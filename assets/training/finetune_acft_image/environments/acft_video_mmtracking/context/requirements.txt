@@ -1,4 +1,4 @@
-azureml-metrics[image]==0.0.32
+azureml-metrics[video]==0.0.32
 azureml-evaluate-mlflow=={{latest-pypi-version}}
 azureml-acft-accelerator=={{latest-pypi-version}}
 azureml-acft-common-components[image]==0.0.32
