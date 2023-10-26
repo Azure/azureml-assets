@@ -321,6 +321,7 @@ def validate_categories(asset_config: assets.AssetConfig) -> int:
 
 
 def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_asset_config: assets.AssetConfig) -> int:
+    """Check if current model asset and validated one matches and has a successful run."""
     # latest_asset_config is expected to be non null
     if not validated_asset_config:
         logger.log_error(f"Validated asset config is None for {latest_asset_config.name}")
@@ -404,6 +405,7 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
 
 
 def get_validated_models_assets_map(model_validation_results_dir: str):
+    """Return model assets map."""
     try:
         if not model_validation_results_dir:
             logger.log_error(
