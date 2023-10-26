@@ -107,7 +107,7 @@ def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
         [(cat_col_names[i], unique_vals[i]) for i in range(len(cat_col_names))],
         schema=metadata_schema,
     )
-    
+
     unique_vals_df = unique_vals_df.to_pandas_on_spark()
 
     return unique_vals_df
