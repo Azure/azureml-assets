@@ -95,20 +95,13 @@ inputs:
       - IDF1
     description: Specify the metric to use to compare two different models. If left empty, will be chosen automatically based on the task type and model selected.
 
-  # Augmentation parameters
-  apply_augmentations:
-    type: boolean
-    default: true
-    optional: true
-    description: If set to true, will enable data augmentations for training.
-
+  # Training parameters
   number_of_workers:
     type: integer
     default: 8
     optional: true
     description: Number of subprocesses to use for data loading (PyTorch only). 0 means that the data will be loaded in the main process.
 
-  # Training parameters
   number_of_epochs:
     type: integer
     optional: true
@@ -315,7 +308,7 @@ outputs:
 jobs:
   model_selector:
     type: command
-    component: ../model_import/model_import_mmt.yaml
+    component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.1
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
@@ -325,7 +318,7 @@ jobs:
       download_from_source: ${{parent.inputs.download_from_source}}
   finetune:
     type: command
-    component: ../finetune/finetune_mmt.yaml
+    component: azureml:mmtracking_video_multi_object_tracking_finetune_test:0.0.1
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
@@ -338,7 +331,6 @@ jobs:
       image_height: ${{parent.inputs.image_height}}
       task_name: ${{parent.inputs.task_name}}
       metric_for_best_model: ${{parent.inputs.metric_for_best_model}}
-      apply_augmentations: ${{parent.inputs.apply_augmentations}}
       number_of_workers: ${{parent.inputs.number_of_workers}}
       number_of_epochs: ${{parent.inputs.number_of_epochs}}
       max_steps: ${{parent.inputs.max_steps}}
