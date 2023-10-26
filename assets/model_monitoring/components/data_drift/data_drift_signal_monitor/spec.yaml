@@ -97,7 +97,7 @@ jobs:
         path: ${{parent.inputs.baseline_data}}
       feature_names:
         type: mltable
-        path: azureml:azureml_c120d451-4e2b-48c5-ae84-253b28d12942_output_data_signal_metrics:1
+        path: ${{parent.jobs.feature_selection.outputs.feature_names}}
       numerical_metric: ${{parent.inputs.numerical_metric}}
       categorical_metric: ${{parent.inputs.categorical_metric}}
       numerical_threshold: ${{parent.inputs.numerical_threshold}}
