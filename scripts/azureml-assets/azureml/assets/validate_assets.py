@@ -353,7 +353,6 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
             return 1
 
         # check validation results now
-        
         validation_results_dir = validated_asset_config.file_path.parent / MODEL_VALIDATION_RESULTS_FOLDER
         validation_job_details_path = validation_results_dir / MODEL_VALIDATION_JOB_DETAILS
         if not validation_job_details_path.exists():
@@ -375,7 +374,9 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
 
         return 0
     except Exception as e:
-        logger.log_error(f"Exception when confirming validation results for model {latest_asset_config.name}. Exception {e}")
+        logger.log_error(
+            f"Exception when confirming validation results for model {latest_asset_config.name}. Exception {e}"
+        )
         return 1
 
 
@@ -388,7 +389,9 @@ def get_validated_models_assets_map(model_validation_results_dir: str):
             return {}
 
         validated_model_assets: List[assets.AssetConfig] = util.find_assets(
-            [model_validation_results_dir], asset_config_filename=assets.DEFAULT_ASSET_FILENAME, types=[assets.config.AssetType.MODEL]
+            input_dirs=[model_validation_results_dir],
+            asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
+            types=[assets.config.AssetType.MODEL]
         )
 
         return {model_asset.name: model_asset for model_asset in validated_model_assets}
