@@ -64,10 +64,10 @@ def determine_task_type(task_type, target_column, baseline_data):
 
     if is_categorical_column(baseline_data, target_column):
         return constants.CLASSIFICATION
-    return constants.REGRESSION 
+    return constants.REGRESSION
 
 
-def create_lightgbm_model(X, y, task_type):
+def create_lightgbm_model(X, y, task_type, categorical_features):
     """Create model on which to calculate feature importances.
 
     :param X: x values (data excluding target columns)
@@ -79,19 +79,25 @@ def create_lightgbm_model(X, y, task_type):
     :return: an appropriate model wrapper
     :rtype: LightGBMClassifier or LightGBMRegressor
     """
+    categorical_params = {
+        "categorical_feature": categorical_features,
+        "feature_name":categorical_features
+        }
     if task_type == constants.CLASSIFICATION:
         lgbm = LGBMClassifier(boosting_type='gbdt', learning_rate=0.1,
-                              max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
+                              max_depth=5, n_estimators=200, n_jobs=1, random_state=777,
+                              **categorical_params)
     else:
         lgbm = LGBMRegressor(boosting_type='gbdt', learning_rate=0.1,
-                             max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
+                             max_depth=5, n_estimators=200, n_jobs=1, random_state=777,
+                              **categorical_params)
 
     model = lgbm.fit(X, y)
     log_time_and_message(f"Created lightgbm model using task_type: {task_type}")
     return model
 
 
-def get_model_wrapper(task_type, target_column, baseline_data):
+def get_model_wrapper(task_type, target_column, baseline_data, categorical_features):
     """Create model wrapper using ml-wrappers on which to calculate feature importances.
 
     :param task_type: The task type (regression or classification) of the resulting model
@@ -108,9 +114,9 @@ def get_model_wrapper(task_type, target_column, baseline_data):
     x_train = baseline_data.drop([target_column], axis=1)
     # Transform categorical features into the appropriate type that is expected by LightGBM
     for column in x_train:
-        if is_categorical_column(x_train, column):
+        if column in categorical_features:
             x_train[column] = x_train[column].astype('category')
-    model = create_lightgbm_model(x_train, y_train, task_type)
+    model = create_lightgbm_model(x_train, y_train, task_type, categorical_features)
     model_predict = model.predict(x_train)
     log_time_and_message("Called predict on model")
 
@@ -194,7 +200,7 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
     :return: list of feature importances in the order of the columns in the baseline data
     :rtype: list[float]
     """
-    model_wrapper = get_model_wrapper(task_type, target_column, baseline_data)
+    model_wrapper = get_model_wrapper(task_type, target_column, baseline_data, categorical_features)
 
     baseline_explanations = compute_explanations(
         model_wrapper, baseline_data, categorical_features, target_column, task_type)

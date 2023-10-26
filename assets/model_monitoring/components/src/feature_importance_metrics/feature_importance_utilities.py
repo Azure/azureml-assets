@@ -40,12 +40,12 @@ def is_categorical_column(baseline_data, column_name):
     """
     baseline_column = pd.Series(baseline_data[column_name])
     baseline_column_type = baseline_column.dtype.name
-    if (pd.api.types.is_float_dtype(baseline_column)
-            or pd.api.types.is_timedelta64_ns_dtype(baseline_column)):
+    if pd.api.types.is_float_dtype(baseline_column):
         return False
-    if (pd.api.types.is_object_dtype(baseline_column) or pd.api.types.is_string_dtype(baseline_column) or
-            pd.api.types.is_datetime64_any_dtype(baseline_column) or pd.api.types.is_timedelta64_dtype(baseline_column)
-            or baseline_column_type == "bool"):
+    # treat all datetime types as categorical since LightGBM cannot accept anything but bool, int and float
+    if (pd.api.types.is_object_dtype(baseline_column) or pd.api.types.is_string_dtype(baseline_column)
+            or baseline_column_type == "bool" or pd.api.types.is_datetime64_dtype(baseline_column) or
+            pd.api.types.is_timedelta64_dtype(baseline_column)):
         return True
     if pd.api.types.is_integer_dtype(baseline_column):
         distinct_column_values = len(baseline_column.unique())
