@@ -457,7 +457,7 @@ def validate_assets(input_dirs: List[Path],
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
         if asset_config.type == assets.AssetType.MODEL:
-            error_count += validate_model_assets(asset_config, validated_model_map[asset_config.name])
+            error_count += validate_model_assets(asset_config, validated_model_map.get(asset_config.name, None))
 
         # Populate dictionary of image names to asset config paths
         environment_config = None
