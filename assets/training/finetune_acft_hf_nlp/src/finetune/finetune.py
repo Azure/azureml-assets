@@ -67,27 +67,27 @@ add_run_properties(RUN_PROPERTIES)
 # mlflow model task based signature for inference
 MLFLOW_MODEL_SIGNATURES = {
     Tasks.SINGLE_LABEL_CLASSIFICATION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
     Tasks.MULTI_LABEL_CLASSIFICATION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
     Tasks.NAMED_ENTITY_RECOGNITION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
     Tasks.QUESTION_ANSWERING: {
-        "inputs": '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]',
+        "inputs": '[{"type": "string"}, {"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
     Tasks.SUMMARIZATION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
     Tasks.TRANSLATION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
 }
@@ -95,7 +95,7 @@ MLFLOW_MODEL_SIGNATURES = {
 MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR = {
     SUPPORTED_FLAVORS.TRANSFORMERS : {
         Tasks.SINGLE_LABEL_CLASSIFICATION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
         "params": '[{"name": "return_all_scores", "dtype" : "boolean", "default" : true, "shape" : null}]',
         },
@@ -836,15 +836,16 @@ def finetune(args: Namespace):
     logger.info(f"FT MLFlow config - {mlflow_ft_conf}")
 
     # set task based mlflow_model_signature
-    if getattr(args, "task_name", None) is not None and args.task_name in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[flavor]:
-        mlflow_ft_conf["mlflow_model_signature"] = deep_update(
-            mlflow_ft_conf["mlflow_model_signature"],
-            MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[flavor][args.task_name],
-        )
-        logger.info(
-                    f"Adding mlflow model signature for task {args.task_name} - "
-                    f"{MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[flavor][args.task_name]}"
-                )
+    if getattr(args, "task_name", None) is not None:
+        if flavor is not None and flavor in args.task_name in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR.keys():
+            mlflow_ft_conf["mlflow_model_signature"] = deep_update(
+                mlflow_ft_conf["mlflow_model_signature"],
+                MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[flavor][args.task_name],
+            )
+            logger.info(
+                        f"Adding mlflow model signature for task {args.task_name} - "
+                        f"{MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[flavor][args.task_name]}"
+                    )
 
     # remove mlflow_model_signature if empty
     if "mlflow_model_signature" in mlflow_ft_conf \
@@ -909,6 +910,22 @@ def finetune(args: Namespace):
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
+
+    # remove unwanted packages from requirements.txt
+    unwanted_packages = ["apex==0.1"]
+    _remove_unwanted_packages(vars(args)['mlflow_model_folder'], unwanted_packages)
+
+
+def _remove_unwanted_packages(model_save_path: str, unwanted_packages: list):
+    import os
+    path= os.path.join(model_save_path, 'requirements.txt')
+    packages = None
+    with open(str(path), 'r') as f:
+        all_packages = f.read().split("\n")
+        packages = [item for item in all_packages if item not in unwanted_packages]
+
+    with open(str(path), 'w') as f:
+        f.write('\n'.join(str(package) for package in packages))
 
 
 def can_apply_ort(args: Namespace, logger):
