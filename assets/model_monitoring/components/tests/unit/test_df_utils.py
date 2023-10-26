@@ -11,6 +11,8 @@ import pandas as pd
 
 
 def test_get_numerical_columns():
+    """Test numerical columns"""
+    # Test with mixed columns
     column_dtype_map = {'col1': 'int',
                         'col2': 'float',
                         'col3': 'double',
@@ -28,6 +30,7 @@ def test_get_numerical_columns():
 
 
 def test_get_categorical_columns():
+    """Test categorical columns"""
     # Test with all numerical columns
     column_dtype_map = {
                         'col1': 'int',
@@ -72,6 +75,7 @@ def test_get_categorical_columns():
 
 
 def test_is_categorical():
+    """Test int is categorical"""
     # Test with integer column
     result = False
     baseline_column = pd.Series([1, 2, 3, 4, 5])
@@ -87,6 +91,7 @@ def test_is_categorical():
 
 
 def test_is_numerical():
+    """Test int is numerical"""
     # Test with integer column with high distinct value ratio
     baseline_column = pd.Series([1, 2, 3, 4, 5])
     result = True
