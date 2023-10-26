@@ -50,8 +50,8 @@ class TestMDCPreprocessor:
         """Test uri_folder_to_spark_df()."""
         print("testing test_uri_folder_to_spark_df...")
         print("working dir:", os.getcwd())
-        # python_path = sys.executable
-        # os.environ["PYSPARK_PYTHON"] = python_path
+        python_path = sys.executable
+        os.environ["PYSPARK_PYTHON"] = python_path
         print("PYSPARK_PYTHON", os.environ.get("PYSPARK_PYTHON", "NA"))
         # module_path = f"{os.getcwd()}/src"
         # old_python_path = os.environ.get("PYTHONPATH", None)
