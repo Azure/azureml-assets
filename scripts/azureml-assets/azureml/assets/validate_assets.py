@@ -414,7 +414,7 @@ def get_validated_models_assets_map(model_validation_results_dir: str):
             return {}
 
         validated_model_assets: List[assets.AssetConfig] = util.find_assets(
-            input_dirs=[model_validation_results_dir],
+            input_dirs=[Path(model_validation_results_dir)],
             asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
             types=[assets.config.AssetType.MODEL]
         )
