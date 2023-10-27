@@ -37,7 +37,7 @@ from azureml.core.run import Run
 from azure.ai.ml import MLClient
 
 
-def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_name=None, ws_name=None) -> str:
+def _convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_name=None, ws_name=None) -> str:
     """Convert path to AzureML path."""
     url = urlparse(url_str)
     if url.scheme in ["https", "http"]:
@@ -59,7 +59,7 @@ def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_n
            f"/{datastore}/paths/{path}"
 
 
-def get_datastore_from_input_path(input_path: str, ml_client=None) -> str:
+def _get_datastore_from_input_path(input_path: str, ml_client=None) -> str:
     """Get datastore name from input path."""
     url = urlparse(input_path)
     if url.scheme == "azureml":
@@ -67,9 +67,10 @@ def get_datastore_from_input_path(input_path: str, ml_client=None) -> str:
             return _get_datastore_from_asset_path(input_path, ml_client)
         else:  # azureml long or short form
             return _get_datastore_from_azureml_path(input_path)
+    elif url.scheme == "file" or os.path.isdir(input_path):
+        return None  # local path for testing, datastore is not needed
     else:
-        # todo: raise ModelMonitoringException
-        return "workspaceblobstore"
+        raise ValueError("Only azureml path(long, short or asset) is supported as input path of the MDC preprocessor.")
 
 
 def _get_workspace_info() -> Tuple[str, str, str]:
@@ -98,7 +99,7 @@ def _get_datastore_from_asset_path(asset_path: str, ml_client=None) -> str:
     asset_version = asset_sections[2]
 
     data_asset = ml_client.data.get(asset_name, asset_version)
-    return data_asset.datastore or get_datastore_from_input_path(data_asset.path)
+    return data_asset.datastore or _get_datastore_from_input_path(data_asset.path)
 
 
 def _raw_mdc_uri_folder_to_mltable(
@@ -158,13 +159,19 @@ def _get_data_columns(df: DataFrame) -> list:
 
 
 def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool, datastore: str) -> DataFrame:
+    """
+    If data column exists, return the json contents in it,
+    otherwise, return the dataref content which is a url to the json file.
+    """
     def read_data(row):
         data = getattr(row, MDC_DATA_COLUMN, None)
         if data:
             return data
 
         dataref = getattr(row, MDC_DATAREF_COLUMN, None)
-        data_url = convert_to_azureml_long_form(dataref, datastore)
+        # convert https path to azureml long form path which can be recognized by azureml filesystem
+        # and read by pd.read_json()
+        data_url = _convert_to_azureml_long_form(dataref, datastore)
         return data_url
         # TODO: Move this to tracking stream if both data and dataref are NULL
 
@@ -246,7 +253,7 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
         )
         return
 
-    datastore = get_datastore_from_input_path(input_data)
+    datastore = _get_datastore_from_input_path(input_data)
     print("Datastore:", datastore)
     transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id, datastore)
 

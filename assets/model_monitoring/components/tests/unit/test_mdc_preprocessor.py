@@ -15,8 +15,8 @@ from pandas.testing import assert_frame_equal
 from model_data_collector_preprocessor.run import (
     _raw_mdc_uri_folder_to_preprocessed_spark_df,
     mdc_preprocessor,
-    convert_to_azureml_long_form,
-    get_datastore_from_input_path,
+    _convert_to_azureml_long_form,
+    _get_datastore_from_input_path,
 )
 
 
@@ -24,7 +24,7 @@ from model_data_collector_preprocessor.run import (
 def mdc_preprocessor_test_setup():
     """Change working directory to root of the assets/model_monitoring_components."""
     original_work_dir = os.getcwd()
-    momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../../src")
+    momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
     os.chdir(momo_work_dir)  # change working directory to root of the assets/model_monitoring_components
     yield
     os.chdir(original_work_dir)  # change working directory back to original
@@ -34,6 +34,7 @@ def mdc_preprocessor_test_setup():
 class TestMDCPreprocessor:
     """Test class for MDC Preprocessor."""
 
+    @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, extract_correlation_id",
         [
@@ -56,14 +57,11 @@ class TestMDCPreprocessor:
         python_path = sys.executable
         os.environ["PYSPARK_PYTHON"] = python_path
         print("PYSPARK_PYTHON", os.environ.get("PYSPARK_PYTHON", "NA"))
-        # module_path = f"{os.getcwd()}/src"
-        # old_python_path = os.environ.get("PYTHONPATH", None)
-        # old_python_path = f"{old_python_path};" if old_python_path else ""
-        # os.environ["PYTHONPATH"] = f"{old_python_path}{module_path}"
+        module_path = f"{os.getcwd()}/src"
+        old_python_path = os.environ.get("PYTHONPATH", None)
+        old_python_path = f"{old_python_path};" if old_python_path else ""
+        os.environ["PYTHONPATH"] = f"{old_python_path}{module_path}"
         print("PYTHONPATH:", os.environ.get("PYTHONPATH", "NA"))
-        print("JAVA_HOME:", os.environ.get("JAVA_HOME", "NA"))
-        # os.environ["JAVA_HOME"] = "C:\\Program Files\\Microsoft\\jdk-11.0.16.101-hotspot"
-        # os.environ["PYSPARK_SUBMIT_ARGS"] = f"--py-files {module_path}"
 
         fs = fsspec.filesystem("file")
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
@@ -139,7 +137,7 @@ class TestMDCPreprocessor:
     )
     def test_convert_to_azureml_long_form(self, url_str: str, converted: bool):
         """Test convert_to_azureml_long_form()."""
-        converted_path = convert_to_azureml_long_form(url_str, "my_datastore", "my_sub_id", "my_rg_name", "my_ws_name")
+        converted_path = _convert_to_azureml_long_form(url_str, "my_datastore", "my_sub_id", "my_rg_name", "my_ws_name")
         azureml_long = "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name" \
             "/datastores/my_datastore/paths/path/to/file"
         expected_path = azureml_long if converted else url_str
@@ -154,13 +152,25 @@ class TestMDCPreprocessor:
                 "long_form_datastore"
             ),
             ("azureml://datastores/short_form_datastore/paths/path/to/file", "short_form_datastore"),
-            ("wasbs://my_container@my_account.blob.core.windows.net/path/to/file", "workspaceblobstore"),
+            ("file://path/to/folder", None),
         ]
     )
     def test_get_datastore_from_input_path(self, input_path, expected_datastore):
         """Test get_datastore_from_input_path()."""
-        datastore = get_datastore_from_input_path(input_path)
+        datastore = _get_datastore_from_input_path(input_path)
         assert datastore == expected_datastore
+
+    @pytest.mark.parametrize(
+        "input_path",
+        [
+            "wasbs://my_container@my_account.blob.core.windows.net/path/to/file",
+            "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
+        ]
+    )
+    def test_get_datastore_from_input_path_throw_error(self, input_path):
+        """Test get_datastore_from_input_path() with invalid input."""
+        with pytest.raises(ValueError):
+            _get_datastore_from_input_path(input_path)
 
     @pytest.mark.parametrize(
         "datastore, path, expected_datastore",
@@ -173,7 +183,7 @@ class TestMDCPreprocessor:
                 "long_form_datastore"
             ),
             (None, "azureml://datastores/short_form_datastore/paths/path/to/folder", "short_form_datastore"),
-            (None, "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder", "workspaceblobstore")
+            # (None, "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder", "workspaceblobstore")
         ]
     )
     def test_get_datastore_from_input_path_with_asset_path(self, datastore, path, expected_datastore):
@@ -182,5 +192,5 @@ class TestMDCPreprocessor:
         mock_ml_client = Mock()
         mock_ml_client.data.get.return_value = mock_data_asset
 
-        datastore = get_datastore_from_input_path("azureml:my_asset:my_version", mock_ml_client)
+        datastore = _get_datastore_from_input_path("azureml:my_asset:my_version", mock_ml_client)
         assert datastore == expected_datastore
