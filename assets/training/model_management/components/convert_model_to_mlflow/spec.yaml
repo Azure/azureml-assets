@@ -68,6 +68,7 @@ inputs:
       - image-text-to-text
       - zero-shot-image-classification
       - video-multi-object-tracking
+      - visual-question-answering
     description: A Hugging face task on which model was trained on. A required parameter for transformers MLflow flavor. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
 

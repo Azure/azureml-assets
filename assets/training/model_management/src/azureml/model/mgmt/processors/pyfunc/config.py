@@ -35,6 +35,7 @@ class SupportedTasks(_CustomEnum):
 
     # BLIP tasks
     IMAGE_TO_TEXT = "image-to-text"
+    VISUAL_QUESTION_ANSWERING = "visual-question-answering"
 
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
