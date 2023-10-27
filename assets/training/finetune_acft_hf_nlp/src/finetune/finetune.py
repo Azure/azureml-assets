@@ -918,13 +918,22 @@ def finetune(args: Namespace):
 
 def _remove_unwanted_packages(model_save_path: str, unwanted_packages: list):
     import os
-    path= os.path.join(model_save_path, 'requirements.txt')
+    req_file_path= os.path.join(model_save_path, 'requirements.txt')
+    conda_file_path = os.path.join(model_save_path, 'conda.yaml')
     packages = None
-    with open(str(path), 'r') as f:
+    with open(str(req_file_path), 'r') as f:
         all_packages = f.read().split("\n")
         packages = [item for item in all_packages if item not in unwanted_packages]
 
-    with open(str(path), 'w') as f:
+    with open(str(req_file_path), 'w') as f:
+        f.write('\n'.join(str(package) for package in packages))
+
+    with open(str(conda_file_path), 'r') as f:
+        all_packages = f.read().split("\n")
+        unwanted_conda_pip_packages = ['  - '+ package for package in unwanted_packages]
+        packages = [item for item in all_packages if item not in unwanted_conda_pip_packages]
+
+    with open(str(conda_file_path), 'w') as f:
         f.write('\n'.join(str(package) for package in packages))
 
 
