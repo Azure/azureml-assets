@@ -10,17 +10,18 @@ import codecs
 import argparse
 import logging as logger
 import pandas as pd
-import sys  
-from io import StringIO  
+import sys
 
+from io import StringIO
 from jinja2 import Environment
 from datasets import load_dataset
 from typing import Any, Dict, List, Union
 
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
-\S|$))"""
+\S|$))"""  # noqa: W605
 failed_runs = []
+
 
 def _parse_args():
     """Parse the arguments."""
@@ -109,7 +110,7 @@ def _run(
     regex_expr = REGEX_EXPR
 
     # Post processing the prediction and ground truth columns
-    _, ground_truths, predictions = run_humaneval_postprocessor(pred_with_task_id, regex_expr)
+    ground_truths, predictions = run_humaneval_postprocessor(pred_with_task_id, regex_expr)
 
     _write_to_jsonl_file(predictions, output_path, ground_truths)
 
@@ -119,14 +120,13 @@ def merge_id(
     pred_data: List[Dict[str, Any]]
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
-    Code to merge the two datasets.
+    Run the custom processor function to extract the ground truth.
 
-    :param label_data: The label data.
-    :type: List[Dict[str, Any]]
-    :param pred_data: Prediction data.
+    :param data: Data loaded from _read_jsonl_file function.
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
+    # Get the original data from Hugging Face
     expected_op = [{**x, **y} for x, y in zip(label_data, pred_data)]
     return expected_op
 
@@ -167,8 +167,9 @@ def run_humaneval_postprocessor(
 
     # Post processing the prediction and ground truth columns
     for idx, row in enumerate(pred_dict_full):
-        gt = "\n"+pred_dict_full[idx]["test"]+"\n"+"check(" + pred_dict_full[idx]["entry_point"] + ")"
-        if str("def "+ pred_dict_full[idx]["entry_point"] + "(") in pred_dict_full[idx]["original_prediction"]:
+        gt = "\n" + pred_dict_full[idx]["test"] + "\n" + "check(" + pred_dict_full[idx]["entry_point"] + ")"
+
+        if str("def " + pred_dict_full[idx]["entry_point"] + "(") in pred_dict_full[idx]["original_prediction"]:
             # If the model regenerates the prompt/ function name
             pred_combined_prompt = pred_dict_full[idx]["original_prediction"]
         else:
@@ -179,36 +180,39 @@ def run_humaneval_postprocessor(
             pred = apply_regex_expr(pred_combined_prompt, regex_exp)
         else:
             pred = pred_combined_prompt
-
-        # To run the test cases, uncomment the following lines
-        # failed,_ = code_ran(pred, gt, prediction_dataset_full1[idx]["task_id"], pred_combined_prompt, prediction_dataset_full1[idx]["original_prediction"])
-        # gt_list.append(failed)
-
-        gt_list.append({"ground_truth": gt})
+        failed, _ = code_run(pred,
+                             gt,
+                             pred_dict_full[idx]["task_id"],
+                             pred_combined_prompt,
+                             pred_dict_full[idx]["original_prediction"])
+        gt_list.append(failed)
+        # gt_list.append({"ground_truth": gt})
         pred_list.append({"prediction": pred})
+    return gt_list, pred_list
 
-    return pred_dict_full, gt_list, pred_list
 
-def code_ran(pred, test_cases, index, pred_combined_prompt, pred_orig):
+def code_run(pred, test_cases, index, pred_combined_prompt, pred_orig):
     failed_runs = []
-    output, error, error_type = run_code(pred+test_cases) 
-    failed = {"index" : index,
-                "pred_orig" : pred_orig,
-                "pred_combined_prompt" : pred_combined_prompt,
-                "pred_final_with_regex" : pred,
-                "ground_truth" : test_cases,
-                "test_cases" : test_cases,
-                "full_code" : str(pred + test_cases),
-                "error" : error,
-                "error_type" : error_type,
-                "output" : output,
-                }
+    output, error, error_type = run_code(pred+test_cases)
+    failed = {
+        "index": index,
+        "pred_orig": pred_orig,
+        "pred_combined_prompt": pred_combined_prompt,
+        "pred_final_with_regex": pred,
+        "ground_truth": test_cases,
+
+        "full_code": str(pred + test_cases),
+        "error": error,
+        "error_type": error_type,
+        "output": output,
+        }
     failed_runs.append(failed)
     return failed, failed_runs
 
-# Function to run code  
-def run_code(code):  
-    # Temporarily redirect stdout and stderr
+
+def run_code(code):
+    """Function to run code."""
+
     original_stdout = sys.stdout
     original_stderr = sys.stderr
     sys.stdout = StringIO()
@@ -218,7 +222,7 @@ def run_code(code):
     error = None
     error_type = None
 
-    try:  
+    try:
         exec(code)
         output = sys.stdout.getvalue()
         output = "No error, executed successfully"
@@ -232,7 +236,7 @@ def run_code(code):
     sys.stdout = original_stdout
     sys.stderr = original_stderr
 
-    return output, error, error_type 
+    return output, error, error_type
 
 
 def apply_regex_expr(
@@ -247,6 +251,7 @@ def apply_regex_expr(
             return text
         return matches.group(1)
     return text
+
 
 if __name__ == "__main__":
     argss = _parse_args()
