@@ -17,9 +17,10 @@ from jinja2 import Environment
 from datasets import load_dataset
 from typing import Any, Dict, List, Union
 
+# flake8: noqa
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
-\S|$))"""  # noqa: W605
+\S|$))"""  
 failed_runs = []
 
 
