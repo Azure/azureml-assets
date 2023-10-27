@@ -408,8 +408,8 @@ def get_validated_models_assets_map(model_validation_results_dir: str):
     """Return model assets map."""
     try:
         if not model_validation_results_dir:
-            logger.log_error(
-                "Unexpected. model_validation_results_dir is None. All models assets will fail in validation"
+            logger.log_warning(
+                "Unexpected. model_validation_results_dir is None. All models assets might fail in validation"
             )
             return {}
 
