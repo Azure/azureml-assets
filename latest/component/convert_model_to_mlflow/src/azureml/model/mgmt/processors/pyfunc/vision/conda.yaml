@@ -1,3 +1,6 @@
+# This conda.yaml is only used for MMTracking.
+# For MMDetection, please use the mmd-od-requirements.txt
+# or mmdet-is-requirements.txt in the same directory.
 channels:
 - conda-forge
 dependencies:
