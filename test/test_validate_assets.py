@@ -10,6 +10,7 @@ import re
 import azureml.assets as assets
 
 RESOURCES_DIR = Path("resources/validate")
+MODEL_VALIDATION_RESULTS = Path("resources/model_validation_results")
 
 
 @pytest.mark.parametrize(
@@ -38,6 +39,7 @@ RESOURCES_DIR = Path("resources/validate")
         ("dockerfile-from-ce-image-windows", False, False, None, False),
         ("model-with-microsoft", False, True, None, True),
         ("model-with-azure", False, True, None, False),
+        ("bad-build-context", False, True, None, False),
     ]
 )
 def test_validate_assets(test_subdir: str, check_images: bool, check_names: bool,
@@ -55,7 +57,9 @@ def test_validate_assets(test_subdir: str, check_images: bool, check_names: bool
 
     assert assets.validate_assets(
         input_dirs=this_dir / RESOURCES_DIR / test_subdir,
+        model_validation_results_dir=this_dir / MODEL_VALIDATION_RESULTS / test_subdir,
         asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
         check_names=check_names,
         check_names_skip_pattern=check_names_skip_pattern,
-        check_images=check_images) == expected
+        check_images=check_images,
+        check_build_context=True) == expected

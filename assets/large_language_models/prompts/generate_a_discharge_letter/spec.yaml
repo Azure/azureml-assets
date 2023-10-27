@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+name: generate-a-discharge-letter
+version: 0.1.1
+display_name: Generate A Discharge Letter
+
+tags:
+  modality: chat
+  task: content-creation
+  industry: healthcare
+
+data_uri: ./prompt
+template_path: prompt.yaml

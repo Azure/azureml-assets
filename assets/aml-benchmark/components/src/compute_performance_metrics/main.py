@@ -20,10 +20,12 @@ from utils.exceptions import (
     BenchmarkValidationException,
     MissingColumnException,
 )
+from utils.aml_run_utils import str2bool
 from utils.error_definitions import BenchmarkValidationError, MissingColumnError
 
 
 logger = get_logger(__name__)
+MAX_ALLOWED_LENGTH = 50
 
 
 def extract_and_validate_percentiles(percentile_arr: List[str]) -> List[float]:
@@ -179,6 +181,9 @@ def parse_args() -> argparse.Namespace:
         "--output_char_count_column_name", type=str, required=False, default=None
     )
     parser.add_argument(
+        "--is_batch_inference_result", default=True, type=str2bool,
+    )
+    parser.add_argument(
         "--performance_result",
         type=str,
         help="path to store performance metric results",
@@ -201,6 +206,7 @@ def main(
     output_token_count_column_name: Optional[str] = None,
     input_char_count_column_name: Optional[str] = None,
     output_char_count_column_name: Optional[str] = None,
+    is_batch_inference_result: bool = True
 ) -> None:
     """
     Entry function for Compute Performance Metrics Component.
@@ -219,6 +225,7 @@ def main(
     output token count info.
     :param input_char_count_column_name: Name of the column in the performance data that contains the
     input character count info.
+    :param is_batch_inference_result: Whether the performance data is from batch inference.
     :param output_char_count_column_name: Name of the column in the performance data that contains the
     output character count info.
     :return: None
@@ -243,6 +250,7 @@ def main(
     # Start Logging
     mlflow.start_run()
     results = dict()
+    run_timespan = None
 
     if len(all_data) > 0:
         # Calculate latency data
@@ -259,8 +267,14 @@ def main(
             ]
         )
         latency_data = (end_data - start_data) * 1000
+        run_timespan = np.max(end_data) - np.min(start_data)
         latency_data = latency_data / np.array(all_data[batch_size_column_name])
         results["latency_avg"] = np.average(latency_data)
+        total_latency = np.sum(latency_data)
+        if is_batch_inference_result:
+            results["requests_per_sec"] = len(all_data) / run_timespan
+        else:
+            results["requests_per_sec"] = len(all_data) / total_latency
 
         client = mlflow.tracking.MlflowClient()
         for percentile in percentiles:
@@ -281,19 +295,20 @@ def main(
                     "latency_per_input_char_p{0}".format(str(percentile))
                 ] = np.percentile(input_char_normalized_latency, percentile)
 
-            # Log latency versus characters
-            client.log_batch(
-                mlflow.active_run().info.run_id,
-                metrics=[
-                    mlflow.entities.Metric(
-                        key="latency_vs_input_char",
-                        value=val[0],
-                        timestamp=0,
-                        step=int(val[1]),
-                    )
-                    for val in zip(latency_data, input_char_data)
-                ],
-            )
+            if len(latency_data) <= MAX_ALLOWED_LENGTH:
+                # Log latency versus characters
+                client.log_batch(
+                    mlflow.active_run().info.run_id,
+                    metrics=[
+                        mlflow.entities.Metric(
+                            key="latency_vs_input_char",
+                            value=val[0],
+                            timestamp=0,
+                            step=int(val[1]),
+                        )
+                        for val in zip(latency_data, input_char_data)
+                    ],
+                )
 
         # Get output character data if it exists
         if output_char_count_column_name is not None:
@@ -308,19 +323,20 @@ def main(
                     "latency_per_output_char_p{0}".format(str(percentile))
                 ] = np.percentile(output_char_normalized_latency, percentile)
 
-            # Log latency versus characters
-            client.log_batch(
-                mlflow.active_run().info.run_id,
-                metrics=[
-                    mlflow.entities.Metric(
-                        key="latency_vs_output_char",
-                        value=val[0],
-                        timestamp=0,
-                        step=int(val[1]),
-                    )
-                    for val in zip(latency_data, output_char_data)
-                ],
-            )
+            if len(latency_data) <= MAX_ALLOWED_LENGTH:
+                # Log latency versus characters
+                client.log_batch(
+                    mlflow.active_run().info.run_id,
+                    metrics=[
+                        mlflow.entities.Metric(
+                            key="latency_vs_output_char",
+                            value=val[0],
+                            timestamp=0,
+                            step=int(val[1]),
+                        )
+                        for val in zip(latency_data, output_char_data)
+                    ],
+                )
 
         # Get input plus output character data if they both exists
         if (
@@ -340,19 +356,20 @@ def main(
                     "latency_per_input_output_char_p{0}".format(str(percentile))
                 ] = np.percentile(input_output_char_normalized_latency, percentile)
 
-            # Log latency versus characters
-            client.log_batch(
-                mlflow.active_run().info.run_id,
-                metrics=[
-                    mlflow.entities.Metric(
-                        key="latency_vs_input_output_char",
-                        value=val[0],
-                        timestamp=0,
-                        step=int(val[1]),
-                    )
-                    for val in zip(latency_data, input_output_char_data)
-                ],
-            )
+            if len(latency_data) <= MAX_ALLOWED_LENGTH:
+                # Log latency versus characters
+                client.log_batch(
+                    mlflow.active_run().info.run_id,
+                    metrics=[
+                        mlflow.entities.Metric(
+                            key="latency_vs_input_output_char",
+                            value=val[0],
+                            timestamp=0,
+                            step=int(val[1]),
+                        )
+                        for val in zip(latency_data, input_output_char_data)
+                    ],
+                )
 
         # Get input token data if it exists
         if input_token_count_column_name is not None:
@@ -361,9 +378,12 @@ def main(
             input_token_count = np.sum(input_token_data)
             results["total_input_tokens"] = int(input_token_count)
             total_latency = np.sum(latency_data)
-            results["input_token_throughput"] = input_token_count / total_latency
-
+            if is_batch_inference_result:
+                results["input_tokens_per_sec"] = input_token_count / run_timespan
+            else:
+                results["input_tokens_per_sec"] = input_token_count / total_latency
             input_token_normalized_latency = latency_data / input_token_data
+
             results["latency_per_input_token_avg"] = np.average(
                 input_token_normalized_latency
             )
@@ -373,19 +393,20 @@ def main(
                     "latency_per_input_token_p{0}".format(str(percentile))
                 ] = np.percentile(input_token_normalized_latency, percentile)
 
-            # Log latency versus tokens
-            client.log_batch(
-                mlflow.active_run().info.run_id,
-                metrics=[
-                    mlflow.entities.Metric(
-                        key="latency_vs_input_tokens",
-                        value=val[0],
-                        timestamp=0,
-                        step=int(val[1]),
-                    )
-                    for val in zip(latency_data, input_token_data)
-                ],
-            )
+            if len(latency_data) <= MAX_ALLOWED_LENGTH:
+                # Log latency versus tokens
+                client.log_batch(
+                    mlflow.active_run().info.run_id,
+                    metrics=[
+                        mlflow.entities.Metric(
+                            key="latency_vs_input_tokens",
+                            value=val[0],
+                            timestamp=0,
+                            step=int(val[1]),
+                        )
+                        for val in zip(latency_data, input_token_data)
+                    ],
+                )
 
         # Get output token data if it exists
         if output_token_count_column_name is not None:
@@ -394,7 +415,10 @@ def main(
             output_token_count = np.sum(output_token_data)
             results["total_output_tokens"] = int(output_token_count)
             total_latency = np.sum(latency_data)
-            results["output_token_throughput"] = output_token_count / total_latency
+            if is_batch_inference_result:
+                results["output_tokens_per_sec"] = output_token_count / run_timespan
+            else:
+                results["output_tokens_per_sec"] = output_token_count / total_latency
 
             output_token_normalized_latency = latency_data / output_token_data
             results["latency_per_output_token_avg"] = np.average(
@@ -406,19 +430,20 @@ def main(
                     "latency_per_output_token_p{0}".format(str(percentile))
                 ] = np.percentile(output_token_normalized_latency, percentile)
 
-            # Log latency versus tokens
-            client.log_batch(
-                mlflow.active_run().info.run_id,
-                metrics=[
-                    mlflow.entities.Metric(
-                        key="latency_vs_output_tokens",
-                        value=val[0],
-                        timestamp=0,
-                        step=int(val[1]),
-                    )
-                    for val in zip(latency_data, output_token_data)
-                ],
-            )
+            if len(latency_data) <= MAX_ALLOWED_LENGTH:
+                # Log latency versus tokens
+                client.log_batch(
+                    mlflow.active_run().info.run_id,
+                    metrics=[
+                        mlflow.entities.Metric(
+                            key="latency_vs_output_tokens",
+                            value=val[0],
+                            timestamp=0,
+                            step=int(val[1]),
+                        )
+                        for val in zip(latency_data, output_token_data)
+                    ],
+                )
 
         # Get input plus output token data if they both exists
         if (
@@ -440,19 +465,20 @@ def main(
                     "latency_per_input_output_token_p{0}".format(str(percentile))
                 ] = np.percentile(input_output_token_normalized_latency, percentile)
 
-            # Log latency versus tokens
-            client.log_batch(
-                mlflow.active_run().info.run_id,
-                metrics=[
-                    mlflow.entities.Metric(
-                        key="latency_vs_input_output_tokens",
-                        value=val[0],
-                        timestamp=0,
-                        step=int(val[1]),
-                    )
-                    for val in zip(latency_data, input_output_token_data)
-                ],
-            )
+            if len(latency_data) <= MAX_ALLOWED_LENGTH:
+                # Log latency versus tokens
+                client.log_batch(
+                    mlflow.active_run().info.run_id,
+                    metrics=[
+                        mlflow.entities.Metric(
+                            key="latency_vs_input_output_tokens",
+                            value=val[0],
+                            timestamp=0,
+                            step=int(val[1]),
+                        )
+                        for val in zip(latency_data, input_output_token_data)
+                    ],
+                )
 
     # Output the metrics that are logged in the metrics file
     mlflow.log_metrics(results)
@@ -478,4 +504,5 @@ if __name__ == "__main__":
         output_token_count_column_name=args.output_token_count_column_name,
         input_char_count_column_name=args.input_char_count_column_name,
         output_char_count_column_name=args.output_char_count_column_name,
+        is_batch_inference_result=args.is_batch_inference_result
     )

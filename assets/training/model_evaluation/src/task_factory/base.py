@@ -103,34 +103,42 @@ class BasePredictor(ABC):
 
     def handle_device_failure(self, X_test, **kwargs):
         """Handle device failure."""
+        predict_fn = kwargs.get('predict_fn', self.model.predict)
         if self.device == constants.DEVICE.AUTO and torch.cuda.is_available():
             try:
                 cuda_current_device = torch.cuda.current_device()
-                logger.info("Loading model and prediction with cuda current device ")
+                logger.info("Loading model and prediction with cuda current device.")
                 if self.current_device != cuda_current_device:
                     logger.info(
                         f"Current Device: {self.current_device} does not match expected device {cuda_current_device}")
                     self.model = load_model(self.model_uri, cuda_current_device, self.task_type)
                     self.current_device = cuda_current_device
+                    predict_fn = kwargs.get('predict_fn', self.model.predict)
                 kwargs["device"] = self.current_device
-                return self.model.predict(X_test, **kwargs)
-            except TypeError:
-                return self.model.predict(X_test)
+                return predict_fn(X_test, **kwargs)
+            except TypeError as e:
+                logger.warning("Failed on GPU with error: " + repr(e))
+                logger.info("Trying on GPU without kwargs.")
+                return predict_fn(X_test)
             except Exception as e:
-                logger.info("Failed on GPU with error: " + repr(e))
+                logger.warning("Failed on GPU with error: " + repr(e))
         if self.device != -1:
-            logger.warning("Predict failed on GPU. Falling back to CPU")
+            logger.warning("Running predictions on CPU.")
+            self.model = load_model(self.model_uri, -1, self.task_type)
+            predict_fn = kwargs.get('predict_fn', self.model.predict)
             try:
-                logger.info("Loading model and prediction with cuda current device. Trying CPU ")
-                if self.current_device != -1:
-                    self.current_device = -1
-                    self._ensure_model_on_cpu()
-                kwargs["device"] = -1
-                return self.model.predict(X_test, **kwargs)
-            except TypeError:
-                return self.model.predict(X_test)
+                logger.info("Loading model and prediction with cuda current device. Trying CPU.")
+                if 'device' in kwargs:
+                    kwargs.pop('device')
+                if 'device_map' in kwargs:
+                    kwargs.pop('device_map')
+                return predict_fn(X_test, **kwargs)
+            except TypeError as e:
+                logger.warning("Failed on CPU with error: " + repr(e))
+                logger.info("Trying on CPU without kwargs.")
+                return predict_fn(X_test)
             except Exception as e:
-                logger.info("Failed on CPU with error: " + repr(e))
+                logger.warning("Failed on CPU with error: " + repr(e))
                 raise e
 
 
@@ -171,5 +179,15 @@ class ForecastWrapper(BasePredictor):
         Args:
             X_test (_type_): _description_
             y_context (_type_): _description_
+        """
+        pass
+
+    @abstractmethod
+    def rolling_forecast(self, X_test, step=1):
+        """Abstract forecast.
+
+        Args:
+            X_test (_type_): _description_
+            step (_type_): _description_
         """
         pass
