@@ -132,7 +132,7 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: azureml:batch_inference_preparer:0.0.1
+    component: azureml:batch_inference_preparer:0.0.2
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
