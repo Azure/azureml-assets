@@ -169,7 +169,12 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
 
         mlflow_model_wrapper = ImagesDetectionMLflowModelWrapper(task_type=self._task)
         artifacts_dict = self._prepare_artifacts_dict()
-        pip_requirements = os.path.join(self.MODEL_DIR, "requirements.txt")
+        if self._task == MMLabDetectionTasks.MM_OBJECT_DETECTION.value:
+            pip_requirements = os.path.join(self.MODEL_DIR, "mmdet-od-requirements.txt")
+        elif self._task == MMLabDetectionTasks.MM_INSTANCE_SEGMENTATION.value:
+            pip_requirements = os.path.join(self.MODEL_DIR, "mmdet-is-requirements.txt")
+        else:
+            pip_requirements = None
         code_path = [
             os.path.join(self.MODEL_DIR, "detection_predict.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
