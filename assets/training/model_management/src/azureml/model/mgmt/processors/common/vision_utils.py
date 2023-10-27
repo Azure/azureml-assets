@@ -208,6 +208,9 @@ def string_to_nested_float_list(s: str) -> list:
     :return: string converted to nested list of floats
     :rtype: list
     """
+    # Check if string is None or empty
+    if s in ["null", "None", "", "nan", "NoneType", np.nan, None]:
+        return None
     # Check if string matches the expected format using a regex pattern.
     # This pattern ensures that the string only contains brackets, numbers, dots, and commas.
     if not re.match(r"^\[((\[|\]|\s|\d|\,|\.|-)*?)\]$", s):
