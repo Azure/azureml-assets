@@ -30,6 +30,7 @@ def _get_parser():
     parser.add_argument("--model-id", required=True)
     parser.add_argument("--model-download-metadata", required=True, help="Model source info file path")
     parser.add_argument("--model-output-dir", required=True, help="Model download directory")
+    parser.add_argument("--mlflow-model-output-dir", required=True, help="Model directory to output mlflow model to")
     parser.add_argument("--update-existing-model", required=False, default='false', help="Update existing model")
     parser.add_argument("--validation-info", required=False, help="Validation info")
     parser.add_argument("--is-mlflow-model", type=Path, required=True, help="if input model is mlflow model")
@@ -84,7 +85,7 @@ def validate_if_model_exists(model_id):
                         "Please continue importing the model.")
 
 
-def check_and_prepare_mlflow_model(model_path: Path) -> bool:
+def check_and_prepare_mlflow_model(model_path: Path, mlflow_model_folder: Path) -> bool:
     """Check and prepare model if its a mlflow model.
 
     :param model_path: Path to downloaded model
@@ -99,15 +100,13 @@ def check_and_prepare_mlflow_model(model_path: Path) -> bool:
     if os.path.exists(model_path / MLFLOW_MODEL):
         if not os.path.exists(model_path / MLFLOW_MODEL / MLMODEL):
             raise Exception(f"Invalid MLflow model. {MLMODEL} file not present, under {MLFLOW_MODEL}")
-        shutil.copytree(src=model_path / MLFLOW_MODEL, dst=model_path, dirs_exist_ok=True)
-        shutil.rmtree(path=model_path / MLFLOW_MODEL)
+        shutil.copytree(src=model_path / MLFLOW_MODEL, dst=mlflow_model_folder, dirs_exist_ok=True)
         return True
 
     if os.path.exists(model_path / MLFLOW_MODEL_FOLDER):
         if not os.path.exists(model_path / MLFLOW_MODEL_FOLDER / MLMODEL):
             raise Exception(f"Invalid MLflow model. {MLMODEL} file not present, under {MLFLOW_MODEL_FOLDER}")
-        shutil.copytree(src=model_path / MLFLOW_MODEL_FOLDER, dst=model_path, dirs_exist_ok=True)
-        shutil.rmtree(path=model_path / MLFLOW_MODEL_FOLDER)
+        shutil.copytree(src=model_path / MLFLOW_MODEL_FOLDER, dst=mlflow_model_folder, dirs_exist_ok=True)
         return True
 
     return False
@@ -123,6 +122,7 @@ def run():
     model_id = args.model_id
     model_download_metadata_path = args.model_download_metadata
     model_output_dir = args.model_output_dir
+    mlflow_model_output_dir = args.mlflow_model_output_dir
     update_existing_model = args.update_existing_model.lower()
     is_mlflow_model_conditional_output = args.is_mlflow_model
 
@@ -141,7 +141,7 @@ def run():
         model_source=model_source, model_id=model_id, download_dir=model_output_dir
     )
 
-    is_mlflow_model = check_and_prepare_mlflow_model(Path(model_output_dir))
+    is_mlflow_model = check_and_prepare_mlflow_model(Path(model_output_dir), Path(mlflow_model_output_dir))
     conditional_params = {is_mlflow_model_conditional_output: is_mlflow_model}
     update_run_for_conditional_output(conditional_params)
     logger.info("Updated condition params")
