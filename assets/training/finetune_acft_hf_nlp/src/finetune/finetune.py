@@ -23,6 +23,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     HfModelTypes,
     MLFlowHFFlavourConstants,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+    SUPPORTED_FLAVORS,
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
@@ -66,29 +67,41 @@ add_run_properties(RUN_PROPERTIES)
 # mlflow model task based signature for inference
 MLFLOW_MODEL_SIGNATURES = {
     Tasks.SINGLE_LABEL_CLASSIFICATION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
     Tasks.MULTI_LABEL_CLASSIFICATION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
     Tasks.NAMED_ENTITY_RECOGNITION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
     Tasks.QUESTION_ANSWERING: {
-        "inputs": '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]',
+        "inputs": '[{"type": "string"}, {"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
     Tasks.SUMMARIZATION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
     Tasks.TRANSLATION: {
-        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
+}
+
+MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR = {
+    SUPPORTED_FLAVORS.TRANSFORMERS : {
+        Tasks.SINGLE_LABEL_CLASSIFICATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+        "params": '[{"name": "return_all_scores", "dtype" : "boolean", "default" : true, "shape" : null}]',
+        },
+    },
+    SUPPORTED_FLAVORS.HFTRANSFORMERS : MLFLOW_MODEL_SIGNATURES,
+    SUPPORTED_FLAVORS.HFTRANSFORMERSV2 : MLFLOW_MODEL_SIGNATURES,
 }
 
 IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
@@ -771,22 +784,6 @@ def finetune(args: Namespace):
         "mlflow_hftransformers_misc_conf": {},
     }
 
-    # set task based mlflow_model_signature
-    if getattr(args, "task_name", None) is not None and args.task_name in MLFLOW_MODEL_SIGNATURES:
-        mlflow_ft_conf["mlflow_model_signature"] = deep_update(
-            mlflow_ft_conf["mlflow_model_signature"],
-            MLFLOW_MODEL_SIGNATURES[args.task_name],
-        )
-        logger.info(
-                    f"Adding mlflow model signature for task {args.task_name} - "
-                    f"{MLFLOW_MODEL_SIGNATURES[args.task_name]}"
-                )
-
-    # remove mlflow_model_signature if empty
-    if "mlflow_model_signature" in mlflow_ft_conf \
-            and len(mlflow_ft_conf["mlflow_model_signature"]) == 0:
-        del mlflow_ft_conf["mlflow_model_signature"]
-
     model_name_or_type = None
     # pass `mlflow_hftransformers_misc_conf` to be set in mlflow model
     if hasattr(args, "model_name") and args.model_name in MLFLOW_HFTRANSFORMERS_MISC_CONF:
@@ -805,6 +802,7 @@ def finetune(args: Namespace):
         )
 
     # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
+    flavor = None
     mlflow_config_file = Path(args.model_selector_output, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
     if mlflow_config_file.is_file():
         import yaml
@@ -822,6 +820,13 @@ def finetune(args: Namespace):
                 mlflow_ft_conf["mlflow_hftransformers_misc_conf"],
                 mlflow_hftransformers_misc_conf,
             )
+
+            # fetch flavor
+            for flvr in mlflow_data["flavors"].keys():
+                if flvr in [SUPPORTED_FLAVORS.HFTRANSFORMERS, SUPPORTED_FLAVORS.HFTRANSFORMERSV2, SUPPORTED_FLAVORS.TRANSFORMERS]:
+                    flavor = flvr
+                    break
+
             logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
         else:
             logger.info("MLmodel file is empty")
@@ -829,6 +834,23 @@ def finetune(args: Namespace):
         logger.info("MLmodel file does not exist")
 
     logger.info(f"FT MLFlow config - {mlflow_ft_conf}")
+
+    # set task based mlflow_model_signature
+    if getattr(args, "task_name", None) is not None:
+        if flavor is not None and flavor in args.task_name in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR.keys():
+            mlflow_ft_conf["mlflow_model_signature"] = deep_update(
+                mlflow_ft_conf["mlflow_model_signature"],
+                MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[flavor][args.task_name],
+            )
+            logger.info(
+                        f"Adding mlflow model signature for task {args.task_name} - "
+                        f"{MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[flavor][args.task_name]}"
+                    )
+
+    # remove mlflow_model_signature if empty
+    if "mlflow_model_signature" in mlflow_ft_conf \
+            and len(mlflow_ft_conf["mlflow_model_signature"]) == 0:
+        del(mlflow_ft_conf["mlflow_model_signature"])
 
     mlflow_ft_conf = deep_update(mlflow_ft_conf, args.finetune_config.get("mlflow_ft_conf", {}))
     args.finetune_config["mlflow_ft_conf"] = deepcopy(mlflow_ft_conf)
@@ -888,6 +910,31 @@ def finetune(args: Namespace):
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
+
+    # remove unwanted packages from requirements.txt
+    unwanted_packages = ["apex==0.1"]
+    _remove_unwanted_packages(vars(args)['mlflow_model_folder'], unwanted_packages)
+
+
+def _remove_unwanted_packages(model_save_path: str, unwanted_packages: list):
+    import os
+    req_file_path= os.path.join(model_save_path, 'requirements.txt')
+    conda_file_path = os.path.join(model_save_path, 'conda.yaml')
+    packages = None
+    with open(str(req_file_path), 'r') as f:
+        all_packages = f.read().split("\n")
+        packages = [item for item in all_packages if item not in unwanted_packages]
+
+    with open(str(req_file_path), 'w') as f:
+        f.write('\n'.join(str(package) for package in packages))
+
+    with open(str(conda_file_path), 'r') as f:
+        all_packages = f.read().split("\n")
+        unwanted_conda_pip_packages = ['  - '+ package for package in unwanted_packages]
+        packages = [item for item in all_packages if item not in unwanted_conda_pip_packages]
+
+    with open(str(conda_file_path), 'w') as f:
+        f.write('\n'.join(str(package) for package in packages))
 
 
 def can_apply_ort(args: Namespace, logger):
