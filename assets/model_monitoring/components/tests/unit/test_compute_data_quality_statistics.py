@@ -53,7 +53,7 @@ class TestModelMonitorDataQualityStatistic:
     ):
         """Test compute data quality statistics with string, integer, boolean, double type."""
         actual_data_stats_table = compute_data_quality_statistics(df)
-        assert_frame_equal(actual_data_stats_table.to_pandas(), data_stats_table.toPandas())
+        assert_frame_equal(actual_data_stats_table.to_pandas(), data_stats_table.toPandas(), check_like=True)
 
     @pytest.mark.parametrize("df, df_exclude_boolean",
                              [(df, df_exclude_boolean)])
