@@ -29,16 +29,21 @@ Standard_NC24s_v3 | 1.08 | 34.9
 ### Sample inputs and outputs (for real-time inference)
 
 ```json
+#### Sample output
+```json
 {
     "input_data": {
-        "input_string": ["Explain to me the difference between nuclear fission and fusion."]
+        "input_string": [
+            "My name is John and I am",
+            "Once upon a time,"
+        ]
     }
    "parameters": {
-            "top_p": 0.9,
-            "temperature": 0.2,
-            "do_sample": true,
-            "max_new_tokens": 200
-        }
+        "top_p": 0.9,
+        "temperature": 0.2,
+        "do_sample": true,
+        "max_new_tokens": 200
+    }
 }
 ```
 
