@@ -44,15 +44,6 @@ Standard_NC24s_v3 | 1.08 | 34.9
 
 #### Sample output
 ```json
-{
-    "input_data": {
-        "input_string": ["My name is John and I am", "Once upon a time,"]
-    }
-}
-```
-
-#### Sample output
-```json
 [
     {
         "0": "My name is John and I am a student at UC Berkeley. It is my main interest to do research in the humanities. I am going to share"
