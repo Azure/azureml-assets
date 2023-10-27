@@ -28,7 +28,6 @@ Standard_NC24s_v3 | 1.08 | 34.9
 
 ### Sample inputs and outputs (for real-time inference)
 
-```json
 #### Sample output
 ```json
 {
