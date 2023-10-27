@@ -8,7 +8,8 @@ from PIL import Image
 import pandas as pd
 import tempfile
 
-from transformers import AutoProcessor, BlipForConditionalGeneration, Blip2ForConditionalGeneration
+from transformers import (AutoProcessor, BlipForConditionalGeneration,
+                          BlipForQuestionAnswering, Blip2ForConditionalGeneration)
 from config import MLflowSchemaLiterals, MLflowLiterals, Tasks, HfBlipModelId
 from typing import List
 
@@ -48,19 +49,23 @@ class BLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        if self._task_type == (Tasks.IMAGE_TO_TEXT.value):
+        if self._task_type in [Tasks.IMAGE_TO_TEXT.value, Tasks.VISUAL_QUESTION_ANSWERING.value]:
             try:
                 model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
                 self._processor = AutoProcessor.from_pretrained(model_dir)
-                print(self._model_id)
+
                 if self._model_id == HfBlipModelId.BLIP_IMAGE_TO_TEXT.value:
                     self._model = BlipForConditionalGeneration.from_pretrained(
                         model_dir)
-                elif self._model_id == HfBlipModelId.BLIP2_IMAGE_TO_TEXT.value:
+                elif self._model_id == HfBlipModelId.BLIP_VQA.value:
+                    self._model = BlipForQuestionAnswering.from_pretrained(
+                        model_dir)
+                elif self._model_id in [HfBlipModelId.BLIP2.value]:
                     self._model = Blip2ForConditionalGeneration.from_pretrained(
                         model_dir)
                 else:
                     raise ValueError(f"invalid model id {self._model_id}")
+
                 self._device = get_current_device()
                 self._model.to(self._device)
 
@@ -95,9 +100,17 @@ class BLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
                 .tolist()
             )
 
-            generated_text_list = self.run_inference_batch(
-                image_path_list=image_path_list,
-            )
+            if self._task_type == Tasks.IMAGE_TO_TEXT.value:
+                generated_text_list = self.run_inference_batch(
+                    image_path_list=image_path_list,
+                )
+            elif self._task_type == Tasks.VISUAL_QUESTION_ANSWERING.value:
+                generated_text_list = self.run_inference_batch(
+                    image_path_list=image_path_list,
+                    question_list=input_data["text"].tolist()
+                )
+            else:
+                raise ValueError(f"invalid task type {self._task_type}")
 
         df_result = pd.DataFrame(
             columns=[
@@ -111,19 +124,31 @@ class BLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
 
     def run_inference_batch(
         self,
-        image_path_list: List
+        image_path_list: List,
+        question_list: List = None
     ) -> List[str]:
         """Perform inference on batch of input images.
 
         :param image_path_list: list of image paths for inferencing.
         :type image_path_list: List
+        :param question_list: list of questions for VQA Task. This is ignored for Image-To-Text task type.
+        :type question_list: List
         :return: List of generated texts
         :rtype: List of strings
         """
         image_list = [Image.open(img_path) for img_path in image_path_list]
 
-        inputs = self._processor(images=image_list,
-                                 return_tensors="pt").to(self._device)
+        if self._task_type == Tasks.IMAGE_TO_TEXT.value:
+            inputs = self._processor(images=image_list,
+                                     return_tensors="pt").to(self._device)
+        elif self._task_type == Tasks.VISUAL_QUESTION_ANSWERING.value:
+            inputs = self._processor(images=image_list,
+                                     text=question_list,
+                                     padding=True,
+                                     return_tensors="pt").to(self._device)
+        else:
+            raise ValueError(f"invalid task type {self._task_type}")
+
         generated_ids = self._model.generate(**inputs)
         generated_text_list = self._processor.batch_decode(generated_ids, skip_special_tokens=True)
 
