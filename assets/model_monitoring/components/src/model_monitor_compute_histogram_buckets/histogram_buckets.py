@@ -5,7 +5,7 @@
 
 
 import pyspark.sql as pyspark_sql
-from shared_utilities.df_utils import get_numerical_columns
+from shared_utilities.df_utils import get_numerical_cols_with_df
 from shared_utilities.histogram_utils import get_dual_histogram_bin_edges
 from shared_utilities.df_utils import get_common_columns
 from pyspark.sql.types import (
@@ -23,8 +23,10 @@ def compute_numerical_bins(
     """Compute numerical bins given two data frames."""
     # Generate histograms only for columns in both baseline and target dataset
     common_columns_dict = get_common_columns(df1, df2)
-    numerical_columns = get_numerical_columns(common_columns_dict)
-
+    print(common_columns_dict)
+    numerical_columns = get_numerical_cols_with_df(common_columns_dict, df1)
+    print("numerical_columns")
+    print(numerical_columns)
     # Numerical column histogram generation
     baseline_count = df1.count()
     production_count = df2.count()
@@ -32,7 +34,7 @@ def compute_numerical_bins(
     bin_edges = get_dual_histogram_bin_edges(
         df1, df2, baseline_count, production_count, numerical_columns
     )
-
+    print("bin_edges")
     return bin_edges
 
 
@@ -40,6 +42,7 @@ def compute_histogram_buckets(
     df1: pyspark_sql.DataFrame, df2: pyspark_sql.DataFrame
 ) -> pyspark_sql.DataFrame:
     """Compute histogram buckets."""
+    print("compute numerical bins")
     # Generate histograms only for columns in both baseline and target dataset
     spark = init_spark()
     schema = StructType(
@@ -56,11 +59,12 @@ def compute_histogram_buckets(
     for feature in bin_edges:
         print(bin_edges[feature])
         for i in range(len(bin_edges[feature])):
+            print(type(bin_edges[feature][i]))
             data.append(
                 {
                     "feature_name": feature,
                     "data_type": "Numerical",
-                    "bucket": bin_edges[feature][i],
+                    "bucket": float(bin_edges[feature][i]),
                 }
             )
     return spark.createDataFrame(data=data, schema=schema)

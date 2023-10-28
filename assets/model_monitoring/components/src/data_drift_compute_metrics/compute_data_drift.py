@@ -11,8 +11,8 @@ from categorical_data_drift_metrics import compute_categorical_data_drift_measur
 from io_utils import get_output_spark_df
 from shared_utilities.df_utils import (
     get_common_columns,
-    get_numerical_columns,
-    get_categorical_columns,
+    get_numerical_cols_with_df,
+    get_categorical_cols_with_df,
 )
 
 
@@ -26,10 +26,11 @@ def compute_data_drift_measures_tests(
 ):
     """Compute Data drift metrics and tests."""
     common_columns_dict = get_common_columns(baseline_df, production_df)
-    print(common_columns_dict)
-    numerical_columns_names = get_numerical_columns(common_columns_dict, baseline_df)
-    categorical_columns_names = get_categorical_columns(common_columns_dict, baseline_df)
-
+    numerical_columns_names = get_numerical_cols_with_df(common_columns_dict,
+                                                         baseline_df)
+    categorical_columns_names = get_categorical_cols_with_df(
+        common_columns_dict,
+        baseline_df)
     baseline_df = baseline_df.dropna()
     production_df = production_df.dropna()
 
@@ -63,10 +64,14 @@ def compute_data_drift_measures_tests(
             categorical_columns_names,
             categorical_threshold,
         )
-
+        print(categorical_df)
     # TODO: fix this if, else
     if len(numerical_columns_names) != 0 and len(categorical_columns_names) != 0:
-        output_df = numerical_df.union(categorical_df)
+        if categorical_df is not None:
+            output_df = numerical_df.union(categorical_df)
+        else:
+            print("categorical_df is none")
+            output_df = numerical_df
     elif len(numerical_columns_names) != 0:
         output_df = numerical_df
     else:
