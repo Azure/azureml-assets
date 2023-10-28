@@ -160,9 +160,10 @@ def _get_data_columns(df: DataFrame) -> list:
 
 def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool, datastore: str) -> DataFrame:
     """
-    If data column exists, return the json contents in it,
+    If data column exists, return the json contents in it.
     otherwise, return the dataref content which is a url to the json file.
     """
+
     def read_data(row):
         data = getattr(row, MDC_DATA_COLUMN, None)
         if data:
