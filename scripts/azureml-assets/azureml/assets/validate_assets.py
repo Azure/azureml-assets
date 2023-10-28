@@ -408,13 +408,13 @@ def get_validated_models_assets_map(model_validation_results_dir: str):
     """Return model assets map."""
     try:
         if not model_validation_results_dir:
-            logger.log_error(
-                "Unexpected. model_validation_results_dir is None. All models assets will fail in validation"
+            logger.log_warning(
+                "Unexpected !!! model_validation_results_dir is None. Model assets might fail in validation."
             )
             return {}
 
         validated_model_assets: List[assets.AssetConfig] = util.find_assets(
-            input_dirs=[model_validation_results_dir],
+            input_dirs=[Path(model_validation_results_dir)],
             asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
             types=[assets.config.AssetType.MODEL]
         )
@@ -481,7 +481,8 @@ def validate_assets(input_dirs: List[Path],
         # Populate dictionary of asset names to asset config paths
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
-        if asset_config.type == assets.AssetType.MODEL:
+        # validated_model_map would be ampty for non-drop scenario
+        if validated_model_map and asset_config.type == assets.AssetType.MODEL:
             error_count += validate_model_assets(asset_config, validated_model_map.get(asset_config.name, None))
 
         # Populate dictionary of image names to asset config paths

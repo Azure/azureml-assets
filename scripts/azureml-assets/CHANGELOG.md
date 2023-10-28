@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.14
+### 🐛 Bugs Fixed
+- [#1574](https://github.com/Azure/azureml-assets/pull/1574) Fix fetching validated model assets
+
 ## 1.16.13
 ### 🚀 New Features
 - [#1569](https://github.com/Azure/azureml-assets/pull/1569) Add model validations
