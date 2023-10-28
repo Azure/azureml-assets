@@ -1,4 +1,25 @@
-Roberta-base is a fine-tuned language model for extractive Question Answering in English, trained on the SQuAD2.0 dataset. It is based on the "roberta-base" model, developed by deepset and can be used with Haystack and Transformers. The model requires 4 Tesla v100s and has a batch size of 96, 2 epochs, and a learning rate of 3e-5. The model was evaluated on the SQuAD 2.0 dev set and achieved an exact match of 79.87 and an F1 score of 82.91. There is also a distilled version of this model available called "deepset/tinyroberta-squad2" which has a comparable prediction quality and runs twice as fast. Usage examples for the model are provided for Haystack and Transformers. The authors of the model are Branden Chan, Timo Möller, Malte Pietsch, and Tanay Soni from deepset.ai.
+The "deepset/roberta-base-squad2" model is a version of the RoBERTa model tailored for answering questions using the SQuAD 2.0 dataset. RoBERTa is a strong transformer-based model for natural language processing tasks. This variant has been fine-tuned to excel in answering questions based on provided context from the SQuAD 2.0 dataset. It's designed to provide accurate answers to questions and is useful for question-answering applications.
+
+### Overview
+Language model: roberta-base
+Language: English
+Downstream-task: Extractive QA
+Training data: SQuAD 2.0
+Eval data: SQuAD 2.0
+Code: See an example QA pipeline on Haystack
+Infrastructure: 4x Tesla v100
+
+### Hyperparameters
+batch_size = 96
+n_epochs = 2
+base_LM_model = "roberta-base"
+max_seq_len = 386
+learning_rate = 3e-5
+lr_schedule = LinearWarmup
+warmup_proportion = 0.2
+doc_stride=128
+max_query_length=64
+
 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/deepset/roberta-base-squad2" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
@@ -19,6 +40,26 @@ Token Classification|Named Entity Recognition|<a href="https://huggingface.co/da
 Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
 
 
+
+#### Performance
+Evaluated on the SQuAD 2.0 dev set with the official eval script.
+
+"exact": 79.87029394424324,
+"f1": 82.91251169582613,
+
+"total": 11873,
+"HasAns_exact": 77.93522267206478,
+"HasAns_f1": 84.02838248389763,
+"HasAns_total": 5928,
+"NoAns_exact": 81.79983179142137,
+"NoAns_f1": 81.79983179142137,
+"NoAns_total": 5945
+
+### Authors
+Branden Chan: branden.chan@deepset.ai
+Timo Möller: timo.moeller@deepset.ai
+Malte Pietsch: malte.pietsch@deepset.ai
+Tanay Soni: tanay.soni@deepset.ai
 ### Model Evaluation
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
