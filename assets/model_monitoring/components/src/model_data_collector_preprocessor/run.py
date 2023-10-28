@@ -242,8 +242,8 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
     print("MLTable:", table)
 
     df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs)
-    print("df after converting mltable to spark df:")
-    df.show()
+    # print("df after converting mltable to spark df:")
+    # df.show()
 
     if not df:
         print("Skipping the Model Data Collector preprocessor.")
@@ -254,7 +254,7 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
         return
 
     datastore = _get_datastore_from_input_path(input_data)
-    print("Datastore:", datastore)
+    # print("Datastore:", datastore)
     transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id, datastore)
 
     return transformed_df
