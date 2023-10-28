@@ -137,7 +137,8 @@ class TestMDCPreprocessor:
     )
     def test_convert_to_azureml_long_form(self, url_str: str, converted: bool):
         """Test convert_to_azureml_long_form()."""
-        converted_path = _convert_to_azureml_long_form(url_str, "my_datastore", "my_sub_id", "my_rg_name", "my_ws_name")
+        converted_path = _convert_to_azureml_long_form(url_str, "my_datastore", "my_sub_id",
+                                                       "my_rg_name", "my_ws_name")
         azureml_long = "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name" \
             "/datastores/my_datastore/paths/path/to/file"
         expected_path = azureml_long if converted else url_str
