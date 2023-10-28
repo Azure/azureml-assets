@@ -1,6 +1,18 @@
-BERT is a pre-trained language model created by the Hugging Face team that uses masked language modeling (MLM) on a large corpus of English data. Its primary uses are for sequence classification and question answering, and it is not intended for text generation. It is important to note that this particular BERT model is cased, making a distinction between 'english' and 'English'. The model can be fine-tuned for downstream tasks, and it is described as having 24 layers, 1024 hidden dimensions, 16 attention heads, and 336M parameters. It's most effective on use cases that involve using the entire sentence to make decisions, whereas tasks such as text-generations, you should use GPT2.
+BERT-Large-Cased is a variant of the BERT (Bidirectional Encoder Representations from Transformers) model, developed by Google. Unlike the "bert-base-uncased" version, "bert-large-cased" uses a larger architecture with more parameters, making it more powerful but also computationally more intensive. The "cased" tokenization means that the model retains the original case of the text during preprocessing.
+
+BERT-Large-Cased is particularly well-suited for complex natural language processing tasks that require a deeper understanding of context and semantics. It provides even better performance and higher accuracy compared to "bert-base-uncased" but may require more computational resources for training and inference.
+
+Due to its larger size and increased computational requirements, BERT-Large-Cased is often used in scenarios where high-quality language representations are crucial and the computational cost can be justified. It is commonly employed in research, large-scale language understanding tasks, and applications demanding advanced NLP capabilities.
 <br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/bert-large-cased" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
+BERT-Large, Cased (Whole Word Masking): 24-layer, 1024-hidden, 16-heads, 340M parameters
+
+|      Model                             | SQUAD 1.1 F1/EM  | Multi NLI Accuracy  |
+|----------------------------------------|------------------|---------------------|
+|BERT-Large, Cased (Original)            |   91.5/84.8      |  86.09              |
+|BERT-Large, Cased (Whole Word Masking)  |   92.9/86.7      | 86.46               |
+
 
 ### Inference samples
 
