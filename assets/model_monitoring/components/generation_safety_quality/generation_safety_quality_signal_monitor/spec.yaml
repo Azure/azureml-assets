@@ -4,7 +4,7 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.4.4
+version: 0.4.5
 is_deterministic: true
 inputs:
   monitor_name:
