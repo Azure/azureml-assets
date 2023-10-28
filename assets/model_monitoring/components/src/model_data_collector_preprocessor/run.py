@@ -242,7 +242,7 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
     end_datetime = parser.parse(data_window_end)
 
     table = _raw_mdc_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
-    print("MLTable:", table)
+    # print("MLTable:", table)
 
     df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs)
     # print("df after converting mltable to spark df:")
