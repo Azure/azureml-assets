@@ -180,7 +180,7 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.3
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.4
     inputs:
       signal_metrics:
         type: mltable
