@@ -28,10 +28,12 @@ import pytest
 
 
 df = [
-        ("string1", 2, True,  4.67, 4, "2023-10-01 00:00:01", 100, bytearray([10, 50]), 3.549999952316284, 4, "char"),
+        ("string1", 2, True,  4.67, 4, "2023-10-01 00:00:01", 100, bytearray([10, 50]), 3.549999952316284,
+         4, "char"),
         ("string1", 3, False, 90.1, 5, "2023-10-01 00:00:02", 200, bytearray([10, 50]), 3.55, 6, "char"),
         ("string1", 4, True,  2.8987, -1, "2023-10-01 00:00:03", 300, bytearray([10, 50]), 45.6, 7, "char"),
-        ("string1", 5, False, 3.454, -2, "2023-10-01 00:00:04", 400, bytearray([10, 50]),  56.70000076293945, 9, "char"),
+        ("string1", 5, False, 3.454, -2, "2023-10-01 00:00:04", 400, bytearray([10, 50]),  56.70000076293945,
+         9, "char"),
         ]
 schema = StructType([
     StructField("feature_string", StringType(), True),
@@ -100,6 +102,8 @@ class TestModelMonitorDataQualityStatistic:
     ):
         """Test compute data quality statistics with string, integer, boolean, double type."""
         actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp)
+        assert data_stats_table.count() == actual_data_stats_table.to_spark().count()
+        assert sorted(data_stats_table.collect()) == sorted(actual_data_stats_table.collect())
         assert_pyspark_df_equal(data_stats_table, actual_data_stats_table.to_spark())
 
     @pytest.mark.parametrize("df_with_timestamp, df_for_max_min_value",

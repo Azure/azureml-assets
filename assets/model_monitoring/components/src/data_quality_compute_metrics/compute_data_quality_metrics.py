@@ -556,7 +556,7 @@ def compute_data_quality_metrics(df, data_stats_table):
             col("metricName") != "RowCount", concat(col("metricName"), lit("Rate"))
         ).otherwise(col("metricName")),
     )
-    violation_df_remapped.show(40, False)
+
     # MOVE ROW COUNT "metricValue" TO THE RIGHT COLUMN AND SET VIOLATION COUNT TO 0
     violation_df_remapped = violation_df_remapped.withColumn(
         "metricValue",
@@ -567,5 +567,5 @@ def compute_data_quality_metrics(df, data_stats_table):
         "violationCount",
         when(col("metricName") == "RowCount", 0).otherwise(col("violationCount")),
     )
-    violation_df_remapped.show(40, False)
+
     return violation_df_remapped
