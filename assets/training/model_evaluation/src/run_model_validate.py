@@ -9,7 +9,7 @@ from utils import ArgumentParser
 def run():
     """Entry function of model validation script."""
     parser = ArgumentParser()
-    parser.add_argument("--validation-info", required=True, help="Model source ")
+    parser.add_argument("--validation-info", required=True, help="Model source")
 
     args, _ = parser.parse_known_args()
 
@@ -18,5 +18,5 @@ def run():
         f.write("Validation info")
 
 
-if __name__ in "__main__":
+if __name__ == "__main__":
     run()

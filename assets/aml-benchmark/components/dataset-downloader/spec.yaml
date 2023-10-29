@@ -13,7 +13,9 @@ inputs:
     optional: True
   configuration:
     type: string
-    description: If a specific sub-dataset of the dataset to download, specify the configuration name; specify 'all' to download all configurations. Else, leave it null.
+    description: >-
+      If a specific sub-dataset of the dataset to download, specify the configuration name; specify 'all' to download all 
+      configurations; specify comma-separated values to download multiple configurations (Ex: config1,config2). Else, leave it null.
     optional: True
   split:
     type: string

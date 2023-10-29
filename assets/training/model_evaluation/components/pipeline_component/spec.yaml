@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: model_evaluation_pipeline
-version: 0.0.15
+version: 0.0.17
 type: pipeline
 display_name: Model Evaluation Pipeline
 description: Pipeline component for model evaluation for supported tasks. \
@@ -36,6 +36,7 @@ inputs:
       fill-mask,
       image-classification,
       image-classification-multilabel,
+      chat-completion,
       image-object-detection,
       image-instance-segmentation,
     ]
@@ -55,13 +56,6 @@ inputs:
     type: string
     optional: true
     description: "Input column names in provided test dataset (Ex : column1). Add comma delimited values in case of multiple input columns (Ex : column1,column2)"
-  model_uri:
-    type: string
-    optional: true
-    description: "[DEPRECATED] The location, in URI format, of the Mlflow model, for example:
-                      - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
-                      - ``models:/<model_name>/<model_version>``
-                      - ``models:/<model_name>/<stage>``"
   device:
     type: string
     optional: false
@@ -89,7 +83,7 @@ outputs:
 jobs:
   validation_trigger_model_evaluation:
     type: command
-    component: azureml:validation_trigger_model_evaluation:0.0.2
+    component: azureml:validation_trigger_model_evaluation:0.0.16
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -102,13 +96,13 @@ jobs:
       label_column_name: '${{parent.inputs.label_column_name}}'
       input_column_names: '${{parent.inputs.input_column_names}}'
       device: '${{parent.inputs.device}}'
-      batch_size: '${{parent.inputs.batch_size}}'
+#      batch_size: '${{parent.inputs.batch_size}}'
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
 
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.15
+    component: azureml:model_prediction:0.0.16
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -118,8 +112,7 @@ jobs:
       mlflow_model: '${{parent.inputs.mlflow_model}}'
       label_column_name: '${{parent.inputs.label_column_name}}'
       input_column_names: '${{parent.inputs.input_column_names}}'
-      model_uri: '${{parent.inputs.model_uri}}'
-      device: '${{parent.inputs.device}}' 
+      device: '${{parent.inputs.device}}'
       batch_size: '${{parent.inputs.batch_size}}'
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
@@ -127,7 +120,7 @@ jobs:
   
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.15
+    component: azureml:compute_metrics:0.0.16
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

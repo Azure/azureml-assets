@@ -71,18 +71,6 @@ class SupportedNLPTasks(_CustomEnum):
     TRANSLATION = "translation"
 
 
-class SupportedDiffusersTask(_CustomEnum):
-    """Supported diffusers task."""
-
-    TEXT_TO_IMAGE = "text-to-image"
-
-
-class SupportedTextToImageModelFamily(_CustomEnum):
-    """Supported text to image models."""
-
-    STABLE_DIFFUSION = "stable-diffusion"
-
-
 class SupportedASRModelFamily(_CustomEnum):
     """Supported text to image models."""
 

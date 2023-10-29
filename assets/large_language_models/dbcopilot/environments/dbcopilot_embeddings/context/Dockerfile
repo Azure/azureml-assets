@@ -28,8 +28,11 @@ RUN /bin/bash -c "source ~/.bashrc"
 COPY ./extra_requirements.txt ./
 RUN pip install -r extra_requirements.txt
 
+## Install dbcopilot
+RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.9-py3-none-any.whl
+
 # fix for https://portal.microsofticm.com/imp/v3/incidents/incident/418102604/summary
-RUN pip install cryptography==41.0.3
+RUN pip install cryptography==41.0.4
 RUN pip install langchain==0.0.236
 
 RUN set -eux; \

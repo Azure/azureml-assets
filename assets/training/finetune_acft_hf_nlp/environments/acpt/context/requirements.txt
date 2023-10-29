@@ -5,9 +5,9 @@ mltable=={{latest-pypi-version}}
 datasets==2.12.0
 mpi4py==3.1.4
 sentencepiece==0.1.99
-transformers==4.33.2
+transformers==4.34.0
 optimum==1.11.0
-accelerate==0.21.0
+accelerate==0.23.0
 diffusers==0.18.0
 onnxruntime-training==1.15.1
 rouge-score==0.1.2

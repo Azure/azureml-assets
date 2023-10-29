@@ -48,12 +48,18 @@ Code Llama and its variants are a new technology that carries risks with use. Te
 
 Please see the Responsible Use Guide available at [https://ai.meta.com/llama/responsible-use-guide/](https://ai.meta.com/llama/responsible-use-guide)
 
+# Model Evaluation samples
 
-## **Inference samples**
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+
+
+# **Inference samples**
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 
@@ -62,15 +68,13 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ### **Sample input**
 ```json
 {
-  "input_data": {
-      "input_string": ["I believe the meaning of life is"],
-      "parameters":{   
-              "top_p": 0.9,
-              "temperature": 0.6,
-              "max_gen_len": 96,
-              "do_sample": true
-      }
-  }
+    "input_data": {
+        "input_string": ["Develop a Python function to sort a list of integers in ascending order"], 
+        "parameters": { 
+            "return_full_text": false,
+            "do_sample":true
+        }
+    }
 }
 ```
 
@@ -78,7 +82,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 [
     {
-        "0": "I believe the meaning of life is to learn to love.\\nI believe in a world of compassion, a world where love rules.\\nI believe in a world where people care for one another.\\nI believe in a world where people help each other.\\nI believe in a world where people are kind to each other.\\nI believe in a world where people are happy.\\nI believe in a world where people are peaceful.\\nI believe in a world where people are loving."
+        "0": "def sort_integers(int_list):\n    \"\"\"This function takes an a list of integers and sorts it in ascending order using build in `sorted` function which returns\n    a new sorted list.\n\n    Args:\n        int_list (list): list of integers to be sorted.\n    Returns:\n        \"list\": sorted list\n\n    \"\"\"\n    return sorted(int_list)\nlst = [3, 7, -4, 2, 1]\nlst1 = [15, 2, 1, 8, 4, 3]\nprint(\"unsorted list\", lst)\nprint(\"sorted list\", sort_integers(lst))\nprint(\"sorted list\", sort_integers(lst1))\n"
     }
 ]
 ```

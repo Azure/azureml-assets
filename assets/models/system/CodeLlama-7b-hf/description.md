@@ -68,6 +68,20 @@ Code Llama and its variants are a new technology that carries risks with use. Te
 
 Please see the Responsible Use Guide available available at [https://ai.meta.com/llama/responsible-user-guide](https://ai.meta.com/llama/responsible-user-guide).
 
+# Finetuning samples
+
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+
+
+# Model Evaluation Sample
+
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+
+
 # Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML

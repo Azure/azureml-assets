@@ -1,16 +1,16 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-name: endpoint_batch_inference
-display_name: Endpoint Batch Inference
+name: batch_benchmark_inference
+display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.1
+version: 0.0.2
 
 inputs:
   input_dataset:
     type: uri_folder
-    description: Input jsonl dataset that contains prompt.
-    optional: False
+    description: Input jsonl dataset that contains prompt.  For the performance test, this one will be neglected.
+    optional: True
   batch_input_pattern:
     type: string
     description: >- 
@@ -18,7 +18,8 @@ inputs:
       for the key for the value put in the `###<key>`. For example, one can use the following format for
       a llama text-gen model with a input dataset has `prompt` for the payload
       and `_batch_request_metadata` storing the corresponding ground truth.
-      {"input_data": 
+      {
+        "input_data":
         {
           "input_string": ["###<prompt>"],
           "parameters":
@@ -30,10 +31,56 @@ inputs:
         },
         "_batch_request_metadata": ###<_batch_request_metadata>
       }
+
+      For AOAI model, the following pattern can be used,
+      {
+          "messages":
+          [
+            {"role": "user", "content": "###<prompt>" } ],
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "frequency_penalty": 0,
+            "presence_penalty": 0,
+            "max_tokens": 800,
+            "stop": null
+      }
     optional: False
-  online_endpoint_url:
+  endpoint_url:
     type: string
     optional: False
+    description: The endpointurl.
+  is_performance_test:
+    type: boolean
+    default: False
+    description: If true, the performance test will be run and the input dataset will be neglected.
+  deployment_name:
+    type: string
+    optional: True
+    description: The deployment name. Only needed for managed OSS deployment.
+  connections_name:
+    type: string
+    optional: False
+    description: Connections name for the endpoint.
+  label_column_name:
+    type: string
+    optional: True
+    description: The label column name.
+  n_samples:
+    type: integer
+    description: The number of top samples send to endpoint. When performance test is enabled, this will be the number of repeated samples send to the endpoint.
+    optional: True
+  handle_response_failure:
+    type: string
+    optional: False
+    description: The way that the formatter handles the failed response.
+    enum:
+      - use_fallback
+      - neglect
+    default: use_fallback
+  fallback_value:
+    description: The fallback value that can be used when request payload failed. If not provided, the fallback value will be an empty string.
+    type: string
+    optional: True
   additional_headers:
     type: string
     optional: True
@@ -51,6 +98,7 @@ inputs:
     type: integer
     optional: False
     default: 5
+    description: The initial number of workers to use for scoring.
   max_worker_count:
     type: integer
     optional: False
@@ -64,31 +112,19 @@ inputs:
     type: integer
     default: 1
     description: Number of processes that will be run concurrently on any given node. This number should not be larger than 1/2 of the number of cores in an individual node in the specified cluster.
-  metadata_key:
-    type: string
-    optional: True
-    description: The metadata key that in the request payload that contains label columns. If not provided, the `request_metadata` will be used in the batch benchmark score output to retrieve ground truth.
-  label_key:
-    type: string
-    optional: False
-    description: The label column key.
   debug_mode:
     type: boolean
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
-  n_samples:
-    type: integer
-    description: The number of top samples send to endpoint.
-    optional: True
 outputs:
-  prediction_data:
+  predictions:
     type: uri_file
     description: The prediction data.
-  perf_data:
+  performance_metadata:
     type: uri_file
     description: The performance data.
-  ground_truth_data:
+  ground_truth:
     type: uri_file
     description: The ground truth data that has a one-to-one mapping with the prediction data.
 
@@ -100,16 +136,23 @@ jobs:
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
+      is_performance_test: ${{parent.inputs.is_performance_test}}
       n_samples: ${{parent.inputs.n_samples}}
+      endpoint_url: ${{parent.inputs.endpoint_url}}
+      label_column_name: ${{parent.inputs.label_column_name}}
     outputs:
       formatted_data:
         type: mltable
+      ground_truth_metadata:
+        type: uri_folder
   # Inference
-  real_point_batch_score: 
+  endpoint_batch_score:
     type: parallel
     component: azureml:batch_benchmark_score:0.0.1
     inputs:
-      online_endpoint_url: ${{parent.inputs.online_endpoint_url}}
+      online_endpoint_url: ${{parent.inputs.endpoint_url}}
+      deployment_name: ${{parent.inputs.deployment_name}}
+      connections_name: ${{parent.inputs.connections_name}}
       debug_mode: ${{parent.inputs.debug_mode}}
       additional_headers: ${{parent.inputs.additional_headers}}
       ensure_ascii: ${{parent.inputs.ensure_ascii}}
@@ -127,7 +170,7 @@ jobs:
     resources:
       instance_count: ${{parent.inputs.instance_count}}
     max_concurrency_per_instance:  ${{parent.inputs.max_concurrency_per_instance}}
-    mini_batch_size: "3072"
+    mini_batch_size: "100KB"
     retry_settings:
       timeout: 6000
       max_retries: 10
@@ -136,16 +179,21 @@ jobs:
     type: command
     component: azureml:batch_output_formatter:0.0.1
     inputs:
-      batch_inference_output: ${{parent.jobs.real_point_batch_score.outputs.mini_batch_results_out_directory}}
-      metadata_key: ${{parent.inputs.metadata_key}}
-      label_key: ${{parent.inputs.label_key}}
+      batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
+      label_column_name: ${{parent.inputs.label_column_name}}
+      ground_truth_input: ${{parent.jobs.batch_inference_preparer.outputs.ground_truth_metadata}}
+      fallback_value: ${{parent.inputs.fallback_value}}
+      handle_response_failure: ${{parent.inputs.handle_response_failure}}
+      is_performance_test: ${{parent.inputs.is_performance_test}}
+      endpoint_url: ${{parent.inputs.endpoint_url}}
     outputs:
-      prediction_data:
+      predictions:
         type: uri_file
-        path: ${{parent.outputs.prediction_data}}
-      perf_data:
+        path: ${{parent.outputs.predictions}}
+      performance_metadata:
         type: uri_file
-        path: ${{parent.outputs.perf_data}}
-      ground_truth_data:
+        path: ${{parent.outputs.performance_metadata}}
+      ground_truth:
         type: uri_file
-        path: ${{parent.outputs.ground_truth_data}}
+        path: ${{parent.outputs.ground_truth}}
+

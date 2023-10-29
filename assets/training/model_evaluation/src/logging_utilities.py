@@ -67,7 +67,7 @@ class CustomDimensions:
     def __init__(self,
                  run_details,
                  app_name=constants.TelemetryConstants.COMPONENT_NAME,
-                 model_evaluation_version="0.0.10",
+                 model_evaluation_version="0.0.16",
                  os_info=platform.system(),
                  task_type="") -> None:
         """__init__.

@@ -55,9 +55,7 @@ class EndpointDeploymentBase(OBOComponentBase):
                     secrets.update(
                         {
                             f"{connection_type}-aoai-api-key": credential.key,
-                            f"{connection_type}-aoai-api-base": connection[
-                                "properties"
-                            ].get("target", {}),
+                            f"{connection_type}-aoai-api-base": connection.target,
                         }
                     )
                     logging.info("Using workspace connection key for OpenAI")

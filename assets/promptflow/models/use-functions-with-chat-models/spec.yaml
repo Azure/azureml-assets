@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Combining external functions to extend the capabilities of GPT chat models.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 3
+version: 4

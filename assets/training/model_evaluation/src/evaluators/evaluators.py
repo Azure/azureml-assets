@@ -19,7 +19,7 @@ from error_definitions import (
 # TODO: Import ForecastColumns from azureml.evaluate.mlflow, when it will be
 # available.
 from constants import TASK, ForecastingConfigContract, ForecastColumns, TextGenerationColumns, DataFrameParams, SubTask
-from image_constants import ImageDataFrameParams, ODISLiterals, SettingLiterals
+from image_constants import ImageDataFrameParams, ODISLiterals
 from azureml.evaluate.mlflow.models.evaluation.azureml._image_od_is_evaluator import (
     ImageOdIsEvaluator,
 )
@@ -50,6 +50,7 @@ class EvaluatorFactory:
             TASK.QnA: QnAEvaluator,
             TASK.FILL_MASK: FillMaskEvaluator,
             TASK.TEXT_GENERATION: TextGenerationEvaluator,
+            TASK.CHAT_COMPLETION: ChatCompletionEvaluator,
             TASK.FORECASTING: ForecastingEvaluator,
             TASK.IMAGE_CLASSIFICATION: ClassifierEvaluator,
             TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
@@ -562,17 +563,53 @@ class CodeGenerationEvaluator(Evaluator):
                 )
                 log_traceback(exception, logger)
                 raise exception
+        else:
+            y_test = None
 
         y_pred = self._convert_predictions(y_pred)
-        y_test = self._convert_predictions(y_test)
+        if y_test is not None:
+            y_test = self._convert_predictions(y_test)
+            if y_test.ndim == 1:
+                y_test = np.reshape(y_test, (-1, 1))
+                y_test = y_test.tolist()
         if y_test_cases is not None:
             y_test_cases = self._convert_predictions(y_test_cases).tolist()
-        if y_test.ndim == 1:
-            y_test = np.reshape(y_test, (-1, 1))
         if y_pred.ndim == 1:
             y_pred = np.reshape(y_pred, (-1, 1))
-        metrics = compute_metrics(task_type=constants.Tasks.CODE_GENERATION, y_test=y_test.tolist(),
+        metrics = compute_metrics(task_type=constants.Tasks.CODE_GENERATION, y_test=y_test,
                                   y_pred=y_pred.tolist(), test_cases=y_test_cases, **self.metrics_config)
+        return metrics
+
+
+class ChatCompletionEvaluator(Evaluator):
+    """Chat Completion Evaluator.
+
+    Args:
+        Evaluator (_type_): _description_
+    """
+
+    def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
+        super().__init__(task_type, metrics_config)
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate Chat Completion.
+
+        Args:
+            y_test (_type_): _description_
+            y_pred (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        y_pred_formatted = y_pred.iloc[:, 0].apply(lambda x: [item['input_string'] for item in x])
+        metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted.tolist(),
+                                  **self.metrics_config)
         return metrics
 
 
@@ -638,6 +675,7 @@ class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
             metrics_config (Dict): Dict of metrics config
         """
         super().__init__(task_type, metrics_config)
+        self.masks_required = task_type == TASK.IMAGE_INSTANCE_SEGMENTATION
 
     def evaluate(self, y_test, y_pred, **kwargs):
         """Evaluate Object Detection/Instance Segmentation.
@@ -676,18 +714,16 @@ class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
         y_test = y_test.drop(ImageDataFrameParams.IMAGE_META_INFO, axis=1)
 
         # Convert predictions to expected format
-        y_pred[ImageDataFrameParams.PREDICTIONS] = y_pred[ImageDataFrameParams.PREDICTIONS].apply(lambda x: _recast(x))
         y_test[ImageDataFrameParams.LABEL_COLUMN_NAME] = \
             y_test[ImageDataFrameParams.LABEL_COLUMN_NAME].apply(lambda x: _recast(x))
 
         y_pred = self._convert_predictions(y_pred)
         y_test = self._convert_predictions(y_test)
 
-        masks_required = self.metrics_config.pop(SettingLiterals.MASKS_REQUIRED, False)
         metrics = ImageOdIsEvaluator.compute_metrics(y_test=y_test,
                                                      y_pred=y_pred,
                                                      image_meta_info=image_meta_info,
-                                                     masks_required=masks_required,
+                                                     masks_required=self.masks_required,
                                                      **self.metrics_config)
 
         return metrics

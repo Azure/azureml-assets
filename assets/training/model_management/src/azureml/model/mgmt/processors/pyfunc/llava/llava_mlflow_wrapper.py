@@ -12,7 +12,7 @@ import pandas as pd
 from PIL import Image
 from transformers import TextStreamer
 
-from config import MLflowLiterals, MLflowSchemaLiterals, Tasks
+from config import MAX_PROMPT_LENGTH, MLflowLiterals, MLflowSchemaLiterals, Tasks
 
 
 class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -20,9 +20,11 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
 
     LLAVA_MPT = "mpt"
     LLAVA_7B = "7b"
+    LLAVA_7B_15 = "7b_15"
     LLAVA_13B = "13b"
     LLAVA_13B2 = "13b2"
-    MODEL_VERSIONS = [LLAVA_MPT, LLAVA_7B, LLAVA_13B, LLAVA_13B2]
+    LLAVA_13B_15 = "13b_15"
+    MODEL_VERSIONS = [LLAVA_MPT, LLAVA_7B, LLAVA_7B_15, LLAVA_13B, LLAVA_13B2, LLAVA_13B_15]
 
     def __init__(self, task_type: str) -> None:
         """Construct LLaVA MLflow wrapper object.
@@ -64,6 +66,11 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
                     model_base = os.path.join(model_dir, "Llama-2-7b-chat")
                     stop_str = conv_templates["llava_llama_2"].sep
 
+                elif self._model_version == self.LLAVA_7B_15:
+                    model_name = "llava-v1.5-7b"
+                    model_base = None
+                    stop_str = conv_templates["llava_v1"].sep2
+
                 elif self._model_version == self.LLAVA_13B:
                     model_name = "llava-v1-0719-336px-lora-merge-vicuna-13b-v1.3"
                     model_base = None
@@ -73,6 +80,11 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
                     model_name = "llava-llama-2-13b-chat-lightning-preview"
                     model_base = None
                     stop_str = conv_templates["llava_llama_2"].sep
+
+                elif self._model_version == self.LLAVA_13B_15:
+                    model_name = "llava-v1.5-13b"
+                    model_base = None
+                    stop_str = conv_templates["llava_v1"].sep2
 
                 else:
                     raise NotImplementedError(f"Model name {self._model_version} not supported.")
@@ -134,9 +146,15 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
                         f"the visual content that the user provides, and assist the user with a variety of tasks "
                         f"using natural language.\n<</SYS>>\n\n<im_start><image><im_end>\n{direct_question} [/INST]"
                     )
+                elif self._model_version == self.LLAVA_7B_15:
+                    prompt = (
+                        f"A chat between a curious human and an artificial intelligence assistant. "
+                        f"The assistant gives helpful, detailed, and polite answers to the human's questions. USER: "
+                        f"<image>\n{direct_question} ASSISTANT:"
+                    )
                 elif self._model_version == self.LLAVA_13B:
                     prompt = (
-                        f"input to llava: A chat between a curious human and an artificial intelligence assistant. "
+                        f"A chat between a curious human and an artificial intelligence assistant. "
                         f"The assistant gives helpful, detailed, and polite answers to the human's questions. USER: "
                         f"<im_start><image><im_end>\n{direct_question} ASSISTANT:"
                     )
@@ -145,6 +163,12 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
                         f"[INST] <<SYS>>\nYou are a helpful language and vision assistant. You are able to understand "
                         f"the visual content that the user provides, and assist the user with a variety of tasks "
                         f"using natural language.\n<</SYS>>\n\n<image>\n{direct_question} [/INST]"
+                    )
+                elif self._model_version == self.LLAVA_13B_15:
+                    prompt = (
+                        f"A chat between a curious human and an artificial intelligence assistant. "
+                        f"The assistant gives helpful, detailed, and polite answers to the human's questions. USER: "
+                        f"<image>\n{direct_question} ASSISTANT:"
                     )
             else:
                 prompt_from_direct_question = False
@@ -159,6 +183,16 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
                 prompt, self._tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt"
             ).unsqueeze(0).cuda()
             stopping_criteria = KeywordsStoppingCriteria([self._stop_str], self._tokenizer, input_ids)
+
+            # For small models on V100 machines, long prompts cause a GPU OOMs which the server does not recover from.
+            # To prevent this, we are using a length threshold that allows for a small number of question-answer pairs
+            # (e.g. 5-10) in each prompt.
+            if self._model_version in [self.LLAVA_MPT, self.LLAVA_7B, self.LLAVA_7B_15]:
+                prompt_length = max([len(i) for i in input_ids])
+                if prompt_length > MAX_PROMPT_LENGTH:
+                    raise ValueError(
+                        f"Prompt too long: {prompt_length} tokens. Maximum allowed is {MAX_PROMPT_LENGTH}."
+                    )
 
             # Call model.
             output_ids = self._model.generate(

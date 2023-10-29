@@ -188,15 +188,28 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                                                   python_version=python_version,
                                                   pip_packages=pip_pkgs,
                                                   pin_sdk_version=False)
+
             curated_conda_env = conda_deps.as_dict()
+
+            # handle OSS trust_remote_code value
+            trust_remote_code_val = False
+            config_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
+            tokenizer_args = self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
+            model_args = self._hf_conf.get(HF_CONF.HF_MODEL_ARGS.value, {})
+
+            if (config_args.get('trust_remote_code', False)
+                    and tokenizer_args.get('trust_remote_code', False)
+                    and model_args.get('trust_remote_code', False)):
+                trust_remote_code_val = True
 
             # handle OSS model loading with device map
             try:
-                model_pipeline = transformers.pipeline(task=self._task, model=model, device_map="auto")
+                model_pipeline = transformers.pipeline(task=self._task, model=model, device_map="auto",
+                                                       trust_remote_code=trust_remote_code_val)
                 logger.info("OSS model loaded with device_map auto")
             except Exception as e:
                 logger.error("OSS Model load failed with exception: {}, reloading without device_map auto".format(e))
-                model_pipeline = transformers.pipeline(task=self._task, model=model)
+                model_pipeline = transformers.pipeline(task=self._task, model=model, trust_remote_code=trust_remote_code_val)
 
                 # pass in signature for a text-classification model
             if self._task == SupportedNLPTasks.TEXT_CLASSIFICATION.value:
@@ -307,8 +320,8 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         PIP_LIST = ['mlflow', 'accelerate', 'cffi', 'dill', 'google-api-core', 'numpy',
                     'packaging', 'pillow', 'protobuf', 'pyyaml', 'requests', 'scikit-learn',
-                    'scipy', 'sentencepiece', 'torch', 'transformers']
-        ADD_PACKAGE_LIST = ['torchvision==0.14.1']
+                    'scipy', 'sentencepiece', 'torch']
+        ADD_PACKAGE_LIST = ['torchvision==0.14.1', 'transformers==4.31.0']
 
         conda_list_cmd = ["conda", "list", "--json"]
         try:

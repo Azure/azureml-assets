@@ -9,20 +9,40 @@ inputs:
     type: uri_folder
     description: The raw batch inference output.
     optional: False
-  metadata_key:
+  label_column_name:
     type: string
     optional: True
-    description: The metadata key that stores ground truth `label_key` in the response. If using azureml llama model and pass `_batch_request_metadata`, then this one can left empty or using `request_metadata`.
-  label_key:
+    description: The label column name.
+  endpoint_url:
     type: string
     optional: False
-    description: The key that stores the ground truth value.
+  ground_truth_input:
+    type: uri_folder
+    description: The raw batch inference output.
+    optional: True
+  handle_response_failure:
+    type: string
+    optional: False
+    description: The way that the formatter handles the failed response.
+    enum:
+      - use_fallback
+      - neglect
+    default: use_fallback
+  fallback_value:
+    description: The fallback value that can be used when request payload failed.
+    type: string
+    optional: True
+  is_performance_test:
+    type: boolean
+    default: False
+    description: If true, the performance test will be run.
+    optional: False
 outputs:
-  prediction_data:
+  predictions:
     type: uri_file
-  perf_data:
+  performance_metadata:
     type: uri_file
-  ground_truth_data:
+  ground_truth:
     type: uri_file
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
@@ -33,9 +53,12 @@ resources:
 command: >-
   python -m batch_output_formatter.main
   --batch_inference_output ${{inputs.batch_inference_output}}
-  --prediction_data ${{outputs.prediction_data}}
-  --perf_data ${{outputs.perf_data}}
-  --predict_ground_truth_data ${{outputs.ground_truth_data}}
-  --label_key ${{inputs.label_key}}
-  --model_type llama
-  $[[--metadata_key ${{inputs.metadata_key}}]]
+  --prediction_data ${{outputs.predictions}}
+  --perf_data ${{outputs.performance_metadata}}
+  --predict_ground_truth_data ${{outputs.ground_truth}}
+  --endpoint_url ${{inputs.endpoint_url}}
+  $[[--label_key ${{inputs.label_column_name}}]]
+  --handle_response_failure ${{inputs.handle_response_failure}}
+  --is_performance_test ${{inputs.is_performance_test}}
+  $[[--fallback_value ${{inputs.fallback_value}}]]
+  $[[--ground_truth_input ${{inputs.ground_truth_input}}]]

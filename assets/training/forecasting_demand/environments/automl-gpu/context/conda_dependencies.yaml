@@ -1,28 +1,24 @@
 name: automl-gpu
 channels:
-- anaconda
 - conda-forge
+- anaconda
 dependencies:
 - python=3.8
 - pip=22.1.2
-- pytorch=1.9.0
 - numpy~=1.22.3
-- scikit-learn=0.22.1
-- pandas~=1.1.5
+- pandas~=1.3.5
 - py-xgboost=1.3.3
 - holidays=0.10.3
 - cudatoolkit=11.1
 - pyopenssl=23.2.0
 - psutil>=5.2.2,<6.0.0
-- GitPython=3.1.30
-- scipy~=1.7.0
+- GitPython=3.1.32
 - tqdm
 - setuptools=65.5.1
 - wheel=0.38.1
 - openssl=1.1.1s
 - pip:
   - inference-schema
-  - cryptography==41.0.0
   - azureml-core=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-defaults=={{latest-pypi-version}}
@@ -38,7 +34,8 @@ dependencies:
   - azureml-train-automl=={{latest-pypi-version}}
   - azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}}
   - https://aka.ms/automl-resources/packages/en_core_web_sm-2.1.0.tar.gz
+  - cryptography>=41.0.2
+  - scipy==1.10.1
   - spacy==2.1.8
-  - fbprophet==0.7.1
-  - pystan==2.19.1.1
+  - prophet==1.1.4
   - py-cpuinfo==5.0.0

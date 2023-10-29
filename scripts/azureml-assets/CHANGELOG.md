@@ -3,6 +3,44 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.12 (2023-10-12)
+### 🐛 Bugs Fixed
+- [#1458](https://github.com/Azure/azureml-assets/pull/1458) Update schema for prompt and benchmark assets
+
+## 1.16.11 (2023-10-09)
+### 🐛 Bugs Fixed
+- [#1428](https://github.com/Azure/azureml-assets/pull/1428) Azcopy fixes to support additional clouds
+
+## 1.16.10 (2023-10-06)
+### 🐛 Bugs Fixed
+- [#1411](https://github.com/Azure/azureml-assets/pull/1411) Prevent Config._expand_path from returning directories
+
+## 1.16.9 (2023-10-05)
+### 🚀 New Features
+- [#1345](https://github.com/Azure/azureml-assets/pull/1345) Add sample prompt assets and prompt publishing
+
+## 1.16.8 (2023-10-05)
+### 🐛 Bugs Fixed
+- [#1393](https://github.com/Azure/azureml-assets/pull/1393) Fix mlflow model and keep parent mlflow_model_folder
+
+
+## 1.16.7 (2023-10-03)
+### 🐛 Bugs Fixed
+- [#1363](https://github.com/Azure/azureml-assets/pull/1363) Fix AzureBlobstoreAssetPath storage account
+  URI logic
+
+## 1.16.6 (2023-10-02)
+### 🐛 Bugs Fixed
+- [#1357](https://github.com/Azure/azureml-assets/pull/1357) Fix validate_assets arg
+
+## 1.16.5 (2023-09-29)
+### 🐛 Bugs Fixed
+- [#1341](https://github.com/Azure/azureml-assets/pull/1341) Prevent nested directory creation during model upload
+
+## 1.16.4 (2023-09-27)
+### 🚀 New Features
+- [#1327](https://github.com/Azure/azureml-assets/pull/1327) Support prompt asset type
+
 ## 1.16.3 (2023-09-26)
 ### 🐛 Bugs Fixed
 - [#1317](https://github.com/Azure/azureml-assets/pull/1317) Improve sovereign cloud support by removing direct reference to Azure Public Cloud

@@ -3,17 +3,29 @@ name: CodeLlama-13b-Python-hf
 path: ./
 properties:
   SHA: 488587ade99c84ea4325e6d620d307372728cc97
+  inference-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: EN
+  azureml.copyRegistryFilesToWorkspace: true
 tags:
   Featured: ''
   Preview: ''
+  evaluation_compute_allow_list:
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_ND96amsr_A100_v4
   inference_compute_allow_list:
   - Standard_NC24s_v3
   - Standard_NC24rs_v3
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
+  SharedComputeCapacityEnabled: ''
+  task: text-generation
   license: llama2
   author: meta
-  task: text-generation
-version: 1
+version: 2

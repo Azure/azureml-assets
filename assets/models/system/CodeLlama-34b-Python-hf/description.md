@@ -62,12 +62,24 @@ All experiments reported here and the released models have been trained and fine
 
 See evaluations for the main models and detailed ablations in Section 3 and safety evaluations in Section 4 of the research paper.
 
-
 ## Ethical Considerations and Limitations
 
 Code Llama and its variants are a new technology that carries risks with use. Testing conducted to date has been in English, and has not covered, nor could it cover all scenarios. For these reasons, as with all LLMs, Code Llama’s potential outputs cannot be predicted in advance, and the model may in some instances produce inaccurate or objectionable responses to user prompts. Therefore, before deploying any applications of Code Llama, developers should perform safety testing and tuning tailored to their specific applications of the model.
 
 Please see the Responsible Use Guide available available at [https://ai.meta.com/llama/responsible-user-guide](https://ai.meta.com/llama/responsible-user-guide).
+
+# **Model Evaluation samples**
+
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+
+
+# **Inference samples**
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 ## Sample inputs and outputs (for real-time inference)
 

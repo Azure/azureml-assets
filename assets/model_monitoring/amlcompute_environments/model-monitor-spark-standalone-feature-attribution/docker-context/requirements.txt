@@ -1,6 +1,0 @@
-azureml-mlflow>=1.49.0
-cryptography>=41.0.4
-mltable>=1.4.1
-py4j~=0.10.9.7
-responsibleai~=0.29.0
-scikit-learn<1.1

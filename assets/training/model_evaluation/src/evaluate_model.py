@@ -128,8 +128,8 @@ class EvaluateModel(BasePredictor):
                              constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
                 input_column_names.append(ImageDataFrameParams.IMAGE_META_INFO)
         else:
-            data = read_data(test_data, is_mltable)
-        data = map(_validate, data, repeat(input_column_names), repeat(label_column_name))
+            data = read_data(test_data, is_mltable, self.batch_size)
+        data = map(_validate, data, repeat(input_column_names), repeat(label_column_name), repeat(self.batch_size))
         data = map(prepare_data, data, repeat(self.task), repeat(label_column_name), repeat(self._has_multiple_output))
         return data  # X_test, y_test
 
@@ -226,10 +226,9 @@ def run():
                         type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()],
                         dest="input_column_names", required=False, default=None)
     parser.add_argument("--mlflow-model", type=str, dest="mlflow_model", required=True, default=None)
-    parser.add_argument("--model-uri", type=str, dest="model_uri", required=False, default="")
     parser.add_argument("--device", type=str, dest="device", required=True, choices=constants.ALL_DEVICES,
                         default=constants.DEVICE.AUTO)
-    parser.add_argument("--batch-size", type=int, dest="batch_size", required=False, default=1)
+    parser.add_argument("--batch-size", type=int, dest="batch_size", required=False, default=None)
     parser.add_argument("--config_str", type=str, dest="config_str", required=False, default=None)
 
     # Outputs
@@ -247,22 +246,19 @@ def run():
         config = fetch_compute_metrics_args(config, args.task)
         config.update(pipeline_params)
 
-        model_uri = args.model_uri.strip()
-        mlflow_model = args.mlflow_model
-        if mlflow_model:
-            model_uri = mlflow_model
-
     data = args.data
     is_mltable = check_and_return_if_mltable(data)
 
-    runner = EvaluateModel(
-        task=args.task,
-        output=args.output,
-        model_uri=model_uri,
-        config=config,
-        device=args.device,
-        batch_size=args.batch_size
-    )
+    with log_activity(logger, constants.TelemetryConstants.INITIALISING_RUNNER,
+                      custom_dimensions=custom_dims_dict):
+        runner = EvaluateModel(
+            task=args.task,
+            output=args.output,
+            model_uri=args.mlflow_model,
+            config=config,
+            device=args.device,
+            batch_size=args.batch_size
+        )
 
     with log_activity(logger, activity_name=constants.TelemetryConstants.DATA_LOADING,
                       custom_dimensions=custom_dims_dict):
@@ -295,5 +291,5 @@ def run():
     return
 
 
-if __name__ in "__main__":
+if __name__ == "__main__":
     run()

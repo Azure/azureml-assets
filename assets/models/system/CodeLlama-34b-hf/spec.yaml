@@ -3,7 +3,11 @@ name: CodeLlama-34b-hf
 path: ./
 properties:
   SHA: 14e224d625f24d8774c010a15fe9244d1772f50d
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_NC24s_v3,
+    Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: EN
+  azureml.copyRegistryFilesToWorkspace: true
 tags:
   Featured: ''
   Preview: ''
@@ -11,6 +15,14 @@ tags:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
+  evaluation_compute_allow_list:
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_ND96amsr_A100_v4
+  SharedComputeCapacityEnabled: ''
+  task: text-generation
   license: llama2
   author: meta
-version: 1
+version: 2

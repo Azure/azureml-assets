@@ -6,7 +6,7 @@ dependencies:
 - python=3.8
 - pip=21.3.1
 - pip:
-  - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation]==0.2.5
+  - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone]>=0.2.14
   - langchain==0.0.236
   - azureml-core=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
@@ -23,4 +23,5 @@ dependencies:
   - python-dateutil>=2.7.3,<3.0.0
   - PyJWT<3.0.0
   - pytz
-  - cryptography>=41.0.3
+  - cryptography>=41.0.4
+  - azure-ai-formrecognizer==3.3.1

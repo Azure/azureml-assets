@@ -214,8 +214,7 @@ def predict(
         tokenizer=tokenizer.tokenizer,
         feature_extractor=tokenizer.feature_extractor,
         chunk_length_s=chunk_length_s,
-        stride_length_s=stride_length_s,
-        device=device
+        stride_length_s=stride_length_s
     )
 
     for row in model_input.itertuples():
