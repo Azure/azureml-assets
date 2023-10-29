@@ -168,13 +168,13 @@ def run_humaneval_postprocessor(
 
     # Post processing the prediction and ground truth columns
     for idx, row in enumerate(pred_dict_full):
-        gt = "\n" + pred_dict_full[idx]["test"] + "\n" + "check(" + pred_dict_full[idx]["entry_point"] + ")"
+        gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
 
-        if str("def " + pred_dict_full[idx]["entry_point"] + "(") in pred_dict_full[idx]["original_prediction"]:
+        if str("def " + row["entry_point"] + "(") in row["original_prediction"]:
             # If the model regenerates the prompt/ function name
-            pred_combined_prompt = pred_dict_full[idx]["original_prediction"]
+            pred_combined_prompt = row["original_prediction"]
         else:
-            pred_combined_prompt = pred_dict_full[idx]["prompt"]+"\n"+pred_dict_full[idx]["original_prediction"]
+            pred_combined_prompt = row["prompt"]+"\n"+row["original_prediction"]
 
         # Applying regex on the prediction column
         if regex_exp:
@@ -183,9 +183,9 @@ def run_humaneval_postprocessor(
             pred = pred_combined_prompt
         failed, _ = code_run(pred,
                              gt,
-                             pred_dict_full[idx]["task_id"],
+                             row["task_id"],
                              pred_combined_prompt,
-                             pred_dict_full[idx]["original_prediction"])
+                             row["original_prediction"])
         gt_list.append(failed)
         # gt_list.append({"ground_truth": gt})
         pred_list.append({"prediction": pred})
@@ -201,7 +201,6 @@ def code_run(pred, test_cases, index, pred_combined_prompt, pred_orig):
         "pred_combined_prompt": pred_combined_prompt,
         "pred_final_with_regex": pred,
         "ground_truth": test_cases,
-
         "full_code": str(pred + test_cases),
         "error": error,
         "error_type": error_type,
