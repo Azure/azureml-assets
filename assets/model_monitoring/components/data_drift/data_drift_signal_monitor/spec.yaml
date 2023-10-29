@@ -112,7 +112,7 @@ jobs:
       type: aml_token
   compute_histogram_buckets:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.1
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.2
     inputs:
       input_data_1:
         type: mltable
@@ -130,7 +130,7 @@ jobs:
       type: aml_token
   compute_baseline_histogram:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.2
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.3
     inputs:
       input_data:
         type: mltable
@@ -148,7 +148,7 @@ jobs:
       type: aml_token
   compute_target_histogram:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.2
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.3
     inputs:
       input_data:
         type: mltable

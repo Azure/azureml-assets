@@ -41,7 +41,8 @@ def get_numerical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
         for column in column_dtype_map
         if column_dtype_map[column] in ["float", "double", "decimal"]
         or (column_dtype_map[column] in ["int", "bigint", "short", "long"]
-            and is_numerical(baseline_df.select(column).rdd.flatMap(lambda x: x).collect()))
+            and is_numerical(baseline_df.select(column)
+                             .rdd.flatMap(lambda x: x).collect()))
     ]
     return numerical_columns
 
@@ -56,7 +57,8 @@ def get_categorical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
         for column in column_dtype_map
         if column_dtype_map[column] in ["string", "bool"]
         or (column_dtype_map[column] in ["int", "bigint", "short", "long"]
-            and is_categorical(baseline_df.select(column).rdd.flatMap(lambda x: x).collect()))
+            and is_categorical(baseline_df.select(column)
+                               .rdd.flatMap(lambda x: x).collect()))
     ]
     return categorical_columns
 

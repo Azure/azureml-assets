@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 from pyspark.sql import SparkSession
 
+
 @pytest.mark.unit
 class TestDFUtils:
     """Test class for df utilities."""
@@ -117,11 +118,11 @@ class TestDFUtils:
         # Test with integer column with low distinct value ratio
         result = False
         baseline_column = pd.DataFrame([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, None, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                        1, 1, 1, 1, 1, None, 1, 1, 1, 1, 1, 1,
+                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
         assert is_numerical(baseline_column) == result
 
         # Test with integer column with high distinct value ratio
@@ -136,23 +137,32 @@ class TestDFUtils:
         assert get_common_columns(baseline_df, production_df) == {}
 
         # Test with two dataframes that have no common columns
-        baseline_df = pd.DataFrame([(1, "a"), (2, "b")], columns=["id", "name"])
-        production_df = pd.DataFrame([(3, "c"), (4, "d")], columns=["age", "gender"])
+        baseline_df = pd.DataFrame([(1, "a"), (2, "b")],
+                                   columns=["id", "name"])
+        production_df = pd.DataFrame([(3, "c"), (4, "d")],
+                                     columns=["age",
+                                              "gender"])
         assert get_common_columns(baseline_df, production_df) == {}
 
         # Test with two dataframes that have one common column
-        baseline_df = pd.DataFrame([(1, "a"), (2, "b")], columns=["id", "name"])
-        production_df = pd.DataFrame([(1, "c"), (2, "d")], columns=["id", "age"])
+        baseline_df = pd.DataFrame([(1, "a"), (2, "b")], columns=["id",
+                                                                  "name"])
+        production_df = pd.DataFrame([(1, "c"), (2, "d")], columns=["id",
+                                                                    "age"])
         assert get_common_columns(baseline_df, production_df) == {"id": "int64"}
 
         # Test with two dataframes that have multiple common columns
-        baseline_df = pd.DataFrame([(1, "a", 10), (2, "b", 20)], columns=["id", "name", "age"])
-        production_df = pd.DataFrame([(1, "c", 30), (2, "d", 40)], columns=["id", "name", "age"])
+        baseline_df = pd.DataFrame([(1, "a", 10), (2, "b", 20)],
+                                   columns=["id", "name", "age"])
+        production_df = pd.DataFrame([(1, "c", 30), (2, "d", 40)],
+                                     columns=["id", "name", "age"])
         assert get_common_columns(baseline_df, production_df) == {"id": "int64", "name": "object", "age": "int64"}
 
         # Test with two dataframes that have different Types in common columns
-        baseline_df = pd.DataFrame([(1.0, "a", 10), (2, "b", 20)], columns=["id", "name", "age"])
-        production_df = pd.DataFrame([(1, "c", 30), (2, "d", 40)], columns=["id", "name", "age"])
+        baseline_df = pd.DataFrame([(1.0, "a", 10), (2, "b", 20)],
+                                   columns=["id", "name", "age"])
+        production_df = pd.DataFrame([(1, "c", 30), (2, "d", 40)],
+                                     columns=["id", "name", "age"])
         assert get_common_columns(baseline_df, production_df) == {"name": "object", "age": "int64"}
         
     def init_spark(self):
