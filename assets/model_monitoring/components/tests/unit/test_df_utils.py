@@ -164,7 +164,7 @@ class TestDFUtils:
         production_df = pd.DataFrame([(1, "c", 30), (2, "d", 40)],
                                      columns=["id", "name", "age"])
         assert get_common_columns(baseline_df, production_df) == {"name": "object", "age": "int64"}
-        
+
     def init_spark(self):
         """Get or create spark session."""
         spark = SparkSession.builder.appName("test").getOrCreate()

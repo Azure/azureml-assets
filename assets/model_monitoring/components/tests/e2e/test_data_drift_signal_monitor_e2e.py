@@ -86,7 +86,7 @@ class TestDataDriftModelMonitor:
         )
 
         assert pipeline_job.status == "Completed"
-    
+
     def test_monitoring_run_use_int_data_has_no_drift_successful(
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
