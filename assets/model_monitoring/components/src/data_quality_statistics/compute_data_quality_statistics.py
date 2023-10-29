@@ -15,6 +15,8 @@ import pyspark.pandas as ps
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
 
+supported_datatype_for_max_min_value = ["IntegerType()", "DoubleType()", "ByteType()", "LongType()", "FloatType()"]
+
 
 def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     """
@@ -54,24 +56,25 @@ def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     return metadata_df
 
 
-def exclude_boolean_feature_from_df(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+def get_features_for_max_min_calculation(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     """
-    Compute a Spark DataFrame exclude the columns of boolean type.
+    Compute a Spark DataFrame with features which get max and min value
 
     Args:
         df: Input Spark DataFrame.
 
     Returns:
-        df_excluding_boolean_type: A Spark DataFrame without boolean type col
+        df_for_max_min_value: A Spark DataFrame with features which get max and min value
     """
-    dtypes = df.dtypes
-    boolean_columns = []
-    for dtype in dtypes:
-        if dtype[1] == "boolean":
-            boolean_columns.append(dtype[0])
-    df_excluding_boolean_type = df.select([column for column in df.columns if column not in boolean_columns])
+    schema = df.schema
+    supported_columns = []
+    for col_ in schema:
+        if str(col_.dataType) in supported_datatype_for_max_min_value:
+            supported_columns.append(col_.name)
 
-    return df_excluding_boolean_type
+    df_for_max_min_value = df.select(*supported_columns)
+
+    return df_for_max_min_value
 
 
 def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
@@ -149,15 +152,18 @@ def compute_max_df(df: ps.DataFrame) -> ps.DataFrame:
     return max_vals
 
 
-def compute_data_quality_statistics(df):
+def compute_data_quality_statistics(df) -> ps.DataFrame:
     """Compute data quality statistics."""
     dtype_df = get_df_schema(df=df).to_pandas_on_spark()
     unique_vals_df = get_unique_value_list(df=df)
     # Note: excluding boolean type column as the boolean type do not need to be calculated
     # for max_vals and min_vals.
-    df_exclude_boolean = exclude_boolean_feature_from_df(df=df)
-    max_vals = compute_max_df(df=df_exclude_boolean.to_pandas_on_spark())
-    min_vals = compute_min_df(df=df_exclude_boolean.to_pandas_on_spark())
+    df_for_max_min_value = get_features_for_max_min_calculation(df=df)
+    df_for_max_min_value.show()
+    # The compute_max_df and compute_min_df works for all numerical, except ShortType()
+    # They will get null for non-numerical data
+    max_vals = compute_max_df(df=df_for_max_min_value.to_pandas_on_spark())
+    min_vals = compute_min_df(df=df_for_max_min_value.to_pandas_on_spark())
 
     # Join tables to get all metrics into one table
     min_max_df = max_vals.merge(min_vals, left_on="featureName", right_on="featureName")
@@ -167,5 +173,4 @@ def compute_data_quality_statistics(df):
     metric_unique_df = metric_df.merge(
         unique_vals_df, right_on="featureName", left_on="featureName", how="left"
     )
-
     return metric_unique_df

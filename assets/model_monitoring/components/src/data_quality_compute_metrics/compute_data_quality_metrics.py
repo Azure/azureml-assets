@@ -37,8 +37,8 @@ import warnings
 # Init spark session
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
-supported_datatypes = ['timestamp', 'boolean', 'double', 'binary', 'date', 'decimal', 'float', 'integer',
-                       'long', 'short', 'string', 'char(30)', 'varchar(30)', 'byte']
+supported_datatypes = ['timestamp', 'boolean', 'double', 'binary', 'date', 'float', 'integer',
+                       'long', 'short', 'string', 'byte']
 
 
 def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
@@ -303,10 +303,9 @@ def compute_dtype_violation_count_modify_dataset(
         dtype_baseline = dtype_baseline[0][0]
 
         if dtype_baseline not in supported_datatypes:
-            # we set the default num of error as we do not support this type validation
-            warnings.warn("we set the default num of error to 0 as we do not support \
-                           this datatype {} validation".format(dtype_baseline))
-            num_errors = 0
+            # we do not support this type validation, we do not count num_errors for unsupported datatype
+            warnings.warn("we do not support this datatype {} validation".format(dtype_baseline))
+            continue
         else:
             # Cast the column to datatype from baseline reference column and count the number of errors
             num_errors = (
@@ -399,11 +398,8 @@ def modify_dataType(data_stats_table) -> pyspark.sql.DataFrame:
         .when(col("dataType") == "BooleanType()", "boolean")
         .when(col("dataType") == "BinaryType()", "binary")
         .when(col("dataType") == "DateType()", "date")
-        .when(col("dataType") == "DecimalType()", "decimal")
         .when(col("dataType") == "FloatType()", "float")
         .when(col("dataType") == "ShortType()", "short")
-        .when(col("dataType") == "CharType()", "char(30)")
-        .when(col("dataType") == "VarcharType()", "varchar(30)")
         .when(col("dataType") == "ByteType()", "byte")
         .otherwise(col("dataType")),
     )
@@ -544,11 +540,8 @@ def compute_data_quality_metrics(df, data_stats_table):
         .when(col("dataType") == "BooleanType()", "Categorical")
         .when(col("dataType") == "BinaryType()", "Categorical")
         .when(col("dataType") == "DateType()", "Categorical")
-        .when(col("dataType") == "DecimalType()", "Numerical")
         .when(col("dataType") == "FloatType()", "Numerical")
         .when(col("dataType") == "ShortType()", "Numerical")
-        .when(col("dataType") == "CharType()", "Categorical")
-        .when(col("dataType") == "VarcharType()", "Categorical")
         .when(col("dataType") == "ByteType()", "Categorical")
         .otherwise(col("dataType")),
     )
@@ -563,7 +556,7 @@ def compute_data_quality_metrics(df, data_stats_table):
             col("metricName") != "RowCount", concat(col("metricName"), lit("Rate"))
         ).otherwise(col("metricName")),
     )
-
+    violation_df_remapped.show(40, False)
     # MOVE ROW COUNT "metricValue" TO THE RIGHT COLUMN AND SET VIOLATION COUNT TO 0
     violation_df_remapped = violation_df_remapped.withColumn(
         "metricValue",
@@ -574,5 +567,5 @@ def compute_data_quality_metrics(df, data_stats_table):
         "violationCount",
         when(col("metricName") == "RowCount", 0).otherwise(col("violationCount")),
     )
-
+    violation_df_remapped.show(40, False)
     return violation_df_remapped

@@ -79,4 +79,4 @@ DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME = 'model_outputs_join_column'
 DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = 'azureml:groundedness_preprocess_target_small:1'
 
 # For Data Quality with timestamp and boolean type in the MLTable
-DATA_ASSET_VALID_DATATYPE = 'azureml:valid_datatype:11'
+DATA_ASSET_VALID_DATATYPE = 'azureml:mltable_validate_datatype_for_data_quality:1'
