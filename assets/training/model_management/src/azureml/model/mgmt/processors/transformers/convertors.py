@@ -27,10 +27,12 @@ from azureml.model.mgmt.utils.common_utils import (
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
     run_command,
+    fetch_mlflow_acft_metadata
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from mlflow.models import ModelSignature
+from mlflow.models import ModelSignature, Model
 from mlflow.types.schema import ColSpec, DataType, Schema, ParamSpec, ParamSchema
+from mlflow.utils.requirements_utils import _get_pinned_requirement
 from pathlib import Path
 from transformers import (
     AutoImageProcessor,
@@ -248,11 +250,16 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                 self._model_dir, **self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
             )
 
+            # set metadata info
+            metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
+                                                  is_finetuned_model=False)
+            mlflow_model = Model(metadata=metadata)
             hf_mlflow.hftransformers.save_model(
                 config=config,
                 tokenizer=tokenizer,
                 hf_model=model,
                 hf_conf=self._hf_conf,
+                mlflow_model=mlflow_model,
                 conda_env=conda_env,
                 code_paths=code_paths,
                 signature=self._signatures,
@@ -264,6 +271,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
             )
 
             logger.info("Model saved with transformers evaluate flow for task: {}".format(self._task))
+
             # move metadata files to parent folder
             logger.info("Moving meta files such as license, use_policy, readme to parent")
             move_files(
@@ -391,6 +399,12 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         config_load_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
         config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
         hf_conf[HF_CONF.TRAIN_LABEL_LIST.value] = list(config.id2label.values())
+        extra_pip_requirements = ["torchvision"]
+        if self._extra_pip_requirements is None:
+            self._extra_pip_requirements = []
+        for package_name in extra_pip_requirements:
+            package_with_version = _get_pinned_requirement(package_name)
+            self._extra_pip_requirements.append(package_with_version)
 
         return super()._save(
             code_paths=[VisionMLflowConvertor.PREDICT_FILE_PATH, VisionMLflowConvertor.VISION_UTILS_FILE_PATH],
