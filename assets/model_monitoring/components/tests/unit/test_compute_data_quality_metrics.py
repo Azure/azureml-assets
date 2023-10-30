@@ -57,7 +57,7 @@ data_stats = [
 data_stats_table_mod = create_pyspark_dataframe(data_stats, columns)
 
 
-@pytest.mark.unit
+@pytest.mark.local
 class TestModelMonitorDataQuality:
     """Test class for model monitor data quality component."""
 
@@ -163,6 +163,6 @@ class TestModelMonitorDataQuality:
 
         expected_metrics_df = expected_metrics_df.unionByName(row)
         metrics_df = compute_data_quality_metrics(df_with_timestamp, data_stats_table)
-        assert expected_metrics_data.count() == metrics_df.count()
-        assert sorted(expected_metrics_data.collect()) == sorted(metrics_df.collect())
-        assert_pyspark_df_equal(left_df=expected_metrics_df, actual_df=metrics_df,check_columns_in_order=False)
+        assert expected_metrics_df.count() == metrics_df.count()
+        assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
+        assert_pyspark_df_equal(left_df=expected_metrics_df, actual_df=metrics_df, check_columns_in_order=False)
