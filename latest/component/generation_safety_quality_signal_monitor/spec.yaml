@@ -159,7 +159,7 @@ jobs:
       type: aml_token
   output_signal_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.10
+    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.11
     inputs:
       signal_metrics:
         type: mltable
