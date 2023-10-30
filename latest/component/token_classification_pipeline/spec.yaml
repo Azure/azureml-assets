@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: token_classification_pipeline
-version: 0.0.25
+version: 0.0.26
 type: pipeline
 display_name: Token Classification Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for token
@@ -572,7 +572,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.23
+    component: azureml:ft_nlp_common_validation:0.0.24
     compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
@@ -590,7 +590,7 @@ jobs:
       user_column_names: '${{parent.inputs.token_key}},${{parent.inputs.tag_key}}'
   token_classification_model_import:
     type: command
-    component: azureml:token_classification_model_import:0.0.23
+    component: azureml:token_classification_model_import:0.0.24
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -601,7 +601,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   token_classification_datapreprocess:
     type: command
-    component: azureml:token_classification_datapreprocess:0.0.23
+    component: azureml:token_classification_datapreprocess:0.0.24
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -620,7 +620,7 @@ jobs:
       model_selector_output: '${{parent.jobs.token_classification_model_import.outputs.output_dir}}'
   token_classification_finetune:
     type: command
-    component: azureml:token_classification_finetune:0.0.23
+    component: azureml:token_classification_finetune:0.0.24
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -677,7 +677,7 @@ jobs:
       # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.23
+    component: azureml:ft_nlp_model_converter:0.0.24
     compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       model_path: '${{parent.jobs.token_classification_finetune.outputs.pytorch_model_folder}}'
@@ -686,7 +686,7 @@ jobs:
       output_dir: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.16
+    component: azureml:model_prediction:0.0.17
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -695,12 +695,12 @@ jobs:
       test_data: '${{parent.jobs.token_classification_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.tag_key}}'
       input_column_names: '${{parent.inputs.token_key}}'
-      # batch_size: '${{parent.inputs.batch_size}}'
+      batch_size: '${{parent.inputs.batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.output_dir}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.16
+    component: azureml:compute_metrics:0.0.17
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
