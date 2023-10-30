@@ -1,0 +1,8 @@
+path:
+  container_name: test_container
+  container_path: test_path/mlflow_model_model
+  storage_name: test_account
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
