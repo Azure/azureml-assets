@@ -156,7 +156,7 @@ def run_humaneval_postprocessor(
     pred_df_full = pd.merge(pred_df,
                             original_dataset,
                             how='left',
-                            left_on='ground_truth',
+                            left_on='completion',
                             right_on='task_id')
 
     # Rename the prediction column
