@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
 name: one-shot-financial-news-summarization
-version: 0.1.1
+version: 0.1.2
 display_name: One Shot Financial News Summarization
 
 tags:
