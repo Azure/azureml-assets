@@ -1560,7 +1560,8 @@ def apply_annotation(
     # Sampling
     production_df = production_df.sample(withReplacement=False, fraction=sample_rate)
     if production_df.count() == 0:
-        raise ValueError("Not enough data resulting from sample_rate and production dataset. Try increasing sample_rate.")
+        raise ValueError("Not enough data resulting from sample_rate and production dataset. "
+                         "Try increasing sample_rate.")
     production_df_with_index = production_df.withColumn("id",
                                                         row_number()
                                                         .over(Window.orderBy(monotonically_increasing_id()))-1)
