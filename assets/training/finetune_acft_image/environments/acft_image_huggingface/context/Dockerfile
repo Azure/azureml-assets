@@ -7,3 +7,7 @@ RUN apt-get -y update
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
+
+# Vulnerability fixes
+RUN pip install pydash==6.0.0
+RUN pip install urllib3==2.0.7
