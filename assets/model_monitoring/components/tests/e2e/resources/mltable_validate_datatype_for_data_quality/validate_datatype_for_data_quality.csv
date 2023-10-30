@@ -1,0 +1,6 @@
+timestamp,string,boolean,integer,double
+10/26/2023 10:25,setosa,TRUE,4,3.44
+10/26/2023 10:25,setosa,FALSE,5,4.55
+10/26/2023 10:25,setosa,FALSE,6,5.423
+10/26/2023 10:25,setosa,FALSE,7,89.04
+10/26/2023 10:25,setosa,FALSE,8,875.7
