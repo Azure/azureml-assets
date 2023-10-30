@@ -25,7 +25,7 @@ except ImportError:
     pass
 
 from feature_importance_metrics.feature_importance_utilities import (
-    compute_categorical_features, convert_pandas_to_spark, is_categorical_column, log_time_and_message)
+    compute_categorical_features, convert_pandas_to_spark, convert_time_columns, is_categorical_column, log_time_and_message)
 
 
 def parse_args():
@@ -287,6 +287,7 @@ def run(args):
         log_time_and_message(f"Computed task type is {task_type}")
 
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
+        convert_time_columns(baseline_df)
         feature_importances = compute_feature_importance(
             task_type, args.target_column, baseline_df, categorical_features)
         feature_columns = baseline_df.drop([args.target_column], axis=1)
