@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.6
+version: 0.0.9
 name: llm_rag_crack_and_chunk_and_embed
 display_name: LLM - Crack, Chunk and Embed Data
 is_deterministic: true
@@ -13,7 +13,7 @@ description: |
   Creates chunks no larger than `chunk_size` from `input_data`, extracted document titles are prepended to each chunk
 
   LLM models have token limits for the prompts passed to them, this is a limiting factor at embedding time and even more limiting at prompt completion time as only so much context can be passed along with instructions to the LLM and user queries.
-  Chunking allows splitting source data of various formats into small but coherent snippets of information which can be 'packed' into LLM prompts when asking for answers to user querys related to the sorce documents.
+  Chunking allows splitting source data of various formats into small but coherent snippets of information which can be 'packed' into LLM prompts when asking for answers to user query related to the source documents.
 
   Supported formats: md, txt, html/htm, pdf, ppt(x), doc(x), xls(x), py
 
@@ -41,6 +41,10 @@ inputs:
     type: integer
     default: 0
     description: "Number of tokens to overlap between chunks."
+  doc_intel_connection_id:
+    type: string
+    optional: true
+    description: "Connection id for Document Intelligence service. If provided, will be used to extract content from .pdf document."
   citation_url:
     type: string
     optional: true
@@ -71,6 +75,18 @@ inputs:
     type: string
     optional: true
     description: "The connection id of the Embeddings Model provider to use."
+  batch_size:
+    type: integer
+    default: 100
+    description: "Batch size to use when embedding data."
+  num_workers:
+    type: integer
+    default: -1
+    description: "Number of workers to use when embedding data. -1 defaults to cpus / 2."
+  verbosity:
+    type: integer
+    default: 0
+    description: "Verbosity level for embedding process, specific to document processing information. 0: Aggregate Source/Document Info, 1: Source Ids logged as processed, 2: Document Ids logged as processed."
 outputs:
   embeddings:
     type: uri_folder
@@ -87,7 +103,11 @@ command: >-
   --use_rcts '${{inputs.use_rcts}}'
   $[[--citation_url ${{inputs.citation_url}}]]
   $[[--citation_replacement_regex '${{inputs.citation_replacement_regex}}']]
+  $[[--doc_intel_connection_id ${{inputs.doc_intel_connection_id}}]]
   --embeddings_model ${{inputs.embeddings_model}}
   $[[--embeddings_connection_id ${{inputs.embeddings_connection_id}}]]
   $[[--embeddings_container ${{inputs.embeddings_container}}]]
+  --batch_size ${{inputs.batch_size}}
+  --num_workers ${{inputs.num_workers}}
   --output_path ${{outputs.embeddings}}
+  --verbosity ${{inputs.verbosity}}

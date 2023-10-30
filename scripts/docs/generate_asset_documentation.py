@@ -111,7 +111,7 @@ class AssetInfo:
         doc.add_heading("Overview ", level=2)
 
     def _add_doc_description(self, doc):
-        doc.add_paragraph("**Description**: " + self.description)
+        doc.add_raw(self.description)
 
     def _add_doc_asset_version(self, doc):
         doc.add_paragraph("**Version**: " + self.version)

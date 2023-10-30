@@ -18,14 +18,21 @@ from error_definitions import (
 )
 # TODO: Import ForecastColumns from azureml.evaluate.mlflow, when it will be
 # available.
-from constants import TASK, ForecastingConfigContract, ForecastColumns, TextGenerationColumns, DataFrameParams, SubTask
+from constants import (
+    TASK,
+    ForecastingConfigContract,
+    ForecastColumns,
+    TextGenerationColumns,
+    DataFrameParams,
+    SubTask,
+    ChatCompletionConstants
+)
 from image_constants import ImageDataFrameParams, ODISLiterals
 from azureml.evaluate.mlflow.models.evaluation.azureml._image_od_is_evaluator import (
     ImageOdIsEvaluator,
 )
-from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.metrics import compute_metrics, constants
-from logging_utilities import get_logger, log_traceback
+from logging_utilities import get_logger, log_traceback, get_azureml_exception
 
 logger = get_logger(name=__name__)
 
@@ -538,9 +545,7 @@ class CodeGenerationEvaluator(Evaluator):
         y_test_col_name = kwargs.get(DataFrameParams.Ground_Truth_Column_Name, None)
         # TodO: This validaion should ideally be done while data loading. Design needs to be reconsidered
         if extra_cols is None and y_test_col_name is None:
-            exception = DataValidationException._with_error(
-                AzureMLError.create(InvalidGroundTruthColumnNameCodeGen)
-            )
+            exception = get_azureml_exception(DataValidationException, InvalidGroundTruthColumnNameCodeGen, None)
             log_traceback(exception, logger)
             raise exception
         y_test_case_col_name = extra_cols[0] if extra_cols is not None and len(extra_cols) > 0 else None
@@ -548,9 +553,7 @@ class CodeGenerationEvaluator(Evaluator):
             if y_test_case_col_name in y_test.columns:
                 y_test_cases = y_test[[y_test_case_col_name]]
             else:
-                exception = DataValidationException._with_error(
-                    AzureMLError.create(InvalidYTestCasesColumnNameData)
-                )
+                exception = get_azureml_exception(DataValidationException, InvalidYTestCasesColumnNameData, None)
                 log_traceback(exception, logger)
                 raise exception
 
@@ -558,9 +561,7 @@ class CodeGenerationEvaluator(Evaluator):
             if y_test_col_name in y_test.columns:
                 y_test = y_test[[y_test_col_name]]
             else:
-                exception = DataValidationException._with_error(
-                    AzureMLError.create(InvalidGroundTruthColumnNameData)
-                )
+                exception = get_azureml_exception(DataValidationException, InvalidGroundTruthColumnNameData, None)
                 log_traceback(exception, logger)
                 raise exception
         else:
@@ -607,9 +608,23 @@ class ChatCompletionEvaluator(Evaluator):
         Returns:
             _type_: _description_
         """
-        y_pred_formatted = y_pred.iloc[:, 0].apply(lambda x: [item['input_string'] for item in x])
-        metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted.tolist(),
-                                  **self.metrics_config)
+        #  dataframe with 2 columns predictions and preditions appended to the conversation
+        if len(y_pred.columns) > 1:
+            y_pred_formatted = [
+                item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0]["0"]
+                for idx, item in y_pred.iterrows()
+            ]
+        # dataframe wih just predictions appeneded to conversations
+        else:
+            y_pred_formatted = y_pred.values.tolist()[0]
+        #  if ground truth is passed
+        if y_test is not None and len(y_test) > 0:
+            y_test = y_test.iloc[:, 0].apply(lambda x: [x]).tolist()
+            metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted,
+                                      y_test=y_test, **self.metrics_config)
+        else:
+            metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted,
+                                      **self.metrics_config)
         return metrics
 
 

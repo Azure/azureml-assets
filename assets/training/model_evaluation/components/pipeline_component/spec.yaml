@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: model_evaluation_pipeline
-version: 0.0.17
+version: 0.0.18
 type: pipeline
 display_name: Model Evaluation Pipeline
 description: Pipeline component for model evaluation for supported tasks. \
@@ -51,6 +51,7 @@ inputs:
     description: "Mlflow Model (could be a registered model or part of another pipeline"
   label_column_name:
     type: string
+    optional: true
     description: "Label column name in provided test dataset (Ex: label)"
   input_column_names:
     type: string
@@ -74,6 +75,10 @@ inputs:
     type: string
     optional: true
     description: "JSON Serialized string of evaluation_config"
+  openai_config_params:
+    type: string
+    optional: true
+    description: "Required OpenAI Params for calculating GPT Based metrics for QnA task"
 
 outputs:
   evaluation_result:
@@ -83,7 +88,7 @@ outputs:
 jobs:
   validation_trigger_model_evaluation:
     type: command
-    component: azureml:validation_trigger_model_evaluation:0.0.16
+    component: azureml:validation_trigger_model_evaluation:0.0.17
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -96,13 +101,18 @@ jobs:
       label_column_name: '${{parent.inputs.label_column_name}}'
       input_column_names: '${{parent.inputs.input_column_names}}'
       device: '${{parent.inputs.device}}'
-#      batch_size: '${{parent.inputs.batch_size}}'
+      batch_size: '${{parent.inputs.batch_size}}'
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
 
+  validation_succeeded:
+    type: if_else
+    condition: ${{parent.jobs.validation_trigger_model_evaluation.outputs.output}}
+    true_block: ${{parent.jobs.model_prediction}}
+
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.16
+    component: azureml:model_prediction:0.0.17
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -116,11 +126,10 @@ jobs:
       batch_size: '${{parent.inputs.batch_size}}'
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-      validation_info: '${{parent.jobs.validation_trigger_model_evaluation.outputs.validation_info}}'
   
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.16
+    component: azureml:compute_metrics:0.0.17
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -133,5 +142,6 @@ jobs:
       prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+      openai_config_params: '${{parent.inputs.openai_config_params}}'
     outputs:
       evaluation_result: '${{parent.outputs.evaluation_result}}'
