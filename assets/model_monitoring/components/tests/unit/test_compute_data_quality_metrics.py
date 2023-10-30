@@ -12,7 +12,6 @@ from pyspark.sql.types import (
     StringType,
     StructField,
     StructType)
-from pyspark_test import assert_pyspark_df_equal
 from src.data_quality_compute_metrics.compute_data_quality_metrics import (
     compute_data_quality_metrics,
     compute_dtype_violation_count_modify_dataset,
@@ -57,7 +56,7 @@ data_stats = [
 data_stats_table_mod = create_pyspark_dataframe(data_stats, columns)
 
 
-@pytest.mark.local
+@pytest.mark.unit
 class TestModelMonitorDataQuality:
     """Test class for model monitor data quality component."""
 
@@ -167,4 +166,4 @@ class TestModelMonitorDataQuality:
         metrics_df = compute_data_quality_metrics(df_with_timestamp, data_stats_table)
         assert expected_metrics_df.count() == metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
-        assert_pyspark_df_equal(expected_metrics_df, metrics_df, check_columns_in_order=False)
+

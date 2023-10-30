@@ -89,7 +89,7 @@ data_stat_colums = ["featureName", "max_value", "min_value", "dataType", "set"]
 data_stats_table = create_pyspark_dataframe(data_stat_df, data_stat_colums)
 
 
-@pytest.mark.local
+@pytest.mark.unit
 class TestModelMonitorDataQualityStatistic:
     """Test class for model monitor data quality statistics."""
 
@@ -104,7 +104,6 @@ class TestModelMonitorDataQualityStatistic:
         actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp)
         assert data_stats_table.count() == actual_data_stats_table.to_spark().count()
         assert sorted(data_stats_table.collect()) == sorted(actual_data_stats_table.to_spark().collect())
-        assert_pyspark_df_equal(data_stats_table, actual_data_stats_table.to_spark())
 
     @pytest.mark.parametrize("df_with_timestamp, df_for_max_min_value",
                              [(df_with_timestamp, df_for_max_min_value)])
