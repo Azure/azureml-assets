@@ -11,7 +11,7 @@ import pandas as pd
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
-from batch_inference_preparer.endpoint_data_preparer import EndpointDataPreparer
+from aml_benchmark.batch_inference_preparer.endpoint_data_preparer import EndpointDataPreparer
 
 
 logger = get_logger(__name__)

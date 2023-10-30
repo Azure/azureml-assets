@@ -4,13 +4,12 @@
 """Test the functionality of the prompt factory which powers the prompt crafter."""
 
 import pytest
-import os
 import sys
 
+from .test_utils import get_src_dir
 
-sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(__file__)), "components", "src")
-)
+
+sys.path.append(get_src_dir())
 
 
 from aml_benchmark.batch_output_formatter.result_converters import ResultConverters  # noqa: E402
