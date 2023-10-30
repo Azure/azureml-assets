@@ -96,7 +96,11 @@ class Pipeline(Component):
             sub_comp_str = yaml_data['jobs'][s_c]['component']
             sub_comp = parse_component(sub_comp_str)
 
-            new_version = comp_assets_all[sub_comp.name].version
+            try:
+                new_version = comp_assets_all[sub_comp.name].version
+            except KeyError as e:
+                print(f"[{self.name}] Cannot find sub-component {e}, assuming that it comes from a skipped directory.")
+                continue
 
             if sub_comp.version != new_version:
                 needs_update = True
@@ -194,10 +198,15 @@ def generate_assets(folder_path: List[str]) -> Tuple[Dict[str, Component], Dict[
     """Walk the file tree and pull out all the components and component pipelines."""
     comp_assets_all = {}
     pipe_assets_all = {}
-    for root, _, files in os.walk(folder_path):
-        if [d for d in skip_dirs if d in root]:
-            print(f"Skipping {root}")
-            continue
+    for root, dirs, files in os.walk(folder_path, topdown=True):
+        # https://stackoverflow.com/questions/19859840/excluding-directories-in-os-walk
+        new_dirs = []
+        for d in dirs:
+            if d not in skip_dirs:
+                new_dirs.append(d)
+            else:
+                print(f"Going to skip dir '{d}' in root '{root}'")
+        dirs[:] = new_dirs
         comp = parse_asset_yamls(files, root)
         if comp is not None:
             if isinstance(comp, Pipeline):

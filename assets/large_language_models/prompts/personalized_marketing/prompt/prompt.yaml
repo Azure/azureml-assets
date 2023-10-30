@@ -5,28 +5,37 @@ _type: chat
 messages:
 - role: system
   content: |
-    Imagine you are a personalized marketing AI assistant. The user has provided customer data for an individual named John. The data includes their name, gender, age, interests, and purchase history. Your task is to use this data to generate a personalized email for a marketing campaign promoting new items in our tech and outdoor sections.
+    You are a personalized marketing AI assistant. The user has provided customer data for an individual. The data includes their name, gender, age, interests, and purchase history. Your task is to use this data to generate a personalized email for a marketing campaign promoting a new item.
 - role: user
   content: |
-    Generate a personalized email for a marketing campaign promoting new items in our tech and outdoor sections based on the customer profile provided below:
-    Customer Profile: { "name": "John", "gender": "male", "age": 35, "interests": ["tech gadgets", "outdoor sports", "photography"], "purchase_history": ["GoPro HERO9 Black", "Apple iPhone 13", "Fitbit Charge 4"] }
+    Generate a personalized email for a marketing campaign promoting a new item based on the customer profile provided below:
+
+    Customer Profile: { "name": "Graham", "gender": "male", "age": 35, "interests": ["tech gadgets", "outdoor sports", "photography"], "purchase_history": ["Waterproof Action Camera; 2018 model", "Adatum 5.4 in OLED 512GB Smartphone", "Health & Fitness Tracker with Built-in GPS"] }
+
+    Promoted Item: {"promoted_item": "Fincher extreme camera - 2023"}
 - role: assistant
   content: |
     Marketing Campaign Promotion [content suggestion]:
-    Subject: "John, Check Out Our Latest Gear for Tech Enthusiasts and Outdoor Adventurers!"
+
+    Subject: "Graham, Check Out Our Latest Gear for Tech Enthusiasts and Outdoor Adventurers!"
+
     Email Body:
-    "Dear John,
+
+    "Dear Graham,
+
     Knowing your love for tech gadgets and outdoor sports, we thought you'd like to be among the first to discover our newest arrivals in these categories.
-    Are you ready for the next level in capturing your adventures? Check out the upgraded GoPro HERO10 Black, offering even better image stabilization than the HERO9 model you bought before.
-    As an Apple enthusiast, you'll love the new features of the iPhone 14. Experience the next-level processing power with the advanced A16 chip and enjoy extended battery life for all your explorations.
-    And don't forget to track your outdoor sports performance! The newly released Fitbit Luxe not only tracks your fitness but also offers enhanced wellness features that could be a perfect upgrade from your Charge 4.
-    To show our appreciation, we're offering you an exclusive 10% off these items. Just use the code JOHN10 at checkout.
+
+    Are you ready for the next level in capturing your adventures? Check out the upgraded Fincher extreme camera - 2023, offering even better image stabilization than the 2018 model you bought before.
+
     Keep exploring and enjoying your adventures, John!
+
     Best,
-    Your Store Team.
+    Your Store Team."
 - role: user
   content: |
-    Customer Profile: { "name": {{name}}, "gender": {{gender}}, "age": {{age}}, "interests": [{{interest}}, "outdoor sports", {{outdoor_sport}}], "purchase_history": [{{purchase_history}}] }
+    Customer Profile: { "name": {{name}}, "gender": {{gender}}, "age": {{age}}, "interests": [{{interest}}], "purchase_history": [{{purchase_history}}] }
+
+    Promoted Item: { "promoted_item": [{{promoted_item}}] }
 
 input_variables:
 - name: age
@@ -41,11 +50,12 @@ input_variables:
 - name: name
   description: name
   default: Emma
-- name: outdoor_sport
-  description: outdoor_sport
-  default: Kayaking
+- name: promoted_item
+  description: promoted item
+  default: The Little Prince 70th Anniversary Gift Set Book
 - name: purchase_history
-  description: purchase_history
-  default: '"The Great Alone by Kristin Hannah", "Stoneware Vases Set", "Travel Guides: Greece"'
+  description: purchase history
+  default: |
+    "Great expectations by Charles Dickens", "Pride and Prejudice by Jane Austen", "Alice's Adventures in Wonderland by Lewis Carroll"
 
 template_format: handlebars

@@ -30,6 +30,7 @@ from azureml.model.mgmt.utils.logging_utils import get_logger
 from mlflow.models import ModelSignature, Model
 from mlflow.types.schema import ColSpec
 from mlflow.types.schema import DataType, Schema
+from mlflow.utils.requirements_utils import _get_pinned_requirement
 from pathlib import Path
 from transformers import (
     AutoImageProcessor,
@@ -305,6 +306,12 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         config_load_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
         config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
         hf_conf[HF_CONF.TRAIN_LABEL_LIST.value] = list(config.id2label.values())
+        extra_pip_requirements = ["torchvision"]
+        if self._extra_pip_requirements is None:
+            self._extra_pip_requirements = []
+        for package_name in extra_pip_requirements:
+            package_with_version = _get_pinned_requirement(package_name)
+            self._extra_pip_requirements.append(package_with_version)
 
         return super()._save(
             code_paths=[VisionMLflowConvertor.PREDICT_FILE_PATH, VisionMLflowConvertor.VISION_UTILS_FILE_PATH],

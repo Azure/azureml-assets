@@ -125,7 +125,7 @@ class ModelPredictionRunner:
         data = read_model_prediction_data(test_data, self.task, self.batch_size)
         data = map(_clean_and_validate_dataset, data, repeat(all_cols), repeat(self.batch_size))
         data = map(prepare_data, data, repeat(self.task), repeat(self.label_column_name),
-                   repeat(self.input_column_names), repeat(False), repeat(self.extra_y_test_cols))
+                   repeat(False), repeat(self.extra_y_test_cols))
         return data  # X_test, y_test
 
     def load_tokenizer(self, token_counts_enabled):

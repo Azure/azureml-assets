@@ -267,7 +267,13 @@ def validate_Xy(X_test, y_test):
         X_test (_type_): _description_
         y_test (_type_): _description_
     """
-    _validate_data_passed(X_test, "test_data")
+    # _validate_data_passed(X_test, "test_data")
+    assert_and_raise(
+        condition=(X_test is not None and len(X_test) != 0),
+        exception_cls=DataValidationException,
+        error_cls=InvalidData,
+        message_kwargs={"input_port": "test_data"}
+    )
     assert_and_raise(
         condition=y_test is not None,
         exception_cls=DataValidationException,

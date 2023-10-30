@@ -81,7 +81,7 @@ inputs:
 
   ground_truth_key:
     type: string
-    optional: false
+    optional: true
     description: >-
       key for ground_truth in an example. 
       we take separate column for ground_truth to enable use cases like summarization, translation, 

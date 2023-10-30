@@ -113,6 +113,7 @@ class BasePredictor(ABC):
                         f"Current Device: {self.current_device} does not match expected device {cuda_current_device}")
                     self.model = load_model(self.model_uri, cuda_current_device, self.task_type)
                     self.current_device = cuda_current_device
+                    predict_fn = kwargs.get('predict_fn', self.model.predict)
                 kwargs["device"] = self.current_device
                 return predict_fn(X_test, **kwargs)
             except TypeError as e:
@@ -124,6 +125,7 @@ class BasePredictor(ABC):
         if self.device != -1:
             logger.warning("Running predictions on CPU.")
             self.model = load_model(self.model_uri, -1, self.task_type)
+            predict_fn = kwargs.get('predict_fn', self.model.predict)
             try:
                 logger.info("Loading model and prediction with cuda current device. Trying CPU.")
                 if 'device' in kwargs:

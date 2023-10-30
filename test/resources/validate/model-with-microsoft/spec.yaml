@@ -1,19 +1,11 @@
 # This isn't a proper model YAML, but we're not testing this here
-$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
-
-description: >-
-  An environment for deep learning with Tensorflow containing the Azure ML SDK and additional python packages.
-
-name: "{{asset.name}}"
-version: "{{asset.version}}"
-
-image: "{{image.publish.hostname}}/{{image.name}}:{{asset.version}}"
-
-os_type: linux
-
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: microsoft-thing
+version: 1
+path: ./
 tags:
-  Tensorflow: "2.8"
-  GPU: Cuda11
-  OS: Ubuntu20.04
-  Training: ""
-  Preview: ""
+  author: microsoft
+properties:
+  SHA: 9da301148150e37e533abef672062fa49f6bda4f
+description: >-
+  Microsoft test model
