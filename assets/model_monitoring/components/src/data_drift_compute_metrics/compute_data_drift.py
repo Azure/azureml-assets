@@ -43,6 +43,12 @@ def compute_data_drift_measures_tests(
     numerical_production_df = production_df.select(numerical_columns_names)
     categorical_production_df = production_df.select(categorical_columns_names)
 
+    if len(numerical_columns_names) == 0 and \
+       len(categorical_columns_names) == 0:
+        print("No common columns found between production data and baseline"
+              "data. We dont support this scenario.")
+        return
+
     if len(numerical_columns_names) != 0:
         numerical_df = compute_numerical_data_drift_measures_tests(
             numerical_baseline_df,
@@ -64,14 +70,9 @@ def compute_data_drift_measures_tests(
             categorical_columns_names,
             categorical_threshold,
         )
-        print(categorical_df)
     # TODO: fix this if, else
     if len(numerical_columns_names) != 0 and len(categorical_columns_names) != 0:
-        if categorical_df is not None:
-            output_df = numerical_df.union(categorical_df)
-        else:
-            print("categorical_df is none")
-            output_df = numerical_df
+        output_df = numerical_df.union(categorical_df)
     elif len(numerical_columns_names) != 0:
         output_df = numerical_df
     else:
@@ -93,7 +94,8 @@ def compute_data_drift_measures_tests(
         "",
         ""
     ]
-    row_count_metric_df = get_output_spark_df([baseline_count_row, target_count_row])
+    row_count_metric_df = get_output_spark_df([baseline_count_row,
+                                               target_count_row])
     row_count_metric_df = row_count_metric_df \
         .withColumn("threshold_value", F.lit("nan").cast("float"))
     output_df = output_df.union(row_count_metric_df)
