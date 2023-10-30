@@ -641,6 +641,7 @@ jobs:
       early_stopping_threshold: '${{parent.inputs.early_stopping_threshold}}'
       apply_deepspeed: '${{parent.inputs.apply_deepspeed}}'
       deepspeed: '${{parent.inputs.deepspeed}}'
+      deepspeed_stage: '${{parent.inputs.deepspeed_stage}}'
       apply_ort: '${{parent.inputs.apply_ort}}'
       preprocess_output: '${{parent.jobs.text_generation_datapreprocess.outputs.output_dir}}'
       model_selector_output: '${{parent.jobs.text_generation_model_import.outputs.output_dir}}'
