@@ -165,4 +165,4 @@ class TestModelMonitorDataQuality:
         metrics_df = compute_data_quality_metrics(df_with_timestamp, data_stats_table)
         assert expected_metrics_df.count() == metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
-        assert_pyspark_df_equal(left_df=expected_metrics_df, actual_df=metrics_df, check_columns_in_order=False)
+        assert_pyspark_df_equal(expected_metrics_df, metrics_df, check_columns_in_order=False)

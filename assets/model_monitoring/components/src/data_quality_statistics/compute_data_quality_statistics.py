@@ -159,7 +159,6 @@ def compute_data_quality_statistics(df) -> ps.DataFrame:
     # Note: excluding boolean type column as the boolean type do not need to be calculated
     # for max_vals and min_vals.
     df_for_max_min_value = get_features_for_max_min_calculation(df=df)
-    df_for_max_min_value.show()
     # The compute_max_df and compute_min_df works for all numerical, except ShortType()
     # They will get null for non-numerical data
     max_vals = compute_max_df(df=df_for_max_min_value.to_pandas_on_spark())

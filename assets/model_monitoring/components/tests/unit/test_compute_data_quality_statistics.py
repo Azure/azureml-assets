@@ -81,7 +81,7 @@ data_stat_df = [
                 ("feature_binary", None, None, "BinaryType()", None),
                 ("feature_float", 56.70000076293945, 3.549999952316284, "FloatType()", None),
                 ("feature_short", None, None, "ShortType()", None),
-                ("feature_char", None, None, "CharType(30)", None),
+                ("feature_char", None, None, "StringType()", "[char]"),
                 ("feature_date", None, None, "DateType()", None),
 ]
 data_stat_colums = ["featureName", "max_value", "min_value", "dataType", "set"]
@@ -89,7 +89,7 @@ data_stat_colums = ["featureName", "max_value", "min_value", "dataType", "set"]
 data_stats_table = create_pyspark_dataframe(data_stat_df, data_stat_colums)
 
 
-@pytest.mark.unit
+@pytest.mark.local
 class TestModelMonitorDataQualityStatistic:
     """Test class for model monitor data quality statistics."""
 
