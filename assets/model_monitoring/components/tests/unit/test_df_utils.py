@@ -59,9 +59,7 @@ class TestDFUtils:
         assert categorical_columns == []
 
         # Test with int being same value
-        column_dtype_map = {
-                            'col1': 'int'
-                            }
+        column_dtype_map = {'col1': 'int'}
         baseline_df = pd.DataFrame({
                                     'col1': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
