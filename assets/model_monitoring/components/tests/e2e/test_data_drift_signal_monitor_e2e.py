@@ -60,8 +60,8 @@ class TestDataDriftModelMonitor:
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):
-        """Test the happy path scenario where the data has drift and default
-        settings are used."""
+        """Test the happy path scenario where the data has no drift."""
+     
         pipeline_job = _submit_data_drift_model_monitor_job(
             ml_client,
             get_component,
@@ -91,8 +91,7 @@ class TestDataDriftModelMonitor:
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):
-        """Test the happy path scenario where the data has drift and default
-        settings are used."""
+        """Test the happy path scenario with int data."""
         pipeline_job = _submit_data_drift_model_monitor_job(
             ml_client,
             get_component,

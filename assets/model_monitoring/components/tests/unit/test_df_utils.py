@@ -131,6 +131,7 @@ class TestDFUtils:
         assert is_numerical(baseline_column) == result
 
     def test_get_common_columns(self):
+        """Test get common columns."""
         # Test with two empty dataframes
         baseline_df = pd.DataFrame(columns=[])
         production_df = pd.DataFrame(columns=[])
