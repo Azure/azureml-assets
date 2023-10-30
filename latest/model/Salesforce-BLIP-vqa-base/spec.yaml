@@ -21,7 +21,7 @@ tags:
   Preview: ''
   license: mit
   task: visual-question-answering
-version: 1
+version: 2
 description: |-
   `BLIP` is a new Vision-Language Pre-training (VLP) framework that excels in both understanding-based and generation-based tasks. It effectively utilizes noisy web data by bootstrapping the captions, where a captioner generates synthetic captions and a filter removes the noisy ones. BLIP achieves state-of-the-art results on a wide range of vision-language tasks, such as image-text retrieval, image captioning, and VQA. It also demonstrates strong generalization ability when directly transferred to video-language tasks in a zero-shot manner. Code, models, and datasets are available on the official repository.
 

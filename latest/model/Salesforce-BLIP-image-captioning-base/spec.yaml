@@ -21,7 +21,7 @@ tags:
   Preview: ''
   license: mit
   task: image-to-text
-version: 1
+version: 2
 description: |-
   The `BLIP` framework is a new Vision-Language Pre-training (VLP) framework that can be used for both vision-language understanding and generation tasks. BLIP effectively utilizes noisy web data by bootstrapping the captions, where a captioner generates synthetic captions and a filter removes the noisy ones. This framework achieves state-of-the-art results on a wide range of vision-language tasks, such as image-text retrieval, image captioning, and VQA. BLIP also demonstrates strong generalization ability when directly transferred to video-language tasks in a zero-shot manner. The code, models, and datasets are available for use. Researchers should carefully assess the safety and fairness of the model before deploying it in any real-world applications.
 

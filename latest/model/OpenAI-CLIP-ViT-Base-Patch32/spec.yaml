@@ -21,7 +21,7 @@ tags:
   Preview: ''
   license: mit
   task: zero-shot-image-classification
-version: 4
+version: 5
 description: |
   The `CLIP` model was developed by OpenAI researchers to learn about what contributes to robustness in computer vision tasks and to test the ability of models to generalize to arbitrary image classification tasks in a zero-shot manner. The model uses a ViT-B/32 Transformer architecture as an image encoder and uses a masked self-attention Transformer as a text encoder. The model was trained on publicly available image-caption data, which was gathered in a mostly non-interventionist manner. The model is intended as a research output for research communities, and the primary intended users of these models are AI researchers. The model has been evaluated on a wide range of benchmarks across a variety of computer vision datasets, but it currently struggles with respect to certain tasks such as fine-grained classification and counting objects. The model also poses issues with regards to fairness and bias, and the specific biases it exhibits can depend significantly on class design and the choices one makes for categories to include and exclude.
 

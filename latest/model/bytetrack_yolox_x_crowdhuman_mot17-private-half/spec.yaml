@@ -18,7 +18,7 @@ tags:
     apply_deepspeed: 'false'
     apply_ort: 'false'
   task: multi-object-tracking
-version: 1
+version: 2
 description: |
   `bytetrack_yolox_x_crowdhuman_mot17-private-half` model is from <a href="https://github.com/open-mmlab/mmtracking/tree/v0.14.0" target="_blank">OpenMMLab's MMTracking library</a>. This model is <a href="https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/bytetrack/metafile.yml#L24" target="_blank">reported</a> to obtain MOTA: 78.6, IDF1: 79.2 for video-multi-object-tracking task on <a href="https://motchallenge.net/data/MOT17/" target="_blank">MOT17-half-eval dataset</a>.
 
