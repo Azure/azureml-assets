@@ -71,19 +71,15 @@ def _get_timestamp():
 
 def post_email_event(signal_name: str, emails: str, message: str):
     """Post an email event with message to the current job."""
-    logger = logging.getLogger("event_utils")
-
     run: Run = mlflow.get_run(run_id=_get_run_id())
     root_run_id = run.info.run_id
     if ROOT_RUN_ID_TAG in run.data.tags:
         root_run_id = run.data.tags[ROOT_RUN_ID_TAG]
 
-    logger.info(f"Posting email event with message '{message}' to run '{root_run_id}'.")
-    with mlflow.start_run(nested=True, run_id=root_run_id) as run:
-        mlflow.set_tag(AML_SEND_EMAIL_ADDRESSES_TAG, emails)
-        mlflow.set_tag(
-            f"azureml.modelmonitor.threshold.breached.{signal_name}", message
-        )
+    print(f"Posting email event with message '{message}' to run '{root_run_id}'.")
+    client = mlflow.tracking.MlflowClient()
+    client.set_tag(root_run_id, AML_SEND_EMAIL_ADDRESSES_TAG, emails)
+    client.set_tag(root_run_id, f"azureml.modelmonitor.threshold.breached.{signal_name}", message)
 
 
 def post_warning_event(message):
