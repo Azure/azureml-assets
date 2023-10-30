@@ -7,7 +7,7 @@ dependencies:
 - pip=21.3.1
 - pip:
   - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone]>=0.2.15
-  - langchain==0.0.236
+  - langchain==0.0.308
   - azureml-core=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
