@@ -166,4 +166,3 @@ class TestModelMonitorDataQuality:
         metrics_df = compute_data_quality_metrics(df_with_timestamp, data_stats_table)
         assert expected_metrics_df.count() == metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
-
