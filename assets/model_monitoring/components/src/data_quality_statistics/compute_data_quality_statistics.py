@@ -58,7 +58,7 @@ def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
 
 def get_features_for_max_min_calculation(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     """
-    Compute a Spark DataFrame with features which get max and min value
+    Compute a Spark DataFrame with features which get max and min value.
 
     Args:
         df: Input Spark DataFrame.
