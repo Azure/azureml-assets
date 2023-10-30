@@ -1533,7 +1533,6 @@ def apply_annotation(
 ):
     """Apply annotation to all samples in the production_dataset."""
     production_df = io_utils.read_mltable_in_spark(production_dataset)
-    row_count = production_df.count()
     # Ensure input data has the correct columns given the metrics
     # Question, answer required for coherence and fluency
     qa_required = len(list(set(QA_METRIC_NAMES).intersection(
@@ -1558,11 +1557,15 @@ def apply_annotation(
         SIMILARITY: [prompt_column_name, completion_column_name, ground_truth_column_name]
     }
     # Sampling
-    production_df = production_df.sample(withReplacement=False, fraction=sample_rate)
+    production_df_sampled = production_df.sample(withReplacement=False, fraction=sample_rate)
     if production_df.count() == 0:
-        raise ValueError("Not enough data resulting from sample_rate and production dataset. "
-                         "Try increasing sample_rate.")
-    production_df_with_index = production_df.withColumn("id",
+        print("Not enough data resulting from sample_rate and production dataset. "
+                         "Using default of 5 records. To use sample_rate with this dataset, "
+                         "try increasing sample_rate value.")
+        production_df_sampled.sample(withReplacement=False, n=5)
+    production_df = production_df_sampled
+    row_count = production_df.count()
+    production_df_with_index = production_df_sampled.withColumn("id",
                                                         row_number()
                                                         .over(Window.orderBy(monotonically_increasing_id()))-1)
 
