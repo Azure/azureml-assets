@@ -428,7 +428,7 @@ class TestInferencePostprocessorScript:
             argss.extend(["--label_map", f"'{label_map}'"])
         argss = " ".join(argss)
         src_dir = get_src_dir()
-        cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+        cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
         run_command(f"{cmd}")
         _verify_and_get_output_records(
             dataset_name,
@@ -474,7 +474,7 @@ class TestInferencePostprocessorScript:
                     f"'{template}'",
                 ]
             )
-            cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             out_message = e.output.strip()
@@ -488,7 +488,7 @@ class TestInferencePostprocessorScript:
                     f"'{template}'",
                 ]
             )
-            cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -508,7 +508,7 @@ class TestInferencePostprocessorScript:
                     f"'{template}'",
                 ]
             )
-            cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -527,7 +527,7 @@ class TestInferencePostprocessorScript:
                     dummy_script_path,
                 ]
             )
-            cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -918,7 +918,7 @@ class TestInferencePostprocessorScript:
                     f"'{template}'",
                 ]
             )
-            cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()

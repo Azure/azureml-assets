@@ -108,7 +108,7 @@ outputs:
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
-  python -m prompt_crafter.main 
+  python -m aml_benchmark.prompt_crafter.main 
   --test_data ${{inputs.test_data}}
   $[[--few_shot_data ${{inputs.few_shot_data}}]]
   --n_shots ${{inputs.n_shots}}

@@ -321,7 +321,7 @@ class TestPromptCrafterScript:
         src_dir = get_src_dir()
         args = [
             f"cd {src_dir} &&",
-            "python -m prompt_crafter.main",
+            "python -m aml_benchmark.prompt_crafter.main",
             "--system_message",
             f"{system_message}",
             "--random_seed",
