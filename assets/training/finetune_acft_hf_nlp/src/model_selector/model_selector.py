@@ -501,7 +501,7 @@ def main():
     )
 
     # Adding flavor map to args
-    args.__setattr__("flavor_map", FLAVOR_MAP)
+    setattr(args, "flavor_map", FLAVOR_MAP)
 
     model_selector(args)
 
