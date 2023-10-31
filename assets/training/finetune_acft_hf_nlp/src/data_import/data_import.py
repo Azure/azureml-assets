@@ -5,7 +5,7 @@
 
 import argparse
 from argparse import Namespace
-from typing import List
+from typing import List, Optional
 
 from pathlib import Path
 import shutil
@@ -69,12 +69,12 @@ def get_parser():
     return parser
 
 
-def _validate_file_paths_with_supported_formats(file_paths: List[str]):
+def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]]):
     """Check if the file path is in the list of supported formats."""
     global SUPPORTED_FILE_FORMATS
 
     for file_path in file_paths:
-        if not Path(file_path).suffix.lower() in SUPPORTED_FILE_FORMATS:
+        if file_path and not Path(file_path).suffix.lower() in SUPPORTED_FILE_FORMATS:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
                     ACFTUserError,
