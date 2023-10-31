@@ -4,7 +4,7 @@ type: pipeline
 name: data_quality_signal_monitor
 display_name: Data Quality - Signal Monitor
 description: Computes the data quality of a target dataset with reference to a baseline.
-version: 0.3.11
+version: 0.3.12
 is_deterministic: true
 
 inputs:
@@ -87,7 +87,7 @@ jobs:
       type: aml_token
   compute_baseline_data_statistics:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.1
+    component: azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.2
     inputs:
       baseline_data:
         type: mltable
@@ -102,7 +102,7 @@ jobs:
       type: aml_token
   compute_baseline_data_quality:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.5
+    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.6
     inputs:
       input_data:
         type: mltable
@@ -125,7 +125,7 @@ jobs:
       type: aml_token
   compute_target_data_quality:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.5
+    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.6
     inputs:
       input_data:
         type: mltable
@@ -187,7 +187,7 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.2
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.4
     inputs:
       signal_metrics:
         type: mltable

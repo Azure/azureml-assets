@@ -493,6 +493,10 @@ def get_parser():
             metrics_constants.MEAN_AVERAGE_PRECISION,
             metrics_constants.PRECISION,
             metrics_constants.RECALL,
+            metrics_constants.MOTA,
+            metrics_constants.MOTP,
+            metrics_constants.IDF1,
+            metrics_constants.IDSW
         ),
         help=(
             "Specify the metric to use to compare two different models."
@@ -669,6 +673,7 @@ def main():
         Tasks.MM_INSTANCE_SEGMENTATION,
         Tasks.HF_MULTI_CLASS_IMAGE_CLASSIFICATION,
         Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION,
+        Tasks.MM_MULTI_OBJECT_TRACKING,
     ]:
         training_defaults = TrainingDefaults(
             task=args.task_name,
