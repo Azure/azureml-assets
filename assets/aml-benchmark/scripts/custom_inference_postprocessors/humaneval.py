@@ -20,9 +20,8 @@ from typing import Any, Dict, List, Union
 # flake8: noqa
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
-\S|$))"""
+\\S|$))"""
 CODE_GENERATION_DEBUG=False
-failed_runs = []
 
 
 def _parse_args():
