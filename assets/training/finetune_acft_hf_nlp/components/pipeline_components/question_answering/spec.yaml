@@ -650,9 +650,9 @@ jobs:
   ft_nlp_model_converter:
     type: command
     component: azureml:ft_nlp_model_converter:0.0.24
-    compute: '${{parent.inputs.compute_model_import}}'
+    compute: '${{parent.inputs.compute_finetune}}'
     resources:
-      instance_type: '${{parent.inputs.instance_type_model_import}}'
+      instance_type: '${{parent.inputs.instance_type_finetune}}'
     inputs:
       model_path: '${{parent.jobs.question_answering_finetune.outputs.pytorch_model_folder}}'
       converted_model: '${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}'
