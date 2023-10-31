@@ -93,11 +93,16 @@ def data_import(args: Namespace):
 
     # validate file formats
     _validate_file_paths_with_supported_formats([args.train_file_path, args.validation_file_path])
+    logger.info("File format validation successful.")
 
     # copy files
+    logger.info(f"Copy started for {args.train_file_path}")
     shutil.copyfile(args.train_file_path, args.output_dataset / TRAIN_FILE_NAME)
+    logger.info("Copy completed")
     if args.validation_file_path is not None:
+        logger.info(f"Copy started for {args.validation_file_path}")
         shutil.copyfile(args.validation_file_path, args.output_dataset / VALIDATION_FILE_NAME)
+        logger.info("Copy completed")
 
 
 @swallow_all_exceptions(time_delay=5)
