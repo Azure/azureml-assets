@@ -832,12 +832,19 @@ def finetune(args: Namespace):
     mlflow_ft_conf = {
         "mlflow_model_signature": {},
         "mlflow_hftransformers_misc_conf": {},
+        "mlflow_flavor": None,
     }
 
     mlflow_data = _load_mlflow_model(args.model_selector_output)
 
-    if mlflow_data != None:
-        current_flavor = _get_model_flavor([MLFLOW_FLAVORS.TRANSFORMERS, MLFLOW_FLAVORS.HFTRANSFORMERS, MLFLOW_FLAVORS.HFTRANSFORMERSV2], mlflow_data)
+    if mlflow_data is not None:
+        mlflow_flavors = [
+            MLFLOW_FLAVORS.TRANSFORMERS,
+            MLFLOW_FLAVORS.HFTRANSFORMERS,
+            MLFLOW_FLAVORS.HFTRANSFORMERSV2,
+        ]
+        current_flavor = _get_model_flavor(mlflow_flavors, mlflow_data)
+        mlflow_ft_conf["mlflow_flavor"] = current_flavor
         # set task based mlflow_model_signature
         if getattr(args, "task_name", None) is not None:
             if current_flavor is not None and current_flavor in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR.keys():
@@ -952,23 +959,22 @@ def finetune(args: Namespace):
 
 
 def _remove_unwanted_packages(model_save_path: str, unwanted_packages: list):
-    req_file_path= os.path.join(model_save_path, 'requirements.txt')
-    conda_file_path = os.path.join(model_save_path, 'conda.yaml')
+    req_file_path = os.path.join(model_save_path, "requirements.txt")
+    conda_file_path = os.path.join(model_save_path, "conda.yaml")
     requirements = None
     if os.path.exists(req_file_path):
-        with open(req_file_path, 'r') as f:
+        with open(req_file_path, "r") as f:
             requirements = f.readlines()
         if requirements:
             for package in unwanted_packages:
                 requirements = [item for item in requirements if not item.startswith(package)]
-            with open(req_file_path, 'w') as f:
+            with open(req_file_path, "w") as f:
                 f.writelines(requirements)
             logger.info("Updated requirements.txt file")
 
     if os.path.exists(conda_file_path):
-        with open(conda_file_path, 'r') as f:
+        with open(conda_file_path, "r") as f:
             conda_dict = yaml.safe_load(f)
-            # pip_dependency = [item for item in conda_dict["dependencies"] if isinstance(item, dict) and "pip" in item][0]
             for i in range(len(conda_dict["dependencies"])):
                 if "pip" in conda_dict["dependencies"][i] and isinstance(conda_dict["dependencies"][i], dict):
                     pip_list = conda_dict["dependencies"][i]["pip"]
@@ -978,7 +984,7 @@ def _remove_unwanted_packages(model_save_path: str, unwanted_packages: list):
                         conda_dict["dependencies"][i]["pip"] = pip_list
                         break
 
-        with open(conda_file_path, 'w') as f:
+        with open(conda_file_path, "w") as f:
             yaml.safe_dump(conda_dict, f)
         logger.info("Updated conda.yaml file")
 
