@@ -357,8 +357,8 @@ command: python model_selector/model_selector.py --task_name TextGeneration $[[-
   --task_name TextGeneration --text_key '${{inputs.text_key}}' $[[--ground_truth_key
   '${{inputs.ground_truth_key}}']] $[[--batch_size '${{inputs.batch_size}}']] $[[--pad_to_max_length
   '${{inputs.pad_to_max_length}}']] $[[--max_seq_length '${{inputs.max_seq_length}}']]
-  $[[--train_file_path '${{inputs.dataset_input}}/train_input.jsonl']] $[[--validation_file_path
-  '${{inputs.dataset_input}}/validation_input.jsonl']] $[[--test_file_path '${{inputs.dataset_input}}/train_input.jsonl']]
+  --train_file_path '${{inputs.dataset_input}}/train_input.jsonl' --validation_file_path
+  '${{inputs.dataset_input}}/validation_input.jsonl' --test_file_path '${{inputs.dataset_input}}/train_input.jsonl'
   --model_selector_output model_selector_output --output_dir preprocess_output &&
   python -m torch.distributed.launch --nproc_per_node=${{inputs.number_of_gpu_to_use_finetuning}}
   finetune/finetune.py $[[--apply_lora '${{inputs.apply_lora}}']] $[[--merge_lora_weights
