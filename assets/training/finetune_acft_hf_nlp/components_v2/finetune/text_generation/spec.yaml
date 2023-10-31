@@ -17,10 +17,12 @@ inputs:
     type: mlflow_model
     optional: True
     description: Input folder path containing mlflow model for further finetuning. Proper model/huggingface id must be passed.
+    mode: download
   dataset_input:
     type: uri_folder
     optional: False
     description: Output of data import component. The folder contains train and validation data.
+    mode: download
   text_key:
     type: string
     optional: False
