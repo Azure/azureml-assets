@@ -133,7 +133,7 @@ def get_model_name(finetune_args_path: str) -> Optional[str]:
 
 
 def convert_lora_weights_to_safetensors(model_path: str):
-    """Reads the bin files and convert them to safe tensors."""
+    """Read the bin files and convert them to safe tensors."""
     import os
     import torch
     from azureml.acft.contrib.hf.nlp.utils.io_utils import find_files_with_inc_excl_pattern
@@ -151,7 +151,7 @@ def convert_lora_weights_to_safetensors(model_path: str):
 
 
 def copy_model_to_output(model_path: str, output_dir: str):
-    """Copy the model from model path to output dir"""
+    """Copy the model from model path to output dir."""
     import shutil
     logger.info("Started copying the model weights to output directory")
     shutil.copytree(model_path, output_dir, dirs_exist_ok=True)
@@ -184,7 +184,6 @@ def get_properties(finetune_args_path: str) -> Dict[str, str]:
 
 def register_model(args: Namespace):
     """Run main function for sdkv1."""
-
     model_name = args.model_name
     model_type = args.model_type
     model_path = args.model_path
