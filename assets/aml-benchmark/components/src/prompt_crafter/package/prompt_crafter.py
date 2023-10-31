@@ -76,6 +76,7 @@ class PromptCrafter:
         few_shot_data: Optional[str],
         prefix: Optional[str],
         label_map: Optional[str],
+        label_key: Optional[str],
         additional_payload: Optional[str],
         system_message: Optional[str],
         base_prompt_factory_cls: Optional[PromptFactory] = PromptFactory,
@@ -84,6 +85,7 @@ class PromptCrafter:
         """Initialize the prompt crafter."""
         self.metadata_keys = metadata_keys
         self.additional_payload = additional_payload
+        self.label_key = label_key
         params = {k: v for k, v in locals().items() if k not in ["self", "base_prompt_factory_cls", "params"]}
         self.mlflow_logger = _MLFlowLogger()
         self.mlflow_logger.save_parameters(params=params, output_mltable=output_mltable)
@@ -116,6 +118,7 @@ class PromptCrafter:
             few_shot_pool=few_shot_pool,
             few_shot_separator=few_shot_separator,
             prefix=prefix,
+            label_key=label_key,
             label_map_str=label_map,
             output_pattern=output_pattern,
             system_message=system_message,

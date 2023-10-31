@@ -44,6 +44,7 @@ class PromptFactory(ABC):
     few_shot_pattern: Optional[str] = None
     few_shot_separator: Optional[str] = None
     prefix: Optional[str] = None
+    label_key: Optional[str] = None
     label_map_str: Optional[str] = None
     output_pattern: Optional[str] = None
     system_message: Optional[str] = None
