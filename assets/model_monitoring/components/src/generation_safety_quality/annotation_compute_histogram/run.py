@@ -1567,8 +1567,8 @@ def apply_annotation(
         # if the production dataset is less than the sample_rate, use all the data. otherwise, default to 5.
         fraction=float(5/production_df.count())
         if fraction < sample_rate:
-            fraction=float(production_df.count())
-        production_df_sampled = production_df_sampled.sample(withReplacement=False, fraction=fraction)
+            fraction=1.0
+        production_df_sampled = production_df.sample(withReplacement=False, fraction=fraction)
 
     production_df = production_df_sampled
     row_count = production_df.count()
