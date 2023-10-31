@@ -1562,19 +1562,18 @@ def apply_annotation(
     production_df_sampled = production_df.sample(withReplacement=False, fraction=sample_rate)
     if production_df_sampled.count() == 0:
         print("Not enough data resulting from sample_rate and production dataset. "
-                         "Using default sampling value. To use sample_rate with this dataset, "
-                         "try increasing sample_rate value.")
+                "Using default sampling value. To use sample_rate with this dataset, "
+                "try increasing sample_rate value.")
         # if the production dataset is less than the sample_rate, use all the data. otherwise, default to 5.
-        fraction=float(5/production_df.count())
+        fraction = float(5 / production_df.count())
         if fraction < sample_rate:
-            fraction=1.0
+            fraction = 1.0
         production_df_sampled = production_df.sample(withReplacement=False, fraction=fraction)
 
     production_df = production_df_sampled
     row_count = production_df.count()
-    production_df_with_index = production_df_sampled.withColumn("id",
-                                                        row_number()
-                                                        .over(Window.orderBy(monotonically_increasing_id()))-1)
+    production_df_with_index = production_df_sampled.withColumn("id", row_number()
+                                                                .over(Window.orderBy(monotonically_increasing_id()))-1)
 
     spark = io_utils.init_spark()
     spark_conf = spark.sparkContext.getConf()
