@@ -113,7 +113,7 @@ def main(
     :param output_pattern: Pattern to use for output prompts.
     :param prompt_pattern: Pattern to use for prompts.
     :param output_file: Path to jsonl with generated prompts.
-    :param ground_truth_column_name: Ground truth column.
+    :param ground_truth_column_name: Ground truth column name.
     :param few_shot_separator: Separator to use for few-shot prompts.
     :param prefix: Prefix to use for prompts.
     :param system_message: System message to use for prompts.

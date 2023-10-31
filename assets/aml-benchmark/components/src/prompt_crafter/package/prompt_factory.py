@@ -191,8 +191,13 @@ class PromptFactory(ABC):
         if self.output_pattern is not None:
             output_data['completion'] = self.get_label_from_output_pattern(row)
 
-        if self.ground_truth_column_name is not None and self.ground_truth_column_name in row:
-            output_data['ground_truth_column_name'] = row[self.ground_truth_column_name]
+        if self.ground_truth_column_name is not None and len(self.ground_truth_column_name) > 0:
+            if self.ground_truth_column_name in row:
+                output_data['ground_truth'] = row[self.ground_truth_column_name]
+            else:
+                mssg = "Ground truth column is not present in the data"
+                raise BenchmarkValidationException._with_error(
+                        AzureMLError.create(BenchmarkValidationError, error_details=mssg))
 
         if self.metadata_keys is not None:
             def collect_metadata(metadata_keys, data, index):
