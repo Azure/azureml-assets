@@ -189,7 +189,6 @@ def register_model(args: Namespace):
     model_type = args.model_type
     model_path = args.model_path
     registration_details_folder = args.registration_details_folder
-    model_version = args.model_version
     tags, properties, model_description = {}, {}, ""
 
     # set properties
