@@ -14,6 +14,7 @@ import os
 import socket
 import subprocess
 import time
+import copy
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
 
@@ -69,6 +70,7 @@ class VLLMEngine(AbstractEngine):
         self.task_config: TaskConfig = task_config
         self._server_process: Optional[subprocess.Popen] = None
         self._vllm_args: Dict = self.engine_config.vllm_config or {}
+        self._verify_and_convert_float_type()
         self._load_vllm_defaults()
 
     @log_execution_time
@@ -94,6 +96,28 @@ class VLLMEngine(AbstractEngine):
             )
         if "model" not in self._vllm_args:
             self._vllm_args["model"] = self.engine_config.model_id
+    
+    def _verify_and_convert_float_type(self):
+        """
+        Check to see whether the model's float type is compatible with the compute type selected.
+
+        Bfloat16 is only supported on GPUs such as A100s. V100s do not support bfloat16, only float16.
+        Converting from bfloat16 to float16 is ok in this case.
+        """
+        # Check if the GPU supports the dtype.
+        dtype = self._vllm_args.get("dtype", "auto")
+        if dtype == "bfloat16":
+            compute_capability = torch.cuda.get_device_capability()
+            if compute_capability[0] < 8:
+                gpu_name = torch.cuda.get_device_name()
+
+                # Cast bfloat16 to float16
+                self._vllm_args["dtype"] = "float16"
+                logger.warning(
+                    "Bfloat16 is only supported on GPUs with compute capability "
+                    f"of at least 8.0. Your {gpu_name} GPU has compute capability "
+                    f"{compute_capability[0]}.{compute_capability[1]}. "
+                    f"Bfloat16 will be converted to float16.")
 
     def _start_server(self, server_args: Dict):
         """Start the VLLM server with the given arguments."""
@@ -150,8 +174,6 @@ class VLLMEngine(AbstractEngine):
     @log_execution_time
     def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
         """Generate responses for the given prompts with the given parameters."""
-        params = self._gen_params_to_vllm_params(params)
-
         # pop _batch_size from params if it exists, set it to 1 by default (for testing only)
         batch_size = params.pop("_batch_size", 1)
 
@@ -169,6 +191,7 @@ class VLLMEngine(AbstractEngine):
     def _generate_single_prompt(self, prompt: str, params: Dict) -> InferenceResult:
         """Generate a response for a single prompt with the given parameters."""
         api_url = self._get_generate_uri()
+        unfiltered_params = copy.deepcopy(params)
         params = self._gen_params_to_vllm_params(params)
         headers = {"User-Agent": "VLLMEngine Client"}
 
@@ -183,13 +206,13 @@ class VLLMEngine(AbstractEngine):
         if response.status_code == 200:
             # take the first candidate from the list of candidates (if beam search was used)
             output = json.loads(response.content)["text"][0]
-            generated_text = self._del_prompt_if_req(prompt, output)
+            generated_text = self._del_prompt_if_req(prompt, output, unfiltered_params)
             inference_time_ms = (end_time - start_time) * 1000
             logger.info(f"Inference time: {inference_time_ms} ms")
 
             # TODO: Until mii returns the num tokens, approximate num_tokens. roughly, 75 words ~= 100 tokens
             num_tokens = (
-                len(self._del_prompt_if_req(prompt, output, force=True).split(" "))
+                len(self._del_prompt_if_req(prompt, output, unfiltered_params, force=True).split(" "))
                 // 75
                 * 100
             )

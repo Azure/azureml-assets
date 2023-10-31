@@ -278,6 +278,10 @@ def init():
             os.getenv("AZUREML_MODEL_DIR", ""), DEFAULT_MLFLOW_MODEL_PATH
         )
 
+        config_path = os.path.join(
+            os.getenv("AZUREML_MODEL_DIR", ""), DEFAULT_MLFLOW_MODEL_PATH, "config.json"
+        )
+
         _init_cuda_visible_devices()
 
         for k, v in os.environ.items():
@@ -335,10 +339,15 @@ def init():
             engine_config["mii_config"] = mii_engine_config
 
         if engine_config["engine_name"] == EngineName.VLLM:
+            dtype = "auto"
+            if config_path and os.path.exists(config_path):
+                with open(config_path) as config_content:
+                    content = json.load(config_content)
+                    dtype = content.get("torch_dtype", "auto")
             vllm_config = {
                 "tensor-parallel-size": tensor_parallel if tensor_parallel else DEVICE_COUNT,
+                "dtype": dtype
             }
-
             engine_config["vllm_config"] = vllm_config
 
         task_config = {
