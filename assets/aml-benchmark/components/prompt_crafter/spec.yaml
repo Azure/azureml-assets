@@ -6,7 +6,7 @@ display_name: Prompt Crafter
 description: This component is used to create prompts from a given dataset. From a 
   given jinja prompt template, it will generate prompts. It can also create 
   few-shot prompts given a few-shot dataset and the number of shots.
-version: 0.0.2.0
+version: 0.0.2.1
 is_deterministic: true
 
 inputs:
@@ -93,6 +93,11 @@ inputs:
     optional: true
     default: 0
     description: Random seed for sampling few-shots; if not specified, 0 is used.
+  label_key:
+    type: string
+    optional: true
+    default: ''
+    description: Label key/ ground truth column to be passed in the output.
 outputs:
   output_file:
     type: uri_file
@@ -110,6 +115,7 @@ command: >-
   --prompt_pattern '${{inputs.prompt_pattern}}'
   --output_pattern '${{inputs.output_pattern}}'
   $[[--system_message '${{inputs.system_message}}']]
+  $[[--label_key '${{inputs.label_key}}']]
   $[[--prefix '${{inputs.prefix}}']]
   $[[--few_shot_separator '${{inputs.few_shot_separator}}']]
   --output_file ${{outputs.output_file}}

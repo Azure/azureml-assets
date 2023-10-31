@@ -18,6 +18,7 @@ inputs:
   output_pattern: " {{answerKey}} "
   prompt_type: "completions"
   system_message: "Answer truthfully. "
+  label_key: "answerKey"
 
 outputs:
   output_file:
