@@ -121,8 +121,6 @@ def run():
         )
     for metric_name in compact_metric_names:
         passrate_threshold = threshold_args[f"{metric_name.lower()}_passrate_threshold"]
-        print(passrate_threshold)
-        print("line 126")
         full_pass_rate_metric_name = f"Aggregated{metric_name}PassRate"
         full_per_instance_score_metric_name = f"Acceptable{metric_name}ScorePerInstance"
         if full_pass_rate_metric_name in input_metric_names:
