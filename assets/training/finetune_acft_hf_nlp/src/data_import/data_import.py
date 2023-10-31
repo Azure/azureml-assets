@@ -5,14 +5,18 @@
 
 import argparse
 from argparse import Namespace
+from typing import List
 
 from pathlib import Path
 import shutil
 
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
+from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
@@ -21,6 +25,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.data_import.data_import")
 
 
+SUPPORTED_FILE_FORMATS = [".jsonl"]
 COMPONENT_NAME = "ACFT-Data_Import"
 TRAIN_FILE_NAME = "train_input.jsonl"
 VALIDATION_FILE_NAME = "validation_input.jsonl"
@@ -64,17 +69,38 @@ def get_parser():
     return parser
 
 
+def _validate_file_paths_with_supported_formats(file_paths: List[str]):
+    """Check if the file path is in the list of supported formats."""
+    global SUPPORTED_FILE_FORMATS
+
+    for file_path in file_paths:
+        if not Path(file_path).suffix.lower() in SUPPORTED_FILE_FORMATS:
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        f"{file_path} is not in list of supported file formats. "
+                        f"Supported file formats: {SUPPORTED_FILE_FORMATS}"
+                    )
+                )
+            )
+
+
 def data_import(args: Namespace):
     """Copy the user data to output dir."""
     # create the directory
-    Path(args.output_dataset).mkdir(exist_ok=True)
+    Path(args.output_dataset).mkdir(exist_ok=True, parents=True)
 
+    # validate file formats
+    _validate_file_paths_with_supported_formats([args.train_file_path, args.validation_file_path])
+
+    # copy files
     shutil.copyfile(args.train_file_path, args.output_dataset / TRAIN_FILE_NAME)
-    # TODO Keep validation file optional
-    shutil.copyfile(args.validation_file_path, args.output_dataset / VALIDATION_FILE_NAME)
+    if args.validation_file_path is not None:
+        shutil.copyfile(args.validation_file_path, args.output_dataset / VALIDATION_FILE_NAME)
 
 
-@swallow_all_exceptions(time_delay=60)
+@swallow_all_exceptions(time_delay=5)
 def main():
     """Parse args and import model."""
     # args
