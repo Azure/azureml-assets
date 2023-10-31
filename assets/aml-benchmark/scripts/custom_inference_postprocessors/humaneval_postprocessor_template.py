@@ -181,20 +181,21 @@ def run_humaneval_postprocessor(
             pred = apply_regex_expr(pred_combined_prompt, regex_exp)
         else:
             pred = pred_combined_prompt
-        failed, _ = code_run(pred,
-                             gt,
-                             row["task_id"],
-                             pred_combined_prompt,
-                             row["original_prediction"])
-        gt_list.append(failed)
-        # gt_list.append({"ground_truth": gt})
+        # failed, _ = code_run(pred,
+        #                      gt,
+        #                      row["task_id"],
+        #                      pred_combined_prompt,
+        #                      row["original_prediction"])
+        # gt_list.append(failed)
+        gt_list.append({"ground_truth": gt})
         pred_list.append({"prediction": pred})
     return gt_list, pred_list
 
 
 def code_run(pred, test_cases, index, pred_combined_prompt, pred_orig):
+    """To debug the python codes."""
     failed_runs = []
-    output, error, error_type = run_code(pred+test_cases)
+    # output, error, error_type = run_code(pred+test_cases)
     failed = {
         "index": index,
         "pred_orig": pred_orig,
@@ -202,17 +203,16 @@ def code_run(pred, test_cases, index, pred_combined_prompt, pred_orig):
         "pred_final_with_regex": pred,
         "ground_truth": test_cases,
         "full_code": str(pred + test_cases),
-        "error": error,
-        "error_type": error_type,
-        "output": output,
+        # "error": error,
+        # "error_type": error_type,
+        # "output": output,
         }
     failed_runs.append(failed)
     return failed, failed_runs
 
 
 def run_code(code):
-    """Function to run code."""
-
+    """To run the test cases."""
     original_stdout = sys.stdout
     original_stderr = sys.stderr
     sys.stdout = StringIO()
