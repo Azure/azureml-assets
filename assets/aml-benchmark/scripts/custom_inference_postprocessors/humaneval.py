@@ -20,7 +20,8 @@ from typing import Any, Dict, List, Union
 # flake8: noqa
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
-\S|$))"""  
+\S|$))"""
+CODE_GENERATION_DEBUG=False
 failed_runs = []
 
 
@@ -98,8 +99,7 @@ def _write_to_jsonl_file(
 def _run(
     prediction_dataset: str,
     output_path: str,
-    ground_truth_dataset: str = None,
-    regex_expr: str = None
+    ground_truth_dataset: str = None
 ) -> None:
     """Entry function to read, run and write the processed the data."""
     if prediction_dataset:
@@ -108,10 +108,8 @@ def _run(
             task_id = _read_jsonl_file(ground_truth_dataset)
             pred_with_task_id = merge_id(task_id, pred_data)
 
-
     # Post processing the prediction and ground truth columns
     ground_truths, predictions = run_humaneval_postprocessor(pred_with_task_id, REGEX_EXPR)
-
     _write_to_jsonl_file(predictions, output_path, ground_truths)
 
 
@@ -167,7 +165,7 @@ def run_humaneval_postprocessor(
     pred_dict_full = pred_df_full.to_dict('records')
 
     # Post processing the prediction and ground truth columns
-    for idx, row in enumerate(pred_dict_full):
+    for row in pred_dict_full:
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
 
         if str("def " + row["entry_point"] + "(") in row["original_prediction"]:
@@ -181,34 +179,37 @@ def run_humaneval_postprocessor(
             pred = apply_regex_expr(pred_combined_prompt, regex_exp)
         else:
             pred = pred_combined_prompt
-        # detailed_op, _ = generate_outputs(pred,
-                                     # gt,
-                                     # row["task_id"],
-                                     # pred_combined_prompt,
-                                     # row["original_prediction"])
-        # gt_list.append(detailed_op)
-        gt_list.append({"ground_truth": gt})
+        if CODE_GENERATION_DEBUG==True:
+            detailed_op = generate_output(pred,
+                                        gt,
+                                        row["task_id"],
+                                        pred_combined_prompt,
+                                        row["original_prediction"])
+            gt_list.append(detailed_op)
+        else:
+            gt_list.append({"ground_truth": gt})
         pred_list.append({"prediction": pred})
     return gt_list, pred_list
 
 
-def generate_outputs(pred, test_cases, index, pred_combined_prompt, pred_orig):
+def generate_output(pred, test_cases, index, pred_combined_prompt, pred_orig
+) -> Dict[str, Any]:
     """To debug the python codes."""
-    failed_runs = []
-    # output, error, error_type = run_code(pred+test_cases)
-    failed = {
+
+    op_details = {
         "index": index,
         "pred_orig": pred_orig,
         "pred_combined_prompt": pred_combined_prompt,
-        "pred_final_with_regex": pred,
+        "pred_with_regex": pred,
         "ground_truth": test_cases,
         "full_code": str(pred + test_cases),
-        # "error": error,
-        # "error_type": error_type,
-        # "output": output,
         }
-    failed_runs.append(failed)
-    return failed, failed_runs
+    if CODE_GENERATION_DEBUG==True:
+        output, error, error_type = run_code(pred+test_cases)
+        op_details["error"] = error
+        op_details["error_type"] = error_type
+        op_details["output"] = output
+    return op_details
 
 
 def run_code(code):
