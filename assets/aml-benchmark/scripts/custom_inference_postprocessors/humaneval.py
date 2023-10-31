@@ -194,7 +194,6 @@ def run_humaneval_postprocessor(
 def generate_output(pred, test_cases, index, pred_combined_prompt, pred_orig
 ) -> Dict[str, Any]:
     """To debug the python codes."""
-
     op_details = {
         "index": index,
         "pred_orig": pred_orig,
