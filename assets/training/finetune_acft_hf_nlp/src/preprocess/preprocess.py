@@ -7,7 +7,8 @@ import json
 import argparse
 from pathlib import Path
 from argparse import Namespace
-
+from typing import Any
+from functools import partial
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -50,6 +51,13 @@ def str2bool(arg):
         raise ValueError(f"Invalid argument {arg} to while converting string to boolean")
 
 
+def default_missing_path(arg_str: str, default: Any = None):
+    """If path of the arg is missing, reset the value to default. Use this type with paths."""
+    if isinstance(arg_str, str) and not Path(arg_str).is_file():
+        return default
+    return arg_str
+
+
 def get_parser():
     """
     Add arguments and returns the parser. Here we add all the arguments for all the tasks.
@@ -65,9 +73,11 @@ def get_parser():
         default=None,
         help="Train data path",
     )
+    # NOTE that the default is present in both :param `type` and `default`. In case of change, we need to update
+    # in both places
     parser.add_argument(
         "--validation_file_path",
-        type=str,
+        type=partial(default_missing_path, default=None),
         required=False,
         default=None,
         help="Validation data path",
