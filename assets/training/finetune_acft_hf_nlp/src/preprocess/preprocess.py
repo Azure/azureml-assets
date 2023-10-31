@@ -66,9 +66,11 @@ def get_parser():
     """
     parser = argparse.ArgumentParser(description="Model Preprocessing", allow_abbrev=False)
 
+    # NOTE that the default is present in both :param `type` and `default`. In case of change, we need to update
+    # in both places
     parser.add_argument(
         "--train_file_path",
-        type=str,
+        type=partial(default_missing_path, default=None),
         required=False,
         default=None,
         help="Train data path",
@@ -82,9 +84,11 @@ def get_parser():
         default=None,
         help="Validation data path",
     )
+    # NOTE that the default is present in both :param `type` and `default`. In case of change, we need to update
+    # in both places
     parser.add_argument(
         "--test_file_path",
-        type=str,
+        type=partial(default_missing_path, default=None),
         required=False,
         default=None,
         help="Test data path",
