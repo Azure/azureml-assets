@@ -525,6 +525,8 @@ jobs:
     type: command
     component: azureml:ft_nlp_common_validation:0.0.24
     compute: '${{parent.inputs.compute_model_import}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_model_import}}'
     inputs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       compute_finetune: '${{parent.inputs.compute_finetune}}'
@@ -544,6 +546,8 @@ jobs:
     type: command
     component: azureml:text_generation_model_import:0.0.24
     compute: '${{parent.inputs.compute_model_import}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_model_import}}'
     inputs:
       huggingface_id: '${{parent.inputs.huggingface_id}}'
       pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
@@ -554,6 +558,8 @@ jobs:
     type: command
     component: azureml:text_generation_datapreprocess:0.0.24
     compute: '${{parent.inputs.compute_preprocess}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_preprocess}}'
     inputs:
       text_key: '${{parent.inputs.text_key}}'
       ground_truth_key: '${{parent.inputs.ground_truth_key}}'
@@ -577,6 +583,7 @@ jobs:
       process_count_per_instance: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
     resources:
       instance_count: '${{parent.inputs.num_nodes_finetune}}'
+      instance_type: '${{parent.inputs.instance_type_finetune}}'
     inputs:
       apply_lora: '${{parent.inputs.apply_lora}}'
       merge_lora_weights: '${{parent.inputs.merge_lora_weights}}'
@@ -629,6 +636,8 @@ jobs:
     type: command
     component: azureml:ft_nlp_model_converter:0.0.24
     compute: '${{parent.inputs.compute_model_import}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_model_import}}'
     inputs:
       model_path: '${{parent.jobs.text_generation_finetune.outputs.pytorch_model_folder}}'
       converted_model: '${{parent.jobs.text_generation_finetune.outputs.mlflow_model_folder}}'
