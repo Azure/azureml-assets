@@ -28,20 +28,6 @@ def convert_pandas_to_spark(pandas_data):
     return spark.createDataFrame(pandas_data)
 
 
-def convert_time_columns(baseline_data):
-    """Convert time-type columns to int so lightgbm can handle.
-
-    :param baseline_data: The baseline data meaning the data used to create the
-    model monitor
-    :type baseline_data: pandas.DataFrame    
-    """
-    for column in baseline_data.columns:
-        col =  pd.Series(baseline_data[column])
-        if (pd.api.types.is_datetime64_dtype(col) or
-            pd.api.types.is_timedelta64_dtype(col)):
-                baseline_data[column] = baseline_data[column].astype(int)
-    
-
 def is_categorical_column(baseline_data, column_name):
     """Determine whether the column is categorical.
 

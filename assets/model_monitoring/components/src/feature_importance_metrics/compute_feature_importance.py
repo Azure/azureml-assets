@@ -67,7 +67,7 @@ def determine_task_type(task_type, target_column, baseline_data):
     return constants.REGRESSION
 
 
-def create_lightgbm_model(X, y, task_type, categorical_features):
+def create_lightgbm_model(X, y, task_type):
     """Create model on which to calculate feature importances.
 
     :param X: x values (data excluding target columns)
@@ -79,18 +79,12 @@ def create_lightgbm_model(X, y, task_type, categorical_features):
     :return: an appropriate model wrapper
     :rtype: LightGBMClassifier or LightGBMRegressor
     """
-    categorical_params = {
-        "categorical_feature": categorical_features,
-        "feature_name":categorical_features
-        }
     if task_type == constants.CLASSIFICATION:
         lgbm = LGBMClassifier(boosting_type='gbdt', learning_rate=0.1,
-                              max_depth=5, n_estimators=200, n_jobs=1, random_state=777,
-                              **categorical_params)
+                              max_depth=5, n_estimators=200, n_jobs=1, random_state=777,)
     else:
         lgbm = LGBMRegressor(boosting_type='gbdt', learning_rate=0.1,
-                             max_depth=5, n_estimators=200, n_jobs=1, random_state=777,
-                              **categorical_params)
+                             max_depth=5, n_estimators=200, n_jobs=1, random_state=777,)
 
     model = lgbm.fit(X, y)
     log_time_and_message(f"Created lightgbm model using task_type: {task_type}")
@@ -116,7 +110,7 @@ def get_model_wrapper(task_type, target_column, baseline_data, categorical_featu
     for column in x_train:
         if column in categorical_features:
             x_train[column] = x_train[column].astype('category')
-    model = create_lightgbm_model(x_train, y_train, task_type, categorical_features)
+    model = create_lightgbm_model(x_train, y_train, task_type,)
     model_predict = model.predict(x_train)
     log_time_and_message("Called predict on model")
 
@@ -287,7 +281,12 @@ def run(args):
         log_time_and_message(f"Computed task type is {task_type}")
 
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
-        convert_time_columns(baseline_df)
+        
+        for column in baseline_df.columns:
+            col =  pd.Series(baseline_df[column])
+            if (pd.api.types.is_datetime64_dtype(col) or pd.api.types.is_timedelta64_dtype(col)):
+                baseline_df[column] = baseline_df[column].astype(int)
+    
         feature_importances = compute_feature_importance(
             task_type, args.target_column, baseline_df, categorical_features)
         feature_columns = baseline_df.drop([args.target_column], axis=1)
