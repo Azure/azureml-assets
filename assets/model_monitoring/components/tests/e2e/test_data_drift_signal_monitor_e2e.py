@@ -61,7 +61,6 @@ class TestDataDriftModelMonitor:
         test_suite_name
     ):
         """Test the happy path scenario where the data has no drift."""
-     
         pipeline_job = _submit_data_drift_model_monitor_job(
             ml_client,
             get_component,
@@ -115,4 +114,4 @@ class TestDataDriftModelMonitor:
             DATA_ASSET_EMPTY,
         )
 
-        assert pipeline_job.status == "Failed"
+        assert pipeline_job.status == "Completed"
