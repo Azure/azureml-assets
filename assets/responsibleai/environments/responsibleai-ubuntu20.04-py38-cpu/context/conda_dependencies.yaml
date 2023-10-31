@@ -7,16 +7,16 @@ dependencies:
   - python=3.8
   - pip
   - pip:
-    - responsibleai~=0.30.0
-    - raiwidgets~=0.30.0
+    - responsibleai~=0.31.0
+    - raiwidgets~=0.31.0
     - pyarrow
     - markupsafe<=2.0.1
     - itsdangerous==2.0.1
     - mlflow
-    - scikit-learn<1.1
+    - scikit-learn~=1.2
     - pdfkit==1.0.0
     - plotly==5.6.0
     - kaleido==0.2.1
     - mltable==1.4.1
-    - responsibleai-tabular-automl==0.7.0
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/raiwidgets_big_data/raiwidgets_big_data-0.6.0-py3-none-any.whl
+    - responsibleai-tabular-automl==0.8.0
+    - https://publictestdatasets.blob.core.windows.net/packages/pypi/raiwidgets_big_data/raiwidgets_big_data-0.7.0-py3-none-any.whl
