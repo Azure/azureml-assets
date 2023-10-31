@@ -108,10 +108,9 @@ def _run(
             task_id = _read_jsonl_file(ground_truth_dataset)
             pred_with_task_id = merge_id(task_id, pred_data)
 
-    regex_expr = REGEX_EXPR
 
     # Post processing the prediction and ground truth columns
-    ground_truths, predictions = run_humaneval_postprocessor(pred_with_task_id, regex_expr)
+    ground_truths, predictions = run_humaneval_postprocessor(pred_with_task_id, REGEX_EXPR)
 
     _write_to_jsonl_file(predictions, output_path, ground_truths)
 
@@ -121,13 +120,14 @@ def merge_id(
     pred_data: List[Dict[str, Any]]
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
-    Run the custom processor function to extract the ground truth.
+    Merge the task_id with the prediction data.
 
-    :param data: Data loaded from _read_jsonl_file function.
+    :param label_data: Label data loaded from _read_jsonl_file function.
+    :type: List[Dict[str, Any]]
+    :param pred_data: Prediction data loaded from _read_jsonl_file function.
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
-    # Get the original data from Hugging Face
     expected_op = [{**x, **y} for x, y in zip(label_data, pred_data)]
     return expected_op
 
@@ -137,9 +137,9 @@ def run_humaneval_postprocessor(
     regex_exp: str = None
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
-    Run the custom processor function to extract the ground truth.
+    Run the custom post processor function to extract the expected code.
 
-    :param data: Data loaded from _read_jsonl_file function.
+    :param data: Model prediction data
     :type: List[Dict[str, Any]]
     :param regex_exp: Regex expression to extract the prediction.
     :type: str
@@ -181,18 +181,18 @@ def run_humaneval_postprocessor(
             pred = apply_regex_expr(pred_combined_prompt, regex_exp)
         else:
             pred = pred_combined_prompt
-        # failed, _ = code_run(pred,
-        #                      gt,
-        #                      row["task_id"],
-        #                      pred_combined_prompt,
-        #                      row["original_prediction"])
-        # gt_list.append(failed)
+        # detailed_op, _ = generate_outputs(pred,
+                                     # gt,
+                                     # row["task_id"],
+                                     # pred_combined_prompt,
+                                     # row["original_prediction"])
+        # gt_list.append(detailed_op)
         gt_list.append({"ground_truth": gt})
         pred_list.append({"prediction": pred})
     return gt_list, pred_list
 
 
-def code_run(pred, test_cases, index, pred_combined_prompt, pred_orig):
+def generate_outputs(pred, test_cases, index, pred_combined_prompt, pred_orig):
     """To debug the python codes."""
     failed_runs = []
     # output, error, error_type = run_code(pred+test_cases)
