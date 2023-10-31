@@ -259,7 +259,6 @@ def main(
         f"Sampling {n_samples}/{line_counts} lines using sampling_style {sampling_style}."
     )
 
-    random_seed = args.random_seed
     if (
         sampling_style == SamplingStyle.head.value
         or sampling_style == SamplingStyle.tail.value

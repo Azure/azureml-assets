@@ -1,0 +1,4 @@
+spec: spec.yaml
+type: component
+categories:
+- Retrieval Augmented Generation

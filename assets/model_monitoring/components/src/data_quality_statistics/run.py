@@ -6,7 +6,7 @@
 import argparse
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import regexp_replace
-from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.io_utils import try_read_mltable_in_spark_with_warning, save_spark_df_as_mltable
 from compute_data_quality_statistics import compute_data_quality_statistics
 
 
@@ -18,7 +18,11 @@ def run():
     parser.add_argument("--data_statistics", type=str)
     args = parser.parse_args()
 
-    df = read_mltable_in_spark(args.baseline_data)
+    df = try_read_mltable_in_spark_with_warning(args.baseline_data, "baseline_data")
+
+    if not df:
+        print("Skipping data statistics computation.")
+        return
 
     metric_unique_df = compute_data_quality_statistics(df)
 

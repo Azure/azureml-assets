@@ -11,8 +11,8 @@ from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_JOINER,
     COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR,
     COMPONENT_NAME_MDC_PREPROCESSOR,
+    DATA_ASSET_EMPTY,
     DATA_ASSET_IRIS_BASELINE_DATA,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_OUTPUTS_NO_DRIFT,
     DATA_ASSET_IRIS_MODEL_INPUTS_NO_DRIFT,
     DATA_ASSET_IRIS_MODEL_OUTPUTS_NO_DRIFT,
 )
@@ -141,20 +141,6 @@ def _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
 class TestFeatureAttributionDriftModelMonitor:
     """Test class."""
 
-    def test_monitoring_run_use_defaults_data_has_no_drift_successful(
-        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
-    ):
-        """Test the happy path scenario where the data has drift and default settings are used."""
-        pipeline_job = _submit_feature_attribution_drift_model_monitor_job(
-            ml_client,
-            get_component,
-            test_suite_name,
-            DATA_ASSET_IRIS_BASELINE_DATA,
-            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_OUTPUTS_NO_DRIFT,
-        )
-
-        assert pipeline_job.status == "Completed"
-
     def test_featureattributiondrift_with_preprocessor_and_datajoiner_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
@@ -166,6 +152,20 @@ class TestFeatureAttributionDriftModelMonitor:
             DATA_ASSET_IRIS_MODEL_INPUTS_NO_DRIFT,
             DATA_ASSET_IRIS_MODEL_OUTPUTS_NO_DRIFT,
             DATA_ASSET_IRIS_BASELINE_DATA
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    def test_monitoring_run_use_defaults_empty_production_data_successful(
+        self, ml_client: MLClient, get_component, test_suite_name
+    ):
+        """Test the scenario where the production data is empty."""
+        pipeline_job = _submit_feature_attribution_drift_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_BASELINE_DATA,
+            DATA_ASSET_EMPTY,
         )
 
         assert pipeline_job.status == "Completed"

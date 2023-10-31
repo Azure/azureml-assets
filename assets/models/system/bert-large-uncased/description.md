@@ -44,7 +44,7 @@ Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-
         "0": "capital"
     },
     {
-        "0": "beautiful"
+        "0": "good"
     }
 ]
 ```

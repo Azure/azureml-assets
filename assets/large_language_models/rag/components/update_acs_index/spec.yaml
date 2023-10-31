@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.24
+version: 0.0.36
 name: llm_rag_update_acs_index
 display_name: LLM - Update ACS Index
 is_deterministic: true
@@ -32,6 +32,10 @@ inputs:
   acs_config:
     type: string
     description: 'JSON string containing the ACS configuration. e.g. {"endpoint": "https://my-cog.search.windows.net", "index_name": "my-index", "api_version": "2021-04-30-Preview", "endpoint_key_name": "ACS-PROD-KEY"}'
+  index_connection_id:
+    type: string
+    optional: true
+    description: "The connection id of the ACS Index provider to use."
 outputs:
   index:
     type: uri_folder
@@ -44,3 +48,4 @@ command: >-
   --embeddings ${{inputs.embeddings}}
   --acs_config '${{inputs.acs_config}}'
   --output ${{outputs.index}}
+  $[[--connection_id '${{inputs.index_connection_id}}']]

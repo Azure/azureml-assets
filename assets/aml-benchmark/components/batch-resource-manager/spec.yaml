@@ -1,0 +1,84 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: batch_resource_manager
+display_name: Batch Inference Resource Manager
+description: Resource Manager for batch inference.
+version: 0.0.1
+
+inputs:
+  wait_input:
+    type: uri_file
+    optional: True
+  endpoint_name:
+    type: string
+    optional: True
+    description: The endpoint name or url. If not provided, the endpoint will be created.
+  deployment_name:
+    type: string
+    optional: True
+    description: The deployment name. If not provided, the deployment will be created.
+  model:
+    type: string
+    optional: True
+    description: Model name or model asset path. Only needed for managed deployment.
+  model_version:
+    type: string
+    optional: True
+    description: Model version. If model asset path provided, this one can be optional.
+  deployment_sku:
+    type: string
+    optional: True
+    description: The sku for the deployment. Only needed for managed deployment.
+  endpoint_workspace:
+    type: string
+    optional: True
+    description: The workspace name for the endpoint. If not provided, the same workspace of the run will be used.
+  endpoint_resource_group:
+    type: string
+    optional: True
+    description: The resource group name for the endpoint. If not provided, the same resource group of the run will be used.
+  endpoint_subscription_id:
+    type: string
+    optional: True
+    description: The subscription id for the endpoint. If not provided, the same subscription id of the run will be used.
+  endpoint_location:
+    type: string
+    optional: True
+    description: The location for the endpoint. Only required for the AOAI endpoint. If not provided, the same location of the run will be used.
+  connections_name:
+    type: string
+    description: The connections name.
+    optional: True
+  delete_managed_resources:
+    type: boolean
+    optional: True
+    default: True
+    description: If true, the managed resources created during the run will be deleted.
+  deployment_metadata_dir:
+    type: uri_folder
+    optional: True
+    description: The deployment metadata directory that contains deployment details.
+outputs:
+  output_metadata:
+    type: uri_folder
+    description: Path to the folder where the deployment metadata will be stored.
+
+code: ../src
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+command: >-
+  python -m batch_resource_manager.main
+  --output_metadata ${{outputs.output_metadata}}
+  $[[--endpoint_name ${{inputs.endpoint_name}}]]
+  $[[--deployment_name ${{inputs.deployment_name}}]]
+  $[[--model ${{inputs.model}}]]
+  $[[--model_version ${{inputs.model_version}}]]
+  $[[--deployment_sku ${{inputs.deployment_sku}}]]
+  $[[--endpoint_workspace ${{inputs.endpoint_workspace}}]]
+  $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
+  $[[--endpoint_subscription_id ${{inputs.endpoint_subscription_id}}]]
+  $[[--endpoint_location ${{inputs.endpoint_location}}]]
+  $[[--connections_name ${{inputs.connections_name}}]]
+  $[[--delete_managed_resources ${{inputs.delete_managed_resources}}]]
+  $[[--deployment_metadata_dir ${{inputs.deployment_metadata_dir}}]]
+

@@ -6,7 +6,6 @@
 import argparse
 import os
 from typing import Optional, List
-from concurrent.futures import ProcessPoolExecutor
 
 from datasets import load_dataset, get_dataset_split_names, get_dataset_config_names
 import pandas as pd
@@ -38,7 +37,10 @@ def parse_args() -> argparse.Namespace:
         "--configuration",
         type=str,
         default=None,
-        help="Sub-part of the dataset to download; specify 'all' to download all sub-parts."
+        help=(
+            "Sub-part of the dataset to download; specify 'all' to download all sub-parts; specify "
+            "comma-separated values to download multiple sub-parts (Ex: config1,config2)."
+        )
     )
     parser.add_argument(
         "--split",
@@ -92,12 +94,14 @@ def resolve_configuration(
     if configuration == ALL:
         return available_configs
 
-    if configuration not in available_configs:
-        mssg = f"Configuration '{configuration}' not available for dataset '{dataset_name}'."
-        raise BenchmarkValidationException._with_error(
-            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
-        )
-    return [configuration]
+    configuration_arr = configuration.split(",")
+    for configuration in configuration_arr:
+        if configuration not in available_configs:
+            mssg = f"Configuration '{configuration}' not available for dataset '{dataset_name}'."
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
+    return configuration_arr
 
 
 def resolve_split(
@@ -139,6 +143,7 @@ def download_dataset_from_hf(
     """
     splits = resolve_split(dataset_name, configuration, split)
     for split in splits:
+        logger.info(f"Downloading - Configuration: '{configuration}', Split: '{split}'.")
         try:
             dataset = load_dataset(path=dataset_name, name=configuration, split=split)
         except Exception as e:
@@ -150,7 +155,7 @@ def download_dataset_from_hf(
         os.makedirs(out_dir, exist_ok=True)
         output_file_path = os.path.join(out_dir, "data.jsonl")
         dataset.to_json(output_file_path)
-        logger.info(f"Configuration: '{configuration}', Split: '{split}' downloaded.")
+        logger.info(f"Downloaded - Configuration: '{configuration}', Split: '{split}'.")
 
 
 def download_file_from_url(url: str, output_dir: str) -> None:
@@ -246,26 +251,20 @@ def main(
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
-    config_len = len(configurations)
     logger.info(f"Following configurations will be downloaded: {configurations}.")
-    with ProcessPoolExecutor(min(os.cpu_count(), config_len)) as executor:
-        my_iter = executor.map(
-            download_dataset_from_hf,
-            [dataset_name] * config_len,
-            configurations,
-            [split] * config_len,
-            [output_dataset] * config_len,
+    for config in configurations:
+        download_dataset_from_hf(
+            dataset_name,
+            config,
+            split,
+            output_dataset,
         )
 
-    # log any exceptions raised inside calls
-    for _ in my_iter:
-        pass
-
     log_mlflow_params(
-        dataset_name=args.dataset_name,
-        configuration=args.configuration,
-        split=args.split,
-        script=args.script,
+        dataset_name=dataset_name if script is None else None,
+        configuration=configuration,
+        split=split,
+        script=script,
     )
 
 

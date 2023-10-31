@@ -6,7 +6,7 @@
 import argparse
 from pyspark.sql.functions import lit
 from shared_utilities.io_utils import (
-    read_mltable_in_spark,
+    try_read_mltable_in_spark,
     save_spark_df_as_mltable,
     init_spark,
 )
@@ -26,7 +26,7 @@ def run():
     parser.add_argument("--signal_metrics", type=str)
 
     args = parser.parse_args()
-    token_df = read_mltable_in_spark(args.token_dataset)
+    token_df = try_read_mltable_in_spark(args.token_dataset)
     group_pivot_column_name = args.group_pivot_column_name
 
     # failed calls dont have an id, so imputing them

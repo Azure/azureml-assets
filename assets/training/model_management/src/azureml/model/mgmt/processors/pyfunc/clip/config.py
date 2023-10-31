@@ -18,6 +18,7 @@ class Tasks(_CustomEnum):
     """Tasks supported."""
 
     ZERO_SHOT_IMAGE_CLASSIFICATION = "zero-shot-image-classification"
+    EMBEDDINGS = "embeddings"
 
 
 class MLflowSchemaLiterals:
@@ -30,6 +31,8 @@ class MLflowSchemaLiterals:
     OUTPUT_COLUMN_DATA_TYPE = DataType.string
     OUTPUT_COLUMN_PROBS = "probs"
     OUTPUT_COLUMN_LABELS = "labels"
+    OUTPUT_COLUMN_IMAGE_FEATURES = "image_features"
+    OUTPUT_COLUMN_TEXT_FEATURES = "text_features"
 
 
 class MLflowLiterals:

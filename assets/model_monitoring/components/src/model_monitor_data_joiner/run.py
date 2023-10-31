@@ -7,7 +7,7 @@ import argparse
 import pyspark.sql as pyspark_sql
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
-    read_mltable_in_spark,
+    try_read_mltable_in_spark_with_warning,
     save_spark_df_as_mltable,
 )
 
@@ -68,15 +68,12 @@ def run():
     args = parser.parse_args()
 
     # Load data
-    try:
-        left_input_data_df = read_mltable_in_spark(mltable_path=args.left_input_data)
-    except IndexError:
-        raise Exception('The left_input_data is empty. Please add data and try again.')
+    left_input_data_df = try_read_mltable_in_spark_with_warning(args.left_input_data, "left_input_data")
+    right_input_data_df = try_read_mltable_in_spark_with_warning(args.right_input_data, "right_input_data")
 
-    try:
-        right_input_data_df = read_mltable_in_spark(mltable_path=args.right_input_data)
-    except IndexError:
-        raise Exception('The right_input_data is empty. Please add data and try again.')
+    if not left_input_data_df or not right_input_data_df:
+        print("Skipping data joining due to missing data.")
+        return
 
     joined_data_df = join_data(
         left_input_data_df,

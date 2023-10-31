@@ -9,7 +9,6 @@ import os
 from abc import ABC, abstractclassmethod
 from ..utils.token_provider import TokenProvider
 from ..utils.common import constants
-from azureml.core import Workspace, Run
 from azureml._common._error_definition.azureml_error import AzureMLError
 from ..utils.exceptions import BenchmarkValidationException
 from ..utils.error_definitions import BenchmarkValidationError
@@ -68,8 +67,3 @@ class HeaderHandler(ABC):
             workload_id if workload_id else "Unknown",
             os.environ.get(constants.OS_ENVIRON_WORKSPACE, "DNE"),
             os.environ.get(constants.OS_ENVIRON_RUN_ID, "DNE"))
-
-    def _get_curr_workspace(self) -> Workspace:
-        run = Run.get_context()
-        curr_workspace = run.experiment.workspace
-        return curr_workspace

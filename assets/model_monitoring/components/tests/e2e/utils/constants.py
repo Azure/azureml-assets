@@ -63,6 +63,9 @@ DATA_ASSET_MLTABLE_SAMPLES_INDEX_OUTPUT = (
     "azureml:mltable_samples_index_output:1"
 )
 
+DATA_ASSET_EMPTY = (
+    "azureml:mltable_empty:1"
+)
 
 # MDC-generated target dataset of an iris model which contains both the input features as well as the inferred results.
 # The data contains no drift. Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
@@ -74,3 +77,6 @@ DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME = 'model_inputs_join_column'
 DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME = 'model_outputs_join_column'
 # Groundedness target dataset as a MLTable.
 DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = 'azureml:groundedness_preprocess_target_small:1'
+
+# For Data Quality with timestamp and boolean type in the MLTable
+DATA_ASSET_VALID_DATATYPE = 'azureml:mltable_validate_datatype_for_data_quality:1'

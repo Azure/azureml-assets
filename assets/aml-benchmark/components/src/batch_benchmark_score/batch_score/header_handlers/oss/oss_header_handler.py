@@ -3,17 +3,14 @@
 
 """The class for OSS header handler."""
 
-import json
 import uuid
 
 from ..header_handler import HeaderHandler
 from ...utils.token_provider import TokenProvider
 from ...utils.common import constants
 
-from azureml.core import Workspace
-from azureml._restclient.clientbase import ClientBase
-from azureml._model_management._util import get_requests_session
-from azureml._model_management._util import _get_mms_url
+from utils.online_endpoint.oss_online_endpoint import OSSOnlineEndpoint
+from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 
 
 class OSSHeaderHandler(HeaderHandler):
@@ -22,30 +19,39 @@ class OSSHeaderHandler(HeaderHandler):
     def __init__(
             self,
             token_provider: TokenProvider, user_agent_segment: str = None, batch_pool: str = None,
-            quota_audience: str = None, additional_headers: str = None, deployment_name: str = None,
+            quota_audience: str = None, additional_headers: str = None, endpoint_name: str = None,
             endpoint_subscription: str = None, endpoint_resource_group: str = None,
-            endpoint_workspace: str = None
+            endpoint_workspace: str = None, deployment_name: str = None, connections_name: str = None,
+            online_endpoint_model: OnlineEndpointModel = None
     ) -> None:
         """Init method."""
         super().__init__(token_provider, user_agent_segment, batch_pool, quota_audience, additional_headers)
-        self._deployment_name = deployment_name
+        self._endpoint_name = endpoint_name
         self._endpoint_subscription = endpoint_subscription
         self._endpoint_resource_group = endpoint_resource_group
         self._endpoint_workspace = endpoint_workspace
+        self._deployment_name = deployment_name
+        self._connections_name = connections_name
+        self._model = online_endpoint_model
 
     def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
         """Get handers."""
-        bearer_token, _ = self._get_auth_key()
-
+        online_endpoint = OSSOnlineEndpoint(
+            workspace_name=self._endpoint_workspace, resource_group=self._endpoint_resource_group,
+            subscription_id=self._endpoint_subscription, online_endpoint_model=self._model,
+            endpoint_name=self._endpoint_name, deployment_name=self._deployment_name, sku=None,
+            connections_name=self._connections_name
+        )
+        headers = online_endpoint.get_endpoint_authorization_header_from_connections()
         user_agent = self._get_user_agent()
 
-        headers = {
-            'Authorization': f"Bearer {bearer_token}",
+        headers.update({
             'Content-Type': 'application/json',
             'User-Agent': user_agent,
             'azureml-model-group': constants.TRAFFIC_GROUP,
             'x-ms-client-request-id': str(uuid.uuid4()),
-        }
+            'azureml-model-deployment': self._deployment_name
+        })
 
         headers.update(self._additional_headers)
 
@@ -53,25 +59,3 @@ class OSSHeaderHandler(HeaderHandler):
             headers.update(additional_headers)
 
         return headers
-
-    def _get_auth_key(self):
-        curr_workspace = self._get_curr_workspace()
-        if self._endpoint_workspace is None:
-            workspace = curr_workspace
-        else:
-            workspace = Workspace(
-                self._endpoint_subscription, self._endpoint_resource_group, self._endpoint_workspace,
-                auth=curr_workspace._auth)
-        headers = workspace._auth.get_authentication_header()
-        list_keys_url = _get_mms_url(workspace) + '/onlineEndpoints/{}'.format(self._deployment_name) + '/listkeys'
-        resp = ClientBase._execute_func(
-            get_requests_session().post, list_keys_url, params={}, headers=headers)
-
-        content = resp.content
-        if isinstance(content, bytes):
-            content = content.decode('utf-8')
-        keys_content = json.loads(content)
-        print(keys_content)
-        primary_key = keys_content['primaryKey']
-        secondary_key = keys_content['secondaryKey']
-        return primary_key, secondary_key

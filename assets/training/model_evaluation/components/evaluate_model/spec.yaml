@@ -3,7 +3,7 @@ name: evaluate_model
 display_name: Evaluate Model
 description: Evaluate MLFlow models for supported task types.
 
-version: 0.0.14
+version: 0.0.17
 type: command
 tags:
   type: evaluation
@@ -19,6 +19,7 @@ inputs:
       tabular-classification,
       tabular-classification-multilabel,
       tabular-regression,
+      tabular-forecasting,
       text-classification,
       text-classification-multilabel,
       text-named-entity-recognition,
@@ -29,6 +30,7 @@ inputs:
       text-generation,
       image-classification,
       image-classification-multilabel,
+      chat-completion,
       image-object-detection,
       image-instance-segmentation,
     ]
@@ -36,11 +38,13 @@ inputs:
   test_data:
     type: uri_folder
     optional: false
+    mode: ro_mount
     description: "Test Data as JSON Lines URI_FILE"
   evaluation_config:
     type: uri_file
-    description: "Additional parameters required for evaluation."
     optional: true
+    mode: ro_mount
+    description: "Additional parameters required for evaluation."
   test_data_label_column_name:
     type: string
     optional: false
@@ -52,14 +56,8 @@ inputs:
   mlflow_model:
     type: mlflow_model
     optional: false
+    mode: ro_mount
     description: "Mlflow Model - registered model or output of a job with type mlflow_model in a pipeline"
-  model_uri:
-    type: string
-    optional: true
-    description: "[DEPRECATED] The location, in URI format, of the Mlflow model, for example:
-                      - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
-                      - ``models:/<model_name>/<model_version>``
-                      - ``models:/<model_name>/<stage>``"
   device:
     type: string
     optional: false
@@ -79,21 +77,19 @@ outputs:
 
 is_deterministic: True
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/11
+environment: azureml://registries/azureml/environments/model-evaluation/versions/14
 
 command: >-
   python download_dependencies.py
-  --mlflow-model '${{inputs.mlflow_model}}'
-  $[[--model-uri ${{inputs.model_uri}}]] ;
+  --mlflow-model '${{inputs.mlflow_model}}' ;
   python evaluate_model.py
-  --task ${{inputs.task}}
+  --task '${{inputs.task}}'
   --output '${{outputs.evaluation_result}}'
-  --label-column-name ${{inputs.test_data_label_column_name}}
+  --label-column-name '${{inputs.test_data_label_column_name}}'
   --mlflow-model '${{inputs.mlflow_model}}'
-  --device ${{inputs.device}}
+  --device '${{inputs.device}}'
   --data '${{inputs.test_data}}'
   $[[--input-column-names '${{inputs.test_data_input_column_names}}']]
-  $[[--model-uri ${{inputs.model_uri}}]]
   $[[--config-file-name '${{inputs.evaluation_config}}']]
-  $[[--batch-size ${{inputs.batch_size}}]]
+  $[[--batch-size '${{inputs.batch_size}}']]
   $[[--config_str '${{inputs.evaluation_config_params}}']]

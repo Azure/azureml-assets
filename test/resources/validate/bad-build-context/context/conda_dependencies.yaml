@@ -1,0 +1,10 @@
+name: build-test-good
+channels:
+- anaconda
+- conda-forge
+dependencies:
+- python=3.7
+- pip=20.2.4
+- pip:
+  - azureml-core=={{latest-pypi-version}}
+  - --extra-index-url https://some.url

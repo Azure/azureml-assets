@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.3
+version: 0.0.5
 name: olive_optimizer
 display_name: Olive Optimizer - CPU
 is_deterministic: false
@@ -19,6 +19,10 @@ inputs:
     type: uri_folder
     optional: True
     description: "A code folder that contains all the files that are needed for Olive."
+  data:
+    type: uri_folder
+    optional: True
+    description: "A folder that contains the data directory that is needed for Olive."
   model:
     type: uri_folder
     optional: True
@@ -38,6 +42,7 @@ command: >-
     python -m olive_optimizer.run
     --config_path ${{inputs.config}}
     $[[--code ${{inputs.code_path}}]]
+    $[[--data_path ${{inputs.data}}]]
     $[[--model_path ${{inputs.model}}]]
     --optimized_parameters_path ${{outputs.optimized_parameters}}
     --optimized_model_path ${{outputs.optimized_model}}

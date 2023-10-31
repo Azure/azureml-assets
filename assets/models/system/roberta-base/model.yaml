@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/roberta-base/1693501861/mlflow_model_folder
+  container_path: huggingface/roberta-base/1694430215/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

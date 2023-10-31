@@ -1,4 +1,4 @@
-olive-ai==0.2.1
+olive-ai==0.3.1
 onnxruntime==1.15.1
 pydantic==1.10.10
 azureml.core=={{latest-pypi-version}}

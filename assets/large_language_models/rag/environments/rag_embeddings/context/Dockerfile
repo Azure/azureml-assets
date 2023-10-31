@@ -44,8 +44,8 @@ RUN set -eux; \
     arch="$(dpkg --print-architecture)"; \
     case "$arch" in \
         'amd64') \
-            downloadUrl='https://download.java.net/java/early_access/jdk21/34/GPL/openjdk-21-ea+34_linux-x64_bin.tar.gz'; \
-			downloadSha256='d16356385a726320077563c6180f2eabf72ded64b5695f24f3e7a2d3980b1f11'; \
+            downloadUrl='https://download.java.net/java/GA/jdk21/fd2272bbf8e04c3dbaee13770090416c/35/GPL/openjdk-21_linux-x64_bin.tar.gz'; \
+			downloadSha256='a30c454a9bef8f46d5f1bf3122830014a8fbe7ac03b5f8729bc3add4b92a1d0a'; \
             ;; \
         *) echo >&2 "error: unsupported architecture: '$arch'"; exit 1 ;; \
     esac; \
@@ -103,8 +103,8 @@ RUN python3 -m nltk.downloader punkt && \
 
 ENV TIKA_SERVER_JAR file:///tika-server.jar
 
-RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.9.0/tika-server-standard-2.9.0.jar'; \
-    downloadMd5='ef0f13490f3b832a46567a16e82e6b23'; \
+RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.9.1/tika-server-standard-2.9.1.jar'; \
+    downloadMd5='4a0e60c6698b85881a3ef28a68669ac5'; \
     wget --progress=dot:giga -O tika-server.jar "$downloadUrl"; \
     # tika-python looks for tika-server.jar.md5 file along with TIKA_SERVER_JAR
     echo -n "$downloadMd5" > tika-server.jar.md5; \

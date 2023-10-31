@@ -22,7 +22,7 @@ from typing import List, Dict, Any, Tuple
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
     # model wrapper for save_model().
-    from vision_utils import create_temp_file, process_image
+    from vision_utils import create_temp_file, process_image_pandas_series
 except ImportError:
     pass
 
@@ -79,7 +79,9 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
     ['filename', 'boxes'] for object detection, instance segmentation
     """
     # Decode the base64 image column
-    decoded_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(axis=1, func=process_image)
+    decoded_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
+        axis=1, func=process_image_pandas_series
+    )
 
     # arguments for Trainer
     test_args = TrainingArguments(

@@ -5,6 +5,7 @@
 
 import azureml.evaluate.mlflow as aml_mlflow
 import constants
+import torch
 from logging_utilities import get_logger
 from mlflow.models import Model
 
@@ -32,18 +33,28 @@ def load_model(model_uri, device, task):
     aml_args = {
         "model_hf_load_kwargs": curr_model.get("model_hf_load_kwargs", {})
     }
-    if device == constants.DEVICE.AUTO:
+    if device == constants.DEVICE.AUTO and torch.cuda.is_available():
         aml_args["model_hf_load_kwargs"]["device_map"] = constants.DEVICE.AUTO
+    elif device == constants.DEVICE.GPU and torch.cuda.is_available():
+        aml_args["model_hf_load_kwargs"]["device_map"] = torch.cuda.current_device()
+    elif isinstance(device, int) and device >= 0:
+        aml_args["model_hf_load_kwargs"]["device_map"] = device
     else:
-        aml_args["model_hf_load_kwargs"]["device_map"] = "eval_na"
+        if device == constants.DEVICE.GPU:
+            logger.warning("Device_map set as GPU, but the compute doesn't have a GPU.")
+        logger.info("Loading model on CPU with f32 dtype")
+        aml_args["model_hf_load_kwargs"]["device_map"] = constants.DEVICE.CPU
+        aml_args["model_hf_load_kwargs"]["torch_dtype"] = torch.float32
+
     try:
         logger.info(f"aml args: {aml_args}")
         model = aml_mlflow.aml.load_model(model_uri=model_uri,
                                           model_type=constants.MLFLOW_MODEL_TYPE_MAP[task], **aml_args)
     except Exception:
-        logger.info("device_map=auto didn't work. Trying without auto.")
+        logger.info("Reloading model with device_map NA")
         aml_args["model_hf_load_kwargs"]["device_map"] = "eval_na"
         logger.info(f"aml args: {aml_args}")
         model = aml_mlflow.aml.load_model(model_uri=model_uri,
                                           model_type=constants.MLFLOW_MODEL_TYPE_MAP[task], **aml_args)
+
     return model
