@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.7
+version: 0.0.8
 name: transformers_image_classification_finetune
 display_name: Image Classification HuggingFace Transformers Model Finetune
 description: Component to finetune HuggingFace transformers models for image classification.
 
 is_deterministic: false
 
-environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/2
+environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/3
 
 code: ../../../src/finetune
 
@@ -86,9 +86,8 @@ inputs:
   # Deepspeed Parameters
   apply_deepspeed:
     type: boolean
-    default: false
     optional: true
-    description: If set to true, will enable deepspeed for training.
+    description: If set to true, will enable deepspeed for training. If left empty, will be chosen automatically based on the task type and model selected.
 
   # optional component input: deepspeed config
   deepspeed_config:
@@ -98,9 +97,8 @@ inputs:
 
   apply_ort:
     type: boolean
-    default: false
     optional: true
-    description: If set to true, will use the ONNXRunTime training.
+    description: If set to true, will use the ONNXRunTime training. If left empty, will be chosen automatically based on the task type and model selected.
 
   # Training parameters
   number_of_epochs:

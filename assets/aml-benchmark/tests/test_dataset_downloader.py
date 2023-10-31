@@ -8,18 +8,19 @@ import os
 import subprocess
 
 from azure.ai.ml.entities import Job
+from azure.ai.ml import Input
 import pytest
 from datasets import get_dataset_config_names, get_dataset_split_names
 
-from utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
     download_outputs,
-    get_mlflow_logged_params,
     get_src_dir,
     assert_exception_mssg,
     run_command,
+    assert_logged_params,
 )
 
 
@@ -29,12 +30,12 @@ class TestDatasetDownloaderComponent:
     EXP_NAME = "dataset-downloader-test"
 
     @pytest.mark.parametrize(
-        "dataset_name, configuration, split, url",
+        "dataset_name, configuration, split, script",
         [
             ("xquad", "xquad.en", "validation", None),
-            ("xquad", "xquad.en", "all", None),
+            ("xquad", "xquad.en,xquad.hi", "all", None),
             ("xquad", "all", "all", None),
-            (None, None, None, Constants.REMOTE_FILE_URL),
+            (None, "all", "test", Constants.MATH_DATASET_LOADER_SCRIPT),
         ],
     )
     def test_dataset_downloader_component(
@@ -43,7 +44,7 @@ class TestDatasetDownloaderComponent:
         dataset_name: Union[str, None],
         configuration: Union[str, None],
         split: Union[str, None],
-        url: Union[str, None],
+        script: Union[str, None],
     ) -> None:
         """Dataset Downloader component test."""
         ml_client = get_mlclient()
@@ -52,7 +53,7 @@ class TestDatasetDownloaderComponent:
             dataset_name,
             configuration,
             split,
-            url,
+            script,
             self.test_dataset_downloader_component.__name__,
         )
 
@@ -64,13 +65,20 @@ class TestDatasetDownloaderComponent:
         print(pipeline_job)
 
         file_count = 1
+        path = dataset_name if dataset_name else script
         if configuration == "all":
-            file_count = len(get_dataset_config_names(dataset_name))
+            file_count = len(get_dataset_config_names(path))
         elif split == "all":
-            file_count = len(get_dataset_split_names(dataset_name, configuration))
+            configs = configuration.split(",")
+            file_count = sum(len(get_dataset_split_names(path, config)) for config in configs)
         self._verify_output(pipeline_job, temp_dir, file_count)
-        self._verify_logged_params(
-            pipeline_job.name, dataset_name, configuration, split, url
+        assert_logged_params(
+            pipeline_job.name,
+            self.EXP_NAME,
+            dataset_name=dataset_name,
+            configuration=configuration,
+            split=split,
+            script=script,
         )
 
     def _get_pipeline_job(
@@ -78,7 +86,7 @@ class TestDatasetDownloaderComponent:
         dataset_name: Union[str, None],
         configuration: Union[str, None],
         split: Union[str, None],
-        url: Union[str, None],
+        script: Union[str, None],
         display_name: str,
     ) -> Job:
         """Get the pipeline job.
@@ -86,6 +94,7 @@ class TestDatasetDownloaderComponent:
         :param dataset_name: Name of the dataset to download from HuggingFace.
         :param configuration: Specific sub-dataset of the HuggingFace dataset to download.
         :param split: Specific split of the HuggingFace dataset to download.
+        :param script: Path to the data loader script.
         :param display_name: The display name for job.
         :return: The pipeline job.
         """
@@ -95,7 +104,7 @@ class TestDatasetDownloaderComponent:
         pipeline_job.inputs.dataset_name = dataset_name
         pipeline_job.inputs.configuration = configuration
         pipeline_job.inputs.split = split
-        pipeline_job.inputs.url = url
+        pipeline_job.inputs.script_path = Input(type="uri_file", path=script) if script else None
         pipeline_job.display_name = display_name
 
         return pipeline_job
@@ -118,81 +127,40 @@ class TestDatasetDownloaderComponent:
         assert os.path.exists(output_dir)
         assert sum(len(files) for _, _, files in os.walk(output_dir)) == file_count
 
-    def _verify_logged_params(
-        self,
-        job_name: str,
-        dataset_name: Union[str, None],
-        configuration: Union[str, None],
-        split: Union[str, None],
-        url: Union[str, None],
-    ) -> None:
-        """Verify the logged parameters.
-
-        :param job_name: The job name.
-        :param dataset_name: Name of the dataset.
-        :param configuration: Specific sub-dataset of the HuggingFace.
-        :param split: Specific split of the HuggingFace dataset.
-        :param url: The url that was used to download the dataset from.
-        :return: None.
-        """
-        logged_params = get_mlflow_logged_params(job_name, self.EXP_NAME)
-
-        # verify the logged parameters
-        if dataset_name is not None:
-            assert logged_params["dataset_name"] == dataset_name
-        if configuration is not None:
-            assert logged_params["configuration"] == configuration
-        if split is not None:
-            assert logged_params["split"] == split
-        if url is not None:
-            assert logged_params["url"] == url
-
 
 class TestDatasetDownloaderScript:
     """Tests for dataset downloader script."""
 
     @pytest.mark.parametrize(
-        "dataset_name, split, url",
-        [("dataset", None, None), (None, "train", None), ("dataset", "test", "url")],
+        "dataset_name, split, script",
+        [(None, "train", None), ("dataset", "test", "script")],
     )
     def test_invalid_input_combination(
         self,
         dataset_name: Union[str, None],
         split: Union[str, None],
-        url: Union[str, None],
+        script: Union[str, None],
     ):
         """Test for invalid input combination."""
-        if dataset_name and split and url:
-            expected_exception_mssg = "Either 'dataset_name' with 'split', or 'url' must be supplied; but not both."
-        else:
-            expected_exception_mssg = (
-                "Either 'dataset_name' with 'split', or 'url' must be supplied."
-            )
+        if dataset_name and script:
+            expected_exception_mssg = "Either 'dataset_name' or 'script' must be supplied; but not both."
+        elif not (dataset_name or script):
+            expected_exception_mssg = "Either 'dataset_name' or 'script' must be supplied."
 
         # Run the script and verify the exception
         try:
-            self._run_downloader_script(dataset_name, None, split, url)
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
-            assert_exception_mssg(exception_message, expected_exception_mssg)
-
-    def test_unsupported_url_file(self):
-        """Test for unsupported url file."""
-        url = "no_link.zzz"
-        expected_exception_mssg = (
-            f"File extension '{url.split('.')[-1]}' not supported."
-        )
-
-        # Run the script and verify the exception
-        try:
-            self._run_downloader_script(None, None, None, url)
+            self._run_downloader_script(dataset_name, None, split, script)
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.parametrize(
         "dataset_name, configuration, split",
-        [("squad_v2", None, "test"), ("ai2_arc", None, "validation")],
+        [
+            ("squad_v2", None, "test"),
+            ("ai2_arc", None, "validation"),
+            ("some_random_name", None, "test"),
+        ],
     )
     def test_invalid_hf_dataset(
         self, dataset_name: str, configuration: Optional[str], split: str
@@ -204,6 +172,8 @@ class TestDatasetDownloaderScript:
                 f"Multiple configurations available for dataset '{dataset_name}'. Please specify either one of "
                 f"the following: {get_dataset_config_names(dataset_name)} or 'all'."
             )
+        elif dataset_name == "some_random_name":
+            expected_exception_mssg = "FileNotFoundError: Couldn't find a dataset script at "
 
         # Run the script and verify the exception
         try:
@@ -217,7 +187,7 @@ class TestDatasetDownloaderScript:
         dataset_name: Union[str, None],
         configuration: Union[str, None],
         split: Union[str, None],
-        url: Union[str, None],
+        script: Union[str, None],
         output_dataset: str = "out",
     ) -> None:
         """
@@ -226,7 +196,7 @@ class TestDatasetDownloaderScript:
         :param dataset_name: The name of the dataset.
         :param configuration: The configuration of the dataset.
         :param split: The split of the dataset.
-        :param url: The url of the dataset.
+        :param script: Path to the data loader script.
         :param output_dataset: The output dataset file path, default is "out.jsonl".
         :return: None.
         """
@@ -236,14 +206,14 @@ class TestDatasetDownloaderScript:
             "python -m dataset_downloader.main",
             "--output_dataset",
             f"{output_dataset}",
+            "--split",
+            f"{split}",
         ]
         if dataset_name is not None:
             args.extend(["--dataset_name", f"{dataset_name}"])
         if configuration is not None:
             args.extend(["--configuration", f"{configuration}"])
-        if split is not None:
-            args.extend(["--split", f"{split}"])
-        if url is not None:
-            args.extend(["--url", f"{url}"])
+        if script is not None:
+            args.extend(["--script", f"{script}"])
 
         run_command(" ".join(args))

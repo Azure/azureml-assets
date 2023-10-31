@@ -17,7 +17,7 @@ from tempfile import TemporaryDirectory
 from transformers import WhisperProcessor, WhisperForConditionalGeneration, pipeline
 from urllib.parse import urlparse
 
-logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.WARNING)
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.WARNING)
 
 supported_languages = [
     "en",
@@ -195,11 +195,12 @@ def predict(
     chunk_length_s = min(chunk_length_s, 30)
     stride_length_s = kwargs.get("stride_length_s", chunk_length_s/6)
 
-    if device == -1 and torch.cuda.is_available():
-        logging.warning('CUDA available. To switch to GPU device pass `"parameters": {"device" : 0}` in the input.')
-    if device == 0 and not torch.cuda.is_available():
+    if torch.cuda.is_available():
+        device = 0
+        logging.warning('CUDA available. Mounting Model to GPU')
+    if not torch.cuda.is_available():
         device = -1
-        logging.warning("CUDA unavailable. Defaulting to CPU device.")
+        logging.warning("CUDA unavailable. Defaulting to CPU.")
 
     device = "cuda:0" if device == 0 else "cpu"
 
@@ -213,9 +214,8 @@ def predict(
         tokenizer=tokenizer.tokenizer,
         feature_extractor=tokenizer.feature_extractor,
         chunk_length_s=chunk_length_s,
-        stride_length_s=stride_length_s,
-        device=device,
-        )
+        stride_length_s=stride_length_s
+    )
 
     for row in model_input.itertuples():
         # Parse inputs.

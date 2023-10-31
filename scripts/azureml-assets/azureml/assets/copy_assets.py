@@ -69,6 +69,7 @@ def copy_asset(asset_config: assets.AssetConfig,
 
 
 def copy_assets(input_dirs: List[Path],
+                changed_files: List[Path],
                 output_directory_root: Path,
                 asset_config_filename: str,
                 release_directory_root: Path = None,
@@ -79,6 +80,7 @@ def copy_assets(input_dirs: List[Path],
 
     Args:
         input_dirs (List[Path]): List of directories to search for assets.
+        changed_files (List[Path]): List of changed files
         output_directory_root (Path, optional): Output directory
         asset_config_filename (str): Asset config filename to search for.
         release_directory_root (Path, optional): Release directory location. Defaults to None.
@@ -89,7 +91,8 @@ def copy_assets(input_dirs: List[Path],
     asset_count = 0
     copied_count = 0
     copied_type_counter = Counter()
-    for asset_config in util.find_assets(input_dirs, asset_config_filename, pattern=pattern):
+    for asset_config in util.find_assets(
+            input_dirs, asset_config_filename, changed_files=changed_files, pattern=pattern):
         asset_count += 1
 
         # Copy asset if tag doesn't exist or release_directory_root isn't specified
@@ -126,6 +129,8 @@ if __name__ == '__main__':
                         help="Use version directories when storing assets in output directory")
     parser.add_argument("-t", "--pattern", type=re.compile,
                         help="Regex pattern to select assets to copy, in the format <type>/<name>/<version>")
+    parser.add_argument("-c", "--changed-files", type=str,
+                        help="Comma-separated list of changed files, used to filter assets")
     parser.add_argument("-p", "--check-previous-release", action="store_true",
                         help="Check if previous release exists (environments only)")
     args = parser.parse_args()
@@ -136,9 +141,11 @@ if __name__ == '__main__':
 
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
+    changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
 
     # Copy assets
     copy_assets(input_dirs=input_dirs,
+                changed_files=changed_files,
                 output_directory_root=args.output_directory,
                 asset_config_filename=args.asset_config_filename,
                 release_directory_root=args.release_directory,

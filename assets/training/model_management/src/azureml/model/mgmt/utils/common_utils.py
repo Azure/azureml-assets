@@ -19,14 +19,13 @@ from azureml.core.run import Run
 from azureml.model.mgmt.utils.exceptions import (
     GenericRunCMDError,
     HuggingFaceErrorInFetchingModelInfo,
-    NonMsiAttachedComputeError,
     UserIdentityMissingError
     )
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
 
@@ -94,23 +93,25 @@ def get_json_header(token: str) -> Dict:
 
 def get_mlclient(registry_name: str = None):
     """Return ML Client."""
-    has_obo_succeeded = False
+    has_msi_succeeded = False
     try:
-        credential = AzureMLOnBehalfOfCredential()
-        # Check if given credential can get token successfully.
+        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+        credential = ManagedIdentityCredential(client_id=msi_client_id)
         credential.get_token("https://management.azure.com/.default")
-        has_obo_succeeded = True
+        has_msi_succeeded = True
     except Exception:
-        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
-        logger.warning(AzureMLError.create(UserIdentityMissingError))
+        # Fall back to AzureMLOnBehalfOfCredential in case ManagedIdentityCredential does not work
+        has_msi_succeeded = False
+        logger.warning("ManagedIdentityCredential was not found in the compute. "
+                       "Falling back to AzureMLOnBehalfOfCredential")
 
-    if not has_obo_succeeded:
+    if not has_msi_succeeded:
         try:
-            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-            credential = ManagedIdentityCredential(client_id=msi_client_id)
+            credential = AzureMLOnBehalfOfCredential()
+            # Check if given credential can get token successfully.
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
-            raise AzureMLException._with_error(AzureMLError.create(NonMsiAttachedComputeError, exception=ex))
+            raise AzureMLException._with_error(AzureMLError.create(UserIdentityMissingError, exception=ex))
 
     if registry_name is None:
         run = Run.get_context(allow_offline=False)
@@ -125,17 +126,43 @@ def get_mlclient(registry_name: str = None):
     return MLClient(credential=credential, registry_name=registry_name)
 
 
-def copy_file_paths_to_destination(src_dir: Path, destn_dir: Path, regex: str) -> None:
+@log_execution_time
+def copy_files(
+    src_dir: Path,
+    destn_dir: Path,
+    include_pattern_str: str = r"^.*$",
+    exclude_pattern_str: Optional[str] = None
+) -> None:
     """Copy files to destination directory [Non-recursively] based on regex pattern provided."""
     if not Path(src_dir).is_dir():
         raise Exception("src path provided should be a dir")
-    if Path(destn_dir).exists():
-        raise Exception("destination dir should be empty")
-    os.makedirs(destn_dir)
-    pattern = re.compile(regex)
+
+    os.makedirs(destn_dir, exist_ok=True)
+
+    include_pattern = re.compile(include_pattern_str)
+    exclude_pattern = None if not exclude_pattern_str else re.compile(exclude_pattern_str)
     for file_name in os.listdir(src_dir):
-        if pattern.match(file_name):
+        if exclude_pattern and exclude_pattern.match(file_name):
+            continue
+        if include_pattern.match(file_name):
             shutil.copy(os.path.join(src_dir, file_name), destn_dir)
+
+
+@log_execution_time
+def move_files(src_dir: Path, destn_dir: Path, include_pattern_str: str = r"^.*$", ignore_case: bool = False) -> None:
+    """Move files to destination directory [Non-recursively] based on regex pattern provided."""
+    if not Path(src_dir).is_dir():
+        raise Exception("src path provided should be a dir")
+
+    os.makedirs(destn_dir, exist_ok=True)
+
+    include_pattern = re.compile(include_pattern_str)
+    if ignore_case:
+        include_pattern = re.compile(include_pattern_str, re.IGNORECASE)
+
+    for file_name in os.listdir(src_dir):
+        if include_pattern.match(file_name):
+            shutil.move(os.path.join(src_dir, file_name), destn_dir)
 
 
 def create_namespace_from_dict(var: Any):
@@ -302,3 +329,40 @@ def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
         return int(stdout)
     except Exception as e:
         raise AzureMLException._with_error(AzureMLError.create(GenericRunCMDError, error=e))
+
+
+class MlflowMetaConstants:
+    """Mlflow consants."""
+
+    IS_FINETUNED_MODEL = "is_finetuned_model"
+    IS_ACFT_MODEL = "is_acft_model"
+    BASE_MODEL_NAME = "base_model_name"
+    BASE_MODEL_TASK = "base_model_task"
+
+
+def fetch_mlflow_acft_metadata(
+        is_finetuned_model: bool = False,
+        base_model_name: str = None,
+        base_model_task: str = None) -> dict:
+    """Fetch metadata to be dumped in MlFlow MlModel File.
+
+    :param is_finetuned_model: whether the model is finetuned one or base model
+    :type is_finetuned_model: bool
+    :param is_acft_model: whether the model using acft packages
+    :type is_acft_model: bool
+    :param base_model_name: name of the model
+    :type base_model_name: str
+    :param base_model_task: name of the base model task
+    :type base_model_task: str
+
+    :return: metadata
+    :rtype: dict
+    """
+    metadata = {
+        MlflowMetaConstants.IS_FINETUNED_MODEL: is_finetuned_model,
+        MlflowMetaConstants.IS_ACFT_MODEL: True,
+        MlflowMetaConstants.BASE_MODEL_NAME: base_model_name,
+        MlflowMetaConstants.BASE_MODEL_TASK: base_model_task
+    }
+
+    return metadata

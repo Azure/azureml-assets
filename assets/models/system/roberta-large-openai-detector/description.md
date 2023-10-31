@@ -33,7 +33,7 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
     }
 }

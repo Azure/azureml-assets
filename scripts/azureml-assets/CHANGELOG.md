@@ -1,9 +1,99 @@
-## 1.14.0 (Unreleased)
+## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
 
-## 1.13.0 (Unreleased)
+## 1.16.15 (2023-10-30)
+### 🐛 Bugs Fixed
+- [#1523](https://github.com/Azure/azureml-assets/pull/1523) Support for storage accounts that are not configured for anonymous access
+
+## 1.16.14
+### 🐛 Bugs Fixed
+- [#1574](https://github.com/Azure/azureml-assets/pull/1574) Fix fetching validated model assets
+
+## 1.16.13
+### 🚀 New Features
+- [#1569](https://github.com/Azure/azureml-assets/pull/1569) Add model validations
+
+## 1.16.12 (2023-10-12)
+### 🐛 Bugs Fixed
+- [#1458](https://github.com/Azure/azureml-assets/pull/1458) Update schema for prompt and benchmark assets
+
+## 1.16.11 (2023-10-09)
+### 🐛 Bugs Fixed
+- [#1428](https://github.com/Azure/azureml-assets/pull/1428) Azcopy fixes to support additional clouds
+
+## 1.16.10 (2023-10-06)
+### 🐛 Bugs Fixed
+- [#1411](https://github.com/Azure/azureml-assets/pull/1411) Prevent Config._expand_path from returning directories
+
+## 1.16.9 (2023-10-05)
+### 🚀 New Features
+- [#1345](https://github.com/Azure/azureml-assets/pull/1345) Add sample prompt assets and prompt publishing
+
+## 1.16.8 (2023-10-05)
+### 🐛 Bugs Fixed
+- [#1393](https://github.com/Azure/azureml-assets/pull/1393) Fix mlflow model and keep parent mlflow_model_folder
+
+
+## 1.16.7 (2023-10-03)
+### 🐛 Bugs Fixed
+- [#1363](https://github.com/Azure/azureml-assets/pull/1363) Fix AzureBlobstoreAssetPath storage account
+  URI logic
+
+## 1.16.6 (2023-10-02)
+### 🐛 Bugs Fixed
+- [#1357](https://github.com/Azure/azureml-assets/pull/1357) Fix validate_assets arg
+
+## 1.16.5 (2023-09-29)
+### 🐛 Bugs Fixed
+- [#1341](https://github.com/Azure/azureml-assets/pull/1341) Prevent nested directory creation during model upload
+
+## 1.16.4 (2023-09-27)
+### 🚀 New Features
+- [#1327](https://github.com/Azure/azureml-assets/pull/1327) Support prompt asset type
+
+## 1.16.3 (2023-09-26)
+### 🐛 Bugs Fixed
+- [#1317](https://github.com/Azure/azureml-assets/pull/1317) Improve sovereign cloud support by removing direct reference to Azure Public Cloud
+
+## 1.16.2 (2023-09-23)
+### 🐛 Bugs Fixed
+- [#1288](https://github.com/Azure/azureml-assets/pull/1288) Add arg for no-op model updates
+
+## 1.16.1 (2023-09-22)
+### 🐛 Bugs Fixed
+- [#1288](https://github.com/Azure/azureml-assets/pull/1288) Support to keep latest model version intact
+
+## 1.16.0 (2023-09-12)
+### 🚀 New Features
+- [#1207](https://github.com/Azure/azureml-assets/pull/1207) Support copy of changed files
+
+## 1.15.2 (2023-09-08)
+### 🐛 Bugs Fixed
+- [#1188](https://github.com/Azure/azureml-assets/pull/1188) Decrease azcopy verbosity
+
+## 1.15.1 (2023-09-07)
+### 🐛 Bugs Fixed
+- [#1182](https://github.com/Azure/azureml-assets/pull/1182) Fix authentication when retrieving temporary data references during model upload
+
+## 1.15.0 (2023-09-06)
+### 🐛 New Features
+- [#1174](https://github.com/Azure/azureml-assets/pull/1174) Support updating model properties
+
+## 1.14.2 (2023-08-31)
+### 🐛 Bugs Fixed
+- [#1150](https://github.com/Azure/azureml-assets/pull/1147) Fix model registration issue
+
+## 1.14.1 (2023-08-31)
+### 🐛 Bugs Fixed
+- [#1147](https://github.com/Azure/azureml-assets/pull/1147) Use packaging directly
+
+## 1.14.0 (2023-08-25)
+### 🚀 New Features
+- [#1098](https://github.com/Azure/azureml-assets/pull/1098) Allow to update Model metadata without increasing the version.
+
+## 1.13.0 (2023-08-11)
 ### 🚀 New Features
 - [#1030](https://github.com/Azure/azureml-assets/pull/1030) Allow "microsoft" to appear in model names
 

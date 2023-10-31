@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 tags:
-    Preview: ''
+  Preview: ""
 name: llm_dbcopilot_create_promptflow
 display_name: LLM - Create DBCopilot Prompt Flow
-version: 0.0.14
+version: 0.0.31
 inputs:
   index_name:
     type: string

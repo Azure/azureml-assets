@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/gpt2-medium/425b0cc/mlflow_model_folder
+  container_path: huggingface/gpt2-medium/1693293317/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

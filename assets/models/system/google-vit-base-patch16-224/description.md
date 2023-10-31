@@ -37,8 +37,10 @@ Image Multi-label classification|Image Multi-label classification|[multilabel fr
     "data": ["image1", "image2"]
   }
 }
-Note: "image1" and "image2" string should be in base64 format or publicly accessible urls.
 ```
+
+Note: "image1" and "image2" string should be in base64 format or publicly accessible urls.
+
 
 #### Sample output
 

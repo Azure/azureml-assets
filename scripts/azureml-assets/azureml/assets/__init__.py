@@ -29,6 +29,7 @@ from .update_assets import (
     update_assets,
 )
 from .environment.pin_image_versions import get_manifest
+from .publish_utils import create_asset
 from .update_spec import create_template_data, update as update_spec
 from .validate_assets import validate_assets
 from .validate_tree import validate_tree

@@ -3,10 +3,10 @@ name: bring-your-own-data-qna
 path: ./
 properties:
   is-promptflow: true
-  promptflow.section: gallery
-  promptflow.type: rag
-  promptflow.name: Bring Your Own Data Qna
-  promptflow.description: Create flows for Q&A with GPT3.5 using data from your own indexed files to make the answer more grounded for entreprise chat scenarios.
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: rag
+  azureml.promptflow.name: Bring Your Own Data QnA
+  azureml.promptflow.description: Create flows for Q&A with GPT3.5 using data from your own indexed files to make the answer more grounded for entreprise chat scenarios.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 1
+version: 4

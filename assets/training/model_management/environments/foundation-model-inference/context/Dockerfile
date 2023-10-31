@@ -1,29 +1,24 @@
-# Use the base image that includes the necessary dependencies
-FROM ghcr.io/huggingface/text-generation-inference:0.9
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch201:{{latest-image-tag:biweekly.\d{6}.\d{1}.*}}
 
-ENV DEBIAN_FRONTEND noninteractive
+WORKDIR /
 
-# Remove cached conda packages (which contains some vulnerable packages as well)
-RUN rm -rf /opt/conda/pkgs
-RUN apt-get update -y && apt-get install vim openssh-server openssh-client curl graphviz -y
+# support Deepspeed launcher requirement of passwordless ssh login
+RUN apt-get update && apt-get -y upgrade
 
-
-
-COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
-
-# List installed packages
-RUN pip list
-
-## Delete
-RUN rm requirements.txt
+COPY . .
+RUN pip install --no-cache-dir -e .
+RUN pip list    # show installed packages
 
 # Copy scoring file
-COPY score.py /var/mlflow_resources/mlflow_score_script.py
+COPY src/score.py /var/mlflow_resources/mlflow_score_script.py
 ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 ENV AML_APP_ROOT="/var/mlflow_resources"
 
-# Inference requirements
+# clean conda and pip caches
+RUN conda clean -y --all
+RUN rm -rf ~/.cache/pip
+
+#Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN /var/requirements/install_system_requirements.sh && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
@@ -33,9 +28,4 @@ RUN /var/requirements/install_system_requirements.sh && \
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=3600
 EXPOSE 5001 8883 8888
-
-# Stop server from starting at the very beginning itself
-# We are handling server start from scoring script
-ENTRYPOINT []
-
-CMD ["runsvdir", "/var/runit"]
+CMD [ "runsvdir", "/var/runit" ]

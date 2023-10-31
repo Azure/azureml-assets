@@ -3,11 +3,10 @@
 
 """Tests for Dataset Sampler Component."""
 
-from typing import Union, List, Dict, Any
+from typing import Union, List, Dict, Any, Optional
 import json
 import os
 import subprocess
-import hashlib
 import shutil
 import uuid
 import random
@@ -17,15 +16,15 @@ import pytest
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
-from utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
     download_outputs,
-    get_mlflow_logged_params,
     get_src_dir,
     assert_exception_mssg,
     run_command,
+    assert_logged_params,
 )
 
 
@@ -35,7 +34,7 @@ def _verify_and_get_output_records(
     sampling_style: str = "head",
     sampling_ratio: Union[float, None] = None,
     n_samples: Union[int, None] = None,
-) -> List[List[Dict[str, Any]]]:
+) -> List[Dict[str, Any]]:
     """Verify the output and get output records.
 
     :param input_paths: The list of input file paths.
@@ -43,36 +42,46 @@ def _verify_and_get_output_records(
     :param sampling_style: The sampling style, defaults to "head".
     :param sampling_ratio: The sampling ratio, defaults to None.
     :param n_samples: The number of samples, defaults to None.
-    :return: list of output records
+    :return: list of json records
     """
-    out_record_list = []
     output_paths = [
         os.path.join(output_dir, file)
         for file in os.listdir(output_dir)
         if file.endswith(".jsonl")
     ]
-    for input_path, output_path in zip(input_paths, output_paths):
+    assert len(output_paths) == 1
+
+    # Read the output file
+    with open(output_paths[0], "r") as f:
+        output_records = [json.loads(line) for line in f]
+    output_row_count = len(output_records)
+    expected_row_count = 0
+    expected_rows = []
+
+    for input_path in input_paths:
         # Read the input file
         with open(input_path, "r") as f:
             input_records = [json.loads(line) for line in f]
-
-        # Read the output file
-        with open(output_path, "r") as f:
-            output_records = [json.loads(line) for line in f]
-        output_row_count = len(output_records)
+        input_row_count = len(input_records)
 
         # Check row count and records
         if n_samples:
-            assert output_row_count == n_samples
+            curr_exp_row_count = n_samples
         else:
-            assert output_row_count == int(len(input_records) * sampling_ratio)
+            curr_exp_row_count = int(input_row_count * sampling_ratio)
+        expected_row_count += curr_exp_row_count
 
-            if sampling_style == "head":
-                assert output_records == input_records[:output_row_count]
-            elif sampling_style == "tail":
-                assert output_records == input_records[-output_row_count:]
-        out_record_list.append(output_records)
-    return out_record_list
+        if sampling_style == "head":
+            expected_rows += input_records[:curr_exp_row_count]
+        elif sampling_style == "tail":
+            expected_rows += input_records[-curr_exp_row_count:]
+        elif sampling_style == "duplicate":
+            expected_rows += input_records + input_records[:curr_exp_row_count - input_row_count]
+
+    assert output_row_count == expected_row_count
+    if sampling_style != "random":
+        assert output_records == expected_rows
+    return output_records
 
 
 class TestDatasetSamplerComponent:
@@ -86,6 +95,7 @@ class TestDatasetSamplerComponent:
             ("head", 0.1, None),
             ("tail", None, 6),
             ("random", None, 5),
+            ("duplicate", 1.2, None),
         ],
     )
     def test_dataset_sampler_component(
@@ -122,12 +132,14 @@ class TestDatasetSamplerComponent:
             [input_file_path],
             temp_dir,
         )
-        self._verify_logged_params(
+        assert_logged_params(
             pipeline_job.name,
-            [input_file_path],
-            sampling_style,
-            sampling_ratio,
-            n_samples,
+            self.EXP_NAME,
+            dataset=[input_file_path],
+            sampling_style=sampling_style,
+            sampling_ratio=sampling_ratio,
+            n_samples=n_samples,
+            random_seed=0 if sampling_style == "random" else None,
         )
 
     @pytest.mark.parametrize(
@@ -176,12 +188,14 @@ class TestDatasetSamplerComponent:
                     temp_dir,
                 )
             )
-            self._verify_logged_params(
+            assert_logged_params(
                 pipeline_job.name,
-                [input_file_path],
-                sampling_style,
-                sampling_ratio,
-                n_samples,
+                self.EXP_NAME,
+                dataset=[input_file_path],
+                sampling_style=sampling_style,
+                sampling_ratio=sampling_ratio,
+                n_samples=n_samples,
+                random_seed=0 if sampling_style == "random" else None,
             )
 
         # verify the output of two runs are the same
@@ -268,42 +282,6 @@ class TestDatasetSamplerComponent:
             input_file_paths, output_dir, sampling_style, sampling_ratio, n_samples
         )
 
-    def _verify_logged_params(
-        self,
-        job_name: str,
-        input_file_paths: List[str],
-        sampling_style: str = "head",
-        sampling_ratio: Union[float, None] = None,
-        n_samples: Union[int, None] = None,
-        random_seed: int = 0,
-    ) -> None:
-        """Verify the logged parameters.
-
-        :param job_name: The job name.
-        :param input_file_paths: The list of input file paths.
-        :param sampling_style: The sampling style, defaults to "head"
-        :param sampling_ratio: The sampling ratio, defaults to None
-        :param n_samples: The number of samples, defaults to None
-        :param random_seed: The random seed, defaults to 0
-        :return: None.
-        """
-        logged_params = get_mlflow_logged_params(job_name, self.EXP_NAME)
-
-        # compute input dataset checksum
-        input_dataset_checksum = hashlib.md5(
-            b"".join(open(item, "rb").read() for item in input_file_paths)
-        ).hexdigest()
-
-        # verify the logged parameters
-        assert logged_params["input_dataset_checksum"] == input_dataset_checksum
-        assert logged_params["sampling_style"] == sampling_style
-        if sampling_ratio is not None:
-            assert logged_params["sampling_ratio"] == str(sampling_ratio)
-        if n_samples is not None:
-            assert logged_params["n_samples"] == str(n_samples)
-        if sampling_style == "random":
-            assert logged_params["random_seed"] == str(random_seed)
-
 
 class TestDatasetSamplerScript:
     """Tests for dataset sampler script."""
@@ -317,20 +295,16 @@ class TestDatasetSamplerScript:
             input_file_path = self._create_input_file(
                 temp_dir, file_name="temp_test.json"
             )
-            expected_exception_mssg = (
-                f"Input file '{input_file_path}' is not a .jsonl file."
-            )
+            expected_exception_mssg = f"No .jsonl files found in {input_file_path}."
         else:
-            # Create two `.jsonl` files in the folder, folder as input is now invalid
+            # Create two `.json` files in the folder, folder as input is now invalid
             input_file_path = self._create_input_file(
-                temp_dir, file_name="temp_test_1.jsonl"
+                temp_dir, file_name="temp_test_1.json"
             )
             input_file_path = self._create_input_file(
                 temp_dir, file_name="temp_test_2.json"
             )
-            expected_exception_mssg = (
-                "Input file 'temp_test_2.json' is not a .jsonl file."
-            )
+            expected_exception_mssg = f"No .jsonl files found in {temp_dir}."
             input_file_path = temp_dir
 
         # Run the script and verify the exception
@@ -367,8 +341,23 @@ class TestDatasetSamplerScript:
             exception_message = e.output.strip()
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
-    @pytest.mark.parametrize("dataset_type", ["uri_folder"])
-    def test_valid_dataset(self, temp_dir, dataset_type: str):
+    @pytest.mark.parametrize(
+        "dataset_type, sampling_style, n_samples, sampling_ratio",
+        [
+            ("uri_folder", "head", 5, None),
+            ("mltable", "tail", None, 0.3),
+            ("uri_folder", "duplicate", None, 1.3),
+            ("uri_file", "random", 10, None),
+        ]
+    )
+    def test_valid_dataset(
+        self,
+        temp_dir,
+        dataset_type: str,
+        sampling_style: str,
+        n_samples: Optional[int],
+        sampling_ratio: Optional[float]
+    ):
         """Test for valid input dataset."""
         # Create input file
         shutil.copy(Constants.SAMPLER_INPUT_FILE_1, temp_dir)
@@ -389,12 +378,25 @@ class TestDatasetSamplerScript:
             dataset = temp_dir
 
         # Run the script
-        out_dir = temp_dir + "/out"
+        out_dir = os.path.join(temp_dir, "out")
         os.makedirs(out_dir, exist_ok=True)
-        self._run_sampler_script(dataset, n_samples=5, output_dataset=out_dir)
+        file_path = os.path.join(out_dir, "out.jsonl")
+        self._run_sampler_script(
+            dataset,
+            n_samples=n_samples,
+            output_dataset=file_path,
+            sampling_style=sampling_style,
+            sampling_ratio=sampling_ratio
+        )
 
         # Verify the output file(s)
-        _verify_and_get_output_records(input_file_paths, out_dir, n_samples=5)
+        _verify_and_get_output_records(
+            input_file_paths,
+            out_dir,
+            n_samples=n_samples,
+            sampling_style=sampling_style,
+            sampling_ratio=sampling_ratio
+        )
 
     @pytest.mark.parametrize("sampling_ratio", [0, -0.6, 1.1, None])
     def test_invalid_sampling_ratio(
@@ -407,9 +409,14 @@ class TestDatasetSamplerScript:
             expected_exception_mssg = (
                 "Either 'sampling_ratio' or 'n_samples' must be specified."
             )
+        elif sampling_ratio > 1:
+            expected_exception_mssg = (
+                "Invalid sampling_ratio: sampling_ratio > 1 only allowed for sampling style `duplicate`. "
+                "Received: sampling_style=head."
+            )
         else:
             expected_exception_mssg = (
-                f"Invalid sampling_ratio: {float(sampling_ratio)}. Please specify float in (0, 1]."
+                f"Invalid sampling_ratio: {float(sampling_ratio)}. Please specify a positive float number."
             )
 
         # Run the script and verify the exception
@@ -430,7 +437,7 @@ class TestDatasetSamplerScript:
             )
         else:
             expected_exception_mssg = (
-                f"Invalid n_samples: [{n_samples}]. Please specify positive integer."
+                f"Invalid n_samples: {n_samples}. Please specify positive integer."
             )
 
         # Run the script and verify the exception
@@ -462,7 +469,8 @@ class TestDatasetSamplerScript:
         input_file_path = self._create_input_file(temp_dir, file_name="temp_test.jsonl")
         # the message below is the default message for invalid choice directly from argparse
         expected_exception_mssg = (
-            f"argument --sampling_style: invalid choice: '{sampling_style}' (choose from 'head', 'tail', 'random')"
+            f"argument --sampling_style: invalid choice: '{sampling_style}' "
+            "(choose from 'head', 'tail', 'random', 'duplicate')"
         )
 
         # Run the script and verify the exception
@@ -474,7 +482,7 @@ class TestDatasetSamplerScript:
             exception_message = e.output.strip()
             assert expected_exception_mssg in exception_message
 
-    @pytest.mark.parametrize("sampling_style", ["head", "tail"])
+    @pytest.mark.parametrize("sampling_style", ["head", "tail", "duplicate"])
     def test_random_seed_for_non_random_sampling(
         self, temp_dir: str, sampling_style: str
     ):
@@ -485,10 +493,17 @@ class TestDatasetSamplerScript:
             f"Received random_seed: {0}, but it won't be used. It is used only when 'sampling_style' is 'random'."
         )
 
+        out_dir = os.path.join(temp_dir, "out")
+        os.makedirs(out_dir, exist_ok=True)
+        out_file_path = os.path.join(out_dir, "out.jsonl")
+
         # Run the script and verify the exception
         try:
             self._run_sampler_script(
-                input_file_path, sampling_style=sampling_style, sampling_ratio=0.2
+                input_file_path,
+                sampling_style=sampling_style,
+                sampling_ratio=0.2,
+                output_dataset=out_file_path,
             )
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -517,7 +532,7 @@ class TestDatasetSamplerScript:
         sampling_ratio: Union[float, None] = None,
         n_samples: Union[int, None] = None,
         random_seed: int = 0,
-        output_dataset: str = "out",
+        output_dataset: str = "out.jsonl",
     ) -> None:
         """
         Run the dataset sampler script with the given arguments.
@@ -532,7 +547,7 @@ class TestDatasetSamplerScript:
         :type n_samples: Union[int, None], optional
         :param random_seed: The random seed, defaults to 0
         :type random_seed: int, optional
-        :param output_dataset: The output directory, defaults to "out"
+        :param output_dataset: The output file path, defaults to "out.jsonl"
         :type output_dataset: str, optional
         :return: None
         :rtype: NoneType

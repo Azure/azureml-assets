@@ -1,0 +1,113 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+tags:
+    Preview: ""
+
+version: 0.0.9
+name: llm_rag_crack_and_chunk_and_embed
+display_name: LLM - Crack, Chunk and Embed Data
+is_deterministic: true
+
+description: |
+  Creates chunks no larger than `chunk_size` from `input_data`, extracted document titles are prepended to each chunk
+
+  LLM models have token limits for the prompts passed to them, this is a limiting factor at embedding time and even more limiting at prompt completion time as only so much context can be passed along with instructions to the LLM and user queries.
+  Chunking allows splitting source data of various formats into small but coherent snippets of information which can be 'packed' into LLM prompts when asking for answers to user query related to the source documents.
+
+  Supported formats: md, txt, html/htm, pdf, ppt(x), doc(x), xls(x), py
+
+  Also generates embeddings vectors for data chunks if configured.
+
+  If `embeddings_container` is supplied, input chunks are compared to existing chunks in the Embeddings Container and only changed/new chunks are embedded, existing chunks being reused.
+
+inputs:
+  # Input AzureML Data
+  input_data:
+    type: uri_folder
+    mode: rw_mount
+    description: "Uri Folder containing files to be chunked."
+  # Files to handle from source
+  input_glob:
+    type: string
+    optional: true
+    description: "Limit files opened from `input_data`, defaults to '**/*'."
+  # Chunking options
+  chunk_size:
+    type: integer
+    default: 768
+    description: "Maximum number of tokens to put in each chunk."
+  chunk_overlap:
+    type: integer
+    default: 0
+    description: "Number of tokens to overlap between chunks."
+  doc_intel_connection_id:
+    type: string
+    optional: true
+    description: "Connection id for Document Intelligence service. If provided, will be used to extract content from .pdf document."
+  citation_url:
+    type: string
+    optional: true
+    description: "Base URL to join with file paths to create full source file URL for chunk metadata."
+  citation_replacement_regex:
+    type: string
+    optional: true
+    description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern' to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)(\\\\.[^.]+)$\", \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles' from the middle of the url."
+  use_rcts:
+    type: string
+    default: "True"
+    enum:
+    - "True"
+    - "False"
+    description:  "Whether to use RecursiveCharacterTextSplitter to split documents into chunks"
+  # If adding to previously generated Embeddings
+  embeddings_container:
+    type: uri_folder
+    optional: true
+    mode: direct
+    description: "Folder containing previously generated embeddings. Should be parent folder of the 'embeddings' output path used for for this component. Will compare input data to existing embeddings and only embed changed/new data, reusing existing chunks."
+  # Embeddings settings
+  embeddings_model:
+    type: string
+    default: "hugging_face://model/sentence-transformers/all-mpnet-base-v2"
+    description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2' or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
+  embeddings_connection_id:
+    type: string
+    optional: true
+    description: "The connection id of the Embeddings Model provider to use."
+  batch_size:
+    type: integer
+    default: 100
+    description: "Batch size to use when embedding data."
+  num_workers:
+    type: integer
+    default: -1
+    description: "Number of workers to use when embedding data. -1 defaults to cpus / 2."
+  verbosity:
+    type: integer
+    default: 0
+    description: "Verbosity level for embedding process, specific to document processing information. 0: Aggregate Source/Document Info, 1: Source Ids logged as processed, 2: Document Ids logged as processed."
+outputs:
+  embeddings:
+    type: uri_folder
+    description: "Where to save data with embeddings. This should be a subfolder of previous embeddings if supplied, typically named using '${name}'. e.g. /my/prev/embeddings/${name}"
+
+environment: azureml:llm-rag-embeddings@latest
+code: '../src/'
+command: >-
+  python -m azureml.rag.tasks.crack_and_chunk_and_embed
+  --input_data ${{inputs.input_data}}
+  $[[--input_glob '${{inputs.input_glob}}']]
+  --chunk_size ${{inputs.chunk_size}}
+  --chunk_overlap ${{inputs.chunk_overlap}}
+  --use_rcts '${{inputs.use_rcts}}'
+  $[[--citation_url ${{inputs.citation_url}}]]
+  $[[--citation_replacement_regex '${{inputs.citation_replacement_regex}}']]
+  $[[--doc_intel_connection_id ${{inputs.doc_intel_connection_id}}]]
+  --embeddings_model ${{inputs.embeddings_model}}
+  $[[--embeddings_connection_id ${{inputs.embeddings_connection_id}}]]
+  $[[--embeddings_container ${{inputs.embeddings_container}}]]
+  --batch_size ${{inputs.batch_size}}
+  --num_workers ${{inputs.num_workers}}
+  --output_path ${{outputs.embeddings}}
+  --verbosity ${{inputs.verbosity}}

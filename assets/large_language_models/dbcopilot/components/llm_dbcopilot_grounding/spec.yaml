@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 tags:
-    Preview: ''
+  Preview: ""
 name: llm_dbcopilot_grounding
 display_name: LLM - DBCopilot Grounding DB
-version: 0.0.15
+version: 0.0.31
 inputs:
   asset_uri:
     type: string

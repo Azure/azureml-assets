@@ -11,6 +11,11 @@ FEATURE_CATEGORY_COLUMN = 'data_type'
 METRIC_NAME_COLUMN = 'metric_name'
 METRIC_VALUE_COLUMN = 'metric_value'
 
+# Column Names of samples index parquet.
+SAMPLES_COLUMN = 'samples'
+SAMPLES_NAME_COLUMN = 'samples_name'
+ASSET_COLUMN = 'asset'
+
 # Column Names of Histogram
 BUCKET_COUNT_COLUMN = 'bucket_count'
 CATEGORY_BUCKET_COLUMN = 'category_bucket'
@@ -59,9 +64,15 @@ SIGNAL_METRICS_THRESHOLD_VALUE = 'threshold_value'
 
 # Keywords in metric output JSON schema
 GROUPS = 'groups'
+METRICS = "metrics"
+SAMPLES_URI = "uri"
 THRESHOLD = 'threshold'
+TIMESERIES = "timeseries"
+TIMESERIES_RUN_ID = "runId"
+TIMESERIES_METRIC_NAMES = "metricNames"
+TIMESERIES_METRIC_NAMES_VALUE = "value"
+TIMESERIES_METRIC_NAMES_THRESHOLD = "threshold"
 VALUE = 'value'
-
 # Values for Outputs of Output Metrics Component
 METADATA_VERSION = '1.0.0'
 
@@ -75,5 +86,7 @@ ROW_COUNT_COLUMN_NAME = 'RowCount'
 THRESHOLD_VALUE = 'threshold_value'
 
 # Column names in MDC Preprocessor
+MDC_CHAT_HISTORY_COLUMN = 'chat_history'
 MDC_CORRELATION_ID_COLUMN = 'correlationid'
 MDC_DATA_COLUMN = 'data'
+MDC_DATAREF_COLUMN = 'dataref'

@@ -3,10 +3,10 @@ name: classification-accuracy-eval
 path: ./
 properties:
   is-promptflow: true
-  promptflow.section: gallery
-  promptflow.type: evaluate
-  promptflow.name: Classification Accuracy Eval
-  promptflow.description: Measuring the performance of a classification system by comparing its outputs to groundtruth.
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: evaluate
+  azureml.promptflow.name: Classification Accuracy Evaluation
+  azureml.promptflow.description: Measuring the performance of a classification system by comparing its outputs to groundtruth.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 1
+version: 4

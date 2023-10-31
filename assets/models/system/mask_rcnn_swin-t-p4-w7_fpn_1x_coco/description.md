@@ -31,7 +31,7 @@ Image instance segmentation|Image instance segmentation|[fridgeObjects](https://
     "columns": [
       "image"
     ],
-    "index": [0, 1]
+    "index": [0, 1],
     "data": ["image1", "image2"]
   }
 }

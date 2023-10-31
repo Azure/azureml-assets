@@ -6,7 +6,7 @@ token_classification_datapreprocess
 
 ### Version 
 
-0.0.2
+0.0.17
 
 ### Type 
 
@@ -31,6 +31,30 @@ For the above dataset pattern, `token_key` should be set as tokens_column and `t
 | token_key  | Key for tokens in each example line                                  | string  | -       | False    | NA   |
 | tag_key    | Key for tags in each example line                                    | string  | -       | False    | NA   |
 | batch_size | Number of examples to batch before calling the tokenization function | integer | 1000    | True     | NA   |
+
+
+
+Tokenization params
+
+pad_to_max_length:
+
+type: string
+
+enum:
+
+- "true"
+
+- "false"
+
+default: "true"
+
+optional: true
+
+description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
+
+| Name           | Description                                                                                                          | Type    | Default | Optional | Enum |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- | ------- | ------- | -------- | ---- |
+| max_seq_length | Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`. | integer | -1      | True     | NA   |
 
 
 

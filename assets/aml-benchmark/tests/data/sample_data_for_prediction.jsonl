@@ -1,0 +1,5 @@
+{"input_string": "I am happy.", "ground_truth": "POS"}
+{"input_string": "It is a difficult task.", "ground_truth": "NEG"}
+{"input_string": "2+2 is 4", "ground_truth": "NEU"}
+{"input_string": "This is great!", "ground_truth": "POS"}
+{"input_string": "An action movie.", "ground_truth": "NEU"}

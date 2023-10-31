@@ -3,10 +3,10 @@ name: chat-with-wikipedia
 path: ./
 properties:
   is-promptflow: true
-  promptflow.section: gallery
-  promptflow.type: chat
-  promptflow.name: Chat With Wikipedia
-  promptflow.description: ChatGPT-based chatbot that leverages Wikipedia data to ground the responses.
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: chat
+  azureml.promptflow.name: Chat with Wikipedia
+  azureml.promptflow.description: ChatGPT-based chatbot that leverages Wikipedia data to ground the responses.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 2
+version: 6

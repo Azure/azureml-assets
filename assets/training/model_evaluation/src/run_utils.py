@@ -6,8 +6,10 @@ from azureml.core import Run
 from azureml.core.run import _OfflineRun
 import azureml.evaluate.mlflow as aml_mlflow
 import os
+import re
 
 known_modules = {
+    'validation_trigger_model_evaluation',
     "model_prediction",
     "compute_metrics",
     "evaluate_model"
@@ -176,9 +178,8 @@ class TestRun:
                     model_asset_id = raw_json["runDefinition"]["inputAssets"]["mlflow_model"]["asset"]["assetId"]
                     info["model_asset_id"] = model_asset_id
                     if model_asset_id.startswith("azureml://registries"):
-                        import re
                         info["model_source"] = "registry"
-                        model_info = re.search("azureml://registries/(.+?)/models/(.+?)/versions/(.+?)",
+                        model_info = re.search("azureml://registries/(.+)/models/(.+)/versions/(.+)",
                                                model_asset_id)
                         info["model_registry_name"] = model_info.group(1)
                         info["model_name"] = model_info.group(2)
@@ -187,22 +188,29 @@ class TestRun:
                         info["model_source"] = "workspace"
                 except Exception:
                     pass
+            try:
+                module_name = raw_json['properties'].get('azureml.moduleName', 'Unknown')
+                info["moduleName"] = module_name if module_name in known_modules else 'Unknown'
+                if info["moduleName"] != 'Unknown':
+                    module_id = raw_json['properties'].get('azureml.moduleid', '')
+                    info['moduleId'] = module_id
+                    if module_id.startswith("azureml://registries"):
+                        info["moduleSource"] = "registry"
+                        module_info = re.search("azureml://registries/(.+)/components/(.+)/versions/(.+)",
+                                                module_id)
+                        info["moduleRegistryName"] = module_info.group(1)
+                        info["moduleVersion"] = module_info.group(3)
+                    else:
+                        info["moduleSource"] = "workspace"
+                        info["moduleVersion"] = raw_json['properties'].get('azureml.moduleVersion', 'Unknown')
+                info["pipeline_type"] = raw_json['properties'].get('PipelineType', None)
+                info["source"] = raw_json['properties'].get('Source', None)
+            except Exception:
+                pass
         try:
-            import re
             location = os.environ.get("AZUREML_SERVICE_ENDPOINT")
             location = re.compile("//(.*?)\\.").search(location).group(1)
         except Exception:
             location = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
         info["location"] = location
-        try:
-            if hasattr(self._run, 'experiment'):
-                module_name = self._run.properties.get('azureml.moduleName', 'Unknown')
-                info["moduleName"] = module_name if module_name in known_modules else 'Unknown'
-                if info["moduleName"] != 'Unknown':
-                    info["moduleVersion"] = self._run.properties.get('azureml.moduleVersion', 'Unknown')
-                info["pipeline_type"] = self._run.properties.get('PipelineType', None)
-                info["source"] = self._run.properties.get('Source', None)
-
-        except Exception:
-            pass
         return info

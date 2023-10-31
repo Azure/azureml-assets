@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: samples/ask_wikipedia/v2/model_folder
+  storage_name: promptflowsamples
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

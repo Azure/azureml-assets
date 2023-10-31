@@ -26,11 +26,12 @@ import json5
 import pandas as pd
 import requests
 import tiktoken
-from azure.ai.ml.identity import CredentialUnavailableError, AzureMLOnBehalfOfCredential
+from azure.ai.ml.identity import CredentialUnavailableError
 from azure.ai.ml.identity._internal import _scopes_to_resource
 from azure.core.credentials import AccessToken, TokenCredential
-from pyspark.sql import DataFrame
-from pyspark.sql.types import IntegerType, StructField, StructType
+from pyspark.sql import DataFrame, Window
+from pyspark.sql.types import IntegerType, StructField, StructType, StringType
+from pyspark.sql.functions import col, row_number, monotonically_increasing_id
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from shared_utilities import io_utils
@@ -41,6 +42,7 @@ logging.basicConfig(level=logging.INFO)
 DEFAULT_INDENT = 2
 
 RATING = "rating"
+INDEX = "index"
 LABEL_KEYS = [RATING]
 PROMPT = "prompt"
 COMPLETION = "completion"
@@ -105,6 +107,7 @@ THRESHOLD_PARAMS = [
 
 CL_100K_BASE = "cl100k_base"
 GPT_35_TURBO = "gpt-35-turbo"
+GPT_35_TURBO_16K = "gpt-35-turbo-16k"
 GPT_4 = "gpt-4"
 GPT_4_32K = "gpt-4-32k"
 BASE_MAX_TOKENS = 1000
@@ -113,6 +116,7 @@ BASE_MAX_PROMPT_TOKENS = 3000
 MODEL_TYPE_FACTOR = {
     GPT_35_TURBO: 1,
     GPT_4: 2,
+    GPT_35_TURBO_16K: 4,
     GPT_4_32K: 8
 }
 
@@ -525,9 +529,12 @@ COUNT = "count"
 METRIC_NAME = "metric_name"
 METRIC_VALUE = "metric_value"
 GROUP = "group"
+GROUP_DIMENSION = "group_dimension"
+SAMPLES_NAME = "samples_name"
+ASSET = "asset"
 THRESHOLD = "threshold_value"
-PRODUCTION_ROW_COUNT = "Production"
-REFERENCE_ROW_COUNT = "Reference"
+PRODUCTION_ROW_COUNT = "production_data"
+REFERENCE_ROW_COUNT = "reference_data"
 
 
 def _check_and_format_azure_endpoint_url(
@@ -748,31 +755,7 @@ class _APITokenManager(ABC):
         pass
 
 
-class _ManagedIdentityAPITokenManager(_APITokenManager):
-    def __init__(
-        self,
-        *,
-        endpoint_type,
-        auth_header,
-        token_scope,
-        **kwargs,
-    ):
-        super().__init__(endpoint_type=endpoint_type, auth_header=auth_header)
-        self.token_scope = token_scope
-
-    def get_token(self):
-        if (
-            self.token is None
-            or self.last_refresh_time is None
-            or time.time() - self.last_refresh_time > AZURE_TOKEN_REFRESH_INTERVAL
-        ):
-            self.last_refresh_time = time.time()
-            self.token = self.credential.get_token(self.token_scope.value).token
-
-        return self.token
-
-
-class _UAIAPITokenManager(_APITokenManager):
+class _WorkspaceConnectionTokenManager(_APITokenManager):
     def __init__(
         self,
         *,
@@ -781,30 +764,48 @@ class _UAIAPITokenManager(_APITokenManager):
         **kwargs,
     ):
         super().__init__(auth_header=auth_header)
-        # using UAI, call /listsecrets on the workspace connection to get the credentials for the aoai endpoint
-        credential = AzureMLOnBehalfOfCredential()
-        try:
-            access_token = credential.get_token('https://management.azure.com')
-        except CredentialUnavailableError as err:
-            print(f"Unable to get an AML OBO token, error: {str(err)}.")
-            raise
 
-        headers = {"Content-Type": "application/json", "Authorization": f"{BEARER} {access_token.token}"}
-        response = requests.post(url=connection_name, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
-        if response.status_code == 200:
-            response_data = response.json()
-            response_props = response_data['properties']
-            if response_props['category'] != "AzureOpenAI":
-                raise Exception(f"Received unexpected endpoint type {response_props['category']}"
-                                "only Azure Open AI endpoints are supported at this time")
-            self.api_version = response_props["metadata"]["ApiVersion"]
-            self.domain_name = response_props["target"]
-            self.token = response_props['credentials']['key']
-        else:
-            raise Exception(
-                "Received unexpected HTTP status: "
-                f"{response.status_code} {response.text}"
+        try:
+            from azureml.dataprep.api._aml_auth._azureml_token_authentication import AzureMLTokenAuthentication
+            from azure.ai.ml import MLClient
+            from azure.ai.ml.entities import WorkspaceConnection
+
+            credential = AzureMLTokenAuthentication._initialize_aml_token_auth()
+
+            uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)",  # noqa: E501
+                                 connection_name, flags=re.IGNORECASE)
+
+            ml_client = MLClient(
+                credential=credential,
+                subscription_id=uri_match.group(1),
+                resource_group_name=uri_match.group(2),
+                workspace_name=uri_match.group(3)
             )
+
+            if os.environ.get("AZUREML_RUN_ID", None) is not None:
+                # In AzureML Run context, we need to use workspaces internal endpoint that will accept
+                # AzureMLToken auth.
+                ml_client.connections._operation._client._base_url = f"{os.environ.get('AZUREML_SERVICE_ENDPOINT')}/rp/workspaces"  # noqa: E501
+                print(f"Using ml_client base_url: {ml_client.connections._operation._client._base_url}")
+                list_secrets_response = ml_client.connections._operation.list_secrets(
+                    connection_name=uri_match.group(4),
+                    resource_group_name=ml_client.resource_group_name,
+                    workspace_name=ml_client.workspace_name,
+                )
+                connection = WorkspaceConnection._from_rest_object(list_secrets_response)
+                print(f"Retrieved Workspace Connection: {connection.id}")
+
+                if connection.type != "azure_open_ai":
+                    raise Exception(f"Received unexpected endpoint type {connection.type}"
+                                    "only Azure Open AI endpoints are supported at this time")
+
+                self.api_version = connection.metadata["ApiVersion"]
+                self.domain_name = connection.target
+                self.token = connection.credentials["key"]
+            else:
+                raise Exception("Unable to retrieve the token to establish a Workspace Connection")
+        except Exception as e:
+            raise Exception(f"Error encountered while attempting to authentication token: {e}")
 
     def get_api_version(self):
         return self.api_version
@@ -1055,6 +1056,7 @@ def _request_api(
                     r["message"]["content"]
                     for r in response_data["choices"]
                 ],
+                "index": request_params,
                 "finish_reason": [
                     r["finish_reason"] for r in response_data["choices"]
                 ],
@@ -1285,11 +1287,20 @@ def _parse_responses(
             print(f"Failed decoding examples: {sample_examples}")
             num_failed += 1
 
+    # if the number of expected samples does not match the output samples
+    # there was an issue getting the response and we cannot accurately map
+    # the indices with the input data
+    index_mapping = job.prompt_data.input_idx
+    if output_examples[0] is None:
+        print("Not all responses could be parsed correctly. Ignoring indices for violations")
+        index_mapping = [-1] * len(index_mapping)
+
     if num_failed == num_samples:
         job.status = _JobStatus.PARSING_FAILED
     else:
         job.status = _JobStatus.SUCCESS
         job.response_data["output_examples"] = output_examples
+        job.response_data["index_mapping"] = index_mapping
 
 
 class _JobManager:
@@ -1355,9 +1366,16 @@ class _JobManager:
             if job.status == _JobStatus.SUCCESS
             for result in job.response_data["output_examples"][0]
         ]
-        return pd.DataFrame(
-            {key: [res[key] for res in job_results] for key in LABEL_KEYS}
-        )
+        job_indices = [
+                result
+                for job in jobs
+                if job.status == _JobStatus.SUCCESS
+                for result in job.response_data["index_mapping"]
+        ]
+        return pd.DataFrame({
+            RATING: [res[RATING] for res in job_results],
+            INDEX: job_indices,
+        })
 
     def make_job(self, **job_params) -> _Job:
         """Make job, tracking job_idx internally."""
@@ -1379,11 +1397,11 @@ def run():
     parser.add_argument("--presence_penalty", type=float, default=0.0)
     parser.add_argument("--stop", type=str, default=None)
 
-    parser.add_argument("--groundedness_rating_threshold", type=int, default=3)
-    parser.add_argument("--similarity_rating_threshold", type=int, default=3)
-    parser.add_argument("--relevance_rating_threshold", type=int, default=3)
-    parser.add_argument("--fluency_rating_threshold", type=int, default=3)
-    parser.add_argument("--coherence_rating_threshold", type=int, default=3)
+    parser.add_argument("--groundedness_rating_threshold", type=int, default=4)
+    parser.add_argument("--similarity_rating_threshold", type=int, default=4)
+    parser.add_argument("--relevance_rating_threshold", type=int, default=4)
+    parser.add_argument("--fluency_rating_threshold", type=int, default=4)
+    parser.add_argument("--coherence_rating_threshold", type=int, default=4)
 
     parser.add_argument("--prompt_column_name", type=str, default=PROMPT)
     parser.add_argument("--completion_column_name", type=str, default=COMPLETION)
@@ -1401,6 +1419,13 @@ def run():
     parser.add_argument("--api_call_retry_backoff_factor", type=int, default=3)
     parser.add_argument("--api_call_retry_max_count", type=int, default=10)
     parser.add_argument("--histogram", type=str, required=True)
+    parser.add_argument("--samples_index", type=str, required=True)
+    parser.add_argument("--groundedness_violations", type=str, required=True)
+    parser.add_argument("--fluency_violations", type=str, required=True)
+    parser.add_argument("--relevance_violations", type=str, required=True)
+    parser.add_argument("--coherence_violations", type=str, required=True)
+    parser.add_argument("--similarity_violations", type=str, required=True)
+
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
     args = parser.parse_args()
 
@@ -1459,10 +1484,19 @@ def run():
     # TODO add validation for threshold args!!
     print(f"Running with args: {args}")
 
+    violations = {
+        "groundedness": args.groundedness_violations,
+        "relevance": args.relevance_violations,
+        "fluency": args.fluency_violations,
+        "similarity": args.similarity_violations,
+        "coherence": args.coherence_violations,
+    }
+
     apply_annotation(
         metric_names=metric_names,
         production_dataset=args.production_dataset,
         histogram=args.histogram,
+        samples_index=args.samples_index,
         model_deployment_name=args.model_deployment_name,
         workspace_connection_arm_id=args.workspace_connection_arm_id,
         num_samples=args.num_samples,
@@ -1474,6 +1508,7 @@ def run():
         completion_column_name=args.completion_column_name,
         context_column_name=args.context_column_name,
         ground_truth_column_name=args.ground_truth_column_name,
+        violations=violations,
     )
 
 
@@ -1493,6 +1528,8 @@ def apply_annotation(
     completion_column_name,
     context_column_name,
     ground_truth_column_name,
+    samples_index,
+    violations,
 ):
     """Apply annotation to all samples in the production_dataset."""
     production_df = io_utils.read_mltable_in_spark(production_dataset)
@@ -1522,6 +1559,9 @@ def apply_annotation(
     }
     # Sampling
     production_df = production_df.sample(withReplacement=False, fraction=sample_rate)
+    production_df_with_index = production_df.withColumn("id",
+                                                        row_number()
+                                                        .over(Window.orderBy(monotonically_increasing_id()))-1)
 
     spark = io_utils.init_spark()
     spark_conf = spark.sparkContext.getConf()
@@ -1553,14 +1593,18 @@ def apply_annotation(
             "TID",
         ]
     }
-    # Define authorization token manager
-    connection = LISTSECRETS_API_PATTERN.format(workspace_connection_arm_id)
-    token_manager_class = _UAIAPITokenManager
+    try:
+        # Define authorization token manager
+        token_manager_class = _WorkspaceConnectionTokenManager
 
-    token_manager = token_manager_class(
-        connection_name=connection,
-        auth_header=API_KEY
-    )
+        token_manager = token_manager_class(
+            connection_name=workspace_connection_arm_id,
+            auth_header=API_KEY
+        )
+    except Exception as e:
+        print(f"Unable to process request: {e}")
+        return
+
     endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
     api_version = token_manager.get_api_version()
 
@@ -1571,9 +1615,10 @@ def apply_annotation(
     endpoint_args["azure_endpoint_domain_name"] = endpoint_domain_name
     endpoint_args["azure_openai_api_version"] = api_version
 
+    # use fixed API version since newer versions aren't supported
     get_model_endpoint = _check_and_format_azure_endpoint_url(AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
                                                               AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-                                                              endpoint_domain_name, api_version,
+                                                              endpoint_domain_name, "2022-12-01",
                                                               model_deployment_name)
     try:
         headers = {
@@ -1601,6 +1646,7 @@ def apply_annotation(
 
     print(f"starting submit_inputs with endpoint_args={endpoint_args}")
     all_metrics_pdf = None
+    samples_index_rows = []
     for metric_name in metric_names:
         # Run inference over input dataset
         print(f"Begin {metric_name} request.")
@@ -1639,7 +1685,8 @@ def apply_annotation(
             annotate_batch,
             schema=StructType(
                 [
-                    StructField(name=RATING, dataType=IntegerType(), nullable=True),
+                    StructField(RATING, IntegerType(), True),
+                    StructField(INDEX, IntegerType(), True),
                 ]
             ),
         ).cache()
@@ -1665,6 +1712,22 @@ def apply_annotation(
         metrics_pdf[THRESHOLD] = metric_threshold_value
         print(metrics_pdf)
 
+        # create violations table if there are violations
+        violations_df = annotations_df.filter((col(RATING) < metric_threshold_value) & (col(INDEX) != -1))
+        if violations_df.count() > 0:
+            violations_df_full = production_df_with_index.join(violations_df,
+                                                               production_df_with_index.id == violations_df.index,
+                                                               "inner").drop(violations_df.index).drop(
+                                                                   production_df_with_index.id).withColumnRenamed(
+                                                                       'rating', metric_name_compact)
+            run_id = os.environ.get("AZUREML_RUN_ID")
+            io_utils.save_spark_df_as_mltable(violations_df_full, violations[metric_name_compact.lower()])
+            samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
+                                       GROUP: "",
+                                       GROUP_DIMENSION: "",
+                                       SAMPLES_NAME: "Violations",
+                                       ASSET: f"azureml_{run_id}_output_data_{metric_name_compact.lower()}_violations:1"})  # noqa: E501
+
         if all_metrics_pdf is None:
             all_metrics_pdf = metrics_pdf
         else:
@@ -1681,6 +1744,19 @@ def apply_annotation(
             },
             ignore_index=True)
     print("Finished calculating metrics based on annotations.")
+
+    metadata_schema = StructType(
+        [
+            StructField(METRIC_NAME, StringType(), True),
+            StructField(GROUP, StringType(), True),
+            StructField(GROUP_DIMENSION, StringType(), True),
+            StructField(SAMPLES_NAME, StringType(), True),
+            StructField(ASSET, StringType(), True),
+        ]
+    )
+    # Create a new DataFrame for the samples index data
+    samples_df = spark.createDataFrame(samples_index_rows, metadata_schema)
+    io_utils.save_spark_df_as_mltable(samples_df, samples_index)
 
     io_utils.save_spark_df_as_mltable(
         spark.createDataFrame(all_metrics_pdf),

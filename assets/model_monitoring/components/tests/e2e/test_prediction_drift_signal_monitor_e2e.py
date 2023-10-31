@@ -10,6 +10,7 @@ from tests.e2e.utils.constants import (
     COMPONENT_NAME_PREDICTION_DRIFT_SIGNAL_MONITOR,
     DATA_ASSET_IRIS_BASELINE_DATA,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_NO_DRIFT,
+    DATA_ASSET_EMPTY
 )
 
 
@@ -62,6 +63,20 @@ class TestPredictionDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_NO_DRIFT,
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    def test_monitoring_run_empty_production_data_successful(
+        self, ml_client: MLClient, get_component, test_suite_name
+    ):
+        """Test the happy path scenario where the data has drift and default settings are used."""
+        pipeline_job = _submit_prediction_drift_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_BASELINE_DATA,
+            DATA_ASSET_EMPTY,
         )
 
         assert pipeline_job.status == "Completed"

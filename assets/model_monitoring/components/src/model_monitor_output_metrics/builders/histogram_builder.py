@@ -18,30 +18,31 @@ class HistogramBuilder:
             self.histograms = {}
             return
 
-        for row in baseline_histograms:
-            feature_name = row["feature_bucket"]
-            if feature_name not in histograms:
-                histograms[feature_name] = {
-                    "featureName": row["feature_bucket"],
-                    "histogram": {},
+        if baseline_histograms:
+            for row in baseline_histograms:
+                feature_name = row["feature_bucket"]
+                if feature_name not in histograms:
+                    histograms[feature_name] = {
+                        "featureName": row["feature_bucket"],
+                        "histogram": {},
+                    }
+
+                bucket = {
+                    "baselineCount": row["bucket_count"],
                 }
 
-            bucket = {
-                "baselineCount": row["bucket_count"],
-            }
+                bucket_key = None
+                if row["data_type"] == "categorical":
+                    bucket_key = row["category_bucket"]
+                    bucket["category"] = row["category_bucket"]
+                else:
+                    bucket_key = row["lower_bound"]
+                    bucket["lowerBound"] = row["lower_bound"]
+                    bucket["upperBound"] = row["upper_bound"]
 
-            bucket_key = None
-            if row["data_type"] == "categorical":
-                bucket_key = row["category_bucket"]
-                bucket["category"] = row["category_bucket"]
-            else:
-                bucket_key = row["lower_bound"]
-                bucket["lowerBound"] = row["lower_bound"]
-                bucket["upperBound"] = row["upper_bound"]
+                histograms[feature_name]["histogram"][bucket_key] = bucket
 
-            histograms[feature_name]["histogram"][bucket_key] = bucket
-
-        if target_histograms is not None:
+        if target_histograms:
             for row in target_histograms:
                 feature_name = row["feature_bucket"]
                 if feature_name not in histograms:

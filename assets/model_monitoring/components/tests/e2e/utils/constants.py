@@ -11,6 +11,7 @@ COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR = (
 )
 COMPONENT_NAME_CREATE_MANIFEST = "model_monitor_create_manifest"
 COMPONENT_NAME_MDC_PREPROCESSOR = "model_data_collector_preprocessor"
+COMPONENT_NAME_METRIC_OUTPUTTER = "model_monitor_metric_outputter"
 COMPONENT_NAME_DATA_JOINER = "model_monitor_data_joiner"
 COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR = 'generation_safety_quality_signal_monitor'
 
@@ -54,6 +55,18 @@ DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN = (
     "azureml:mltable_iris_preprocessed_model_outputs_with_join_column:1"
 )
 
+DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT = (
+    "azureml:mltable_data_drift_signal_output:1"
+)
+
+DATA_ASSET_MLTABLE_SAMPLES_INDEX_OUTPUT = (
+    "azureml:mltable_samples_index_output:1"
+)
+
+DATA_ASSET_EMPTY = (
+    "azureml:mltable_empty:1"
+)
+
 # MDC-generated target dataset of an iris model which contains both the input features as well as the inferred results.
 # The data contains no drift. Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
 DATA_ASSET_IRIS_MODEL_INPUTS_OUTPUTS_WITH_NO_DRIFT = (
@@ -62,6 +75,8 @@ DATA_ASSET_IRIS_MODEL_INPUTS_OUTPUTS_WITH_NO_DRIFT = (
 
 DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME = 'model_inputs_join_column'
 DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME = 'model_outputs_join_column'
-
 # Groundedness target dataset as a MLTable.
 DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = 'azureml:groundedness_preprocess_target_small:1'
+
+# For Data Quality with timestamp and boolean type in the MLTable
+DATA_ASSET_VALID_DATATYPE = 'azureml:mltable_validate_datatype_for_data_quality:1'

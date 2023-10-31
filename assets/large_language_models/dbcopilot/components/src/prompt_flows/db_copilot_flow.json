@@ -12,7 +12,7 @@
                         "embedding_aoai_config": "@@EMBEDDING_CONNECTION@@",
                         "chat_aoai_config": "@@CHAT_CONNECTION@@",
                         "grounding_embedding_uri": "@@GROUNDING_EMBEDDING_URI@@",
-                        "example_embedding_uri": null,
+                        "example_embedding_uri": "@@EXAMPLE_EMBEDDING_URI@@",
                         "db_context_uri": "@@DB_CONTEXT_URI@@",
                         "embedding_aoai_deployment_name": "@@EMBEDDING_AOAI_DEPLOYMENT_NAME@@",
                         "chat_aoai_deployment_name": "@@CHAT_AOAI_DEPLOYMENT_NAME@@",

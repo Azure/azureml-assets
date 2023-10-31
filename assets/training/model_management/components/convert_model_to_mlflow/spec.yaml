@@ -1,15 +1,15 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: convert_model_to_mlflow
-version: 0.0.13
+version: 0.0.15
 type: command
 
 is_deterministic: True
 
-display_name: Convert Hugging face models to MLflow
-description: Component converts Huggingface models to MLflow model packaging format
+display_name: Convert models to MLflow
+description: Component converts models from supported frameworks to MLflow model packaging format
 
-environment: azureml://registries/azureml/environments/model-management/versions/13
+environment: azureml://registries/azureml/environments/model-management/versions/17
 
 code: ../../src/
 command: >
@@ -27,7 +27,7 @@ command: >
   $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]]
   $[[--hf-use-experimental-features ${{inputs.hf_use_experimental_features}}]]
   $[[--extra-pip-requirements "${{inputs.extra_pip_requirements}}"]]
-  --mlflow-flavor ${{inputs.mlflow_flavor}}
+  --model-framework ${{inputs.model_framework}}
   --model-path ${{inputs.model_path}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
   --model-import-job-path ${{outputs.model_import_job_path}}
@@ -35,17 +35,18 @@ command: >
 inputs:
   model_id:
     type: string
-    description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for transformers flavor. Can be provided as input here or in model_download_metadata JSON file.
+    description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for Huggingface model framework. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
 
-  mlflow_flavor:
+  model_framework:
     type: string
     enum:
-      - transformers
-      - mmlab_pyfunc
-    default: transformers
+      - Huggingface
+      - MMLab
+      - llava
+    default: Huggingface
     optional: false
-    description: MLflow flavor to convert model into. Please note that, mmlab_pyfunc flavor is only supported for image object detection models.
+    description: Framework from which model is imported from.
 
   task_name:
     type: string
@@ -61,7 +62,13 @@ inputs:
       - image-classification
       - image-object-detection
       - image-instance-segmentation
+      - image-to-text
       - text-to-image
+      - text-to-image-inpainting
+      - image-text-to-text
+      - zero-shot-image-classification
+      - video-multi-object-tracking
+      - visual-question-answering
     description: A Hugging face task on which model was trained on. A required parameter for transformers MLflow flavor. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
 
@@ -76,7 +83,7 @@ inputs:
     type: string
     description: |
       Provide args that should be used to load Huggingface model tokenizer.
-      eg: trust_remote_code=True, device_map=auto, 
+      eg: trust_remote_code=True, device_map=auto,
     optional: true
 
   hf_model_args:

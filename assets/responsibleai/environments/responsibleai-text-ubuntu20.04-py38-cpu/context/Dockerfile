@@ -17,11 +17,15 @@ RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 # Install main azureml packages
 RUN pip install 'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-rai-utils==0.0.3'
+                'azureml-rai-utils==0.0.6'
 
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-telemetry=={{latest-pypi-version}}' \
                 'Werkzeug==2.2.3'
+
+# Install huggingface evaluate package from source
+# see issue https://github.com/huggingface/datasets/issues/6182
+RUN pip install git+https://github.com/huggingface/evaluate.git
 
 RUN pip freeze
 

@@ -1,26 +1,30 @@
-This is a flow illustrating how to evaluate the performance of a classification system. It involves comparing each prediction to the groundtruth and assigns a "Correct" or "Incorrect" grade, and aggregating the results to produce metrics such as accuracy, which reflects how good the system is at classifying the data.
+The "Classification Accuracy Evaluation" is a model designed to assess the effectiveness of a data classification system. It involves matching each prediction against the ground truth, subsequently assigning a "Correct" or "Incorrect" score. The cumulative results are then leveraged to generate performance metrics, such as accuracy, providing an overall measure of the system's proficiency in data classification.
 
-Brief description: Measuring the performance of a classification system by comparing its outputs to groundtruth.
 
-### What you will learn
+### Inference samples
 
-In this flow, you will learn
-- how to compose a point based evaluation flow, where you can calculate point-wise metrics.
-- the way to log metrics.
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|<a href="https://github.com/microsoft/promptflow/blob/pm/3p-inside-materials/docs/media/deploy-to-aml-code/sdk/deploy.ipynb" target="_blank">deploy-promptflow-model-python-example</a>|<a href="https://github.com/microsoft/promptflow/blob/pm/3p-inside-materials/docs/go-to-production/deploy-to-aml-code.md" target="_blank">deploy-promptflow-model-cli-example</a>
+Batch | N/A | N/A
 
-#### Evaluate a classification flow
-There are two ways to evaluate a classification flow.
-* Run a classification flow and evaluation flow all together
-    * step 1: create or clone a classification flow
-    * step 2: select bulk test and fill in variants, then click on next
-    * step 3: fill in test data, then click on next
-    * step 4: when you are in evaluation setting page, use quotas for 'Sample evaluation flows'. Select 'Classification Accuracy Evaluation' from Sample evaluation flows, select the evaluation flow's inputs mapping from normal flow's inputs or outputs and click on next  
-    * step 5: review run settings and submit
-        
-* Run 'Classification Accuracy Evaluation' from an existing classification flow run
-    * step 1: create a bulk test classification flow run and submit
-    * step 2: click on 'View run history' to go to all submitted runs page and select a bulk test in bulk runs panel to go to details page
-    * step 3: click on 'New evaluation', select one or more variants and the Classification Accuracy Evaluation from Sample evaluation flows. Then set connections, input mappings and submit
+### Sample inputs and outputs (for real-time inference)
 
-### Tools used in this flow
-- Python Tool
+#### Sample input
+```json
+{
+    "inputs": {
+        "groundtruth": "App",
+        "prediction": "App"
+    }
+}
+```
+
+#### Sample output
+```json
+{
+    "outputs": {
+        "grade": "Correct"
+    }
+}
+```

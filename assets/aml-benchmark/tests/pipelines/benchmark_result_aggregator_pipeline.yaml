@@ -1,0 +1,90 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+display_name: Benchmark-test-result-aggregator
+experiment_name: benchmark-result-aggregator-test
+
+outputs:
+  benchmark_result:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/benchmark_result.json
+
+jobs:
+  evaluation:
+    type: command
+    component: azureml://registries/azureml/components/model_prediction/labels/latest
+    limits:
+      timeout: 3600
+    inputs:
+      test_data:
+        type: uri_file
+        path: ../data/sample_data_for_prediction.jsonl
+      mlflow_model:
+        type: mlflow_model
+        path: azureml://registries/azureml/models/finiteautomata-bertweet-base-sentiment-analysis/versions/8
+      task: text-classification
+      label_column_name: ground_truth
+      input_column_names: input_string
+      device: auto
+    outputs:
+      predictions:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+      prediction_probabilities:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+      ground_truth:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+      performance_metadata:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+  quality:
+    type: command
+    component: azureml://registries/azureml/components/compute_metrics/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      ground_truth:
+        type: uri_folder
+        path: ${{parent.jobs.evaluation.outputs.ground_truth}}
+      prediction:
+        type: uri_folder
+        path: ${{parent.jobs.evaluation.outputs.predictions}}
+      task: text-classification
+      ground_truth_column_name: ground_truth
+    outputs:
+      evaluation_result:
+        type: uri_folder
+  performance:
+    type: command
+    component: ../../components/compute-performance-metrics/spec.yaml
+    limits:
+      timeout: 900
+    inputs:
+      performance_data:
+        type: uri_folder
+        path: ${{parent.jobs.evaluation.outputs.performance_metadata}}
+      percentiles: 50,90,99
+      start_time_column_name: start_time_iso
+      end_time_column_name: end_time_iso
+      batch_size_column_name: batch_size
+    outputs:
+      performance_result:
+        type: uri_folder
+  aggregator:
+    type: command
+    component: ../../components/benchmark-result-aggregator/spec.yaml
+    limits:
+      timeout: 900
+    inputs:
+      quality_metrics:
+        type: uri_folder
+        path: ${{parent.jobs.quality.outputs.evaluation_result}}
+      performance_metrics:
+        type: uri_folder
+        path: ${{parent.jobs.performance.outputs.performance_result}}
+    outputs:
+      benchmark_result: ${{parent.outputs.benchmark_result}}
+settings:
+  continue_on_step_failure: true
+  default_compute: azureml:serverless

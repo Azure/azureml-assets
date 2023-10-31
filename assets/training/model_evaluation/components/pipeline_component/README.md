@@ -6,7 +6,7 @@ model_evaluation_pipeline_component
 
 ### Version 
 
-0.0.2
+0.0.17
 
 ### Type 
 
@@ -23,11 +23,9 @@ This pipeline component for model evaluation for supported tasks. Generates pred
 | ------------------ | ----------------------------------------------------------------------------------- | ------- | ------- | 
 | task         | Task type for which model is trained                                                                       | string  |  True     | 
 | test_data | Path to file containing test data in `jsonl` format | uri_file | True
-| test_data_mltable | Test data in the form of mltables | ml_table | True
 | input_column_names | Name of the columns in the test dataset that should be used for prediction. More than one columns should be separated by the comma(,) delimiter without any whitespaces in between | string | True
 | label_column_name | Name of the key containing target values in test data. | string | True
 | mlflow_model |MLFlow model (either registered or output of another job) | mlflow_model | True
-| model_uri |  MLFlow model uri of the form - <br> fetched from azureml run as `runs:/<azureml_run_id>/run-relative/path/to/model` <br> fetched from azureml model registry as `models:/<model_name>/<model_version>` | string | True
 | evaluation_config          | Additional config file required by metrics package. This data asset should contain a JSON Config file. | uri_file    | True     |                                                |
 | evaluation_config_params                       | JSON Serielized string of evaluation_config            | string | True                                                     |
 | device | Option to run the experiment on CPU or GPU provided that the compute that they are choosing has Cuda support. | string | True

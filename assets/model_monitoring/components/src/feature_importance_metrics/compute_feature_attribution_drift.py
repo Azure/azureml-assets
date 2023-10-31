@@ -8,13 +8,10 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import ndcg_score
 
-from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.io_utils import try_read_mltable_in_spark_with_warning, save_spark_df_as_mltable
 from shared_utilities import constants
 
 from feature_importance_metrics.feature_importance_utilities import convert_pandas_to_spark, log_time_and_message
-
-from shared_utilities.patch_mltable import patch_all
-patch_all()
 
 
 def parse_args():
@@ -132,7 +129,7 @@ def configure_data(data):
     :return: the sorted pandas feature importances data with the row count dropped and the number of rows
     :rtype: tuple of pandas dataframe and number
     """
-    df = read_mltable_in_spark(data).toPandas()
+    df = data.toPandas()
     for i in range(len(df.index)):
         if df.iloc[i][constants.METRIC_NAME_COLUMN] == constants.ROW_COUNT_COLUMN_NAME:
             num_rows = df.iloc[i][constants.METRIC_VALUE_COLUMN]
@@ -166,10 +163,16 @@ def drop_metadata_columns(baseline_data, production_data):
 def run(args):
     """Calculate feature attribution drift."""
     try:
-        log_time_and_message("Reading in baseline data")
-        [baseline_explanations, baseline_row_count] = configure_data(args.baseline_data)
-        log_time_and_message("Reading in target data")
-        [production_explanations, production_row_count] = configure_data(args.production_data)
+        log_time_and_message("Reading in baseline data & target data")
+        baseline_df = try_read_mltable_in_spark_with_warning(args.baseline_data, "baseline_data")
+        production_df = try_read_mltable_in_spark_with_warning(args.production_data, "production_data")
+
+        if not baseline_df or not production_df:
+            print("Skipping feature atttribution drift computation.")
+            return
+
+        [baseline_explanations, baseline_row_count] = configure_data(baseline_df)
+        [production_explanations, production_row_count] = configure_data(production_df)
         production_explanations = drop_metadata_columns(baseline_explanations, production_explanations)
         compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations,
                                           args.signal_metrics, baseline_row_count, production_row_count)

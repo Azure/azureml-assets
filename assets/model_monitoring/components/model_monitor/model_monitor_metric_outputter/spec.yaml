@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_metric_outputter
 display_name: Model Monitor - Metric Outputter
 description: Output the computed model monitor metrics.
-version: 0.3.3
+version: 0.3.11
 is_deterministic: true
 
 code: ../../src/
@@ -12,13 +12,21 @@ entry:
   file: ./model_monitor_metric_outputter/run.py
 
 inputs:
+  monitor_name:
+    type: string
+  signal_name:
+    type: string
   signal_metrics: 
     type: mltable
     mode: direct
-  signal_name:
-    type: string
+  samples_index: 
+    type: mltable
+    mode: direct
+    optional: true
   signal_type: 
     type: string
+  metric_timestamp:
+    type: string    
 outputs:
   signal_output:
     type: uri_folder
@@ -47,4 +55,4 @@ conf:
         - fsspec~=2023.4.0
     name: momo-base-spark
 args: >-
-  --signal_name ${{inputs.signal_name}} --signal_type ${{inputs.signal_type}} --signal_metrics ${{inputs.signal_metrics}} --signal_output ${{outputs.signal_output}}
+  --monitor_name ${{inputs.monitor_name}} --signal_name ${{inputs.signal_name}} --signal_type ${{inputs.signal_type}} --signal_metrics ${{inputs.signal_metrics}} --metric_timestamp ${{inputs.metric_timestamp}} --signal_output ${{outputs.signal_output}} $[[--samples_index ${{inputs.samples_index}}]]

@@ -5,7 +5,7 @@ description: Component to finetune AutoML legacy models for image classification
 
 name: train_image_classification_model
 display_name: Image Classification AutoML Legacy Model Finetune
-version: 0.0.4
+version: 0.0.5
 
 is_deterministic: false
 
@@ -173,7 +173,7 @@ inputs:
     optional: true
     min: 0
     max: 1
-  weighted_loss: 
+  weighted_loss:
     description: 0 for no weighted loss, 1 for weighted loss with sqrt (class_weights), 2 for weighted loss with class_weights.
     type: integer
     optional: true
@@ -188,7 +188,7 @@ outputs:
 
 code: ../src
 
-environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/1
+environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/3
 
 command: >-
   python -m image_classification.run

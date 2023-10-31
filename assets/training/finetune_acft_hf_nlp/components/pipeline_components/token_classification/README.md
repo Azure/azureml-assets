@@ -6,7 +6,7 @@ token_classification_pipeline
 
 ### Version 
 
-0.0.2
+0.0.17
 
 ### Type 
 
@@ -18,42 +18,62 @@ Pipeline component to finetune Hugging Face pretrained models for token classifi
 
 ## Inputs 
 
-Compute parameters
-
-| Name                            | Description                                                                                                                       | Type    | Default | Optional | Enum |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- | -------- | ---- |
-| compute_model_import            | compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'                                | string  | -       | False    | NA   |
-| compute_preprocess              | compute to be used for preprocess eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'                                  | string  | -       | False    | NA   |
-| compute_finetune                | compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'                                    | string  | -       | False    | NA   |
-| compute_model_evaluation        | compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'                                    | string  | -       | False    | NA   |
-| num_nodes_finetune              | number of nodes to be used for finetuning (used for distributed training)                                                         | integer | 1       | True     | NA   |
-| number_of_gpu_to_use_finetuning | number of gpus to be used per node for finetuning, should be equal to number of gpu per node in the compute SKU used for finetune | integer | 1       | True     | NA   |
+| Name                            | Description                                                                                                                                                                                                     | Type    | Default            | Optional | Enum |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | -------- | ---- |
+| instance_type_model_import      | Instance type to be used for model_import component in case of serverless compute, eg. standard_d12_v2. The parameter compute_model_import must be set to 'serverless' for instance_type to be used             | string  | Standard_d12_v2    | True     | NA   |
+| instance_type_preprocess        | Instance type to be used for preprocess component in case of serverless compute, eg. standard_d12_v2. The parameter compute_preprocess must be set to 'serverless' for instance_type to be used                 | string  | Standard_d12_v2    | True     | NA   |
+| instance_type_finetune          | Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3. The parameter compute_finetune must be set to 'serverless' for instance_type to be used                  | string  | Standard_nc24rs_v3 | True     | NA   |
+| instance_type_model_evaluation  | Instance type to be used for model_evaluation components in case of serverless compute, eg. standard_nc24rs_v3. The parameter compute_model_evaluation must be set to 'serverless' for instance_type to be used | string  | Standard_nc24rs_v3 | True     | NA   |
+| num_nodes_finetune              | number of nodes to be used for finetuning (used for distributed training)                                                                                                                                       | integer | 1                  | True     | NA   |
+| number_of_gpu_to_use_finetuning | number of gpus to be used per node for finetuning, should be equal to number of gpu per node in the compute SKU used for finetune                                                                               | integer | 1                  | True     | NA   |
 
 
 
 Model Import parameters (See [docs](https://aka.ms/azureml/components/token_classification_model_import) to learn more)
 
-| Name               | Description                                                                                                                                                                                                                                                                                                                                                 | Type         | Default | Optional | Enum |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------- | -------- | ---- |
-| huggingface_id     | The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=token-classification&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms. | string       | -       | True     | NA   |
-| pytorch_model_path | Pytorch model asset path                                                                                                                                                                                                                                                                                                                                    | custom_model | -       | True     | NA   |
-| mlflow_model_path  | MLflow model asset path                                                                                                                                                                                                                                                                                                                                     | mlflow_model | -       | True     | NA   |
+| Name               | Description                                                                                                                                                                                                                                                                                                                                                                                                                     | Type         | Default | Optional | Enum |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------- | -------- | ---- |
+| huggingface_id     | The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=token-classification&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms. Special characters like \ and ' are invalid in the parameter value. | string       | -       | True     | NA   |
+| pytorch_model_path | Pytorch model asset path. Special characters like \ and ' are invalid in the parameter value.                                                                                                                                                                                                                                                                                                                                   | custom_model | -       | True     | NA   |
+| mlflow_model_path  | MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.                                                                                                                                                                                                                                                                                                                                    | mlflow_model | -       | True     | NA   |
 
 
 
 Data PreProcess parameters (See [docs](https://aka.ms/azureml/components/token_classification_datapreprocess) to learn more)
 
-| Name                    | Description                                                                                                               | Type     | Default | Optional | Enum |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | ------- | -------- | ---- |
-| token_key               | Key for tokens in each example line                                                                                       | string   | -       | False    | NA   |
-| tag_key                 | Key for tags in each example line                                                                                         | string   | -       | False    | NA   |
-| batch_size              | Number of examples to batch before calling the tokenization function                                                      | integer  | 1000    | True     | NA   |
-| train_file_path         | Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.   | uri_file | -       | True     | NA   |
-| validation_file_path    | Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. | uri_file | -       | True     | NA   |
-| test_file_path          | Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.       | uri_file | -       | True     | NA   |
-| train_mltable_path      | Path to the registered training data asset in `mltable` format.                                                           | mltable  | -       | True     | NA   |
-| validation_mltable_path | Path to the registered validation data asset in `mltable` format.                                                         | mltable  | -       | True     | NA   |
-| test_mltable_path       | Path to the registered test data asset in `mltable` format.                                                               | mltable  | -       | True     | NA   |
+| Name       | Description                                                                                              | Type    | Default | Optional | Enum |
+| ---------- | -------------------------------------------------------------------------------------------------------- | ------- | ------- | -------- | ---- |
+| token_key  | Key for tokens in each example line. Special characters like \ and ' are invalid in the parameter value. | string  | -       | False    | NA   |
+| tag_key    | Key for tags in each example line. Special characters like \ and ' are invalid in the parameter value.   | string  | -       | False    | NA   |
+| batch_size | Number of examples to batch before calling the tokenization function                                     | integer | 1000    | True     | NA   |
+
+
+
+pad_to_max_length:
+
+type: string
+
+enum:
+
+- "true"
+
+- "false"
+
+default: "false"
+
+optional: true
+
+description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
+
+| Name                    | Description                                                                                                                                                                                                | Type     | Default | Optional | Enum |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- | -------- | ---- |
+| max_seq_length          | Controls the maximum length to use when pad_to_max_length parameter is set to `true`. Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`. | integer  | -1      | True     | NA   |
+| train_file_path         | Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.                | uri_file | -       | True     | NA   |
+| validation_file_path    | Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.              | uri_file | -       | True     | NA   |
+| test_file_path          | Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.                    | uri_file | -       | True     | NA   |
+| train_mltable_path      | Path to the registered training data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.                                                                        | mltable  | -       | True     | NA   |
+| validation_mltable_path | Path to the registered validation data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.                                                                      | mltable  | -       | True     | NA   |
+| test_mltable_path       | Path to the registered test data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.                                                                            | mltable  | -       | True     | NA   |
 
 
 
@@ -79,6 +99,7 @@ Finetune parameters (See [docs](https://aka.ms/azureml/components/token_classifi
 | adam_beta2                  | beta2 hyperparameter for the AdamW optimizer                                                                                                                                                                                                                                          | number   | 0.999    | True     | NA                                                                                             |
 | adam_epsilon                | epsilon hyperparameter for the AdamW optimizer                                                                                                                                                                                                                                        | number   | 1e-08    | True     | NA                                                                                             |
 | gradient_accumulation_steps | Number of updates steps to accumulate the gradients for, before performing a backward/update pass                                                                                                                                                                                     | integer  | 1        | True     | NA                                                                                             |
+| eval_accumulation_steps     | Number of predictions steps to accumulate before moving the tensors to the CPU                                                                                                                                                                                                        | integer  | 1        | True     | NA                                                                                             |
 | lr_scheduler_type           | learning rate scheduler to use.                                                                                                                                                                                                                                                       | string   | linear   | True     | ['linear', 'cosine', 'cosine_with_restarts', 'polynomial', 'constant', 'constant_with_warmup'] |
 | precision                   | Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.                                                                                                                                                                          | string   | 32       | True     | ['32', '16']                                                                                   |
 | seed                        | Random seed that will be set at the beginning of training                                                                                                                                                                                                                             | integer  | 42       | True     | NA                                                                                             |
@@ -98,17 +119,28 @@ Finetune parameters (See [docs](https://aka.ms/azureml/components/token_classifi
 | early_stopping_patience     | Stop training when the metric specified through _metric_for_best_model_ worsens for _early_stopping_patience_ evaluation calls.This value is only valid if _apply_early_stopping_ is set to true.                                                                                     | integer  | 1        | True     | NA                                                                                             |
 | early_stopping_threshold    | Denotes how much the specified metric must improve to satisfy early stopping conditions. This value is only valid if _apply_early_stopping_ is set to true.                                                                                                                           | number   | 0.0      | True     | NA                                                                                             |
 | apply_deepspeed             | If set to true, will enable deepspeed for training                                                                                                                                                                                                                                    | string   | false    | True     | ['true', 'false']                                                                              |
-| deepspeed                   | Deepspeed config to be used for finetuning                                                                                                                                                                                                                                            | uri_file | -        | True     | NA                                                                                             |
+| deepspeed                   | Deepspeed config to be used for finetuning. Special characters like \ and ' are invalid in the parameter value.                                                                                                                                                                       | uri_file | -        | True     | NA                                                                                             |
 | apply_ort                   | If set to true, will use the ONNXRunTime training                                                                                                                                                                                                                                     | string   | false    | True     | ['true', 'false']                                                                              |
 
 
 
 Model Evaluation parameters
 
-| Name                     | Description                                     | Type     | Default | Optional | Enum |
-| ------------------------ | ----------------------------------------------- | -------- | ------- | -------- | ---- |
-| evaluation_config        | Additional parameters for Computing Metrics     | uri_file | -       | True     | NA   |
-| evaluation_config_params | Additional parameters as JSON serielized string | string   | -       | True     | NA   |
+| Name                     | Description                                                                                                      | Type     | Default | Optional | Enum |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------- | -------- | ------- | -------- | ---- |
+| evaluation_config        | Additional parameters for Computing Metrics. Special characters like \ and ' are invalid in the parameter value. | uri_file | -       | True     | NA   |
+| evaluation_config_params | Additional parameters as JSON serielized string                                                                  | string   | -       | True     | NA   |
+
+
+
+Compute parameters
+
+| Name                     | Description                                                                                                                                                                                                                                                                                   | Type   | Default    | Optional | Enum |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------- | -------- | ---- |
+| compute_model_import     | compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used      | string | serverless | True     | NA   |
+| compute_preprocess       | compute to be used for preprocess eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used        | string | serverless | True     | NA   |
+| compute_finetune         | compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used          | string | serverless | True     | NA   |
+| compute_model_evaluation | compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used | string | serverless | True     | NA   |
 
 ## Outputs 
 

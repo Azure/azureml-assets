@@ -1,5 +1,6 @@
-# PTCA Image
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch200:{{latest-image-tag:biweekly\.\d{6}\.\d{1}}}
+# PTCA Image (enabling Singularity Support)
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch200:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+
 RUN apt-get update && apt-get -y upgrade
 
 WORKDIR /

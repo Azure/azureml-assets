@@ -12,6 +12,7 @@ from azureml.acft.image.components.common.constants import LOGS_TO_BE_FILTERED_I
 
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import swallow_all_exceptions
+from azureml.acft.common_components.utils.arg_utils import str2bool
 
 logger = get_logger_app("azureml.acft.image.scripts.components.model_selector.model_selector")
 
@@ -38,7 +39,8 @@ def get_common_parser():
         type=str,
         choices=(
             MODEL_FAMILY_CLS.HUGGING_FACE_IMAGE,
-            MODEL_FAMILY_CLS.MMDETECTION_IMAGE
+            MODEL_FAMILY_CLS.MMDETECTION_IMAGE,
+            MODEL_FAMILY_CLS.MMTRACKING_VIDEO,
         ),
         required=True,
         help="Which framework the model belongs to. E.g. HuggingFaceImage"
@@ -62,6 +64,12 @@ def get_common_parser():
         default=None,
         type=str,
         help="Input Asset Id of pytorch model"
+    )
+    parser.add_argument(
+        "--download_from_source",
+        type=lambda x: bool(str2bool(str(x), "download_from_source")),
+        default=False,
+        help="Download model directly from HuggingFace or MMDetection hubs instead of system registry"
     )
 
     return parser
@@ -93,6 +101,7 @@ def main():
         model_name=args.model_name,
         model_family=args.model_family,
         output_dir=args.output_dir,
+        download_from_source=args.download_from_source,
     ).run_workflow()
     logger.info("Model download successful!")
 

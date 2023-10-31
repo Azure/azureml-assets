@@ -19,9 +19,6 @@ from model_monitor_output_metrics.entities.signals.data_quality_signal import (
 from model_monitor_output_metrics.entities.signals.feature_attribution_drift_signal import (
     FeatureAttributionDriftSignal,
 )
-from model_monitor_output_metrics.entities.signals.generation_safety_quality_signal import (
-    GenerationSafetyQualitySignal,
-)
 
 
 class SignalFactory:
@@ -55,10 +52,6 @@ class SignalFactory:
             )
         elif signal_type == SignalType.FEATURE_ATTRIBUTION_DRIFT.name:
             return FeatureAttributionDriftSignal(
-                monitor_name=monitor_name, signal_name=signal_name, metrics=metrics
-            )
-        elif signal_type == SignalType.GENERATION_SAFETY_SIGNAL_QUALITY.name:
-            return GenerationSafetyQualitySignal(
                 monitor_name=monitor_name, signal_name=signal_name, metrics=metrics
             )
         else:

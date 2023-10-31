@@ -20,6 +20,7 @@ from azureml.acft.common_components.utils.error_handling.exceptions import ACFTV
 from azureml.acft.common_components.utils.error_handling.error_definitions import (
     ModelInputEmpty, ArgumentInvalid, ACFTUserError
 )
+from azureml.acft.common_components.utils.arg_utils import str2bool
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import swallow_all_exceptions
 
 from azureml.metrics import constants as metrics_constants
@@ -93,28 +94,6 @@ class Mapper:
         IncomingOptimizerNames.ADAGRAD: OptimizerNames.ADAGRAD,
         IncomingOptimizerNames.ADAMW_ORT_FUSED: ORTOptimizerNames.ADAMW_ORT_FUSED
     }
-
-
-def str2bool(arg, arg_name=""):
-    """Convert string to boolean.
-
-    :param arg: String to be converted to boolean.
-    :type arg: str
-    :param arg_name: Name of the argument.
-    :type arg_name: str
-
-    :return: Boolean value.
-    :rtype: bool
-    """
-    arg = arg.lower()
-    if arg in ["true", "1"]:
-        return True
-    elif arg in ["false", "0"]:
-        return False
-    else:
-        raise ACFTValidationException._with_error(
-            AzureMLError.create(ArgumentInvalid, argument_name=arg_name, expected_type="bool")
-        )
 
 
 def get_parser():
@@ -229,8 +208,8 @@ def get_parser():
     parser.add_argument(
         "--apply_deepspeed",
         type=lambda x: bool(str2bool(str(x), "apply_deepspeed")),
-        default=False,
-        help="If set to true, will enable deepspeed for training."
+        help="If set to true, will enable deepspeed for training. "
+        "If left empty, will be chosen automatically based on the task type and model selected."
     )
     # optional component input: deepspeed config json
     # core is using this parameter to check if deepspeed is enabled
@@ -245,8 +224,8 @@ def get_parser():
     parser.add_argument(
         "--apply_ort",
         type=lambda x: bool(str2bool(str(x), "apply_ort")),
-        default=False,
-        help="If set to true, will enable Onnxruntime for training."
+        help="If set to true, will enable Onnxruntime for training. "
+        "If left empty, will be chosen automatically based on the task type and model selected."
     )
 
     # # LORA
@@ -514,6 +493,10 @@ def get_parser():
             metrics_constants.MEAN_AVERAGE_PRECISION,
             metrics_constants.PRECISION,
             metrics_constants.RECALL,
+            metrics_constants.MOTA,
+            metrics_constants.MOTP,
+            metrics_constants.IDF1,
+            metrics_constants.IDSW
         ),
         help=(
             "Specify the metric to use to compare two different models."
@@ -647,15 +630,6 @@ def main():
                 logger.info(f"{key}, {value}")
                 setattr(args, key, value)
 
-    use_fp16 = bool(args.precision == 16)
-
-    # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
-    if args.apply_deepspeed and args.deepspeed_config is None:
-        args.deepspeed_config = "./zero1.json"
-        with open(args.deepspeed_config) as fp:
-            ds_dict = json.load(fp)
-            use_fp16 = "fp16" in ds_dict and "enabled" in ds_dict["fp16"] and ds_dict["fp16"]["enabled"]
-
     # continual_finetuning is when an existing model which is already registered in the workspace
     # is used for finetuning. In that case, model_name would be None and either of the
     # pytorch_model_path or mlflow_model_path would be present.
@@ -683,6 +657,36 @@ def main():
                                   argument_name="Model ports and model_name"
                                   )
               )
+
+    # Map learing rate scheduler to as expected by the Trainer class
+    if args.lr_scheduler_type is not None:
+        args.lr_scheduler_type = Mapper.LR_SCHEDULER_MAP[args.lr_scheduler_type]
+
+    # Map optimizer to as expected by the Trainer class
+    if args.optim is not None:
+        args.optim = Mapper.OPTIMIZER_MAP[args.optim]
+
+    # Update 'args' namespace with defaults based on task type and model selected
+    # Doing this before any assignment to 'args' namespace
+    if args.task_name in [
+        Tasks.MM_OBJECT_DETECTION,
+        Tasks.MM_INSTANCE_SEGMENTATION,
+        Tasks.HF_MULTI_CLASS_IMAGE_CLASSIFICATION,
+        Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION,
+        Tasks.MM_MULTI_OBJECT_TRACKING,
+    ]:
+        training_defaults = TrainingDefaults(
+            task=args.task_name,
+            model_name_or_path=args.model_name_or_path,
+        )
+        # Update the namespace object with values from the dictionary
+        # Only update the values that don't already exist or are None
+        for key, value in training_defaults.defaults_dict.items():
+            if not hasattr(args, key) or getattr(args, key) is None:
+                setattr(args, key, value)
+
+    logger.info(f"Using learning rate scheduler - {args.lr_scheduler_type}")
+    logger.info(f"Using optimizer - {args.optim}")
 
     if args.task_name == Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION and \
             args.label_smoothing_factor is not None and args.label_smoothing_factor > 0.0:
@@ -716,32 +720,10 @@ def main():
             AzureMLError.create(ACFTUserError, pii_safe_message=error_string)
         )
 
-    # Map learing rate scheduler to as expected by the Trainer class
-    if args.lr_scheduler_type is not None:
-        args.lr_scheduler_type = Mapper.LR_SCHEDULER_MAP[args.lr_scheduler_type]
-
-    # Map optimizer to as expected by the Trainer class
-    if args.optim is not None:
-        args.optim = Mapper.OPTIMIZER_MAP[args.optim]
-
-    if args.task_name in [
-        Tasks.MM_OBJECT_DETECTION,
-        Tasks.MM_INSTANCE_SEGMENTATION,
-        Tasks.HF_MULTI_CLASS_IMAGE_CLASSIFICATION,
-        Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION
-    ]:
-        training_defaults = TrainingDefaults(
-            task=args.task_name,
-            model_name_or_path=args.model_name_or_path,
-        )
-        # Update the namespace object with values from the dictionary
-        # Only update the values that don't already exist or are None
-        for key, value in training_defaults.defaults_dict.items():
-            if not hasattr(args, key) or getattr(args, key) is None:
-                setattr(args, key, value)
-
-    logger.info(f"Using learning rate scheduler - {args.lr_scheduler_type}")
-    logger.info(f"Using optimizer - {args.optim}")
+    if args.apply_ort is True and args.optim != IncomingOptimizerNames.ADAMW_ORT_FUSED:
+        logger.warning(f"ORT training is enabled but optimizer is not set to {IncomingOptimizerNames.ADAMW_ORT_FUSED},\
+            Setting optimizer to {IncomingOptimizerNames.ADAMW_ORT_FUSED}")
+        args.optim = IncomingOptimizerNames.ADAMW_ORT_FUSED
 
     if "iou" in args.metric_for_best_model and args.task_name != Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION:
         err_msg = f"{args.metric_for_best_model} metric supported only for {Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION}"
@@ -750,7 +732,16 @@ def main():
                                 expected_type=err_msg)
         )
 
-    # Prepare args as per the TrainingArguments class
+    # Prepare args as per the TrainingArguments class+
+    use_fp16 = bool(args.precision == 16)
+
+    # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
+    if args.apply_deepspeed and args.deepspeed_config is None:
+        args.deepspeed_config = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zero1.json")
+        with open(args.deepspeed_config) as fp:
+            ds_dict = json.load(fp)
+            use_fp16 = "fp16" in ds_dict and "enabled" in ds_dict["fp16"] and ds_dict["fp16"]["enabled"]
+
     args.fp16 = use_fp16
     args.deepspeed = args.deepspeed_config if args.apply_deepspeed else None
     if args.metric_for_best_model in MetricConstants.METRIC_LESSER_IS_BETTER:

@@ -14,10 +14,7 @@ dependencies:
 - setuptools=65.5.1
 - wheel=0.38.1
 - pip:
-  - --extra-index-url https://download.pytorch.org/whl/cu113
-  - torch==1.11.0+cu113
-  - torchvision==0.12.0+cu113
-  - cryptography==41.0.0
+  - cryptography>=41.0.2
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}

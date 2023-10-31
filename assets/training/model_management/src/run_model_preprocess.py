@@ -7,11 +7,11 @@ import argparse
 import os
 import json
 import shutil
-from azureml.model.mgmt.config import AppName, ModelFlavor
+from azureml.model.mgmt.config import AppName, ModelFramework
 from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
-from azureml.model.mgmt.processors.transformers.config import SupportedTasks
-from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
+from azureml.model.mgmt.processors.transformers.config import SupportedTasks as TransformersSupportedTasks
+from azureml.model.mgmt.processors.pyfunc.config import SupportedTasks as PyFuncSupportedTasks
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, UnsupportedTaskType
 from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError
@@ -35,12 +35,13 @@ def _get_parser():
     parser.add_argument("--hf-config-class", type=str, required=False, help="Hugging Face config class")
     parser.add_argument("--hf-model-class", type=str, required=False, help="Hugging Face model class ")
     parser.add_argument("--hf-tokenizer-class", type=str, required=False, help="Hugging tokenizer class")
+    # argparse issue: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     parser.add_argument(
         "--hf-use-experimental-features",
-        type=bool,
-        required=False,
-        default=False,
+        type=str,
+        default="false",
         help="Enable experimental features for hugging face MLflow model conversion",
+        required=False,
     )
 
     parser.add_argument(
@@ -51,10 +52,10 @@ def _get_parser():
     )
 
     parser.add_argument(
-        "--mlflow-flavor",
+        "--model-framework",
         type=str,
-        default=ModelFlavor.TRANSFORMERS.value,
-        help="Model flavor",
+        default=ModelFramework.HUGGINGFACE.value,
+        help="Model framework",
     )
     parser.add_argument(
         "--model-download-metadata",
@@ -79,24 +80,6 @@ def _get_parser():
     return parser
 
 
-def _validate_transformers_args(args):
-    if not args.get("model_id"):
-        raise Exception("model_id is a required parameter for hftransformers MLflow flavor.")
-    if not args.get("task"):
-        raise Exception("task is a required parameter for hftransformers MLflow flavor.")
-    task = args["task"]
-    if not SupportedTasks.has_value(task):
-        raise Exception(f"Unsupported task {task} for hftransformers MLflow flavor.")
-
-
-def _validate_pyfunc_args(pyfunc_args):
-    if not pyfunc_args.get("task"):
-        raise Exception("task is a required parameter for pyfunc flavor.")
-    task = pyfunc_args["task"]
-    if not Tasks.has_value(task):
-        raise Exception(f"Unsupported task {task} for pyfunc flavor.")
-
-
 @swallow_all_exceptions(logger)
 def run():
     """Run preprocess."""
@@ -105,7 +88,7 @@ def run():
 
     model_id = args.model_id
     task_name = args.task_name
-    mlflow_flavor = args.mlflow_flavor
+    model_framework = args.model_framework
     hf_config_args = args.hf_config_args
     hf_tokenizer_args = args.hf_tokenizer_args
     hf_model_args = args.hf_model_args
@@ -113,7 +96,7 @@ def run():
     hf_config_class = args.hf_config_class
     hf_model_class = args.hf_model_class
     hf_tokenizer_class = args.hf_tokenizer_class
-    hf_use_experimental_features = args.hf_use_experimental_features
+    hf_use_experimental_features = False if args.hf_use_experimental_features.lower() == "false" else True
     extra_pip_requirements = args.extra_pip_requirements
 
     model_download_metadata_path = args.model_download_metadata
@@ -122,8 +105,8 @@ def run():
     model_import_job_path = args.model_import_job_path
     license_file_path = args.license_file_path
 
-    if not ModelFlavor.has_value(mlflow_flavor):
-        raise Exception(f"Unsupported model flavor {mlflow_flavor}")
+    if not ModelFramework.has_value(model_framework):
+        raise Exception(f"Unsupported model framework {model_framework}")
 
     preprocess_args = {}
     if model_download_metadata_path:
@@ -133,15 +116,20 @@ def run():
             preprocess_args.update(download_details.get("properties", {}))
             preprocess_args["misc"] = download_details.get("misc", [])
 
-    if task_name is None or not SupportedTasks.has_value(task_name.lower()):
+    if task_name is None or \
+            (
+                not TransformersSupportedTasks.has_value(task_name.lower()) and
+                not PyFuncSupportedTasks.has_value(task_name.lower())
+            ):
         task_name = preprocess_args.get("task")
         logger.warning("task_name is not provided or not supported. "
                        f"Using task_name={task_name} from model download metadata.")
 
     if task_name is None:
+        supported_tasks = set(TransformersSupportedTasks.list_values() + PyFuncSupportedTasks.list_values())
         raise AzureMLException._with_error(
                 AzureMLError.create(UnsupportedTaskType, task_type=args.task_name,
-                                    supported_tasks=SupportedTasks.list_values())
+                                    supported_tasks=list(supported_tasks))
             )
 
     preprocess_args["task"] = task_name.lower()
@@ -161,16 +149,10 @@ def run():
 
     logger.info(f"Preprocess args : {preprocess_args}")
 
-    # TODO: move validations to respective convertors
-    if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
-        _validate_transformers_args(preprocess_args)
-    elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
-        _validate_pyfunc_args(preprocess_args)
-
     with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, TemporaryDirectory(
         dir=mlflow_model_output_dir
     ) as temp_dir:
-        run_preprocess(mlflow_flavor, model_path, working_dir, temp_dir, **preprocess_args)
+        run_preprocess(model_framework, model_path, working_dir, temp_dir, **preprocess_args)
         shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
 
     # Copy license file to output model path

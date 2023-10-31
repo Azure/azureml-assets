@@ -12,15 +12,15 @@ import mltable
 import pandas as pd
 
 import mlflow
+import torch
 from ml_wrappers.common.constants import Device
 from azureml.core import Run
 from raiutils.data_processing import serialize_json_safe
 
-from _telemetry._loggerfactory import _LoggerFactory, track
-
 from spacy.cli import download
 from azureml.rai.utils import ModelSerializer
 from azureml.rai.utils.dataset_manager import DownloadManager
+from azureml.rai.utils.telemetry import LoggerFactory, track
 from responsibleai import __version__ as responsibleai_version
 from responsibleai.feature_metadata import FeatureMetadata
 from responsibleai_vision import RAIVisionInsights
@@ -36,7 +36,10 @@ logging.basicConfig(level=logging.INFO)
 
 
 IMAGE_DATA_TYPE = "image"
+CPU = "cpu"
+GPU = "gpu"
 PORTABLE_PATH = "PortablePath"
+COMPONENT_NAME = "azureml.rai.vision"
 
 _ai_logger = None
 
@@ -44,7 +47,11 @@ _ai_logger = None
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
-        _ai_logger = _LoggerFactory.get_logger(__file__)
+        run = Run.get_context()
+        module_name = run.properties["azureml.moduleName"]
+        module_version = run.properties["azureml.moduleid"]
+        _ai_logger = LoggerFactory.get_logger(
+            __file__, module_name, module_version, COMPONENT_NAME)
     return _ai_logger
 
 
@@ -94,6 +101,10 @@ class PropertyKeyValues:
 
     RAI_INSIGHTS_DATA_TYPE_KEY = (
         "_azureml.responsibleai.rai_insights.data_type"
+    )
+
+    RAI_INSIGHTS_DOCKER_PLATFORM_TYPE_KEY = (
+        "_azureml.responsibleai.rai_insights.docker_platform_type"
     )
 
 
@@ -234,6 +245,11 @@ def parse_args():
 
     parser.add_argument("--mask_res", type=int, required=False,
                         help="Mask resolution for DRISE")
+    parser.add_argument(
+        "--device", type=int, help=(
+            "Device for CPU/GPU supports. Setting this to -1 will leverage "
+            "CPU, >=0 will run the model on the associated CUDA device id.")
+    )
 
     # Outputs
     parser.add_argument("--dashboard", type=str, required=True)
@@ -324,7 +340,8 @@ def fetch_model_id(model_info_path: str):
 
 
 def add_properties_to_gather_run(
-    dashboard_info: Dict[str, str], tool_present_dict: Dict[str, str]
+    dashboard_info: Dict[str, str], tool_present_dict: Dict[str, str],
+    is_gpu: bool
 ):
     _logger.info("Adding properties to the gather run")
     gather_run = Run.get_context()
@@ -341,6 +358,11 @@ def add_properties_to_gather_run(
         PropertyKeyValues.RAI_INSIGHTS_DATA_TYPE_KEY:
             IMAGE_DATA_TYPE
     }
+    platform_type = PropertyKeyValues.RAI_INSIGHTS_DOCKER_PLATFORM_TYPE_KEY
+    if is_gpu:
+        run_properties[platform_type] = GPU
+    else:
+        run_properties[platform_type] = CPU
 
     _logger.info("Appending tool present information")
     for k, v in tool_present_dict.items():
@@ -421,6 +443,16 @@ def main(args):
         else:
             feature_metadata.dropped_features.append(PORTABLE_PATH)
     _logger.info("Creating RAI Vision Insights")
+
+    device_id = args.device
+    device = Device.CPU.value
+    is_gpu = False
+    if device_id >= 0:
+        device = Device.CUDA.value
+        is_gpu = True
+        is_available = str(torch.cuda.is_available())
+        _logger.info("Using CUDA device. Is CUDA available: " + is_available)
+
     rai_vi = RAIVisionInsights(
         model=image_model,
         test=test_df,
@@ -441,7 +473,7 @@ def main(args):
         max_evals=max_evals,
         num_masks=num_masks,
         mask_res=mask_res,
-        device=Device.CPU.value
+        device=device
     )
 
     included_tools: Dict[str, bool] = {
@@ -489,7 +521,7 @@ def main(args):
     dashboard_info = dict()
     dashboard_info[DashboardInfo.RAI_INSIGHTS_MODEL_ID_KEY] = model_id
 
-    add_properties_to_gather_run(dashboard_info, included_tools)
+    add_properties_to_gather_run(dashboard_info, included_tools, is_gpu)
     _logger.info("Processing completed")
 
 

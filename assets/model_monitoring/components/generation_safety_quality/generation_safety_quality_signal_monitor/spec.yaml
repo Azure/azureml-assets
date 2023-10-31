@@ -4,9 +4,11 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.3.9
+version: 0.4.5
 is_deterministic: true
 inputs:
+  monitor_name:
+    type: string
   signal_name:
     type: string
   production_data:
@@ -42,23 +44,23 @@ inputs:
   groundedness_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   similarity_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   relevance_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   fluency_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   coherence_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   groundedness_passrate_threshold:
     type: number
     optional: true
@@ -82,6 +84,12 @@ inputs:
   workspace_connection_arm_id:
     type: string
     optional: false
+  monitor_current_time:
+    type: string
+  notification_emails:
+    type: string
+    default: ""
+    optional: true
 outputs:
   signal_output:
     type: uri_folder
@@ -89,7 +97,7 @@ outputs:
 jobs:
   compute_histogram:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.3.6
+    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.3
     inputs:
       production_dataset:
         type: mltable
@@ -110,14 +118,26 @@ jobs:
     outputs:
       histogram:
         type: mltable
+      samples_index:
+        type: mltable
+      groundedness_violations:
+        type: mltable
+      coherence_violations:
+        type: mltable
+      relevance_violations:
+        type: mltable
+      fluency_violations:
+        type: mltable
+      similarity_violations:
+        type: mltable
     resources:
       instance_type: standard_e4s_v3
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.3.3
+    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.1
     inputs:
       annotation_histogram:
         type: mltable
@@ -138,18 +158,35 @@ jobs:
       type: aml_token
   output_signal_metrics: 
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.3
+    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.11
     inputs:
       signal_metrics:
         type: mltable
         path: ${{parent.jobs.compute_metrics.outputs.signal_metrics}}
       signal_type: "GenerationSafetyQuality"
       signal_name: ${{parent.inputs.signal_name}}
+      samples_index: ${{parent.jobs.compute_histogram.outputs.samples_index}}
+      metric_timestamp: ${{parent.inputs.monitor_current_time}}
+      monitor_name: ${{parent.inputs.monitor_name}}
     outputs:
       signal_output:
         type: uri_folder
         path: ${{parent.outputs.signal_output}}
         mode: direct
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  evaluate_metric_thresholds:
+    type: spark
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.4
+    inputs:
+      signal_metrics:
+        type: mltable
+        path: ${{parent.jobs.compute_metrics.outputs.signal_metrics}}
+      notification_emails: ${{parent.inputs.notification_emails}}
+      signal_name: ${{parent.inputs.signal_name}}
     resources:
       instance_type: standard_e4s_v3
       runtime_version: "3.3"

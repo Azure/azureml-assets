@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.15
+version: 0.0.18
 
 # Pipeline inputs
 inputs:
@@ -21,7 +21,7 @@ inputs:
     type: string
     optional: true
     default: STANDARD_NC6s_v3
-    description: Instance type to be used for the component in case of serverless compute, eg. STANDARD_NC6s_v3. 
+    description: Instance type to be used for the component in case of serverless compute, eg. STANDARD_NC6s_v3.
       The parameter compute must be set to 'serverless' for instance_type to be used
 
   ## Inputs for download model
@@ -57,6 +57,8 @@ inputs:
     - translation
     - image-classification
     - text-to-image
+    - zero-shot-image-classification
+    - video-multi-object-tracking
     optional: true
     type: string
 
@@ -71,7 +73,7 @@ inputs:
     type: string
     description: |
       Provide args that should be used to load Huggingface model tokenizer.
-      eg: trust_remote_code=True, device_map=auto, 
+      eg: trust_remote_code=True, device_map=auto,
     optional: true
 
   hf_model_args:
@@ -175,7 +177,7 @@ outputs:
 
 jobs:
   validation_trigger_import:
-    component: azureml:validation_trigger_import:0.0.2
+    component: azureml:validation_trigger_import:0.0.3
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -208,10 +210,12 @@ jobs:
         type: uri_file
 
   download_model:
-    component: azureml:download_model:0.0.14
+    component: azureml:download_model:0.0.16
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
     inputs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
@@ -224,7 +228,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.13
+    component: azureml:convert_model_to_mlflow:0.0.15
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -249,7 +253,7 @@ jobs:
         type: uri_file
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.4
+    component: azureml:mlflow_model_local_validation:0.0.5
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -261,7 +265,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.8
+    component: azureml:register_model:0.0.10
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

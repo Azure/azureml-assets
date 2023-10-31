@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+name: personalized-marketing
+version: 0.1.2
+display_name: Personalized Marketing
+
+tags:
+  modality: chat
+  task: content-creation
+  industry: retail
+
+data_uri: ./prompt
+template_path: prompt.yaml

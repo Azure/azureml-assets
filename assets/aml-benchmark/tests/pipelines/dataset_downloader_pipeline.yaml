@@ -10,7 +10,9 @@ inputs:
   dataset_name: test_dataset
   configuration: None
   split: validation
-  url: None
+  script_path:
+    type: uri_file
+    path: some_path
 
 outputs:
   output_dataset:
@@ -26,7 +28,7 @@ jobs:
       dataset_name: ${{parent.inputs.dataset_name}}
       configuration: ${{parent.inputs.configuration}}
       split: ${{parent.inputs.split}}
-      url: ${{parent.inputs.url}}
+      script_path: ${{parent.inputs.script_path}}
     outputs:
       output_dataset: ${{parent.outputs.output_dataset}}
     

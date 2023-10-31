@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/vision/stable-ubuntu2004-cu117-py38-torch1131:{{latest-image-tag:biweekly\.\d{6}\.\d+}}
+FROM mcr.microsoft.com/aifx/acpt/vision/stable-ubuntu2004-cu117-py38-torch1131:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
 RUN apt-get -y update
@@ -14,3 +14,6 @@ RUN mim install mmcv-full==1.7.1
 # # Note that MMDet installs pycocotools
 # Note: mmdet should be installed via mim to access the model zoo config folder.
 RUN mim install mmdet==2.28.2
+
+# yapf fix - this will be removed once we update to MMDetection's latest version
+RUN pip install yapf==0.40.1

@@ -7,11 +7,12 @@ from typing import Any, List, Dict, Optional
 import uuid
 import json
 import os
+import glob
 
 import mltable
 from azureml._common._error_definition.azureml_error import AzureMLError
 
-from utils.helper import get_logger
+from utils.logging import get_logger
 from utils.exceptions import DataFormatException
 from utils.error_definitions import DataFormatError
 
@@ -23,9 +24,7 @@ def _raise_if_not_jsonl_file(input_file_path: str) -> None:
     """Raise exception if file is not a .jsonl file.
 
     :param input_file_path: Path to file
-    :type input_file_path: str
     :return: None
-    :rtype: NoneType
     """
     if not input_file_path.endswith(".jsonl"):
         mssg = f"Input file '{input_file_path}' is not a .jsonl file."
@@ -39,9 +38,7 @@ def _is_mltable(dataset: str) -> bool:
     Check if dataset is MLTable.
 
     :param dataset: Path to dataset
-    :type dataset: str
     :return: True if dataset is an MLTable, False otherwise
-    :rtype: bool
     """
     is_mltable = False
     if os.path.isdir(dataset):
@@ -62,7 +59,6 @@ def _get_file_paths_from_folder(dataset: str) -> List[str]:
 
     for root, dirs, files in os.walk(dataset):
         for file in files:
-            _raise_if_not_jsonl_file(file)
             file_paths.append(os.path.join(root, file))
 
     file_paths.sort()
@@ -72,7 +68,7 @@ def _get_file_paths_from_folder(dataset: str) -> List[str]:
 def get_output_file_path(input_file_path: str, output_path: str, counter: Optional[int] = None) -> str:
     """Get output file path.
 
-    Uses the file name and extension from input_file_path along with counter to create the output file name.
+    Uses the file name and extension from `input_file_path` along with counter to create the output file name.
 
     :param input_file_path: Path to input file
     :param output_path: Path to output directory
@@ -96,41 +92,40 @@ def resolve_io_path(dataset: str) -> List[str]:
     - `mltable`: `dataset` is a directory containing an MLTable file.
 
     :param dataset: Either file or directory path
-    :type dataset: str
     :return: List of sorted file paths
-    :rtype: str
     """
     if _is_mltable(dataset):
-        logger.warn(
+        logger.warning(
             "Received 'dataset' as MLTable. Trying to process."
         )
         df = mltable.load(dataset).to_pandas_dataframe()
-        file_path = os.path.join(dataset, f"{uuid.uuid4()}.jsonl")
+        file_path = os.path.join(os.getcwd(), f"{uuid.uuid4()}.jsonl")
         df.to_json(file_path, orient="records", lines=True)
         return [file_path]
 
     if not os.path.isfile(dataset):
-        logger.warn(
+        logger.warning(
             "Received 'dataset' as URI_FOLDER. Trying to resolve paths."
         )
         return _get_file_paths_from_folder(dataset)
 
-    _raise_if_not_jsonl_file(dataset)
     return [dataset]
 
 
 def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
     """
-    Read .jsonl files and return a list of dictionaries.
+    Read `.jsonl` files and return a list of dictionaries.
 
-    Raises exception if file is not a .jsonl file or if the file contains invalid JSON.
+    Ignores files that do not have `.jsonl` extension. Raises exception if no `.jsonl` files
+    found or if any `.jsonl` file contains invalid JSON.
 
     :param file_paths: List of paths to .jsonl files.
     :return: List of dictionaries.
     """
     data_dicts = []
     for file_path in file_paths:
-        _raise_if_not_jsonl_file(file_path)
+        if not file_path.endswith(".jsonl"):
+            continue
         with open(file_path, 'r') as file:
             for i, line in enumerate(file):
                 try:
@@ -140,4 +135,61 @@ def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
                     raise DataFormatException._with_error(
                         AzureMLError.create(DataFormatError, error_details=mssg)
                     )
+    if not data_dicts:
+        mssg = "No .jsonl file found."
+        raise DataFormatException._with_error(
+            AzureMLError.create(DataFormatError, error_details=mssg)
+        )
     return data_dicts
+
+
+def read_json_data(data_path: Optional[str]) -> Dict[str, Any]:
+    """
+    Read json file(s) from a given file or directory path. \
+    If multiple json files are found, they are merged in one dictionary.
+
+    :param data_path: Path to the data.
+    :returns: The dictionary representing the json data.
+    """
+    if data_path is None:
+        return {}
+    file_paths: List[str] = []
+    if os.path.isfile(path=data_path):
+        file_paths = [data_path]
+    elif os.path.isdir(data_path):
+        file_paths = glob.glob(
+            pathname=os.path.join(data_path, "**/*.json"),
+            recursive=True
+        )
+    json_output: Dict[str, Any] = {}
+    for file_path in file_paths:
+        with open(file=file_path, mode='r') as file:
+            data: Dict[str, Any] = json.load(file)
+        json_output = {**json_output, **data}
+
+    # Read artifacts.
+    file_paths = glob.glob(
+        pathname=os.path.join(data_path, "*", "artifacts", "*"),
+        recursive=True
+    )
+    for file_path in file_paths:
+        try:
+            logger.info(f"Trying to read metrics from {file_path}")
+            with open(file=file_path, mode='r') as file:
+                data: Dict[str, Any] = json.load(file)
+            key = os.path.basename(file_path)
+            json_output[key] = data
+        except Exception as exception:
+            logger.warning(f"Failed to read metrics from {file_path} due to {exception}")
+    return json_output
+
+
+def save_json_to_file(json_dict: Dict[Any, Any], path: str) -> None:
+    """
+    Save the json represented as dictionary as a file in the specified path.
+
+    :param json_dict: The json represented as dictionary.
+    :param path: The path where it has to be saved.
+    """
+    with open(path, mode='w') as file:
+        json.dump(json_dict, file, indent=4)

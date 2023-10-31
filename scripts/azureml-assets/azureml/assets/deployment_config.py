@@ -63,6 +63,17 @@ class AssetTags:
 
 
 @dataclass
+class AssetProperties:
+    """Asset properties class.
+
+    Args:
+        add (Dict[str, str]): Properties to add.
+    """
+
+    add: Dict[str, str] = None
+
+
+@dataclass
 class Versions:
     """Versions base class.
 
@@ -87,12 +98,16 @@ class AssetVersionUpdate(Versions):
 
     description: str = None
     tags: AssetTags = None
+    properties: AssetProperties = None
     stage: str = None
 
     def __post_init__(self):
         """Convert field values to objects."""
         if self.tags:
             self.tags = AssetTags(**self.tags)
+
+        if self.properties:
+            self.properties = AssetProperties(**self.properties)
 
 
 @dataclass
@@ -221,6 +236,17 @@ class TagsSchema(Schema):
             raise ValueError("replace can't be used with add or delete")
 
 
+class PropertiesSchema(Schema):
+    """Properties schema."""
+
+    add = fields.Dict(fields.Str(), fields.Str())
+
+    @validates('add')
+    def _validate_add(self, value: Dict[str, str]):
+        if value is not None and not value:
+            raise ValueError("add must be non-empty")
+
+
 class VersionsSchema(Schema):
     """Versions schema."""
 
@@ -243,6 +269,7 @@ class AssetVersionUpdateSchema(VersionsSchema):
 
     description = fields.Str()
     tags = fields.Nested(TagsSchema)
+    properties = fields.Nested(PropertiesSchema)
     stage = fields.Str()
 
 

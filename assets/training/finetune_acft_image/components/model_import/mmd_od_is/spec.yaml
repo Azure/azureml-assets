@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.7
+version: 0.0.8
 name: mmdetection_image_objectdetection_instancesegmentation_model_import
 display_name: Image Object Detection and Instance Segmentation MMDetection Model Import
 description: Import PyTorch / MLflow model
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/2
+environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/3
 
 code: ../../../src/model_selector
 
@@ -40,6 +40,12 @@ inputs:
     optional: true
     description: Mlflow Model registered in AzureML Asset.
 
+  download_from_source:
+    type: boolean
+    optional: true
+    default: false
+    description: Download model directly from MMDetection instead of system registry
+
 outputs:
   output_dir:
     type: uri_folder
@@ -51,5 +57,6 @@ command: >-
   $[[--model_name ${{inputs.model_name}}]]
   $[[--pytorch_model ${{inputs.pytorch_model}}]]
   $[[--mlflow_model ${{inputs.mlflow_model}}]]
+  $[[--download_from_source ${{inputs.download_from_source}}]]
   --output_dir ${{outputs.output_dir}}
 

@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 from math import isclose
+import time
 import uuid
 
 import numpy as np
@@ -16,7 +17,7 @@ import pytest
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
-from utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
@@ -75,12 +76,12 @@ def _verify_and_get_output_records(
     num_metrics += 1
     if has_input_token_counts:
         assert "total_input_tokens" in output_records
-        assert "input_token_throughput" in output_records
+        assert "input_tokens_per_sec" in output_records
         assert "latency_per_input_token_avg" in output_records
         num_metrics += 3
     if has_output_token_counts:
         assert "total_output_tokens" in output_records
-        assert "output_token_throughput" in output_records
+        assert "output_tokens_per_sec" in output_records
         assert "latency_per_output_token_avg" in output_records
         num_metrics += 3
     if has_input_token_counts and has_output_token_counts:
@@ -127,6 +128,8 @@ def _verify_and_get_output_records(
                 in output_records
             )
             num_metrics += 1
+    assert "requests_per_sec" in output_records
+    num_metrics += 1
 
     # Check that no other metrics are present
     assert num_metrics == len(output_records)
@@ -600,7 +603,15 @@ class TestComputePerfMetricsComponent:
         :rtype: NoneType
         """
         logged_metrics = get_mlflow_logged_metrics(job_name, self.EXP_NAME)
-        print(logged_metrics)
+        counter = 0
+        while not logged_metrics:
+            time.sleep(10)
+            # It looks like sometimes the metrics is not flowed, and we need to wait a little bit.
+            logged_metrics = get_mlflow_logged_metrics(job_name, self.EXP_NAME)
+            print(f"logger metrics is:{logged_metrics} with counter {counter}")
+            counter += 1
+            if counter > 6:
+                break
 
         # Verify the logged parameters
         assert logged_metrics["latency_avg"] == output_records["latency_avg"]

@@ -8,10 +8,12 @@ Utility File for incrementing, synchronizing, and updating all LLM versions.
 Also checks Environments are tagging latest.
 
 To update all:
-\\azureml-assets\assets>python utils\ComponentVersionUpdator.py --input_folder . --update_all
+\\azureml-assets\assets>
+python utils\ComponentVersionUpdator.py --input_folder . --update_all
 
 To only update component pipelines with updated components:
-\\azureml-assets\assets>python utils\ComponentVersionUpdator.py --input_folder .
+\\azureml-assets\assets>
+python utils\ComponentVersionUpdator.py --input_folder .
 """
 
 from typing import List, Dict, Any, Tuple
@@ -94,7 +96,11 @@ class Pipeline(Component):
             sub_comp_str = yaml_data['jobs'][s_c]['component']
             sub_comp = parse_component(sub_comp_str)
 
-            new_version = comp_assets_all[sub_comp.name].version
+            try:
+                new_version = comp_assets_all[sub_comp.name].version
+            except KeyError as e:
+                print(f"[{self.name}] Cannot find sub-component {e}, assuming that it comes from a skipped directory.")
+                continue
 
             if sub_comp.version != new_version:
                 needs_update = True
@@ -181,12 +187,26 @@ validate_fields = {
     'environment': validate_environment
 }
 
+skip_dirs = [
+    "oai_v2_1p",  # owned by oai team
+    "prompts",
+    "dbcopilot"
+]
+
 
 def generate_assets(folder_path: List[str]) -> Tuple[Dict[str, Component], Dict[str, Pipeline]]:
     """Walk the file tree and pull out all the components and component pipelines."""
     comp_assets_all = {}
     pipe_assets_all = {}
-    for root, _, files in os.walk(folder_path):
+    for root, dirs, files in os.walk(folder_path, topdown=True):
+        # https://stackoverflow.com/questions/19859840/excluding-directories-in-os-walk
+        new_dirs = []
+        for d in dirs:
+            if d not in skip_dirs:
+                new_dirs.append(d)
+            else:
+                print(f"Going to skip dir '{d}' in root '{root}'")
+        dirs[:] = new_dirs
         comp = parse_asset_yamls(files, root)
         if comp is not None:
             if isinstance(comp, Pipeline):
