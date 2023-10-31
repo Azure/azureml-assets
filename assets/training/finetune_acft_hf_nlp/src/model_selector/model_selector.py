@@ -248,20 +248,20 @@ ACFT_CONFIG = {
 
 
 FLAVOR_MAP = {
-    "transformers" : {  ## OSS flavor
-        "tokenizer" : "components/tokenizer",
-        "model" : "model",
-        "config" : "model"
+    "transformers": {  ## OSS flavor
+        "tokenizer": "components/tokenizer",
+        "model": "model",
+        "config": "model"
     },
     "hftransformersv2": {
-        "tokenizer" : "data/tokenizer",
-        "model" : "data/model",
-        "config" : "data/config"
+        "tokenizer": "data/tokenizer",
+        "model": "data/model",
+        "config": "data/config"
     },
     "hftransformers": {
-        "tokenizer" : "data/tokenizer",
-        "model" : "data/model",
-        "config" : "data/config"
+        "tokenizer": "data/tokenizer",
+        "model": "data/model",
+        "config": "data/config"
     }
 }
 
