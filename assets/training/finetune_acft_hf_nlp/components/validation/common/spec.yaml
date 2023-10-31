@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: ft_nlp_common_validation
-version: 0.0.21
+version: 0.0.24
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/25
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/28
 
 code: ../../../src/validation
 
@@ -17,6 +17,7 @@ inputs:
     type: mlflow_model
     optional: true
     description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
+    mode: rw_mount
 
   compute_finetune:
     type: string
@@ -58,16 +59,19 @@ inputs:
     type: uri_file
     optional: true
     description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.
+    mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
     description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.
+    mode: rw_mount
 
   test_file_path:
     type: uri_file
     optional: true
     description: Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.
+    mode: rw_mount
 
   train_mltable_path:
     type: mltable
@@ -88,11 +92,18 @@ inputs:
     type: string
     optional: true
     description: Comma separated list of column names to be used for training
-  
+
+  # Validation parameters
+  system_properties:
+    type: string
+    optional: true
+    description: Validation parameters propagated from pipeline.
+
 outputs:
   validation_info:
     type: uri_file
     description: Validation status.
+    mode: rw_mount
 
 command: >-
-  python validation.py --validation-info '${{outputs.validation_info}}'
+  python validation.py $[[--system_properties '${{inputs.system_properties}}']] --validation-info '${{outputs.validation_info}}'

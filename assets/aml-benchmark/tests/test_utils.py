@@ -64,6 +64,12 @@ class Constants:
     POSTPROCESS_SAMPLE_EXAMPLES_EXPECTED_OUTPUT_FILE = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data/sample_examples_expected_postprocessed_outputs.jsonl"
     )
+    PROMPTCRAFTER_SAMPLE_INPUT_FILE = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/test_data_prompt_crafter/inferencesample.jsonl"
+    )
+    PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/test_data_prompt_crafter/fewshotsample.jsonl"
+    )
     REFERENCES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "references")
     OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
     OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"
@@ -211,7 +217,9 @@ def get_mlflow_logged_metrics(job_name: str, exp_name: str) -> Dict[str, Any]:
 def get_src_dir() -> str:
     """Get the source directory for component code."""
     cwd = os.getcwd()
-    if os.path.basename(cwd) == "azureml-assets":
+    if os.path.basename(cwd) == "aml-benchmark":
+        src_dir = "components/src"
+    elif os.path.basename(cwd) == "azureml-assets":
         # when running tests locally
         src_dir = "assets/aml-benchmark/components/src"
     else:
@@ -321,7 +329,8 @@ def deploy_fake_test_endpoint_maybe(
     should_wait = True
     endpoint = None
     if use_workspace_name:
-        endpoint_name = f"{endpoint_name}-{ml_client.workspace_name.split('-')[-1]}"
+        # Endpoint names can be at max 32 characters long.
+        endpoint_name = f"{endpoint_name}-{ml_client.workspace_name.split('-')[-1]}"[:32]
     try:
         while should_wait:
             endpoint = ml_client.online_endpoints.get(name=endpoint_name)

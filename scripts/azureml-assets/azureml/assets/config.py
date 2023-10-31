@@ -4,6 +4,7 @@
 """Asset config classes."""
 
 import re
+import datetime
 from collections import defaultdict
 from enum import Enum
 from functools import total_ordering
@@ -16,6 +17,12 @@ from azure.ai.ml._azure_environments import (
     _get_default_cloud_name,
     _get_storage_endpoint_from_metadata
 )
+from azure.identity import AzureCliCredential
+from azure.storage.blob import (
+    BlobServiceClient,
+    ContainerSasPermissions,
+    generate_container_sas
+)
 
 
 class ValidationException(Exception):
@@ -25,8 +32,6 @@ class ValidationException(Exception):
 class AssetType(Enum):
     """Asset type."""
 
-    # TODO: Remove BENCHMARKRESULT after other scripts are updated to switch to EVALUATIONRESULT
-    BENCHMARKRESULT = 'benchmarkresult'
     COMPONENT = 'component'
     DATA = 'data'
     ENVIRONMENT = 'environment'
@@ -485,7 +490,11 @@ class LocalAssetPath(AssetPath):
 class AzureBlobstoreAssetPath(AssetPath):
     """Azure Blobstore asset path."""
 
-    DEFAULT_BLOBSTORE_URI = "https://{}.blob.core.windows.net/{}/{}"
+    AZURE_CLOUD_SUFFIX = "core.windows.net"
+
+    SAS_EXPIRATION_TIME_DELTA = datetime.timedelta(hours=1)
+
+    AZURE_CLI_PROCESS_LOGIN_TIMEOUT = 60
 
     def __init__(self, storage_name: str, container_name: str, container_path: str):
         """Create a Blobstore path.
@@ -508,18 +517,56 @@ class AzureBlobstoreAssetPath(AssetPath):
         if _get_default_cloud_name() in [AzureEnvironments.ENV_DEFAULT,
                                          AzureEnvironments.ENV_US_GOVERNMENT,
                                          AzureEnvironments.ENV_CHINA]:
-            uri = AzureBlobstoreAssetPath.DEFAULT_BLOBSTORE_URI.format(
-                storage_name,
-                container_name,
-                container_path)
+            cloud_suffix = AzureBlobstoreAssetPath.AZURE_CLOUD_SUFFIX
         else:
-            uri = "https://{}.blob.{}/{}/{}".format(
-                storage_name,
-                _get_storage_endpoint_from_metadata(),
-                container_name,
-                container_path)
+            cloud_suffix = _get_storage_endpoint_from_metadata()
+        account_uri = f"https://{storage_name}.blob.{cloud_suffix}"
 
-        super().__init__(PathType.AZUREBLOB, uri)
+        # Check to see if the container allows anonymous access. If it does not,
+        # then generate a temporary SAS token for the container and append it to
+        # the URI.
+        #
+        # If we are unable to access the storage account, have trouble determining
+        # if public access is enabled, or run into any issues when creating the
+        # SAS token, then we will assume its allows for anonymous access (i.e.
+        # no SAS token needed) and hope for the best
+        sas_token = ""
+
+        try:
+            blob_service_client = BlobServiceClient(
+                    account_url=account_uri,
+                    credential=AzureCliCredential(
+                        process_timeout=AzureBlobstoreAssetPath.AZURE_CLI_PROCESS_LOGIN_TIMEOUT
+                    )
+                )
+            container_client = blob_service_client.get_container_client(container=container_name)
+
+            if container_client.get_container_properties().public_access is not None:
+                # If the SAS token is not needed due to the container allowing anonymous
+                # access, then it will be an empty string and have no impact on the final
+                # uri.
+                sas_token = ""
+            else:
+                start_time = datetime.datetime.now(datetime.timezone.utc)
+                expiry_time = start_time + AzureBlobstoreAssetPath.SAS_EXPIRATION_TIME_DELTA
+
+                key = blob_service_client.get_user_delegation_key(start_time, expiry_time)
+
+                sas_token = "?" + generate_container_sas(
+                    account_name=storage_name,
+                    container_name=container_name,
+                    user_delegation_key=key,
+                    permission=ContainerSasPermissions(read=True, list=True),
+                    expiry=expiry_time,
+                    start=start_time
+                )
+        except Exception:
+            sas_token = ""
+
+        super().__init__(
+            PathType.AZUREBLOB,
+            f"{account_uri}/{container_name}/{container_path}{sas_token}"
+        )
 
 
 class GitAssetPath(AssetPath):

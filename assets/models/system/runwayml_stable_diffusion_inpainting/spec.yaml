@@ -5,10 +5,13 @@ properties:
   SHA: 51388a731f57604945fddd703ecb5c50e8e7b49d
   datasets: LAION aesthetics v2.5+
   inference-min-sku-spec: 4|1|28|176
-  inference-recommended-sku: Standard_NC6s_v3
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_NC24rs_v3, Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+    Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4,
+    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
   model_id: runwayml/stable-diffusion-inpainting
 tags:
   Preview: ''
   license: creativeml-openrail-m
   task: text-to-image
-version: 2
+version: 4

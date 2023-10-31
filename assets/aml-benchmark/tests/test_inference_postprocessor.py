@@ -17,7 +17,7 @@ from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 from azure.ai.ml.constants import AssetTypes
 
-from test_utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
@@ -896,3 +896,30 @@ class TestInferencePostprocessorScript:
         for input in mock_completion_list:
             output.append(obj.apply_remove_prompt_prefix(text=input, data=data))
         assert output == expected_completion_list
+
+    def test_if_prediction_dataset_empty(self):
+        """Test the exceptions raise if prediction dataset is empty."""
+        empty_dataset_error_mssg = (
+            "No .jsonl file found."
+        )
+        src_dir = get_src_dir()
+        prediction_column_name = 'prediction'
+        template = '{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}'
+        dummy_dataset = os.path.join(os.getcwd(), "dummy_prediction_dataset.jsonl")
+        os.system(f"touch {dummy_dataset}")
+        try:
+            argss = " ".join(
+                [
+                    "--prediction_dataset",
+                    dummy_dataset,
+                    "--prediction_column_name",
+                    prediction_column_name,
+                    "--template",
+                    f"'{template}'",
+                ]
+            )
+            cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+            run_command(f"{cmd}")
+        except subprocess.CalledProcessError as e:
+            exception_message = e.output.strip()
+            assert_exception_mssg(exception_message, empty_dataset_error_mssg)

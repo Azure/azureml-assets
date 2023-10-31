@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+name: lesson-plan-by-grade-level-and-subject
+version: 0.1.2
+display_name: Lesson Plan By Grade Level And Subject
+
+tags:
+  modality: chat
+  task: recommendation
+  industry: education
+
+data_uri: ./prompt
+template_path: prompt.yaml

@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.1
+version: 0.0.2
 
 inputs:
   input_dataset:
@@ -132,7 +132,7 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: azureml:batch_inference_preparer:0.0.1
+    component: azureml:batch_inference_preparer:0.0.2
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
@@ -170,7 +170,7 @@ jobs:
     resources:
       instance_count: ${{parent.inputs.instance_count}}
     max_concurrency_per_instance:  ${{parent.inputs.max_concurrency_per_instance}}
-    mini_batch_size: "3072"
+    mini_batch_size: "100KB"
     retry_settings:
       timeout: 6000
       max_retries: 10

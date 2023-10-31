@@ -16,12 +16,16 @@ from mlflow.types.schema import ColSpec, Schema
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from azureml.model.mgmt.utils.common_utils import fetch_mlflow_acft_metadata
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
-from azureml.model.mgmt.processors.pyfunc.config import MMLabDetectionTasks, SupportedTasks
+from azureml.model.mgmt.processors.pyfunc.config import (
+    MMLabDetectionTasks, MMLabTrackingTasks, SupportedTasks)
 
 from azureml.model.mgmt.processors.pyfunc.clip.config import \
     MLflowSchemaLiterals as CLIPMLFlowSchemaLiterals, MLflowLiterals as CLIPMLflowLiterals
+from azureml.model.mgmt.processors.pyfunc.blip.config import \
+    MLflowSchemaLiterals as BLIPMLFlowSchemaLiterals, MLflowLiterals as BLIPMLflowLiterals
 from azureml.model.mgmt.processors.pyfunc.text_to_image.config import (
     MLflowSchemaLiterals as TextToImageMLFlowSchemaLiterals,
     MLflowLiterals as TextToImageMLflowLiterals,
@@ -96,7 +100,10 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         """
         signatures = self._signatures or self.get_model_signature()
-
+        # set metadata info
+        metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
+                                              is_finetuned_model=False,
+                                              base_model_task=self._task)
         mlflow.pyfunc.save_model(
             path=self._output_dir,
             python_model=mlflow_model_wrapper,
@@ -105,7 +112,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
             conda_env=conda_env,
             signature=signatures,
             code_path=code_path,
-            metadata={"model_name": self._model_id},
+            metadata=metadata,
         )
 
         logger.info("Model saved successfully.")
@@ -163,7 +170,12 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
 
         mlflow_model_wrapper = ImagesDetectionMLflowModelWrapper(task_type=self._task)
         artifacts_dict = self._prepare_artifacts_dict()
-        pip_requirements = os.path.join(self.MODEL_DIR, "requirements.txt")
+        if self._task == MMLabDetectionTasks.MM_OBJECT_DETECTION.value:
+            pip_requirements = os.path.join(self.MODEL_DIR, "mmdet-od-requirements.txt")
+        elif self._task == MMLabDetectionTasks.MM_INSTANCE_SEGMENTATION.value:
+            pip_requirements = os.path.join(self.MODEL_DIR, "mmdet-is-requirements.txt")
+        else:
+            pip_requirements = None
         code_path = [
             os.path.join(self.MODEL_DIR, "detection_predict.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
@@ -295,6 +307,76 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
             CLIPMLflowLiterals.MODEL_DIR: self._model_dir
         }
         return artifacts_dict
+
+
+class BLIPMLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for BLIP models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "blip")
+    COMMON_DIR = os.path.join(os.path.dirname(
+        os.path.dirname(__file__)), "common")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for BLIP models."""
+        super().__init__(**kwargs)
+        if self._task not in [SupportedTasks.IMAGE_TO_TEXT.value, SupportedTasks.VISUAL_QUESTION_ANSWERING.value]:
+            raise Exception("Unsupported task")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+        if self._task == SupportedTasks.IMAGE_TO_TEXT.value:
+            input_schema = Schema(
+                [
+                    ColSpec(BLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE,
+                            BLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
+                ]
+            )
+        elif self._task == SupportedTasks.VISUAL_QUESTION_ANSWERING.value:
+            input_schema = Schema(
+                [
+                    ColSpec(BLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE,
+                            BLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
+                    ColSpec(BLIPMLFlowSchemaLiterals.INPUT_COLUMN_TEXT_DATA_TYPE,
+                            BLIPMLFlowSchemaLiterals.INPUT_COLUMN_TEXT),
+                ]
+            )
+        else:
+            raise Exception("Unsupported task")
+
+        output_schema = Schema(
+            [
+                ColSpec(BLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                        BLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_TEXT),
+            ]
+        )
+
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+        from mlflow_wrapper import BLIPMLFlowModelWrapper
+
+        mlflow_model_wrapper = BLIPMLFlowModelWrapper(task_type=self._task, model_id=self._model_id)
+        artifacts_dict = {
+            BLIPMLflowLiterals.MODEL_DIR: self._model_dir
+        }
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = [
+            os.path.join(self.MODEL_DIR, "mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py"),
+        ]
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=code_path,
+        )
 
 
 class TextToImageMLflowConvertor(PyFuncMLFLowConvertor):
@@ -502,5 +584,79 @@ class LLaVAMLFlowConvertor(PyFuncMLFLowConvertor):
         # Set model_dir parameter to point to subdirectory.
         artifacts_dict = {
             LLaVAMLflowLiterals.MODEL_DIR: os.path.join(self._model_dir, sd)
+        }
+        return artifacts_dict
+
+
+class MMLabTrackingMLflowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for tracking models from MMLab."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "vision")
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for vision models."""
+        super().__init__(**kwargs)
+        if not MMLabTrackingTasks.has_value(self._task):
+            raise Exception("Unsupported vision task")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+        input_schema = Schema(
+            [
+                ColSpec(VisionMLFlowSchemaLiterals.INPUT_COLUMN_VIDEO_DATA_TYPE,
+                        VisionMLFlowSchemaLiterals.INPUT_COLUMN_VIDEO)
+            ]
+        )
+
+        if self._task in [MMLabTrackingTasks.MM_MULTI_OBJECT_TRACKING.value]:
+            output_schema = Schema(
+                [
+                    ColSpec(VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                            VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_BOXES),
+                ]
+            )
+        else:
+            raise NotImplementedError(f"Task type: {self._task} is not supported yet.")
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+        from track_predict import VideosTrackingMLflowModelWrapper
+
+        mlflow_model_wrapper = VideosTrackingMLflowModelWrapper(task_type=self._task)
+        artifacts_dict = self._prepare_artifacts_dict()
+        conda_env = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = [
+            os.path.join(self.MODEL_DIR, "track_predict.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
+        ]
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env,
+            code_path=code_path,
+        )
+
+    def _prepare_artifacts_dict(self) -> Dict:
+        """Prepare artifacts dict for MLflow model.
+
+        :return: artifacts dict
+        :rtype: Dict
+        """
+        metadata_path = os.path.join(self._model_dir, "model_selector_args.json")
+        with open(metadata_path) as f:
+            metadata = json.load(f)
+
+        artifacts_dict = {
+            MMDetLiterals.CONFIG_PATH: os.path.join(self._model_dir, metadata.get("pytorch_model_path")),
+            MMDetLiterals.WEIGHTS_PATH: os.path.join(self._model_dir, metadata.get("model_weights_path_or_url")),
+            MMDetLiterals.METAFILE_PATH: os.path.join(self._model_dir, metadata.get("model_metafile_path")),
         }
         return artifacts_dict
