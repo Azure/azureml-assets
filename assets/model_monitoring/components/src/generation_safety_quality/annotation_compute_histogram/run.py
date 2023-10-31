@@ -1563,10 +1563,10 @@ def apply_annotation(
                          "Using default sampling value. To use sample_rate with this dataset, "
                          "try increasing sample_rate value.")
         # if the production dataset is less than 5, use all the data. otherwise, default to 5.
-        n=5
-        if production_df.count() < 5:
-            n=production_df.count()
-        production_df_sampled.sample(withReplacement=False, n=n)
+        fraction=5/production_df.count()
+        if fraction < 1:
+            fraction=production_df.count()
+        production_df_sampled.sample(withReplacement=False, fraction=fraction)
 
     production_df = production_df_sampled
     row_count = production_df.count()
