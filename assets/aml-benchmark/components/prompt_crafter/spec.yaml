@@ -93,7 +93,7 @@ inputs:
     optional: true
     default: 0
     description: Random seed for sampling few-shots; if not specified, 0 is used.
-  label_key:
+  ground_truth_column_name:
     type: string
     optional: true
     default: ''
@@ -115,7 +115,7 @@ command: >-
   --prompt_pattern '${{inputs.prompt_pattern}}'
   --output_pattern '${{inputs.output_pattern}}'
   $[[--system_message '${{inputs.system_message}}']]
-  $[[--label_key '${{inputs.label_key}}']]
+  $[[--ground_truth_column_name '${{inputs.ground_truth_column_name}}']]
   $[[--prefix '${{inputs.prefix}}']]
   $[[--few_shot_separator '${{inputs.few_shot_separator}}']]
   --output_file ${{outputs.output_file}}

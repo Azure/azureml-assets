@@ -72,10 +72,10 @@ def parse_args() -> ArgumentParser:
         required=False,
         help="The label map to be used for prompts.")
     parser.add_argument(
-        "--label_key",
+        "--ground_truth_column_name",
         type=str,
         required=False,
-        help="The ground truth/label key in the input data.")
+        help="The ground truth key in the input data.")
     parser.add_argument(
         "--system_message",
         type=str,
@@ -98,7 +98,7 @@ def main(
         output_pattern: str,
         prompt_pattern: str,
         output_file: str,
-        label_key: Optional[str] = None,
+        ground_truth_column_name: Optional[str] = None,
         few_shot_separator: Optional[str] = None,
         prefix: Optional[str] = None,
         system_message: Optional[str] = None,
@@ -113,7 +113,7 @@ def main(
     :param output_pattern: Pattern to use for output prompts.
     :param prompt_pattern: Pattern to use for prompts.
     :param output_file: Path to jsonl with generated prompts.
-    :param label_key: Label key to use for prompts.
+    :param ground_truth_column_name: Ground truth column.
     :param few_shot_separator: Separator to use for few-shot prompts.
     :param prefix: Prefix to use for prompts.
     :param system_message: System message to use for prompts.
@@ -132,7 +132,7 @@ def main(
         few_shot_separator=few_shot_separator,
         prefix=prefix,
         output_file=output_file,
-        label_key=label_key,
+        ground_truth_column_name=ground_truth_column_name,
         output_mltable=None,
         metadata_keys=None,
         label_map=None,
@@ -149,7 +149,8 @@ def main(
         output_pattern=output_pattern,
         system_message=system_message,
         random_seed=random_seed,
-        label_key=label_key if label_key else None,
+        ground_truth_column_name=ground_truth_column_name
+        if ground_truth_column_name else None,
         test_dataset_checksum=resolve_io_path(test_data),
         few_shot_dataset_checksum=resolve_io_path(few_shot_data)
         if few_shot_data else None,
@@ -169,7 +170,7 @@ if __name__ == "__main__":
         prompt_pattern=args.prompt_pattern,
         few_shot_separator=args.few_shot_separator,
         prefix=args.prefix,
-        label_key=args.label_key,
+        ground_truth_column_name=args.ground_truth_column_name,
         output_file=args.output_file,
         system_message=args.system_message,
     )

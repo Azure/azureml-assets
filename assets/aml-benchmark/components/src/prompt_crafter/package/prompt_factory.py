@@ -44,7 +44,7 @@ class PromptFactory(ABC):
     few_shot_pattern: Optional[str] = None
     few_shot_separator: Optional[str] = None
     prefix: Optional[str] = None
-    label_key: Optional[str] = None
+    ground_truth_column_name: Optional[str] = None
     label_map_str: Optional[str] = None
     output_pattern: Optional[str] = None
     system_message: Optional[str] = None
@@ -191,8 +191,8 @@ class PromptFactory(ABC):
         if self.output_pattern is not None:
             output_data['completion'] = self.get_label_from_output_pattern(row)
 
-        if self.label_key is not None and self.label_key in row:
-            output_data['label_key'] = row[self.label_key]
+        if self.ground_truth_column_name is not None and self.ground_truth_column_name in row:
+            output_data['ground_truth_column_name'] = row[self.ground_truth_column_name]
 
         if self.metadata_keys is not None:
             def collect_metadata(metadata_keys, data, index):
