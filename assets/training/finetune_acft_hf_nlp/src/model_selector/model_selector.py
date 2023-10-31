@@ -249,7 +249,7 @@ ACFT_CONFIG = {
 
 FLAVOR_MAP = {
     # OSS Flavor
-    "transformers": { 
+    "transformers": {
         "tokenizer": "components/tokenizer",
         "model": "model",
         "config": "model"
