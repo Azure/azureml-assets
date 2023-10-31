@@ -557,7 +557,7 @@ class TestInferencePostprocessorScript:
     ) -> None:
         """Test apply_find_first."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -593,7 +593,7 @@ class TestInferencePostprocessorScript:
     ) -> None:
         """Test apply_separator."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -666,7 +666,7 @@ class TestInferencePostprocessorScript:
     ) -> None:
         """Test regex_expr."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -715,7 +715,7 @@ class TestInferencePostprocessorScript:
     ) -> None:
         """Test when extract_number is set to 'first'."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -766,7 +766,7 @@ class TestInferencePostprocessorScript:
     ) -> None:
         """Test when extract_number is set to 'last'."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj1 = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -797,7 +797,7 @@ class TestInferencePostprocessorScript:
     ):
         """Test remove_prefixes."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -831,7 +831,7 @@ class TestInferencePostprocessorScript:
         """Test remove_prompt_prefix."""
         data = {"prompt": prompt_prefix}
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -858,7 +858,7 @@ class TestInferencePostprocessorScript:
         """Test when remove_prompt_prefix is set to False."""
         data = {"prompt": prompt_prefix}
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -885,7 +885,7 @@ class TestInferencePostprocessorScript:
         """Check if wrong key is provided when remove_prompt_prefix is set to True."""
         data = {"wrong_prompt_key": prompt_prefix}
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,

@@ -304,7 +304,7 @@ class TestDatasetPreprocessorScript:
     ):
         """Test if tojson filter is added to each value in the template."""
         sys.path.append(get_src_dir())
-        from dataset_preprocessor import dataset_preprocessor as dsp
+        from aml_benchmark.dataset_preprocessor import dataset_preprocessor as dsp
         with open(
             os.path.join(os.path.dirname(
                 Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE), "process_one_example.jsonl"), "w"
