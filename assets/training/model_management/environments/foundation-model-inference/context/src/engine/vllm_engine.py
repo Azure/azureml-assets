@@ -70,13 +70,16 @@ class VLLMEngine(AbstractEngine):
         self.task_config: TaskConfig = task_config
         self._server_process: Optional[subprocess.Popen] = None
         self._vllm_args: Dict = self.engine_config.vllm_config or {}
+
+        # Not all vllm arguments require a value
+        self._vllm_additional_args: List[str] = []
         self._verify_and_convert_float_type()
         self._load_vllm_defaults()
 
     @log_execution_time
     def load_model(self):
         """Load the model from the pretrained model specified in the engine configuration."""
-        self._start_server(self._vllm_args)
+        self._start_server(self._vllm_args, self._vllm_additional_args)
 
     def init_client(self):
         """Initialize client[s] for the engine to receive requests on."""
@@ -96,6 +99,11 @@ class VLLMEngine(AbstractEngine):
             )
         if "model" not in self._vllm_args:
             self._vllm_args["model"] = self.engine_config.model_id
+        if "model_name" in self._vllm_args:
+            if self._vllm_args["model_name"] == "falcon":
+                self._vllm_args["gpu-memory-utilization"] = 1
+                self._vllm_additional_args.append("trust-remote-code")
+            del self._vllm_args["model_name"]
     
     def _verify_and_convert_float_type(self):
         """
@@ -119,10 +127,11 @@ class VLLMEngine(AbstractEngine):
                     f"{compute_capability[0]}.{compute_capability[1]}. "
                     f"Bfloat16 will be converted to float16.")
 
-    def _start_server(self, server_args: Dict):
+    def _start_server(self, server_kwargs: Dict, server_args: List):
         """Start the VLLM server with the given arguments."""
         cmd = ["python", "-m", "vllm.entrypoints.api_server"]
-        cmd.extend([f"--{k}={v}" for k, v in server_args.items()])
+        cmd.extend([f"--{k}={v}" for k, v in server_kwargs.items()])
+        cmd.extend([f"--{arg}" for arg in server_args])
         logger.info(f"Starting VLLM server with command: {cmd}")
         self._server_process = subprocess.Popen(cmd)
         logger.info("Starting VLLM server...")

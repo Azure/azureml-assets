@@ -295,6 +295,7 @@ def init():
             with open(abs_mlmodel_path) as f:
                 mlmodel = yaml.safe_load(f)
 
+        model_name = ""
         if mlmodel:
             flavors = mlmodel.get("flavors", {})
             if "hftransformersv2" in flavors:
@@ -317,6 +318,9 @@ def init():
                     f"updated default_generator_configs: "
                     f"{default_generator_configs}"
                 )
+                huggingface_id = flavors["hftransformersv2"].get("huggingface_id", "")
+                if "falcon" in huggingface_id:
+                    model_name = "falcon"
 
         logger.info(f"Loading model from path {model_path} for task_type: {task_type}")
         logger.info(f"List model_path = {os.listdir(model_path)}")
@@ -346,7 +350,8 @@ def init():
                     dtype = content.get("torch_dtype", "auto")
             vllm_config = {
                 "tensor-parallel-size": tensor_parallel if tensor_parallel else DEVICE_COUNT,
-                "dtype": dtype
+                "dtype": dtype,
+                "model_name": model_name
             }
             engine_config["vllm_config"] = vllm_config
 
