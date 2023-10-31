@@ -247,6 +247,26 @@ ACFT_CONFIG = {
 }
 
 
+FLAVOR_MAP = {
+    # OSS Flavor
+    "transformers": {
+        "tokenizer": "components/tokenizer",
+        "model": "model",
+        "config": "model"
+    },
+    "hftransformersv2": {
+        "tokenizer": "data/tokenizer",
+        "model": "data/model",
+        "config": "data/config"
+    },
+    "hftransformers": {
+        "tokenizer": "data/tokenizer",
+        "model": "data/model",
+        "config": "data/config"
+    }
+}
+
+
 def get_model_asset_id() -> str:
     """Read the model asset id from the run context.
 
@@ -421,7 +441,7 @@ def model_selector(args: Namespace):
                     mlflow_data = yaml.safe_load(fp)
                 if mlflow_data and "flavors" in mlflow_data:
                     for key in mlflow_data["flavors"]:
-                        if key in ["hftransformers", "hftransformersv2"]:
+                        if key in FLAVOR_MAP.keys():
                             for key2 in mlflow_data["flavors"][key]:
                                 if key2 == "generator_config" and args.task_name == "TextGeneration":
                                     generator_config = mlflow_data["flavors"][key]["generator_config"]
@@ -479,6 +499,9 @@ def main():
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
+
+    # Adding flavor map to args
+    setattr(args, "flavor_map", FLAVOR_MAP)
 
     model_selector(args)
 
