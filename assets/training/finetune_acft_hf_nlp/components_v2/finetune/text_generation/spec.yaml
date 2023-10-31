@@ -19,7 +19,7 @@ inputs:
     description: Input folder path containing mlflow model for further finetuning. Proper model/huggingface id must be passed.
   dataset_input:
     type: uri_folder
-    optional: True
+    optional: False
     description: Output of data import component. The folder contains train and validation data.
   text_key:
     type: string
