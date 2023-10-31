@@ -45,8 +45,8 @@ logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.fine
 
 COMPONENT_NAME = "ACFT-Finetune"
 
-DEFAULT_DEEPSPEED_STAGE2_CONFIG = "zero2.json"
-DEFAULT_DEEPSPEED_STAGE3_CONFIG = "zero3.json"
+DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
+DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
 
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
