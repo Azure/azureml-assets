@@ -206,7 +206,11 @@ def register_model(args: Namespace):
     st = time.time()
     model = Model.register(
         workspace=ws,
-        model_path=model_path,
+        model_path=(
+            registration_details_folder
+            if args.copy_model_to_output else
+            model_path
+        ),
         model_name=model_name,
         model_framework=model_type,
         description=model_description,
@@ -250,9 +254,9 @@ if __name__ == "__main__":
     if args.model_name is None:
         args.model_name = get_model_name(args.finetune_args_path)
 
-    # register model
-    register_model(args)
-
     # copy to output dir
     if args.copy_model_to_output:
         copy_model_to_output(args.model_path, args.registration_details_folder)
+
+    # register model
+    register_model(args)
