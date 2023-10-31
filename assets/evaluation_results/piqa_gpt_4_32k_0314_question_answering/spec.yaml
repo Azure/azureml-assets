@@ -1,0 +1,32 @@
+type: evaluationresult
+name: piqa_gpt_4_32k_0314_question_answering
+version: 1.0.0
+display_name: piqa_gpt_4_32k_0314_question_answering
+description: gpt-4-32k-0314 run for piqa dataset
+dataset_family: piqa
+dataset_name: piqa
+
+model_name: gpt-4-32k-0314
+model_version: "314"
+model_asset_id: Azure_OpenAI_GPT
+
+relationships:
+  - relationshipType: Source
+    assetId: Azure_OpenAI_GPT
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.922
+
+path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 0.3
+  fewshot_split: "train"
