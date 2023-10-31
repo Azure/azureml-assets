@@ -7,8 +7,9 @@ import pyspark.sql as pyspark_sql
 
 def get_numerical_columns(column_dtype_map: dict) -> list:
     """Get numerical columns from all columns."""
-    # NOTE: byte, short, int, long are not included in the list because they are ambiguous with categorical columns.
-    # They should be added to the list based on some heuristics or user preference.
+    # NOTE: byte, short, long are not included in the list because they
+    # are ambiguous with categorical columns. They should be added to the list
+    # based on some heuristics or user preference.
     numerical_columns = [
         column
         for column in column_dtype_map
@@ -19,14 +20,66 @@ def get_numerical_columns(column_dtype_map: dict) -> list:
 
 def get_categorical_columns(column_dtype_map: dict) -> list:
     """Get categorical columns from all columns."""
-    # NOTE: byte, short, int, long are not included in the list because they are ambiguous with numerical columns.
-    # They should be added to the list based on some heuristics or user preference.
+    # NOTE: byte, short, long are not included in the list because they
+    # are ambiguous with numerical columns. They should be added to the
+    # list based on some heuristics or user preference.
     categorical_columns = [
         column
         for column in column_dtype_map
         if column_dtype_map[column] in ["string", "bool"]
     ]
     return categorical_columns
+
+
+def get_numerical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
+    """Get numerical columns from all columns with dataframe."""
+    # NOTE: byte, short, long are not included in the list because they
+    # are ambiguous with categorical columns. They should be added to the list
+    # based on some heuristics or user preference.
+    numerical_columns = [
+        column
+        for column in column_dtype_map
+        if column_dtype_map[column] in ["float", "double", "decimal"]
+        or (column_dtype_map[column] in ["int", "bigint", "short", "long"]
+            and is_numerical(baseline_df.select(column)
+                             .rdd.flatMap(lambda x: x).collect()))
+    ]
+    return numerical_columns
+
+
+def get_categorical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
+    """Get categorical columns from all columns with dataframe."""
+    # NOTE: byte, short, long are not included in the list because they
+    # are ambiguous with numerical columns. They should be added to the
+    # list based on some heuristics or user preference.
+    categorical_columns = [
+        column
+        for column in column_dtype_map
+        if column_dtype_map[column] in ["string", "bool"]
+        or (column_dtype_map[column] in ["int", "bigint", "short", "long"]
+            and is_categorical(baseline_df.select(column)
+                               .rdd.flatMap(lambda x: x).collect()))
+    ]
+    return categorical_columns
+
+
+def get_distinct_ratio(column):
+    """Get distict ratio for values in a column."""
+    distinct_values = len(set(column))
+    total_values = len(column)
+    return distinct_values / total_values
+
+
+def is_numerical(column):
+    """Check if int column should be numerical."""
+    distinct_value_ratio = get_distinct_ratio(column)
+    return distinct_value_ratio >= 0.05
+
+
+def is_categorical(column):
+    """Check if int column should be categorical."""
+    distinct_value_ratio = get_distinct_ratio(column)
+    return distinct_value_ratio < 0.05
 
 
 def get_common_columns(
