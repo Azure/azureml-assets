@@ -272,8 +272,9 @@ if __name__ == "__main__":
     # convert to safe tensors
     if args.convert_to_safetensors:
         convert_lora_weights_to_safetensors(args.model_path)
-        # update adapter_config.json with `peft_version`
-        update_peft_adapter_config(args.model_path)
+
+    # update adapter_config.json with `peft_version`
+    update_peft_adapter_config(args.model_path)
 
     # update model name
     if args.model_name is None:
