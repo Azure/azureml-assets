@@ -522,6 +522,9 @@ class AzureBlobstoreAssetPath(AssetPath):
             cloud_suffix = _get_storage_endpoint_from_metadata()
         account_uri = f"https://{storage_name}.blob.{cloud_suffix}"
 
+        # !!!!!!!!!! Temporarily disabling SAS token generation
+        # !!!!!!!!!! until we can address performance impact of this feature
+        
         # Check to see if the container allows anonymous access. If it does not,
         # then generate a temporary SAS token for the container and append it to
         # the URI.
@@ -532,36 +535,36 @@ class AzureBlobstoreAssetPath(AssetPath):
         # no SAS token needed) and hope for the best
         sas_token = ""
 
-        try:
-            blob_service_client = BlobServiceClient(
-                    account_url=account_uri,
-                    credential=AzureCliCredential(
-                        process_timeout=AzureBlobstoreAssetPath.AZURE_CLI_PROCESS_LOGIN_TIMEOUT
-                    )
-                )
-            container_client = blob_service_client.get_container_client(container=container_name)
-
-            if container_client.get_container_properties().public_access is not None:
-                # If the SAS token is not needed due to the container allowing anonymous
-                # access, then it will be an empty string and have no impact on the final
-                # uri.
-                sas_token = ""
-            else:
-                start_time = datetime.datetime.now(datetime.timezone.utc)
-                expiry_time = start_time + AzureBlobstoreAssetPath.SAS_EXPIRATION_TIME_DELTA
-
-                key = blob_service_client.get_user_delegation_key(start_time, expiry_time)
-
-                sas_token = "?" + generate_container_sas(
-                    account_name=storage_name,
-                    container_name=container_name,
-                    user_delegation_key=key,
-                    permission=ContainerSasPermissions(read=True, list=True),
-                    expiry=expiry_time,
-                    start=start_time
-                )
-        except Exception:
-            sas_token = ""
+        #try:
+        #    blob_service_client = BlobServiceClient(
+        #            account_url=account_uri,
+        #            credential=AzureCliCredential(
+        #                process_timeout=AzureBlobstoreAssetPath.AZURE_CLI_PROCESS_LOGIN_TIMEOUT
+        #            )
+        #        )
+        #    container_client = blob_service_client.get_container_client(container=container_name)
+        #
+        #    if container_client.get_container_properties().public_access is not None:
+        #        # If the SAS token is not needed due to the container allowing anonymous
+        #        # access, then it will be an empty string and have no impact on the final
+        #        # uri.
+        #        sas_token = ""
+        #    else:
+        #        start_time = datetime.datetime.now(datetime.timezone.utc)
+        #        expiry_time = start_time + AzureBlobstoreAssetPath.SAS_EXPIRATION_TIME_DELTA
+        #
+        #        key = blob_service_client.get_user_delegation_key(start_time, expiry_time)
+        #
+        #        sas_token = "?" + generate_container_sas(
+        #            account_name=storage_name,
+        #            container_name=container_name,
+        #            user_delegation_key=key,
+        #            permission=ContainerSasPermissions(read=True, list=True),
+        #            expiry=expiry_time,
+        #            start=start_time
+        #        )
+        #except Exception:
+        #    sas_token = ""
 
         super().__init__(
             PathType.AZUREBLOB,
