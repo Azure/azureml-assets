@@ -73,6 +73,9 @@ BUILD_CONTEXT_DISALLOWED_PATTERNS = [
     re.compile(r"extra-index-url", re.IGNORECASE),
 ]
 
+# Directory path for config files related to asset validation, relative to the current source path
+CONFIG_DIRECTORY = "config"
+
 
 def _log_error(file: Path, error: str) -> None:
     """Log error.
@@ -326,14 +329,14 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
 
     Args:
         asset_config (AssetConfig): Asset config.
-        valid_tags_filename (str): Yaml file defining valid tags for the asset.
+        valid_tags_filename (str): Yaml filename in the config directory defining valid tags for the asset.
 
     Returns:
         int: Number of errors.
     """
     error_count = 0
 
-    with open(Path(__file__).with_name(valid_tags_filename)) as f:
+    with open(Path(__file__).parent / CONFIG_DIRECTORY / valid_tags_filename) as f:
         valid_tags = YAML().load(f)
 
     asset_spec = asset_config._spec._yaml
@@ -576,10 +579,10 @@ def validate_assets(input_dirs: List[Path],
                     error_count += validate_build_context(asset_config.extra_config_as_object())
 
             if asset_config.type == assets.AssetType.PROMPT or asset_config.type == assets.AssetType.EVALUATIONRESULT:
-                error_count += validate_tags(asset_config, 'tag_values_shared.yml')
+                error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
 
             if asset_config.type == assets.AssetType.PROMPT:
-                error_count += validate_tags(asset_config, 'tag_values_prompt.yml')
+                error_count += validate_tags(asset_config, 'tag_values_prompt.yaml')
 
             # Validate categories
             if check_categories:
