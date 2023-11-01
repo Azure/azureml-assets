@@ -2,12 +2,12 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: distilgpt2
 path: ./
 properties:
-  SHA: f241065e938b44ac52db2c5de82c8bd2fafc76d0
+  SHA: 38cc92ec43315abd5136313225e95acc5986876c
   datasets: openwebtext
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
   finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC24rs_v3
+  finetune-recommended-sku: Standard-NC12s-v3
   finetuning-tasks: text-classification, token-classification
   inference-min-sku-spec: 2|0|7|14
   inference-recommended-sku: Standard_DS2_v2, Standard_D2a_v4, Standard_D2as_v4, Standard_DS3_v2,
@@ -18,7 +18,7 @@ properties:
     Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2,
     Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E2s_v3, Standard_E4s_v3,
     Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3,
-    Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
+    Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC6s_v3,Standard-NC12s-v3
     Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
     Standard_ND40rs_v2
@@ -53,4 +53,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: text-generation
-version: 9
+version: 10
