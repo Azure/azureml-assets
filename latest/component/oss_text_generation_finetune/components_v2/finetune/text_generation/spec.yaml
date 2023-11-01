@@ -389,7 +389,7 @@ command: python model_selector/model_selector.py --task_name TextGeneration $[[-
   --model_selector_output model_selector_output --preprocess_output preprocess_output
   $[[--system_properties '${{inputs.system_properties}}']] --pytorch_model_folder
   pytorch_model_folder --mlflow_model_folder mlflow_model_folder --output_model '${{outputs.output_model}}'
-  && python register_model/register_model.py $[[--model_name ${{inputs.registered_model_name}}]]
-  --finetune_args_path pytorch_model_folder/finetune_args.json --registration_details_folder
-  '${{outputs.output_model}}' --model_path pytorch_model_folder/peft_adapter_weights
+  && python register_model/register_model.py --task_name TextGeneration $[[--model_name
+  ${{inputs.registered_model_name}}]] --finetune_args_path pytorch_model_folder/finetune_args.json
+  --registration_details_folder '${{outputs.output_model}}' --model_path pytorch_model_folder/peft_adapter_weights
   --convert_to_safetensors true --copy_model_to_output true
