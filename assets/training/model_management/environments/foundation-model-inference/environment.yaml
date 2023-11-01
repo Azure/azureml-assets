@@ -7,7 +7,6 @@ image:
     template_files:
     - Dockerfile
     - requirements.txt
-    - score.py
   publish:
     location: mcr
     visibility: public
