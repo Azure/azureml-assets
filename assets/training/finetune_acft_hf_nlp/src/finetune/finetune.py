@@ -199,6 +199,18 @@ def get_parser():
     parser.add_argument("--lora_alpha", type=int, default=128, help="lora attn alpha")
     parser.add_argument("--lora_dropout", type=float, default=0.0, help="lora dropout value")
     parser.add_argument("--lora_r", default=8, type=int, help="lora dimension")
+    parser.add_argument(
+        "--lora_save_format",
+        type=str,
+        default="safetensors",
+        help="File format to save lora layers.Supported formats are pytorch and safetensors.",
+    )
+    parser.add_argument(
+        "--lora_save_path",
+        type=str,
+        default=None,
+        help="Output directory to save the best finetuned lora layers",
+    )
 
     # Training settings
     parser.add_argument("--num_train_epochs", default=5, type=int, help="training epochs")
@@ -749,7 +761,8 @@ def finetune(args: Namespace):
         setattr(args, "ignore_mismatched_sizes", False)
 
     # set eval_accumulation_steps to None if passed a non-positive value
-    if getattr(args, "eval_accumulation_steps", -1) <= 0:
+    eval_accumulation_steps = getattr(args, "eval_accumulation_steps", -1)
+    if eval_accumulation_steps and eval_accumulation_steps <= 0:
         setattr(args, "eval_accumulation_steps", None)
 
     logger.info(f"eval_accumulation_steps: {getattr(args, 'eval_accumulation_steps', None)}")
