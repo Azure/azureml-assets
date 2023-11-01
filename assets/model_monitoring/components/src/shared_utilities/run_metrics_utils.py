@@ -103,7 +103,7 @@ def get_or_create_run_id(
             with mlflow.start_run(
                 nested=True,
                 run_name=run_name,
-                tags=self._create_run_tags(
+                tags=_create_run_tags(
                     monitor_name, signal_name, feature_name, metric_name
                 ),
             ) as nested_run:
