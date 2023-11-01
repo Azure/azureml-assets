@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: openai-clip-vit-base-patch32
+name: OpenAI-CLIP-ViT-Base-Patch32
 path: ./
 properties:
     SHA: e6a30b603a447e251fdaca1c3056b2a16cdfebeb
@@ -21,4 +21,4 @@ tags:
    Preview: ''
    license: mit
    task: zero-shot-image-classification
-version: 3
+version: 5

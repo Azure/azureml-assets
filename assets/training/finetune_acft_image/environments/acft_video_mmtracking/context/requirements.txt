@@ -1,15 +1,19 @@
-azureml-metrics[video]==0.0.32
+azureml-metrics[video]==0.0.33
 azureml-evaluate-mlflow=={{latest-pypi-version}}
 azureml-acft-accelerator=={{latest-pypi-version}}
-azureml-acft-common-components[image]==0.0.32
+azureml-acft-common-components[image]==0.0.33
 azureml-acft-image-components=={{latest-pypi-version}}
-azureml-core==1.52.0
-azure-ai-ml==1.5.0
+azureml-core==1.53.0
+azure-ai-ml==1.11.0
 requests
 datasets==2.14.5
-optimum==1.13.1
-transformers==4.33.0
-numpy==1.22.2
+transformers==4.34.1
+# Note: pinning transformers[sentencepiece], as sentencepiece is required by optimum lib, to avoid version conflict
+transformers[sentencepiece]==4.34.1
+accelerate==0.23.0
+# NOTE: optimum is pinned to old version because with new version, we see big drop in run time performance for MMD
+optimum==1.8.8
+diffusers==0.20.2
 openmim==0.3.9
 mmengine==0.8.4
 peft==0.4.0
