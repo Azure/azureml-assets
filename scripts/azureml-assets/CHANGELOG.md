@@ -4,7 +4,7 @@
 ### 🐛 Bugs Fixed
 ## 1.16.16 (2023-11-01)
 ### 🐛 Bugs Fixed
-- [#xxxxx](https://github.com/Azure/azureml-assets/pull/xxxxx) Disabling storage account changes added in 1.16.15
+- [#1619](https://github.com/Azure/azureml-assets/pull/1619) Disabling storage account changes added in 1.16.15
 until performance issues are resolved
 
 ## 1.16.15 (2023-10-30)
