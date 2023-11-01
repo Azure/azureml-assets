@@ -8,11 +8,11 @@ dataset_name: mmlu_humanities
 
 model_name: gpt-35-turbo-0301
 model_version: "301"
-model_asset_id: Azure_OpenAI_GPT
+model_asset_id: azureml://registries/azure-openai-v2/models/gpt-35-turbo/versions/703844
 
 relationships:
   - relationshipType: Source
-    assetId: Azure_OpenAI_GPT
+    assetId: azureml://registries/azure-openai-v2/models/gpt-35-turbo/versions/703844
 
 tags:
   task: question-answering

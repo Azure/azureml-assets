@@ -8,11 +8,11 @@ dataset_name: mmlu_humanities
 
 model_name: gpt-4-0314
 model_version: "314"
-model_asset_id: Azure_OpenAI_GPT
+model_asset_id: azureml://registries/azure-openai-preview/models/gpt-4/versions/629591.2a481b56
 
 relationships:
   - relationshipType: Source
-    assetId: Azure_OpenAI_GPT
+    assetId: azureml://registries/azure-openai-preview/models/gpt-4/versions/629591.2a481b56
 
 tags:
   task: question-answering
