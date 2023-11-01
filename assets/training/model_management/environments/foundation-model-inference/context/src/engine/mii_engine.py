@@ -68,12 +68,12 @@ class MiiEngine(AbstractEngine):
         inference_results = []  # type: List[InferenceResult]
         for i, res in enumerate(responses.response):
             generated_text = res
-            generated_text = self._del_prompt_if_req(prompts[i], generated_text)
+            generated_text = self._del_prompt_if_req(prompts[i], generated_text, params)
             # TODO: Until mii returns the num tokens, approximate num_tokens. roughly, 75 words ~= 100 tokens
             num_tokens = (
                 len(
                     self._del_prompt_if_req(
-                        prompts[i], generated_text, force=True
+                        prompts[i], generated_text, params, force=True
                     ).split(" ")
                 )
                 // 75
@@ -162,13 +162,13 @@ class MiiEngine(AbstractEngine):
         # For now, max 1 replica per 1 GPU
         # Taking in extra memory for cache
         # TODO: improve this logic based on the amount of KV cache required and token length
-        num_possible_replicas = int(DEVICE_COUNT/math.ceil((model_size_in_gb/0.8)/gpu_size_in_gb))
+        num_possible_replicas = int(DEVICE_COUNT / math.ceil((model_size_in_gb / 0.8) / gpu_size_in_gb))
         if num_possible_replicas == 0:
             logger.debug(
                 "Tensor parallel / model replica calculation with extra memory for cache "
                 "results in 0 replicas. Calculating without extra memory for cache."
             )
-            num_possible_replicas = int(DEVICE_COUNT/math.ceil((model_size_in_gb)/gpu_size_in_gb))
+            num_possible_replicas = int(DEVICE_COUNT / math.ceil((model_size_in_gb) / gpu_size_in_gb))
             if num_possible_replicas == 0:
                 raise ValueError("Not enough GPU to support model. Please select bigger SKU.")
 
