@@ -229,6 +229,7 @@ def update_assets(input_dirs: List[Path],
         counters[ASSET_COUNT] += 1
 
         # Update asset if it's changed
+        logger.print(f"Working on {asset_config}")
         new_version = update_asset(asset_config=asset_config,
                                    output_directory_root=output_directory_root,
                                    release_directory_root=release_directory_root,

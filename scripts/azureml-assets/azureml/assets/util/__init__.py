@@ -18,5 +18,6 @@ from .util import (
     get_asset_output_dir_from_parts,
     get_asset_release_dir,
     get_asset_release_dir_from_parts,
+    is_logged_in,
     load_yaml,
 )

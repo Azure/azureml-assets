@@ -11,11 +11,13 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from typing import List, Tuple, Union
 
+from azure.identity._credentials.azure_cli import _run_command as azcli_run_command
 import azureml.assets as assets
 from azureml.assets.util import logger
 
 RELEASE_SUBDIR = "latest"
 EXCLUDE_DIR_PREFIX = "!"
+_AZCLI_LOGGED_IN = None
 
 
 # See https://stackoverflow.com/questions/4187564
@@ -433,3 +435,36 @@ def dump_yaml(yaml_dict: dict, file_path: str):
     """
     with open(file_path, "w") as f:
         yaml_dict = YAML().dump(yaml_dict, f)
+
+
+def is_logged_in(timeout: int, enable_cache: bool = True, show_error: bool = False) -> bool:
+    """Determine whether the Azure CLI is logged in.
+
+    Args:
+        timeout (int): Timeout in seconds.
+        enable_cache (bool): Cache logged in status. Defaults to True.
+        show_error (bool): Whether to show error messages. Defaults to False.
+
+    Returns:
+        bool: True if logged in, otherwise False.
+    """
+    global _AZCLI_LOGGED_IN
+
+    # Return cached value if available
+    if enable_cache and _AZCLI_LOGGED_IN is not None:
+        return _AZCLI_LOGGED_IN
+
+    try:
+        # Run command that would succeed if logged in
+        azcli_run_command("az account show", timeout)
+        result = True
+    except Exception as ex:
+        if show_error:
+            logger.log_warning(f"Azure CLI not logged in: {ex}")
+        result = False
+
+    # Cache result
+    if enable_cache:
+        _AZCLI_LOGGED_IN = result
+
+    return result
