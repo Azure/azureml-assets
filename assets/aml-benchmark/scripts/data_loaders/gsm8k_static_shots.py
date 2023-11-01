@@ -100,7 +100,6 @@ class GSM8kStaticShots(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager):
         """Return SplitGenerators."""
-
         return [
             datasets.SplitGenerator(
                 name="dev",
