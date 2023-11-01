@@ -270,9 +270,14 @@ if __name__ == "__main__":
     if args.model_name is None:
         args.model_name = get_model_name(args.finetune_args_path)
 
-    # register model
-    register_model(args)
-
     # copy to output dir
     if args.copy_model_to_output:
+        # saving original model path
+        setattr(args, "input_model_path", args.model_path)
+        # copy model to output dir
         copy_model_to_output(args.model_path, args.registration_details_folder)
+        # update model path to copied path i.e., output dir
+        args.model_path = args.registration_details_folder
+
+    # register model
+    register_model(args)
