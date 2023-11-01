@@ -4,13 +4,18 @@
 """Entry script for Model Data Collector Data Window Component."""
 
 import argparse
+
 import pandas as pd
+from pyspark.sql import DataFrame
+from dateutil import parser
 import mltable
+from mltable import MLTable
 import tempfile
+
+from fsspec import AbstractFileSystem
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
 from pyspark.sql.functions import col, lit
-from shared_utilities.datetime_utils import parse_datetime_from_string
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     init_spark,
@@ -22,12 +27,85 @@ from shared_utilities.constants import (
     MDC_CHAT_HISTORY_COLUMN,
     MDC_CORRELATION_ID_COLUMN,
     MDC_DATA_COLUMN,
+    MDC_DATAREF_COLUMN
 )
 
+from typing import Tuple
+import os
+from urllib.parse import urlparse
+from azureml.core.run import Run
+from azure.ai.ml import MLClient
 
-def _convert_uri_folder_to_mltable(
+
+def _convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_name=None, ws_name=None) -> str:
+    """Convert path to AzureML path."""
+    url = urlparse(url_str)
+    if url.scheme in ["https", "http"]:
+        idx = url.path.find('/', 1)
+        path = url.path[idx+1:]
+    elif url.scheme in ["wasbs", "wasb", "abfss", "abfs"]:
+        path = url.path[1:]
+    elif url.scheme == "azureml" and url.hostname == "datastores":  # azrueml short form
+        idx = url.path.find('/paths/')
+        path = url.path[idx+7:]
+    else:
+        return url_str  # azureml long form, azureml asset, file or other scheme, return original path directly
+
+    sub_id = sub_id or os.environ.get("AZUREML_ARM_SUBSCRIPTION", None)
+    rg_name = rg_name or os.environ.get("AZUREML_ARM_RESOURCEGROUP", None)
+    ws_name = ws_name or os.environ.get("AZUREML_ARM_WORKSPACE_NAME", None)
+
+    return f"azureml://subscriptions/{sub_id}/resourcegroups/{rg_name}/workspaces/{ws_name}/datastores" \
+           f"/{datastore}/paths/{path}"
+
+
+def _get_datastore_from_input_path(input_path: str, ml_client=None) -> str:
+    """Get datastore name from input path."""
+    url = urlparse(input_path)
+    if url.scheme == "azureml":
+        if ':' in url.path:  # azureml asset path
+            return _get_datastore_from_asset_path(input_path, ml_client)
+        else:  # azureml long or short form
+            return _get_datastore_from_azureml_path(input_path)
+    elif url.scheme == "file" or os.path.isdir(input_path):
+        return None  # local path for testing, datastore is not needed
+    else:
+        raise ValueError("Only azureml path(long, short or asset) is supported as input path of the MDC preprocessor.")
+
+
+def _get_workspace_info() -> Tuple[str, str, str]:
+    """Get workspace info from Run context and environment variables."""
+    ws = Run.get_context().experiment.workspace
+    sub_id = ws.subscription_id or os.environ.get("AZUREML_ARM_SUBSCRIPTION")
+    rg_name = ws.resource_group or os.environ.get("AZUREML_ARM_RESOURCEGROUP")
+    ws_name = ws.name or os.environ.get("AZUREML_ARM_WORKSPACE_NAME")
+    return sub_id, rg_name, ws_name
+
+
+def _get_datastore_from_azureml_path(azureml_path: str) -> str:
+    start_idx = azureml_path.find('/datastores/')
+    end_idx = azureml_path.find('/paths/')
+    return azureml_path[start_idx+12:end_idx]
+
+
+def _get_datastore_from_asset_path(asset_path: str, ml_client=None) -> str:
+    if not ml_client:
+        sub_id, rg_name, ws_name = _get_workspace_info()
+        ml_client = MLClient(subscription_id=sub_id, resource_group=rg_name, workspace_name=ws_name)
+
+    # todo: validation
+    asset_sections = asset_path.split(':')
+    asset_name = asset_sections[1]
+    asset_version = asset_sections[2]
+
+    data_asset = ml_client.data.get(asset_name, asset_version)
+    return data_asset.datastore or _get_datastore_from_input_path(data_asset.path)
+
+
+def _raw_mdc_uri_folder_to_mltable(
     start_datetime: datetime, end_datetime: datetime, input_data: str
 ):
+    """Create mltable definition - extract, filter and convert columns."""
     # Extract partition format
     table = mltable.from_json_lines_files(
         paths=[{"pattern": f"{input_data}**/*.jsonl"}]
@@ -37,7 +115,9 @@ def _convert_uri_folder_to_mltable(
     table = table.extract_columns_from_partition_format(partitionFormat)
 
     # Filter on partitionFormat based on user data window
-    filterStr = f"PartitionDate >= datetime({start_datetime.year}, {start_datetime.month}, {start_datetime.day}, {start_datetime.hour}) and PartitionDate <= datetime({end_datetime.year}, {end_datetime.month}, {end_datetime.day}, {end_datetime.hour})"  # noqa
+    filterStr = f"PartitionDate >= datetime({start_datetime.year}, {start_datetime.month}, {start_datetime.day}, " \
+                f"{start_datetime.hour}) and PartitionDate <= datetime({end_datetime.year}, {end_datetime.month}, " \
+                f"{end_datetime.day}, {end_datetime.hour})"
     table = table.filter(filterStr)
 
     # Data column is a list of objects, convert it into string because spark.read_json cannot read object
@@ -45,67 +125,69 @@ def _convert_uri_folder_to_mltable(
     return table
 
 
-def mdc_preprocessor(
-    data_window_start: str,
-    data_window_end: str,
-    input_data: str,
-    preprocessed_input_data: str,
-    extract_correlation_id: bool,
-):
-    """Extract data based on window size provided and preprocess it into MLTable.
+def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, fs: AbstractFileSystem) -> DataFrame:
+    """Convert MLTable to Spark DataFrame."""
+    with tempfile.TemporaryDirectory() as mltable_temp_path:
+        # Save MLTable to temp location
+        table.save(mltable_temp_path)
 
-    Args:
-        production_data: The data asset on which the date filter is applied.
-        monitor_current_time: The current time of the window (inclusive).
-        window_size_in_days: Number of days from current time to start time window (exclusive).
-        preprocessed_data: The mltable path pointing to location where the outputted mltable will be written to.
-        extract_correlation_id: The boolean to extract correlation Id from the MDC logs.
-    """
-    # Format the dates
-    format_data = "%Y-%m-%d %H:%M:%S"
-    start_datetime = parse_datetime_from_string(format_data, data_window_start)
-    end_datetime = parse_datetime_from_string(format_data, data_window_end)
-
-    # Create mltable definition - extract, filter and convert columns.
-    table = _convert_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
-
-    # Create MLTable in different location
-    save_path = tempfile.mktemp()
-    table.save(save_path)
-
-    # Save preprocessed_data MLTable to temp location
-    des_path = preprocessed_input_data + "temp"
-    fs = AzureMachineLearningFileSystem(des_path)
-    print("MLTable path:", des_path)
-    # TODO: Evaluate if we need to overwrite
-    fs.upload(
-        lpath=save_path,
-        rpath="",
-        **{"overwrite": "MERGE_WITH_OVERWRITE"},
-        recursive=True,
-    )
+        # Save preprocessed_data MLTable to temp location
+        des_path = preprocessed_input_data + "temp"
+        fs = fs or AzureMachineLearningFileSystem(des_path)  # for testing
+        print("MLTable path:", des_path)
+        # TODO: Evaluate if we need to overwrite
+        # Richard: why we need to upload the mltable folder to azureml://?
+        fs.upload(
+            lpath=mltable_temp_path,
+            rpath=des_path,
+            **{"overwrite": "MERGE_WITH_OVERWRITE"},
+            recursive=True,
+        )
 
     # Read mltable from preprocessed_data
-    df = try_read_mltable_in_spark(des_path, "preprocessed_data")
+    return try_read_mltable_in_spark(des_path, "preprocessed_data")
 
-    if not df:
-        print("Skipping the Model Data Collector preprocessor.")
-        post_warning_event(
-            "Although data was found, the window for this current run contains no data. "
-            + "Please visit aka.ms/mlmonitoringhelp for more information."
-        )
-        return
+
+def _get_data_columns(df: DataFrame) -> list:
+    columns = []
+    if MDC_DATA_COLUMN in df.columns:
+        columns.append(MDC_DATA_COLUMN)
+    if MDC_DATAREF_COLUMN in df.columns:
+        columns.append(MDC_DATAREF_COLUMN)
+
+    return columns
+
+
+def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool, datastore: str) -> DataFrame:
+    """
+    Extract data and correlation id from the MDC logs.
+
+    If data column exists, return the json contents in it,
+    otherwise, return the dataref content which is a url to the json file.
+    """
+
+    def read_data(row):
+        data = getattr(row, MDC_DATA_COLUMN, None)
+        if data:
+            return data
+
+        dataref = getattr(row, MDC_DATAREF_COLUMN, None)
+        # convert https path to azureml long form path which can be recognized by azureml filesystem
+        # and read by pd.read_json()
+        data_url = _convert_to_azureml_long_form(dataref, datastore)
+        return data_url
+        # TODO: Move this to tracking stream if both data and dataref are NULL
 
     # Output MLTable
-    first_data_row = df.select(MDC_DATA_COLUMN).rdd.map(lambda x: x).first()
+    data_columns = _get_data_columns(df)
+    first_data_row = df.select(data_columns).rdd.map(lambda x: x).first()
 
     spark = init_spark()
-    data_as_df = spark.createDataFrame(pd.read_json(first_data_row[MDC_DATA_COLUMN]))
+    data_as_df = spark.createDataFrame(pd.read_json(read_data(first_data_row)))
 
-    """ The temporary workaround to remove the chat_history column if it exists.
-    We are removing the column because the pyspark DF is unable to parse it.
-    This version of the MDC is applied only to GSQ.
-    """
+    # The temporary workaround to remove the chat_history column if it exists.
+    # We are removing the column because the pyspark DF is unable to parse it.
+    # This version of the MDC is applied only to GSQ.
     if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
         data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
 
@@ -113,10 +195,10 @@ def mdc_preprocessor(
         for df in iterator:
             yield pd.concat(
                 extract_data_and_correlation_id(
-                    getattr(row, MDC_DATA_COLUMN),
+                    read_data(row),
                     getattr(row, MDC_CORRELATION_ID_COLUMN),
                 )
-                for row in df.itertuples()  # noqa
+                for row in df.itertuples()
             )
 
     def extract_data_and_correlation_id(entry, correlationid):
@@ -131,21 +213,75 @@ def mdc_preprocessor(
     def transform_df_function_without_correlation_id(iterator):
         for df in iterator:
             yield pd.concat(
-                pd.read_json(getattr(row, MDC_DATA_COLUMN)) for row in df.itertuples()
+                pd.read_json(read_data(row)) for row in df.itertuples()
             )
 
+    data_columns = _get_data_columns(df)
     if extract_correlation_id:
-        # Add emtpy column to get the correlationId in the schema
+        # Add empty column to get the correlationId in the schema
         data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
-        transformed_df = df.select(
-            MDC_DATA_COLUMN, MDC_CORRELATION_ID_COLUMN
-        ).mapInPandas(
+        data_columns.append(MDC_CORRELATION_ID_COLUMN)
+        transformed_df = df.select(data_columns).mapInPandas(
             tranform_df_function_with_correlation_id, schema=data_as_df.schema
         )
     else:
-        transformed_df = df.select(MDC_DATA_COLUMN).mapInPandas(
+        # TODO: if neither data and dataref move to tracking stream (or throw ModelMonitoringException?)
+        transformed_df = df.select(data_columns).mapInPandas(
             transform_df_function_without_correlation_id, schema=data_as_df.schema
         )
+    return transformed_df
+
+
+def _raw_mdc_uri_folder_to_preprocessed_spark_df(
+        data_window_start: datetime, data_window_end: datetime,
+        input_data: str, preprocessed_input_data: str, extract_correlation_id: bool,
+        fs: AbstractFileSystem = None) -> DataFrame:
+    """Read raw MDC data, preprocess, and return in a Spark DataFrame."""
+    # Parse the dates
+    start_datetime = parser.parse(data_window_start)
+    end_datetime = parser.parse(data_window_end)
+
+    table = _raw_mdc_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
+    # print("MLTable:", table)
+
+    df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs)
+    # print("df after converting mltable to spark df:")
+    # df.show()
+
+    if not df:
+        print("Skipping the Model Data Collector preprocessor.")
+        post_warning_event(
+            "Although data was found, the window for this current run contains no data. "
+            + "Please visit aka.ms/mlmonitoringhelp for more information."
+        )
+        return
+
+    datastore = _get_datastore_from_input_path(input_data)
+    # print("Datastore:", datastore)
+    transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id, datastore)
+
+    return transformed_df
+
+
+def mdc_preprocessor(
+    data_window_start: str,
+    data_window_end: str,
+    input_data: str,
+    preprocessed_input_data: str,
+    extract_correlation_id: bool,
+    fs: AbstractFileSystem = None,
+):
+    """Extract data based on window size provided and preprocess it into MLTable.
+
+    Args:
+        data_window_start: The start date of the data window.
+        data_window_end: The end date of the data window.
+        input_data: The data asset on which the date filter is applied.
+        preprocessed_data: The mltable path pointing to location where the outputted mltable will be written to.
+        extract_correlation_id: The boolean to extract correlation Id from the MDC logs.
+    """
+    transformed_df = _raw_mdc_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, input_data,
+                                                                  preprocessed_input_data, extract_correlation_id, fs)
 
     save_spark_df_as_mltable(transformed_df, preprocessed_input_data)
 
