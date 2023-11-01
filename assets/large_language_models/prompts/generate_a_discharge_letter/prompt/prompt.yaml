@@ -1,120 +1,119 @@
 $schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
 
-_type: chat
+_type: completion
 
-messages:
-- role: system
-  content: |
-    As an AI, when generating discharge letters, you must ensure to use formal and professional language consistent with medical writing standards. It's crucial to be clear, concise, and unambiguous in your descriptions, especially when detailing diagnoses, treatment plans, and follow-up care. Ensure all terms and acronyms are fully defined and spelled out at first mention, with the abbreviation in parentheses, to ensure clarity for all potential readers.
+template: |
+  As an AI, when generating discharge letters, you must ensure to use formal and professional language consistent with medical writing standards. It's crucial to be clear, concise, and unambiguous in your descriptions, especially when detailing diagnoses, treatment plans, and follow-up care. Ensure all terms and acronyms are fully defined and spelled out at first mention, with the abbreviation in parentheses, to ensure clarity for all potential readers.
 
-    Tone should be neutral, factual, and respectful, avoiding overly technical language that might be difficult for a non-medical professional or the patient to understand. However, the writing must also be detailed and precise enough to convey the necessary information to healthcare providers.
+  Tone should be neutral, factual, and respectful, avoiding overly technical language that might be difficult for a non-medical professional or the patient to understand. However, the writing must also be detailed and precise enough to convey the necessary information to healthcare providers.
 
-    Remember to include all essential sections such as patient details, admission and discharge dates, primary and secondary diagnoses, reason for hospitalization, significant findings, procedures performed, treatment provided, condition at discharge, discharge medications, and follow-up care.
+  Remember to include all essential sections such as patient details, admission and discharge dates, primary and secondary diagnoses, reason for hospitalization, significant findings, procedures performed, treatment provided, condition at discharge, discharge medications, and follow-up care.
 
-    Emphasize any vital instructions for patient's aftercare, changes to medication regimen, and future appointments to ensure smooth transition of care. Please make sure to use a respectful and empathetic tone when writing instructions for the patient.
-- role: user
-  content: |
-    Write a discharge letter for the patient with following information:
-
-    Patient's Name: Hailey Clark
-    Patient's Date of Birth: April 14, 1985
-    Date of Admission: July 1, 2023
-    Date of Discharge: July 8, 2023
-    Doctor's Name: Briana Hernandez
-    Primary Diagnosis: Pneumonia
-
-    Secondary Diagnosis: Type 2 Diabetes Mellitus
-
-    Reason for Hospitalization: Patient experienced persistent cough with fever and difficulty breathing.
-
-    Significant Findings:
-    - Chest X-Ray: Right lower lobe consolidation
-    - Sputum culture: Streptococcus pneumoniae identified
-    - Blood tests: Elevated WBC count, slightly elevated HbA1c
-    - Procedures Performed: None
-
-    Treatment Provided:
-    - IV Ceftriaxone 2g daily
-    - IV Azithromycin 500mg daily
-    - Metformin 1000mg twice daily for diabetes
-
-    Condition at Discharge: Improved. Patient reports no more fever or difficulty breathing. Cough significantly reduced.
-
-    Discharge Medications:
-    - Amoxicillin 500mg three times daily for 7 days - Antibiotic for pneumonia
-    - Metformin 1000mg twice daily - For diabetes control
+  Emphasize any vital instructions for patient's aftercare, changes to medication regimen, and future appointments to ensure smooth transition of care. Please make sure to use a respectful and empathetic tone when writing instructions for the patient.
 
 
-    Follow-up care:
-    - Outpatient clinic follow-up in 2 weeks for symptom check and blood tests
-    - Home health nursing for medication management and diabetes education
-    - Continue monitoring blood glucose levels regularly
-    - Maintain a balanced, low-sugar diet
-    - Regular exercise as tolerated
-- role: assistant
-  content: |
-    Discharge Letter:
-    Hailey Clark, born April 14, 1985, was admitted to the hospital on July 1, 2023, due to persistent cough with fever and difficulty breathing. She was diagnosed with pneumonia as her primary condition and Type 2 Diabetes Mellitus as a secondary diagnosis. During her stay, significant findings included a chest X-Ray that revealed right lower lobe consolidation and a sputum culture that identified Streptococcus pneumoniae. Blood tests also showed an elevated white blood cell (WBC) count and slightly elevated HbA1c levels.
+  Write a discharge letter for the patient with following information:
 
-    Under the care of Dr. Briana Hernandez, she received treatment with intravenous (IV) ceftriaxone (2g daily), IV azithromycin (500mg daily), and metformin (1000mg twice daily) for diabetes management. No procedures were performed during her stay.
+  Patient's Name: Karl Kadenbach
+  Patient's Date of Birth: April 14, 1985
+  Date of Admission: July 1, 2023
+  Date of Discharge: July 8, 2023
+  Doctor's Name: Snorre Kolstad
+  Primary Diagnosis: Pneumonia
 
-    Upon discharge on July 8, 2023, her condition had significantly improved. She reported no more fever or difficulty breathing, and her cough had substantially reduced. She was prescribed amoxicillin (500mg three times daily for seven days) for the continued treatment of pneumonia and metformin (1000mg twice daily) for diabetes management.
+  Secondary Diagnosis: Type 2 Diabetes Mellitus
 
-    For follow-up care, an outpatient clinic appointment has been scheduled in two weeks to check her symptoms and conduct blood tests. Home health nursing has been arranged to assist with medication management and provide diabetes education. She has been advised to monitor her blood glucose levels regularly, maintain a balanced low-sugar diet, and engage in regular exercise as tolerated.
+  Reason for Hospitalization: Patient experienced persistent cough with fever and difficulty breathing.
 
-    Regards, Briana Hernandez
-- role: user
-  content: |
-    Write a discharge letter for the patient with following information:
+  Significant Findings:
+  - Chest X-Ray: Right lower lobe consolidation
+  - Sputum culture: Streptococcus pneumoniae identified
+  - Blood tests: Elevated WBC count, slightly elevated HbA1c
+  - Procedures Performed: None
 
+  Treatment Provided:
+  - IV Ceftriaxone 2g daily
+  - IV Azithromycin 500mg daily
+  - Metformin 1000mg twice daily for diabetes
 
-    Patient's Name: {{patient_name}}
-    Patient's Date of Birth: {{dob}}
-    Date of Admission: {{date_of_admission}}
-    Date of Discharge: {{date_of_discharge}}
-    Medical Record Number: {{medical_record_number}}
-    Doctor's Name: {{doctor_name}}
-    Primary Diagnosis: {{primary_diagnosis}}
+  Condition at Discharge: Improved. Patient reports no more fever or difficulty breathing. Cough significantly reduced.
 
-    Secondary Diagnosis: {{secondary_diagnosis}}
-
-    Reason for Hospitalization: {{reason_for_hospitalization}}
-
-    Significant Findings: {{significant_findings}}
-
-    Procedures Performed: {{procedures_performed}}
-
-    Treatment Provided: {{treatment_provided}}
+  Discharge Medications:
+  - Amoxicillin 500mg three times daily for 7 days - Antibiotic for pneumonia
+  - Metformin 1000mg twice daily - For diabetes control
 
 
-    Condition at Discharge: {{condition_at_discharge}}
+  Follow-up care:
+  - Outpatient clinic follow-up in 2 weeks for symptom check and blood tests
+  - Home health nursing for medication management and diabetes education
+  - Continue monitoring blood glucose levels regularly
+  - Maintain a balanced, low-sugar diet
+  - Regular exercise as tolerated
 
-    Discharge Medications: {{discharge_medications}}
 
 
-    Follow-up care: {{follow_up_care}}
+  Discharge Letter:
+
+  Karl Kadenbach, born April 14, 1985, was admitted to the hospital on July 1, 2023, due to persistent cough with fever and difficulty breathing. She was diagnosed with pneumonia as her primary condition and Type 2 Diabetes Mellitus as a secondary diagnosis. During her stay, significant findings included a chest X-Ray that revealed right lower lobe consolidation and a sputum culture that identified Streptococcus pneumoniae. Blood tests also showed an elevated white blood cell (WBC) count and slightly elevated HbA1c levels.
+
+  Under the care of Dr. Snorre Kolstad, she received treatment with intravenous (IV) ceftriaxone (2g daily), IV azithromycin (500mg daily), and metformin (1000mg twice daily) for diabetes management. No procedures were performed during her stay.
+
+  Upon discharge on July 8, 2023, her condition had significantly improved. She reported no more fever or difficulty breathing, and her cough had substantially reduced. She was prescribed amoxicillin (500mg three times daily for seven days) for the continued treatment of pneumonia and metformin (1000mg twice daily) for diabetes management.
+
+  For follow-up care, an outpatient clinic appointment has been scheduled in two weeks to check her symptoms and conduct blood tests. Home health nursing has been arranged to assist with medication management and provide diabetes education. She has been advised to monitor her blood glucose levels regularly, maintain a balanced low-sugar diet, and engage in regular exercise as tolerated.
+
+  Regards, Snorre Kolstad
+
+
+  Write a discharge letter for the patient with following information:
+
+  Patient's Name: {{patient_name}}
+  Patient's Date of Birth: {{dob}}
+  Date of Admission: {{date_of_admission}}
+  Date of Discharge: {{date_of_discharge}}
+  Medical Record Number: {{medical_record_number}}
+  Doctor's Name: {{doctor_name}}
+  Primary Diagnosis: {{primary_diagnosis}}
+
+  Secondary Diagnosis: {{secondary_diagnosis}}
+
+  Reason for Hospitalization: {{reason_for_hospitalization}}
+
+  Significant Findings: {{significant_findings}}
+
+  Procedures Performed: {{procedures_performed}}
+
+  Treatment Provided: {{treatment_provided}}
+
+
+  Condition at Discharge: {{condition_at_discharge}}
+
+  Discharge Medications: {{discharge_medications}}
+
+
+  Follow-up care: {{follow_up_care}}
 
 input_variables:
 - name: dob
   description: dob
-  default: January 1, 1960
+  default: January 1, 1900
 - name: condition_at_discharge
   description: condition at discharge
   default: |
     Stable. Patient experienced significant symptom relief post-PCI. No further episodes of chest pain or shortness of breath. Blood pressure under control with medications.
 - name: date_of_admission
   description: date of admission
-  default: June 1, 2023
+  default: June 1, 1940
 - name: date_of_discharge
   description: date of discharge
-  default: June 7, 2023
+  default: June 7, 1940
 - name: discharge_medications
   description: discharge medications
   default: |
     Aspirin 81mg daily - Antithrombotic agent Atorvastatin 40mg daily - For cholesterol control Clopidogrel 75mg daily - Antiplatelet agent Lisinopril 10mg daily - For blood pressure control
 - name: doctor_name
   description: doctor name
-  default: Hannah Jarvis
+  default: Ahmad Syahrizal
 - name: follow_up_care
   description: follow up care
   default: |
@@ -124,7 +123,7 @@ input_variables:
   default: '1234567'
 - name: patient_name
   description: patient name
-  default: Gabriel Diaz
+  default: Maximilian Tropschuh
 - name: primary_diagnosis
   description: primary diagnosis
   default: Acute Myocardial Infarction (Heart Attack)
@@ -146,5 +145,15 @@ input_variables:
   description: treatment provided
   default: |
     IV thrombolysis with Tissue plasminogen activator (tPA) Aspirin 325mg stat, then 81mg daily Atorvastatin 80mg daily Clopidogrel 75mg daily
+
+execution_settings:
+  default:
+    temperature: 0.1
+    max_tokens: 2500
+    top_p: 0.5
+    frequency_penalty: 0.7
+    presence_penalty: 0
+    number_of_responses: 1
+    stop_sequences: []
 
 template_format: handlebars
