@@ -138,7 +138,7 @@ def get_model_name(finetune_args_path: str) -> Optional[str]:
 
 
 def update_peft_adapter_config(model_path: str):
-    """Update the peft adapter_config.json with `peft_version`"""
+    """Update the peft adapter_config.json with `peft_version`."""
     adapter_config_file = Path(model_path, PEFT_ADAPTER_CONFIG_FILE_NAME)
     update_config = {
         PEFT_VERSION_KEY: peft_version,
