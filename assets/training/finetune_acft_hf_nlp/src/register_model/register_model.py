@@ -206,7 +206,7 @@ def register_model(args: Namespace):
     st = time.time()
     model = Model.register(
         workspace=ws,
-        model_path=registration_details_folder, # where the model was copied to in output
+        model_path=registration_details_folder,  # where the model was copied to in output
         model_name=model_name,
         model_framework=model_type,
         description=model_description,
@@ -265,5 +265,3 @@ if __name__ == "__main__":
 
     # register model
     register_model(args)
-
-    
