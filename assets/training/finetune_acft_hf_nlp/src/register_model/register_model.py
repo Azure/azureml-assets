@@ -12,11 +12,14 @@ import re
 
 from pathlib import Path
 from azureml.core.model import Model
+from peft import __version__ as peft_version
+from peft.utils import CONFIG_NAME as PEFT_ADAPTER_CONFIG_FILE_NAME
 
 from azureml.core import Workspace
 from azureml.core.run import Run, _OfflineRun
 
 from azureml.acft.common_components import get_logger_app
+from azureml.acft.accelerator.utils.code_utils import update_json_file_and_overwrite
 
 
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.register_model.register_model")
@@ -28,6 +31,7 @@ VALID_MODEL_NAME_PATTERN = r"^[a-zA-Z0-9-]+$"
 NEGATIVE_MODEL_NAME_PATTERN = r"[^a-zA-Z0-9-]"
 REGISTRATION_DETAILS_JSON_FILE = "model_registration_details.json"
 DEFAULT_MODEL_NAME = "default_model_name"
+PEFT_VERSION_KEY = "peft_version"
 
 
 def str2bool(arg):
@@ -132,6 +136,19 @@ def get_model_name(finetune_args_path: str) -> Optional[str]:
     return new_model_name
 
 
+def update_peft_adapter_config(model_path: str):
+    """Update the peft adapter_config.json with `peft_version`"""
+    adapter_config_file = Path(model_path, PEFT_ADAPTER_CONFIG_FILE_NAME)
+    update_config = {
+        PEFT_VERSION_KEY: peft_version,
+    }
+    if adapter_config_file.is_file():
+        update_json_file_and_overwrite(str(adapter_config_file), update_config)
+        logger.info(f"Updated {PEFT_ADAPTER_CONFIG_FILE_NAME}.")
+    else:
+        logger.info(f"Could not find {PEFT_ADAPTER_CONFIG_FILE_NAME}.")
+
+
 def convert_lora_weights_to_safetensors(model_path: str):
     """Read the bin files and convert them to safe tensors."""
     import os
@@ -148,6 +165,9 @@ def convert_lora_weights_to_safetensors(model_path: str):
         logger.info(f"Created {safe_tensor_file}")
         os.remove(bin_file)
         logger.info(f"Deleted {bin_file}")
+
+    # update adapter_config.json with `peft_version`
+    update_peft_adapter_config(args.model_path)
 
 
 def copy_model_to_output(model_path: str, output_dir: str):
