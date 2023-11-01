@@ -29,17 +29,16 @@ class MIRPayload(SerializableDataClass):
 
     def convert_query_to_list(self) -> None:
         """
-        Convert the query prompts into a list.
+        Convert the query parameter into a list.
 
-        FMScore.run expects a list of prompts.
-        In the case of chat completion, a single string is produced and needs to be
-        put inside of a list.
+        FMScore.run expects a list of prompts. In the case of chat completion, a single string
+        is produced and needs to be put inside of a list.
         """
         if not isinstance(self.query, list):
             self.query = [self.query]
 
     def update_params(self, new_params: Dict) -> None:
-        """Update the params with the given dictionary."""
+        """Update current parameters to the new parameters the MIRPayload should have."""
         self.params = new_params
 
 

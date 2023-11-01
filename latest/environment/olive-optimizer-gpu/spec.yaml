@@ -4,7 +4,7 @@ description: >-
   An environment for olive_optimizer_gpu components.
 
 name: "olive-optimizer-gpu"
-version: "5"
+version: "6"
 
 build:
   path: "context"

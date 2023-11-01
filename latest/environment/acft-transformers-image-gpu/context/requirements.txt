@@ -1,15 +1,17 @@
-azureml-metrics[image]==0.0.30
-azureml-evaluate-mlflow==0.0.32
-azureml-acft-accelerator==0.0.32
-azureml-acft-common-components[image]==0.0.30
-azureml-acft-image-components==0.0.32
-azureml-core==1.52.0
-azure-ai-ml==1.5.0
+azureml-metrics[image]==0.0.33
+azureml-evaluate-mlflow==0.0.33
+azureml-acft-accelerator==0.0.33
+azureml-acft-common-components[image]==0.0.33
+azureml-acft-image-components==0.0.33
+azureml-core==1.53.0
+azure-ai-ml==1.11.0
 requests
 datasets==2.14.5
-transformers==4.33.0
+transformers==4.34.1
+# Note: pinning transformers[sentencepiece], as sentencepiece is required by optimum lib, to avoid version conflict
+transformers[sentencepiece]==4.34.1
+accelerate==0.23.0
 optimum==1.13.1
-accelerate==0.22.0
 diffusers==0.20.2
 numpy==1.22.2
 certifi==2023.07.22

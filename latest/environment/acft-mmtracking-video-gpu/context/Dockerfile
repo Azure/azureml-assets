@@ -18,6 +18,5 @@ RUN mim install mmdet==2.28.2
 
 # vulnerability fixes - this will be removed once we update to MMTracking's latest version
 RUN pip install yapf==0.40.1
-RUN pip install Pillow==10.0.1
 RUN pip install pydash==6.0.0
 RUN pip install urllib3==2.0.7

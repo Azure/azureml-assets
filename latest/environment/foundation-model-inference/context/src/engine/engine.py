@@ -48,13 +48,14 @@ class AbstractEngine(ABC):
         raise NotImplementedError("generate method not implemented.")
 
     def _del_prompt_if_req(
-        self, prompt: str, response: str, force: bool = False
+        self, prompt: str, response: str, params: Dict, force: bool = False
     ) -> str:
         """Delete the prompt from the response if required."""
         if force:
             return response[len(prompt):].strip()
-
         if self.task_config.task_type == TaskType.TEXT_GENERATION:
+            if "return_full_text" in params and not params["return_full_text"]:
+                return response[len(prompt):].strip()
             return response
         elif self.task_config.task_type == TaskType.CONVERSATIONAL:
             return response[len(prompt):].strip()
