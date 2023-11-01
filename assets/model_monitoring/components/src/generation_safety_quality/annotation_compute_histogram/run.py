@@ -1562,7 +1562,7 @@ def apply_annotation(
     production_df_sampled = production_df.sample(withReplacement=False, fraction=sample_rate)
     if production_df_sampled.count() == 0:
         print("Not enough data resulting from sample_rate and production dataset. "
-              "Using default sampling value of 5. To use custom sample_rate with this dataset, "
+              "Using first five rows of production dataset instead. To use custom sample_rate with this dataset, "
               "try increasing sample_rate value.")
         # Default to 5
         production_df_sampled = production_df.limit(5)
