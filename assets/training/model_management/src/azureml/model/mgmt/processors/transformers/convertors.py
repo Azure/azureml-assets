@@ -197,7 +197,8 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         # set metadata info
         metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
-                                              is_finetuned_model=False)
+                                              is_finetuned_model=False,
+                                              base_model_task=self._task)
         mlflow_model = Model(metadata=metadata)
         hf_mlflow.hftransformers.save_model(
             config=config,

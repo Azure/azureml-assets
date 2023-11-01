@@ -1,0 +1,323 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: oss_text_generation_finetune
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: OSS Text Generation Finetune
+description: FTaaS component to finetune model for Text Generation task
+
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/28
+
+code: ../../../src/
+
+inputs:
+  mlflow_model_path:
+    type: mlflow_model
+    optional: True
+    description: Input folder path containing mlflow model for further finetuning. Proper model/huggingface id must be passed.
+    mode: download
+  dataset_input:
+    type: uri_folder
+    optional: False
+    description: Output of data import component. The folder contains train and validation data.
+    mode: download
+  text_key:
+    type: string
+    optional: False
+    description: key for text in an example. format your data keeping in mind that text is concatenated with ground_truth while finetuning in the form - text + groundtruth. for eg. "text"="knock knock\n", "ground_truth"="who's there"; will be treated as "knock knock\nwho's there"
+  ground_truth_key:
+    type: string
+    optional: True
+    description: key for ground_truth in an example. we take separate column for ground_truth to enable use cases like summarization, translation, question_answering, etc. which can be repurposed in form of text-generation where both text and ground_truth are needed. This separation is useful for calculating metrics. for eg. "text"="Summarize this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of the dialogue}"
+  batch_size:
+    type: integer
+    optional: True
+    default: 1000
+    description: Number of examples to batch before calling the tokenization function
+  pad_to_max_length:
+    type: string
+    optional: True
+    default: "false"
+    description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
+    enum:
+    - "true"
+    - "false"
+  max_seq_length:
+    type: integer
+    optional: True
+    default: -1
+    description: Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.
+  number_of_gpu_to_use_finetuning:
+    type: integer
+    optional: False
+    default: 1
+    description: number of gpus to be used per node for finetuning, should be equal to number of gpu per node in the compute SKU used for finetune
+    min: 1
+  apply_lora:
+    type: string
+    optional: True
+    default: "false"
+    description: lora enabled
+    enum:
+    - "true"
+    - "false"
+  merge_lora_weights:
+    type: string
+    optional: True
+    default: "true"
+    description: if set to true, the lora trained weights will be merged to base model before saving
+    enum:
+    - "true"
+    - "false"
+  lora_alpha:
+    type: integer
+    optional: True
+    default: 128
+    description: lora attention alpha
+  lora_r:
+    type: integer
+    optional: True
+    default: 8
+    description: lora dimension
+  lora_dropout:
+    type: number
+    optional: True
+    default: 0.0
+    description: lora dropout value
+  num_train_epochs:
+    type: integer
+    optional: True
+    default: 1
+    description: training epochs
+  max_steps:
+    type: integer
+    optional: True
+    default: -1
+    description: If set to a positive number, the total number of training steps to perform. Overrides 'epochs'. In case of using a finite iterable dataset the training may stop before reaching the set number of steps when all data is exhausted.
+  per_device_train_batch_size:
+    type: integer
+    optional: True
+    default: 1
+    description: Train batch size
+  per_device_eval_batch_size:
+    type: integer
+    optional: True
+    default: 1
+    description: Validation batch size
+  auto_find_batch_size:
+    type: string
+    optional: True
+    default: "false"
+    description: Flag to enable auto finding of batch size. If the provided 'per_device_train_batch_size' goes into Out Of Memory (OOM) enabling auto_find_batch_size will find the correct batch size by iteratively reducing 'per_device_train_batch_size' by a factor of 2 till the OOM is fixed
+    enum:
+    - "true"
+    - "false"
+  optim:
+    type: string
+    optional: True
+    default: adamw_hf
+    description: Optimizer to be used while training
+    enum:
+    - adamw_hf
+    - adamw_torch
+    - adafactor
+  learning_rate:
+    type: number
+    optional: True
+    default: 2e-05
+    description: Start learning rate. Defaults to linear scheduler.
+  warmup_steps:
+    type: integer
+    optional: True
+    default: 0
+    description: Number of steps used for a linear warmup from 0 to learning_rate
+  weight_decay:
+    type: number
+    optional: True
+    default: 0.0
+    description: The weight decay to apply (if not zero) to all layers except all bias and LayerNorm weights in AdamW optimizer
+  adam_beta1:
+    type: number
+    optional: True
+    default: 0.9
+    description: The beta1 hyperparameter for the AdamW optimizer
+  adam_beta2:
+    type: number
+    optional: True
+    default: 0.999
+    description: The beta2 hyperparameter for the AdamW optimizer
+  adam_epsilon:
+    type: number
+    optional: True
+    default: 1e-08
+    description: The epsilon hyperparameter for the AdamW optimizer
+  gradient_accumulation_steps:
+    type: integer
+    optional: True
+    default: 1
+    description: Number of updates steps to accumulate the gradients for, before performing a backward/update pass
+  eval_accumulation_steps:
+    type: integer
+    optional: True
+    default: -1
+    description: Number of predictions steps to accumulate before moving the tensors to the CPU, will be passed as None if set to -1
+  lr_scheduler_type:
+    type: string
+    optional: True
+    default: linear
+    description: learning rate scheduler to use.
+    enum:
+    - linear
+    - cosine
+    - cosine_with_restarts
+    - polynomial
+    - constant
+    - constant_with_warmup
+  precision:
+    type: string
+    optional: True
+    default: "32"
+    description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
+    enum:
+    - "32"
+    - "16"
+  seed:
+    type: integer
+    optional: True
+    default: 42
+    description: Random seed that will be set at the beginning of training
+  enable_full_determinism:
+    type: string
+    optional: True
+    default: "false"
+    description: Ensure reproducible behavior during distributed training
+    enum:
+    - "true"
+    - "false"
+  dataloader_num_workers:
+    type: integer
+    optional: True
+    default: 0
+    description: Number of subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
+  ignore_mismatched_sizes:
+    type: string
+    optional: True
+    default: "true"
+    description: Whether or not to raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model
+    enum:
+    - "true"
+    - "false"
+  max_grad_norm:
+    type: number
+    optional: True
+    default: 1.0
+    description: Maximum gradient norm (for gradient clipping)
+  evaluation_strategy:
+    type: string
+    optional: True
+    default: epoch
+    description: The evaluation strategy to adopt during training
+    enum:
+    - epoch
+    - steps
+  evaluation_steps_interval:
+    type: number
+    optional: True
+    default: 0.0
+    description: The evaluation steps in fraction of an epoch steps to adopt during training. Overwrites evaluation_steps if not 0.
+  eval_steps:
+    type: integer
+    optional: True
+    default: 500
+    description: Number of update steps between two evals if evaluation_strategy='steps'
+  logging_strategy:
+    type: string
+    optional: True
+    default: epoch
+    description: The logging strategy to adopt during training.
+    enum:
+    - epoch
+    - steps
+  logging_steps:
+    type: integer
+    optional: True
+    default: 500
+    description: Number of update steps between two logs if logging_strategy='steps'
+  metric_for_best_model:
+    type: string
+    optional: True
+    default: loss
+    description: Specify the metric to use to compare two different models
+    enum:
+    - loss
+  resume_from_checkpoint:
+    type: string
+    optional: True
+    default: "false"
+    description: Loads Optimizer, Scheduler and Trainer state for finetuning if true
+    enum:
+    - "true"
+    - "false"
+  save_total_limit:
+    type: integer
+    optional: True
+    default: 1
+    description: If a value is passed, will limit the total amount of checkpoints. Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints"
+  apply_early_stopping:
+    type: string
+    optional: True
+    default: "false"
+    description: Enable early stopping
+    enum:
+    - "true"
+    - "false"
+  early_stopping_patience:
+    type: integer
+    optional: True
+    default: 1
+    description: Stop training when the specified metric worsens for early_stopping_patience evaluation calls
+  early_stopping_threshold:
+    type: number
+    optional: True
+    default: 0.0
+    description: Denotes how much the specified metric must improve to satisfy early stopping conditions
+  apply_deepspeed:
+    type: string
+    optional: True
+    default: "false"
+    description: If set to true, will enable deepspeed for training
+    enum:
+    - "true"
+    - "false"
+  deepspeed_stage:
+    type: string
+    optional: True
+    default: "2"
+    description: This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config information via deepspeed port.
+    enum:
+    - "2"
+    - "3"
+  apply_ort:
+    type: string
+    optional: True
+    default: "false"
+    description: If set to true, will use the ONNXRunTime training
+    enum:
+    - "true"
+    - "false"
+  system_properties:
+    type: string
+    optional: True
+    description: Validation parameters propagated from pipeline.
+  registered_model_name:
+    type: string
+    optional: True
+    description: Name of the registered model
+outputs:
+  output_model:
+    type: uri_folder
+    description: Output dir to save the finetuned lora weights
+
+command: python model_selector/model_selector.py --task_name TextGeneration $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] --output_dir model_selector_output && python preprocess/preprocess.py --task_name TextGeneration --text_key '${{inputs.text_key}}' $[[--ground_truth_key '${{inputs.ground_truth_key}}']] $[[--batch_size '${{inputs.batch_size}}']] $[[--pad_to_max_length '${{inputs.pad_to_max_length}}']] $[[--max_seq_length '${{inputs.max_seq_length}}']] --train_file_path '${{inputs.dataset_input}}/train_input.jsonl' --validation_file_path '${{inputs.dataset_input}}/validation_input.jsonl' --test_file_path '${{inputs.dataset_input}}/train_input.jsonl' --model_selector_output model_selector_output --output_dir preprocess_output && python -m torch.distributed.launch --nproc_per_node=${{inputs.number_of_gpu_to_use_finetuning}} finetune/finetune.py $[[--apply_lora '${{inputs.apply_lora}}']] $[[--merge_lora_weights '${{inputs.merge_lora_weights}}']] $[[--lora_alpha '${{inputs.lora_alpha}}']] $[[--lora_r '${{inputs.lora_r}}']] $[[--lora_dropout '${{inputs.lora_dropout}}']] $[[--num_train_epochs '${{inputs.num_train_epochs}}']] $[[--max_steps '${{inputs.max_steps}}']] $[[--per_device_train_batch_size '${{inputs.per_device_train_batch_size}}']] $[[--per_device_eval_batch_size '${{inputs.per_device_eval_batch_size}}']] $[[--auto_find_batch_size '${{inputs.auto_find_batch_size}}']] $[[--optim '${{inputs.optim}}']] $[[--learning_rate '${{inputs.learning_rate}}']] $[[--warmup_steps '${{inputs.warmup_steps}}']] $[[--weight_decay '${{inputs.weight_decay}}']] $[[--adam_beta1 '${{inputs.adam_beta1}}']] $[[--adam_beta2 '${{inputs.adam_beta2}}']] $[[--adam_epsilon '${{inputs.adam_epsilon}}']] $[[--gradient_accumulation_steps '${{inputs.gradient_accumulation_steps}}']] $[[--eval_accumulation_steps '${{inputs.eval_accumulation_steps}}']] $[[--lr_scheduler_type '${{inputs.lr_scheduler_type}}']] $[[--precision '${{inputs.precision}}']] $[[--seed '${{inputs.seed}}']] $[[--enable_full_determinism '${{inputs.enable_full_determinism}}']] $[[--dataloader_num_workers '${{inputs.dataloader_num_workers}}']] $[[--ignore_mismatched_sizes '${{inputs.ignore_mismatched_sizes}}']] $[[--max_grad_norm '${{inputs.max_grad_norm}}']] $[[--evaluation_strategy '${{inputs.evaluation_strategy}}']] $[[--evaluation_steps_interval '${{inputs.evaluation_steps_interval}}']] $[[--eval_steps '${{inputs.eval_steps}}']] $[[--logging_strategy '${{inputs.logging_strategy}}']] $[[--logging_steps '${{inputs.logging_steps}}']] $[[--metric_for_best_model '${{inputs.metric_for_best_model}}']] $[[--resume_from_checkpoint '${{inputs.resume_from_checkpoint}}']] $[[--save_total_limit '${{inputs.save_total_limit}}']] $[[--apply_early_stopping '${{inputs.apply_early_stopping}}']] $[[--early_stopping_patience '${{inputs.early_stopping_patience}}']] $[[--early_stopping_threshold '${{inputs.early_stopping_threshold}}']] $[[--apply_ort '${{inputs.apply_ort}}']] $[[--apply_deepspeed '${{inputs.apply_deepspeed}}']] $[[--deepspeed_stage '${{inputs.deepspeed_stage}}']] --model_selector_output model_selector_output --preprocess_output preprocess_output $[[--system_properties '${{inputs.system_properties}}']] --pytorch_model_folder pytorch_model_folder --mlflow_model_folder mlflow_model_folder --output_model '${{outputs.output_model}}' && python register_model/register_model.py $[[--model_name ${{inputs.registered_model_name}}]] --finetune_args_path pytorch_model_folder/finetune_args.json --registration_details_folder '${{outputs.output_model}}' --model_path pytorch_model_folder/peft_adapter_weights --convert_to_safetensors true --copy_model_to_output true
