@@ -136,6 +136,11 @@ args: >-
   $[[--context_column_name ${{inputs.context_column_name}}]]
   $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
   $[[--sample_rate ${{inputs.sample_rate}}]]
+  $[[--groundedness_rating_threshold ${{inputs.groundedness_rating_threshold}}]]
+  $[[--relevance_rating_threshold ${{inputs.relevance_rating_threshold}}]]
+  $[[--similarity_rating_threshold ${{inputs.similarity_rating_threshold}}]]
+  $[[--fluency_rating_threshold ${{inputs.fluency_rating_threshold}}]]
+  $[[--coherence_rating_threshold ${{inputs.coherence_rating_threshold}}]]
   --histogram ${{outputs.histogram}}
   --samples_index ${{outputs.samples_index}}
   --groundedness_violations ${{outputs.groundedness_violations}}

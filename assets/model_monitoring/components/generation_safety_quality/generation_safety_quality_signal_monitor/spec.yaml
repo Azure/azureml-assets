@@ -137,7 +137,7 @@ jobs:
       type: aml_token
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.1
+    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.2
     inputs:
       annotation_histogram:
         type: mltable
