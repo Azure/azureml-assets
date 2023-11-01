@@ -172,7 +172,7 @@ def get_modelregistry_url(workspace):
     return modelregistry_url + uri
 
 
-def get_pipeline_run_id():
+def get_pipeline_run_id() -> str:
     """Fetch pipeline runId at top level."""
     run = Run.get_context()
     try:
@@ -189,11 +189,13 @@ def get_pipeline_run_id():
         return None
 
 
-def get_model_path_in_HOBO_storage():
+def get_model_path_in_HOBO_storage() -> str:
     run = Run.get_context()
     try:
         run_details = run.get_details()
+        run_id = run_details['runId']
         model_path_in_storage = run_details['runDefinition']['outputData']['output_model']['outputLocation']['uri']['path']
+        model_path_in_storage = model_path_in_storage.replace("${{name}}", run_id)
         return model_path_in_storage
     except Exception:
         logger.warning(f"cannot fetch model output path, returning none.")
