@@ -18,13 +18,16 @@ from peft.utils import CONFIG_NAME as PEFT_ADAPTER_CONFIG_FILE_NAME
 from azureml.core import Workspace
 from azureml.core.run import Run, _OfflineRun
 
-from azureml.acft.common_components import get_logger_app
+from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
+from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
+from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 from azureml.acft.accelerator.utils.code_utils import update_json_file_and_overwrite
 
 
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.register_model.register_model")
 
 
+COMPONENT_NAME = "ACFT-Register_Model"
 SUPPORTED_MODEL_ASSET_TYPES = [Model.Framework.CUSTOM, "PRESETS"]
 # omitting underscores which is supported in model name for consistency
 VALID_MODEL_NAME_PATTERN = r"^[a-zA-Z0-9-]+$"
@@ -57,6 +60,11 @@ def parse_args():
         default="false",
         choices=[True, False],
         help="convert pytorch model to safetensors format"
+    )
+    parser.add_argument(
+        "--task_name",
+        type=str,
+        help="Finetuning task name",
     )
     parser.add_argument(
         "--copy_model_to_output",
@@ -261,6 +269,16 @@ def register_model(args: Namespace):
 # run script
 if __name__ == "__main__":
     args = parse_args()
+
+    set_logging_parameters(
+        task_type=args.task_name,
+        acft_custom_dimensions={
+            LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
+            LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
+            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
+        },
+        azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+    )
 
     # convert to safe tensors
     if args.convert_to_safetensors:
