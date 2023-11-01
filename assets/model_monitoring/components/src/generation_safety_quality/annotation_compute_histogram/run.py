@@ -32,7 +32,6 @@ from azure.core.credentials import AccessToken, TokenCredential
 from pyspark.sql import DataFrame, Window
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
 from pyspark.sql.functions import col, row_number, monotonically_increasing_id
-from pyspark.sql.utils import ParseException
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from shared_utilities import io_utils
@@ -1534,7 +1533,8 @@ def apply_annotation(
 ):
     """Apply annotation to all samples in the production_dataset."""
     if "chat_history" in [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]:
-        raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified column. ")
+        raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
+                                  "column. ")
 
     production_df = io_utils.read_mltable_in_spark(production_dataset)
     if production_df.count() == 0:
