@@ -45,7 +45,18 @@ from azureml._common._error_definition.azureml_error import AzureMLError  # type
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
-UNWANTED_PACKAGES = ["apex>", "apex<", "apex="]
+UNWANTED_PACKAGES = [
+    "apex>",
+    "apex<",
+    "apex=",
+    "mlflow>",
+    "mlflow<",
+    "mlflow=",
+    "transformers=",
+    "transformers>",
+    "transformers<",
+]
+PINNED_PACAKGES = ["transformers==4.31.0", "mlflow==2.8.0"]
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
@@ -955,10 +966,10 @@ def finetune(args: Namespace):
     hf_task_runner.run_finetune(args)
 
     # remove unwanted packages from requirements.txt and conda.yaml
-    _remove_unwanted_packages(vars(args)['mlflow_model_folder'], UNWANTED_PACKAGES)
+    _remove_unwanted_packages(getattr(args, 'mlflow_model_folder', None))
 
 
-def _remove_unwanted_packages(model_save_path: str, unwanted_packages: list):
+def _remove_unwanted_packages(model_save_path: str):
     req_file_path = os.path.join(model_save_path, "requirements.txt")
     conda_file_path = os.path.join(model_save_path, "conda.yaml")
     requirements = None
@@ -966,8 +977,10 @@ def _remove_unwanted_packages(model_save_path: str, unwanted_packages: list):
         with open(req_file_path, "r") as f:
             requirements = f.readlines()
         if requirements:
-            for package in unwanted_packages:
+            for package in UNWANTED_PACKAGES:
                 requirements = [item for item in requirements if not item.startswith(package)]
+            pinned_packages = [pin_pack + '\n' for pin_pack in PINNED_PACAKGES]
+            requirements[-1:-1] = pinned_packages
             with open(req_file_path, "w") as f:
                 f.writelines(requirements)
             logger.info("Updated requirements.txt file")
@@ -979,7 +992,7 @@ def _remove_unwanted_packages(model_save_path: str, unwanted_packages: list):
                 if "pip" in conda_dict["dependencies"][i] and isinstance(conda_dict["dependencies"][i], dict):
                     pip_list = conda_dict["dependencies"][i]["pip"]
                     if len(pip_list) > 0:
-                        for package in unwanted_packages:
+                        for package in UNWANTED_PACKAGES:
                             pip_list = [item for item in pip_list if not item.startswith(package)]
                         conda_dict["dependencies"][i]["pip"] = pip_list
                         break
