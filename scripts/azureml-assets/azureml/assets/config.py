@@ -536,6 +536,8 @@ class AzureBlobstoreAssetPath(AssetPath):
 
     @property
     def uri(self) -> str:
+        """Asset URI."""
+
         # If we have already cached the URI, then simply return it
         if len(self._uri) > 0:
             return self._uri
