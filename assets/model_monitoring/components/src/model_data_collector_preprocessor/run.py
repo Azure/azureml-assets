@@ -15,7 +15,7 @@ import tempfile
 from fsspec import AbstractFileSystem
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
-from pyspark.sql.functions import col, lit
+from pyspark.sql.functions import lit
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     init_spark,
@@ -24,10 +24,11 @@ from shared_utilities.io_utils import (
 )
 
 from shared_utilities.constants import (
-    MDC_CHAT_HISTORY_COLUMN,
+    # MDC_CHAT_HISTORY_COLUMN,
     MDC_CORRELATION_ID_COLUMN,
     MDC_DATA_COLUMN,
-    MDC_DATAREF_COLUMN
+    MDC_DATAREF_COLUMN,
+    SCHEMA_INFER_ROW_COUNT
 )
 
 from typing import Tuple
@@ -158,7 +159,7 @@ def _get_data_columns(df: DataFrame) -> list:
     return columns
 
 
-def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool, datastore: str) -> DataFrame:
+def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool, datastore: str = None) -> DataFrame:
     """
     Extract data and correlation id from the MDC logs.
 
@@ -166,7 +167,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     otherwise, return the dataref content which is a url to the json file.
     """
 
-    def read_data(row):
+    def read_data(row) -> str:
         data = getattr(row, MDC_DATA_COLUMN, None)
         if data:
             return data
@@ -178,18 +179,32 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
         return data_url
         # TODO: Move this to tracking stream if both data and dataref are NULL
 
-    # Output MLTable
+    def row_to_pdf(row) -> pd.DataFrame:
+        return pd.read_json(read_data(row))
+
     data_columns = _get_data_columns(df)
-    first_data_row = df.select(data_columns).rdd.map(lambda x: x).first()
+    data_rows = df.select(data_columns).rdd.take(SCHEMA_INFER_ROW_COUNT)  # TODO: make it an argument user can define
 
     spark = init_spark()
-    data_as_df = spark.createDataFrame(pd.read_json(read_data(first_data_row)))
+    infer_pdf = pd.concat([row_to_pdf(row) for row in data_rows], ignore_index=True)
+    data_as_df = spark.createDataFrame(infer_pdf)
+    # data_as_df.show()  
+    # data_as_df.printSchema()
 
     # The temporary workaround to remove the chat_history column if it exists.
     # We are removing the column because the pyspark DF is unable to parse it.
     # This version of the MDC is applied only to GSQ.
-    if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
-        data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
+    # if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
+    #     data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
+
+    def extract_data_and_correlation_id(entry, correlationid):
+        result = pd.read_json(entry)
+        result[MDC_CORRELATION_ID_COLUMN] = ""
+        for index, row in result.iterrows():
+            result.loc[index, MDC_CORRELATION_ID_COLUMN] = (
+                correlationid + "_" + str(index)
+            )
+        return result
 
     def tranform_df_function_with_correlation_id(iterator):
         for df in iterator:
@@ -200,15 +215,6 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
                 )
                 for row in df.itertuples()
             )
-
-    def extract_data_and_correlation_id(entry, correlationid):
-        result = pd.read_json(entry)
-        result[MDC_CORRELATION_ID_COLUMN] = ""
-        for index, row in result.iterrows():
-            result.loc[index, MDC_CORRELATION_ID_COLUMN] = (
-                correlationid + "_" + str(index)
-            )
-        return result
 
     def transform_df_function_without_correlation_id(iterator):
         for df in iterator:
@@ -247,6 +253,7 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
     df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs)
     # print("df after converting mltable to spark df:")
     # df.show()
+    # df.printSchema()
 
     if not df:
         print("Skipping the Model Data Collector preprocessor.")

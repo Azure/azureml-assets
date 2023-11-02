@@ -3,10 +3,13 @@
 
 """test class for mdc preprocessor."""
 
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructField, StringType, DoubleType, LongType, ArrayType, MapType
 import pytest
 from unittest.mock import Mock
 import fsspec
 import shutil
+import json
 import os
 import sys
 import spark_mltable  # noqa, to enable spark.read.mltable
@@ -14,6 +17,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from model_data_collector_preprocessor.run import (
     _raw_mdc_uri_folder_to_preprocessed_spark_df,
+    _extract_data_and_correlation_id,
     mdc_preprocessor,
     _convert_to_azureml_long_form,
     _get_datastore_from_input_path,
@@ -26,6 +30,14 @@ def mdc_preprocessor_test_setup():
     original_work_dir = os.getcwd()
     momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
     os.chdir(momo_work_dir)  # change working directory to root of the assets/model_monitoring_components
+    python_path = sys.executable
+    os.environ["PYSPARK_PYTHON"] = python_path
+    print("PYSPARK_PYTHON", os.environ.get("PYSPARK_PYTHON", "NA"))
+    module_path = f"{os.getcwd()}/src"
+    old_python_path = os.environ.get("PYTHONPATH", None)
+    old_python_path = f"{old_python_path};" if old_python_path else ""
+    os.environ["PYTHONPATH"] = f"{old_python_path}{module_path}"
+    print("PYTHONPATH:", os.environ.get("PYTHONPATH", "NA"))
     yield
     os.chdir(original_work_dir)  # change working directory back to original
 
@@ -34,7 +46,7 @@ def mdc_preprocessor_test_setup():
 class TestMDCPreprocessor:
     """Test class for MDC Preprocessor."""
 
-    @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
+    # @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, extract_correlation_id",
         [
@@ -54,14 +66,6 @@ class TestMDCPreprocessor:
         """Test uri_folder_to_spark_df()."""
         print("testing test_uri_folder_to_spark_df...")
         print("working dir:", os.getcwd())
-        python_path = sys.executable
-        os.environ["PYSPARK_PYTHON"] = python_path
-        print("PYSPARK_PYTHON", os.environ.get("PYSPARK_PYTHON", "NA"))
-        module_path = f"{os.getcwd()}/src"
-        old_python_path = os.environ.get("PYTHONPATH", None)
-        old_python_path = f"{old_python_path};" if old_python_path else ""
-        os.environ["PYTHONPATH"] = f"{old_python_path}{module_path}"
-        print("PYTHONPATH:", os.environ.get("PYTHONPATH", "NA"))
 
         fs = fsspec.filesystem("file")
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
@@ -81,9 +85,9 @@ class TestMDCPreprocessor:
         pdf_actual = sdf.toPandas()
 
         pdf_expected = pd.DataFrame({
-            'sepal_length': [1, 2, 3, 1],
+            'sepal_length': [1, 2, 3, 1.5],
             'sepal_width': [2.3, 3.2, 3.4, 1.0],
-            'petal_length': [2, 3, 3, 4],
+            'petal_length': [2, 3, 3.2, 4],
             'petal_width': [1.3, 1.5, 1.8, 1.6]
         })
         if extract_correlation_id:
@@ -101,6 +105,38 @@ class TestMDCPreprocessor:
 
         assert_frame_equal(pdf_actual, pdf_expected)
 
+    @pytest.mark.parametrize(
+        "window_start_time, window_end_time, extract_correlation_id",
+        [
+            # chat history
+            ("2023-10-30T16:00:00", "2023-10-30T17:00:00", False),
+            ("2023-10-30T16:00:00", "2023-10-30T17:00:00", True),
+        ]
+    )
+    def test_uri_folder_to_spark_df_with_chat_history(
+            self, mdc_preprocessor_test_setup,
+            window_start_time, window_end_time, extract_correlation_id):
+        """Test uri_folder_to_spark_df() with chat_history column."""
+        print("testing test_uri_folder_to_spark_df...")
+        print("working dir:", os.getcwd())
+
+        fs = fsspec.filesystem("file")
+        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        preprocessed_output = f"{tests_path}/unit/preprocessed_mdc_data"
+        shutil.rmtree(f"{preprocessed_output}temp", True)
+
+        sdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
+            window_start_time,
+            window_end_time,
+            f"{tests_path}/unit/raw_mdc_data/",
+            preprocessed_output,
+            extract_correlation_id,
+            fs,
+        )
+        print("preprocessed dataframe:")
+        sdf.show(truncate=False)
+        # todo: assert dataframe content
+
     @pytest.mark.skip(reason="spark write is not ready in local")
     def test_mdc_preprocessor(self, mdc_preprocessor_test_setup):
         """Test mdc_preprocessor()."""
@@ -117,6 +153,162 @@ class TestMDCPreprocessor:
             False,
             fs,
         )
+
+    @pytest.mark.parametrize(
+        "data, expected_pdf, expected_fields",
+        [
+            # single input in each row
+            (
+                [
+                    [json.dumps([{"f0": "v0",  "f1": 1,    "f2": 2}]), "cid0"],
+                    [json.dumps([{"f0": "v1",  "f1": 1.2,  "f2": 3}]), "cid1"],
+                    [json.dumps([{"f0": "v2",  "f1": 2.3,  "f2": 4}]), "cid2"],
+                ],
+                pd.DataFrame([
+                    {"f0": "v0",    "f1": 1.0,  "f2": 2,    "correlationid": "cid0_0"},
+                    {"f0": "v1",    "f1": 1.2,  "f2": 3,    "correlationid": "cid1_0"},
+                    {"f0": "v2",    "f1": 2.3,  "f2": 4,    "correlationid": "cid2_0"},
+                ]),
+                [
+                    StructField("f0", StringType()), StructField("f1", DoubleType()), StructField("f2", LongType()),
+                    # StructField("correlationid", StringType(), False)
+                ]
+            ),
+            # multiple inputs in one row
+            (
+                [
+                    [json.dumps([{"f0": "v0",   "f1": 1,    "f2": 2},
+                                 {"f0": "v3",   "f1": 1.5,  "f2": 5}]), "cid0"],
+                    [json.dumps([{"f0": "v1",   "f1": 2,    "f2": 3}]), "cid1"],
+                    [json.dumps([{"f0": "v2",   "f1": 3,    "f2": 4}]), "cid2"],
+                ],
+                pd.DataFrame([
+                    {"f0": "v0",    "f1": 1.0,  "f2": 2,    "correlationid": "cid0_0"},
+                    {"f0": "v3",    "f1": 1.5,  "f2": 5,    "correlationid": "cid0_1"},
+                    {"f0": "v1",    "f1": 2,    "f2": 3,    "correlationid": "cid1_0"},
+                    {"f0": "v2",    "f1": 3,    "f2": 4,    "correlationid": "cid2_0"},
+                ]),
+                [
+                    StructField("f0", StringType()), StructField("f1", DoubleType()), StructField("f2", LongType()),
+                    # StructField("correlationid", StringType(), False)
+                ]
+            ),
+            # struct fields
+            (
+                [
+                    [json.dumps([{"simple_field": "v0", "struct_field": {"f0": "t0", "f1": "u0", "f2": "w0"}}]), "cid0"],  # noqa
+                    [json.dumps([{"simple_field": "v1", "struct_field": {"f0": "t1", "f1": "u1", "f2": "w1"}},
+                                 {"simple_field": "v2", "struct_field": {"f0": "t2", "f1": "u2", "f2": "w2"}}]), "cid1"],  # noqa
+                    [json.dumps([{"simple_field": "v3", "struct_field": {"f0": "t3", "f1": "u3", "f2": "w3"}}]), "cid2"],  # noqa
+                ],
+                pd.DataFrame([
+                    {"simple_field": "v0", "struct_field": {"f0": "t1", "f1": "u0", "f2": "w0"}, "correlationid": "cid0_0"},  # noqa
+                    {"simple_field": "v1", "struct_field": {"f0": "t2", "f1": "u1", "f2": "w1"}, "correlationid": "cid1_0"},  # noqa
+                    {"simple_field": "v2", "struct_field": {"f0": "t3", "f1": "u2", "f2": "w2"}, "correlationid": "cid1_1"},  # noqa
+                    {"simple_field": "v3", "struct_field": {"f0": "t4", "f1": "u3", "f2": "w3"}, "correlationid": "cid2_0"},  # noqa
+                ]),
+                [
+                    StructField("simple_field", StringType()),
+                    StructField("struct_field", MapType(StringType(), StringType())),
+                    # StructField("correlationid", StringType(), False)
+                ]
+            ),
+            # chat history
+            (
+                [
+                    [
+                        json.dumps([{"question": "q0", "chat_history": []}]),
+                        "cid0"
+                    ],
+                    [
+                        json.dumps([
+                            {
+                                "question": "q1",
+                                "chat_history": [
+                                    {
+                                        "inputs": {"question": "q0"},
+                                        "outputs": {"output": "o0"},
+                                    }
+                                ]
+                            }
+                        ]),
+                        "cid1"
+                    ],
+                    [
+                        json.dumps([
+                            {
+                                "question": "q2",
+                                "chat_history": [
+                                    {
+                                        "inputs": {"question": "q0"},
+                                        "outputs": {"output": "o0"},
+                                    },
+                                    {
+                                        "inputs": {"question": "q1"},
+                                        "outputs": {"output": "o1"},
+                                    }
+                                ]
+                            }
+                        ]),
+                        "cid2"
+                    ],
+                ],
+                pd.DataFrame([
+                    {"question": "q0", "chat_history": [], "correlationid": "cid0_0"},
+                    {
+                        "question": "q1",
+                        "chat_history": [
+                            {
+                                "inputs": {"question": "q0"},
+                                "outputs": {"output": "o0"},
+                            }
+                        ],
+                        "correlationid": "cid1_0"
+                    },
+                    {
+                        "question": "q2",
+                        "chat_history": [
+                            {
+                                "inputs": {"question": "q0"},
+                                "outputs": {"output": "o0"},
+                            },
+                            {
+                                "inputs": {"question": "q1"},
+                                "outputs": {"output": "o1"},
+                            }
+                        ],
+                        "correlationid": "cid2_0"
+                    }
+                ]),
+                [
+                    StructField("question", StringType()),
+                    StructField('chat_history', ArrayType(MapType(StringType(), MapType(StringType(), StringType())))),
+                    # StructField("correlationid", StringType(), False)
+                ]
+            )
+        ]
+    )
+    def test_extract_data_and_correlation_id(self, mdc_preprocessor_test_setup,
+                                             data, expected_pdf, expected_fields):
+        spark = SparkSession.builder.appName("test_extract_data_and_correlation_id").getOrCreate()
+        extract_correlation_ids = [True, False]
+        for extract_correlation_id in extract_correlation_ids:
+            in_df = spark.createDataFrame(data, ["data", "correlationid"])
+            out_df = _extract_data_and_correlation_id(in_df, extract_correlation_id)
+            out_df.show(truncate=False)
+            out_df.printSchema()
+            fields = out_df.schema.fields
+            for field in expected_fields:
+                assert field in fields
+            expected_pdf_ = expected_pdf
+            if extract_correlation_id:
+                assert StructField("correlationid", StringType(), False) in fields
+            else:
+                expected_pdf_ = expected_pdf.drop(columns=["correlationid"], inplace=False)
+            actual_pdf = out_df.toPandas()
+            assert_frame_equal(actual_pdf, expected_pdf_)
+
+        # assert False
 
     @pytest.mark.parametrize(
         "url_str, converted",
