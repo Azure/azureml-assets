@@ -44,6 +44,7 @@ Note:
 ]
 ```
 
-#### Model inference: Text for the sample image
+#### Model inference - visual question answering
+For a sample image and text prompt "what are people doing? Answer: ".
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_blip2_vqa.png" alt="Salesforce-BLIP2-vqa">
