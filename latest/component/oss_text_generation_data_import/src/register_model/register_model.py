@@ -63,13 +63,6 @@ def parse_args():
         help="Finetuning task name",
     )
     parser.add_argument(
-        "--copy_model_to_output",
-        type=str2bool,
-        default="false",
-        choices=[True, False],
-        help="If true, copies the model to output_dir"
-    )
-    parser.add_argument(
         "--model_type",
         type=str,
         default=Model.Framework.CUSTOM,
@@ -195,7 +188,6 @@ def register_model(args: Namespace):
     """Run main function for sdkv1."""
     model_name = args.model_name
     model_type = args.model_type
-    model_path = args.model_path
     registration_details_folder = args.registration_details_folder
     tags, properties, model_description = {}, {}, ""
 
@@ -214,7 +206,7 @@ def register_model(args: Namespace):
     st = time.time()
     model = Model.register(
         workspace=ws,
-        model_path=model_path,
+        model_path=registration_details_folder,  # where the model was copied to in output
         model_name=model_name,
         model_framework=model_type,
         description=model_description,
@@ -268,9 +260,8 @@ if __name__ == "__main__":
     if args.model_name is None:
         args.model_name = get_model_name(args.finetune_args_path)
 
+    # copy to output dir
+    copy_model_to_output(args.model_path, args.registration_details_folder)
+
     # register model
     register_model(args)
-
-    # copy to output dir
-    if args.copy_model_to_output:
-        copy_model_to_output(args.model_path, args.registration_details_folder)
