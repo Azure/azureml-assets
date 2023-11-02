@@ -552,7 +552,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             list_container_url = f"{self._account_uri}/{self._container_name}?restype=container&comp=list&maxresults=1"
             response = requests.get(list_container_url, timeout=AzureBlobstoreAssetPath.CONTAINER_ANONYMOUS_ACCESS_CHECK_TIMEOUT)
 
-            if response.status_code >= 200 or response.status_code <= 299:
+            if response.status_code >= 200 and response.status_code <= 299:
                 return self._uri
         except Exception:
             # If we fail pass through to the next approach
