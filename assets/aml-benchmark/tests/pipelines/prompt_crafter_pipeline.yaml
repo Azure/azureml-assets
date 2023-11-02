@@ -18,7 +18,7 @@ inputs:
   output_pattern: " {{answerKey}} "
   prompt_type: "completions"
   system_message: "Answer truthfully. "
-  ground_truth_column_name: "answerKey"
+  ground_truth_column_name: "answerKey"  
 
 outputs:
   output_file:

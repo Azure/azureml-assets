@@ -197,7 +197,7 @@ class PromptFactory(ABC):
             else:
                 mssg = "Ground truth column is not present in the data"
                 raise BenchmarkValidationException._with_error(
-                        AzureMLError.create(BenchmarkValidationError, error_details=mssg))
+                    AzureMLError.create(BenchmarkValidationError, error_details=mssg))
 
         if self.metadata_keys is not None:
             def collect_metadata(metadata_keys, data, index):

@@ -149,8 +149,7 @@ def main(
         output_pattern=output_pattern,
         system_message=system_message,
         random_seed=random_seed,
-        ground_truth_column_name=ground_truth_column_name
-        if ground_truth_column_name else None,
+        ground_truth_column_name=ground_truth_column_name if ground_truth_column_name else None,
         test_dataset_checksum=resolve_io_path(test_data),
         few_shot_dataset_checksum=resolve_io_path(few_shot_data)
         if few_shot_data else None,
