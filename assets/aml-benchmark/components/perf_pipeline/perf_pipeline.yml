@@ -6,7 +6,7 @@ description: benchmark_clip
 jobs:
   endpoint:
     type: pipeline
-    component: azureml://registries/azureml/components/batch_benchmark_inference/labels/latest
+    component: azureml:batch_benchmark_inference:0.0.2.vision
     inputs:
       batch_input_pattern: '{
         "input_data": {
@@ -21,10 +21,10 @@ jobs:
         },
         "params": {}
       }'
-      endpoint_url: https://clip-base.eastus.inference.ml.azure.com/score
+      endpoint_url: https://clip-base-embed-cpu.eastus.inference.ml.azure.com/score
       is_performance_test: true
       deployment_name: openai-clip-image-text-embeddi-2
-      connections_name: clip-conn
+      connections_name: clip-conn-embed
       n_samples: 10
       handle_response_failure: use_fallback
       ensure_ascii: false
@@ -56,8 +56,6 @@ jobs:
       batch_size_column_name: batch_size
       start_time_column_name: start_time_iso
       end_time_column_name: end_time_iso
-      input_token_count_column_name: input_token_count
-      output_token_count_column_name: output_token_count
       is_batch_inference_result: true
     outputs:
       performance_result:

@@ -132,7 +132,7 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: azureml:batch_inference_preparer:0.0.2
+    component: azureml://registries/azureml/components/batch_inference_preparer/versions/0.0.1
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
@@ -148,7 +148,7 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml:batch_benchmark_score:0.0.1
+    component: azureml://registries/azureml/components/batch_benchmark_score/versions/0.0.1
     inputs:
       online_endpoint_url: ${{parent.inputs.endpoint_url}}
       deployment_name: ${{parent.inputs.deployment_name}}
@@ -177,7 +177,7 @@ jobs:
   # Reformat
   batch_output_formatter: 
     type: command
-    component: azureml:batch_output_formatter:0.0.1
+    component: ../batch-output-formatter/spec.yaml
     inputs:
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
       label_column_name: ${{parent.inputs.label_column_name}}

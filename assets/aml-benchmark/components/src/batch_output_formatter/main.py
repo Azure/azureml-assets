@@ -102,17 +102,17 @@ def main(
                 logger.warn("Met failed response {} at index {} of file {}".format(row, index, f))
                 if handle_response_failure == 'neglect':
                     continue
-            new_df.append(rc.convert_result(row))
+            # new_df.append(rc.convert_result(row))
             perf_df.append(rc.convert_result_perf(row))
             if not is_performance_test:
                 ground_truth.append(rc.convert_result_ground_truth(row))
             else:
                 ground_truth.append({"ground_truth": ''})
     logger.info("Output data now.")
-    new_df = pd.DataFrame(new_df)
+    # new_df = pd.DataFrame(new_df)
     perf_df = pd.DataFrame(perf_df)
     ground_truth = pd.DataFrame(ground_truth)
-    new_df.to_json(prediction_data, orient="records", lines=True)
+    # new_df.to_json(prediction_data, orient="records", lines=True)
     perf_df.to_json(perf_data, orient="records", lines=True)
     ground_truth.to_json(predict_ground_truth_data, orient="records", lines=True)
 

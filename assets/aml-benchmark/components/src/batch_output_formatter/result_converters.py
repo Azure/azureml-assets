@@ -21,12 +21,9 @@ class ResultConverters:
     """Convert the batch inference output to different results."""
 
     PERF_OUTPUT_KEYS = [
-        "start_time_iso", "end_time_iso", "time_taken_ms", "output_token_count", "input_token_count"]
+        "start_time_iso", "end_time_iso", "time_taken_ms"]
     METADATA_KEY_IN_RESULT = 'metadata_key'
-    PREDICTION_COL_NAME = 'prediction'
     DEFAULT_ISO_FORMAT = '2000-01-01T00:00:00.000000+00:00'
-    DEFAULT_PERF_INPUT_TOKEN = 512
-    DEFAULT_GROUND_TRUTH = 'ground_truth'
 
     def __init__(
             self, model_type: str, metadata_key: str, data_id_key: str,
@@ -64,7 +61,7 @@ class ResultConverters:
             usage = copy.deepcopy(response.get('usage', {}))
         for new_key, old_key in zip(
                 ResultConverters.PERF_OUTPUT_KEYS, [
-                    "start", "end", "latency", "completion_tokens", "prompt_tokens"]):
+                    "start", "end", "latency"]):
             if new_key in usage:
                 # For the token scenario, no need to do the conversion.
                 usage[new_key] = usage[new_key]
@@ -77,16 +74,10 @@ class ResultConverters:
                 dt = datetime.datetime.utcfromtimestamp(result[old_key] / 1000)
                 usage[new_key] = dt.astimezone().isoformat()
             else:
-                # For the token and latency scenarios, no need to do the conversion.
+                # For the latency scenarios, no need to do the conversion.
                 usage[new_key] = usage[old_key] if old_key in usage else result.get(old_key, -1)
             if old_key in usage:
                 del usage[old_key]
-        if self._model.is_oss_model():
-            usage['input_token_count'] = self._get_oss_input_token(usage)
-            usage['output_token_count'] = self._get_oss_output_token(result, usage)
-        for k in ["output_token_count", "input_token_count"]:
-            if usage[k] == -1:
-                del usage[k]
         usage['batch_size'] = result.get('batch_size', 1)
         return usage
 
@@ -128,12 +119,12 @@ class ResultConverters:
         """Check if the result contains a successful response."""
         if result['status'].lower() != "success":
             return False
-        # handle the scenario the 200 with failure in response.
-        try:
-            _ = self._get_raw_output(result)
-        except Exception as e:
-            logger.warning(f'Converting meet errors {e}')
-            return False
+        # # handle the scenario the 200 with failure in response.
+        # try:
+        #     _ = self._get_raw_output(result)
+        # except Exception as e:
+        #     logger.warning(f'Converting meet errors {e}')
+        #     return False
         return True
 
     def _get_oss_input_token(self, perf_metrics: Any) -> Tuple[int, int]:
