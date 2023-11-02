@@ -353,6 +353,7 @@ outputs:
   output_model:
     type: uri_folder
     description: Output dir to save the finetuned lora weights
+    mode: rw_mount
 
 command: python model_selector/model_selector.py --task_name TextGeneration $[[--mlflow_model_path
   '${{inputs.mlflow_model_path}}']] --output_dir model_selector_output && python preprocess/preprocess.py
