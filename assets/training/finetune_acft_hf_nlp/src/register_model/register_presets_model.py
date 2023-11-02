@@ -73,6 +73,27 @@ def get_modelregistry_url(workspace):
     return modelregistry_url + uri
 
 
+def is_model_registered_already(request_uri, model_properties, params, headers):
+    current_run_id = model_properties["runId"]
+    model_name = model_properties["name"]
+    model_version = model_properties["version"]
+    url = request_uri + "/" + model_name + ":" + model_version
+    try:
+        resp = ClientBase._execute_func(get_requests_session().get, url, params=params, headers=headers)
+        resp.raise_for_status()
+    except requests.exceptions.HTTPError:
+        # log any HTTP errors and return False
+        logger.error('Received bad response from GET Model request:\n'
+                        'Response Code: {}\n'
+                        'Headers: {}\n'
+                        'Content: {}'.format(resp.status_code, resp.headers, resp.content))
+        return False
+    # check if model is registered with the same runId as current.
+    # if it is then model registration succeeded in past so return True.
+    # if not then some other model is registered with same name and version so return False.
+    return  "runId" in resp.json() and resp.json()["runId"] == current_run_id
+
+
 def submit_rest_request(
     request_type,
     request_uri,
@@ -260,7 +281,7 @@ def registermodel_entrypoint(
         run_details = run.get_details()
         # run_properties = run.get_properties()
 
-        if create_v1_dataset_for_registration == True:
+        if create_v1_dataset_for_registration:
             model_dataset = create_v1_dataset(finetune_run_id, run.experiment.workspace)
             logger.info(f"Created v1 dataset: {model_dataset}")
         else:
@@ -360,7 +381,12 @@ def registermodel_entrypoint(
     # if base_weights_asset_id:
     #     properties["azureMlBaseModelAssetId"] = base_weights_asset_id
 
-    # ft_component_version = get_ft_component_version(is_v2, finetuned_model_config, run_properties, keyname_basis_postprocess_type)
+    # ft_component_version = get_ft_component_version(
+    #     is_v2,
+    #     finetuned_model_config,
+    #     run_properties,
+    #     keyname_basis_postprocess_type
+    # )
     # if ft_component_version:
     #     properties["azureMlFinetuneVersion"] = ft_component_version
 
@@ -375,7 +401,7 @@ def registermodel_entrypoint(
 
     # logging.info("Registering model with properties: {}".format(properties))
 
-    resp_json = register_model(
+    _ = register_model(
         workspace=ws,
         model_name=model_name,
         model_version=registered_model_version,
