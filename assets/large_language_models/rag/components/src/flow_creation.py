@@ -147,12 +147,12 @@ def get_deployment_and_model_name(s):
         return (deployment_name, model_name)
 
 
-def upload_code_files(ws: Workspace, name):
+def upload_code_files(ws: Workspace):
     """Upload the files in the code flow directory."""
     from azureml.data.dataset_factory import FileDatasetFactory
     working_directory = ws.datastores.get("workspaceworkingdirectory")
     asset_id = str(uuid.uuid4())
-    dest = f"Users/{name}/Promptflows/{asset_id}/{CODE_DIR}"
+    dest = f"index-in-pf-examples/Promptflows/{asset_id}/{CODE_DIR}"
     FileDatasetFactory.upload_directory(
         os.path.join(Path(__file__).parent.absolute(), CODE_DIR),
         (working_directory, dest))
@@ -341,15 +341,7 @@ def main(args, ws, current_run, activity_logger: Logger):
                 file.write(codecs.decode(_MODIFY_PROMPT, 'unicode_escape'))
 
         # upload code
-        try:
-            details = current_run.get_details()
-            user_name = details.get("submittedBy", "systemcreated")
-            user_name = user_name.lower().replace(" ", "")
-        except Exception:
-            # For local runs, get_details fails
-            user_name = "systemcreated"
-
-        yaml_path = upload_code_files(ws, user_name) + "/flow.dag.yaml"
+        yaml_path = upload_code_files(ws) + "/flow.dag.yaml"
         activity_logger.info(
             "[Promptflow Creation]: Code first flow files successfully uploaded!")
         # Load in Json

@@ -17,7 +17,7 @@ from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 from azure.ai.ml.constants import AssetTypes
 
-from test_utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,

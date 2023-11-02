@@ -11,7 +11,7 @@ import uuid
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
-from test_utils import (
+from .test_utils import (
     get_mlclient,
     Constants,
     download_outputs,

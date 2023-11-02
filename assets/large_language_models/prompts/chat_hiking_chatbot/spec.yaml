@@ -2,12 +2,12 @@ $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
 name: chat_hiking_chatbot
-version: 0.0.3
+version: 0.0.4
 display_name: Hiking recommendations chatbot
 
 tags:
   modality: chat
-  task: chatbot
+  task: chat-completions
   industry: sustainability
 
 data_uri: ./prompt

@@ -71,8 +71,7 @@ class EndpointDataPreparer:
             if placeholder in placeholders:
                 if isinstance(v, str):
                     # replace special characters to avoid error when doing json deserialization
-                    new_json_string = new_json_string.replace(
-                        placeholder, v.replace('\\', '\\\\').replace("\n", "\\n").replace('"', '\\"'))
+                    new_json_string = new_json_string.replace(placeholder, json.dumps(v)[1:-1])
                 elif isinstance(v, dict) or isinstance(v, list):
                     new_json_string = new_json_string.replace(placeholder, json.dumps(v))
                 else:
