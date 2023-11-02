@@ -539,7 +539,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         # If we have already cached the URI, then simply return it
         if len(self._uri) > 0:
             return self._uri
-        
+
         # Its possible that the account URI may need additional tweaking to add a SAS
         # token if the account does not allow for anonymous access. Build the simple,
         # non-SAS URI for quick use later in the function
@@ -550,7 +550,10 @@ class AzureBlobstoreAssetPath(AssetPath):
         # allows anonmymous access and we can return the URI "as-is".
         try:
             list_container_url = f"{self._account_uri}/{self._container_name}?restype=container&comp=list&maxresults=1"
-            response = requests.get(list_container_url, timeout=AzureBlobstoreAssetPath.CONTAINER_ANONYMOUS_ACCESS_CHECK_TIMEOUT)
+            response = requests.get(
+                list_container_url,
+                timeout=AzureBlobstoreAssetPath.CONTAINER_ANONYMOUS_ACCESS_CHECK_TIMEOUT
+            )
 
             if response.status_code >= 200 and response.status_code <= 299:
                 return self._uri
@@ -572,7 +575,7 @@ class AzureBlobstoreAssetPath(AssetPath):
 
             if container_client.get_container_properties().public_access is not None:
                 return self._uri
-            
+
             # Our final approach is to generate a SAS token for the container and append
             # it to the URI
             start_time = datetime.datetime.now(datetime.timezone.utc)
@@ -591,12 +594,10 @@ class AzureBlobstoreAssetPath(AssetPath):
 
             self._uri += sas_token
             return self._uri
-            
+
         except Exception:
             # If we fail then simply return the URI "as-is" and hope for the best
             return self._uri
-
-
 
 
 class GitAssetPath(AssetPath):
