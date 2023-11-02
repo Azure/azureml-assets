@@ -90,6 +90,10 @@ class TestDatasetPreprocessorComponent:
                 """ {"premise":{{premise}}, "hypothesis":{{hypothesis}},"label":{{label|string}}} """,
                 None, '{"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}'
             ),
+            (
+                "hellaswag_hf", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, None,
+                os.path.join(Constants.CUSTOM_PREPROCESSOR_SCRIPT_PATH, "hellaswag_hf.py"), None
+            ),
         ],
     )
     def test_dataset_preprocessor_as_component(
@@ -227,6 +231,10 @@ class TestDatasetPreprocessorScript:
             (
                 "quac_org", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, None,
                 os.path.join(Constants.CUSTOM_PREPROCESSOR_SCRIPT_PATH, "quac_textgen_babel.py"), None
+            ),
+            (
+                "hellaswag_hf", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, None,
+                os.path.join(Constants.CUSTOM_PREPROCESSOR_SCRIPT_PATH, "hellaswag_hf.py"), None
             )
         ],
     )
