@@ -495,6 +495,8 @@ class AzureBlobstoreAssetPath(AssetPath):
 
     SAS_EXPIRATION_TIME_DELTA = datetime.timedelta(hours=1)
 
+    CONTAINER_ANONYMOUS_ACCESS_CHECK_TIMEOUT = 15
+
     AZURE_CLI_PROCESS_LOGIN_TIMEOUT = 60
 
     def __init__(self, storage_name: str, container_name: str, container_path: str):
@@ -557,7 +559,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         # allows anonmymous access and we can return the URI "as-is".
         try:
             list_container_url = f"{self._account_uri}/{self._container_name}?restype=container&comp=list&maxresults=1"
-            response = requests.get(list_container_url, timeout=10)
+            response = requests.get(list_container_url, timeout=AzureBlobstoreAssetPath.CONTAINER_ANONYMOUS_ACCESS_CHECK_TIMEOUT)
 
             if response.status_code >= 200 or response.status_code <= 299:
                 return self._uri
