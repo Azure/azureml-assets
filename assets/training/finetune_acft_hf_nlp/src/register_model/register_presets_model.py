@@ -20,6 +20,17 @@ logger = get_logger_app(__name__)
 
 
 def get_model_path_in_HOBO_storage(run_details) -> str:
+    """Get model HOBO path from run document.
+
+    Args:
+        run_details (_type_): Run details
+
+    Raises:
+        Exception: throw exception if cannot get model path
+
+    Returns:
+        str: model path in datastore
+    """
     try:
         run_id = run_details['runId']
         model_path_in_storage = run_details['runDefinition'][
