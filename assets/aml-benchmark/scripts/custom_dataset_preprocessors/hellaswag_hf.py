@@ -17,8 +17,8 @@ def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
-    argss = parser.parse_args()
-    return argss
+    args = parser.parse_args()
+    return args
 
 
 def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
@@ -52,11 +52,13 @@ def _run(input_path: str, output_path: str) -> None:
     _write_to_jsonl_file(processed_data, output_path)
 
 
-def preprocess(text):
+def preprocess(text: str) -> str:
     """Clean the data."""
     text = text.strip()
-    # NOTE: Brackets are artifacts of the WikiHow dataset portion of HellaSwag.
+    # NOTE: Brackets are artifacts of the WikiHow dataset portion of HellaSwag. We will clean these artifacts.
     text = text.replace(" [title]", ". ")
+    # the re.sub("\\[.*?\\]", "", text) function will remove any text enclosed in square brackets from the
+    # input string text.
     text = re.sub("\\[.*?\\]", "", text)
     text = text.replace("  ", " ")
     return text
@@ -77,5 +79,5 @@ def run_processor(data: List[Dict[str, Any]]) -> Union[pd.DataFrame, List[Dict[s
 
 
 if __name__ == '__main__':
-    argss = _parse_args()
-    _run(argss.input_path, argss.output_path)
+    args = _parse_args()
+    _run(args.input_path, args.output_path)
