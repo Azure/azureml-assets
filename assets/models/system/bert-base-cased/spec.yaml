@@ -25,6 +25,7 @@ properties:
   languages: en
 tags:
   Preview: ''
+  hf_model_id: bert-base-cased
   computes_allow_list:
   - Standard_NV12s_v3
   - Standard_NV24s_v3
@@ -53,4 +54,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: fill-mask
-version: 10
+version: 11
