@@ -25,7 +25,7 @@ except ImportError:
     pass
 
 from feature_importance_metrics.feature_importance_utilities import (
-    compute_categorical_features, convert_pandas_to_spark, convert_time_columns, is_categorical_column, log_time_and_message)
+    compute_categorical_features, convert_pandas_to_spark, is_categorical_column, log_time_and_message)
 
 
 def parse_args():

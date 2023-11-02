@@ -4,7 +4,7 @@
 """This file contains unit tests for the Data Drift Output Metrics component."""
 
 from feature_importance_metrics.compute_feature_importance import determine_task_type, get_train_test_data
-from feature_importance_metrics.feature_importance_utilities import compute_categorical_features
+from feature_importance_metrics.feature_importance_utilities import compute_categorical_features, is_categorical_column
 from feature_importance_metrics.compute_feature_attribution_drift import (
     drop_metadata_columns, calculate_attribution_drift)
 import pytest
@@ -22,7 +22,6 @@ def get_fraud_data():
         "ACCOUNTID": ["A1176337474875483", "A1343835256155075",
                       "A1343835256155076", "A1706480214256418"],
         "TRANSACTIONAMOUNT": [146161.99, 57487.200000000004,  227728.76, 59340.0],
-        "LOCALHOUR": [16, 22, 16, 8],
         "TIMESTAMP": ["2023-01-30T16:25:17.000Z",
                       "2023-01-30T16:58:44.000Z",
                       "2023-01-30T22:46:37.000Z",
@@ -34,6 +33,12 @@ def get_fraud_data():
         "IS_FRAUD": ["0", "0", "0", "0"]
     })
 
+@pytest.fixture
+def get_complex_dtype_data():
+    return pd.DataFrame({
+        "Time": [pd.Timedelta('1 days 06:05:01.000030')],
+        "DateTime": pd.DatetimeIndex(['2018-04-24 00:00:00'], dtype='datetime64[ns]', freq=None)
+    })
 
 @pytest.fixture
 def get_zipcode_data():
@@ -62,11 +67,20 @@ class TestComputeFeatureImportanceMetrics:
         train_data, test_data = get_train_test_data(get_large_data)
         assert len(train_data.index) == 5003
         assert len(test_data.index) == 5000
+    
+    def test_is_categorical_column(self, get_complex_dtype_data):
+        """Test whether a column is categorical"""
+        result = is_categorical_column(get_complex_dtype_data, "Time")
+        assert(result == False)
+        result = is_categorical_column(get_complex_dtype_data, "DateTime")
+        assert(result == False)
 
     def test_compute_categorical_features(self, get_fraud_data):
         """Test determine categorical features."""
         categorical_features = compute_categorical_features(get_fraud_data, "IS_FRAUD")
-        assert categorical_features == ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP", "ISPROXYIP"]
+        print(categorical_features)
+        assert categorical_features == ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP",
+                                        "ISPROXYIP", "DIGITALITEMCOUNT", "PHYSICALITEMCOUNT"]
 
     def test_compute_categorical_features_integer(self, get_zipcode_data):
         """Test determine categorical features with integers as categorical."""
@@ -88,7 +102,7 @@ class TestComputeFeatureImportanceMetrics:
         """Test deteremine task type for regression scenario."""
         task_type = determine_task_type(None, "TRANSACTIONAMOUNTUSD", get_fraud_data)
         assert task_type == "regression"
-        task_type = determine_task_type("invalid", "PHYSICALITEMCOUNT", get_fraud_data)
+        task_type = determine_task_type("invalid", "TRANSACTIONAMOUNTUSD", get_fraud_data)
         assert task_type == "regression"
         task_type = determine_task_type("Regression", "TRANSACTIONAMOUNTUSD", get_fraud_data)
         assert task_type == "regression"

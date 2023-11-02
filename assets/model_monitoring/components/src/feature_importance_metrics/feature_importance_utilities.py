@@ -52,7 +52,7 @@ def is_categorical_column(baseline_data, column_name):
     if pd.api.types.is_integer_dtype(baseline_column):
         distinct_column_values = len(baseline_column.unique())
         total_column_values = len(baseline_column)
-        distinct_value_ratio = distinct_column_values / total_column_values
+        distinct_value_ratio = total_column_values / distinct_column_values
         if distinct_value_ratio < 0.05:
             return False
         else:
