@@ -22,6 +22,7 @@ logger = get_logger_app(__name__)
 
 
 def get_dataset_relative_path(dataset):
+    """Get the dataset relative path in the blobstore."""
     steps = dataset._dataflow._get_steps()
     step_arguments = steps[0].arguments
     source = [
@@ -33,6 +34,7 @@ def get_dataset_relative_path(dataset):
 
 
 def create_v1_dataset(run_id, ws):
+    """Create v1 dataset."""
     # datastore_name = get_datastore_name(run_details)
     # path = get_output_relative_path(run_details)
     datastore_name = Datastore.get_default(ws).name
@@ -50,6 +52,7 @@ def create_v1_dataset(run_id, ws):
 
 
 def get_model_dataset(run_details, is_v2):
+    """Get the registered dataset."""
     if is_v2:
         for d in run_details["outputDatasets"]:
             if d["outputDetails"]["outputName"] == "output_model":
@@ -60,6 +63,7 @@ def get_model_dataset(run_details, is_v2):
 
 
 def get_modelregistry_url(workspace):
+    """Get model registry url."""
     from azureml._restclient.assets_client import AssetsClient
 
     assets_client = AssetsClient(workspace.service_context)
@@ -74,6 +78,7 @@ def get_modelregistry_url(workspace):
 
 
 def is_model_registered_already(request_uri, model_properties, params, headers):
+    """Check if the model is already registered."""
     current_run_id = model_properties["runId"]
     model_name = model_properties["name"]
     model_version = model_properties["version"]
@@ -104,6 +109,7 @@ def submit_rest_request(
     headers=None,
     use_auto_version=False,
 ):
+    """Register model rest API."""
     # TODO: This relies on the v1 SDK. Handling will need to be adapted to shift to v2
 
     # retry_count = RETRY_NUM_FOR_409 if use_auto_version else 1
@@ -268,6 +274,7 @@ def registermodel_entrypoint(
     create_v1_dataset_for_registration=True,
     properties=None,
 ):
+    """Entry point for model registration."""
     logger.info("Starting registermodel")
 
     # model_name = os.environ.get("AZUREML_PARAMETER_registered_model_name")
