@@ -3,17 +3,19 @@
 
 """This file contains the core logic for data drift compute metrics component."""
 
-import pyspark
-import pyspark.pandas as ps
 from pyspark.context import SparkContext
 from pyspark.sql.functions import col
 from pyspark.sql.session import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
+import pyspark
+import pyspark.pandas as ps
 
 
 # Init spark session
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
+
+supported_datatype_for_max_min_value = ["IntegerType()", "DoubleType()", "ByteType()", "LongType()", "FloatType()"]
 
 
 def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
@@ -52,6 +54,27 @@ def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     metadata_df = spark.createDataFrame(metadata_rows, metadata_schema)
 
     return metadata_df
+
+
+def get_features_for_max_min_calculation(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+    """
+    Compute a Spark DataFrame with features which get max and min value.
+
+    Args:
+        df: Input Spark DataFrame.
+
+    Returns:
+        df_for_max_min_value: A Spark DataFrame with features which get max and min value
+    """
+    schema = df.schema
+    supported_columns = []
+    for col_ in schema:
+        if str(col_.dataType) in supported_datatype_for_max_min_value:
+            supported_columns.append(col_.name)
+
+    df_for_max_min_value = df.select(*supported_columns)
+
+    return df_for_max_min_value
 
 
 def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
@@ -129,12 +152,17 @@ def compute_max_df(df: ps.DataFrame) -> ps.DataFrame:
     return max_vals
 
 
-def compute_data_quality_statistics(df):
+def compute_data_quality_statistics(df) -> ps.DataFrame:
     """Compute data quality statistics."""
     dtype_df = get_df_schema(df=df).to_pandas_on_spark()
     unique_vals_df = get_unique_value_list(df=df)
-    max_vals = compute_max_df(df=df.to_pandas_on_spark())
-    min_vals = compute_min_df(df=df.to_pandas_on_spark())
+    # Note: excluding boolean type column as the boolean type do not need to be calculated
+    # for max_vals and min_vals.
+    df_for_max_min_value = get_features_for_max_min_calculation(df=df)
+    # The compute_max_df and compute_min_df works for all numerical, except ShortType()
+    # They will get null for non-numerical data
+    max_vals = compute_max_df(df=df_for_max_min_value.to_pandas_on_spark())
+    min_vals = compute_min_df(df=df_for_max_min_value.to_pandas_on_spark())
 
     # Join tables to get all metrics into one table
     min_max_df = max_vals.merge(min_vals, left_on="featureName", right_on="featureName")
@@ -144,5 +172,4 @@ def compute_data_quality_statistics(df):
     metric_unique_df = metric_df.merge(
         unique_vals_df, right_on="featureName", left_on="featureName", how="left"
     )
-
     return metric_unique_df

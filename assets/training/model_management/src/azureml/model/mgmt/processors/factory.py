@@ -24,7 +24,7 @@ from azureml.model.mgmt.processors.transformers.convertors import (
     WhisperMLflowConvertor,
 )
 from azureml.model.mgmt.processors.pyfunc.convertors import (
-    BLIP2MLFlowConvertor,
+    BLIPMLFlowConvertor,
     MMLabDetectionMLflowConvertor,
     MMLabTrackingMLflowConvertor,
     CLIPMLFlowConvertor,
@@ -63,12 +63,12 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return CLIPMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
-        elif task == PyFuncSupportedTasks.MASK_GENERATION.value:
-            return SegmentAnythingMLflowConvertorFactory.create_mlflow_convertor(
+        elif task in [PyFuncSupportedTasks.IMAGE_TO_TEXT.value, PyFuncSupportedTasks.VISUAL_QUESTION_ANSWERING.value]:
+            return BLIPMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
-        elif task == PyFuncSupportedTasks.IMAGE_TO_TEXT.value:
-            return BLIP2MLflowConvertorFactory.create_mlflow_convertor(
+        elif task == PyFuncSupportedTasks.MASK_GENERATION.value:
+            return SegmentAnythingMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
@@ -199,12 +199,12 @@ class CLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
         )
 
 
-class BLIP2MLflowConvertorFactory(MLflowConvertorFactoryInterface):
-    """Factory class for BLIP2 model family."""
+class BLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for BLIP model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
-        """Create MLflow convertor for BLIP2 model."""
-        return BLIP2MLFlowConvertor(
+        """Create MLflow convertor for BLIP model family."""
+        return BLIPMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,

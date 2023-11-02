@@ -33,8 +33,9 @@ class SupportedTasks(_CustomEnum):
     ZERO_SHOT_IMAGE_CLASSIFICATION = "zero-shot-image-classification"
     EMBEDDINGS = "embeddings"
 
-    # BLIP2 task
+    # BLIP tasks
     IMAGE_TO_TEXT = "image-to-text"
+    VISUAL_QUESTION_ANSWERING = "visual-question-answering"
 
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"

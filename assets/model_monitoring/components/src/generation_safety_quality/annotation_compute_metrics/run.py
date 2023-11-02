@@ -84,7 +84,6 @@ def run():
     parser.add_argument("--coherence_passrate_threshold", type=float, default=0.7)
 
     args = parser.parse_args()
-
     histogram_df = try_read_mltable_in_spark_with_warning(args.annotation_histogram, "annotation_histogram")
 
     if not histogram_df:
