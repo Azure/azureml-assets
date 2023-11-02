@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: bert-large-cased
 path: ./
 properties:
-  SHA: d9238236d8326ce4bc117132bb3b7e62e95f3a9a
+  SHA: 0879dca57dc16fa0f759392a4dde1250698570aa
   datasets: bookcorpus, wikipedia
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
@@ -52,4 +52,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: fill-mask
-version: 12
+version: 6
