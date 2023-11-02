@@ -11,8 +11,6 @@ from random import randint
 from azureml.acft.common_components import get_logger_app
 
 from azureml.core.run import Run, _OfflineRun
-from azureml.core.dataset import Dataset
-from azureml.core.datastore import Datastore
 
 from azureml._model_management._util import get_requests_session
 from azureml._restclient.clientbase import ClientBase
@@ -24,12 +22,16 @@ logger = get_logger_app(__name__)
 def get_model_path_in_HOBO_storage(run_details) -> str:
     try:
         run_id = run_details['runId']
-        model_path_in_storage = run_details['runDefinition']['outputData']['output_model']['outputLocation']['uri']['path']
-        model_path_in_storage = model_path_in_storage.replace("${{name}}", run_id)
+        model_path_in_storage = run_details['runDefinition'][
+            'outputData']['output_model']['outputLocation']['uri']['path']
+        model_path_in_storage = model_path_in_storage.replace(
+            "${{name}}", run_id)
         return model_path_in_storage
     except Exception:
-        logger.warning(f"cannot fetch model output path from properties, ES should set it.")
-        raise Exception("Unable to find model output path from rundocument, ES should set it.")
+        logger.warning(
+            "cannot fetch model output path from properties, ES should set it.")
+        raise Exception(
+            "Unable to find model output path from rundocument, ES should set it.")
 
 
 def get_modelregistry_url(workspace):
@@ -54,7 +56,8 @@ def is_model_registered_already(request_uri, model_properties, params, headers):
     model_version = model_properties["version"]
     url = request_uri + "/" + model_name + ":" + model_version
     try:
-        resp = ClientBase._execute_func(get_requests_session().get, url, params=params, headers=headers)
+        resp = ClientBase._execute_func(
+            get_requests_session().get, url, params=params, headers=headers)
         resp.raise_for_status()
     except requests.exceptions.HTTPError:
         # log any HTTP errors and return False
@@ -132,7 +135,8 @@ def submit_rest_request(
                 "Received bad response from POST Model request:\n"
                 "Response Code: {}\n"
                 "Headers: {}\n"
-                "Content: {}".format(resp.status_code, resp.headers, resp.content)
+                "Content: {}".format(
+                    resp.status_code, resp.headers, resp.content)
             )
 
 
@@ -258,7 +262,6 @@ def registermodel_entrypoint(
         run_details = run.get_details()
         # run_properties = run.get_properties()
 
-        
         ws = run._experiment.workspace
 
         model_output_path = get_model_path_in_HOBO_storage(run_details)
@@ -330,7 +333,8 @@ def registermodel_entrypoint(
     engine_controller_manifest_path = (
         "azureml/{}/output_model/manifest.enginecontroller.json".format(run_id)
     )
-    pipe_manifest_path = "azureml/{}/output_model/manifest.pipe.json".format(run_id)
+    pipe_manifest_path = "azureml/{}/output_model/manifest.pipe.json".format(
+        run_id)
 
     # Model properties is a dict({str : str}), all values must be converted to string type.
     properties = properties or {}
