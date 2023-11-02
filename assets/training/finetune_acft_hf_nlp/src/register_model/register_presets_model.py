@@ -83,15 +83,17 @@ def is_model_registered_already(request_uri, model_properties, params, headers):
         resp.raise_for_status()
     except requests.exceptions.HTTPError:
         # log any HTTP errors and return False
-        logger.error('Received bad response from GET Model request:\n'
-                        'Response Code: {}\n'
-                        'Headers: {}\n'
-                        'Content: {}'.format(resp.status_code, resp.headers, resp.content))
+        logger.error(
+            "Received bad response from GET Model request:\n"
+            "Response Code: {}\n"
+            "Headers: {}\n"
+            "Content: {}".format(resp.status_code, resp.headers, resp.content)
+        )
         return False
     # check if model is registered with the same runId as current.
     # if it is then model registration succeeded in past so return True.
     # if not then some other model is registered with same name and version so return False.
-    return  "runId" in resp.json() and resp.json()["runId"] == current_run_id
+    return "runId" in resp.json() and resp.json()["runId"] == current_run_id
 
 
 def submit_rest_request(
