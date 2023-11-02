@@ -21,45 +21,15 @@ from azureml._restclient.clientbase import ClientBase
 logger = get_logger_app(__name__)
 
 
-def get_dataset_relative_path(dataset):
-    """Get the dataset relative path in the blobstore."""
-    steps = dataset._dataflow._get_steps()
-    step_arguments = steps[0].arguments
-    source = [
-        (store["datastoreName"], store["path"])
-        for store in step_arguments["datastores"]
-    ]
-    data_paths = [x[1] for x in source]
-    return data_paths[0]
-
-
-def create_v1_dataset(run_id, ws):
-    """Create v1 dataset."""
-    # datastore_name = get_datastore_name(run_details)
-    # path = get_output_relative_path(run_details)
-    datastore_name = Datastore.get_default(ws).name
-    logger.info(f"Default datastore name: {datastore_name} | {type(datastore_name)}")
-    rel_path = f"azureml/{run_id}/mlflow_model_folder"
-    # pdb.set_trace()
-    datastore = Datastore.get(ws, datastore_name)
-    finetuned_model_dataset = Dataset.File.from_files(
-        path=[(datastore, rel_path)], validate=False
-    )
-    finetuned_model_dataset = finetuned_model_dataset.register(
-        workspace=ws, name="register_model_dataset_" + run_id
-    )
-    return finetuned_model_dataset
-
-
-def get_model_dataset(run_details, is_v2):
-    """Get the registered dataset."""
-    if is_v2:
-        for d in run_details["outputDatasets"]:
-            if d["outputDetails"]["outputName"] == "output_model":
-                return d["dataset"]
-        raise Exception("Unable to find output_model port.")
-    else:
-        return run_details["inputDatasets"][0]["dataset"]
+def get_model_path_in_HOBO_storage(run_details) -> str:
+    try:
+        run_id = run_details['runId']
+        model_path_in_storage = run_details['runDefinition']['outputData']['output_model']['outputLocation']['uri']['path']
+        model_path_in_storage = model_path_in_storage.replace("${{name}}", run_id)
+        return model_path_in_storage
+    except Exception:
+        logger.warning(f"cannot fetch model output path from properties, ES should set it.")
+        raise Exception("Unable to find model output path from rundocument, ES should set it.")
 
 
 def get_modelregistry_url(workspace):
@@ -170,13 +140,12 @@ def register_model(
     workspace,
     model_name,
     model_version,
-    dataset_id,
+    model_output_path,
     run_id,
-    is_v2,
     tags=None,
     properties=None,
     description=None,
-    model_format="CUSTOM",
+    model_format="PRESETS",
 ):
     """Register a model with the provided workspace.
 
@@ -186,8 +155,8 @@ def register_model(
     :type model_name: str
     :param model_version: The version to register the model with. If it is None, the code figures out the version.
     :type model_version: int or None
-    :param dataset_id: The id of the model dataset.
-    :type dataset_id: str
+    :param model_output_path: The path of the model output.
+    :type model_output_path: str
     :param tags: An optional dictionary of key value tags to assign to the model.
     :type tags: dict({str : str})
     :param properties: An optional dictionary of key value properties to assign to the model.
@@ -226,7 +195,7 @@ def register_model(
     request_body = {
         "name": model_name,
         "description": description,
-        "url": "azureml://datasets/{}".format(dataset_id),
+        "url": model_output_path,
         "runId": run_id,
         "mimeType": "application/x-python",
         "properties": properties,
@@ -234,7 +203,7 @@ def register_model(
         "modelFormat": model_format,
     }
 
-    use_auto_version = is_v2 and model_version is None
+    use_auto_version = model_version is None
 
     request_params = {"autoVersion": "true" if use_auto_version else "false"}
     if not use_auto_version:
@@ -246,6 +215,7 @@ def register_model(
 
     logger.info("Starting register model request")
     logger.info(f"Request body: {request_body}")
+    print(f"Request url is {request_url}, Request body: {request_body}")
     resp = submit_rest_request(
         get_requests_session().post,
         request_url,
@@ -270,12 +240,10 @@ def registermodel_entrypoint(
     finetuned_model_input,
     registered_model_output,
     registered_model_version=None,
-    is_v2=False,
-    create_v1_dataset_for_registration=True,
     properties=None,
 ):
-    """Entry point for model registration."""
-    logger.info("Starting registermodel")
+    """Entry point for model registration for presets."""
+    logger.info("Starting register presets model")
 
     # model_name = os.environ.get("AZUREML_PARAMETER_registered_model_name")
     # if not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9\-\._]{0,254}', model_name):
@@ -284,23 +252,16 @@ def registermodel_entrypoint(
     try:
         run = Run.get_context()
         if isinstance(run, _OfflineRun):
-            raise ValueError("Register model is nor supported for Offline run")
+            raise ValueError("Register model is not supported for Offline run")
 
         # run_dto = run._client.get_run()
         run_details = run.get_details()
         # run_properties = run.get_properties()
 
-        if create_v1_dataset_for_registration:
-            model_dataset = create_v1_dataset(finetune_run_id, run.experiment.workspace)
-            logger.info(f"Created v1 dataset: {model_dataset}")
-        else:
-            model_dataset = get_model_dataset(run_details, is_v2)
-
-        dataset_id = model_dataset.id
-        # dataset_path = get_dataset_relative_path(model_dataset)
-
+        
         ws = run._experiment.workspace
 
+        model_output_path = get_model_path_in_HOBO_storage(run_details)
         # get pipeline run id
         run_id = run_details["runId"]
         top_level_run = run
@@ -414,9 +375,8 @@ def registermodel_entrypoint(
         workspace=ws,
         model_name=model_name,
         model_version=registered_model_version,
-        dataset_id=dataset_id,
+        model_output_path=model_output_path,
         run_id=top_level_run.id,
-        is_v2=is_v2,
         properties=properties,
         model_format="PRESETS",
     )

@@ -209,7 +209,7 @@ def register_custom_model(
     workspace, model_path, model_name, model_type, model_description, tags, properties, registration_details_folder
 ):
     """Register the model in custom format."""
-    # register the model
+    # register the model using SDKV1
     model = Model.register(
         workspace=workspace,
         model_path=model_path,  # where the model was copied to in output
@@ -241,7 +241,7 @@ def register_custom_model(
 
 
 def register_model(args: Namespace):
-    """Run main function for sdkv1."""
+    """Run main function."""
     model_name = args.model_name
     model_type = args.model_type
     registration_details_folder = args.registration_details_folder
@@ -279,8 +279,6 @@ def register_model(args: Namespace):
             finetuned_model_input=None,
             registered_model_output=None,
             registered_model_version=None,
-            is_v2=True,  # True will auto increment the version
-            create_v1_dataset_for_registration=True,
             properties=properties
         )
 
