@@ -33,12 +33,14 @@ def get_fraud_data():
         "IS_FRAUD": ["0", "0", "0", "0"]
     })
 
+
 @pytest.fixture
 def get_complex_dtype_data():
     return pd.DataFrame({
         "Time": [pd.Timedelta('1 days 06:05:01.000030')],
         "DateTime": pd.DatetimeIndex(['2018-04-24 00:00:00'], dtype='datetime64[ns]', freq=None)
     })
+
 
 @pytest.fixture
 def get_zipcode_data():
@@ -67,13 +69,13 @@ class TestComputeFeatureImportanceMetrics:
         train_data, test_data = get_train_test_data(get_large_data)
         assert len(train_data.index) == 5003
         assert len(test_data.index) == 5000
-    
+
     def test_is_categorical_column(self, get_complex_dtype_data):
         """Test whether a column is categorical"""
         result = is_categorical_column(get_complex_dtype_data, "Time")
-        assert(result == False)
+        assert result == False
         result = is_categorical_column(get_complex_dtype_data, "DateTime")
-        assert(result == False)
+        assert result == False
 
     def test_compute_categorical_features(self, get_fraud_data):
         """Test determine categorical features."""

@@ -281,12 +281,12 @@ def run(args):
         log_time_and_message(f"Computed task type is {task_type}")
 
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
-        
+
         for column in baseline_df.columns:
-            col =  pd.Series(baseline_df[column])
+            col = pd.Series(baseline_df[column])
             if (pd.api.types.is_datetime64_dtype(col) or pd.api.types.is_timedelta64_dtype(col)):
                 baseline_df[column] = baseline_df[column].astype(int)
-    
+
         feature_importances = compute_feature_importance(
             task_type, args.target_column, baseline_df, categorical_features)
         feature_columns = baseline_df.drop([args.target_column], axis=1)
