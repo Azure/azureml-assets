@@ -1532,6 +1532,10 @@ def apply_annotation(
     violations,
 ):
     """Apply annotation to all samples in the production_dataset."""
+    if "chat_history" in [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]:
+        raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
+                                  "column. ")
+
     production_df = io_utils.read_mltable_in_spark(production_dataset)
     if production_df.count() == 0:
         raise ValueError("No data detected.")
