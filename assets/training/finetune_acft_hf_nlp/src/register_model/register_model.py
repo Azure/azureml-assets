@@ -190,10 +190,12 @@ def get_properties(finetune_args_path: str) -> Dict[str, str]:
         properties[property_key] = finetune_args_dict.get(finetune_args_key, None)
         if "baseModelId" == property_key:
             properties[property_key] = "/".join(properties[property_key].split('/')[:-2])
+            properties["baseweightsId"] = properties[property_key].split("/")[-1]
 
     # fixed properties
     additional_properties = {
         "baseModelWeightsVersion": 1.0,
+        "hasDeltaWeights": "true",
     }
     properties.update(additional_properties)
     logger.info(f"Adding the following properties to the registered model: {properties}")
