@@ -545,15 +545,6 @@ class AzureBlobstoreAssetPath(AssetPath):
         # non-SAS URI for quick use later in the function
         self._uri = f"{self._account_uri}/{self._container_name}/{self._container_path}"
 
-        #
-        # If this fails, then our second approach is to to use the azure python SDK
-        # to view the properties of the container. If the container allows for anonymous
-        # access then we can return the URI "as-is".
-        #
-        # The final approach is to generate a SAS token for the container and append
-        # it to the URI. If we fail to geneate a SAS token then simply return the URI
-        # "as-is" and hope for the best
-
         # The first test is to see if we can simply list the contents of the container
         # using a very simple and quick HTTP request.If this succeeds, then the container
         # allows anonmymous access and we can return the URI "as-is".
