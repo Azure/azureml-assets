@@ -1679,7 +1679,6 @@ def apply_annotation(
             job_manager = _JobManager(
                 prompt_builder=prompt_builder,
             )
-            print(iterator)
 
             for batch in iterator:
                 # add environment variables on executors
