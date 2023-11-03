@@ -527,7 +527,7 @@ class AzureBlobstoreAssetPath(AssetPath):
 
         # Its possible that the account URL may need additional tweaking to add a SAS
         # token if the account does not allow for anonymous access. However, for
-        # performance reasons take a lazy approach to determining his and wait
+        # performance reasons take a lazy approach to determining this and wait
         # until a client of this class actually attempts to reference the URI
         super().__init__(
             PathType.AZUREBLOB,
