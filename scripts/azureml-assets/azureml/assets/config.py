@@ -568,10 +568,11 @@ class AzureBlobstoreAssetPath(AssetPath):
         # return the URI "as-is".
         #
         # This approach is slower than the first approach, which is why we
-        # tried the simply HTTP request first.
+        # tried the simple HTTP request approach first.
         #
         # It also requires Azure Credentials to be configured which may or may
-        # not be present depending on the execution environment.
+        # not be present depending on the execution environment. If these credentials
+        # do not exist then fail gracefully, return the URI "as-is", and hope for the best.
         try:
             blob_service_client = BlobServiceClient(
                 account_url=self._account_uri,
