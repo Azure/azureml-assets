@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: bert-base-uncased
 path: ./
 properties:
-  SHA: 0a6aa9128b6194f4f3c4db429b6cb4891cdb421b
+  SHA: 1dbc166cf8765166998eff31ade2eb64c8a40076
   datasets: bookcorpus, wikipedia
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
