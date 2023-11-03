@@ -1000,9 +1000,11 @@ class _HTTPClientWithRetry:
 
         retry_strategy = Retry(
             total=n_retry,
+            status=n_retry,
             status_forcelist=[104, 408, 409, 424, 429, 500, 502, 503, 504],
             backoff_factor=backoff_factor,
             respect_retry_after_header=True,
+            allowed_methods=frozenset(['GET', 'POST', 'PUT']),
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
         self.client = requests.Session()
@@ -1169,7 +1171,7 @@ def _request_prompt_batch(
     azure_endpoint_domain_name: str,
     azure_openai_api_version: str,
     request_error_rate_threshold: float = 0.5,
-    api_call_retry_backoff_factor: int = 3,
+    api_call_retry_backoff_factor: int = 4,
     api_call_retry_max_count: int = 3,
     **kwargs,
 ) -> List[_Job]:
@@ -1418,7 +1420,7 @@ def run():
         help="Fail if the running error rate for the endpoint requests "
         "raises above this threshold.",
     )
-    parser.add_argument("--api_call_retry_backoff_factor", type=int, default=3)
+    parser.add_argument("--api_call_retry_backoff_factor", type=int, default=4)
     parser.add_argument("--api_call_retry_max_count", type=int, default=10)
     parser.add_argument("--histogram", type=str, required=True)
     parser.add_argument("--samples_index", type=str, required=True)
