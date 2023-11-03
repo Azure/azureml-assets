@@ -16,12 +16,11 @@ from jinja2 import Environment
 from datasets import load_dataset
 from typing import Any, Dict, List, Union
 
-# flake8: noqa
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
-\\S|$))"""  
-CODE_GENERATION_DEBUG = False 
-failed_runs = []
+\\S|$))"""
+CODE_GENERATION_DEBUG=False
+
 
 def _parse_args():
     """Parse the arguments."""
@@ -29,28 +28,21 @@ def _parse_args():
     parser.add_argument(
         "--prediction_dataset",
         type=str,
-        # default = r"C:\Users\sagoswami\projects\aml_benchmarking_sdk\benchmark\fix_humaneval_postprocessing\predictions_gpt_4_.jsonl",
-        default= r"C:\Users\sagoswami\projects\azureml-assets\assets\aml-benchmark\tests\data\humaneval\gpt4-0314\predictions.jsonl",
-        required=False,
+        required=True,
         help="Path to load the prediction dataset."
     )
     parser.add_argument(
         "--ground_truth_dataset",
         type=str,
-        default=r"C:\Users\sagoswami\projects\azureml-assets\assets\aml-benchmark\tests\data\humaneval\gpt4-0314\ground_truth.jsonl",
-        # default=r"C:\Users\sagoswami\projects\aml_benchmarking_sdk\benchmark\fix_humaneval_postprocessing\ground_truth_gpt_4_.jsonl",
         help="Path to load the actual dataset."
     )
     parser.add_argument(
         "--output_dataset",
         type=str,
-        # default=r"C:\Users\sagoswami\projects\aml_benchmarking_sdk\benchmark\fix_humaneval_postprocessing\output3.jsonl",
-        default=r"C:\Users\sagoswami\projects\azureml-assets\assets\aml-benchmark\tests\data\humaneval\gpt4-0314\output.jsonl",
         help="Path to the jsonl output file to write the processed data."
     )
     argss = parser.parse_args()
     return argss
-
 
 
 def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
@@ -207,7 +199,6 @@ def run_humaneval_postprocessor(
 def generate_output(pred, test_cases, index, pred_combined_prompt, pred_orig
 ) -> Dict[str, Any]:
     """To debug the python codes."""
-
     op_details = {
         "index": index,
         "pred_orig": pred_orig,
@@ -269,4 +260,3 @@ def apply_regex_expr(
 if __name__ == "__main__":
     argss = _parse_args()
     _run(argss.prediction_dataset, argss.output_dataset, argss.ground_truth_dataset)
-
