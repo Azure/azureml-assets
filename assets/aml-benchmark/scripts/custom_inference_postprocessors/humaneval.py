@@ -10,7 +10,6 @@ import argparse
 import logging as logger
 import pandas as pd
 import sys
-
 from io import StringIO
 from jinja2 import Environment
 from datasets import load_dataset
@@ -19,7 +18,7 @@ from typing import Any, Dict, List, Union
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
 \\S|$))"""
-CODE_GENERATION_DEBUG=False
+CODE_GENERATION_DEBUG = False
 
 
 def _parse_args():
@@ -134,7 +133,7 @@ def merge_id(
 
 def run_humaneval_postprocessor(
     data: List[Dict[str, Any]],
-    label_key: str, 
+    label_key: str,
     prediction_key: str,
     regex_exp: str = None,
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
@@ -183,12 +182,12 @@ def run_humaneval_postprocessor(
             pred = apply_regex_expr(pred_combined_prompt, regex_exp)
         else:
             pred = pred_combined_prompt
-        if CODE_GENERATION_DEBUG==True:
+        if CODE_GENERATION_DEBUG is True:
             detailed_op = generate_output(pred,
-                                        gt,
-                                        row["task_id"],
-                                        pred_combined_prompt,
-                                        row["original_prediction"])
+                                          gt,
+                                          row["task_id"],
+                                          pred_combined_prompt,
+                                          row["original_prediction"])
             gt_list.append(detailed_op)
         else:
             gt_list.append({"ground_truth": gt})
@@ -196,8 +195,12 @@ def run_humaneval_postprocessor(
     return gt_list, pred_list
 
 
-def generate_output(pred, test_cases, index, pred_combined_prompt, pred_orig
-) -> Dict[str, Any]:
+def generate_output(
+        pred: str,
+        test_cases: str,
+        index: str,
+        pred_combined_prompt: str,
+        pred_orig: str) -> Dict[str, Any]:
     """To debug the python codes."""
     op_details = {
         "index": index,
@@ -207,7 +210,7 @@ def generate_output(pred, test_cases, index, pred_combined_prompt, pred_orig
         "ground_truth": test_cases,
         "full_code": str(pred + test_cases),
         }
-    if CODE_GENERATION_DEBUG==True:
+    if CODE_GENERATION_DEBUG is True:
         output, error, error_type = run_code(pred+test_cases)
         op_details["error"] = error
         op_details["error_type"] = error_type
