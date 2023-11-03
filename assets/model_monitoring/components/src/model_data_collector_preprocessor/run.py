@@ -188,7 +188,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     spark = init_spark()
     infer_pdf = pd.concat([row_to_pdf(row) for row in data_rows], ignore_index=True)
     data_as_df = spark.createDataFrame(infer_pdf)
-    # data_as_df.show()  
+    # data_as_df.show()
     # data_as_df.printSchema()
 
     # The temporary workaround to remove the chat_history column if it exists.
