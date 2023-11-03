@@ -2,7 +2,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ---------------------------------------------------------
-
 """Custom inference postprocessor for HumanEval."""
 import re
 import json
@@ -11,17 +10,15 @@ import argparse
 import logging as logger
 import pandas as pd
 import sys
-
 from io import StringIO
 from jinja2 import Environment
 from datasets import load_dataset
 from typing import Any, Dict, List, Union
 
-# flake8: noqa
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
 \\S|$))"""
-CODE_GENERATION_DEBUG=False
+CODE_GENERATION_DEBUG = False
 
 
 def _parse_args():
@@ -105,10 +102,13 @@ def _run(
         pred_data = _read_jsonl_file(prediction_dataset)
         if ground_truth_dataset:
             task_id = _read_jsonl_file(ground_truth_dataset)
-            pred_with_task_id = merge_id(task_id, pred_data)
+            pred_with_task_id, label_key, prediction_key = merge_id(task_id, pred_data)
 
     # Post processing the prediction and ground truth columns
-    ground_truths, predictions = run_humaneval_postprocessor(pred_with_task_id, REGEX_EXPR)
+    ground_truths, predictions = run_humaneval_postprocessor(pred_with_task_id,
+                                                             label_key,
+                                                             prediction_key,
+                                                             REGEX_EXPR)
     _write_to_jsonl_file(predictions, output_path, ground_truths)
 
 
@@ -125,13 +125,17 @@ def merge_id(
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
+    label_key = next(iter(label_data[0]))
+    prediction_key = next(iter(pred_data[0]))
     expected_op = [{**x, **y} for x, y in zip(label_data, pred_data)]
-    return expected_op
+    return expected_op, label_key, prediction_key
 
 
 def run_humaneval_postprocessor(
     data: List[Dict[str, Any]],
-    regex_exp: str = None
+    label_key: str,
+    prediction_key: str,
+    regex_exp: str = None,
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
     Run the custom post processor function to extract the expected code.
@@ -153,11 +157,11 @@ def run_humaneval_postprocessor(
     pred_df_full = pd.merge(pred_df,
                             original_dataset,
                             how='left',
-                            left_on='completion',
+                            left_on=label_key,
                             right_on='task_id')
 
     # Rename the prediction column
-    pred_df_full.rename(columns={"prediction": "original_prediction"},
+    pred_df_full.rename(columns={prediction_key: "original_prediction"},
                         inplace=True)
 
     # Convert the dataframe to a dictionary of lists of each row
@@ -178,12 +182,12 @@ def run_humaneval_postprocessor(
             pred = apply_regex_expr(pred_combined_prompt, regex_exp)
         else:
             pred = pred_combined_prompt
-        if CODE_GENERATION_DEBUG==True:
+        if CODE_GENERATION_DEBUG is True:
             detailed_op = generate_output(pred,
-                                        gt,
-                                        row["task_id"],
-                                        pred_combined_prompt,
-                                        row["original_prediction"])
+                                          gt,
+                                          row["task_id"],
+                                          pred_combined_prompt,
+                                          row["original_prediction"])
             gt_list.append(detailed_op)
         else:
             gt_list.append({"ground_truth": gt})
@@ -191,8 +195,12 @@ def run_humaneval_postprocessor(
     return gt_list, pred_list
 
 
-def generate_output(pred, test_cases, index, pred_combined_prompt, pred_orig
-) -> Dict[str, Any]:
+def generate_output(
+        pred: str,
+        test_cases: str,
+        index: str,
+        pred_combined_prompt: str,
+        pred_orig: str) -> Dict[str, Any]:
     """To debug the python codes."""
     op_details = {
         "index": index,
@@ -202,7 +210,7 @@ def generate_output(pred, test_cases, index, pred_combined_prompt, pred_orig
         "ground_truth": test_cases,
         "full_code": str(pred + test_cases),
         }
-    if CODE_GENERATION_DEBUG==True:
+    if CODE_GENERATION_DEBUG is True:
         output, error, error_type = run_code(pred+test_cases)
         op_details["error"] = error
         op_details["error_type"] = error_type
