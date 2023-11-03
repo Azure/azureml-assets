@@ -531,14 +531,14 @@ class AzureBlobstoreAssetPath(AssetPath):
         # until a client of this class actually attempts to reference the URI
         super().__init__(
             PathType.AZUREBLOB,
-            "",
+            None,
         )
 
     @property
     def uri(self) -> str:
         """Asset URI."""
         # If we have already cached the URI, then simply return it
-        if len(self._uri) > 0:
+        if self._uri:
             return self._uri
 
         # Build the simple, non-SAS URI for quick use later in the function.
