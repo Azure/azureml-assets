@@ -50,4 +50,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: token-classification
-version: 1
+version: 12
