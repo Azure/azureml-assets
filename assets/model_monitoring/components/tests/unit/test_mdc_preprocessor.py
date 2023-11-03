@@ -295,6 +295,7 @@ class TestMDCPreprocessor:
     )
     def test_extract_data_and_correlation_id(self, mdc_preprocessor_test_setup,
                                              data, expected_pdf, expected_fields):
+        """Test _extract_data_and_correlation_id()."""
         spark = SparkSession.builder.appName("test_extract_data_and_correlation_id").getOrCreate()
         expected_pdf.drop(columns=["chat_history"], inplace=True)
         extract_correlation_ids = [True, False]
