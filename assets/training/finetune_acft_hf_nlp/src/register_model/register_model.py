@@ -319,6 +319,7 @@ def main():
     # register model
     register_model(args)
 
+
 # run script
 if __name__ == "__main__":
     main()
