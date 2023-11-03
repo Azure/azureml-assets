@@ -798,8 +798,10 @@ class _WorkspaceConnectionTokenManager(_APITokenManager):
                 if connection.type != "azure_open_ai":
                     raise Exception(f"Received unexpected endpoint type {connection.type}"
                                     "only Azure Open AI endpoints are supported at this time")
-
-                self.api_version = connection.metadata["ApiVersion"]
+                api_version = "2023-07-01-preview"
+                if hasattr(connection.metadata, "ApiVersion"):
+                    api_version = connection.metadata["ApiVersion"]
+                self.api_version = api_version
                 self.domain_name = connection.target
                 self.token = connection.credentials["key"]
             else:
