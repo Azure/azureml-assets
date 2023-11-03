@@ -15,7 +15,7 @@ import tempfile
 from fsspec import AbstractFileSystem
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import lit, col
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     init_spark,
@@ -24,7 +24,7 @@ from shared_utilities.io_utils import (
 )
 
 from shared_utilities.constants import (
-    # MDC_CHAT_HISTORY_COLUMN,
+    MDC_CHAT_HISTORY_COLUMN,
     MDC_CORRELATION_ID_COLUMN,
     MDC_DATA_COLUMN,
     MDC_DATAREF_COLUMN,
@@ -194,8 +194,8 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     # The temporary workaround to remove the chat_history column if it exists.
     # We are removing the column because the pyspark DF is unable to parse it.
     # This version of the MDC is applied only to GSQ.
-    # if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
-    #     data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
+    if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
+        data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
 
     def extract_data_and_correlation_id(entry, correlationid):
         result = pd.read_json(entry)
