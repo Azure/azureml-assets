@@ -200,13 +200,15 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     def extract_data_and_correlation_id(entry, correlationid):
         result = pd.read_json(entry)
         result[MDC_CORRELATION_ID_COLUMN] = ""
+        if MDC_CHAT_HISTORY_COLUMN in result.columns:
+            result.drop(columns=[MDC_CHAT_HISTORY_COLUMN], inplace=True)
         for index, row in result.iterrows():
             result.loc[index, MDC_CORRELATION_ID_COLUMN] = (
                 correlationid + "_" + str(index)
             )
         return result
 
-    def tranform_df_function_with_correlation_id(iterator):
+    def transform_df_function_with_correlation_id(iterator):
         for df in iterator:
             yield pd.concat(
                 extract_data_and_correlation_id(
@@ -218,17 +220,19 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
 
     def transform_df_function_without_correlation_id(iterator):
         for df in iterator:
-            yield pd.concat(
+            pdf = pd.concat(
                 pd.read_json(read_data(row)) for row in df.itertuples()
             )
+            if MDC_CHAT_HISTORY_COLUMN in pdf.columns:
+                pdf.drop(columns=[MDC_CHAT_HISTORY_COLUMN], inplace=True)
+            yield pdf
 
-    data_columns = _get_data_columns(df)
     if extract_correlation_id:
         # Add empty column to get the correlationId in the schema
         data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
         data_columns.append(MDC_CORRELATION_ID_COLUMN)
         transformed_df = df.select(data_columns).mapInPandas(
-            tranform_df_function_with_correlation_id, schema=data_as_df.schema
+            transform_df_function_with_correlation_id, schema=data_as_df.schema
         )
     else:
         # TODO: if neither data and dataref move to tracking stream (or throw ModelMonitoringException?)
@@ -266,6 +270,8 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
     datastore = _get_datastore_from_input_path(input_data)
     # print("Datastore:", datastore)
     transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id, datastore)
+    # transformed_df.show()
+    # transformed_df.printSchema()
 
     return transformed_df
 
