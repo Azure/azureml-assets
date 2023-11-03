@@ -7,6 +7,7 @@ import json
 import time
 import requests
 from random import randint
+from typing import List, Dict
 
 from azureml.acft.common_components import get_logger_app
 
@@ -15,8 +16,12 @@ from azureml.core.run import Run, _OfflineRun
 from azureml._model_management._util import get_requests_session
 from azureml._restclient.clientbase import ClientBase
 
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
+from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
+from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
-logger = get_logger_app(__name__)
+
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.register_model.register_presets_model")
 
 
 def get_model_path_in_HOBO_storage(run_details) -> str:
@@ -248,11 +253,58 @@ def register_model(
     return resp_json
 
 
+def get_rel_paths_pipe_manifest_files(folder_to_search: str) -> List[str]:
+    """Fetch pipe manifest file paths relative to :param folder_to_search.
+
+    :param folder_to_search - folder to search for the manifest files
+    :type str
+    :return list of files matching the pattern
+    :type List[str]
+    """
+    from azureml.acft.contrib.hf.nlp.utils.io_utils import find_files_with_inc_excl_pattern
+
+    full_paths = find_files_with_inc_excl_pattern(
+        root_folder=folder_to_search,
+        include_pat=".safetensors$|.json$|README.md",
+    )
+    return [pth.replace(folder_to_search, '.') for pth in full_paths]
+
+
+def get_rel_paths_manifest_engine_controller_files(folder_to_search: str) -> List[str]:
+    """Fetch manifest engine controller file paths relative to :param folder_to_search.
+
+    :param folder_to_search - folder to search for the manifest files
+    :type str
+    :return list of files matching the pattern
+    :type List[str]
+    """
+    from azureml.acft.contrib.hf.nlp.utils.io_utils import find_files_with_inc_excl_pattern
+
+    full_paths = find_files_with_inc_excl_pattern(
+        root_folder=folder_to_search,
+        include_pat=".safetensors$|.json$|README.md",
+    )
+    return [pth.replace(folder_to_search, '.') for pth in full_paths]
+
+
+def construct_storge_items(files_list: List[str]) -> List[Dict]:
+    """Construct the storage item."""
+    from pathlib import Path
+
+    return_list = []
+    for file in files_list:
+        return_list.append(
+            {
+                "remoteLocation": str(Path("{0}", f"{file}")),
+                "localRelativePath": file,
+                "unpackType": 0
+            }
+        )
+    return return_list
+
+
 def registermodel_entrypoint(
-    args,
     model_name,
-    finetune_run_id,
-    finetuned_model_input,
     registered_model_output,
     registered_model_version=None,
     properties=None,
@@ -287,54 +339,33 @@ def registermodel_entrypoint(
         logger.error(f"args: {e.args}, traceback: {e.__traceback__}")
         raise e
 
-    # get the dependent components configs
-    # finetuned_model_config = get_params_from_pipeline_config(finetuned_model_input)
+    manifest_dict_pipe = {}
+    pipe_manifest_files = get_rel_paths_pipe_manifest_files(registered_model_output)
+    if len(pipe_manifest_files) == 0:
+        raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError, pii_safe_message="Pipe manifest is empty."
+                )
+            )
+    manifest_dict_pipe["storageItems"] = construct_storge_items(pipe_manifest_files)
 
-    # keyname_basis_postprocess_type = get_keyname_basis_postprocess_type(finetuned_model_config)
+    manifest_dict_enginecontroller = {}
+    engine_controller_manifest_files = get_rel_paths_manifest_engine_controller_files(registered_model_output)
+    if len(engine_controller_manifest_files) == 0:
+        raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError, pii_safe_message="Engine controller manifest is empty."
+                )
+            )
+    manifest_dict_enginecontroller["storageItems"] = construct_storge_items(engine_controller_manifest_files)
 
-    # register_model_type = get_model_type(finetuned_model_input, finetuned_model_config, is_v2)
+    output_manifest_pipe = registered_model_output + "/manifest.pipe.json"
+    with open(output_manifest_pipe, 'w') as f:
+        json.dump(manifest_dict_pipe, f)
 
-    # manifest_dict_enginecontroller = {}
-    # storage_item_enginecontroller = []
-    # manifest_dict_pipe = {}
-    # storage_item_pipe = []
-    # model_details = {}
-    # rootdir = finetuned_model_input
-    # dataset_root_path = os.path.join("{0}", dataset_path)
-    # model_directory_path = "model"
-
-    # for subdir, dirs, files in os.walk(rootdir):
-    #     for file in files:
-    #         if check_sub_directory_has_required_model_folder(subdir):
-    #             model_type = subdir.split("/")[-1] if subdir.split("/")[-1] not in MODEL_FOLDER_NAME else ""
-    #             remote_location = os.path.join(dataset_root_path, model_directory_path, model_type, file)
-    #             local_path = os.path.join(model_type, file)
-    #             blob_dict = {"remoteLocation": remote_location, "localRelativePath": local_path, "unpackType": 0}
-    #             storage_item_pipe.append(blob_dict)
-    #             if file.endswith(".json"):
-    #                 storage_item_enginecontroller.append(blob_dict)
-
-    # if register_model_type == ModelType.BASE_PLUS_LORA and run.parent.id.startswith("sub-") and \
-    #             len(storage_item_pipe) == 0 and len(storage_item_enginecontroller) == 0:
-    #     logging.warning("We have identified a registration attempt for an empty base+lora model within a subgraph. \
-    #                      Exiting component with no-op.")
-    #     return 0
-
-    # if len(storage_item_pipe) == 0:
-    #     raise UserErrorException("Pipe manifest is empty.")
-    # if len(storage_item_enginecontroller) == 0:
-    #     raise UserErrorException("Engine controller manifest is empty.")
-
-    # manifest_dict_pipe["storageItems"] = storage_item_pipe
-    # manifest_dict_enginecontroller["storageItems"] = storage_item_enginecontroller
-
-    # output_manifest_pipe = registered_model_output + "/manifest.pipe.json"
-    # with open(output_manifest_pipe, 'w') as f:
-    #     json.dump(manifest_dict_pipe, f)
-
-    # output_manifest_enginecontroller = registered_model_output + "/manifest.enginecontroller.json"
-    # with open(output_manifest_enginecontroller, 'w') as f:
-    #     json.dump(manifest_dict_enginecontroller, f)
+    output_manifest_enginecontroller = registered_model_output + "/manifest.enginecontroller.json"
+    with open(output_manifest_enginecontroller, 'w') as f:
+        json.dump(manifest_dict_enginecontroller, f)
 
     # # register model
     # model_json_path = os.path.join(finetuned_model_input, "model.json")

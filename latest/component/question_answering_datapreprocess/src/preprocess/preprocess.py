@@ -215,7 +215,7 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
         if model_type == HfModelTypes.T5 and \
                 (src_lang not in T5_CODE2LANG_MAP or tgt_lang not in T5_CODE2LANG_MAP):
             raise ACFTValidationException._with_error(
-                AzureMLError.create(ACFTUserError, error=(
+                AzureMLError.create(ACFTUserError, pii_safe_message=(
                     "Either source or target language is not supported for T5. Supported languages are "
                     f"{list(T5_CODE2LANG_MAP.keys())}"
                 ))
