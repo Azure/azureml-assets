@@ -90,6 +90,10 @@ class TestDatasetPreprocessorComponent:
                 """ {"premise":{{premise}}, "hypothesis":{{hypothesis}},"label":{{label|string}}} """,
                 None, '{"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}'
             ),
+            (
+                "hellaswag_hf", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, None,
+                os.path.join(Constants.CUSTOM_PREPROCESSOR_SCRIPT_PATH, "hellaswag_hf.py"), None
+            ),
         ],
     )
     def test_dataset_preprocessor_as_component(
@@ -227,6 +231,10 @@ class TestDatasetPreprocessorScript:
             (
                 "quac_org", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, None,
                 os.path.join(Constants.CUSTOM_PREPROCESSOR_SCRIPT_PATH, "quac_textgen_babel.py"), None
+            ),
+            (
+                "hellaswag_hf", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, None,
+                os.path.join(Constants.CUSTOM_PREPROCESSOR_SCRIPT_PATH, "hellaswag_hf.py"), None
             )
         ],
     )
@@ -268,7 +276,7 @@ class TestDatasetPreprocessorScript:
         if encoder_config is not None:
             argss.extend(["--encoder_config", str(encoder_config)])
         argss = " ".join(argss)
-        cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+        cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
         run_command(f"{cmd}")
         _verify_and_get_output_records(
             dataset_name, dataset,
@@ -296,7 +304,7 @@ class TestDatasetPreprocessorScript:
     ):
         """Test if tojson filter is added to each value in the template."""
         sys.path.append(get_src_dir())
-        from dataset_preprocessor import dataset_preprocessor as dsp
+        from aml_benchmark.dataset_preprocessor import dataset_preprocessor as dsp
         with open(
             os.path.join(os.path.dirname(
                 Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE), "process_one_example.jsonl"), "w"
@@ -352,7 +360,7 @@ class TestDatasetPreprocessorScript:
         src_dir = get_src_dir()
         try:
             argss = " ".join(["--template_input", f"'{template_input}'"])
-            cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             out_message = e.output.strip()
@@ -362,7 +370,7 @@ class TestDatasetPreprocessorScript:
         os.system(f"mkdir {dummy_dataset_path}")
         try:
             argss = " ".join(["--dataset", dummy_dataset_path])
-            cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -370,7 +378,7 @@ class TestDatasetPreprocessorScript:
 
         try:
             argss = " ".join(["--dataset", dataset])
-            cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -380,7 +388,7 @@ class TestDatasetPreprocessorScript:
         os.system(f"touch {dummy_script_path}")
         try:
             argss = " ".join(["--dataset", dataset, "--script_path", dummy_script_path])
-            cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -433,7 +441,7 @@ class TestDatasetPreprocessorScript:
         if encoder_config is not None:
             argss.extend(["--encoder_config", str(encoder_config)])
         argss = " ".join(argss)
-        cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+        cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
         run_command(f"{cmd}")
         with open(dataset, "r") as f:
             input_records = [json.loads(line) for line in f]

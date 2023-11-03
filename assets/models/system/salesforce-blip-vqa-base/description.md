@@ -44,6 +44,7 @@ Note:
 ]
 ```
 
-#### Model inference: Text for the sample image
+#### Model inference - visual question answering
+For sample image below and text prompt "What is in the picture?", the output text is "sand".
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_blip_vqa_base.png" alt="Salesforce-BLIP-vqa-base">
