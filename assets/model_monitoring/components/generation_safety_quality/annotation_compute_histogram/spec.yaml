@@ -4,7 +4,7 @@ type: spark
 name: gsq_annotation_compute_histogram
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-version: 0.4.3
+version: 0.4.8
 is_deterministic: false
 inputs:
   production_dataset: 
@@ -136,6 +136,11 @@ args: >-
   $[[--context_column_name ${{inputs.context_column_name}}]]
   $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
   $[[--sample_rate ${{inputs.sample_rate}}]]
+  $[[--groundedness_rating_threshold ${{inputs.groundedness_rating_threshold}}]]
+  $[[--relevance_rating_threshold ${{inputs.relevance_rating_threshold}}]]
+  $[[--similarity_rating_threshold ${{inputs.similarity_rating_threshold}}]]
+  $[[--fluency_rating_threshold ${{inputs.fluency_rating_threshold}}]]
+  $[[--coherence_rating_threshold ${{inputs.coherence_rating_threshold}}]]
   --histogram ${{outputs.histogram}}
   --samples_index ${{outputs.samples_index}}
   --groundedness_violations ${{outputs.groundedness_violations}}

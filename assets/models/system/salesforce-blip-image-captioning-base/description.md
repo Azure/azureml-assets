@@ -43,6 +43,7 @@ Note:
 ]
 ```
 
-#### Model inference: Text for the sample image
+#### Model inference - image to text
+For sample image below, the output text is "a stream in the middle of a forest".
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_blip_image_captioning_base.png" alt="Salesforce-BLIP-image-captioning-base">

@@ -27,7 +27,7 @@ inputs:
     mode: rw_mount
 
   mlflow_model_path:
-    type:  mlflow_model
+    type: mlflow_model
     optional: true
     description: Input folder path containing mlflow model for further finetuning. Proper model/huggingface id must be passed.
     mode: rw_mount
