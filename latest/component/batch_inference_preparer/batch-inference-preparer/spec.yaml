@@ -61,7 +61,7 @@ outputs:
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
-  python -m batch_inference_preparer.main
+  python -m aml_benchmark.batch_inference_preparer.main
   --batch_input_pattern '${{inputs.batch_input_pattern}}'
   --formatted_data ${{outputs.formatted_data}}
   --output_metadata ${{outputs.ground_truth_metadata}}

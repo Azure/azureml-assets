@@ -70,7 +70,7 @@ outputs:
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
-  python -m compute_performance_metrics.main
+  python -m aml_benchmark.perf_metrics.main
   --performance_data ${{inputs.performance_data}}
   --batch_size_column_name ${{inputs.batch_size_column_name}}
   --start_time_column_name ${{inputs.start_time_column_name}}

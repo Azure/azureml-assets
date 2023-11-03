@@ -71,7 +71,7 @@ outputs:
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
-  python -m batch_resource_manager.main
+  python -m aml_benchmark.batch_resource_manager.main
   --output_metadata ${{outputs.output_metadata}}
   $[[--endpoint_name ${{inputs.endpoint_name}}]]
   $[[--deployment_name ${{inputs.deployment_name}}]]

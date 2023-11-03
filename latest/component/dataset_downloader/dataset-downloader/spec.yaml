@@ -41,6 +41,6 @@ outputs:
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
-  python -m dataset_downloader.main
+  python -m aml_benchmark.dataset_downloader.main
   $[[--dataset_name ${{inputs.dataset_name}}]]  $[[--configuration ${{inputs.configuration}}]]  --split
   ${{inputs.split}}  $[[--script ${{inputs.script_path}}]]  --output_dataset ${{outputs.output_dataset}}

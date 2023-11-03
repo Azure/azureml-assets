@@ -136,7 +136,7 @@ code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 
 command: >-
-  python -m inference_postprocessor.main
+  python -m aml_benchmark.inference_postprocessor.main
   --prediction_dataset ${{inputs.prediction_dataset}}
   --prediction_column_name ${{inputs.prediction_column_name}}
   $[[--ground_truth_dataset ${{inputs.ground_truth_dataset}}]]

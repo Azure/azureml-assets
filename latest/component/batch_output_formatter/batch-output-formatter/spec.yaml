@@ -51,7 +51,7 @@ resources:
   instance_count: 1
 
 command: >-
-  python -m batch_output_formatter.main
+  python -m aml_benchmark.batch_output_formatter.main
   --batch_inference_output ${{inputs.batch_inference_output}}
   --prediction_data ${{outputs.predictions}}
   --perf_data ${{outputs.performance_metadata}}
