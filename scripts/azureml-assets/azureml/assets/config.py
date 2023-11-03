@@ -537,19 +537,19 @@ class AzureBlobstoreAssetPath(AssetPath):
     @property
     def uri(self) -> str:
         """Asset URI."""
-
         # If we have already cached the URI, then simply return it
         if len(self._uri) > 0:
             return self._uri
 
+        # Build the simple, non-SAS URI for quick use later in the function.
         # Its possible that the account URI may need additional tweaking to add a SAS
-        # token if the account does not allow for anonymous access. Build the simple,
-        # non-SAS URI for quick use later in the function
+        # token if the account does not allow for anonymous access.
         self._uri = f"{self._account_uri}/{self._container_name}/{self._container_path}"
 
         # The first test is to see if we can simply list the contents of the container
-        # using a very simple and quick HTTP request.If this succeeds, then the container
-        # allows anonmymous access and we can return the URI "as-is".
+        # using a very simple and quick HTTP request. In order for this to work,
+        # container must support anonymous read access. If this succeeds, we can
+        # return the URI "as-is".
         try:
             list_container_url = f"{self._account_uri}/{self._container_name}?restype=container&comp=list&maxresults=1"
             response = requests.get(
@@ -566,6 +566,12 @@ class AzureBlobstoreAssetPath(AssetPath):
         # Our second approach is to to use the azure python SDK to view the properties
         # of the container. If the container allows for anonymous access then we can
         # return the URI "as-is".
+        #
+        # This approach is slower than the first approach, which is why we
+        # tried the simply HTTP request first.
+        #
+        # It also requires Azure Credentials to be configured which may or may
+        # not be present depending on the execution environment.
         try:
             blob_service_client = BlobServiceClient(
                 account_url=self._account_uri,
@@ -575,6 +581,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             )
             container_client = blob_service_client.get_container_client(container=self._container_name)
 
+            # If the container allows for anonymous access then we can return the URI "as-is"
             if container_client.get_container_properties().public_access is not None:
                 return self._uri
 
