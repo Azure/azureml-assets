@@ -538,7 +538,7 @@ class AzureBlobstoreAssetPath(AssetPath):
     def uri(self) -> str:
         """Asset URI."""
         # If we have already cached the URI, then simply return it
-        if self._uri:
+        if self._uri is not None:
             return self._uri
 
         # Build the simple, non-SAS URI for quick use later in the function.
