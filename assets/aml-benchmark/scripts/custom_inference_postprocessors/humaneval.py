@@ -2,7 +2,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ---------------------------------------------------------
-
 """Custom inference postprocessor for HumanEval."""
 import re
 import json
@@ -20,9 +19,9 @@ from typing import Any, Dict, List, Union
 # flake8: noqa
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
-\\S|$))"""
-CODE_GENERATION_DEBUG=False
-
+\\S|$))"""  
+CODE_GENERATION_DEBUG = False 
+failed_runs = []
 
 def _parse_args():
     """Parse the arguments."""
@@ -30,21 +29,28 @@ def _parse_args():
     parser.add_argument(
         "--prediction_dataset",
         type=str,
-        required=True,
+        # default = r"C:\Users\sagoswami\projects\aml_benchmarking_sdk\benchmark\fix_humaneval_postprocessing\predictions_gpt_4_.jsonl",
+        default= r"C:\Users\sagoswami\projects\azureml-assets\assets\aml-benchmark\tests\data\humaneval\gpt4-0314\predictions.jsonl",
+        required=False,
         help="Path to load the prediction dataset."
     )
     parser.add_argument(
         "--ground_truth_dataset",
         type=str,
+        default=r"C:\Users\sagoswami\projects\azureml-assets\assets\aml-benchmark\tests\data\humaneval\gpt4-0314\ground_truth.jsonl",
+        # default=r"C:\Users\sagoswami\projects\aml_benchmarking_sdk\benchmark\fix_humaneval_postprocessing\ground_truth_gpt_4_.jsonl",
         help="Path to load the actual dataset."
     )
     parser.add_argument(
         "--output_dataset",
         type=str,
+        # default=r"C:\Users\sagoswami\projects\aml_benchmarking_sdk\benchmark\fix_humaneval_postprocessing\output3.jsonl",
+        default=r"C:\Users\sagoswami\projects\azureml-assets\assets\aml-benchmark\tests\data\humaneval\gpt4-0314\output.jsonl",
         help="Path to the jsonl output file to write the processed data."
     )
     argss = parser.parse_args()
     return argss
+
 
 
 def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
@@ -105,10 +111,13 @@ def _run(
         pred_data = _read_jsonl_file(prediction_dataset)
         if ground_truth_dataset:
             task_id = _read_jsonl_file(ground_truth_dataset)
-            pred_with_task_id = merge_id(task_id, pred_data)
+            pred_with_task_id, label_key, prediction_key = merge_id(task_id, pred_data)
 
     # Post processing the prediction and ground truth columns
-    ground_truths, predictions = run_humaneval_postprocessor(pred_with_task_id, REGEX_EXPR)
+    ground_truths, predictions = run_humaneval_postprocessor(pred_with_task_id,
+                                                             label_key,
+                                                             prediction_key,
+                                                             REGEX_EXPR)
     _write_to_jsonl_file(predictions, output_path, ground_truths)
 
 
@@ -125,13 +134,17 @@ def merge_id(
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
+    label_key = next(iter(label_data[0]))
+    prediction_key = next(iter(pred_data[0]))
     expected_op = [{**x, **y} for x, y in zip(label_data, pred_data)]
-    return expected_op
+    return expected_op, label_key, prediction_key
 
 
 def run_humaneval_postprocessor(
     data: List[Dict[str, Any]],
-    regex_exp: str = None
+    label_key: str, 
+    prediction_key: str,
+    regex_exp: str = None,
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
     Run the custom post processor function to extract the expected code.
@@ -153,11 +166,11 @@ def run_humaneval_postprocessor(
     pred_df_full = pd.merge(pred_df,
                             original_dataset,
                             how='left',
-                            left_on='completion',
+                            left_on=label_key,
                             right_on='task_id')
 
     # Rename the prediction column
-    pred_df_full.rename(columns={"prediction": "original_prediction"},
+    pred_df_full.rename(columns={prediction_key: "original_prediction"},
                         inplace=True)
 
     # Convert the dataframe to a dictionary of lists of each row
@@ -194,6 +207,7 @@ def run_humaneval_postprocessor(
 def generate_output(pred, test_cases, index, pred_combined_prompt, pred_orig
 ) -> Dict[str, Any]:
     """To debug the python codes."""
+
     op_details = {
         "index": index,
         "pred_orig": pred_orig,
@@ -255,3 +269,4 @@ def apply_regex_expr(
 if __name__ == "__main__":
     argss = _parse_args()
     _run(argss.prediction_dataset, argss.output_dataset, argss.ground_truth_dataset)
+
