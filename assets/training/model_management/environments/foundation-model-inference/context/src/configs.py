@@ -53,6 +53,8 @@ class EngineConfig(SerializableDataClass):
     trust_remote_code: bool = True
     mii_config: Optional[MiiEngineConfig] = None
     vllm_config: Optional[Dict] = None
+    mlflow_model: Optional[str] = None
+    model_kwargs: Optional[Dict] = None
 
     @classmethod
     def from_dict(cls: Type[TypeVar("T")], d: Dict) -> TypeVar("T"):
