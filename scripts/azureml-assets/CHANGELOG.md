@@ -3,6 +3,22 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.16 (2023-11-03)
+### 🐛 Bugs Fixed
+- [#1643](https://github.com/Azure/azureml-assets/pull/1643) Optimizing SAS token generation when needed to access storage accounts
+
+## 1.16.15 (2023-10-30)
+### 🐛 Bugs Fixed
+- [#1523](https://github.com/Azure/azureml-assets/pull/1523) Support for storage accounts that are not configured for anonymous access
+
+## 1.16.14
+### 🐛 Bugs Fixed
+- [#1574](https://github.com/Azure/azureml-assets/pull/1574) Fix fetching validated model assets
+
+## 1.16.13
+### 🚀 New Features
+- [#1569](https://github.com/Azure/azureml-assets/pull/1569) Add model validations
+
 ## 1.16.12 (2023-10-12)
 ### 🐛 Bugs Fixed
 - [#1458](https://github.com/Azure/azureml-assets/pull/1458) Update schema for prompt and benchmark assets

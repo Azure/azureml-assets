@@ -11,7 +11,7 @@ from .test_utils import get_src_dir
 
 sys.path.append(get_src_dir())
 try:
-    from prompt_crafter.package.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
+    from aml_benchmark.prompt_crafter.package.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
 except ImportError:
     raise ImportError("Please install the package 'prompt_crafter' to run this test.")
 

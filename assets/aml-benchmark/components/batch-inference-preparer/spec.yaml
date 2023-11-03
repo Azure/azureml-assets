@@ -4,7 +4,7 @@ type: command
 name: batch_inference_preparer
 display_name: Batch Inference Preparer
 description: Prepare the jsonl file and endpoint for batch inference component.
-version: 0.0.1
+version: 0.0.2
 
 inputs:
   input_dataset: 
@@ -58,7 +58,7 @@ outputs:
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
-  python -m batch_inference_preparer.main
+  python -m aml_benchmark.batch_inference_preparer.main
   --batch_input_pattern '${{inputs.batch_input_pattern}}'
   --formatted_data ${{outputs.formatted_data}}
   --output_metadata ${{outputs.ground_truth_metadata}}
