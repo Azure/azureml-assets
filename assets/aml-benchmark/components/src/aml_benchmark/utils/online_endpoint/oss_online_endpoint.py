@@ -47,7 +47,8 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             sku: Optional[str] = None,
             api_version: str = '2023-04-01-Preview',
             connections_name: str = None,
-            additional_deployment_env_vars = {}
+            additional_deployment_env_vars = {},
+            deployment_env: str = None
     ):
         """Init method."""
         super().__init__(
@@ -63,6 +64,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
         )
         self._api_version = api_version
         self._additional_deployment_env_vars = additional_deployment_env_vars
+        self._deployment_env = deployment_env
 
     def get_endpoint_name_from_url(self) -> str:
         """Get the endpoint."""
@@ -116,6 +118,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             instance_type=self._sku,
             instance_count=1,
             code_configuration=None,
+            environment=self._deployment_env,
             environment_variables=deployment_env_vars,
             request_settings=OnlineRequestSettings(
                 request_timeout_ms=OSSOnlineEndpoint.REQUEST_TIMEOUT_MS,

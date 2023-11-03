@@ -154,7 +154,8 @@ def _online_endpoint_generator(
         connections_name: str,
         do_quota_validation: bool,
         additional_deployment_env_vars: str,
-        use_max_quota: bool
+        use_max_quota: bool,
+        deployment_env: str
 ) -> Generator[OnlineEndpoint, None, None]:
     if deployment_sku is None:
         deployment_sku = 1
@@ -174,7 +175,8 @@ def _online_endpoint_generator(
                 region,
                 connections_name=connections_name,
                 additional_deployment_env_vars=json.loads(
-                    additional_deployment_env_vars) if additional_deployment_env_vars else {}
+                    additional_deployment_env_vars) if additional_deployment_env_vars else {},
+                deployment_env=deployment_env
             )
             if do_quota_validation and online_model.is_aoai_model():
                 current_quota = online_endpoint.model_quota()
@@ -249,7 +251,8 @@ def main(
                 connections_name,
                 do_quota_validation,
                 additional_deployment_env_vars,
-                use_max_quota
+                use_max_quota,
+                deployment_env
         ):
             managed_endpoint = False
             try:

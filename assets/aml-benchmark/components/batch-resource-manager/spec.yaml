@@ -37,6 +37,10 @@ inputs:
     type: string
     optional: True
     description: The sku for the deployment. Only needed for managed deployment.
+  deployment_env:
+    type: string
+    optional: True
+    description: The env for the deployment.
   endpoint_workspace:
     type: string
     optional: True
@@ -111,4 +115,5 @@ command: >-
   $[[--do_quota_validation ${{inputs.do_quota_validation}}]]
   $[[--redeploy_model ${{inputs.redeploy_model}}]]
   $[[--deployment_metadata_dir ${{inputs.deployment_metadata_dir}}]]
+  $[[--deployment_env ${{inputs.deployment_env}}]]
   $[[--additional_deployment_env_vars  '${{inputs.additional_deployment_env_vars}}']]

@@ -25,7 +25,8 @@ class OnlineEndpointFactory:
             sku: Optional[str] = None,
             location: Optional[str] = None,
             connections_name: Optional[str] = None,
-            additional_deployment_env_vars: dict = {}
+            additional_deployment_env_vars: dict = {},
+            deployment_env: str = None
     ) -> OnlineEndpoint:
         """Get the online endpoint."""
         online_endpoint_url = endpoint if OnlineEndpointFactory._is_endpoint_url(endpoint) else None
@@ -54,7 +55,8 @@ class OnlineEndpointFactory:
                 deployment_name,
                 sku,
                 connections_name=connections_name,
-                additional_deployment_env_vars=additional_deployment_env_vars
+                additional_deployment_env_vars=additional_deployment_env_vars,
+                deployment_env=deployment_env
             )
 
     @staticmethod
