@@ -12,6 +12,10 @@ import re
 
 from pathlib import Path
 from azureml.core.model import Model
+from peft import __version__ as peft_version
+from peft.utils import CONFIG_NAME as PEFT_ADAPTER_CONFIG_FILE_NAME
+
+from register_presets_model import registermodel_entrypoint
 
 from azureml.core import Workspace
 from azureml.core.run import Run, _OfflineRun
@@ -19,6 +23,11 @@ from azureml.core.run import Run, _OfflineRun
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
+from azureml.acft.accelerator.utils.code_utils import update_json_file_and_overwrite
+
+from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
+    swallow_all_exceptions,
+)
 
 
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.register_model.register_model")
@@ -31,6 +40,7 @@ VALID_MODEL_NAME_PATTERN = r"^[a-zA-Z0-9-]+$"
 NEGATIVE_MODEL_NAME_PATTERN = r"[^a-zA-Z0-9-]"
 REGISTRATION_DETAILS_JSON_FILE = "model_registration_details.json"
 DEFAULT_MODEL_NAME = "default_model_name"
+PEFT_VERSION_KEY = "peft_version"
 
 
 def str2bool(arg):
@@ -63,16 +73,9 @@ def parse_args():
         help="Finetuning task name",
     )
     parser.add_argument(
-        "--copy_model_to_output",
-        type=str2bool,
-        default="false",
-        choices=[True, False],
-        help="If true, copies the model to output_dir"
-    )
-    parser.add_argument(
         "--model_type",
         type=str,
-        default=Model.Framework.CUSTOM,
+        default="PRESETS",
         choices=SUPPORTED_MODEL_ASSET_TYPES,
         help="Type of model you want to register",
     )
@@ -140,6 +143,19 @@ def get_model_name(finetune_args_path: str) -> Optional[str]:
     return new_model_name
 
 
+def update_peft_adapter_config(model_path: str):
+    """Update the peft adapter_config.json with `peft_version`."""
+    adapter_config_file = Path(model_path, PEFT_ADAPTER_CONFIG_FILE_NAME)
+    update_config = {
+        PEFT_VERSION_KEY: peft_version,
+    }
+    if adapter_config_file.is_file():
+        update_json_file_and_overwrite(str(adapter_config_file), update_config)
+        logger.info(f"Updated {PEFT_ADAPTER_CONFIG_FILE_NAME}.")
+    else:
+        logger.info(f"Could not find {PEFT_ADAPTER_CONFIG_FILE_NAME}.")
+
+
 def convert_lora_weights_to_safetensors(model_path: str):
     """Read the bin files and convert them to safe tensors."""
     import os
@@ -180,10 +196,12 @@ def get_properties(finetune_args_path: str) -> Dict[str, str]:
         properties[property_key] = finetune_args_dict.get(finetune_args_key, None)
         if "baseModelId" == property_key:
             properties[property_key] = "/".join(properties[property_key].split('/')[:-2])
+            properties["baseWeightsId"] = properties[property_key].split("/")[-1]
 
     # fixed properties
     additional_properties = {
         "baseModelWeightsVersion": 1.0,
+        "hasDeltaWeights": "true",
     }
     properties.update(additional_properties)
     logger.info(f"Adding the following properties to the registered model: {properties}")
@@ -191,11 +209,45 @@ def get_properties(finetune_args_path: str) -> Dict[str, str]:
     return properties
 
 
+def register_custom_model(
+    workspace, model_path, model_name, model_type, model_description, tags, properties, registration_details_folder
+):
+    """Register the model in custom format."""
+    # register the model using SDKV1
+    model = Model.register(
+        workspace=workspace,
+        model_path=model_path,  # where the model was copied to in output
+        model_name=model_name,
+        model_framework=model_type,
+        description=model_description,
+        tags=tags,
+        properties=properties
+    )
+    logger.info(f"Registering model {model.name} with version {model.version}.")
+    logger.info(f"Model registered. AssetID : {model.id}")
+
+    # save the model info
+    model_info = {
+        "id": model.id,
+        "name": model.name,
+        "version": model.version,
+        "type": model.model_framework,
+        "properties": model.properties,
+        "tags": model.tags,
+        "description": model.description,
+    }
+    json_object = json.dumps(model_info, indent=4)
+    registration_file = registration_details_folder / REGISTRATION_DETAILS_JSON_FILE
+
+    with open(registration_file, "w+") as outfile:
+        outfile.write(json_object)
+    logger.info("Saved model registration details in output json file.")
+
+
 def register_model(args: Namespace):
-    """Run main function for sdkv1."""
+    """Run main function."""
     model_name = args.model_name
     model_type = args.model_type
-    model_path = args.model_path
     registration_details_folder = args.registration_details_folder
     tags, properties, model_description = {}, {}, ""
 
@@ -212,42 +264,32 @@ def register_model(args: Namespace):
         logger.info(f"Updated model_name = {model_name}")
 
     st = time.time()
-    model = Model.register(
-        workspace=ws,
-        model_path=model_path,
-        model_name=model_name,
-        model_framework=model_type,
-        description=model_description,
-        tags=tags,
-        properties=properties
-    )
+    if Model.Framework.CUSTOM == model_type:
+        register_custom_model(
+            workspace=ws,
+            model_path=registration_details_folder,
+            model_name=model_name,
+            model_type=Model.Framework.CUSTOM,
+            model_description=model_description,
+            tags=tags,
+            properties=properties,
+            registration_details_folder=registration_details_folder
+        )
+    elif "PRESETS" == model_type:
+        registermodel_entrypoint(
+            model_name=model_name,
+            registered_model_output=str(registration_details_folder),
+            registered_model_version=None,
+            properties=properties
+        )
+
     time_to_register = time.time() - st
     logger.info(f"Time to register: {time_to_register} seconds")
 
-    # register the model in workspace or registry
-    logger.info(f"Registering model {model.name} with version {model.version}.")
-    logger.info(f"Model registered. AssetID : {model.id}")
-    # Registered model information
-    model_info = {
-        "id": model.id,
-        "name": model.name,
-        "version": model.version,
-        "type": model.model_framework,
-        "properties": model.properties,
-        "tags": model.tags,
-        "description": model.description,
-    }
-    json_object = json.dumps(model_info, indent=4)
 
-    registration_file = registration_details_folder / REGISTRATION_DETAILS_JSON_FILE
-
-    with open(registration_file, "w+") as outfile:
-        outfile.write(json_object)
-    logger.info("Saved model registration details in output json file.")
-
-
-# run script
-if __name__ == "__main__":
+@swallow_all_exceptions(time_delay=60)
+def main():
+    """Main run function."""
     args = parse_args()
 
     set_logging_parameters(
@@ -264,13 +306,20 @@ if __name__ == "__main__":
     if args.convert_to_safetensors:
         convert_lora_weights_to_safetensors(args.model_path)
 
+    # update adapter_config.json with `peft_version`
+    update_peft_adapter_config(args.model_path)
+
     # update model name
     if args.model_name is None:
         args.model_name = get_model_name(args.finetune_args_path)
 
+    # copy to output dir
+    copy_model_to_output(args.model_path, args.registration_details_folder)
+
     # register model
     register_model(args)
 
-    # copy to output dir
-    if args.copy_model_to_output:
-        copy_model_to_output(args.model_path, args.registration_details_folder)
+
+# run script
+if __name__ == "__main__":
+    main()
