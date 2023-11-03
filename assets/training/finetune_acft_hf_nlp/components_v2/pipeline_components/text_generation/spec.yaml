@@ -156,7 +156,7 @@ jobs:
       text_key: '${{parent.inputs.text_key}}'
       ground_truth_key: '${{parent.inputs.ground_truth_key}}'
       batch_size: 1000
-      pad_to_max_length: false
+      pad_to_max_length: "false"
       max_seq_length: 4096
       number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
       apply_lora: "true"
@@ -167,7 +167,7 @@ jobs:
       max_steps: -1
       per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       per_device_eval_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
-      auto_find_batch_size: false
+      auto_find_batch_size: "false"
       optim: adamw_hf
       learning_rate: '${{parent.inputs.learning_rate}}'
       warmup_steps: 0
@@ -179,9 +179,9 @@ jobs:
       lr_scheduler_type: linear
       precision: 16
       seed: 42
-      enable_full_determinism: false
+      enable_full_determinism: "false"
       dataloader_num_workers: 0
-      ignore_mismatched_sizes: true
+      ignore_mismatched_sizes: "true"
       max_grad_norm: 1.0
       evaluation_strategy: epoch
       evaluation_steps_interval: 0.0
@@ -189,13 +189,13 @@ jobs:
       logging_strategy: epoch
       logging_steps: 500
       metric_for_best_model: loss
-      resume_from_checkpoint: false
+      resume_from_checkpoint: "false"
       save_total_limit: 1
-      apply_early_stopping: false
+      apply_early_stopping: "false"
       early_stopping_patience: 0
-      apply_deepspeed: true
+      apply_deepspeed: "true"
       deepspeed_stage: 3
-      apply_ort: false
+      apply_ort: "false"
       system_properties: '${{parent.inputs.system_properties}}'
       registered_model_name: '${{parent.inputs.registered_model_name}}'
     outputs:

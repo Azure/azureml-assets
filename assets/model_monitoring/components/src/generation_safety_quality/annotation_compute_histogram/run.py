@@ -798,8 +798,10 @@ class _WorkspaceConnectionTokenManager(_APITokenManager):
                 if connection.type != "azure_open_ai":
                     raise Exception(f"Received unexpected endpoint type {connection.type}"
                                     "only Azure Open AI endpoints are supported at this time")
-
-                self.api_version = connection.metadata["ApiVersion"]
+                api_version = "2023-07-01-preview"
+                if hasattr(connection.metadata, "ApiVersion"):
+                    api_version = connection.metadata["ApiVersion"]
+                self.api_version = api_version
                 self.domain_name = connection.target
                 self.token = connection.credentials["key"]
             else:
@@ -1532,8 +1534,13 @@ def apply_annotation(
     violations,
 ):
     """Apply annotation to all samples in the production_dataset."""
+    if "chat_history" in [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]:
+        raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
+                                  "column. ")
+
     production_df = io_utils.read_mltable_in_spark(production_dataset)
-    row_count = production_df.count()
+    if production_df.count() == 0:
+        raise ValueError("No data detected.")
     # Ensure input data has the correct columns given the metrics
     # Question, answer required for coherence and fluency
     qa_required = len(list(set(QA_METRIC_NAMES).intersection(
@@ -1558,10 +1565,18 @@ def apply_annotation(
         SIMILARITY: [prompt_column_name, completion_column_name, ground_truth_column_name]
     }
     # Sampling
-    production_df = production_df.sample(withReplacement=False, fraction=sample_rate)
-    production_df_with_index = production_df.withColumn("id",
-                                                        row_number()
-                                                        .over(Window.orderBy(monotonically_increasing_id()))-1)
+    production_df_sampled = production_df.sample(withReplacement=False, fraction=sample_rate)
+    if production_df_sampled.count() == 0:
+        print("Not enough data resulting from sample_rate and production dataset. "
+              "Using first five rows of production dataset instead. To use custom sample_rate with this dataset, "
+              "try increasing sample_rate value.")
+        # Default to 5
+        production_df_sampled = production_df.limit(5)
+
+    production_df = production_df_sampled
+    row_count = production_df.count()
+    production_df_with_index = production_df_sampled.withColumn("id", row_number()
+                                                                .over(Window.orderBy(monotonically_increasing_id()))-1)
 
     spark = io_utils.init_spark()
     spark_conf = spark.sparkContext.getConf()
