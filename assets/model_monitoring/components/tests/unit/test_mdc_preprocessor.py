@@ -4,7 +4,7 @@
 """test class for mdc preprocessor."""
 
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructField, StringType, DoubleType, LongType, ArrayType, MapType
+from pyspark.sql.types import StructField, StringType, DoubleType, LongType, MapType
 import pytest
 from unittest.mock import Mock
 import fsspec
@@ -286,7 +286,8 @@ class TestMDCPreprocessor:
                 ]),
                 [
                     StructField("question", StringType()),
-                    # StructField('chat_history', ArrayType(MapType(StringType(), MapType(StringType(), StringType())))),
+                    # StructField('chat_history',
+                    #             ArrayType(MapType(StringType(), MapType(StringType(), StringType())))),
                     # StructField("correlationid", StringType(), False)
                 ]
             )
