@@ -53,4 +53,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: translation
-version: 5
+version: 10
