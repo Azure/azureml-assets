@@ -21,6 +21,7 @@ properties:
 tags:
   Featured: ''
   Preview: ''
+  hf_model_id: openai/whisper-large
   license: mit
   task: automatic-speech-recognition
-version: 14
+version: 15
