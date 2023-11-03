@@ -20,7 +20,7 @@ from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperRegression)
 
 try:
-    from lightgbm import LGBMClassifier, LGBMRegressor
+    from lightgbm import LGBMClassifier, LGBMRegressor, Dataset
 except ImportError:
     pass
 
@@ -91,7 +91,7 @@ def create_lightgbm_model(X, y, task_type):
     return model
 
 
-def get_model_wrapper(task_type, target_column, baseline_data, categorical_features):
+def get_model_wrapper(task_type, target_column, train_data):
     """Create model wrapper using ml-wrappers on which to calculate feature importances.
 
     :param task_type: The task type (regression or classification) of the resulting model
@@ -104,12 +104,8 @@ def get_model_wrapper(task_type, target_column, baseline_data, categorical_featu
     :return: an appropriate model wrapper
     :rtype: PredictionsModelWrapperRegression or PredictionsModelWrapperClassification
     """
-    y_train = baseline_data[target_column]
-    x_train = baseline_data.drop([target_column], axis=1)
-    # Transform categorical features into the appropriate type that is expected by LightGBM
-    for column in x_train:
-        if column in categorical_features:
-            x_train[column] = x_train[column].astype('category')
+    y_train = train_data[target_column]
+    x_train = train_data.drop([target_column], axis=1)
     model = create_lightgbm_model(x_train, y_train, task_type,)
     model_predict = model.predict(x_train)
     log_time_and_message("Called predict on model")
@@ -147,7 +143,7 @@ def get_train_test_data(data):
     return train_data, test_data
 
 
-def compute_explanations(model_wrapper, data, categorical_features, target_column, task_type):
+def compute_explanations(model_wrapper, train_data, test_data, categorical_features, target_column, task_type):
     """Compute explanations (feature importances) for a given dataset.
 
     :param model_wrapper: wrapper around a model that can be used to calculate explanations
@@ -165,7 +161,6 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     """
     # Create the RAI Insights object, split baseline data into train and test data
     feature_metadata = FeatureMetadata(categorical_features=categorical_features, dropped_features=[])
-    train_data, test_data = get_train_test_data(data)
 
     rai_i: RAIInsights = RAIInsights(
         model_wrapper, train_data, test_data, target_column, task_type, feature_metadata=feature_metadata
@@ -194,10 +189,10 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
     :return: list of feature importances in the order of the columns in the baseline data
     :rtype: list[float]
     """
-    model_wrapper = get_model_wrapper(task_type, target_column, baseline_data, categorical_features)
-
+    train_data, test_data = get_train_test_data(baseline_data)
+    model_wrapper = get_model_wrapper(task_type, target_column, train_data)
     baseline_explanations = compute_explanations(
-        model_wrapper, baseline_data, categorical_features, target_column, task_type)
+        model_wrapper, train_data=train_data, test_data=test_data, categorical_features=categorical_features, target_column=target_column, task_type=task_type)
     log_time_and_message("Successfully computed explanations for dataset")
 
     return baseline_explanations
@@ -285,8 +280,10 @@ def run(args):
         for column in baseline_df.columns:
             col = pd.Series(baseline_df[column])
             if (pd.api.types.is_datetime64_dtype(col) or pd.api.types.is_timedelta64_dtype(col)):
-                baseline_df[column] = baseline_df[column].astype(int)
-
+                baseline_df[column] = baseline_df[column].astype("int")
+            elif column in categorical_features and column != args.target_column:
+                baseline_df[column] = baseline_df[column].astype('category')
+        
         feature_importances = compute_feature_importance(
             task_type, args.target_column, baseline_df, categorical_features)
         feature_columns = baseline_df.drop([args.target_column], axis=1)
