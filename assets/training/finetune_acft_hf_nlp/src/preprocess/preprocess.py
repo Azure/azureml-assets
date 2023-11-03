@@ -8,6 +8,7 @@ import argparse
 from pathlib import Path
 from argparse import Namespace
 
+from transformers.trainer_utils import get_last_checkpoint
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -16,7 +17,6 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     HfModelTypes,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
 )
-from azureml.acft.contrib.hf.nlp.utils.common_utils import get_model_or_checkpoint_path
 from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite
 from azureml.acft.contrib.hf.nlp.nlp_auto.config import AzuremlAutoConfig
 from azureml.acft.contrib.hf.nlp.tasks.translation.preprocess.preprocess_for_finetune import T5_CODE2LANG_MAP
@@ -167,7 +167,9 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
         model_name_or_path = Path(parsed_args.model_selector_output, parsed_args.model_name)
         # Transformers lib searches for tokenizer files locally only if the folder path is same as model's name
         if model_name_or_path.is_dir():
-            model_name_or_path = get_model_or_checkpoint_path(model_name_or_path)
+            last_checkpoint = get_last_checkpoint(model_name_or_path)
+            if last_checkpoint:
+                model_name_or_path = last_checkpoint
             logger.info(f"Copying content from {model_name_or_path} to {parsed_args.model_name}")
             copy_and_overwrite(str(model_name_or_path), parsed_args.model_name)
         parsed_args.model_name_or_path = parsed_args.model_name

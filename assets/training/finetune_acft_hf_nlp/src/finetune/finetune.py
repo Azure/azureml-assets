@@ -646,7 +646,7 @@ def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
 
 
 def setup_deepspeed_nebula(ds_config_json: Dict[str, Any], pytorch_model_folder: str,
-                           model_name_or_path: Path) -> Dict[str, Any]:
+                           model_name_or_path: str) -> Dict[str, Any]:
     """Set nebula settings in ds config if it has been enabled."""
     nebula: Dict = ds_config_json.get("nebula", {})
     if not nebula:
@@ -662,6 +662,7 @@ def setup_deepspeed_nebula(ds_config_json: Dict[str, Any], pytorch_model_folder:
     nebula["enable_nebula_load"] = True
     logger.info(f"Nebula settings: {nebula}")
 
+    model_name_or_path = Path(model_name_or_path)
     if model_name_or_path.is_dir():
         logger.info(f"Copying checkpoints from {model_name_or_path} to {pytorch_model_folder}...")
         try:
