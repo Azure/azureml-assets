@@ -357,7 +357,7 @@ def get_parser():
     )
     parser.add_argument(
         "--eval_accumulation_steps",
-        default=-1,
+        default=None,
         type=int,
         help="Number of predictions steps to accumulate before moving the tensors to the CPU.",
     )
