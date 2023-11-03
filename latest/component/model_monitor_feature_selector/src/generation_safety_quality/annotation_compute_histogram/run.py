@@ -1557,12 +1557,18 @@ def apply_annotation(
     if SIMILARITY in metric_names and ground_truth_column_name not in production_df.columns:
         raise ValueError(f"production_dataset must have column: {ground_truth_column_name}")
 
+    # rename columns to prompt, completion, context, ground truth to match metaprompt data
+    production_df = (production_df.withColumnRenamed(prompt_column_name, PROMPT)
+                     .withColumnRenamed(completion_column_name, COMPLETION)
+                     .withColumnRenamed(context_column_name, CONTEXT)
+                     .withColumnRenamed(ground_truth_column_name, GROUND_TRUTH))
+
     annotation_requirements = {
-        GROUNDEDNESS: [prompt_column_name, completion_column_name, context_column_name],
-        RELEVANCE: [prompt_column_name, completion_column_name, context_column_name],
-        FLUENCY: [prompt_column_name, completion_column_name],
-        COHERENCE: [prompt_column_name, completion_column_name],
-        SIMILARITY: [prompt_column_name, completion_column_name, ground_truth_column_name]
+        GROUNDEDNESS: [PROMPT, COMPLETION, CONTEXT],
+        RELEVANCE: [PROMPT, COMPLETION, CONTEXT],
+        FLUENCY: [PROMPT, COMPLETION],
+        COHERENCE: [PROMPT, COMPLETION],
+        SIMILARITY: [PROMPT, COMPLETION, GROUND_TRUTH]
     }
     # Sampling
     production_df_sampled = production_df.sample(withReplacement=False, fraction=sample_rate)
