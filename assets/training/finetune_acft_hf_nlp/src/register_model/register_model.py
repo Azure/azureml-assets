@@ -25,6 +25,10 @@ from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 from azureml.acft.accelerator.utils.code_utils import update_json_file_and_overwrite
 
+from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
+    swallow_all_exceptions,
+)
+
 
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.register_model.register_model")
 
@@ -273,11 +277,8 @@ def register_model(args: Namespace):
         )
     elif "PRESETS" == model_type:
         registermodel_entrypoint(
-            args=Namespace(),
             model_name=model_name,
-            finetune_run_id=Run.get_context().id,
-            finetuned_model_input=None,
-            registered_model_output=None,
+            registered_model_output=str(registration_details_folder),
             registered_model_version=None,
             properties=properties
         )
@@ -286,8 +287,9 @@ def register_model(args: Namespace):
     logger.info(f"Time to register: {time_to_register} seconds")
 
 
-# run script
-if __name__ == "__main__":
+@swallow_all_exceptions(time_delay=60)
+def main():
+    """Main run function."""
     args = parse_args()
 
     set_logging_parameters(
@@ -316,3 +318,7 @@ if __name__ == "__main__":
 
     # register model
     register_model(args)
+
+# run script
+if __name__ == "__main__":
+    main()
