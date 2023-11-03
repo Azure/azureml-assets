@@ -21,7 +21,7 @@ from azure.core.pipeline.policies import HeadersPolicy
 from azureml.ai.monitoring import Collector
 
 
-from constants import EngineName, TaskType, SupportedTask
+from constants import EngineName, TaskType, SupportedTask, ALL_TASKS, VLLMSupportedModels, MIISupportedModels
 from fm_score import FMScore
 from logging_config import configure_logger
 from managed_inference import MIRPayload
@@ -36,8 +36,10 @@ g_aacs_client = None
 
 # default values
 DEVICE_COUNT = torch.cuda.device_count()
+MLFLOW_MODEL_ROOT_PATH = "mlflow_model_folder"
 MLMODEL_PATH = "mlflow_model_folder/MLmodel"
 DEFAULT_MLFLOW_MODEL_PATH = "mlflow_model_folder/data/model"
+DEFAULT_MLFLOW_CONFIG_PATH = "mlflow_model_folder/data/config"
 task_type = SupportedTask.TEXT_GENERATION
 g_fmscorer: FMScore = None
 
@@ -248,6 +250,37 @@ def _init_cuda_visible_devices():
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(gpu_ids)
 
 
+def get_model_size(model_path):
+    size = 0
+    # get size
+    for path, dirs, files in os.walk(model_path):
+        for f in files:
+            fp = os.path.join(path, f)
+            size += os.path.getsize(fp)
+    
+    size /= (pow(1024, 3))
+    return size
+
+
+def get_best_engine(config_path, model_path):
+    with open(config_path) as f:
+        model_config = json.load(f)
+    model_class = model_config["architectures"][0]
+    folder_size = get_model_size(model_path)
+    dtype = model_config.get("torch_dtype", "float32")
+    if "float16" in dtype:
+        model_size = folder_size//2
+    else:
+        model_size = folder_size//4
+    best_engine = EngineName.HF
+    if model_class in VLLMSupportedModels.Models:
+        best_engine = EngineName.VLLM
+        # TODO: Add logic for selecting MII Over VLLM using model size 
+    elif model_class in MIISupportedModels.Models:
+        best_engine = EngineName.MII
+    return best_engine
+
+
 def init():
     """Initialize text-generation-inference server and client."""
     global g_fmscorer
@@ -279,7 +312,7 @@ def init():
         )
 
         config_path = os.path.join(
-            os.getenv("AZUREML_MODEL_DIR", ""), DEFAULT_MLFLOW_MODEL_PATH, "config.json"
+            os.getenv("AZUREML_MODEL_DIR", ""), DEFAULT_MLFLOW_CONFIG_PATH, "config.json"
         )
 
         _init_cuda_visible_devices()
@@ -296,18 +329,23 @@ def init():
                 mlmodel = yaml.safe_load(f)
 
         model_name = ""
+        model_load_kwargs = {}
         if mlmodel:
             flavors = mlmodel.get("flavors", {})
-            if "hftransformersv2" in flavors:
-                task_type = flavors["hftransformersv2"]["task_type"]
-                model_generator_configs = flavors["hftransformersv2"].get(
+            if "hftransformersv2" in flavors or "hftransformers" in flavors:
+                if "hftransformersv2" in flavors:
+                    flavors_dict = flavors.get("hftransformersv2")
+                else:
+                    flavors_dict = flavors.get("hftransformers")
+                task_type = flavors_dict["task_type"]
+                model_generator_configs = flavors_dict.get(
                     "generator_config", {}
                 )
+                model_load_kwargs = flavors_dict.get(
+                    "model_hf_load_kwargs", {}
+                )
                 logger.info(f"model_generator_configs: {model_generator_configs}")
-                if task_type not in (
-                    SupportedTask.TEXT_GENERATION,
-                    SupportedTask.CHAT_COMPLETION,
-                ):
+                if task_type not in ALL_TASKS:
                     raise Exception(f"Unsupported task_type {task_type}")
 
                 # update default gen configs with model configs
@@ -318,14 +356,14 @@ def init():
                     f"updated default_generator_configs: "
                     f"{default_generator_configs}"
                 )
-                huggingface_id = flavors["hftransformersv2"].get("huggingface_id", "")
+                huggingface_id = flavors_dict.get("huggingface_id", "")
                 if "falcon" in huggingface_id:
                     model_name = "falcon"
 
         logger.info(f"Loading model from path {model_path} for task_type: {task_type}")
         logger.info(f"List model_path = {os.listdir(model_path)}")
 
-        default_engine = EngineName.VLLM
+        default_engine = get_best_engine(config_path, model_path)
         tensor_parallel = os.getenv("TENSOR_PARALLEL", None)
         if tensor_parallel:
             tensor_parallel = int(tensor_parallel)
@@ -354,6 +392,12 @@ def init():
                 "model_name": model_name
             }
             engine_config["vllm_config"] = vllm_config
+
+        if engine_config["engine_name"] == EngineName.HF:
+            engine_config["model_kwargs"] = model_load_kwargs
+            engine_config["mlflow_model"] = os.path.join(
+                os.getenv("AZUREML_MODEL_DIR", ""), MLFLOW_MODEL_ROOT_PATH
+            )
 
         task_config = {
             "task_type": TaskType.CONVERSATIONAL
