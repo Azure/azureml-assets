@@ -1,0 +1,32 @@
+type: evaluationresult
+name: human_eval_gpt_4_0314_text_generation
+version: 1.0.0
+display_name: human_eval_gpt_4_0314_text_generation
+description: gpt-4-0314 run for human_eval dataset
+dataset_family: human_eval
+dataset_name: human_eval
+
+model_name: gpt-4-0314
+model_version: "314"
+model_asset_id: azureml://registries/azure-openai-preview/models/gpt-4/versions/629591.2a481b56
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azure-openai-preview/models/gpt-4/versions/629591.2a481b56
+
+tags:
+  task: text-generation
+  accuracy_metric_name: pass@1
+
+metrics:
+  accuracy: 0.732
+
+path: ./job_files
+
+
+properties:
+  n_shot: 0
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: None
+  fewshot_split: "None"
