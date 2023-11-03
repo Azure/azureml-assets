@@ -14,7 +14,7 @@ dependencies:
 - setuptools=65.5.1
 - wheel=0.38.1
 - pip:
-  - cryptography>=41.0.2
+  - cryptography>=41.0.4
   - azureml-mlflow==1.53.0
   - azureml-dataset-runtime==1.53.0
   - azureml-telemetry==1.53.0
