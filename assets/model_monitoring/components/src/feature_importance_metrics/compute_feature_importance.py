@@ -192,7 +192,7 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
     train_data, test_data = get_train_test_data(baseline_data)
     model_wrapper = get_model_wrapper(task_type, target_column, train_data)
     baseline_explanations = compute_explanations(
-        model_wrapper, train_data=train_data, test_data=test_data, categorical_features=categorical_features, target_column=target_column, task_type=task_type)
+        model_wrapper, train_data, test_data, categorical_features, target_column, task_type)
     log_time_and_message("Successfully computed explanations for dataset")
 
     return baseline_explanations
