@@ -999,7 +999,7 @@ class _HTTPClientWithRetry:
         self.attempts = n_retry
 
         retry_strategy = Retry(
-            total=n_retry,
+            total=None,
             status=n_retry,
             status_forcelist=[104, 408, 409, 424, 429, 500, 502, 503, 504],
             backoff_factor=backoff_factor,
