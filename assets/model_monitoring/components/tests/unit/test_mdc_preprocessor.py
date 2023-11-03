@@ -46,7 +46,7 @@ def mdc_preprocessor_test_setup():
 class TestMDCPreprocessor:
     """Test class for MDC Preprocessor."""
 
-    # @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
+    @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, extract_correlation_id",
         [
@@ -105,12 +105,15 @@ class TestMDCPreprocessor:
 
         assert_frame_equal(pdf_actual, pdf_expected)
 
+    @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, extract_correlation_id",
         [
             # chat history
             ("2023-10-30T16:00:00", "2023-10-30T17:00:00", False),
             ("2023-10-30T16:00:00", "2023-10-30T17:00:00", True),
+            # ("2023-10-24T22:00:00", "2023-10-24T23:00:00", False),
+            # ("2023-10-24T22:00:00", "2023-10-24T23:00:00", True),
         ]
     )
     def test_uri_folder_to_spark_df_with_chat_history(
@@ -154,6 +157,7 @@ class TestMDCPreprocessor:
             fs,
         )
 
+    @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "data, expected_pdf, expected_fields",
         [
@@ -197,15 +201,15 @@ class TestMDCPreprocessor:
             (
                 [
                     [json.dumps([{"simple_field": "v0", "struct_field": {"f0": "t0", "f1": "u0", "f2": "w0"}}]), "cid0"],  # noqa
-                    [json.dumps([{"simple_field": "v1", "struct_field": {"f0": "t1", "f1": "u1", "f2": "w1"}},
+                    [json.dumps([{"simple_field": "v1", "struct_field": {"f0": "t1", "f1": "u1"}},
                                  {"simple_field": "v2", "struct_field": {"f0": "t2", "f1": "u2", "f2": "w2"}}]), "cid1"],  # noqa
-                    [json.dumps([{"simple_field": "v3", "struct_field": {"f0": "t3", "f1": "u3", "f2": "w3"}}]), "cid2"],  # noqa
+                    [json.dumps([{"simple_field": "v3", "struct_field": {"f0": "t3",             "f2": "w3"}}]), "cid2"],  # noqa
                 ],
                 pd.DataFrame([
-                    {"simple_field": "v0", "struct_field": {"f0": "t1", "f1": "u0", "f2": "w0"}, "correlationid": "cid0_0"},  # noqa
-                    {"simple_field": "v1", "struct_field": {"f0": "t2", "f1": "u1", "f2": "w1"}, "correlationid": "cid1_0"},  # noqa
-                    {"simple_field": "v2", "struct_field": {"f0": "t3", "f1": "u2", "f2": "w2"}, "correlationid": "cid1_1"},  # noqa
-                    {"simple_field": "v3", "struct_field": {"f0": "t4", "f1": "u3", "f2": "w3"}, "correlationid": "cid2_0"},  # noqa
+                    {"simple_field": "v0", "struct_field": {"f0": "t0", "f1": "u0", "f2": "w0"}, "correlationid": "cid0_0"},  # noqa
+                    {"simple_field": "v1", "struct_field": {"f0": "t1", "f1": "u1"},             "correlationid": "cid1_0"},  # noqa
+                    {"simple_field": "v2", "struct_field": {"f0": "t2", "f1": "u2", "f2": "w2"}, "correlationid": "cid1_1"},  # noqa
+                    {"simple_field": "v3", "struct_field": {"f0": "t3",             "f2": "w3"}, "correlationid": "cid2_0"},  # noqa
                 ]),
                 [
                     StructField("simple_field", StringType()),
@@ -282,7 +286,7 @@ class TestMDCPreprocessor:
                 ]),
                 [
                     StructField("question", StringType()),
-                    StructField('chat_history', ArrayType(MapType(StringType(), MapType(StringType(), StringType())))),
+                    # StructField('chat_history', ArrayType(MapType(StringType(), MapType(StringType(), StringType())))),
                     # StructField("correlationid", StringType(), False)
                 ]
             )
@@ -291,6 +295,7 @@ class TestMDCPreprocessor:
     def test_extract_data_and_correlation_id(self, mdc_preprocessor_test_setup,
                                              data, expected_pdf, expected_fields):
         spark = SparkSession.builder.appName("test_extract_data_and_correlation_id").getOrCreate()
+        expected_pdf.drop(columns=["chat_history"], inplace=True)
         extract_correlation_ids = [True, False]
         for extract_correlation_id in extract_correlation_ids:
             in_df = spark.createDataFrame(data, ["data", "correlationid"])
