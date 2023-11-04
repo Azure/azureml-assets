@@ -28,48 +28,23 @@ Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 Image object detection|Image object detection|[fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjects.zip)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-image-object-detection-task-fridge-items/automl-image-object-detection-task-fridge-items.ipynb" target="_blank">[fridgeobjects-object-detection.ipynb](https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-image-object-detection-task-fridge-items/automl-image-object-detection-task-fridge-items.ipynb)</a>|<a href="https://github.com/Azure/azureml-examples/tree/sdk-preview/cli/jobs/automl-standalone-jobs/cli-automl-image-object-detection-task-fridge-items" target="_blank">cli-automl-image-object-detection-task-fridge-items.yml</a>
 
 
-### Sample inputs and outputs (for real-time inference)
+### Sample inputs and outputs
 
 #### Sample input
 
 ```json
 {
-    "image_url": "azureml://subscriptions/<my-subscription-id>/resourcegroups/<my-resource-group>/workspaces/<my-workspace>/datastores/<my-datastore>/paths/image_data/Image_01.png",
-    "image_details":
-    {
-        "format": "png",
-        "width": "2230px",
-        "height": "4356px"
-    },
-    "label":
-    {
-        "label": "cat",
-        "topX": "1",
-        "topY": "0",
-        "bottomX": "0",
-        "bottomY": "1",
-        "isCrowd": "true",
-    }
-}
-{
-    "image_url": "azureml://subscriptions/<my-subscription-id>/resourcegroups/<my-resource-group>/workspaces/<my-workspace>/datastores/<my-datastore>/paths/image_data/Image_02.png",
-    "image_details":
-    {
-        "format": "jpeg",
-        "width": "1230px",
-        "height": "2356px"
-    },
-    "label":
-    {
-        "label": "dog",
-        "topX": "0",
-        "topY": "1",
-        "bottomX": "0",
-        "bottomY": "1",
-        "isCrowd": "false",
-    }
+  "input_data": {
+    "columns": [
+      "image"
+    ],
+    "index": [0, 1],
+    "data": ["image1", "image2"]
+  }
 }
 ```
+
+Note: "image1" and "image2" string should be in base64 format or publicly accessible urls.
 
 
 #### Sample output
