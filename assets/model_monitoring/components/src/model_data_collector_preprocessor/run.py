@@ -19,7 +19,7 @@ from pyspark.sql.functions import lit, col
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     init_spark,
-    try_read_mltable_in_spark,
+    try_read_mltable_in_spark_with_error,
     save_spark_df_as_mltable,
 )
 
@@ -146,7 +146,7 @@ def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, f
         )
 
     # Read mltable from preprocessed_data
-    return try_read_mltable_in_spark(des_path, "preprocessed_data")
+    return try_read_mltable_in_spark_with_error(des_path, "preprocessed_data")
 
 
 def _get_data_columns(df: DataFrame) -> list:

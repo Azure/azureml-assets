@@ -22,6 +22,7 @@ from model_data_collector_preprocessor.run import (
     _convert_to_azureml_long_form,
     _get_datastore_from_input_path,
 )
+from shared_utilities.momo_exceptions import DataNotFoundError
 
 
 @pytest.fixture(scope="module")
@@ -105,15 +106,41 @@ class TestMDCPreprocessor:
 
         assert_frame_equal(pdf_actual, pdf_expected)
 
-    @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
+    @pytest.mark.parametrize(
+        "window_start_time, window_end_time",
+        [
+            ("2023-11-03T15:00:00", "2023-11-03T16:00:00"),
+        ]
+    )
+    def test_uri_folder_to_spark_df_no_data(self, mdc_preprocessor_test_setup,
+                                            window_start_time, window_end_time):
+        """Test uri_folder_to_spark_df()."""
+        print("testing test_uri_folder_to_spark_df...")
+        print("working dir:", os.getcwd())
+
+        fs = fsspec.filesystem("file")
+        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        preprocessed_output = f"{tests_path}/unit/preprocessed_mdc_data"
+        shutil.rmtree(f"{preprocessed_output}temp", True)
+
+        with pytest.raises(DataNotFoundError):
+            pdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
+                window_start_time,
+                window_end_time,
+                f"{tests_path}/unit/raw_mdc_data/",
+                preprocessed_output,
+                False,
+                fs,
+            )
+            pdf.show()
+
+    # @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, extract_correlation_id",
         [
             # chat history
             ("2023-10-30T16:00:00", "2023-10-30T17:00:00", False),
             ("2023-10-30T16:00:00", "2023-10-30T17:00:00", True),
-            # ("2023-10-24T22:00:00", "2023-10-24T23:00:00", False),
-            # ("2023-10-24T22:00:00", "2023-10-24T23:00:00", True),
         ]
     )
     def test_uri_folder_to_spark_df_with_chat_history(
