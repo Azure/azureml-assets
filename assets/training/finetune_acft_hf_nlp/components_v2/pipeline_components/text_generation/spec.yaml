@@ -21,7 +21,7 @@ inputs:
       The parameter compute_finetune must be set to 'virtual cluster' for instance_type to be used
   number_of_gpu_to_use_finetuning:
     type: integer
-    default: 1
+    default: 8
     optional: true
     description: >-
       number of gpus to be used per node for finetuning, should be equal
