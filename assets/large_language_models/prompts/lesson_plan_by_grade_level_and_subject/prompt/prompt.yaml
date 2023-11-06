@@ -1,7 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
 
-_type: completion
-
 template: |
   I am a grade {{grade_level}} {{subject}} teacher trying to teach my students about {{content_area}}. Please generate a lesson plan that helps me teach {{concept}}, to grade level {{grade_level}} {{subject}}. In the lesson plan, include:
 
