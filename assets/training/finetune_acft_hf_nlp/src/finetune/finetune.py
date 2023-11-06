@@ -56,7 +56,7 @@ UNWANTED_PACKAGES = [
     "transformers>",
     "transformers<",
 ]
-PINNED_PACAKGES = ["transformers==4.31.0", "mlflow==2.8.0"]
+PINNED_PACAKGES = ["transformers==4.34.0", "mlflow==2.8.0"]
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
@@ -847,7 +847,7 @@ def finetune(args: Namespace):
     }
 
     mlflow_data = _load_mlflow_model(args.model_selector_output)
-
+    current_flavor = None
     if mlflow_data is not None:
         mlflow_flavors = [
             MLFLOW_FLAVORS.TRANSFORMERS,
@@ -965,11 +965,12 @@ def finetune(args: Namespace):
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
 
-    # remove unwanted packages from requirements.txt and conda.yaml
-    _remove_unwanted_packages(getattr(args, 'mlflow_model_folder', None))
+    # remove unwanted packages and add pinned packages in requirements.txt and conda.yaml
+    if current_flavor == MLFLOW_FLAVORS.TRANSFORMERS:
+        _update_packages(getattr(args, 'mlflow_model_folder', None))
 
 
-def _remove_unwanted_packages(model_save_path: str):
+def _update_packages(model_save_path: str):
     req_file_path = os.path.join(model_save_path, "requirements.txt")
     conda_file_path = os.path.join(model_save_path, "conda.yaml")
     requirements = None
@@ -985,21 +986,24 @@ def _remove_unwanted_packages(model_save_path: str):
                 f.writelines(requirements)
             logger.info("Updated requirements.txt file")
 
+    conda_dict = None
     if os.path.exists(conda_file_path):
         with open(conda_file_path, "r") as f:
             conda_dict = yaml.safe_load(f)
+        if conda_dict is not None and "dependencies" in conda_dict:
             for i in range(len(conda_dict["dependencies"])):
                 if "pip" in conda_dict["dependencies"][i] and isinstance(conda_dict["dependencies"][i], dict):
                     pip_list = conda_dict["dependencies"][i]["pip"]
                     if len(pip_list) > 0:
                         for package in UNWANTED_PACKAGES:
                             pip_list = [item for item in pip_list if not item.startswith(package)]
+                        pip_list.extend(PINNED_PACAKGES)
                         conda_dict["dependencies"][i]["pip"] = pip_list
                         break
 
-        with open(conda_file_path, "w") as f:
-            yaml.safe_dump(conda_dict, f)
-        logger.info("Updated conda.yaml file")
+            with open(conda_file_path, "w") as f:
+                yaml.safe_dump(conda_dict, f)
+            logger.info("Updated conda.yaml file")
 
 
 def can_apply_ort(args: Namespace, logger):
