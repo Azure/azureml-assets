@@ -90,31 +90,31 @@ def get_parser():
         type=str,
         default="",
         help="Columns to ignore in the input data. Should be a comma-separated list of column names. "
-             "Example: 'column_1,column_2'",
+        "Example: 'column_1,column_2'",
     )
     parser.add_argument(
         "--numerical_columns_overrides",
         type=str,
         default="",
         help="Columns to treat as numerical in the input data. This setting would override the column types detected "
-             "from automatic column purpose detection. Should be a comma-separated list of column names. "
-             "Example: 'column_1,column_2'",
+        "from automatic column purpose detection. Should be a comma-separated list of column names. "
+        "Example: 'column_1,column_2'",
     )
     parser.add_argument(
         "--categorical_columns_overrides",
         type=str,
         default="",
-        help="Columns to treat as categorical in the input data. This setting would override the column types detected "
-             "from automatic column purpose detection. Should be a comma-separated list of column names. "
-             "Example: 'column_1,column_2'",
+        help="Columns to treat as categorical in the input data. This setting would override the column types "
+        "detected from automatic column purpose detection. Should be a comma-separated list of column names. "
+        "Example: 'column_1,column_2'",
     )
     parser.add_argument(
         "--text_columns_overrides",
         type=str,
         default="",
         help="Columns to treat as text in the input data. This setting would override the column types detected "
-             "from automatic column purpose detection. Should be a comma-separated list of column names. "
-             "Example: 'column_1,column_2'",
+        "from automatic column purpose detection. Should be a comma-separated list of column names. "
+        "Example: 'column_1,column_2'",
     )
 
     return parser
@@ -158,7 +158,6 @@ def pre_process(parsed_args: Namespace, unparsed_args: List[str]):
     else:
         parsed_args.task_name = Tasks.MULTIMODAL_MULTILABEL_CLASSIFICATION
 
-
     task_runner = get_task_runner(task_name=parsed_args.task_name)()
     task_runner.run_preprocess_for_finetune(parsed_args, unparsed_args)
 
@@ -174,7 +173,7 @@ if __name__ == "__main__":
         acft_custom_dimensions={
             LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
             LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
-        }
+        },
     )
 
     logger.info(f"Component Args: {parsed_args}")
