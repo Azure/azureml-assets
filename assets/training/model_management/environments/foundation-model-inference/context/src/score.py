@@ -40,6 +40,7 @@ MLFLOW_MODEL_ROOT_PATH = "mlflow_model_folder"
 MLMODEL_PATH = "mlflow_model_folder/MLmodel"
 DEFAULT_MLFLOW_MODEL_PATH = "mlflow_model_folder/data/model"
 DEFAULT_MLFLOW_CONFIG_PATH = "mlflow_model_folder/data/config"
+DEFAULT_MLFLOW_TOKENIZER_PATH = "mlflow_model_folder/data/tokenizer"
 task_type = SupportedTask.TEXT_GENERATION
 g_fmscorer: FMScore = None
 
@@ -330,6 +331,8 @@ def init():
 
         model_name = ""
         model_load_kwargs = {}
+        config_load_kwargs = {}
+        tokenizer_load_kwargs = {}
         if mlmodel:
             flavors = mlmodel.get("flavors", {})
             if "hftransformersv2" in flavors or "hftransformers" in flavors:
@@ -343,6 +346,12 @@ def init():
                 )
                 model_load_kwargs = flavors_dict.get(
                     "model_hf_load_kwargs", {}
+                )
+                config_load_kwargs = flavors_dict.get(
+                    "config_hf_load_kwargs", {}
+                )
+                tokenizer_load_kwargs = flavors_dict.get(
+                    "tokenizer_hf_load_kwargs", {}
                 )
                 logger.info(f"model_generator_configs: {model_generator_configs}")
                 if task_type not in ALL_TASKS:
@@ -395,14 +404,19 @@ def init():
 
         if engine_config["engine_name"] == EngineName.HF:
             engine_config["model_kwargs"] = model_load_kwargs
-            engine_config["mlflow_model"] = os.path.join(
-                os.getenv("AZUREML_MODEL_DIR", ""), MLFLOW_MODEL_ROOT_PATH
+            engine_config["config_kwargs"] = config_load_kwargs
+            engine_config["tokenizer_kwargs"] = tokenizer_load_kwargs
+            engine_config["hf_config_path"] = os.path.join(
+                os.getenv("AZUREML_MODEL_DIR", ""), DEFAULT_MLFLOW_CONFIG_PATH
+            )
+            engine_config["hf_tokenizer_path"] = os.path.join(
+                os.getenv("AZUREML_MODEL_DIR", ""), DEFAULT_MLFLOW_TOKENIZER_PATH
             )
 
         task_config = {
             "task_type": TaskType.CONVERSATIONAL
             if task_type == SupportedTask.CHAT_COMPLETION
-            else TaskType.TEXT_GENERATION,
+            else task_type,
         }
 
         config = {

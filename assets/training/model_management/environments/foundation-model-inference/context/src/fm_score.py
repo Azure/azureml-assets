@@ -7,7 +7,8 @@ import os
 from typing import Dict, List
 from configs import EngineConfig, TaskConfig
 from constants import TaskType
-from engine.engine import HfEngine, InferenceResult
+from engine.engine import InferenceResult
+from engine.hf_engine import HfEngine
 from managed_inference import MIRPayload
 from prompt_formatter import Llama2Formatter
 from utils import log_execution_time
@@ -19,7 +20,7 @@ logger = configure_logger(__name__)
 def get_engine(engine_name: str, engine_config: EngineConfig, task_config: TaskConfig):
     """Return the appropriate engine based on the engine name."""
     if engine_name == "hf":
-        return HfEngine(engine_config)
+        return HfEngine(engine_config, task_config)
     elif engine_name == "vllm":
         from engine.vllm_engine import VLLMEngine
 
