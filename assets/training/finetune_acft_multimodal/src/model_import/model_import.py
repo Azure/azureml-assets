@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-File containing function for model selector component.
-"""
+"""File containing function for model selector component."""
 
 from pathlib import Path
 import argparse
@@ -21,8 +19,9 @@ logger = get_logger_app("azureml.acft.multimodal.components.scripts.components.m
 
 def get_parser():
     """
-    Adds arguments and returns the parser. Here we add all the arguments for all the tasks.
-    Those arguments that are not relevant for the input task should be ignored
+    Add arguments and returns the parser. Here we add all the arguments for all the tasks.
+
+    Those arguments that are not relevant for the input task should be ignored.
     """
     parser = argparse.ArgumentParser(description="Model selector for hugging face models", allow_abbrev=False)
 
@@ -80,9 +79,7 @@ def get_parser():
 
 
 def model_selector(args: Namespace):
-    """
-    main function handling model selector
-    """
+    """Select and return the appropriate model."""
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     if args.huggingface_id is not None:

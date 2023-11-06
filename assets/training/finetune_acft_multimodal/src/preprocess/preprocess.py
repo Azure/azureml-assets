@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Read the args from preprocess component"""
+"""Read the args from preprocess component."""
 
 import argparse
 import json
@@ -25,9 +25,7 @@ logger = get_logger_app("azureml.acft.multimodal.components.scripts.components.p
 
 
 def get_parser():
-    """
-    Adds arguments and returns the parser.
-    """
+    """Add arguments and returns the parser."""
     parser = argparse.ArgumentParser(description="Tabular Preprocessing", allow_abbrev=False)
 
     parser.add_argument(
@@ -121,9 +119,7 @@ def get_parser():
 
 
 def pre_process(parsed_args: Namespace, unparsed_args: List[str]):
-    """
-    main function handling tabular data preprocess
-    """
+    """Preprocess tabular data for analysis."""
     Path(parsed_args.output_dir).mkdir(exist_ok=True, parents=True)
 
     # Model Selector Component ---> Preprocessor Component

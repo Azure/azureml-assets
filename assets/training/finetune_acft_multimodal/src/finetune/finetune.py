@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-File containing function for finetune component.
-"""
+"""File containing function for finetune component."""
 
 import json
 import argparse
@@ -30,10 +28,7 @@ logger = get_logger_app("azureml.acft.multimodal.components.scripts.components.f
 
 
 def get_parser():
-    """
-    Get the parser object.
-    """
-
+    """Get the parser object."""
     parser = argparse.ArgumentParser(description="Multimodal single label classification with Lora support")
 
     # Model optimization settings
@@ -291,10 +286,7 @@ def get_parser():
 
 
 def finetune(args: Namespace):
-    """
-    Main function handling finetune.
-    """
-
+    """Fine-tune the model with the given parameters."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
     enable_full_determinism(args.seed) if args.enable_full_determinism else set_seed(args.seed)
 
