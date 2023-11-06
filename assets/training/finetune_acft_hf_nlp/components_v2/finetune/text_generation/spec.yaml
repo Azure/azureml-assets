@@ -52,7 +52,7 @@ inputs:
   number_of_gpu_to_use_finetuning:
     type: integer
     optional: False
-    default: 8
+    default: 1
     description: number of gpus to be used per node for finetuning, should be equal to number of gpu per node in the compute SKU used for finetune
     min: 1
   apply_lora:
