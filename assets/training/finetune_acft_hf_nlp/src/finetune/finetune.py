@@ -767,21 +767,21 @@ def setup_automl_nlp(args: Namespace) -> None:
 
 def _load_mlflow_model(model_path: str) -> str:
     mlflow_config_file = Path(model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
-    mlflow_data = None
+    mlmodel_data = None
     if mlflow_config_file.is_file():
         try:
             with open(mlflow_config_file, "r") as rptr:
-                mlflow_data = yaml.safe_load(rptr)
+                mlmodel_data = yaml.safe_load(rptr)
         except Exception as e:
             logger.info(f"Unable to load MLmodel file - {e}")
     else:
         logger.info("MLmodel file does not exist")
-    return mlflow_data
+    return mlmodel_data
 
 
-def _get_model_flavor(mlflow_flavors: list, mlflow_data: dict) -> str:
+def _get_model_flavor(mlflow_flavors: list, mlmodel_data: dict) -> str:
     for each_flavor in mlflow_flavors:
-        if each_flavor in mlflow_data["flavors"]:
+        if each_flavor in mlmodel_data["flavors"]:
             logger.info(f"Current mlflow flavor - {each_flavor}")
             return each_flavor
     logger.info("MLmodel file does not have any mlflow flavor")
@@ -846,27 +846,27 @@ def finetune(args: Namespace):
         "mlflow_flavor": None,
     }
 
-    mlflow_data = _load_mlflow_model(args.model_selector_output)
-    current_flavor = None
-    if mlflow_data is not None:
+    mlmodel_data = _load_mlflow_model(args.model_selector_output)
+    mlflow_flavor = None
+    if mlmodel_data is not None:
         mlflow_flavors = [
             MLFLOW_FLAVORS.TRANSFORMERS,
             MLFLOW_FLAVORS.HFTRANSFORMERS,
             MLFLOW_FLAVORS.HFTRANSFORMERSV2,
         ]
-        current_flavor = _get_model_flavor(mlflow_flavors, mlflow_data)
-        mlflow_ft_conf["mlflow_flavor"] = current_flavor
+        mlflow_flavor = _get_model_flavor(mlflow_flavors, mlmodel_data)
+        mlflow_ft_conf["mlflow_flavor"] = mlflow_flavor
         # set task based mlflow_model_signature
         if getattr(args, "task_name", None) is not None:
-            if current_flavor is not None and current_flavor in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR.keys():
-                if args.task_name in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[current_flavor]:
+            if mlflow_flavor is not None and mlflow_flavor in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR.keys():
+                if args.task_name in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[mlflow_flavor]:
                     mlflow_ft_conf["mlflow_model_signature"] = deep_update(
                         mlflow_ft_conf["mlflow_model_signature"],
-                        MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[current_flavor][args.task_name],
+                        MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[mlflow_flavor][args.task_name],
                     )
                     logger.info(
                                 f"Adding mlflow model signature for task {args.task_name} - "
-                                f"{MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[current_flavor][args.task_name]}"
+                                f"{MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[mlflow_flavor][args.task_name]}"
                             )
 
     # remove mlflow_model_signature if empty
@@ -892,10 +892,10 @@ def finetune(args: Namespace):
         )
 
     # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
-    if mlflow_data is not None:
+    if mlmodel_data is not None:
         # pass base model MLmodel file data if available
         mlflow_hftransformers_misc_conf = mlflow_ft_conf.get("mlflow_hftransformers_misc_conf", {})
-        mlflow_hftransformers_misc_conf.update({"base_model_mlmodel": mlflow_data})
+        mlflow_hftransformers_misc_conf.update({"base_model_mlmodel": mlmodel_data})
         mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = deep_update(
             mlflow_ft_conf["mlflow_hftransformers_misc_conf"],
             mlflow_hftransformers_misc_conf,
@@ -966,7 +966,8 @@ def finetune(args: Namespace):
     hf_task_runner.run_finetune(args)
 
     # remove unwanted packages and add pinned packages in requirements.txt and conda.yaml
-    if current_flavor == MLFLOW_FLAVORS.TRANSFORMERS:
+    # TODO: Workaround for now, we need to find better solution
+    if mlflow_flavor == MLFLOW_FLAVORS.TRANSFORMERS:
         _update_packages(getattr(args, 'mlflow_model_folder', None))
 
 
