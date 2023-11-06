@@ -4,7 +4,7 @@ tags:
   Preview: ""
 name: llm_dbcopilot_grounding
 display_name: LLM - DBCopilot Grounding DB
-version: 0.0.31
+version: 0.0.32
 inputs:
   asset_uri:
     type: string
