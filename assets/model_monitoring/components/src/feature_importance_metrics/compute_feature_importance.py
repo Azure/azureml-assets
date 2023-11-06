@@ -20,7 +20,7 @@ from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperRegression)
 
 try:
-    from lightgbm import LGBMClassifier, LGBMRegressor, Dataset
+    from lightgbm import LGBMClassifier, LGBMRegressor
 except ImportError:
     pass
 

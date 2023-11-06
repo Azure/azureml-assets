@@ -50,13 +50,14 @@ def is_categorical_column(baseline_data, column_name):
             pd.api.types.is_timedelta64_dtype(baseline_column)):
         return True
     if pd.api.types.is_integer_dtype(baseline_column):
+        # if there are more unique values, not likely to be categorical
         distinct_column_values = len(baseline_column.unique())
         total_column_values = len(baseline_column)
-        distinct_value_ratio = total_column_values / distinct_column_values
+        distinct_value_ratio = distinct_column_values/ total_column_values
         if distinct_value_ratio < 0.05:
-            return False
-        else:
             return True
+        else:
+            return False
     # Log the datatype detected and default to true
     log_time_and_message(f"Unknown column type: {baseline_column_type}")
     return True

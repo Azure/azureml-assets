@@ -82,7 +82,7 @@ class TestComputeFeatureImportanceMetrics:
         categorical_features = compute_categorical_features(get_fraud_data, "IS_FRAUD")
         print(categorical_features)
         assert categorical_features == ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP",
-                                        "ISPROXYIP", "DIGITALITEMCOUNT", "PHYSICALITEMCOUNT"]
+                                        "ISPROXYIP"]
 
     def test_compute_categorical_features_integer(self, get_zipcode_data):
         """Test determine categorical features with integers as categorical."""
