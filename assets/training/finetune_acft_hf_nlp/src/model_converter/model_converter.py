@@ -311,7 +311,7 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
 
         # adding metadata to mlflow model
         metadata = self.component_args.model_metadata
-        metadata=update_acft_metadata(metadata=metadata, finetuning_task=mlflow_task_type)
+        metadata = update_acft_metadata(metadata=metadata, finetuning_task=mlflow_task_type)
         mlflow_model = Model(metadata=metadata)
 
         mlflow.hftransformers.save_model(
