@@ -34,7 +34,7 @@ outputs:
 jobs:
   compute_baseline_explanations:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.7
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.6
     inputs:
       baseline_data:
         type: mltable
@@ -51,7 +51,7 @@ jobs:
       type: aml_token
   compute_production_explanations:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.7
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.6
     inputs:
       baseline_data:
         type: mltable
