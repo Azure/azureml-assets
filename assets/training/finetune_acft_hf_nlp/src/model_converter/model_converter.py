@@ -11,6 +11,7 @@ import shutil
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from mlflow.models import Model
 
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
@@ -30,7 +31,7 @@ from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
-
+from azureml.acft.common_components.utils.mlflow_utils import update_acft_metadata
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
@@ -308,6 +309,11 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
         # Check if any code files are present in the model folder
         py_code_files = get_model_custom_code_files(model_name_or_path, model)
 
+        # adding metadata to mlflow model
+        metadata = self.component_args.model_metadata
+        metadata=update_acft_metadata(metadata=metadata, finetuning_task=mlflow_task_type)
+        mlflow_model = Model(metadata=metadata)
+
         mlflow.hftransformers.save_model(
             model,
             mlflow_model_save_path,
@@ -315,6 +321,7 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
             model.config,
             misc_conf,
             code_paths=py_code_files,
+            mlflow_model=mlflow_model,
             **mlflow_save_model_kwargs,
         )
 
