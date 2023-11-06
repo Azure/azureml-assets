@@ -123,6 +123,7 @@ def cleanup():
 
 
 def set_db_copilot_adapter(db_name, db_copilot_config, visibility):
+    """Set a dbcopilot adapter."""
     cache_dir = os.getenv("AZUREML_MODEL_DIR")
     cache_uri = os.getenv("DBCOPILOT_CACHE_URI")
 
