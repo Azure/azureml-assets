@@ -4,7 +4,7 @@ type: pipeline
 name: data_quality_signal_monitor
 display_name: Data Quality - Signal Monitor
 description: Computes the data quality of a target dataset with reference to a baseline.
-version: 0.3.13
+version: 0.3.14
 is_deterministic: true
 
 inputs:
