@@ -1559,6 +1559,12 @@ def apply_annotation(
     if SIMILARITY in metric_names and ground_truth_column_name not in production_df.columns:
         raise ValueError(f"production_dataset must have column: {ground_truth_column_name}")
 
+    column_names = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
+    if len(column_names) != len(set(column_names)):
+        raise ValueError("Detected duplicate specified columns. Column name input cannot be the same. Please ensure that"
+                         " the column input specified for prompt_column_name, completion_column_name, context_column_name,"
+                         " and ground_truth_column_name is unique.")
+        
     # rename columns to prompt, completion, context, ground truth to match metaprompt data
     production_df = (production_df.withColumnRenamed(prompt_column_name, PROMPT)
                      .withColumnRenamed(completion_column_name, COMPLETION)
