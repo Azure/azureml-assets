@@ -6,7 +6,7 @@
 import socket
 import time
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 from configs import EngineConfig
@@ -94,7 +94,8 @@ class HfEngine(AbstractEngine):
 
     def load_model(self):
         """Load the model from the pretrained model specified in the engine configuration."""
-        self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.model_id)
+        self.config = AutoConfig.from_pretrained(self.engine_config.hf_config_path, trust_remote_code=self.engine_config.trust_remote_code)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.hf_tokenizer_path, **self.engine_config.tokenizer_kwargs)
         self.model = AutoModelForCausalLM.from_pretrained(self.engine_config.model_id)
         # move to the model to the GPU if testing on GPU
         if torch.cuda.is_available():
