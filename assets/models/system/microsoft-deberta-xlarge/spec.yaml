@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: microsoft-deberta-xlarge
+name: mst-deberta-xlarge
 path: ./
 properties:
   SHA: 971e67361eb2580900e26b7062470dee4773d324
@@ -47,4 +47,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: fill-mask
-version: 12
+version: 13
