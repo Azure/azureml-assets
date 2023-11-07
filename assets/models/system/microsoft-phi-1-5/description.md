@@ -39,7 +39,7 @@ The model is licensed under the <a href="https://huggingface.co/microsoft/phi-1_
     "parameters": {
       "top_p": 0.9,
       "temperature": 0.6,
-      "max_new_tokens": 100,
+      "max_new_tokens": 200,
       "do_sample": true
     }
   }
@@ -50,7 +50,7 @@ The model is licensed under the <a href="https://huggingface.co/microsoft/phi-1_
 ```json
 {
   "output": [
-    "What is a fermi paradox?\nAnswer: The fermi paradox is the question of why, if we know that there are infinitely many universes with different physical laws, why haven't we found a way to travel between them and explore them.\n\nExercise 2:\nWhat is a black hole?\nAnswer: A black hole is an object in space with such strong gravity that nothing can escape, not even light.\n\nExercise 3:\nWhat is the difference between a black hole and a wormhole?"
+    "What is a fermi paradox? Answer: The fermi paradox is a paradox that arises from the observation that, if there is a high probability of a particle being in a particular state, it should not be observed at all. Exercise 3: What is the Higgs boson? Answer: The Higgs boson is a particle that was discovered in 2012. It gives other particles mass by interacting with them through a fundamental force. Exercise 4: What is the role of particle physics in modern medicine? Answer: Particle physics has contributed to the development of many medical treatments, including radiation therapy for cancer and imaging techniques like MRI and PET scans. Exercise 5: What is the role of particle physics in renewable energy? Answer: Particle physics has contributed to the development of renewable energy technologies like solar cells and wind turbines. Title: The Importance of Comparison: Judicious and Foolhardy Introduction: In our daily lives,"
   ]
 }
 ```
@@ -76,7 +76,7 @@ The model is licensed under the <a href="https://huggingface.co/microsoft/phi-1_
 ```json
 {
   "output": [
-    "Alice: What is a fermi paradox?\n\nBob: It's a question about why the number of fermions and bosons in the universe is roughly equal.\n\nAlice: Oh, I see. So, why are there more fermions than bosons?\n\nBob: Well, there are a few reasons. One is that fermions are more abundant in nature, and they have a greater affinity for each other. Another reason is that fermions can form more stable structures than bosons, pregnancies,"
+    "Alice: What is a fermi paradox?\nA: The fermi paradox is the paradox that arises from the fact that the probability of the existence of a black hole is incredibly high, yet we cannot observe it directly.\n\nBob: That's fascinating! So, if we can't see the black hole, how can we know it exists?\nAlice: Well, scientists have indirect evidence, such as the gravitational effects on nearby matter and the emission of high-energy radiation.\n\nBob: But if we can't see"
   ]
 }
 ```
@@ -103,7 +103,7 @@ The model is licensed under the <a href="https://huggingface.co/microsoft/phi-1_
 ```json
 {
   "output": [
-    "def is_prime(n: int) -> bool:\n        if n < 2:\n            return False\n        for i in range(2, int(math.sqrt(n)) + 1):\n            if n % i == 0:\n                return False\n        return True\n\n    def is_triangular(n: int) -> bool:\n        return is_prime(n * (n + 1) // 2)\n\n    triangular_numbers = [i * ("
+    "def is_prime(n: int) -> bool:\n        if n < 2:\n            return False\n        for i in range(2, int(math.sqrt(n)) + 1):\n            if n % i == 0:\n                return False\n        return True\n\n    for i in range(len(li)):\n        for j in range(i + 1, len(li)):\n            if is_prime(li[i] + li[j]"
   ]
 }
 ```
