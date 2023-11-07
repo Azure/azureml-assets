@@ -66,6 +66,7 @@ AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE = r"^(?=.{1,255}$)(?!-)[a-zA-Z0-9-]{1,63}
 AZURE_OPENAI_API_COMPLETION_URL_PATTERN = "https://{}/openai/deployments/{}/chat/completions"
 LISTSECRETS_API_PATTERN = "https://management.azure.com{}/listsecrets?api-version=2023-06-01-preview"
 AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN = "https://{}/openai/deployments/{}"
+SUPPORTED_CONNECTION_TYPES = ["azure_open_ai", "open_ai"]
 
 # OpenAI API
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
@@ -794,21 +795,31 @@ class _WorkspaceConnectionTokenManager(_APITokenManager):
                 )
                 connection = WorkspaceConnection._from_rest_object(list_secrets_response)
                 print(f"Retrieved Workspace Connection: {connection.id}")
-
-                if connection.type != "azure_open_ai":
-                    raise Exception(f"Received unexpected endpoint type {connection.type}"
-                                    "only Azure Open AI endpoints are supported at this time")
+                
                 api_version = "2023-07-01-preview"
+                token_credential = None
+                print(connection)
+                if connection.type not in SUPPORTED_CONNECTION_TYPES:
+                    raise Exception(f"Received unexpected endpoint type {connection.type}"
+                                    "only Azure Open AI and Open AI endpoints are supported at this time")
                 if hasattr(connection.metadata, "ApiVersion"):
                     api_version = connection.metadata["ApiVersion"]
+                if hasattr(connection.credentials, "key"):
+                    token_credential = connection.credentials["key"]
                 self.api_version = api_version
                 self.domain_name = connection.target
-                self.token = connection.credentials["key"]
+                self.connection_type = connection.type
+                self.token = token_credential
+                print(self)
+
             else:
                 raise Exception("Unable to retrieve the token to establish a Workspace Connection")
         except Exception as e:
             raise Exception(f"Error encountered while attempting to authentication token: {e}")
 
+    def get_connection_type(self):
+        return self.connection_type
+    
     def get_api_version(self):
         return self.api_version
 
@@ -1559,6 +1570,14 @@ def apply_annotation(
     if SIMILARITY in metric_names and ground_truth_column_name not in production_df.columns:
         raise ValueError(f"production_dataset must have column: {ground_truth_column_name}")
 
+    column_names = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
+    if len(column_names) != len(set(column_names)):
+        raise ValueError("Detected duplicate specified columns. Column name input cannot be the same. Please ensure "
+                         f"that the column input specified is unique.\nReceived prompt_column_name: "
+                         f"{prompt_column_name}\ncompletion_column_name: {completion_column_name}\n"
+                         f"context_column_name: {context_column_name}\nground_truth_column_name: "
+                         f"{ground_truth_column_name}")
+
     # rename columns to prompt, completion, context, ground truth to match metaprompt data
     production_df = (production_df.withColumnRenamed(prompt_column_name, PROMPT)
                      .withColumnRenamed(completion_column_name, COMPLETION)
@@ -1625,40 +1644,44 @@ def apply_annotation(
             auth_header=API_KEY
         )
     except Exception as e:
-        print(f"Unable to process request: {e}")
-        return
+        raise ValueError(f"Unable to process request: {e}")
 
     endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
     api_version = token_manager.get_api_version()
 
-    print(
-        "Created token manager for auth type "
-        f"managed identity using auth header {API_KEY}."
-    )
-    endpoint_args["azure_endpoint_domain_name"] = endpoint_domain_name
-    endpoint_args["azure_openai_api_version"] = api_version
+    # TODO: need to add validation for model deployment name if oai
+    model_type = model_deployment_name
 
-    # use fixed API version since newer versions aren't supported
-    get_model_endpoint = _check_and_format_azure_endpoint_url(AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
-                                                              AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-                                                              endpoint_domain_name, "2022-12-01",
-                                                              model_deployment_name)
-    try:
-        headers = {
-            "Content-Type": "application/json",
-            "api-key": token_manager.get_token()
-        }
-        response = requests.get(url=get_model_endpoint, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
-        if response.status_code == 200:
-            response_data = response.json()
-            model_type = response_data["model"]
-        else:
-            raise Exception(
-                "Received unexpected HTTP status: "
-                f"{response.status_code} {response.text}"
-            )
-    except Exception:
-        raise Exception("Error encountered while attempting to get model type")
+    if token_manager.get_connection_type() == "azure_open_ai":
+        print(
+            "Created token manager for auth type "
+            f"managed identity using auth header {API_KEY}."
+        )
+        endpoint_args["azure_endpoint_domain_name"] = endpoint_domain_name
+        endpoint_args["azure_openai_api_version"] = api_version
+
+        # use fixed API version since newer versions aren't supported
+        get_model_endpoint = _check_and_format_azure_endpoint_url(AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
+                                                                AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
+                                                                endpoint_domain_name, "2022-12-01",
+                                                                model_deployment_name)
+        try:
+            headers = {
+                "Content-Type": "application/json",
+                "api-key": token_manager.get_token()
+            }
+            response = requests.get(url=get_model_endpoint, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
+            if response.status_code == 200:
+                response_data = response.json()
+                model_type = response_data["model"]
+            else:
+                raise Exception(
+                    "Received unexpected HTTP status: "
+                    f"{response.status_code} {response.text}"
+                )
+        except Exception:
+            raise Exception("Error encountered while attempting to get model type")
+
 
     request_args["max_tokens"] = BASE_MAX_TOKENS * MODEL_TYPE_FACTOR[model_type]
     max_inputs = BASE_MAX_INPUTS * MODEL_TYPE_FACTOR[model_type]
