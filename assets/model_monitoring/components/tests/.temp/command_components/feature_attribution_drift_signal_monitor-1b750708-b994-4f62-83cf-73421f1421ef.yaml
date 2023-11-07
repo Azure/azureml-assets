@@ -1,0 +1,123 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+
+name: feature_attribution_drift_signal_monitor
+display_name: Feature Attribution Drift - Signal Monitor
+description: Computes the feature attribution between a baseline and production data
+  assets.
+version: '11_07_2023_14_07_51'
+is_deterministic: true
+
+inputs:
+  monitor_name:
+    type: string
+  signal_name:
+    type: string
+  target_data:
+    type: mltable
+  baseline_data:
+    type: mltable
+  target_column:
+    type: string
+  task_type:
+    type: string
+    optional: true
+  monitor_current_time:
+    type: string
+  notification_emails:
+    type: string
+    default: ''
+    optional: true
+outputs:
+  signal_output:
+    type: mltable
+
+jobs:
+  compute_baseline_explanations:
+    type: spark
+    component: azureml:feature_importance_metrics:11_07_2023_14_07_51
+    inputs:
+      baseline_data:
+        type: mltable
+        path: ${{parent.inputs.baseline_data}}
+      task_type: ${{parent.inputs.task_type}}
+      target_column: ${{parent.inputs.target_column}}
+    outputs:
+      signal_metrics:
+        type: mltable
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: '3.3'
+    identity:
+      type: aml_token
+  compute_production_explanations:
+    type: spark
+    component: azureml:feature_importance_metrics:11_07_2023_14_07_51
+    inputs:
+      baseline_data:
+        type: mltable
+        path: ${{parent.inputs.target_data}}
+      task_type: ${{parent.inputs.task_type}}
+      target_column: ${{parent.inputs.target_column}}
+    outputs:
+      signal_metrics:
+        type: mltable
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: '3.3'
+    identity:
+      type: aml_token
+  compute_feature_attribution:
+    type: spark
+    component: azureml:feature_attribution_drift_compute_metrics:11_07_2023_14_07_51
+    inputs:
+      production_data:
+        type: mltable
+        path: ${{parent.jobs.compute_production_explanations.outputs.signal_metrics}}
+      baseline_data:
+        type: mltable
+        path: ${{parent.jobs.compute_baseline_explanations.outputs.signal_metrics}}
+      target_column: ${{parent.inputs.target_column}}
+    outputs:
+      signal_metrics:
+        type: mltable
+    resources:
+      instance_type: standard_e8s_v3
+      runtime_version: '3.3'
+    identity:
+      type: aml_token
+  output_signal_metrics:
+    type: spark
+    component: azureml:model_monitor_output_metrics:11_07_2023_14_07_51
+    inputs:
+      signal_metrics:
+        type: mltable
+        path: ${{parent.jobs.compute_feature_attribution.outputs.signal_metrics}}
+      signal_type: FeatureAttributionDrift
+      signal_name: ${{parent.inputs.signal_name}}
+      monitor_name: ${{parent.inputs.monitor_name}}
+      metric_timestamp: ${{parent.inputs.monitor_current_time}}
+    outputs:
+      signal_output:
+        type: uri_folder
+        path: ${{parent.outputs.signal_output}}
+        mode: direct
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: '3.3'
+    identity:
+      type: aml_token
+  evaluate_metric_thresholds:
+    type: spark
+    component: azureml:model_monitor_evaluate_metrics_threshold:11_07_2023_14_07_51
+    inputs:
+      signal_metrics:
+        type: mltable
+        path: ${{parent.jobs.compute_feature_attribution.outputs.signal_metrics}}
+      notification_emails: ${{parent.inputs.notification_emails}}
+      signal_name: ${{parent.inputs.signal_name}}
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: '3.3'
+    identity:
+      type: aml_token

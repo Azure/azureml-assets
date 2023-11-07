@@ -1,0 +1,47 @@
+$schema: http://azureml/sdk-2-0/SparkComponent.json
+type: spark
+
+name: data_quality_data_statistics
+display_name: Data Quality - Data Statistics
+description: Compute data statistics leveraged by the data quality monitor.
+version: '11_07_2023_14_07_51'
+is_deterministic: true
+
+inputs:
+  baseline_data:
+    type: mltable
+    mode: direct
+outputs:
+  data_statistics:
+    type: mltable
+    mode: direct
+
+code: C:\Users\yunzhan\src\azureml-assets\assets\model_monitoring\components\src
+entry:
+  file: ./data_quality_statistics/run.py
+conf:
+  spark.driver.cores: 1
+  spark.driver.memory: 2g
+  spark.executor.cores: 2
+  spark.executor.memory: 2g
+  spark.executor.instances: 1
+  spark.dynamicAllocation.enabled: true
+  spark.dynamicAllocation.minExecutors: 1
+  spark.dynamicAllocation.maxExecutors: 4
+  spark.synapse.library.python.env: |
+    channels:
+      - conda-forge
+    dependencies:
+      - python=3.8
+      - pip:
+        - scipy~=1.10.0
+        - numpy~=1.21.0
+        - pandas~=1.4.3
+        - azureml-mlflow~=1.49.0
+        - mltable~=1.3.0
+        - azureml-fsspec
+        - fsspec~=2023.4.0
+    name: momo-base-spark
+args: >-
+  --baseline_data ${{inputs.baseline_data}}
+  --data_statistics ${{outputs.data_statistics}}

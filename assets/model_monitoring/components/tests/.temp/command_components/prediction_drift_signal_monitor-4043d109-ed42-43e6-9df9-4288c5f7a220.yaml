@@ -1,0 +1,127 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+
+name: prediction_drift_signal_monitor
+display_name: Prediction Drift - Signal Monitor
+description: Computes the prediction drift between a baseline and a target data assets.
+version: '11_07_2023_14_07_51'
+is_deterministic: true
+
+inputs:
+  signal_name:
+    type: string
+  monitor_name:
+    type: string
+  target_data:
+    type: mltable
+  baseline_data:
+    type: mltable
+  numerical_metric:
+    type: string
+    default: NormalizedWassersteinDistance
+  categorical_metric:
+    type: string
+    default: JensenShannonDistance
+  numerical_threshold:
+    type: number
+    default: 0.5
+  categorical_threshold:
+    type: number
+    default: 0.5
+  monitor_current_time:
+    type: string
+  filter_type:
+    type: string
+    default: All
+  filter_value:
+    type: string
+    default: '*'
+  notification_emails:
+    type: string
+    default: ''
+    optional: true
+outputs:
+  signal_output:
+    type: uri_folder
+    mode: direct
+jobs:
+  feature_selection:
+    type: spark
+    component: azureml:model_monitor_feature_selector:11_07_2023_14_07_51
+    inputs:
+      input_data_1:
+        type: mltable
+        path: ${{parent.inputs.target_data}}
+      input_data_2:
+        type: mltable
+        path: ${{parent.inputs.baseline_data}}
+      filter_type: ${{parent.inputs.filter_type}}
+      filter_value: ${{parent.inputs.filter_value}}
+    outputs:
+      feature_names:
+        type: mltable
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: '3.3'
+    identity:
+      type: aml_token
+  compute_drift_metrics:
+    type: spark
+    component: azureml:data_drift_compute_metrics:11_07_2023_14_07_51
+    inputs:
+      production_dataset:
+        type: mltable
+        path: ${{parent.inputs.target_data}}
+      baseline_dataset:
+        type: mltable
+        path: ${{parent.inputs.baseline_data}}
+      feature_names:
+        type: mltable
+        path: ${{parent.jobs.feature_selection.outputs.feature_names}}
+      numerical_metric: ${{parent.inputs.numerical_metric}}
+      categorical_metric: ${{parent.inputs.categorical_metric}}
+      numerical_threshold: ${{parent.inputs.numerical_threshold}}
+      categorical_threshold: ${{parent.inputs.categorical_threshold}}
+    outputs:
+      signal_metrics:
+        type: mltable
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: '3.3'
+    identity:
+      type: aml_token
+  output_signal_metrics:
+    type: spark
+    component: azureml:model_monitor_output_metrics:11_07_2023_14_07_51
+    inputs:
+      signal_metrics:
+        type: mltable
+        path: ${{parent.jobs.compute_drift_metrics.outputs.signal_metrics}}
+      signal_type: PredictionDrift
+      signal_name: ${{parent.inputs.signal_name}}
+      monitor_name: ${{parent.inputs.monitor_name}}
+      metric_timestamp: ${{parent.inputs.monitor_current_time}}
+    outputs:
+      signal_output:
+        type: uri_folder
+        path: ${{parent.outputs.signal_output}}
+        mode: direct
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: '3.3'
+    identity:
+      type: aml_token
+  evaluate_metric_thresholds:
+    type: spark
+    component: azureml:model_monitor_evaluate_metrics_threshold:11_07_2023_14_07_51
+    inputs:
+      signal_metrics:
+        type: mltable
+        path: ${{parent.jobs.compute_drift_metrics.outputs.signal_metrics}}
+      notification_emails: ${{parent.inputs.notification_emails}}
+      signal_name: ${{parent.inputs.signal_name}}
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: '3.3'
+    identity:
+      type: aml_token

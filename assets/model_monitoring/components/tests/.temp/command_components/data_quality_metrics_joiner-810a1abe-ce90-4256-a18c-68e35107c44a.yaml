@@ -1,0 +1,57 @@
+$schema: http://azureml/sdk-2-0/SparkComponent.json
+type: spark
+
+name: data_quality_metrics_joiner
+display_name: Data Quality - Metrics Joiner
+description: Join baseline and target data quality metrics into a single output.
+version: '11_07_2023_14_07_51'
+is_deterministic: true
+
+inputs:
+  baseline_metrics:
+    type: mltable
+    mode: direct
+  target_metrics:
+    type: mltable
+    mode: direct
+  categorical_threshold:
+    type: number
+  numerical_threshold:
+    type: number
+outputs:
+  signal_metrics:
+    type: mltable
+    mode: direct
+
+code: C:\Users\yunzhan\src\azureml-assets\assets\model_monitoring\components\src
+entry:
+  file: ./data_quality_metrics_joiner/run.py
+conf:
+  spark.driver.cores: 1
+  spark.driver.memory: 2g
+  spark.executor.cores: 2
+  spark.executor.memory: 2g
+  spark.executor.instances: 1
+  spark.dynamicAllocation.enabled: true
+  spark.dynamicAllocation.minExecutors: 1
+  spark.dynamicAllocation.maxExecutors: 4
+  spark.synapse.library.python.env: |
+    channels:
+      - conda-forge
+    dependencies:
+      - python=3.8
+      - pip:
+        - scipy~=1.10.0
+        - numpy~=1.21.0
+        - pandas~=1.4.3
+        - azureml-mlflow~=1.49.0
+        - mltable~=1.3.0
+        - azureml-fsspec
+        - fsspec~=2023.4.0
+    name: momo-base-spark
+args: >-
+  --baseline_metrics ${{inputs.baseline_metrics}}
+  --target_metrics ${{inputs.target_metrics}}
+  --numerical_threshold ${{inputs.numerical_threshold}}
+  --categorical_threshold ${{inputs.categorical_threshold}}
+  --signal_metrics ${{outputs.signal_metrics}}
