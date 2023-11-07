@@ -1,0 +1,29 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+template: | 
+  There are many fruits that were found on the recently discovered planet Goocrux. There are neoskizzles that grow there, which are purple and taste like candy. There are also loheckles, which are a grayish blue fruit and are very tart, a little bit like a lemon. Pounits are a bright green color and are more savory than sweet. There are also plenty of loopnovas which are a neon pink flavor and taste like cotton candy. Finally, there are fruits called glowls, which have a very sour and bitter taste which is acidic and caustic, and a pale orange tinge to them.
+
+  Please make a table summarizing the fruits from Goocrux
+  | Fruit | Color | Flavor |
+  | Neoskizzles | Purple | Sweet |
+  | Loheckles | Grayish blue | Tart |
+
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
+execution_settings:
+  default:
+    bestOf: 1,
+    frequencyPenalty: 0,
+    responseLength: 60,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1  
+  text-davinci-003:
+    model_id: text-davinci-003
+    bestOf: 1,
+    frequencyPenalty: 0,
+    responseLength: 60,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1  
+    
+template_format: handlebars
