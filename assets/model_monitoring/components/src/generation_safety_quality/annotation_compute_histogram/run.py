@@ -1562,9 +1562,10 @@ def apply_annotation(
     column_names = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
     if len(column_names) != len(set(column_names)):
         raise ValueError("Detected duplicate specified columns. Column name input cannot be the same. Please ensure "
-                        f"that the column input specified is unique. Received prompt_column_name: {prompt_column_name}"
-                        f"\ncompletion_column_name: {completion_column_name}\ncontext_column_name: "
-                        f"{context_column_name}\nground_truth_column_name: {ground_truth_column_name}")
+                         f"that the column input specified is unique.\nReceived prompt_column_name: "
+                         f"{prompt_column_name}\ncompletion_column_name: {completion_column_name}\n"
+                         f"context_column_name: {context_column_name}\nground_truth_column_name: "
+                         f"{ground_truth_column_name}")
 
     # rename columns to prompt, completion, context, ground truth to match metaprompt data
     production_df = (production_df.withColumnRenamed(prompt_column_name, PROMPT)
