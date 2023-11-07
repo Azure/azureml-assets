@@ -383,7 +383,7 @@ def registermodel_entrypoint(
     properties.update(
         {
             "pipeManifestPath": pipe_manifest_path,
-            "intellectualPropertyPublisher": "OSS",
+            "intellectualPropertyPublisher": "nopublisher",
             # "modelPath": model_directory_path,
             # "componentVersion": "1",
             "engineControllerManifestPath": engine_controller_manifest_path,
