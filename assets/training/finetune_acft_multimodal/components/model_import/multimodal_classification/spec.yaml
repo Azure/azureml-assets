@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.1
+version: 0.0.1.testPR
 name: multimodal_classification_model_import
 display_name: Multimodal Classification Model Import
 description: Import PyTorch / MLflow model
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/acft-multimodal-gpu/versions/1
+environment: azureml:azml-train-finetune-mm-curated-acpt-pytorch-113-py38-cuda117-gpu:51
 
 code: ../../../src/model_import/
 
