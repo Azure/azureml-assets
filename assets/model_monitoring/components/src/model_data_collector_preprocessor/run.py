@@ -16,7 +16,7 @@ from fsspec import AbstractFileSystem
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
 from pyspark.sql.functions import lit, col
-from shared_utilities.event_utils import post_warning_event
+from shared_utilities.momo_exceptions import DataNotFoundError
 from shared_utilities.io_utils import (
     init_spark,
     try_read_mltable_in_spark_with_error,
@@ -259,13 +259,8 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
     # df.show()
     # df.printSchema()
 
-    if not df:
-        print("Skipping the Model Data Collector preprocessor.")
-        post_warning_event(
-            "Although data was found, the window for this current run contains no data. "
-            + "Please visit aka.ms/mlmonitoringhelp for more information."
-        )
-        return
+    if not df or df.isEmpty():
+        raise DataNotFoundError(f"No data was found for input '{input_data}' in the specified window.")
 
     datastore = _get_datastore_from_input_path(input_data)
     # print("Datastore:", datastore)

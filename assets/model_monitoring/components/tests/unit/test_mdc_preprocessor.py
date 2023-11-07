@@ -109,7 +109,9 @@ class TestMDCPreprocessor:
     @pytest.mark.parametrize(
         "window_start_time, window_end_time",
         [
-            ("2023-11-03T15:00:00", "2023-11-03T16:00:00"),
+            ("2023-11-03T15:00:00", "2023-11-03T16:00:00"),  # no folder
+            ("2023-11-06T15:00:00", "2023-11-06T16:00:00"),  # has folder, no file
+            ("2023-11-06T17:00:00", "2023-11-06T18:00:00"),  # has folder and file, but empty file
         ]
     )
     def test_uri_folder_to_spark_df_no_data(self, mdc_preprocessor_test_setup,
@@ -133,6 +135,8 @@ class TestMDCPreprocessor:
                 fs,
             )
             pdf.show()
+
+    # todo: add test for root MDC dir not exists (e.g. {test_path}/unit/raw_mdc_data1/)
 
     # @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
