@@ -36,6 +36,7 @@ def get_fraud_data():
 
 @pytest.fixture
 def get_complex_dtype_data():
+    """Return time data as pandas dataframe."""
     return pd.DataFrame({
         "Time": [pd.Timedelta('1 days 06:05:01.000030')],
         "DateTime": pd.DatetimeIndex(['2018-04-24 00:00:00'], dtype='datetime64[ns]', freq=None)
@@ -71,7 +72,7 @@ class TestComputeFeatureImportanceMetrics:
         assert len(test_data.index) == 5000
 
     def test_is_categorical_column(self, get_complex_dtype_data):
-        """Test whether a column is categorical"""
+        """Test whether a column is categorical."""
         result = is_categorical_column(get_complex_dtype_data, "Time")
         assert not result
         result = is_categorical_column(get_complex_dtype_data, "DateTime")
