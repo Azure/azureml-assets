@@ -18,7 +18,7 @@ distribution:
 inputs:
   problem_type:
     type: string
-    default: multimodal-classification
+    default: multimodal-classification-singlelabel
     optional: false
     enum:
       - multimodal-classification-singlelabel
