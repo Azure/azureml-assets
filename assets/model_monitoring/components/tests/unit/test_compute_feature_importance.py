@@ -73,14 +73,13 @@ class TestComputeFeatureImportanceMetrics:
     def test_is_categorical_column(self, get_complex_dtype_data):
         """Test whether a column is categorical"""
         result = is_categorical_column(get_complex_dtype_data, "Time")
-        assert result == False
+        assert not result
         result = is_categorical_column(get_complex_dtype_data, "DateTime")
-        assert result == False
+        assert not result
 
     def test_compute_categorical_features(self, get_fraud_data):
         """Test determine categorical features."""
         categorical_features = compute_categorical_features(get_fraud_data, "IS_FRAUD")
-        print(categorical_features)
         assert categorical_features == ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP",
                                         "ISPROXYIP"]
 

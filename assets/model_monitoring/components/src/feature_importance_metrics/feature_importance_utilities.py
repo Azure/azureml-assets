@@ -53,7 +53,7 @@ def is_categorical_column(baseline_data, column_name):
         # if there are more unique values, not likely to be categorical
         distinct_column_values = len(baseline_column.unique())
         total_column_values = len(baseline_column)
-        distinct_value_ratio = distinct_column_values/ total_column_values
+        distinct_value_ratio = distinct_column_values / total_column_values
         if distinct_value_ratio < 0.05:
             return True
         else:

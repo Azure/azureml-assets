@@ -283,7 +283,7 @@ def run(args):
                 baseline_df[column] = baseline_df[column].astype("int")
             elif column in categorical_features and column != args.target_column:
                 baseline_df[column] = baseline_df[column].astype('category')
-        
+
         feature_importances = compute_feature_importance(
             task_type, args.target_column, baseline_df, categorical_features)
         feature_columns = baseline_df.drop([args.target_column], axis=1)
