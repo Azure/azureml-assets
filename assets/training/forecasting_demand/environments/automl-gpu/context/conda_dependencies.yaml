@@ -40,4 +40,4 @@ dependencies:
   - prophet==1.1.4
   - py-cpuinfo==5.0.0
   # TODO: Remove urllib pin when azureml-automl-runtime 1.54.0 will be released.
-  - urllib<2.0.0
+  - urllib3==1.26.18
