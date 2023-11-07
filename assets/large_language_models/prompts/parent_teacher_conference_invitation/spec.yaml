@@ -2,11 +2,11 @@ $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
 name: parent-teacher-conference-invitation
-version: 0.1.1
+version: 0.1.3
 display_name: Parent Teacher Conference Invitation
 
 tags:
-  modality: chat
+  modality: completion
   task: content-creation
   industry: education
 

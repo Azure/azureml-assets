@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: question_answering_pipeline
-version: 0.0.25
+version: 0.0.26
 type: pipeline
 display_name: Question Answering Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for extractive question answering task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/question_answering_pipeline) to learn more.
@@ -541,8 +541,10 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.23
+    component: azureml:ft_nlp_common_validation:0.0.24
     compute: '${{parent.inputs.compute_model_import}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_model_import}}'
     inputs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       compute_finetune: '${{parent.inputs.compute_finetune}}'
@@ -559,7 +561,7 @@ jobs:
       user_column_names: '${{parent.inputs.question_key}},${{parent.inputs.context_key}},${{parent.inputs.answers_key}}'
   question_answering_model_import:
     type: command
-    component: azureml:question_answering_model_import:0.0.23
+    component: azureml:question_answering_model_import:0.0.24
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -570,7 +572,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   question_answering_datapreprocess:
     type: command
-    component: azureml:question_answering_datapreprocess:0.0.23
+    component: azureml:question_answering_datapreprocess:0.0.24
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -595,7 +597,7 @@ jobs:
       model_selector_output: '${{parent.jobs.question_answering_model_import.outputs.output_dir}}'
   question_answering_finetune:
     type: command
-    component: azureml:question_answering_finetune:0.0.23
+    component: azureml:question_answering_finetune:0.0.24
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -652,8 +654,10 @@ jobs:
       # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.23
-    compute: '${{parent.inputs.compute_model_import}}'
+    component: azureml:ft_nlp_model_converter:0.0.24
+    compute: '${{parent.inputs.compute_finetune}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_finetune}}'
     inputs:
       model_path: '${{parent.jobs.question_answering_finetune.outputs.pytorch_model_folder}}'
       converted_model: '${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}'
@@ -661,7 +665,7 @@ jobs:
       output_dir: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.16
+    component: azureml:model_prediction:0.0.17
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -670,12 +674,12 @@ jobs:
       test_data: '${{parent.jobs.question_answering_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.answers_key}}'
       input_column_names: "'${{parent.inputs.question_key}}','${{parent.inputs.context_key}}'"
-      # batch_size: '${{parent.inputs.batch_size}}'
+      batch_size: '${{parent.inputs.batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.output_dir}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.16
+    component: azureml:compute_metrics:0.0.17
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'

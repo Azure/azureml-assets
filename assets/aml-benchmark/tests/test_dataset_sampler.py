@@ -555,7 +555,7 @@ class TestDatasetSamplerScript:
         src_dir = get_src_dir()
         args = [
             f"cd {src_dir} &&",
-            "python -m dataset_sampler.main",
+            "python -m aml_benchmark.dataset_sampler.main",
             "--dataset",
             dataset,
             "--sampling_style",
