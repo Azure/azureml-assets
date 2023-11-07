@@ -7,6 +7,7 @@ import pyspark.sql as pyspark_sql
 data_type_double_group = ["float", "double"]
 data_type_long_group = ["long", "int", "bigint", "short"]
 
+
 def get_numerical_columns(column_dtype_map: dict) -> list:
     """Get numerical columns from all columns."""
     # NOTE: byte, short, long are not included in the list because they
@@ -99,13 +100,13 @@ def get_common_columns(
             # and both of them are in [double, float],
             # We consider them to be double
             if production_df_dtypes.get(column_name) in data_type_double_group \
-            and baseline_df_dtypes.get(column_name) in data_type_double_group:
+                and baseline_df_dtypes.get(column_name) in data_type_double_group:
                 common_columns[column_name] = 'double'
             # if baseline and target are of different type
             # and both of them are in [int, long, short]
             # We consider them to be long
             elif production_df_dtypes.get(column_name) in data_type_long_group\
-            and baseline_df_dtypes.get(column_name) in data_type_long_group:
+                and baseline_df_dtypes.get(column_name) in data_type_long_group:
                 common_columns[column_name] = 'long'
 
     return common_columns
