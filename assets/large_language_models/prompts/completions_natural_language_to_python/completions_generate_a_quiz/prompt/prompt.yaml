@@ -1,0 +1,33 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+template: | 
+  Generate a multiple choice quiz from the text below. Quiz should contain at least 5 questions. Each answer choice should be on a separate line, with a blank line separating each question.
+
+  A neutron star is the collapsed core of a massive supergiant star, which had a total mass of between 10 and 25 solar masses, possibly more if the star was especially metal-rich. Neutron stars are the smallest and densest stellar objects, excluding black holes and hypothetical white holes, quark stars, and strange stars. Neutron stars have a radius on the order of 10 kilometers (6.2 mi) and a mass of about 1.4 solar masses. They result from the supernova explosion of a massive star, combined with gravitational collapse, that compresses the core past white dwarf star density to that of atomic nuclei.
+
+  Example:
+  Q1. What is a neutron star?
+  A. The collapsed core of a massive supergiant star
+  B. The smallest and densest stellar object
+  C. A white hole
+  D. A quark star
+
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
+execution_settings:
+  default:
+    bestOf: 1
+    frequencyPenalty: 0
+    responseLength: 500
+    presencePenalty: 0.5
+    temperature: 0.8
+    topP: 1
+  text-davinci-003:
+    model_id: text-davinci-003
+    bestOf: 1
+    frequencyPenalty: 0
+    responseLength: 500
+    presencePenalty: 0.5
+    temperature: 0.8
+    topP: 1
+    
+template_format: handlebars

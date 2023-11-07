@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.1
+name: natural_language_to_sql
+display_name: Natural language to SQL
+description: Natural language to SQL
+
+tags:
+  modality: completion
+  task: natural-language-to-code
+
+data_uri: ./prompt
+template_path: prompt.yaml

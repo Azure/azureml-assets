@@ -1,0 +1,15 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.1
+name: generate_a_quiz
+display_name: Generate a quiz
+description: Generate a quiz
+
+tags:
+  modality: completion
+  task: content-creation
+
+data_uri: ./prompt
+template_path: prompt.yaml
+

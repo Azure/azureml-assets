@@ -1,0 +1,45 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+template: | 
+    Generate a summary of the below conversation in the following format:
+    Customer problem:
+    Outcome of the conversation:
+    Action items for follow-up:
+    Customer budget:
+    Departure city:
+    Destination city:
+
+    Conversation:
+    User: Hi there, I'm off between August 25 and September 11. I saved up 4000 for a nice trip. If I flew out from San Francisco, what are your suggestions for where I can go?
+    Agent: For that budget you could travel to cities in the US, Mexico, Brazil, Italy or Japan. Any preferences?
+    User: Excellent, I've always wanted to see Japan. What kind of hotel can I expect?
+    Agent: Great, let me check what I have. First, can I just confirm with you that this is a trip for one adult?
+    User: Yes it is
+    Agent: Great, thank you, In that case I can offer you 15 days at HOTEL Contoso, a 3 star hotel close to a Palace. You would be staying there between August 25th and September 7th. They offer free wifi and have an excellent guest rating of 8.49/10. The entire package costs 2024.25USD. Should I book this for you?
+    User: That sounds really good actually. Please book me at Contoso.
+    Agent: I can do that for you! Can I help you with anything else today?
+    User: No, thanks! Please just send me the itinerary to my email soon.
+
+    Summary:
+
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
+execution_settings:
+  default:
+    bestOf: 1
+    frequencyPenalty: 0
+    responseLength: 350
+    presencePenalty: 0
+    stopSequences: []
+    temperature: 0.3
+    topP: 1
+  text-davinci-003:
+    model_id: text-davinci-003
+    bestOf: 1
+    frequencyPenalty: 0
+    responseLength: 350
+    presencePenalty: 0
+    stopSequences: []
+    temperature: 0.3
+    topP: 1
+    
+template_format: handlebars

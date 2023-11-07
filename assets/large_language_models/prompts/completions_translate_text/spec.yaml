@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.1
+name: translate_text
+display_name: Translate text
+description: Translate text
+
+tags:
+  modality: completion
+  task: translation
+
+data_uri: ./prompt
+template_path: prompt.yaml
