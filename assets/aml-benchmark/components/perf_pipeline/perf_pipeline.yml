@@ -6,8 +6,9 @@ description: benchmark_clip
 jobs:
   endpoint:
     type: pipeline
-    component: azureml:batch_benchmark_inference:0.0.3.vision
+    component: azureml:batch_benchmark_inference:0.0.2.clip_benchmarking
     inputs:
+      perf_jsonl: "beach_huge.jsonl"
       batch_input_pattern: '{
         "input_data": {
           "columns": [
@@ -16,20 +17,20 @@ jobs:
           ],
           "index": [0],
           "data": [
-            ["###<image>", "###<text>"]
+            ["###<image>", "label1, label2, label3"]
           ]
         },
         "params": {}
       }'
-      endpoint_url: https://clip-base-embed-cpu.eastus.inference.ml.azure.com/score
+      endpoint_url: https://clip-large-ic.eastus.inference.ml.azure.com/score
       is_performance_test: true
-      deployment_name: openai-clip-image-text-embeddi-2
-      connections_name: clip-conn-embed
+      deployment_name: openai-clip-vit-large-patch14-3
+      connections_name: clip-large-ic
       n_samples: 10
       handle_response_failure: use_fallback
       ensure_ascii: false
       initial_worker_count: 5
-      max_worker_count: 200
+      max_worker_count: 5
       instance_count: 1
       max_concurrency_per_instance: 1
       debug_mode: true

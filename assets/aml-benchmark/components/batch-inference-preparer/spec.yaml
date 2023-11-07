@@ -11,6 +11,10 @@ inputs:
     type: uri_folder
     description: Input jsonl dataset that contains prompt. For the performance test, this one will be neglected.
     optional: True
+  perf_jsonl:
+    type: string
+    description: Input jsonl containing data for inference request for performance test.
+    optional: True
   batch_input_pattern:
     type: string
     description: >- 
@@ -64,6 +68,7 @@ command: >-
   --output_metadata ${{outputs.ground_truth_metadata}}
   --is_performance_test ${{inputs.is_performance_test}}
   $[[--input_dataset ${{inputs.input_dataset}}]]
+  $[[--perf_jsonl ${{inputs.perf_jsonl}}]]
   $[[--n_samples ${{inputs.n_samples}}]]
   $[[--endpoint_url ${{inputs.endpoint_url}}]]
   $[[--label_key ${{inputs.label_column_name}}]]

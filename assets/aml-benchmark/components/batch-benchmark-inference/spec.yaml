@@ -11,6 +11,10 @@ inputs:
     type: uri_folder
     description: Input jsonl dataset that contains prompt.  For the performance test, this one will be neglected.
     optional: True
+  perf_jsonl:
+    type: string
+    description: Input jsonl containing data for inference request for performance test.
+    optional: True
   batch_input_pattern:
     type: string
     description: >- 
@@ -135,6 +139,7 @@ jobs:
     component: ../batch-inference-preparer/spec.yaml
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
+      perf_jsonl: ${{parent.inputs.perf_jsonl}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
       n_samples: ${{parent.inputs.n_samples}}

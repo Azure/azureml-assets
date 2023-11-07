@@ -33,6 +33,7 @@ def parse_args() -> argparse.Namespace:
     # Input and output arguments
     parser = argparse.ArgumentParser(description=f"{__file__}")
     parser.add_argument("--input_dataset", type=str, help="Input raw dataset.", default=None)
+    parser.add_argument("--perf_jsonl", type=str, help="Input raw dataset.", default="perf_jsonl")
     parser.add_argument(
         "--batch_input_pattern", nargs='?', const=None, type=str,
         help="The input patterns for the batch endpoint.", default="{}")
@@ -51,6 +52,7 @@ def parse_args() -> argparse.Namespace:
 @swallow_all_exceptions(logger)
 def main(
     input_dataset: str,
+    perf_jsonl: str,
     formatted_dataset: str,
     batch_input_pattern: str,
     n_samples: int,
@@ -84,7 +86,7 @@ def main(
         input_file_paths = resolve_io_path(input_dataset)
     else:
         input_file_paths = [
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "perf_data.jsonl")]
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", perf_jsonl)]
     df = pd.DataFrame(read_jsonl_files(input_file_paths))
 
     # Reformat the columns and save
@@ -132,6 +134,7 @@ if __name__ == "__main__":
     args = parse_args()
     main(
         input_dataset=args.input_dataset,
+        perf_jsonl=args.perf_jsonl,
         formatted_dataset=args.formatted_data,
         batch_input_pattern=args.batch_input_pattern,
         n_samples=args.n_samples,
