@@ -175,7 +175,6 @@ class TestMDCPreprocessor:
                 ]),
                 [
                     StructField("f0", StringType()), StructField("f1", DoubleType()), StructField("f2", LongType()),
-                    # StructField("correlationid", StringType(), False)
                 ]
             ),
             # multiple inputs in one row
@@ -194,7 +193,6 @@ class TestMDCPreprocessor:
                 ]),
                 [
                     StructField("f0", StringType()), StructField("f1", DoubleType()), StructField("f2", LongType()),
-                    # StructField("correlationid", StringType(), False)
                 ]
             ),
             # struct fields
@@ -214,7 +212,6 @@ class TestMDCPreprocessor:
                 [
                     StructField("simple_field", StringType()),
                     StructField("struct_field", MapType(StringType(), StringType())),
-                    # StructField("correlationid", StringType(), False)
                 ]
             ),
             # chat history
@@ -288,7 +285,6 @@ class TestMDCPreprocessor:
                     StructField("question", StringType()),
                     # StructField('chat_history',
                     #             ArrayType(MapType(StringType(), MapType(StringType(), StringType())))),
-                    # StructField("correlationid", StringType(), False)
                 ]
             )
         ]
@@ -297,7 +293,9 @@ class TestMDCPreprocessor:
                                              data, expected_pdf, expected_fields):
         """Test _extract_data_and_correlation_id()."""
         spark = SparkSession.builder.appName("test_extract_data_and_correlation_id").getOrCreate()
-        expected_pdf.drop(columns=["chat_history"], inplace=True)
+        if "chat_history" in expected_pdf.columns:
+            # TODO: add it back after json object is supported
+            expected_pdf.drop(columns=["chat_history"], inplace=True)
         extract_correlation_ids = [True, False]
         for extract_correlation_id in extract_correlation_ids:
             in_df = spark.createDataFrame(data, ["data", "correlationid"])
