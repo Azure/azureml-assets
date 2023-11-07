@@ -188,7 +188,7 @@ jobs:
       warmup_steps: 0
       weight_decay: 0.0
       adam_beta1: 0.9
-      adam_beta2: 0.00000001
+      adam_beta2: 0.999
       gradient_accumulation_steps: 1
       eval_accumulation_steps: 1
       lr_scheduler_type: linear
