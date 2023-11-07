@@ -303,14 +303,19 @@ def construct_storge_items(files_list: List[str]) -> List[Dict]:
     return return_list
 
 
-def create_v1_dataset(run_id, ws):
+def create_v1_dataset(run_details, ws):
     """Create v1 dataset."""
     from azureml.core.dataset import Dataset
     from azureml.core.datastore import Datastore
 
+    run_id = run_details["runId"]
     # datastore_name = get_datastore_name(run_details)
     # path = get_output_relative_path(run_details)
-    datastore_name = Datastore.get_default(ws).name
+    model_output_HOBO_path = get_model_path_in_HOBO_storage(run_details)
+    # example: azureml://datastores/azureml_managed_nopublisherossmodelweights/paths/azureml/${{name}}/output_model/
+    datastore_name_tmp = model_output_HOBO_path.split("azureml://datastores/")
+    datastore_name_tmp = datastore_name_tmp[1].split("/paths")
+    datastore_name = datastore_name_tmp[0]
 
     # TODO auto construct relative path instead of hard-coding it
     rel_path = f"azureml/{run_id}/output_model"
@@ -350,7 +355,7 @@ def registermodel_entrypoint(
 
         # NOTE Using the HOBO path doesn't work <Reason>
         # model_output_path = get_model_path_in_HOBO_storage(run_details)
-        registered_model_dataset = create_v1_dataset(run.id, ws)
+        registered_model_dataset = create_v1_dataset(run_details, ws)
         # get pipeline run id
         run_id = run_details["runId"]
         top_level_run = run
