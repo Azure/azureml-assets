@@ -1,6 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 """This file contains unit tests for the df utilities."""
+from decimal import Decimal
+from pyspark.sql.types import (
+    DoubleType,
+    FloatType,
+    StructField,
+    StructType)
+from pyspark.sql import SparkSession
 from shared_utilities.df_utils import (
         get_numerical_cols_with_df,
         get_categorical_cols_with_df,
@@ -8,9 +15,9 @@ from shared_utilities.df_utils import (
         is_numerical,
         get_common_columns
     )
+from tests.e2e.utils.io_utils import create_pyspark_dataframe
 import pandas as pd
 import pytest
-from pyspark.sql import SparkSession
 
 
 @pytest.mark.unit
@@ -131,38 +138,54 @@ class TestDFUtils:
     def test_get_common_columns(self):
         """Test get common columns."""
         # Test with two empty dataframes
-        baseline_df = pd.DataFrame(columns=[])
-        production_df = pd.DataFrame(columns=[])
+        spark = SparkSession.builder.appName("test").getOrCreate()
+        emp_RDD = spark.sparkContext.emptyRDD()
+        # Create empty schema
+        columns = StructType([])
+ 
+        # Create an empty RDD with empty schema
+        baseline_df = create_pyspark_dataframe(emp_RDD, columns)
+        production_df = create_pyspark_dataframe(emp_RDD, columns)
         assert get_common_columns(baseline_df, production_df) == {}
 
+        # Test with two dataframes that have common columns but datatype is not in the same type
+        float_data = [ (3.55,), (6.88,), (7.99,)]
+        schema = StructType([
+        StructField("target", FloatType(), True)])
+        baseline_df = create_pyspark_dataframe(float_data, schema)
+        double_data = [ (3.55,), (6.88,), (7.99,)]
+        schema = StructType([
+        StructField("target", DoubleType(), True)])
+        production_df = create_pyspark_dataframe(double_data, schema)        
+        assert get_common_columns(baseline_df, production_df) == {'target': 'double'}
+
         # Test with two dataframes that have no common columns
-        baseline_df = pd.DataFrame([(1, "a"), (2, "b")],
-                                   columns=["id", "name"])
-        production_df = pd.DataFrame([(3, "c"), (4, "d")],
-                                     columns=["age",
-                                              "gender"])
+        baseline_df = create_pyspark_dataframe([(1, "a"), (2, "b")],
+                                   ["id", "name"])
+        production_df = create_pyspark_dataframe([(3, "c"), (4, "d")],
+                                   ["age", "gender"])
         assert get_common_columns(baseline_df, production_df) == {}
 
         # Test with two dataframes that have one common column
-        baseline_df = pd.DataFrame([(1, "a"), (2, "b")], columns=["id",
-                                                                  "name"])
-        production_df = pd.DataFrame([(1, "c"), (2, "d")], columns=["id",
-                                                                    "age"])
-        assert get_common_columns(baseline_df, production_df) == {"id": "int64"}
+        baseline_df = create_pyspark_dataframe([(1, "a"), (2, "b")],
+                                               ["id", "name"])
+        production_df = create_pyspark_dataframe([(1, "c"), (2, "d")], 
+                                                 ["id", "age"])
+        assert get_common_columns(baseline_df, production_df) == {"id": "bigint"}
 
         # Test with two dataframes that have multiple common columns
-        baseline_df = pd.DataFrame([(1, "a", 10), (2, "b", 20)],
-                                   columns=["id", "name", "age"])
-        production_df = pd.DataFrame([(1, "c", 30), (2, "d", 40)],
-                                     columns=["id", "name", "age"])
-        assert get_common_columns(baseline_df, production_df) == {"id": "int64", "name": "object", "age": "int64"}
+        baseline_df = create_pyspark_dataframe([(1, "a", 10), (2, "b", 20)],
+                                   ["id", "name", "age"])
+        production_df = create_pyspark_dataframe([(1, "c", 30), (2, "d", 40)],
+                                    ["id", "name", "age"])
+        assert get_common_columns(baseline_df, production_df) == {"id": "bigint", "name": "string", "age": "bigint"}
 
         # Test with two dataframes that have different Types in common columns
-        baseline_df = pd.DataFrame([(1.0, "a", 10), (2, "b", 20)],
-                                   columns=["id", "name", "age"])
-        production_df = pd.DataFrame([(1, "c", 30), (2, "d", 40)],
-                                     columns=["id", "name", "age"])
-        assert get_common_columns(baseline_df, production_df) == {"name": "object", "age": "int64"}
+        baseline_df = create_pyspark_dataframe([(1.0, "a", 10), (2.0, "b", 20)],
+                                   ["id", "name", "age"])
+        production_df = create_pyspark_dataframe([(1, "c", 30), (2, "d", 40)],
+                                     ["id", "name", "age"])
+        assert get_common_columns(baseline_df, production_df) == {"name": "string", "age": "bigint"}
 
     def init_spark(self):
         """Get or create spark session."""
