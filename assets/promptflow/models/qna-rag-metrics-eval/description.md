@@ -15,9 +15,9 @@ Batch | N/A | N/A
 {
     "inputs": {
         "question": "What is the purpose of the LLM Grounding Score, and what does a higher score mean in this context?",
-        "answer": "The LLM Grounding Score is a metric used in the context of in-context learning with large-scale pretrained language models (LLMs) [doc1]. It measures the ability of the LLM to understand and connect with the provided context or demonstrations during the learning process.A higher LLM Grounding Score indicates that the LLM has a better understanding and connection with the context or demonstrations [doc1]. It means that the LLM is able to effectively utilize the provided examples and generate more accurate and relevant responses based on that context.Please note that the LLM Grounding Score is specific to the in-context learning framework and may not be applicable in other contexts or tasks.[doc1]: In-Context Learning with Large-Scale Pretrained Language Models: How Far Are We? (2022) - zelin, English.",
+        "answer": "The LLM Grounding Score gauges an LLM's grasp of provided context in in-context learning. A higher score implies better understanding and more accurate responses.",
         "metrics": "gpt_groundedness,gpt_retrieval_score,gpt_relevance",
-        "documents": "{'documents': [{'[doc1]': {'title': 'In-Context Learning with Large-Scale Pretrained Language Models',\r'content': 'In-Context Learning, different from Few-Shot Learning, leverages large pretrained language models to acquire new skills with minimal training examples. GPT-3 introduced this concept, achieving accuracy comparable to fine-tuned models. The order of prompts and selecting similar training examples significantly impact performance. To enhance in-context learning, \"Retrievers\" are used to find exemplary few-shot examples. Retrievers, fine-tuned for semantic similarity, excel in this role. For advanced applications, retrievers can be fine-tuned for downstream tasks, such as code generation. However, the assumption that training examples with the same structure are always \"fantastic\" has limitations, necessitating different approaches for various tasks.'}}]}"
+        "documents": "{'documents': [{'[doc1]': {'title': 'In-Context Learning with Large-Scale Pretrained Language Models',\r'content': 'In-Context Learning uses large pretrained models to acquire new skills. GPT-3 introduced this, achieving accuracy similar to fine-tuned models. Prompt order and similar training examples affect performance. Retrievers locate exemplary few-shot examples, with semantic similarity fine-tuning. Advanced retriever use includes code generation, but 'fantastic' examples assumption has task-specific limitations.'}}]}"
     }
 }
 ```
@@ -27,8 +27,8 @@ Batch | N/A | N/A
 {
     "outputs": {
         "gpt_groundedness":5,
-        "gpt_relevance":"NaN",
-        "gpt_retrieval_score":5
+        "gpt_relevance":5,
+        "gpt_retrieval_score":1
     }
 }
 ```
