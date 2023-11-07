@@ -412,8 +412,8 @@ def registermodel_entrypoint(
         {
             "pipeManifestPath": pipe_manifest_path,
             "intellectualPropertyPublisher": "nopublisher",
-            # "modelPath": model_directory_path,
-            # "componentVersion": "1",
+            "modelPath": ".", # hordcode it for now
+            "componentVersion": "1",
             "engineControllerManifestPath": engine_controller_manifest_path,
             # "azureMlBaseModel": base_model_name,
             # "loraDim": str(finetuned_model_config["inputs"][keyname_basis_postprocess_type]["arguments"]["lora_dim"])
