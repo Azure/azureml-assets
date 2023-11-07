@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""File containing function for model selector component."""
+"""File containing function for model import component."""
 
 from pathlib import Path
 import argparse
