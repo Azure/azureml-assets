@@ -182,6 +182,9 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
             logger.info("Experimental features enabled for MLflow conversion")
             self._hf_conf["exp"] = True
 
+        # set metadata info
+        metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
+                                              is_finetuned_model=False)
         try:
             # create a conda environment for OSS transformers Flavor
             python_version = platform.python_version()
@@ -228,6 +231,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                 input_example=input_example,
                 pip_requirements=pip_requirements,
                 extra_pip_requirements=self._extra_pip_requirements,
+                metadata=metadata,
                 path=self._output_dir,
             )
 
@@ -250,9 +254,6 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                 self._model_dir, **self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
             )
 
-            # set metadata info
-            metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
-                                                  is_finetuned_model=False)
             mlflow_model = Model(metadata=metadata)
             hf_mlflow.hftransformers.save_model(
                 config=config,
@@ -326,10 +327,10 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         import subprocess
         import json
 
-        PIP_LIST = ['mlflow', 'accelerate', 'cffi', 'dill', 'google-api-core', 'numpy',
+        PIP_LIST = ['accelerate', 'cffi', 'dill', 'google-api-core', 'numpy',
                     'packaging', 'pillow', 'protobuf', 'pyyaml', 'requests', 'scikit-learn',
                     'scipy', 'sentencepiece', 'torch']
-        ADD_PACKAGE_LIST = ['torchvision==0.14.1', 'transformers==4.31.0']
+        ADD_PACKAGE_LIST = ['mlflow==2.8.0', 'torchvision==0.14.1', 'transformers==4.31.0']
 
         conda_list_cmd = ["conda", "list", "--json"]
         try:
