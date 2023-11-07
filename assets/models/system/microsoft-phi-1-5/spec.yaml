@@ -51,4 +51,4 @@ tags:
     apply_lora: 'false'
     apply_ort: 'false'
   task: text-generation
-version: 4
+version: 5

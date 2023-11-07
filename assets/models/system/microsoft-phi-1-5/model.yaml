@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/microsoft-phi-1-5/1694812209/mlflow_model_folder
+  container_path: huggingface/microsoft-phi-1-5/1694812210/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
