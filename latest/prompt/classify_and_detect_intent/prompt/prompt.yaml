@@ -1,0 +1,37 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+template: | 
+  For the below text, provide two labels one each from the following categories:
+  - Department: “Books”, “Home”, “Fashion”, “Electronics”, “Grocery”, “Others”
+  - Order intent
+
+  Subject: Request for Refund of Recent Book Purchase
+  Dear [Business Name],
+  I am writing to request a refund for the books I purchased from your store last week. Unfortunately, the books did not meet my expectations, and I would like to return them for a full refund.
+  I have attached a copy of the purchase receipt to this email as proof of purchase. The books are in their original packaging and have not been used, so I hope that the refund process will be straightforward.
+  Please let me know what steps I need to take to return the books and receive a refund. I look forward to hearing back from you soon.
+  Thank you for your attention to this matter.
+  Sincerely,
+  [Your Name]
+
+  Response:
+
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
+execution_settings:
+  default:
+    bestOf: 1,
+    frequencyPenalty: 0,
+    responseLength: 60,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1  
+  text-davinci-003:
+    model_id: text-davinci-003
+    bestOf: 1,
+    frequencyPenalty: 0,
+    responseLength: 60,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1  
+    
+template_format: handlebars

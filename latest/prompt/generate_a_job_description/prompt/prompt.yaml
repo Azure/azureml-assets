@@ -1,0 +1,24 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+template: | 
+  Write a job description for the following job title: 'Business Intelligence Analyst'. The job description should outline the main responsibilities of the role, list the required qualifications, highlight unique benefits like flexible working hours, and provide information on how to apply.
+
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
+execution_settings:
+  default:
+    bestOf: 1
+    frequencyPenalty: 0
+    responseLength: 600
+    presencePenalty: 0
+    temperature: 1
+    topP: 1
+  text-davinci-003:
+    model_id: text-davinci-003
+    bestOf: 1
+    frequencyPenalty: 0
+    responseLength: 600
+    presencePenalty: 0
+    temperature: 1
+    topP: 1
+    
+template_format: handlebars
