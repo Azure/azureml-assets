@@ -160,7 +160,7 @@ def register_model(
     workspace,
     model_name,
     model_version,
-    model_output_path,
+    dataset_id,
     run_id,
     tags=None,
     properties=None,
@@ -175,8 +175,8 @@ def register_model(
     :type model_name: str
     :param model_version: The version to register the model with. If it is None, the code figures out the version.
     :type model_version: int or None
-    :param model_output_path: The path of the model output.
-    :type model_output_path: str
+    :param dataset_id: The id of the model dataset.
+    :type dataset_id: str
     :param tags: An optional dictionary of key value tags to assign to the model.
     :type tags: dict({str : str})
     :param properties: An optional dictionary of key value properties to assign to the model.
@@ -215,7 +215,7 @@ def register_model(
     request_body = {
         "name": model_name,
         "description": description,
-        "url": model_output_path,
+        "url": "azureml://datasets/{}".format(dataset_id),
         "runId": run_id,
         "mimeType": "application/x-python",
         "properties": properties,
@@ -265,7 +265,7 @@ def get_rel_paths_pipe_manifest_files(folder_to_search: str) -> List[str]:
 
     full_paths = find_files_with_inc_excl_pattern(
         root_folder=folder_to_search,
-        include_pat=".safetensors$|.json$|README.md",
+        include_pat=".safetensors$|.json$",
     )
     return [pth.replace(folder_to_search, '.') for pth in full_paths]
 
@@ -282,7 +282,7 @@ def get_rel_paths_manifest_engine_controller_files(folder_to_search: str) -> Lis
 
     full_paths = find_files_with_inc_excl_pattern(
         root_folder=folder_to_search,
-        include_pat=".safetensors$|.json$|README.md",
+        include_pat=".safetensors$|.json$",
     )
     return [pth.replace(folder_to_search, '.') for pth in full_paths]
 
@@ -301,6 +301,27 @@ def construct_storge_items(files_list: List[str]) -> List[Dict]:
             }
         )
     return return_list
+
+
+def create_v1_dataset(run_id, ws):
+    """Create v1 dataset."""
+    from azureml.core.dataset import Dataset
+    from azureml.core.datastore import Datastore
+
+    # datastore_name = get_datastore_name(run_details)
+    # path = get_output_relative_path(run_details)
+    datastore_name = Datastore.get_default(ws).name
+
+    # TODO auto construct relative path instead of hard-coding it
+    rel_path = f"azureml/{run_id}/output_model"
+    datastore = Datastore.get(ws, datastore_name)
+    finetuned_model_dataset = Dataset.File.from_files(
+        path=[(datastore, rel_path)], validate=False
+    )
+    finetuned_model_dataset = finetuned_model_dataset.register(
+        workspace=ws, name="register_model_dataset_" + run_id
+    )
+    return finetuned_model_dataset
 
 
 def registermodel_entrypoint(
@@ -327,7 +348,9 @@ def registermodel_entrypoint(
 
         ws = run._experiment.workspace
 
-        model_output_path = get_model_path_in_HOBO_storage(run_details)
+        # NOTE Using the HOBO path doesn't work <Reason>
+        # model_output_path = get_model_path_in_HOBO_storage(run_details)
+        registered_model_dataset = create_v1_dataset(run.id, ws)
         # get pipeline run id
         run_id = run_details["runId"]
         top_level_run = run
@@ -421,7 +444,7 @@ def registermodel_entrypoint(
         workspace=ws,
         model_name=model_name,
         model_version=registered_model_version,
-        model_output_path=model_output_path,
+        dataset_id=registered_model_dataset.id,
         run_id=top_level_run.id,
         properties=properties,
         model_format="PRESETS",
