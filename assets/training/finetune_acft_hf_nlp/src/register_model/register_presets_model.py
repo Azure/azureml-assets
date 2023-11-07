@@ -412,7 +412,7 @@ def registermodel_entrypoint(
         {
             "pipeManifestPath": pipe_manifest_path,
             "intellectualPropertyPublisher": "nopublisher",
-            "modelPath": ".", # hordcode it for now
+            "modelPath": ".",  # hordcode it for now
             "componentVersion": "1",
             "engineControllerManifestPath": engine_controller_manifest_path,
             # "azureMlBaseModel": base_model_name,
