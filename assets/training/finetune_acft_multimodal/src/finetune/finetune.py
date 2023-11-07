@@ -227,7 +227,6 @@ def get_parser():
             "If the value is -1 saves all checkpoints"
         ),
     )
-
     parser.add_argument(
         "--apply_early_stopping",
         type=lambda x: bool(str2bool(str(x), "apply_early_stopping")),
@@ -246,35 +245,30 @@ def get_parser():
         default=0.0,
         help="Denotes how much the specified metric must improve to satisfy early stopping conditions",
     )
-
     parser.add_argument(
         "--save_as_mlflow_model",
         type=lambda x: bool(str2bool(str(x), "save_as_mlflow_model")),
         default=True,
         help="Save as mlflow model with pyfunc as flavour",
     )
-
     parser.add_argument(
         "--preprocess_output",
         default=None,
         type=str,
         help="output folder of preprocessor containing the metadata of train, evaluation and test files",
     )
-
     parser.add_argument(
         "--model_selector_output",
         default=None,
         type=str,
         help="output folder of model selector containing model configs, tokenizer, checkpoints.",
     )
-
     parser.add_argument(
         "--pytorch_model_folder",
         default=SaveFileConstants.DEFAULT_PYTORCH_OUTPUT,
         type=str,
         help="Output dir to save the finetune model and other metadata",
     )
-
     parser.add_argument(
         "--mlflow_model_folder",
         default=SaveFileConstants.DEFAULT_MLFLOW_OUTPUT,

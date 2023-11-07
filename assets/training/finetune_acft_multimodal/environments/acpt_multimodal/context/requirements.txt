@@ -1,7 +1,7 @@
 azureml-acft-accelerator=={{latest-pypi-version}}
-azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
-azureml-acft-common-components=={{latest-pypi-version}}
 azureml-evaluate-mlflow=={{latest-pypi-version}}
+azureml-acft-common-components=={{latest-pypi-version}}
+azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
 azureml_acft_multimodal_components=={{latest-pypi-version}}
 # needed by multimodal
 datasets==2.14.5
@@ -24,3 +24,4 @@ aiohttp==3.8.5
 certifi==2023.07.22
 numpy==1.22
 azure-ai-ml==1.11.0
+azureml-dataprep==4.12.4

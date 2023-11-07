@@ -93,7 +93,6 @@ def model_selector(args: Namespace):
 
 
 if __name__ == "__main__":
-    # args
     parser = get_parser()
     args, _ = parser.parse_known_args()
 
