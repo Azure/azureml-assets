@@ -265,7 +265,7 @@ def get_rel_paths_pipe_manifest_files(folder_to_search: str) -> List[str]:
 
     full_paths = find_files_with_inc_excl_pattern(
         root_folder=folder_to_search,
-        include_pat=".safetensors$|.json$|README.md",
+        include_pat=".safetensors$|.json$",
     )
     return [pth.replace(folder_to_search, '.') for pth in full_paths]
 
@@ -282,7 +282,7 @@ def get_rel_paths_manifest_engine_controller_files(folder_to_search: str) -> Lis
 
     full_paths = find_files_with_inc_excl_pattern(
         root_folder=folder_to_search,
-        include_pat=".safetensors$|.json$|README.md",
+        include_pat=".safetensors$|.json$",
     )
     return [pth.replace(folder_to_search, '.') for pth in full_paths]
 
