@@ -97,14 +97,13 @@ class ComputeMetricsRunner:
                     llm_config[k] = v
             do_openai_init = True
             self.qna_input_data_keys = {}
-            for k in constants.OpenAIConstants.REQUIRED_KEYS:
-                if k not in llm_config:
-                    logger.warning(f"Required Key '{k}' missing in openai_config_params.\n\
-                                Skipping GPT Based Metrics calculcation for this Run.")
-                    do_openai_init = False
-                    break
-                else:
-                    self.qna_input_data_keys[k] = llm_config[k]
+            if not any(k in llm_config for k in constants.OpenAIConstants.REQUIRED_KEYS):
+                logger.warning(f"Any of Required Keys '[{', '.join(constants.OpenAIConstants.REQUIRED_KEYS)}]' missing"
+                               f" in openai_config_params.\nSkipping GPT Based Metrics calculation for this Run.")
+                do_openai_init = False
+            else:
+                for k in constants.OpenAIConstants.REQUIRED_KEYS:
+                    self.qna_input_data_keys[k] = llm_config.get(k, None)
             if do_openai_init:
                 openai_init_params = {}
                 for k, v in constants.OpenAIConstants.DEFAULT_OPENAI_INIT_PARAMS.items():
@@ -132,13 +131,15 @@ class ComputeMetricsRunner:
                 contexts_key = self.qna_input_data_keys[constants.OpenAIConstants.CONTEXTS_KEY]
                 questions, contexts = fetch_questions_and_contexts(ground_truth, questions_key,
                                                                    contexts_key, self.ground_truths_column_name)
-                if len(questions) and len(contexts):
-                    self.config[constants.OpenAIConstants.QUESTIONS_KEY] = questions
-                    self.config[constants.OpenAIConstants.CONTEXTS_KEY] = contexts
-                else:
+                if not len(questions) and not len(contexts):
                     logger.warning("Failed to Fetch Questions and Contexts from Ground Truth Data.\n\
                                    Skipping GPT Based Metrics Calculation")
                     self.config.pop(constants.OpenAIConstants.METRICS_KEY)
+                else:
+                    if len(questions):
+                        self.config[constants.OpenAIConstants.QUESTIONS_KEY] = questions
+                    if len(contexts):
+                        self.config[constants.OpenAIConstants.CONTEXTS_KEY] = contexts
 
             if len(ground_truth) > 0:
                 ground_truth = filter_ground_truths(ground_truth, self.task, self.ground_truths_column_name,
@@ -232,37 +233,28 @@ def fetch_questions_and_contexts(data, questions_key, contexts_key, gt_column_na
         contexts_key (_type_): _description_
     """
     questions, contexts = [], []
-    if len(data.columns) > 1:
-        if questions_key in data.columns and contexts_key in data.columns:
+    if not questions_key and not contexts_key:
+        return questions, contexts
+    if questions_key in data.columns or contexts_key in data.columns:
+        if questions_key and questions_key in data.columns:
             questions = data[questions_key].tolist()
+        if contexts_key and contexts_key in data.columns:
             contexts = data[contexts_key].tolist()
-        elif gt_column_name is not None and gt_column_name in data.columns:
-            if not isinstance(data[gt_column_name][0], dict):
-                logger.warning("To calculate GPT based metrics, Questions and Contexts are required to be a \
-                            part of Ground Truths. Ground Truths should be in SQuAD format.\n\
-                            Skipping GPT Based metrics calculation for this Run.")
-                return [], []
-            sample = data[gt_column_name][0]
-            if questions_key not in sample or contexts_key not in sample:
-                logger.warning("Either Contexts Key or Questions Key not found in the Ground Truths Data row.\n\
-                               Skipping GPT Based Metrics Calculation for this Run.")
-                return [], []
-            questions = data[gt_column_name].apply(lambda x: x[questions_key]).tolist()
-            contexts = data[gt_column_name].apply(lambda x: x[contexts_key]).tolist()
-
+    elif len(data.columns) > 1:
+        if gt_column_name is not None and gt_column_name in data.columns:
+            if isinstance(data[gt_column_name][0], dict):
+                sample = data[gt_column_name][0]
+                if questions_key in sample:
+                    questions = data[gt_column_name].apply(lambda x: x[questions_key]).tolist()
+                if contexts_key in sample:
+                    contexts = data[gt_column_name].apply(lambda x: x[contexts_key]).tolist()
     else:
-        if not isinstance(data.tolist()[0], dict):
-            logger.warning("To calculate GPT based metrics, Questions and Contexts are required to be a \
-                            part of Ground Truths. Ground Truths should be in SQuAD format.\n\
-                            Skipping GPT Based metrics calculation for this Run.")
-            return [], []
-        sample = data.tolist()[0]
-        if questions_key not in sample or contexts_key not in sample:
-            logger.warning("Either Contexts Key or Questions Key not found in the Ground Truths Data row.\n\
-                            Skipping GPT Based Metrics Calculation for this Run.")
-            return [], []
-        questions = data[gt_column_name].apply(lambda x: x[questions_key]).tolist()
-        contexts = data[gt_column_name].apply(lambda x: x[contexts_key]).tolist()
+        if isinstance(data.tolist()[0], dict):
+            sample = data.tolist()[0]
+            if questions_key in sample:
+                questions = data[gt_column_name].apply(lambda x: x[questions_key]).tolist()
+            if contexts_key in sample:
+                contexts = data[gt_column_name].apply(lambda x: x[contexts_key]).tolist()
     return questions, contexts
 
 
@@ -394,7 +386,8 @@ def run():
     parser.add_argument("--config_str", type=str, dest=ArgumentLiterals.CONFIG_STR, required=False, default=None)
     parser.add_argument("--config-file-name", type=str, dest=ArgumentLiterals.CONFIG_FILE_NAME,
                         required=False, default="")
-    parser.add_argument("--openai-config-params", type=str, dest="openai_config_params", required=False, default="{}")
+    parser.add_argument("--openai-config-params", type=str, dest=ArgumentLiterals.OPENAI_CONFIG_PARAMS,
+                        required=False, default="{}")
 
     # Outputs
     parser.add_argument("--output", type=str, dest=ArgumentLiterals.OUTPUT)
@@ -437,7 +430,7 @@ def run():
                 raise exception
         llm_config = {}
         try:
-            llm_config = json.loads(args.openai_config_params)
+            llm_config = json.loads(args[ArgumentLiterals.OPENAI_CONFIG_PARAMS])
             if not isinstance(llm_config, dict):
                 raise ValueError(f"Openai config is expected to be a json encoded dictionary. \
                                  Got {type(llm_config)} instead")
