@@ -10,7 +10,7 @@ import argparse
 from pathlib import Path
 from argparse import Namespace
 from copy import deepcopy
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import re
 
 import torch
@@ -46,6 +46,7 @@ COMPONENT_NAME = "ACFT-Finetune"
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
+DEFAULT_UPDATED_DEEPSPEED_PREFIX = str(Path(__file__).parent.resolve() / "updated_zero.json")
 
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
@@ -661,6 +662,32 @@ def resolve_deepspeed_config(args: Namespace) -> str:
     return default_deepspeed_config
 
 
+def update_deepspeed_config(ds_config_json: Dict[str, Any]) -> Optional[str]:
+    """Update the deepspeed config based on env flags."""
+    enable_profiler = os.environ.get("AZUREML_ENABLE_DEEPSPEED_PROFILER", False)
+    is_ds_config_updated = False
+    if enable_profiler and "flops_profiler" not in ds_config_json:
+        logger.info("Env variable is set to enable profiler.")
+        profiler_dict = dict(
+            flops_profiler=dict(
+                enabled=True,
+                profile_step=1,
+                module_depth=-1,
+                top_modules=1,
+                detailed=True,
+                output_file=None
+            )
+        )
+        ds_config_json.update(profiler_dict)
+        is_ds_config_updated = True
+
+    if is_ds_config_updated:
+        logger.info(f"Saving the updated deepspeed to new location: {DEFAULT_UPDATED_DEEPSPEED_PREFIX}")
+        with open(DEFAULT_UPDATED_DEEPSPEED_PREFIX, 'w', encoding="utf-8") as wptr:
+            json.dump(ds_config_json, wptr, indent=2)
+        return DEFAULT_UPDATED_DEEPSPEED_PREFIX
+
+
 def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
     """Deepspeed initialization and validation.
 
@@ -678,6 +705,10 @@ def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
 
     # load deepspeed config
     ds_config_json = get_deepspeed_config_json(args)
+
+    # Update the deepspeed config based on the env flags
+    # NOTE cannot update args.deepspeed always as it could be an input to the port
+    args.deepspeed = update_deepspeed_config(ds_config_json) or args.deepspeed
 
     # add validations for deepspeed stage3
     if do_validate and identify_deepspeed_stage(ds_config_json) == 3:
