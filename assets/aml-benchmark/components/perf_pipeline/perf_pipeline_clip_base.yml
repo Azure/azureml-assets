@@ -15,22 +15,23 @@ jobs:
             "image",
             "text"
           ],
-          "index": [0],
+          "index": [0,1],
           "data": [
+            ["###<image>", "label1, label2, label3"],
             ["###<image>", "label1, label2, label3"]
           ]
         },
         "params": {}
       }'
-      endpoint_url: https://clip-large-ic.eastus.inference.ml.azure.com/score
+      endpoint_url: https://clip-base-ic.eastus.inference.ml.azure.com/score
       is_performance_test: true
-      deployment_name: openai-clip-vit-large-patch14-3
-      connections_name: clip-large-ic
+      deployment_name: openai-clip-vit-base-patch32-5
+      connections_name: clip-base-ic
       n_samples: 10
       handle_response_failure: use_fallback
       ensure_ascii: false
-      initial_worker_count: 5
-      max_worker_count: 5
+      initial_worker_count: 1
+      max_worker_count: 1
       instance_count: 1
       max_concurrency_per_instance: 1
       debug_mode: true
