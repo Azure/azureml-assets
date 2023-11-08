@@ -43,6 +43,7 @@ class ArgumentLiterals:
     PREDICTION_PROBABILITIES = "prediction_probabilities"
     PERFORMANCE_METADATA = "performance_metadata"
     OUTPUT = "output"
+    OPENAI_CONFIG_PARAMS = "openai_config_params"
 
 
 class DEVICE:
@@ -181,7 +182,7 @@ class TelemetryConstants:
     """Telemetry Constants."""
 
     COMPONENT_NAME = "model_evaluation"
-    COMPONENT_DEFAULT_VERSION = "0.0.17"
+    COMPONENT_DEFAULT_VERSION = "0.0.18"
 
     INITIALISING_RUNNER = "initialising_runner"
     VALIDATION_NAME = "argument_validation"

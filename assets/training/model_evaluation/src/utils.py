@@ -86,7 +86,7 @@ def assert_and_raise(condition, exception_cls, error_cls, **message_kwargs):
         exception: _description_
     """
     if not condition:
-        exception = get_azureml_exception(exception_cls, error_cls, **message_kwargs)
+        exception = get_azureml_exception(exception_cls, error_cls, None, **message_kwargs)
         log_traceback(exception, logger)
         raise exception
 
@@ -182,7 +182,6 @@ def _log_metrics(metrics, artifacts):
                 for k, v in score.items():
                     if not isinstance(v, np.ndarray) and not isinstance(v, list):
                         continue
-                    run.log("mean_"+name+"_"+k, np.mean(v))
                     x, y = np.histogram(v, bins=10)
                     run.log_table("Bert F1 Score", value={"_score": list(y)[1:], "count": list(x)})
 
@@ -196,9 +195,7 @@ def _log_metrics(metrics, artifacts):
                     if not isinstance(score, list) and not isinstance(score, np.ndarray):
                         logger.warning(f"{name} is not an iterable. \nValue: {score}")
                         continue
-                    metric_name = "mean_"+name
                     int_score = [int(i) for i in score]
-                    run.log(metric_name, np.mean(int_score))
                     counts = [0]*5
                     for i in int_score:
                         counts[i-1] += 1
@@ -947,8 +944,11 @@ def openai_init(llm_config, **openai_params):
                 secrets["OPENAI-API-BASE"] = secrets["BAKER-OPENAI-API-BASE"]
             if secrets["BAKER-OPENAI-API-KEY"] is not None:
                 secrets["OPENAI-API-KEY"] = secrets["BAKER-OPENAI-API-KEY"]
-            llm_config["key"] = secrets["OPENAI-API-KEY"]
-            llm_config["base"] = secrets["OPENAI-API-BASE"]
+
+            if secrets["OPENAI-API-KEY"] is not None:
+                llm_config["key"] = secrets["OPENAI-API-KEY"]
+            if secrets["OPENAI-API-BASE"] is not None:
+                llm_config["base"] = secrets["OPENAI-API-BASE"]
         else:
             logger.warn("No Connection String Provided and no credentials present in workspace's keyvault.")
             logger.warn("Skipping OpenAI Initialization.")
@@ -958,6 +958,11 @@ def openai_init(llm_config, **openai_params):
     openai.api_type = openai_api_type
     openai.api_base = llm_config["base"]
     openai.api_key = llm_config["key"]
+
+    if not all([llm_config["base"], llm_config["key"], llm_config['deployment_name']]):
+        logger.warn("No Connection String Provided and no credentials present in workspace's keyvault.")
+        logger.warn("Skipping OpenAI Initialization.")
+        return {}
 
     openai_final_params = {
         "api_version": openai_api_version,
