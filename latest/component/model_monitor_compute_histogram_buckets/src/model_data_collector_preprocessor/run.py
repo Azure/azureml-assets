@@ -11,11 +11,11 @@ from dateutil import parser
 import mltable
 from mltable import MLTable
 import tempfile
-
+import json
 from fsspec import AbstractFileSystem
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
-from pyspark.sql.functions import lit, col
+from pyspark.sql.functions import lit
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     init_spark,
@@ -24,7 +24,6 @@ from shared_utilities.io_utils import (
 )
 
 from shared_utilities.constants import (
-    MDC_CHAT_HISTORY_COLUMN,
     MDC_CORRELATION_ID_COLUMN,
     MDC_DATA_COLUMN,
     MDC_DATAREF_COLUMN,
@@ -171,7 +170,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
         columns = dataframe.columns
         for column in columns:
             if dataframe[column].dtype == "object":
-                dataframe[column] = dataframe[column].astype(str)
+                dataframe[column] = dataframe[column].apply(lambda x: x if type(x) is str else json.dumps(x))
 
         return dataframe
 
@@ -201,18 +200,10 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     # data_as_df.show()
     # data_as_df.printSchema()
 
-    # The temporary workaround to remove the chat_history column if it exists.
-    # We are removing the column because the pyspark DF is unable to parse it.
-    # This version of the MDC is applied only to GSQ.
-    if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
-        data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
-
     def extract_data_and_correlation_id(entry, correlationid):
         result = pd.read_json(entry)
         result = convert_object_to_str(result)
         result[MDC_CORRELATION_ID_COLUMN] = ""
-        if MDC_CHAT_HISTORY_COLUMN in result.columns:
-            result.drop(columns=[MDC_CHAT_HISTORY_COLUMN], inplace=True)
         for index, row in result.iterrows():
             result.loc[index, MDC_CORRELATION_ID_COLUMN] = (
                 correlationid + "_" + str(index)
@@ -234,8 +225,6 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
             pdf = pd.concat(
                 convert_object_to_str(pd.read_json(read_data(row))) for row in df.itertuples()
             )
-            if MDC_CHAT_HISTORY_COLUMN in pdf.columns:
-                pdf.drop(columns=[MDC_CHAT_HISTORY_COLUMN], inplace=True)
             yield pdf
 
     if extract_correlation_id:
