@@ -167,7 +167,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     otherwise, return the dataref content which is a url to the json file.
     """
 
-    def convert_object_to_str(dataframe):
+    def convert_object_to_str(dataframe: pd.DataFrame) -> pd.DataFrame:
         columns = dataframe.columns
         for column in columns:
             if dataframe[column].dtype == "object":
