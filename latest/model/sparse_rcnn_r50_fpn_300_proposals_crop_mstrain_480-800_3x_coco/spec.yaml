@@ -29,7 +29,7 @@ tags:
     apply_deepspeed: 'false'
     apply_ort: 'false'
   task: object-detection
-version: 7
+version: 8
 description: |
   `sparse_rcnn_r50_fpn_300_proposals_crop_mstrain_480-800_3x_coco` model is from <a href="https://github.com/open-mmlab/mmdetection/tree/v2.28.2" target="_blank">OpenMMLab's MMDetection library</a>. This model is reported to obtain <a href="https://github.com/open-mmlab/mmdetection/blob/e9cae2d0787cd5c2fc6165a6061f92fa09e48fb1/configs/sparse_rcnn/metafile.yml#L55" target="_blank">box AP of 45.0 for object-detection task on COCO dataset</a>. To understand the naming style used, please refer to <a href="https://mmdetection.readthedocs.io/en/v2.28.2/tutorials/config.html#config-name-style" target="_blank">MMDetection's Config Name Style</a>.
 

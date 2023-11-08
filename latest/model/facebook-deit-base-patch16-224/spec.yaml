@@ -29,7 +29,7 @@ tags:
     apply_deepspeed: 'true'
     apply_ort: 'true'
   task: image-classification
-version: 9
+version: 10
 description: |
   This model is a more efficiently trained Vision Transformer (ViT). The Vision Transformer (ViT) is a transformer encoder model that is pre-trained and fine-tuned on a large collection of images in a supervised fashion. It is presented with images as sequences of fixed-size patches, which are linearly embedded, and before feeding the sequence to the layers of the Transformer encoder, absolute position embeddings are added. By pre-training the model, it is able to generate an inner representation of images that can be used to extract useful features for downstream tasks. For example, if one has a dataset of labeled images, a standard classifier can be trained by placing a linear layer on top of the pre-trained encoder. The last hidden state of the [CLS] token can be used as a representation of the entire image.
 

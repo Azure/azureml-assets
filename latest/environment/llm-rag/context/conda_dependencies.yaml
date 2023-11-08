@@ -18,7 +18,7 @@ dependencies:
   - azureml-contrib-services
   - azureml-core==1.53.0
   - azureml-telemetry==1.53.0
-  - azureml-dataprep==4.12.6
+  - azureml-dataprep==4.12.7
   - azureml-fsspec
   - azureml-inference-server-http==0.7.6
   - azureml-mlflow==1.53.0
