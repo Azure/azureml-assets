@@ -71,12 +71,13 @@ class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
             string representation of a numpy array of shape `(point_batch_size, num_points, 2)`:
             Input 2D spatial points, this is used by the prompt encoder to encode the prompt. Generally yields to much
             better results. The points can be obtained by passing a list of list of list to the processor that will
-            create corresponding `torch` tensors of dimension 3. The first dimension is the point batch size (i.e. how many
-            segmentation masks do we want the model to predict per input point), the third dimension is the number of points
-            per segmentation mask (it is possible to pass multiple points for a single mask), and the last dimension is the 
-            x (vertical) and y (horizontal) coordinates of the point. If a different number of points is passed either for each
-            image, or for each mask, the processor will create "PAD" points that will correspond to the (0, 0) coordinate, and the
-            computation of the embedding will be skipped for these points using the labels.
+            create corresponding `torch` tensors of dimension 3. The first dimension is the point batch size (i.e.
+            how many segmentation masks do we want the model to predict per input point), the third dimension is the
+            number of points per segmentation mask (it is possible to pass multiple points for a single mask), and the
+            last dimension is the x (vertical) and y (horizontal) coordinates of the point. If a different number of
+            points is passed either for each image, or for each mask, the processor will create "PAD" points that
+            will correspond to the (0, 0) coordinate, and the computation of the embedding will be skipped for these
+            points using the labels.
 
             third column name ["input_boxes"] -
             string representation of a numpy array of shape `(num_boxes, 4)`:
