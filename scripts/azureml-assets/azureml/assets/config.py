@@ -547,7 +547,8 @@ class AzureBlobstoreAssetPath(AssetPath):
         # token if the account does not allow for anonymous access.
         self._uri = f"{self._account_uri}/{self._container_name}/{self._container_path}"
 
-        # Check whether the token is already set. If so, append the token.
+        # If a SAS token has been explicitly set, then assume that the URI+token is valid.
+        # Simply append the token and return. If no SAS token is set, then proceed to rest of function.
         if self.token is not None:
             self._uri += "?" + self.token
             return self._uri
