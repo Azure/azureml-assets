@@ -4,7 +4,7 @@
 """test class for mdc preprocessor."""
 
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructField, StringType, DoubleType, LongType, MapType
+from pyspark.sql.types import StructField, StringType, DoubleType, LongType, BooleanType
 import pytest
 from unittest.mock import Mock
 import fsspec
@@ -164,17 +164,18 @@ class TestMDCPreprocessor:
             # single input in each row
             (
                 [
-                    [json.dumps([{"f0": "v0",  "f1": 1,    "f2": 2}]), "cid0"],
-                    [json.dumps([{"f0": "v1",  "f1": 1.2,  "f2": 3}]), "cid1"],
-                    [json.dumps([{"f0": "v2",  "f1": 2.3,  "f2": 4}]), "cid2"],
+                    [json.dumps([{"f0": "v0",  "f1": 1,    "f2": 2, "f3": True,  "f4": "2023-11-08T07:01:02Z"}]), "cid0"],  # noqa
+                    [json.dumps([{"f0": "v1",  "f1": 1.2,  "f2": 3, "f3": False, "f4": "2023-11-08T07:02:03Z"}]), "cid1"],  # noqa
+                    [json.dumps([{"f0": "v2",  "f1": 2.3,  "f2": 4, "f3": True,  "f4": "2023-11-08T08:00:05Z"}]), "cid2"],  # noqa
                 ],
                 pd.DataFrame([
-                    {"f0": "v0",    "f1": 1.0,  "f2": 2,    "correlationid": "cid0_0"},
-                    {"f0": "v1",    "f1": 1.2,  "f2": 3,    "correlationid": "cid1_0"},
-                    {"f0": "v2",    "f1": 2.3,  "f2": 4,    "correlationid": "cid2_0"},
+                    {"f0": "v0",    "f1": 1.0,  "f2": 2,    "f3": True,     "f4": "2023-11-08T07:01:02Z",   "correlationid": "cid0_0"},  # noqa
+                    {"f0": "v1",    "f1": 1.2,  "f2": 3,    "f3": False,    "f4": "2023-11-08T07:02:03Z",   "correlationid": "cid1_0"},  # noqa
+                    {"f0": "v2",    "f1": 2.3,  "f2": 4,    "f3": True,     "f4": "2023-11-08T08:00:05Z",   "correlationid": "cid2_0"},  # noqa
                 ]),
                 [
                     StructField("f0", StringType()), StructField("f1", DoubleType()), StructField("f2", LongType()),
+                    StructField("f3", BooleanType()), StructField("f4", StringType()),
                 ]
             ),
             # multiple inputs in one row
@@ -198,20 +199,20 @@ class TestMDCPreprocessor:
             # struct fields
             (
                 [
-                    [json.dumps([{"simple_field": "v0", "struct_field": {"f0": "t0", "f1": "u0", "f2": "w0"}}]), "cid0"],  # noqa
-                    [json.dumps([{"simple_field": "v1", "struct_field": {"f0": "t1", "f1": "u1"}},
-                                 {"simple_field": "v2", "struct_field": {"f0": "t2", "f1": "u2", "f2": "w2"}}]), "cid1"],  # noqa
-                    [json.dumps([{"simple_field": "v3", "struct_field": {"f0": "t3",             "f2": "w3"}}]), "cid2"],  # noqa
+                    [json.dumps([{"simple_field": "v0", "struct_field": {"f0": "t0", "f1": 1,   "f2": 4}}]), "cid0"],  # noqa
+                    [json.dumps([{"simple_field": "v1", "struct_field": {"f0": "t1", "f1": 1.2}},
+                                 {"simple_field": "v2", "struct_field": {"f0": "t2", "f1": 1.3, "f2": 5}}]), "cid1"],  # noqa
+                    [json.dumps([{"simple_field": "v3", "struct_field": {"f0": "t3",            "f2": 6}}]), "cid2"],  # noqa
                 ],
                 pd.DataFrame([
-                    {"simple_field": "v0", "struct_field": {"f0": "t0", "f1": "u0", "f2": "w0"}, "correlationid": "cid0_0"},  # noqa
-                    {"simple_field": "v1", "struct_field": {"f0": "t1", "f1": "u1"},             "correlationid": "cid1_0"},  # noqa
-                    {"simple_field": "v2", "struct_field": {"f0": "t2", "f1": "u2", "f2": "w2"}, "correlationid": "cid1_1"},  # noqa
-                    {"simple_field": "v3", "struct_field": {"f0": "t3",             "f2": "w3"}, "correlationid": "cid2_0"},  # noqa
+                    {"simple_field": "v0", "struct_field": json.dumps({"f0": "t0", "f1": 1,   "f2": 4}), "correlationid": "cid0_0"},  # noqa
+                    {"simple_field": "v1", "struct_field": json.dumps({"f0": "t1", "f1": 1.2}),          "correlationid": "cid1_0"},  # noqa
+                    {"simple_field": "v2", "struct_field": json.dumps({"f0": "t2", "f1": 1.3, "f2": 5}), "correlationid": "cid1_1"},  # noqa
+                    {"simple_field": "v3", "struct_field": json.dumps({"f0": "t3",            "f2": 6}), "correlationid": "cid2_0"},  # noqa
                 ]),
                 [
                     StructField("simple_field", StringType()),
-                    StructField("struct_field", MapType(StringType(), StringType())),
+                    StructField("struct_field", StringType()),
                 ]
             ),
             # chat history
@@ -312,8 +313,6 @@ class TestMDCPreprocessor:
                 expected_pdf_ = expected_pdf.drop(columns=["correlationid"], inplace=False)
             actual_pdf = out_df.toPandas()
             assert_frame_equal(actual_pdf, expected_pdf_)
-
-        # assert False
 
     @pytest.mark.parametrize(
         "url_str, converted",

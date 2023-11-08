@@ -41,7 +41,7 @@ outputs:
     description: "The evaluation config file which can be consumed by the compute metrics component."
 
 code: ../../src
-environment: azureml://registries/azureml/environments/automl-gpu/versions/4
+environment: azureml://registries/azureml/environments/automl-gpu/versions/5
 
 command: >-
   python inference.py

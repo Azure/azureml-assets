@@ -1,14 +1,15 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-name: one-shot-financial-news-summarization
-version: 0.1.5
-display_name: One Shot Financial News Summarization
+version: 0.0.1
+name: generate_a_job_description
+display_name: Generate a job description
+description: Generate a job description
 
 tags:
   modality: completion
-  task: summarization
-  industry: financial-services
+  task: content-creation
 
 data_uri: ./prompt
 template_path: prompt.yaml
+
