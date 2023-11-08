@@ -156,7 +156,7 @@ transformations:
             if len(few_shot_paths) == 1:
                 few_shot_pool = read_jsonl_files(few_shot_paths)
             else:
-                mssg = f"Multiple or No input files found for {few_shot_paths}"
+                mssg = f"Multiple or No input files found for {few_shot_file}"
                 raise BenchmarkValidationException._with_error(
                     AzureMLError.create(BenchmarkValidationError, error_details=mssg)
                 )

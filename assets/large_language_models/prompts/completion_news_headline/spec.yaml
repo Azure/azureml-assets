@@ -9,7 +9,7 @@ description: Classify news headline for different categories
 tags:
   modality: completion
   industry: financial-services
-  task: classification
+  task: text-classification
 
 data_uri: ./prompt
 template_path: prompt.yaml

@@ -190,9 +190,21 @@ class TestPromptCrafterScript:
         few_shot_data, prompt_pattern, output_pattern",
         [
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 1,
-             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test, _output_pattern_test),
+             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
+                _output_pattern_test),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 1,
-             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test, _output_pattern_test),
+             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
+                _output_pattern_test),
+            (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 0,
+             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
+                _output_pattern_test),
+            (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 0,
+             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
+                _output_pattern_test),
+            (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 0,
+                None, _prompt_pattern_test, _output_pattern_test),
+            (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 0,
+                None, _prompt_pattern_test, _output_pattern_test),
         ]
     )
     def test_valid_prompt_crafter(
@@ -296,8 +308,6 @@ class TestPromptCrafterScript:
             "python -m prompt_crafter.main",
             "--system_message",
             f"{system_message}",
-            "--few_shot_data",
-            f"{few_shot_data}",
             "--random_seed",
             f"{random_seed}",
             "--output_file",
@@ -317,5 +327,7 @@ class TestPromptCrafterScript:
             args.extend(["--prompt_pattern", f'"{prompt_pattern}"'])
         if output_pattern is not None:
             args.extend(["--output_pattern", f'"{output_pattern}"'])
+        if few_shot_data is not None:
+            args.extend(["--few_shot_data", f'"{few_shot_data}"'])
 
         run_command(str(" ".join(args)))

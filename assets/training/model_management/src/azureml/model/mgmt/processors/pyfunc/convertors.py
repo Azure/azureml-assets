@@ -16,6 +16,7 @@ from mlflow.types.schema import ColSpec, Schema
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from azureml.model.mgmt.utils.common_utils import fetch_mlflow_acft_metadata
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.pyfunc.config import (
@@ -99,7 +100,9 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         """
         signatures = self._signatures or self.get_model_signature()
-
+        # set metadata info
+        metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
+                                              is_finetuned_model=False)
         mlflow.pyfunc.save_model(
             path=self._output_dir,
             python_model=mlflow_model_wrapper,
@@ -108,7 +111,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
             conda_env=conda_env,
             signature=signatures,
             code_path=code_path,
-            metadata={"model_name": self._model_id},
+            metadata=metadata,
         )
 
         logger.info("Model saved successfully.")

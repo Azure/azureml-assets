@@ -24,9 +24,10 @@ from azureml.model.mgmt.utils.common_utils import (
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
     run_command,
+    fetch_mlflow_acft_metadata
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from mlflow.models import ModelSignature
+from mlflow.models import ModelSignature, Model
 from mlflow.types.schema import ColSpec
 from mlflow.types.schema import DataType, Schema
 from pathlib import Path
@@ -193,11 +194,16 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
             logger.info("Experimental features enabled for MLflow conversion")
             self._hf_conf["exp"] = True
 
+        # set metadata info
+        metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
+                                              is_finetuned_model=False)
+        mlflow_model = Model(metadata=metadata)
         hf_mlflow.hftransformers.save_model(
             config=config,
             tokenizer=tokenizer,
             hf_model=model,
             hf_conf=self._hf_conf,
+            mlflow_model=mlflow_model,
             conda_env=conda_env,
             code_paths=code_paths,
             signature=self._signatures,
