@@ -45,8 +45,6 @@ def compute_data_drift_measures_tests(
 
     if len(numerical_columns_names) == 0 and \
        len(categorical_columns_names) == 0:
-        print("No common columns found between production data and baseline"
-              "data. We dont support this scenario.")
         raise ValueError("No common columns found between production data and baseline"
               "data. We dont support this scenario.")
 
