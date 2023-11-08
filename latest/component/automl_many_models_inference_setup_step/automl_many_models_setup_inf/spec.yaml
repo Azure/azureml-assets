@@ -93,7 +93,7 @@ outputs:
     description: 'The processed data after setup step.'
 
 code: ../src/setup
-environment: azureml://registries/azureml/environments/automl-gpu/versions/4
+environment: azureml://registries/azureml/environments/automl-gpu/versions/5
 
 command: >-
   python setup.py  --raw-data ${{inputs.raw_data}}
