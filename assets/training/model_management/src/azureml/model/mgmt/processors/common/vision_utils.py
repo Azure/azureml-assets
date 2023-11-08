@@ -213,7 +213,7 @@ def string_to_nested_float_list(input_str: str) -> list:
     try:
         # Use ast.literal_eval to safely evaluate the string into a list
         nested_list = literal_eval(input_str)
-        
+
         # Recursive function to convert all numbers in the nested list to floats
         def to_floats(lst) -> list:
             """
@@ -225,7 +225,7 @@ def string_to_nested_float_list(input_str: str) -> list:
             :rtype: list
             """
             return [to_floats(item) if isinstance(item, list) else float(item) for item in lst]
-        
+
         # Use the recursive function to process the nested list
         return to_floats(nested_list)
     except (ValueError, SyntaxError) as e:
