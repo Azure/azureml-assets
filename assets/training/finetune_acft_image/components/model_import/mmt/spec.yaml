@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.1
+version: 0.0.2
 name: mmtracking_video_multi_object_tracking_model_import
 display_name: Video Multi Object Tracking MMTracking Model Import
 description: Import PyTorch / MLflow model
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/acft-mmtracking-video-gpu/versions/1
+environment: azureml://registries/azureml/environments/acft-mmtracking-video-gpu/versions/2
 
 code: ../../../src/model_selector
 
