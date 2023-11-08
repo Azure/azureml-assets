@@ -256,20 +256,20 @@ class TestMDCPreprocessor:
                     ],
                 ],
                 pd.DataFrame([
-                    {"question": "q0", "chat_history": [], "correlationid": "cid0_0"},
+                    {"question": "q0", "chat_history": json.dumps([]), "correlationid": "cid0_0"},
                     {
                         "question": "q1",
-                        "chat_history": [
+                        "chat_history": json.dumps([
                             {
                                 "inputs": {"question": "q0"},
                                 "outputs": {"output": "o0"},
                             }
-                        ],
+                        ]),
                         "correlationid": "cid1_0"
                     },
                     {
                         "question": "q2",
-                        "chat_history": [
+                        "chat_history": json.dumps([
                             {
                                 "inputs": {"question": "q0"},
                                 "outputs": {"output": "o0"},
@@ -278,12 +278,13 @@ class TestMDCPreprocessor:
                                 "inputs": {"question": "q1"},
                                 "outputs": {"output": "o1"},
                             }
-                        ],
+                        ]),
                         "correlationid": "cid2_0"
                     }
                 ]),
                 [
                     StructField("question", StringType()),
+                    StructField("chat_history", StringType()),
                     # StructField('chat_history',
                     #             ArrayType(MapType(StringType(), MapType(StringType(), StringType())))),
                 ]
@@ -294,9 +295,6 @@ class TestMDCPreprocessor:
                                              data, expected_pdf, expected_fields):
         """Test _extract_data_and_correlation_id()."""
         spark = SparkSession.builder.appName("test_extract_data_and_correlation_id").getOrCreate()
-        if "chat_history" in expected_pdf.columns:
-            # TODO: add it back after json object is supported
-            expected_pdf.drop(columns=["chat_history"], inplace=True)
         extract_correlation_ids = [True, False]
         for extract_correlation_id in extract_correlation_ids:
             in_df = spark.createDataFrame(data, ["data", "correlationid"])
