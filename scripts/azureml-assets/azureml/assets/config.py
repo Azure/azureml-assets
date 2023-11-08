@@ -512,6 +512,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         self._storage_name = storage_name
         self._container_name = container_name
         self._container_path = container_path
+        self._token = None
 
         # AzureCloud, USGov, and China clouds should all pull from the same endpoint
         # associated with AzureCloud. If the cloud is not one of these, then the
@@ -563,7 +564,12 @@ class AzureBlobstoreAssetPath(AssetPath):
             # If we fail pass through to the next approach
             pass
 
-        # Our second approach is to to use the azure python SDK to view the properties
+        # Check whether the token is already set. If so, append the token.
+        if self.token is not None:
+            self._uri += self.token
+            return self._uri
+
+        # Our second approach is to use the azure python SDK to view the properties
         # of the container. If the container allows for anonymous access then we can
         # return the URI "as-is".
         #
@@ -608,6 +614,21 @@ class AzureBlobstoreAssetPath(AssetPath):
         except Exception:
             # If we fail then simply return the URI "as-is" and hope for the best
             return self._uri
+
+    @property
+    def storage_name(self) -> str:
+        """Storage name."""
+        return self._storage_name
+
+    @property
+    def token(self) -> str:
+        """Sas token."""
+        return self._token
+    
+    @token.setter
+    def token(self, value: str):
+        """Set sas token."""
+        self._token = value
 
 
 class GitAssetPath(AssetPath):
