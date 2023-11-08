@@ -10,7 +10,7 @@ properties:
     ground truth.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 2
+version: 3
 description: |-
   The "QnA F1 Score Evaluation" is a model to evaluate the Q&A Retrieval Augmented Generation systems using f1 score based on the word counts in predicted answer and ground truth.
 

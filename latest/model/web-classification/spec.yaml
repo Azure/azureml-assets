@@ -10,7 +10,7 @@ properties:
     URLs into multiple categories.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 2
+version: 3
 description: |-
   The "Web Classification" is a model demonstrating multi-class classification with LLM. Given an url, it will classify the url into one web category with just a few shots, simple summarization and classification prompts.
 

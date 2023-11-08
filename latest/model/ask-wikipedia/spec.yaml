@@ -10,7 +10,7 @@ properties:
     to make your answers more grounded.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 2
+version: 3
 description: |-
   The "Ask Wikipedia" is a Q&A model that employs GPT3.5 to answer questions using information sourced from Wikipedia, ensuring more grounded responses. This process involves identifying the relevant Wikipedia link and extracting its contents. These contents are then used as an augmented prompt, enabling GPT3.5 to generate an accurate response to the question.
 
