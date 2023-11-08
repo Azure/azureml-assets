@@ -22,7 +22,7 @@ from shared_utilities.io_utils import (
     try_read_mltable_in_spark_with_error,
     save_spark_df_as_mltable,
 )
-
+from shared_utilities.event_utils import add_tags_to_root_run
 from shared_utilities.constants import (
     MDC_CHAT_HISTORY_COLUMN,
     MDC_CORRELATION_ID_COLUMN,
@@ -126,7 +126,8 @@ def _raw_mdc_uri_folder_to_mltable(
     return table
 
 
-def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, fs: AbstractFileSystem) -> DataFrame:
+def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str,
+                                 fs: AbstractFileSystem = None, add_tags_func=None) -> DataFrame:
     """Convert MLTable to Spark DataFrame."""
     with tempfile.TemporaryDirectory() as mltable_temp_path:
         # Save MLTable to temp location
@@ -146,7 +147,13 @@ def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, f
         )
 
     # Read mltable from preprocessed_data
-    return try_read_mltable_in_spark_with_error(des_path, "preprocessed_data")
+    try:
+        return try_read_mltable_in_spark_with_error(des_path, "preprocessed_data")
+    except DataNotFoundError as e:
+        tags = {"no_input_data": True}
+        add_tags_func = add_tags_func or add_tags_to_root_run
+        add_tags_func(tags)
+        raise e
 
 
 def _get_data_columns(df: DataFrame) -> list:
@@ -245,7 +252,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
 def _raw_mdc_uri_folder_to_preprocessed_spark_df(
         data_window_start: datetime, data_window_end: datetime,
         input_data: str, preprocessed_input_data: str, extract_correlation_id: bool,
-        fs: AbstractFileSystem = None) -> DataFrame:
+        fs: AbstractFileSystem = None, add_tags_func=None) -> DataFrame:
     """Read raw MDC data, preprocess, and return in a Spark DataFrame."""
     # Parse the dates
     start_datetime = parser.parse(data_window_start)
@@ -254,7 +261,7 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
     table = _raw_mdc_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
     # print("MLTable:", table)
 
-    df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs)
+    df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs, add_tags_func)
     # print("df after converting mltable to spark df:")
     # df.show()
     # df.printSchema()

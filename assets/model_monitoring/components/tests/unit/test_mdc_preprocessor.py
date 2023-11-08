@@ -107,16 +107,19 @@ class TestMDCPreprocessor:
         assert_frame_equal(pdf_actual, pdf_expected)
 
     @pytest.mark.parametrize(
-        "window_start_time, window_end_time",
+        "window_start_time, window_end_time, root_folder_exists",
         [
-            ("2023-11-03T15:00:00", "2023-11-03T16:00:00"),  # no folder
-            ("2023-11-06T15:00:00", "2023-11-06T16:00:00"),  # has folder, no file
-            ("2023-11-06T17:00:00", "2023-11-06T18:00:00"),  # has folder and file, but empty file
+            ("2023-11-03T15:00:00", "2023-11-03T16:00:00", True),  # no window folder
+            ("2023-11-06T15:00:00", "2023-11-06T16:00:00", True),  # has window folder, no file
+            ("2023-11-06T17:00:00", "2023-11-06T18:00:00", True),  # has window folder and file, but empty file
+            ("2023-11-08T14:00:00", "2023-11-08T16:00:00", False),  # root folder not exists
         ]
     )
     def test_uri_folder_to_spark_df_no_data(self, mdc_preprocessor_test_setup,
-                                            window_start_time, window_end_time):
+                                            window_start_time, window_end_time, root_folder_exists):
         """Test uri_folder_to_spark_df()."""
+        def my_add_tags(tags: dict):
+            print("my_add_tags:", tags)
         print("testing test_uri_folder_to_spark_df...")
         print("working dir:", os.getcwd())
 
@@ -124,21 +127,21 @@ class TestMDCPreprocessor:
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
         preprocessed_output = f"{tests_path}/unit/preprocessed_mdc_data"
         shutil.rmtree(f"{preprocessed_output}temp", True)
+        root_folder = f"{tests_path}/unit/raw_mdc_data/" if root_folder_exists else f"{tests_path}/unit/raw_mdc_data1/"
 
         with pytest.raises(DataNotFoundError):
             pdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
                 window_start_time,
                 window_end_time,
-                f"{tests_path}/unit/raw_mdc_data/",
+                root_folder,
                 preprocessed_output,
                 False,
                 fs,
+                my_add_tags
             )
             pdf.show()
 
-    # todo: add test for root MDC dir not exists (e.g. {test_path}/unit/raw_mdc_data1/)
-
-    # @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
+    @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, extract_correlation_id",
         [

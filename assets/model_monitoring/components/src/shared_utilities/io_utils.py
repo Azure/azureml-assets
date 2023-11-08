@@ -24,13 +24,17 @@ def init_spark():
     return spark
 
 
-def _is_not_found_exception(error: Exception):
-    return (
-        isinstance(error, IndexError)
-        or "The requested stream was not found" in error.args[0]
-        or "Not able to find MLTable file" in error.args[0]
-        or "Partition 0 is out of bounds." in error.args[0]
-    )
+def _is_not_found_exception(input_name, error: Exception):
+    if isinstance(error, IndexError) or ("Partition 0 is out of bounds." in error.args[0]):
+        return True, (f"No data is found for input '{input_name}' in the specified window, "
+                      "most likely there is no request in the specified window.")
+    elif "The requested stream was not found" in error.args[0]:
+        return True, (f"No data is found for input '{input_name}', "
+                      "seems the root folder of the input is moved or deleted.")
+    elif "Not able to find MLTable file" in error.args[0]:
+        return True, f"No data is found for input '{input_name}'."
+    else:
+        return False, None
 
 
 def try_read_mltable_in_spark_with_warning(mltable_path: str, input_name: str) -> DataFrame:
@@ -49,25 +53,31 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
 
     If data not found, conduct different error handling based on no_data_approach.
     """
+    def process_input_not_found(error_message):
+        if no_data_approach == NoDataApproach.IGNORE:
+            return None
+        elif no_data_approach == NoDataApproach.WARNING:
+            post_warning_event(
+                error_message
+                + " Please visit aka.ms/mlmonitoringhelp for more information."
+            )
+            return None
+        else:  # no_data_approach == NoDataApproach.ERROR:
+            raise DataNotFoundError(error_message)
+
     try:
-        return read_mltable_in_spark(mltable_path)
+        df = read_mltable_in_spark(mltable_path)
     except Exception as error:
-        if _is_not_found_exception(error):
+        input_not_found, error_message = _is_not_found_exception(input_name, error)
+        if input_not_found:
             print(error)
-            error_message = f"No data was found for input '{input_name}' in the specified window."
-            print(error_message)
-            if no_data_approach == NoDataApproach.IGNORE:
-                return None
-            elif no_data_approach == NoDataApproach.WARNING:
-                post_warning_event(
-                    error_message
-                    + " Please visit aka.ms/mlmonitoringhelp for more information."
-                )
-                return None
-            else:  # no_data_approach == NoDataApproach.ERROR:
-                raise DataNotFoundError(error_message)
+            return process_input_not_found(error_message)
         else:
             raise error
+    if (not df) or df.isEmpty():
+        error_message = (f"No data is found for input '{input_name}' in the specified window, "
+                         "most likely there is no request in the specified window.")
+        return process_input_not_found(error_message)
 
 
 def read_mltable_in_spark(mltable_path: str):

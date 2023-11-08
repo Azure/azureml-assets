@@ -69,17 +69,31 @@ def _get_timestamp():
     return now.strftime(DATE_TIME_FORMAT)
 
 
+def add_tags_to_run(run_id: str, tags: dict):
+    """Add tags to the run with the specified run id."""
+    client = mlflow.tracking.MlflowClient()
+    for key, value in tags.items():
+        client.set_tag(run_id, key, value)
+
+
+def add_tags_to_root_run(tags: dict):
+    """Add tags to the root run."""
+    run = mlflow.get_run(run_id=_get_run_id())
+    root_run_id = run.data.tags.get(ROOT_RUN_ID_TAG, None) or run.info.run_id
+    add_tags_to_run(root_run_id, tags)
+
+
 def post_email_event(signal_name: str, emails: str, message: str):
     """Post an email event with message to the current job."""
-    run: Run = mlflow.get_run(run_id=_get_run_id())
-    root_run_id = run.info.run_id
-    if ROOT_RUN_ID_TAG in run.data.tags:
-        root_run_id = run.data.tags[ROOT_RUN_ID_TAG]
-
+    run = mlflow.get_run(run_id=_get_run_id())
+    root_run_id = run.data.tags.get(ROOT_RUN_ID_TAG, None) or run.info.run_id
     print(f"Posting email event with message '{message}' to run '{root_run_id}'.")
-    client = mlflow.tracking.MlflowClient()
-    client.set_tag(root_run_id, AML_SEND_EMAIL_ADDRESSES_TAG, emails)
-    client.set_tag(root_run_id, f"azureml.modelmonitor.threshold.breached.{signal_name}", message)
+    add_tags_to_run(
+        root_run_id,
+        {
+            AML_SEND_EMAIL_ADDRESSES_TAG: emails,
+            f"azureml.modelmonitor.threshold.breached.{signal_name}": message
+        })
 
 
 def post_warning_event(message):
