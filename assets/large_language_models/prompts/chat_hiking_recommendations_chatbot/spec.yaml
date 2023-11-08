@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.1
+name: hiking_recommendations_chatbot
+display_name: Hiking Recommendations Chatbot
+description: Hiking Recommendations Chatbot
+
+tags:
+  modality: chat
+  task: chat-completions
+
+data_uri: ./prompt
+template_path: prompt.yaml

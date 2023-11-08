@@ -174,6 +174,14 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     otherwise, return the dataref content which is a url to the json file.
     """
 
+    def convert_object_to_str(dataframe: pd.DataFrame) -> pd.DataFrame:
+        columns = dataframe.columns
+        for column in columns:
+            if dataframe[column].dtype == "object":
+                dataframe[column] = dataframe[column].astype(str)
+
+        return dataframe
+
     def read_data(row) -> str:
         data = getattr(row, MDC_DATA_COLUMN, None)
         if data:
@@ -187,7 +195,9 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
         # TODO: Move this to tracking stream if both data and dataref are NULL
 
     def row_to_pdf(row) -> pd.DataFrame:
-        return pd.read_json(read_data(row))
+        df = pd.read_json(read_data(row))
+        df = convert_object_to_str(df)
+        return df
 
     data_columns = _get_data_columns(df)
     data_rows = df.select(data_columns).rdd.take(SCHEMA_INFER_ROW_COUNT)  # TODO: make it an argument user can define
@@ -206,6 +216,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
 
     def extract_data_and_correlation_id(entry, correlationid):
         result = pd.read_json(entry)
+        result = convert_object_to_str(result)
         result[MDC_CORRELATION_ID_COLUMN] = ""
         if MDC_CHAT_HISTORY_COLUMN in result.columns:
             result.drop(columns=[MDC_CHAT_HISTORY_COLUMN], inplace=True)
@@ -228,7 +239,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     def transform_df_function_without_correlation_id(iterator):
         for df in iterator:
             pdf = pd.concat(
-                pd.read_json(read_data(row)) for row in df.itertuples()
+                convert_object_to_str(pd.read_json(read_data(row))) for row in df.itertuples()
             )
             if MDC_CHAT_HISTORY_COLUMN in pdf.columns:
                 pdf.drop(columns=[MDC_CHAT_HISTORY_COLUMN], inplace=True)
