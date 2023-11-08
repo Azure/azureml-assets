@@ -18,4 +18,4 @@ tags:
     apply_deepspeed: 'false'
     apply_ort: 'false'
   task: multi-object-tracking
-version: 1
+version: 3

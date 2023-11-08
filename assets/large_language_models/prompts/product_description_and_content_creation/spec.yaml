@@ -2,11 +2,11 @@ $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
 name: product-description-and-content-creation
-version: 0.1.1
+version: 0.1.5
 display_name: Product Description And Content Creation
 
 tags:
-  modality: chat
+  modality: completion
   task: content-creation
   industry: retail
 

@@ -1,0 +1,60 @@
+# Valid tag values that can be applied to assets such as prompts, models, and evaluation results.
+# For prompts, these map to filters in the prompt gallery UX.
+modality:
+  required: False
+  allow_multiple: False
+  values:
+    - completion
+    - chat
+    - image
+    - video
+
+industry:
+  required: False
+  allow_multiple: False
+  values:
+    - financial-services
+    - healthcare
+    - retail
+    - manufacturing
+    - sustainability
+    - nonprofit
+    - energy
+    - sovereignty
+    - education
+
+task:
+  required: False
+  allow_multiple: True
+  values:
+  - summarization
+  - content-creation
+  - text-classification
+  - sentiment-analysis
+  - entity-extraction
+  - data-parsing
+  - translation
+  - natural-language-to-code
+  - explain-code
+  - question-answering
+  - reasoning-and-insights
+  - recommendation
+  - chat-completions
+  - automatic-speech-recognition
+  - completions
+  - conversational
+  - embeddings
+  - fill-mask
+  - image-classification
+  - image-segmentation
+  - object-detection
+  - table-question-answering
+  - text2text-generation
+  - text-generation
+  - text-summarization
+  - text-to-image
+  - text-translation
+  - token-classification
+  - video-classification
+  - zero-shot-classification
+  - zero-shot-image-classification

@@ -59,18 +59,20 @@ def run():
     ).get_metrics_dict()
 
     samples_index: List[Row] = None
+    samples_index_df = None
     if args_dict["samples_index"]:
-        print("Processing samples index.")
-        samples_index_df = try_read_mltable_in_spark(
-            args.samples_index, "samples_index"
-        )
-        if not samples_index_df:
-            print("Samples index is empty. Skipping processing of the samples index.")
-        else:
-            samples_index: List[Row] = samples_index_df.collect()
-            result = merge_dicts(
-                result, SamplesOutputBuilder(samples_index).get_samples_dict()
+        try:
+            print("Processing samples index.")
+            samples_index_df = try_read_mltable_in_spark(
+                args.samples_index, "samples_index"
             )
+            if samples_index_df is not None:
+                samples_index: List[Row] = samples_index_df.collect()
+                result = merge_dicts(
+                    result, SamplesOutputBuilder(samples_index).get_samples_dict()
+                )
+        except Exception as e:
+            print(f"Samples index is empty. Skipping processing of the samples index. {e}")
 
     output_payload = to_output_payload(args.signal_name, args.signal_type, result)
 

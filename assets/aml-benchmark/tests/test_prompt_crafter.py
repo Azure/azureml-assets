@@ -28,6 +28,7 @@ from .test_utils import (
 def _verify_and_get_output_records(
     input_file: str,
     expected_output_file: str,
+    is_ground_truth_col: bool = False,
 ) -> None:
     """Verify the output and get output records.
 
@@ -44,7 +45,9 @@ def _verify_and_get_output_records(
     with open(expected_output_file, "r") as f:
         expected_output_records = [json.loads(line) for line in f]
         expected_output_row_count = len(expected_output_records)
-
+        if is_ground_truth_col:
+            for line in f:
+                assert 'ground_truth' in json.loads(line).keys()
     assert input_row_count == expected_output_row_count
     return
 
@@ -52,6 +55,7 @@ def _verify_and_get_output_records(
 # test patterns
 _prompt_pattern_test = "Question:{{question}} \nChoices:(1) {{choices.text[0]}}\n(2) {{choices.text[1]}}\n(3) {{choices.text[2]}}\n(4) {{choices.text[3]}}\nThe answer is: "  # noqa: E501
 _output_pattern_test = "{{answerKey}}"
+_ground_truth_column = "answerKey"
 
 
 class TestPromptCrafterComponent:
@@ -187,24 +191,24 @@ class TestPromptCrafterScript:
 
     @pytest.mark.parametrize(
         "test_data, prompt_type, n_shots, \
-        few_shot_data, prompt_pattern, output_pattern",
+        few_shot_data, prompt_pattern, output_pattern, ground_truth_column",
         [
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 1,
              Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
-                _output_pattern_test),
+                _output_pattern_test, _ground_truth_column),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 1,
              Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
-                _output_pattern_test),
+                _output_pattern_test, _ground_truth_column),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 0,
              Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
-                _output_pattern_test),
+                _output_pattern_test, _ground_truth_column),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 0,
              Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
-                _output_pattern_test),
+                _output_pattern_test, _ground_truth_column),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 0,
-                None, _prompt_pattern_test, _output_pattern_test),
+                None, _prompt_pattern_test, _output_pattern_test, _ground_truth_column),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 0,
-                None, _prompt_pattern_test, _output_pattern_test),
+                None, _prompt_pattern_test, _output_pattern_test, _ground_truth_column),
         ]
     )
     def test_valid_prompt_crafter(
@@ -215,6 +219,7 @@ class TestPromptCrafterScript:
         few_shot_data: str,
         prompt_pattern: str,
         output_pattern: str,
+        ground_truth_column: str,
         output_file: str = os.path.join(
             os.path.dirname(__file__), 'data/prompt_crafter_output.jsonl'),
     ):
@@ -228,21 +233,29 @@ class TestPromptCrafterScript:
             output_file=output_file,
             output_pattern=output_pattern,
             few_shot_data=few_shot_data,
+            ground_truth_column=ground_truth_column,
         )
 
         # Verify the output file(s)
         _verify_and_get_output_records(
             test_data,
             output_file,
+            is_ground_truth_col=True,
         )
+
+    _error_mssg_few_shot_data_shortage = "Unable to find 10 few shots after 100 retries"
+    _error_mssg_ground_truth_column_not_found = "Ground truth column is not present in the data"
 
     @pytest.mark.parametrize(
         "test_data, prompt_type, n_shots, \
-        few_shot_data, prompt_pattern, output_pattern",
+        few_shot_data, prompt_pattern, output_pattern, ground_truth_column, expected_error_message",
         [
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 10,
-             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE,
-             _prompt_pattern_test, _output_pattern_test),
+             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
+             _output_pattern_test, _ground_truth_column, _error_mssg_few_shot_data_shortage),
+            (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 1,
+             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
+             _output_pattern_test, "invalid_column", _error_mssg_ground_truth_column_not_found),
         ]
     )
     def test_invalid_prompt_crafter(
@@ -253,11 +266,12 @@ class TestPromptCrafterScript:
         few_shot_data: str,
         prompt_pattern: str,
         output_pattern: str,
+        ground_truth_column: str,
+        expected_error_message: str,
         output_file: str = os.path.join(
             os.path.dirname(__file__), 'data/prompt_crafter_output.jsonl'),
     ):
         """Test for valid input dataset."""
-        expected_error_message = "Unable to find 10 few shots after 100 retries"
         try:
             # Run the script
             self._run_prompt_crafter_script(
@@ -268,6 +282,7 @@ class TestPromptCrafterScript:
                 output_file=output_file,
                 output_pattern=output_pattern,
                 few_shot_data=few_shot_data,
+                ground_truth_column=ground_truth_column,
             )
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -280,6 +295,7 @@ class TestPromptCrafterScript:
         n_shots: int,
         prompt_pattern: str,
         output_file: str,
+        ground_truth_column: Optional[str] = None,
         few_shot_separator: Optional[str] = None,
         prefix: Optional[str] = None,
         system_message: Optional[str] = None,
@@ -305,7 +321,7 @@ class TestPromptCrafterScript:
         src_dir = get_src_dir()
         args = [
             f"cd {src_dir} &&",
-            "python -m prompt_crafter.main",
+            "python -m aml_benchmark.prompt_crafter.main",
             "--system_message",
             f"{system_message}",
             "--random_seed",
@@ -329,5 +345,7 @@ class TestPromptCrafterScript:
             args.extend(["--output_pattern", f'"{output_pattern}"'])
         if few_shot_data is not None:
             args.extend(["--few_shot_data", f'"{few_shot_data}"'])
+        if ground_truth_column is not None:
+            args.extend(["--ground_truth_column_name", f"{ground_truth_column}"])
 
         run_command(str(" ".join(args)))

@@ -375,11 +375,13 @@ class MlflowMetaConstants:
     IS_FINETUNED_MODEL = "is_finetuned_model"
     IS_ACFT_MODEL = "is_acft_model"
     BASE_MODEL_NAME = "base_model_name"
+    BASE_MODEL_TASK = "base_model_task"
 
 
 def fetch_mlflow_acft_metadata(
         is_finetuned_model: bool = False,
-        base_model_name: str = None) -> dict:
+        base_model_name: str = None,
+        base_model_task: str = None) -> dict:
     """Fetch metadata to be dumped in MlFlow MlModel File.
 
     :param is_finetuned_model: whether the model is finetuned one or base model
@@ -388,6 +390,8 @@ def fetch_mlflow_acft_metadata(
     :type is_acft_model: bool
     :param base_model_name: name of the model
     :type base_model_name: str
+    :param base_model_task: name of the base model task
+    :type base_model_task: str
 
     :return: metadata
     :rtype: dict
@@ -395,7 +399,8 @@ def fetch_mlflow_acft_metadata(
     metadata = {
         MlflowMetaConstants.IS_FINETUNED_MODEL: is_finetuned_model,
         MlflowMetaConstants.IS_ACFT_MODEL: True,
-        MlflowMetaConstants.BASE_MODEL_NAME: base_model_name
+        MlflowMetaConstants.BASE_MODEL_NAME: base_model_name,
+        MlflowMetaConstants.BASE_MODEL_TASK: base_model_task
     }
 
     return metadata

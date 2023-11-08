@@ -126,10 +126,19 @@ def set_db_copilot_adapter(db_name, db_copilot_config, visibility):
     """Set a dbcopilot adapter."""
     cache_dir = os.getenv("AZUREML_MODEL_DIR")
     cache_uri = os.getenv("DBCOPILOT_CACHE_URI")
+
+    def simple_db_name(db_name):
+        if db_name.startswith("azureml://"):
+            return db_name.split("/")[-1].replace(".", "_")
+        return db_name
+
     if cache_uri:
-        cache_folder = os.path.join(cache_dir, visibility.value.lower(), db_name)
+        cache_folder = os.path.join(
+            cache_dir, visibility.value.lower(), simple_db_name(db_name)
+        )
         with DatastoreUploader(
-            f"{cache_uri}{visibility.value.lower()}/{db_name}", cache_folder
+            f"{cache_uri}{visibility.value.lower()}/{simple_db_name(db_name)}",
+            cache_folder,
         ):
             db_copilot_adapter = DBCopilotAdapter(
                 db_copilot_config,

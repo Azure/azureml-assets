@@ -1,0 +1,32 @@
+type: evaluationresult
+name: hellaswag_llama_2_13b_question_answering
+version: 1.0.0
+display_name: hellaswag_llama_2_13b_question_answering
+description: llama-2-13b run for hellaswag dataset
+dataset_family: hellaswag
+dataset_name: hellaswag
+
+model_name: llama-2-13b
+model_version: "12"
+model_asset_id: azureml://registries/azureml-meta/models/Llama-2-13b/versions/12
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-meta/models/Llama-2-13b/versions/12
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.422
+
+path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"

@@ -203,7 +203,7 @@ class TestDatasetDownloaderScript:
         src_dir = get_src_dir()
         args = [
             f"cd {src_dir} &&",
-            "python -m dataset_downloader.main",
+            "python -m aml_benchmark.dataset_downloader.main",
             "--output_dataset",
             f"{output_dataset}",
             "--split",

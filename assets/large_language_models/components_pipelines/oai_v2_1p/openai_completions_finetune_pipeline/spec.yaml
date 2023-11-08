@@ -1,6 +1,6 @@
 $schema: http://azureml/sdk-2-0/PipelineComponent.json
 type: pipeline
-version: 0.1.0
+version: 0.1.2
 name: openai_completions_finetune_pipeline
 display_name: OpenAI Completions Finetune Pipeline
 description: Finetune your own OAI model. Visit https://learn.microsoft.com/en-us/azure/cognitive-services/openai/ for more info.
@@ -18,6 +18,7 @@ inputs:
       - babbage-002
       - davinci-002
       - gpt-35-turbo
+      - gpt-4
   train_dataset:
     type: uri_folder
     optional: False
@@ -52,10 +53,6 @@ inputs:
     optional: False
     default: -1
     description: Global batch size. If set to -1, batch size will be determined dynamically based on the input data.
-  quota_enforcement_resource_id:
-    type: string
-    optional: True
-    description: Owner subscription id. 
 
 outputs:
   output_model:
@@ -69,7 +66,7 @@ jobs:
     resources:
       properties:
         quota_enforcement_resource_id: ${{parent.inputs.quota_enforcement_resource_id}}
-    component: azureml://registries/azure-openai-v2/components/openai_data_import/versions/0.3.3
+    component: azureml://registries/azure-openai-v2/components/openai_data_import/versions/0.3.5
     inputs:
       train_dataset: ${{parent.inputs.train_dataset}}
       validation_dataset: ${{parent.inputs.validation_dataset}}
@@ -79,7 +76,7 @@ jobs:
     resources:
       properties:
         quota_enforcement_resource_id: ${{parent.inputs.quota_enforcement_resource_id}}
-    component: azureml://registries/azure-openai-v2/components/openai_completions_finetune/versions/0.3.23
+    component: azureml://registries/azure-openai-v2/components/openai_completions_finetune/versions/0.4.4
     inputs:
       input_dataset: ${{parent.jobs.openai_data_import.outputs.out_dataset}}
       model: ${{parent.inputs.model}}

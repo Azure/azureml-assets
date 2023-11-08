@@ -9,6 +9,7 @@ import re
 import sys
 from collections import defaultdict
 from pathlib import Path
+from ruamel.yaml import YAML
 from typing import List
 
 from azure.ai.ml import load_model
@@ -71,6 +72,9 @@ IMAGE_NAME_PATTERN = re.compile(r"^azureml/curated/(.+)")
 BUILD_CONTEXT_DISALLOWED_PATTERNS = [
     re.compile(r"extra-index-url", re.IGNORECASE),
 ]
+
+# Directory path for config files related to asset validation, relative to the current source path
+CONFIG_DIRECTORY = "config"
 
 
 def _log_error(file: Path, error: str) -> None:
@@ -320,6 +324,62 @@ def validate_categories(asset_config: assets.AssetConfig) -> int:
     return 0
 
 
+def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) -> int:
+    """Validate proper tags for an asset.
+
+    Args:
+        asset_config (AssetConfig): Asset config.
+        valid_tags_filename (str): Yaml filename in the config directory defining valid tags for the asset.
+
+    Returns:
+        int: Number of errors.
+    """
+    error_count = 0
+
+    with open(Path(__file__).parent / CONFIG_DIRECTORY / valid_tags_filename) as f:
+        valid_tags = YAML().load(f)
+
+    asset_spec = asset_config._spec._yaml
+    asset_tags = asset_spec.get('tags')
+
+    for tag in valid_tags:
+        tag_info = valid_tags[tag]
+        if tag_info.get('required') and (not asset_tags or tag not in asset_tags):
+            _log_error(asset_config.file_name_with_path,
+                       f"Asset '{asset_config.name}' is missing required tag '{tag}'")
+            error_count += 1
+            continue
+
+        if not asset_tags or tag not in asset_tags:
+            continue
+
+        tag_value = asset_tags[tag]
+        if not isinstance(tag_value, str):
+            _log_error(asset_config.file_name_with_path,
+                       f"Asset '{asset_config.name}' has non-string '{type(tag_value)}' for tag '{tag}'")
+            error_count += 1
+            continue
+
+        valid_tag_values = tag_info.get('values')
+        if valid_tag_values:
+            if tag_info.get('allow_multiple'):
+                tag_values = tag_value.split(',')
+                for single_tag_value in tag_values:
+                    if single_tag_value not in valid_tag_values:
+                        _log_error(asset_config.file_name_with_path,
+                                   f"Asset '{asset_config.name}' has invalid value '{single_tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")  # noqa: E501
+                        error_count += 1
+                        continue
+            else:
+                if tag_value not in valid_tag_values:
+                    _log_error(asset_config.file_name_with_path,
+                               f"Asset '{asset_config.name}' has invalid value '{tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")  # noqa: E501
+                    error_count += 1
+                    continue
+
+    return error_count
+
+
 def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_asset_config: assets.AssetConfig) -> int:
     """Check if current model asset and validated one matches and has a successful run."""
     # latest_asset_config is expected to be non null
@@ -408,13 +468,13 @@ def get_validated_models_assets_map(model_validation_results_dir: str):
     """Return model assets map."""
     try:
         if not model_validation_results_dir:
-            logger.log_error(
-                "Unexpected. model_validation_results_dir is None. All models assets will fail in validation"
+            logger.log_warning(
+                "Unexpected !!! model_validation_results_dir is None. Model assets might fail in validation."
             )
             return {}
 
         validated_model_assets: List[assets.AssetConfig] = util.find_assets(
-            input_dirs=[model_validation_results_dir],
+            input_dirs=[Path(model_validation_results_dir)],
             asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
             types=[assets.config.AssetType.MODEL]
         )
@@ -481,7 +541,8 @@ def validate_assets(input_dirs: List[Path],
         # Populate dictionary of asset names to asset config paths
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
-        if asset_config.type == assets.AssetType.MODEL:
+        # validated_model_map would be ampty for non-drop scenario
+        if validated_model_map and asset_config.type == assets.AssetType.MODEL:
             error_count += validate_model_assets(asset_config, validated_model_map.get(asset_config.name, None))
 
         # Populate dictionary of image names to asset config paths
@@ -516,6 +577,12 @@ def validate_assets(input_dirs: List[Path],
                 error_count += validate_dockerfile(asset_config.extra_config_as_object())
                 if check_build_context:
                     error_count += validate_build_context(asset_config.extra_config_as_object())
+
+            if asset_config.type == assets.AssetType.PROMPT or asset_config.type == assets.AssetType.EVALUATIONRESULT:
+                error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
+
+            if asset_config.type == assets.AssetType.PROMPT:
+                error_count += validate_tags(asset_config, 'tag_values_prompt.yaml')
 
             # Validate categories
             if check_categories:
