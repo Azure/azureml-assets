@@ -223,6 +223,7 @@ def string_to_nested_float_list(s: str) -> list:
     def to_float_recursive(lst) -> list:
         """
         Recursively convert nested lists to floats.
+
         :param lst: nested list
         :type lst: list
         :return: nested list of floats
