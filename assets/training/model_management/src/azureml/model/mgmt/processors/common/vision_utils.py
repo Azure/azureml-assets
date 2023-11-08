@@ -202,41 +202,36 @@ def get_current_device() -> torch.device:
         return torch.device(type="cpu")
 
 
-def string_to_nested_float_list(s: str) -> list:
+def string_to_nested_float_list(input_str: str) -> list:
     """Convert string to nested list of floats.
 
     :return: string converted to nested list of floats
     :rtype: list
     """
-    # Check if string is None or empty
-    if s in ["null", "None", "", "nan", "NoneType", np.nan, None]:
+    if input_str in ["null", "None", "", "nan", "NoneType", np.nan, None]:
         return None
-    # Check if string matches the expected format using a regex pattern.
-    # This pattern ensures that the string only contains brackets, numbers, dots, and commas.
-    if not re.match(r"^\[((\[|\]|\s|\d|\,|\.|-)*?)\]$", s):
-        raise ValueError("Invalid input format, please use a nested list of ints or floats.")
+    try:
+        # Use ast.literal_eval to safely evaluate the string into a list
+        nested_list = literal_eval(input_str)
+        
+        # Recursive function to convert all numbers in the nested list to floats
+        def to_floats(lst) -> list:
+            """
+            Recursively convert all numbers in a nested list to floats.
 
-    # Convert string to nested list using literal_eval
-    nested_list = literal_eval(s)
-
-    # Helper function to convert nested lists to floats
-    def to_float_recursive(lst) -> list:
-        """
-        Recursively convert nested lists to floats.
-
-        :param lst: nested list
-        :type lst: list
-        :return: nested list of floats
-        :rtype: list
-        """
-        for i, item in enumerate(lst):
-            if isinstance(item, list):
-                to_float_recursive(item)
-            else:
-                lst[i] = float(item)
-
-    to_float_recursive(nested_list)
-    return nested_list
+            :param lst: nested list
+            :type lst: list
+            :return: nested list of floats
+            :rtype: list
+            """
+            return [to_floats(item) if isinstance(item, list) else float(item) for item in lst]
+        
+        # Use the recursive function to process the nested list
+        return to_floats(nested_list)
+    except (ValueError, SyntaxError) as e:
+        # In case of an error during conversion, print an error message
+        print(f"Invalid input {input_str}: {e}, ignoring.")
+        return None
 
 
 def bool_array_to_pil_image(bool_array: np.ndarray) -> PIL.Image.Image:
