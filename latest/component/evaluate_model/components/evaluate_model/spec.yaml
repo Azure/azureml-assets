@@ -3,7 +3,7 @@ name: evaluate_model
 display_name: Evaluate Model
 description: Evaluate MLFlow models for supported task types.
 
-version: 0.0.17
+version: 0.0.18
 type: command
 tags:
   type: evaluation
@@ -64,7 +64,7 @@ outputs:
 
 is_deterministic: true
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/14
+environment: azureml://registries/azureml/environments/model-evaluation/versions/15
 
 command: >-
   python download_dependencies.py

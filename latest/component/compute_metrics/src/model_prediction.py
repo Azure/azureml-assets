@@ -22,6 +22,7 @@ from exceptions import (
 )
 from error_definitions import (
     ModelPredictionInternalError,
+    ModelPredictionValueError,
     BadModel,
     BadInputData,
     EmptyInputData,
@@ -137,21 +138,20 @@ class ModelPredictionRunner:
         Returns:
             _type_: _description_
         """
-        tokenizer_load_start = time.time()
-        logger.info("Loading Tokenizer")
         tokenizer = None
-
-        if self.task in constants.TEXT_TOKEN_TASKS and token_counts_enabled:
-            try:
-                tokenizer = self.predictor.model._model_impl.tokenizer
-                logger.info(f"Loaded Tokenizer: {tokenizer}")
-            except Exception as e:
-                logger.info(f"Error encountered in loading the tokenizer: {e}")
-                logger.warning("Tokenizer loading failed with the error above; no token counts will be returned.")
-        elif self.task not in constants.TEXT_TOKEN_TASKS and token_counts_enabled:
-            logger.warning("Token counts not supported for this task type; no token counts will be returned.")
-
-        logger.info(f"Tokenizer load time ms: {(time.time() - tokenizer_load_start) * 1000}")
+        if token_counts_enabled:
+            logger.info("Loading Tokenizer")
+            if self.task in constants.TEXT_TOKEN_TASKS:
+                tokenizer_load_start = time.time()
+                try:
+                    tokenizer = self.predictor.model._model_impl.tokenizer
+                    logger.info(f"Loaded Tokenizer: {tokenizer}")
+                except Exception as e:
+                    logger.info(f"Error encountered in loading the tokenizer: {e}")
+                    logger.warning("Tokenizer loading failed with the error above; no token counts will be returned.")
+                logger.info(f"Tokenizer load time ms: {(time.time() - tokenizer_load_start) * 1000}")
+            else:
+                logger.warning("Token counts not supported for this task type; no token counts will be returned.")
         return tokenizer
 
     def predict(self, data):
@@ -325,7 +325,10 @@ class ModelPredictionRunner:
                     y_test["image_meta_info"] = X_test["image_meta_info"]
 
                 logger.info(f"Latency (ms) for this batch: {latency_ms}")
-
+            except ValueError as e:
+                exception = get_azureml_exception(PredictException, ModelPredictionValueError, e, error=repr(e))
+                log_traceback(exception, logger)
+                raise exception
             except Exception as e:
                 exception = get_azureml_exception(PredictException, ModelPredictionInternalError, e,
                                                   wrap_azureml_ex=False, error=repr(e))
