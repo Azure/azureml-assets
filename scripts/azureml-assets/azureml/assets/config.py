@@ -547,6 +547,11 @@ class AzureBlobstoreAssetPath(AssetPath):
         # token if the account does not allow for anonymous access.
         self._uri = f"{self._account_uri}/{self._container_name}/{self._container_path}"
 
+        # Check whether the token is already set. If so, append the token.
+        if self.token is not None:
+            self._uri += "?" + self.token
+            return self._uri
+
         # The first test is to see if we can simply list the contents of the container
         # using a very simple and quick HTTP request. In order for this to work,
         # container must support anonymous read access. If this succeeds, we can
@@ -563,11 +568,6 @@ class AzureBlobstoreAssetPath(AssetPath):
         except Exception:
             # If we fail pass through to the next approach
             pass
-
-        # Check whether the token is already set. If so, append the token.
-        if self.token is not None:
-            self._uri += self.token
-            return self._uri
 
         # Our second approach is to use the azure python SDK to view the properties
         # of the container. If the container allows for anonymous access then we can
@@ -624,7 +624,7 @@ class AzureBlobstoreAssetPath(AssetPath):
     def token(self) -> str:
         """Sas token."""
         return self._token
-    
+
     @token.setter
     def token(self, value: str):
         """Set sas token."""
