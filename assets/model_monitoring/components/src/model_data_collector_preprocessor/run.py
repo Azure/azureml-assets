@@ -169,11 +169,10 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
 
     def convert_object_to_str(dataframe):
         columns = dataframe.columns
-        index = 0
-        for t in dataframe.dtypes:
-            if t == "object":
-                dataframe[columns[index]] = dataframe[columns[index]].astype(str)
-                index += 1
+        for column in columns:
+            if dataframe[column].dtype == "object":
+                dataframe[column] = dataframe[column].astype(str)
+
         return dataframe
 
     def read_data(row) -> str:
