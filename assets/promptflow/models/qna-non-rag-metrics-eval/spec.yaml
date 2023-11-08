@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: qna-fluency-eval
+name: qna-non-rag-metrics-eval
 path: ./
 properties:
   is-promptflow: true
   azureml.promptflow.section: gallery
   azureml.promptflow.type: evaluate
-  azureml.promptflow.name: QnA Fluency Evaluation
-  azureml.promptflow.description: Compute the Fluency of the answer base on the question using llm.
+  azureml.promptflow.name: QnA Evaluation
+  azureml.promptflow.description: Compute the quality of the answer for the given question based on the ground_truth and the context
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 3
+version: 1
