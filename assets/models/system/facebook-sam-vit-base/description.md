@@ -52,7 +52,7 @@ Note: "image1" string should be in base64 format or publicly accessible urls.
 ]
 ```
 
-Note: "encoded_binary_mask1" string should be in base64 format.
+Note: "encoded_binary_mask1" string is in base64 format.
 
 
 #### Model inference - visualization for a sample image
