@@ -12,7 +12,7 @@ from azure.ai.ml import Input
 import pytest
 from datasets import get_dataset_config_names, get_dataset_split_names
 
-from test_utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
@@ -203,7 +203,7 @@ class TestDatasetDownloaderScript:
         src_dir = get_src_dir()
         args = [
             f"cd {src_dir} &&",
-            "python -m dataset_downloader.main",
+            "python -m aml_benchmark.dataset_downloader.main",
             "--output_dataset",
             f"{output_dataset}",
             "--split",

@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.1.1
+name: marketing_writing_assistant
+display_name: Marketing Writing Assistant
+description: Marketing Writing Assistant Prompt
+
+tags:
+  modality: chat
+  task: chat-completions
+
+data_uri: ./prompt
+template_path: prompt.yaml

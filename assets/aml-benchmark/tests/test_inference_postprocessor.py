@@ -17,7 +17,7 @@ from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 from azure.ai.ml.constants import AssetTypes
 
-from test_utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
@@ -428,7 +428,7 @@ class TestInferencePostprocessorScript:
             argss.extend(["--label_map", f"'{label_map}'"])
         argss = " ".join(argss)
         src_dir = get_src_dir()
-        cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+        cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
         run_command(f"{cmd}")
         _verify_and_get_output_records(
             dataset_name,
@@ -474,7 +474,7 @@ class TestInferencePostprocessorScript:
                     f"'{template}'",
                 ]
             )
-            cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             out_message = e.output.strip()
@@ -488,7 +488,7 @@ class TestInferencePostprocessorScript:
                     f"'{template}'",
                 ]
             )
-            cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -508,7 +508,7 @@ class TestInferencePostprocessorScript:
                     f"'{template}'",
                 ]
             )
-            cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -527,7 +527,7 @@ class TestInferencePostprocessorScript:
                     dummy_script_path,
                 ]
             )
-            cmd = f"cd {src_dir} && python -m inference_postprocessor.main {argss}"
+            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
@@ -557,7 +557,7 @@ class TestInferencePostprocessorScript:
     ) -> None:
         """Test apply_find_first."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -593,7 +593,7 @@ class TestInferencePostprocessorScript:
     ) -> None:
         """Test apply_separator."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -666,7 +666,7 @@ class TestInferencePostprocessorScript:
     ) -> None:
         """Test regex_expr."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -715,7 +715,7 @@ class TestInferencePostprocessorScript:
     ) -> None:
         """Test when extract_number is set to 'first'."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -766,7 +766,7 @@ class TestInferencePostprocessorScript:
     ) -> None:
         """Test when extract_number is set to 'last'."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj1 = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -797,7 +797,7 @@ class TestInferencePostprocessorScript:
     ):
         """Test remove_prefixes."""
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -831,7 +831,7 @@ class TestInferencePostprocessorScript:
         """Test remove_prompt_prefix."""
         data = {"prompt": prompt_prefix}
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -858,7 +858,7 @@ class TestInferencePostprocessorScript:
         """Test when remove_prompt_prefix is set to False."""
         data = {"prompt": prompt_prefix}
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -885,7 +885,7 @@ class TestInferencePostprocessorScript:
         """Check if wrong key is provided when remove_prompt_prefix is set to True."""
         data = {"wrong_prompt_key": prompt_prefix}
         sys.path.append(get_src_dir())
-        from inference_postprocessor import inference_postprocessor as inferpp
+        from aml_benchmark.inference_postprocessor import inference_postprocessor as inferpp
 
         obj = inferpp.InferencePostprocessor(
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
@@ -896,3 +896,30 @@ class TestInferencePostprocessorScript:
         for input in mock_completion_list:
             output.append(obj.apply_remove_prompt_prefix(text=input, data=data))
         assert output == expected_completion_list
+
+    def test_if_prediction_dataset_empty(self):
+        """Test the exceptions raise if prediction dataset is empty."""
+        empty_dataset_error_mssg = (
+            "No .jsonl file found."
+        )
+        src_dir = get_src_dir()
+        prediction_column_name = 'prediction'
+        template = '{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}'
+        dummy_dataset = os.path.join(os.getcwd(), "dummy_prediction_dataset.jsonl")
+        os.system(f"touch {dummy_dataset}")
+        try:
+            argss = " ".join(
+                [
+                    "--prediction_dataset",
+                    dummy_dataset,
+                    "--prediction_column_name",
+                    prediction_column_name,
+                    "--template",
+                    f"'{template}'",
+                ]
+            )
+            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
+            run_command(f"{cmd}")
+        except subprocess.CalledProcessError as e:
+            exception_message = e.output.strip()
+            assert_exception_mssg(exception_message, empty_dataset_error_mssg)

@@ -17,7 +17,7 @@ import pytest
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
-from test_utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
@@ -921,7 +921,7 @@ class TestComputePerfMetricsScript:
         src_dir = get_src_dir()
         args = [
             f"cd {src_dir} &&",
-            "python -m compute_performance_metrics.main",
+            "python -m aml_benchmark.perf_metrics.main",
             "--performance_data",
             dataset,
             "--batch_size_column_name",

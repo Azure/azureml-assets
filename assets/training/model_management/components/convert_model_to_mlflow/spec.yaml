@@ -9,7 +9,7 @@ is_deterministic: True
 display_name: Convert models to MLflow
 description: Component converts models from supported frameworks to MLflow model packaging format
 
-environment: azureml://registries/azureml/environments/model-management/versions/13
+environment: azureml://registries/azureml/environments/model-management/versions/17
 
 code: ../../src/
 command: >
@@ -62,10 +62,14 @@ inputs:
       - image-classification
       - image-object-detection
       - image-instance-segmentation
+      - image-to-text
       - text-to-image
       - text-to-image-inpainting
       - image-text-to-text
       - zero-shot-image-classification
+      - mask-generation
+      - video-multi-object-tracking
+      - visual-question-answering
     description: A Hugging face task on which model was trained on. A required parameter for transformers MLflow flavor. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
 

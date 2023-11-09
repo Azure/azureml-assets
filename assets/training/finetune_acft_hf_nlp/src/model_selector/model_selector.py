@@ -160,9 +160,6 @@ ACFT_CONFIG = {
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
                 },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
             },
             "mlflow_save_model_kwargs": {
                 "extra_pip_requirements": ["einops"],

@@ -26,9 +26,19 @@ messages:
 input_variables:
   - name: User_Location
     description: Location that the user is looking to hike
-    defaultValue: United States
+    default: United States
   - name: Hike_Intensity
     description: Desired hiking intensity from the user
-    defaultValue: Relaxed
+    default: Relaxed
 
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
+execution_settings:
+  default:
+    temperature: 0
+  gpt-4:
+    model_id: gpt-4
+    temperature: 0
+    evaluation: xxx (for future use to add evaluation results)
+    
 template_format: handlebars
+

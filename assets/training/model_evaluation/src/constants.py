@@ -22,6 +22,30 @@ ROOT_RUN_PROPERTIES = {
 }
 
 
+class ArgumentLiterals:
+    """Input Argument literals list."""
+
+    TASK = "task"
+    DATA = "data"
+    MLFLOW_MODEL = "mlflow_model"
+    LABEL_COLUMN_NAME = "label_column_name"
+    INPUT_COLUMN_NAMES = "input_column_names"
+    DEVICE = "device"
+    BATCH_SIZE = "batch_size"
+    CONFIG_FILE_NAME = "config_file_name"
+    CONFIG_STR = "config_str"
+    CONFIG = "config"
+
+    GROUND_TRUTHS = "ground_truths"
+    GROUND_TRUTHS_COLUMN_NAME = "ground_truths_column_name"
+    PREDICTIONS = "predictions"
+    PREDICTIONS_COLUMN_NAME = "predictions_column_name"
+    PREDICTION_PROBABILITIES = "prediction_probabilities"
+    PERFORMANCE_METADATA = "performance_metadata"
+    OUTPUT = "output"
+    OPENAI_CONFIG_PARAMS = "openai_config_params"
+
+
 class DEVICE:
     """Device list."""
 
@@ -147,10 +171,18 @@ TEXT_OUTPUT_TOKEN_TASKS = [
 ]
 
 
+class ChatCompletionConstants:
+    """Chat completion constants."""
+
+    OUTPUT = "predictions"
+    OUTPUT_FULL_CONVERSATION = "prediction_appended"
+
+
 class TelemetryConstants:
     """Telemetry Constants."""
 
     COMPONENT_NAME = "model_evaluation"
+    COMPONENT_DEFAULT_VERSION = "0.0.18"
 
     INITIALISING_RUNNER = "initialising_runner"
     VALIDATION_NAME = "argument_validation"
@@ -160,6 +192,7 @@ class TelemetryConstants:
     LOAD_MODEL = "load_model"
 
     PREDICT_NAME = "predict"
+    TRIGGER_VALIDATION_NAME = "validation_trigger_model_evaluation"
     MODEL_PREDICTION_NAME = "model_prediction"
     COMPUTE_METRICS_NAME = "compute_metrics"
     SCORE_NAME = "score"
@@ -172,6 +205,8 @@ class TelemetryConstants:
     LOGGER_NAME = "model_evaluation_component"
     APP_INSIGHT_HANDLER_NAME = "AppInsightsHandler"
 
+    NON_PII_MESSAGE = '[Hidden as it may contain PII]'
+
 
 class ExceptionLiterals:
     """Exception Constants."""
@@ -181,6 +216,7 @@ class ExceptionLiterals:
     DATA_LOADING_TARGET = "AzureML Model Evaluation Data Loading"
     ARGS_TARGET = "AzureML Model Evaluation Arguments Validation"
     MODEL_LOADER_TARGET = "AzureML Model Evaluation Model Loading"
+    DATA_SAVING_TARGET = "AzureML Model Evaluation Data Saving"
 
 
 class ExceptionTypes:
@@ -204,20 +240,18 @@ class ErrorStrings:
     DownloadDependenciesFailed = "Failed to install model dependencies: [{dependencies}]"
 
     # Arguments related
-    ArgumentParsingError = "Failed to parse input arguments."
+    ArgumentParsingError = "Parsing input arguments failed with error: [{error}]"
     InvalidTaskType = "Given Task Type [{TaskName}] is not supported. " + \
                       "Please see the list of supported task types:\n" + \
                       "\n".join(ALL_TASKS)
-    InvalidModel = "Either correct Model URI or Mlflow Model should be passed.\n" \
-                   "If you have passed Model URI, your Model URI is incorrect."
+    InvalidModel = "Model passed is not a valid MLFlow model. " + \
+                   "Please save model using 'azureml-evaluate-mlflow' or 'mlflow' package."
     BadModelData = "Model load failed due to error: [{error}]"
-    InvalidTestData = "Test data should be passed."
+    InvalidData = "[{input_port}] should be passed."
     InvalidFileInputSource = "File input source [{input_port}] must be of type ro_mount."
-    InvalidPredictionsData = "Predictions should be passed."
-    InvalidGroundTruthData = "Ground truth should be passed."
     InvalidGroundTruthColumnName = "Ground truth column name should be passed since columns in data are > 0."
     InvalidGroundTruthColumnNameData = "Ground truth column name not found in input data."
-    InvalidPredictionColumnNameData = "Prediction Column name not found in input data."
+    InvalidPredictionColumnNameData = "Prediction Column name [{prediction_column}] not found in input data."
     InvalidYTestCasesColumnNameData = "y_test_cases column name not found in input data."
     InvalidGroundTruthColumnNameCodeGen = "The format for the label column name in code generation should follow " \
                                           "the pattern: '<label_col_name>,<test_case_col_name>'. Either " \
@@ -225,9 +259,10 @@ class ErrorStrings:
                                           "of them must be set."
 
     # Data Asset related
+    BadInputColumnData = "No input columns found in test data."
     BadLabelColumnName = "No label column found in test data."
-    BadFeatureColumnNames = "input_column_names is not a subset of input test dataset columns.\
-                 input_column_names include [{keep_columns}] whereas data has [{data_columns}]"
+    BadFeatureColumnNames = "[{column}] not a subset of input test dataset columns.\
+                 [{column}] include [{keep_columns}] whereas data has [{data_columns}]"
     BadInputData = "Failed to load data with error: [{error}]"
     EmptyInputData = "Input data contains no data."
     BadEvaluationConfigFile = "Evaluation Config file failed to load due to [{error}]"
@@ -238,10 +273,13 @@ class ErrorStrings:
                                  "in the ground_truths parameter." \
                                  "The table must contain time, prediction " \
                                  "ground truth and time series IDs columns."
-    BadRegressionColumnType = "Expected target columns of type float found [{y_test_dtype}] instead"
+    BadRegressionColumnType = "Failed to convert y_test column type to float with error: [{error}]. " \
+                              "Expected target columns of type float found [{y_test_dtype}] instead"
+    FilteringDataError = "Failed to filter data with error: [{error}]"
 
     # Logging Related
     MetricLoggingError = "Failed to log metric {metric_name} due to [{error}]"
+    SavingOutputError = "Failed to save output due to [{error}]"
 
 
 class ForecastingConfigContract:
@@ -307,3 +345,22 @@ class SubTask:
     """Constants for sub-tasks."""
 
     CODEGENERATION = "code"
+
+
+class OpenAIConstants:
+    """OpenAI Related Constants."""
+
+    CONNECTION_STRING_KEY = "AZUREML_WORKSPACE_CONNECTION_ID_AOAI"
+    METRICS_KEY = "openai_params"
+    DEFAULT_OPENAI_CONFIG = {
+        "type": "azure_open_ai",
+        "model_name": "gpt-35-turbo",
+        "deployment_name": "gpt-35-turbo"
+    }
+    DEFAULT_OPENAI_INIT_PARAMS = {
+        "openai_api_type": "azure",
+        "openai_api_version": "2023-03-15-preview"
+    }
+    QUESTIONS_KEY = "questions"
+    CONTEXTS_KEY = "contexts"
+    REQUIRED_KEYS = [QUESTIONS_KEY, CONTEXTS_KEY]

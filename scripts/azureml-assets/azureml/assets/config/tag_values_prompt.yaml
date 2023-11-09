@@ -1,0 +1,4 @@
+# Tag rules that are specific to prompt assets.
+# Modality is required for the prompt playground UX.
+modality:
+  required: True

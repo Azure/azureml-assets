@@ -9,8 +9,12 @@ import pickle
 import os
 import sys
 import argparse
+import json
+import openai
+import glob
 
-from constants import TASK, ForecastingConfigContract
+from constants import TASK, ForecastingConfigContract, ArgumentLiterals
+from workspace_utils import get_connection_by_id_v2, workspace_connection_to_credential
 from logging_utilities import get_logger, log_traceback
 from mltable import load
 from task_factory.tabular.classification import TabularClassifier
@@ -28,12 +32,13 @@ from task_factory.text.chat_completion import ChatCompletion
 from task_factory.image.classification import ImageMulticlassClassifier, ImageMultilabelClassifier
 from task_factory.image.od_is import ImageOdIsPredictor
 from evaluators.evaluators import EvaluatorFactory
-from logging_utilities import current_run
+from logging_utilities import current_run, get_azureml_exception
 from azureml.metrics import _scoring_utilities, constants as metrics_constants
 from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 import azureml.evaluate.mlflow as aml_mlflow
 from azureml.evaluate.mlflow.models.evaluation import EvaluationResult
-from azureml._common._error_definition.azureml_error import AzureMLError
+from run_utils import TestRun
+from image_constants import ImageDataFrameParams
 from error_definitions import (
     BadRegressionData,
     MetricsLoggingError,
@@ -49,7 +54,6 @@ from exceptions import (
     ModelEvaluationException,
     ArgumentValidationException,
 )
-from copy import deepcopy
 
 logger = get_logger(name=__name__)
 
@@ -65,50 +69,26 @@ class ArgumentParser(argparse.ArgumentParser):
         """Override ArgumentParser internal error call."""
         self.print_usage(sys.stderr)
         args = {'prog': self.prog, 'message': message}
-        message = '%(prog)s: error: %(message)s\n' % args
-        exception = ArgumentValidationException._with_error(
-            AzureMLError.create(ArgumentParsingError, error=message),
-        )
+        message = '%(prog)s: error: %(message)s' % args
+        exception = get_azureml_exception(ArgumentValidationException, ArgumentParsingError, None, error=message)
         log_traceback(exception, logger)
         raise exception
 
 
-def assert_and_raise(condition, exception_cls, error_cls, message_kwargs={}):
+def assert_and_raise(condition, exception_cls, error_cls, **message_kwargs):
     """Assert condition and raise the error if false.
 
     Args:
         condition (_type_): _description_
         exception_cls (_type_): _description_
-        message (_type_): _description_
 
     Raises:
         exception: _description_
     """
     if not condition:
-        exception = exception_cls._with_error(
-            AzureMLError.create(error_cls, **message_kwargs)
-        )
-        log_traceback(exception, logger, is_critical=True)
+        exception = get_azureml_exception(exception_cls, error_cls, None, **message_kwargs)
+        log_traceback(exception, logger)
         raise exception
-
-
-def get_task_from_model(model_uri):
-    """Get task type from model config.
-
-    Args:
-        model_uri (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    mlflow_model = aml_mlflow.models.Model.load(model_uri)
-    task_type = ""
-    if "hftransformers" in mlflow_model.flavors:
-        if "task_type" in mlflow_model.flavors["hftransformers"]:
-            task_type = mlflow_model.flavors["hftransformers"]["task_type"]
-            if task_type.startswith("translation"):
-                task_type = constants.TASK.TRANSLATION
-    return task_type
 
 
 def filter_pipeline_params(evaluation_config):
@@ -122,32 +102,6 @@ def filter_pipeline_params(evaluation_config):
     """
     filtered_params = {i: j for i, j in evaluation_config.items() if i in constants.ALLOWED_PIPELINE_PARAMS}
     return filtered_params
-
-
-def sanitize_device_and_device_map(evaluation_config, device):
-    """Check device_map and device in args.
-
-    Args:
-        evaluation_config (_type_): _description_
-        device (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    has_device_map_auto = False
-    if evaluation_config.get("pipeline_init_args"):
-        if evaluation_config["pipeline_init_args"].get("device_map"):
-            has_device_map_auto = evaluation_config["pipeline_init_args"]["device_map"] == constants.DEVICE.AUTO
-    if has_device_map_auto:
-        return evaluation_config, None
-    else:
-        if device == constants.DEVICE.AUTO:
-            new_evaluation_config = deepcopy(evaluation_config)
-            if not new_evaluation_config.get("pipeline_init_args"):
-                new_evaluation_config["pipeline_init_args"] = {}
-            new_evaluation_config["pipeline_init_args"]["device_map"] = constants.DEVICE.AUTO
-            return new_evaluation_config, None
-        return evaluation_config, device
 
 
 def load_transformer(filename):
@@ -166,9 +120,10 @@ def load_transformer(filename):
         with open(filename, "rb") as f:
             y_transformer = pickle.load(f)
     except Exception as e:
-        error_message = "Not able to load y_transformer. Check file format"
-        log_traceback(e, logger, error_message)
-        raise DataValidationException(error_message)
+        error_message = "Not able to load y_transformer. Check file format."
+        exception = get_azureml_exception(DataValidationException, BadEvaluationConfigParam, e, error=repr(e))
+        log_traceback(exception, logger, error_message)
+        raise exception
     return y_transformer
 
 
@@ -191,8 +146,10 @@ def _log_metrics(metrics, artifacts):
 
     for name, score in artifacts.items():
         if score is None:
+            logger.warning("Empty score for {}. Skipping.".format(name))
             continue
-        elif _scoring_utilities.is_table_metric(name):
+        elif _scoring_utilities.is_table_metric(name) or name in metrics_constants.Metric.QA_GPT_METRICS_SET \
+                or name == metrics_constants.Metric.BERTScore:
             table_scores[name] = score
         elif name in list_metrics:
             try:
@@ -221,7 +178,40 @@ def _log_metrics(metrics, artifacts):
             run.log(name, score)
 
         for name, score in table_scores.items():
-            run.log_table(name, score)
+            if name == metrics_constants.Metric.BERTScore:
+                for k, v in score.items():
+                    if not isinstance(v, np.ndarray) and not isinstance(v, list):
+                        continue
+                    x, y = np.histogram(v, bins=10)
+                    run.log_table("Bert F1 Score", value={"_score": list(y)[1:], "count": list(x)})
+
+                    x, y = np.histogram(v, bins=10)
+                    run.log_table("Bert Precision", value={"_score": list(y)[1:], "count": list(x)})
+
+                    x, y = np.histogram(v, bins=10)
+                    run.log_table("Bert Recall", value={"_score": list(y)[1:], "count": list(x)})
+            elif name in metrics_constants.Metric.QA_GPT_METRICS_SET:
+                try:
+                    if not isinstance(score, list) and not isinstance(score, np.ndarray):
+                        logger.warning(f"{name} is not an iterable. \nValue: {score}")
+                        continue
+                    int_score = [int(i) for i in score]
+                    counts = [0]*5
+                    for i in int_score:
+                        counts[i-1] += 1
+                    cur_score = {
+                        "_rating": [i for i in range(1, 6)],
+                        "count": counts
+                    }
+                    run.log_table(name, cur_score)
+                except Exception as e:
+                    if (isinstance(score, list) or isinstance(score, np.ndarray)) and len(score) > 0:
+                        exception_cls_name = score[0]
+                        logger.warning(f"Ignoring metric: {name}\n Computation Failed due to: {exception_cls_name}")
+                    else:
+                        logger.warning(f"Ignoring metric: {name}\n Logging Failed due to: {repr(e)}")
+            else:
+                run.log_table(name, score)
 
         # for name, score in list_scores.items():
         #     # TODO: Add checks for logging longer lists
@@ -257,22 +247,19 @@ def _log_metrics(metrics, artifacts):
                         run.log_table(name, metrics)
                 else:
                     logger.warning("Unsupported non-scalar metric {}. Will not log.".format(name))
-            except Exception:
+            except Exception:  # TODO
                 e = ModelEvaluationException(f"Failed to log classwise metric {name} with value {score}")
                 log_traceback(e, logger)
                 raise e
     except Exception as e:
-        if isinstance(e, ModelEvaluationException):
-            raise e
-        exception = ComputeMetricsException._with_error(
-            AzureMLError.create(MetricsLoggingError, metric_name=name, error=repr(e)),
-            inner_exception=e
-        )
+        exception = get_azureml_exception(ComputeMetricsException, MetricsLoggingError, e, wrap_azureml_ex=False,
+                                          metric_name=name, error=repr(e))
         log_traceback(exception, logger)
         raise exception
 
 
-def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None, **kwargs):
+def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None,
+                         input_column_names=None, **kwargs):
     """Compute metrics mode method.
 
     Args:
@@ -287,7 +274,8 @@ def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config
         _type_: _description_
     """
     evaluator = EvaluatorFactory().get_evaluator(task_type, metrics_config)
-    res = evaluator.evaluate(y_test, y_pred, y_pred_proba=y_pred_proba, X_test=X_test, **kwargs)
+    res = evaluator.evaluate(y_test, y_pred, y_pred_proba=y_pred_proba, X_test=X_test,
+                             input_column_names=input_column_names, **kwargs)
     metrics = res[metrics_constants.Metric.Metrics]
     artifacts = res[metrics_constants.Metric.Artifacts]
     _log_metrics(metrics, artifacts)
@@ -330,38 +318,6 @@ def get_predictor(task):
         TASK.IMAGE_INSTANCE_SEGMENTATION: ImageOdIsPredictor
     }
     return predictor_map.get(task)
-
-
-def validate_and_transform_multilabel(X_test, y_test, y_pred=None, y_transformer=None, class_names=None):
-    """Validate multilabel data.
-
-    Args:
-        X_test (_type_): _description_
-        y_test (_type_): _description_
-        y_pred (_type_, optional): _description_. Defaults to None.
-        y_transformer (_type_, optional): _description_. Defaults to None.
-        class_names (_type_, optional): _description_. Defaults to None.
-
-    Returns:
-        _type_: _description_
-    """
-    if class_names:
-        labels = class_names
-    else:
-        labels = set()
-        for row in y_test.values:
-            for lab in row:
-                if lab == "":
-                    continue
-                labels.add(lab)
-    if not y_transformer:
-        logger.warn("No y_transformer found. Using scikit-learn's MultiLabelBinarizer")
-        from sklearn.preprocessing import MultiLabelBinarizer
-        y_transformer = MultiLabelBinarizer()
-        y_transformer.fit(list(labels))
-    y_test_ = pd.DataFrame(y_transformer.transform(y_test), columns=y_transformer.classes_, index=X_test.index)
-
-    return y_test_, y_transformer
 
 
 class ArgumentsSet:
@@ -545,7 +501,6 @@ class ArgumentsSet:
             ForecastingConfigContract.FORECAST_FLAVOR: "str(val)",
             ForecastingConfigContract.ROLLING_FORECAST_STEP: "int(val)",
             ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)",
-            ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)",
             ForecastingConfigContract.FORECAST_PREDICTIONS: "val",
             ForecastingConfigContract.FORECAST_GROUND_TRUTH: "val"
         }
@@ -591,18 +546,6 @@ class ArgumentsSet:
         return args_map
 
 
-def setup_model_dependencies(requirements):
-    """Install pip dependencies dynamically.
-
-    Args:
-        requirements (_type_): _description_
-    """
-    import pip
-    logger.info("Installing model dependencies from requirements. %s", requirements)
-    pip_args = ["install", "-r", requirements]
-    pip.main(pip_args)
-
-
 def check_and_return_if_mltable(data):
     """Is current director MLTable or not.
 
@@ -614,86 +557,158 @@ def check_and_return_if_mltable(data):
     """
     is_mltable = False
     if os.path.isdir(data):
-        local_yaml_path = os.path.join(data, 'MLTable')
+        local_yaml_path = os.path.join(data, constants.MLTABLE_FILE_NAME)
         if os.path.exists(local_yaml_path):
             is_mltable = True
     return is_mltable
 
 
-def read_data(file_path, is_mltable=True, batch_size=None):
-    """Util function for reading test data.
+def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None):
+    """Util function for reading test data for model prediction.
 
     Args:
         file_path (_type_): _description_
-        is_mltable: (_type_, optional): _description_. Defaults to True.
+        task (_type_): _description_
         batch_size (_type_): _description_
+        nrows (_type_): _description_
 
     Raises:
         DataValidationException: _description_
 
     Returns:
         _type_: _description_
+    """
+    if task in constants.IMAGE_TASKS:
+        from image_dataset import get_image_dataset
+        df = get_image_dataset(task_type=task, test_mltable=file_path)
+        data = iter([df])
+    else:
+        data = read_data(file_path, batch_size, nrows)
+    return data
+
+
+def read_data(file_path, batch_size=None, nrows=None):
+    """Util function for reading test data.
+
+    Args:
+        file_path (_type_): _description_
+        batch_size (_type_): _description_
+        nrows (_type_): _description_
+
+    Raises:
+        DataValidationException: _description_
+
+    Returns:
         _type_: _description_
     """
+    is_mltable = check_and_return_if_mltable(file_path)
     if not is_mltable and os.path.isdir(file_path):
         logger.warn("Received URI_FOLDER instead of URI_FILE. Checking if part of LLM Pipeline")
         if constants.LLM_FT_PREPROCESS_FILENAME not in os.listdir(file_path):
-            message = "Test Data is a folder. JSON Lines File expected"
-            exception = DataLoaderException._with_error(
-                AzureMLError.create(BadInputData, error=message)
-            )
-            log_traceback(exception, logger)
+            message = "Test Data is a folder. JSON Lines File or MLTable expected."
+            exception = get_azureml_exception(DataLoaderException, BadInputData, None, error=message)
+            log_traceback(exception, logger, message)
+            raise exception
         logger.info("Found LLM Preprocess args")
-        import json
         with open(os.path.join(file_path, constants.LLM_FT_PREPROCESS_FILENAME)) as f:
             llm_preprocess_args = json.load(f)
         test_data_path = llm_preprocess_args[constants.LLM_FT_TEST_DATA_KEY]
         file_path = os.path.join(file_path, test_data_path)
     try:
         if is_mltable:
-            data = iter([load(file_path).to_pandas_dataframe()])
+            if batch_size:
+                logger.warning("batch_size not supported with MLTable files. Ignoring parameter.")
+            mltable_data = load(file_path)
+            if nrows:
+                mltable_data = mltable_data.take(nrows)
+            data = iter([mltable_data.to_pandas_dataframe()])
         else:
-            data = read_dataframe(file_path, batch_size=batch_size)
+            data = read_dataframe(file_path, batch_size=batch_size, nrows=nrows)
             if not batch_size:
                 data = iter([data])
     except Exception as e:
-        exception = DataLoaderException._with_error(
-            AzureMLError.create(BadInputData, error=repr(e))
-        )
-        exception.inner_exception = e
+        exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=repr(e))
         log_traceback(exception, logger)
         raise exception
     return data
 
 
-def read_dataframe(file_path, batch_size=None):
+def read_dataframe(file_path, batch_size=None, nrows=None):
     """Util function for reading a DataFrame based on the file extension.
 
     Args:
         file_path (_type_): _description_
         batch_size: (_type_, optional): _description_. Defaults to None.
+        nrows (_type_): _description_
 
     Returns:
         _type_: _description_
     """
-    file_extension = os.path.splitext(file_path)[1]
+    file_extension = os.path.splitext(file_path)[1].lower()
+    logger.info("Detected File Format: {}".format(file_extension))
+    if batch_size:
+        nrows = None
 
     if file_extension == '.csv':
         # Reading a CSV file with the specified batch_size
-        return pd.read_csv(file_path, chunksize=batch_size)
+        return pd.read_csv(file_path, chunksize=batch_size, nrows=nrows)
     elif file_extension == '.tsv':
         # Reading a TSV file with the specified batch_size and skipping initial spaces
-        return pd.read_csv(file_path, sep='\t', chunksize=batch_size, skipinitialspace=True)
+        return pd.read_csv(file_path, sep='\t', chunksize=batch_size, nrows=nrows, skipinitialspace=True)
+    elif file_extension == '.json':
+        try:
+            if batch_size:
+                logger.warning("batch_size not supported for json file format. Ignoring parameter.")
+            json_data = pd.read_json(file_path)
+            return iter([json_data]) if batch_size else json_data
+        except Exception as e:
+            logger.error("Failed to load data json data. Exception: {}".format(str(e)))
+            logger.info("Trying to load the data with 'lines=True'.")
+            # Reading a JSONL file with the specified batch_size
+            return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size, nrows=nrows)
     elif file_extension == '.jsonl':
         try:
             # Reading a JSONL file with the specified batch_size
-            return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+            return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size, nrows=nrows)
         except Exception as e:
-            logger.info("Loading the data without chunksize. Exception: {}".format(str(e)))
-            return pd.read_json(file_path)
+            logger.error("Failed to load data with JSONL. Trying to load the data without 'lines=True'. "
+                         "Exception: {}".format(str(e)))
+            json_data = pd.read_json(file_path)
+            return iter([json_data]) if batch_size else json_data
     else:
         # Default to reading JSONL files without raising an exception
-        return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+        if file_extension == "":
+            logger.info("No file format detected. Loading as 'jsonl' file format.")
+        else:
+            logger.warning("File format not in supported formats. Defaulting to load data as jsonl format. "
+                           "Valid formats: csv, tsv, json, jsonl.")
+        return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size, nrows=nrows)
+
+
+def read_multiple_files(path):
+    """Read multiple JSON Lines file from folder.
+
+    Args:
+        path (_type_): _description_
+
+    Raises:
+        DataLoaderException: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    dfs = []
+    for file_path in glob.glob(os.path.join(path, "**", "*.jsonl"), recursive=True):
+        df = read_data(file_path=file_path)
+        df = list(df)[0]
+        dfs.append(df)
+    if not dfs:
+        error = "No JSON Lines files found in folder."
+        exception = get_azureml_exception(DataLoaderException, BadInputData, None, error=error)
+        log_traceback(exception, logger)
+        raise exception
+    data = pd.concat(dfs, ignore_index=True)
+    return iter([data])
 
 
 def prepare_data(data, task, label_column_name=None, _has_multiple_output=False, extra_y_test_cols=None):
@@ -703,7 +718,6 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False,
         data (_type_): _description_
         task (_type_): _description_
         label_column_name (_type_, optional): _description_. Defaults to None.
-        input_column_names (_type_, optional): _description_. Defaults to None.
         _has_multiple_output (bool, optional): _description_. Defaults to False.
         extra_y_test_cols (_type_, optional): _description_. Defaults to None.
 
@@ -718,7 +732,7 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False,
     if extra_y_test_cols is not None and label_column_name is not None:
         # IF extra_y_test_cols is not None, label_column_name should also be not None;
         # extra_y_test_cols is accepted only for text-gen
-        X_test, y_test = X_test.drop(extra_y_test_cols + [label_column_name], axis=1), \
+        X_test, y_test = data.drop(extra_y_test_cols + [label_column_name], axis=1), \
                          data[extra_y_test_cols + [label_column_name]]
     elif label_column_name is not None:
         X_test, y_test = data.drop(label_column_name, axis=1), data[label_column_name]
@@ -729,17 +743,15 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False,
             try:
                 y_test = y_test.astype(np.float64)
             except Exception as e:
-                exception = DataLoaderException._with_error(
-                    AzureMLError.create(BadRegressionData, error=repr(e)),
-                    inner_exception=e
-                )
+                exception = get_azureml_exception(DataLoaderException, BadRegressionData, e,
+                                                  error=repr(e), y_test_dtype=y_test.dtype)
                 log_traceback(exception, logger)
                 raise exception
     if task == constants.TASK.NER:
         if len(X_test.columns) > 1 and "tokens" not in X_test.columns:
             message = "Too many feature columns in dataset. Only 1 feature column should be passed for NER."
-            exception = DataLoaderException(message)
-            log_traceback(exception, logger, message)
+            exception = get_azureml_exception(DataLoaderException, BadInputData, None, error=message)
+            log_traceback(exception, logger)
             raise exception
         if len(X_test.columns) > 1:
             X_test = X_test["tokens"]
@@ -760,13 +772,12 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False,
             # Extracting only the first one for now
             # TODO: Fix this post PrP
             y_test = y_test.apply(lambda x: x["text"][0] if len(x["text"]) > 0 else "")
-            # print(y_test)
         elif isinstance(y_test.iloc[0], list) or isinstance(y_test.iloc[0], np.ndarray):
             y_test = y_test.apply(lambda x: x[0])
         if not isinstance(y_test.iloc[0], str):
-            message = "Ground Truths for Question-answering should be a string \
-                       or an array found " + type(y_test.iloc[0])
-            exception = DataLoaderException(exception_message=message)
+            message = "Ground Truths for Question-answering should be a string or an array. " \
+                      "Found: " + type(y_test.iloc[0])
+            exception = get_azureml_exception(DataLoaderException, BadInputData, None, error=message)
             log_traceback(exception, logger, message)
             raise exception
     if task == constants.TASK.FILL_MASK and y_test is not None:
@@ -774,19 +785,12 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False,
             y_test = y_test.apply(lambda x: tuple(x))
         if not isinstance(y_test.iloc[0], str) and not isinstance(y_test.iloc[0], tuple):
             message = "Ground Truths for Fill-Mask should be a string or an array found " + type(y_test.iloc[0])
-            exception = DataLoaderException(exception_message=message)
+            exception = get_azureml_exception(DataLoaderException, BadInputData, None, error=message)
             log_traceback(exception, logger, message)
             raise exception
 
     if y_test is not None:
         y_test = y_test.values
-
-    if task == constants.TASK.CHAT_COMPLETION:
-        X_test = []
-        y_test = None
-        for conversation in data[label_column_name]:
-            df = pd.DataFrame({"input_string": conversation})
-            X_test.append(df)
 
     return X_test, y_test
 
@@ -795,7 +799,8 @@ def fetch_compute_metrics_args(data, task_type):
     """Fetch compute metrics arguments from evaluation config.
 
     Args:
-        data (_type_): _description_
+        data : _description_
+        task_type: _description_
     """
     metrics_args = ArgumentsSet(task_type=task_type)
     metrics_config = {}
@@ -804,12 +809,15 @@ def fetch_compute_metrics_args(data, task_type):
         if val is not None:
             try:
                 metrics_config[arg] = eval(func)
-            except TypeError:
+            except TypeError as e:
                 message = "Invalid dtype passed for config param '" + arg + "'."
-                exception = DataValidationException(message)
+                exception = get_azureml_exception(DataLoaderException, BadEvaluationConfigParam, e, error=repr(e))
+                log_traceback(exception, logger, message)
+                raise exception
+            except Exception as e:
+                exception = get_azureml_exception(DataLoaderException, BadEvaluationConfigParam, e, error=repr(e))
                 log_traceback(exception, logger)
                 raise exception
-
     return metrics_config
 
 
@@ -828,15 +836,11 @@ def read_config(conf_file):
     if not conf_file:
         return dict()
     try:
-        import json
         with open(conf_file, "r") as f:
             data = json.load(f)
     except Exception as e:
-        exception = DataLoaderException._with_error(
-            AzureMLError.create(BadEvaluationConfigFile, error=repr(e)),
-            inner_exception=e
-        )
-        log_traceback(exception, logger, is_critical=True)
+        exception = get_azureml_exception(DataLoaderException, BadEvaluationConfigFile, e, error=repr(e))
+        log_traceback(exception, logger)
         raise exception
 
     return data
@@ -857,79 +861,114 @@ def read_config_str(conf_str):
     if not conf_str:
         return dict()
     try:
-        import json
-        data = json.loads(conf_str)
+        return json.loads(conf_str)
     except Exception as e:
         message = "Unable to load evaluation_config_params. String is not JSON serialized."
-        exception = DataLoaderException._with_error(
-            AzureMLError.create(BadEvaluationConfigParam, error=repr(e)),
-            inner_exception=e
-        )
-        log_traceback(exception=exception, logger=logger, message=message, is_critical=True)
+        exception = get_azureml_exception(DataLoaderException, BadEvaluationConfigParam, e, error=repr(e))
+        log_traceback(exception, logger, message)
         raise exception
-
-    return data
-
-
-def read_conll(stream_info, labels=None):
-    """Read NER data in Conll format.
-
-    Args:
-        stream_info (_type_): _description_
-        labels (_type_, optional): _description_. Defaults to None.
-
-    Raises:
-        DataLoaderException: _description_
-
-    Returns:
-        _type_: _description_
-    """
-    logger.info(type(stream_info))
-    if isinstance(stream_info, str):
-        with open(stream_info, "r") as f:
-            data = f.read()
-    elif hasattr(stream_info, "open"):
-        f = stream_info.open()
-        data = str(f.read())
-        f.close()
-    else:
-        info_link = "https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-\
-            standalone-jobs/cli-automl-text-ner-conll/validation-mltable-folder/MLTable"
-        raise DataLoaderException("Invalid MLTABLE File for ConLL formatted data. \
-                                  See Sample Here : " + info_link)
-    data = data.replace("-DOCSTART- O\n\n", "")
-    data = data.split("\n\n")
-
-    labels_list = labels
-    if labels is None:
-        labels_list = []
-    tokens, targets = [], []
-    for sentence in data:
-        toks = sentence.split("\n")
-        cur_sentence, cur_target = [], []
-        for splits in toks:
-            item = splits.split(" ")
-            cur_sentence.append(item[0])
-            lab = item[-1].strip()
-            if lab.isnumeric():
-                item[-1] = int(lab)
-            else:
-                if lab not in labels_list:
-                    labels_list.append(lab)
-                item[-1] = labels_list.index(lab)
-
-            cur_target.append(item[-1])
-        tokens.append(np.array(cur_sentence))
-        targets.append(np.array(cur_target))
-    return np.asarray(tokens), np.asarray(targets), labels_list
 
 
 def parse_input_ground_truth_col(col_name):
     """Parse input ground truth columns."""
     extra_cols = None
-    if col_name is not None and "," in col_name:
-        col_name, extra_cols = col_name.split(",", 1)
+    if col_name and len(col_name) == 0:
+        col_name = None
+    if col_name is not None:
+        col_name, extra_cols = col_name[0].strip(), col_name[1:]
         # Adding this to be consistent with how it is being used elsewhere, ideally it should be ""
         col_name = None if col_name == "" else col_name
-        extra_cols = extra_cols.split(",") if extra_cols != "" else None
+
+        extra_cols = [i.strip() for i in extra_cols if i and not i.isspace()]
+        extra_cols = None if len(extra_cols) == 0 else extra_cols
     return col_name, extra_cols
+
+
+def get_column_names(args, data):
+    """Get Column names from test data."""
+    task = args[ArgumentLiterals.TASK]
+    if task in constants.IMAGE_TASKS:
+        input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
+        label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
+        extra_y_test_cols = None
+        if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
+            input_column_names.append(ImageDataFrameParams.IMAGE_META_INFO)
+    else:
+        # If input_column_names are not sent as argument we are retaining all columns
+        label_column_name = args[ArgumentLiterals.LABEL_COLUMN_NAME]
+        label_column_name, extra_y_test_cols = parse_input_ground_truth_col(label_column_name)
+
+        input_column_names = args[ArgumentLiterals.INPUT_COLUMN_NAMES]
+        if input_column_names is None or len(input_column_names) == 0:
+            input_column_names = list(data.columns)
+            if label_column_name is not None and label_column_name in input_column_names:
+                input_column_names.remove(label_column_name)
+            if extra_y_test_cols is not None:
+                for col in extra_y_test_cols:
+                    if col in input_column_names:
+                        input_column_names.remove(col)
+    return input_column_names, label_column_name, extra_y_test_cols
+
+
+def openai_init(llm_config, **openai_params):
+    """Initialize OpenAI Params."""
+    logger.info(f"Using llm_config: {json.dumps(llm_config, indent=2)}")
+    openai_api_type = openai_params.get("openai_api_type", "azure")
+    openai_api_version = openai_params.get("openai_api_version", "2023-03-15-preview")
+
+    connection_id = os.environ.get(constants.OpenAIConstants.CONNECTION_STRING_KEY, None)
+    fetch_from_connection = False
+    if connection_id is not None:
+        connection = get_connection_by_id_v2(connection_id)
+        credential = workspace_connection_to_credential(connection)
+        if hasattr(credential, 'key'):
+            llm_config["key"] = credential.key
+            llm_config["base"] = connection['properties'].get('target', {})
+            openai_api_type = connection['properties'].get('metadata', {}).get('apiType', "azure")
+            openai_api_version = connection['properties'].get('metadata', {}).get('apiVersion', "2023-03-15-preview")
+            logger.info("Using workspace connection key for OpenAI")
+            fetch_from_connection = True
+    if not fetch_from_connection:
+        if llm_config.get("type") == "azure_open_ai":
+            ws = TestRun().workspace
+            keyvault = ws.get_default_keyvault()
+            secrets = keyvault.get_secrets(secrets=[
+                "BAKER-OPENAI-API-BASE",
+                "BAKER-OPENAI-API-KEY",
+                "OPENAI-API-KEY",
+                "OPENAI-API-BASE"])
+            logger.info("Run context and secrets retrieved")
+
+            # hacky way to override OPENAI-API-KEY if Baker key existed
+            if secrets["BAKER-OPENAI-API-BASE"] is not None:
+                secrets["OPENAI-API-BASE"] = secrets["BAKER-OPENAI-API-BASE"]
+            if secrets["BAKER-OPENAI-API-KEY"] is not None:
+                secrets["OPENAI-API-KEY"] = secrets["BAKER-OPENAI-API-KEY"]
+
+            if secrets["OPENAI-API-KEY"] is not None:
+                llm_config["key"] = secrets["OPENAI-API-KEY"]
+            if secrets["OPENAI-API-BASE"] is not None:
+                llm_config["base"] = secrets["OPENAI-API-BASE"]
+        else:
+            logger.warn("No Connection String Provided and no credentials present in workspace's keyvault.")
+            logger.warn("Skipping OpenAI Initialization.")
+            return {}
+
+    openai.api_version = openai_api_version
+    openai.api_type = openai_api_type
+    openai.api_base = llm_config["base"]
+    openai.api_key = llm_config["key"]
+
+    if not all([llm_config["base"], llm_config["key"], llm_config['deployment_name']]):
+        logger.warn("No Connection String Provided and no credentials present in workspace's keyvault.")
+        logger.warn("Skipping OpenAI Initialization.")
+        return {}
+
+    openai_final_params = {
+        "api_version": openai_api_version,
+        "api_type": openai_api_type,
+        "api_base": llm_config["base"],
+        "api_key": llm_config["key"],
+        "deployment_id": llm_config['deployment_name']
+    }
+    return openai_final_params

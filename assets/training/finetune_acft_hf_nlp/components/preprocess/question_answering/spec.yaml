@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: question_answering_datapreprocess
-version: 0.0.21
+version: 0.0.24
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Question Answering DataPreProcess
 description: Component to preprocess data for question answering task. See [docs](https://aka.ms/azureml/components/question_answering_datapreprocess) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/25
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/28
 
 code: ../../../src/preprocess
 
@@ -92,16 +92,19 @@ inputs:
     type: uri_file
     optional: true
     description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
     description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
 
   test_file_path:
     type: uri_file
     optional: true
     description: Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
 
   train_mltable_path:
     type: mltable
@@ -123,11 +126,13 @@ inputs:
     type: uri_folder
     optional: false
     description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+    mode: rw_mount
 
 outputs:
   output_dir:
     type: uri_folder
     description: The folder contains the tokenized output of the train, validation and test data along with the tokenizer files used to tokenize the data
+    mode: rw_mount
 
 command: >-
   python preprocess.py --task_name QuestionAnswering --question_key '${{inputs.question_key}}' --context_key '${{inputs.context_key}}' --answers_key '${{inputs.answers_key}}' --answer_start_key '${{inputs.answer_start_key}}' --answer_text_key '${{inputs.answer_text_key}}' $[[--doc_stride '${{inputs.doc_stride}}']] $[[--n_best_size '${{inputs.n_best_size}}']] $[[--max_answer_length_in_tokens '${{inputs.max_answer_length_in_tokens}}']] $[[--batch_size '${{inputs.batch_size}}']] $[[--pad_to_max_length '${{inputs.pad_to_max_length}}']] $[[--max_seq_length '${{inputs.max_seq_length}}']] $[[--train_file_path '${{inputs.train_file_path}}']] $[[--validation_file_path '${{inputs.validation_file_path}}']] $[[--test_file_path '${{inputs.test_file_path}}']] $[[--train_mltable_path '${{inputs.train_mltable_path}}']] $[[--validation_mltable_path '${{inputs.validation_mltable_path}}']] $[[--test_mltable_path '${{inputs.test_mltable_path}}']] --model_selector_output '${{inputs.model_selector_output}}' --output_dir '${{outputs.output_dir}}'

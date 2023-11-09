@@ -1,0 +1,35 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+template: |
+  I am a teacher at a school in {{place}} teaching students in grade {{grade_level}}. Draft an invitation for a parent-teacher conference to be held at {{time}} {{date}} in {{place}}.
+  Include {{areas_of_discussion}} as the areas of discussion you're hoping to cover during the meeting to give parents an idea of what to expect.
+  Be concise.
+
+input_variables:
+- name: areas_of_discussion
+  description: areas of discussion
+  default: performance in science class
+- name: date
+  description: date
+  default: next Wednesday, 29th of November
+- name: grade_level
+  description: grade level
+  default: '8'
+- name: place
+  description: place
+  default: Seattle, WA
+- name: time
+  description: time
+  default: 5pm
+
+execution_settings:
+  default:
+    temperature: 0.7
+    max_tokens: 400
+    top_p: 0.7
+    frequency_penalty: 0.7
+    presence_penalty: 0
+    number_of_responses: 1
+    stop_sequences: []
+
+template_format: handlebars

@@ -11,7 +11,7 @@ import uuid
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
-from test_utils import (
+from .test_utils import (
     get_mlclient,
     Constants,
     download_outputs,
@@ -70,7 +70,7 @@ class TestBatchBenchmarkInferenceComponent:
                 deployment_name: str,
                 connections_name: str,
                 batch_input_pattern: str,
-                label_key: str,
+                label_column_name: str,
                 temp_dir: Optional[str] = None,
             ) -> Job:
         temp_yaml = self._create_inference_yaml()
@@ -93,7 +93,7 @@ class TestBatchBenchmarkInferenceComponent:
         pipeline_job.inputs.initial_worker_count = 1
         pipeline_job.inputs.max_worker_count = 10
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
-        pipeline_job.inputs.label_key = label_key
+        pipeline_job.inputs.label_column_name = label_column_name
         pipeline_job.name = str(uuid.uuid4())
         pipeline_job.display_name = display_name
 
