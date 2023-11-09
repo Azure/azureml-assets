@@ -2,7 +2,7 @@ azureml-acft-accelerator=={{latest-pypi-version}}
 azureml-evaluate-mlflow=={{latest-pypi-version}}
 azureml-acft-common-components=={{latest-pypi-version}}
 azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
-azureml_acft_multimodal_components=={{latest-pypi-version}}
+azureml-acft-multimodal-components=={{latest-pypi-version}}
 # needed by multimodal
 datasets==2.14.5
 mltable==1.5.0
