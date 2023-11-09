@@ -4,7 +4,7 @@ type: pipeline
 name: data_quality_signal_monitor
 display_name: Data Quality - Signal Monitor
 description: Computes the data quality of a target dataset with reference to a baseline.
-version: 0.3.13
+version: 0.3.15
 is_deterministic: true
 
 inputs:
@@ -37,6 +37,9 @@ inputs:
   target_column:
     type: string
     optional: true
+  task_type:
+    type: string
+    optional: true
   monitor_current_time:
     type: string
   notification_emails:
@@ -50,11 +53,12 @@ outputs:
 jobs:
   compute_feature_importances:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.4
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.5
     inputs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
+      task_type: ${{parent.inputs.task_type}}
       target_column: ${{parent.inputs.target_column}}
     outputs:
       signal_metrics:

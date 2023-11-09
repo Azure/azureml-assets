@@ -1,0 +1,32 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+template: | 
+  ### Postgres SQL tables, with their properties:
+  #
+  # Employee(id, name, department_id)
+  # Department(id, name, address)
+  # Salary_Payments(id, employee_id, amount, date)
+  #
+  ### A query to list the names of the departments which employed more than 10 employees in the last 3 months
+
+  SELECT
+
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
+execution_settings:
+  default:
+    bestOf: 1,
+    frequencyPenalty: 0,
+    responseLength: 60,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1  
+  text-davinci-003:
+    model_id: text-davinci-003
+    bestOf: 1,
+    frequencyPenalty: 0,
+    responseLength: 60,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1  
+    
+template_format: handlebars

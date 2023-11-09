@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.1
+name: classify_and_detect_intent
+display_name: Classify and detect intent
+description: Classify and detect intent
+
+tags:
+  modality: completion
+  task: text-classification
+
+data_uri: ./prompt
+template_path: prompt.yaml
