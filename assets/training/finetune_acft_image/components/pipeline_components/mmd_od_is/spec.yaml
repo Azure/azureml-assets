@@ -391,7 +391,7 @@ outputs:
 jobs:
   finetune_common_validation:
     type: command
-    component: azureml:finetune_validation_component:0.0.1
+    component: azureml:finetune_common_validation:0.0.1
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_path: ${{parent.inputs.mlflow_model}}
