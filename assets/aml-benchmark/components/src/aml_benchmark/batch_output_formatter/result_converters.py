@@ -103,6 +103,8 @@ class ResultConverters:
                 use_ground_truth_input = True
         elif self._model.is_aoai_model():
             use_ground_truth_input = True
+        elif self._model.is_vision_oss_model():
+            use_ground_truth_input = False
         if use_ground_truth_input:
             request_payload = self._get_request(result)
             payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
@@ -115,6 +117,8 @@ class ResultConverters:
             prediction = ResultConverters._get_oss_response_result(result)
         elif self._model.is_aoai_model():
             prediction = ResultConverters._get_aoai_response_result(result)
+        elif self._model.is_vision_oss_model():
+            prediction = ResultConverters._get_vision_oss_response_results(result)
         return {ResultConverters.PREDICTION_COL_NAME: prediction}
 
     def _get_fallback_output(self, is_perf: bool = False) -> Dict[str, Any]:
@@ -185,3 +189,8 @@ class ResultConverters:
         if '0' in response:
             return response['0']
         return response['output']
+    
+    @staticmethod
+    def _get_vision_oss_response_results(result: Dict[str, Any]) -> Any:
+        response = ResultConverters._get_response(result)
+        return response

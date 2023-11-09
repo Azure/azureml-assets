@@ -11,6 +11,10 @@ inputs:
     type: uri_folder
     description: Input jsonl dataset that contains prompt. For the performance test, this one will be neglected.
     optional: True
+  model_type:
+    type: string
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    optional: True
   batch_input_pattern:
     type: string
     description: >- 
@@ -61,6 +65,7 @@ command: >-
   python -m aml_benchmark.batch_inference_preparer.main
   --batch_input_pattern '${{inputs.batch_input_pattern}}'
   --formatted_data ${{outputs.formatted_data}}
+  --model_type ${{inputs.model_type}}
   --output_metadata ${{outputs.ground_truth_metadata}}
   --is_performance_test ${{inputs.is_performance_test}}
   $[[--input_dataset ${{inputs.input_dataset}}]]

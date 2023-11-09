@@ -180,7 +180,7 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--app_insights_connection_string", nargs='?', const=None, type=str)
     parser.add_argument("--additional_properties", nargs='?', const=None, type=str)
     parser.add_argument("--run_type", type=str)
-    parser.add_argument("--model_type", type=str)
+    parser.add_argument("--model_type", type=str, help="model_type", default=None)
 
     # Sequential-specific parameters
     parser.add_argument("--sorted", default=False, type=str2bool)

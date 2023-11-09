@@ -5,6 +5,10 @@ is_deterministic: True
 type: command
 description: Output Formatter for batch inference output
 inputs:
+  model_type:
+    type: string
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    optional: True
   batch_inference_output:
     type: uri_folder
     description: The raw batch inference output.
@@ -52,6 +56,7 @@ resources:
 
 command: >-
   python -m aml_benchmark.batch_output_formatter.main
+  --model_type ${{inputs.model_type}}
   --batch_inference_output ${{inputs.batch_inference_output}}
   --prediction_data ${{outputs.predictions}}
   --perf_data ${{outputs.performance_metadata}}

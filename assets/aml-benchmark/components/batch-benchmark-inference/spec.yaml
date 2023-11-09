@@ -11,6 +11,10 @@ inputs:
     type: uri_folder
     description: Input jsonl dataset that contains prompt.  For the performance test, this one will be neglected.
     optional: True
+  model_type:
+    type: string
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    optional: True
   batch_input_pattern:
     type: string
     description: >- 
@@ -135,6 +139,7 @@ jobs:
     component: azureml:batch_inference_preparer:0.0.2
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
+      model_type: ${{parent.inputs.model_type}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
       n_samples: ${{parent.inputs.n_samples}}
@@ -150,6 +155,7 @@ jobs:
     type: parallel
     component: azureml:batch_benchmark_score:0.0.1
     inputs:
+      model_type: ${{parent.inputs.model_type}}
       online_endpoint_url: ${{parent.inputs.endpoint_url}}
       deployment_name: ${{parent.inputs.deployment_name}}
       connections_name: ${{parent.inputs.connections_name}}
@@ -179,6 +185,7 @@ jobs:
     type: command
     component: azureml:batch_output_formatter:0.0.1
     inputs:
+      model_type: ${{parent.inputs.model_type}}
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
       label_column_name: ${{parent.inputs.label_column_name}}
       ground_truth_input: ${{parent.jobs.batch_inference_preparer.outputs.ground_truth_metadata}}

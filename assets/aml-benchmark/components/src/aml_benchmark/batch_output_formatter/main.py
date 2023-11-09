@@ -22,6 +22,7 @@ def parse_args() -> argparse.Namespace:
     """Parse the args for the method."""
     # Input and output arguments
     parser = argparse.ArgumentParser(description=f"{__file__}")
+    parser.add_argument("--model_type", type=str, help="model_type", default=None)
     parser.add_argument("--batch_inference_output", type=str, help="path to prompt crafter output")
     parser.add_argument("--prediction_data", type=str, help="path to output location")
     parser.add_argument("--ground_truth_input", type=str, help="path to output location", default=None)
