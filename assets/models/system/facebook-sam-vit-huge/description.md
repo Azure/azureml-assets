@@ -1,6 +1,6 @@
 The Segment Anything Model (SAM) is an innovative image segmentation tool capable of creating high-quality object masks from simple input prompts. Trained on a massive dataset comprising 11 million images and 1.1 billion masks, SAM demonstrates strong zero-shot capabilities, effectively adapting to new image segmentation tasks without prior specific training. The model's impressive performance matches or exceeds prior models that operated under full supervision.
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/facebook/sam-vit-base" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/facebook/sam-vit-huge" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
 

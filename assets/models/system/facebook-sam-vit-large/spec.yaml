@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: facebook-sam-vit-huge
+name: facebook-sam-vit-large
 path: ./
 properties:
   SHA: 70009d56dac23ebb3265377257158b1d6ed4c802
@@ -15,7 +15,7 @@ properties:
       Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
       Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
       Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
-  model_id: facebook/sam-vit-huge
+  model_id: facebook/sam-vit-large
 tags:
   Preview: ''
   license: apache-2.0
