@@ -28,10 +28,8 @@ from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
-from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError, ACFTSystemError
-from azureml.acft.common_components.utils.mlflow_utils import update_acft_metadata
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.common_components.utils.logging_utils import SystemSettings
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
@@ -806,7 +804,6 @@ def finetune(args: Namespace):
             mlflow_hftransformers_misc_conf,
         )
 
-    metadata = {}
     # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
     mlflow_config_file = Path(args.model_selector_output, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
     if mlflow_config_file.is_file():
@@ -815,7 +812,6 @@ def finetune(args: Namespace):
         try:
             with open(mlflow_config_file, "r") as rptr:
                 mlflow_data = yaml.safe_load(rptr)
-                metadata = mlflow_data.get("metadata", {})
         except Exception as e:
             logger.info(f"Unable to load MLmodel file - {e}")
         if mlflow_data is not None:
@@ -831,13 +827,6 @@ def finetune(args: Namespace):
             logger.info("MLmodel file is empty")
     else:
         logger.info("MLmodel file does not exist")
-
-    # if input is pytorch model, read metadata if the metadata.json exists.
-    if not metadata:
-        metadatapath = os.path.join(model_name_or_path, ModelSelectorDefaults.MODEL_DEFAULTS_PATH)
-        if os.path.isfile(metadatapath):
-            with open(metadatapath, "r") as rptr:
-                metadata = json.load(rptr)
 
     logger.info(f"FT MLFlow config - {mlflow_ft_conf}")
 
@@ -893,10 +882,6 @@ def finetune(args: Namespace):
 
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
-
-    args.model_metadata = update_acft_metadata(metadata=metadata,
-                                               finetuning_task=args.task_name,
-                                               base_model_asset_id=model_asset_id)
 
     setup_automl_nlp(args)
 
