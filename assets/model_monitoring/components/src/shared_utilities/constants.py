@@ -93,4 +93,4 @@ MDC_DATAREF_COLUMN = 'dataref'
 
 SCHEMA_INFER_ROW_COUNT = 10
 
-AML_MOMO_INPUT_NOT_FOUND_TAG = "azureml.modelmonitor.input.not.found"
+AML_MOMO_ERROR_TAG = "azureml.modelmonitor.error"

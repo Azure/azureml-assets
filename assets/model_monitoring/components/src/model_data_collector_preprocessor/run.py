@@ -28,7 +28,7 @@ from shared_utilities.constants import (
     MDC_DATA_COLUMN,
     MDC_DATAREF_COLUMN,
     SCHEMA_INFER_ROW_COUNT,
-    AML_MOMO_INPUT_NOT_FOUND_TAG
+    AML_MOMO_ERROR_TAG
 )
 
 from typing import Tuple
@@ -150,7 +150,7 @@ def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str,
     try:
         return try_read_mltable_in_spark_with_error(des_path, "preprocessed_data")
     except DataNotFoundError as e:
-        tags = {AML_MOMO_INPUT_NOT_FOUND_TAG: True}
+        tags = {AML_MOMO_ERROR_TAG: "DataNotFoundError"}
         add_tags_func = add_tags_func or add_tags_to_root_run
         add_tags_func(tags)
         raise e
