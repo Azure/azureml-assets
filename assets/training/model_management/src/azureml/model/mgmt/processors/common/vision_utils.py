@@ -14,6 +14,8 @@ import io
 import re
 import requests
 import torch
+from ast import literal_eval
+import numpy as np
 
 from PIL import Image, UnidentifiedImageError
 from typing import Tuple, Union
@@ -121,11 +123,14 @@ def process_image(image: Union[str, bytes]) -> bytes:
             try:
                 return base64.b64decode(image)
             except ValueError:
-                raise ValueError("The provided image string cannot be decoded. "
-                                 "Expected format is base64 string or url string.")
+                raise ValueError(
+                    "The provided image string cannot be decoded. " "Expected format is base64 string or url string."
+                )
     else:
-        raise ValueError(f"Image received in {type(image)} format which is not supported. "
-                         "Expected format is bytes, base64 string or url string.")
+        raise ValueError(
+            f"Image received in {type(image)} format which is not supported. "
+            "Expected format is bytes, base64 string or url string."
+        )
 
 
 def process_image_pandas_series(image_pandas_series: pd.Series) -> pd.Series:
@@ -187,7 +192,7 @@ def get_current_device() -> torch.device:
             # get the current device index
             device_idx = torch.distributed.get_rank()
         except RuntimeError as ex:
-            if 'Default process group has not been initialized'.lower() in str(ex).lower():
+            if "Default process group has not been initialized".lower() in str(ex).lower():
                 device_idx = 0
             else:
                 logger.error(str(ex))
@@ -195,3 +200,52 @@ def get_current_device() -> torch.device:
         return torch.device(type="cuda", index=device_idx)
     else:
         return torch.device(type="cpu")
+
+
+def string_to_nested_float_list(input_str: str) -> list:
+    """Convert string to nested list of floats.
+
+    :return: string converted to nested list of floats
+    :rtype: list
+    """
+    if input_str in ["null", "None", "", "nan", "NoneType", np.nan, None]:
+        return None
+    try:
+        # Use ast.literal_eval to safely evaluate the string into a list
+        nested_list = literal_eval(input_str)
+
+        # Recursive function to convert all numbers in the nested list to floats
+        def to_floats(lst) -> list:
+            """
+            Recursively convert all numbers in a nested list to floats.
+
+            :param lst: nested list
+            :type lst: list
+            :return: nested list of floats
+            :rtype: list
+            """
+            return [to_floats(item) if isinstance(item, list) else float(item) for item in lst]
+
+        # Use the recursive function to process the nested list
+        return to_floats(nested_list)
+    except (ValueError, SyntaxError) as e:
+        # In case of an error during conversion, print an error message
+        print(f"Invalid input {input_str}: {e}, ignoring.")
+        return None
+
+
+def bool_array_to_pil_image(bool_array: np.ndarray) -> PIL.Image.Image:
+    """Convert boolean array to PIL Image.
+
+    :param bool_array: boolean array
+    :type bool_array: np.array
+    :return: PIL Image
+    :rtype: PIL.Image.Image
+    """
+    # Convert boolean array to uint8
+    uint8_array = bool_array.astype(np.uint8) * 255
+
+    # Create a PIL Image
+    pil_image = Image.fromarray(uint8_array)
+
+    return pil_image
