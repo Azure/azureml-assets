@@ -1,0 +1,15 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.1
+name: generate_a_job_description
+display_name: Generate a job description
+description: Generate a job description
+
+tags:
+  modality: completion
+  task: content-creation
+
+data_uri: ./prompt
+template_path: prompt.yaml
+
