@@ -11,7 +11,6 @@ from azureml._restclient.run_client import RunClient
 from azureml._restclient.service_context import ServiceContext
 from azureml.core.authentication import AzureMLTokenAuthentication
 from mlflow import MlflowClient
-from mlflow.entities import Run
 
 DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 MODEL_MONITOR = "Model Monitor"
