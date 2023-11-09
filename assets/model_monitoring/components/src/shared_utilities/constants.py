@@ -90,4 +90,7 @@ MDC_CHAT_HISTORY_COLUMN = 'chat_history'
 MDC_CORRELATION_ID_COLUMN = 'correlationid'
 MDC_DATA_COLUMN = 'data'
 MDC_DATAREF_COLUMN = 'dataref'
+
 SCHEMA_INFER_ROW_COUNT = 10
+
+AML_MOMO_INPUT_NOT_FOUND_TAG = "azureml.modelmonitor.input.not.found"
