@@ -113,43 +113,6 @@ inputs:
 
   # ########################### Finetuning Component ########################### #
 
-  # Lora parameters
-  apply_lora:
-    type: string
-    enum:
-      - "true"
-      - "false"
-    default: "false"
-    optional: true
-    description: lora enabled.
-
-  merge_lora_weights:
-    type: string
-    enum:
-      - "true"
-      - "false"
-    default: "true"
-    optional: true
-    description: if set to true, the lora trained weights will be merged to base model before saving.
-
-  lora_alpha:
-    type: integer
-    default: 128
-    optional: true
-    description: lora attention alpha.
-
-  lora_r:
-    type: integer
-    default: 8
-    optional: true
-    description: lora dimension.
-
-  lora_dropout:
-    type: number
-    default: 0.0
-    optional: true
-    description: lora dropout value.
-
   # Training parameters
   number_of_epochs:
     type: integer
@@ -432,11 +395,6 @@ jobs:
     resources:
       instance_count: ${{parent.inputs.instance_count}}
     inputs:
-      apply_lora: ${{parent.inputs.apply_lora}}
-      merge_lora_weights: ${{parent.inputs.merge_lora_weights}}
-      lora_alpha: ${{parent.inputs.lora_alpha}}
-      lora_r: ${{parent.inputs.lora_r}}
-      lora_dropout: ${{parent.inputs.lora_dropout}}
       number_of_epochs: ${{parent.inputs.number_of_epochs}}
       max_steps: ${{parent.inputs.max_steps}}
       training_batch_size: ${{parent.inputs.training_batch_size}}

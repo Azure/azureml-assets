@@ -25,43 +25,6 @@ inputs:
       - multimodal-classification-multilabel
     description: Specify whether its single-label or multi-label multimodal classification task.
 
-  # Lora parameters
-  apply_lora:
-    type: string
-    enum:
-      - "true"
-      - "false"
-    default: "false"
-    optional: true
-    description: lora enabled
-
-  merge_lora_weights:
-    type: string
-    enum:
-      - "true"
-      - "false"
-    default: "true"
-    optional: true
-    description: if set to true, the lora trained weights will be merged to base model before saving
-
-  lora_alpha:
-    type: integer
-    default: 128
-    optional: true
-    description: lora attention alpha
-
-  lora_r:
-    type: integer
-    default: 8
-    optional: true
-    description: lora dimension
-
-  lora_dropout:
-    type: number
-    default: 0.0
-    optional: true
-    description: lora dropout value
-
   # Training parameters
   number_of_epochs:
     type: integer
@@ -351,11 +314,11 @@ outputs:
 command: >-
   python finetune.py
   --problem_type ${{inputs.problem_type}}
-  $[[--apply_lora ${{inputs.apply_lora}}]]
-  $[[--merge_lora_weights ${{inputs.merge_lora_weights}}]]
-  $[[--lora_alpha ${{inputs.lora_alpha}}]]
-  $[[--lora_r ${{inputs.lora_r}}]]
-  $[[--lora_dropout ${{inputs.lora_dropout}}]]
+  --apply_lora "false"
+  --merge_lora_weights "true"
+  --lora_alpha 128
+  --lora_r 8
+  --lora_dropout 0.0
   $[[--num_train_epochs ${{inputs.number_of_epochs}}]]
   $[[--max_steps ${{inputs.max_steps}}]]
   $[[--per_device_train_batch_size ${{inputs.training_batch_size}}]]
