@@ -44,6 +44,9 @@ class SupportedTasks(_CustomEnum):
     # LLaVA task
     IMAGE_TEXT_TO_TEXT = "image-text-to-text"
 
+    # mask generation
+    MASK_GENERATION = "mask-generation"
+
 
 class SupportedTextToImageModelFamily(_CustomEnum):
     """Supported text to image models."""

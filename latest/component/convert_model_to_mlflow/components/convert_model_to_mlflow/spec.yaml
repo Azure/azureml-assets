@@ -70,6 +70,7 @@ inputs:
     - text-to-image-inpainting
     - image-text-to-text
     - zero-shot-image-classification
+    - mask-generation
     - video-multi-object-tracking
     - visual-question-answering
     description: A Hugging face task on which model was trained on. A required parameter
