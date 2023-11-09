@@ -6,7 +6,8 @@
 from azureml._common._error_definition import error_decorator
 from azureml._common._error_definition.user_error import (
     BadArgument,
-    BadData
+    BadData,
+    UserError
 )
 from azureml._common._error_definition.system_error import ClientError
 from constants import ErrorStrings
@@ -26,6 +27,19 @@ class ModelEvaluationInternalError(ClientError):
 
 
 class ModelPredictionInternalError(ClientError):
+    """Model Prediction error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.GenericModelPredictionError
+
+
+class ModelPredictionValueError(UserError):
     """Model Prediction error."""
 
     @property
