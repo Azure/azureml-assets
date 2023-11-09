@@ -323,6 +323,17 @@ jobs:
   model_selector:
     type: command
     component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.2
+    compute: ${{parent.inputs.compute_model_import}}
+    inputs:
+      model_family: ${{parent.inputs.model_family}}
+      model_name: ${{parent.inputs.model_name}}
+      pytorch_model: ${{parent.inputs.pytorch_model}}
+      mlflow_model: ${{parent.inputs.mlflow_model}}
+      download_from_source: ${{parent.inputs.download_from_source}}
+      validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
+  finetune:
+    type: command
+    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.2
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
