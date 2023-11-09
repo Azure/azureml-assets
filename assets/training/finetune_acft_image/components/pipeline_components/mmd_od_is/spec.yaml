@@ -12,29 +12,29 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
+    description: Compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   compute_finetune:
     type: string
     optional: false
-    description: compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
+    description: Compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   instance_count:
     type: integer
     default: 1
     optional: true
-    description: number of nodes to be used for finetuning (used for distributed training)
+    description: Number of nodes to be used for finetuning (used for distributed training)
 
   process_count_per_instance:
     type: integer
     default: 1
     optional: true
-    description: number of gpus to be used per node for finetuning, should be equal to number of gpu per node in the compute SKU used for finetune
+    description: Number of gpus to be used per node for finetuning, should be equal to number of gpu per node in the compute SKU used for finetune
 
   compute_model_evaluation:
     type: string
     optional: true
-    description: compute to be used for model evaluation eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
+    description: Compute to be used for model evaluation eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   # ########################### Model Selector Component ########################### #
   # Model family
@@ -344,7 +344,7 @@ inputs:
   # component input: test mltable
   test_data:
     type: mltable
-    optional: true
+    optional: false
     description: Path to the mltable of the test dataset.
 
   test_batch_size:

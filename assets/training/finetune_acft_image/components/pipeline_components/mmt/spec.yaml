@@ -12,12 +12,12 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: compute to be used for model_selector eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
+    description: Compute to be used for model_selector eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   compute_finetune:
     type: string
     optional: false
-    description: compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
+    description: Compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   # ########################### Model Selector Component ########################### #
   # Model family
