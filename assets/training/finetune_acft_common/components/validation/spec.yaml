@@ -10,7 +10,7 @@ is_deterministic: True
 
 environment: azureml:acpt-pytorch-2.0-cuda11.7@latest
 
-code: ../../../src/validation
+code: ../../src/validation
 
 inputs:
 
