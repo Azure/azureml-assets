@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.2
+version: 0.0.3
 name: mmtracking_video_multi_object_tracking_pipeline
 display_name: Video Multi-Object Tracking MMTracking Pipeline
 description: Pipeline component for multi-object tracking using MMTracking models.
@@ -68,13 +68,15 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: image width that is input to the network. Default is -1 which means it would be overwritten by image_scale in model config. 
+    description: image width that is input to the network.
+     Default is -1 which means it would be overwritten by image_scale in model config. 
 
   image_height:
     type: integer
     default: -1
     optional: true
-    description: image height that is input to the network. Default is -1 which means it would be overwritten by image_scale in model config.
+    description: image height that is input to the network.
+     Default is -1 which means it would be overwritten by image_scale in model config.
 
   task_name:
     type: string
@@ -306,19 +308,21 @@ outputs:
     description: Output dir to save the finetune model as torch model.
 
 jobs:
+  finetune_common_validation:
+    type: command
+    component: azureml:finetune_validation_component:0.0.1
+    compute: ${{parent.inputs.compute_model_import}}
+    inputs:
+      mlflow_model_path: ${{parent.inputs.mlflow_model}}
+      training_data: ${{parent.inputs.training_data}}
+      validation_data: ${{parent.inputs.validation_data}}
+      compute_model_import: ${{parent.inputs.compute_model_import}}
+      compute_finetune: ${{parent.inputs.compute_finetune}}
+      task_name: ${{parent.inputs.task_name}}
+      task_specific_extra_params: '"model_family=${{parent.inputs.model_family}};model_name=${{parent.inputs.model_name}};metric_for_best_model=${{parent.inputs.metric_for_best_model}};number_of_epochs=${{parent.inputs.number_of_epochs}}"'
   model_selector:
     type: command
     component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.2
-    compute: ${{parent.inputs.compute_model_import}}
-    inputs:
-      model_family: ${{parent.inputs.model_family}}
-      model_name: ${{parent.inputs.model_name}}
-      pytorch_model: ${{parent.inputs.pytorch_model}}
-      mlflow_model: ${{parent.inputs.mlflow_model}}
-      download_from_source: ${{parent.inputs.download_from_source}}
-  finetune:
-    type: command
-    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.2
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'

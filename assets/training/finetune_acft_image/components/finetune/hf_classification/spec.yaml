@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.8
+version: 0.0.9
 name: transformers_image_classification_finetune
 display_name: Image Classification HuggingFace Transformers Model Finetune
 description: Component to finetune HuggingFace transformers models for image classification.
 
 is_deterministic: false
 
-environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/3
+environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/8
 
 code: ../../../src/finetune
 
@@ -39,13 +39,19 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: Final Image width after augmentation that is input to the network. Default value is -1 which means it would be overwritten by default image width in Hugging Face feature extractor. If either image_width or image_height is set to -1, default value would be used for both width and height.
+    description: Final Image width after augmentation that is input to the network.
+                 Default value is -1 which means it would be overwritten by default image
+                 width in Hugging Face feature extractor. If either image_width or image_height
+                 is set to -1, default value would be used for both width and height.
 
   image_height:
     type: integer
     default: -1
     optional: true
-    description: Final Image height after augmentation that is input to the network. Default value is -1 which means it would be overwritten by default image height in Hugging Face feature extractor. If either image_width or image_height is set to -1, default value would be used for both width and height.
+    description: Final Image height after augmentation that is input to the network.
+                 Default value is -1 which means it would be overwritten by default image
+                 height in Hugging Face feature extractor. If either image_width or image_height
+                 is set to -1, default value would be used for both width and height.
 
   task_name:
     type: string

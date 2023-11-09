@@ -12,29 +12,29 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: Compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'.
+    description: compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   compute_finetune:
     type: string
     optional: false
-    description: Compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'.
+    description: compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   instance_count:
     type: integer
     default: 1
     optional: true
-    description: Number of nodes to be used for finetuning (used for distributed training).
+    description: number of nodes to be used for finetuning (used for distributed training)
 
   process_count_per_instance:
     type: integer
     default: 1
     optional: true
-    description: Number of gpus to be used per node for finetuning, should be equal to number of gpu per node in the compute SKU used for finetune.
+    description: number of gpus to be used per node for finetuning, should be equal to number of gpu per node in the compute SKU used for finetune
 
   compute_model_evaluation:
     type: string
     optional: true
-    description: Compute to be used for model evaluation eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
+    description: compute to be used for model evaluation eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   # ########################### Model Selector Component ########################### #
   # Model family
@@ -49,7 +49,7 @@ inputs:
   model_name:
     type: string
     optional: true
-    description: Please select models from AzureML Model Assets for all supported models. For MMDetection, provide the model's config name here, same as its specified in MMDetection Model Zoo. It is the user responsibility to comply with the model's license terms.
+    description: Please select models from AzureML Model Assets for all supported models. For MMDetection, provide the model's config name here, same as its specified in MMDetection Model Zoo. To find the correct model name, go to https://github.com/open-mmlab/mmdetection/tree/v3.1.0/configs click on the model type and you will find the model name in the metafile.yml file which is present at configs/<MODEL_TYPE>/metafile.yml location. It is the user responsibility to comply with the model's license terms.
 
   pytorch_model:
     type: custom_model
@@ -291,7 +291,8 @@ inputs:
     enum:
       - epoch
       - steps
-    description: The checkpoint save strategy to adopt during training. Please note that the save_strategy and evaluation_strategy should match.
+    description: The checkpoint save strategy to adopt during training. Please note that the save_strategy and
+     evaluation_strategy should match.
 
   save_steps:
     type: integer
@@ -343,7 +344,7 @@ inputs:
   # component input: test mltable
   test_data:
     type: mltable
-    optional: false
+    optional: true
     description: Path to the mltable of the test dataset.
 
   test_batch_size:
@@ -388,18 +389,42 @@ outputs:
     description: Test Data Evaluation Results
 
 jobs:
+  finetune_common_validation:
+    type: command
+    component: azureml:finetune_validation_component:0.0.1
+    compute: ${{parent.inputs.compute_model_import}}
+    inputs:
+      mlflow_model_path: ${{parent.inputs.mlflow_model}}
+      training_data: ${{parent.inputs.training_data}}
+      validation_data: ${{parent.inputs.validation_data}}
+      test_data: ${{parent.inputs.test_data}}
+      compute_model_import: ${{parent.inputs.compute_model_import}}
+      compute_finetune: ${{parent.inputs.compute_finetune}}
+      instance_count: ${{parent.inputs.instance_count}}
+      process_count_per_instance: ${{parent.inputs.process_count_per_instance}}
+      compute_model_evaluation: ${{parent.inputs.compute_model_evaluation}}
+      task_name: ${{parent.inputs.task_name}}
+      label_column_name: '${{parent.inputs.label_column_name}}'
+      input_column_names: '${{parent.inputs.input_column_names}}'
+      test_batch_size: ${{parent.inputs.test_batch_size}}
+      device: auto
+      evaluation_config: ${{parent.inputs.evaluation_config}}
+      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+      task_specific_extra_params: '"model_family=${{parent.inputs.model_family}};model_name=${{parent.inputs.model_name}};metric_for_best_model=${{parent.inputs.metric_for_best_model}};number_of_epochs=${{parent.inputs.number_of_epochs}}"'
   image_od_is_model_import:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.8
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.9
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
       model_name: ${{parent.inputs.model_name}}
       pytorch_model: ${{parent.inputs.pytorch_model}}
       mlflow_model: ${{parent.inputs.mlflow_model}}
+      download_from_source: ${{parent.inputs.download_from_source}}
+      validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
   image_od_is_finetune:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.8
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.9
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
