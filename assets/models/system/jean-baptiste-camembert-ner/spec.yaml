@@ -22,7 +22,7 @@ properties:
   languages: fr
 tags:
   Preview: ''
-  computes_allow_list:
+  finetune_compute_allow_list:
   - Standard_NV12s_v3
   - Standard_NV24s_v3
   - Standard_NV48s_v3
