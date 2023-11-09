@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_text_generation_pipeline
-version: 0.0.1
+version: 0.0.2
 type: pipeline
 display_name: OSS Text Generation Pipeline
 description: FTaaS Pipeline component for text generation
