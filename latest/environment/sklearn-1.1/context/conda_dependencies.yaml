@@ -11,11 +11,11 @@ dependencies:
 - pip:
   - scikit-learn-intelex==2023.2.1
   - wheel~=0.38.1
-  - azureml-core==1.53.0
-  - azureml-defaults==1.53.0
-  - azureml-mlflow==1.53.0
-  - azureml-telemetry==1.53.0
-  - azureml-automl-common-tools==1.53.0
+  - azureml-core==1.54.0
+  - azureml-defaults==1.54.0
+  - azureml-mlflow==1.54.0
+  - azureml-telemetry==1.54.0
+  - azureml-automl-common-tools==1.54.0
   - scikit-learn~=1.1.0
   - joblib~=1.2.0
   # vulnerabilities

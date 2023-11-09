@@ -8,8 +8,8 @@ dependencies:
     - azure-ai-ml==1.11.1
     - azure-identity==1.15.0
     # v1 package for fetching run details
-    - azureml-core==1.53.0
+    - azureml-core==1.54.0
     # v1 package for logging and telemetry. Switch to using application-insights and implementing custom logging
-    - azureml-telemetry==1.53.0
+    - azureml-telemetry==1.54.0
     - cryptography==41.0.5
     - certifi==2023.7.22

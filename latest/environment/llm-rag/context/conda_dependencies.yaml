@@ -16,12 +16,12 @@ dependencies:
   - azure-keyvault-secrets==4.6.0
   - azure-mgmt-cognitiveservices~=13.4.0
   - azureml-contrib-services
-  - azureml-core==1.53.0
-  - azureml-telemetry==1.53.0
+  - azureml-core==1.54.0
+  - azureml-telemetry==1.54.0
   - azureml-dataprep>=4.12.7 # Change back to latest version once azureml-fsspec is compatible
   - azureml-fsspec
   - azureml-inference-server-http==0.7.6
-  - azureml-mlflow==1.53.0
+  - azureml-mlflow==1.54.0
   - beautifulsoup4~=4.11.2
   - datasets~=2.10.1
   - faiss-cpu~=1.7.3

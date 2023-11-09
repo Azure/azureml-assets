@@ -8,9 +8,9 @@ dependencies:
 - pip:
   - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone]>=0.2.18.1
   - langchain==0.0.312
-  - azureml-core==1.53.0
-  - azureml-telemetry==1.53.0
-  - azureml-mlflow==1.53.0
+  - azureml-core==1.54.0
+  - azureml-telemetry==1.54.0
+  - azureml-mlflow==1.54.0
   - azure-search-documents==11.4.0b8
   - psutil~=5.8.0
   - pandas~=1.1.5

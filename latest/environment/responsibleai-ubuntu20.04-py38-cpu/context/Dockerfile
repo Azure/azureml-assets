@@ -27,10 +27,10 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
                           'domonic==0.9.10'
 
 # Install azureml packages
-RUN pip install 'azureml-dataset-runtime==1.53.0' \
-                'azureml-core==1.53.0' \
-                'azureml-mlflow==1.53.0' \
-                'azureml-telemetry==1.53.0'
+RUN pip install 'azureml-dataset-runtime==1.54.0' \
+                'azureml-core==1.54.0' \
+                'azureml-mlflow==1.54.0' \
+                'azureml-telemetry==1.54.0'
 
 # To resolve vulnerability issue
 RUN pip install 'Werkzeug==2.2.3'
