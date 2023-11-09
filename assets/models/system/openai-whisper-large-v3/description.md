@@ -9,8 +9,8 @@ The Whisper large-v3 model was trained on 1 million hours of weakly labeled audi
 
 The large-v3 model shows better performance than Whisper large-v2 on many languages, reducing errors by 10% to 20%.
 
-|--Size--|Parameters|English-only|Multilingual|
-|large-v3|	1550 M	|    x	     |      ✓     |
+|  Size  |Parameters|English-only|Multilingual|
+|large-v3|	1550 M	|    x	     |      ✓    |
 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/openai/whisper-large-v3" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
