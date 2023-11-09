@@ -29,8 +29,8 @@ tags:
     apply_deepspeed: 'true'
     apply_ort: 'true'
   task: image-classification
-version: 11
-description: |
+version: 12
+description: |-
   The Swin Transformer is a type of Vision Transformer used in both image classification and dense recognition tasks. It builds hierarchical feature maps by merging image patches in deeper layers and has linear computation complexity to input image size due to computation of self-attention only within each local window. Previous vision Transformers produce feature maps of a single low resolution and have quadratic computation complexity to input image size due to the computation of self-attention globally. Swin Transformer v2 has three main improvements which are a residual-post-norm method, a log-spaced continuous position bias method, and a self-supervised pre-training method called SimMIM. These improvements combined with cosine attention help improve training stability and reduce the need for vast labeled images.
 
   > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/microsoft/swinv2-base-patch4-window12-192-22k" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
@@ -92,4 +92,6 @@ description: |
 
   #### Model inference - visualization for a sample image
 
-  <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_microsoft-swinv2-base-patch4-window12-192-22k_MC.png" alt="mc visualization">
+  <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_microsoft-swinv2-base-patch4-window12-192-22k_MC_new.png" alt="mc visualization">
+
+  Note: The labels provided by swinv2 model are class indices appended to "LABEL_"(starting from "LABEL_0" to "LABEL_21841"). For e.g. "LABEL_3500" for "Giraffe". For visualization purpose, we explictly mapped these labels to imagenet-21k class names which are shown above in the sample image.
