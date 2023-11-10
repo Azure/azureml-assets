@@ -35,6 +35,7 @@ logger = get_logger('validate_deployments')
 MAX_RETRIES = 3
 SLEEP_DURATION = 2
 
+
 def get_cognitive_services_client(ws):
     """Get cognitive services client."""
     client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID", None)
@@ -70,14 +71,15 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
     except HttpResponseError as ex:
         # Hack: Use proxy url to access AOAI deployment with speicific app version
         if ex.reason == 'Forbidden':
-            proxy_url = f'/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroupName}}' \
-                + f'/providers/Microsoft.MachineLearningServices/workspaces/{ws.name}/endpoints/Azure.OpenAI/deployments/{{deploymentName}}'
+            proxy_url = '/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroupName}}' \
+                + f'/providers/Microsoft.MachineLearningServices/workspaces/{ws.name}' \
+                + f'/endpoints/Azure.OpenAI/deployments/{{deploymentName}}'
             api_version = '2023-10-01'
-            
+
             activity_logger.warn(
-                f"[Validate Deployments]: AOAI resource deployment {model_params['deployment_id']} validation hit authorization error."
+                f"[Validate Deployments]: Validating deployment {model_params['deployment_id']} hit authorization error."
                 + f"Try to use proxy url '{proxy_url}' with specific app version '{api_version}'.")
-            
+
             client.deployments.get.metadata['url'] = proxy_url
             response = client.deployments.get(
                 resource_group_name=resource_group_name,
