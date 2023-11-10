@@ -28,6 +28,41 @@ def convert_pandas_to_spark(pandas_data):
     return spark.createDataFrame(pandas_data)
 
 
+def is_categorical_column(baseline_data, column_name):
+    """Determine whether the column is categorical.
+
+    :param column_name: the column to determine
+    :type column_name: string
+    :param baseline_data: The baseline data meaning the data used to create the
+    model monitor
+    :type baseline_data: pandas.DataFrame
+    :rtype: boolean
+    """
+    baseline_column = pd.Series(baseline_data[column_name])
+    baseline_column_type = baseline_column.dtype.name
+    if (pd.api.types.is_float_dtype(baseline_column) or
+            pd.api.types.is_datetime64_ns_dtype(baseline_column) or
+            pd.api.types.is_timedelta64_ns_dtype(baseline_column)):
+        return False
+    # treat all datetime types as categorical since LightGBM cannot accept anything but bool, int and float
+    if (pd.api.types.is_object_dtype(baseline_column) or pd.api.types.is_string_dtype(baseline_column)
+            or baseline_column_type == "bool" or pd.api.types.is_datetime64_dtype(baseline_column) or
+            pd.api.types.is_timedelta64_dtype(baseline_column)):
+        return True
+    if pd.api.types.is_integer_dtype(baseline_column):
+        # if there are more unique values, not likely to be categorical
+        distinct_column_values = len(baseline_column.unique())
+        total_column_values = len(baseline_column)
+        distinct_value_ratio = distinct_column_values / total_column_values
+        if distinct_value_ratio < 0.05:
+            return True
+        else:
+            return False
+    # Log the datatype detected and default to true
+    log_time_and_message(f"Unknown column type: {baseline_column_type}")
+    return True
+
+
 def compute_categorical_features(baseline_data, target_column):
     """Compute which features are categorical based on data type of the columns.
 
@@ -41,18 +76,8 @@ def compute_categorical_features(baseline_data, target_column):
     """
     categorical_features = []
     for column in baseline_data.columns:
-        baseline_column = pd.Series(baseline_data[column])
-        if baseline_column.name != target_column:
-            column_type = baseline_column.dtype.name
-            if column_type == 'object' or column_type == 'bool':
-                categorical_features.append(baseline_column.name)
-            # if the type is int and the ratio of distinct values to total values
-            # is less than .05 than the column is considered categorical
-            elif column_type == 'int64':
-                distinct_column_values = len(baseline_column.unique())
-                total_column_values = len(baseline_column)
-                distinct_value_ratio = distinct_column_values / total_column_values
-                if distinct_value_ratio < 0.05:
-                    categorical_features.append(baseline_column.name)
+        if column != target_column:
+            if is_categorical_column(baseline_data, column):
+                categorical_features.append(column)
     print("Successfully categorized columns")
     return categorical_features
