@@ -78,7 +78,7 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
 
             activity_logger.warn(
                 f"[Validate Deployments]: Validating deployment {model_params['deployment_id']} hit "
-                + f"authorization error. Try to use proxy url '{proxy_url}' with app version '{api_version}'.")
+                + f"authorization error.\nTry to use proxy url '{proxy_url}' with app version '{api_version}'.")
 
             client.deployments.get.metadata['url'] = proxy_url
             response = client.deployments.get(
@@ -90,7 +90,7 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
 
     response_status = str.lower(response.properties.provisioning_state)
     if (response_status != "succeeded"):
-        # log this becauase we need to find out what the possible states are
+        # log this because we need to find out what the possible states are
         print(
             f"Deployment is not yet in status 'succeeded'. Current status is: {response_status}")
     if (response_status == "failed" or response_status == "deleting"):
@@ -588,4 +588,4 @@ if __name__ == "__main__":
     finally:
         if _logger_factory.appinsights:
             _logger_factory.appinsights.flush()
-            time.sleep(5)  # wait for appinsights to send telemetry
+            time.sleep(5)  # wait for AppInsights to send telemetry
