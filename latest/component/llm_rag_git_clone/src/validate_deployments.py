@@ -13,6 +13,7 @@ from azureml.rag.utils.connections import get_connection_by_id_v2, workspace_con
 from azureml.rag.utils.connections import get_connection_credential
 import time
 from typing import Tuple
+from azure.core.exceptions import HttpResponseError
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
 from azure.identity import ManagedIdentityCredential, AzureCliCredential
@@ -54,16 +55,41 @@ def get_cognitive_services_client(ws):
 
 
 def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=None):
-    """Validate default aoai deployments and attempt creation if does not exist."""
+    """Validate default AOAI deployments and attempt creation if does not exist."""
+    resource_group_name = model_params.get("resource_group", ws.resource_group)
+    account_name = model_params["default_aoai_name"]
+    deployment_name = model_params["deployment_id"]
+
     client = get_cognitive_services_client(ws)
-    response = client.deployments.get(
-        resource_group_name=model_params.get("resource_group", ws.resource_group),
-        account_name=model_params["default_aoai_name"],
-        deployment_name=model_params["deployment_id"],
-    )
+    try:
+        response = client.deployments.get(
+            resource_group_name=resource_group_name,
+            account_name=account_name,
+            deployment_name=deployment_name,
+        )
+    except HttpResponseError as ex:
+        # Hack: Use proxy url to access AOAI deployment with specific app version
+        if ex.reason == 'Forbidden':
+            proxy_url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}' \
+                + f'/providers/Microsoft.MachineLearningServices/workspaces/{ws.name}' \
+                + '/endpoints/Azure.OpenAI/deployments/{deploymentName}'
+            api_version = '2023-10-01'
+
+            activity_logger.warn(
+                f"[Validate Deployments]: Validating deployment {model_params['deployment_id']} hit "
+                + f"authorization error.\nTry to use proxy url '{proxy_url}' with app version '{api_version}'.")
+
+            client.deployments.get.metadata['url'] = proxy_url
+            response = client.deployments.get(
+                resource_group_name=resource_group_name,
+                account_name=account_name,
+                deployment_name=deployment_name,
+                api_version=api_version
+            )
+
     response_status = str.lower(response.properties.provisioning_state)
     if (response_status != "succeeded"):
-        # log this becauase we need to find out what the possible states are
+        # log this because we need to find out what the possible states are
         print(
             f"Deployment is not yet in status 'succeeded'. Current status is: {response_status}")
     if (response_status == "failed" or response_status == "deleting"):
@@ -561,4 +587,4 @@ if __name__ == "__main__":
     finally:
         if _logger_factory.appinsights:
             _logger_factory.appinsights.flush()
-            time.sleep(5)  # wait for appinsights to send telemetry
+            time.sleep(5)  # wait for AppInsights to send telemetry
