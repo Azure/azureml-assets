@@ -56,7 +56,6 @@ def get_cognitive_services_client(ws):
 
 def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=None):
     """Validate default AOAI deployments and attempt creation if does not exist."""
-
     resource_group_name = model_params.get("resource_group", ws.resource_group)
     account_name = model_params["default_aoai_name"]
     deployment_name = model_params["deployment_id"]
