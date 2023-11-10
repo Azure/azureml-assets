@@ -176,7 +176,7 @@ jobs:
     resources:
       instance_count: ${{parent.inputs.instance_count}}
     max_concurrency_per_instance:  ${{parent.inputs.max_concurrency_per_instance}}
-    mini_batch_size: "100KB"
+    mini_batch_size: "10GB"
     retry_settings:
       timeout: 6000
       max_retries: 10

@@ -6,7 +6,7 @@ description: benchmark_clip
 jobs:
   endpoint:
     type: pipeline
-    component: azureml:batch_benchmark_inference:0.0.1.vision_oss
+    component: azureml:batch_benchmark_inference:0.0.5.vision_oss
     inputs:
       input_dataset: 
         path: azureml://subscriptions/dbd697c3-ef40-488f-83e6-5ad4dfb78f9b/resourcegroups/rbhimani-rg/workspaces/rbhimani-eastus/datastores/workspaceblobstore/paths/UI/2023-11-09_235042_UTC/
@@ -27,7 +27,7 @@ jobs:
       endpoint_url: https://clip-large-ic.eastus.inference.ml.azure.com/score
       is_performance_test: false
       deployment_name: openai-clip-vit-large-patch14-3
-      connections_name: clip-large-ic
+      connections_name: clip-large-ic-2
       handle_response_failure: use_fallback
       ensure_ascii: false
       initial_worker_count: 1

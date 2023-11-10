@@ -61,9 +61,9 @@ class EndpointDataPreparer:
         if self._model.is_vision_oss_model():
             if "input_data" not in output_payload_dict:
                 errors.append("`input_data` should be presented in the payload json.")
-            if "image" not in output_payload_dict["input_data"]:
+            if "data" not in output_payload_dict["input_data"]:
                 errors.append(
-                    "`image` should be presented in the `input_data` fields of payload json.")
+                    "`data` should be presented in the `input_data` fields of payload json.")
         return errors
 
     def _convert_python_pattern(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
