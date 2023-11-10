@@ -1,0 +1,77 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: endpoint_inference_triton
+display_name: Endpoint Inference Triton
+description: Component to get predictions from an endpoint having triton model deployment.
+version: 0.0.1
+
+inputs:
+  dataset: 
+    type: uri_folder
+    description: Path to the input .jsonl file(s).
+    optional: False
+  task_type:
+    type: string
+    enum:
+      - text_generation
+      - chat_completion
+    description: Task type, either `text_generation` or `chat_completion`.
+    optional: False
+  input_pattern:
+    type: string
+    description: Jinja template that is used to generate payload.
+    optional: False
+  endpoint_url:
+    type: string
+    description: Endpoint URL.
+    optional: False
+  deployment_name:
+    type: string
+    description: Deployment name.
+    optional: False
+  model_name:
+    type: string
+    description: Model name.
+    optional: False
+  model_version:
+    type: string
+    description: Model version.
+    default: "1"
+    optional: False
+  connections_name:
+    type: string
+    description: The connections name that has the API Key to successfully authenticate the endpoint.
+    optional: False
+  label_column_name:
+    type: string
+    description: Column name containing label.
+    optional: False
+
+outputs:
+  predictions:
+    type: uri_file
+    description: Path to the predictions file.
+  performance_metadata:
+    type: uri_file
+    description: Path to the performance metadata file.
+  ground_truth:
+    type: uri_file
+    description: Path to the ground truth file.
+
+code: ../src
+environment: azureml://registries/azureml-preview-test1/environments/endpoint-inference-triton/versions/1
+command: >-
+  python -m aml_benchmark.endpoint_inference_triton.main 
+  --dataset ${{inputs.dataset}}
+  --task_type ${{inputs.task_type}}
+  --input_pattern ${{inputs.input_pattern}}
+  --endpoint_url ${{inputs.endpoint_url}}
+  --deployment_name ${{inputs.deployment_name}}
+  --model_name ${{inputs.model_name}}
+  --model_version ${{inputs.model_version}}
+  --connections_name ${{inputs.connections_name}}
+  --label_column_name ${{inputs.label_column_name}}
+  --predictions ${{outputs.predictions}}
+  --performance_metadata ${{outputs.performance_metadata}}
+  --ground_truth ${{outputs.ground_truth}}

@@ -193,3 +193,28 @@ def save_json_to_file(json_dict: Dict[Any, Any], path: str) -> None:
     """
     with open(path, mode='w') as file:
         json.dump(json_dict, file, indent=4)
+
+
+def parse_jinja_template(template: str, data: Dict[str, Any]) -> str:
+    """
+    Parse a jinja template with the given arguments.
+
+    :param template: The jinja template.
+    :param kwargs: The arguments to be passed to the template.
+    :returns: The parsed template.
+    """
+    from jinja2 import Template
+    return Template(template).render(**data)
+
+
+def write_jsonl_file(data: List[Dict[str, Any]], file_path: str) -> None:
+    """
+    Write the data to a jsonl file.
+
+    :param data: The data to be written.
+    :param file_path: The path where the data has to be written.
+    """
+    with open(file_path, mode='w') as file:
+        for row in data:
+            file.write(json.dumps(row))
+            file.write('\n')

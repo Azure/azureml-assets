@@ -2,15 +2,20 @@
 # Licensed under the MIT License.
 
 """Helper functions for AML runs."""
-from typing import List, Optional, Tuple, cast
+from typing import List, Optional, Tuple, cast, Dict
 import os
 import tempfile
 import re
+import json
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
 
 import mlflow
 from mlflow.entities import Run as MLFlowRun
 from azureml.core import Run
 from aml_benchmark.utils.logging import get_logger
+from azureml.core import Workspace
 
 from azureml._common._error_definition.azureml_error import AzureMLError
 from .exceptions import BenchmarkValidationException
@@ -112,3 +117,96 @@ def str2bool(v):
         raise BenchmarkValidationException._with_error(
             AzureMLError.create(BenchmarkValidationError, error_details='Boolean value expected.')
         )
+
+
+def _get_retry_policy(num_retry: int = 3) -> Retry:
+    """
+    Request retry policy with increasing backoff.
+
+    :return: Returns the msrest or requests REST client retry policy.
+    :rtype: urllib3.Retry
+    """
+    status_forcelist = [413, 429, 500, 502, 503, 504]
+    backoff_factor = 0.4
+    retry_policy = Retry(
+        total=num_retry,
+        read=num_retry,
+        connect=num_retry,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+        # By default this is True. We set it to false to get the full error trace, including url and
+        # status code of the last retry. Otherwise, the error message is too many 500 error responses',
+        # which is not useful.
+        raise_on_status=False
+    )
+    return retry_policy
+
+
+def _create_session_with_retry(retry: int = 3) -> requests.Session:
+    """
+    Create requests.session with retry.
+
+    :type retry: int
+    rtype: Response
+    """
+    retry_policy = _get_retry_policy(num_retry=retry)
+
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=retry_policy))
+    session.mount("http://", HTTPAdapter(max_retries=retry_policy))
+    return session
+
+
+def get_authorization_header(connections_name: str) -> Dict[str, str]:
+    """Get the api key."""
+
+    def _send_post_request(url: str, headers: dict, payload: dict):
+        """Send a POST request."""
+        with _create_session_with_retry() as session:
+            response = session.post(url, data=json.dumps(payload), headers=headers)
+            # Raise an exception if the response contains an HTTP error status code
+            response.raise_for_status()
+
+        return response
+
+    try:
+        workspace = Run.get_context().experiment.workspace
+    except AttributeError:
+        # local offline run
+        workspace = Workspace.from_config()
+    if hasattr(workspace._auth, "get_token"):
+        bearer_token = workspace._auth.get_token("https://management.azure.com/.default").token
+    else:
+        bearer_token = workspace._auth.token
+
+    endpoint = workspace.service_context._get_endpoint("api")
+    url_list = [
+        endpoint,
+        "rp/workspaces/subscriptions",
+        workspace.subscription_id,
+        "resourcegroups",
+        workspace.resource_group,
+        "providers",
+        "Microsoft.MachineLearningServices",
+        "workspaces",
+        workspace.name,
+        "connections",
+        connections_name,
+        "listsecrets?api-version=2023-02-01-preview"
+    ]
+    resp = _send_post_request('/'.join(url_list), {
+        "Authorization": f"Bearer {bearer_token}",
+        "content-type": "application/json"
+    }, {})
+
+    response = resp.json()
+
+    credentials = response['properties'].get('credentials')
+    access_key_id = credentials.get('access_key_id')
+    if 'secretAccessKey' not in credentials and 'keys' in credentials:
+        credentials = credentials['keys']
+    if access_key_id == 'api-key':
+        token = credentials['secretAccessKey'] 
+    else:
+        token = 'Bearer ' + credentials['secretAccessKey']
+    return {access_key_id if access_key_id else "Authorization": token}
