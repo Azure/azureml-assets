@@ -189,7 +189,7 @@ class ResultConverters:
         if '0' in response:
             return response['0']
         return response['output']
-    
+
     @staticmethod
     def _get_vision_oss_response_results(result: Dict[str, Any]) -> Any:
         response = ResultConverters._get_response(result)
