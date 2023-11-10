@@ -21,6 +21,6 @@ properties:
 tags:
   Featured: ''
   Preview: ''
-  license: apache-2.0
+  license: mit
   task: automatic-speech-recognition
 version: 1
