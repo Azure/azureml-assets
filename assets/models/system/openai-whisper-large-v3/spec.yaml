@@ -2,7 +2,9 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-large-v3
 path: ./
 properties:
-  SHA: 
+  SHA: ''
+  evaluation-min-sku-spec: 8|0|28|56
+  evaluation-recommended-sku: Standard_DS4_v3
   inference-min-sku-spec: 16|0|56|112
   inference-recommended-sku: Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
     Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
