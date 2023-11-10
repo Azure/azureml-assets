@@ -10,13 +10,16 @@ The Whisper large-v3 model was trained on 1 million hours of weakly labeled audi
 The large-v3 model shows better performance than Whisper large-v2 on many languages, reducing errors by 10% to 20%.
 
 |  Size  |Parameters|English-only|Multilingual|
-|large-v3|	1550 M	|    x	     |      ✓    |
+|large-v3|	1550 M	|    x	     |      ✓     |
 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/openai/whisper-large-v3" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
 
-
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-asr" target="_blank">asr-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-asr" target="_blank">asr-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-asr" target="_blank">asr-batch-endpoint.ipynb</a>| coming soon
 
 ### Sample inputs and outputs (for real-time inference)
 
