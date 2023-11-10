@@ -77,8 +77,8 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
             api_version = '2023-10-01'
 
             activity_logger.warn(
-                f"[Validate Deployments]: Validating deployment {model_params['deployment_id']} hit authorization error."
-                + f"Try to use proxy url '{proxy_url}' with specific app version '{api_version}'.")
+                f"[Validate Deployments]: Validating deployment {model_params['deployment_id']} hit "
+                + f"authorization error. Try to use proxy url '{proxy_url}' with app version '{api_version}'.")
 
             client.deployments.get.metadata['url'] = proxy_url
             response = client.deployments.get(
