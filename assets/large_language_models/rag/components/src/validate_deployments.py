@@ -71,9 +71,9 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
     except HttpResponseError as ex:
         # Hack: Use proxy url to access AOAI deployment with speicific app version
         if ex.reason == 'Forbidden':
-            proxy_url = '/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroupName}}' \
+            proxy_url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}' \
                 + f'/providers/Microsoft.MachineLearningServices/workspaces/{ws.name}' \
-                + f'/endpoints/Azure.OpenAI/deployments/{{deploymentName}}'
+                + '/endpoints/Azure.OpenAI/deployments/{deploymentName}'
             api_version = '2023-10-01'
 
             activity_logger.warn(
