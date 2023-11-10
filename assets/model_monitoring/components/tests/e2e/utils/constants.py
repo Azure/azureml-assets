@@ -33,7 +33,7 @@ DATA_ASSET_IRIS_MODEL_OUTPUTS_NO_DRIFT = "azureml:uri_folder_iris_model_outputs_
 DATA_ASSET_IRIS_BASELINE_DATA = "azureml:mltable_iris_baseline:1"
 
 # Iris baseline integer dataset as a MLTable.
-DATA_ASSET_IRIS_BASELINE_INT_DATA = "azureml:mltable_iris_baseline_int_data:1"
+DATA_ASSET_IRIS_BASELINE_INT_DATA_TYPE = "azureml:mltable_iris_baseline_int_data_type:1"
 
 # Iris preprocessed target with integer dataset as a MLTable.
 DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT_INT_DATA = (

@@ -31,6 +31,7 @@ from azureml.model.mgmt.processors.pyfunc.convertors import (
     StableDiffusionMlflowConvertor,
     StableDiffusionInpaintingMlflowConvertor,
     LLaVAMLFlowConvertor,
+    SegmentAnythingMLFlowConvertor,
 )
 
 
@@ -64,6 +65,10 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             )
         elif task in [PyFuncSupportedTasks.IMAGE_TO_TEXT.value, PyFuncSupportedTasks.VISUAL_QUESTION_ANSWERING.value]:
             return BLIPMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif task == PyFuncSupportedTasks.MASK_GENERATION.value:
+            return SegmentAnythingMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
@@ -213,6 +218,19 @@ class LLaVAMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for LLaVA model."""
         return LLaVAMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class SegmentAnythingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for segment anything (SAM) model."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for segment anything (SAM) model."""
+        return SegmentAnythingMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,

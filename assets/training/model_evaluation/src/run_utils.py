@@ -93,10 +93,13 @@ class TestRun:
         """
         if not isinstance(self._run, _OfflineRun):
             target_name = self._run.get_details()["target"]
-            if self.workspace.compute_targets.get(target_name):
-                return self.workspace.compute_targets[target_name].vm_size
-            else:
-                return "serverless"
+            try:
+                if self.workspace.compute_targets.get(target_name):
+                    return self.workspace.compute_targets[target_name].vm_size
+                else:
+                    return "serverless"
+            except Exception:
+                return "Unknown"
         return "local"
 
     @property
