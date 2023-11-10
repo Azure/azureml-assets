@@ -49,6 +49,13 @@ inputs:
     default: SingleLabelClassification
     description: Finetuning task type
 
+  num_nodes_finetune:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: number of nodes to be used for finetuning (used for distributed training)
+
   number_of_gpu_to_use_finetuning:
     type: integer
     optional: true
