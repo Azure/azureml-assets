@@ -1,0 +1,87 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+display_name: clip-perf
+experiment_name: pipeline_generator
+description: benchmark_clip
+jobs:
+  endpoint:
+    type: pipeline
+    component: azureml:batch_benchmark_inference:0.0.1.vision_oss
+    inputs:
+      input_dataset: 
+        path: azureml://subscriptions/dbd697c3-ef40-488f-83e6-5ad4dfb78f9b/resourcegroups/rbhimani-rg/workspaces/rbhimani-eastus/datastores/workspaceblobstore/paths/UI/2023-11-09_235042_UTC/
+      batch_input_pattern: '{
+        "input_data": {
+          "columns": [
+            "image",
+            "text"
+          ],
+          "index": [0],
+          "data": [
+            ["###<image>", "label1, label2, label3"]
+          ]
+        },
+        "params": {}
+      }'
+      model_type: vision_oss
+      endpoint_url: https://clip-large-ic.eastus.inference.ml.azure.com/score
+      is_performance_test: false
+      deployment_name: openai-clip-vit-large-patch14-3
+      connections_name: clip-large-ic
+      handle_response_failure: use_fallback
+      ensure_ascii: false
+      initial_worker_count: 1
+      max_worker_count: 1
+      instance_count: 1
+      max_concurrency_per_instance: 1
+      debug_mode: true
+    outputs:
+      predictions:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+      performance_metadata:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+      ground_truth:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+  performance:
+    type: command
+    component: azureml://registries/azureml/components/compute_performance_metrics/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      performance_data:
+        type: uri_folder
+        path: ${{parent.jobs.endpoint.outputs.performance_metadata}}
+      percentiles: 50,90,99
+      batch_size_column_name: batch_size
+      start_time_column_name: start_time_iso
+      end_time_column_name: end_time_iso
+      is_batch_inference_result: true
+    outputs:
+      performance_result:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
+  aggregator:
+    type: command
+    component: azureml://registries/azureml/components/benchmark_result_aggregator/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      performance_metrics:
+        type: uri_folder
+        path: ${{parent.jobs.performance.outputs.performance_result}}
+    outputs:
+      benchmark_result:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
+tags:
+  workflow: llm_benchmark
+  run_type: private
+properties:
+  _azureml.evaluation_run: Benchmark
+settings:
+  continue_on_step_failure: true
+  force_rerun: false
+  default_compute: azureml:serverless
