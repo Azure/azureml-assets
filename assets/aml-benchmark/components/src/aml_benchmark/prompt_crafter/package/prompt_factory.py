@@ -45,6 +45,7 @@ class PromptFactory(ABC):
     few_shot_separator: Optional[str] = None
     prefix: Optional[str] = None
     ground_truth_column_name: Optional[str] = None
+    additional_columns: Optional[str] = None
     label_map_str: Optional[str] = None
     output_pattern: Optional[str] = None
     system_message: Optional[str] = None
@@ -198,6 +199,13 @@ class PromptFactory(ABC):
                 mssg = "Ground truth column is not present in the data"
                 raise BenchmarkValidationException._with_error(
                     AzureMLError.create(BenchmarkValidationError, error_details=mssg))
+
+        if self.additional_columns:
+            for k in self.additional_columns.split(","):
+                if k in row:
+                    output_data[k] = row[k]
+                else:
+                    logger.warning(f"Column name {k} not found in data at row {index}")
 
         if self.metadata_keys is not None:
             def collect_metadata(metadata_keys, data, index):
