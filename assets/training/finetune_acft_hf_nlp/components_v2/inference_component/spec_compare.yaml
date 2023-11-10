@@ -1,0 +1,48 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: oss_inference_model_base_v_finetune
+version: 0.0.5.ftaas
+display_name: OSS Inference Model base v finetune
+is_deterministic: True
+type: command
+description: Component to convert the finetune job output to pytorch and mlflow model
+inputs:
+  base_model_path:
+    type: mlflow_model
+    optional: False
+    description: Pytorch model asset path. Pass the finetune job pytorch model output.
+  lora_model:
+    type: uri_folder
+    optional: True
+    description: Exisiting converted MlFlow path. Pass the finetune job mlflow model output.
+  test_file_path:
+    type: uri_file
+    optional: False
+    description: Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.
+  text_key:
+    type: string
+    optional: False
+    description: key for text in an example. format your data keeping in mind that text is concatenated with ground_truth while finetuning in the form - text + groundtruth. for eg. "text"="knock knock\n", "ground_truth"="who's there"; will be treated as "knock knock\nwho's there"
+  ground_truth_key:
+    type: string
+    optional: True
+    description: key for ground_truth in an example.  we take separate column for ground_truth to enable use cases like summarization, translation,  question_answering, etc. which can be repurposed in form of text-generation where both text and ground_truth are needed. This separation is useful for calculating metrics. for eg. "text"="Summarize this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of the dialogue}"
+  num_examples:
+    type: integer
+    optional: True
+    default: 10
+    description: Number of examples to run
+  generation_config_list:
+    type: string
+    optional: True
+    default: '[{"do_sample": "true", "top_p": 0.7, "temperature": 0.8, "max_new_tokens": 256}, {"do_sample": "true", "top_p": 0.8, "temperature": 0.8, "max_new_tokens": 256}, {"do_sample": "true", "top_p": 0.9, "temperature": 0.8, "max_new_tokens": 256}, {"do_sample": "true", "top_p": 1.0, "temperature": 0.8, "max_new_tokens": 256}]'
+    description: iterate over generation_config_list, which is passed to model on top of what's present in base model generation config, i.e. a parameter present in passed config will override base model parameter
+outputs:
+  output_dir:
+    type: uri_folder
+    description: output folder containing inference output
+code: ./code
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/28
+resources:
+  instance_count: 1
+command: python inference_base_vs_finetune.py --base_model_path '${{inputs.base_model_path}}' $[[--lora_model '${{inputs.lora_model}}']]  --test_file_path '${{inputs.test_file_path}}' --text_key '${{inputs.text_key}}' $[[--ground_truth_key '${{inputs.ground_truth_key}}']] $[[--generation_config_list '${{inputs.generation_config_list}}']] $[[--num_examples '${{inputs.num_examples}}']] --output_dir '${{outputs.output_dir}}'
+...
