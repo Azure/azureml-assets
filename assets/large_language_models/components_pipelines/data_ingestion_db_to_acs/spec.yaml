@@ -4,7 +4,7 @@ tags:
   Preview: ""
 name: llm_ingest_db_to_acs
 display_name: LLM - SQL Datastore to ACS Pipeline
-version: 0.0.43
+version: 0.0.42
 description: Single job pipeline to chunk data from AzureML sql data store, and create ACS embeddings index
 settings:
   default_compute: serverless
@@ -169,7 +169,7 @@ jobs:
         path: ${{parent.inputs.acs_config}}
     outputs:
       index: ${{parent.outputs.grounding_index}}
-    component: "azureml:llm_rag_update_acs_index:0.0.37"
+    component: "azureml:llm_rag_update_acs_index:0.0.38"
     type: command
   register_mlindex_asset_job:
     resources:
@@ -186,7 +186,7 @@ jobs:
     outputs:
       asset_id:
         type: uri_file
-    component: "azureml:llm_rag_register_mlindex_asset:0.0.37"
+    component: "azureml:llm_rag_register_mlindex_asset:0.0.38"
     type: command
   create_prompt_flow:
     environment_variables:
