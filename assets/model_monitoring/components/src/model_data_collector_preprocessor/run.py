@@ -138,7 +138,7 @@ def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str,
         fs = fs or AzureMachineLearningFileSystem(des_path)  # for testing
         print("MLTable path:", des_path)
         # TODO: Evaluate if we need to overwrite
-        # Richard: why we need to upload the mltable folder to azureml://?
+        # upload the mltable folder to azureml://, so it is available for all executors
         fs.upload(
             lpath=mltable_temp_path,
             rpath=des_path,
@@ -267,7 +267,7 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
     # df.show()
     # df.printSchema()
 
-    if not df or df.isEmpty():
+    if (not df) or df.isEmpty():
         raise DataNotFoundError(f"No data was found for input '{input_data}' in the specified window.")
 
     datastore = _get_datastore_from_input_path(input_data)
