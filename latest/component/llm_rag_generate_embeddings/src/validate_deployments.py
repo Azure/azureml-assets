@@ -89,7 +89,7 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
 
     response_status = str.lower(response.properties.provisioning_state)
     if (response_status != "succeeded"):
-        # log this because we need to find out what the possible states are
+        # Log this because we need to find out what the possible states are
         print(
             f"Deployment is not yet in status 'succeeded'. Current status is: {response_status}")
     if (response_status == "failed" or response_status == "deleting"):
@@ -380,7 +380,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
 
     poll_on_deployment(completion_params,
                        embedding_params, activity_logger)
-    # dummy output to allow step ordering
+    # Dummy output to allow step ordering
     with open(parser_args.output_data, "w") as f:
         json.dump({"deployment_validation_success": "true"}, f)
 
