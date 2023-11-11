@@ -35,6 +35,7 @@ logger = get_logger('validate_deployments')
 MAX_RETRIES = 3
 SLEEP_DURATION = 2
 
+
 def get_cognitive_services_client(ws):
     """Get cognitive services client."""
     client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID", None)
