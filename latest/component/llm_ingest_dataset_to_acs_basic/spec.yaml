@@ -122,7 +122,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.42'
+    component: 'azureml:llm_rag_validate_deployments:0.0.43'
     identity:
       type: user_identity
     inputs:
