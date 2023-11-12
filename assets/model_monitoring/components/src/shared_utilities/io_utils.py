@@ -102,8 +102,7 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
             return process_input_not_found(input_not_found_category)
         else:
             raise error
-    if (not df) or df.isEmpty():
-        return process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
+    return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 
 
 def read_mltable_in_spark(mltable_path: str):

@@ -128,7 +128,11 @@ def _raw_mdc_uri_folder_to_mltable(
 
 def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str,
                                  fs: AbstractFileSystem = None, add_tags_func=None) -> DataFrame:
-    """Convert MLTable to Spark DataFrame."""
+    """
+    Convert MLTable to Spark DataFrame.
+
+    A DataNotFoundError will be raised if no data in mltable, otherwise a non empty Spark DataFrame will be returned.
+    """
     with tempfile.TemporaryDirectory() as mltable_temp_path:
         # Save MLTable to temp location
         table.save(mltable_temp_path)
@@ -266,9 +270,6 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
     # print("df after converting mltable to spark df:")
     # df.show()
     # df.printSchema()
-
-    if (not df) or df.isEmpty():
-        raise DataNotFoundError(f"No data was found for input '{input_data}' in the specified window.")
 
     datastore = _get_datastore_from_input_path(input_data)
     # print("Datastore:", datastore)
