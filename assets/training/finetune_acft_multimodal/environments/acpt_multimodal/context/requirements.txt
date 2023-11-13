@@ -23,6 +23,7 @@ einops==0.6.1
 aiohttp==3.8.5
 certifi==2023.07.22
 numpy==1.22
-azure-ai-ml==1.11.0
+azure-ai-ml==1.11.1
 azureml-dataprep==4.12.4
-
+# Downgraded azureml-metrics, to prevent bug related to logger in azureml-metrics. Should be upgraded in next pypi release of acft-multimodal
+azureml-metrics==0.0.33
