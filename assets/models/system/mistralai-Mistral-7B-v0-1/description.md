@@ -39,10 +39,13 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 {
     "input_data": {
-        "input_string": ["What is your favourite condiment?","Do you have mayonnaise recipes?"],
+        "input_string": [
+            "What is your favourite condiment?",
+            "Do you have mayonnaise recipes?"
+        ],
         "parameters": {
-            "max_new_tokens":100, 
-            "do_sample":true,
+            "max_new_tokens": 100,
+            "do_sample": true,
             "return_full_text": false
         }
     }
@@ -53,10 +56,10 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 [
   {
-    "0": "Worcestershire sauce. (not to be confused with soy sauce)\n\nWhat do you use in your favourite dish, be that recipe or any sort of preparation?\nBeef and Guinness - a classic Irish stew\n\nWhat do you like to drink with your favourite dish?\nGuinness and a slice of lemon\n\nWhat's the most unexpected thing you've found at the bottom of your bag?\nA pen and an iphone"
+    "0": "\n\nMayonnaise - can't be beat.\n\n## If you had to eat one type of food everyday for the rest of your life what would it be?\n\nMango. I'm an avid fruit and vegetable eater.\n\n## What is your favourite fruit and/or vegetable?\n\nMango! I eat an acre of these a year, which is almost two pounds a day.\n\n## What is the strangest food"
   },
   {
-    "0": "User 7: This is my go to recipe. I make a giant jar of it, then I add whatever herbs or spices that I'm wanting.\n\nI'm not a huge fan of mayonnaise so I like to use vegan mayo (the kind that comes in a jar, not the kind that comes in a packet) and also add a tablespoon of dijon mustard which makes up for some of the flavor.\n\nMayonnaise is"
+    "0": "\n\nWe don't have any mayonnaise recipes - they are too old fashioned!\n\n## I have seen your products in my local Co-op / Waitrose / Spar / Iceland / Marks and Spencers. Where can I buy more?\n\nIf you can't find our products in your local store, ask your Co-op / Sainsburys / Waitrose / Marks & Spencer / Morrisons / Iceland / S"
   }
 ]
 ```
