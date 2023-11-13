@@ -27,7 +27,6 @@ tags:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
-  - Standard_E16s_v3
   license: apache-2.0
   task: text-generation
   SharedComputeCapacityEnabled: ''
