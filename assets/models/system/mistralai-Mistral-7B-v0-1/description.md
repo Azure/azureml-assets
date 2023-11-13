@@ -11,6 +11,7 @@ Mistral-7B-v0.1 is a transformer model, with the following architecture choices:
 - Grouped-Query Attention
 - Sliding-Window Attention
 - Byte-fallback BPE tokenizer
+
 Mistral 7B v0.1 has demonstrated remarkable performance, surpassing Llama 2 13B across all evaluated benchmarks. Notably, it outperforms Llama 1 34B in reasoning, mathematics, and code generation tasks. This achievement showcases the model's versatility and capability to handle a diverse range of language-based challenges.
 
 ## Notice
