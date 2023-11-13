@@ -66,7 +66,7 @@ def _calculate_passrate(df, metric_name):
     # if there are no metric value, we should mark as fail since there was probably a
     # parsing error or request error that resulted in no metrics
     if total == 0:
-        return "0"
+        return "NaN"
     passrate = passing / total
     return str(passrate)
 
