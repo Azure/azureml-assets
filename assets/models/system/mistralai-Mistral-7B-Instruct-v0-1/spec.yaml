@@ -22,6 +22,7 @@ tags:
   - Standard_ND96amsr_A100_v4
   inference_compute_allow_list:
   - Standard_DS5_v2
+  - Standard_E16s_v3
   - Standard_NC12s_v3
   - Standard_NC24s_v3
   - Standard_NC24rs_v3
