@@ -4,7 +4,7 @@ tags:
   Preview: ""
 name: llm_ingest_db_to_faiss
 display_name: LLM - SQL Datastore to FAISS Pipeline
-version: 0.0.43
+version: 0.0.44
 description: Single job pipeline to chunk data from AzureML sql data store, and create FAISS embeddings index
 settings:
   default_compute: serverless

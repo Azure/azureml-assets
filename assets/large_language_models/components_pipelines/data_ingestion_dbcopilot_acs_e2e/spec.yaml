@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.js
 type: pipeline
 
 name: llm_ingest_dbcopilot_acs_e2e
-version: 0.0.14
+version: 0.0.15
 display_name: Data Ingestion for DB Data Output to ACS E2E Deployment
 description: Single job pipeline to chunk data from AzureML DB Datastore and create acs embeddings index
 
