@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 name: automl_forecasting_inference
 display_name: AutoML Forecasting Inference
 description: Inference component for AutoML Forecasting.
-version: 0.0.4
+version: 0.0.5
 type: command
 
 inputs:
