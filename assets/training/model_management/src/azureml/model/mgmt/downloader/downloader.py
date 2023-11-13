@@ -60,11 +60,17 @@ class AzureBlobstoreDownloader:
         """
         self._model_uri = model_uri
         self._download_dir = download_dir
+        # read SAS from env
+        self._sas = os.getenv("BLOBSTORE_SAS", None);
 
     @log_execution_time
     def _download(self):
         try:
-            download_cmd = f"azcopy cp --recursive=true '{self._model_uri}' {self._download_dir}"
+            src = self._model_uri
+            if self._sas:
+                logger.info("BLOBSTORE_SAS provided. Using it to access model in cotainer")
+                src = f"{src}?{self._sas}"
+            download_cmd = f"azcopy cp --recursive=true '{src}' {self._download_dir}"
             # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
             # https://github.com/Azure/azureml-assets/issues/283
             exit_code, stdout = run_command(download_cmd)
