@@ -1,12 +1,21 @@
 # **Model Details**
-The Mistral-7B-Instruct-v0.1 Large Language Model (LLM) is a fine-tuned version of the Mistral-7B-v0.1 generative text model, created using publicly available conversation datasets. To use this model, prompts should be surrounded by [INST] and [\INST] tokens, with the first instruction starting with a sentence ID and ending with an end-of-sentence token ID. This format is available as a chat template for easy usage. The model architecture is based on Mistral-7B-v0.1 and includes features like Grouped-Query Attention, Sliding-Window Attention, and Byte-fallback BPE tokenizer.
 
-If you encounter a specific error when using the model, you may need to install the transformers library from source to resolve it, although this issue should be fixed in versions after transformers-v4.33.4.
+The Mistral-7B-Instruct-v0.1 Large Language Model (LLM) is a instruct fine-tuned version of the [Mistral-7B-v0.1](https://huggingface.co/mistralai/Mistral-7B-v0.1) generative text model using a variety of publicly available conversation datasets.
 
-It's important to note that the Mistral 7B Instruct model lacks moderation mechanisms, and efforts are being made to make it more suitable for environments requiring controlled outputs. For full details, you can refer to the release blog post provided.
+For full details of this model please read our [paper](https://arxiv.org/abs/2310.06825) and [release blog post](https://mistral.ai/news/announcing-mistral-7b/).
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+## Model Architecture
 
+This instruction model is based on Mistral-7B-v0.1, a transformer model with the following architecture choices:
+- Grouped-Query Attention
+- Sliding-Window Attention
+- Byte-fallback BPE tokenizer
+
+## Limitations
+
+The Mistral 7B Instruct model is a quick demonstration that the base model can be easily fine-tuned to achieve compelling performance. 
+It does not have any moderation mechanisms. We're looking forward to engaging with the community on ways to
+make the model finely respect guardrails, allowing for deployment in environments requiring moderated outputs.
 
 # Model Evaluation Sample
 
