@@ -1,11 +1,11 @@
 # **Model Details**
-The Mistral-7B-Instruct-v0.1 Large Language Model (LLM) is a fine-tuned version of the Mistral-7B-v0.1 generative text model, created using publicly available conversation datasets. To use this model, prompts should be surrounded by [INST] and [\INST] tokens, with the first instruction starting with a sentence ID and ending with an end-of-sentence token ID. This format is available as a chat template for easy usage. The model architecture is based on Mistral-7B-v0.1 and includes features like Grouped-Query Attention, Sliding-Window Attention, and Byte-fallback BPE tokenizer.
+The Mistral 7B v0.1 is a groundbreaking language model developed by a collaborative team led by Albert Q. Jiang, Alexandre Sablayrolles, Arthur Mensch, Chris Bamford, Devendra Singh Chaplot, Diego de las Casas, Florian Bressand, Gianna Lengyel, Guillaume Lample, Lucile Saulnier, Lélio Renard Lavaud, Marie-Anne Lachaux, Pierre Stock, Teven Le Scao, Thibaut Lavril, Thomas Wang, Timothée Lacroix, and William El Sayed. This model represents a significant advancement in natural language processing, boasting 7 billion parameters and engineered to deliver superior performance and efficiency.
 
-If you encounter a specific error when using the model, you may need to install the transformers library from source to resolve it, although this issue should be fixed in versions after transformers-v4.33.4.
+Mistral 7B v0.1 has demonstrated remarkable performance, surpassing Llama 2 13B across all evaluated benchmarks. Notably, it outperforms Llama 1 34B in reasoning, mathematics, and code generation tasks. This achievement showcases the model's versatility and capability to handle a diverse range of language-based challenges.
 
-It's important to note that the Mistral 7B Instruct model lacks moderation mechanisms, and efforts are being made to make it more suitable for environments requiring controlled outputs. For full details, you can refer to the release blog post provided.
+Mistral 7B leverages Grouped-Query Attention for enhanced inference speed. This mechanism allows the model to focus on relevant information efficiently, contributing to faster and more efficient language understanding.
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/mistralai/Mistral-7B-v0.1" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 # Model Evaluation Sample
 
@@ -18,7 +18,7 @@ Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 

@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/mistralai-Mistral-7B-Instruct-v0-1/1696493664/mlflow_model_folder
+  container_path: huggingface/mistralai-Mistral-7B-v0-1/1699878876/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
