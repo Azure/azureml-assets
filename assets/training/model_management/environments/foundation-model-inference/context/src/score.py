@@ -4,12 +4,15 @@
 """Run script to infer."""
 # flake8: noqa
 
+import time
 import json
 import os
+
 import yaml
 import torch
 import pandas as pd
 import numpy as np
+import logging
 
 from mlflow.pyfunc.scoring_server import _get_jsonable_obj
 
@@ -20,19 +23,17 @@ from azure.core.pipeline.policies import HeadersPolicy
 
 from azureml.ai.monitoring import Collector
 
-
 from constants import EngineName, TaskType, SupportedTask
 from fm_score import FMScore
 from logging_config import configure_logger
 from managed_inference import MIRPayload
+from utils import box_logger, map_env_vars_to_vllm_server_args
 
 logger = configure_logger(__name__)
-
 
 # AACS
 g_aacs_threshold = int(os.environ.get("CONTENT_SAFETY_THRESHOLD", 2))
 g_aacs_client = None
-
 
 # default values
 DEVICE_COUNT = torch.cuda.device_count()
@@ -232,8 +233,8 @@ def _init_cuda_visible_devices():
         return
 
     if (
-        "NVIDIA_VISIBLE_DEVICES" in os.environ
-        and os.environ["NVIDIA_VISIBLE_DEVICES"] != "all"
+            "NVIDIA_VISIBLE_DEVICES" in os.environ
+            and os.environ["NVIDIA_VISIBLE_DEVICES"] != "all"
     ):
         # map the gpu ids to integers
         gpu_ids = os.environ["NVIDIA_VISIBLE_DEVICES"].split(",")
@@ -243,8 +244,6 @@ def _init_cuda_visible_devices():
     else:
         # if no GPU is available, don't set anything
         return
-
-    logger.info(f"Setting CUDA_VISIBLE_DEVICES to {gpu_ids}")
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(gpu_ids)
 
 
@@ -254,8 +253,8 @@ def init():
     global task_type
     global g_aacs_client
 
+    AACS_error = None
     try:
-        logger.info("Setting up AACS")
         endpoint = os.environ.get("CONTENT_SAFETY_ENDPOINT", None)
         key = get_aacs_access_key()
 
@@ -271,7 +270,7 @@ def init():
             endpoint, AzureKeyCredential(key), headers_policy=headers_policy
         )
     except Exception as e:
-        logger.error(f"AACS not configured. Bypassing content moderation. Error {e}")
+        AACS_error = e
 
     try:
         model_path = os.path.join(
@@ -284,9 +283,6 @@ def init():
 
         _init_cuda_visible_devices()
 
-        for k, v in os.environ.items():
-            logger.info(f"env: {k} = {v}")
-
         abs_mlmodel_path = os.path.join(
             os.getenv("AZUREML_MODEL_DIR", ""), MLMODEL_PATH
         )
@@ -295,7 +291,7 @@ def init():
             with open(abs_mlmodel_path) as f:
                 mlmodel = yaml.safe_load(f)
 
-        model_name = ""
+        default_generator_configs = ""
         if mlmodel:
             flavors = mlmodel.get("flavors", {})
             if "hftransformersv2" in flavors:
@@ -303,10 +299,10 @@ def init():
                 model_generator_configs = flavors["hftransformersv2"].get(
                     "generator_config", {}
                 )
-                logger.info(f"model_generator_configs: {model_generator_configs}")
+
                 if task_type not in (
-                    SupportedTask.TEXT_GENERATION,
-                    SupportedTask.CHAT_COMPLETION,
+                        SupportedTask.TEXT_GENERATION,
+                        SupportedTask.CHAT_COMPLETION,
                 ):
                     raise Exception(f"Unsupported task_type {task_type}")
 
@@ -314,16 +310,6 @@ def init():
                 default_generator_configs = get_generator_params(
                     model_generator_configs
                 )
-                logger.info(
-                    f"updated default_generator_configs: "
-                    f"{default_generator_configs}"
-                )
-                huggingface_id = flavors["hftransformersv2"].get("huggingface_id", "")
-                if "falcon" in huggingface_id:
-                    model_name = "falcon"
-
-        logger.info(f"Loading model from path {model_path} for task_type: {task_type}")
-        logger.info(f"List model_path = {os.listdir(model_path)}")
 
         default_engine = EngineName.VLLM
         tensor_parallel = os.getenv("TENSOR_PARALLEL", None)
@@ -334,7 +320,7 @@ def init():
             "model_id": model_path,
             "tensor_parallel": tensor_parallel
         }
-        if engine_config["engine_name"] == EngineName.MII:
+        if engine_config["engine_name"] == EngineName.MII or engine_config["engine_name"] == EngineName.MII_V1:
             mii_engine_config = {
                 "deployment_name": os.getenv("DEPLOYMENT_NAME", "llama-deployment"),
                 "mii_configs": {},
@@ -343,17 +329,13 @@ def init():
             engine_config["mii_config"] = mii_engine_config
 
         if engine_config["engine_name"] == EngineName.VLLM:
-            dtype = "auto"
+            model_config = {}
+            vllm_config = map_env_vars_to_vllm_server_args()
             if config_path and os.path.exists(config_path):
                 with open(config_path) as config_content:
-                    content = json.load(config_content)
-                    dtype = content.get("torch_dtype", "auto")
-            vllm_config = {
-                "tensor-parallel-size": tensor_parallel if tensor_parallel else DEVICE_COUNT,
-                "dtype": dtype,
-                "model_name": model_name
-            }
+                    model_config = json.load(config_content)
             engine_config["vllm_config"] = vllm_config
+            engine_config["model_config"] = model_config
 
         task_config = {
             "task_type": TaskType.CONVERSATIONAL
@@ -368,6 +350,15 @@ def init():
 
         g_fmscorer = FMScore(config)
         g_fmscorer.init()
+        if os.environ.get("LOGGING_WORKER_ID", "") == str(os.getpid()):
+            for k, v in os.environ.items():
+                logger.info(f"env: {k} = {v}")
+            logger.info(
+                f"updated default_generator_configs: "
+                f"{default_generator_configs}"
+            )
+            if AACS_error:
+                logger.warning(f"AACS was not configured. Content moderation bypassed in setup. Error {AACS_error}")
 
     except Exception as e:
         raise Exception(f"Error in creating client or server: {e}") from e
@@ -413,6 +404,13 @@ def run(data):
             inference_results = g_fmscorer.run(payload)
             outputs = {str(i): res.response for i, res in enumerate(inference_results)}
             result_dict = pd.DataFrame([outputs])
+
+        for result in inference_results:
+            result.print_results()
+        all_logged_results = f''' ### Inference Results ###\n \
+Total Generation Time: {inference_results[0].inference_time_ms}\n \
+Throughput (prompt/sec): {len(inference_results) / (inference_results[0].inference_time_ms / 1000):.2f}'''
+        box_logger(all_logged_results)
 
         stats_dict = [vars(result) for result in inference_results]
         g_collector.collect(stats_dict)
