@@ -7,29 +7,14 @@ import os
 from typing import Dict, List
 from configs import EngineConfig, TaskConfig
 from constants import TaskType
-from engine.engine import HfEngine, InferenceResult
+from engine.engine import InferenceResult
 from managed_inference import MIRPayload
 from prompt_formatter import Llama2Formatter
+from replica_manager import ReplicaManagerConfig, ReplicaManager
 from utils import log_execution_time
 from logging_config import configure_logger
 
 logger = configure_logger(__name__)
-
-
-def get_engine(engine_name: str, engine_config: EngineConfig, task_config: TaskConfig):
-    """Return the appropriate engine based on the engine name."""
-    if engine_name == "hf":
-        return HfEngine(engine_config)
-    elif engine_name == "vllm":
-        from engine.vllm_engine import VLLMEngine
-
-        return VLLMEngine(engine_config, task_config)
-    elif engine_name == "mii":
-        from engine.mii_engine import MiiEngine
-
-        return MiiEngine(engine_config, task_config)
-    else:
-        raise ValueError("Invalid engine name.")
 
 
 def get_formatter(model_name: str):
@@ -50,8 +35,18 @@ class FMScore:
 
     def init(self):
         """Initialize the engine and formatter."""
-        self.engine = self._initialize_engine()
+        self.replica_manager = self._init_replica_manager()
         self.formatter = self._initialize_formatter()
+
+    def _init_replica_manager(self):
+        replica_manager_config = ReplicaManagerConfig(
+            engine_config=self.engine_config,
+            task_config=self.task_config,
+            num_replicas=int(os.environ.get("NUM_REPLICAS", -1))
+        )
+        replica_manager = ReplicaManager(replica_manager_config)
+        replica_manager.initialize()
+        return replica_manager
 
     @log_execution_time
     def run(self, payload: MIRPayload) -> List[InferenceResult]:
@@ -65,62 +60,8 @@ class FMScore:
             self.formatter.format_prompt(self.task_config.task_type, prompt, payload.params)
             for prompt in payload.query
         ]
-        print(f"Formatted prompts: {formatted_prompts}")
-        inference_results = self.engine.generate(formatted_prompts, payload.params)
-        logger.info(
-            f"inference_time_ms: {inference_results[0].inference_time_ms}, "
-            f"time_per_token_ms: {inference_results[0].time_per_token_ms}"
-        )
+        inference_results = self.replica_manager.get_replica().generate(formatted_prompts, payload.params)
         return inference_results
-
-    def _initialize_engine(self):
-        print(f"Initializing engine: {self.engine_config.engine_name}")
-        self.engine = get_engine(
-            self.engine_config.engine_name, self.engine_config, self.task_config
-        )
-
-        """
-        This block of code is used to handle the loading of the model in a multi-process environment.
-        A flag file at "/tmp/model_loaded_flag.txt" is used as a lock to ensure that the model is loaded only once.
-        If the flag file exists, it means the model is already being loaded by another worker.
-        If the flag file does not exist, the current worker creates the flag file and loads the model.
-        If the flag file creation fails due to FileExistsError, it means another worker is currently loading
-        the model.
-        The current worker then waits for the model to finish loading.
-        After the model has been loaded and the client has been initialized, the flag file is removed,
-        acting as releasing the lock.
-        """
-        flag_file_path = "/tmp/model_loaded_flag.txt"
-        process_is_loading_model = False
-        if os.path.exists(flag_file_path):
-            logger.info(
-                f"Model already loaded by another worker. Current worker pid: {os.getpid()}"
-            )
-        else:
-            try:
-                with open(flag_file_path, "x"):
-                    logger.info(
-                        f"Lock acquired by worker with pid: {os.getpid()}. Loading model."
-                    )
-                    process_is_loading_model = True
-                    self.engine.load_model()
-                    logger.info(f"Model loaded by worker with pid: {os.getpid()}")
-            except FileExistsError:
-                logger.info(
-                    f"Model already being loaded by another worker. Waiting for model to finish loading. "
-                    f"Current worker pid: {os.getpid()}"
-                )
-
-        self.engine.init_client()  # wait for the model to finish loading
-        if process_is_loading_model:
-            # run nvidia-smi to check GPU usage after the model is loaded
-            logger.info("###### GPU INFO ######")
-            logger.info(os.system("nvidia-smi"))
-            logger.info("###### GPU INFO ######")
-            if os.path.exists(flag_file_path):
-                os.remove(flag_file_path)
-
-        return self.engine
 
     def _initialize_formatter(self):
         formatter = get_formatter(model_name="Llama2")

@@ -3,20 +3,21 @@
 
 """Mii Engine module.
 
-This module contains the MiiEngine class which is responsible for initializing the MII server and client,
+This module contains the MiiEngineV2 class which is responsible for initializing the MII server and client,
 generating responses for given prompts, and managing the allocation of processes and load balancing.
 """
 
-from configs import EngineConfig, TaskConfig
-from engine.engine import BaseEngine, InferenceResult
 import math
 import os
-import psutil
-import torch
 import time
-import mii
 from typing import Dict, List
+
+import mii
+import torch
+from configs import EngineConfig, TaskConfig
+from engine.engine import BaseEngine, InferenceResult
 from logging_config import configure_logger
+from mii.backend import MIIClient, MIIServer
 from utils import log_execution_time
 
 logger = configure_logger(__name__)
@@ -29,7 +30,7 @@ MODEL_PATH = "mlflow_model_folder/data/model"
 DEVICE_COUNT = torch.cuda.device_count()
 
 
-class MiiEngine(BaseEngine):
+class MiiEngineV2(BaseEngine):
     """Inference engine using MII methods."""
 
     def __init__(self, config: EngineConfig, task_config: TaskConfig):
@@ -43,7 +44,7 @@ class MiiEngine(BaseEngine):
         """Initialize MII server and MII client."""
         logger.info("MII Config: " + str(self.mii_config))
         logger.info("Start server setup")
-        self.mii_server = mii.MIIServer(self.mii_config)
+        self.mii_server = MIIServer(self.mii_config)
         logger.info("Completed server setup")
 
     def init_client(self):
@@ -51,9 +52,7 @@ class MiiEngine(BaseEngine):
         # wait until server is healthy then create client
         self.wait_until_server_healthy("localhost", self.mii_config.port_number)
         if self.model is None:
-            self.model = mii.MIIClient(
-                self.mii_config.model_config.task, "localhost", self.mii_config.port_number
-            )
+            self.model = MIIClient(self.mii_config)
 
     @log_execution_time
     def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
@@ -61,16 +60,15 @@ class MiiEngine(BaseEngine):
         if self.model is None:
             logger.warning("MII client not initialized. Initializing now.")
             self.init_client()
-        queries = {"query": prompts}
         start_time = time.time()
-        responses = self.model.query(queries, **params)
+        responses = self.model.generate(prompts, **params)
         inference_time_ms = (time.time() - start_time) * 1000
         inference_results = []  # type: List[InferenceResult]
         for i, res in enumerate(responses.response):
             generated_text = res
-            generated_text = self._del_prompt_if_req(prompts[i], generated_text, params)
             response_tokens = self.get_tokens(generated_text)
             time_per_token_ms = inference_time_ms / len(response_tokens) if len(response_tokens) > 0 else 0
+
             result = InferenceResult(
                 response=generated_text,
                 inference_time_ms=inference_time_ms,
@@ -83,14 +81,7 @@ class MiiEngine(BaseEngine):
 
     def _get_mii_config(self):
         """Get MII configuration."""
-        # TODO: Remove this once DS-Inference supports 70b models
-        is_70b_model = "Llama-2-70b" in MODEL_DIR or "Llama-2-70b-chat" in MODEL_DIR
-        replace_with_kernel_inject = not is_70b_model
-
-        # TODO: Update to check whether meta tensor is supported for the model
-        meta_tensor = False
         model_size_in_gb = self._get_model_size_in_gb()
-        self._check_memory_requirement(model_size_in_gb, meta_tensor)
 
         if self.engine_config.tensor_parallel is not None:
             if self.engine_config.tensor_parallel > DEVICE_COUNT:
@@ -107,46 +98,31 @@ class MiiEngine(BaseEngine):
             "deployment_type": mii.constants.DeploymentType.AML,
             "instance_type": "",  # this is only used for creating deployment script, can be left empty
             "model_config": {
-                "checkpoint_dict": None,
-                "deploy_rank": list(range(self.engine_config.tensor_parallel)),
-                "ds_config": self.engine_config.mii_config.ds_config,
-                "dtype": torch.float16,
-                "enable_cuda_graph": False,
-                "enable_deepspeed": self.engine_config.mii_config.enable_deepspeed,
-                "enable_zero": self.engine_config.mii_config.ds_zero,
-                "hf_auth_token": None,
-                "load_with_sys_mem": True,
-                "max_tokens": MAX_TOKENS,
-                "meta_tensor": False,
-                "model": MODEL_DIR,
-                "model_path": MODEL_PATH,
+                "all_rank_output": False,
+                "inference_engine_config": {
+                    "state_manager": {
+                        "max_context": 8192,
+                        "max_ragged_batch_size": 768,
+                        "max_ragged_sequence_count": 512,
+                        "max_tracked_sequences": 2048,
+                        "memory_config": {"mode": "reserve", "size": 1000000000},
+                        "offload": False,
+                    },
+                    "tensor_parallel": {"tp_size": self.engine_config.tensor_parallel},
+                },
+                "max_length": None,
+                "model_name_or_path": self.engine_config.model_id,
                 "profile_model_time": False,
-                "replace_with_kernel_inject": replace_with_kernel_inject,
                 "replica_configs": [],
                 "replica_num": replica_num,
-                "skip_model_check": True,
-                # "task": self.task_config.task_type,
+                "sync_debug": False,
                 "task": "text-generation",
                 "tensor_parallel": self.engine_config.tensor_parallel,
-                "trust_remote_code": False
+                "tokenizer": self.engine_config.model_id
             }
         }
-        mii_config = mii.MIIConfig(**default_mii_config)
+        mii_config = mii.config.MIIConfig(**default_mii_config)
         return mii_config
-
-    def _check_memory_requirement(self, model_size_in_gb, meta_tensor):
-        """Check if the model can be loaded in the available memory.
-
-        If loading with system memory, DeepSpeed-Inference requires RAM size of model_size * DEVICE_COUNT.
-        If meta_tensor is enabled instead for the model, then skip this check.
-        """
-        # Check RAM required for loading the model
-        # If meta tensor is available and if so, skip RAM check.
-        if not meta_tensor:
-            total_ram_in_gb = psutil.virtual_memory().total / (1024 ** 3)
-            total_required_ram_in_gb = model_size_in_gb * DEVICE_COUNT
-            if total_ram_in_gb < total_required_ram_in_gb:
-                raise ValueError("Total RAM is smaller than required RAM.")
 
     def _calculate_replicas(self, model_size_in_gb) -> int:
         """Calculate the number of replicas."""
