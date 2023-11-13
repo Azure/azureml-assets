@@ -63,8 +63,10 @@ def _calculate_passrate(df, metric_name):
         .head()[0]
     )
     total = df_with_buckets.select(sum(METRIC_VALUE_COLUMN)).head()[0]
+    # if there are no metric value, we should mark as fail since there was probably a
+    # parsing error or request error that resulted in no metrics
     if total == 0:
-        return "1"
+        return "0"
     passrate = passing / total
     return str(passrate)
 
