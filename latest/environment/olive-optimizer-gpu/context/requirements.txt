@@ -6,4 +6,4 @@ pandas==2.1.3
 plotly==5.18.0
 psutil==5.9.6
 datasets==2.14.6
-transformers==4.35.0
+transformers==4.35.1

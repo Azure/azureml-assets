@@ -27,4 +27,4 @@ dependencies:
   - mltable==1.5.0
   - openai~=0.27.4
   - azure-ai-ml==1.12.0
-  - mldesigner==0.1.0b16
+  - mldesigner==0.1.0b17
