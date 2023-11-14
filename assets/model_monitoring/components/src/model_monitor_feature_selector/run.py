@@ -29,8 +29,8 @@ def run():
     input_df2 = try_read_mltable_in_spark(args.input_data_2, "input_data_2 is empty.")
 
     if not input_df1 and not input_df2:
-        print("Both input data are empty. Skipping feature selection.")
-        return
+        raise ValueError("Both input data are empty. Cannot select the feature")
+
     elif not input_df1:
         input_df1 = input_df2
 
@@ -54,6 +54,9 @@ def run():
         input_df2=input_df2,
     )
 
+    if features_df is None or features_df.isEmpty():
+         raise ValueError("Could not find common column names.")       
+    
     save_spark_df_as_mltable(features_df, args.feature_names)
 
 
