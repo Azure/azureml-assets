@@ -8,7 +8,7 @@ description: >-
   components.
 
 name: "llm-rag"
-version: "28"
+version: "29"
 
 build:
   path: "context"
