@@ -44,7 +44,7 @@ _MODIFY_INPUT = r'Given the following conversation history and the users next qu
 _CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} ' + \
     r'\nassistant: \n{{ item.outputs.output }} \n{% endfor %}'
 _MODIFY_PROMPT = r'system: \n' + _MODIFY_INPUT + r'\nconversation:\n' + _CHAT_HISTORY + \
-    r'\n\nFollow up Input: {{question}} \nStandalone Question:'
+    r'\n\nuser:\nFollow up Input: {{question}} \nStandalone Question:'
 _STATIC_METRIC_PRIORITY_LIST = ["gpt_similarity", "gpt_relevance", "bert_f1"]
 
 

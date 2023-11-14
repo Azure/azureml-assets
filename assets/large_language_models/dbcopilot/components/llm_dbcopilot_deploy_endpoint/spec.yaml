@@ -2,8 +2,8 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 type: command
 tags: {}
 name: llm_dbcopilot_deploy_endpoint
-display_name: DBCopilot Deploy Endpoint Component
-version: 0.0.7
+display_name: LLM - DBCopilot Deploy Endpoint Component
+version: 0.0.9
 inputs:
   deployment_name:
     type: string

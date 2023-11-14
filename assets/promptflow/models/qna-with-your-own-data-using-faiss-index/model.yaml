@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: samples/qna_with_your_own_data_using_faiss_index/v2/model_folder
+  container_path: samples/qna_with_your_own_data_using_faiss_index/v3/model_folder
   storage_name: promptflowsamples
   type: azureblob
 publish:

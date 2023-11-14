@@ -19,6 +19,6 @@ properties:
     model_id: Salesforce/blip-vqa-base
 tags:
    Preview: ''
-   license: mit
+   license: bsd-3-clause
    task: visual-question-answering
-version: 2
+version: 1

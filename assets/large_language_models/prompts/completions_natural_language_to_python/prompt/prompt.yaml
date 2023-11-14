@@ -1,0 +1,26 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+template: | 
+  # Write a python function to reverse a string. The function should be an optimal solution in terms of time and space complexity.
+  # Example input to the function: abcd123
+  # Example output to the function: 321dcba
+
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
+execution_settings:
+  default:
+    bestOf: 1,
+    frequencyPenalty: 0,
+    responseLength: 60,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1  
+  text-davinci-003:
+    model_id: text-davinci-003
+    bestOf: 1,
+    frequencyPenalty: 0,
+    responseLength: 60,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1  
+    
+template_format: handlebars
