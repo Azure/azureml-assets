@@ -20,11 +20,6 @@ inputs:
     optional: false
     description: compute to be used for finetune eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'
-  shm_size_finetune:
-    type: string
-    optional: true
-    default: 5g
-    description: Shared memory size to be used for finetune component. It is useful while using Nebula (via DeepSpeed) which uses shared memory to save model and optimizer states.
   num_nodes_finetune:
     type: integer
     default: 1

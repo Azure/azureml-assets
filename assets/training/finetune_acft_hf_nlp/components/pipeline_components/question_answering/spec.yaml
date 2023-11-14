@@ -605,6 +605,7 @@ jobs:
     resources:
       instance_count: '${{parent.inputs.num_nodes_finetune}}'
       instance_type: '${{parent.inputs.instance_type_finetune}}'
+      shm_size: '${{parent.inputs.shm_size_finetune}}'
     inputs:
       apply_lora: '${{parent.inputs.apply_lora}}'
       merge_lora_weights: '${{parent.inputs.merge_lora_weights}}'
