@@ -33,6 +33,7 @@ def run():
         return
     elif not input_df1:
         input_df1 = input_df2
+    # TODO what if input_df1 and not input_df2?
 
     feature_importance = None
     try:
