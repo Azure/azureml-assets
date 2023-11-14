@@ -262,7 +262,7 @@ jobs:
 
   image_classification_runtime_component:
     type: command
-    component: azureml:train_image_classification_model:0.0.5
+    component: azureml:train_image_classification_model:0.0.6
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
