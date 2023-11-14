@@ -55,8 +55,8 @@ def run():
     )
 
     if features_df is None or features_df.isEmpty():
-         raise ValueError("Could not find common column names.")       
-    
+        raise ValueError("Could not find common column names.")
+
     save_spark_df_as_mltable(features_df, args.feature_names)
 
 
