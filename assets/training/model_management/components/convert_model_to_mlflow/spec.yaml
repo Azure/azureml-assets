@@ -44,6 +44,7 @@ inputs:
       - Huggingface
       - MMLab
       - llava
+      - AutoML
     default: Huggingface
     optional: false
     description: Framework from which model is imported from.
@@ -60,6 +61,7 @@ inputs:
       - text-classification
       - translation
       - image-classification
+      - image-classification-multilabel
       - image-object-detection
       - image-instance-segmentation
       - image-to-text
