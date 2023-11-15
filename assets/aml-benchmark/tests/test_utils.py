@@ -40,6 +40,9 @@ class Constants:
     BATCH_INFERENCE_PREPARER_FILE_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data/sample_batch_input.jsonl"
     )
+    BATCH_INFERENCE_PREPARER_FILE_PATH_VISION = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/sample_batch_input_vision.jsonl"
+    )
     BATCH_OUTPUT_FORMATTER_FILE_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data", "batch_inference_output.jsonl"
     )
