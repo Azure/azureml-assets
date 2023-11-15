@@ -116,7 +116,7 @@ inputs:
   # Training parameters
   number_of_epochs:
     type: integer
-    default: 1
+    default: 15
     optional: true
     description: training epochs
 
