@@ -164,7 +164,7 @@ def run(args):
     """Calculate feature attribution drift."""
     try:
         log_time_and_message("Reading in baseline data & target data")
-        baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data", "feature")
+        baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
         production_df = try_read_mltable_in_spark_with_error(args.production_data, "production_data")
 
         [baseline_explanations, baseline_row_count] = configure_data(baseline_df)

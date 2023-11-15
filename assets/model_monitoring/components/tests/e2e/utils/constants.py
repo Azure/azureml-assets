@@ -27,7 +27,7 @@ DATA_ASSET_IRIS_MODEL_INPUTS_NO_DRIFT = "azureml:uri_folder_iris_model_inputs_no
 
 # MDC-generated target dataset of an iris model. The data contains no drift.
 # Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
-DATA_ASSET_IRIS_MODEL_OUTPUTS_NO_DRIFT = "azureml:uri_folder_iris_model_outputs_no_drift:1"
+DATA_ASSET_IRIS_MODEL_OUTPUTS_NO_DRIFT = "azureml:uri_folder_iris_model_outputs_no_drift:2"
 
 # Iris baseline dataset as a MLTable.
 DATA_ASSET_IRIS_BASELINE_DATA = "azureml:mltable_iris_baseline:1"
