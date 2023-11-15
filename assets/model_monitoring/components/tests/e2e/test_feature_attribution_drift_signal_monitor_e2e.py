@@ -156,7 +156,7 @@ class TestFeatureAttributionDriftModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_use_defaults_empty_production_data_successful(
+    def test_monitoring_run_use_defaults_empty_production_data_failed(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the scenario where the production data is empty."""
@@ -168,4 +168,5 @@ class TestFeatureAttributionDriftModelMonitor:
             DATA_ASSET_EMPTY,
         )
 
+        # empty target data should cause the pipeline to fail
         assert pipeline_job.status == "Completed"

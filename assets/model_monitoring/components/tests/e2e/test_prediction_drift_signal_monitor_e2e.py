@@ -67,7 +67,7 @@ class TestPredictionDriftModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_empty_production_data_successful(
+    def test_monitoring_run_empty_production_data_failed(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the happy path scenario where the data has drift and default settings are used."""
@@ -79,4 +79,5 @@ class TestPredictionDriftModelMonitor:
             DATA_ASSET_EMPTY,
         )
 
-        assert pipeline_job.status == "Completed"
+        # empty target data should fail the pipeline
+        assert pipeline_job.status == "Failed"

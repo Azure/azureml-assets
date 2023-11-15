@@ -71,7 +71,7 @@ class TestDataDriftModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_empty_production_data_successful(
+    def test_monitoring_run_empty_production_data_failed(
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):
@@ -84,7 +84,8 @@ class TestDataDriftModelMonitor:
             DATA_ASSET_EMPTY,
         )
 
-        assert pipeline_job.status == "Completed"
+        # empty production data should fail the job
+        assert pipeline_job.status == "Failed"
 
     def test_monitoring_run_use_int_data_has_no_drift_successful(
         self, ml_client: MLClient, get_component, download_job_output,
@@ -114,4 +115,5 @@ class TestDataDriftModelMonitor:
             DATA_ASSET_EMPTY,
         )
 
-        assert pipeline_job.status == "Completed"
+        # empty production and target data should fail the job
+        assert pipeline_job.status == "Failed"
