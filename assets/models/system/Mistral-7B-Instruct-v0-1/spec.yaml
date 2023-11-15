@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: Mistral-7B-Instruct-v01
+name: mistralai-Mistral-7B-Instruct-v01
 path: ./
 properties:
   SHA: 3dc28cf29d2edd31a0a7b8f0b21637059815b4d5
