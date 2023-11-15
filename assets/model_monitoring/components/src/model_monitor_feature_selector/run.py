@@ -10,7 +10,10 @@ from model_monitor_feature_selector.factories.feature_selector_factory import (
 from model_monitor_feature_selector.selectors.feature_selector_type import (
     FeatureSelectorType,
 )
-from shared_utilities.io_utils import try_read_mltable_in_spark, read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.io_utils import (
+    try_read_mltable_in_spark, try_read_mltable_in_spark_with_error, save_spark_df_as_mltable
+)
+from shared_utilities.momo_exceptions import DataNotFoundError
 
 
 def run():
@@ -33,24 +36,27 @@ def run():
         return
     elif not input_df1:
         input_df1 = input_df2
-    # TODO what if input_df1 and not input_df2?
+    # it's ok if input_df1 and not input_df2
 
     feature_importance = None
     try:
-        feature_importance = read_mltable_in_spark(args.feature_importance)
+        feature_importance = try_read_mltable_in_spark_with_error(args.feature_importance)
+    except DataNotFoundError as e:
+        if args.filter_type == FeatureSelectorType.TOP_N_BY_ATTRIBUTION.name:
+            raise e
     except Exception:
         if args.filter_type == FeatureSelectorType.TOP_N_BY_ATTRIBUTION.name:
             raise Exception(
                 "Error encountered when retrieving top N features. Please ensure target_column is defined."
             )
 
-    factory = FeatureSelectorFactory().produce(
+    feature_selector = FeatureSelectorFactory().produce(
         feature_selector_type=args.filter_type,
         filter_value=args.filter_value,
         feature_importance=feature_importance,
     )
 
-    features_df = factory.select(
+    features_df = feature_selector.select(
         input_df1=input_df1,
         input_df2=input_df2,
     )
