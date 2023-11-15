@@ -52,7 +52,7 @@ class TestBatchInferencePreparerComponent:
                         '}')
 
     @pytest.mark.parametrize(
-            'model_type', [("vision_oss")]
+            'model_type', [(None), ("vision_oss")]
     )
     def test_batch_inference_preparer(self, model_type:str, temp_dir: str):
         """Test batch inference preparer."""
