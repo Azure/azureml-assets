@@ -49,6 +49,9 @@ class Constants:
     BATCH_INFERENCE_FILE_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data", "batch_inference_input.json"
     )
+    BATCH_INFERENCE_FILE_PATH_VISION = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data", "batch_inference_input_vision.jsonl"
+    )
     PROCESS_SAMPLE_EXAMPLES_INPUT_FILE = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data/process_sample_examples.jsonl"
     )
@@ -363,7 +366,7 @@ def deploy_fake_test_endpoint_maybe(
             print("Failed deployment due to {}.".format(e))
             print("Trying deploy using a new name now.")
             if "There is already an endpoint with this name" in str(e):
-                endpoint_name = str(uuid.uuid4().hex)
+                endpoint_name = "aml-benchmark-test-" + str(uuid.uuid4().hex)
                 print("deploying using {}".format(endpoint_name))
                 endpoint = _deploy_endpoint(ml_client, endpoint_name)
                 deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
