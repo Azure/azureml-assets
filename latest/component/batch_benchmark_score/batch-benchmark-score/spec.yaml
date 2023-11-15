@@ -1,6 +1,6 @@
 $schema: http://azureml/sdk-2-0/ParallelComponent.json
 name: batch_benchmark_score
-version: 0.0.1
+version: 0.0.2
 display_name: Batch Benchmark Score
 is_deterministic: false
 type: parallel
@@ -71,7 +71,7 @@ outputs:
     type: uri_folder
 task:
   code: ../src
-  environment: azureml://registries/azureml/environments/model-evaluation/versions/13
+  environment: azureml://registries/azureml/environments/model-evaluation/versions/15
   program_arguments: --append_row_safe_output True --debug_mode ${{inputs.debug_mode}}
     --online_endpoint_url ${{inputs.online_endpoint_url}} $[[--additional_properties
     ${{inputs.additional_properties}}]] $[[--additional_headers ${{inputs.additional_headers}}]]
