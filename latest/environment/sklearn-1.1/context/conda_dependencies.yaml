@@ -9,7 +9,7 @@ dependencies:
 - scipy~=1.10.0
 - numpy~=1.22.0
 - pip:
-  - scikit-learn-intelex==2023.2.1
+  - scikit-learn-intelex==2024.0.0
   - wheel~=0.38.1
   - azureml-core==1.54.0
   - azureml-defaults==1.54.0

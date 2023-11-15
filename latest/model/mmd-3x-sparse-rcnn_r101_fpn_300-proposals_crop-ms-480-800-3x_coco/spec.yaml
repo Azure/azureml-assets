@@ -1,0 +1,116 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: mmd-3x-sparse-rcnn_r101_fpn_300-proposals_crop-ms-480-800-3x_coco
+path: ./
+properties:
+  SHA: fff646d3dda72d8c794471bfaa75b4db0adb7610
+  datasets: COCO
+  evaluation-min-sku-spec: 4|1|28|176
+  evaluation-recommended-sku: Standard_NC6s_v3
+  finetune-min-sku-spec: 4|1|28|176
+  finetune-recommended-sku: Standard_NC6s_v3
+  finetuning-tasks: image-object-detection
+  inference-min-sku-spec: 4|0|14|28
+  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
+    Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
+    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
+    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_F8s_v2,
+    Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2,
+    Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3,
+    Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3,
+    Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
+    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
+    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
+    Standard_ND40rs_v2
+  model_id: mmd-3x-sparse-rcnn_r101_fpn_300-proposals_crop-ms-480-800-3x_coco
+tags:
+  Preview: ''
+  license: apache-2.0
+  model_specific_defaults:
+    apply_deepspeed: 'false'
+    apply_ort: 'false'
+  task: object-detection
+version: 8
+description: |
+  `sparse-rcnn_r101_fpn_300-proposals_crop-ms-480-800-3x_coco` model is from <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0" target="_blank">OpenMMLab's MMDetection library</a>. This model is reported to obtain <a href="https://github.com/open-mmlab/mmdetection/blob/3.x/configs/sparse_rcnn/metafile.yml#L70" target="_blank">box AP of 46.2 for object-detection task on COCO dataset</a>. To understand the naming style used, please refer to <a href="https://mmdetection.readthedocs.io/en/v3.1.0/user_guides/config.html#config-name-style" target="_blank">MMDetection's Config Name Style</a>.
+
+  We present Sparse R-CNN, a purely sparse method for object detection in images. Existing works on object detection heavily rely on dense object candidates, such as k anchor boxes pre-defined on all grids of image feature map of size H×W. In our method, however, a fixed sparse set of learned object proposals, total length of N, are provided to object recognition head to perform classification and location. By eliminating HWk (up to hundreds of thousands) hand-designed object candidates to N (e.g. 100) learnable proposals, Sparse R-CNN completely avoids all efforts related to object candidates design and many-to-one label assignment. More importantly, final predictions are directly output without non-maximum suppression post-procedure. Sparse R-CNN demonstrates accuracy, run-time and training convergence performance on par with the well-established detector baselines on the challenging COCO dataset, e.g., achieving 45.0 AP in standard 3× training schedule and running at 22 fps using ResNet-50 FPN model. We hope our work could inspire re-thinking the convention of dense prior in object detectors.
+
+  > The above abstract is from MMDetection website. Review the <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0/configs/sparse_rcnn" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
+  ### Inference samples
+
+  Inference type|Python sample (Notebook)|CLI with YAML
+  |--|--|--|
+  Real time|<a href="https://aka.ms/azureml-infer-sdk-image-object-detection" target="_blank">image-object-detection-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-image-object-detection" target="_blank">image-object-detection-online-endpoint.sh</a>
+  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-image-object-detection" target="_blank">image-object-detection-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-image-object-detection" target="_blank">image-object-detection-batch-endpoint.sh</a>
+
+  ### Finetuning samples
+
+  Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+  |---|--|--|--|--|
+  Image object detection|Image object detection|[fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjects.zip)|<a href="https://aka.ms/azureml-ft-sdk-image-object-detection" target="_blank">fridgeobjects-object-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-image-object-detection" target="_blank">fridgeobjects-object-detection.sh</a>
+
+  ### Model Evaluation
+
+  |Task|Use case|Dataset|Python sample (Notebook)|
+  |---|--|--|--|
+  Image object detection|Image object detection|[fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjects.zip)|<a href="https://aka.ms/azureml-evaluation-sdk-image-object-detection" target="_blank">image-object-detection.ipynb</a>|
+
+  ### Sample inputs and outputs (for real-time inference)
+
+  #### Sample input
+
+  ```json
+  {
+    "input_data": {
+      "columns": [
+        "image"
+      ],
+      "index": [0, 1],
+      "data": ["image1", "image2"]
+    }
+  }
+  ```
+
+  Note: "image1" and "image2" string should be in base64 format or publicly accessible urls.
+
+  #### Sample output
+
+  ```json
+  [
+      {
+          "boxes": [
+              {
+                  "box": {
+                      "topX": 0.1,
+                      "topY": 0.2,
+                      "bottomX": 0.8,
+                      "bottomY": 0.7
+                  },
+                  "label": "carton",
+                  "score": 0.98
+              }
+          ]
+      },
+      {
+          "boxes": [
+              {
+                  "box": {
+                      "topX": 0.2,
+                      "topY": 0.3,
+                      "bottomX": 0.6,
+                      "bottomY": 0.5
+                  },
+                  "label": "can",
+                  "score": 0.97
+              }
+          ]
+      }
+  ]
+  ```
+
+  Note: Please refer to object detection output <a href="https://learn.microsoft.com/en-us/azure/machine-learning/reference-automl-images-schema?view=azureml-api-2#object-detection-1" target="_blank">data schema</a> for more detail.
+
+  #### Model inference - visualization for a sample image
+
+  <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_sparse_rcnn_r101_fpn_300_proposals_crop_mstrain_480-800_3x_coco_OD.png" alt="od visualization">
