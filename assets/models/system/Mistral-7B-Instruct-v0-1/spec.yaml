@@ -35,6 +35,7 @@ tags:
   - Standard_ND96amsr_A100_v4
   - Standard_ND96asr_v4
   license: apache-2.0
-  task: text-generation
+  task: chat-completion
   author: mistralai
+  disable-batch: 'true'
 version: 1
