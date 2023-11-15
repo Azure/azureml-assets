@@ -106,6 +106,24 @@ inputs:
     optional: true
     description: Validation parameters propagated from pipeline.
 
+  apply_deepspeed:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will enable deepspeed for training
+
+  precision:
+    type: string
+    enum:
+      - "32"
+      - "16"
+    default: "32"
+    optional: true
+    description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
+
 outputs:
   validation_info:
     type: uri_file
