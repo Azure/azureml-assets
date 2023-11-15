@@ -17,26 +17,15 @@ The Mistral 7B Instruct model is a quick demonstration that the base model can b
 It does not have any moderation mechanisms. We're looking forward to engaging with the community on ways to
 make the model finely respect guardrails, allowing for deployment in environments requiring moderated outputs.
 
-# Model Evaluation Sample
-
-Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|--|
-Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
-
-
 # **Inference samples**
-
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
-
 
 ## **Sample inputs and outputs (for real-time inference)**
 
 ### **Sample input**
 ```json
 {
-  "input_data": {"input_string": [
+  "input_data": {
+    "input_string": [
       {
         "role": "user",
         "content": "I am going to Paris, what should I see?"
@@ -50,7 +39,7 @@ Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly
         "content": "What is so great about #1?"
       }
     ]
-},
+  },
   "params": {
     "temperature": 0.6,
     "top_p": 0.9,
