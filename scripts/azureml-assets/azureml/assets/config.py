@@ -535,41 +535,61 @@ class AzureBlobstoreAssetPath(AssetPath):
             None,
         )
 
-    @property
-    def uri(self) -> str:
-        """Asset URI."""
-        # If we have already cached the URI, then simply return it
-        if self._uri is not None:
-            return self._uri
+    @staticmethod
+    def generate_uri(uri: str, account_uri: str, container_name: str, token: str) -> str:
+        """Generate URI.
 
-        # Build the simple, non-SAS URI for quick use later in the function.
-        # Its possible that the account URI may need additional tweaking to add a SAS
-        # token if the account does not allow for anonymous access.
-        self._uri = f"{self._account_uri}/{self._container_name}/{self._container_path}"
-
+        :param uri: Asset URI
+        :type uri: str
+        :param account_uri: Account URI
+        :type account_uri: str
+        :param container_name: Blob container name
+        :type container_name: str
+        :param token: SAS token
+        :type token: str
+        """
         # If a SAS token has been explicitly set, then assume that the URI+token is valid.
         # Simply append the token and return. If no SAS token is set, then proceed to rest of function.
-        if self.token is not None:
-            self._uri += "?" + self.token
-            return self._uri
+        if token is not None:
+            uri += "?" + token
+            return uri
 
         # The first test is to see if we can simply list the contents of the container
         # using a very simple and quick HTTP request. In order for this to work,
         # container must support anonymous read access. If this succeeds, we can
         # return the URI "as-is".
         try:
-            list_container_url = f"{self._account_uri}/{self._container_name}?restype=container&comp=list&maxresults=1"
+            list_container_url = f"{account_uri}/{container_name}?restype=container&comp=list&maxresults=1"
             response = requests.get(
                 list_container_url,
                 timeout=AzureBlobstoreAssetPath.CONTAINER_ANONYMOUS_ACCESS_CHECK_TIMEOUT
             )
 
             if response.status_code >= 200 and response.status_code <= 299:
-                return self._uri
+                return uri
         except Exception:
             # If we fail pass through to the next approach
-            pass
+            return None
 
+    @staticmethod
+    def generate_sas_token(uri: str, account_uri: str, container_name: str, storage_name: str, start_time: datetime.datetime, expiry_time: datetime.datetime) -> str:
+        """Generate SAS Token.
+
+        :param uri: Asset URI
+        :type uri: str
+        :param account_uri: Account URI
+        :type account_uri: str
+        :param container_name: Blob container name
+        :type container_name: str
+        :param storage_name: Blob storage name
+        :type storage_name: str
+        :param start_time: SAS Token start time
+        :type start_time: datetime.datetime
+        :param expiry_time: SAS Token expiry time
+        :type expiry_time: datetime.datetime
+        :param token: SAS token
+        :type token: str
+        """
         # Our second approach is to use the azure python SDK to view the properties
         # of the container. If the container allows for anonymous access then we can
         # return the URI "as-is".
@@ -582,39 +602,56 @@ class AzureBlobstoreAssetPath(AssetPath):
         # do not exist then fail gracefully, return the URI "as-is", and hope for the best.
         try:
             blob_service_client = BlobServiceClient(
-                account_url=self._account_uri,
+                account_url=account_uri,
                 credential=AzureCliCredential(
                     process_timeout=AzureBlobstoreAssetPath.AZURE_CLI_PROCESS_LOGIN_TIMEOUT
                 )
             )
-            container_client = blob_service_client.get_container_client(container=self._container_name)
+            container_client = blob_service_client.get_container_client(container=container_name)
 
             # If the container allows for anonymous access then we can return the URI "as-is"
             if container_client.get_container_properties().public_access is not None:
-                return self._uri
+                return uri
 
             # Our final approach is to generate a SAS token for the container and append
             # it to the URI
-            start_time = datetime.datetime.now(datetime.timezone.utc)
-            expiry_time = start_time + AzureBlobstoreAssetPath.SAS_EXPIRATION_TIME_DELTA
-
             key = blob_service_client.get_user_delegation_key(start_time, expiry_time)
 
             sas_token = "?" + generate_container_sas(
-                account_name=self._storage_name,
-                container_name=self._container_name,
+                account_name=storage_name,
+                container_name=container_name,
                 user_delegation_key=key,
                 permission=ContainerSasPermissions(read=True, list=True),
                 expiry=expiry_time,
                 start=start_time
             )
 
-            self._uri += sas_token
-            return self._uri
+            uri += sas_token
+            return uri
 
         except Exception:
             # If we fail then simply return the URI "as-is" and hope for the best
+            return uri
+
+    @property
+    def uri(self) -> str:
+        """Asset URI.""" 
+        # If we have already cached the URI, then simply return it
+        if self._uri is not None:
             return self._uri
+        
+        # Build the simple, non-SAS URI for quick use later in the function.
+        # Its possible that the account URI may need additional tweaking to add a SAS
+        # token if the account does not allow for anonymous access.
+        self._uri = f"{self._account_uri}/{self._container_name}/{self._container_path}"
+        
+        if self.generate_uri(self._uri, self._account_uri, self._container_name, self._token) is not None:
+            return self._uri
+        
+        start_time = datetime.datetime.now(datetime.timezone.utc)
+        expiry_time = start_time + AzureBlobstoreAssetPath.SAS_EXPIRATION_TIME_DELTA
+
+        return self.generate_sas_token(self._uri, self._account_uri, self._container_name, self._storage_name, start_time, expiry_time)
 
     @property
     def storage_name(self) -> str:
@@ -622,9 +659,19 @@ class AzureBlobstoreAssetPath(AssetPath):
         return self._storage_name
 
     @property
+    def container_name(self) -> str:
+        """Container name"""
+        return self._container_name
+
+    @property
     def token(self) -> str:
         """Sas token."""
         return self._token
+    
+    @property
+    def account_uri(self) -> str:
+        """Account URI."""
+        return self._account_uri
 
     @token.setter
     def token(self, value: str):
