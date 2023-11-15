@@ -10,6 +10,9 @@ inputs:
   wait_input:
     type: uri_file
     optional: True
+  cli_file:
+    type: uri_file
+    optional: True
   endpoint_name:
     type: string
     optional: True
@@ -101,6 +104,7 @@ command: >-
   --output_metadata ${{outputs.output_metadata}}
   $[[--endpoint_name ${{inputs.endpoint_name}}]]
   $[[--model_type ${{inputs.model_type}}]]
+  $[[--cli_file ${{inputs.cli_file}}]]
   $[[--deployment_name ${{inputs.deployment_name}}]]
   $[[--model ${{inputs.model}}]]
   $[[--model_version ${{inputs.model_version}}]]

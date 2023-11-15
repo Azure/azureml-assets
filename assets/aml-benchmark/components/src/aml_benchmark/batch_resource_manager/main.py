@@ -8,6 +8,8 @@
 from typing import List, Optional, Tuple, Generator
 import argparse
 import json
+import subprocess
+
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
@@ -34,6 +36,7 @@ def parse_args() -> argparse.Namespace:
         "--deployment_metadata_dir", default=None, type=str,
         help="Directory contains deployment metadata.",
     )
+    parser.add_argument("--cli_file", type=str, help="cli_file", default=None)
     parser.add_argument("--deployment_name", type=str, help="deployment_name", default=None)
     parser.add_argument("--endpoint_name", type=str, help="endpoint_name", default=None)
     parser.add_argument("--deployment_sku", type=str, help="deployment_sku", default=None)
@@ -209,7 +212,8 @@ def main(
     do_quota_validation: bool,
     use_max_quota: bool,
     redeploy_model: bool,
-    deployment_env: str
+    deployment_env: str,
+    cli_file: str
 ) -> None:
     """
     Entry function of the script.
@@ -232,6 +236,14 @@ def main(
     :param is_performance_test: Whether it is performance test.
     :return: None
     """
+    if cli_file:
+        subprocess.run(
+            [
+                "az ml online-deployment create -f", cli_file, "--workspace-name",
+                endpoint_workspace, "--resource-group", endpoint_resource_group,
+                "--subscription", endpoint_subscription_id
+            ], check=True
+        )
     if not delete_managed_resources:
         subscriptions_list = [
             s.strip() for s in endpoint_subscription_id.split(',')] if endpoint_subscription_id else [None]
@@ -313,5 +325,6 @@ if __name__ == "__main__":
         args.do_quota_validation,
         args.use_max_quota,
         args.redeploy_model,
-        args.deployment_env
+        args.deployment_env,
+        args.cli_file
     )
