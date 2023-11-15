@@ -4,7 +4,7 @@ type: command
 name: compute_performance_metrics
 display_name: Compute Performance Metrics
 description: Performs performance metric post processing using data from a model inference run.
-version: 0.0.1
+version: 0.0.2
 
 inputs:
   performance_data: 
