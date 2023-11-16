@@ -634,7 +634,7 @@ class AzureBlobstoreAssetPath(AssetPath):
 
             return sas_token
 
-        except Exception as e:
+        except Exception:
             # If we fail then simply return the URI "as-is" and hope for the best
             return ""
 
