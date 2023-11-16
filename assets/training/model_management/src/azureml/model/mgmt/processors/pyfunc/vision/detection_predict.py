@@ -86,7 +86,10 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
             bboxes = pred_instances.bboxes.cpu().numpy()
             labels = pred_instances.labels.cpu().numpy()
             scores = pred_instances.scores.cpu().numpy()
-            masks = pred_instances.masks.cpu().numpy() if self._task_type == Tasks.MM_INSTANCE_SEGMENTATION.value else None
+            if self._task_type == Tasks.MM_INSTANCE_SEGMENTATION.value:
+                masks = pred_instances.masks.cpu().numpy()
+            else:
+                masks = None
 
             cur_image_preds = {ODLiterals.BOXES: []}
             for i in range(len(labels)):
