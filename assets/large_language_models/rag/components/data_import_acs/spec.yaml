@@ -38,7 +38,7 @@ outputs:
      type: uri_folder
      description: "Uri folder containing an MLIndex yaml representing the ACS Index. Can be used with azureml-rag package"
 
-environment: azureml:llm-rag@latest
+environment: azureml:llm-rag-embeddings@latest
 code: '../src/embeddings/'
 command: >-
   python data_import_acs.py --num_docs ${{inputs.num_docs}} --output_data ${{outputs.output_data}} --ml_index ${{outputs.ml_index}} --acs_config '${{inputs.acs_config}}' --use_existing '${{inputs.use_existing}}'

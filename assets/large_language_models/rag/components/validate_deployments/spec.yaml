@@ -54,7 +54,7 @@ outputs:
   output_data:
     type: uri_file
 
-environment: azureml:llm-rag@latest
+environment: azureml:llm-rag-embeddings@latest
 code: '../src'
 command: >-
   python validate_deployments.py
