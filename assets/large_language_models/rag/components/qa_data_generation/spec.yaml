@@ -57,7 +57,7 @@ outputs:
      type: uri_folder
      description: "csv or jsonl file containing the question, answer, context, and metadata sets"
 
-environment: azureml:llm-rag@latest
+environment: azureml:llm-rag-embeddings@latest
 code: '../src'  # nothing used from here
 command: >-
   python -m azureml.rag.tasks.generate_qa
