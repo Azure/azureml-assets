@@ -5,9 +5,7 @@ properties:
   SHA: f7796529e36b2d49094450fb038cc7c4c86afa44
   datasets: tiiuae/falcon-refinedweb
   languages: en
-  inference-recommended-sku: Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3,
-    Standard_E48s_v3, Standard_E64s_v3, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2,
-    Standard_F64s_v2, Standard_F64s_v2, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
     Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   evaluation-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4,
     Standard_ND96amsr_A100_v4
@@ -22,16 +20,6 @@ tags:
   task: text-generation
   author: tiiuae
   inference_compute_allow_list:
-  - Standard_E8s_v3
-  - Standard_E16s_v3
-  - Standard_E32s_v3
-  - Standard_E48s_v3
-  - Standard_E64s_v3
-  - Standard_F16s_v2
-  - Standard_F32s_v2
-  - Standard_F48s_v2
-  - Standard_F64s_v2
-  - Standard_F64s_v2
   - Standard_NC6s_v3
   - Standard_NC12s_v3
   - Standard_NC24s_v3
@@ -52,7 +40,7 @@ tags:
   model_specific_defaults:
     apply_lora: 'true'
     precision: '4'
-version: 4
+version: 5
 description: |
   # Description
   Falcon-7B is a large language model with 7 billion parameters. It is a causal decoder-only model developed by TII and trained on 1,500 billion tokens of RefinedWeb dataset, which was enhanced with curated corpora. The model is available under the Apache 2.0 license. It outperforms comparable open-source models and features an architecture optimized for inference. However, it is a raw, pretrained model that should be further finetuned for most use cases.
