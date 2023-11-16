@@ -1,13 +1,10 @@
-# There are not enough GPUs available for sponsored subscriptions, so we no longer
-# have quota for the low end GPU cluster. We'll redirect it to the v100 one.
-
 location="eastus"
 datestamp=$(date "+%Y%m%d")
 resource_group="azureml-assets-${datestamp}"
 container_registry="azuremlassetscr${datestamp}"
 workspace="azureml-assets-ws-${datestamp}"
 cpu_cluster="cpu-cluster"
-# gpu_cluster="gpu-cluster"
+gpu_cluster="gpu-cluster"
 gpu_v100_cluster="gpu-v100-cluster"
 
 echo "Installing Azure CLI extension for Azure Machine Learning"
@@ -49,12 +46,12 @@ else
         az ml compute create --name $cpu_cluster --size Standard_DS3_v2 --min-instances 0 --max-instances 10 --type AmlCompute
     fi
 
-    # resource_name="compute cluster ${gpu_cluster}"
-    # echo "Checking ${resource_name}"
-    # if ! az ml compute show --name $gpu_cluster --output none >/dev/null 2>&1; then
-    #     echo "Creating ${resource_name}"
-    #     az ml compute create --name $gpu_cluster --size Standard_NC4as_T4_v3 --min-instances 0 --max-instances 10 --type AmlCompute
-    # fi
+    resource_name="compute cluster ${gpu_cluster}"
+    echo "Checking ${resource_name}"
+    if ! az ml compute show --name $gpu_cluster --output none >/dev/null 2>&1; then
+        echo "Creating ${resource_name}"
+        az ml compute create --name $gpu_cluster --size Standard_NC4as_T4_v3 --min-instances 0 --max-instances 10 --type AmlCompute
+    fi
 
     resource_name="compute cluster ${gpu_v100_cluster}"
     echo "Checking ${resource_name}"
@@ -70,6 +67,6 @@ resource_group=${resource_group}
 container_registry=${container_registry}
 workspace=${workspace}
 cpu_cluster=${cpu_cluster}
-gpu_cluster=${gpu_v100_cluster}
+gpu_cluster=${gpu_cluster}
 gpu_v100_cluster=${gpu_v100_cluster}
 EOF

@@ -12,6 +12,7 @@ class EngineName(str, Enum):
     HF = "hf"
     VLLM = "vllm"
     MII = "mii"
+    MII_V1 = "mii-v1"
 
     def __str__(self):
         """Return the string representation of the engine name."""
