@@ -653,7 +653,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         start_time = datetime.datetime.now(datetime.timezone.utc)
         expiry_time = start_time + AzureBlobstoreAssetPath.SAS_EXPIRATION_TIME_DELTA
 
-        sas_token = self.generate_sas_token(self._uri, self._account_uri, self._container_name, self._storage_name, start_time, expiry_time)
+        sas_token = self.generate_sas_token(self._account_uri, self._container_name, self._storage_name, start_time, expiry_time)
         self._uri += sas_token
 
         if self.generate_uri(self._uri, self._account_uri, self._container_name, self._token) is not None:
