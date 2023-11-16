@@ -10,8 +10,6 @@ description: FTaaS component to copy user training data to output
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/30
 
-code: ../../../src/
-
 inputs:
   # Inputs
   train_file_path:
@@ -38,4 +36,4 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python data_import/data_import.py --task_name TextGeneration --train_file_path '${{inputs.train_file_path}}' $[[--validation_file_path '${{inputs.validation_file_path}}']] --output_dataset '${{outputs.output_dataset}}'
+  python /azureml/data_import/run.py --task_name TextGeneration --train_file_path '${{inputs.train_file_path}}' $[[--validation_file_path '${{inputs.validation_file_path}}']] --output_dataset '${{outputs.output_dataset}}'

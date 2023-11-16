@@ -10,8 +10,6 @@ description: FTaaS component to finetune model for Text Generation task
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/30
 
-code: ../../../src/
-
 inputs:
   mlflow_model_path:
     type: mlflow_model
