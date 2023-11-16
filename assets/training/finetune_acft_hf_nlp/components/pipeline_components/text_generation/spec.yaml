@@ -548,6 +548,14 @@ jobs:
       test_mltable_path: '${{parent.inputs.test_mltable_path}}'
       user_column_names: '${{parent.inputs.text_key}},${{parent.inputs.ground_truth_key}}'
       system_properties: '${{parent.inputs.system_properties}}'
+      num_train_epochs: '${{parent.inputs.num_train_epochs}}'
+      max_steps: '${{parent.inputs.max_steps}}'
+      per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
+      per_device_eval_batch_size: '${{parent.inputs.per_device_eval_batch_size}}'
+      learning_rate: '${{parent.inputs.learning_rate}}'
+      adam_beta1: '${{parent.inputs.adam_beta1}}'
+      adam_beta2: '${{parent.inputs.adam_beta2}}'
+      adam_epsilon: '${{parent.inputs.adam_epsilon}}'
   text_generation_model_import:
     type: command
     component: azureml:text_generation_model_import:0.0.25
