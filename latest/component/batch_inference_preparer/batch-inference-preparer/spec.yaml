@@ -4,13 +4,17 @@ type: command
 name: batch_inference_preparer
 display_name: Batch Inference Preparer
 description: Prepare the jsonl file and endpoint for batch inference component.
-version: 0.0.2
+version: 0.0.3
 
 inputs:
   input_dataset:
     type: uri_folder
     description: Input jsonl dataset that contains prompt. For the performance test,
       this one will be neglected.
+    optional: true
+  model_type:
+    type: string
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
     optional: true
   batch_input_pattern:
     type: string
@@ -66,6 +70,7 @@ command: >-
   --formatted_data ${{outputs.formatted_data}}
   --output_metadata ${{outputs.ground_truth_metadata}}
   --is_performance_test ${{inputs.is_performance_test}}
+  $[[--model_type ${{inputs.model_type}}]]
   $[[--input_dataset ${{inputs.input_dataset}}]]
   $[[--n_samples ${{inputs.n_samples}}]]
   $[[--endpoint_url ${{inputs.endpoint_url}}]]

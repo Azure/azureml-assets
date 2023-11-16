@@ -65,6 +65,10 @@ class OnlineEndpointModel:
         """Check if the model is llama model."""
         return self._model_type == 'oss'
 
+    def is_vision_oss_model(self) -> bool:
+        """Check if the model is a vision oss model."""
+        return self._model_type == "vision_oss"
+
     def _get_model_type_from_url(self, endpoint_url: str) -> str:
         if endpoint_url is None:
             logger.warning('Endpoint url is None. Default to oss.')

@@ -41,6 +41,7 @@ def parse_args() -> argparse.Namespace:
         "--n_samples", type=int, help="Top samples sending to the endpoint.", default=-1)
     parser.add_argument("--formatted_data", type=str, help="path to output location")
     parser.add_argument("--endpoint_url", type=str, help="endpoint_url", default=None)
+    parser.add_argument("--model_type", type=str, help="model_type", default=None)
     parser.add_argument("--output_metadata", type=str, help="path to ground_truth location", default=None)
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
     args, _ = parser.parse_known_args()
@@ -52,6 +53,7 @@ def parse_args() -> argparse.Namespace:
 def main(
     input_dataset: str,
     formatted_dataset: str,
+    model_type: str,
     batch_input_pattern: str,
     n_samples: int,
     endpoint_url: str,
@@ -73,7 +75,7 @@ def main(
     :param is_performance_test: Whether it is performance test.
     :return: None
     """
-    online_model = OnlineEndpointModel(None, None, None, endpoint_url=endpoint_url)
+    online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
 
     endpoint_data_preparer = EndpointDataPreparer(
         online_model._model_type, batch_input_pattern, label_key=label_key)
@@ -133,6 +135,7 @@ if __name__ == "__main__":
     main(
         input_dataset=args.input_dataset,
         formatted_dataset=args.formatted_data,
+        model_type=args.model_type,
         batch_input_pattern=args.batch_input_pattern,
         n_samples=args.n_samples,
         endpoint_url=args.endpoint_url,
