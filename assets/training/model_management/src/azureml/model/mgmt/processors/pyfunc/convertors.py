@@ -832,19 +832,15 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         :return: Path to default model.
         :rtype: str
         """
-        multilabel = False
-        if self._task == SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value:
-            multilabel = True
-
         from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
         from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
 
-        # from azureml.model.mgmt.processors.pyfunc.automl.vit_classes import IMAGENET2012_CLASSES
+        from azureml.model.mgmt.processors.pyfunc.automl.od_is_classes import COCO_CLASSES
         import copy
         model_wrapper = setup_model(
             model_name=ModelNames.YOLO_V5,
             number_of_classes=80,
-            classes=list(range(80)),
+            classes=COCO_CLASSES,
             device=self._device,
             distributed=False,
             local_rank=0,
@@ -854,7 +850,7 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
             settings={})
         specs = {
             "model_settings": model_wrapper.model_settings,
-            'labels': list(range(80))
+            'labels': COCO_CLASSES
         }
 
         checkpoint_data = {
@@ -876,19 +872,15 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         :return: Path to default model.
         :rtype: str
         """
-        multilabel = False
-        if self._task == SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value:
-            multilabel = True
-
         from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
         from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
 
-        # from azureml.model.mgmt.processors.pyfunc.automl.vit_classes import IMAGENET2012_CLASSES
+        from azureml.model.mgmt.processors.pyfunc.automl.od_is_classes import COCO_CLASSES
         import copy
         model_wrapper = setup_model(
             model_name=ModelNames.MASK_RCNN_RESNET50_FPN,
             number_of_classes=80,
-            classes=list(range(80)),
+            classes=COCO_CLASSES,
             device=self._device,
             distributed=False,
             local_rank=0,
@@ -897,7 +889,7 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
             settings={})
         specs = {
             "model_settings": model_wrapper.model_settings,
-            'labels': list(range(80))
+            'labels': COCO_CLASSES,
         }
 
         checkpoint_data = {
