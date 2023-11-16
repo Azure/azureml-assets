@@ -71,7 +71,7 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
             deployment_name=deployment_name,
         )
     except HttpResponseError as ex:
-        activity_logger.warn(f"[Validate Deployments]: Got error response: '{ex.reason}'.")
+        activity_logger.warning(f"[Validate Deployments]: Got error response: '{ex.reason}'.")
 
         connection_id_embedding = model_params["connection"]
         connection = get_connection_by_id_v2(connection_id_embedding)
