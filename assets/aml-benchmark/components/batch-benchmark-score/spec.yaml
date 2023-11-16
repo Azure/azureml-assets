@@ -79,7 +79,7 @@ error_threshold: -1
 logging_level: DEBUG
 max_concurrency_per_instance: 1
 mini_batch_error_threshold: 5
-mini_batch_size: '10GB'
+mini_batch_size: '3072'
 retry_settings:
   max_retries: 10
   timeout: 6000
