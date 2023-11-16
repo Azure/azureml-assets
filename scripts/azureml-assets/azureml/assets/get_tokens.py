@@ -17,9 +17,9 @@ import datetime
 import json
 
 def get_tokens(input_dirs: List[Path],
-                asset_config_filename: str,
-                json_output_path: str,
-                pattern: re.Pattern = None):
+               asset_config_filename: str,
+               json_output_path: str,
+               pattern: re.Pattern = None):
     """Generate SAS tokens for models to JSON output file.
 
     Args:
@@ -48,7 +48,8 @@ def get_tokens(input_dirs: List[Path],
         start_time = datetime.datetime.now(datetime.timezone.utc)
         expiry_time = start_time + datetime.timedelta(days=1)
 
-        token = AzureBlobstoreAssetPath.generate_sas_token(account_uri=model_config.path.account_uri, container_name=container_name, storage_name=account_name, start_time=start_time, expiry_time=expiry_time)
+        token = AzureBlobstoreAssetPath.generate_sas_token(account_uri=model_config.path.account_uri, container_name=container_name,
+                                                           storage_name=account_name, start_time=start_time, expiry_time=expiry_time)
 
         if len(token) == 0:
             token = None
@@ -77,6 +78,6 @@ if __name__ == '__main__':
 
     # Get SAS tokens
     get_tokens(input_dirs=input_dirs,
-                asset_config_filename=args.asset_config_filename,
-                json_output_path=args.json_output_path,
-                pattern=args.pattern)
+               asset_config_filename=args.asset_config_filename,
+               json_output_path=args.json_output_path,
+               pattern=args.pattern)

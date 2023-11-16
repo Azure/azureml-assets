@@ -13,6 +13,7 @@ from ruamel.yaml import YAML
 from packaging import version
 from typing import Dict, List, Set, Tuple, Union
 import requests
+import sys
 from azure.ai.ml._azure_environments import (
     AzureEnvironments,
     _get_default_cloud_name,
@@ -580,7 +581,8 @@ class AzureBlobstoreAssetPath(AssetPath):
             return None
 
     @staticmethod
-    def generate_sas_token(account_uri: str, container_name: str, storage_name: str, start_time: datetime.datetime, expiry_time: datetime.datetime) -> str:
+    def generate_sas_token(account_uri: str, container_name: str, storage_name: str, start_time: datetime.datetime,
+                           expiry_time: datetime.datetime) -> str:
         """Generate SAS Token.
 
         :param account_uri: Account URI
@@ -634,8 +636,9 @@ class AzureBlobstoreAssetPath(AssetPath):
 
             return sas_token
 
-        except Exception:
+        except Exception as e:
             # If we fail then simply return the URI "as-is" and hope for the best
+            print(f"Failed to generate SAS token for storage {storage_name} and container {container_name}: {e}", file=sys.stderr)
             return ""
 
     @property
@@ -644,7 +647,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         # If we have already cached the URI, then simply return it
         if self._uri is not None:
             return self._uri
-        
+
         # Build the simple, non-SAS URI for quick use later in the function.
         # Its possible that the account URI may need additional tweaking to add a SAS
         # token if the account does not allow for anonymous access.
@@ -653,7 +656,8 @@ class AzureBlobstoreAssetPath(AssetPath):
         start_time = datetime.datetime.now(datetime.timezone.utc)
         expiry_time = start_time + AzureBlobstoreAssetPath.SAS_EXPIRATION_TIME_DELTA
 
-        sas_token = self.generate_sas_token(self._account_uri, self._container_name, self._storage_name, start_time, expiry_time)
+        sas_token = self.generate_sas_token(self._account_uri, self._container_name, 
+                                            self._storage_name, start_time, expiry_time)
         self._uri += sas_token
 
         if self.generate_uri(self._uri, self._account_uri, self._container_name, self._token) is not None:
@@ -673,7 +677,7 @@ class AzureBlobstoreAssetPath(AssetPath):
     def token(self) -> str:
         """Sas token."""
         return self._token
-    
+
     @property
     def account_uri(self) -> str:
         """Account URI."""
