@@ -762,6 +762,8 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         if self._task not in [
             SupportedTasks.IMAGE_CLASSIFICATION.value,
             SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
+            SupportedTasks.AUTOML_OBJECT_DETECTION.value,
+            SupportedTasks.AUTOML_INSTANCE_SEGMENTATION.value,
         ]:
             raise Exception("Unsupported task")
 
@@ -823,6 +825,94 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
 
         return model_file
 
+
+    def _get_model_weights_object_detection(self) -> str:
+        """Return default model weights path.
+
+        :return: Path to default model.
+        :rtype: str
+        """
+        multilabel = False
+        if self._task == SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value:
+            multilabel = True
+
+        from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
+        from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
+
+        # from azureml.model.mgmt.processors.pyfunc.automl.vit_classes import IMAGENET2012_CLASSES
+        import copy
+        model_wrapper = setup_model(
+            model_name=ModelNames.YOLO_V5,
+            number_of_classes=80,
+            classes=list(range(80)),
+            device=self._device,
+            distributed=False,
+            local_rank=0,
+            model_state=None,
+            specs={"model_size": "medium",
+                   "device": self._device},
+            settings={})
+        specs = {
+            "model_settings": model_wrapper.model_settings,
+            'labels': list(range(80))
+        }
+
+        checkpoint_data = {
+            "model_name": model_wrapper.model_name,
+            "number_of_classes": model_wrapper.number_of_classes,
+            "specs": specs,
+            "model_state": copy.deepcopy(model_wrapper.state_dict()),
+        }
+
+        model_file = "/tmp/yolov5.pth"
+        torch.save(checkpoint_data, model_file)
+
+        return model_file
+
+
+    def _get_model_weights_instance_segmentation(self) -> str:
+        """Return default model weights path.
+
+        :return: Path to default model.
+        :rtype: str
+        """
+        multilabel = False
+        if self._task == SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value:
+            multilabel = True
+
+        from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
+        from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
+
+        # from azureml.model.mgmt.processors.pyfunc.automl.vit_classes import IMAGENET2012_CLASSES
+        import copy
+        model_wrapper = setup_model(
+            model_name=ModelNames.MASK_RCNN_RESNET50_FPN,
+            number_of_classes=80,
+            classes=list(range(80)),
+            device=self._device,
+            distributed=False,
+            local_rank=0,
+            model_state=None,
+            specs=None,
+            settings={})
+        specs = {
+            "model_settings": model_wrapper.model_settings,
+            'labels': list(range(80))
+        }
+
+        checkpoint_data = {
+            "model_name": model_wrapper.model_name,
+            "number_of_classes": model_wrapper.number_of_classes,
+            "specs": specs,
+            "model_state": copy.deepcopy(model_wrapper.state_dict()),
+        }
+
+        model_file = "/tmp/maskrcnn.pth"
+        torch.save(checkpoint_data, model_file)
+
+        return model_file
+
+
     def get_model_signature(self) -> ModelSignature:
         """Return MLflow model signature with input and output schema for the given input task.
 
@@ -848,6 +938,10 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
             SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
         ]:
             model_file = self._get_model_weights_classification()
+        elif self._task == SupportedTasks.AUTOML_OBJECT_DETECTION.value:
+            model_file = self._get_model_weights_object_detection()
+        elif self._task == SupportedTasks.AUTOML_INSTANCE_SEGMENTATION.value:
+            model_file = self._get_model_weights_instance_segmentation()
         else:
             raise Exception("Unsupported task")
 
