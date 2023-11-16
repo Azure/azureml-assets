@@ -22,6 +22,7 @@ from model_data_collector_preprocessor.run import (
     _convert_to_azureml_long_form,
     _get_datastore_from_input_path,
 )
+from shared_utilities.momo_exceptions import DataNotFoundError
 
 
 @pytest.fixture(scope="module")
@@ -105,6 +106,41 @@ class TestMDCPreprocessor:
 
         assert_frame_equal(pdf_actual, pdf_expected)
 
+    @pytest.mark.parametrize(
+        "window_start_time, window_end_time, root_folder_exists",
+        [
+            ("2023-11-03T15:00:00", "2023-11-03T16:00:00", True),  # no window folder
+            ("2023-11-06T15:00:00", "2023-11-06T16:00:00", True),  # has window folder, no file
+            ("2023-11-06T17:00:00", "2023-11-06T18:00:00", True),  # has window folder and file, but empty file
+            ("2023-11-08T14:00:00", "2023-11-08T16:00:00", False),  # root folder not exists
+        ]
+    )
+    def test_uri_folder_to_spark_df_no_data(self, mdc_preprocessor_test_setup,
+                                            window_start_time, window_end_time, root_folder_exists):
+        """Test uri_folder_to_spark_df()."""
+        def my_add_tags(tags: dict):
+            print("my_add_tags:", tags)
+        print("testing test_uri_folder_to_spark_df...")
+        print("working dir:", os.getcwd())
+
+        fs = fsspec.filesystem("file")
+        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        preprocessed_output = f"{tests_path}/unit/preprocessed_mdc_data"
+        shutil.rmtree(f"{preprocessed_output}temp", True)
+        root_folder = f"{tests_path}/unit/raw_mdc_data/" if root_folder_exists else f"{tests_path}/unit/raw_mdc_data1/"
+
+        with pytest.raises(DataNotFoundError):
+            pdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
+                window_start_time,
+                window_end_time,
+                root_folder,
+                preprocessed_output,
+                False,
+                fs,
+                my_add_tags
+            )
+            pdf.show()
+
     @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, extract_correlation_id",
@@ -112,8 +148,6 @@ class TestMDCPreprocessor:
             # chat history
             ("2023-10-30T16:00:00", "2023-10-30T17:00:00", False),
             ("2023-10-30T16:00:00", "2023-10-30T17:00:00", True),
-            # ("2023-10-24T22:00:00", "2023-10-24T23:00:00", False),
-            # ("2023-10-24T22:00:00", "2023-10-24T23:00:00", True),
         ]
     )
     def test_uri_folder_to_spark_df_with_chat_history(
