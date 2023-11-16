@@ -1,8 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: tiiuae-falcon-7b
+name: tiiuae-falcon-7b-instruct
 path: ./
 properties:
-  SHA: f7796529e36b2d49094450fb038cc7c4c86afa44
+  SHA: cf4b3c42ce2fdfe24f753f0f0d179202fea59c99
   datasets: tiiuae/falcon-refinedweb
   languages: en
   inference-recommended-sku: Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3,
@@ -50,4 +50,4 @@ tags:
   model_specific_defaults:
     apply_lora: 'true'
     precision: '4'
-version: 5
+version: 3
