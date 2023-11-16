@@ -638,7 +638,8 @@ class AzureBlobstoreAssetPath(AssetPath):
 
         except Exception as e:
             # If we fail then simply return the URI "as-is" and hope for the best
-            print(f"Failed to generate SAS token for storage {storage_name} and container {container_name}: {e}", file=sys.stderr)
+            print(f"Failed to generate SAS token for storage {storage_name} and container 
+                  {container_name}: {e}", file=sys.stderr)
             return ""
 
     @property
@@ -656,7 +657,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         start_time = datetime.datetime.now(datetime.timezone.utc)
         expiry_time = start_time + AzureBlobstoreAssetPath.SAS_EXPIRATION_TIME_DELTA
 
-        sas_token = self.generate_sas_token(self._account_uri, self._container_name, 
+        sas_token = self.generate_sas_token(self._account_uri, self._container_name,
                                             self._storage_name, start_time, expiry_time)
         self._uri += sas_token
 
