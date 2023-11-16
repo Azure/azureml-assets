@@ -25,36 +25,36 @@ class TestBatchInferencePreparerComponent:
 
     EXP_NAME = "batch-inference-preparer-test"
     LLM_REQUEST = ('{'
-                    '   "input_data":'
-                    '   {'
-                    '       "input_string": ["###<prompt>"],'
-                    '       "parameters":'
-                    '       {'
-                    '           "temperature": 0.6,'
-                    '           "max_new_tokens": 100,'
-                    '           "do_sample": true'
-                    '       }'
-                    '   },'
-                    '   "_batch_request_metadata": ###<_batch_request_metadata>'
-                    '}')
+                   '   "input_data":'
+                   '   {'
+                   '       "input_string": ["###<prompt>"],'
+                   '       "parameters":'
+                   '       {'
+                   '           "temperature": 0.6,'
+                   '           "max_new_tokens": 100,'
+                   '           "do_sample": true'
+                   '       }'
+                   '   },'
+                   '   "_batch_request_metadata": ###<_batch_request_metadata>'
+                   '}')
     VISION_REQUEST = ('{'
-                        '"input_data": {'
-                        '  "columns": ['
-                        '    "image",'
-                        '    "text"'
-                        '  ],'
-                        '  "index": [0],'
-                        '  "data": ['
-                        '    ["###<image>", "###<text>"]'
-                        '  ]'
-                        '},'
-                        '"params": {}'
-                        '}')
+                      '"input_data": {'
+                      '  "columns": ['
+                      '    "image",'
+                      '    "text"'
+                      '  ],'
+                      '  "index": [0],'
+                      '  "data": ['
+                      '    ["###<image>", "###<text>"]'
+                      '  ]'
+                      '},'
+                      '"params": {}'
+                      '}')
 
     @pytest.mark.parametrize(
             'model_type', [(None), ("vision_oss")]
     )
-    def test_batch_inference_preparer(self, model_type:str, temp_dir: str):
+    def test_batch_inference_preparer(self, model_type: str, temp_dir: str):
         """Test batch inference preparer."""
         ml_client = get_mlclient()
         score_url = "https://test.com"
@@ -99,7 +99,7 @@ class TestBatchInferencePreparerComponent:
         if temp_dir is not None:
             file_path = os.path.join(temp_dir, uuid.uuid4().hex + ".jsonl")
             batch_input_file = Constants.BATCH_INFERENCE_PREPARER_FILE_PATH_VISION \
-                                if model_type == "vision_oss" else Constants.BATCH_INFERENCE_PREPARER_FILE_PATH
+                if model_type == "vision_oss" else Constants.BATCH_INFERENCE_PREPARER_FILE_PATH
             with open(batch_input_file, "r") as f:
                 with open(file_path, "w") as f2:
                     f2.write(f.read())

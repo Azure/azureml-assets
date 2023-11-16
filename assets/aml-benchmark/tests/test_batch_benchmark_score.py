@@ -79,7 +79,7 @@ class TestBatchBenchmarkScoreComponent:
         if temp_dir is not None:
             file_path = os.path.join(temp_dir, uuid.uuid4().hex + ".json")
             input_data = Constants.BATCH_INFERENCE_FILE_PATH_VISION if model_type == "vision_oss" \
-                         else Constants.BATCH_INFERENCE_FILE_PATH
+                else Constants.BATCH_INFERENCE_FILE_PATH
             with open(input_data, "r") as f:
                 with open(file_path, "w") as f2:
                     f2.write(f.read())
