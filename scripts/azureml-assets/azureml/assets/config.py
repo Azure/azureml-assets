@@ -671,7 +671,7 @@ class AzureBlobstoreAssetPath(AssetPath):
 
     @property
     def container_name(self) -> str:
-        """Container name"""
+        """Container name."""
         return self._container_name
 
     @property
