@@ -75,6 +75,6 @@ Note:
 ```
 
 #### Model inference - visualization
-For a sample image.
+For a sample image below, the top 4 labels are 'trilobite', 'affenpinscher, monkey pinscher, monkey dog', 'mosque', 'Bernese mountain dog'.
 
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_openai-clip-vit-base-patch32_cafe_ZSIC.jpg" alt="multiclass image classification visualization">
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_automl_image_classification.png" alt="image classification visualization">
