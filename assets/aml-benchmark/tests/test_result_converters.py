@@ -10,6 +10,7 @@ from .test_utils import get_src_dir
 
 
 sys.path.append(get_src_dir())
+print(get_src_dir())
 
 
 from aml_benchmark.batch_output_formatter.result_converters import ResultConverters  # noqa: E402
@@ -19,7 +20,7 @@ class TestResultConverters:
     """Test result converters."""
 
     @pytest.mark.parametrize(
-            'model_type,label_col', [('oai', 'label'), ('oss', None)]
+            'model_type,label_col', [('oai', 'label'), ('oss', None), ('vision_oss', None)]
     )
     def test_label_column_name(self, model_type, label_col):
         """Test label column name."""

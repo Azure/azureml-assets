@@ -2,12 +2,12 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: roberta-base-openai-detector
 path: ./
 properties:
-  SHA: 8bdaf8823e2e58aaa3716eabc607f05b631b7273
+  SHA: f5444000d615d1366ab9432a981035c58c57d55f
   datasets: bookcorpus, wikipedia
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
   finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC24rs_v3
+  finetune-recommended-sku: Standard_NC12s_v3
   finetuning-tasks: text-classification, token-classification, question-answering
   inference-min-sku-spec: 2|0|7|14
   inference-recommended-sku: Standard_DS2_v2, Standard_D2a_v4, Standard_D2as_v4, Standard_DS3_v2,
@@ -53,4 +53,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: text-classification
-version: 10
+version: 11
