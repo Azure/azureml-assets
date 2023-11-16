@@ -2,12 +2,12 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: bert-base-uncased
 path: ./
 properties:
-  SHA: 0a6aa9128b6194f4f3c4db429b6cb4891cdb421b
+  SHA: 1dbc166cf8765166998eff31ade2eb64c8a40076
   datasets: bookcorpus, wikipedia
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
   finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC24rs_v3
+  finetune-recommended-sku: Standard_NC12s_v3
   finetuning-tasks: text-classification, token-classification, question-answering
   inference-min-sku-spec: 2|0|7|14
   inference-recommended-sku: Standard_DS2_v2, Standard_D2a_v4, Standard_D2as_v4, Standard_DS3_v2,
@@ -53,7 +53,7 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: fill-mask
-version: 10
+version: 11
 description: |
   BERT is a pre-trained model in the field of NLP (natural language processing) released by Google. It is an AI language model that has been trained on a large corpus of English data using a self-supervised method, learning to predict masked words in a sentence and to predict if two sentences are consecutive or not. This model comes in several variations, including an English "uncased" version, Chinese and multilingual cased/uncased versions, and 24 smaller models. It is primarily used to fine-tune on downstream tasks for NLP, such as sequence classification, token classification, or question answering, although it can also be used for masked language modeling and next sentence prediction. The model was trained on BookCorpus and English Wikipedia data and its training procedure involved preprocessing the data, tokenizing it, and masking 15% of the tokens. The BERT model is fine-tuned on various tasks, and its test results on these tasks have shown impressive accuracy. 
   <br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
@@ -88,7 +88,7 @@ description: |
   #### Sample input
   ```json
   {
-      "inputs": {
+      "input_data": {
           "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
       }
   }
