@@ -638,8 +638,7 @@ class AzureBlobstoreAssetPath(AssetPath):
 
         except Exception as e:
             # If we fail then simply return the URI "as-is" and hope for the best
-            print(f"Failed to generate SAS token for storage {storage_name} and container 
-                  {container_name}: {e}", file=sys.stderr)
+            print(f'Failed to generate SAS token for storage {storage_name} and container {container_name}: {e}', file=sys.stderr)
             return ""
 
     @property
