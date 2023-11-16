@@ -83,12 +83,12 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
         # Hack: Use proxy url template to access AOAI deployment with specific app version
         # 1st and 3rd line cannot be f-string otherwise it will fail the check.
         proxy_url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}' \
-                + f'/providers/Microsoft.MachineLearningServices/workspaces/{proxy_workspace_name}' \
-                + '/endpoints/Azure.OpenAI/deployments/{deploymentName}'
+            + f'/providers/Microsoft.MachineLearningServices/workspaces/{proxy_workspace_name}' \
+            + '/endpoints/Azure.OpenAI/deployments/{deploymentName}'
         api_version = '2023-10-01'
 
         activity_logger.info(f"Try to use proxy url '{proxy_url}' with app version '{api_version}'.")
-        
+
         # create new client with proxy subscription id
         client = get_cognitive_services_client(proxy_subscription_id)
 
