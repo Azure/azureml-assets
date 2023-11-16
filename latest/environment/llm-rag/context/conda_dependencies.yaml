@@ -9,7 +9,7 @@ dependencies:
 - pip:
   - azureml-rag[cognitive_search,data_generation,pinecone]>=0.2.18.1
   - azure-search-documents==11.4.0b8
-  - langchain==0.0.312
+  - langchain==0.0.317
   - tiktoken~=0.3.0
   - azure-ai-ml==1.12.0
   - azure-identity==1.12.0
