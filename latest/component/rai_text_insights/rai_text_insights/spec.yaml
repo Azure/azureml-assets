@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: rai_text_insights
 display_name: RAI Text Insights
-version: 0.0.10
+version: 0.0.11
 tags:
   Preview: ""
 type: command
@@ -72,7 +72,7 @@ outputs:
     description: Json file to which UX is serialized to for viewing in static AzureML
       Studio UI
 code: ../src
-environment: azureml://registries/azureml/environments/responsibleai-text-ubuntu20.04-py38-cpu/versions/30
+environment: azureml://registries/azureml/environments/responsibleai-text-ubuntu20.04-py38-cpu/versions/33
 command: >-
   python ./rai_text_insights.py
   --task_type ${{inputs.task_type}}
