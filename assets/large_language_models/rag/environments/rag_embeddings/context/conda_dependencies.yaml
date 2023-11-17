@@ -22,7 +22,6 @@ dependencies:
   - azureml-contrib-services
   - azureml-core=={{latest-pypi-version}}
   - azureml-dataprep>=4.12.7 # Change back to latest version once azureml-fsspec is compatible
-  - azureml-fsspec
   - azureml-inference-server-http==0.7.6
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
@@ -30,7 +29,6 @@ dependencies:
   - beautifulsoup4~=4.11.2
   - datasets~=2.10.1
   - faiss-cpu~=1.7.3
-  - fsspec~=2023.3.0
   - GitPython>=3.1
   - inference-schema==1.4
   - langchain==0.0.317
@@ -50,7 +48,6 @@ dependencies:
   - sentence-transformers
   - sqlalchemy==1.4.46
   - tika~=2.6.0
-  - tiktoken~=0.3.0
     # Package dependency needed for AML run token authentication
   - python-dateutil>=2.7.3,<3.0.0
   - PyJWT<3.0.0
