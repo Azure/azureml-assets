@@ -534,7 +534,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             None,
         )
 
-    def get_uri(self, token_expiration_timedelta = datetime.timedelta(hours=1)) -> str:
+    def get_uri(self, token_expiration_timedelta=datetime.timedelta(hours=1)) -> str:
         """Get Asset URI.
 
         :param token_expiration_timedelta: Amount of time until token expiration
