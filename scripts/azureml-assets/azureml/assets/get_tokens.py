@@ -46,17 +46,8 @@ def get_tokens(input_dirs: List[Path],
         if container_name in json_info[account_name]:
             continue
 
-        start_time = datetime.datetime.now(datetime.timezone.utc)
-        expiry_time = start_time + datetime.timedelta(days=1)
-
-        token = AzureBlobstoreAssetPath.generate_sas_token(account_uri=model_config.path.account_uri,
-                                                           container_name=container_name,
-                                                           storage_name=account_name,
-                                                           start_time=start_time,
-                                                           expiry_time=expiry_time)
-
-        if len(token) == 0:
-            token = None
+        _ = model_config.path.get_uri(token_expiration_timedelta=datetime.timedelta(days=1))
+        token = model_config.path.token
 
         json_info[account_name][container_name] = token
 
