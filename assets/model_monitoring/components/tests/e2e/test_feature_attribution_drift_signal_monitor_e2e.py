@@ -174,4 +174,4 @@ class TestFeatureAttributionDriftModelMonitor:
         )
 
         # empty target data should cause the pipeline to fail
-        assert pipeline_job.status == "Completed"
+        assert pipeline_job.status == "Failed"

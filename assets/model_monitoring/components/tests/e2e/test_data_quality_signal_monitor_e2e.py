@@ -84,7 +84,7 @@ class TestDataQualityModelMonitor:
 
     def test_monitoring_run_use_defaults_empty_production_data_failed(
         self, ml_client: MLClient, get_component, test_suite_name
-    ):        
+    ):
         """Test the scenario where the production data is empty."""
         pipeline_job = _submit_data_quality_signal_monitor_job(
             ml_client,
