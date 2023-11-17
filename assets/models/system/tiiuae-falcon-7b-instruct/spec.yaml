@@ -38,4 +38,6 @@ tags:
   model_specific_defaults:
     apply_lora: 'true'
     precision: '4'
+  inference_supported_envs:
+  - vllm
 version: 3
