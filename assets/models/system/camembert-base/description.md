@@ -1,7 +1,22 @@
 CamemBERT is a state-of-the-art language model for French developed by a team of researchers. It is based on the RoBERTa model and is available in 6 different versions on Hugging Face. It can be used for fill-in-the-blank tasks. However, it has been pretrained on a subcorpus of OSCAR which may contain lower quality data and personal and sensitive information. Also, there may be biases and historical stereotypes present in the model. The model is licensed under the MIT license, and more information can be found in the research paper and on the Camembert website. It was trained on the OSCAR dataset, which is a multilingual corpus obtained by language classification and filtering of the Common Crawl corpus using the Ungoliant architecture.
+The "Camembert" model is an advanced computer program designed for understanding and processing human language, a field known as natural language processing (NLP). It's based on a powerful architecture called a transformer, which is very good at handling language-related tasks. Camembert is particularly optimized for the French language and can be used to analyze text, understand context, and perform tasks like translation, sentiment analysis, and more. It's a tool that helps computers understand and work with human language in a sophisticated way.
+
+It serves as the starting point for customization and fine-tuning for specific tasks, such as sentiment analysis, question answering, or text generation. This base model already possesses a general understanding of language, making it easier to adapt to more specific purposes.
+
 <br>Please Note: This model accepts masks in `<mask>` format. See Sample input for reference. 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/camembert-base" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
+|      Model                             | #Params          |  Arch     |
+|----------------------------------------|------------------|-----------|
+|camembert-base                          |   110M           |  Base     |
+|camembert/camembert-large               |   335M           |  Large    |
+|camembert/camembert-base-ccnet          |   110M           |  Base     |
+|camembert/camembert-base-wikipedia-4gb  |   110M           |  Base     |
+|camembert/camembert-base-oscar-4gb      |   110M           |  Base     |
+|camembert/camembert-base-ccnet-4gb      |   110M           |  Base     |
+
+### Authors
+CamemBERT was trained and evaluated by Louis Martin*, Benjamin Muller*, Pedro Javier Ortiz Suárez*, Yoann Dupont, Laurent Romary, Éric Villemonte de la Clergerie, Djamé Seddah and Benoît Sagot.
 ### Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
