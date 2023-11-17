@@ -553,7 +553,8 @@ class AzureBlobstoreAssetPath(AssetPath):
         # If a SAS token has been explicitly set, then assume that the URI+token is valid.
         # Simply append the token and return. If no SAS token is set, then proceed to rest of function.
         if self.token is not None:
-            uri += "?" + self.token
+            if self.token:
+                uri += "?" + self.token
             return uri
 
         # The first test is to see if we can simply list the contents of the container
@@ -568,6 +569,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             )
 
             if response.status_code >= 200 and response.status_code <= 299:
+                self._token = ""
                 return uri
         except Exception:
             # If we fail pass through to the next approach
