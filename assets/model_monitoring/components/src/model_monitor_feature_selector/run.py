@@ -28,8 +28,8 @@ def run():
     parser.add_argument("--feature_names", type=str)
     args = parser.parse_args()
 
-    input_df1 = try_read_mltable_in_spark(args.input_data_1, "input_data_1 is empty.")
-    input_df2 = try_read_mltable_in_spark(args.input_data_2, "input_data_2 is empty.")
+    input_df1 = try_read_mltable_in_spark(args.input_data_1, "input_data_1")
+    input_df2 = try_read_mltable_in_spark(args.input_data_2, "input_data_2")
 
     if not input_df1 and not input_df2:
         print("Both input data are empty. Skipping feature selection.")
@@ -40,7 +40,7 @@ def run():
 
     feature_importance = None
     try:
-        feature_importance = try_read_mltable_in_spark_with_error(args.feature_importance)
+        feature_importance = try_read_mltable_in_spark_with_error(args.feature_importance, "feature_importance")
     except DataNotFoundError as e:
         if args.filter_type == FeatureSelectorType.TOP_N_BY_ATTRIBUTION.name:
             raise e
