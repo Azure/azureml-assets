@@ -7,6 +7,7 @@ RUN apt-get update && apt-get -y upgrade
 
 COPY . .
 RUN pip install --no-cache-dir -e .
+RUN pip install triton==2.1.0
 RUN pip list    # show installed packages
 
 # Copy scoring file
