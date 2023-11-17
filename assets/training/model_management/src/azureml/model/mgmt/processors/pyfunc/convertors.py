@@ -834,7 +834,6 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
         from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
-
         from azureml.model.mgmt.processors.pyfunc.automl.od_is_classes import COCO_CLASSES
         import copy
         model_wrapper = setup_model(
@@ -848,9 +847,12 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
             specs={"model_size": "medium",
                    "device": self._device},
             settings={})
+
         specs = {
-            "model_settings": model_wrapper.model_settings,
-            'labels': COCO_CLASSES
+            "model_specs": model_wrapper.specs,
+            "model_settings": model_wrapper.model_settings.get_settings_dict(),
+            "inference_settings": model_wrapper.inference_settings,
+            'classes': model_wrapper.classes,
         }
 
         checkpoint_data = {
@@ -865,7 +867,6 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
 
         return model_file
 
-
     def _get_model_weights_instance_segmentation(self) -> str:
         """Return default model weights path.
 
@@ -874,9 +875,9 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
         from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
-
         from azureml.model.mgmt.processors.pyfunc.automl.od_is_classes import COCO_CLASSES
         import copy
+
         model_wrapper = setup_model(
             model_name=ModelNames.MASK_RCNN_RESNET50_FPN,
             number_of_classes=80,
@@ -887,9 +888,12 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
             model_state=None,
             specs=None,
             settings={})
+
         specs = {
-            "model_settings": model_wrapper.model_settings,
-            'labels': COCO_CLASSES,
+            "model_specs": model_wrapper.specs,
+            "model_settings": model_wrapper.model_settings.get_settings_dict(),
+            "inference_settings": model_wrapper.inference_settings,
+            'classes': model_wrapper.classes,
         }
 
         checkpoint_data = {
