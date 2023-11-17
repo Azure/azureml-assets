@@ -1,4 +1,4 @@
-name: crack_chunk_embed_index_and_register
+name: llm_rag_crack_chunk_embed_index_and_register
 version: 0.0.1
 tags:
     Preview: ""
@@ -98,6 +98,7 @@ inputs:
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
+
 command: >-
   python -m azureml.rag.tasks.crack_chunk_embed_index_and_register
   --input_data ${{inputs.input_data}}
