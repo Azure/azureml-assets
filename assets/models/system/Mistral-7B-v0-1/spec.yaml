@@ -46,6 +46,9 @@ tags:
     deepspeed_stage: '3'
     apply_deepspeed: 'true'
     apply_ort: 'true'
+  inference_supported_envs:
+  - vllm
+  - ds_mii
   license: apache-2.0
   task: text-generation
   author: mistralai
