@@ -7,6 +7,7 @@ from typing import Optional
 import json
 import os
 import uuid
+import pytest
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
@@ -35,7 +36,10 @@ class TestBatchBenchmarkScoreComponent:
 
     EXP_NAME = "batch-benchmark-score-test"
 
-    def test_batch_benchmark_score(self, temp_dir: str):
+    @pytest.mark.parametrize(
+            'model_type', [(None), ("vision_oss")]
+    )
+    def test_batch_benchmark_score(self, model_type: str, temp_dir: str):
         """Test batch score preparer."""
         ml_client = get_mlclient()
         score_url, deployment_name, connections_name = deploy_fake_test_endpoint_maybe(ml_client)
@@ -45,6 +49,7 @@ class TestBatchBenchmarkScoreComponent:
             deployment_name,
             connections_name,
             temp_dir,
+            model_type
         )
         # submit the pipeline job
         pipeline_job = ml_client.create_or_update(
@@ -66,19 +71,24 @@ class TestBatchBenchmarkScoreComponent:
                 deployment_name: str,
                 connections_name: str,
                 temp_dir: Optional[str] = None,
+                model_type: Optional[str] = None,
             ) -> Job:
         pipeline_job = load_yaml_pipeline("batch_benchmark_score.yaml")
 
         # avoid blob exists error when running pytest with multiple workers
         if temp_dir is not None:
             file_path = os.path.join(temp_dir, uuid.uuid4().hex + ".json")
-            with open(Constants.BATCH_INFERENCE_FILE_PATH, "r") as f:
+            input_data = Constants.BATCH_INFERENCE_FILE_PATH_VISION if model_type == "vision_oss" \
+                else Constants.BATCH_INFERENCE_FILE_PATH
+            with open(input_data, "r") as f:
                 with open(file_path, "w") as f2:
                     f2.write(f.read())
             with open(os.path.join(temp_dir, "MLTable"), "w") as f:
                 f.writelines(MLTABLE_CONTENTS)
 
         # set the pipeline inputs
+        if model_type:
+            pipeline_job.jobs['run_batch_benchmark_score'].inputs.model_type = model_type
         pipeline_job.inputs.data_input_table = Input(
             type="mltable", path=temp_dir
         )

@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/deepset-minilm-uncased-squad2/96785db/mlflow_model_folder
+  container_path: huggingface/deepset-minilm-uncased-squad2/1698812677/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
