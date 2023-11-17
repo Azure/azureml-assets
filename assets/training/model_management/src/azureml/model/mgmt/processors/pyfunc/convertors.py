@@ -879,6 +879,8 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
         from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
         from azureml.model.mgmt.processors.pyfunc.automl.od_is_classes import COCO_SEG_CLASSES
+        from azureml.automl.dnn.vision.common.constants import PretrainedModelUrls
+        from azureml.automl.dnn.vision.common.pretrained_model_utilities import load_state_dict_from_url
         import copy
 
         model_wrapper = setup_model(
@@ -899,11 +901,17 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
             'classes': model_wrapper.classes,
         }
 
+        # ideally, model_state_dict should be copy.deepcopy(model_wrapper.state_dict())
+        # for instance segmentation, when the pretrained weight is loaded in dnn-vision package,
+        # it would randomly initialize the predictor head (regardless of number_of_classes is the same as default)
+        # thus we need to use the temp workaround to load the pretrained weight from url
+        model_url = PretrainedModelUrls.MODEL_URLS["maskrcnn_resnet50_fpn_coco"]
+        model_state_dict = load_state_dict_from_url(model_url)
         checkpoint_data = {
             "model_name": model_wrapper.model_name,
             "number_of_classes": model_wrapper.number_of_classes,
             "specs": specs,
-            "model_state": copy.deepcopy(model_wrapper.state_dict()),
+            "model_state": model_state_dict,
         }
 
         model_file = "/tmp/maskrcnn.pth"
