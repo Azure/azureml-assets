@@ -615,8 +615,7 @@ class AzureBlobstoreAssetPath(AssetPath):
                 start=start_time
             )
 
-            sas_token = "?" + self._token
-            uri += sas_token
+            uri += "?" + self._token
             return uri
 
         except Exception as e:
