@@ -762,8 +762,8 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         if self._task not in [
             SupportedTasks.IMAGE_CLASSIFICATION.value,
             SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
-            SupportedTasks.AUTOML_OBJECT_DETECTION.value,
-            SupportedTasks.AUTOML_INSTANCE_SEGMENTATION.value,
+            SupportedTasks.IMAGE_OBJECT_DETECTION.value,
+            SupportedTasks.IMAGE_INSTANCE_SEGMENTATION.value,
         ]:
             raise Exception("Unsupported task")
 
@@ -845,7 +845,10 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
             local_rank=0,
             model_state=None,
             specs={"model_size": "medium",
-                   "device": self._device},
+                   "device": self._device,
+                   "img_size": 640,
+                   "box_score_thresh": 0.1,
+                   "nms_iou_thresh": 0.5},
             settings={})
 
         specs = {
@@ -922,6 +925,10 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         """Prepare model for save to MLflow."""
         from azureml.automl.dnn.vision.common.mlflow.mlflow_model_wrapper import MLFlowImagesModelWrapper
         from azureml.automl.dnn.vision.common.model_export_utils import _get_scoring_method
+        is_yolo = self._task == SupportedTasks.IMAGE_OBJECT_DETECTION.value
+        mlflow_model_wrapper = MLFlowImagesModelWrapper(model_settings={},
+                                                        task_type=self._task,
+                                                        scoring_method=_get_scoring_method(self._task, is_yolo))
 
         mlflow_model_wrapper = MLFlowImagesModelWrapper(
             model_settings={},
@@ -934,9 +941,9 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
             SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
         ]:
             model_file = self._get_model_weights_classification()
-        elif self._task == SupportedTasks.AUTOML_OBJECT_DETECTION.value:
+        elif self._task == SupportedTasks.IMAGE_OBJECT_DETECTION.value:
             model_file = self._get_model_weights_object_detection()
-        elif self._task == SupportedTasks.AUTOML_INSTANCE_SEGMENTATION.value:
+        elif self._task == SupportedTasks.IMAGE_INSTANCE_SEGMENTATION.value:
             model_file = self._get_model_weights_instance_segmentation()
         else:
             raise Exception("Unsupported task")
