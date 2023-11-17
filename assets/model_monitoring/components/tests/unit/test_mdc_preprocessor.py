@@ -106,6 +106,31 @@ class TestMDCPreprocessor:
 
         assert_frame_equal(pdf_actual, pdf_expected)
 
+    @pytest.mark.skip(reason="pending on a mltable column to_string() bug")
+    @pytest.mark.parametrize(
+        "window_start_time, window_end_time",
+        [
+            ("2023-11-12T10:00:00", "2023-11-12T11:00:00"),
+        ]
+    )
+    def test_uri_folder_to_spark_df_with_complex_type(self, mdc_preprocessor_test_setup,
+                                                      window_start_time, window_end_time):
+        """Test uri_folder_to_spark_df()."""
+        fs = fsspec.filesystem("file")
+        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        preprocessed_output = f"{tests_path}/unit/preprocessed_mdc_data"
+        shutil.rmtree(f"{preprocessed_output}temp", True)
+
+        pdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
+            window_start_time,
+            window_end_time,
+            f"{tests_path}/unit/raw_mdc_data/",
+            preprocessed_output,
+            False,
+            fs
+        )
+        pdf.show()
+
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, root_folder_exists",
         [
@@ -130,7 +155,7 @@ class TestMDCPreprocessor:
         root_folder = f"{tests_path}/unit/raw_mdc_data/" if root_folder_exists else f"{tests_path}/unit/raw_mdc_data1/"
 
         with pytest.raises(DataNotFoundError):
-            pdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
+            df = _raw_mdc_uri_folder_to_preprocessed_spark_df(
                 window_start_time,
                 window_end_time,
                 root_folder,
@@ -139,7 +164,7 @@ class TestMDCPreprocessor:
                 fs,
                 my_add_tags
             )
-            pdf.show()
+            df.show()
 
     @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
@@ -230,19 +255,19 @@ class TestMDCPreprocessor:
                     StructField("f0", StringType()), StructField("f1", DoubleType()), StructField("f2", LongType()),
                 ]
             ),
-            # struct fields
+            # struct fields, with escape characters
             (
                 [
-                    [json.dumps([{"simple_field": "v0", "struct_field": {"f0": "t0", "f1": 1,   "f2": 4}}]), "cid0"],  # noqa
-                    [json.dumps([{"simple_field": "v1", "struct_field": {"f0": "t1", "f1": 1.2}},
-                                 {"simple_field": "v2", "struct_field": {"f0": "t2", "f1": 1.3, "f2": 5}}]), "cid1"],  # noqa
-                    [json.dumps([{"simple_field": "v3", "struct_field": {"f0": "t3",            "f2": 6}}]), "cid2"],  # noqa
+                    [json.dumps([{"simple_field": "v0", "struct_field": {"f0": "t\\0",  "f1": 1,    "f2": 4}}]), "cid0"],  # noqa
+                    [json.dumps([{"simple_field": "v1", "struct_field": {"f0": "t\"1",  "f1": 1.2}},
+                                 {"simple_field": "v2", "struct_field": {"f0": "\"t2\"","f1": 1.3,  "f2": 5}}]), "cid1"],  # noqa
+                    [json.dumps([{"simple_field": "v3", "struct_field": {"f0": "\"[\\\"t3\\\"]\"",                "f2": 6}}]), "cid2"],  # noqa
                 ],
                 pd.DataFrame([
-                    {"simple_field": "v0", "struct_field": json.dumps({"f0": "t0", "f1": 1,   "f2": 4}), "correlationid": "cid0_0"},  # noqa
-                    {"simple_field": "v1", "struct_field": json.dumps({"f0": "t1", "f1": 1.2}),          "correlationid": "cid1_0"},  # noqa
-                    {"simple_field": "v2", "struct_field": json.dumps({"f0": "t2", "f1": 1.3, "f2": 5}), "correlationid": "cid1_1"},  # noqa
-                    {"simple_field": "v3", "struct_field": json.dumps({"f0": "t3",            "f2": 6}), "correlationid": "cid2_0"},  # noqa
+                    {"simple_field": "v0", "struct_field": json.dumps({"f0": "t\\0",    "f1": 1,   "f2": 4}),   "correlationid": "cid0_0"},  # noqa
+                    {"simple_field": "v1", "struct_field": json.dumps({"f0": "t\"1",    "f1": 1.2}),            "correlationid": "cid1_0"},  # noqa
+                    {"simple_field": "v2", "struct_field": json.dumps({"f0": "\"t2\"",  "f1": 1.3, "f2": 5}),   "correlationid": "cid1_1"},  # noqa
+                    {"simple_field": "v3", "struct_field": json.dumps({"f0": "\"[\\\"t3\\\"]\"",                 "f2": 6}),   "correlationid": "cid2_0"},  # noqa
                 ]),
                 [
                     StructField("simple_field", StringType()),

@@ -1,6 +1,6 @@
 $schema: http://azureml/sdk-2-0/ParallelComponent.json
 name: batch_benchmark_score
-version: 0.0.2
+version: 0.0.3
 display_name: Batch Benchmark Score
 is_deterministic: False
 type: parallel
@@ -9,6 +9,10 @@ inputs:
     type: mltable
     optional: False
     description: The data to be split and scored in parallel.
+  model_type:
+    type: string
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    optional: True
   online_endpoint_url:
     type: string
     optional: False
@@ -66,7 +70,7 @@ outputs:
 task:
   code: ../src
   environment: azureml://registries/azureml/environments/model-evaluation/versions/15
-  program_arguments: --append_row_safe_output True --debug_mode ${{inputs.debug_mode}} --online_endpoint_url ${{inputs.online_endpoint_url}} $[[--additional_properties ${{inputs.additional_properties}}]] $[[--additional_headers ${{inputs.additional_headers}}]] $[[--user_agent_segment ${{inputs.user_agent_segment}}]] --metrics_out_directory ${{outputs.metrics_out_directory}} --tally_failed_requests False --tally_exclusions none --run_type parallel --segment_large_requests disabled --segment_max_token_size 600  --ensure_ascii ${{inputs.ensure_ascii}} --output_behavior append_row --initial_worker_count ${{inputs.initial_worker_count}} --max_worker_count ${{inputs.max_worker_count}} $[[--max_retry_time_interval ${{inputs.max_retry_time_interval}}]] --save_mini_batch_results enabled --mini_batch_results_out_directory ${{outputs.mini_batch_results_out_directory}} --connections_name ${{inputs.connections_name}}  $[[--deployment_name ${{inputs.deployment_name}}]]
+  program_arguments: --append_row_safe_output True --debug_mode ${{inputs.debug_mode}} $[[--model_type ${{inputs.model_type}}]] --online_endpoint_url ${{inputs.online_endpoint_url}} $[[--additional_properties ${{inputs.additional_properties}}]] $[[--additional_headers ${{inputs.additional_headers}}]] $[[--user_agent_segment ${{inputs.user_agent_segment}}]] --metrics_out_directory ${{outputs.metrics_out_directory}} --tally_failed_requests False --tally_exclusions none --run_type parallel --segment_large_requests disabled --segment_max_token_size 600  --ensure_ascii ${{inputs.ensure_ascii}} --output_behavior append_row --initial_worker_count ${{inputs.initial_worker_count}} --max_worker_count ${{inputs.max_worker_count}} $[[--max_retry_time_interval ${{inputs.max_retry_time_interval}}]] --save_mini_batch_results enabled --mini_batch_results_out_directory ${{outputs.mini_batch_results_out_directory}} --connections_name ${{inputs.connections_name}}  $[[--deployment_name ${{inputs.deployment_name}}]]
   entry_script: aml_benchmark.batch_benchmark_score.batch_score.main
   type: run_function
   append_row_to: ${{outputs.job_out_path}}

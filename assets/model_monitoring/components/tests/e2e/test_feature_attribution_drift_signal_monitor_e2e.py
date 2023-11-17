@@ -7,6 +7,7 @@ import pytest
 from azure.ai.ml import Input, MLClient, Output
 from azure.ai.ml.entities import AmlTokenConfiguration
 from azure.ai.ml.dsl import pipeline
+from azure.ai.ml.exceptions import JobException
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_JOINER,
     COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR,
@@ -48,7 +49,11 @@ def _submit_feature_attribution_drift_model_monitor_job(
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
 
     return ml_client.jobs.get(pipeline_job.name)
 
@@ -156,7 +161,7 @@ class TestFeatureAttributionDriftModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_use_defaults_empty_production_data_successful(
+    def test_monitoring_run_use_defaults_empty_production_data_failed(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the scenario where the production data is empty."""
@@ -168,4 +173,5 @@ class TestFeatureAttributionDriftModelMonitor:
             DATA_ASSET_EMPTY,
         )
 
+        # empty target data should cause the pipeline to fail
         assert pipeline_job.status == "Completed"
