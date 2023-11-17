@@ -7,7 +7,13 @@ RUN apt-get update && apt-get -y upgrade
 RUN pip install --upgrade pip
 
 COPY requirements.txt .
+# data import code files
 COPY data_import.py /azureml/data_import/run.py
+# finetune code files
+COPY model_selector.py /azureml/finetune/model_selector.py
+COPY preprocess.py /azureml/finetune/preprocess.py
+COPY finetune.py /azureml/finetune/finetune.py
+COPY register_model.py /azureml/finetune/register_model.py
 
 RUN pip install "azureml-evaluate-mlflow==0.0.31"
 RUN pip install -r requirements.txt --no-cache-dir
