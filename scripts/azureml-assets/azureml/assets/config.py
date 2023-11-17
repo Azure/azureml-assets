@@ -534,14 +534,17 @@ class AzureBlobstoreAssetPath(AssetPath):
             None,
         )
 
-
-    def get_uri(self, token_expiration_timedelta: datetime.timedelta = datetime.timedelta(hours=1)) -> str:
+    def get_uri(self, token_expiration_timedelta = datetime.timedelta(hours=1)) -> str:
         """Get Asset URI.
 
         :param token_expiration_timedelta: Amount of time until token expiration
         :type token_expiration_timedelta: datetime.timedelta
         """
-        # Store SAS token in the object in a way that allows you to tell if the container is public or not
+        # There are 3 values token can be set to
+        # None = no attempts have been made to create a SAS token
+        # Empty string = container is public (no SAS token required)
+        # Neither of the above = the SAS token
+
         # Build the simple, non-SAS URI for quick use later in the function.
         # Its possible that the account URI may need additional tweaking to add a SAS
         # token if the account does not allow for anonymous access.
@@ -591,6 +594,7 @@ class AzureBlobstoreAssetPath(AssetPath):
 
             # If the container allows for anonymous access then we can return the URI "as-is"
             if container_client.get_container_properties().public_access is not None:
+                self._token = ""
                 return uri
 
             # Our final approach is to generate a SAS token for the container and append
@@ -615,17 +619,15 @@ class AzureBlobstoreAssetPath(AssetPath):
 
         except Exception as e:
             # If we fail then simply return the URI "as-is" and hope for the best
-            print(f"Failed to generate SAS token for storage {self._storage_name} and container {self._container_name}: {e}",
+            print(f"Failed to generate SAS token for storage {self._storage_name} "
+                  f"and container {self._container_name}: {e}",
                   file=sys.stderr)
             return uri
-
 
     @property
     def uri(self) -> str:
         """Asset URI."""
-        # If we have already cached the URI, then simply return it
-        if self._uri is not None:
-            return self._uri
+        return self.get_uri()
 
     @property
     def storage_name(self) -> str:

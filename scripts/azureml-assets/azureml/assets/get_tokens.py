@@ -36,8 +36,9 @@ def get_tokens(input_dirs: List[Path],
             input_dirs, asset_config_filename, types=[AssetType.MODEL], pattern=pattern):
 
         model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+        path = model_config.path
 
-        if not isinstance(model_config.path, AzureBlobstoreAssetPath):
+        if not isinstance(path, AzureBlobstoreAssetPath):
             continue
 
         account_name = model_config.path.storage_name
