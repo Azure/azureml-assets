@@ -13,7 +13,7 @@ import azureml.assets.util as util
 from azureml.assets.config import AssetType, AzureBlobstoreAssetPath
 
 from collections import defaultdict
-import datetime
+from datetime import timedelta
 import json
 
 
@@ -47,8 +47,11 @@ def get_tokens(input_dirs: List[Path],
         if container_name in json_info[account_name]:
             continue
 
-        _ = model_config.path.get_uri(token_expiration_timedelta=datetime.timedelta(days=1))
+        _ = model_config.path.get_uri(token_expiration=timedelta(days=1))
         token = model_config.path.token
+
+        if len(token) == 0:
+            token = None
 
         json_info[account_name][container_name] = token
 

@@ -4,7 +4,7 @@
 """Asset config classes."""
 
 import re
-import datetime
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from enum import Enum
 from functools import total_ordering
@@ -534,7 +534,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             None,
         )
 
-    def get_uri(self, token_expiration_timedelta=datetime.timedelta(hours=1)) -> str:
+    def get_uri(self, token_expiration: timedelta = timedelta(hours=1)) -> str:
         """Get Asset URI.
 
         :param token_expiration_timedelta: Amount of time until token expiration
@@ -601,8 +601,8 @@ class AzureBlobstoreAssetPath(AssetPath):
 
             # Our final approach is to generate a SAS token for the container and append
             # it to the URI
-            start_time = datetime.datetime.now(datetime.timezone.utc)
-            expiry_time = start_time + token_expiration_timedelta
+            start_time = datetime.now(timezone.utc)
+            expiry_time = start_time + token_expiration
 
             key = blob_service_client.get_user_delegation_key(start_time, expiry_time)
 
@@ -623,6 +623,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             print(f"Failed to generate SAS token for storage {self._storage_name} "
                   f"and container {self._container_name}: {e}",
                   file=sys.stderr)
+            self._token = ""
             return uri
 
     @property
@@ -644,11 +645,6 @@ class AzureBlobstoreAssetPath(AssetPath):
     def token(self) -> str:
         """Sas token."""
         return self._token
-
-    @property
-    def account_uri(self) -> str:
-        """Account URI."""
-        return self._account_uri
 
     @token.setter
     def token(self, value: str):
