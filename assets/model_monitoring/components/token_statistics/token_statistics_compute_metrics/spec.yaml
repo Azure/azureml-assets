@@ -4,7 +4,7 @@ type: spark
 name: token_statistics_compute_metrics
 display_name:  Token Statistics - Compute Metrics
 description: Compute token statistics metrics.
-version: 0.0.1
+version: 0.0.2
 is_deterministic: true
 
 inputs:
