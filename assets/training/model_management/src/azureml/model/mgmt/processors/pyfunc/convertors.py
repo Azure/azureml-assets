@@ -838,7 +838,7 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         import copy
         model_wrapper = setup_model(
             model_name=ModelNames.YOLO_V5,
-            number_of_classes=80,
+            number_of_classes=len(COCO_CLASSES),
             classes=COCO_CLASSES,
             device=self._device,
             distributed=False,
@@ -878,13 +878,13 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
         from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
-        from azureml.model.mgmt.processors.pyfunc.automl.od_is_classes import COCO_CLASSES
+        from azureml.model.mgmt.processors.pyfunc.automl.od_is_classes import COCO_SEG_CLASSES
         import copy
 
         model_wrapper = setup_model(
             model_name=ModelNames.MASK_RCNN_RESNET50_FPN,
-            number_of_classes=80,
-            classes=COCO_CLASSES,
+            number_of_classes=len(COCO_SEG_CLASSES),
+            classes=COCO_SEG_CLASSES,
             device=self._device,
             distributed=False,
             local_rank=0,
