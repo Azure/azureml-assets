@@ -25,7 +25,7 @@ from shared_utilities.constants import METADATA_VERSION
 from shared_utilities.dict_utils import merge_dicts
 from shared_utilities.io_utils import (
     np_encoder,
-    try_read_mltable_in_spark,
+    try_read_mltable_in_spark_with_error,
 )
 
 
@@ -44,14 +44,9 @@ def run():
     args = arg_parser.parse_args()
     args_dict = vars(args)
 
-    signal_metrics = try_read_mltable_in_spark(args.signal_metrics, "signal_metrics")
+    signal_metrics = try_read_mltable_in_spark_with_error(args.signal_metrics, "signal_metrics")
 
-    metrics: List[Row] = []
-    if not signal_metrics:
-        print("No metrics detected, creating an empty signal metrics.")
-        return
-    else:
-        metrics: List[Row] = signal_metrics.collect()
+    metrics: List[Row] = signal_metrics.collect()
 
     runmetric_client = RunMetricClient()
     result = MetricOutputBuilder(
@@ -63,15 +58,15 @@ def run():
     if args_dict["samples_index"]:
         try:
             print("Processing samples index.")
-            samples_index_df = try_read_mltable_in_spark(
+            samples_index_df = try_read_mltable_in_spark_with_error(
                 args.samples_index, "samples_index"
             )
-            if samples_index_df is not None:
-                samples_index: List[Row] = samples_index_df.collect()
-                result = merge_dicts(
-                    result, SamplesOutputBuilder(samples_index).get_samples_dict()
-                )
+            samples_index: List[Row] = samples_index_df.collect()
+            result = merge_dicts(
+                result, SamplesOutputBuilder(samples_index).get_samples_dict()
+            )
         except Exception as e:
+            # whatever error we got, including DataNotFoundError, skip processing the samples index
             print(f"Samples index is empty. Skipping processing of the samples index. {e}")
 
     output_payload = to_output_payload(args.signal_name, args.signal_type, result)

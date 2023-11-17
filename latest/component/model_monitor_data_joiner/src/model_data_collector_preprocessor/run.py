@@ -6,6 +6,7 @@
 import argparse
 
 import pandas as pd
+import numpy as np
 from pyspark.sql import DataFrame
 from dateutil import parser
 import mltable
@@ -178,11 +179,19 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     otherwise, return the dataref content which is a url to the json file.
     """
 
+    def safe_dumps(x):
+        if type(x) in [dict, list]:
+            return json.dumps(x)
+        elif type(x) is np.ndarray:
+            return json.dumps(x.tolist())
+        else:
+            return x
+
     def convert_object_to_str(dataframe: pd.DataFrame) -> pd.DataFrame:
         columns = dataframe.columns
         for column in columns:
             if dataframe[column].dtype == "object":
-                dataframe[column] = dataframe[column].apply(lambda x: x if type(x) is str else json.dumps(x))
+                dataframe[column] = dataframe[column].apply(safe_dumps)
 
         return dataframe
 
@@ -268,7 +277,7 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
 
     df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs, add_tags_func)
     # print("df after converting mltable to spark df:")
-    # df.show()
+    # df.select("data").show(truncate=False)
     # df.printSchema()
 
     datastore = _get_datastore_from_input_path(input_data)

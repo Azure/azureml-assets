@@ -7,7 +7,7 @@ import argparse
 from evaluate_metrics_threshold import (
     evaluate_metrics_threshold,
 )
-from shared_utilities.io_utils import try_read_mltable_in_spark
+from shared_utilities.io_utils import try_read_mltable_in_spark_with_error
 
 
 def run():
@@ -19,11 +19,7 @@ def run():
     parser.add_argument("--notification_emails", type=str, required=False, nargs="?")
     args = parser.parse_args()
 
-    metrics_df = try_read_mltable_in_spark(args.metrics_to_evaluate, "metrics_to_evaluate")
-
-    if not metrics_df:
-        print("No metrics to evaluate. Skipping metric evaluation.")
-        return
+    metrics_df = try_read_mltable_in_spark_with_error(args.metrics_to_evaluate, "metrics_to_evaluate")
 
     is_valid = evaluate_metrics_threshold(args.signal_name, metrics_df, args.notification_emails)
 

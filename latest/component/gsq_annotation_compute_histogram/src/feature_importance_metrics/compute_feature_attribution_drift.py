@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import ndcg_score
 
-from shared_utilities.io_utils import try_read_mltable_in_spark_with_warning, save_spark_df_as_mltable
+from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable
 from shared_utilities import constants
 
 from feature_importance_metrics.feature_importance_utilities import convert_pandas_to_spark, log_time_and_message
@@ -164,12 +164,8 @@ def run(args):
     """Calculate feature attribution drift."""
     try:
         log_time_and_message("Reading in baseline data & target data")
-        baseline_df = try_read_mltable_in_spark_with_warning(args.baseline_data, "baseline_data")
-        production_df = try_read_mltable_in_spark_with_warning(args.production_data, "production_data")
-
-        if not baseline_df or not production_df:
-            print("Skipping feature atttribution drift computation.")
-            return
+        baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
+        production_df = try_read_mltable_in_spark_with_error(args.production_data, "production_data")
 
         [baseline_explanations, baseline_row_count] = configure_data(baseline_df)
         [production_explanations, production_row_count] = configure_data(production_df)

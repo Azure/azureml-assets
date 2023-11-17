@@ -33,7 +33,7 @@ def run():
     args = arg_parser.parse_args()
 
     signal_metrics = try_read_mltable_in_spark(
-        args.signal_metrics, "signal_metrics does not contain data."
+        args.signal_metrics, "signal_metrics"
     )
 
     metrics: List[Row] = []
