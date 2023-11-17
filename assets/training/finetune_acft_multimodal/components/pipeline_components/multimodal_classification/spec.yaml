@@ -116,7 +116,7 @@ inputs:
   # Training parameters
   number_of_epochs:
     type: integer
-    default: 1
+    default: 15
     optional: true
     description: training epochs
 
@@ -395,6 +395,7 @@ jobs:
     resources:
       instance_count: ${{parent.inputs.instance_count}}
     inputs:
+      problem_type: ${{parent.inputs.problem_type}}
       number_of_epochs: ${{parent.inputs.number_of_epochs}}
       max_steps: ${{parent.inputs.max_steps}}
       training_batch_size: ${{parent.inputs.training_batch_size}}
