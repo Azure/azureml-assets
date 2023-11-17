@@ -18,7 +18,7 @@ NOTE: We highly recommend to finetune the model on your dataset before deploying
  Task|Dataset|Python sample (Notebook)|CLI with YAML 
  |--|--|--|--| 
  Multimodal multi-class classification|[Airbnb listings dataset](https://automlresources-prod.azureedge.net/datasets/AirBnb.zip)|<a href='https://aka.ms/azureml-ft-sdk-multimodal-mc-classification' target='_blank'>multimodal-multiclass-classification.ipynb</a>|<a href='https://aka.ms/azureml-ft-cli-multimodal-mc-classification' target='_blank'>multimodal-multiclass-classification.sh</a> 
- Multimodal multi-label classification |[Chest X-Rays dataset](https://automlresources-prod.azureedge.net/datasets/ChXray.zip)|<a href='https://aka.ms/azureml-ft-sdk-multimodal-ml-classification' target='_blank'>multimodal-multilabel-classification.ipynb</a>|<a href='https://aka.ms/azureml-ft-cli-multimodal-ml-classification' target='_blank'>multimodal-multilabel-classification.sh</a> 
+ Multimodal multi-label classification |[Chest X-Rays dataset](https://automlresources-prod.azureedge.net/datasets/chXray.zip)|<a href='https://aka.ms/azureml-ft-sdk-multimodal-ml-classification' target='_blank'>multimodal-multilabel-classification.ipynb</a>|<a href='https://aka.ms/azureml-ft-cli-multimodal-ml-classification' target='_blank'>multimodal-multilabel-classification.sh</a> 
  
 ### Sample inputs and outputs (for real-time inference) 
 
