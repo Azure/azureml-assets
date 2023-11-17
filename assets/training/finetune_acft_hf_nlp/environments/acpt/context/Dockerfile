@@ -14,6 +14,9 @@ COPY model_selector.py /azureml/finetune/model_selector.py
 COPY preprocess.py /azureml/finetune/preprocess.py
 COPY finetune.py /azureml/finetune/finetune.py
 COPY register_model.py /azureml/finetune/register_model.py
+COPY register_presets_model.py /azureml/finetune/register_presets_model.py
+COPY zero2.json /azureml/finetune/zero2.json
+COPY zero3.json /azureml/finetune/zero3.json
 
 RUN pip install "azureml-evaluate-mlflow==0.0.31"
 RUN pip install -r requirements.txt --no-cache-dir
