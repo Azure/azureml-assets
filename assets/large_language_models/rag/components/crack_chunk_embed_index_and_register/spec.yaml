@@ -95,6 +95,18 @@ inputs:
     type: string
     optional: True
     description: The connection id of the ACS provider to use.
+  validate_deployments:
+    type: string
+    optional: True
+    description: Enables Validation of Model and Index deployments.
+  llm_config:
+    type: string
+    optional: True
+    description: JSON string containing the LLM configuration.
+  llm_connection_id:
+    type: string
+    optional: True
+    description: The connection id of the LLM provider to use.
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
@@ -118,3 +130,6 @@ command: >-
   --index_config '${{inputs.acs_config}}'
   $[[--index_connection_id ${{inputs.index_connection_id}}]]
   --asset_uri ${{inputs.asset_uri}}
+  $[[--validate_deployments ${{inputs.validate_deployments}}]]
+  $[[--llm_config ${{inputs.llm_config}}]]
+  $[[--llm_connection_id ${{inputs.llm_connection_id}}]]
