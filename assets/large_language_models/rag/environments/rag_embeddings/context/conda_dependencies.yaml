@@ -44,7 +44,7 @@ dependencies:
   - polling2~=0.5.0
   - psutil~=5.8.0
   - pymssql==2.2.7
-  - pypdf~=3.7.0
+  - pypdf~=3.17.1
   - sentence-transformers
   - sqlalchemy==1.4.46
   - tika~=2.6.0
