@@ -39,7 +39,7 @@ jobs:
       run: npm install -g cspell
 
     - name: Run cspell for typo check
-      working-directory: PROMPTFLOW_DIR
+      working-directory: ${{ env.PROMPTFLOW_DIR }}
       run: |-
         cspell lint "**" > cspell_check.log || true
         if [ -s cspell_check.log ]; then
@@ -50,4 +50,4 @@ jobs:
         fi
 
     - name: Check spec yaml
-      run: python scripts/promptflow-ci/check_spec_yaml.py --models_dir PROMPTFLOW_DIR
+      run: python scripts/promptflow-ci/check_spec_yaml.py --models_dir ${{ env.PROMPTFLOW_DIR }}
