@@ -761,12 +761,11 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         super().__init__(**kwargs)
         if self._task not in [
             SupportedTasks.IMAGE_CLASSIFICATION.value,
-            SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value
+            SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
         ]:
             raise Exception("Unsupported task")
 
         self._device = "cuda:0" if torch.cuda.is_available() else "cpu"
-
 
     def _get_model_weights_classification(self) -> str:
         """Return default model weights path.
@@ -780,24 +779,36 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
 
         from azureml.automl.dnn.vision.classification.models import ModelFactory
         from azureml.automl.dnn.vision.classification.common.constants import ModelNames
-        from azureml.model.mgmt.processors.pyfunc.automl.vit_classes import IMAGENET2012_CLASSES
+        from azureml.automl.dnn.vision.common.constants import (
+            PretrainedModelUrls,
+            PretrainedModelNames,
+        )
+        from azureml.automl.dnn.vision.common.pretrained_model_utilities import (
+            PretrainedModelFactory,
+        )
         import copy
+
+        with open(os.path.join(self.MODEL_DIR, "vit_classes.txt")) as f:
+            vit_classes = f.readlines()
 
         model_wrapper = ModelFactory().get_model_wrapper(
             model_name=ModelNames.VITB16R224,
-            num_classes=1000,
+            num_classes=len(vit_classes),
             multilabel=multilabel,
             distributed=False,
             local_rank=0,
             device=self._device,
-            model_state=None,
+            model_state=PretrainedModelFactory._load_state_dict_from_url_with_retry(
+                PretrainedModelUrls.MODEL_URLS[PretrainedModelNames.VITB16R224],
+                progress=True,
+            ),
             settings={},
         )
 
         specs = {
             "multilabel": model_wrapper.multilabel,
             "model_settings": model_wrapper.model_settings,
-            'labels': list(IMAGENET2012_CLASSES.values())
+            "labels": vit_classes,
         }
 
         checkpoint_data = {
@@ -812,7 +823,6 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
 
         return model_file
 
-
     def get_model_signature(self) -> ModelSignature:
         """Return MLflow model signature with input and output schema for the given input task.
 
@@ -823,18 +833,22 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         from azureml.automl.dnn.vision.common.model_export_utils import _get_mlflow_signature
         return _get_mlflow_signature(self._task)
 
-
     def save_as_mlflow(self):
         """Prepare model for save to MLflow."""
-        sys.path.append(self.MODEL_DIR)
 
         from azureml.automl.dnn.vision.common.mlflow.mlflow_model_wrapper import MLFlowImagesModelWrapper
         from azureml.automl.dnn.vision.common.model_export_utils import _get_scoring_method
-        mlflow_model_wrapper = MLFlowImagesModelWrapper(model_settings={},
-                                                        task_type=self._task,
-                                                        scoring_method=_get_scoring_method(self._task))
 
-        if self._task in [SupportedTasks.IMAGE_CLASSIFICATION.value, SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value]:
+        mlflow_model_wrapper = MLFlowImagesModelWrapper(
+            model_settings={},
+            task_type=self._task,
+            scoring_method=_get_scoring_method(self._task),
+        )
+
+        if self._task in [
+            SupportedTasks.IMAGE_CLASSIFICATION.value,
+            SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
+        ]:
             model_file = self._get_model_weights_classification()
         else:
             raise Exception("Unsupported task")
