@@ -1,6 +1,19 @@
-BERT is a pre-trained language model created by the Hugging Face team that uses masked language modeling (MLM) on a large corpus of English data. Its primary uses are for sequence classification and question answering, and it is not intended for text generation. It is important to note that this particular BERT model is cased, making a distinction between 'english' and 'English'. The model can be fine-tuned for downstream tasks, and it is described as having 24 layers, 1024 hidden dimensions, 16 attention heads, and 336M parameters. It's most effective on use cases that involve using the entire sentence to make decisions, whereas tasks such as text-generations, you should use GPT2.
+BERT-Large-Uncased is another variant of the BERT (Bidirectional Encoder Representations from Transformers) model, similar to "bert-base-uncased," but with a larger architecture and more parameters. The "uncased" tokenization means that all text is converted to lowercase during preprocessing, just like in the "bert-base-uncased" version.
+
+The main differences between "bert-base-uncased" and "bert-large-uncased" lie in the model size and complexity. BERT-Large-Uncased has more layers and hidden units, making it even more powerful for capturing complex language patterns and semantics. However, this increased complexity also requires more computational resources for training and inference compared to the "bert-base-uncased" version.
+
+BERT-Large-Uncased is well-suited for tasks that demand a deeper understanding of context and a higher level of performance. It excels in a wide range of natural language processing tasks, including text classification, question-answering, sentiment analysis, and more. Researchers and organizations with access to substantial computational resources often prefer using BERT-Large-Uncased to achieve state-of-the-art results in various NLP applications.
+
 <br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/bert-large-uncased" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
+BERT-Large, Uncased (Whole Word Masking): 24-layer, 1024-hidden, 16-heads, 340M parameters
+
+|      Model                             | SQUAD 1.1 F1/EM  | Multi NLI Accuracy  |
+|----------------------------------------|------------------|---------------------|
+|BERT-Large, Uncased (Original)           |   91.0/84.3     |  86.05              |
+|BERT-Large, Cased (Whole Word Masking)  |    92.8/86.7     |  87.07              |
+
 
 ### Inference samples
 
