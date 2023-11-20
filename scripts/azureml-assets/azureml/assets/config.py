@@ -537,8 +537,8 @@ class AzureBlobstoreAssetPath(AssetPath):
     def get_uri(self, token_expiration: timedelta = timedelta(hours=1)) -> str:
         """Get Asset URI.
 
-        :param token_expiration_timedelta: Amount of time until token expiration
-        :type token_expiration_timedelta: datetime.timedelta
+        :param token_expiration: Amount of time until token expiration
+        :type token_expiration: timedelta
         """
         # There are 3 values token can be set to
         # None = no attempts have been made to create a SAS token
