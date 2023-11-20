@@ -22,6 +22,7 @@ def parse_args() -> argparse.Namespace:
     """Parse the args for the method."""
     # Input and output arguments
     parser = argparse.ArgumentParser(description=f"{__file__}")
+    parser.add_argument("--model_type", type=str, help="model_type", default=None)
     parser.add_argument("--batch_inference_output", type=str, help="path to prompt crafter output")
     parser.add_argument("--prediction_data", type=str, help="path to output location")
     parser.add_argument("--ground_truth_input", type=str, help="path to output location", default=None)
@@ -45,6 +46,7 @@ def parse_args() -> argparse.Namespace:
 @swallow_all_exceptions(logger)
 def main(
         batch_inference_output: str,
+        model_type: str,
         data_id_key: str,
         metadata_key: str,
         label_key: str,
@@ -89,7 +91,7 @@ def main(
         ground_truth_df = pd.DataFrame(read_jsonl_files(input_file_paths))
     else:
         ground_truth_df = None
-    online_model = OnlineEndpointModel(None, None, None, endpoint_url=endpoint_url)
+    online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
     rc = ResultConverters(
         online_model._model_type, metadata_key, data_id_key,
         label_key, ground_truth_df, fallback_value=fallback_value, is_performance_test=is_performance_test)
@@ -121,6 +123,7 @@ if __name__ == "__main__":
     args = parse_args()
     main(
         batch_inference_output=args.batch_inference_output,
+        model_type=args.model_type,
         data_id_key=args.data_id_key,
         metadata_key=args.metadata_key,
         label_key=args.label_key,

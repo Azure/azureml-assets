@@ -7,9 +7,9 @@ dependencies:
 - pip=21.3.1
 - scikit-learn==0.24.2
 - pip:
-  - azureml-rag[cognitive_search,data_generation,pinecone]>=0.2.17
+  - azureml-rag[cognitive_search,data_generation,pinecone]>=0.2.18.1
   - azure-search-documents==11.4.0b8
-  - langchain==0.0.312
+  - langchain==0.0.317
   - tiktoken~=0.3.0
   - azure-ai-ml=={{latest-pypi-version}}
   - azure-identity==1.12.0
@@ -18,7 +18,7 @@ dependencies:
   - azureml-contrib-services
   - azureml-core=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
-  - azureml-dataprep=={{latest-pypi-version}}
+  - azureml-dataprep>=4.12.7 # Change back to latest version once azureml-fsspec is compatible
   - azureml-fsspec
   - azureml-inference-server-http==0.7.6
   - azureml-mlflow=={{latest-pypi-version}}

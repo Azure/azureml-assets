@@ -1,0 +1,6 @@
+name: acft-multimodal-gpu
+version: "1"
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["PyTorch", "Training"]
