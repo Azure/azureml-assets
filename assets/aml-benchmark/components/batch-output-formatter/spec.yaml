@@ -41,6 +41,10 @@ inputs:
     default: False
     description: If true, the performance test will be run.
     optional: False
+  deployment_config_dir:
+    type: uri_folder
+    description: The folder that contains the deployment config.
+    optional: True
 outputs:
   predictions:
     type: uri_file
@@ -67,3 +71,4 @@ command: >-
   --is_performance_test ${{inputs.is_performance_test}}
   $[[--fallback_value ${{inputs.fallback_value}}]]
   $[[--ground_truth_input ${{inputs.ground_truth_input}}]]
+  $[[--deployment_config_dir ${{inputs.deployment_config_dir}}]]

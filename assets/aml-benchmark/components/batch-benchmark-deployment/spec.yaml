@@ -11,10 +11,6 @@ inputs:
     type: uri_folder
     description: Input jsonl dataset that contains prompt.  For the performance test, this one will be neglected.
     optional: True
-  model_type:
-    type: string
-    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
-    optional: True
   batch_input_pattern:
     type: string
     description: >- 
@@ -49,22 +45,6 @@ inputs:
             "stop": null
       }
     optional: False
-  endpoint_url:
-    type: string
-    optional: True
-    description: The endpointurl.
-  is_performance_test:
-    type: boolean
-    default: False
-    description: If true, the performance test will be run and the input dataset will be neglected.
-  deployment_name:
-    type: string
-    optional: True
-    description: The deployment name. Only needed for managed OSS deployment.
-  connections_name:
-    type: string
-    optional: False
-    description: Connections name for the endpoint.
   label_column_name:
     type: string
     optional: True
@@ -94,6 +74,47 @@ inputs:
     optional: False
     default: False
     description: If ensure_ascii is true, the output is guaranteed to have all incoming non-ASCII characters escaped. If ensure_ascii is false, these characters will be output as-is. More detailed information can be found at https://docs.python.org/3/library/json.html
+  endpoint_subscription:
+    type: string
+    optional: True
+    description: The subscription id for the endpoint. If empty, the same subscription as workspace will be used.
+  endpoint_resource_group:
+    type: string
+    optional: True
+    description: The resource group for the endpoint. If empty, the same resource group as workspace will be used.
+  endpoint_region:
+    type: string
+    optional: True
+    description: The region for the endpoint. If empty, the same region as workspace will be used.
+  endpoint_sku:
+    type: string
+    optional: True
+    description: The sku for the endpoint. If empty, the largest quota of the resource group will be used.
+  endpoint_name:
+    type: string
+    optional: True
+    description: The name for the endpoint. If empty, a random one will be used.
+  model:
+    type: string
+    optional: True
+    description: The model name/asset url.
+  model_version:
+    type: string
+    optional: True
+    description: The model version.
+  delete_managed_resources:
+    type: boolean
+    optional: True
+    default: True
+    description: If true, the managed resources created during the run will be deleted.
+  deployment_name:
+    type: string
+    optional: True
+    description: The deployment name. Only needed for managed OSS deployment.
+  connections_name:
+    type: string
+    optional: True
+    description: Connections name for the endpoint.
   max_retry_time_interval:
     type: integer
     optional: True
@@ -121,43 +142,16 @@ inputs:
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
-  endpoint_subscription:
-    type: string
-    optional: True
-    description: The subscription id for the endpoint. If empty, the same subscription as workspace will be used.
-  endpoint_resource_group:
-    type: string
-    optional: True
-    description: The resource group for the endpoint. If empty, the same resource group as workspace will be used.
-  endpoint_workspace:
-    type: string
-    optional: True
-    description: The workspace for the endpoint. If empty, the same workspace will be used.
-  endpoint_region:
-    type: string
-    optional: True
-    description: The region for the endpoint. If empty, the same region as workspace will be used.
-  endpoint_sku:
-    type: string
-    optional: True
-    description: The sku for the endpoint. If empty, the largest quota of the resource group will be used.
-  endpoint_name:
-    type: string
-    optional: True
-    description: The name for the endpoint. If empty, a random one will be used.
-  model:
-    type: string
-    optional: True
-    description: The model name/asset url.
-  model_version:
-    type: string
-    optional: True
-    description: The model version.
-  delete_managed_resources:
+  do_quota_validation:
     type: boolean
     optional: True
     default: True
-    description: If true, the managed resources created during the run will be deleted.
+    description: If doing quota valiation or not for AOAI model.
+  use_max_quota:
+    type: boolean
+    optional: True
+    default: True
+    description: If using max quota or not for AOAI model.
 outputs:
   predictions:
     type: uri_file
@@ -179,6 +173,7 @@ jobs:
       deployment_name: ${{parent.inputs.deployment_name}}
       model: ${{parent.inputs.model}}
       model_version: ${{parent.inputs.model_version}}
+      model_type: oai
       deployment_sku: ${{parent.inputs.deployment_sku}}
       endpoint_workspace: ${{parent.inputs.endpoint_workspace}}
       endpoint_resource_group: ${{parent.inputs.endpoint_resource_group}}
@@ -186,17 +181,19 @@ jobs:
       endpoint_location: ${{parent.inputs.endpoint_region}}
       connections_name: ${{parent.inputs.connections_name}}
       delete_managed_resources: ${{parent.inputs.delete_managed_resources}}
+      do_quota_validation: ${{parent.inputs.do_quota_validation}}
+      use_max_quota: ${{parent.inputs.use_max_quota}}
   # Preparer
   batch_inference_preparer: 
     type: command
     component: azureml:batch_inference_preparer:0.0.3
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
-      model_type: ${{parent.inputs.model_type}}
+      model_type: oai
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
-      is_performance_test: ${{parent.inputs.is_performance_test}}
+      is_performance_test: false
       n_samples: ${{parent.inputs.n_samples}}
-      endpoint_url: ${{parent.inputs.endpoint_url}}
+      endpoint_url: "a_url"
       label_column_name: ${{parent.inputs.label_column_name}}
       deployment_config_dir: ${{model_deployment.outputs.output_metadata}}
     outputs:
@@ -209,10 +206,10 @@ jobs:
     type: parallel
     component: azureml:batch_benchmark_score:0.0.3
     inputs:
-      model_type: ${{parent.inputs.model_type}}
-      online_endpoint_url: ${{parent.inputs.endpoint_url}}
+      model_type: oai
+      online_endpoint_url: "a_url"
       deployment_name: ${{parent.inputs.deployment_name}}
-      connections_name: ${{parent.inputs.connections_name}}
+      connections_name: "a_connection_name"
       debug_mode: ${{parent.inputs.debug_mode}}
       additional_headers: ${{parent.inputs.additional_headers}}
       ensure_ascii: ${{parent.inputs.ensure_ascii}}
@@ -220,6 +217,7 @@ jobs:
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
+      deployment_config_dir: ${{model_deployment.outputs.output_metadata}}
     outputs:
       job_out_path:
         type: uri_file
@@ -239,14 +237,15 @@ jobs:
     type: command
     component: azureml:batch_output_formatter:0.0.3
     inputs:
-      model_type: ${{parent.inputs.model_type}}
+      model_type: oai
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
       label_column_name: ${{parent.inputs.label_column_name}}
       ground_truth_input: ${{parent.jobs.batch_inference_preparer.outputs.ground_truth_metadata}}
       fallback_value: ${{parent.inputs.fallback_value}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
-      is_performance_test: ${{parent.inputs.is_performance_test}}
-      endpoint_url: ${{parent.inputs.endpoint_url}}
+      is_performance_test: false
+      endpoint_url: "a_url"
+      deployment_config_dir: ${{model_deployment.outputs.output_metadata}}
     outputs:
       predictions:
         type: uri_file
@@ -257,4 +256,11 @@ jobs:
       ground_truth:
         type: uri_file
         path: ${{parent.outputs.ground_truth}}
+    # Delete deployment
+  delete_deployment:
+    type: command
+    component: azureml:batch_resource_manager:0.0.1
+    inputs:
+      deployment_metadata_dir: ${{model_deployment.outputs.output_metadata}}
+      wait_input: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
 

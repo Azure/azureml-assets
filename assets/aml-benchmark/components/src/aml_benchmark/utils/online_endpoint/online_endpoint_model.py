@@ -52,7 +52,7 @@ class OnlineEndpointModel:
     @property
     def model_path(self) -> str:
         """Get the model path."""
-        if self._model_path is None:
+        if self._model_path is None and self.is_oss_model():
             self._model_path = 'azureml://registries/azureml-meta/models/{}/versions/{}'.format(
                 self._model_name,
                 self._model_version

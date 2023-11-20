@@ -10,9 +10,6 @@ inputs:
   wait_input:
     type: uri_file
     optional: True
-  cli_file:
-    type: uri_file
-    optional: True
   endpoint_name:
     type: string
     optional: True
@@ -78,7 +75,7 @@ inputs:
     type: boolean
     optional: True
     default: False
-    description: If doing quota valiation or not for AOAI model.
+    description: If deploying the same model for OSS endpoint.
   use_max_quota:
     type: boolean
     optional: True
@@ -104,7 +101,6 @@ command: >-
   --output_metadata ${{outputs.output_metadata}}
   $[[--endpoint_name ${{inputs.endpoint_name}}]]
   $[[--model_type ${{inputs.model_type}}]]
-  $[[--cli_file ${{inputs.cli_file}}]]
   $[[--deployment_name ${{inputs.deployment_name}}]]
   $[[--model ${{inputs.model}}]]
   $[[--model_version ${{inputs.model_version}}]]
@@ -118,6 +114,6 @@ command: >-
   $[[--use_max_quota ${{inputs.use_max_quota}}]]
   $[[--do_quota_validation ${{inputs.do_quota_validation}}]]
   $[[--redeploy_model ${{inputs.redeploy_model}}]]
-  $[[--deployment_metadata_dir ${{inputs.deployment_metadata_dir}}]]
+  $[[--input_metadata ${{inputs.deployment_metadata_dir}}]]
   $[[--deployment_env ${{inputs.deployment_env}}]]
   $[[--additional_deployment_env_vars  '${{inputs.additional_deployment_env_vars}}']]
