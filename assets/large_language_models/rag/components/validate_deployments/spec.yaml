@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.44
+version: 0.0.45
 name: llm_rag_validate_deployments
 display_name: LLM – Validate Deployments
 is_deterministic: false
@@ -54,7 +54,7 @@ outputs:
   output_data:
     type: uri_file
 
-environment: azureml:llm-rag@latest
+environment: azureml:llm-rag-embeddings@latest
 code: '../src'
 command: >-
   python validate_deployments.py

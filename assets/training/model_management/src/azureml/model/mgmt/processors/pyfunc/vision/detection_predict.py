@@ -83,10 +83,13 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         for result in batch_results:
             image_height, image_width = result.ori_shape
             pred_instances = result.pred_instances
-            bboxes = pred_instances.bboxes.numpy()
-            labels = pred_instances.labels.numpy()
-            scores = pred_instances.scores.numpy()
-            masks = pred_instances.masks.numpy() if self._task_type == Tasks.MM_INSTANCE_SEGMENTATION.value else None
+            bboxes = pred_instances.bboxes.cpu().numpy()
+            labels = pred_instances.labels.cpu().numpy()
+            scores = pred_instances.scores.cpu().numpy()
+            if self._task_type == Tasks.MM_INSTANCE_SEGMENTATION.value:
+                masks = pred_instances.masks.cpu().numpy()
+            else:
+                masks = None
 
             cur_image_preds = {ODLiterals.BOXES: []}
             for i in range(len(labels)):
@@ -166,7 +169,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
 
         with tempfile.TemporaryDirectory() as tmp_output_dir:
             image_path_list = (
-                processed_images.iloc[:, 0].map(lambda row: create_temp_file(row, tmp_output_dir)).tolist()
+                processed_images.iloc[:, 0].map(lambda row: create_temp_file(row, tmp_output_dir)[0]).tolist()
             )
 
             results = self._inference_detector(imgs=image_path_list, model=self._model)
