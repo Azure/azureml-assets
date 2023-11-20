@@ -21,20 +21,13 @@ You can initiate [individual trials](https://learn.microsoft.com/azure/machine-l
 
 For more information, see [how to configure experiments](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#configure-experiments)
 
-### Finetune samples
+### Code samples
 
 Task|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|
 Image Multi-class classification|[fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/fridgeObjects.zip)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-image-classification-multiclass-task-fridge-items/automl-image-classification-multiclass-task-fridge-items.ipynb" target="_blank">image-classification-multiclass.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-image-classification-multiclass-task-fridge-items/cli-automl-image-classification-multiclass-task-fridge-items.yml" target="_blank">image-classification-multiclass.yml</a>
 Image Multi-label classification|[multilabel fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/multilabelFridgeObjects.zip)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-image-classification-multilabel-task-fridge-items/automl-image-classification-multilabel-task-fridge-items.ipynb" target="_blank">image-classification-multilabel.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-image-classification-multilabel-task-fridge-items/cli-automl-image-classification-multilabel-task-fridge-items.yml" target="_blank">image-classification-multilabel.yml</a>
 
-
-### Inference samples
-
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-sdk-image-classification" target="_blank">image-classification-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-image-classification" target="_blank">image-classification-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-image-classification" target="_blank">image-classification-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-image-classification" target="_blank">image-classification-batch-endpoint.sh</a>
 
 ### Sample inputs and outputs (for real-time inference)
 
@@ -73,6 +66,6 @@ Note:
 ```
 
 #### Model inference - visualization
-For a sample image below, the top 4 labels are 'trilobite', 'affenpinscher, monkey pinscher, monkey dog', 'mosque', 'Bernese mountain dog'.
+For a sample image below, the top 3 labels are 'African elephant, Loxodonta africana', 'tusker', 'Indian elephant, Elephas maximus'.
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_automl_image_classification.png" alt="image classification visualization">
