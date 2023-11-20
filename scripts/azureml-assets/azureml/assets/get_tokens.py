@@ -50,7 +50,7 @@ def get_tokens(input_dirs: List[Path],
         _ = model_config.path.get_uri(token_expiration=timedelta(days=1))
         token = model_config.path.token
 
-        if len(token) == 0:
+        if token is not None and len(token) == 0:
             token = None
 
         json_info[account_name][container_name] = token
