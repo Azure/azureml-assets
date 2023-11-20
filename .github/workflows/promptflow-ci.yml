@@ -17,7 +17,7 @@ env:
   PROMPTFLOW_DIR: "assets/promptflow/models"
 
 jobs:
-  check speck.yaml:
+  check_speck_yaml:
     runs-on: ubuntu-latest
     name: Check speck.yaml fields
     timeout-minutes: 45
