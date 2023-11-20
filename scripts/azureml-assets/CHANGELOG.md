@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.17 (2023-11-20)
+### 🐛 Bugs Fixed
+- [#1760](https://github.com/Azure/azureml-assets/pull/1760) Generate SAS tokens for multiple models and output in JSON
+
 ## 1.16.17 (2023-11-07)
 ### 🐛 Bugs Fixed
 - [#1703](https://github.com/Azure/azureml-assets/pull/1703) Support for storage account access for model copy with SAS token
