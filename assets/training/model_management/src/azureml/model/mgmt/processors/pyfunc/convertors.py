@@ -518,36 +518,36 @@ class StableDiffusionInpaintingMlflowConvertor(TextToImageInpaintingMLflowConver
 
 
 class ImageTextToImageMLflowConvertor(PyFuncMLFLowConvertor):
-    """MlfLow convertor base class for text to image inpainting models."""
+    """MlfLow convertor base class for image-text to image models."""
 
     MODEL_DIR = os.path.join(os.path.dirname(__file__), "text_to_image")
 
     def __init__(self, **kwargs):
-        """Initialize MLflow convertor for text to image models."""
+        """Initialize MLflow convertor for image-text to image models."""
         super().__init__(**kwargs)
 
     def get_model_signature(self):
-        """Return model signature for text to image models."""
+        """Return model signature for image-text to image models."""
         input_schema = Schema(inputs=[
             ColSpec(name=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_PROMPT,
-                    type=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_PROMPT_DATA_TYPE,),
+                    type=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_PROMPT_DATA_TYPE),
             ColSpec(name=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE,
-                    type=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_TYPE,)
+                    type=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_TYPE)
         ])
         output_schema = Schema(inputs=[
             ColSpec(name=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_IMAGE,
                     type=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_IMAGE_TYPE),
             ColSpec(name=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG,
-                    type=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG_TYPE,),
+                    type=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG_TYPE),
         ])
         return ModelSignature(inputs=input_schema, outputs=output_schema)
 
 
 class StableDiffusionImageToImageMlflowConvertor(ImageTextToImageMLflowConvertor):
-    """HF MlfLow convertor class for stable diffusion inpainting models."""
+    """HF MlfLow convertor class for stable diffusion image-text to image models."""
 
     def __init__(self, **kwargs):
-        """Initialize MLflow convertor for SD inpainting models."""
+        """Initialize MLflow convertor for SD image-text to image models."""
         super().__init__(**kwargs)
 
     def _prepare_artifacts_dict(self) -> Dict:
@@ -563,7 +563,6 @@ class StableDiffusionImageToImageMlflowConvertor(ImageTextToImageMLflowConvertor
 
     def save_as_mlflow(self):
         """Prepare SD model for save to MLflow."""
-        """Prepare model for save to MLflow."""
         sys.path.append(self.MODEL_DIR)
         from stable_diffusion_image_to_image_mlflow_wrapper import StableDiffusionImagetoImageMLflowWrapper
 
