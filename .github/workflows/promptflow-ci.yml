@@ -1,0 +1,50 @@
+name: Promptflow CI
+on:
+  # Triggers the Promptflow CI on pull request targeting the main branch
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'assets/promptflow/models/**'
+      - '.github/workflows/promptflow_ci.yml'
+      - 'scripts/promptflow_ci/**'
+
+env:
+  PROMPTFLOW_DIR: "assets/promptflow/models"
+
+jobs:
+  check speck.yaml:
+    runs-on: ubuntu-latest
+    name: Check speck.yaml fields
+    timeout-minutes: 45
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Set up Python 3.9 environment
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    - name: Use Node.js 18.x  
+      uses: actions/setup-node@v3
+      with:
+        node-version: "18.x"
+
+    - name: Install cspell
+      run: npm install -g cspell
+
+    - name: Run cspell for typo check
+      working-directory: PROMPTFLOW_DIR
+        run: |-
+          cspell lint "**" > cspell_check.log || true
+          if [ -s cspell_check.log ]; then
+            echo -e "\e[91mNote: If the detected words are expected, add them into "assets/promptflow/.cspell.json"\e[0m" 
+            echo -e "====================== Summary of cspell errors ======================"
+            echo -e "\e[31m$(cat cspell_check.log)\e[0m" 
+            exit 1
+          fi
+
+    - name: Check models.yaml
+      run: python scripts/promptflow-ci/check_spec_yaml.py --models_dir PROMPTFLOW_DIR
