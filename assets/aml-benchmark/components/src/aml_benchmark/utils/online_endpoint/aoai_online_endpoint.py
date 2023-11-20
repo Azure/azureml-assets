@@ -203,6 +203,14 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def _aoai_deployment_url(self) -> str:
         """Aoai deployment url."""
         return f'{self._aoai_deployment_base_url}?api-version={self._api_version}'
+    
+    @property
+    def _aoai_subscription_usage_url(self) -> str:
+        url_list = [
+            self._arm_base_subscription, 'providers/Microsoft.CognitiveServices',
+            'locations', self._location, f'usages?api-version={self._api_version}'
+        ]
+        return "/".join(url_list)
 
     def _get_scoring_url(self) -> str:
         """Get the scoring url."""
@@ -237,3 +245,20 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                     BenchmarkValidationError,
                     error_details='SKU for AOAI model must be int.')
                 )
+
+    def model_quota(self):
+        """Get the model quota."""
+        logger.info(self._aoai_subscription_usage_url)
+        resp = self._call_endpoint(get_requests_session().get, self._aoai_subscription_usage_url)
+        content = {}
+        quota = -1
+        try:
+            self._raise_if_not_success(resp)
+            content = self._get_content_from_response(resp)
+        except Exception as e:
+            logger.error(f'Failed to get the model quota. {e}')
+        for result in content.get('value'):
+            if result.get("name", {}).get("value", "").lower() == f"OpenAI.Standard.{self._model.model_name}".lower():
+                quota = result['limit'] - result['currentValue']
+                break
+        return quota

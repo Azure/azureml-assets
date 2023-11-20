@@ -7,6 +7,7 @@
 from typing import Any, Optional
 from abc import abstractmethod
 from enum import Enum
+import time
 import json
 import os
 import uuid
@@ -180,12 +181,18 @@ class OnlineEndpoint:
         except Exception as err:
             logger.error(f"Failed to get content from response: {err}")
             return {}
+        
+    @property
+    def _arm_base_subscription(self) -> str:
+        """Get the arm base for subscriptions."""
+        url_list = ['https://management.azure.com', 'subscriptions', self.subscription_id]
+        return "/".join(url_list)
 
     @property
     def _arm_base_url(self) -> str:
         """Get the arm base url."""
         url_list = [
-            'https://management.azure.com', 'subscriptions', self.subscription_id,
+            self._arm_base_subscription,
             'resourceGroups', self.resource_group
         ]
         return "/".join(url_list)
@@ -193,10 +200,16 @@ class OnlineEndpoint:
     def _call_endpoint(
             self, call_method: Any, url: str, payload: Optional[dict] = None
     ) -> Response:
-        headers = self.get_resource_authorization_header()
-        resp = ClientBase._execute_func(
-            call_method, url, params={}, headers=headers, json=payload
-        )
+        should_retry = True
+        while should_retry:
+            headers = self.get_resource_authorization_header()
+            resp = ClientBase._execute_func(
+                call_method, url, params={}, headers=headers, json=payload
+            )
+            if resp.status_code not in {409, 429}:
+                should_retry = False
+            else:
+                time.sleep(30)
         return resp
 
     @property
@@ -218,12 +231,11 @@ class OnlineEndpoint:
     def get_endpoint_authorization_header_from_connections(self) -> dict:
         """Get the authorization header."""
         resp = self._get_connections_by_name()
-        credentials = resp['properties'].get('credentials')
-        if self._model.is_aoai_model():
-            return {'api-key': resp['properties']['credentials']['key']}
+        credentials = resp['properties'].get('credentials', {})
+        if self._model.is_aoai_model() and 'key' in credentials:
+            return {'api-key': credentials['key']}
         else:
             access_key_id = credentials.get('access_key_id')
-            credentials = resp['properties'].get('credentials', {})
             if 'secretAccessKey' not in credentials and 'keys' in credentials:
                 credentials = credentials['keys']
             token = credentials['secretAccessKey'] \
@@ -426,3 +438,7 @@ class OnlineEndpoint:
         }, {})
 
         return resp.json()
+
+    def model_quota(self) -> int:
+        """Get the model quota."""
+        return -1
