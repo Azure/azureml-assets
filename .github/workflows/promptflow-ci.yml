@@ -48,6 +48,7 @@ jobs:
           echo -e "\e[31m$(cat cspell_check.log)\e[0m" 
           exit 1
         fi
+        rm -rf cspell_check.log
 
     - name: Check spec yaml
       run: |-
