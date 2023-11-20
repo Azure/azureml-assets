@@ -57,7 +57,10 @@
       "pfbytes",
       "Apim",
       "junit",
-      "nunit"
+      "nunit",
+      "Lightolier",
+      "Tabbe",
+      "Lightolier"
     ],
     "ignoreWords": [
       "openmpi",
