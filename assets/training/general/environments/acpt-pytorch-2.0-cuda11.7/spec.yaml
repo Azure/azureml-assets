@@ -24,3 +24,5 @@ tags:
   ONNXRuntime: "1.14.1"
   torch_ORT: "1.14.0"
   Checkpointing:Nebula: "0.16.2 (Preview)"
+  Intel Extension for PyTorch: "2.0"
+  oneDNN: ""

@@ -13,6 +13,7 @@ RUN /var/requirements/install_system_requirements.sh && \
     rm -f /etc/nginx/sites-enabled/default
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
+ENV DS_ACCELERATOR=cuda
 EXPOSE 5001 8883 8888
 
 # support Deepspeed launcher requirement of passwordless ssh login
