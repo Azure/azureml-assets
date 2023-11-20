@@ -50,4 +50,6 @@ jobs:
         fi
 
     - name: Check spec yaml
-      run: python scripts/promptflow-ci/check_spec_yaml.py --models_dir ${{ env.PROMPTFLOW_DIR }}
+      run: |-
+        pip install yaml
+        python scripts/promptflow-ci/check_spec_yaml.py --models_dir ${{ env.PROMPTFLOW_DIR }}
