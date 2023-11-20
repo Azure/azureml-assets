@@ -49,5 +49,5 @@ jobs:
           exit 1
         fi
 
-    - name: Check models.yaml
+    - name: Check spec yaml
       run: python scripts/promptflow-ci/check_spec_yaml.py --models_dir PROMPTFLOW_DIR
