@@ -19,7 +19,7 @@ inputs:
     enum:
       - "text-image"
       - "text-image-tabular"
-    default: "text-image"
+    default: "text-image-tabular"
     description: Modalities to be supported
 
   # Continual-Finetuning model path
