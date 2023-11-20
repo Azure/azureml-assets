@@ -207,10 +207,23 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def _get_scoring_url(self) -> str:
         """Get the scoring url."""
         url_list = [
-            f'https://{self.endpoint_name}.openai.azure.com', 'openai', 'deployments',
+            self._get_scoring_url_base, 'openai', 'deployments',
             self.deployment_name, 'chat', 'completions?api-version=2023-07-01-preview'
         ]
         return '/'.join(url_list)
+
+    def _get_scoring_url_base(self) -> str:
+        """Get the scoring url base."""
+        try:
+            # The base can be https://{self.endpoint_name}.openai.azure.com or 
+            # https://region.api.cognitive.microsoft.com
+            resp = self._call_endpoint(get_requests_session().get, self._aoai_account_url)
+            self._raise_if_not_success(resp)
+            content = self._get_content_from_response(resp)
+            return content['properties']['endpoint']
+        except Exception as e:
+            logger.warning(f'Failed to get the scoring url base. Error: {e}, using the default one')
+            return f'https://{self.endpoint_name}.openai.azure.com'
 
     def _validate_settings(self) -> None:
         """Validate settings."""

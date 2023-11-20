@@ -6,6 +6,7 @@
 
 from typing import Optional
 from ..logging import get_logger
+from .endpoint_utils import EndpointUtilities
 
 
 logger = get_logger(__name__)
@@ -13,6 +14,7 @@ logger = get_logger(__name__)
 
 class OnlineEndpointModel:
     """Class for online endpoint model."""
+    AOAI_ENDPOINT_URL_BASE = ['openai.azure.com', 'api.cognitive.microsoft.com']
 
     def __init__(
             self, model: str, model_version: Optional[str], model_type: str,
@@ -73,6 +75,18 @@ class OnlineEndpointModel:
         if endpoint_url is None:
             logger.warning('Endpoint url is None. Default to oss.')
             return 'oss'
-        if ".".join(['openai', 'azure', 'com']) in endpoint_url:
-            return 'oai'
+        for base_url in OnlineEndpointModel.AOAI_ENDPOINT_URL_BASE:
+            if base_url in endpoint_url:
+                return 'oai'
         return 'oss'
+
+    @staticmethod
+    def from_deployment_config_file(dir_path: str) -> "OnlineEndpointModel":
+        """Get the online endpoint model from deployment config file."""
+        config = EndpointUtilities.load_endpoint_metadata_json(dir_path)
+        return OnlineEndpointModel(
+            config['model_path'],
+            None,
+            config['model_type'],
+            config['scoring_url']
+        )

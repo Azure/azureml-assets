@@ -42,6 +42,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--formatted_data", type=str, help="path to output location")
     parser.add_argument("--endpoint_url", type=str, help="endpoint_url", default=None)
     parser.add_argument("--model_type", type=str, help="model_type", default=None)
+    parser.add_argument("--deployment_config_dir", type=str, help="model_type", default=None)
     parser.add_argument("--output_metadata", type=str, help="path to ground_truth location", default=None)
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
     args, _ = parser.parse_known_args()
@@ -59,6 +60,7 @@ def main(
     endpoint_url: str,
     is_performance_test: bool,
     label_key: str,
+    deployment_config_dir: str,
     output_metadata: str
 ) -> None:
     """
@@ -75,7 +77,10 @@ def main(
     :param is_performance_test: Whether it is performance test.
     :return: None
     """
-    online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
+    if deployment_config_dir:
+        online_model = OnlineEndpointModel.from_deployment_config_file(deployment_config_dir)
+    else:
+        online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
 
     endpoint_data_preparer = EndpointDataPreparer(
         online_model._model_type, batch_input_pattern, label_key=label_key)
@@ -141,5 +146,6 @@ if __name__ == "__main__":
         endpoint_url=args.endpoint_url,
         is_performance_test=args.is_performance_test,
         label_key=args.label_key,
+        deployment_config_dir=args.deployment_config_dir,
         output_metadata=args.output_metadata
     )
