@@ -1,4 +1,4 @@
-Automated machine learning, or AutoML, is a process that automates the repetitive and time-consuming tasks involved in developing machine learning models. This helps data scientists, analysts, and developers to create models more efficiently and with higher quality, resulting in increased productivity and scalability.
+Automated Machine Learning, or AutoML, is a process that automates the repetitive and time-consuming tasks involved in developing machine learning models. This helps data scientists, analysts, and developers to create models more efficiently and with higher quality, resulting in increased productivity and scalability.
 AutoML Image Classification enables you to train machine learning models to perform *image multiclass* and *image multilabel* tasks according to your own defined labels. It is a computer vision task that involves analyzing and categorizing an image into specific label(s).
 
 With this functionality, you can:
