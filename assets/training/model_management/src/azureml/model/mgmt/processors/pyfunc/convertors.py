@@ -829,13 +829,11 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         :return: MLflow model signature.
         :rtype: mlflow.models.signature.ModelSignature
         """
-
         from azureml.automl.dnn.vision.common.model_export_utils import _get_mlflow_signature
         return _get_mlflow_signature(self._task)
 
     def save_as_mlflow(self):
         """Prepare model for save to MLflow."""
-
         from azureml.automl.dnn.vision.common.mlflow.mlflow_model_wrapper import MLFlowImagesModelWrapper
         from azureml.automl.dnn.vision.common.model_export_utils import _get_scoring_method
 
