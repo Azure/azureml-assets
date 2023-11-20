@@ -56,4 +56,5 @@ if __name__ == "__main__":
             print(error)
         exit(1)
     else:
+        print(f"Check passed. Found {len(errors)} errors when checking models' spec.yaml.")
         exit(0)
