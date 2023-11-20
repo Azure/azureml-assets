@@ -17,7 +17,7 @@ env:
   PROMPTFLOW_DIR: "assets/promptflow/models"
 
 jobs:
-  check_speck_yaml:
+  check_spec_yaml:
     runs-on: ubuntu-latest
     name: Check speck.yaml fields
     timeout-minutes: 45
@@ -51,5 +51,5 @@ jobs:
 
     - name: Check spec yaml
       run: |-
-        pip install yaml
+        pip install PyYAML
         python scripts/promptflow-ci/check_spec_yaml.py --models_dir ${{ env.PROMPTFLOW_DIR }}
