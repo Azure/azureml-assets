@@ -30,6 +30,7 @@ from azureml.model.mgmt.processors.pyfunc.convertors import (
     CLIPMLFlowConvertor,
     StableDiffusionMlflowConvertor,
     StableDiffusionInpaintingMlflowConvertor,
+    StableDiffusionImageToImageMlflowConvertor,
     LLaVAMLFlowConvertor,
     SegmentAnythingMLFlowConvertor,
 )
@@ -51,7 +52,8 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
                 model_dir, output_dir, temp_dir, translate_params
             )
         elif task in [PyFuncSupportedTasks.TEXT_TO_IMAGE.value,
-                      PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value]:
+                      PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value,
+                      PyFuncSupportedTasks.IMAGE_TEXT_TO_IMAGE.value]:
             return TextToImageMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
@@ -154,6 +156,8 @@ class TextToImageMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     STABLE_DIFFUSION_TASK_MAP = {
         PyFuncSupportedTasks.TEXT_TO_IMAGE.value: StableDiffusionMlflowConvertor,
         PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value: StableDiffusionInpaintingMlflowConvertor,
+        PyFuncSupportedTasks.IMAGE_TEXT_TO_IMAGE.value: StableDiffusionImageToImageMlflowConvertor,
+
     }
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):

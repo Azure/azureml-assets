@@ -517,6 +517,72 @@ class StableDiffusionInpaintingMlflowConvertor(TextToImageInpaintingMLflowConver
         )
 
 
+class ImageTextToImageMLflowConvertor(PyFuncMLFLowConvertor):
+    """MlfLow convertor base class for text to image inpainting models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "text_to_image")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for text to image models."""
+        super().__init__(**kwargs)
+
+    def get_model_signature(self):
+        """Return model signature for text to image models."""
+        input_schema = Schema(inputs=[
+            ColSpec(name=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_PROMPT,
+                    type=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_PROMPT_DATA_TYPE,),
+            ColSpec(name=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE,
+                    type=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_TYPE,)
+        ])
+        output_schema = Schema(inputs=[
+            ColSpec(name=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_IMAGE,
+                    type=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_IMAGE_TYPE),
+            ColSpec(name=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG,
+                    type=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG_TYPE,),
+        ])
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
+
+
+class StableDiffusionImageToImageMlflowConvertor(ImageTextToImageMLflowConvertor):
+    """HF MlfLow convertor class for stable diffusion inpainting models."""
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for SD inpainting models."""
+        super().__init__(**kwargs)
+
+    def _prepare_artifacts_dict(self) -> Dict:
+        """Prepare artifacts dict for MLflow model.
+
+        :return: artifacts dict
+        :rtype: Dict
+        """
+        artifacts_dict = {
+            TextToImageMLflowLiterals.MODEL_DIR: self._model_dir
+        }
+        return artifacts_dict
+
+    def save_as_mlflow(self):
+        """Prepare SD model for save to MLflow."""
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+        from stable_diffusion_image_to_image_mlflow_wrapper import StableDiffusionImagetoImageMLflowWrapper
+
+        mlflow_model_wrapper = StableDiffusionImagetoImageMLflowWrapper(task_type=self._task)
+        artifacts_dict = self._prepare_artifacts_dict()
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = [
+            os.path.join(self.MODEL_DIR, "stable_diffusion_image_to_image_mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
+        ]
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=code_path,
+        )
+
+
 class LLaVAMLFlowConvertor(PyFuncMLFLowConvertor):
     """PyFunc MLfLow convertor for LLaVA models."""
 

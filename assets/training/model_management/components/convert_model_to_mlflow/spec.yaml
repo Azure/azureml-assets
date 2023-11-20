@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: convert_model_to_mlflow
-version: 0.0.15
+version: 0.0.17
 type: command
 
 is_deterministic: True
@@ -66,6 +66,7 @@ inputs:
       - text-to-image
       - text-to-image-inpainting
       - image-text-to-text
+      - image-text-to-image
       - zero-shot-image-classification
       - mask-generation
       - video-multi-object-tracking
