@@ -37,14 +37,14 @@ jobs:
 
     - name: Run cspell for typo check
       working-directory: PROMPTFLOW_DIR
-        run: |-
-          cspell lint "**" > cspell_check.log || true
-          if [ -s cspell_check.log ]; then
-            echo -e "\e[91mNote: If the detected words are expected, add them into "assets/promptflow/.cspell.json"\e[0m" 
-            echo -e "====================== Summary of cspell errors ======================"
-            echo -e "\e[31m$(cat cspell_check.log)\e[0m" 
-            exit 1
-          fi
+      run: |-
+        cspell lint "**" > cspell_check.log || true
+        if [ -s cspell_check.log ]; then
+          echo -e "\e[91mNote: If the detected words are expected, add them into "assets/promptflow/.cspell.json"\e[0m" 
+          echo -e "====================== Summary of cspell errors ======================"
+          echo -e "\e[31m$(cat cspell_check.log)\e[0m" 
+          exit 1
+        fi
 
     - name: Check models.yaml
       run: python scripts/promptflow-ci/check_spec_yaml.py --models_dir PROMPTFLOW_DIR
