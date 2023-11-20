@@ -4,9 +4,9 @@ path: ./
 properties:
   is-promptflow: true
   azureml.promptflow.section: gallery
-  azureml.promptflow.type: evaluate
+  azureml.promptflow.type: evaluates
   azureml.promptflow.name: Classification Accuracy Evaluation
-  azureml.promptflow.description: Measuring the performance of a classification system by comparing its outputs to groundtruth.
+  azureml.promptflow.description: Measuring the performance of a classification system by comparing its outputs to groundtruth. wowow typo
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
 version: 5
