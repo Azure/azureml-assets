@@ -834,12 +834,13 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
         from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
-        from azureml.model.mgmt.processors.pyfunc.automl.od_is_classes import COCO_CLASSES
         import copy
+        with open(os.path.join(self.MODEL_DIR, "coco_od_classes.txt")) as f:
+            coco_classes = f.readlines()
         model_wrapper = setup_model(
             model_name=ModelNames.YOLO_V5,
-            number_of_classes=len(COCO_CLASSES),
-            classes=COCO_CLASSES,
+            number_of_classes=len(coco_classes),
+            classes=coco_classes,
             device=self._device,
             distributed=False,
             local_rank=0,
@@ -878,15 +879,14 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
         from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
-        from azureml.model.mgmt.processors.pyfunc.automl.od_is_classes import COCO_SEG_CLASSES
         from azureml.automl.dnn.vision.common.constants import PretrainedModelUrls
         from azureml.automl.dnn.vision.common.pretrained_model_utilities import load_state_dict_from_url
-        import copy
-
+        with open(os.path.join(self.MODEL_DIR, "coco_seg_classes.txt")) as f:
+            coco_classes = f.readlines()
         model_wrapper = setup_model(
             model_name=ModelNames.MASK_RCNN_RESNET50_FPN,
-            number_of_classes=len(COCO_SEG_CLASSES),
-            classes=COCO_SEG_CLASSES,
+            number_of_classes=len(coco_classes),
+            classes=coco_classes,
             device=self._device,
             distributed=False,
             local_rank=0,
