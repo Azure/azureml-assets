@@ -878,7 +878,6 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
         from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
-        from azureml.automl.dnn.vision.common.constants import PretrainedModelUrls
         from azureml.automl.dnn.vision.common.pretrained_model_utilities import load_state_dict_from_url
         from azureml.automl.dnn.vision.common.constants import (
             PretrainedModelUrls,
