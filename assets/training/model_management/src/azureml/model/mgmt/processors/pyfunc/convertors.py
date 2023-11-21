@@ -825,7 +825,6 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
 
         return model_file
 
-
     def _get_model_weights_object_detection(self) -> str:
         """Return default model weights path.
 
@@ -918,7 +917,6 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         torch.save(checkpoint_data, model_file)
 
         return model_file
-
 
     def get_model_signature(self) -> ModelSignature:
         """Return MLflow model signature with input and output schema for the given input task.
