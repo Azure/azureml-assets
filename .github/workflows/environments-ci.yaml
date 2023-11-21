@@ -70,8 +70,9 @@ jobs:
       
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v4
+        # azureml-dataprep and/or azureml-dataprep-native doesn't support python 3.12 yet.
         with:
-          python-version: '>=3.8'
+          python-version: '>=3.8, <3.12'
     
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
