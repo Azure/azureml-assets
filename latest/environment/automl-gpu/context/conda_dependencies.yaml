@@ -12,7 +12,7 @@ dependencies:
 # We limit psutil because there is no psutil
 # for python 3.9 resulting in deployment failures.
 - psutil>=5.2.2,<5.9.4
-- GitPython=3.1.32
+- GitPython>=3.1.37
 - tqdm
 - setuptools=65.5.1
 - wheel=0.38.1
