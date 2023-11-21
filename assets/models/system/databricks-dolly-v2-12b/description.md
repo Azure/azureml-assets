@@ -31,11 +31,13 @@ Standard_NC24s_v3 | 1.08 | 34.9
 ```json
 {
     "input_data": {
-        "input_string": ["What is your favourite condiment?"],
-        "parameters":{
-        "max_new_tokens": 50,
-        "do_sample":true,
-        "return_full_text":false
+        "input_string": [
+            "What is your favourite condiment?"
+        ],
+        "parameters": {
+            "max_new_tokens": 50,
+            "do_sample": true,
+            "return_full_text": false
         }
     }
 }
@@ -44,8 +46,8 @@ Standard_NC24s_v3 | 1.08 | 34.9
 #### Sample output
 ```json
 [
-  {
-    "0": "I am a big fan of Salt and Pepper. I use it on nearly every meal."
-  }
+    {
+        "0": "I am a big fan of Salt and Pepper. I use it on nearly every meal."
+    }
 ]
 ```
