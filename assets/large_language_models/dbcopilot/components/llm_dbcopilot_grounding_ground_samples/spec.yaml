@@ -2,8 +2,8 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 type: command
 tags: {}
 name: llm_dbcopilot_grounding_ground_samples
-display_name: DBCopilot Grounding Ground Samples Component
-version: 0.0.7
+display_name: LLM - DBCopilot Grounding Ground Samples Component
+version: 0.0.11
 inputs:
   grounding_context:
     type: uri_folder

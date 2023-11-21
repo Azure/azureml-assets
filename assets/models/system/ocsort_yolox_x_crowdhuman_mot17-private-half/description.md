@@ -90,3 +90,6 @@ Note: "video_link" should be a publicly accessible url.
 ]
 ```
 
+#### Model inference - visualization for a video
+
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_mot_b2d502aa-f0b28e3e.gif" alt="mot visualization">

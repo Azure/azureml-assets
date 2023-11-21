@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.1
+name: parse_unstructured_data
+display_name: Parse unstructured data
+description: Parse unstructured data
+
+tags:
+  modality: completion
+  task: reasoning-and-insights
+
+data_uri: ./prompt
+template_path: prompt.yaml

@@ -44,6 +44,7 @@ inputs:
       - Huggingface
       - MMLab
       - llava
+      - AutoML
     default: Huggingface
     optional: false
     description: Framework from which model is imported from.
@@ -60,6 +61,7 @@ inputs:
       - text-classification
       - translation
       - image-classification
+      - image-classification-multilabel
       - image-object-detection
       - image-instance-segmentation
       - image-to-text
@@ -67,6 +69,7 @@ inputs:
       - text-to-image-inpainting
       - image-text-to-text
       - zero-shot-image-classification
+      - mask-generation
       - video-multi-object-tracking
       - visual-question-answering
     description: A Hugging face task on which model was trained on. A required parameter for transformers MLflow flavor. Can be provided as input here or in model_download_metadata JSON file.

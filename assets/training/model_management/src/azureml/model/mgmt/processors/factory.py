@@ -24,6 +24,7 @@ from azureml.model.mgmt.processors.transformers.convertors import (
     WhisperMLflowConvertor,
 )
 from azureml.model.mgmt.processors.pyfunc.convertors import (
+    AutoMLMLFlowConvertor,
     BLIPMLFlowConvertor,
     MMLabDetectionMLflowConvertor,
     MMLabTrackingMLflowConvertor,
@@ -31,6 +32,7 @@ from azureml.model.mgmt.processors.pyfunc.convertors import (
     StableDiffusionMlflowConvertor,
     StableDiffusionInpaintingMlflowConvertor,
     LLaVAMLFlowConvertor,
+    SegmentAnythingMLFlowConvertor,
 )
 
 
@@ -66,6 +68,10 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return BLIPMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
+        elif task == PyFuncSupportedTasks.MASK_GENERATION.value:
+            return SegmentAnythingMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
         else:
             raise Exception(f"Models from {model_framework} for {task} not supported for MLflow conversion")
     elif model_framework == ModelFramework.MMLAB.value:
@@ -88,6 +94,19 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             )
         else:
             raise Exception(f"Models from {model_framework} for {task} not supported for MLflow conversion")
+    elif model_framework == ModelFramework.AutoML.value:
+        # Models from AutML model framework exported in PyFunc mlflow flavor
+        if task in [
+            PyFuncSupportedTasks.IMAGE_CLASSIFICATION.value,
+            PyFuncSupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
+        ]:
+            return AutoMLMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        else:
+            raise Exception(
+                f"Models from {model_framework} for {task} not supported for MLflow conversion"
+            )
     else:
         raise Exception(f"Models from {model_framework} not supported for MLflow conversion")
 
@@ -220,12 +239,38 @@ class LLaVAMLflowConvertorFactory(MLflowConvertorFactoryInterface):
         )
 
 
+class SegmentAnythingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for segment anything (SAM) model."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for segment anything (SAM) model."""
+        return SegmentAnythingMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
 class MMLabTrackingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for MMTrack video model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for vision tasks."""
         return MMLabTrackingMLflowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class AutoMLMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for AutoML models."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for AutoML models."""
+        return AutoMLMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,

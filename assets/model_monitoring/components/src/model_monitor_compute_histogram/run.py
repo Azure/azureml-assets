@@ -15,7 +15,7 @@ from shared_utilities.io_utils import (
     init_spark,
     save_spark_df_as_mltable,
     try_read_mltable_in_spark,
-    try_read_mltable_in_spark_with_warning,
+    try_read_mltable_in_spark_with_error,
 )
 
 
@@ -40,11 +40,7 @@ def run():
     parser.add_argument("--histogram", type=str)
     args = parser.parse_args()
 
-    df = try_read_mltable_in_spark_with_warning(args.input_data, "input_data")
-
-    if not df:
-        print("No histogram buckets detected. Skipping histogram generation.")
-        return
+    df = try_read_mltable_in_spark_with_error(args.input_data, "input_data")
 
     histogram_buckets = try_read_mltable_in_spark(
         args.histogram_buckets, "histogram_buckets"

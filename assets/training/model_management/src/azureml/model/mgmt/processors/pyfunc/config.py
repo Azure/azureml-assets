@@ -44,6 +44,13 @@ class SupportedTasks(_CustomEnum):
     # LLaVA task
     IMAGE_TEXT_TO_TEXT = "image-text-to-text"
 
+    # mask generation
+    MASK_GENERATION = "mask-generation"
+
+    # AutoML Tasks
+    IMAGE_CLASSIFICATION = "image-classification"
+    IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
+
 
 class SupportedTextToImageModelFamily(_CustomEnum):
     """Supported text to image models."""

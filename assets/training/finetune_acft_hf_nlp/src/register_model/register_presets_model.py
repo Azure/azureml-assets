@@ -160,7 +160,7 @@ def register_model(
     workspace,
     model_name,
     model_version,
-    model_output_path,
+    dataset_id,
     run_id,
     tags=None,
     properties=None,
@@ -175,8 +175,8 @@ def register_model(
     :type model_name: str
     :param model_version: The version to register the model with. If it is None, the code figures out the version.
     :type model_version: int or None
-    :param model_output_path: The path of the model output.
-    :type model_output_path: str
+    :param dataset_id: The id of the model dataset.
+    :type dataset_id: str
     :param tags: An optional dictionary of key value tags to assign to the model.
     :type tags: dict({str : str})
     :param properties: An optional dictionary of key value properties to assign to the model.
@@ -210,17 +210,22 @@ def register_model(
                 "be sure they are properly formatted."
             )
 
-    request_url = get_modelregistry_url(workspace)
+    intellectualProperty = {
+        "publisher": "nopublisher"
+    }
+    intellectualProperty = json.loads(json.dumps(intellectualProperty))
 
+    request_url = get_modelregistry_url(workspace)
     request_body = {
         "name": model_name,
         "description": description,
-        "url": model_output_path,
+        "url": "azureml://datasets/{}".format(dataset_id),
         "runId": run_id,
         "mimeType": "application/x-python",
         "properties": properties,
         "kvTags": tags,
         "modelFormat": model_format,
+        "intellectualProperty": intellectualProperty
     }
 
     use_auto_version = model_version is None
@@ -265,7 +270,7 @@ def get_rel_paths_pipe_manifest_files(folder_to_search: str) -> List[str]:
 
     full_paths = find_files_with_inc_excl_pattern(
         root_folder=folder_to_search,
-        include_pat=".safetensors$|.json$|README.md",
+        include_pat=".safetensors$|.json$",
     )
     return [pth.replace(folder_to_search, '.') for pth in full_paths]
 
@@ -282,12 +287,12 @@ def get_rel_paths_manifest_engine_controller_files(folder_to_search: str) -> Lis
 
     full_paths = find_files_with_inc_excl_pattern(
         root_folder=folder_to_search,
-        include_pat=".safetensors$|.json$|README.md",
+        include_pat=".safetensors$|.json$",
     )
     return [pth.replace(folder_to_search, '.') for pth in full_paths]
 
 
-def construct_storge_items(files_list: List[str]) -> List[Dict]:
+def construct_storge_items(files_list: List[str], run_id: str) -> List[Dict]:
     """Construct the storage item."""
     from pathlib import Path
 
@@ -295,12 +300,38 @@ def construct_storge_items(files_list: List[str]) -> List[Dict]:
     for file in files_list:
         return_list.append(
             {
-                "remoteLocation": str(Path("{0}", f"{file}")),
+                "remoteLocation": str(Path("{0}", "azureml", f"{run_id}", "output_model", f"{file}")),
                 "localRelativePath": file,
                 "unpackType": 0
             }
         )
     return return_list
+
+
+def create_v1_dataset(run_details, ws):
+    """Create v1 dataset."""
+    from azureml.core.dataset import Dataset
+    from azureml.core.datastore import Datastore
+
+    run_id = run_details["runId"]
+    # datastore_name = get_datastore_name(run_details)
+    # path = get_output_relative_path(run_details)
+    model_output_HOBO_path = get_model_path_in_HOBO_storage(run_details)
+    # example: azureml://datastores/azureml_managed_nopublisherossmodelweights/paths/azureml/${{name}}/output_model/
+    datastore_name_tmp = model_output_HOBO_path.split("azureml://datastores/")
+    datastore_name_tmp = datastore_name_tmp[1].split("/paths")
+    datastore_name = datastore_name_tmp[0]
+
+    # TODO auto construct relative path instead of hard-coding it
+    rel_path = f"azureml/{run_id}/output_model"
+    datastore = Datastore.get(ws, datastore_name)
+    finetuned_model_dataset = Dataset.File.from_files(
+        path=[(datastore, rel_path)], validate=False
+    )
+    finetuned_model_dataset = finetuned_model_dataset.register(
+        workspace=ws, name="register_model_dataset_" + run_id
+    )
+    return finetuned_model_dataset
 
 
 def registermodel_entrypoint(
@@ -327,7 +358,9 @@ def registermodel_entrypoint(
 
         ws = run._experiment.workspace
 
-        model_output_path = get_model_path_in_HOBO_storage(run_details)
+        # NOTE Using the HOBO path doesn't work <Reason>
+        # model_output_path = get_model_path_in_HOBO_storage(run_details)
+        registered_model_dataset = create_v1_dataset(run_details, ws)
         # get pipeline run id
         run_id = run_details["runId"]
         top_level_run = run
@@ -347,7 +380,7 @@ def registermodel_entrypoint(
                     ACFTUserError, pii_safe_message="Pipe manifest is empty."
                 )
             )
-    manifest_dict_pipe["storageItems"] = construct_storge_items(pipe_manifest_files)
+    manifest_dict_pipe["storageItems"] = construct_storge_items(pipe_manifest_files, run_id)
 
     manifest_dict_enginecontroller = {}
     engine_controller_manifest_files = get_rel_paths_manifest_engine_controller_files(registered_model_output)
@@ -357,7 +390,7 @@ def registermodel_entrypoint(
                     ACFTUserError, pii_safe_message="Engine controller manifest is empty."
                 )
             )
-    manifest_dict_enginecontroller["storageItems"] = construct_storge_items(engine_controller_manifest_files)
+    manifest_dict_enginecontroller["storageItems"] = construct_storge_items(engine_controller_manifest_files, run_id)
 
     output_manifest_pipe = registered_model_output + "/manifest.pipe.json"
     with open(output_manifest_pipe, 'w') as f:
@@ -383,9 +416,9 @@ def registermodel_entrypoint(
     properties.update(
         {
             "pipeManifestPath": pipe_manifest_path,
-            "intellectualPropertyPublisher": "OSS",
-            # "modelPath": model_directory_path,
-            # "componentVersion": "1",
+            "intellectualPropertyPublisher": "nopublisher",
+            "modelPath": ".",  # hordcode it for now
+            "componentVersion": "1",
             "engineControllerManifestPath": engine_controller_manifest_path,
             # "azureMlBaseModel": base_model_name,
             # "loraDim": str(finetuned_model_config["inputs"][keyname_basis_postprocess_type]["arguments"]["lora_dim"])
@@ -421,7 +454,7 @@ def registermodel_entrypoint(
         workspace=ws,
         model_name=model_name,
         model_version=registered_model_version,
-        model_output_path=model_output_path,
+        dataset_id=registered_model_dataset.id,
         run_id=top_level_run.id,
         properties=properties,
         model_format="PRESETS",

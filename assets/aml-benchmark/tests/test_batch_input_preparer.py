@@ -7,6 +7,7 @@ from typing import Optional
 import json
 import os
 import uuid
+import pytest
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
@@ -23,28 +24,47 @@ class TestBatchInferencePreparerComponent:
     """Component test for batch inference preparer."""
 
     EXP_NAME = "batch-inference-preparer-test"
+    LLM_REQUEST = ('{'
+                   '   "input_data":'
+                   '   {'
+                   '       "input_string": ["###<prompt>"],'
+                   '       "parameters":'
+                   '       {'
+                   '           "temperature": 0.6,'
+                   '           "max_new_tokens": 100,'
+                   '           "do_sample": true'
+                   '       }'
+                   '   },'
+                   '   "_batch_request_metadata": ###<_batch_request_metadata>'
+                   '}')
+    VISION_REQUEST = ('{'
+                      '"input_data": {'
+                      '  "columns": ['
+                      '    "image",'
+                      '    "text"'
+                      '  ],'
+                      '  "index": [0],'
+                      '  "data": ['
+                      '    ["###<image>", "###<text>"]'
+                      '  ]'
+                      '},'
+                      '"params": {}'
+                      '}')
 
-    def test_batch_inference_preparer(self, temp_dir: str):
+    @pytest.mark.parametrize(
+            'model_type', [(None), ("vision_oss")]
+    )
+    def test_batch_inference_preparer(self, model_type: str, temp_dir: str):
         """Test batch inference preparer."""
         ml_client = get_mlclient()
         score_url = "https://test.com"
+        request = self.VISION_REQUEST if model_type == "vision_oss" else self.LLM_REQUEST
         pipeline_job = self._get_pipeline_job(
             self.test_batch_inference_preparer.__name__,
-            '{'
-            '   "input_data":'
-            '   {'
-            '       "input_string": ["###<prompt>"],'
-            '       "parameters":'
-            '       {'
-            '           "temperature": 0.6,'
-            '           "max_new_tokens": 100,'
-            '           "do_sample": true'
-            '       }'
-            '   },'
-            '   "_batch_request_metadata": ###<_batch_request_metadata>'
-            '}',
+            request,
             endpoint_url=score_url,
             temp_dir=temp_dir,
+            model_type=model_type,
         )
         # submit the pipeline job
         pipeline_job = ml_client.create_or_update(
@@ -55,9 +75,13 @@ class TestBatchInferencePreparerComponent:
 
         out_dir = os.path.join(temp_dir, "output")
         os.makedirs(out_dir, exist_ok=True)
+        if model_type == "vision_oss":
+            expected_keys = ["input_data"]
+        else:
+            expected_keys = ["input_data", "_batch_request_metadata"]
         self._verify_output(
-            pipeline_job, output_dir=out_dir, check_key=["input_data", "_batch_request_metadata"],
-            model_type='oss',
+            pipeline_job, output_dir=out_dir, check_key=expected_keys,
+            model_type=model_type,
             check_param_dict={"temperature": 0.6, "max_new_tokens": 100, "do_sample": True}
         )
 
@@ -67,17 +91,22 @@ class TestBatchInferencePreparerComponent:
                 batch_input_pattern: str,
                 endpoint_url: str,
                 temp_dir: Optional[str] = None,
+                model_type: Optional[str] = None,
             ) -> Job:
         pipeline_job = load_yaml_pipeline("batch_inference_preparer.yaml")
 
         # avoid blob exists error when running pytest with multiple workers
         if temp_dir is not None:
             file_path = os.path.join(temp_dir, uuid.uuid4().hex + ".jsonl")
-            with open(Constants.BATCH_INFERENCE_PREPARER_FILE_PATH, "r") as f:
+            batch_input_file = Constants.BATCH_INFERENCE_PREPARER_FILE_PATH_VISION \
+                if model_type == "vision_oss" else Constants.BATCH_INFERENCE_PREPARER_FILE_PATH
+            with open(batch_input_file, "r") as f:
                 with open(file_path, "w") as f2:
                     f2.write(f.read())
 
         # set the pipeline inputs
+        if model_type:
+            pipeline_job.jobs['run_batch_inference_preparer'].inputs.model_type = model_type
         pipeline_job.inputs.input_dataset = Input(
             type="uri_folder", path=temp_dir
         )
@@ -102,6 +131,8 @@ class TestBatchInferencePreparerComponent:
         for r in output_records:
             for k in check_key:
                 assert k in r, f"{k} not in records {r}"
-            if model_type == "oss":
+            if model_type == "oss" or model_type is None:
                 for k, v in check_param_dict.items():
                     assert r['input_data']['parameters'][k] == v, f"{k} not equal to {v}"
+            if model_type == "vision_oss":
+                assert 'data' in r['input_data']

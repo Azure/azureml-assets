@@ -1540,9 +1540,7 @@ def apply_annotation(
         raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
                                   "column. ")
 
-    production_df = io_utils.read_mltable_in_spark(production_dataset)
-    if production_df.count() == 0:
-        raise ValueError("No data detected.")
+    production_df = io_utils.try_read_mltable_in_spark_with_error(production_dataset)
     # Ensure input data has the correct columns given the metrics
     # Question, answer required for coherence and fluency
     qa_required = len(list(set(QA_METRIC_NAMES).intersection(
@@ -1558,6 +1556,14 @@ def apply_annotation(
     # Question, answer, ground-truth required for similarity
     if SIMILARITY in metric_names and ground_truth_column_name not in production_df.columns:
         raise ValueError(f"production_dataset must have column: {ground_truth_column_name}")
+
+    column_names = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
+    if len(column_names) != len(set(column_names)):
+        raise ValueError("Detected duplicate specified columns. Column name input cannot be the same. Please ensure "
+                         f"that the column input specified is unique.\nReceived prompt_column_name: "
+                         f"{prompt_column_name}\ncompletion_column_name: {completion_column_name}\n"
+                         f"context_column_name: {context_column_name}\nground_truth_column_name: "
+                         f"{ground_truth_column_name}")
 
     # rename columns to prompt, completion, context, ground truth to match metaprompt data
     production_df = (production_df.withColumnRenamed(prompt_column_name, PROMPT)

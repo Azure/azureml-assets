@@ -1,5 +1,5 @@
 name: automl-gpu
-version: 4
+version: 5
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml

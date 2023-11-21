@@ -1,7 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
 
-_type: completion
-
 template: |
   You are a personalized marketing AI assistant. The user has provided customer data for an individual. The data includes their name, gender, age, interests, and purchase history. Your task is to use this data to generate a personalized email for a marketing campaign promoting a new item.
 
