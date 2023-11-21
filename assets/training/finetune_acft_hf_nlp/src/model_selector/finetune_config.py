@@ -13,7 +13,9 @@ from azureml.acft.contrib.hf.nlp.constants.constants import HfModelTypes
 from azureml.acft.common_components import get_logger_app
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.model_selector.finetune_config")
+logger = get_logger_app(
+    "azureml.acft.contrib.hf.scripts.components.scripts.model_selector.finetune_config"
+)
 
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
@@ -181,10 +183,7 @@ ACFT_CONFIG = {
         },
     },
     HfModelTypes.LLAMA: {
-        "load_tokenizer_kwargs": {
-            "add_eos_token": True,
-            "padding_side": "right"
-        },
+        "load_tokenizer_kwargs": {"add_eos_token": True, "padding_side": "right"},
         "mlflow_ft_conf": {
             "mlflow_hftransformers_misc_conf": {
                 "tokenizer_hf_load_kwargs": {
@@ -192,8 +191,8 @@ ACFT_CONFIG = {
                     "padding_side": "right",
                 },
             }
-        }
-    }
+        },
+    },
 }
 
 
@@ -214,7 +213,7 @@ class FinetuneConfig:
         model_name: Optional[str] = None,
         model_type: Optional[str] = None,
         artifacts_finetune_config_path: Optional[str] = None,
-        io_finetune_config_path: Optional[str] = None
+        io_finetune_config_path: Optional[str] = None,
     ) -> None:
         """
         :param task_name - The finetune task
@@ -237,7 +236,9 @@ class FinetuneConfig:
         self.artifacts_finetune_config_path = artifacts_finetune_config_path
         self.io_finetune_config_path = io_finetune_config_path
 
-    def _read_ft_config_json_file(self, json_file_path: Optional[str]) -> Dict[str, Any]:
+    def _read_ft_config_json_file(
+        self, json_file_path: Optional[str]
+    ) -> Dict[str, Any]:
         """Utility to read the finetune config json file.
 
         :param json_file_path - Path to the finetune config json file
@@ -248,28 +249,36 @@ class FinetuneConfig:
         if not json_file_path:
             return {}
 
-        with open(json_file_path, 'r', encoding="utf-8") as rptr:
+        with open(json_file_path, "r", encoding="utf-8") as rptr:
             json_data = json.load(rptr)
         # filter the finetune config for version 2
         if json_data.get("version", self._DEFAULT_VERSION) == "2":
-            json_data = json_data.get("task_specific_config", {}).get(self.task_name, {})
+            json_data = json_data.get("task_specific_config", {}).get(
+                self.task_name, {}
+            )
 
         return json_data
 
     def get_finetune_config(self) -> Dict[str, Any]:
         """Fetch the finetune config. Attempts to read the finetune config with v2 version."""
-        finetune_config_artifacts = self._read_ft_config_json_file(self.artifacts_finetune_config_path)
-        finetune_config_io = self._read_ft_config_json_file(self.io_finetune_config_path)
+        finetune_config_artifacts = self._read_ft_config_json_file(
+            self.artifacts_finetune_config_path
+        )
+        finetune_config_io = self._read_ft_config_json_file(
+            self.io_finetune_config_path
+        )
         # combine artifacts and io finetune config.
         finetune_config = deep_update(
             finetune_config_artifacts,
-            finetune_config_io  # finetune_config_io is given more precedence over finetune_config_artifacts
+            finetune_config_io,  # finetune_config_io is given more precedence over finetune_config_artifacts
         )
 
         # read legacy config from FINETUNE_CONFIG_V0
         if not finetune_config:
             finetune_config = self._read_legacy_finetune_config()
-        logger.info(f"Setting the following finetune config to this model: {finetune_config}")
+        logger.info(
+            f"Setting the following finetune config to this model: {finetune_config}"
+        )
         return finetune_config
 
     def _read_legacy_finetune_config(self) -> Dict[str, Any]:
@@ -279,8 +288,12 @@ class FinetuneConfig:
         finetune_config_v0 = {}
         if self.model_name is not None and self.model_name in FINETUNE_CONFIG_V0:
             finetune_config_v0 = copy.deepcopy(FINETUNE_CONFIG_V0[self.model_name])
-            logger.info(f"Found model name in finetune config version v0 - {finetune_config_v0}")
+            logger.info(
+                f"Found model name in finetune config version v0 - {finetune_config_v0}"
+            )
         elif self.model_type is not None and self.model_type in ACFT_CONFIG:
             finetune_config_v0 = copy.deepcopy(FINETUNE_CONFIG_V0[self.model_type])
-            logger.info(f"Found model type in finetune config version v0 - {finetune_config_v0}")
+            logger.info(
+                f"Found model type in finetune config version v0 - {finetune_config_v0}"
+            )
         return finetune_config_v0
