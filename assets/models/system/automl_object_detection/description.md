@@ -1,12 +1,10 @@
-### Task Overview
 Automated Machine Learning, or AutoML, is a process that automates the repetitive and time-consuming tasks involved in developing machine learning models. This helps data scientists, analysts, and developers to create models more efficiently and with higher quality, resulting in increased productivity and scalability.
-
 AutoML Object Detection enables you to train machine learning models to detect and locate objects of interest in an image. It is a computer vision task that involves identifying the position and boundaries of objects in an image, and classifying the objects into different categories.
 
 With this functionality, you can:
-* Directly use datasets coming from [Azure Machine Learning data labeling](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-image-labeling-projects?view=azureml-api-2)
+* Directly use datasets coming from [Azure Machine Learning data labeling](https://learn.microsoft.com/azure/machine-learning/how-to-create-image-labeling-projects?view=azureml-api-2)
 * Utilize labeled data to create image models without any training code.
-* Enhance model performance by selecting the appropriate algorithm and fine-tuning the hyperparameters selecting the appropriate algorithm from a [large selection of models](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli#supported-model-architectures) or let AutoML find the best model for you.
+* Enhance model performance by selecting the appropriate algorithm and fine-tuning the hyperparameters selecting the appropriate algorithm from a [large selection of models](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli#supported-model-architectures) or let AutoML find the best model for you.
 * Either download or deploy the resulting model as a endpoint in Azure Machine Learning.
 * Scale the operationalization process with the help of Azure Machine Learning's MLOps and ML Pipelines capabilities.
 
@@ -45,8 +43,8 @@ Image object detection|Image object detection|[fridgeObjects](https://cvbp-secon
   }
 }
 ```
-
-Note: "image1" and "image2" string should be in base64 format or publicly accessible urls.
+Note:
+- "image1" and "image2" should be strings in `base64` format.
 
 
 #### Sample output
@@ -84,8 +82,8 @@ Note: "image1" and "image2" string should be in base64 format or publicly access
 ]
 ```
 
-Note: Please refer to object detection output <a href="https://learn.microsoft.com/en-us/azure/machine-learning/reference-automl-images-schema?view=azureml-api-2#object-detection-1" target="_blank">data schema</a> for more detail.
+Note: Please refer to object detection output <a href="https://learn.microsoft.com/azure/machine-learning/reference-automl-images-schema?view=azureml-api-2#object-detection-1" target="_blank">data schema</a> for more detail.
 
-#### Model inference - visualization for a sample image
+#### Model inference - visualization
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/yolov5_tao_vis.png" alt="od visualization">

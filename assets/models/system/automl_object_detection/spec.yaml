@@ -1,10 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: AutoML Vision Image Object Detection
+name: AutoML-Image-Object-Detection
 path: ./
 properties:
   datasets: COCO
-  evaluation-min-sku-spec: 4|1|28|176
-  evaluation-recommended-sku: Standard_NC6s_v3
   finetune-min-sku-spec: 4|1|28|176
   finetune-recommended-sku: Standard_NC6s_v3
   finetuning-tasks: image-object-detection
@@ -21,6 +19,6 @@ properties:
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
     Standard_ND40rs_v2
 tags:
-  license: apache-2.0
+  license: mit
   task: object-detection
 version: 1

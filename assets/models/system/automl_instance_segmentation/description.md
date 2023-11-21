@@ -1,13 +1,10 @@
-### Task Overview
-
 Automated Machine Learning, or AutoML, is a process that automates the repetitive and time-consuming tasks involved in developing machine learning models. This helps data scientists, analysts, and developers to create models more efficiently and with higher quality, resulting in increased productivity and scalability.
-
 AutoML Image Instance Segmentation enables you to train machine learning models to identify and separate individual objects within an image, including detecting the boundaries of each object and assigning a unique label to each object. The goal of instance segmentation is to produce a pixel-wise segmentation map of the image, where each pixel is assigned to a specific object instance.
 
 With this functionality, you can:
-* Directly use datasets coming from [Azure Machine Learning data labeling](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-image-labeling-projects?view=azureml-api-2)
+* Directly use datasets coming from [Azure Machine Learning data labeling](https://learn.microsoft.com/azure/machine-learning/how-to-create-image-labeling-projects?view=azureml-api-2)
 * Utilize labeled data to create image models without any training code.
-* Enhance model performance by selecting the appropriate algorithm and fine-tuning the hyperparameters selecting the appropriate algorithm from a [large selection of models](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli#supported-model-architectures) or let AutoML find the best model for you.
+* Enhance model performance by selecting the appropriate algorithm and fine-tuning the hyperparameters selecting the appropriate algorithm from a [large selection of models](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli#supported-model-architectures) or let AutoML find the best model for you.
 * Either download or deploy the resulting model as a endpoint in Azure Machine Learning.
 * Scale the operationalization process with the help of Azure Machine Learning's MLOps and ML Pipelines capabilities.
 
@@ -47,8 +44,8 @@ Image Instance Segmentation|Image instance segmentation|[fridgeObjects](https://
   }
 }
 ```
-
-Note: "image1" and "image2" string should be in base64 format or publicly accessible urls.
+Note:
+- "image1" and "image2" should be strings in `base64` format.
 
 
 #### Sample output
@@ -107,7 +104,7 @@ Note: "image1" and "image2" string should be in base64 format or publicly access
 ]
 ```
 
-Note: Please refer to instance segmentation output <a href="https://learn.microsoft.com/en-us/azure/machine-learning/reference-automl-images-schema?view=azureml-api-2#instance-segmentation-1" target="_blank">data schema</a> for more detail.
+Note: Please refer to instance segmentation output <a href="https://learn.microsoft.com/azure/machine-learning/reference-automl-images-schema?view=azureml-api-2#instance-segmentation-1" target="_blank">data schema</a> for more detail.
 
 #### Model inference - visualization for a sample image
 
