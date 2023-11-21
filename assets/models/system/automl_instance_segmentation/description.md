@@ -1,14 +1,28 @@
 ### Task Overview
-<b>Image Instance Segmentation</B> is a computer vision task that involves identifying and separating individual objects within an image, including detecting the boundaries of each object and assigning a unique label to each object. The goal of instance segmentation is to produce a pixel-wise segmentation map of the image, where each pixel is assigned to a specific object instance.
 
-<b>Automated ML</b> supports model training for computer vision tasks like instance segmentation. Authoring AutoML models for computer vision tasks is currently supported via the Azure Machine Learning Python SDK. The resulting experimentation trials, models, and outputs are accessible from the Azure Machine Learning studio UI.
+Automated Machine Learning, or AutoML, is a process that automates the repetitive and time-consuming tasks involved in developing machine learning models. This helps data scientists, analysts, and developers to create models more efficiently and with higher quality, resulting in increased productivity and scalability.
 
-Please see <a href="https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli#supported-model-algorithms" target="_blank">documentation</a> to get more information.
+AutoML Image Instance Segmentation enables you to train machine learning models to identify and separate individual objects within an image, including detecting the boundaries of each object and assigning a unique label to each object. The goal of instance segmentation is to produce a pixel-wise segmentation map of the image, where each pixel is assigned to a specific object instance.
 
-### Model Zoo
-Model Architecture|Model Name(s)|Reference
-|--|--|--|
-MaskRCNN ResNet FPN	|`maskrcnn_resnet18_fpn`<br>`maskrcnn_resnet34_fpn`<br>`maskrcnn_resnet50_fpn`<br>`maskrcnn_resnet101_fpn`<br>`maskrcnn_resnet152_fpn`|<a href="https://arxiv.org/abs/1703.06870" target="_blank">[1]</a>
+With this functionality, you can:
+* Directly use datasets coming from [Azure Machine Learning data labeling](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-image-labeling-projects?view=azureml-api-2)
+* Utilize labeled data to create image models without any training code.
+* Enhance model performance by selecting the appropriate algorithm and fine-tuning the hyperparameters selecting the appropriate algorithm from a [large selection of models](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli#supported-model-architectures) or let AutoML find the best model for you.
+* Either download or deploy the resulting model as a endpoint in Azure Machine Learning.
+* Scale the operationalization process with the help of Azure Machine Learning's MLOps and ML Pipelines capabilities.
+
+See [How to train image models](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli) for more information.
+
+### Documentation
+
+#### Prepare Data
+To create computer vision models, it is necessary to provide labeled image data as input for model training. This data needs to be in the form of an MLTable, which can be created from training data in JSONL format. Please see [documentation](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#jsonl-schema-samples) for JSONL Schema and consuming the same in MLTable.
+
+#### Train a Model
+
+You can initiate [individual trials](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#individual-trials), [manual sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#manually-sweeping-model-hyperparameters), or [automatic sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#automatically-sweeping-model-hyperparameters-automode). It is suggested to begin with an automatic sweep to establish a baseline model. Afterward, you can experiment with individual trials using specific models and hyperparameter configurations. Lastly, manual sweeps can be used to explore multiple hyperparameter values near the more promising models and hyperparameter configurations. This three-step process (automatic sweep, individual trials, manual sweeps) helps avoid searching the entirety of the hyperparameter space, which grows exponentially with the number of hyperparameters.
+
+For more information, see [how to configure experiments](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#configure-experiments)
 
 
 ### Code samples
@@ -97,4 +111,4 @@ Note: Please refer to instance segmentation output <a href="https://learn.micros
 
 #### Model inference - visualization for a sample image
 
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_mask_rcnn_swin-t-p4-w7_fpn_1x_coco_IS.png" alt="is visualization">
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/markrcnn_resnet50_fpn_tao_vis.png" alt="is visualization">

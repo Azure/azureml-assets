@@ -1,27 +1,29 @@
 ### Task Overview
-<b>Image Object Detection</B> is a computer vision task in which the goal is to detect and locate objects of interest in an image. The task involves identifying the position and boundaries of objects in an image, and classifying the objects into different categories. 
+Automated Machine Learning, or AutoML, is a process that automates the repetitive and time-consuming tasks involved in developing machine learning models. This helps data scientists, analysts, and developers to create models more efficiently and with higher quality, resulting in increased productivity and scalability.
 
-<b>Automated ML</b> supports model training for computer vision tasks like  object detection. Authoring AutoML models for computer vision tasks is currently supported via the Azure Machine Learning Python SDK. The resulting experimentation trials, models, and outputs are accessible from the Azure Machine Learning studio UI.
+AutoML Object Detection enables you to train machine learning models to detect and locate objects of interest in an image. It is a computer vision task that involves identifying the position and boundaries of objects in an image, and classifying the objects into different categories.
 
-Please see <a href="https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli#supported-model-algorithms" target="_blank">documentation</a> to get more information.
+With this functionality, you can:
+* Directly use datasets coming from [Azure Machine Learning data labeling](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-image-labeling-projects?view=azureml-api-2)
+* Utilize labeled data to create image models without any training code.
+* Enhance model performance by selecting the appropriate algorithm and fine-tuning the hyperparameters selecting the appropriate algorithm from a [large selection of models](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli#supported-model-architectures) or let AutoML find the best model for you.
+* Either download or deploy the resulting model as a endpoint in Azure Machine Learning.
+* Scale the operationalization process with the help of Azure Machine Learning's MLOps and ML Pipelines capabilities.
 
-### Model Zoo
-Model Architecture|Model Name(s)|Reference
-|--|--|--|
-YOLOv5|`yolov5`|<a href="https://github.com/ultralytics/yolov5" target="_blank">[1]</a>
-Faster RCNN ResNet FPN|`fasterrcnn_resnet18_fpn`<br>`fasterrcnn_resnet34_fpn`<br>`fasterrcnn_resnet50_fpn`<br>`fasterrcnn_resnet101_fpn`<br>`fasterrcnn_resnet152_fpn`|<a href="https://arxiv.org/abs/1612.03144" target="_blank">[2]</a>
-RetinaNet ResNet FPN|`retinanet_resnet50_fpn`|<a href="https://arxiv.org/abs/1708.02002" target="_blank">[3]</a>
+See [How to train image models](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli) for more information.
 
+### Documentation
 
+#### Prepare Data
+To create computer vision models, it is necessary to provide labeled image data as input for model training. This data needs to be in the form of an MLTable, which can be created from training data in JSONL format. Please see [documentation](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#jsonl-schema-samples) for JSONL Schema and consuming the same in MLTable.
 
-### Inference samples
+#### Train a Model
 
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Batch Scoring|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-image-object-detection-task-fridge-items-batch-scoring/image-object-detection-batch-scoring-non-mlflow-model.ipynb" target="_blank">image-object-detection-batch-scoring-non-mlflow-model.ipynb</a>|
+You can initiate [individual trials](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#individual-trials), [manual sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#manually-sweeping-model-hyperparameters), or [automatic sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#automatically-sweeping-model-hyperparameters-automode). It is suggested to begin with an automatic sweep to establish a baseline model. Afterward, you can experiment with individual trials using specific models and hyperparameter configurations. Lastly, manual sweeps can be used to explore multiple hyperparameter values near the more promising models and hyperparameter configurations. This three-step process (automatic sweep, individual trials, manual sweeps) helps avoid searching the entirety of the hyperparameter space, which grows exponentially with the number of hyperparameters.
 
+For more information, see [how to configure experiments](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#configure-experiments)
 
-### Finetune samples
+### Code samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|--|
@@ -86,4 +88,4 @@ Note: Please refer to object detection output <a href="https://learn.microsoft.c
 
 #### Model inference - visualization for a sample image
 
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_yolof_r50_c5_8x8_1x_coco_OD.png" alt="od visualization">
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/yolov5_tao_vis.png" alt="od visualization">
