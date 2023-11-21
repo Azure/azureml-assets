@@ -880,6 +880,10 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
         from azureml.automl.dnn.vision.common.constants import PretrainedModelUrls
         from azureml.automl.dnn.vision.common.pretrained_model_utilities import load_state_dict_from_url
+        from azureml.automl.dnn.vision.common.constants import (
+            PretrainedModelUrls,
+            PretrainedModelNames,
+        )
         with open(os.path.join(self.MODEL_DIR, "coco_seg_classes.txt")) as f:
             coco_classes = f.readlines()
         model_wrapper = setup_model(
@@ -904,7 +908,8 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         # for instance segmentation, when the pretrained weight is loaded in dnn-vision package,
         # it would randomly initialize the predictor head (regardless of number_of_classes is the same as default)
         # thus we need to use the temp workaround to load the pretrained weight from url
-        model_url = PretrainedModelUrls.MODEL_URLS["maskrcnn_resnet50_fpn_coco"]
+
+        model_url = PretrainedModelUrls.MODEL_URLS[PretrainedModelNames.MASKRCNN_RESNET50_FPN_COCO]
         model_state_dict = load_state_dict_from_url(model_url)
         checkpoint_data = {
             "model_name": model_wrapper.model_name,
@@ -935,12 +940,6 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
         mlflow_model_wrapper = MLFlowImagesModelWrapper(model_settings={},
                                                         task_type=self._task,
                                                         scoring_method=_get_scoring_method(self._task, is_yolo))
-
-        mlflow_model_wrapper = MLFlowImagesModelWrapper(
-            model_settings={},
-            task_type=self._task,
-            scoring_method=_get_scoring_method(self._task),
-        )
 
         if self._task in [
             SupportedTasks.IMAGE_CLASSIFICATION.value,
