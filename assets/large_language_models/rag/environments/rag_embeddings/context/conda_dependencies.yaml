@@ -4,13 +4,13 @@ channels:
 - anaconda
 dependencies:
 - python=3.8
-- pip=21.3.1
+- pip=23.3.1
 - pip:
     # RAG package
-  - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone]>=0.2.18.1
+  - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone]==0.2.21
     # Azure AI
   - azure-ai-formrecognizer==3.3.1
-  - azure-ai-ml==1.11.1 # Pin to 1.11.1, Because of a breaking change in v1.12.0
+  - azure-ai-ml=={{latest-pypi-version}}
     # Azure
   - azure-core<2.0.0,>=1.8.0,!=1.22.0
   - azure-identity==1.12.0
