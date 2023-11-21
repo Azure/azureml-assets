@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.from peft import PeftModel
+
+"""Validate LoRA weights."""
+
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
@@ -14,19 +19,20 @@ import torch
 
 COMPONENT_NAME = "ACFT-Validate_lora_weights"
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.validate_lora_weights.validate_lora_weights")
+logger = get_logger_app(
+    "azureml.acft.contrib.hf.scripts.components.scripts.validate_lora_weights.validate_lora_weights"
+)
 
 GENERATION_CONFIG = {
-    "max_new_tokens": 256, 
-    "do_sample": True, 
-    "top_p": 0.7, 
+    "max_new_tokens": 256,
+    "do_sample": True,
+    "top_p": 0.7,
     "temperature": 0.8
 }
 
+
 def validate_lora_weights(base_model_path: str, lora_weights_path: str, tokenizer_path: str, test_examples: list):
-    """
-    Load model and make forward pass to validate lora weights
-    """
+    """Load model and make forward pass to validate lora weights."""
     logger.info("Validating lora model weights")
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
@@ -44,7 +50,7 @@ def validate_lora_weights(base_model_path: str, lora_weights_path: str, tokenize
     try:
         outputs = model.generate(inputs=input_ids, **GENERATION_CONFIG)
         predictions_text = tokenizer.batch_decode(outputs)
-    except Exception as e:
+    except Exception:
         raise ACFTValidationException._with_error(
                 AzureMLError.create(
                     ACFTUserError,
@@ -53,9 +59,10 @@ def validate_lora_weights(base_model_path: str, lora_weights_path: str, tokenize
                     )
                 )
             )
-    
+
     logger.info(f"inputs:\n{test_examples}\ngenerated text:\n{predictions_text}")
     logger.info("Outputs generated successfully, Validation successful")
+
 
 def get_parser():
     """Get the parser object."""
@@ -84,6 +91,7 @@ def get_parser():
 
     return parser
 
+
 @swallow_all_exceptions(time_delay=5)
 def main():
     """Validate lora weights after finetuning."""
@@ -102,6 +110,7 @@ def main():
 
     print("validating lora weights")
     validate_lora_weights(args.base_model_path, args.lora_weights_path, args.tokenizer_path, ["Hello"])
+
 
 if __name__ == "__main__":
     main()
