@@ -7,17 +7,8 @@ from azureml.core.run import Run
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import Data
 from azure.identity import DefaultAzureCredential, AzureCliCredential
-
-
-class HdfsPath:
-    def __init__(self, scheme, account_name, container_name, path):
-        self.scheme = scheme
-        self.account_name = account_name
-        self.container_name = container_name
-        self.path = path
-
-    def __str__(self):
-        return f"{self.scheme}://{self.container_name}@{self.account_name}.{store_type}.core.windows.net/{self.path}"
+from azure.storage.filedatalake import DataLakeServiceClient, FileSystemClient
+from azure.core.exceptions import ResourceNotFoundError, ClientAuthenticationError
 
 
 def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_name=None, ws_name=None) -> str:
@@ -47,8 +38,8 @@ def convert_to_hdfs_path(uri_folder_path: str, ml_client=None) -> str:
     url = urlparse(uri_folder_path)
     # TODO sovereign endpoint
     if url.scheme in ["https", "http"]:
-        pattern = "(?P<scheme>http|https)://(?P<account_name>[^\.]+).(?P<store_type>blob|dfs).core.windows.net/" \
-                  "(?P<container>[^/]+)/(?P<path>.+)"
+        pattern = r"(?P<scheme>http|https)://(?P<account_name>[^\.]+).(?P<store_type>blob|dfs).core.windows.net/" \
+                  r"(?P<container>[^/]+)/(?P<path>.+)"
         matches = re.match(pattern, uri_folder_path)
         if not matches:
             raise ValueError(f"Unsupported uri as uri_folder: {uri_folder_path}")
@@ -60,7 +51,7 @@ def convert_to_hdfs_path(uri_folder_path: str, ml_client=None) -> str:
         path = matches.group("path")
         return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}"
     elif url.scheme in ["wasbs", "wasb", "abfss", "abfs"]:
-        pattern = "(?P<scheme>wasbs|abfss|wasb|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+).(?P<store_type>blob|dfs).core.windows.net/(?P<path>.+)"  # noqa
+        pattern = r"(?P<scheme>wasbs|abfss|wasb|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+).(?P<store_type>blob|dfs).core.windows.net/(?P<path>.+)"  # noqa
         matches = re.match(pattern, uri_folder_path)
         if not matches:
             raise ValueError(f"Unsupported uri as uri_folder: {uri_folder_path}")
@@ -77,7 +68,10 @@ def convert_to_hdfs_path(uri_folder_path: str, ml_client=None) -> str:
             datastore_name, path = _get_datastore_and_path_from_azureml_path(uri_folder_path)
             if not ml_client:
                 sub_id, rg_name, ws_name = _get_workspace_info()
-                ml_client = MLClient(DefaultAzureCredential(), sub_id, rg_name, ws_name)
+                try:
+                    ml_client = MLClient(DefaultAzureCredential(), sub_id, rg_name, ws_name)
+                except ClientAuthenticationError:
+                    ml_client = MLClient(AzureCliCredential(), sub_id, rg_name, ws_name)
             datastore = ml_client.datastores.get(datastore_name)
             datastore_type = datastore.type.__str__()
             if datastore_type not in ["DatastoreType.AZURE_BLOB", "DatastoreType.AZURE_DATA_LAKE_GEN2"]:
@@ -107,29 +101,68 @@ def get_datastore_from_input_path(input_path: str, ml_client=None) -> str:
         raise ValueError("Only azureml path(long, short or asset) is supported as input path of the MDC preprocessor.")
 
 
-def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str) -> List[str]:
+def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str,
+                  root_uri_folder: str = None, service_client: DataLakeServiceClient = None) -> List[str]:
+    if _is_local_path(input_data):
+        # for lcoal testing
+        return _get_local_file_list(start_datetime, end_datetime, input_data)
+
     file_list = []
-    root_uri_folder = convert_to_hdfs_path(input_data)
+    root_uri_folder = root_uri_folder or convert_to_hdfs_path(input_data).rstrip('/')
+    # get meta from root_uri_folder
+    pattern = r"(?P<scheme>abfss|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+).dfs.core.windows.net(?P<path>$|/.*)"  # noqa
+    matches = re.match(pattern, root_uri_folder)
+    if not matches:
+        raise ValueError(f"Unsupported uri as uri_folder: {root_uri_folder}")
+    scheme = "https" if matches.group("scheme") == "abfss" else "http"
+    account_url = f"{scheme}://{matches.group('account_name')}.dfs.core.windows.net"
+    service_client = service_client or DataLakeServiceClient(account_url, credential=DefaultAzureCredential())
+    file_system_client = service_client.get_file_system_client(matches.group("container"))
+    root_path = matches.group("path").rstrip('/')
     if end_datetime.minute == 0 and end_datetime.second == 0:
         # if end_datetime is a whole hour, the last hour folder is not needed
         end_datetime -= timedelta(seconds=1)
     cur_datetime = start_datetime
     while cur_datetime <= end_datetime:
-        cur_folder = get_datetime_folder(root_uri_folder, cur_datetime)
-        if folder_exists(cur_folder):
-            file_list.append(cur_folder)
+        if _folder_exists(file_system_client, f"{root_path}/{cur_datetime.strftime('%Y/%m/%d/%H')}"):
+            cur_folder = f"{root_uri_folder}/{cur_datetime.strftime('%Y/%m/%d/%H')}"
+            file_list.append(f"{cur_folder}/*.jsonl")
         cur_datetime += timedelta(hours=1)
     return file_list
 
 
-def folder_exists(folder_path: str) -> bool:
-    """Check if folder exists."""
-    return _folder_exists(folder_path)
+def _get_local_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str) -> List[str]:
+    file_list = []
+    root_folder = input_data.rstrip('/')
+    if end_datetime.minute == 0 and end_datetime.second == 0:
+        # if end_datetime is a whole hour, the last hour folder is not needed
+        end_datetime -= timedelta(seconds=1)
+    cur_datetime = start_datetime
+    while cur_datetime <= end_datetime:
+        cur_folder = f"{root_folder}/{cur_datetime.strftime('%Y/%m/%d/%H')}"
+        if os.path.isdir(cur_folder):
+            for file in os.listdir(cur_folder):
+                full_qualify_file = os.path.join(cur_folder, file)
+                if os.path.isfile(full_qualify_file) and file.endswith(".jsonl"):
+                    file_list.append(full_qualify_file) # local winutils/hadoop package doesn't support wildcard
+        cur_datetime += timedelta(hours=1)
+    return file_list
 
 
-def get_datetime_folder(root_uri_folder: str, cur_datetime: datetime) -> str:
-    root_uri_folder = root_uri_folder.rstrip('/')
-    return f"{root_uri_folder}/{cur_datetime.strftime('%Y/%m/%d/%H')}"
+def _is_local_path(path: str) -> bool:
+    return os.path.isdir(path) or path.startswith("file://") or path.startswith("/") or path.startswith(".") or \
+        re.match(r"^[a-zA-Z]:[/\\]", path)
+
+
+def _folder_exists(file_system_client: FileSystemClient, folder_path: str) -> bool:
+    """Check if hdfs folder exists."""
+    # DataLakeDirectoryClient.exists() doesn't work for blob, need to use DataLakeFileSystemClient.get_paths()
+    files = file_system_client.get_paths(folder_path, recursive=False, max_results=1)
+    try:
+        _ = next(files)
+        return True
+    except (ResourceNotFoundError, StopIteration):
+        return False
 
 
 def _get_workspace_info() -> Tuple[str, str, str]:
@@ -150,7 +183,12 @@ def _get_datastore_and_path_from_azureml_path(azureml_path: str) -> Tuple[str, s
 def _get_dataasset_from_asset_uri(asset_uri: str, ml_client=None) -> Data:
     if not ml_client:
         sub_id, rg_name, ws_name = _get_workspace_info()
-        ml_client = MLClient(subscription_id=sub_id, resource_group=rg_name, workspace_name=ws_name)
+        try:
+            ml_client = MLClient(DefaultAzureCredential(), subscription_id=sub_id,
+                                 resource_group=rg_name, workspace_name=ws_name)
+        except ClientAuthenticationError:
+            ml_client = MLClient(AzureCliCredential(), subscription_id=sub_id,
+                                 resource_group=rg_name, workspace_name=ws_name)
 
     # todo: validation
     asset_sections = asset_uri.split(':')

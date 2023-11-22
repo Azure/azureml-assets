@@ -5,15 +5,13 @@
 
 import argparse
 
-import pandas as pd
-import numpy as np
 from pyspark.sql import DataFrame
+from pyspark.sql.functions import posexplode, concat_ws
 from dateutil import parser
 import json
 from fsspec import AbstractFileSystem
 from datetime import datetime
-from pyspark.sql.functions import lit
-from mdc_preprocessor_helper import convert_to_azureml_long_form, get_datastore_from_input_path
+from mdc_preprocessor_helper import get_datastore_from_input_path
 from shared_utilities.momo_exceptions import DataNotFoundError
 from shared_utilities.io_utils import (
     init_spark,
@@ -24,15 +22,27 @@ from shared_utilities.constants import (
     MDC_CORRELATION_ID_COLUMN,
     MDC_DATA_COLUMN,
     MDC_DATAREF_COLUMN,
-    SCHEMA_INFER_ROW_COUNT,
     AML_MOMO_ERROR_TAG
 )
+from mdc_preprocessor_helper import get_file_list
 
 
-def _raw_mdc_uri_folder_to_spark_df(start_datetime: datetime, end_datetime: datetime, input_data: str) -> DataFrame:
+def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: datetime, input_data: str,
+                                    add_tags_func=None) -> DataFrame:
+    def handle_data_not_found():
+        add_tags_func({AML_MOMO_ERROR_TAG: "No data found for the given time window."})
+        raise DataNotFoundError(f"No data found for the given time window: {start_datetime} to {end_datetime}")
+
+    add_tags_func = add_tags_func or add_tags_to_root_run
     file_list = get_file_list(start_datetime, end_datetime, input_data)
+    if not file_list:
+        handle_data_not_found()
+
     spark = init_spark()
-    spark.read.json(file_list)
+    df = spark.read.json(file_list)
+    if df.rdd.isEmpty():
+        handle_data_not_found()
+    return df
 
 
 def _get_data_columns(df: DataFrame) -> list:
@@ -53,100 +63,32 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     otherwise, return the dataref content which is a url to the json file.
     """
 
-    def safe_dumps(x):
-        if type(x) in [dict, list]:
-            return json.dumps(x)
-        elif type(x) is np.ndarray:
-            return json.dumps(x.tolist())
-        else:
-            return x
+    columns = _get_data_columns(df)
 
-    def convert_object_to_str(dataframe: pd.DataFrame) -> pd.DataFrame:
-        columns = dataframe.columns
-        for column in columns:
-            if dataframe[column].dtype == "object":
-                dataframe[column] = dataframe[column].apply(safe_dumps)
-
-        return dataframe
-
-    def read_data(row) -> str:
-        data = getattr(row, MDC_DATA_COLUMN, None)
-        if data:
-            return data
-
-        dataref = getattr(row, MDC_DATAREF_COLUMN, None)
-        # convert https path to azureml long form path which can be recognized by azureml filesystem
-        # and read by pd.read_json()
-        data_url = convert_to_azureml_long_form(dataref, datastore)
-        return data_url
-        # TODO: Move this to tracking stream if both data and dataref are NULL
-
-    def row_to_pdf(row) -> pd.DataFrame:
-        df = pd.read_json(read_data(row))
-        df = convert_object_to_str(df)
-        return df
-
-    data_columns = _get_data_columns(df)
-    data_rows = df.select(data_columns).rdd.take(SCHEMA_INFER_ROW_COUNT)  # TODO: make it an argument user can define
-
-    spark = init_spark()
-    infer_pdf = pd.concat([row_to_pdf(row) for row in data_rows], ignore_index=True)
-    data_as_df = spark.createDataFrame(infer_pdf)
-    # data_as_df.show()
-    # data_as_df.printSchema()
-
-    def extract_data_and_correlation_id(entry, correlationid):
-        result = pd.read_json(entry)
-        result = convert_object_to_str(result)
-        result[MDC_CORRELATION_ID_COLUMN] = ""
-        for index, row in result.iterrows():
-            result.loc[index, MDC_CORRELATION_ID_COLUMN] = (
-                correlationid + "_" + str(index)
-            )
-        return result
-
-    def transform_df_function_with_correlation_id(iterator):
-        for df in iterator:
-            yield pd.concat(
-                extract_data_and_correlation_id(
-                    read_data(row),
-                    getattr(row, MDC_CORRELATION_ID_COLUMN),
-                )
-                for row in df.itertuples()
-            )
-
-    def transform_df_function_without_correlation_id(iterator):
-        for df in iterator:
-            pdf = pd.concat(
-                convert_object_to_str(pd.read_json(read_data(row))) for row in df.itertuples()
-            )
-            yield pdf
-
+    # TODO handle dataref
     if extract_correlation_id:
-        # Add empty column to get the correlationId in the schema
-        data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
-        data_columns.append(MDC_CORRELATION_ID_COLUMN)
-        transformed_df = df.select(data_columns).mapInPandas(
-            transform_df_function_with_correlation_id, schema=data_as_df.schema
-        )
+        columns.append(MDC_CORRELATION_ID_COLUMN)
+        # explode the data column of array type to multiple rows with index
+        df = df[columns].select(posexplode(MDC_DATA_COLUMN).alias("index", "value"), MDC_CORRELATION_ID_COLUMN)
+        # set the new correlationid as {correlationid}_{index}
+        df = df.withColumn(MDC_CORRELATION_ID_COLUMN, concat_ws("_", MDC_CORRELATION_ID_COLUMN, "index")).drop("index")
+        # select the 1st level features as columns
+        df = df.select("value.*", MDC_CORRELATION_ID_COLUMN)
     else:
-        # TODO: if neither data and dataref move to tracking stream (or throw ModelMonitoringException?)
-        transformed_df = df.select(data_columns).mapInPandas(
-            transform_df_function_without_correlation_id, schema=data_as_df.schema
-        )
-    return transformed_df
+        df = df[columns].select(posexplode(MDC_DATA_COLUMN).alias("index", "value"))
+        df = df.select("value.*")
+    return df
 
 
-def _raw_mdc_uri_folder_to_preprocessed_spark_df(
-        data_window_start: datetime, data_window_end: datetime,
-        input_data: str, preprocessed_input_data: str, extract_correlation_id: bool,
-        fs: AbstractFileSystem = None, add_tags_func=None) -> DataFrame:
+def _mdc_uri_folder_to_preprocessed_spark_df(
+        data_window_start: datetime, data_window_end: datetime, input_data: str, extract_correlation_id: bool,
+        add_tags_func=None) -> DataFrame:
     """Read raw MDC data, preprocess, and return in a Spark DataFrame."""
     # Parse the dates
     start_datetime = parser.parse(data_window_start)
     end_datetime = parser.parse(data_window_end)
 
-    df = _raw_mdc_uri_folder_to_spark_df(start_datetime, end_datetime, input_data)
+    df = _mdc_uri_folder_to_raw_spark_df(start_datetime, end_datetime, input_data, add_tags_func)
     print("df converted from MDC raw uri folder:")
     df.select("data").show(truncate=False)
     df.printSchema()
@@ -177,8 +119,8 @@ def mdc_preprocessor(
         preprocessed_data: The mltable path pointing to location where the outputted mltable will be written to.
         extract_correlation_id: The boolean to extract correlation Id from the MDC logs.
     """
-    transformed_df = _raw_mdc_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, input_data,
-                                                                  preprocessed_input_data, extract_correlation_id, fs)
+    transformed_df = _mdc_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, input_data,
+                                                              preprocessed_input_data, extract_correlation_id, fs)
 
     save_spark_df_as_mltable(transformed_df, preprocessed_input_data)
 

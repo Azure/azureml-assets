@@ -1,8 +1,9 @@
 from unittest.mock import Mock
 import pytest
+from datetime import datetime
 
 from model_data_collector_preprocessor.mdc_preprocessor_helper import (
-    convert_to_azureml_long_form, convert_to_hdfs_path, get_datastore_from_input_path
+    convert_to_azureml_long_form, convert_to_hdfs_path, get_datastore_from_input_path, get_file_list
 )
 
 
@@ -156,3 +157,36 @@ class TestMDCPreprocessorHelper:
 
         datastore = get_datastore_from_input_path("azureml:my_asset:my_version", mock_ml_client)
         assert datastore == expected_datastore
+
+    @pytest.mark.parametrize(
+        "start_hour, end_hour, expected_hours, root_folder",
+        [
+            (7, 21, [7, 8, 13, 17, 19, 20], "/path/to/folder"),
+            (4, 8, [6, 7], "/path/to/folder/"),
+            (20, 23, [20, 21], ""),
+            (13, 19, [13, 17], "/"),
+            (3, 6, [], "/folder"),
+            (22, 23, [], "/"),
+            (9, 13, [], ""),
+        ]
+    )
+    def test_get_file_list(self, start_hour, end_hour, expected_hours, root_folder):
+        def _mock_get_paths(path, recursive, max_results):
+            non_empty_hours = [6, 7, 8, 13, 17, 19, 20, 21]
+            non_empty_folders = [f"{root_folder.rstrip('/')}/2023/11/20/{h:02d}" for h in non_empty_hours]
+            result_list = ["1.jsonl"] if path in non_empty_folders else []
+            return result_list.__iter__()
+        mock_fs_client = Mock()
+        mock_fs_client.get_paths.side_effect = _mock_get_paths
+        mock_svc_client = Mock()
+        mock_svc_client.get_file_system_client.side_effect = lambda n: mock_fs_client if n == "my_container" else None
+
+        hdfs_uri_folder = f"abfss://my_container@my_account.dfs.core.windows.net{root_folder}"
+        start = datetime(2023, 11, 20, start_hour)
+        end = datetime(2023, 11, 20, end_hour)
+        file_list = get_file_list(start, end, "uri_folder_path", hdfs_uri_folder, service_client=mock_svc_client)
+
+        assert file_list == [
+            f"abfss://my_container@my_account.dfs.core.windows.net{root_folder}/2023/11/20/{h:02d}/*.jsonl"
+            for h in expected_hours
+        ]
