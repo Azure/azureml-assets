@@ -241,7 +241,7 @@ class FinetuneConfig:
     def _read_ft_config_json_file(
         self, json_file_path: Optional[str]
     ) -> Dict[str, Any]:
-        """Utility to read the finetune config json file.
+        """Read the finetune config json file.
 
         :param json_file_path - Path to the finetune config json file
         :type Optional[str]
@@ -285,7 +285,9 @@ class FinetuneConfig:
 
     def _read_legacy_finetune_config(self) -> Dict[str, Any]:
         """Read the finetune config from the legacy ACFT_CONFIG a.k.a FINETUNE_CONFIG_V0.
-        If both model_name and model_type are present, precedence is given to model_name over model_type.
+
+        While reading finetune config from the above dictionary, if both model_name and model_type are present,
+        precedence is given to model_name over model_type.
         """
         finetune_config_v0 = {}
         if self.model_name is not None and self.model_name in FINETUNE_CONFIG_V0:
