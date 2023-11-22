@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: roberta-large-mnli
 path: ./
 properties:
-  SHA: 0dcbcf20673c006ac2d1e324954491b96f0c0015
+  SHA: df0f743a40fd2c7a260dfae33c1991f72ca9d472
   datasets: multi_nli, wikipedia, bookcorpus
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
@@ -53,4 +53,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: text-classification
-version: 10
+version: 11
