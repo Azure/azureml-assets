@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: OSS Text Generation Finetune
 description: FTaaS component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/28
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/30
 
 code: ../../../src/
 
