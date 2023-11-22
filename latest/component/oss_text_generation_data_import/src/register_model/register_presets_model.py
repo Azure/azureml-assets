@@ -210,12 +210,8 @@ def register_model(
                 "be sure they are properly formatted."
             )
 
-    intellectualProperty = {
-        "publisher": "nopublisher"
-    }
-    intellectualProperty = json.loads(json.dumps(intellectualProperty))
-
     request_url = get_modelregistry_url(workspace)
+
     request_body = {
         "name": model_name,
         "description": description,
@@ -225,7 +221,6 @@ def register_model(
         "properties": properties,
         "kvTags": tags,
         "modelFormat": model_format,
-        "intellectualProperty": intellectualProperty
     }
 
     use_auto_version = model_version is None
@@ -416,7 +411,6 @@ def registermodel_entrypoint(
     properties.update(
         {
             "pipeManifestPath": pipe_manifest_path,
-            "intellectualPropertyPublisher": "nopublisher",
             "modelPath": ".",  # hordcode it for now
             "componentVersion": "1",
             "engineControllerManifestPath": engine_controller_manifest_path,
