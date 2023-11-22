@@ -11,7 +11,7 @@ properties:
     chat scenarios.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 4
+version: 5
 description: |-
   The "Bring Your Own Data Chat QnA" is a pre-trained chat model, enhanced by GPT3.5, that leverages your personally indexed data and chat history to deliver more concrete and relevant answers. It involves processing the raw query through an embedding procedure, followed by a "Vector Search" to pinpoint the most pertinent context within the user's data. Subsequently, GPT3.5 is employed to generate a comprehensive answer to the question using the sourced documents.
 
