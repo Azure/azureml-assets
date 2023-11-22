@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/cyberagent-open-calm-7b/1700556900/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
