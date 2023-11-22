@@ -7,7 +7,6 @@ import os
 import json
 import logging
 import argparse
-import shutil
 from pathlib import Path
 from argparse import Namespace
 from copy import deepcopy
@@ -49,6 +48,7 @@ COMPONENT_NAME = "ACFT-Finetune"
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
+
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
@@ -647,37 +647,6 @@ def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
         )
 
 
-def setup_deepspeed_nebula(ds_config_json: Dict[str, Any], pytorch_model_folder: str,
-                           model_name_or_path: str) -> Dict[str, Any]:
-    """Set nebula settings in ds config if it has been enabled."""
-    nebula: Dict = ds_config_json.get("nebula", {})
-    if not nebula:
-        return ds_config_json
-    enabled = nebula.get("enabled", False)
-    if not enabled:
-        del ds_config_json["nebula"]
-        return ds_config_json
-    nebula_dirname = "nebula_checkpoints"
-    nebula["persistent_storage_path"] = os.path.abspath(os.path.join(pytorch_model_folder, nebula_dirname))
-    nebula["persistent_time_interval"] = nebula.get("persistent_time_interval", 30)
-    nebula["num_of_version_in_retention"] = nebula.get("num_of_version_in_retention", 2)
-    nebula["enable_nebula_load"] = True
-    logger.info(f"Nebula settings: {nebula}")
-
-    model_name_or_path = Path(model_name_or_path)
-    if model_name_or_path.is_dir():
-        logger.info(f"Copying checkpoints from {model_name_or_path} to {pytorch_model_folder}...")
-        try:
-            shutil.copytree(model_name_or_path, pytorch_model_folder, dirs_exist_ok=True)
-        except Exception as e:
-            shutil.rmtree(pytorch_model_folder, ignore_errors=True)
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(ACFTSystemError, pii_safe_message=f"shutil copy failed with err: {e}"))
-
-    ds_config_json["nebula"] = nebula
-    return ds_config_json
-
-
 def resolve_deepspeed_config(args: Namespace) -> str:
     """Identify the right deepspeed config to be used based on user passed parameters."""
     # Check for deepspeed config via input port
@@ -722,9 +691,6 @@ def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
         # check for invalid settings
         logger.info("Checking for invalid deepspeed configurations.")
         check_for_invalid_ds_zero3_settings(args)
-
-    ds_config_json = setup_deepspeed_nebula(ds_config_json, args.pytorch_model_folder, args.model_name_or_path)
-    args.deepspeed = ds_config_json  # replace file path with updated dict
 
 
 def enable_ds3_model_specific_args(args: Namespace):
