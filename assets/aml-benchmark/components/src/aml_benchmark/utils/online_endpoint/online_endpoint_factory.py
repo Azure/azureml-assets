@@ -70,15 +70,15 @@ class OnlineEndpointFactory:
             metadata_dict['model_type']
         )
         return OnlineEndpointFactory.get_online_endpoint(
-            metadata_dict['workspace_name'],
-            metadata_dict['resource_group'],
-            metadata_dict['subscription_id'],
-            online_endpoint_model,
-            metadata_dict['scoring_url'],
-            metadata_dict['deployment_name'],
-            None,
-            None,
-            metadata_dict['connections_name']
+            workspace_name=metadata_dict['workspace_name'],
+            resource_group=metadata_dict['resource_group'],
+            subscription_id=metadata_dict['subscription_id'],
+            online_endpoint_model=online_endpoint_model,
+            endpoint=metadata_dict['endpoint_name'],
+            deployment_name=metadata_dict['deployment_name'],
+            sku=None,
+            location=None,
+            connections_name=metadata_dict['connections_name']
         )
 
     @staticmethod

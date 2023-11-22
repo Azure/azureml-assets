@@ -11,6 +11,7 @@ from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.aml_run_utils import str2bool
 from .endpoint_data_preparer import EndpointDataPreparer
+from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 
@@ -78,7 +79,7 @@ def main(
     :return: None
     """
     if deployment_config_dir:
-        online_model = OnlineEndpointModel.from_deployment_config_file(deployment_config_dir)
+        online_model = EndpointUtilities.get_model_from_deployment_config_file(deployment_config_dir)
     else:
         online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
 

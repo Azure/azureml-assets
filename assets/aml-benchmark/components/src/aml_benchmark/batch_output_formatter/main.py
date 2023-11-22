@@ -11,6 +11,7 @@ from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
+from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from .result_converters import ResultConverters
 
@@ -31,7 +32,7 @@ def parse_args() -> argparse.Namespace:
         help="The ground truth data mapping 1-1 to the prediction data.")
 
     parser.add_argument("--perf_data", type=str, help="path to output location")
-    parser.add_argument("--endpoint_url", type=str, help="endpoint_url")
+    parser.add_argument("--endpoint_url", type=str, help="endpoint_url", default=None)
     parser.add_argument("--metadata_key", type=str, help="metadata key", default=None)
     parser.add_argument("--data_id_key", type=str, help="metadata key", default=None)
     parser.add_argument("--label_key", type=str, help="label key")
@@ -94,7 +95,7 @@ def main(
     else:
         ground_truth_df = None
     if deployment_config_dir:
-        online_model = OnlineEndpointModel.from_deployment_config_file(deployment_config_dir)
+        online_model = EndpointUtilities.get_model_from_deployment_config_file(deployment_config_dir)
     else:
         online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
 

@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 
 class AOAIOnlineEndpoint(OnlineEndpoint):
     """Class for AOAI online endpoint."""
+    FINETUNED_MAX_SKU = 50
 
     def __init__(
             self,
@@ -71,14 +72,14 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def endpoint_state(self) -> ResourceState:
         """Check if the endpoint exists."""
         resp = self._call_endpoint(get_requests_session().get, self._aoai_account_url)
-        logger.info("Calling {} returned {} with content {}.".format(
+        logger.info("Calling(GET) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
         return self._get_resource_state(resp)
 
     def deployment_state(self) -> ResourceState:
         """Check if the deployment exists."""
         resp = self._call_endpoint(get_requests_session().get, self._aoai_deployment_url)
-        logger.info("Calling {} returned {} with content {}.".format(
+        logger.info("Calling(GET)  {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
         return self._get_resource_state(resp)
 
@@ -98,7 +99,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         }
         resp = self._call_endpoint(get_requests_session().put, self._aoai_account_url, payload=payload)
         self._raise_if_not_success(resp)
-        logger.info("Calling {} returned {} with content {}.".format(
+        logger.info("Calling(PUT) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
 
     def create_deployment(self):
@@ -117,14 +118,17 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                     "format": "OpenAI",
                     "name": self._model.model_name,
                     "version": self._model.model_version
-                },
-                "raiPolicyName": "Microsoft.Default",
-                "versionUpgradeOption": "OnceNewDefaultVersionAvailable"
+                }
             }
         }
+        if self._model.is_finetuned:
+            payload['properties']['model']['source'] = self._model.source
+        else:
+            payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
+            payload['properties']["raiPolicyName"] = "Microsoft.Default"
         resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
         self._raise_if_not_success(resp)
-        logger.info("Calling {} returned {} with content {}.".format(
+        logger.info("Calling(PUT) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
 
     def get_endpoint_authorization_header(self) -> dict:
@@ -149,18 +153,18 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         """Delete the endpoint."""
         resp = self._call_endpoint(get_requests_session().delete, self._aoai_account_url)
         self._raise_if_not_success(resp)
-        logger.info("Calling {} returned {} with content {}.".format(
+        logger.info("Calling(DELETE) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
 
     def delete_deployment(self):
         """Delete the deployment."""
         resp = self._call_endpoint(get_requests_session().delete, self._aoai_deployment_url)
         self._raise_if_not_success(resp)
-        logger.info("Calling {} returned {} with content {}.".format(
+        logger.info("Calling(DELETE) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
 
     @property
-    def sku(self) -> str:
+    def sku(self) -> int:
         """Get the sku."""
         return int(self._sku) if self._sku else 120
 
@@ -215,12 +219,13 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def _get_scoring_url(self) -> str:
         """Get the scoring url."""
         url_list = [
-            self._get_scoring_url_base, 'openai', 'deployments',
+            self._scoring_url_base, 'openai', 'deployments',
             self.deployment_name, 'chat', 'completions?api-version=2023-07-01-preview'
         ]
         return '/'.join(url_list)
 
-    def _get_scoring_url_base(self) -> str:
+    @property
+    def _scoring_url_base(self) -> str:
         """Get the scoring url base."""
         try:
             # The base can be https://{self.endpoint_name}.openai.azure.com or 
@@ -228,7 +233,12 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             resp = self._call_endpoint(get_requests_session().get, self._aoai_account_url)
             self._raise_if_not_success(resp)
             content = self._get_content_from_response(resp)
-            return content['properties']['endpoint']
+            logger.info("Calling(GET) {} returned {} with content {}.".format(
+                self._aoai_account_url, resp.status_code, self._get_content_from_response(resp)))
+            url = content['properties']['endpoint']
+            if url.endswith('/'):
+                url = url[:-1]
+            return url
         except Exception as e:
             logger.warning(f'Failed to get the scoring url base. Error: {e}, using the default one')
             return f'https://{self.endpoint_name}.openai.azure.com'

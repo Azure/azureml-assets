@@ -6,7 +6,6 @@
 
 from typing import Optional
 from ..logging import get_logger
-from .endpoint_utils import EndpointUtilities
 
 
 logger = get_logger(__name__)
@@ -14,11 +13,16 @@ logger = get_logger(__name__)
 
 class OnlineEndpointModel:
     """Class for online endpoint model."""
-    AOAI_ENDPOINT_URL_BASE = ['openai.azure.com', 'api.cognitive.microsoft.com']
+    AOAI_ENDPOINT_URL_BASE = [
+        'openai.azure.com', 'api.cognitive.microsoft.com', 'cognitiveservices.azure.com/']
 
     def __init__(
             self, model: str, model_version: Optional[str], model_type: str,
-            endpoint_url: Optional[str] = None
+            endpoint_url: Optional[str] = None,
+            is_finetuned: Optional[bool] = False,
+            finetuned_subscription_id: Optional[str] = None,
+            finetuned_resource_group: Optional[str] = None,
+            finetuned_workspace: Optional[str] = None
     ):
         """Init method."""
         if model is not None and model.startswith('azureml:'):
@@ -33,6 +37,10 @@ class OnlineEndpointModel:
         self._model_type = model_type
         if model_type is None:
             self._model_type = self._get_model_type_from_url(endpoint_url)
+        self._is_finetuned = is_finetuned
+        self._finetuned_subscription_id = finetuned_subscription_id
+        self._finetuned_resource_group = finetuned_resource_group
+        self._finetuned_workspace = finetuned_workspace
 
     @property
     def model_name(self) -> str:
@@ -48,6 +56,23 @@ class OnlineEndpointModel:
     def model_type(self) -> str:
         """Get the model type."""
         return self._model_type
+
+    @property
+    def is_finetuned(self) -> bool:
+        """Get the finetune flag."""
+        return self._is_finetuned
+
+    @property
+    def source(self) -> Optional[str]:
+        """Get the source."""
+        if self.is_finetuned:
+            source_list = [
+                "/subscriptions", self._finetuned_subscription_id, "resourceGroups",
+                self._finetuned_resource_group, "providers", "Microsoft.MachineLearningServices",
+                "workspaces", self._finetuned_workspace
+            ]
+            return "/".join(source_list)
+        return None
 
     @property
     def model_path(self) -> str:
@@ -79,14 +104,3 @@ class OnlineEndpointModel:
             if base_url in endpoint_url:
                 return 'oai'
         return 'oss'
-
-    @staticmethod
-    def from_deployment_config_file(dir_path: str) -> "OnlineEndpointModel":
-        """Get the online endpoint model from deployment config file."""
-        config = EndpointUtilities.load_endpoint_metadata_json(dir_path)
-        return OnlineEndpointModel(
-            config['model_path'],
-            None,
-            config['model_type'],
-            config['scoring_url']
-        )

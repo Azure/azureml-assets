@@ -86,10 +86,10 @@ inputs:
     type: string
     optional: True
     description: The region for the endpoint. If empty, the same region as workspace will be used.
-  endpoint_sku:
+  deployment_sku:
     type: string
     optional: True
-    description: The sku for the endpoint. If empty, the largest quota of the resource group will be used.
+    description: The sku for the deployment. Only needed for managed deployment.
   endpoint_name:
     type: string
     optional: True
@@ -102,6 +102,23 @@ inputs:
     type: string
     optional: True
     description: The model version.
+  is_finetuned_model:
+    type: boolean
+    optional: True
+    default: False
+    description: If the model is a finetuned model.
+  finetuned_subscription_id:
+    type: string
+    optional: True
+    description: The subscription id for the finetuned model.
+  finetuned_resource_group:
+    type: string
+    optional: True
+    description: The resource group for the finetuned model.
+  finetuned_workspace:
+    type: string
+    optional: True
+    description: The workspace name for the finetuned model.
   delete_managed_resources:
     type: boolean
     optional: True
@@ -152,6 +169,11 @@ inputs:
     optional: True
     default: True
     description: If using max quota or not for AOAI model.
+  mini_batch_size:
+    type: string
+    optional: True
+    default: "100KB"
+    description: The mini batch size for parallel run.
 outputs:
   predictions:
     type: uri_file
@@ -175,14 +197,17 @@ jobs:
       model_version: ${{parent.inputs.model_version}}
       model_type: oai
       deployment_sku: ${{parent.inputs.deployment_sku}}
-      endpoint_workspace: ${{parent.inputs.endpoint_workspace}}
       endpoint_resource_group: ${{parent.inputs.endpoint_resource_group}}
       endpoint_subscription_id: ${{parent.inputs.endpoint_subscription}}
       endpoint_location: ${{parent.inputs.endpoint_region}}
       connections_name: ${{parent.inputs.connections_name}}
-      delete_managed_resources: ${{parent.inputs.delete_managed_resources}}
+      deletion_model: false
       do_quota_validation: ${{parent.inputs.do_quota_validation}}
       use_max_quota: ${{parent.inputs.use_max_quota}}
+      is_finetuned_model: ${{parent.inputs.is_finetuned_model}}
+      finetuned_subscription_id: ${{parent.inputs.finetuned_subscription_id}}
+      finetuned_resource_group: ${{parent.inputs.finetuned_resource_group}}
+      finetuned_workspace: ${{parent.inputs.finetuned_workspace}}
   # Preparer
   batch_inference_preparer: 
     type: command
@@ -195,7 +220,6 @@ jobs:
       n_samples: ${{parent.inputs.n_samples}}
       endpoint_url: "a_url"
       label_column_name: ${{parent.inputs.label_column_name}}
-      deployment_config_dir: ${{model_deployment.outputs.output_metadata}}
     outputs:
       formatted_data:
         type: mltable
@@ -217,7 +241,8 @@ jobs:
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
-      deployment_config_dir: ${{model_deployment.outputs.output_metadata}}
+      deployment_metadata_dir: ${{parent.jobs.model_deployment.outputs.output_metadata}}
+      mini_batch_size: ${{parent.inputs.mini_batch_size}}
     outputs:
       job_out_path:
         type: uri_file
@@ -244,8 +269,6 @@ jobs:
       fallback_value: ${{parent.inputs.fallback_value}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: false
-      endpoint_url: "a_url"
-      deployment_config_dir: ${{model_deployment.outputs.output_metadata}}
     outputs:
       predictions:
         type: uri_file
@@ -261,6 +284,5 @@ jobs:
     type: command
     component: azureml:batch_resource_manager:0.0.1
     inputs:
-      deployment_metadata_dir: ${{model_deployment.outputs.output_metadata}}
-      wait_input: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
-
+      deployment_metadata_dir: ${{parent.jobs.model_deployment.outputs.output_metadata}}
+      wait_input: ${{parent.jobs.endpoint_batch_score.outputs.job_out_path}}

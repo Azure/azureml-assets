@@ -9,7 +9,10 @@ from typing import List, Optional, Tuple, Generator
 import argparse
 import json
 import subprocess
+import sys
+import traceback
 
+from azureml.core import Run
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
@@ -28,8 +31,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=f"{__file__}")
     parser.add_argument("--model_type", type=str, help="model type", default='oss')
     parser.add_argument(
-        "--delete_managed_resources",
-        default=False, type=str2bool,
+        "--deletion_model",
+        default=True, type=str2bool,
         help="Delete managed resources create during the run.",
     )
     parser.add_argument(
@@ -50,6 +53,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output_metadata", type=str, help="output_metadata", default=None)
     parser.add_argument("--connections_name", type=str, help="output_metadata", default=None)
     parser.add_argument("--additional_deployment_env_vars", type=str, default=None)
+    parser.add_argument("--finetuned_workspace", type=str, help="finetuned_workspace", default=None)
+    parser.add_argument("--finetuned_resource_group", type=str, help="finetuned_resource_group", default=None)
+    parser.add_argument("--finetuned_subscription_id", type=str, help="finetuned_subscription_id", default=None)
     parser.add_argument(
         "--do_quota_validation",
         default=True, type=str2bool,
@@ -64,6 +70,11 @@ def parse_args() -> argparse.Namespace:
         "--use_max_quota",
         default=True, type=str2bool,
         help="If using max quota or not for AOAI model.",
+    )
+    parser.add_argument(
+        "--is_finetuned_model",
+        default=False, type=str2bool,
+        help="Flag on if this is a finetuned model.",
     )
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
@@ -80,19 +91,31 @@ def delete_managed_resources_maybe(
     is_endpoint_deleted = False
     is_deployment_deleted = False
     is_connections_deleted = False
-    if deployment_metadata.get('is_managed_endpoint', True):
-        logger.info("Deleting endpoint.")
-        online_endpoint.delete_endpoint()
-        is_endpoint_deleted = True
-        is_deployment_deleted = True
-    elif deployment_metadata.get('is_managed_deployment', True):
+    # For some OAI model, the deployment needs to be delete
+    if deployment_metadata.get('is_managed_deployment', True):
         logger.info("Deleting deployment.")
-        online_endpoint.delete_deployment()
-        is_deployment_deleted = True
+        try:
+            online_endpoint.delete_deployment()
+            is_deployment_deleted = True
+        except Exception as e:
+            logger.error(f"Failed to delete deployment with error {e}.")
+            logger.error(traceback.format_exception(*sys.exc_info()))
     if deployment_metadata.get('is_managed_connections', True):
         logger.info("Deleting connections.")
-        online_endpoint.delete_connections()
-        is_connections_deleted = True
+        try:
+            online_endpoint.delete_connections()
+            is_connections_deleted = True
+        except Exception as e:
+            logger.error(f"Failed to delete connections with error {e}.")
+            logger.error(traceback.format_exception(*sys.exc_info()))
+    if deployment_metadata.get('is_managed_endpoint', True):
+        logger.info("Deleting endpoint.")
+        try:
+            online_endpoint.delete_endpoint()
+            is_endpoint_deleted = True
+        except Exception as e:
+            logger.error(f"Failed to delete endpoint with error {e}.")
+            logger.error(traceback.format_exception(*sys.exc_info()))
     EndpointUtilities.dump_delete_status(
         is_endpoint_deleted,
         is_deployment_deleted,
@@ -146,9 +169,7 @@ def deploy_model_maybe(
 def _online_endpoint_generator(
         subscription_lists: List[str],
         region_lists: List[str],
-        model: str,
-        model_version: str,
-        model_type: str,
+        online_model: OnlineEndpointModel,
         endpoint_name: str,
         endpoint_workspace: str,
         endpoint_resource_group: str,
@@ -163,10 +184,11 @@ def _online_endpoint_generator(
     if deployment_sku is None:
         deployment_sku = 1
         use_max_quota = True
+    else:
+        deployment_sku = int(deployment_sku)
     for subscription in subscription_lists:
         for region in region_lists:
             logger.info("Checking {} in region {}.".format(subscription, region))
-            online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name)
             online_endpoint = OnlineEndpointFactory.get_online_endpoint(
                 endpoint_workspace,
                 endpoint_resource_group,
@@ -186,9 +208,14 @@ def _online_endpoint_generator(
                 logger.info(
                     "Current quota for model {} is {}.".format(online_model.model_name, current_quota))
                 if current_quota < deployment_sku:
+                    logger.warning(
+                        f"For {region}, current quota is less than sku {deployment_sku}, skip it now.")
                     continue
                 if use_max_quota:
+                    if online_model.is_finetuned:
+                        current_quota = min(current_quota, 50)
                     online_endpoint._sku = current_quota
+
             yield online_endpoint
 
 
@@ -206,14 +233,18 @@ def main(
     deployment_sku: str,
     output_metadata_dir: str,
     deployment_metadata_dir: str,
-    delete_managed_resources: bool,
+    deletion_model: bool,
     connections_name: str,
     additional_deployment_env_vars: str,
     do_quota_validation: bool,
     use_max_quota: bool,
     redeploy_model: bool,
     deployment_env: str,
-    cli_file: str
+    cli_file: str,
+    is_finetuned_model: bool,
+    finetuned_subscription_id: str,
+    finetuned_resource_group: str,
+    finetuned_workspace: str
 ) -> None:
     """
     Entry function of the script.
@@ -244,17 +275,27 @@ def main(
                 "--subscription", endpoint_subscription_id
             ], check=True
         )
-    if not delete_managed_resources:
+    if not deletion_model:
+        managed_deployment = False
         subscriptions_list = [
             s.strip() for s in endpoint_subscription_id.split(',')] if endpoint_subscription_id else [None]
         locations_list = [
             s.strip() for s in endpoint_location.split(',')] if endpoint_location else [None]
+        if is_finetuned_model:
+            workspace = Run.get_context().experiment.workspace
+            finetuned_workspace = finetuned_workspace if finetuned_workspace else workspace.name
+            finetuned_resource_group = finetuned_resource_group \
+                if finetuned_resource_group else workspace.resource_group
+            finetuned_subscription_id = finetuned_subscription_id \
+                if finetuned_subscription_id else workspace.subscription_id
+        online_model = OnlineEndpointModel(
+            model, model_version, model_type, endpoint_name, is_finetuned_model,
+            finetuned_subscription_id, finetuned_resource_group, finetuned_workspace
+        )
         for online_endpoint in _online_endpoint_generator(
                 subscriptions_list,
                 locations_list,
-                model,
-                model_version,
-                model_type,
+                online_model,
                 endpoint_name,
                 endpoint_workspace,
                 endpoint_resource_group,
@@ -276,15 +317,20 @@ def main(
                 managed_deployment = deploy_model_maybe(
                     online_endpoint, output_metadata_dir, managed_endpoint, redeploy_model)
                 if managed_deployment:
+                    logger.info("Endpoint is deployed successfully.")
                     break
             except Exception as e:
                 logger.error(f"Failed to deploy model with error {e}.")
+                logger.error(traceback.format_exception(*sys.exc_info()))
             # If endpoint is deployed successfully, the deletion code won't be reached
             if managed_endpoint:
                 logger.info("Deleting created endpoint now.")
                 online_endpoint.delete_endpoint()
+        if not managed_deployment:
+            raise RuntimeError("Failed to deploy model as no available quota found.")
     else:
         if not deployment_metadata_dir:
+            logger.info("Delete deployment using input parameters.")
             online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name)
             online_endpoint = OnlineEndpointFactory.get_online_endpoint(
                 endpoint_workspace,
@@ -300,6 +346,7 @@ def main(
             deployment_metadata = {}
         else:
             deployment_metadata = EndpointUtilities.load_endpoint_metadata_json(deployment_metadata_dir)
+            logger.info("Loaded deployment metadata {}.".format(deployment_metadata))
             online_endpoint = OnlineEndpointFactory.from_metadata(deployment_metadata)
         delete_managed_resources_maybe(output_metadata_dir, deployment_metadata, online_endpoint)
 
@@ -319,12 +366,16 @@ if __name__ == "__main__":
         args.deployment_sku,
         args.output_metadata,
         args.deployment_metadata_dir,
-        args.delete_managed_resources,
+        args.deletion_model,
         args.connections_name,
         args.additional_deployment_env_vars,
         args.do_quota_validation,
         args.use_max_quota,
         args.redeploy_model,
         args.deployment_env,
-        args.cli_file
+        args.cli_file,
+        args.is_finetuned_model,
+        args.finetuned_subscription_id,
+        args.finetuned_resource_group,
+        args.finetuned_workspace
     )

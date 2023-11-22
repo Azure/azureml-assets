@@ -179,7 +179,7 @@ class OnlineEndpoint:
                 content = content.decode('utf-8')
             return json.loads(content)
         except Exception as err:
-            logger.error(f"Failed to get content from response: {err}")
+            logger.warning(f"Failed to get content from response {resp}: {err}")
             return {}
         
     @property
@@ -226,7 +226,7 @@ class OnlineEndpoint:
 
     def delete_connections(self):
         """Delete the connections."""
-        self.ml_client_curr_workspace.connections.delete(self._connections_name)
+        self.ml_client_curr_workspace.connections.delete(self.connections_name)
 
     def get_endpoint_authorization_header_from_connections(self) -> dict:
         """Get the authorization header."""
@@ -313,7 +313,7 @@ class OnlineEndpoint:
     def _raise_if_not_success(self, resp: Response, msg: Optional[str] = None) -> None:
         """Raise error if not success."""
         default_msg = f'Failed to due to {resp.content} after getting {resp.status_code}'
-        if resp.status_code not in (200, 201, 202):
+        if resp.status_code not in (200, 201, 202, 204):
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(
                     BenchmarkValidationError,

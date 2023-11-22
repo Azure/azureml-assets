@@ -33,6 +33,23 @@ inputs:
     type: string
     optional: True
     description: Model version. If model asset path provided, this one can be optional.
+  is_finetuned_model:
+    type: boolean
+    optional: True
+    default: False
+    description: If the model is a finetuned model.
+  finetuned_subscription_id:
+    type: string
+    optional: True
+    description: The subscription id for the finetuned model.
+  finetuned_resource_group:
+    type: string
+    optional: True
+    description: The resource group for the finetuned model.
+  finetuned_workspace:
+    type: string
+    optional: True
+    description: The workspace name for the finetuned model.
   deployment_sku:
     type: string
     optional: True
@@ -61,7 +78,7 @@ inputs:
     type: string
     description: The connections name.
     optional: True
-  delete_managed_resources:
+  deletion_model:
     type: boolean
     optional: True
     default: True
@@ -110,10 +127,14 @@ command: >-
   $[[--endpoint_subscription_id '${{inputs.endpoint_subscription_id}}']]
   $[[--endpoint_location '${{inputs.endpoint_location}}']]
   $[[--connections_name ${{inputs.connections_name}}]]
-  $[[--delete_managed_resources ${{inputs.delete_managed_resources}}]]
+  $[[--deletion_model ${{inputs.deletion_model}}]]
   $[[--use_max_quota ${{inputs.use_max_quota}}]]
   $[[--do_quota_validation ${{inputs.do_quota_validation}}]]
   $[[--redeploy_model ${{inputs.redeploy_model}}]]
-  $[[--input_metadata ${{inputs.deployment_metadata_dir}}]]
+  $[[--deployment_metadata_dir ${{inputs.deployment_metadata_dir}}]]
   $[[--deployment_env ${{inputs.deployment_env}}]]
   $[[--additional_deployment_env_vars  '${{inputs.additional_deployment_env_vars}}']]
+  $[[--is_finetuned_model ${{inputs.is_finetuned_model}}]]
+  $[[--finetuned_subscription_id ${{inputs.finetuned_subscription_id}}]]
+  $[[--finetuned_resource_group ${{inputs.finetuned_resource_group}}]]
+  $[[--finetuned_workspace ${{inputs.finetuned_workspace}}]]

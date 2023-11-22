@@ -106,3 +106,14 @@ class EndpointUtilities:
                 "Failed to get the prompt from payload {} use the full payload now.".format(e))
             prompt = str(payload)
         return EndpointUtilities._hash_string_character(str(prompt))
+
+    @staticmethod
+    def get_model_from_deployment_config_file(dir_path: str) -> OnlineEndpointModel:
+        """Get the online endpoint model from deployment config file."""
+        config = EndpointUtilities.load_endpoint_metadata_json(dir_path)
+        return OnlineEndpointModel(
+            config['model_path'],
+            None,
+            config['model_type'],
+            config['scoring_url']
+        )
