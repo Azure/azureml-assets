@@ -99,6 +99,8 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
         if task in [
             PyFuncSupportedTasks.IMAGE_CLASSIFICATION.value,
             PyFuncSupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
+            PyFuncSupportedTasks.IMAGE_OBJECT_DETECTION.value,
+            PyFuncSupportedTasks.IMAGE_INSTANCE_SEGMENTATION.value,
         ]:
             return AutoMLMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
