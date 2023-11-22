@@ -411,6 +411,7 @@ def registermodel_entrypoint(
     properties.update(
         {
             "pipeManifestPath": pipe_manifest_path,
+            "intellectualPropertyPublisher": "nopublisher",
             "modelPath": ".",  # hordcode it for now
             "componentVersion": "1",
             "engineControllerManifestPath": engine_controller_manifest_path,
