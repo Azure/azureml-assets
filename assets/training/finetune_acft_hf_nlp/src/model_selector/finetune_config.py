@@ -216,6 +216,8 @@ class FinetuneConfig:
         io_finetune_config_path: Optional[str] = None,
     ) -> None:
         """
+        Finetune config init.
+
         :param task_name - The finetune task
         :type str
         :param model_name - The huggingface model name
