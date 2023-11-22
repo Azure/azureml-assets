@@ -8,11 +8,11 @@ Utility File for incrementing, synchronizing, and updating all LLM versions.
 Also checks Environments are tagging latest.
 
 To update all:
-\\azureml-assets\assets>
+\\azureml-assets\assets\large_language_models>
 python utils\ComponentVersionUpdator.py --input_folder . --update_all
 
 To only update component pipelines with updated components:
-\\azureml-assets\assets>
+\\azureml-assets\assets\large_language_models>
 python utils\ComponentVersionUpdator.py --input_folder .
 """
 
