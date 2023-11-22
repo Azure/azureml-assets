@@ -5,6 +5,7 @@
 
 import copy
 import json
+from pathlib import Path
 from typing import Optional, Dict, Any
 
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
@@ -246,7 +247,7 @@ class FinetuneConfig:
         :return finetune_config
         :rtype Dict[str, Any]
         """
-        if not json_file_path:
+        if not json_file_path or not Path(json_file_path).is_file():
             return {}
 
         with open(json_file_path, "r", encoding="utf-8") as rptr:
