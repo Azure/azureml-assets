@@ -282,8 +282,8 @@ class FinetuneConfig:
         return finetune_config
 
     def _read_legacy_finetune_config(self) -> Dict[str, Any]:
-        """Read the finetune config from the legacy ACFT_CONFIG a.k.a FINETUNE_CONFIG_V0. If both model_name and
-        model_type are present, precedence is given to model_name over model_type.
+        """Read the finetune config from the legacy ACFT_CONFIG a.k.a FINETUNE_CONFIG_V0.
+        If both model_name and model_type are present, precedence is given to model_name over model_type.
         """
         finetune_config_v0 = {}
         if self.model_name is not None and self.model_name in FINETUNE_CONFIG_V0:
