@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_text_generation_finetune
-version: 0.0.2
+version: 0.0.3
 type: command
 
 is_deterministic: True
