@@ -10,7 +10,7 @@ description: Import PyTorch / MLFlow model
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/30
 
-code: ../../../src/model_selector
+code: ../../../src
 
 inputs:
   # Model and task name
@@ -52,5 +52,5 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python model_selector.py --task_name TextGeneration $[[--huggingface_id '${{inputs.huggingface_id}}']] $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] $[[--system_properties '${{inputs.system_properties}}']] --output_dir '${{outputs.output_dir}}'
+  python model_selector/model_selector.py --task_name TextGeneration $[[--huggingface_id '${{inputs.huggingface_id}}']] $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] $[[--system_properties '${{inputs.system_properties}}']] --output_dir '${{outputs.output_dir}}'
 

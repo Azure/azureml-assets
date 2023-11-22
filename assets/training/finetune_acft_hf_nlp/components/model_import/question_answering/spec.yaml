@@ -10,7 +10,7 @@ description: Component to import PyTorch / MLFlow model. See [docs](https://aka.
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/30
 
-code: ../../../src/model_selector
+code: ../../../src
 
 inputs:
   # huggingface id
@@ -51,5 +51,5 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python model_selector.py --task_name QuestionAnswering $[[--huggingface_id '${{inputs.huggingface_id}}']] $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] --output_dir '${{outputs.output_dir}}'
+  python model_selector/model_selector.py --task_name QuestionAnswering $[[--huggingface_id '${{inputs.huggingface_id}}']] $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] --output_dir '${{outputs.output_dir}}'
 

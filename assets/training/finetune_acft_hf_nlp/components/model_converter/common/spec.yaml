@@ -10,7 +10,7 @@ description: Component to convert the finetune job output to pytorch and mlflow 
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/30
 
-code: ../../../src/model_converter
+code: ../../../src
 
 inputs:
   model_path:
@@ -38,4 +38,4 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python model_converter.py --model_path '${{inputs.model_path}}' $[[--converted_model '${{inputs.converted_model}}']] $[[--system_properties '${{inputs.system_properties}}']] --output_dir '${{outputs.output_dir}}'
+  python model_converter/model_converter.py --model_path '${{inputs.model_path}}' $[[--converted_model '${{inputs.converted_model}}']] $[[--system_properties '${{inputs.system_properties}}']] --output_dir '${{outputs.output_dir}}'

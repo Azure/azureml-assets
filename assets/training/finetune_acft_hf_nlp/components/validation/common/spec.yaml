@@ -10,7 +10,7 @@ description: Component to validate the finetune job against Validation Service
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/30
 
-code: ../../../src/validation
+code: ../../../src
 
 inputs:
   mlflow_model_path:
@@ -113,4 +113,4 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python validation.py $[[--system_properties '${{inputs.system_properties}}']] --validation-info '${{outputs.validation_info}}'
+  python validation/validation.py $[[--system_properties '${{inputs.system_properties}}']] --validation-info '${{outputs.validation_info}}'

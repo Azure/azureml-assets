@@ -55,7 +55,7 @@ outputs:
     description: folder to store preprocessed outputs of input data
 
 command: >-
-  python preprocess.py
+  python preprocess/preprocess.py
   --task_name NLPMultilabel
   --sentence1_key sentences
   --label_key ${{inputs.label_column_name}}
