@@ -13,5 +13,4 @@ dependencies:
     - azureml-telemetry=={{latest-pypi-version}}
     - cryptography=={{latest-pypi-version}}
     - certifi=={{latest-pypi-version}}
-    - pydash=={{latest-pypi-version}}
     - urllib3=={{latest-pypi-version}}
