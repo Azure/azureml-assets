@@ -50,6 +50,8 @@ class SupportedTasks(_CustomEnum):
     # AutoML Tasks
     IMAGE_CLASSIFICATION = "image-classification"
     IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
+    IMAGE_OBJECT_DETECTION = "image-object-detection"
+    IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
 
 
 class SupportedTextToImageModelFamily(_CustomEnum):
