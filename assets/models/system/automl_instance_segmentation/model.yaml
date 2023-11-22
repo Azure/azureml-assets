@@ -1,6 +1,6 @@
 path:
   container_name: finetuning-image-models
-  container_path: AutoML-mlflow/AutoML-Image-Instance-Segmentation/1700593283/mlflow_model_folder
+  container_path: AutoML-mlflow/AutoML-Image-Instance-Segmentation/1700615112/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

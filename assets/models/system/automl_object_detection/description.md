@@ -28,7 +28,7 @@ Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 Image object detection|Image object detection|[fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjects.zip)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-image-object-detection-task-fridge-items/automl-image-object-detection-task-fridge-items.ipynb" target="_blank">[fridgeobjects-object-detection.ipynb](https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-image-object-detection-task-fridge-items/automl-image-object-detection-task-fridge-items.ipynb)</a>|<a href="https://github.com/Azure/azureml-examples/tree/sdk-preview/cli/jobs/automl-standalone-jobs/cli-automl-image-object-detection-task-fridge-items" target="_blank">cli-automl-image-object-detection-task-fridge-items.yml</a>
 
 
-### Sample inputs and outputs
+### Sample inputs and outputs (for real-time inference)
 
 #### Sample input
 
