@@ -47,6 +47,12 @@ class SupportedTasks(_CustomEnum):
     # mask generation
     MASK_GENERATION = "mask-generation"
 
+    # AutoML Tasks
+    IMAGE_CLASSIFICATION = "image-classification"
+    IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
+    IMAGE_OBJECT_DETECTION = "image-object-detection"
+    IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
+
 
 class SupportedTextToImageModelFamily(_CustomEnum):
     """Supported text to image models."""

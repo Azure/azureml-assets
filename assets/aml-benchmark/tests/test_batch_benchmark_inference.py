@@ -7,6 +7,7 @@ from typing import Optional
 import json
 import os
 import uuid
+import pytest
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
@@ -25,30 +26,51 @@ class TestBatchBenchmarkInferenceComponent:
 
     EXP_NAME = "batch-benchmark-inference-test"
 
-    def test_batch_benchmark_inference(self, temp_dir: str):
+    LLM_REQUEST = ('{'
+                   '   "input_data":'
+                   '   {'
+                   '       "input_string": ["###<prompt>"],'
+                   '       "parameters":'
+                   '       {'
+                   '           "temperature": 0.6,'
+                   '           "max_new_tokens": 100,'
+                   '           "do_sample": true'
+                   '       }'
+                   '   },'
+                   '   "_batch_request_metadata": ###<_batch_request_metadata>'
+                   '}')
+    VISION_REQUEST = ('{'
+                      '"input_data": {'
+                      '  "columns": ['
+                      '    "image",'
+                      '    "text"'
+                      '  ],'
+                      '  "index": [0],'
+                      '  "data": ['
+                      '    ["###<image>", "###<text>"]'
+                      '  ]'
+                      '},'
+                      '"params": {}'
+                      '}')
+
+    @pytest.mark.parametrize(
+            'model_type', [("vision_oss")]
+    )
+    def test_batch_benchmark_inference(self, model_type: str, temp_dir: str):
         """Test batch inference preparer."""
+        self._model_type = model_type
         ml_client = get_mlclient()
         score_url, deployment_name, connections_name = deploy_fake_test_endpoint_maybe(ml_client)
+        request = self.VISION_REQUEST if model_type == "vision_oss" else self.LLM_REQUEST
         pipeline_job = self._get_pipeline_job(
             self.test_batch_benchmark_inference.__name__,
             score_url,
             deployment_name,
             connections_name,
-            '{'
-            '   "input_data":'
-            '   {'
-            '       "input_string": ["###<prompt>"],'
-            '       "parameters":'
-            '       {'
-            '           "temperature": 0.6,'
-            '           "max_new_tokens": 100,'
-            '           "do_sample": true'
-            '       }'
-            '   },'
-            '   "_batch_request_metadata": ###<_batch_request_metadata>'
-            '}',
+            request,
             'label',
             temp_dir,
+            model_type,
         )
         # submit the pipeline job
         pipeline_job = ml_client.create_or_update(
@@ -72,6 +94,7 @@ class TestBatchBenchmarkInferenceComponent:
                 batch_input_pattern: str,
                 label_column_name: str,
                 temp_dir: Optional[str] = None,
+                model_type: Optional[str] = None,
             ) -> Job:
         temp_yaml = self._create_inference_yaml()
         pipeline_job = load_yaml_pipeline('batch-benchmark-inference.yaml')
@@ -79,7 +102,9 @@ class TestBatchBenchmarkInferenceComponent:
         # avoid blob exists error when running pytest with multiple workers
         if temp_dir is not None:
             file_path = os.path.join(temp_dir, uuid.uuid4().hex + ".jsonl")
-            with open(Constants.BATCH_INFERENCE_PREPARER_FILE_PATH, "r") as f:
+            batch_input_file = Constants.BATCH_INFERENCE_PREPARER_FILE_PATH_VISION \
+                if model_type == "vision_oss" else Constants.BATCH_INFERENCE_PREPARER_FILE_PATH
+            with open(batch_input_file, "r") as f:
                 with open(file_path, "w") as f2:
                     f2.write(f.read())
 
@@ -155,6 +180,8 @@ class TestBatchBenchmarkInferenceComponent:
                 '    path: azureml://datastores/${{default_datastore}}'
                 '/paths/${{name}}/ground_truth.jsonl\n']
         }
+        if self._model_type:
+            param_mapping_dict['model_type:'] = [f"  model_type: {self._model_type}\n"]
         if current_section == "inputs" or current_section == "outputs":
             line_key = self._get_yml_key(line)
             if line_key in param_mapping_dict:
@@ -184,6 +211,8 @@ class TestBatchBenchmarkInferenceComponent:
             return self._get_yml_key(line) not in {"version:", "name:"}
         if current_section == "inputs" or current_section == "outputs":
             if line.startswith("      "):
+                return False
+            if "model_type" in line and not self._model_type:
                 return False
             return self._get_yml_key(line) not in {
                 'optional:', 'type:', 'default:', 'description:', 'enum:'}
@@ -222,4 +251,4 @@ class TestBatchBenchmarkInferenceComponent:
             "performance_metadata", ["start", "end", "latency"])
         self._check_output_data(
             os.path.join(
-                output_dir, "ground_truth"), "ground_truth.jsonl", ["ground_truth"])
+                output_dir, "ground_truth"), "ground_truth.jsonl", ["label"])

@@ -7,6 +7,7 @@ import json
 import mlflow
 import os
 import sys
+import torch
 
 from abc import ABC, abstractmethod
 from mlflow.models.signature import ModelSignature
@@ -746,3 +747,220 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         artifacts_dict = {SegmentAnythingMLflowLiterals.MODEL_DIR: self._model_dir}
         return artifacts_dict
+
+
+class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for AutoML models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "automl")
+    MLflowLiteral_Model = "model"
+    MLflowLiteral_Settings = "settings"
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for AutoML models."""
+        super().__init__(**kwargs)
+        if self._task not in [
+            SupportedTasks.IMAGE_CLASSIFICATION.value,
+            SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
+            SupportedTasks.IMAGE_OBJECT_DETECTION.value,
+            SupportedTasks.IMAGE_INSTANCE_SEGMENTATION.value,
+        ]:
+            raise Exception("Unsupported task")
+
+        self._device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+    def _get_model_weights_classification(self) -> str:
+        """Return default model weights path.
+
+        :return: Path to default model.
+        :rtype: str
+        """
+        multilabel = False
+        if self._task == SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value:
+            multilabel = True
+
+        from azureml.automl.dnn.vision.classification.models import ModelFactory
+        from azureml.automl.dnn.vision.classification.common.constants import ModelNames
+        from azureml.automl.dnn.vision.common.constants import (
+            PretrainedModelUrls,
+            PretrainedModelNames,
+        )
+        from azureml.automl.dnn.vision.common.pretrained_model_utilities import (
+            PretrainedModelFactory,
+        )
+        import copy
+
+        with open(os.path.join(self.MODEL_DIR, "vit_classes.txt")) as f:
+            vit_classes = f.readlines()
+
+        model_wrapper = ModelFactory().get_model_wrapper(
+            model_name=ModelNames.VITB16R224,
+            num_classes=len(vit_classes),
+            multilabel=multilabel,
+            distributed=False,
+            local_rank=0,
+            device=self._device,
+            model_state=PretrainedModelFactory._load_state_dict_from_url_with_retry(
+                PretrainedModelUrls.MODEL_URLS[PretrainedModelNames.VITB16R224],
+                progress=True,
+            ),
+            settings={},
+        )
+
+        specs = {
+            "multilabel": model_wrapper.multilabel,
+            "model_settings": model_wrapper.model_settings,
+            "labels": vit_classes,
+        }
+
+        checkpoint_data = {
+            "model_name": model_wrapper.model_name,
+            "number_of_classes": model_wrapper.number_of_classes,
+            "specs": specs,
+            "model_state": copy.deepcopy(model_wrapper.state_dict()),
+        }
+
+        model_file = "/tmp/vitb16r224-3c68ea1f.pth"
+        torch.save(checkpoint_data, model_file)
+
+        return model_file
+
+    def _get_model_weights_object_detection(self) -> str:
+        """Return default model weights path.
+
+        :return: Path to default model.
+        :rtype: str
+        """
+        from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
+        from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
+        import copy
+        with open(os.path.join(self.MODEL_DIR, "coco_od_classes.txt")) as f:
+            coco_classes = f.readlines()
+        model_wrapper = setup_model(
+            model_name=ModelNames.YOLO_V5,
+            number_of_classes=len(coco_classes),
+            classes=coco_classes,
+            device=self._device,
+            distributed=False,
+            local_rank=0,
+            model_state=None,
+            specs={"model_size": "medium",
+                   "device": self._device,
+                   "img_size": 640,
+                   "box_score_thresh": 0.1,
+                   "nms_iou_thresh": 0.5},
+            settings={})
+
+        specs = {
+            "model_specs": model_wrapper.specs,
+            "model_settings": model_wrapper.model_settings.get_settings_dict(),
+            "inference_settings": model_wrapper.inference_settings,
+            'classes': model_wrapper.classes,
+        }
+
+        checkpoint_data = {
+            "model_name": model_wrapper.model_name,
+            "number_of_classes": model_wrapper.number_of_classes,
+            "specs": specs,
+            "model_state": copy.deepcopy(model_wrapper.state_dict()),
+        }
+
+        model_file = "/tmp/yolov5.pth"
+        torch.save(checkpoint_data, model_file)
+
+        return model_file
+
+    def _get_model_weights_instance_segmentation(self) -> str:
+        """Return default model weights path.
+
+        :return: Path to default model.
+        :rtype: str
+        """
+        from azureml.automl.dnn.vision.object_detection.models.detection import setup_model
+        from azureml.automl.dnn.vision.object_detection.common.constants import ModelNames
+        from azureml.automl.dnn.vision.common.pretrained_model_utilities import load_state_dict_from_url
+        from azureml.automl.dnn.vision.common.constants import (
+            PretrainedModelUrls,
+            PretrainedModelNames,
+        )
+        with open(os.path.join(self.MODEL_DIR, "coco_seg_classes.txt")) as f:
+            coco_classes = f.readlines()
+        model_wrapper = setup_model(
+            model_name=ModelNames.MASK_RCNN_RESNET50_FPN,
+            number_of_classes=len(coco_classes),
+            classes=coco_classes,
+            device=self._device,
+            distributed=False,
+            local_rank=0,
+            model_state=None,
+            specs=None,
+            settings={})
+
+        specs = {
+            "model_specs": model_wrapper.specs,
+            "model_settings": model_wrapper.model_settings.get_settings_dict(),
+            "inference_settings": model_wrapper.inference_settings,
+            'classes': model_wrapper.classes,
+        }
+
+        # ideally, model_state_dict should be copy.deepcopy(model_wrapper.state_dict())
+        # for instance segmentation, when the pretrained weight is loaded in dnn-vision package,
+        # it would randomly initialize the predictor head (regardless of number_of_classes is the same as default)
+        # thus we need to use the temp workaround to load the pretrained weight from url
+
+        model_url = PretrainedModelUrls.MODEL_URLS[PretrainedModelNames.MASKRCNN_RESNET50_FPN_COCO]
+        model_state_dict = load_state_dict_from_url(model_url)
+        checkpoint_data = {
+            "model_name": model_wrapper.model_name,
+            "number_of_classes": model_wrapper.number_of_classes,
+            "specs": specs,
+            "model_state": model_state_dict,
+        }
+
+        model_file = "/tmp/maskrcnn.pth"
+        torch.save(checkpoint_data, model_file)
+
+        return model_file
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+        from azureml.automl.dnn.vision.common.model_export_utils import _get_mlflow_signature
+        return _get_mlflow_signature(self._task)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        from azureml.automl.dnn.vision.common.mlflow.mlflow_model_wrapper import MLFlowImagesModelWrapper
+        from azureml.automl.dnn.vision.common.model_export_utils import _get_scoring_method
+        is_yolo = self._task == SupportedTasks.IMAGE_OBJECT_DETECTION.value
+        mlflow_model_wrapper = MLFlowImagesModelWrapper(model_settings={},
+                                                        task_type=self._task,
+                                                        scoring_method=_get_scoring_method(self._task, is_yolo))
+
+        if self._task in [
+            SupportedTasks.IMAGE_CLASSIFICATION.value,
+            SupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
+        ]:
+            model_file = self._get_model_weights_classification()
+        elif self._task == SupportedTasks.IMAGE_OBJECT_DETECTION.value:
+            model_file = self._get_model_weights_object_detection()
+        elif self._task == SupportedTasks.IMAGE_INSTANCE_SEGMENTATION.value:
+            model_file = self._get_model_weights_instance_segmentation()
+        else:
+            raise Exception("Unsupported task")
+
+        artifacts_dict = {
+            self.MLflowLiteral_Model: model_file,
+            self.MLflowLiteral_Settings: os.path.join(self.MODEL_DIR, "settings.json"),
+        }
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=None,
+        )

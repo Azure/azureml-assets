@@ -8,7 +8,7 @@ generating responses for given prompts, and managing the allocation of processes
 """
 
 from configs import EngineConfig, TaskConfig
-from engine.engine import AbstractEngine, InferenceResult
+from engine.engine import BaseEngine, InferenceResult
 import math
 import os
 import psutil
@@ -29,7 +29,7 @@ MODEL_PATH = "mlflow_model_folder/data/model"
 DEVICE_COUNT = torch.cuda.device_count()
 
 
-class MiiEngine(AbstractEngine):
+class MiiEngine(BaseEngine):
     """Inference engine using MII methods."""
 
     def __init__(self, config: EngineConfig, task_config: TaskConfig):
@@ -39,7 +39,7 @@ class MiiEngine(AbstractEngine):
         self.model = None
         self.mii_config = self._get_mii_config()
 
-    def load_model(self):
+    def load_model(self, env=None):
         """Initialize MII server and MII client."""
         logger.info("MII Config: " + str(self.mii_config))
         logger.info("Start server setup")
@@ -58,9 +58,9 @@ class MiiEngine(AbstractEngine):
     @log_execution_time
     def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
         """Generate responses for given prompts."""
-        assert (
-            self.model is not None
-        ), "MII client not initialized. Please call init_client() before calling generate()"
+        if self.model is None:
+            logger.warning("MII client not initialized. Initializing now.")
+            self.init_client()
         queries = {"query": prompts}
         start_time = time.time()
         responses = self.model.query(queries, **params)
@@ -69,21 +69,14 @@ class MiiEngine(AbstractEngine):
         for i, res in enumerate(responses.response):
             generated_text = res
             generated_text = self._del_prompt_if_req(prompts[i], generated_text, params)
-            # TODO: Until mii returns the num tokens, approximate num_tokens. roughly, 75 words ~= 100 tokens
-            num_tokens = (
-                len(
-                    self._del_prompt_if_req(
-                        prompts[i], generated_text, params, force=True
-                    ).split(" ")
-                )
-                // 75
-                * 100
-            )
-            time_per_token_ms = inference_time_ms / num_tokens if num_tokens > 0 else 0
+            response_tokens = self.get_tokens(generated_text)
+            time_per_token_ms = inference_time_ms / len(response_tokens) if len(response_tokens) > 0 else 0
             result = InferenceResult(
                 response=generated_text,
                 inference_time_ms=inference_time_ms,
                 time_per_token_ms=time_per_token_ms,
+                generated_tokens=response_tokens,
+                prompt_num=i
             )
             inference_results.append(result)
         return inference_results

@@ -19,5 +19,5 @@ properties:
 tags:
   Preview: ''
   license: apache-2.0
-  task: mask-generation
+  task: image-segmentation
 version: 1

@@ -6,12 +6,13 @@
 import pytest
 from azure.ai.ml import MLClient, Output
 from azure.ai.ml.dsl import pipeline
+from azure.ai.ml.exceptions import JobException
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR,
     DATA_ASSET_IRIS_BASELINE_DATA,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
     DATA_ASSET_EMPTY,
-    DATA_ASSET_IRIS_BASELINE_INT_DATA,
+    DATA_ASSET_IRIS_BASELINE_INT_DATA_TYPE,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT_INT_DATA
 )
 
@@ -47,7 +48,11 @@ def _submit_data_drift_model_monitor_job(
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
 
     return ml_client.jobs.get(pipeline_job.name)
 
@@ -71,7 +76,7 @@ class TestDataDriftModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_empty_production_data_successful(
+    def test_monitoring_run_empty_production_data_failed(
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):
@@ -84,7 +89,8 @@ class TestDataDriftModelMonitor:
             DATA_ASSET_EMPTY,
         )
 
-        assert pipeline_job.status == "Completed"
+        # empty production data should fail the job
+        assert pipeline_job.status == "Failed"
 
     def test_monitoring_run_use_int_data_has_no_drift_successful(
         self, ml_client: MLClient, get_component, download_job_output,
@@ -95,7 +101,7 @@ class TestDataDriftModelMonitor:
             ml_client,
             get_component,
             test_suite_name,
-            DATA_ASSET_IRIS_BASELINE_INT_DATA,
+            DATA_ASSET_IRIS_BASELINE_INT_DATA_TYPE,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT_INT_DATA
         )
 
@@ -114,4 +120,5 @@ class TestDataDriftModelMonitor:
             DATA_ASSET_EMPTY,
         )
 
-        assert pipeline_job.status == "Completed"
+        # empty production and target data should fail the job
+        assert pipeline_job.status == "Failed"

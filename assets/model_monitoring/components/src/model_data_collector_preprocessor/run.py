@@ -6,6 +6,7 @@
 import argparse
 
 import pandas as pd
+import numpy as np
 from pyspark.sql import DataFrame
 from dateutil import parser
 import mltable
@@ -16,18 +17,19 @@ from fsspec import AbstractFileSystem
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
 from pyspark.sql.functions import lit
-from shared_utilities.event_utils import post_warning_event
+from shared_utilities.momo_exceptions import DataNotFoundError
 from shared_utilities.io_utils import (
     init_spark,
-    try_read_mltable_in_spark,
+    try_read_mltable_in_spark_with_error,
     save_spark_df_as_mltable,
 )
-
+from shared_utilities.event_utils import add_tags_to_root_run
 from shared_utilities.constants import (
     MDC_CORRELATION_ID_COLUMN,
     MDC_DATA_COLUMN,
     MDC_DATAREF_COLUMN,
-    SCHEMA_INFER_ROW_COUNT
+    SCHEMA_INFER_ROW_COUNT,
+    AML_MOMO_ERROR_TAG
 )
 
 from typing import Tuple
@@ -125,8 +127,13 @@ def _raw_mdc_uri_folder_to_mltable(
     return table
 
 
-def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, fs: AbstractFileSystem) -> DataFrame:
-    """Convert MLTable to Spark DataFrame."""
+def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str,
+                                 fs: AbstractFileSystem = None, add_tags_func=None) -> DataFrame:
+    """
+    Convert MLTable to Spark DataFrame.
+
+    A DataNotFoundError will be raised if no data in mltable, otherwise a non empty Spark DataFrame will be returned.
+    """
     with tempfile.TemporaryDirectory() as mltable_temp_path:
         # Save MLTable to temp location
         table.save(mltable_temp_path)
@@ -136,7 +143,7 @@ def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, f
         fs = fs or AzureMachineLearningFileSystem(des_path)  # for testing
         print("MLTable path:", des_path)
         # TODO: Evaluate if we need to overwrite
-        # Richard: why we need to upload the mltable folder to azureml://?
+        # upload the mltable folder to azureml://, so it is available for all executors
         fs.upload(
             lpath=mltable_temp_path,
             rpath=des_path,
@@ -145,7 +152,13 @@ def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, f
         )
 
     # Read mltable from preprocessed_data
-    return try_read_mltable_in_spark(des_path, "preprocessed_data")
+    try:
+        return try_read_mltable_in_spark_with_error(des_path, "preprocessed_data")
+    except DataNotFoundError as e:
+        tags = {AML_MOMO_ERROR_TAG: "DataNotFoundError"}
+        add_tags_func = add_tags_func or add_tags_to_root_run
+        add_tags_func(tags)
+        raise e
 
 
 def _get_data_columns(df: DataFrame) -> list:
@@ -166,11 +179,19 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     otherwise, return the dataref content which is a url to the json file.
     """
 
+    def safe_dumps(x):
+        if type(x) in [dict, list]:
+            return json.dumps(x)
+        elif type(x) is np.ndarray:
+            return json.dumps(x.tolist())
+        else:
+            return x
+
     def convert_object_to_str(dataframe: pd.DataFrame) -> pd.DataFrame:
         columns = dataframe.columns
         for column in columns:
             if dataframe[column].dtype == "object":
-                dataframe[column] = dataframe[column].apply(lambda x: x if type(x) is str else json.dumps(x))
+                dataframe[column] = dataframe[column].apply(safe_dumps)
 
         return dataframe
 
@@ -245,7 +266,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
 def _raw_mdc_uri_folder_to_preprocessed_spark_df(
         data_window_start: datetime, data_window_end: datetime,
         input_data: str, preprocessed_input_data: str, extract_correlation_id: bool,
-        fs: AbstractFileSystem = None) -> DataFrame:
+        fs: AbstractFileSystem = None, add_tags_func=None) -> DataFrame:
     """Read raw MDC data, preprocess, and return in a Spark DataFrame."""
     # Parse the dates
     start_datetime = parser.parse(data_window_start)
@@ -254,18 +275,10 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
     table = _raw_mdc_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
     # print("MLTable:", table)
 
-    df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs)
+    df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs, add_tags_func)
     # print("df after converting mltable to spark df:")
-    # df.show()
+    # df.select("data").show(truncate=False)
     # df.printSchema()
-
-    if not df:
-        print("Skipping the Model Data Collector preprocessor.")
-        post_warning_event(
-            "Although data was found, the window for this current run contains no data. "
-            + "Please visit aka.ms/mlmonitoringhelp for more information."
-        )
-        return
 
     datastore = _get_datastore_from_input_path(input_data)
     # print("Datastore:", datastore)

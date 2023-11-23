@@ -1,6 +1,6 @@
 path:
   container_name: finetuning-image-models
-  container_path: HuggingFace-mlflow/Salesforce-BLIP-2-opt-2-7b-vqa/1698374214/mlflow_model_folder
+  container_path: HuggingFace-mlflow/Salesforce-BLIP-2-opt-2-7b-vqa/1699561059/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
