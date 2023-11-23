@@ -37,6 +37,7 @@ class ResourceState(Enum):
     SUCCESS = "Success"
     FAILURE = "Failure"
     NOT_FOUND = "NotFound"
+    NOT_READY = "NotReady"
 
 
 class OnlineEndpoint:
@@ -235,9 +236,9 @@ class OnlineEndpoint:
         if self._model.is_aoai_model() and 'key' in credentials:
             return {'api-key': credentials['key']}
         else:
-            access_key_id = credentials.get('access_key_id')
             if 'secretAccessKey' not in credentials and 'keys' in credentials:
                 credentials = credentials['keys']
+            access_key_id = credentials.get('accessKeyId')
             token = credentials['secretAccessKey'] \
                 if access_key_id == 'api-key' else 'Bearer ' + credentials['secretAccessKey']
             return {access_key_id if access_key_id else "Authorization": token}

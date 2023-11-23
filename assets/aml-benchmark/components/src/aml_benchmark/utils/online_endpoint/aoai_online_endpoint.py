@@ -5,6 +5,7 @@
 
 
 from typing import Optional
+import time
 
 from azureml._model_management._util import get_requests_session
 from azureml._common._error_definition.azureml_error import AzureMLError
@@ -76,12 +77,24 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
         return self._get_resource_state(resp)
 
-    def deployment_state(self) -> ResourceState:
+    def deployment_state(self, check_model: bool = False) -> ResourceState:
         """Check if the deployment exists."""
         resp = self._call_endpoint(get_requests_session().get, self._aoai_deployment_url)
+        content = self._get_content_from_response(resp)
         logger.info("Calling(GET)  {} returned {} with content {}.".format(
-            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
-        return self._get_resource_state(resp)
+            self._aoai_deployment_url, resp.status_code, content))
+        status = self._get_resource_state(resp)
+        provisioning_state = content.get('properties', {}).get('provisioningState', None)
+        if status == ResourceState.SUCCESS:
+            if check_model:
+                self._is_same_deployed_model(content)
+            if provisioning_state is not None and provisioning_state.lower() == 'failed':
+                return ResourceState.FAILURE
+            if provisioning_state is not None and provisioning_state.lower() == 'succeeded':
+                return ResourceState.SUCCESS
+            if provisioning_state is not None:
+                return ResourceState.NOT_READY
+        return status
 
     def create_endpoint(self):
         """Create the endpoint."""
@@ -130,6 +143,10 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         self._raise_if_not_success(resp)
         logger.info("Calling(PUT) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
+        while(self.deployment_state() == ResourceState.NOT_READY):
+            logger.info("Deployment is not ready yet, waiting for 30 seconds...")
+            time.sleep(30)
+
 
     def get_endpoint_authorization_header(self) -> dict:
         """Get the authorization header."""
@@ -242,6 +259,25 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         except Exception as e:
             logger.warning(f'Failed to get the scoring url base. Error: {e}, using the default one')
             return f'https://{self.endpoint_name}.openai.azure.com'
+
+    def _is_same_deployed_model(self, content) -> str:
+        if self._model.model_name is None or self._model.model_version is None:
+            logger.info("No model info input, cannot compare.")
+            return None
+        model= content.get('properties', {}).get('model', {})
+        model_name = model.get('name', '')
+        model_version = model.get('version', '')
+        model_source = model.get('source', '')
+        if model_name == self._model.model_name and model_version == self._model.model_version \
+                and model_source == self._model.source:
+            logger.info("The deployed model is the same as the input model. Skipping deployment now.")
+        else:
+            logger.warning(
+                "The deployed model is different from the input model. "
+                f"The deployed model is {model_name}:{model_version} with source {model_source}, "
+                f"the input model is {self._model.model_name}:{self._model.model_version} "
+                f"with source {self._model.source}. "
+                "Skipping deployment now.")
 
     def _validate_settings(self) -> None:
         """Validate settings."""

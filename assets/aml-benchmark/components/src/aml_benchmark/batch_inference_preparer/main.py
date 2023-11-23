@@ -46,6 +46,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--deployment_config_dir", type=str, help="model_type", default=None)
     parser.add_argument("--output_metadata", type=str, help="path to ground_truth location", default=None)
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
+    parser.add_argument("--bypass_dataset_conversion", default=False, type=str2bool, help="bypass_dataset_conversion")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
     return args
@@ -62,7 +63,8 @@ def main(
     is_performance_test: bool,
     label_key: str,
     deployment_config_dir: str,
-    output_metadata: str
+    output_metadata: str,
+    bypass_dataset_conversion: bool
 ) -> None:
     """
     Entry function of the script.
@@ -102,7 +104,10 @@ def main(
     logger.info("Process data now.")
     if not is_performance_test:
         for index, row in df.iterrows():
-            new_data = endpoint_data_preparer.convert_input_dict(row)
+            if not bypass_dataset_conversion:
+                new_data = endpoint_data_preparer.convert_input_dict(row)
+            else:
+                new_data = row
             validate_errors = endpoint_data_preparer.validate_output(new_data)
             ground_truth_data = endpoint_data_preparer.convert_ground_truth(row, new_data)
             if not validate_errors:
@@ -148,5 +153,6 @@ if __name__ == "__main__":
         is_performance_test=args.is_performance_test,
         label_key=args.label_key,
         deployment_config_dir=args.deployment_config_dir,
-        output_metadata=args.output_metadata
+        output_metadata=args.output_metadata,
+        bypass_dataset_conversion=args.bypass_dataset_conversion
     )

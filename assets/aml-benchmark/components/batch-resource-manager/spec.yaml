@@ -106,6 +106,11 @@ inputs:
     type: string
     optional: True
     description: additional deployment env vars
+  delete_managed_deployment:
+    type: boolean
+    optional: True
+    default: True
+    description: If deleting the managed deployment.
 outputs:
   output_metadata:
     type: uri_folder
@@ -128,6 +133,7 @@ command: >-
   $[[--endpoint_location '${{inputs.endpoint_location}}']]
   $[[--connections_name ${{inputs.connections_name}}]]
   $[[--deletion_model ${{inputs.deletion_model}}]]
+  $[[--delete_managed_deployment ${{inputs.delete_managed_deployment}}]]
   $[[--use_max_quota ${{inputs.use_max_quota}}]]
   $[[--do_quota_validation ${{inputs.do_quota_validation}}]]
   $[[--redeploy_model ${{inputs.redeploy_model}}]]

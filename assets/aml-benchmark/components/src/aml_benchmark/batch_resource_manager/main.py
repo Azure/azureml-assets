@@ -67,6 +67,11 @@ def parse_args() -> argparse.Namespace:
         help="Force redeploymodels or not.",
     )
     parser.add_argument(
+        "--delete_managed_deployment",
+        default=False, type=str2bool,
+        help="If deleting the managed deployment.",
+    )
+    parser.add_argument(
         "--use_max_quota",
         default=True, type=str2bool,
         help="If using max quota or not for AOAI model.",
@@ -244,7 +249,8 @@ def main(
     is_finetuned_model: bool,
     finetuned_subscription_id: str,
     finetuned_resource_group: str,
-    finetuned_workspace: str
+    finetuned_workspace: str,
+    delete_managed_deployment: bool
 ) -> None:
     """
     Entry function of the script.
@@ -328,7 +334,7 @@ def main(
                 online_endpoint.delete_endpoint()
         if not managed_deployment:
             raise RuntimeError("Failed to deploy model as no available quota found.")
-    else:
+    elif delete_managed_deployment:
         if not deployment_metadata_dir:
             logger.info("Delete deployment using input parameters.")
             online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name)
@@ -349,6 +355,8 @@ def main(
             logger.info("Loaded deployment metadata {}.".format(deployment_metadata))
             online_endpoint = OnlineEndpointFactory.from_metadata(deployment_metadata)
         delete_managed_resources_maybe(output_metadata_dir, deployment_metadata, online_endpoint)
+    else:
+        logger.info("Skip deletion as delete_managed_deployment is False.")
 
 
 if __name__ == "__main__":
@@ -377,5 +385,6 @@ if __name__ == "__main__":
         args.is_finetuned_model,
         args.finetuned_subscription_id,
         args.finetuned_resource_group,
-        args.finetuned_workspace
+        args.finetuned_workspace,
+        args.delete_managed_deployment
     )
