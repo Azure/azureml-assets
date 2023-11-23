@@ -19,7 +19,7 @@ properties:
 tags:
   Preview: ''
   license: apache-2.0
-  task: mask-generation
+  task: image-segmentation
 version: 1
 description: |
   The Segment Anything Model (SAM) is an innovative image segmentation tool capable of creating high-quality object masks from simple input prompts. Trained on a massive dataset comprising 11 million images and 1.1 billion masks, SAM demonstrates strong zero-shot capabilities, effectively adapting to new image segmentation tasks without prior specific training. The model's impressive performance matches or exceeds prior models that operated under full supervision.
