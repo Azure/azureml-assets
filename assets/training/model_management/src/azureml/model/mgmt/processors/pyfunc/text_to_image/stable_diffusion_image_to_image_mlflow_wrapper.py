@@ -105,4 +105,3 @@ class StableDiffusionImagetoImageMLflowWrapper(mlflow.pyfunc.PythonModel):
         )
 
         return df
-

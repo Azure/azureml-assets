@@ -1,6 +1,6 @@
 ___stabilityai/stable-diffusion-xl-refiner-1.0___ employs an ensemble of expert modules in a pipeline for latent diffusion. The process involves using a base model to generate noisy latents, which are then refined using a specialized denoising model. The base model can function independently. Alternatively, a two-stage pipeline involves generating latents with the base model and then refining them using a high-resolution model and the SDEdit technique. The second approach is slightly slower due to more function evaluations.
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
 
