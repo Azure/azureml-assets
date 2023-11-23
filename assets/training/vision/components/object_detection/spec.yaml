@@ -230,7 +230,7 @@ outputs:
 
 code: ../src
 
-environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/3
+environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/4
 
 command: >-
   python -m object_detection.run
