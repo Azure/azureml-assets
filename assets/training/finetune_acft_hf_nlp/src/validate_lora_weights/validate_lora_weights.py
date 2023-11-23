@@ -4,7 +4,7 @@
 """Validate LoRA weights."""
 
 from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
@@ -16,6 +16,7 @@ from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 import argparse
 import torch
+import os
 
 COMPONENT_NAME = "ACFT-Validate_lora_weights"
 
@@ -31,14 +32,16 @@ GENERATION_CONFIG = {
 }
 
 
-def validate_lora_weights(base_model_path: str, lora_weights_path: str, tokenizer_path: str, test_examples: list):
+def validate_lora_weights(base_model_path: str, config_path: str, lora_weights_path: str, tokenizer_path: str, test_examples: list):
     """Load model and make forward pass to validate lora weights."""
     logger.info("Validating lora model weights")
 
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+    config = AutoConfig.from_pretrained(config_path)
+
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, config=config)
 
     logger.info("Loading base model")
-    base_model = AutoModelForCausalLM.from_pretrained(base_model_path, device_map="auto", torch_dtype=torch.float16)
+    base_model = AutoModelForCausalLM.from_pretrained(base_model_path, device_map="auto", torch_dtype=torch.float16, config=config)
     logger.info("Base model loaded")
 
     logger.info("Loading lora adapters")
@@ -69,10 +72,10 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Validate lora weights after finetuning")
 
     parser.add_argument(
-        "--base_model_path",
+        "--mlflow_model_path",
         type=str,
         required=True,
-        help="Base Model path used for validating lora weights",
+        help="MLFlow Model path used for validating lora weights",
     )
 
     parser.add_argument(
@@ -108,8 +111,11 @@ def main():
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
 
-    print("validating lora weights")
-    validate_lora_weights(args.base_model_path, args.lora_weights_path, args.tokenizer_path, ["Hello"])
+    # extract model and config path from mlflow base model path
+    base_model_path = os.path.join(args.mlflow_model_path, "data/model")
+    config_path = os.path.join(args.mlflow_model_path, "data/config")
+
+    validate_lora_weights(base_model_path, config_path, args.lora_weights_path, args.tokenizer_path, ["Hello"])
 
 
 if __name__ == "__main__":
