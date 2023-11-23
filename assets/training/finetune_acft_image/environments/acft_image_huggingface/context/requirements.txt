@@ -1,4 +1,4 @@
-azureml-metrics[image]=={{latest-pypi-version}}
+azureml-metrics[image]==0.0.35
 azureml-evaluate-mlflow=={{latest-pypi-version}}
 azureml-acft-accelerator=={{latest-pypi-version}}
 azureml-acft-common-components[image]=={{latest-pypi-version}}
