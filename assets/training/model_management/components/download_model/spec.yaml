@@ -17,7 +17,6 @@ command: >
   --model-source ${{inputs.model_source}}
   --model-id '${{inputs.model_id}}'
   $[[--update-existing-model ${{inputs.update_existing_model}}]]
-  $[[--validation-info ${{inputs.validation_info}}]]
   --model-download-metadata ${{outputs.model_download_metadata}}
   --model-output-dir ${{outputs.model_output}}
 
@@ -34,11 +33,6 @@ inputs:
   model_id:
     type: string
     description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
-
-  validation_info:
-    type: uri_file
-    description: Path to the validation info file
-    optional: true
 
   update_existing_model:
     type: boolean
@@ -57,5 +51,4 @@ outputs:
     mode: rw_mount
 
 tags:
-    Preview: ""
-
+  Preview: ""

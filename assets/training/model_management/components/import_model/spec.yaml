@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.18
+version: 0.0.18.cond39
 
 # Pipeline inputs
 inputs:
@@ -177,7 +177,7 @@ outputs:
 
 jobs:
   validation_trigger_import:
-    component: azureml:validation_trigger_import:0.0.3
+    component: azureml:validation_trigger_import:0.0.2.cond3
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -206,11 +206,18 @@ jobs:
       hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
     outputs:
-      validation_info:
-        type: uri_file
+      registration_details_folder:
+        type: uri_folder
+        mode: rw_mount
+
+  validation_succeeded:
+    type: if_else
+    condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
+    true_block: ${{parent.jobs.download_model}}
+    false_block: ${{parent.jobs.get_registry_model}}
 
   download_model:
-    component: azureml:download_model:0.0.16
+    component: azureml:download_model:0.0.15.cond1
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -219,7 +226,6 @@ jobs:
     inputs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
-      validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
     outputs:
       model_download_metadata:
@@ -228,7 +234,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.15
+    component: azureml:convert_model_to_mlflow:0.0.14
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -253,7 +259,7 @@ jobs:
         type: uri_file
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.5
+    component: azureml:mlflow_model_local_validation:0.0.4
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -262,10 +268,12 @@ jobs:
       test_data_path: ${{parent.inputs.local_validation_test_data}}
       column_rename_map: ${{parent.inputs.local_validation_column_rename_map}}
     outputs:
-      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
+      mlflow_model_folder:
+        type: mlflow_model
+        mode: rw_mount
 
   register_model:
-    component: azureml:register_model:0.0.10
+    component: azureml:register_model:0.0.8
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -282,7 +290,30 @@ jobs:
       model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
       model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
     outputs:
-      registration_details_folder: ${{parent.outputs.model_registration_details}}
+      registration_details_folder:
+        type: uri_folder
+        mode: rw_mount
+
+  get_registry_model:
+    component: azureml:get_registry_model:0.0.1.cond16
+    inputs:
+      registration_details_folder: ${{parent.jobs.validation_trigger_import.outputs.registration_details_folder}}
+    outputs:
+      mlflow_model_folder:
+        type: mlflow_model
+        mode: rw_mount
+
+  select_output:
+    component: azureml:select_output:0.0.1.cond1
+    inputs:
+      condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
+      input_a_registration_details_folder: ${{parent.jobs.register_model.outputs.registration_details_folder}}
+      input_a_mlflow_model_folder: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
+      input_b_registration_details_folder: ${{parent.jobs.validation_trigger_import.outputs.registration_details_folder}}
+      input_b_mlflow_model_folder: ${{parent.jobs.get_registry_model.outputs.mlflow_model_folder}}
+    outputs:
+      regsitration_details_folder: ${{parent.outputs.model_registration_details}}
+      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
 tags:
     Preview: ""
