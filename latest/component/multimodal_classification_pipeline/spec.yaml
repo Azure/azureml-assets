@@ -443,7 +443,7 @@ jobs:
       early_stopping_patience: ${{parent.inputs.early_stopping_patience}}
       early_stopping_threshold: ${{parent.inputs.early_stopping_threshold}}
       apply_deepspeed: ${{parent.inputs.apply_deepspeed}}
-      deepspeed: ${{parent.inputs.deepspeed_config}}
+      deepspeed_config: ${{parent.inputs.deepspeed_config}}
       apply_ort: ${{parent.inputs.apply_ort}}
       save_as_mlflow_model: ${{parent.inputs.save_as_mlflow_model}}
       preprocess_output: ${{parent.jobs.multimodal_classification_data_preprocess.outputs.output_dir}}
