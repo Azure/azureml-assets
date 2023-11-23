@@ -168,17 +168,18 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
 
     def delete_endpoint(self):
         """Delete the endpoint."""
-        resp = self._call_endpoint(get_requests_session().delete, self._aoai_account_url)
-        self._raise_if_not_success(resp)
-        logger.info("Calling(DELETE) {} returned {} with content {}.".format(
-            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
+        self._delete_resource(self._aoai_account_url)
 
     def delete_deployment(self):
         """Delete the deployment."""
-        resp = self._call_endpoint(get_requests_session().delete, self._aoai_deployment_url)
+        self._delete_resource(self._aoai_deployment_url)
+
+    def _delete_resource(self, resource_url: str) -> None:
+        """Delete the resource."""
+        resp = self._call_endpoint(get_requests_session().delete, resource_url)
         self._raise_if_not_success(resp)
         logger.info("Calling(DELETE) {} returned {} with content {}.".format(
-            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
+            resource_url, resp.status_code, self._get_content_from_response(resp)))
 
     @property
     def sku(self) -> int:
