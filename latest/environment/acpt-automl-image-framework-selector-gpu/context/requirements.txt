@@ -7,3 +7,4 @@ azureml-core
 requests
 certifi==2023.07.22
 setuptools==67.6.0
+pyarrow-hotfix

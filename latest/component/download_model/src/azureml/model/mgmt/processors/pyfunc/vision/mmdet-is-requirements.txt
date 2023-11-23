@@ -1,6 +1,6 @@
 mlflow==2.6.0
 cloudpickle==2.2.1
-datasets==2.14.5
+datasets==2.14.7
 openmim==0.3.9
 torch==2.0.1
 torchvision==0.15.2
