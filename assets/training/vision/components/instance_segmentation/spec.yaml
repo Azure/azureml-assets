@@ -5,7 +5,7 @@ description: Component to finetune AutoML legacy models for instance segmentatio
 
 name: train_instance_segmentation_model
 display_name: Image Instance Segmentation AutoML Legacy Model Finetune
-version: 0.0.5
+version: 0.0.6
 
 is_deterministic: false
 

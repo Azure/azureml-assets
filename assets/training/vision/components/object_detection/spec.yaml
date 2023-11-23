@@ -5,7 +5,7 @@ description: Component to finetune AutoML legacy models for object detection.
 
 name: train_object_detection_model
 display_name: Image Object Detection AutoML Legacy Model Finetune
-version: 0.0.5
+version: 0.0.6
 
 is_deterministic: false
 
