@@ -8,7 +8,7 @@ description: Component to finetune multimodal models for classification using MM
 
 is_deterministic: true
 
-environment: azureml://registries/azureml/environments/acft-multimodal-gpu/versions/1
+environment: azureml://registries/azureml/environments/acft-multimodal-gpu/versions/2
 
 code: ../../../src/finetune
 
