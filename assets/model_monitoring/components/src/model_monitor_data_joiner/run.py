@@ -7,7 +7,7 @@ import argparse
 import pyspark.sql as pyspark_sql
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
-    try_read_mltable_in_spark_with_warning,
+    try_read_mltable_in_spark_with_error,
     save_spark_df_as_mltable,
 )
 
@@ -68,12 +68,8 @@ def run():
     args = parser.parse_args()
 
     # Load data
-    left_input_data_df = try_read_mltable_in_spark_with_warning(args.left_input_data, "left_input_data")
-    right_input_data_df = try_read_mltable_in_spark_with_warning(args.right_input_data, "right_input_data")
-
-    if not left_input_data_df or not right_input_data_df:
-        print("Skipping data joining due to missing data.")
-        return
+    left_input_data_df = try_read_mltable_in_spark_with_error(args.left_input_data, "left_input_data")
+    right_input_data_df = try_read_mltable_in_spark_with_error(args.right_input_data, "right_input_data")
 
     joined_data_df = join_data(
         left_input_data_df,

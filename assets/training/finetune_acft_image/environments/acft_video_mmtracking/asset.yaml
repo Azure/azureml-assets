@@ -1,5 +1,5 @@
 name: acft-mmtracking-video-gpu
-version: "1"
+version: "4"
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml

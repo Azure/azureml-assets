@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.1
+version: 0.0.2
 name: mmtracking_video_multi_object_tracking_pipeline
 display_name: Video Multi-Object Tracking MMTracking Pipeline
 description: Pipeline component for multi-object tracking using MMTracking models.
@@ -32,7 +32,7 @@ inputs:
   model_name:
     type: string
     optional: true
-    description: Please select models from AzureML Model Assets for all supported models. For MMTracking, provide the model's config name here, same as its specified in MMTracking Model Zoo. It is the user responsibility to comply with the model's license terms.
+    description: Please select models from AzureML Model Assets for all supported models. For MMTracking, provide the model's config name here, same as its specified in MMTracking Model Zoo. To find the correct model name, go to https://github.com/open-mmlab/mmtracking/tree/v0.14.0/configs/mot click on the model type and you will find the model name in the metafile.yml file which is present at configs/<MODEL_TYPE>/metafile.yml location. It is the user responsibility to comply with the model's license terms.
 
   pytorch_model:
     type: custom_model
@@ -308,7 +308,7 @@ outputs:
 jobs:
   model_selector:
     type: command
-    component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.1
+    component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.2
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
@@ -318,7 +318,7 @@ jobs:
       download_from_source: ${{parent.inputs.download_from_source}}
   finetune:
     type: command
-    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.1
+    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.2
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'

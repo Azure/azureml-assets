@@ -1,5 +1,5 @@
 azureml-acft-common-components=={{latest-pypi-version}}
-azure-ai-ml==1.9.0
+azure-ai-ml==1.11.0
 mldesigner
 mlflow
 azureml-mlflow
@@ -7,3 +7,4 @@ azureml-core
 requests
 certifi==2023.07.22
 setuptools==67.6.0
+pyarrow-hotfix

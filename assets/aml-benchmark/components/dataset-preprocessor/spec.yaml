@@ -53,7 +53,7 @@ code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 
 command: >-
-  python -m dataset_preprocessor.main
+  python -m aml_benchmark.dataset_preprocessor.main
   --dataset ${{inputs.dataset}}
   $[[--template_input '${{inputs.template_input}}']]
   $[[--script_path ${{inputs.script_path}}]]

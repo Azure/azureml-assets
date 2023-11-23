@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/databricks-dolly-v2-12b/7dde7ac/mlflow_model_folder
+  container_path: huggingface/databricks-dolly-v2-12b/1700562152/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

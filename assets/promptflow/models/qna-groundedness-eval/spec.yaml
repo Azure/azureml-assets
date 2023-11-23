@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Compute the groundedness of the answer for the given question based on the context.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 2
+version: 3

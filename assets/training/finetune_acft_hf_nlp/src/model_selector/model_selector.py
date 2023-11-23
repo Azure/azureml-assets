@@ -31,7 +31,7 @@ MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
 
 
 # TODO Move this constants class to package
-class ModelImportConstants:
+class ModelSelectorConstants:
     """Model import constants."""
 
     ASSET_ID_NOT_FOUND = "ASSET_ID_NOT_FOUND",
@@ -247,26 +247,6 @@ ACFT_CONFIG = {
 }
 
 
-FLAVOR_MAP = {
-    # OSS Flavor
-    "transformers": {
-        "tokenizer": "components/tokenizer",
-        "model": "model",
-        "config": "model"
-    },
-    "hftransformersv2": {
-        "tokenizer": "data/tokenizer",
-        "model": "data/model",
-        "config": "data/config"
-    },
-    "hftransformers": {
-        "tokenizer": "data/tokenizer",
-        "model": "data/model",
-        "config": "data/config"
-    }
-}
-
-
 def get_model_asset_id() -> str:
     """Read the model asset id from the run context.
 
@@ -281,10 +261,10 @@ def get_model_asset_id() -> str:
             return run_details['runDefinition']['inputAssets']['mlflow_model_path']['asset']['assetId']
         else:
             logger.info("Found offline run")
-            return ModelImportConstants.ASSET_ID_NOT_FOUND
+            return ModelSelectorConstants.ASSET_ID_NOT_FOUND
     except Exception as e:
         logger.info(f"Could not fetch the model asset id: {e}")
-        return ModelImportConstants.ASSET_ID_NOT_FOUND
+        return ModelSelectorConstants.ASSET_ID_NOT_FOUND
 
 
 def get_parser():
@@ -393,7 +373,7 @@ def model_selector(args: Namespace):
     model_selector_args_save_path = Path(args.output_dir, SaveFileConstants.MODEL_SELECTOR_ARGS_SAVE_PATH)
     with open(model_selector_args_save_path, "r") as rptr:
         model_selector_args = json.load(rptr)
-    model_name = model_selector_args.get("model_name", ModelImportConstants.MODEL_NAME_NOT_FOUND)
+    model_name = model_selector_args.get("model_name", ModelSelectorConstants.MODEL_NAME_NOT_FOUND)
     logger.info(f"Model name - {model_name}")
 
     # fetch model_type
@@ -441,7 +421,7 @@ def model_selector(args: Namespace):
                     mlflow_data = yaml.safe_load(fp)
                 if mlflow_data and "flavors" in mlflow_data:
                     for key in mlflow_data["flavors"]:
-                        if key in FLAVOR_MAP.keys():
+                        if key in ["hftransformers", "hftransformersv2"]:
                             for key2 in mlflow_data["flavors"][key]:
                                 if key2 == "generator_config" and args.task_name == "TextGeneration":
                                     generator_config = mlflow_data["flavors"][key]["generator_config"]
@@ -499,9 +479,6 @@ def main():
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
-
-    # Adding flavor map to args
-    setattr(args, "flavor_map", FLAVOR_MAP)
 
     model_selector(args)
 

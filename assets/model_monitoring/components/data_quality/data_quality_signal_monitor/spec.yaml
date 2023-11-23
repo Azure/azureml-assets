@@ -4,7 +4,7 @@ type: pipeline
 name: data_quality_signal_monitor
 display_name: Data Quality - Signal Monitor
 description: Computes the data quality of a target dataset with reference to a baseline.
-version: 0.3.12
+version: 0.3.17
 is_deterministic: true
 
 inputs:
@@ -37,6 +37,9 @@ inputs:
   target_column:
     type: string
     optional: true
+  task_type:
+    type: string
+    optional: true
   monitor_current_time:
     type: string
   notification_emails:
@@ -50,11 +53,12 @@ outputs:
 jobs:
   compute_feature_importances:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.4
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.7
     inputs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
+      task_type: ${{parent.inputs.task_type}}
       target_column: ${{parent.inputs.target_column}}
     outputs:
       signal_metrics:
@@ -87,7 +91,7 @@ jobs:
       type: aml_token
   compute_baseline_data_statistics:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.2
+    component: azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.3
     inputs:
       baseline_data:
         type: mltable
@@ -102,7 +106,7 @@ jobs:
       type: aml_token
   compute_baseline_data_quality:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.6
+    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.7
     inputs:
       input_data:
         type: mltable
@@ -125,7 +129,7 @@ jobs:
       type: aml_token
   compute_target_data_quality:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.6
+    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.7
     inputs:
       input_data:
         type: mltable
@@ -146,7 +150,7 @@ jobs:
       type: aml_token
   join_data_quality_metrics:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_metrics_joiner/versions/0.3.2
+    component: azureml://registries/azureml/components/data_quality_metrics_joiner/versions/0.3.3
     inputs:
       baseline_metrics:
         type: mltable
@@ -166,7 +170,7 @@ jobs:
       type: aml_token
   output_signal_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.4
+    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.5
     inputs:
       signal_metrics:
         type: mltable
@@ -187,7 +191,7 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.4
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.5
     inputs:
       signal_metrics:
         type: mltable

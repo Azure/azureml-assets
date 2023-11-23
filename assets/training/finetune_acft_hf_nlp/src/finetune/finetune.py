@@ -24,14 +24,15 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     HfModelTypes,
     MLFlowHFFlavourConstants,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
-    MLFLOW_FLAVORS,
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
+from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError, ACFTSystemError
+from azureml.acft.common_components.utils.mlflow_utils import update_acft_metadata
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.common_components.utils.logging_utils import SystemSettings
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
@@ -104,43 +105,6 @@ MLFLOW_MODEL_SIGNATURES = {
         "outputs": '[{"type": "string"}]',
     },
 }
-
-
-MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS = {
-    Tasks.SINGLE_LABEL_CLASSIFICATION: {
-        "inputs": '[{"type": "string"}]',
-        "outputs": '[{"type": "string"}]',
-        "params": '[{"name": "return_all_scores", "dtype" : "boolean", "default" : true, "shape" : null}]',
-    },
-    Tasks.MULTI_LABEL_CLASSIFICATION: {
-        "inputs": '[{"type": "string"}]',
-        "outputs": '[{"type": "string"}]',
-    },
-    Tasks.NAMED_ENTITY_RECOGNITION: {
-        "inputs": '[{"type": "string"}]',
-        "outputs": '[{"type": "string"}]',
-    },
-    Tasks.QUESTION_ANSWERING: {
-        "inputs": '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]',
-        "outputs": '[{"type": "string"}]',
-    },
-    Tasks.SUMMARIZATION: {
-        "inputs": '[{"type": "string"}]',
-        "outputs": '[{"type": "string"}]',
-    },
-    Tasks.TRANSLATION: {
-        "inputs": '[{"type": "string"}]',
-        "outputs": '[{"type": "string"}]',
-    },
-}
-
-
-MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR = {
-    MLFLOW_FLAVORS.TRANSFORMERS: MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS,
-    MLFLOW_FLAVORS.HFTRANSFORMERS: MLFLOW_MODEL_SIGNATURES,
-    MLFLOW_FLAVORS.HFTRANSFORMERSV2: MLFLOW_MODEL_SIGNATURES,
-}
-
 
 IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.LLAMA,
@@ -891,7 +855,31 @@ def finetune(args: Namespace):
             mlflow_hftransformers_misc_conf,
         )
 
+    metadata = {}
     # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
+    mlflow_config_file = Path(args.model_selector_output, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
+    if mlflow_config_file.is_file():
+        import yaml
+        mlflow_data = None
+        try:
+            with open(mlflow_config_file, "r") as rptr:
+                mlflow_data = yaml.safe_load(rptr)
+                metadata = mlflow_data.get("metadata", {})
+        except Exception as e:
+            logger.info(f"Unable to load MLmodel file - {e}")
+        if mlflow_data is not None:
+            # pass base model MLmodel file data if available
+            mlflow_hftransformers_misc_conf = mlflow_ft_conf.get("mlflow_hftransformers_misc_conf", {})
+            mlflow_hftransformers_misc_conf.update({"base_model_mlmodel": mlflow_data})
+            mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = deep_update(
+                mlflow_ft_conf["mlflow_hftransformers_misc_conf"],
+                mlflow_hftransformers_misc_conf,
+            )
+            logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
+        else:
+            logger.info("MLmodel file is empty")
+    else:
+        logger.info("MLmodel file does not exist")
     if mlmodel_data is not None:
         # pass base model MLmodel file data if available
         mlflow_hftransformers_misc_conf = mlflow_ft_conf.get("mlflow_hftransformers_misc_conf", {})
@@ -903,6 +891,13 @@ def finetune(args: Namespace):
         logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
     else:
         logger.info("MLmodel file is empty")
+
+    # if input is pytorch model, read metadata if the metadata.json exists.
+    if not metadata:
+        metadatapath = os.path.join(model_name_or_path, ModelSelectorDefaults.MODEL_DEFAULTS_PATH)
+        if os.path.isfile(metadatapath):
+            with open(metadatapath, "r") as rptr:
+                metadata = json.load(rptr)
 
     logger.info(f"FT MLFlow config - {mlflow_ft_conf}")
 
@@ -958,6 +953,10 @@ def finetune(args: Namespace):
 
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
+
+    args.model_metadata = update_acft_metadata(metadata=metadata,
+                                               finetuning_task=args.task_name,
+                                               base_model_asset_id=model_asset_id)
 
     setup_automl_nlp(args)
 
