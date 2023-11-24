@@ -32,7 +32,13 @@ GENERATION_CONFIG = {
 }
 
 
-def validate_lora_weights(base_model_path: str, config_path: str, lora_weights_path: str, tokenizer_path: str, test_examples: list):
+def validate_lora_weights(
+    base_model_path: str,
+    config_path: str,
+    lora_weights_path: str,
+    tokenizer_path: str,
+    test_examples: list
+):
     """Load model and make forward pass to validate lora weights."""
     logger.info("Validating lora model weights")
 
@@ -41,7 +47,9 @@ def validate_lora_weights(base_model_path: str, config_path: str, lora_weights_p
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, config=config)
 
     logger.info("Loading base model")
-    base_model = AutoModelForCausalLM.from_pretrained(base_model_path, device_map="auto", torch_dtype=torch.float16, config=config)
+    base_model = AutoModelForCausalLM.from_pretrained(
+        base_model_path, device_map="auto", torch_dtype=torch.float16, config=config
+    )
     logger.info("Base model loaded")
 
     logger.info("Loading lora adapters")
@@ -58,7 +66,8 @@ def validate_lora_weights(base_model_path: str, config_path: str, lora_weights_p
                 AzureMLError.create(
                     ACFTUserError,
                     pii_safe_message=(
-                        f"LoRA weights validation failed in forward pass, model cannot be inferenced in fp16, error: {str(e)}"
+                        f"LoRA weights validation failed in forward pass, "
+                        f"model cannot be inferenced in fp16, error: {str(e)}"
                     )
                 )
             )
