@@ -2,8 +2,6 @@
 # Licensed under the MIT License.
 
 """Test preprocess."""
-import sys
-# sys.path.append(r'C:\Users\rvadthyavath\work\projects\assets\azureml-assets\assets\training\model_management\src')
 import os
 import json
 import pytest

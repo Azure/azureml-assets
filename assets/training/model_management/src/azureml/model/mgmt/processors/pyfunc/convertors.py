@@ -564,9 +564,9 @@ class StableDiffusionImageToImageMlflowConvertor(ImageTextToImageMLflowConvertor
     def save_as_mlflow(self):
         """Prepare SD model for save to MLflow."""
         sys.path.append(self.MODEL_DIR)
-        from stable_diffusion_image_to_image_mlflow_wrapper import StableDiffusionImagetoImageMLflowWrapper
+        from stable_diffusion_image_to_image_mlflow_wrapper import StableDiffusionImageTexttoImageMLflowWrapper
 
-        mlflow_model_wrapper = StableDiffusionImagetoImageMLflowWrapper(task_type=self._task)
+        mlflow_model_wrapper = StableDiffusionImageTexttoImageMLflowWrapper(task_type=self._task)
         artifacts_dict = self._prepare_artifacts_dict()
         conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
         code_path = [

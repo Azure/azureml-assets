@@ -13,5 +13,5 @@ properties:
 tags:
   Preview: ''
   license: creativeml-openrail++-m
-  task: image-text-to-image
+  task: image-to-image
 version: 1
