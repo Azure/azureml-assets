@@ -12,8 +12,19 @@ import mlflow
 import os
 import pandas as pd
 from diffusers import AutoPipelineForImage2Image
-from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants, DatatypeLiterals
-from vision_utils import get_pil_image, process_image_pandas_series, get_current_device, image_to_base64
+from config import (
+    MLflowSchemaLiterals,
+    Tasks,
+    MLflowLiterals,
+    BatchConstants,
+    DatatypeLiterals,
+)
+from vision_utils import (
+    get_pil_image,
+    process_image_pandas_series,
+    get_current_device,
+    image_to_base64,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +53,9 @@ class StableDiffusionImagetoImageMLflowWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        self._batch_output_folder = os.getenv(BatchConstants.BATCH_OUTPUT_PATH, default=False)
+        self._batch_output_folder = os.getenv(
+            BatchConstants.BATCH_OUTPUT_PATH, default=False
+        )
 
         if self._task_type == Tasks.IMAGE_TO_IMAGE.value:
             try:
@@ -56,7 +69,9 @@ class StableDiffusionImagetoImageMLflowWrapper(mlflow.pyfunc.PythonModel):
         else:
             raise ValueError(f"invalid task type {self._task_type}")
 
-    def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
+    def predict(
+        self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame
+    ) -> pd.DataFrame:
         """
         Perform inference on the input data.
 
@@ -71,10 +86,13 @@ class StableDiffusionImagetoImageMLflowWrapper(mlflow.pyfunc.PythonModel):
         """
         # Decode the base64 image column
         images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
-            axis=1, func=process_image_pandas_series)
+            axis=1, func=process_image_pandas_series
+        )
         images = images.loc[:, 0].apply(func=get_pil_image).tolist()
 
-        text_prompts = input_data.loc[:, MLflowSchemaLiterals.INPUT_COLUMN_PROMPT].tolist()
+        text_prompts = input_data.loc[
+            :, MLflowSchemaLiterals.INPUT_COLUMN_PROMPT
+        ].tolist()
 
         assert len(text_prompts) == len(images), (
             f"Invalid input. Number of text prompt, image are expected to be same. "
@@ -93,7 +111,9 @@ class StableDiffusionImagetoImageMLflowWrapper(mlflow.pyfunc.PythonModel):
             raise
 
         for img in outputs.images:
-            generated_images.append(image_to_base64(img, format=DatatypeLiterals.IMAGE_FORMAT))
+            generated_images.append(
+                image_to_base64(img, format=DatatypeLiterals.IMAGE_FORMAT)
+            )
 
         nsfw_content = None
 
