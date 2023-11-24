@@ -4,11 +4,10 @@ from typing import Tuple, List
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from azureml.core.run import Run
-from azure.ai.ml import MLClient
-from azure.ai.ml.entities import Data
+from azureml.core.workspace import Workspace
 from azure.identity import DefaultAzureCredential, AzureCliCredential
 from azure.storage.filedatalake import DataLakeServiceClient, FileSystemClient
-from azure.core.exceptions import ResourceNotFoundError, ClientAuthenticationError
+from azure.core.exceptions import ResourceNotFoundError
 
 
 def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_name=None, ws_name=None) -> str:
@@ -33,7 +32,7 @@ def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_n
            f"/{datastore}/paths/{path}"
 
 
-def convert_to_hdfs_path(uri_folder_path: str, ml_client=None) -> str:
+def convert_to_hdfs_path(uri_folder_path: str, ws: Workspace = None) -> str:
     """Convert url_path to HDFS path."""
     url = urlparse(uri_folder_path)
     # TODO sovereign endpoint
@@ -63,42 +62,37 @@ def convert_to_hdfs_path(uri_folder_path: str, ml_client=None) -> str:
         return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}"
     elif url.scheme == "azureml":
         if ':' in url.path:  # azureml asset path
-            return _get_hdfs_path_from_asset_uri(uri_folder_path, ml_client)
+            # asset path should be translated to azureml or hdfs path in service, should not reach here
+            raise ValueError("AzureML asset path is not supported as uri_folder.")
         else:  # azureml long or short form
             datastore_name, path = _get_datastore_and_path_from_azureml_path(uri_folder_path)
-            if not ml_client:
-                sub_id, rg_name, ws_name = _get_workspace_info()
-                try:
-                    ml_client = MLClient(DefaultAzureCredential(), sub_id, rg_name, ws_name)
-                except ClientAuthenticationError:
-                    ml_client = MLClient(AzureCliCredential(), sub_id, rg_name, ws_name)
-            datastore = ml_client.datastores.get(datastore_name)
-            datastore_type = datastore.type.__str__()
-            if datastore_type not in ["DatastoreType.AZURE_BLOB", "DatastoreType.AZURE_DATA_LAKE_GEN2"]:
+            ws = ws or Run.get_context().experiment.workspace
+            datastore = ws.datastores.get(datastore_name)
+            datastore_type = datastore.datastore_type
+            if datastore_type not in ["AzureBlob", "AzureDataLakeGen2"]:
                 raise ValueError(f"Only Azure Blob and Azure Data Lake Gen2 are supported, but got {datastore.type}.")
             scheme = "abfss" if datastore.protocol == "https" else "abfs"
             store_type = "dfs"
             account_name = datastore.account_name
-            container = datastore.container_name if datastore_type == "DatastoreType.AZURE_BLOB" \
-                else datastore.filesystem
+            container = datastore.container_name
             return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}"
     else:
         return uri_folder_path  # file or other scheme, return original path directly
 
 
-def get_datastore_from_input_path(input_path: str, ml_client=None) -> str:
+def get_datastore_from_input_path(input_path: str) -> str:
     """Get datastore name from input path."""
     url = urlparse(input_path)
     if url.scheme == "azureml":
         if ':' in url.path:  # azureml asset path
-            return _get_datastore_from_asset_uri(input_path, ml_client)
+            raise ValueError("AzureML asset path is not supported as input path.")
         else:  # azureml long or short form
             datastore, _ = _get_datastore_and_path_from_azureml_path(input_path)
             return datastore
     elif url.scheme == "file" or os.path.isdir(input_path):
         return None  # local path for testing, datastore is not needed
     else:
-        raise ValueError("Only azureml path(long, short or asset) is supported as input path of the MDC preprocessor.")
+        raise ValueError("Only azureml path(long, short) is supported as input path of the MDC preprocessor.")
 
 
 def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str,
@@ -116,7 +110,10 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: 
         raise ValueError(f"Unsupported uri as uri_folder: {root_uri_folder}")
     scheme = "https" if matches.group("scheme") == "abfss" else "http"
     account_url = f"{scheme}://{matches.group('account_name')}.dfs.core.windows.net"
+    # TODO use SAS token
+    print("getting service client...")
     service_client = service_client or DataLakeServiceClient(account_url, credential=DefaultAzureCredential())
+    print("done getting service client.")
     file_system_client = service_client.get_file_system_client(matches.group("container"))
     root_path = matches.group("path").rstrip('/')
     if end_datetime.minute == 0 and end_datetime.second == 0:
@@ -144,7 +141,7 @@ def _get_local_file_list(start_datetime: datetime, end_datetime: datetime, input
             for file in os.listdir(cur_folder):
                 full_qualify_file = os.path.join(cur_folder, file)
                 if os.path.isfile(full_qualify_file) and file.endswith(".jsonl"):
-                    file_list.append(full_qualify_file) # local winutils/hadoop package doesn't support wildcard
+                    file_list.append(full_qualify_file)  # local winutils/hadoop package doesn't support wildcard
         cur_datetime += timedelta(hours=1)
     return file_list
 
@@ -178,34 +175,3 @@ def _get_datastore_and_path_from_azureml_path(azureml_path: str) -> Tuple[str, s
     start_idx = azureml_path.find('/datastores/')
     end_idx = azureml_path.find('/paths/')
     return azureml_path[start_idx+12:end_idx], azureml_path[end_idx+7:]
-
-
-def _get_dataasset_from_asset_uri(asset_uri: str, ml_client=None) -> Data:
-    if not ml_client:
-        sub_id, rg_name, ws_name = _get_workspace_info()
-        try:
-            ml_client = MLClient(DefaultAzureCredential(), subscription_id=sub_id,
-                                 resource_group=rg_name, workspace_name=ws_name)
-        except ClientAuthenticationError:
-            ml_client = MLClient(AzureCliCredential(), subscription_id=sub_id,
-                                 resource_group=rg_name, workspace_name=ws_name)
-
-    # todo: validation
-    asset_sections = asset_uri.split(':')
-    asset_name = asset_sections[1]
-    asset_version = asset_sections[2]
-
-    data_asset = ml_client.data.get(asset_name, asset_version)
-    return data_asset
-
-
-def _get_datastore_from_asset_uri(asset_path: str, ml_client=None) -> str:
-    data_asset = _get_dataasset_from_asset_uri(asset_path, ml_client)
-    return data_asset.datastore or get_datastore_from_input_path(data_asset.path)
-
-
-def _get_hdfs_path_from_asset_uri(asset_uri: str, ml_client=None) -> str:
-    data_asset = _get_dataasset_from_asset_uri(asset_uri, ml_client)
-    if data_asset.type != 'uri_folder':
-        raise ValueError(f"Only uri_folder type asset is supported, but got {data_asset.type}.")
-    return convert_to_hdfs_path(data_asset.path, ml_client)

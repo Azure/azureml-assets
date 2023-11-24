@@ -8,8 +8,6 @@ import argparse
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import posexplode, concat_ws
 from dateutil import parser
-import json
-from fsspec import AbstractFileSystem
 from datetime import datetime
 from mdc_preprocessor_helper import get_datastore_from_input_path
 from shared_utilities.momo_exceptions import DataNotFoundError
@@ -103,13 +101,11 @@ def _mdc_uri_folder_to_preprocessed_spark_df(
 
 
 def mdc_preprocessor(
-    data_window_start: str,
-    data_window_end: str,
-    input_data: str,
-    preprocessed_input_data: str,
-    extract_correlation_id: bool,
-    fs: AbstractFileSystem = None,
-):
+        data_window_start: str,
+        data_window_end: str,
+        input_data: str,
+        preprocessed_input_data: str,
+        extract_correlation_id: bool):
     """Extract data based on window size provided and preprocess it into MLTable.
 
     Args:
@@ -120,7 +116,7 @@ def mdc_preprocessor(
         extract_correlation_id: The boolean to extract correlation Id from the MDC logs.
     """
     transformed_df = _mdc_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, input_data,
-                                                              preprocessed_input_data, extract_correlation_id, fs)
+                                                              extract_correlation_id)
 
     save_spark_df_as_mltable(transformed_df, preprocessed_input_data)
 

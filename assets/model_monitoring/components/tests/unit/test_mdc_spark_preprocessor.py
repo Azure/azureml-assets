@@ -10,7 +10,6 @@ import os
 import sys
 import json
 from datetime import datetime
-import spark_mltable  # noqa, to enable spark.read.mltable
 from model_data_collector_preprocessor.spark_run import (
     _mdc_uri_folder_to_raw_spark_df, _extract_data_and_correlation_id
 )
