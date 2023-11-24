@@ -1,0 +1,15 @@
+{
+  "inputsMapping": {
+      "question": "data.question",
+      "answers": "output.answer"
+  },
+  "data": [
+      {
+        "question": "What is the difference between a crocodile and an alligator?"
+      },
+      {
+        "question": "How can I improve my credit score quickly?"
+      }
+  ],
+  "mainFlowFolderName": "ask_wikipedia"
+}

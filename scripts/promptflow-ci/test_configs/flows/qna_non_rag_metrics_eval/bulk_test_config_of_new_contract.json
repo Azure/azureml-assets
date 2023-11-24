@@ -1,0 +1,12 @@
+{
+    "mainFlowInputsMapping": {
+        "question": "${data.question}"
+    },
+    "evalFlowInputsMapping": {
+        "question": "${data.question}",
+        "answer": "{run.outputs.answer}",
+        "ground_truth": "${data.ground_truth}",
+        "context": "${data.context}"
+    },
+    "mainFlowFolderName": "ask_wikipedia"
+}

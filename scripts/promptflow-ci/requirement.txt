@@ -1,0 +1,6 @@
+azure-storage-blob
+azure-identity
+markdown
+bs4
+azureml-core
+promptflow

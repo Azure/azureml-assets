@@ -1,0 +1,10 @@
+{
+    "mainFlowInputsMapping": {
+        "url": "${data.url}"
+    },
+    "evalFlowInputsMapping": {
+        "groundtruth": "${data.category}",
+        "prediction": "${run.outputs.category}"
+    },
+    "mainFlowFolderName": "web_classification"
+}

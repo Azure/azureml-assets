@@ -1,0 +1,17 @@
+{
+    "inputsMapping": {
+        "groundtruth": "data.category",
+        "prediction": "output.category"
+    },
+    "data": [
+        {
+          "url": "https://aws.amazon.com/blogs/machine-learning/announcing-new-tools-for-building-with-generative-ai-on-aws/",
+          "category": "Profile"
+        },
+        {
+          "url": "https://statsig.com/",
+          "category": "App"
+        }
+    ],
+    "mainFlowFolderName": "web_classification"
+}
