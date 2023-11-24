@@ -316,8 +316,7 @@ if __name__ == "__main__":
 
     if "promptflow_ci.py" in diff_files_list or "promptflow-ci.yml" in diff_files_list:
         log_debug("promptflow_ci.py or promptflow_ci.yml changed, test all models.")
-        # changed_models = get_all_models()
-        changed_models = get_changed_models(diff_files)
+        changed_models = get_all_models()
     else:
         changed_models = get_changed_models(diff_files)
         if len(changed_models) == 0:
