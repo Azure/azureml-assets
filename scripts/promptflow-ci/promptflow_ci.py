@@ -243,7 +243,7 @@ def _resolve_data_to_asset_id(test_data):
     return test_data
 
 
-def check_flow_run_status(flow_runs_to_check, submitted_run_identifiers):
+def check_flow_run_status(flow_runs_to_check, submitted_run_identifiers, check_run_status_interval, check_run_status_max_attempts):
     for flow_run_identifier in flow_runs_to_check:
         flow_id, flow_run_id = flow_utils.resolve_flow_run_identifier(
             flow_run_identifier)
@@ -581,14 +581,14 @@ if __name__ == "__main__":
 
     flow_runs_to_check = copy.deepcopy(submitted_flow_run_identifiers)
     log_debug(f"\n{flow_runs_count} bulk test runs need to check status.")
-    check_flow_run_status(flow_runs_to_check, submitted_flow_run_identifiers)
+    check_flow_run_status(flow_runs_to_check, submitted_flow_run_identifiers, check_run_status_interval, check_run_status_max_attempts)
 
     bulk_test_runs_to_check = copy.deepcopy(
         submitted_bulk_test_run_identifiers)
     log_debug(
         f"\n{bulk_test_runs_count} bulk test evaluation runs need to check status.")
     check_flow_run_status(bulk_test_runs_to_check,
-                          submitted_bulk_test_run_identifiers)
+                          submitted_bulk_test_run_identifiers, check_run_status_interval, check_run_status_max_attempts)
 
     if len(submitted_flow_run_identifiers) > 0 or len(submitted_bulk_test_run_identifiers) > 0:
         failure_message = f"Not all bulk test runs or bulk test evaluation runs are completed after " \
