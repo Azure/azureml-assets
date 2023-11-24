@@ -8,7 +8,7 @@ description: Component to finetune MMDetection models for image object detection
 
 is_deterministic: false
 
-environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/9
+environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/10
 
 code: ../../../src/finetune
 
