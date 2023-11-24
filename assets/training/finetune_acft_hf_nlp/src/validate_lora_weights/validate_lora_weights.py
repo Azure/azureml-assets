@@ -53,12 +53,12 @@ def validate_lora_weights(base_model_path: str, config_path: str, lora_weights_p
     try:
         outputs = model.generate(inputs=input_ids, **GENERATION_CONFIG)
         predictions_text = tokenizer.batch_decode(outputs)
-    except Exception:
+    except Exception as e:
         raise ACFTValidationException._with_error(
                 AzureMLError.create(
                     ACFTUserError,
                     pii_safe_message=(
-                        "LoRA weights validation failed in forward pass, model cannot be inferenced in fp16"
+                        f"LoRA weights validation failed in forward pass, model cannot be inferenced in fp16, error: {str(e)}"
                     )
                 )
             )
