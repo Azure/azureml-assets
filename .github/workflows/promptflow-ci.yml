@@ -30,26 +30,6 @@ jobs:
       with:
         python-version: "3.9"
 
-    - name: Use Node.js 18.x  
-      uses: actions/setup-node@v3
-      with:
-        node-version: "18.x"
-
-    - name: Install cspell
-      run: npm install -g cspell
-
-    - name: Run cspell for typo check
-      working-directory: ${{ env.PROMPTFLOW_DIR }}
-      run: |-
-        cspell lint "**" > cspell_check.log || true
-        if [ -s cspell_check.log ]; then
-          echo -e "\e[91mNote: If the detected words are expected, add them into "assets/promptflow/.cspell.json"\e[0m" 
-          echo -e "====================== Summary of cspell errors ======================"
-          echo -e "\e[31m$(cat cspell_check.log)\e[0m" 
-          exit 1
-        fi
-        rm -rf cspell_check.log
-
     - name: Check spec yaml
       run: |-
         pip install PyYAML
@@ -64,6 +44,14 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Use Node.js 18.x  
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+
+      - name: Install cspell
+        run: npm install -g cspell
 
       - name: Set up Python 3.9 environment
         uses: actions/setup-python@v4
@@ -80,3 +68,15 @@ jobs:
       - name: Validate prompt flows
         run: |
           python scripts/promptflow-ci/promptflow_ci.py --tenant_id ${{ secrets.TENANT_ID }} --client_id ${{ secrets.CLIENT_ID }} --client_secret ${{ secrets.CLIENT_SECRET }} --skipped_flows ${{ vars.SKIPPED_FLOWS }}
+
+      - name: Run cspell for typo check
+        working-directory: ${{ env.PROMPTFLOW_DIR }}
+        run: |-
+          cspell lint "**" > cspell_check.log || true
+          if [ -s cspell_check.log ]; then
+            echo -e "\e[91mNote: If the detected words are expected, add them into "assets/promptflow/.cspell.json"\e[0m" 
+            echo -e "====================== Summary of cspell errors ======================"
+            echo -e "\e[31m$(cat cspell_check.log)\e[0m" 
+            exit 1
+          fi
+          rm -rf cspell_check.log

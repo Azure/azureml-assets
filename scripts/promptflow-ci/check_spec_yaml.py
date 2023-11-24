@@ -9,6 +9,7 @@ BYPASS_GALLERY_CHECK = {
     "assets/promptflow/models/template-standard-flow/spec.yaml",
 }
 
+model_names = {}
 
 def bypass_gallary_check(yaml_file):
     for file in BYPASS_GALLERY_CHECK:
@@ -34,6 +35,13 @@ def check_spec_yaml(yaml_file):
             raise Exception(
                 f"properties.azureml.promptflow.type must in {'chat', 'evaluate', 'standard'}, "
                 f"it's {properties.get('azureml.promptflow.type')} in {yaml_file}")
+    name = properties.get("azureml.promptflow.name")
+    if name in model_names.keys():
+        raise Exception(
+            f"Duplicated name found for fields properties.azureml.promptflow.name in {yaml_file}, "
+            f"{name} already exists in {model_names.get(name)}.")
+    else:
+        model_names[name] = yaml_file
 
 
 if __name__ == "__main__":
@@ -43,7 +51,7 @@ if __name__ == "__main__":
     models_dir = args.models_dir
     examples = os.listdir(models_dir)
     errors = []
-
+    print(f"Check model folders: {examples}")
     for example_dir in examples:
         try:
             check_spec_yaml(os.path.join(models_dir, example_dir, YAML_FILE))
