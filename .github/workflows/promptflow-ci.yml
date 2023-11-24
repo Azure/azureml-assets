@@ -56,7 +56,7 @@ jobs:
         python scripts/promptflow-ci/check_spec_yaml.py --models_dir ${{ env.PROMPTFLOW_DIR }}
 
   run_promptflow_ci_job:
-    runs-on: ubtuntu-latest
+    runs-on: ubuntu-latest
     name: Flow tests
     timeout-minutes: 60
 
