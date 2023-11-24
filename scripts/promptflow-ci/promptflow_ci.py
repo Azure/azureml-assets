@@ -262,6 +262,10 @@ def check_flow_run_status(flow_runs_to_check, submitted_run_identifiers, check_r
                 submitted_run_identifiers.remove(flow_run_identifier)
                 failed_flow_runs.update({flow_run_identifier: flow_run_link})
                 break
+            elif bulk_test_run.status == "Canceled":
+                submitted_run_identifiers.remove(flow_run_identifier)
+                failed_flow_runs.update({flow_run_identifier: flow_run_link})
+                break
 
             current_attempt += 1
             time.sleep(check_run_status_interval)
@@ -624,10 +628,10 @@ if __name__ == "__main__":
         log_error(failure_message, True)
         handled_failures.append(failure_message)
         for flow_run_key, flow_run_link in failed_flow_runs.items():
-            log_debug(
+            log_error(
                 f"Bulk test run link to Azure Machine Learning Portal: {flow_run_link}")
         for flow_run_key, evaluation_run_link in failed_evaluation_runs.items():
-            log_debug(
+            log_error(
                 f"Bulk test evaluation run link to Azure Machine Learning Portal: {evaluation_run_link}")
     elif len(submitted_flow_run_identifiers) == 0 and len(submitted_bulk_test_run_identifiers) == 0:
         log_debug(f"\nRun status checking completed. {flow_runs_count} flow runs and {bulk_test_runs_count} bulk "
