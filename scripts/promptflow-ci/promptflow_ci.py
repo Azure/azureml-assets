@@ -78,7 +78,8 @@ def get_changed_models(diff_files):
                 changed_models.append(os.path.join(
                     MODELS_ROOT, git_diff_file_path.split("/")[-2]))
 
-    log_debug(f"Find {len(deleted_models_path)} deleted models: {deleted_models_path}.")
+    log_debug(
+        f"Find {len(deleted_models_path)} deleted models: {deleted_models_path}.")
     log_debug(f"Find {len(changed_models)} changed models: {changed_models}.")
 
     return changed_models
@@ -119,7 +120,8 @@ def create_flows(flows_dirs):
 
         # check if the flow.dag.yaml exits
         if not os.path.exists(Path(flow_dir) / "flow.dag.yaml"):
-            log_warning(f"flow.dag.yaml not found in {flow_dir}. Skip this flow.")
+            log_warning(
+                f"flow.dag.yaml not found in {flow_dir}. Skip this flow.")
             continue
 
         section_type = "gallery"
@@ -301,6 +303,8 @@ if __name__ == "__main__":
                         default="https://eastus.api.azureml.ms/flow")
     parser.add_argument('--flow_submit_mode', type=str, default="sync")
     parser.add_argument('--run_time', type=str, default="default-mir")
+    parser.add_argument('--skipped_flows', type=str, default="langchain_auto_gpt,bing_grounded_qna,bing_grounded_"
+                                                             "chatgpt")
     parser.add_argument(
         "--local",
         help="local debug mode, will use interactive login authentication, and output the request "
@@ -342,13 +346,28 @@ if __name__ == "__main__":
     bulk_test_main_flows_dirs = get_bulk_test_main_flows_dirs(
         MODELS_ROOT, changed_models)
     bulk_test_main_flows_dirs = list(dict.fromkeys(bulk_test_main_flows_dirs))
-    flows_dirs = [Path(os.path.join(dir, TEST_FOLDER))
-                  for dir in changed_models if dir not in bulk_test_main_flows_dirs]
+    flows_dirs = [
+        dir for dir in changed_models if dir not in bulk_test_main_flows_dirs]
+    bulk_test_main_flows_dirs = [
+        model_dir for model_dir in bulk_test_main_flows_dirs]
+
+    # Filter out skipped flows
+    if args.skipped_flows != "":
+        skipped_flows = args.skipped_flows.split(",")
+        log_debug(f"Skipped flows: {skipped_flows}")
+        flows_dirs = [flow_dir for flow_dir in flows_dirs if Path(
+            flow_dir).name not in skipped_flows]
+        bulk_test_main_flows_dirs = [flow_dir for flow_dir in bulk_test_main_flows_dirs if Path(flow_dir).name not in
+                                     skipped_flows]
+    flows_dirs = [Path(os.path.join(dir, TEST_FOLDER)) for dir in flows_dirs]
     bulk_test_main_flows_dirs = [Path(os.path.join(
         model_dir, TEST_FOLDER)) for model_dir in bulk_test_main_flows_dirs]
 
     log_debug(flows_dirs)
     log_debug(bulk_test_main_flows_dirs)
+    if len(flows_dirs) + len(bulk_test_main_flows_dirs) == 0:
+        print("No flow code change, skip flow testing.")
+        exit(0)
 
     ux_endpoint = args.ux_endpoint
     runtime_name = args.run_time
@@ -551,7 +570,8 @@ if __name__ == "__main__":
     failed_flow_runs = {}  # run key : flow_run_link
     failed_evaluation_runs = {}  # run key : evaluation_run_link
     if flow_runs_count == 0 and bulk_test_runs_count == 0:
-        log_debug("\nNo bulk test run or bulk test evaluation run need to check status")
+        log_debug(
+            "\nNo bulk test run or bulk test evaluation run need to check status")
 
     run_workspace = Workspace.get(
         name=run_operations._operation_scope.workspace_name,
@@ -565,7 +585,8 @@ if __name__ == "__main__":
 
     bulk_test_runs_to_check = copy.deepcopy(
         submitted_bulk_test_run_identifiers)
-    log_debug(f"\n{bulk_test_runs_count} bulk test evaluation runs need to check status.")
+    log_debug(
+        f"\n{bulk_test_runs_count} bulk test evaluation runs need to check status.")
     check_flow_run_status(bulk_test_runs_to_check,
                           submitted_bulk_test_run_identifiers)
 
@@ -610,7 +631,7 @@ if __name__ == "__main__":
                 f"Bulk test evaluation run link to Azure Machine Learning Portal: {evaluation_run_link}")
     elif len(submitted_flow_run_identifiers) == 0 and len(submitted_bulk_test_run_identifiers) == 0:
         log_debug(f"\nRun status checking completed. {flow_runs_count} flow runs and {bulk_test_runs_count} bulk "
-              f"test evaluation runs completed.")
+                  f"test evaluation runs completed.")
     # Fail CI if there are failures.
     if len(handled_failures) > 0:
         log_error(
