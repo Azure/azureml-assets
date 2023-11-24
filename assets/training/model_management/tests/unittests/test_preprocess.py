@@ -540,4 +540,4 @@ class TestTextToImageMLflowConvertorFactory(unittest.TestCase):
         convertor = TextToImageMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir,
                                                                               translate_params)
         assert convertor._task == PyFuncSupportedTasks.IMAGE_TEXT_TO_IMAGE.value
-        assert os.path.join("pyfunc", "image_text_to_image") in convertor.MODEL_DIR
+        assert os.path.join("pyfunc", "text_to_image") in convertor.MODEL_DIR
