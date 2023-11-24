@@ -15,7 +15,7 @@ code: ../../../src/
 inputs:
   mlflow_model_path:
     type: mlflow_model
-    optional: true
+    optional: false
     description: Input folder path containing mlflow model for further finetuning.
       Proper model/huggingface id must be passed.
     mode: download
@@ -355,8 +355,8 @@ outputs:
     description: Output dir to save the finetuned lora weights
     mode: rw_mount
 
-command: python model_selector/model_selector.py --task_name TextGeneration $[[--mlflow_model_path
-  '${{inputs.mlflow_model_path}}']] --output_dir model_selector_output && python preprocess/preprocess.py
+command: python model_selector/model_selector.py --task_name TextGeneration --mlflow_model_path
+  '${{inputs.mlflow_model_path}}' --output_dir model_selector_output && python preprocess/preprocess.py
   --task_name TextGeneration --text_key '${{inputs.text_key}}' $[[--ground_truth_key
   '${{inputs.ground_truth_key}}']] $[[--batch_size '${{inputs.batch_size}}']] $[[--pad_to_max_length
   '${{inputs.pad_to_max_length}}']] $[[--max_seq_length '${{inputs.max_seq_length}}']]
@@ -390,6 +390,8 @@ command: python model_selector/model_selector.py --task_name TextGeneration $[[-
   --model_selector_output model_selector_output --preprocess_output preprocess_output
   $[[--system_properties '${{inputs.system_properties}}']] --pytorch_model_folder
   pytorch_model_folder --mlflow_model_folder mlflow_model_folder --output_model '${{outputs.output_model}}'
+  && python validate_lora_weights/validate_lora_weights.py --mlflow_model_path '${{inputs.mlflow_model_path}}'
+  --lora_weights_path pytorch_model_folder/peft_adapter_weights --tokenizer_path '${{inputs.mlflow_model_path}}/data/tokenizer'
   && python register_model/register_model.py --task_name TextGeneration $[[--model_name
   ${{inputs.registered_model_name}}]] --finetune_args_path pytorch_model_folder/finetune_args.json
   --registration_details_folder '${{outputs.output_model}}' --model_path pytorch_model_folder/peft_adapter_weights

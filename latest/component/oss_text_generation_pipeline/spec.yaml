@@ -32,7 +32,7 @@ inputs:
   # Continual-Finetuning model path
   mlflow_model_path:
     type: mlflow_model
-    optional: true
+    optional: false
     description: MLflow model asset path. Special characters like \ and ' are invalid
       in the parameter value.
     mode: download
