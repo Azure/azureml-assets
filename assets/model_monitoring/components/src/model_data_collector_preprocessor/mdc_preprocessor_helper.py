@@ -5,9 +5,12 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from azureml.core.run import Run
 from azureml.core.workspace import Workspace
-from azure.identity import DefaultAzureCredential, AzureCliCredential
+from azureml.data.azure_data_lake_datastore import AzureDataLakeGen2Datastore
+from azureml.data.azure_storage_datastore import AzureBlobDatastore
 from azure.storage.filedatalake import DataLakeServiceClient, FileSystemClient
-from azure.core.exceptions import ResourceNotFoundError
+from azure.storage.blob import ContainerClient
+from azure.identity import ClientSecretCredential
+from shared_utilities.io_utils import init_spark
 
 
 def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_name=None, ws_name=None) -> str:
@@ -32,8 +35,9 @@ def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_n
            f"/{datastore}/paths/{path}"
 
 
-def convert_to_hdfs_path(uri_folder_path: str, ws: Workspace = None) -> str:
-    """Convert url_path to HDFS path."""
+def _get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = None) \
+        -> Tuple[str, FileSystemClient | ContainerClient]:
+    """Get HDFS path and service client from url_folder_path."""
     url = urlparse(uri_folder_path)
     # TODO sovereign endpoint
     if url.scheme in ["https", "http"]:
@@ -48,7 +52,7 @@ def convert_to_hdfs_path(uri_folder_path: str, ws: Workspace = None) -> str:
         account_name = matches.group("account_name")
         container = matches.group("container")
         path = matches.group("path")
-        return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}"
+        return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}", None
     elif url.scheme in ["wasbs", "wasb", "abfss", "abfs"]:
         pattern = r"(?P<scheme>wasbs|abfss|wasb|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+).(?P<store_type>blob|dfs).core.windows.net/(?P<path>.+)"  # noqa
         matches = re.match(pattern, uri_folder_path)
@@ -59,7 +63,7 @@ def convert_to_hdfs_path(uri_folder_path: str, ws: Workspace = None) -> str:
         account_name = matches.group("account_name")
         container = matches.group("container")
         path = matches.group("path")
-        return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}"
+        return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}", None
     elif url.scheme == "azureml":
         if ':' in url.path:  # azureml asset path
             # asset path should be translated to azureml or hdfs path in service, should not reach here
@@ -75,12 +79,13 @@ def convert_to_hdfs_path(uri_folder_path: str, ws: Workspace = None) -> str:
             store_type = "dfs"
             account_name = datastore.account_name
             container = datastore.container_name
-            return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}"
+            container_client = _get_container_client(datastore)
+            return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}", container_client
     else:
-        return uri_folder_path  # file or other scheme, return original path directly
+        return uri_folder_path, None  # file or other scheme, return original path directly
 
 
-def get_datastore_from_input_path(input_path: str) -> str:
+def get_datastore_name_from_input_path(input_path: str) -> str:
     """Get datastore name from input path."""
     url = urlparse(input_path)
     if url.scheme == "azureml":
@@ -96,36 +101,62 @@ def get_datastore_from_input_path(input_path: str) -> str:
 
 
 def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str,
-                  root_uri_folder: str = None, service_client: DataLakeServiceClient = None) -> List[str]:
+                  root_uri_folder: str = None,  # root_uri_folder and container_client are for testing
+                  container_client: ContainerClient | FileSystemClient = None) -> List[str]:
     if _is_local_path(input_data):
         # for lcoal testing
         return _get_local_file_list(start_datetime, end_datetime, input_data)
 
     file_list = []
-    root_uri_folder = root_uri_folder or convert_to_hdfs_path(input_data).rstrip('/')
+    if not root_uri_folder:
+        root_uri_folder, container_client = _get_hdfs_path_and_container_client(input_data)
+    root_uri_folder = root_uri_folder.rstrip('/')
+
+    _set_data_access_config(container_client)
+
     # get meta from root_uri_folder
     pattern = r"(?P<scheme>abfss|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+).dfs.core.windows.net(?P<path>$|/.*)"  # noqa
     matches = re.match(pattern, root_uri_folder)
     if not matches:
         raise ValueError(f"Unsupported uri as uri_folder: {root_uri_folder}")
-    scheme = "https" if matches.group("scheme") == "abfss" else "http"
-    account_url = f"{scheme}://{matches.group('account_name')}.dfs.core.windows.net"
-    # TODO use SAS token
-    print("getting service client...")
-    service_client = service_client or DataLakeServiceClient(account_url, credential=DefaultAzureCredential())
-    print("done getting service client.")
-    file_system_client = service_client.get_file_system_client(matches.group("container"))
-    root_path = matches.group("path").rstrip('/')
+    root_path = matches.group("path").strip('/')
     if end_datetime.minute == 0 and end_datetime.second == 0:
         # if end_datetime is a whole hour, the last hour folder is not needed
         end_datetime -= timedelta(seconds=1)
     cur_datetime = start_datetime
+    # TODO check day folder and use */*.jsonl if day folder exists
     while cur_datetime <= end_datetime:
-        if _folder_exists(file_system_client, f"{root_path}/{cur_datetime.strftime('%Y/%m/%d/%H')}"):
+        if _folder_exists(container_client, f"{root_path}/{cur_datetime.strftime('%Y/%m/%d/%H')}"):
             cur_folder = f"{root_uri_folder}/{cur_datetime.strftime('%Y/%m/%d/%H')}"
             file_list.append(f"{cur_folder}/*.jsonl")
         cur_datetime += timedelta(hours=1)
     return file_list
+
+
+def _set_data_access_config(container_client: FileSystemClient | ContainerClient):
+    """
+    Set data access relative spark configs.
+
+    This is a special handling to access blob storage with abfs protocol, which enable Spark to access
+    append blob in blob storage.
+    """
+
+    if isinstance(container_client, FileSystemClient):
+        return  # already a gen2 store, no need to set config
+
+    container_name = container_client.container_name
+    account_name = container_client.account_name
+    spark = init_spark()
+    sas_token = spark.conf.get(
+        f"spark.hadoop.fs.azure.sas.{container_name}.{account_name}.blob.core.windows.net", None)
+    if not sas_token:
+        raise ValueError("Credential less datastore is not supported as input of the Model Monitoring")
+
+    sc = spark.sparkContext
+    sc._jsc.hadoopConfiguration().set(f"fs.azure.account.auth.type.{account_name}.dfs.core.windows.net", "SAS")
+    sc._jsc.hadoopConfiguration().set(f"fs.azure.sas.token.provider.type.{account_name}.dfs.core.windows.net",
+                                      "com.microsoft.azure.synapse.tokenlibrary.ConfBasedSASProvider")
+    spark.conf.set(f"spark.storage.synapse.{container_name}.{account_name}.dfs.core.windows.net.sas", sas_token)
 
 
 def _get_local_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str) -> List[str]:
@@ -151,27 +182,32 @@ def _is_local_path(path: str) -> bool:
         re.match(r"^[a-zA-Z]:[/\\]", path)
 
 
-def _folder_exists(file_system_client: FileSystemClient, folder_path: str) -> bool:
+def _folder_exists(container_client: ContainerClient | FileSystemClient, folder_path: str) -> bool:
     """Check if hdfs folder exists."""
-    # DataLakeDirectoryClient.exists() doesn't work for blob, need to use DataLakeFileSystemClient.get_paths()
-    files = file_system_client.get_paths(folder_path, recursive=False, max_results=1)
-    try:
-        _ = next(files)
-        return True
-    except (ResourceNotFoundError, StopIteration):
-        return False
-
-
-def _get_workspace_info() -> Tuple[str, str, str]:
-    """Get workspace info from Run context and environment variables."""
-    ws = Run.get_context().experiment.workspace
-    sub_id = ws.subscription_id or os.environ.get("AZUREML_ARM_SUBSCRIPTION")
-    rg_name = ws.resource_group or os.environ.get("AZUREML_ARM_RESOURCEGROUP")
-    ws_name = ws.name or os.environ.get("AZUREML_ARM_WORKSPACE_NAME")
-    return sub_id, rg_name, ws_name
+    if isinstance(container_client, FileSystemClient):
+        return container_client.get_directory_client(folder_path).exists()
+    else:
+        blobs = container_client.list_blobs(name_starts_with=folder_path)
+        return any(blobs)
 
 
 def _get_datastore_and_path_from_azureml_path(azureml_path: str) -> Tuple[str, str]:
     start_idx = azureml_path.find('/datastores/')
     end_idx = azureml_path.find('/paths/')
     return azureml_path[start_idx+12:end_idx], azureml_path[end_idx+7:]
+
+
+def _get_container_client(datastore: AzureDataLakeGen2Datastore | AzureBlobDatastore) \
+        -> FileSystemClient | ContainerClient:
+    if datastore.datastore_type == "AzureBlob":
+        return datastore.blob_service.get_container_client(datastore.container_name) if datastore.credential_type \
+               else None
+    elif datastore.datastore_type == "AzureDataLakeGen2":
+        account_url = f"{datastore.protocol}://{datastore.account_name}.dfs.{datastore.endpoint}"
+        client_secret_credential = \
+            ClientSecretCredential(tenant_id=datastore.tenant_id,
+                                   client_id=datastore.client_id,
+                                   client_secret=datastore.client_secret) \
+            if datastore.client_id else None
+        service_client = DataLakeServiceClient(account_url, credential=client_secret_credential)
+        return service_client.get_file_system_client(datastore.container_name)

@@ -1,9 +1,10 @@
 from unittest.mock import Mock
 import pytest
 from datetime import datetime
-
+from azure.storage.filedatalake import FileSystemClient
 from model_data_collector_preprocessor.mdc_preprocessor_helper import (
-    convert_to_azureml_long_form, convert_to_hdfs_path, get_datastore_from_input_path, get_file_list
+    convert_to_azureml_long_form, _get_hdfs_path_and_container_client, get_datastore_name_from_input_path,
+    get_file_list
 )
 
 
@@ -66,9 +67,10 @@ class TestMDCPreprocessorHelper:
             )
         ]
     )
-    def test_convert_to_hdfs_path(self, uri_folder_path: str, expected_hdfs_path: str):
-        hdfs_path = convert_to_hdfs_path(uri_folder_path)
+    def test_get_hdfs_path_and_container_client(self, uri_folder_path: str, expected_hdfs_path: str):
+        hdfs_path, container_client = _get_hdfs_path_and_container_client(uri_folder_path)
         assert hdfs_path == expected_hdfs_path
+        assert container_client is None
 
     @pytest.mark.parametrize(
         "azureml_path, datastore_type, protocol, expected_scheme",
@@ -93,16 +95,31 @@ class TestMDCPreprocessorHelper:
             )
         ]
     )
-    def test_convert_to_hdfs_path_with_azureml_uri(self, azureml_path, datastore_type, protocol, expected_scheme):
+    def test_get_hdfs_path_and_container_client_with_azureml_uri(self, azureml_path, datastore_type, protocol,
+                                                                 expected_scheme):
         mock_datastore = Mock(datastore_type=datastore_type, protocol=protocol, endpoint="core.windows.net",
                               account_name="my_account", container_name="my_container")
-        mock_ws = Mock()
-        # mock_ws.datastores.get.side_effect = lambda n: mock_datastore if n == "my_datastore" else None
-        mock_ws.datastores = {"my_datastore": mock_datastore}
+        if datastore_type == "AzureBlob":
+            mock_container_client = Mock(container_name="my_container")
+            mock_blob_svc = Mock()
+            mock_blob_svc.get_container_client.side_effect = \
+                lambda n: mock_container_client if n == "my_container" else None
+            mock_datastore.credential_type = "AccountKey"
+            mock_datastore.blob_service = mock_blob_svc
+        elif datastore_type == "AzureDataLakeGen2":
+            mock_datastore.client_id = "my_client_id" if protocol == "https" else None
+            mock_datastore.client_secret = "my_client_secret" if protocol == "https" else None
+            mock_datastore.tenant_id = "00000" if protocol == "https" else None
+        mock_ws = Mock(datastores={"my_datastore": mock_datastore})
 
-        hdfs_path = convert_to_hdfs_path(azureml_path, mock_ws)
+        hdfs_path, container_client = _get_hdfs_path_and_container_client(azureml_path, mock_ws)
 
         assert hdfs_path == f"{expected_scheme}://my_container@my_account.dfs.core.windows.net/path/to/folder"
+        if datastore_type == "AzureBlob":
+            assert container_client.container_name == "my_container"
+            assert container_client == mock_container_client
+        else:
+            assert isinstance(container_client, FileSystemClient)
 
     @pytest.mark.parametrize(
         "input_path, expected_datastore",
@@ -118,7 +135,7 @@ class TestMDCPreprocessorHelper:
     )
     def test_get_datastore_from_input_path(self, input_path, expected_datastore):
         """Test get_datastore_from_input_path()."""
-        datastore = get_datastore_from_input_path(input_path)
+        datastore = get_datastore_name_from_input_path(input_path)
         assert datastore == expected_datastore
 
     @pytest.mark.parametrize(
@@ -131,12 +148,12 @@ class TestMDCPreprocessorHelper:
     def test_get_datastore_from_input_path_throw_error(self, input_path):
         """Test get_datastore_from_input_path() with invalid input."""
         with pytest.raises(ValueError):
-            get_datastore_from_input_path(input_path)
+            get_datastore_name_from_input_path(input_path)
 
     def test_get_datastore_from_input_path_with_asset_path_throw(self):
         """Test get_datastore_from_input_path() with asset path."""
         with pytest.raises(ValueError):
-            _ = get_datastore_from_input_path("azureml:my_asset:my_version")
+            _ = get_datastore_name_from_input_path("azureml:my_asset:my_version")
 
     @pytest.mark.parametrize(
         "start_hour, end_hour, expected_hours, root_folder",

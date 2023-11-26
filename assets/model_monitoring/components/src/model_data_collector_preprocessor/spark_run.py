@@ -9,7 +9,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import posexplode, concat_ws
 from dateutil import parser
 from datetime import datetime
-from mdc_preprocessor_helper import get_datastore_from_input_path
+from mdc_preprocessor_helper import get_datastore_name_from_input_path
 from shared_utilities.momo_exceptions import DataNotFoundError
 from shared_utilities.io_utils import (
     init_spark,
@@ -35,6 +35,7 @@ def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: date
     file_list = get_file_list(start_datetime, end_datetime, input_data)
     if not file_list:
         handle_data_not_found()
+    # print("DEBUG file_list:", file_list)
 
     spark = init_spark()
     df = spark.read.json(file_list)
@@ -91,7 +92,7 @@ def _mdc_uri_folder_to_preprocessed_spark_df(
     df.select("data").show(truncate=False)
     df.printSchema()
 
-    datastore = get_datastore_from_input_path(input_data)
+    datastore = get_datastore_name_from_input_path(input_data)
     # print("Datastore:", datastore)
     transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id, datastore)
     # transformed_df.show()
