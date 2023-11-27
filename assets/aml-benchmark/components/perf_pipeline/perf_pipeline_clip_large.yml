@@ -10,7 +10,7 @@ jobs:
     inputs:
       input_dataset:
         type: uri_folder
-        path: azureml:10_samples_large:1
+        path: azureml:10_samples_small:1
       model_type: vision_oss
       batch_input_pattern: '{
         "input_data": {
@@ -18,19 +18,17 @@ jobs:
             "image",
             "text"
           ],
-          "index": [0,1,2],
+          "index": [0],
           "data": [
-            ["###<image>", "###<text>"],
-            ["###<image>", "###<text>"],
             ["###<image>", "###<text>"]
           ]
         },
         "params": {}
       }'
-      endpoint_url: https://clip-large-ic.eastus.inference.ml.azure.com/score
+      endpoint_url: https://clip-large-ic-cpu.eastus.inference.ml.azure.com/score
       is_performance_test: False
       deployment_name: openai-clip-vit-large-patch14-3
-      connections_name: clip-large-ic-2
+      connections_name: clip-large-cpu-3
       handle_response_failure: use_fallback
       ensure_ascii: false
       initial_worker_count: 1
