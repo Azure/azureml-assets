@@ -2,8 +2,9 @@ from unittest.mock import Mock
 import pytest
 from datetime import datetime
 from azure.storage.filedatalake import FileSystemClient
+from azure.storage.blob import ContainerClient
 from model_data_collector_preprocessor.mdc_preprocessor_helper import (
-    convert_to_azureml_long_form, _get_hdfs_path_and_container_client, get_datastore_name_from_input_path,
+    convert_to_azureml_long_form, get_hdfs_path_and_container_client, get_datastore_name_from_input_path,
     get_file_list
 )
 
@@ -68,7 +69,7 @@ class TestMDCPreprocessorHelper:
         ]
     )
     def test_get_hdfs_path_and_container_client(self, uri_folder_path: str, expected_hdfs_path: str):
-        hdfs_path, container_client = _get_hdfs_path_and_container_client(uri_folder_path)
+        hdfs_path, container_client = get_hdfs_path_and_container_client(uri_folder_path)
         assert hdfs_path == expected_hdfs_path
         assert container_client is None
 
@@ -112,7 +113,7 @@ class TestMDCPreprocessorHelper:
             mock_datastore.tenant_id = "00000" if protocol == "https" else None
         mock_ws = Mock(datastores={"my_datastore": mock_datastore})
 
-        hdfs_path, container_client = _get_hdfs_path_and_container_client(azureml_path, mock_ws)
+        hdfs_path, container_client = get_hdfs_path_and_container_client(azureml_path, mock_ws)
 
         assert hdfs_path == f"{expected_scheme}://my_container@my_account.dfs.core.windows.net/path/to/folder"
         if datastore_type == "AzureBlob":
@@ -168,22 +169,34 @@ class TestMDCPreprocessorHelper:
         ]
     )
     def test_get_file_list(self, start_hour, end_hour, expected_hours, root_folder):
-        def _mock_get_paths(path, recursive, max_results):
-            non_empty_hours = [6, 7, 8, 13, 17, 19, 20, 21]
-            non_empty_folders = [f"{root_folder.rstrip('/')}/2023/11/20/{h:02d}" for h in non_empty_hours]
-            result_list = ["1.jsonl"] if path in non_empty_folders else []
+        non_empty_hours = [6, 7, 8, 13, 17, 19, 20, 21]
+        non_empty_folders = [f"{root_folder.strip('/')}/2023/11/20/{h:02d}" for h in non_empty_hours]
+
+        def _mock_list_blobs(name_starts_with=None):
+            result_list = [f"{name_starts_with}/1.jsonl"] if name_starts_with in non_empty_folders else []
             return result_list.__iter__()
-        mock_fs_client = Mock()
-        mock_fs_client.get_paths.side_effect = _mock_get_paths
-        mock_svc_client = Mock()
-        mock_svc_client.get_file_system_client.side_effect = lambda n: mock_fs_client if n == "my_container" else None
 
-        hdfs_uri_folder = f"abfss://my_container@my_account.dfs.core.windows.net{root_folder}"
-        start = datetime(2023, 11, 20, start_hour)
-        end = datetime(2023, 11, 20, end_hour)
-        file_list = get_file_list(start, end, "uri_folder_path", hdfs_uri_folder, service_client=mock_svc_client)
+        def _mock_get_dir_client(path):
+            mock_dir_client = Mock(path_name=path)
+            mock_dir_client.exists.return_value = path in non_empty_folders
+            return mock_dir_client
 
-        assert file_list == [
-            f"abfss://my_container@my_account.dfs.core.windows.net{root_folder}/2023/11/20/{h:02d}/*.jsonl"
-            for h in expected_hours
-        ]
+        for store_type in ["AzureBlob", "AzureDataLakeGen2"]:
+            if store_type == "AzureBlob":
+                mock_container_client = Mock(spec=ContainerClient, account_name="my_account",
+                                             container_name="my_container")
+                mock_container_client.list_blobs.side_effect = _mock_list_blobs
+            else:
+                mock_container_client = Mock(spec=FileSystemClient, account_name="my_account",
+                                             container_name="my_container")
+                mock_container_client.get_directory_client.side_effect = _mock_get_dir_client
+            hdfs_uri_folder = f"abfss://my_container@my_account.dfs.core.windows.net{root_folder}"
+            start = datetime(2023, 11, 20, start_hour)
+            end = datetime(2023, 11, 20, end_hour)
+
+            file_list = get_file_list(start, end, "uri_folder_path", hdfs_uri_folder, mock_container_client)
+
+            assert file_list == [
+                f"abfss://my_container@my_account.dfs.core.windows.net{root_folder.rstrip('/')}/2023/11/20/{h:02d}/*.jsonl"  # noqa
+                for h in expected_hours
+            ]

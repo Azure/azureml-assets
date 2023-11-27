@@ -11,10 +11,7 @@ from dateutil import parser
 from datetime import datetime
 from mdc_preprocessor_helper import get_datastore_name_from_input_path
 from shared_utilities.momo_exceptions import DataNotFoundError
-from shared_utilities.io_utils import (
-    init_spark,
-    save_spark_df_as_mltable,
-)
+from shared_utilities.io_utils import init_spark, save_spark_df_as_mltable
 from shared_utilities.event_utils import add_tags_to_root_run
 from shared_utilities.constants import (
     MDC_CORRELATION_ID_COLUMN,
@@ -22,7 +19,7 @@ from shared_utilities.constants import (
     MDC_DATAREF_COLUMN,
     AML_MOMO_ERROR_TAG
 )
-from mdc_preprocessor_helper import get_file_list
+from mdc_preprocessor_helper import get_hdfs_path_and_container_client, get_file_list, set_data_access_config
 
 
 def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: datetime, input_data: str,
@@ -32,12 +29,14 @@ def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: date
         raise DataNotFoundError(f"No data found for the given time window: {start_datetime} to {end_datetime}")
 
     add_tags_func = add_tags_func or add_tags_to_root_run
-    file_list = get_file_list(start_datetime, end_datetime, input_data)
+    hdfs_path, container_client = get_hdfs_path_and_container_client(input_data)
+    file_list = get_file_list(start_datetime, end_datetime, input_data, hdfs_path, container_client)
     if not file_list:
         handle_data_not_found()
     # print("DEBUG file_list:", file_list)
 
     spark = init_spark()
+    set_data_access_config(container_client, spark)
     df = spark.read.json(file_list)
     if df.rdd.isEmpty():
         handle_data_not_found()

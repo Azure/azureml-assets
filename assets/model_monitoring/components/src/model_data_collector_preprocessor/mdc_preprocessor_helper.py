@@ -10,7 +10,7 @@ from azureml.data.azure_storage_datastore import AzureBlobDatastore
 from azure.storage.filedatalake import DataLakeServiceClient, FileSystemClient
 from azure.storage.blob import ContainerClient
 from azure.identity import ClientSecretCredential
-from shared_utilities.io_utils import init_spark
+from pyspark.sql import SparkSession
 
 
 def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_name=None, ws_name=None) -> str:
@@ -35,7 +35,7 @@ def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_n
            f"/{datastore}/paths/{path}"
 
 
-def _get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = None) \
+def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = None) \
         -> Tuple[str, FileSystemClient | ContainerClient]:
     """Get HDFS path and service client from url_folder_path."""
     url = urlparse(uri_folder_path)
@@ -101,7 +101,7 @@ def get_datastore_name_from_input_path(input_path: str) -> str:
 
 
 def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str,
-                  root_uri_folder: str = None,  # root_uri_folder and container_client are for testing
+                  root_uri_folder: str = None,
                   container_client: ContainerClient | FileSystemClient = None) -> List[str]:
     if _is_local_path(input_data):
         # for lcoal testing
@@ -109,10 +109,8 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: 
 
     file_list = []
     if not root_uri_folder:
-        root_uri_folder, container_client = _get_hdfs_path_and_container_client(input_data)
+        root_uri_folder, container_client = get_hdfs_path_and_container_client(input_data)
     root_uri_folder = root_uri_folder.rstrip('/')
-
-    _set_data_access_config(container_client)
 
     # get meta from root_uri_folder
     pattern = r"(?P<scheme>abfss|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+).dfs.core.windows.net(?P<path>$|/.*)"  # noqa
@@ -133,7 +131,7 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: 
     return file_list
 
 
-def _set_data_access_config(container_client: FileSystemClient | ContainerClient):
+def set_data_access_config(container_client: FileSystemClient | ContainerClient, spark: SparkSession):
     """
     Set data access relative spark configs.
 
@@ -146,7 +144,6 @@ def _set_data_access_config(container_client: FileSystemClient | ContainerClient
 
     container_name = container_client.container_name
     account_name = container_client.account_name
-    spark = init_spark()
     sas_token = spark.conf.get(
         f"spark.hadoop.fs.azure.sas.{container_name}.{account_name}.blob.core.windows.net", None)
     if not sas_token:
