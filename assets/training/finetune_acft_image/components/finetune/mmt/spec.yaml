@@ -39,13 +39,13 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: image width that is input to the network. Default is -1 which means it would be overwritten by image_scale in model config. 
+    description: Image width that is input to the network. Default is -1 which means it would be overwritten by image_scale in model config. 
 
   image_height:
     type: integer
     default: -1
     optional: true
-    description: image height that is input to the network. Default is -1 which means it would be overwritten by image_scale in model config.
+    description: Image height that is input to the network. Default is -1 which means it would be overwritten by image_scale in model config.
 
   task_name:
     type: string

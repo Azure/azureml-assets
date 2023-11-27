@@ -211,7 +211,7 @@ inputs:
       - adafactor
       - adagrad
       - adamw_ort_fused
-    description: optimizer to be used while training. 'adamw_ort_fused' optimizer is only supported for ORT training. If left empty, will be chosen automatically based on the task type and model selected.
+    description: Optimizer to be used while training. 'adamw_ort_fused' optimizer is only supported for ORT training. If left empty, will be chosen automatically based on the task type and model selected.
 
   weight_decay:
     type: number

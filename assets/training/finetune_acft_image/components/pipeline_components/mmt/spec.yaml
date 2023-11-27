@@ -12,12 +12,12 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: Compute to be used for model_selector eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
+    description: Compute to be used for model_selector eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'.
 
   compute_finetune:
     type: string
     optional: false
-    description: Compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
+    description: Compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'.
 
   # ########################### Model Selector Component ########################### #
   # Model family
@@ -68,14 +68,14 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: image width that is input to the network.
+    description: Image width that is input to the network.
      Default is -1 which means it would be overwritten by image_scale in model config. 
 
   image_height:
     type: integer
     default: -1
     optional: true
-    description: image height that is input to the network.
+    description: Image height that is input to the network.
      Default is -1 which means it would be overwritten by image_scale in model config.
 
   task_name:
