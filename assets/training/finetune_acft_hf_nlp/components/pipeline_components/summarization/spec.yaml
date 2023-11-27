@@ -526,6 +526,14 @@ jobs:
       validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
       test_mltable_path: '${{parent.inputs.test_mltable_path}}'
       user_column_names: '${{parent.inputs.document_key}},${{parent.inputs.summary_key}}'
+      num_train_epochs: '${{parent.inputs.num_train_epochs}}'
+      max_steps: '${{parent.inputs.max_steps}}'
+      per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
+      per_device_eval_batch_size: '${{parent.inputs.per_device_eval_batch_size}}'
+      learning_rate: '${{parent.inputs.learning_rate}}'
+      adam_beta1: '${{parent.inputs.adam_beta1}}'
+      adam_beta2: '${{parent.inputs.adam_beta2}}'
+      adam_epsilon: '${{parent.inputs.adam_epsilon}}'
   summarization_model_import:
     type: command
     component: azureml:summarization_model_import:0.0.25
