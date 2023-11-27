@@ -68,6 +68,7 @@ inputs:
       - text-to-image
       - text-to-image-inpainting
       - image-text-to-text
+      - image-to-image
       - zero-shot-image-classification
       - mask-generation
       - video-multi-object-tracking
