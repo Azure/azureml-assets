@@ -139,8 +139,9 @@ def set_data_access_config(container_client: FileSystemClient | ContainerClient,
     append blob in blob storage.
     """
 
-    if isinstance(container_client, FileSystemClient):
-        return  # already a gen2 store, no need to set config
+    if isinstance(container_client, FileSystemClient) or container_client is None:
+        # already a gen2 store, or local path, neither need to set config
+        return
 
     container_name = container_client.container_name
     account_name = container_client.account_name
@@ -149,10 +150,11 @@ def set_data_access_config(container_client: FileSystemClient | ContainerClient,
     if not sas_token:
         raise ValueError("Credential less datastore is not supported as input of the Model Monitoring")
 
-    sc = spark.sparkContext
-    sc._jsc.hadoopConfiguration().set(f"fs.azure.account.auth.type.{account_name}.dfs.core.windows.net", "SAS")
-    sc._jsc.hadoopConfiguration().set(f"fs.azure.sas.token.provider.type.{account_name}.dfs.core.windows.net",
-                                      "com.microsoft.azure.synapse.tokenlibrary.ConfBasedSASProvider")
+    # in Synapse doc, it uses sc._jsc.hadoopConfiguration().set to set first two configs
+    # per testing, use spark.conf.set() also works
+    spark.conf.set(f"fs.azure.account.auth.type.{account_name}.dfs.core.windows.net", "SAS")
+    spark.conf.set(f"fs.azure.sas.token.provider.type.{account_name}.dfs.core.windows.net",
+                   "com.microsoft.azure.synapse.tokenlibrary.ConfBasedSASProvider")
     spark.conf.set(f"spark.storage.synapse.{container_name}.{account_name}.dfs.core.windows.net.sas", sas_token)
 
 

@@ -5,7 +5,7 @@ from azure.storage.filedatalake import FileSystemClient
 from azure.storage.blob import ContainerClient
 from model_data_collector_preprocessor.mdc_preprocessor_helper import (
     convert_to_azureml_long_form, get_hdfs_path_and_container_client, get_datastore_name_from_input_path,
-    get_file_list
+    get_file_list, set_data_access_config
 )
 
 
@@ -200,3 +200,42 @@ class TestMDCPreprocessorHelper:
                 f"abfss://my_container@my_account.dfs.core.windows.net{root_folder.rstrip('/')}/2023/11/20/{h:02d}/*.jsonl"  # noqa
                 for h in expected_hours
             ]
+
+    def test_set_data_access_config(self):
+        """Test set_data_access_config()."""
+        class MyDict(dict):
+            def __init__(self, d: dict):
+                super().__init__(d)
+
+            def set(self, k, v):
+                self[k] = v
+
+        # blob
+        mock_container_client = Mock(spec=ContainerClient, account_name="my_account", container_name="my_container")
+        mock_spark = Mock(conf=MyDict({
+            "spark.hadoop.fs.azure.sas.my_container.my_account.blob.core.windows.net": "sas_token"
+        }))
+        set_data_access_config(mock_container_client, mock_spark)
+        assert mock_spark.conf == {
+            "fs.azure.account.auth.type.my_account.dfs.core.windows.net": "SAS",
+            "fs.azure.sas.token.provider.type.my_account.dfs.core.windows.net":
+                "com.microsoft.azure.synapse.tokenlibrary.ConfBasedSASProvider",
+            "spark.storage.synapse.my_container.my_account.dfs.core.windows.net.sas": "sas_token",
+            "spark.hadoop.fs.azure.sas.my_container.my_account.blob.core.windows.net": "sas_token"
+        }
+
+        # gen2
+        mock_container_client = Mock(spec=FileSystemClient)
+        mock_spark = Mock(conf=MyDict({
+            "spark.hadoop.fs.azure.sas.my_container.my_account.blob.core.windows.net": "sas_token"
+        }))
+        set_data_access_config(mock_container_client, mock_spark)
+        assert mock_spark.conf == {
+            "spark.hadoop.fs.azure.sas.my_container.my_account.blob.core.windows.net": "sas_token"
+        }
+
+        # local
+        mock_container_client = None
+        mock_spark = Mock(conf=MyDict({}))
+        set_data_access_config(mock_container_client, mock_spark)
+        assert mock_spark.conf == {}
