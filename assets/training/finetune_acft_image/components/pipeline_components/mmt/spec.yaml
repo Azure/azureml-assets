@@ -308,18 +308,6 @@ outputs:
     description: Output dir to save the finetune model as torch model.
 
 jobs:
-  finetune_common_validation:
-    type: command
-    component: azureml:finetune_common_validation:0.0.1
-    compute: ${{parent.inputs.compute_model_import}}
-    inputs:
-      mlflow_model_path: ${{parent.inputs.mlflow_model}}
-      training_data: ${{parent.inputs.training_data}}
-      validation_data: ${{parent.inputs.validation_data}}
-      compute_model_import: ${{parent.inputs.compute_model_import}}
-      compute_finetune: ${{parent.inputs.compute_finetune}}
-      task_name: ${{parent.inputs.task_name}}
-      task_specific_extra_params: '"model_family=${{parent.inputs.model_family}};model_name=${{parent.inputs.model_name}};metric_for_best_model=${{parent.inputs.metric_for_best_model}};number_of_epochs=${{parent.inputs.number_of_epochs}}"'
   model_selector:
     type: command
     component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.2
@@ -330,7 +318,6 @@ jobs:
       pytorch_model: ${{parent.inputs.pytorch_model}}
       mlflow_model: ${{parent.inputs.mlflow_model}}
       download_from_source: ${{parent.inputs.download_from_source}}
-      validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
   finetune:
     type: command
     component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.2
