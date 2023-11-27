@@ -1,5 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch201:biweekly.202310.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch201:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
 
@@ -13,6 +13,7 @@ COPY data_import.py /azureml/data_import/run.py
 COPY model_selector.py /azureml/finetune/model_selector.py
 COPY preprocess.py /azureml/finetune/preprocess.py
 COPY finetune.py /azureml/finetune/finetune.py
+COPY validate_lora_weights.py /azureml/finetune/validate_lora_weights.py
 COPY register_model.py /azureml/finetune/register_model.py
 COPY register_presets_model.py /azureml/finetune/register_presets_model.py
 COPY zero2.json /azureml/finetune/zero2.json
