@@ -57,7 +57,7 @@ class StableDiffusionImageTexttoImageMLflowWrapper(mlflow.pyfunc.PythonModel):
             BatchConstants.BATCH_OUTPUT_PATH, default=False
         )
 
-        if self._task_type == Tasks.IMAGE_TEXT_TO_IMAGE.value:
+        if self._task_type == Tasks.IMAGE_TO_IMAGE.value:
             try:
                 model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
                 self._pipe = AutoPipelineForImage2Image.from_pretrained(model_dir)

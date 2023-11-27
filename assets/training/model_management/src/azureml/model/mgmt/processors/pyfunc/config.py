@@ -40,7 +40,7 @@ class SupportedTasks(_CustomEnum):
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
     TEXT_TO_IMAGE_INPAINTING = "text-to-image-inpainting"
-    IMAGE_TEXT_TO_IMAGE = "image-to-image"
+    IMAGE_TO_IMAGE = "image-to-image"
 
     # LLaVA task
     IMAGE_TEXT_TO_TEXT = "image-text-to-text"
