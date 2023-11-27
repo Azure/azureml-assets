@@ -10,6 +10,8 @@ from argparse import Namespace
 from typing import Any
 from functools import partial
 
+from transformers.trainer_utils import get_last_checkpoint
+
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.constants.constants import (
     SaveFileConstants,
@@ -180,6 +182,10 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
         model_name_or_path = Path(parsed_args.model_selector_output, parsed_args.model_name)
         # Transformers lib searches for tokenizer files locally only if the folder path is same as model's name
         if model_name_or_path.is_dir():
+            last_checkpoint = get_last_checkpoint(model_name_or_path)
+            if last_checkpoint:
+                model_name_or_path = last_checkpoint
+            logger.info(f"Copying content from {model_name_or_path} to {parsed_args.model_name}")
             copy_and_overwrite(str(model_name_or_path), parsed_args.model_name)
         parsed_args.model_name_or_path = parsed_args.model_name
 
