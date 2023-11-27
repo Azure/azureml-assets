@@ -23,6 +23,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     HfModelTypes,
     MLFlowHFFlavourConstants,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+    MLFLOW_FLAVORS,
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
@@ -92,6 +93,43 @@ MLFLOW_MODEL_SIGNATURES = {
         "outputs": '[{"type": "string"}]',
     },
 }
+
+
+MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS = {
+    Tasks.SINGLE_LABEL_CLASSIFICATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+        "params": '[{"name": "return_all_scores", "dtype" : "boolean", "default" : true, "shape" : null}]',
+    },
+    Tasks.MULTI_LABEL_CLASSIFICATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.NAMED_ENTITY_RECOGNITION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.QUESTION_ANSWERING: {
+        "inputs": '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.SUMMARIZATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.TRANSLATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+}
+
+
+MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR = {
+    MLFLOW_FLAVORS.TRANSFORMERS: MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS,
+    MLFLOW_FLAVORS.HFTRANSFORMERS: MLFLOW_MODEL_SIGNATURES,
+    MLFLOW_FLAVORS.HFTRANSFORMERSV2: MLFLOW_MODEL_SIGNATURES,
+}
+
 
 IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.LLAMA,
