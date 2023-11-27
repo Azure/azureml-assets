@@ -9,7 +9,7 @@ dependencies:
   - mlflow==2.6.0
   - torch==1.13.1
   - transformers==4.33.2
-  - diffusers==0.20.0
+  - diffusers==0.23.0
   - accelerate==0.22.0
   - azure-ai-mlmonitoring
   - azure-identity==1.13.0
