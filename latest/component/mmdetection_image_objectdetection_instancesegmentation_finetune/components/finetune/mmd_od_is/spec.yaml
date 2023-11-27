@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.8
+version: 0.0.9
 name: mmdetection_image_objectdetection_instancesegmentation_finetune
 display_name: Image Object Detection and Instance Segmentation MMDetection Model Finetune
 description: Component to finetune MMDetection models for image object detection and
@@ -9,7 +9,7 @@ description: Component to finetune MMDetection models for image object detection
 
 is_deterministic: false
 
-environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/3
+environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/10
 
 code: ../../../src/finetune
 
@@ -243,7 +243,7 @@ inputs:
     type: number
     optional: true
     description: During inference, only return proposals with a score greater than
-      `box_score_threshold`. \ The score is the multiplication of the objectness score
+      `box_score_threshold`. The score is the multiplication of the objectness score
       and classification probability.
 
   # random seed

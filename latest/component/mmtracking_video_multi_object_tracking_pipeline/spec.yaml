@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.2
+version: 0.0.3
 name: mmtracking_video_multi_object_tracking_pipeline
 display_name: Video Multi-Object Tracking MMTracking Pipeline
 description: Pipeline component for multi-object tracking using MMTracking models.
@@ -12,14 +12,14 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: compute to be used for model_selector eg. provide 'FT-Cluster' if
-      your compute is named 'FT-Cluster'
+    description: Compute to be used for model_selector eg. provide 'FT-Cluster' if
+      your compute is named 'FT-Cluster'.
 
   compute_finetune:
     type: string
     optional: false
-    description: compute to be used for finetune eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'
+    description: Compute to be used for finetune eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'.
 
   # ########################### Model Selector Component ########################### #
   # Model family
@@ -75,14 +75,14 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: image width that is input to the network. Default is -1 which means
+    description: Image width that is input to the network. Default is -1 which means
       it would be overwritten by image_scale in model config.
 
   image_height:
     type: integer
     default: -1
     optional: true
-    description: image height that is input to the network. Default is -1 which means
+    description: Image height that is input to the network. Default is -1 which means
       it would be overwritten by image_scale in model config.
 
   task_name:

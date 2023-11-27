@@ -14,13 +14,13 @@ inputs:
     type: string
     optional: false
     description: Compute to be used for model_import eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'.
+      compute is named 'FT-Cluster'
 
   compute_finetune:
     type: string
     optional: false
     description: Compute to be used for finetune eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'.
+      compute is named 'FT-Cluster'
 
   instance_count:
     type: integer
@@ -95,7 +95,7 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: Final Image width after augmentation that is input to the network.
+    description: Final image width after augmentation that is input to the network.
       Default value is -1 which means it would be overwritten by default image width
       in Hugging Face feature extractor. If either image_width or image_height is
       set to -1, default value would be used for both width and height.
@@ -104,7 +104,7 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: Final Image height after augmentation that is input to the network.
+    description: Final image height after augmentation that is input to the network.
       Default value is -1 which means it would be overwritten by default image height
       in Hugging Face feature extractor. If either image_width or image_height is
       set to -1, default value would be used for both width and height.
@@ -245,7 +245,7 @@ inputs:
     - adafactor
     - adagrad
     - adamw_ort_fused
-    description: optimizer to be used while training. 'adamw_ort_fused' optimizer
+    description: Optimizer to be used while training. 'adamw_ort_fused' optimizer
       is only supported for ORT training. If left empty, will be chosen automatically
       based on the task type and model selected.
 
@@ -455,16 +455,17 @@ outputs:
 jobs:
   image_classification_model_import:
     type: command
-    component: azureml:transformers_image_classification_model_import:0.0.8
+    component: azureml:transformers_image_classification_model_import:0.0.9
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
       model_name: ${{parent.inputs.model_name}}
       pytorch_model: ${{parent.inputs.pytorch_model}}
       mlflow_model: ${{parent.inputs.mlflow_model}}
+      download_from_source: ${{parent.inputs.download_from_source}}
   image_classification_finetune:
     type: command
-    component: azureml:transformers_image_classification_finetune:0.0.8
+    component: azureml:transformers_image_classification_finetune:0.0.9
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
