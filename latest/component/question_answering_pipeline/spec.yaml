@@ -772,7 +772,7 @@ jobs:
       test_data: '${{parent.jobs.question_answering_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.answers_key}}'
       input_column_names: "'${{parent.inputs.question_key}}','${{parent.inputs.context_key}}'"
-      batch_size: '${{parent.inputs.batch_size}}'
+      batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.output_dir}}'
   compute_metrics:
