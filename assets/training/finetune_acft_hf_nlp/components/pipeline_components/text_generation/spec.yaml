@@ -664,7 +664,7 @@ jobs:
       test_data: '${{parent.jobs.text_generation_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.ground_truth_key}}'
       input_column_names: '${{parent.inputs.text_key}}'
-      batch_size: '${{parent.inputs.batch_size}}'
+      batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.output_dir}}'
   compute_metrics:
