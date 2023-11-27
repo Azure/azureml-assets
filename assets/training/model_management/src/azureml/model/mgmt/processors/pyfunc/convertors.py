@@ -79,6 +79,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         self._model_id = translate_params.get("model_id")
         self._task = translate_params["task"]
         self._signatures = translate_params.get("signatures", None)
+        self._inference_base_image = translate_params.get("inference_base_image", None)
 
     def _save(
         self,
@@ -87,6 +88,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         code_path: List[str],
         pip_requirements: Optional[str] = None,
         conda_env: Optional[str] = None,
+        metadata: Optional[Dict] = {}
     ):
         """Save Mlflow model to output directory.
 
@@ -100,13 +102,14 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         :type conda_env: Optional[str]
         :param code_path: A list of local filesystem paths to Python file dependencies
         :type code_path: List[str]
-
+        :param metadata: A metadata dictionary to associate with the MLflow model
+        :type metadata: Optional[Dict]. Defaults to {}.
         """
         signatures = self._signatures or self.get_model_signature()
         # set metadata info
-        metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
+        metadata.update(fetch_mlflow_acft_metadata(base_model_name=self._model_id,
                                               is_finetuned_model=False,
-                                              base_model_task=self._task)
+                                              base_model_task=self._task))
         mlflow.pyfunc.save_model(
             path=self._output_dir,
             python_model=mlflow_model_wrapper,
@@ -440,11 +443,17 @@ class StableDiffusionMlflowConvertor(TextToImageMLflowConvertor):
             os.path.join(self.MODEL_DIR, "config.py"),
             os.path.join(self.COMMON_DIR, "vision_utils.py")
         ]
+
+        metadata = {"model_type": "stable-diffusion"}
+        if self._inference_base_image:
+            metadata["azureml.base_image"] = self._inference_base_image
+
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
             artifacts_dict=artifacts_dict,
             conda_env=conda_env_file,
             code_path=code_path,
+            metadata=metadata
         )
 
 
