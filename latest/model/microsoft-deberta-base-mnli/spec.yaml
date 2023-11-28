@@ -53,7 +53,7 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: text-classification
-version: 10
+version: 11
 description: |
   DeBERTa is a version of the BERT model that has been improved through the use of disentangled attention and enhanced mask decoders. Compared to BERT and RoBERTa, it outperforms them on a majority of NLU tasks using 80GB of training data. It has been fine-tuned for NLU tasks and has achieved dev results on SQuAD 1.1/2.0 and MNLI tasks. If you find the model useful please cite the paper.
 
@@ -87,7 +87,7 @@ description: |
   #### Sample input
   ```json
   {
-      "inputs": {
+      "input_data": {
           "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
       }
   }
