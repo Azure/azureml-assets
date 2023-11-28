@@ -9,17 +9,16 @@ generating responses for given prompts, and managing the server processes.
 
 # flake8: noqa
 
+import copy
 import json
 import os
 import subprocess
 import time
-import copy
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List
 
 import requests
 import torch.cuda
-
 from configs import EngineConfig, TaskConfig
 from engine import BaseEngine, InferenceResult
 from logging_config import configure_logger
@@ -107,13 +106,12 @@ class VLLMEngine(BaseEngine):
 
         # TODO: Remove "RefinedWebModel" and "RefinedWeb" once falcon's model_type param gets updated
         if model_type == "falcon" or model_type == "RefinedWebModel" or model_type == "RefinedWeb":
-            self._vllm_args["gpu-memory-utilization"] = .95
+            self._vllm_args["gpu-memory-utilization"] = 0.95
             self._vllm_additional_args.append("trust-remote-code")
         self._vllm_additional_args.append("disable-log-requests")
 
     def _verify_and_convert_float_type(self):
-        """
-        Check to see whether the model's float type is compatible with the compute type selected.
+        """Check to see whether the model's float type is compatible with the compute type selected.
 
         Bfloat16 is only supported on GPUs such as A100s. V100s do not support bfloat16, only float16.
         Converting from bfloat16 to float16 is ok in this case.
@@ -131,7 +129,8 @@ class VLLMEngine(BaseEngine):
                     "bfloat16 is only supported on GPUs with compute capability "
                     f"of at least 8.0. Your {gpu_name} GPU has compute capability "
                     f"{compute_capability[0]}.{compute_capability[1]}. "
-                    f"bfloat16 will be converted to float16.")
+                    f"bfloat16 will be converted to float16.",
+                )
 
     def _verify_and_modify_tensor_parallel_size(self):
         """Check to see if the tensor parallel size is compatible with the models's number of attention heads."""
@@ -148,13 +147,14 @@ class VLLMEngine(BaseEngine):
             while num_attention_heads % new_tensor_parallel_size != 0:
                 new_tensor_parallel_size -= 1
         if tensor_parallel_size != new_tensor_parallel_size:
-            logger.warning("Tensor parallel size was incompatible with the number of attention heads the model has. "
-                           f"Number of attention heads ({num_attention_heads}) must be divisible by "
-                           f"tensor-parallel-size ({tensor_parallel_size}). To make them compatible, "
-                           f"tensor-parallel-size was reduced from {tensor_parallel_size} to "
-                           f"{new_tensor_parallel_size}. If deploying Falcon-7b or Falcon-7b-Instruct, consider "
-                           "choosing a Standard_NC6s_v3 sku as tensor-parallel-size must be 1 for those models."
-                        )
+            logger.warning(
+                "Tensor parallel size was incompatible with the number of attention heads the model has. "
+                f"Number of attention heads ({num_attention_heads}) must be divisible by "
+                f"tensor-parallel-size ({tensor_parallel_size}). To make them compatible, "
+                f"tensor-parallel-size was reduced from {tensor_parallel_size} to "
+                f"{new_tensor_parallel_size}. If deploying Falcon-7b or Falcon-7b-Instruct, consider "
+                "choosing a Standard_NC6s_v3 sku as tensor-parallel-size must be 1 for those models.",
+            )
         self._vllm_args["tensor-parallel-size"] = new_tensor_parallel_size
 
     def _start_server(self, server_kwargs: Dict, server_args: List, env: Dict):
@@ -194,7 +194,7 @@ class VLLMEngine(BaseEngine):
         unsupported_keys = set(params.keys()) - set(VLLM_SAMPLING_PARAMS.keys())
         for key in unsupported_keys:
             logger.warning(
-                f"Warning: Parameter '{key}' is not supported by VLLM and will be removed."
+                f"Warning: Parameter '{key}' is not supported by VLLM and will be removed.",
             )
             del params[key]
 
@@ -205,14 +205,17 @@ class VLLMEngine(BaseEngine):
         """Generate responses for the given prompts with the given parameters."""
         # pop _batch_size from params if it exists, set it to 1 by default (for testing only)
         batch_size = params.pop("_batch_size", 1)
+        # we need to pop and pass in return_full_text by itself as well, since its not a vLLM official param
+        return_full_text = params.pop("return_full_text", True)
 
         results = []
         start_time = time.time()
         with ThreadPoolExecutor(max_workers=batch_size) as executor:
             results = list(
                 executor.map(
-                    lambda prompt: self._generate_single_prompt(prompt, params), prompts
-                )
+                    lambda prompt: self._generate_single_prompt(prompt, params, return_full_text),
+                    prompts,
+                ),
             )
         inference_time_ms = (time.time() - start_time) * 1000
         for i, result in enumerate(results):
@@ -221,10 +224,10 @@ class VLLMEngine(BaseEngine):
         return results
 
     @log_execution_time
-    def _generate_single_prompt(self, prompt: str, params: Dict) -> InferenceResult:
+    def _generate_single_prompt(self, prompt: str, params: Dict, return_full_text: bool) -> InferenceResult:
         """Generate a response for a single prompt with the given parameters."""
         api_url = self._get_generate_uri()
-        unfiltered_params = copy.deepcopy(params)
+
         params = self._gen_params_to_vllm_params(params)
         headers = {"User-Agent": "VLLMEngine Client"}
 
@@ -239,7 +242,7 @@ class VLLMEngine(BaseEngine):
         if response.status_code == 200:
             # take the first candidate from the list of candidates (if beam search was used)
             output = json.loads(response.content)["text"][0]
-            generated_text = self._del_prompt_if_req(prompt, output, unfiltered_params)
+            generated_text = self._del_prompt_if_req(prompt, output, return_full_text=return_full_text)
             inference_time_ms = (end_time - start_time) * 1000
             response_tokens = self.get_tokens(generated_text)
             time_per_token_ms = inference_time_ms / len(response_tokens) if len(response_tokens) > 0 else 0
