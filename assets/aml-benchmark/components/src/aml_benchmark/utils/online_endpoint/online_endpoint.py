@@ -7,6 +7,7 @@
 from typing import Any, Optional
 from abc import abstractmethod
 from enum import Enum
+import time
 import json
 import os
 import uuid
@@ -36,6 +37,7 @@ class ResourceState(Enum):
     SUCCESS = "Success"
     FAILURE = "Failure"
     NOT_FOUND = "NotFound"
+    NOT_READY = "NotReady"
 
 
 class OnlineEndpoint:
@@ -178,14 +180,20 @@ class OnlineEndpoint:
                 content = content.decode('utf-8')
             return json.loads(content)
         except Exception as err:
-            logger.error(f"Failed to get content from response: {err}")
+            logger.warning(f"Failed to get content from response {resp}: {err}")
             return {}
+
+    @property
+    def _arm_base_subscription(self) -> str:
+        """Get the arm base for subscriptions."""
+        url_list = ['https://management.azure.com', 'subscriptions', self.subscription_id]
+        return "/".join(url_list)
 
     @property
     def _arm_base_url(self) -> str:
         """Get the arm base url."""
         url_list = [
-            'https://management.azure.com', 'subscriptions', self.subscription_id,
+            self._arm_base_subscription,
             'resourceGroups', self.resource_group
         ]
         return "/".join(url_list)
@@ -193,10 +201,16 @@ class OnlineEndpoint:
     def _call_endpoint(
             self, call_method: Any, url: str, payload: Optional[dict] = None
     ) -> Response:
-        headers = self.get_resource_authorization_header()
-        resp = ClientBase._execute_func(
-            call_method, url, params={}, headers=headers, json=payload
-        )
+        should_retry = True
+        while should_retry:
+            headers = self.get_resource_authorization_header()
+            resp = ClientBase._execute_func(
+                call_method, url, params={}, headers=headers, json=payload
+            )
+            if resp.status_code not in {409, 429}:
+                should_retry = False
+            else:
+                time.sleep(30)
         return resp
 
     @property
@@ -213,35 +227,43 @@ class OnlineEndpoint:
 
     def delete_connections(self):
         """Delete the connections."""
-        self.ml_client_curr_workspace.connections.delete(self._connections_name)
+        self.ml_client_curr_workspace.connections.delete(self.connections_name)
 
     def get_endpoint_authorization_header_from_connections(self) -> dict:
         """Get the authorization header."""
         resp = self._get_connections_by_name()
-        credentials = resp['properties'].get('credentials')
-        if self._model.is_aoai_model():
-            return {'api-key': resp['properties']['credentials']['key']}
+        credentials = resp['properties'].get('credentials', {})
+        if self._model.is_aoai_model() and 'key' in credentials:
+            return {'api-key': credentials['key']}
         else:
-            access_key_id = credentials.get('access_key_id')
-            credentials = resp['properties'].get('credentials', {})
             if 'secretAccessKey' not in credentials and 'keys' in credentials:
                 credentials = credentials['keys']
+            access_key_id = credentials.get('accessKeyId')
             token = credentials['secretAccessKey'] \
                 if access_key_id == 'api-key' else 'Bearer ' + credentials['secretAccessKey']
             return {access_key_id if access_key_id else "Authorization": token}
 
-    def create_connections(self) -> str:
+    def create_connections(self) -> bool:
         """Create the connections."""
-        target = self.scoring_url
-        wps_connection = WorkspaceConnection(
-            name=self.connections_name,
-            type="s3",
-            target=target,
-            credentials=AccessKeyConfiguration(
-                access_key_id="api-key" if self._model.is_aoai_model() else "Authorization",
-                secret_access_key=self._get_endpoint_token())
-        )
-        self.ml_client_curr_workspace.connections.create_or_update(workspace_connection=wps_connection)
+        try:
+            target = self.scoring_url
+            wps_connection = WorkspaceConnection(
+                name=self.connections_name,
+                type="s3",
+                target=target,
+                credentials=self._get_access_key_config()
+            )
+            self.ml_client_curr_workspace.connections.create_or_update(workspace_connection=wps_connection)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to create connections: {e}")
+            return False
+
+    def _get_access_key_config(self) -> AccessKeyConfiguration:
+        """Get the access key config."""
+        return AccessKeyConfiguration(
+            access_key_id="api-key" if self._model.is_aoai_model() else "Authorization",
+            secret_access_key=self._get_endpoint_token())
 
     @abstractmethod
     def get_endpoint_name_from_url(self) -> str:
@@ -301,7 +323,7 @@ class OnlineEndpoint:
     def _raise_if_not_success(self, resp: Response, msg: Optional[str] = None) -> None:
         """Raise error if not success."""
         default_msg = f'Failed to due to {resp.content} after getting {resp.status_code}'
-        if resp.status_code not in (200, 201, 202):
+        if resp.status_code not in (200, 201, 202, 204):
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(
                     BenchmarkValidationError,
@@ -426,3 +448,7 @@ class OnlineEndpoint:
         }, {})
 
         return resp.json()
+
+    def model_quota(self) -> int:
+        """Get the model quota."""
+        return -1

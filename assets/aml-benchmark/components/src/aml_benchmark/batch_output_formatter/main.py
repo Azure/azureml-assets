@@ -11,6 +11,7 @@ from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
+from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from .result_converters import ResultConverters
 
@@ -31,12 +32,13 @@ def parse_args() -> argparse.Namespace:
         help="The ground truth data mapping 1-1 to the prediction data.")
 
     parser.add_argument("--perf_data", type=str, help="path to output location")
-    parser.add_argument("--endpoint_url", type=str, help="endpoint_url")
+    parser.add_argument("--endpoint_url", type=str, help="endpoint_url", default=None)
     parser.add_argument("--metadata_key", type=str, help="metadata key", default=None)
     parser.add_argument("--data_id_key", type=str, help="metadata key", default=None)
     parser.add_argument("--label_key", type=str, help="label key")
     parser.add_argument("--handle_response_failure", type=str, help="how to handler failed response.")
     parser.add_argument("--fallback_value", type=str, help="The fallback value.", default='')
+    parser.add_argument("--deployment_config_dir", type=str, help="model_type", default=None)
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
@@ -57,7 +59,8 @@ def main(
         handle_response_failure: str,
         fallback_value: str,
         is_performance_test: bool,
-        endpoint_url: str
+        endpoint_url: str,
+        deployment_config_dir: str
 ) -> None:
     """
     Entry script for the script.
@@ -91,7 +94,11 @@ def main(
         ground_truth_df = pd.DataFrame(read_jsonl_files(input_file_paths))
     else:
         ground_truth_df = None
-    online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
+    if deployment_config_dir:
+        online_model = EndpointUtilities.get_model_from_deployment_config_file(deployment_config_dir)
+    else:
+        online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
+
     rc = ResultConverters(
         online_model._model_type, metadata_key, data_id_key,
         label_key, ground_truth_df, fallback_value=fallback_value, is_performance_test=is_performance_test)
@@ -134,5 +141,6 @@ if __name__ == "__main__":
         handle_response_failure=args.handle_response_failure,
         fallback_value=args.fallback_value,
         is_performance_test=args.is_performance_test,
-        endpoint_url=args.endpoint_url
+        endpoint_url=args.endpoint_url,
+        deployment_config_dir=args.deployment_config_dir
     )
