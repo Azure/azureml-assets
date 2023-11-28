@@ -10,6 +10,7 @@ import argparse
 import json
 import subprocess
 import sys
+import time
 import traceback
 
 from azureml.core import Run
@@ -20,6 +21,9 @@ from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.utils.online_endpoint.online_endpoint_factory import OnlineEndpointFactory
 from aml_benchmark.utils.online_endpoint.online_endpoint import OnlineEndpoint, ResourceState
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.error_definitions import BenchmarkUserError
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 
 logger = get_logger(__name__)
@@ -227,6 +231,62 @@ def _online_endpoint_generator(
             yield online_endpoint
 
 
+def deploy_model_in_list_maybe(
+        subscriptions_list: List[str],
+        locations_list: List[str],
+        online_model: OnlineEndpointModel,
+        endpoint_name: str,
+        endpoint_workspace: str,
+        endpoint_resource_group: str,
+        deployment_name: str,
+        deployment_sku: str,
+        output_metadata_dir: str,
+        connections_name: str,
+        do_quota_validation: bool,
+        additional_deployment_env_vars: str,
+        use_max_quota: bool,
+        deployment_env: str,
+        redeploy_model: bool
+) -> bool:
+    for online_endpoint in _online_endpoint_generator(
+                subscriptions_list,
+                locations_list,
+                online_model,
+                endpoint_name,
+                endpoint_workspace,
+                endpoint_resource_group,
+                deployment_name,
+                deployment_sku,
+                connections_name,
+                do_quota_validation,
+                additional_deployment_env_vars,
+                use_max_quota,
+                deployment_env
+    ):
+        managed_endpoint = False
+        try:
+            managed_endpoint = deploy_endpoint_maybe(online_endpoint)
+        except Exception as e:
+            logger.error(f"Failed to deploy endpoint with error {e}.")
+            continue
+        try:
+            managed_deployment = deploy_model_maybe(
+                online_endpoint, output_metadata_dir, managed_endpoint, redeploy_model)
+            logger.info("Endpoint is deployed successfully.")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to deploy model with error {e}.")
+            logger.error(traceback.format_exception(*sys.exc_info()))
+        # If endpoint is deployed successfully, the deletion code won't be reached
+        if managed_deployment and online_endpoint.deployment_state() != ResourceState.NOT_FOUND:
+            logger.info("Deleting failed deployment now.")
+            online_endpoint.delete_deployment()
+        if managed_endpoint:
+            logger.info("Deleting created endpoint now.")
+            online_endpoint.delete_endpoint()
+    return False
+
+
 @swallow_all_exceptions(logger)
 def main(
     model: str,
@@ -287,7 +347,6 @@ def main(
             ], check=True
         )
     if not deletion_model:
-        managed_deployment = False
         subscriptions_list = [
             s.strip() for s in endpoint_subscription_id.split(',')] if endpoint_subscription_id else [None]
         locations_list = [
@@ -303,7 +362,9 @@ def main(
             model, model_version, model_type, endpoint_name, is_finetuned_model,
             finetuned_subscription_id, finetuned_resource_group, finetuned_workspace
         )
-        for online_endpoint in _online_endpoint_generator(
+        is_deployment_successful = False
+        while deployment_retries > 0:
+            is_deployment_successful = deploy_model_in_list_maybe(
                 subscriptions_list,
                 locations_list,
                 online_model,
@@ -312,33 +373,27 @@ def main(
                 endpoint_resource_group,
                 deployment_name,
                 deployment_sku,
+                output_metadata_dir,
                 connections_name,
                 do_quota_validation,
                 additional_deployment_env_vars,
                 use_max_quota,
-                deployment_env
-        ):
-            managed_endpoint = False
-            try:
-                managed_endpoint = deploy_endpoint_maybe(online_endpoint)
-            except Exception as e:
-                logger.error(f"Failed to deploy endpoint with error {e}.")
-                continue
-            try:
-                managed_deployment = deploy_model_maybe(
-                    online_endpoint, output_metadata_dir, managed_endpoint, redeploy_model)
-                if managed_deployment:
-                    logger.info("Endpoint is deployed successfully.")
-                    break
-            except Exception as e:
-                logger.error(f"Failed to deploy model with error {e}.")
-                logger.error(traceback.format_exception(*sys.exc_info()))
-            # If endpoint is deployed successfully, the deletion code won't be reached
-            if managed_endpoint:
-                logger.info("Deleting created endpoint now.")
-                online_endpoint.delete_endpoint()
-        if not managed_deployment:
-            raise RuntimeError("Failed to deploy model as no available quota found.")
+                deployment_env,
+                redeploy_model
+            )
+            if is_deployment_successful:
+                logger.info("Deployment is successful.")
+                break
+            else:
+                logger.warning("Deployment is not successful, retrying now.")
+                deployment_retries -= 1
+                time.sleep(deployment_retry_interval_seconds)
+        if not is_deployment_successful:
+            raise BenchmarkUserException._with_error(
+                AzureMLError.create(
+                    BenchmarkUserError,
+                    error_details=f"Deployment is not successful after {deployment_retries} retries.")
+                )
     elif delete_managed_deployment:
         if not deployment_metadata_dir:
             logger.info("Delete deployment using input parameters.")
