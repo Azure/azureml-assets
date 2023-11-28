@@ -136,7 +136,9 @@ inputs:
   
   inference_base_image:
     type: string
-    description: The azureml base image to use in model inference. This ACR id is added in metadata of Mlmodel (mlflow).
+    description: |
+      The docker image to use in model inference.
+      This image id is assigned to `azureml.base_image` key in metadata section of mlmodel file.
     optional: true
 
   model_download_metadata:
