@@ -243,18 +243,27 @@ class OnlineEndpoint:
                 if access_key_id == 'api-key' else 'Bearer ' + credentials['secretAccessKey']
             return {access_key_id if access_key_id else "Authorization": token}
 
-    def create_connections(self) -> str:
+    def create_connections(self) -> bool:
         """Create the connections."""
-        target = self.scoring_url
-        wps_connection = WorkspaceConnection(
-            name=self.connections_name,
-            type="s3",
-            target=target,
-            credentials=AccessKeyConfiguration(
-                access_key_id="api-key" if self._model.is_aoai_model() else "Authorization",
-                secret_access_key=self._get_endpoint_token())
-        )
-        self.ml_client_curr_workspace.connections.create_or_update(workspace_connection=wps_connection)
+        try:
+            target = self.scoring_url
+            wps_connection = WorkspaceConnection(
+                name=self.connections_name,
+                type="s3",
+                target=target,
+                credentials=self._get_access_key_config()
+            )
+            self.ml_client_curr_workspace.connections.create_or_update(workspace_connection=wps_connection)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to create connections: {e}")
+            return False
+
+    def _get_access_key_config(self) -> AccessKeyConfiguration:
+        """Get the access key config."""
+        return AccessKeyConfiguration(
+            access_key_id="api-key" if self._model.is_aoai_model() else "Authorization",
+            secret_access_key=self._get_endpoint_token())
 
     @abstractmethod
     def get_endpoint_name_from_url(self) -> str:

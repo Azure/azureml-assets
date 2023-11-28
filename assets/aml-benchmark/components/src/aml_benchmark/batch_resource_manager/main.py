@@ -81,6 +81,9 @@ def parse_args() -> argparse.Namespace:
         default=False, type=str2bool,
         help="Flag on if this is a finetuned model.",
     )
+    parser.add_argument("--deployment_retries" , default=5, type=int, help="Number of retries for deployment.")
+    parser.add_argument(
+        "--deployment_retry_interval_seconds" , default=600, type=int, help="Retry interval for deployment.")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
     return args
@@ -250,7 +253,9 @@ def main(
     finetuned_subscription_id: str,
     finetuned_resource_group: str,
     finetuned_workspace: str,
-    delete_managed_deployment: bool
+    delete_managed_deployment: bool,
+    deployment_retries: int,
+    deployment_retry_interval_seconds: int
 ) -> None:
     """
     Entry function of the script.
@@ -386,5 +391,7 @@ if __name__ == "__main__":
         args.finetuned_subscription_id,
         args.finetuned_resource_group,
         args.finetuned_workspace,
-        args.delete_managed_deployment
+        args.delete_managed_deployment,
+        args.deployment_retries,
+        args.deployment_retry_interval_seconds
     )

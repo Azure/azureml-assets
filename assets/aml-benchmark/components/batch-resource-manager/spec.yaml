@@ -111,6 +111,16 @@ inputs:
     optional: True
     default: True
     description: If deleting the managed deployment.
+  deployment_retries:
+    type: integer
+    optional: True
+    default: 3
+    description: The number of retries for deployment.
+  deployment_retry_interval_seconds:
+    type: integer
+    optional: True
+    default: 600
+    description: The interval seconds for deployment retry.
 outputs:
   output_metadata:
     type: uri_folder
@@ -144,3 +154,5 @@ command: >-
   $[[--finetuned_subscription_id ${{inputs.finetuned_subscription_id}}]]
   $[[--finetuned_resource_group ${{inputs.finetuned_resource_group}}]]
   $[[--finetuned_workspace ${{inputs.finetuned_workspace}}]]
+  $[[--deployment_retries ${{inputs.deployment_retries}}]]
+  $[[--deployment_retry_interval_seconds ${{inputs.deployment_retry_interval_seconds}}]]

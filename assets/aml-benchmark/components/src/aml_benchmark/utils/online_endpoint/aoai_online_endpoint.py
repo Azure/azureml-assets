@@ -9,6 +9,7 @@ import time
 
 from azureml._model_management._util import get_requests_session
 from azureml._common._error_definition.azureml_error import AzureMLError
+from azure.ai.ml.entities import AccessKeyConfiguration, ApiKeyConfiguration
 
 from ..error_definitions import BenchmarkValidationError
 from ..exceptions import BenchmarkValidationException
@@ -291,6 +292,11 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                     BenchmarkValidationError,
                     error_details='SKU for AOAI model must be int.')
                 )
+
+    def _get_access_key_config(self) -> AccessKeyConfiguration:
+        return ApiKeyConfiguration(
+            key=self._get_endpoint_token()
+        )
 
     def model_quota(self):
         """Get the model quota."""
