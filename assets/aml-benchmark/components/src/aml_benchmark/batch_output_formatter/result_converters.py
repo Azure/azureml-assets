@@ -27,16 +27,18 @@ class ResultConverters:
     DEFAULT_ISO_FORMAT = '2000-01-01T00:00:00.000000+00:00'
     DEFAULT_PERF_INPUT_TOKEN = 512
     DEFAULT_GROUND_TRUTH = 'ground_truth'
+    DEFAULT_ADDITIONAL_COLUMNS = None
 
     def __init__(
             self, model_type: str, metadata_key: str, data_id_key: str,
-            label_key: str, ground_truth_df: Optional[pd.DataFrame], fallback_value: str,
-            is_performance_test: bool = False
+            label_key: str, additional_columns: str, ground_truth_df: Optional[pd.DataFrame], 
+            fallback_value: str, is_performance_test: bool = False
     ) -> None:
         """Init for the result converter."""
         self._model = OnlineEndpointModel(model=None, model_version=None, model_type=model_type)
         self._metadata_key = metadata_key
         self._label_key = label_key
+        self._additional_columns = additional_columns.split(",")
         self._data_id_key = data_id_key
         self._lookup_dict = {}
         self._fallback_value = fallback_value
@@ -97,17 +99,23 @@ class ResultConverters:
         if self._model.is_oss_model():
             if self._metadata_key:
                 ground_truth = self._get_request(result)[self._metadata_key][self._label_key]
+                if self.additional_columns:
+                    additional_columns = self._get_additional_columns_data(self._get_request(result)[self._metadata_key])
             elif self.METADATA_KEY_IN_RESULT in result:
                 ground_truth = result[self.METADATA_KEY_IN_RESULT][self._label_key]
+                if self.additional_columns:
+                    additional_columns = self._get_additional_columns_data(result[self.METADATA_KEY_IN_RESULT])
             else:
                 use_ground_truth_input = True
         elif self._model.is_aoai_model():
             use_ground_truth_input = True
-        if use_ground_truth_input:
+        if use_ground_truth_input:  # Ask about edge case.
             request_payload = self._get_request(result)
             payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
             ground_truth = self._lookup_dict.get(payload_hash, '')
-        return {self.ground_truth_column_name: ground_truth}
+        results = additional_columns.copy()
+        results = results[self.ground_truth_column_name] = ground_truth
+        return results
 
     def _get_raw_output(self, result: Dict[str, Any]) -> Dict[str, Any]:
         prediction = ''
@@ -145,10 +153,23 @@ class ResultConverters:
         input_parameters = ResultConverters._get_oss_input_parameters(result)
         return input_parameters.get("max_new_tokens", perf_metrics.get('output_token_count', -1))
 
+    def _get_addtional_columns_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        additional_columns_data = {}
+        if self.additional_columns:
+            for k in self.additional_columns.split(","):
+                if k in data.keys():
+                    additional_columns_data[k] = data[k]
+        return additional_columns_data
+
     @property
     def ground_truth_column_name(self) -> str:
         """Get the output ground truth column name."""
         return self._label_key if self._label_key else ResultConverters.DEFAULT_GROUND_TRUTH
+
+    @property
+    def additional_columns(self) -> str:
+        """Get the additional column names."""
+        return self._additional_columns if self._additional_columns else ResultConverters.DEFAULT_ADDITIONAL_COLUMNS
 
     @staticmethod
     def _get_oss_input_parameters(result: Any) -> Any:
