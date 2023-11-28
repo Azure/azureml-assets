@@ -74,9 +74,15 @@ class TestMDCPreprocessorHelper:
         ]
     )
     def test_get_hdfs_path_and_container_client(self, uri_folder_path: str, expected_hdfs_path: str):
-        hdfs_path, container_client = get_hdfs_path_and_container_client(uri_folder_path)
+        """Test get_hdfs_path_and_container_client()."""
+        spark = Mock(conf={
+            "spark.hadoop.fs.azure.sas.my_container.my_account.blob.core.windows.net": "my_token",
+            # TODO below is quick workaround to pass the UT, need to refine the UT later
+            "spark.hadoop.fs.azure.sas.my_container.my_account.dfs.core.windows.net": "my_token"
+        })
+        hdfs_path, container_client = get_hdfs_path_and_container_client(uri_folder_path, spark=spark)
         assert hdfs_path == expected_hdfs_path
-        assert container_client is None
+        assert container_client is not None
 
     @pytest.mark.parametrize(
         "azureml_path, datastore_type, protocol, expected_scheme",
@@ -103,6 +109,7 @@ class TestMDCPreprocessorHelper:
     )
     def test_get_hdfs_path_and_container_client_with_azureml_uri(self, azureml_path, datastore_type, protocol,
                                                                  expected_scheme):
+        """Test get_hdfs_path_and_container_client() with AzureML URI."""
         mock_datastore = Mock(datastore_type=datastore_type, protocol=protocol, endpoint="core.windows.net",
                               account_name="my_account", container_name="my_container")
         if datastore_type == "AzureBlob":
@@ -174,6 +181,7 @@ class TestMDCPreprocessorHelper:
         ]
     )
     def test_get_file_list(self, start_hour, end_hour, expected_hours, root_folder):
+        """Test get_file_list()."""
         non_empty_hours = [6, 7, 8, 13, 17, 19, 20, 21]
         non_empty_folders = [f"{root_folder.strip('/')}/2023/11/20/{h:02d}" for h in non_empty_hours]
 

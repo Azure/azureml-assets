@@ -6,20 +6,21 @@
 import argparse
 
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import posexplode, concat_ws
+from pyspark.sql.functions import posexplode, concat_ws, udf, from_json, when, col
+from pyspark.sql.types import StringType
 from dateutil import parser
 from datetime import datetime
-from mdc_preprocessor_helper import get_datastore_name_from_input_path
 from shared_utilities.momo_exceptions import DataNotFoundError
 from shared_utilities.io_utils import init_spark, save_spark_df_as_mltable
 from shared_utilities.event_utils import add_tags_to_root_run
 from shared_utilities.constants import (
-    MDC_CORRELATION_ID_COLUMN,
-    MDC_DATA_COLUMN,
-    MDC_DATAREF_COLUMN,
-    AML_MOMO_ERROR_TAG
+    MDC_CORRELATION_ID_COLUMN, MDC_DATA_COLUMN, MDC_DATAREF_COLUMN, AML_MOMO_ERROR_TAG
 )
-from mdc_preprocessor_helper import get_hdfs_path_and_container_client, get_file_list, set_data_access_config
+from mdc_preprocessor_helper import (
+    get_hdfs_path_and_container_client, get_file_list, set_data_access_config
+)
+# used in UDF from executor, need to referenced from root of code
+from model_data_collector_preprocessor.mdc_preprocessor_helper import read_json_content
 
 
 def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: datetime, input_data: str,
@@ -29,13 +30,14 @@ def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: date
         raise DataNotFoundError(f"No data found for the given time window: {start_datetime} to {end_datetime}")
 
     add_tags_func = add_tags_func or add_tags_to_root_run
-    hdfs_path, container_client = get_hdfs_path_and_container_client(input_data)
+
+    spark = init_spark()
+    hdfs_path, container_client = get_hdfs_path_and_container_client(input_data, spark=spark)
     file_list = get_file_list(start_datetime, end_datetime, input_data, hdfs_path, container_client)
     if not file_list:
         handle_data_not_found()
     # print("DEBUG file_list:", file_list)
 
-    spark = init_spark()
     set_data_access_config(container_client, spark)
     df = spark.read.json(file_list)
     if df.rdd.isEmpty():
@@ -53,17 +55,37 @@ def _get_data_columns(df: DataFrame) -> list:
     return columns
 
 
-def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool, datastore: str = None) -> DataFrame:
-    """
-    Extract data and correlation id from the MDC logs.
-
-    If data column exists, return the json contents in it,
-    otherwise, return the dataref content which is a url to the json file.
-    """
-
+def _load_dataref_into_data_column(df: DataFrame) -> DataFrame:
     columns = _get_data_columns(df)
+    if MDC_DATAREF_COLUMN not in columns:
+        return df  # no dataref column, return df directly
+    if MDC_DATA_COLUMN not in columns:
+        # TODO need full schema override
+        raise ValueError(f"{MDC_DATAREF_COLUMN} column without {MDC_DATA_COLUMN} is not supported yet.")
 
-    # TODO handle dataref
+    @udf(returnType=StringType())
+    def load_json_str(path):
+        return read_json_content(path)
+
+    # TODO separate df into 2 parts, one with dataref, one without, then only handle the one with dataref, and
+    #      union the 2 parts back together
+
+    # load json string from dataref to ref_json_str column
+    df = df.withColumn("ref_json_str", load_json_str(df[MDC_DATAREF_COLUMN]))
+    # parse json string to json object with from_json(), into ref_data column
+    df = df.withColumn("ref_data", from_json(df["ref_json_str"], df.schema[MDC_DATA_COLUMN].dataType))
+    # replace data with ref_data if data column is null
+    df = df.withColumn(MDC_DATA_COLUMN,
+                       when(col(MDC_DATA_COLUMN).isNull(), col("ref_data")).otherwise(col(MDC_DATA_COLUMN)))
+    # drop temp columns
+    df = df.drop("ref_json_str", "ref_data")
+
+    return df
+
+
+def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool) -> DataFrame:
+    """Extract data and correlation id from the MDC logs."""
+    columns = [MDC_DATA_COLUMN]
     if extract_correlation_id:
         columns.append(MDC_CORRELATION_ID_COLUMN)
         # explode the data column of array type to multiple rows with index
@@ -91,11 +113,13 @@ def _mdc_uri_folder_to_preprocessed_spark_df(
     df.select("data").show(truncate=False)
     df.printSchema()
 
-    datastore = get_datastore_name_from_input_path(input_data)
-    # print("Datastore:", datastore)
-    transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id, datastore)
-    # transformed_df.show()
-    # transformed_df.printSchema()
+    df = _load_dataref_into_data_column(df)
+    df.select("data").show(truncate=False)
+    df.printSchema()
+
+    transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id)
+    transformed_df.show()
+    transformed_df.printSchema()
 
     return transformed_df
 

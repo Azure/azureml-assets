@@ -35,7 +35,7 @@ def mdc_preprocessor_test_setup():
 
 
 @pytest.mark.unit
-class TestMDCPreprocessor:
+class TestMDCSparkPreprocessor:
     """Test class for MDC Preprocessor."""
 
     _data_schema = ArrayType(StructType([

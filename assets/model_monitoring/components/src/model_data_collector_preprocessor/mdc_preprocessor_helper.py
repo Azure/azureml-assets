@@ -15,7 +15,9 @@ from azureml.data.azure_storage_datastore import AzureBlobDatastore
 from azure.storage.filedatalake import DataLakeServiceClient, FileSystemClient
 from azure.storage.blob import ContainerClient
 from azure.identity import ClientSecretCredential
+from azure.core.credentials import AzureSasCredential
 from pyspark.sql import SparkSession
+from shared_utilities.io_utils import init_spark
 
 
 def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_name=None, ws_name=None) -> str:
@@ -40,9 +42,9 @@ def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_n
            f"/{datastore}/paths/{path}"
 
 
-def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = None) \
+def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = None, spark: SparkSession = None) \
         -> Tuple[str, Union[FileSystemClient, ContainerClient]]:
-    """Get HDFS path and service client from url_folder_path."""
+    """Get HDFS path and container/filesystem client from url_folder_path."""
     url = urlparse(uri_folder_path)
     # TODO sovereign endpoint
     if url.scheme in ["https", "http"]:
@@ -55,9 +57,10 @@ def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = Non
         scheme = "abfss" if matches.group("scheme") == "https" else "abfs"
         store_type = "dfs"
         account_name = matches.group("account_name")
-        container = matches.group("container")
+        container_name = matches.group("container")
         path = matches.group("path")
-        return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}", None
+        filesystem_client = _get_filesystem_client(account_name, container_name, matches.group("store_type"), spark)
+        return f"{scheme}://{container_name}@{account_name}.{store_type}.core.windows.net/{path}", filesystem_client
     elif url.scheme in ["wasbs", "wasb", "abfss", "abfs"]:
         pattern = r"(?P<scheme>wasbs|abfss|wasb|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+).(?P<store_type>blob|dfs).core.windows.net/(?P<path>.+)"  # noqa
         matches = re.match(pattern, uri_folder_path)
@@ -66,9 +69,10 @@ def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = Non
         scheme = "abfss" if matches.group("scheme") in ["wasbs", "abfss"] else "abfs"
         store_type = "dfs"
         account_name = matches.group("account_name")
-        container = matches.group("container")
+        container_name = matches.group("container")
         path = matches.group("path")
-        return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}", None
+        filesystem_client = _get_filesystem_client(account_name, container_name, matches.group("store_type"), spark)
+        return f"{scheme}://{container_name}@{account_name}.{store_type}.core.windows.net/{path}", filesystem_client
     elif url.scheme == "azureml":
         if ':' in url.path:  # azureml asset path
             # asset path should be translated to azureml or hdfs path in service, should not reach here
@@ -83,9 +87,9 @@ def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = Non
             scheme = "abfss" if datastore.protocol == "https" else "abfs"
             store_type = "dfs"
             account_name = datastore.account_name
-            container = datastore.container_name
+            container_name = datastore.container_name
             container_client = _get_container_client(datastore)
-            return f"{scheme}://{container}@{account_name}.{store_type}.core.windows.net/{path}", container_client
+            return f"{scheme}://{container_name}@{account_name}.{store_type}.core.windows.net/{path}", container_client
     else:
         return uri_folder_path, None  # file or other scheme, return original path directly
 
@@ -108,6 +112,7 @@ def get_datastore_name_from_input_path(input_path: str) -> str:
 def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str,
                   root_uri_folder: str = None,
                   container_client: Union[ContainerClient, FileSystemClient] = None) -> List[str]:
+    """Get the available file list for the given time window under the input_data folder."""
     if _is_local_path(input_data):
         # for lcoal testing
         return _get_local_file_list(start_datetime, end_datetime, input_data)
@@ -143,7 +148,6 @@ def set_data_access_config(container_client: Union[FileSystemClient, ContainerCl
     This is a special handling to access blob storage with abfs protocol, which enable Spark to access
     append blob in blob storage.
     """
-
     if isinstance(container_client, FileSystemClient) or container_client is None:
         # already a gen2 store, or local path, neither need to set config
         return
@@ -161,6 +165,29 @@ def set_data_access_config(container_client: Union[FileSystemClient, ContainerCl
     spark.conf.set(f"fs.azure.sas.token.provider.type.{account_name}.dfs.core.windows.net",
                    "com.microsoft.azure.synapse.tokenlibrary.ConfBasedSASProvider")
     spark.conf.set(f"spark.storage.synapse.{container_name}.{account_name}.dfs.core.windows.net.sas", sas_token)
+
+
+def read_json_content(path: str) -> str:
+    """Read json content from path."""
+    if not path:
+        return None
+    if _is_local_path(path):
+        with open(path) as f:
+            json_str = f.read()
+        return json_str
+    hdfs_path, container_client = get_hdfs_path_and_container_client(path)
+    idx = hdfs_path.find('.core.windows.net/') + len('.core.windows.net/')
+    file_path = hdfs_path[idx:]
+    if not container_client:
+        raise ValueError(f"Fail to get credential to access dataref file {hdfs_path}")
+    elif isinstance(container_client, FileSystemClient):
+        with container_client.get_file_client(file_path) as file_client:
+            json_bytes = file_client.download_file().readall()
+    else:  # must be ContainerClient
+        with container_client.get_blob_client(file_path) as blob_client:
+            json_bytes = blob_client.download_blob().readall()
+
+    return json_bytes.decode()
 
 
 def _get_local_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str) -> List[str]:
@@ -182,6 +209,8 @@ def _get_local_file_list(start_datetime: datetime, end_datetime: datetime, input
 
 
 def _is_local_path(path: str) -> bool:
+    if not path:
+        return False
     return os.path.isdir(path) or path.startswith("file://") or path.startswith("/") or path.startswith(".") or \
         re.match(r"^[a-zA-Z]:[/\\]", path)
 
@@ -215,3 +244,20 @@ def _get_container_client(datastore: Union[AzureDataLakeGen2Datastore, AzureBlob
             if datastore.client_id else None
         service_client = DataLakeServiceClient(account_url, credential=client_secret_credential)
         return service_client.get_file_system_client(datastore.container_name)
+
+
+def _get_filesystem_client(account_name: str, container_name: str, store_type: str,
+                           spark: SparkSession = None) -> FileSystemClient:
+    # TODO assuming we always access the same container which have the MDC logs, optimize it by cache the client
+    account_url = f"https://{account_name}.dfs.core.windows.net"  # return filesystem client even for blob storage
+    spark = spark or init_spark()
+    # TODO this is only for blob, if gen2, credential may not be sas
+    sas_token = spark.conf.get(
+        f"spark.hadoop.fs.azure.sas.{container_name}.{account_name}.{store_type}.core.windows.net", None)
+    if not sas_token:
+        return None
+    # TODO maybe we can return ContainerClient for blob storage, and FileSystemClient for gen2 storage
+    sas_credential = AzureSasCredential(sas_token)
+    service_client = DataLakeServiceClient(account_url, credential=sas_credential)
+    filesystem_client = service_client.get_file_system_client(container_name)
+    return filesystem_client
