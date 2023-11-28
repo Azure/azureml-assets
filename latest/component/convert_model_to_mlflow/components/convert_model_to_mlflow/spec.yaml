@@ -28,6 +28,7 @@ command: >
   $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]]
   $[[--hf-use-experimental-features ${{inputs.hf_use_experimental_features}}]]
   $[[--extra-pip-requirements "${{inputs.extra_pip_requirements}}"]]
+  $[[--inference-base-image "${{inputs.inference_base_image}}"]]
   --model-framework ${{inputs.model_framework}}
   --model-path ${{inputs.model_path}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
@@ -140,6 +141,13 @@ inputs:
       Extra pip dependencies that MLflow model should capture as part of conversion. This would be used to create environment while loading the model for inference.
       Pip dependencies expressed as below. Do not use quotes for passing.
       eg: pkg1==1.0, pkg2, pkg3==1.0
+    optional: true
+
+  inference_base_image:
+    type: string
+    description: |
+      The docker image to use in model inference.
+      This image id is assigned to `azureml.base_image` key in metadata section of mlmodel file.
     optional: true
 
   model_download_metadata:
