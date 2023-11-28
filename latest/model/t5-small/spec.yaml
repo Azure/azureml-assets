@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: t5-small
 path: ./
 properties:
-  SHA: 3479082dc36f8a4730936ef1c9b88cd8b0835c53
+  SHA: df1b051c49625cf57a3d0d8d3863ed4d13564fe4
   datasets: c4
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
@@ -52,8 +52,8 @@ tags:
     apply_deepspeed: 'true'
     apply_lora: 'true'
     apply_ort: 'true'
-  task: text-translation
-version: 9
+  task: translation
+version: 10
 description: |
   T5 Small is a text-to-text transformer model with 60 million parameters. It is developed by a group of researchers and is based on the Text-To-Text Transfer Transformer (T5) framework, which allows for a unified text-to-text format for input and output of all NLP tasks. T5-Small can be trained for multiple NLP tasks such as machine translation, document summarization, question answering, classification, and even regression tasks. It is pre-trained on the Colossal Clean Crawled Corpus (C4) and a multi-task mixture of unsupervised and supervised tasks in various languages, such as English, French, Romanian and German. You can use the code provided to get started with the model and refer to the resources provided for more information on the model.
 
@@ -87,7 +87,7 @@ description: |
   #### Sample input
   ```json
   {
-      "inputs": {
+      "input_data": {
           "input_string": ["My name is John and I live in Seattle", "Berlin is the capital of Germany."]
       },
       "parameters": {
