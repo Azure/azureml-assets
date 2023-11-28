@@ -54,7 +54,7 @@ inputs:
     type: integer
     optional: False
     default: 200
-    description: Overrides initial_worker_count if necessary
+    description: Overrides initial_worker_count if necessary.
   debug_mode:
     type: boolean
     optional: False
