@@ -143,10 +143,9 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         self._raise_if_not_success(resp)
         logger.info("Calling(PUT) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
-        while(self.deployment_state() == ResourceState.NOT_READY):
+        while self.deployment_state() == ResourceState.NOT_READY:
             logger.info("Deployment is not ready yet, waiting for 30 seconds...")
             time.sleep(30)
-
 
     def get_endpoint_authorization_header(self) -> dict:
         """Get the authorization header."""
@@ -225,7 +224,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def _aoai_deployment_url(self) -> str:
         """Aoai deployment url."""
         return f'{self._aoai_deployment_base_url}?api-version={self._api_version}'
-    
+
     @property
     def _aoai_subscription_usage_url(self) -> str:
         url_list = [
@@ -246,7 +245,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def _scoring_url_base(self) -> str:
         """Get the scoring url base."""
         try:
-            # The base can be https://{self.endpoint_name}.openai.azure.com or 
+            # The base can be https://{self.endpoint_name}.openai.azure.com or
             # https://region.api.cognitive.microsoft.com
             resp = self._call_endpoint(get_requests_session().get, self._aoai_account_url)
             self._raise_if_not_success(resp)
@@ -265,7 +264,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         if self._model.model_name is None or self._model.model_version is None:
             logger.info("No model info input, cannot compare.")
             return None
-        model= content.get('properties', {}).get('model', {})
+        model = content.get('properties', {}).get('model', {})
         model_name = model.get('name', '')
         model_version = model.get('version', '')
         model_source = model.get('source', '')

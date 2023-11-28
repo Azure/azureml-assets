@@ -182,7 +182,7 @@ class OnlineEndpoint:
         except Exception as err:
             logger.warning(f"Failed to get content from response {resp}: {err}")
             return {}
-        
+
     @property
     def _arm_base_subscription(self) -> str:
         """Get the arm base for subscriptions."""

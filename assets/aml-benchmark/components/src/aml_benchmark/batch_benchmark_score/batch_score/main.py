@@ -215,7 +215,6 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--input_metadata", default=None, type=str)
     parser.add_argument("--deployment_name", default=None, type=str)
     parser.add_argument("--connections_name", default=None, type=str)
-    parser.add_argument("--deployment_metadata_dir", default=None, type=str)
 
 
 def print_arguments(args: Namespace):
@@ -260,7 +259,6 @@ def print_arguments(args: Namespace):
     lu.get_logger().debug("mdoel_type: %s" % args.model_type)
     lu.get_logger().debug("deployment_name: %s" % args.deployment_name)
     lu.get_logger().debug("connections_name: %s" % args.connections_name)
-    lu.get_logger().debug("deployment_metadata_dir: %s" % args.deployment_metadata_dir)
 
 
 def save_mini_batch_results(mini_batch_results: list, mini_batch_context):

@@ -5,7 +5,7 @@
 
 """Entry script for Batch resource manager."""
 
-from typing import List, Optional, Tuple, Generator
+from typing import List, Generator
 import argparse
 import json
 import subprocess

@@ -47,7 +47,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             sku: Optional[str] = None,
             api_version: str = '2023-04-01-Preview',
             connections_name: str = None,
-            additional_deployment_env_vars = {},
+            additional_deployment_env_vars: Optional[dict] = None,
             deployment_env: str = None
     ):
         """Init method."""
@@ -63,7 +63,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             connections_name
         )
         self._api_version = api_version
-        self._additional_deployment_env_vars = additional_deployment_env_vars
+        self._additional_deployment_env_vars = additional_deployment_env_vars or {}
         self._deployment_env = deployment_env
 
     def get_endpoint_name_from_url(self) -> str:
