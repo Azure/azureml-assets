@@ -100,7 +100,7 @@ inputs:
     description: The maximum time (in seconds) spent retrying a payload. If unspecified, payloads are retried unlimited times.
   mini_batch_size:
     type: string
-    optional: false
+    optional: true
     default: 100KB
     description: The mini batch size for parallel run.
   initial_worker_count:
