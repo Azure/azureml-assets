@@ -326,9 +326,9 @@ def _deploy_fake_model(ml_client, endpoint_name, deployment_name):
 
 
 def deploy_fake_test_endpoint_maybe(
-        ml_client, endpoint_name="aml-benchmark-test-bzvkqd", deployment_name="test-model",
+        ml_client, endpoint_name="benchmark-bzvkqd", deployment_name="test-model",
         use_workspace_name=True,
-        connections_name='aml-benchmark-connection'
+        connections_name='benchmark-connection'
 ):
     """Deploy a fake test endpoint."""
     should_deploy = False
@@ -337,6 +337,7 @@ def deploy_fake_test_endpoint_maybe(
     if use_workspace_name:
         # Endpoint names can be at max 32 characters long.
         endpoint_name = f"{endpoint_name}-{ml_client.workspace_name.split('-')[-1]}"[:32]
+        print("endpoint name is {}".format(endpoint_name))
     try:
         while should_wait:
             endpoint = ml_client.online_endpoints.get(name=endpoint_name)
