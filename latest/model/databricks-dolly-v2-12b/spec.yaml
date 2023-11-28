@@ -37,7 +37,7 @@ tags:
   author: Databricks, Inc.
   license: mit
   task: text-generation
-version: 12
+version: 13
 description: |
   # **Model Details**
 
