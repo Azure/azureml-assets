@@ -16,7 +16,6 @@ import logging
 import os
 import re
 import time
-from abc import ABC, abstractmethod
 from collections import OrderedDict
 from enum import Enum
 from typing import Dict, Generator, List, Optional, Tuple, Union
@@ -36,7 +35,6 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from shared_utilities import io_utils
 
-_logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.INFO)
 
 DEFAULT_INDENT = 2
@@ -128,11 +126,11 @@ MAX_RATING = 5
 GROUNDING_ANNOTATION_TEMPLATE = "\n\n".join(
     [
         "System:",
-        f"Given the {CONTEXT} and {PROMPT}, score the {COMPLETION} between {MIN_RATING} to {MAX_RATING} {RATING}, \
-            where {MIN_RATING} star means \"inconsistency\" and {MAX_RATING} {RATING} means \"perfect consistency\". \
-                Note that consistency measures whether the facts in the answer are consistent with the facts in the \
-                    context. Consider whether the answer does reproduce facts accurately and does not make up \
-                        untrue information. Answer only as an integer only, between 1 and 5.",
+        f"Given the {CONTEXT} and {PROMPT}, score the {COMPLETION} between {MIN_RATING} to {MAX_RATING} {RATING}, "
+            f"where {MIN_RATING} star means \"inconsistency\" and {MAX_RATING} {RATING} means \"perfect consistency\". "
+                "Note that consistency measures whether the facts in the answer are consistent with the facts in the "
+                    "context. Consider whether the answer does reproduce facts accurately and does not make up "
+                       "untrue information. Answer only as an integer only, between 1 and 5.",
         "## Example Task #0",
         json.dumps({
             CONTEXT: "The Oscars are a popular award ceremony.",
@@ -146,21 +144,21 @@ GROUNDING_ANNOTATION_TEMPLATE = "\n\n".join(
         }),
         "User:",
         "{input_samples}",
-        "Reminder: The return values for each task should be dictionaries with the key 'rating'. The value of \
-            'rating' should be an integer between 1 and 5."
+        "Reminder: The return values for each task should be dictionaries with the key 'rating'. The value of "
+            "\'rating\' should be an integer between 1 and 5."
     ]
 )
 
 RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
     [
         "System:",
-        f"You are an AI assistant. You will be given the definition of an evaluation metric for assessing the \
-            quality of an {COMPLETION} in a question-answering task. Your job is to compute an accurate evaluation \
-                score using the provided evaluation metric.",
-        f"Relevance measures how well the {COMPLETION} addresses the main aspects of the {PROMPT}, based on the \
-            {CONTEXT}. Consider whether all and only the important aspects are contained in the {COMPLETION} when \
-                evaluating relevance. Given the {CONTEXT} and {PROMPT}, score the relevance of the {COMPLETION} \
-                    between {MIN_RATING} to {MAX_RATING} using the following {RATING} scale:",
+        f"You are an AI assistant. You will be given the definition of an evaluation metric for assessing the "
+        f"quality of an {COMPLETION} in a question-answering task. Your job is to compute an accurate evaluation "
+        "score using the provided evaluation metric.",
+        f"Relevance measures how well the {COMPLETION} addresses the main aspects of the {PROMPT}, based on the "
+            f"{CONTEXT}. Consider whether all and only the important aspects are contained in the {COMPLETION} when "
+            f"evaluating relevance. Given the {CONTEXT} and {PROMPT}, score the relevance of the {COMPLETION} "
+            f"between {MIN_RATING} to {MAX_RATING} using the following {RATING} scale:",
         f"{RATING} 1: the answer completely lacks relevance",
         f"{RATING} 2: the answer mostly lacks relevance",
         f"{RATING} 3: the answer is partially relevant",
@@ -169,11 +167,11 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
         f"The score should be integer only, between {MIN_RATING} and {MAX_RATING}.",
         "## Example Task #0",
         json.dumps({
-            CONTEXT: "Marie Curie was a Polish-born physicist and chemist who pioneered research on radioactivity \
-                and was the first woman to win a Nobel Prize.",
+            CONTEXT: "Marie Curie was a Polish-born physicist and chemist who pioneered research on radioactivity "
+            "and was the first woman to win a Nobel Prize.",
             PROMPT: "What field did Marie Curie excel in?",
-            COMPLETION: "Marie Curie was a renowned painter who focused mainly on impressionist styles and \
-                techniques.",
+            COMPLETION: "Marie Curie was a renowned painter who focused mainly on impressionist styles and "
+                "techniques.",
         }),
         "A good example response would be:",
         "## Example Task #0:",
@@ -182,11 +180,11 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
         }),
         "## Example Task #1",
         json.dumps({
-            CONTEXT: "The Beatles were an English rock band formed in Liverpool in 1960, and they are widely \
-                regarded as the most influential music band in history.",
+            CONTEXT: "The Beatles were an English rock band formed in Liverpool in 1960, and they are widely "
+                "regarded as the most influential music band in history.",
             PROMPT: "Where were The Beatles formed?",
-            COMPLETION: "The band The Beatles began their journey in London, England, and they changed the \
-                history of music.",
+            COMPLETION: "The band The Beatles began their journey in London, England, and they changed the "
+                "history of music.",
         }),
         "A good example response would be:",
         "## Example Task #1:",
@@ -195,9 +193,9 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
         }),
         "## Example Task #2",
         json.dumps({
-            CONTEXT: "The recent Mars rover, Perseverance, was launched in 2020 with the main goal of searching \
-                for signs of ancient life on Mars. The rover also carries an experiment called MOXIE, which aims \
-                    to generate oxygen from the Martian atmosphere.",
+            CONTEXT: "The recent Mars rover, Perseverance, was launched in 2020 with the main goal of searching "
+                "for signs of ancient life on Mars. The rover also carries an experiment called MOXIE, which aims "
+                    "to generate oxygen from the Martian atmosphere.",
             PROMPT: "What are the main goals of Perseverance Mars rover mission?",
             COMPLETION: "The Perseverance Mars rover mission focuses on searching for signs of ancient life on Mars.",
         }),
@@ -208,10 +206,10 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
         }),
         "## Example Task #3",
         json.dumps({
-            CONTEXT: "The Mediterranean diet is a commonly recommended dietary plan that emphasizes fruits, \
-                vegetables, whole grains, legumes, lean proteins, and healthy fats. Studies have shown that it \
-                    offers numerous health benefits, including a reduced risk of heart disease and improved \
-                        cognitive health.",
+            CONTEXT: "The Mediterranean diet is a commonly recommended dietary plan that emphasizes fruits, "
+                "vegetables, whole grains, legumes, lean proteins, and healthy fats. Studies have shown that it "
+                    "offers numerous health benefits, including a reduced risk of heart disease and improved "
+                        "cognitive health.",
             PROMPT: "What are the main components of the Mediterranean diet?",
             COMPLETION: "The Mediterranean diet primarily consists of fruits, vegetables, whole grains, and legumes.",
         }),
@@ -222,13 +220,13 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
         }),
         "## Example Task #4",
         json.dumps({
-            CONTEXT: "The Queen's Royal Castle is a well-known tourist attraction in the United Kingdom. It spans \
-                over 500 acres and contains extensive gardens and parks. The castle was built in the 15th century \
-                    and has been home to generations of royalty.",
+            CONTEXT: "The Queen's Royal Castle is a well-known tourist attraction in the United Kingdom. It spans "
+                "over 500 acres and contains extensive gardens and parks. The castle was built in the 15th century "
+                    "and has been home to generations of royalty.",
             PROMPT: "What are the main attractions of the Queen's Royal Castle?",
-            COMPLETION: "The main attractions of the Queen's Royal Castle are its expansive 500-acre grounds, \
-                extensive gardens, parks, and the historical castle itself, which dates back to the 15th century \
-                    and has housed generations of royalty.",
+            COMPLETION: "The main attractions of the Queen's Royal Castle are its expansive 500-acre grounds, "
+                "extensive gardens, parks, and the historical castle itself, which dates back to the 15th century "
+                    "and has housed generations of royalty.",
         }),
         "A good example response would be:",
         "## Example Task #4:",
@@ -243,13 +241,13 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
 FLUENCY_ANNOTATION_TEMPLATE = "\n\n".join(
     [
         "System:",
-        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality \
-            of an answer in a question-answering task. Your job is to compute an accurate evaluation score using the \
-                provided evaluation metric.",
-        f"Fluency measures the quality of individual sentences in the answer, and whether they are well-written and \
-            grammatically correct. Consider the quality of individual sentences when evaluating fluency. Given the \
-                question and answer, score the fluency of the answer between {MIN_RATING} to {MAX_RATING} using the \
-                    following {RATING} scale:",
+        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality "
+            "of an answer in a question-answering task. Your job is to compute an accurate evaluation score using the "
+                "provided evaluation metric.",
+        f"Fluency measures the quality of individual sentences in the answer, and whether they are well-written and "
+            "grammatically correct. Consider the quality of individual sentences when evaluating fluency. Given the "
+                f"question and answer, score the fluency of the answer between {MIN_RATING} to {MAX_RATING} using the "
+                    f"following {RATING} scale:",
         f"{RATING} 1: the answer completely lacks fluency",
         f"{RATING} 2: the answer mostly lacks fluency",
         f"{RATING} 3: the answer is partially fluent",
@@ -279,8 +277,8 @@ FLUENCY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #2",
         json.dumps({
             PROMPT: "When was the last time you went on a family vacation?",
-            COMPLETION: "Last family vacation, it took place in last summer. We traveled to a beach destination, \
-                very fun.",
+            COMPLETION: "Last family vacation, it took place in last summer. We traveled to a beach destination, "
+                "very fun.",
         }),
         "A good example response would be:",
         "## Example Task #2:",
@@ -290,8 +288,8 @@ FLUENCY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #3",
         json.dumps({
             PROMPT: "What is your favorite thing about your job?",
-            COMPLETION: "My favorite aspect of my job is the chance to interact with diverse people. I am constantly \
-                learning from their experiences and stories.",
+            COMPLETION: "My favorite aspect of my job is the chance to interact with diverse people. I am constantly "
+                "learning from their experiences and stories.",
         }),
         "A good example response would be:",
         "## Example Task #3:",
@@ -301,9 +299,9 @@ FLUENCY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #4",
         json.dumps({
             PROMPT: "Can you describe your morning routine?",
-            COMPLETION: "Every morning, I wake up at 6 am, drink a glass of water, and do some light stretching. \
-                After that, I take a shower and get dressed for work. Then, I have a healthy breakfast, usually \
-                    consisting of oatmeal and fruits, before leaving the house around 7:30 am.",
+            COMPLETION: "Every morning, I wake up at 6 am, drink a glass of water, and do some light stretching. "
+                "After that, I take a shower and get dressed for work. Then, I have a healthy breakfast, usually "
+                    "consisting of oatmeal and fruits, before leaving the house around 7:30 am.",
         }),
         "A good example response would be:",
         "## Example Task #4:",
@@ -317,13 +315,13 @@ FLUENCY_ANNOTATION_TEMPLATE = "\n\n".join(
 COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
     [
         "System:",
-        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality \
-            of an answer in a question-answering task. Your job is to compute an accurate evaluation score using \
-                the provided evaluation metric.",
-        f"Coherence of an answer is measured by how well all the sentences fit together and sound naturally as a \
-            whole. Consider the overall quality of the answer when evaluating coherence. Given the question and \
-                answer, score the fluency of the answer between {MIN_RATING} to {MAX_RATING} using the following \
-                    {RATING} scale:",
+        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality "
+            "of an answer in a question-answering task. Your job is to compute an accurate evaluation score using "
+                "the provided evaluation metric.",
+        f"Coherence of an answer is measured by how well all the sentences fit together and sound naturally as a "
+            "whole. Consider the overall quality of the answer when evaluating coherence. Given the question and "
+                f"answer, score the fluency of the answer between {MIN_RATING} to {MAX_RATING} using the following "
+                    f"{RATING} scale:",
         f"{RATING} 1: the answer completely lacks coherence",
         f"{RATING} 2: the answer mostly lacks coherence",
         f"{RATING} 3: the answer is partially coherent",
@@ -343,8 +341,8 @@ COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #1",
         json.dumps({
             PROMPT: "Can you describe your favorite movie without giving away any spoilers?",
-            COMPLETION: "It is a science fiction movie. There are dinosaurs. The actors eat cake. People must \
-                stop the villain."
+            COMPLETION: "It is a science fiction movie. There are dinosaurs. The actors eat cake. People must "
+                "stop the villain."
         }),
         "A good example response would be:",
         "## Example Task #1:",
@@ -354,8 +352,8 @@ COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #2",
         json.dumps({
             PROMPT: "What are some benefits of regular exercise?",
-            COMPLETION: "Regular exercise improves your mood. A good workout also helps you sleep better. \
-                Trees are green",
+            COMPLETION: "Regular exercise improves your mood. A good workout also helps you sleep better. "
+                "Trees are green",
         }),
         "A good example response would be:",
         "## Example Task #2:",
@@ -365,8 +363,8 @@ COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #3",
         json.dumps({
             PROMPT: "How do you cope with stress in your daily life?",
-            COMPLETION: "I usually go for a walk to clear my head. Listening to music helps me relax as well. \
-                Stress is a part of life, but we can manage it through some activities.",
+            COMPLETION: "I usually go for a walk to clear my head. Listening to music helps me relax as well. "
+                "Stress is a part of life, but we can manage it through some activities.",
         }),
         "A good example response would be:",
         "## Example Task #3:",
@@ -376,10 +374,10 @@ COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #4",
         json.dumps({
             PROMPT: "What can you tell me about climate change and its effects on the environment?",
-            COMPLETION: "Climate change has far-reaching effects on the environment. Rising temperatures result \
-                in the melting of polar ice caps, contributing to sea-level rise. Additionally, more frequent and \
-                    severe weather events, such as hurricanes and heatwaves, can cause disruption to ecosystems \
-                        and human societies alike.",
+            COMPLETION: "Climate change has far-reaching effects on the environment. Rising temperatures result "
+                "in the melting of polar ice caps, contributing to sea-level rise. Additionally, more frequent and "
+                    "severe weather events, such as hurricanes and heatwaves, can cause disruption to ecosystems "
+                        "and human societies alike.",
         }),
         "A good example response would be:",
         "## Example Task #4:",
@@ -392,15 +390,15 @@ COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
 SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
     [
         "System:",
-        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the \
-            quality of an answer in a question-answering task. Your job is to compute an accurate evaluation \
-                score using the provided evaluation metric.",
-        f"Equivalence, as a metric, measures the similarity between the predicted answer and the correct answer. \
-            If the information and content in the predicted answer is similar or equivalent to the correct answer, \
-                then the value of the Equivalence metric should be high, else it should be low. Given the question, \
-                    correct answer, and predicted answer, determine the value of Equivalence metric using the \
-                        following rating scale between {MIN_RATING} to {MAX_RATING} using the following {RATING} \
-                            scale:",
+        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the "
+            "quality of an answer in a question-answering task. Your job is to compute an accurate evaluation "
+                "score using the provided evaluation metric.",
+        f"Equivalence, as a metric, measures the similarity between the predicted answer and the correct answer. "
+            "If the information and content in the predicted answer is similar or equivalent to the correct answer, "
+                "then the value of the Equivalence metric should be high, else it should be low. Given the question, "
+                    "correct answer, and predicted answer, determine the value of Equivalence metric using the "
+                        f"following rating scale between {MIN_RATING} to {MAX_RATING} using the following {RATING} "
+                            "scale:",
         f"{RATING} 1: the predicted answer is not at all similar to the correct answer",
         f"{RATING} 2: the predicted answer is mostly not similar to the correct answer",
         f"{RATING} 3: the predicted answer is somewhat similar to the correct answer",
@@ -410,10 +408,10 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #0",
         json.dumps({
             PROMPT: "What is the role of ribosomes?",
-            COMPLETION: "Ribosomes participate in carbohydrate breakdown by removing nutrients from complex sugar \
-                molecules.",
-            GROUND_TRUTH: "Ribosomes are cellular structures responsible for protein synthesis. They interpret the \
-                genetic information carried by messenger RNA (mRNA) and use it to assemble amino acids into proteins."
+            COMPLETION: "Ribosomes participate in carbohydrate breakdown by removing nutrients from complex sugar "
+                "molecules.",
+            GROUND_TRUTH: "Ribosomes are cellular structures responsible for protein synthesis. They interpret the "
+                f"genetic information carried by messenger RNA (mRNA) and use it to assemble amino acids into proteins."
         }),
         "A good example response would be:",
         "## Example Task #0:",
@@ -423,12 +421,12 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #1",
         json.dumps({
             PROMPT: "Why did the Titanic sink?",
-            COMPLETION: "The sinking of the Titanic was a result of a large iceberg collision. This caused the ship \
-                to take on water and eventually sink, leading to the death of many passengers due to a shortage of \
-                    lifeboats and insufficient rescue attempts.",
-            GROUND_TRUTH: "The Titanic sank after it struck an iceberg during its maiden voyage in 1912. The impact \
-                caused the ship\'s hull to breach, allowing water to flood into the vessel. The ship\'s design, \
-                    lifeboat shortage, and lack of timely rescue efforts contributed to the tragic loss of life."
+            COMPLETION: "The sinking of the Titanic was a result of a large iceberg collision. This caused the ship "
+                "to take on water and eventually sink, leading to the death of many passengers due to a shortage of "
+                    "lifeboats and insufficient rescue attempts.",
+            GROUND_TRUTH: "The Titanic sank after it struck an iceberg during its maiden voyage in 1912. The impact "
+                "caused the ship\'s hull to breach, allowing water to flood into the vessel. The ship\'s design, "
+                    "lifeboat shortage, and lack of timely rescue efforts contributed to the tragic loss of life."
         }),
         "A good example response would be:",
         "## Example Task #1:",
@@ -438,12 +436,12 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #2",
         json.dumps({
             PROMPT: "What causes seasons on Earth?",
-            COMPLETION: "Seasons occur because of the Earth\'s rotation and its elliptical orbit around the Sun. \
-                The tilt of the Earth\'s axis causes regions to be subjected to different sunlight intensities, \
-                    which leads to temperature fluctuations and alternating weather conditions.",
-            GROUND_TRUTH: "Seasons on Earth are caused by the tilt of the Earth\'s axis and its revolution around \
-                the Sun. As the Earth orbits the Sun, the tilt causes different parts of the planet to receive \
-                    varying amounts of sunlight, resulting in changes in temperature and weather patterns."
+            COMPLETION: "Seasons occur because of the Earth\'s rotation and its elliptical orbit around the Sun. "
+                "The tilt of the Earth\'s axis causes regions to be subjected to different sunlight intensities, "
+                    "which leads to temperature fluctuations and alternating weather conditions.",
+            GROUND_TRUTH: "Seasons on Earth are caused by the tilt of the Earth\'s axis and its revolution around "
+                "the Sun. As the Earth orbits the Sun, the tilt causes different parts of the planet to receive "
+                    "varying amounts of sunlight, resulting in changes in temperature and weather patterns."
         }),
         "A good example response would be:",
         "## Example Task #2:",
@@ -453,12 +451,12 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #3",
         json.dumps({
             PROMPT: "How does photosynthesis work?",
-            COMPLETION: "In photosynthesis, sunlight is transformed into nutrients by plants and certain \
-                microorganisms. Light is captured by chlorophyll molecules, followed by the conversion of \
-                    carbon dioxide and water into sugar and oxygen through multiple reactions.",
-            GROUND_TRUTH: "Photosynthesis is a process by which green plants and some other organisms convert \
-                light energy into chemical energy. This occurs as light is absorbed by chlorophyll molecules, and \
-                    then carbon dioxide and water are converted into glucose and oxygen through a series of reactions."
+            COMPLETION: "In photosynthesis, sunlight is transformed into nutrients by plants and certain "
+                "microorganisms. Light is captured by chlorophyll molecules, followed by the conversion of "
+                    "carbon dioxide and water into sugar and oxygen through multiple reactions.",
+            GROUND_TRUTH: "Photosynthesis is a process by which green plants and some other organisms convert "
+                "light energy into chemical energy. This occurs as light is absorbed by chlorophyll molecules, and "
+                    "then carbon dioxide and water are converted into glucose and oxygen through a series of reactions."
         }),
         "A good example response would be:",
         "## Example Task #3:",
@@ -468,12 +466,12 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #4",
         json.dumps({
             PROMPT: "What are the health benefits of regular exercise?",
-            COMPLETION: "Routine physical activity can contribute to maintaining ideal body weight, enhancing \
-                muscle and bone strength, and preventing chronic illnesses. In addition, it supports mental \
-                    health by alleviating stress and augmenting general mood.",
-            GROUND_TRUTH: "Regular exercise can help maintain a healthy weight, increase muscle and bone strength, \
-                and reduce the risk of chronic diseases. It also promotes mental well-being by reducing stress and \
-                    improving overall mood."
+            COMPLETION: "Routine physical activity can contribute to maintaining ideal body weight, enhancing "
+                "muscle and bone strength, and preventing chronic illnesses. In addition, it supports mental "
+                    "health by alleviating stress and augmenting general mood.",
+            GROUND_TRUTH: "Regular exercise can help maintain a healthy weight, increase muscle and bone strength, "
+                "and reduce the risk of chronic diseases. It also promotes mental well-being by reducing stress and "
+                    "improving overall mood."
         }),
         "A good example response would be:",
         "## Example Task #4:",
@@ -559,10 +557,6 @@ class _JobStatus(Enum):
     SUCCESS = "success"
     ENDPOINT_ERROR = "endpoint error"
     PARSING_FAILED = "parsing failed"
-
-
-class _TokenScope(Enum):
-    AZURE_OPENAI_API = "https://cognitiveservices.azure.com"
 
 
 # --- The following is copied from the yet to be released azureml-featurestore.
@@ -726,36 +720,7 @@ def _send_request(url, data=None, headers=None, method=None):
 # END of copied code from azureml-featurestore
 
 
-class _APITokenManager(ABC):
-    def __init__(
-        self,
-        *,
-        auth_header,
-        **kwargs,
-    ):
-        self.credential = self.get_aad_credential()
-        self.token = None
-        self.auth_header = auth_header
-        self.last_refresh_time = None
-
-    def get_aad_credential(self):
-        return AzureMLHoboSparkOnBehalfOfCredential(
-            AZUREML_SYNAPSE_CLUSTER_IDENTIFIER=os.environ[
-                "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER"
-            ],
-            AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT=os.environ[
-                "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT"
-            ],
-            AZUREML_RUN_ID=os.environ["AZUREML_RUN_ID"],
-            AZUREML_RUN_TOKEN_EXPIRY=os.environ["AZUREML_RUN_TOKEN_EXPIRY"],
-        )
-
-    @abstractmethod
-    def get_token(self):
-        pass
-
-
-class _WorkspaceConnectionTokenManager(_APITokenManager):
+class _WorkspaceConnectionTokenManager():
     def __init__(
         self,
         *,
@@ -763,7 +728,8 @@ class _WorkspaceConnectionTokenManager(_APITokenManager):
         auth_header,
         **kwargs,
     ):
-        super().__init__(auth_header=auth_header)
+        self.credential = self.get_aad_credential()
+        self.auth_header = auth_header
 
         try:
             from azureml.dataprep.api._aml_auth._azureml_token_authentication import AzureMLTokenAuthentication
@@ -809,6 +775,18 @@ class _WorkspaceConnectionTokenManager(_APITokenManager):
         except Exception as e:
             raise Exception(f"Error encountered while attempting to authentication token: {e}")
 
+    def get_aad_credential(self):
+        return AzureMLHoboSparkOnBehalfOfCredential(
+            AZUREML_SYNAPSE_CLUSTER_IDENTIFIER=os.environ[
+                "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER"
+            ],
+            AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT=os.environ[
+                "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT"
+            ],
+            AZUREML_RUN_ID=os.environ["AZUREML_RUN_ID"],
+            AZUREML_RUN_TOKEN_EXPIRY=os.environ["AZUREML_RUN_TOKEN_EXPIRY"],
+        )
+    
     def get_api_version(self):
         return self.api_version
 
@@ -1014,7 +992,7 @@ class _HTTPClientWithRetry:
 def _request_api(
     session,
     endpoint_url: str,
-    token_manager: _APITokenManager,
+    token_manager: _WorkspaceConnectionTokenManager,
     **request_params,
 ):
     """Make REST call to API and return parsed result."""
@@ -1109,7 +1087,7 @@ def _query_inference_for_line(
     jobs: List[_Job],
     session: requests.Session,
     endpoint_url: str,
-    token_manager: _APITokenManager,
+    token_manager: _WorkspaceConnectionTokenManager,
     request_error_rate_threshold: float,
 ):
     # if we count too many errors, we stop and raise an exception
@@ -1166,7 +1144,7 @@ def _query_inference_for_line(
 
 def _request_prompt_batch(
     jobs: List[_Job],
-    token_manager: _APITokenManager,
+    token_manager: _WorkspaceConnectionTokenManager,
     model: str,
     azure_endpoint_domain_name: str,
     azure_openai_api_version: str,
@@ -1272,39 +1250,36 @@ def _parse_responses(
                 )
 
             sample_examples = sample_examples[:n_inputs]
+        # splitting all samples into rating per sample failed
         except Exception:  # noqa: B902, F841
             output_examples.append(None)
             print(f"Failed splitting output into examples: {sample}")
-            num_failed += 1
-            continue
+            job.status = _JobStatus.PARSING_FAILED
 
-        # try to decode each example and check for the label keys
-        try:
-            sample_examples_parsed = []
-            for example in sample_examples:
+        # try to decode each example (an example should be in the format: { rating: 3 }) and check for the label keys (rating, in this instance)
+        sample_examples_parsed = []
+        for example in sample_examples:
+            try: 
                 sample_examples_parsed.append(
                     _decode_example(example, LABEL_KEYS)
                 )
-            output_examples.append(sample_examples_parsed)
-        except Exception as _:  # noqa: B902, F841
-            output_examples.append(None)
-            print(f"Failed decoding examples: {sample_examples}")
-            num_failed += 1
+                output_examples.append(sample_examples_parsed)
+            # extracting rating in sample failed, mark as rating of -1 to indicate parsing error
+            except Exception as _:  # noqa: B902, F841
+                sample_examples_parsed.append( { "rating": -1 })
+                output_examples.append(sample_examples_parsed)
+                print(f"Failed decoding examples: {example}")
+                num_failed += 1
 
     # if the number of expected samples does not match the output samples
     # there was an issue getting the response and we cannot accurately map
     # the indices with the input data
-    index_mapping = job.prompt_data.input_idx
-    if output_examples[0] is None:
-        print("Not all responses could be parsed correctly. Ignoring indices for violations")
-        index_mapping = [-1] * len(index_mapping)
-
-    if num_failed == num_samples:
-        job.status = _JobStatus.PARSING_FAILED
+    if num_failed > 0 and num_failed == num_samples:
+            job.status = _JobStatus.PARSING_FAILED
     else:
         job.status = _JobStatus.SUCCESS
-        job.response_data["output_examples"] = output_examples
-        job.response_data["index_mapping"] = index_mapping
+    job.response_data["output_examples"] = output_examples
+    job.response_data["index_mapping"] = job.prompt_data.input_idx
 
 
 class _JobManager:
@@ -1320,7 +1295,7 @@ class _JobManager:
     def submit_inputs(
         self,
         input_data_df: DataFrame,
-        token_manager: _APITokenManager,
+        token_manager: _WorkspaceConnectionTokenManager,
         request_args: dict,
         max_inputs: int,
         num_samples: int,
@@ -1349,7 +1324,6 @@ class _JobManager:
             [f"    Prompt: {job.prompt_data.prompt}" for job in jobs]
         )
         print(f"Generated prompts: \n{prompts_to_print}\n")
-
         _request_prompt_batch(
             jobs=jobs, token_manager=token_manager, **endpoint_args
         )
@@ -1363,7 +1337,6 @@ class _JobManager:
         for job in jobs:
             _parse_responses(job, num_samples)
 
-        # TODO handle errors and attempt retries
         job_results = [
             result
             for job in jobs
@@ -1743,8 +1716,25 @@ def apply_annotation(
         metrics_pdf[THRESHOLD] = metric_threshold_value
         print(metrics_pdf)
 
+        # create parsing error output if there are parsing errors
+        # parsing_error_df = annotations_df.filter((col(RATING) == -1))
+        # if parsing_error_df.count() > 0:
+        #     parsing_error_data_source = production_df_with_index.join(parsing_error_df,
+        #                                                        production_df_with_index.id == parsing_error_df.index,
+        #                                                        "inner").drop(parsing_error_df.index).drop(
+        #                                                            production_df_with_index.id).withColumnRenamed(
+        #                                                                'rating', metric_name_compact)
+        #     run_id = os.environ.get("AZUREML_RUN_ID")
+        #     # TODO: change folder location from violations[metric_name_compact.lower()]
+        #     io_utils.save_spark_df_as_mltable(parsing_error_data_source, violations[metric_name_compact.lower()])
+        #     samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
+        #                                GROUP: "",
+        #                                GROUP_DIMENSION: "",
+        #                                SAMPLES_NAME: "ParsingErrors",
+        #                                ASSET: f"azureml_{run_id}_output_data_{metric_name_compact.lower()}_ParsingErrors:1"})  # noqa: E501
+
         # create violations table if there are violations
-        violations_df = annotations_df.filter((col(RATING) < metric_threshold_value) & (col(INDEX) != -1))
+        violations_df = annotations_df.filter((col(RATING) < metric_threshold_value))
         if violations_df.count() > 0:
             violations_df_full = production_df_with_index.join(violations_df,
                                                                production_df_with_index.id == violations_df.index,
