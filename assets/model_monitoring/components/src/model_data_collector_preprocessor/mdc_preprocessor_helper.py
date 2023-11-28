@@ -1,6 +1,11 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Helper class for MDC preprocessor Component."""
+
 import os
 import re
-from typing import Tuple, List
+from typing import Tuple, List, Union
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from azureml.core.run import Run
@@ -36,7 +41,7 @@ def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_n
 
 
 def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = None) \
-        -> Tuple[str, FileSystemClient | ContainerClient]:
+        -> Tuple[str, Union[FileSystemClient, ContainerClient]]:
     """Get HDFS path and service client from url_folder_path."""
     url = urlparse(uri_folder_path)
     # TODO sovereign endpoint
@@ -102,7 +107,7 @@ def get_datastore_name_from_input_path(input_path: str) -> str:
 
 def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str,
                   root_uri_folder: str = None,
-                  container_client: ContainerClient | FileSystemClient = None) -> List[str]:
+                  container_client: Union[ContainerClient, FileSystemClient] = None) -> List[str]:
     if _is_local_path(input_data):
         # for lcoal testing
         return _get_local_file_list(start_datetime, end_datetime, input_data)
@@ -131,7 +136,7 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: 
     return file_list
 
 
-def set_data_access_config(container_client: FileSystemClient | ContainerClient, spark: SparkSession):
+def set_data_access_config(container_client: Union[FileSystemClient, ContainerClient], spark: SparkSession):
     """
     Set data access relative spark configs.
 
@@ -181,7 +186,7 @@ def _is_local_path(path: str) -> bool:
         re.match(r"^[a-zA-Z]:[/\\]", path)
 
 
-def _folder_exists(container_client: ContainerClient | FileSystemClient, folder_path: str) -> bool:
+def _folder_exists(container_client: Union[ContainerClient, FileSystemClient], folder_path: str) -> bool:
     """Check if hdfs folder exists."""
     if isinstance(container_client, FileSystemClient):
         return container_client.get_directory_client(folder_path).exists()
@@ -196,8 +201,8 @@ def _get_datastore_and_path_from_azureml_path(azureml_path: str) -> Tuple[str, s
     return azureml_path[start_idx+12:end_idx], azureml_path[end_idx+7:]
 
 
-def _get_container_client(datastore: AzureDataLakeGen2Datastore | AzureBlobDatastore) \
-        -> FileSystemClient | ContainerClient:
+def _get_container_client(datastore: Union[AzureDataLakeGen2Datastore, AzureBlobDatastore]) \
+        -> Union[FileSystemClient, ContainerClient]:
     if datastore.datastore_type == "AzureBlob":
         return datastore.blob_service.get_container_client(datastore.container_name) if datastore.credential_type \
                else None

@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Test class for mdc_preprocessor_helper.py."""
+
 from unittest.mock import Mock
 import pytest
 from datetime import datetime
