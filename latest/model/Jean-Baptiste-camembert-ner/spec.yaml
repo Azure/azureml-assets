@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Jean-Baptiste-camembert-ner
 path: ./
 properties:
-  SHA: cc63721791a6e1d60f4764997bbb311667ec75d8
+  SHA: ef35fe7767c1dad71f5c853838cdd80d0b3441ed
   datasets: Jean-Baptiste/wikiner_fr
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
@@ -49,8 +49,8 @@ tags:
     apply_deepspeed: 'true'
     apply_lora: 'true'
     apply_ort: 'true'
-  task: text-named-entity-recognition
-version: 11
+  task: token-classification
+version: 12
 description: |
   Summary: camembert-ner is a NER model fine-tuned from camemBERT on the Wikiner-fr dataset and was validated on email/chat data. It shows better performance on entities that do not start with an uppercase. The model has four classes: O, MISC, PER, ORG and LOC. The model can be loaded using HuggingFace. The performance of the model is evaluated using seqeval. Overall, the model has precision 0.8859, recall 0.8971 and f1 0.8914. It shows good performance on PER entities, with precision, recall and f1 of 0.9372, 0.9598 and 0.9483 respectively. The model's author also provided a link to an article on how he used the model results to train a LSTM model for signature detection in emails.
 
@@ -85,7 +85,7 @@ description: |
   #### Sample input
   ```json
   {
-      "inputs": {
+      "input_data": {
           "input_string": ["Je m'appelle jean-baptiste et je vis à montréal", "george washington est allé à washington"]
       }
   }
