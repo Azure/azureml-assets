@@ -11,7 +11,7 @@ from pyspark.sql.types import (
     StringType,
     FloatType
 )
-from shared_utilities.io_utils import try_read_mltable_in_spark_with_warning, save_spark_df_as_mltable, init_spark
+from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable, init_spark
 from shared_utilities import constants
 from sklearn.model_selection import train_test_split
 from responsibleai import RAIInsights, FeatureMetadata
@@ -266,10 +266,7 @@ def run(args):
             write_empty_signal_metrics_dataframe()
             return
         log_time_and_message("Reading data in spark and converting to pandas")
-        baseline_df = try_read_mltable_in_spark_with_warning(args.baseline_data, "baseline_data")
-        if not baseline_df:
-            print("Skipping feature importance calculation.")
-            return
+        baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
 
         baseline_df = baseline_df.toPandas()
         task_type = determine_task_type(args.task_type, args.target_column, baseline_df)

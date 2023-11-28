@@ -1513,9 +1513,7 @@ def apply_annotation(
         raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
                                   "column. ")
 
-    production_df = io_utils.read_mltable_in_spark(production_dataset)
-    if production_df.count() == 0:
-        raise ValueError("No data detected.")
+    production_df = io_utils.try_read_mltable_in_spark_with_error(production_dataset)
     # Ensure input data has the correct columns given the metrics
     # Question, answer required for coherence and fluency
     qa_required = len(list(set(QA_METRIC_NAMES).intersection(

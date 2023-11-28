@@ -2,20 +2,35 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: databricks-dolly-v2-12b
 path: ./
 properties:
-  SHA: 7dde7ac26ddcb679e0429fed1b6f751c1ffab1fb
+  SHA: 19308160448536e378e3db21a73a751579ee7fdd
   datasets: databricks/databricks-dolly-15k
   evaluation-min-sku-spec: 16|0|64|128
-  evaluation-recommended-sku: Standard_NC24s_v3
+  evaluation-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
   inference-min-sku-spec: 0|24|448|1344
-  inference-recommended-sku: Standard_FX36mds, Standard_FX48mds, Standard_NC24s_v3,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  inference-recommended-sku: Standard_E16s_v3, Standard_FX36mds, Standard_FX48mds, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
   languages: en
 tags:
   Featured: ''
   Preview: ''
-  computes_allow_list:
+  evaluation_computes_allow_list:
+  - Standard_NC24s_v3
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
+  - Standard_NC24ads_A100_v4
+  - Standard_NC48ads_A100_v4
+  - Standard_NC96ads_A100_v4
+  - Standard_ND96amsr_A100_v4
+  inference_compute_allow_list:
+  - Standard_E16s_v3
+  - Standard_FX36mds
+  - Standard_FX48mds
+  - Standard_NC24s_v3
+  - Standard_ND40rs_v2
+  - Standard_NC24ads_A100_v4
+  - Standard_NC48ads_A100_v4
+  - Standard_NC96ads_A100_v4
+  - Standard_ND96amsr_A100_v4
+  author: Databricks, Inc.
   license: mit
   task: text-generation
-version: 11
+version: 13

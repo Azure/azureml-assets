@@ -6,6 +6,7 @@
 import pytest
 from azure.ai.ml import MLClient, Output
 from azure.ai.ml.dsl import pipeline
+from azure.ai.ml.exceptions import JobException
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR,
     DATA_ASSET_EMPTY,
@@ -51,7 +52,11 @@ def _submit_data_quality_signal_monitor_job(
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
 
     return ml_client.jobs.get(pipeline_job.name)
 
@@ -77,7 +82,7 @@ class TestDataQualityModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_use_defaults_empty_production_data_successful(
+    def test_monitoring_run_use_defaults_empty_production_data_failed(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the scenario where the production data is empty."""
@@ -92,7 +97,8 @@ class TestDataQualityModelMonitor:
             "3"
         )
 
-        assert pipeline_job.status == "Completed"
+        # empty target data should cause the pipeline to fail
+        assert pipeline_job.status == "Failed"
 
     def test_monitoring_run_add_more_valid_datatype_data_successful(
         self, ml_client: MLClient, get_component, test_suite_name
