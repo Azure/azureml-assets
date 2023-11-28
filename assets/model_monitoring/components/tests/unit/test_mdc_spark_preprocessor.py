@@ -11,7 +11,7 @@ import sys
 import json
 from datetime import datetime
 from model_data_collector_preprocessor.spark_run import (
-    _mdc_uri_folder_to_raw_spark_df, _extract_data_and_correlation_id
+    _mdc_uri_folder_to_raw_spark_df, _extract_data_and_correlation_id, _mdc_uri_folder_to_preprocessed_spark_df
 )
 from shared_utilities.momo_exceptions import DataNotFoundError
 
@@ -45,7 +45,6 @@ class TestMDCSparkPreprocessor:
         StructField("sepal_width", DoubleType()),
     ]))
 
-    # @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, expected_schema, expected_data",
         [
@@ -89,6 +88,23 @@ class TestMDCSparkPreprocessor:
                     ["95e1afa0-256d-414b-8e4c-fea1baa98225", "tests/unit/raw_mdc_data/2023/10/16/21/mdc_dataref_2.json"],  # noqa
                 ]
             ),
+            # complex type
+            (
+                datetime(2023, 11, 12, 10), datetime(2023, 11, 12, 11),
+                StructType([
+                    StructField("correlationid", StringType()),
+                    StructField("data", ArrayType(StructType([
+                        StructField("current_query_intent", StringType()),
+                        StructField("fetched_docs", StringType()),
+                        StructField("reply", StringType()),
+                        StructField("search_intents", StringType())
+                    ]))),
+                ]),
+                [[
+                    "7960da37-8942-4d6f-96c1-f08414317000",
+                    [('""', '""', "The requested information is not available in the retrieved data. Please try another query or topic.", r'"[\"testing\"]"')]
+                ]]
+            )
         ]
     )
     def test_uri_folder_to_raw_spark_df(self, mdc_preprocessor_test_setup, window_start_time, window_end_time,
@@ -150,7 +166,6 @@ class TestMDCSparkPreprocessor:
             )
             df.show()
 
-    # @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "window_start_time, window_end_time",
         [
@@ -177,7 +192,6 @@ class TestMDCSparkPreprocessor:
         df.printSchema()
         # todo: assert dataframe content
 
-    # @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "raw_data, expected_data, expected_schema",
         [
@@ -364,6 +378,61 @@ class TestMDCSparkPreprocessor:
                 expected_df = expected_df.drop("correlationid")
 
             assert_spark_dataframe_equal(out_df, expected_df)
+
+    _preprocessed_schema = StructType([
+        StructField("petal_length", DoubleType()),
+        StructField("petal_width", DoubleType()),
+        StructField("sepal_length", DoubleType()),
+        StructField("sepal_width", DoubleType()),
+        StructField("correlationid", StringType(), False),
+    ])
+    _preprocessed_data = [
+        [2.0, 1.3, 1.0, 2.3, "7f16d5b1-76f9-4b3e-b82d-fc21d29356a5_0"],
+        [3.0, 1.5, 2.0, 3.2, "f2b524a7-3272-45df-a530-c945004de305_0"],
+        [3.2, 1.8, 3.0, 3.4, "f2b524a7-3272-45df-a530-c945004de305_1"],
+        [4.0, 1.6, 1.5, 1.0, "95e1afa0-256d-414b-8e4c-fea1baa98225_0"],
+    ]
+
+    @pytest.mark.parametrize(
+        "window_start_time, window_end_time, expected_schema, expected_data",
+        [
+            # data only
+            (datetime(2023, 10, 11, 20), datetime(2023, 10, 11, 21), _preprocessed_schema, _preprocessed_data),
+            # data and dataref mix
+            (datetime(2023, 10, 15, 17), datetime(2023, 10, 15, 18), _preprocessed_schema, _preprocessed_data),
+            # dataref only  # dataref only is not supported yet due to lack of schema
+            # (datetime(2023, 10, 16, 21), datetime(2023, 10, 16, 22), _preprocessed_schema, _preprocessed_data),
+            # complex type
+            # (
+            #     datetime(2023, 11, 12, 10), datetime(2023, 11, 12, 11),
+            # )
+        ]
+    )
+    def test_mdc_uri_folder_to_preprocessed_spark_df(
+            self, mdc_preprocessor_test_setup, window_start_time: datetime, window_end_time: datetime,
+            expected_schema, expected_data):
+        """Test uri_folder_to_spark_df()."""
+        def my_add_tags(tags: dict):
+            print("my_add_tags:", tags)
+
+        print("testing mdc_uri_folder_to_preprocessed_spark_df...")
+        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+
+        for extract_correlation_id in [True, False]:
+            actual_df = _mdc_uri_folder_to_preprocessed_spark_df(
+                window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
+                f"{tests_path}/unit/raw_mdc_data/", extract_correlation_id, my_add_tags)
+            print("raw dataframe:")
+            actual_df.show(truncate=False)
+            actual_df.printSchema()
+
+            expected_df = SparkSession.builder.getOrCreate().createDataFrame(expected_data, schema=expected_schema)
+            if not extract_correlation_id:
+                expected_df = expected_df.drop("correlationid")
+            expected_df.show(truncate=False)
+            expected_df.printSchema()
+
+            assert_spark_dataframe_equal(actual_df, expected_df)
 
 
 def assert_spark_dataframe_equal(df1, df2):

@@ -211,8 +211,8 @@ def _get_local_file_list(start_datetime: datetime, end_datetime: datetime, input
 def _is_local_path(path: str) -> bool:
     if not path:
         return False
-    return os.path.isdir(path) or path.startswith("file://") or path.startswith("/") or path.startswith(".") or \
-        re.match(r"^[a-zA-Z]:[/\\]", path)
+    return os.path.isdir(path) or os.path.isfile(path) or path.startswith("file://") or path.startswith("/") \
+        or path.startswith(".") or re.match(r"^[a-zA-Z]:[/\\]", path)
 
 
 def _folder_exists(container_client: Union[ContainerClient, FileSystemClient], folder_path: str) -> bool:
