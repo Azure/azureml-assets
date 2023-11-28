@@ -179,6 +179,16 @@ inputs:
     optional: True
     default: True
     description: If deleting the managed deployment.
+  deployment_retries:
+    type: integer
+    optional: True
+    default: 1
+    description: The number of retries for deployment.
+  deployment_retry_interval_seconds:
+    type: integer
+    optional: True
+    default: 60
+    description: The interval seconds for deployment retry.
 outputs:
   predictions:
     type: uri_file
@@ -213,6 +223,8 @@ jobs:
       finetuned_subscription_id: ${{parent.inputs.finetuned_subscription_id}}
       finetuned_resource_group: ${{parent.inputs.finetuned_resource_group}}
       finetuned_workspace: ${{parent.inputs.finetuned_workspace}}
+      deployment_retries: ${{parent.inputs.deployment_retries}}
+      deployment_retry_interval_seconds: ${{parent.inputs.deployment_retry_interval_seconds}}
   # Preparer
   batch_inference_preparer: 
     type: command

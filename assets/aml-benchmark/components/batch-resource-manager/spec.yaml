@@ -114,12 +114,12 @@ inputs:
   deployment_retries:
     type: integer
     optional: True
-    default: 3
+    default: 1
     description: The number of retries for deployment.
   deployment_retry_interval_seconds:
     type: integer
     optional: True
-    default: 600
+    default: 60
     description: The interval seconds for deployment retry.
 outputs:
   output_metadata:
