@@ -42,7 +42,8 @@ def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_n
            f"/{datastore}/paths/{path}"
 
 
-def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = None, spark: SparkSession = None) \
+def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = None, spark: SparkSession = None,
+                                       credential: str = None) \
         -> Tuple[str, Union[FileSystemClient, ContainerClient]]:
     """Get HDFS path and container/filesystem client from url_folder_path."""
     url = urlparse(uri_folder_path)
@@ -59,7 +60,8 @@ def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = Non
         account_name = matches.group("account_name")
         container_name = matches.group("container")
         path = matches.group("path")
-        filesystem_client = _get_filesystem_client(account_name, container_name, matches.group("store_type"), spark)
+        filesystem_client = _get_filesystem_client(account_name, container_name, matches.group("store_type"),
+                                                   spark, credential)
         return f"{scheme}://{container_name}@{account_name}.{store_type}.core.windows.net/{path}", filesystem_client
     elif url.scheme in ["wasbs", "wasb", "abfss", "abfs"]:
         pattern = r"(?P<scheme>wasbs|abfss|wasb|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+).(?P<store_type>blob|dfs).core.windows.net/(?P<path>.+)"  # noqa
@@ -71,7 +73,8 @@ def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = Non
         account_name = matches.group("account_name")
         container_name = matches.group("container")
         path = matches.group("path")
-        filesystem_client = _get_filesystem_client(account_name, container_name, matches.group("store_type"), spark)
+        filesystem_client = _get_filesystem_client(account_name, container_name, matches.group("store_type"),
+                                                   spark, credential)
         return f"{scheme}://{container_name}@{account_name}.{store_type}.core.windows.net/{path}", filesystem_client
     elif url.scheme == "azureml":
         if ':' in url.path:  # azureml asset path
@@ -167,7 +170,7 @@ def set_data_access_config(container_client: Union[FileSystemClient, ContainerCl
     spark.conf.set(f"spark.storage.synapse.{container_name}.{account_name}.dfs.core.windows.net.sas", sas_token)
 
 
-def read_json_content(path: str) -> str:
+def read_json_content(path: str, sas_token: str) -> str:
     """Read json content from path."""
     if not path:
         return None
@@ -175,7 +178,7 @@ def read_json_content(path: str) -> str:
         with open(path) as f:
             json_str = f.read()
         return json_str
-    hdfs_path, container_client = get_hdfs_path_and_container_client(path)
+    hdfs_path, container_client = get_hdfs_path_and_container_client(path, credential=sas_token)
     idx = hdfs_path.find('.core.windows.net/') + len('.core.windows.net/')
     file_path = hdfs_path[idx:]
     if not container_client:
@@ -247,13 +250,15 @@ def _get_container_client(datastore: Union[AzureDataLakeGen2Datastore, AzureBlob
 
 
 def _get_filesystem_client(account_name: str, container_name: str, store_type: str,
-                           spark: SparkSession = None) -> FileSystemClient:
+                           spark: SparkSession = None, sas_token: str = None) -> FileSystemClient:
+    def get_token_from_spark_conf():
+        # TODO this is only for blob, if gen2, credential may not be sas
+        return (spark or init_spark()).conf.get(
+            f"spark.hadoop.fs.azure.sas.{container_name}.{account_name}.{store_type}.core.windows.net", None)
     # TODO assuming we always access the same container which have the MDC logs, optimize it by cache the client
     account_url = f"https://{account_name}.dfs.core.windows.net"  # return filesystem client even for blob storage
-    spark = spark or init_spark()
-    # TODO this is only for blob, if gen2, credential may not be sas
-    sas_token = spark.conf.get(
-        f"spark.hadoop.fs.azure.sas.{container_name}.{account_name}.{store_type}.core.windows.net", None)
+    # if in executor, need to provide sas_token(from broadcast variable), otherwise, get from spark conf in driver
+    sas_token = sas_token or get_token_from_spark_conf()
     if not sas_token:
         return None
     # TODO maybe we can return ContainerClient for blob storage, and FileSystemClient for gen2 storage

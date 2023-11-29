@@ -75,14 +75,17 @@ class TestMDCPreprocessorHelper:
     )
     def test_get_hdfs_path_and_container_client(self, uri_folder_path: str, expected_hdfs_path: str):
         """Test get_hdfs_path_and_container_client()."""
-        spark = Mock(conf={
-            "spark.hadoop.fs.azure.sas.my_container.my_account.blob.core.windows.net": "my_token",
-            # TODO below is quick workaround to pass the UT, need to refine the UT later
-            "spark.hadoop.fs.azure.sas.my_container.my_account.dfs.core.windows.net": "my_token"
-        })
-        hdfs_path, container_client = get_hdfs_path_and_container_client(uri_folder_path, spark=spark)
-        assert hdfs_path == expected_hdfs_path
-        assert container_client is not None
+        for mock_token in ["my_token", None]:
+            spark = None if mock_token else Mock(conf={
+                "spark.hadoop.fs.azure.sas.my_container.my_account.blob.core.windows.net": "my_token",
+                # TODO below is quick workaround to pass the UT, need to refine the UT later
+                "spark.hadoop.fs.azure.sas.my_container.my_account.dfs.core.windows.net": "my_token"
+            })
+            hdfs_path, container_client = get_hdfs_path_and_container_client(uri_folder_path, spark=spark,
+                                                                             credential=mock_token)
+            assert hdfs_path == expected_hdfs_path
+            # TODO need to do more sophisticated assertions for container_client
+            assert container_client is not None
 
     @pytest.mark.parametrize(
         "azureml_path, datastore_type, protocol, expected_scheme",

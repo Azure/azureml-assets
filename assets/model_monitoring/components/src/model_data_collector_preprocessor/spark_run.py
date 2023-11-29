@@ -19,8 +19,12 @@ from shared_utilities.constants import (
 from mdc_preprocessor_helper import (
     get_hdfs_path_and_container_client, get_file_list, set_data_access_config
 )
-# used in UDF from executor, need to referenced from root of code
-from model_data_collector_preprocessor.mdc_preprocessor_helper import read_json_content
+try:
+    # used in UDF from executor, need to import from root of code in real cluster run
+    from model_data_collector_preprocessor.mdc_preprocessor_helper import read_json_content
+except ImportError:
+    # for remote UT, import from mdc_preprocessor_helper
+    from mdc_preprocessor_helper import read_json_content
 
 
 def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: datetime, input_data: str,
@@ -55,7 +59,7 @@ def _get_data_columns(df: DataFrame) -> list:
     return columns
 
 
-def _load_dataref_into_data_column(df: DataFrame) -> DataFrame:
+def _load_dataref_into_data_column(df: DataFrame, input_data: str) -> DataFrame:
     columns = _get_data_columns(df)
     if MDC_DATAREF_COLUMN not in columns:
         return df  # no dataref column, return df directly
@@ -65,10 +69,22 @@ def _load_dataref_into_data_column(df: DataFrame) -> DataFrame:
 
     @udf(returnType=StringType())
     def load_json_str(path):
-        return read_json_content(path)
+        sas_token = broadcast_credential.value
+        return read_json_content(path, sas_token)
 
     # TODO separate df into 2 parts, one with dataref, one without, then only handle the one with dataref, and
     #      union the 2 parts back together
+
+    # broadcast the sas_token to all executors, so that they can access the dataref files
+    _, container_client = get_hdfs_path_and_container_client(input_data)
+    spark = init_spark()
+    if container_client:
+        # TODO need to depends on the storage type(blob or gen2) to get the credential
+        sas_token = spark.conf.get(f"spark.hadoop.fs.azure.sas.{container_client.container_name}."
+                                   f"{container_client.account_name}.blob.core.windows.net")
+        broadcast_credential = spark.sparkContext.broadcast(sas_token)
+    else:
+        broadcast_credential = spark.sparkContext.broadcast(None)
 
     # load json string from dataref to ref_json_str column
     df = df.withColumn("ref_json_str", load_json_str(df[MDC_DATAREF_COLUMN]))
@@ -113,7 +129,7 @@ def _mdc_uri_folder_to_preprocessed_spark_df(
     df.select("data").show(truncate=False)
     df.printSchema()
 
-    df = _load_dataref_into_data_column(df)
+    df = _load_dataref_into_data_column(df, input_data)
     df.select("data").show(truncate=False)
     df.printSchema()
 

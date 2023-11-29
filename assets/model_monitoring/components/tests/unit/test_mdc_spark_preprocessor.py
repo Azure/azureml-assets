@@ -102,7 +102,7 @@ class TestMDCSparkPreprocessor:
                 ]),
                 [[
                     "7960da37-8942-4d6f-96c1-f08414317000",
-                    [('""', '""', "The requested information is not available in the retrieved data. Please try another query or topic.", r'"[\"testing\"]"')]
+                    [('""', '""', "The requested information is not available in the retrieved data. Please try another query or topic.", r'"[\"testing\"]"')]  # noqa
                 ]]
             )
         ]
