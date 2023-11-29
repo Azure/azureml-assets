@@ -138,5 +138,11 @@
     "flagWords": [
       "Prompt Flow"
     ],
+    "ignorePaths":[
+      "**.py",
+      "**.jinja2",
+      "**.txt",
+      "**.json"
+    ],
     "allowCompoundWords": true
   }

@@ -69,36 +69,26 @@ def _assign_flow_values(flow_dirs, tmp_folder_path):
     for flow_dir in updated_bulk_test_main_flows_dirs:
         flow_dir_name = flow_dir.name
         flow_dir_name = flow_dir_name.replace("-", "_")
-        script_flow_dir = Path(os.path.join(
-            os.getcwd(), "scripts", "promptflow-ci", "test_configs", "flows", flow_dir_name))
-        if not (script_flow_dir.exists() and (script_flow_dir / "values.json").exists()):
-            log_warning(
-                f"No available flow values found for '{flow_dir_name}'. Skip flow values assignment.")
-            continue
-        with open(os.path.join(script_flow_dir, "values.json"), "r") as fin:
-            values = json.load(fin)
+
         with open(Path(flow_dir) / "flow.dag.yaml", "r") as dag_file:
             flow_dag = yaml.safe_load(dag_file)
         # Override connection/inputs in nodes
-        if "nodes" in values:
-            log_debug(f"Start overriding values for nodes for '{flow_dir.name}'.")
-            for override_node in values["nodes"]:
-                for flow_node in flow_dag["nodes"]:
-                    if flow_node["name"] == override_node["name"]:
-                        if "connection" in override_node:
-                            # Override connection
-                            flow_node["connection"] = override_node["connection"]
-                        if "inputs" in override_node:
-                            for input_name, input_value in override_node["inputs"].items():
-                                # Override input
-                                flow_node["inputs"][input_name] = input_value
-            with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
-                yaml.dump(flow_dag, dag_file, allow_unicode=True)
+        log_debug(f"Start overriding values for nodes for '{flow_dir.name}'.")
+        for flow_node in flow_dag["nodes"]:
+            if "connection" in flow_node:
+                flow_node["connection"] = "aoai_connection"
+            if "inputs" in flow_node:
+                if "deployment_name" in flow_node["inputs"]:
+                    if flow_node["source"].get("tool") == "promptflow.tools.embedding.embedding":
+                        flow_node["inputs"]["deployment_name"] =  "text-embedding-ada-002"
+                    else:
+                        flow_node["inputs"]["deployment_name"] = "gpt-35-turbo"
+                if "connection" in flow_node["inputs"]:
+                    flow_node["inputs"]["connection"] = "aoai_connection"
+        with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
+            yaml.dump(flow_dag, dag_file, allow_unicode=True)
     log_debug("=======Complete overriding values for flows=======\n")
     return updated_bulk_test_main_flows_dirs
-
-
-def _add_llm_node_variant(bulk_test_main_flows_dirs):
     log_debug("\n=======Start adding variants for flows=======")
 
     for bulk_test_main_flows_dir in bulk_test_main_flows_dirs:
@@ -136,10 +126,6 @@ def _add_llm_node_variant(bulk_test_main_flows_dirs):
         with open(Path(bulk_test_main_flows_dir) / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
             yaml.dump(flow_dag, dag_file, allow_unicode=True)
     log_debug("=======Complete adding variants for flows=======\n")
-
-
-def construct_create_flow_from_sample_payload(sample_name, flow_definition_file_path):
-    return {"SampleName": sample_name, "FlowDefinitionFilePath": flow_definition_file_path}
 
 
 def construct_create_flow_payload_of_new_contract(flow, flow_meta, properties):
@@ -187,82 +173,6 @@ def construct_submit_flow_payload_of_new_contract(flow_id, batch_data_inputs, ru
     }
     return submit_flow_payload
 
-
-def construct_submit_bulk_test_payload_of_new_contract(evaluation_flow_dag, evaluation_flow_resource_id,
-                                                       batch_data_inputs, bulk_test_config, main_flow_id,
-                                                       main_flow_dag, runtime_name, evaluation_flow_name,
-                                                       main_flow_name):
-    llm_nodes_in_evaluation_flow = [
-        node for node in evaluation_flow_dag["nodes"] if node["type"] == "llm"]
-    llm_node_connection_overrides = []
-    for node in llm_nodes_in_evaluation_flow:
-        connection_override = {
-            "connectionSourceType": "Node",
-            "nodeName": node["name"],
-            "connectionName": "aoai_connection",  # Hard code for now
-        }
-        llm_node_connection_overrides.append(connection_override)
-
-    evaluation_run_id = f"evaluate_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-    evaluation_flow_run_settings = {
-        "evaluation": {
-            "flowRunDispalyName": f"{evaluation_flow_name}-bulktest",
-            "connectionOverrides": llm_node_connection_overrides,
-            "inputsMapping": bulk_test_config["evalFlowInputsMapping"],
-            "flowRunId": evaluation_run_id,
-            "batchDataInput": {"dataUri": batch_data_inputs},
-        }
-    }
-
-    node_variants = main_flow_dag["node_variants"] if "node_variants" in main_flow_dag else {
-    }
-    tuning_node_names = [node["name"]
-                         for node in main_flow_dag["nodes"] if "use_variants" in node]
-    tuning_node_settings = {}
-    for tuning_node_name in tuning_node_names:
-        variant_ids = list(node_variants[tuning_node_name]["variants"].keys())
-        tuning_node_settings.update(
-            {tuning_node_name: {"variantIds": variant_ids}})
-
-    bulk_test_payload = {
-        "flowId": main_flow_id,
-        "flowRunDisplayName": f"{main_flow_name}-bulktest",
-        "flow": {
-            "evaluationFlows": {"evaluation": {"referenceResourceId": evaluation_flow_resource_id}},
-        },
-        "flowRunId": f"run_{datetime.now().strftime('%Y%m%d%H%M%S')}",
-        "flowSubmitRunSettings": {
-            "runMode": "BulkTest",
-            "batchDataInput": {"dataUri": batch_data_inputs},
-            "runtimeName": runtime_name,
-            "inputsMapping": bulk_test_config["mainFlowInputsMapping"],
-            "tags": {},
-            "description": f"CI triggered Bulk test & Evaluate for evaluation flow '{evaluation_flow_name}', "
-            f"main flow: {main_flow_name} main flow ID: {main_flow_id}",
-            "tuningNodeSettings": tuning_node_settings,
-            "evaluationFlowRunSettings": evaluation_flow_run_settings,
-        },
-        "asyncSubmission": True,
-        "useWorkspaceConnection": True,
-        "useFlowSnapshotToSubmit": True,
-    }
-    return bulk_test_payload, evaluation_run_id
-
-
-def resolve_bulk_test_config_of_new_contract(flow_dir: Path):
-    with open(flow_dir / "bulk_test_config_of_new_contract.json", "r") as config:
-        bulk_test_config = json.load(config)
-    if (
-        bulk_test_config is None
-        or bulk_test_config["mainFlowInputsMapping"] is None
-        or bulk_test_config["evalFlowInputsMapping"] is None
-        or bulk_test_config["mainFlowFolderName"] is None
-    ):
-        raise Exception("Invalid bulk test config file.")
-
-    main_flow_folder_name = bulk_test_config["mainFlowFolderName"].replace(
-        "_", "-")
-    return main_flow_folder_name, bulk_test_config
 
 
 def construct_flow_link(aml_resource_uri, subscription, resource_group, workspace, experiment_id, flow_id, ux_flight):

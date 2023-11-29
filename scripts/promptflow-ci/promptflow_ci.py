@@ -64,8 +64,7 @@ def download_blob_to_file(container_name, container_path, storage_name, target_d
 
 
 def get_changed_models(diff_files):
-    changed_models = [os.path.join(MODELS_ROOT, "ask-wikipedia"), os.path.join(
-        MODELS_ROOT, "web-classification")]  # this is main flow folder for eval
+    changed_models = []
     deleted_models_path = []
     for file_path in diff_files:
         file_path_list = file_path.split("\t")
@@ -347,30 +346,20 @@ if __name__ == "__main__":
 
     # Check run flows
     handled_failures = []
-    bulk_test_main_flows_dirs = get_bulk_test_main_flows_dirs(
-        MODELS_ROOT, changed_models)
-    bulk_test_main_flows_dirs = list(dict.fromkeys(bulk_test_main_flows_dirs))
-    flows_dirs = [
-        dir for dir in changed_models if dir not in bulk_test_main_flows_dirs]
-    bulk_test_main_flows_dirs = [
-        model_dir for model_dir in bulk_test_main_flows_dirs]
 
     # Filter out skipped flows
     if args.skipped_flows != "":
         skipped_flows = args.skipped_flows.split(",")
         log_debug(f"Skipped flows: {skipped_flows}")
-        flows_dirs = [flow_dir for flow_dir in flows_dirs if Path(
+        flows_dirs = [flow_dir for flow_dir in changed_models if Path(
             flow_dir).name not in skipped_flows]
-        bulk_test_main_flows_dirs = [flow_dir for flow_dir in bulk_test_main_flows_dirs if Path(flow_dir).name not in
-                                     skipped_flows]
-    flows_dirs = [Path(os.path.join(dir, TEST_FOLDER)) for dir in flows_dirs]
-    bulk_test_main_flows_dirs = [Path(os.path.join(
-        model_dir, TEST_FOLDER)) for model_dir in bulk_test_main_flows_dirs]
+
+    flows_dirs = [Path(os.path.join(dir, TEST_FOLDER))
+                  for dir in changed_models]
 
     log_debug(flows_dirs)
-    log_debug(bulk_test_main_flows_dirs)
-    if len(flows_dirs) + len(bulk_test_main_flows_dirs) == 0:
-        print("No flow code change, skip flow testing.")
+    if len(flows_dirs) == 0:
+        log_debug("No flow code change, skip flow testing.")
         exit(0)
 
     ux_endpoint = args.ux_endpoint
@@ -402,13 +391,8 @@ if __name__ == "__main__":
         log_debug(f"tmp folder path: {tmp_folder_path}")
         flows_dirs = flow_utils._assign_flow_values(
             flows_dirs, tmp_folder_path)
-        bulk_test_main_flows_dirs = flow_utils._assign_flow_values(
-            bulk_test_main_flows_dirs, tmp_folder_path)
-        flow_utils._add_llm_node_variant(bulk_test_main_flows_dirs)
 
         flows_creation_info = create_flows(flows_dirs)
-        bulk_test_main_flows_creation_info = create_flows(
-            bulk_test_main_flows_dirs)
     except Exception as e:
         log_error("Error when creating flow")
         raise e
@@ -419,9 +403,7 @@ if __name__ == "__main__":
     # region: Step2. submit bulk test runs and evaluation flow bulk test runs asynchronously based on the
     # flows_creation_info
     submitted_flow_run_identifiers = set()
-    submitted_bulk_test_run_identifiers = set()
     submit_interval = 2  # seconds
-
     for flow_dir_name, creation_info in flows_creation_info.items():
         time.sleep(submit_interval)
         flow_dir = Path(os.path.join(MODELS_ROOT, flow_dir_name, TEST_FOLDER))
@@ -432,12 +414,6 @@ if __name__ == "__main__":
         flow_id = flow_create_result['flowId']
         flow_resource_id = flow_create_result["flowResourceId"]
         flow_name = flow_create_result["flowName"]
-        # script flow dir contains flow input/param assignments of the flow,
-        # which should be separated from promptflow model
-        flow_dir_name = flow_dir_name.replace("-", "_")
-        script_flow_dir = Path(os.path.join(
-            os.getcwd(), "scripts", "promptflow-ci", "test_configs", "flows", flow_dir_name))
-
         # Call MT to submit flow
         # Skip template flow
         if (section_type == 'template'):
@@ -478,102 +454,15 @@ if __name__ == "__main__":
                                                              args.workspace_name, experiment_id, run_id)
                 log_debug(
                     f"Flow run link for run {run_id} to Azure Machine Learning Portal: {flow_run_link}")
-
-            # Do bulk test for evaluation flow
-        if flow_type == "evaluate":
-            if not os.path.exists(script_flow_dir / "bulk_test_config_of_new_contract.json"):
-                raise Exception(
-                    f"bulk_test_config_of_new_contract.json not found in {script_flow_dir}. Please provide "
-                    f"bulk_test_config_of_new_contract.json to the evaluation flow {flow_dir.name}.")
-            elif not os.path.exists(script_flow_dir / "samples.json"):
-                raise Exception(f"Sample input file path doesn't exist when doing main flow + evaluation flow bulk "
-                                f"test. Flow dir: {flow_dir.name}.")
-            else:
-                log_debug(
-                    f"\nStarting to do main flow + evaluation flow bulk test.\nEvaluation flow dir: {flow_dir_name}. "
-                    f"Evaluation flow id: {flow_id}. Flow resource id: {flow_resource_id}")
-                try:
-                    main_flow_folder_name, bulk_test_config = flow_utils.resolve_bulk_test_config_of_new_contract(
-                        script_flow_dir
-                    )
-                    if main_flow_folder_name in bulk_test_main_flows_creation_info:
-                        main_flow_creation_info = bulk_test_main_flows_creation_info[
-                            main_flow_folder_name]
-                    else:
-                        raise Exception(
-                            f"Sample flow {main_flow_folder_name} is not found in the flows folder. Please make sure "
-                            f"the sample flow is provided.")
-                    main_flow_id = main_flow_creation_info[1]['flowId']
-                    main_flow_dag = main_flow_creation_info[0]
-                    main_flow_name = main_flow_creation_info[1]['flowName']
-                    log_debug(
-                        f"Main flow dir: {main_flow_folder_name}. Main flow id: {main_flow_id}.")
-
-                    batch_data_inputs = _resolve_data_to_asset_id(
-                        flow_dir / "samples.json")
-                    submit_bulk_test_payload, evaluation_run_id = \
-                        flow_utils.construct_submit_bulk_test_payload_of_new_contract(
-                            evaluation_flow_dag=flow_dag,
-                            evaluation_flow_resource_id=flow_resource_id,
-                            batch_data_inputs=batch_data_inputs,
-                            bulk_test_config=bulk_test_config,
-                            main_flow_id=main_flow_id,
-                            main_flow_dag=main_flow_dag,
-                            runtime_name=runtime_name,
-                            evaluation_flow_name=flow_name,
-                            main_flow_name=main_flow_name,
-                        )
-                    debug_output(
-                        submit_bulk_test_payload, "submit_bulk_test_payload", flow_dir.name, args.local)
-                except Exception as e:
-                    log_error(
-                        f"Error when constructing evaluation bulk test payload for {flow_dir_name}")
-                    raise e
-                else:
-                    # Call MT to submit bulk test & evaluation
-                    try:
-                        submit_bulk_test_result, _, evaluation_run_id = mt_client.submit_flow(
-                            submit_bulk_test_payload,
-                            experiment_id
-                        )
-                        bulk_test_run_id = submit_flow_result["bulkTestId"]
-                        flow_run_ids = flow_utils.get_flow_run_ids(
-                            submit_bulk_test_result)
-                    except Exception as e:
-                        failure_message = f"Submit bulk test evaluation run failed. Flow dir: {flow_dir}. Evaluation " \
-                                          f"flow id: {flow_id}. Main flow id: {main_flow_id}. Error: {e}"
-                        log_error(failure_message)
-                        handled_failures.append(failure_message)
-                    else:
-                        debug_output(submit_bulk_test_result, "submit_bulk_test_response", flow_dir.name,
-                                     args.local)
-                        log_debug(
-                            f"All the flow run links for bulk test: {bulk_test_run_id}")
-                        for run_id in flow_run_ids:
-                            submitted_bulk_test_run_identifiers.add(
-                                flow_utils.create_flow_run_identifier(
-                                    main_flow_id, run_id)
-                            )
-                            flow_run_link = flow_utils.get_flow_run_link(submit_bulk_test_result,
-                                                                         ux_endpoint,
-                                                                         args.subscription_id,
-                                                                         args.resource_group,
-                                                                         args.workspace_name,
-                                                                         experiment_id,
-                                                                         run_id
-                                                                         )
-                            log_debug(f"Flow run link for run {run_id} to Azure Machine Learning Portal: "
-                                      f"{flow_run_link}")
     # endregion
 
     # region: Step3. check the submitted run status
     check_run_status_interval = 30  # seconds
     check_run_status_max_attempts = 30  # times
     flow_runs_count = len(submitted_flow_run_identifiers)
-    bulk_test_runs_count = len(submitted_bulk_test_run_identifiers)
     failed_flow_runs = {}  # run key : flow_run_link
     failed_evaluation_runs = {}  # run key : evaluation_run_link
-    if flow_runs_count == 0 and bulk_test_runs_count == 0:
+    if flow_runs_count == 0:
         log_debug(
             "\nNo bulk test run or bulk test evaluation run need to check status")
 
@@ -585,16 +474,10 @@ if __name__ == "__main__":
 
     flow_runs_to_check = copy.deepcopy(submitted_flow_run_identifiers)
     log_debug(f"\n{flow_runs_count} bulk test runs need to check status.")
-    check_flow_run_status(flow_runs_to_check, submitted_flow_run_identifiers, check_run_status_interval, check_run_status_max_attempts)
+    check_flow_run_status(flow_runs_to_check, submitted_flow_run_identifiers,
+                          check_run_status_interval, check_run_status_max_attempts)
 
-    bulk_test_runs_to_check = copy.deepcopy(
-        submitted_bulk_test_run_identifiers)
-    log_debug(
-        f"\n{bulk_test_runs_count} bulk test evaluation runs need to check status.")
-    check_flow_run_status(bulk_test_runs_to_check,
-                          submitted_bulk_test_run_identifiers, check_run_status_interval, check_run_status_max_attempts)
-
-    if len(submitted_flow_run_identifiers) > 0 or len(submitted_bulk_test_run_identifiers) > 0:
+    if len(submitted_flow_run_identifiers) > 0:
         failure_message = f"Not all bulk test runs or bulk test evaluation runs are completed after " \
                           f"{check_run_status_max_attempts} attempts. " \
                           f"Please check the run status on Azure Machine Learning Portal."
@@ -613,14 +496,6 @@ if __name__ == "__main__":
                                                                experiment_id, flow_id, flow_run_id)
             log_debug(
                 f"Flow run link for run {flow_run_id} to Azure Machine Learning Portal: {flow_run_link}")
-        for bulk_test_run_identifier in submitted_bulk_test_run_identifiers:
-            flow_id, flow_run_id = flow_utils.resolve_flow_run_identifier(
-                bulk_test_run_identifier)
-            flow_run_link = flow_utils.construct_flow_run_link(ux_endpoint, args.subscription_id,
-                                                               args.resource_group, args.workspace_name,
-                                                               experiment_id, flow_id, flow_run_id)
-            log_debug(
-                f"Flow run link for run {flow_run_id} to Azure Machine Learning Portal: {flow_run_link}")
 
     if len(failed_flow_runs) > 0 or len(failed_evaluation_runs) > 0:
         failure_message = "There are bulk test runs or bulk test evaluation runs failed. " \
@@ -633,9 +508,9 @@ if __name__ == "__main__":
         for flow_run_key, evaluation_run_link in failed_evaluation_runs.items():
             log_error(
                 f"Bulk test evaluation run link to Azure Machine Learning Portal: {evaluation_run_link}")
-    elif len(submitted_flow_run_identifiers) == 0 and len(submitted_bulk_test_run_identifiers) == 0:
-        log_debug(f"\nRun status checking completed. {flow_runs_count} flow runs and {bulk_test_runs_count} bulk "
-                  f"test evaluation runs completed.")
+    elif len(submitted_flow_run_identifiers) == 0:
+        log_debug(
+            f"\nRun status checking completed. {flow_runs_count} flow runs completed.")
     # Fail CI if there are failures.
     if len(handled_failures) > 0:
         log_error(
