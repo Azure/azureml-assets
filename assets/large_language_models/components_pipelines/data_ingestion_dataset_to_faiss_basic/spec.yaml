@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.54
+version: 0.0.55
 name: llm_ingest_dataset_to_faiss_basic
 display_name: LLM - Dataset to FAISS Pipeline
 is_deterministic: false
@@ -125,7 +125,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_crack_and_chunk:0.0.43'
+    component: 'azureml:llm_rag_crack_and_chunk:0.0.44'
     inputs:
       input_data: ${{parent.inputs.input_data}}
       input_glob: ${{parent.inputs.input_glob}}

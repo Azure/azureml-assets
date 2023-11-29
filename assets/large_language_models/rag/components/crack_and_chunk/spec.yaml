@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.43
+version: 0.0.44
 name: llm_rag_crack_and_chunk
 display_name: LLM - Crack and Chunk Data
 is_deterministic: true
@@ -81,7 +81,7 @@ environment: azureml:llm-rag-embeddings@latest
 code: '../src'
 command: >-
   python -m azureml.rag.tasks.crack_and_chunk
-  --input_data ${{inputs.input_data}}
+  --input_data '${{inputs.input_data}}'
   $[[--input_glob '${{inputs.input_glob}}']]
   $[[--allowed_extensions ${{inputs.allowed_extensions}}]]
   --output_chunks ${{outputs.output_chunks}}

@@ -1,5 +1,5 @@
 name: llm_rag_crack_chunk_embed_index_and_register
-version: 0.0.2
+version: 0.0.3
 tags:
     Preview: ""
 
@@ -113,7 +113,7 @@ code: '../src/'
 
 command: >-
   python -m azureml.rag.tasks.crack_chunk_embed_index_and_register
-  --input_data ${{inputs.input_data}}
+  --input_data '${{inputs.input_data}}'
   --input_glob '${{inputs.input_glob}}'
   --chunk_size ${{inputs.chunk_size}}
   --chunk_overlap ${{inputs.chunk_overlap}}

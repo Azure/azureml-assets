@@ -30,7 +30,7 @@ Translation | Translation | <a href="https://huggingface.co/datasets/wmt16/viewe
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["My name is John and I live in Seattle", "Berlin is the capital of Germany."]
     },
     "parameters": {

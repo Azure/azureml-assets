@@ -79,6 +79,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         self._model_id = translate_params.get("model_id")
         self._task = translate_params["task"]
         self._signatures = translate_params.get("signatures", None)
+        self._inference_base_image = translate_params.get("inference_base_image", None)
 
     def _save(
         self,
@@ -87,6 +88,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         code_path: List[str],
         pip_requirements: Optional[str] = None,
         conda_env: Optional[str] = None,
+        metadata: Optional[Dict] = {}
     ):
         """Save Mlflow model to output directory.
 
@@ -100,13 +102,16 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         :type conda_env: Optional[str]
         :param code_path: A list of local filesystem paths to Python file dependencies
         :type code_path: List[str]
-
+        :param metadata: A metadata dictionary to associate with the MLflow model
+        :type metadata: Optional[Dict]. Defaults to {}.
         """
         signatures = self._signatures or self.get_model_signature()
         # set metadata info
-        metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
-                                              is_finetuned_model=False,
-                                              base_model_task=self._task)
+        metadata.update(fetch_mlflow_acft_metadata(
+            base_model_name=self._model_id,
+            is_finetuned_model=False,
+            base_model_task=self._task
+        ))
         mlflow.pyfunc.save_model(
             path=self._output_dir,
             python_model=mlflow_model_wrapper,
@@ -440,11 +445,17 @@ class StableDiffusionMlflowConvertor(TextToImageMLflowConvertor):
             os.path.join(self.MODEL_DIR, "config.py"),
             os.path.join(self.COMMON_DIR, "vision_utils.py")
         ]
+
+        metadata = {"model_type": "stable-diffusion"}
+        if self._inference_base_image:
+            metadata["azureml.base_image"] = self._inference_base_image
+
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
             artifacts_dict=artifacts_dict,
             conda_env=conda_env_file,
             code_path=code_path,
+            metadata=metadata
         )
 
 
@@ -507,6 +518,71 @@ class StableDiffusionInpaintingMlflowConvertor(TextToImageInpaintingMLflowConver
         conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
         code_path = [
             os.path.join(self.MODEL_DIR, "stable_diffusion_inpainting_mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
+        ]
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=code_path,
+        )
+
+
+class ImageTextToImageMLflowConvertor(PyFuncMLFLowConvertor):
+    """MlfLow convertor base class for image-text to image models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "text_to_image")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for image-text to image models."""
+        super().__init__(**kwargs)
+
+    def get_model_signature(self):
+        """Return model signature for image-text to image models."""
+        input_schema = Schema(inputs=[
+            ColSpec(name=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_PROMPT,
+                    type=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_PROMPT_DATA_TYPE),
+            ColSpec(name=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE,
+                    type=TextToImageMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_TYPE)
+        ])
+        output_schema = Schema(inputs=[
+            ColSpec(name=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_IMAGE,
+                    type=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_IMAGE_TYPE),
+            ColSpec(name=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG,
+                    type=TextToImageMLFlowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG_TYPE),
+        ])
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
+
+
+class StableDiffusionImageToImageMlflowConvertor(ImageTextToImageMLflowConvertor):
+    """HF MlfLow convertor class for stable diffusion image-text to image models."""
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for SD image-text to image models."""
+        super().__init__(**kwargs)
+
+    def _prepare_artifacts_dict(self) -> Dict:
+        """Prepare artifacts dict for MLflow model.
+
+        :return: artifacts dict
+        :rtype: Dict
+        """
+        artifacts_dict = {
+            TextToImageMLflowLiterals.MODEL_DIR: self._model_dir
+        }
+        return artifacts_dict
+
+    def save_as_mlflow(self):
+        """Prepare SD model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+        from stable_diffusion_image_to_image_mlflow_wrapper import StableDiffusionImageTexttoImageMLflowWrapper
+
+        mlflow_model_wrapper = StableDiffusionImageTexttoImageMLflowWrapper(task_type=self._task)
+        artifacts_dict = self._prepare_artifacts_dict()
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = [
+            os.path.join(self.MODEL_DIR, "stable_diffusion_image_to_image_mlflow_wrapper.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
             os.path.join(self.COMMON_DIR, "vision_utils.py")
         ]

@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.14
+version: 0.0.15
 name: llm_rag_crack_and_chunk_and_embed
 display_name: LLM - Crack, Chunk and Embed Data
 is_deterministic: true
@@ -82,7 +82,7 @@ inputs:
   num_workers:
     type: integer
     default: -1
-    description: "Number of workers to use when embedding data. -1 defaults to cpus / 2."
+    description: "Number of workers to use when embedding data. -1 defaults to CPUs / 2."
   verbosity:
     type: integer
     default: 0
@@ -96,7 +96,7 @@ environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
 command: >-
   python -m azureml.rag.tasks.crack_and_chunk_and_embed
-  --input_data ${{inputs.input_data}}
+  --input_data '${{inputs.input_data}}'
   $[[--input_glob '${{inputs.input_glob}}']]
   --chunk_size ${{inputs.chunk_size}}
   --chunk_overlap ${{inputs.chunk_overlap}}
