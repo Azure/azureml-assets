@@ -60,7 +60,10 @@
       "nunit",
       "Lightolier",
       "Tabbe",
-      "Lightolier"
+      "Lightolier",
+      "embedd",
+      "groundesness",
+      "zelin"
     ],
     "ignoreWords": [
       "openmpi",
