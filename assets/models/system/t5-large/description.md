@@ -43,10 +43,10 @@ Translation | Translation | <a href="https://huggingface.co/datasets/wmt16/viewe
 ```json
 [
     {
-        "0": "Mon nom est John et je vivais à Seattle."
+        "0": "Mein Name ist John und ich lebe in Seattle."
     },
     {
-        "0": "Berlin est la capitale de l'Allemagne."
+        "0": "Berlin ist die Hauptstadt Deutschlands."
     }
 ]
 ```
