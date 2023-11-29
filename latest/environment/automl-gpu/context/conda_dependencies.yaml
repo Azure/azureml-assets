@@ -27,7 +27,7 @@ dependencies:
   - azureml-responsibleai==1.54.0
   - azureml-automl-core==1.54.0
   - azureml-automl-runtime==1.54.0
-  - azureml-train-automl-client==1.54.0
+  - azureml-train-automl-client==1.54.0.post1
   - azureml-train-automl-runtime==1.54.0
   - azureml-dataset-runtime==1.54.0
   - azureml-contrib-dataset==1.54.0
