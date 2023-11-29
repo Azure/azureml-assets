@@ -63,7 +63,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
             "What is your favourite condiment?"
         ],
         "parameters": {
-            "max_new_tokens": 50,
+            "max_new_tokens": 100,
             "do_sample": true,
             "return_full_text": false
         }
@@ -75,7 +75,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 [
     {
-        "0": "I am a big fan of Salt and Pepper. I use it on nearly every meal."
+        "0": "I really enjoy wasabi mayo. The spice found in wasabi is a perfect compliment to the mayo's sweetness."
     }
 ]
 ```
