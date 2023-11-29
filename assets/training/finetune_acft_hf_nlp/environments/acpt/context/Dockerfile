@@ -1,5 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch201:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py38-torch210
 
 USER root
 
@@ -8,7 +8,7 @@ RUN pip install --upgrade pip
 
 COPY requirements.txt .
 
-RUN pip install "azureml-evaluate-mlflow=={{latest-pypi-version}}"
+RUN pip install "azureml-evaluate-mlflow==0.0.35"
 # pyarrow-hotfix is installed to fix the vulnerability CVE-2023-47248
 # This can be removed once datasets is upgraded to >= 2.14.7
 RUN pip install -r requirements.txt --no-cache-dir

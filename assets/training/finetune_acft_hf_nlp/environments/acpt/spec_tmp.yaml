@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+build:
+  path: context
+description: Environment used by Hugging Face NLP Finetune components
+name: acft-hf-nlp-gpu
+os_type: linux
+tags:
+  Preview: ''
+version: 28.11.2301
