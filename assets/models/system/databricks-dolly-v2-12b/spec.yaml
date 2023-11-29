@@ -4,8 +4,10 @@ path: ./
 properties:
   SHA: 19308160448536e378e3db21a73a751579ee7fdd
   datasets: databricks/databricks-dolly-15k
+  finetuning-tasks: text-classification, token-classification
   evaluation-min-sku-spec: 16|0|64|128
   evaluation-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
+  finetune-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
   inference-min-sku-spec: 0|24|448|1344
   inference-recommended-sku: Standard_E16s_v3, Standard_FX36mds, Standard_FX48mds, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
   languages: en
@@ -14,6 +16,13 @@ tags:
   Preview: ''
   evaluation_computes_allow_list:
   - Standard_NC24s_v3
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_NC24ads_A100_v4
+  - Standard_NC48ads_A100_v4
+  - Standard_NC96ads_A100_v4
+  - Standard_ND96amsr_A100_v4
+  finetune_computes_allow_list:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_NC24ads_A100_v4
@@ -31,6 +40,11 @@ tags:
   - Standard_NC96ads_A100_v4
   - Standard_ND96amsr_A100_v4
   author: Databricks, Inc.
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'true'
+    apply_ort: 'true'
+    precision: 16
   license: mit
   task: text-generation
 version: 14
