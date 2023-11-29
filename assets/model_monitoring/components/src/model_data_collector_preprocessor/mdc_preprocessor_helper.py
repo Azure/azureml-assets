@@ -18,6 +18,7 @@ from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from pyspark.sql import SparkSession
 from shared_utilities.io_utils import init_spark
+from shared_utilities.momo_exceptions import InvalidInputError
 
 
 def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_name=None, ws_name=None) -> str:
@@ -53,7 +54,7 @@ def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = Non
                   r"(?P<container>[^/]+)/(?P<path>.+)"
         matches = re.match(pattern, uri_folder_path)
         if not matches:
-            raise ValueError(f"Unsupported uri as uri_folder: {uri_folder_path}")
+            raise InvalidInputError(f"Unsupported uri as uri_folder: {uri_folder_path}")
         # use abfss to access both blob and dfs, to workaround the append block issue
         scheme = "abfss" if matches.group("scheme") == "https" else "abfs"
         store_type = "dfs"
@@ -67,7 +68,7 @@ def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = Non
         pattern = r"(?P<scheme>wasbs|abfss|wasb|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+).(?P<store_type>blob|dfs).core.windows.net/(?P<path>.+)"  # noqa
         matches = re.match(pattern, uri_folder_path)
         if not matches:
-            raise ValueError(f"Unsupported uri as uri_folder: {uri_folder_path}")
+            raise InvalidInputError(f"Unsupported uri as uri_folder: {uri_folder_path}")
         scheme = "abfss" if matches.group("scheme") in ["wasbs", "abfss"] else "abfs"
         store_type = "dfs"
         account_name = matches.group("account_name")
@@ -79,14 +80,15 @@ def get_hdfs_path_and_container_client(uri_folder_path: str, ws: Workspace = Non
     elif url.scheme == "azureml":
         if ':' in url.path:  # azureml asset path
             # asset path should be translated to azureml or hdfs path in service, should not reach here
-            raise ValueError("AzureML asset path is not supported as uri_folder.")
+            raise InvalidInputError("AzureML asset path is not supported as uri_folder.")
         else:  # azureml long or short form
             datastore_name, path = _get_datastore_and_path_from_azureml_path(uri_folder_path)
             ws = ws or Run.get_context().experiment.workspace
             datastore = ws.datastores.get(datastore_name)
             datastore_type = datastore.datastore_type
             if datastore_type not in ["AzureBlob", "AzureDataLakeGen2"]:
-                raise ValueError(f"Only Azure Blob and Azure Data Lake Gen2 are supported, but got {datastore.type}.")
+                raise InvalidInputError("Only Azure Blob and Azure Data Lake Gen2 are supported, "
+                                        f"but got {datastore.type}.")
             scheme = "abfss" if datastore.protocol == "https" else "abfs"
             store_type = "dfs"
             account_name = datastore.account_name
@@ -102,14 +104,14 @@ def get_datastore_name_from_input_path(input_path: str) -> str:
     url = urlparse(input_path)
     if url.scheme == "azureml":
         if ':' in url.path:  # azureml asset path
-            raise ValueError("AzureML asset path is not supported as input path.")
+            raise InvalidInputError("AzureML asset path is not supported as input path.")
         else:  # azureml long or short form
             datastore, _ = _get_datastore_and_path_from_azureml_path(input_path)
             return datastore
     elif url.scheme == "file" or os.path.isdir(input_path):
         return None  # local path for testing, datastore is not needed
     else:
-        raise ValueError("Only azureml path(long, short) is supported as input path of the MDC preprocessor.")
+        raise InvalidInputError("Only azureml path(long, short) is supported as input path of the MDC preprocessor.")
 
 
 def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str,
@@ -129,7 +131,7 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: 
     pattern = r"(?P<scheme>abfss|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+).dfs.core.windows.net(?P<path>$|/.*)"  # noqa
     matches = re.match(pattern, root_uri_folder)
     if not matches:
-        raise ValueError(f"Unsupported uri as uri_folder: {root_uri_folder}")
+        raise InvalidInputError(f"Unsupported uri as uri_folder: {root_uri_folder}")
     root_path = matches.group("path").strip('/')
     if end_datetime.minute == 0 and end_datetime.second == 0:
         # if end_datetime is a whole hour, the last hour folder is not needed
@@ -160,7 +162,7 @@ def set_data_access_config(container_client: Union[FileSystemClient, ContainerCl
     sas_token = spark.conf.get(
         f"spark.hadoop.fs.azure.sas.{container_name}.{account_name}.blob.core.windows.net", None)
     if not sas_token:
-        raise ValueError("Credential less datastore is not supported as input of the Model Monitoring")
+        raise InvalidInputError("Credential less datastore is not supported as input of the Model Monitoring for now.")
 
     # in Synapse doc, it uses sc._jsc.hadoopConfiguration().set to set first two configs
     # per testing, use spark.conf.set() also works
@@ -179,10 +181,11 @@ def read_json_content(path: str, sas_token: str) -> str:
             json_str = f.read()
         return json_str
     hdfs_path, container_client = get_hdfs_path_and_container_client(path, credential=sas_token)
+    # TODO endpoint for sovereign cloud may be different
     idx = hdfs_path.find('.core.windows.net/') + len('.core.windows.net/')
     file_path = hdfs_path[idx:]
     if not container_client:
-        raise ValueError(f"Fail to get credential to access dataref file {hdfs_path}")
+        raise InvalidInputError(f"Fail to get credential to access dataref file {hdfs_path}")
     elif isinstance(container_client, FileSystemClient):
         with container_client.get_file_client(file_path) as file_client:
             json_bytes = file_client.download_file().readall()

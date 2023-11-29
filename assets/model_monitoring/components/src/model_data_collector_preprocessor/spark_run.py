@@ -22,7 +22,7 @@ from mdc_preprocessor_helper import (
 try:
     # used in UDF from executor, need to import from root of code in real cluster run
     from model_data_collector_preprocessor.mdc_preprocessor_helper import read_json_content
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     # for remote UT, import from mdc_preprocessor_helper
     from mdc_preprocessor_helper import read_json_content
 
@@ -31,7 +31,9 @@ def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: date
                                     add_tags_func=None) -> DataFrame:
     def handle_data_not_found():
         add_tags_func({AML_MOMO_ERROR_TAG: "No data found for the given time window."})
-        raise DataNotFoundError(f"No data found for the given time window: {start_datetime} to {end_datetime}")
+        raise DataNotFoundError(
+            f"No data found for the given time window: {start_datetime} to {end_datetime} in input {input_data}. "
+            "We expect folder pattern <root>/YYYY/MM/DD/HH/<your_log>.jsonl")
 
     add_tags_func = add_tags_func or add_tags_to_root_run
 
@@ -49,23 +51,12 @@ def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: date
     return df
 
 
-def _get_data_columns(df: DataFrame) -> list:
-    columns = []
-    if MDC_DATA_COLUMN in df.columns:
-        columns.append(MDC_DATA_COLUMN)
-    if MDC_DATAREF_COLUMN in df.columns:
-        columns.append(MDC_DATAREF_COLUMN)
-
-    return columns
-
-
 def _load_dataref_into_data_column(df: DataFrame, input_data: str) -> DataFrame:
-    columns = _get_data_columns(df)
-    if MDC_DATAREF_COLUMN not in columns:
+    if MDC_DATAREF_COLUMN not in df.columns:
         return df  # no dataref column, return df directly
-    if MDC_DATA_COLUMN not in columns:
+    if MDC_DATA_COLUMN not in df.columns:
         # TODO need full schema override
-        raise ValueError(f"{MDC_DATAREF_COLUMN} column without {MDC_DATA_COLUMN} is not supported yet.")
+        raise NotImplementedError(f"{MDC_DATAREF_COLUMN} column without {MDC_DATA_COLUMN} is not supported yet.")
 
     @udf(returnType=StringType())
     def load_json_str(path):
