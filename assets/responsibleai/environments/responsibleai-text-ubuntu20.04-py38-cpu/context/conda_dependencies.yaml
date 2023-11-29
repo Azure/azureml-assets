@@ -16,8 +16,8 @@ dependencies:
     - numpy==1.22.0
     - responsibleai~=0.32.0
     - raiwidgets~=0.32.0
-    - pyarrow-hotfix>=0.5
     - pyarrow
+    - pyarrow-hotfix>=0.5
     - azure-core==1.29.5
     - mlflow
     - markupsafe<=2.1.2
@@ -29,4 +29,4 @@ dependencies:
     - ml-wrappers~=0.5.3
     - nlp-feature-extractors==0.1.0
     - datasets
-    - typing-extensions<4.6.1
+    - typing-extensions<4.6.1git s
