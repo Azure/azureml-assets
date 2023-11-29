@@ -14,17 +14,9 @@ See [How to train nlp models](https://learn.microsoft.com/en-us/azure/machine-le
 ### Documentation
 
 #### Prepare Data
-To create NLP models, it is necessary to provide labeled text data as input for model training. For multi-class classification, the dataset can contain several text columns and exactly one label column. Example as below:
+To create NLP models, it is necessary to provide labeled text data as input for model training. For text classification, the dataset can contain several text columns and exactly one label column. 
 
-```csv
-text,labels
-"I love watching Chicago Bulls games.","NBA"
-"Tom Brady is a great player.","NFL"
-"There is a game between Yankees and Orioles tonight","MLB"
-"Stephen Curry made the most number of 3-Pointers","NBA"
-```
-
-Please see [documentation](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli#data-validation) for data validation requirements.
+Please see [documentation](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#preparing-data) for data preparation requirements.
 
 #### Language Setting
 
@@ -39,10 +31,10 @@ For more information, see [Model sweeping and hyperparameter tuning](https://lea
 ### Code samples
 
 
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|---|--|--|--|--|
-Text Classification|Sentiment analysis|Yelp review|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-nlp-text-classification-multiclass-task-sentiment-analysis/automl-nlp-multiclass-sentiment-mlflow.ipynb" target="_blank">automl-nlp-multiclass-sentiment-mlflow.ipynb</a>|
-Text Classification|Fake news|Newsgroup||<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-text-classification-newsgroup/cli-automl-text-classification-newsgroup.yml" target="_blank">cli-automl-text-classification-newsgroup.yml</a>
+Task|Dataset|Python sample (Notebook)|CLI with YAML
+|---|--|--|--|
+Multiclass Text Classification|[Yelp review](https://huggingface.co/datasets/yelp_review_full)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-nlp-text-classification-multiclass-task-sentiment-analysis/automl-nlp-multiclass-sentiment-mlflow.ipynb" target="_blank">automl-nlp-multiclass-sentiment-mlflow.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-text-classification-newsgroup/cli-automl-text-classification-newsgroup.yml" target="_blank">cli-automl-text-classification-newsgroup.yml</a>
+Multilabel Text Classification|[arXiv paper abstract](https://www.kaggle.com/datasets/spsayakpaul/arxiv-paper-abstracts)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-nlp-text-classification-multilabel-task-paper-categorization/automl-nlp-multilabel-paper-cat.ipynb" target="_blank">automl-nlp-multilabel-paper-cat.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-text-classification-multilabel-paper-cat/cli-automl-text-classification-multilabel-paper-cat.yml" target="_blank">cli-automl-text-classification-multilabel-paper-cat.yml</a>
 
 
 
