@@ -349,7 +349,7 @@ def _initiate_run():
         "--max_seq_length", decode_param_from_env_var("max_seq_length"),
         "--train_file_path", os.path.join(decode_input_from_env_var("dataset_input"), "train_input.jsonl"),
         "--test_file_path", os.path.join(decode_input_from_env_var("dataset_input"), "train_input.jsonl"),
-        "--model_selector_output", 
+        "--model_selector_output",
         os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "model_selector_output"),
         "--output_dir", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "preprocess_output")
     ]
