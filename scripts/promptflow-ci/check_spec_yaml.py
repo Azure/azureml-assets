@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Check spec.yaml fields."""
+
 import argparse
 import os
 import yaml

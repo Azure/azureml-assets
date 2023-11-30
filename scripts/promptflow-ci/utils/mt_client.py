@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""MTClient class."""
+
 from datetime import datetime
 
 import requests

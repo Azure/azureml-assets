@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Retry helper."""
+
 import requests
 import time
 from functools import wraps

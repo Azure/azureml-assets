@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Promptflow CI Script"""
+
 import argparse
 import os
 from pathlib import Path
@@ -257,7 +259,7 @@ def check_flow_run_status(
     check_run_status_interval,
     check_run_status_max_attempts
 ):
-    """check flow run status."""
+    """Check flow run status."""
     for flow_run_identifier in flow_runs_to_check:
         flow_id, flow_run_id = flow_utils.resolve_flow_run_identifier(
             flow_run_identifier)

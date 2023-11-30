@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Auth utils."""
+
 import uuid
 
 from azureml.core.authentication import InteractiveLoginAuthentication
