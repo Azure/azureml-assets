@@ -6,8 +6,8 @@
 import argparse
 
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import posexplode, concat_ws, udf, from_json, when, col
-from pyspark.sql.types import StringType
+from pyspark.sql.functions import posexplode, concat_ws, udf, from_json, when, col, to_json
+from pyspark.sql.types import StringType, AtomicType
 from dateutil import parser
 from datetime import datetime
 from shared_utilities.momo_exceptions import DataNotFoundError
@@ -107,6 +107,13 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     return df
 
 
+def _convert_complex_columns_to_json_string(df: DataFrame) -> DataFrame:
+    for col_schema in df.schema:
+        if not isinstance(col_schema.dataType, AtomicType):
+            df = df.withColumn(col_schema.name, to_json(df[col_schema.name]))
+    return df
+
+
 def _mdc_uri_folder_to_preprocessed_spark_df(
         data_window_start: datetime, data_window_end: datetime, input_data: str, extract_correlation_id: bool,
         add_tags_func=None) -> DataFrame:
@@ -124,11 +131,11 @@ def _mdc_uri_folder_to_preprocessed_spark_df(
     df.select("data").show(truncate=False)
     df.printSchema()
 
-    transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id)
-    transformed_df.show()
-    transformed_df.printSchema()
+    df = _extract_data_and_correlation_id(df, extract_correlation_id)
+    df.show()
+    df.printSchema()
 
-    return transformed_df
+    return df
 
 
 def mdc_preprocessor(
@@ -148,6 +155,8 @@ def mdc_preprocessor(
     """
     transformed_df = _mdc_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, input_data,
                                                               extract_correlation_id)
+    # TODO remove this step after we switch our interface from mltable to uri_folder
+    transformed_df = _convert_complex_columns_to_json_string(transformed_df)
 
     save_spark_df_as_mltable(transformed_df, preprocessed_input_data)
 
