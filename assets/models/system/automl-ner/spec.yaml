@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: AutoML-Named-Entity-Recognition(NER)
+name: AutoML-Named-Entity-Recognition
 path: ./
 properties:
   finetune-min-sku-spec: 4|1|28|176
