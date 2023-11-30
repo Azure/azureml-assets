@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
 name: clip_large_perf_pipeline
-display_name: clip-large-perf
 experiment_name: pipeline_generator
 description: benchmark_clip
 jobs:
