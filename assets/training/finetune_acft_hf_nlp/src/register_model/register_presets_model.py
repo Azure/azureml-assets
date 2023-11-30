@@ -287,7 +287,7 @@ def get_rel_paths_manifest_engine_controller_files(folder_to_search: str) -> Lis
     return [pth.replace(folder_to_search, '.') for pth in full_paths]
 
 
-def construct_storge_items(files_list: List[str]) -> List[Dict]:
+def construct_storge_items(files_list: List[str], run_id: str) -> List[Dict]:
     """Construct the storage item."""
     from pathlib import Path
 
@@ -295,7 +295,7 @@ def construct_storge_items(files_list: List[str]) -> List[Dict]:
     for file in files_list:
         return_list.append(
             {
-                "remoteLocation": str(Path("{0}", f"{file}")),
+                "remoteLocation": str(Path("{0}", "azureml", f"{run_id}", "output_model", f"{file}")),
                 "localRelativePath": file,
                 "unpackType": 0
             }
@@ -375,7 +375,7 @@ def registermodel_entrypoint(
                     ACFTUserError, pii_safe_message="Pipe manifest is empty."
                 )
             )
-    manifest_dict_pipe["storageItems"] = construct_storge_items(pipe_manifest_files)
+    manifest_dict_pipe["storageItems"] = construct_storge_items(pipe_manifest_files, run_id)
 
     manifest_dict_enginecontroller = {}
     engine_controller_manifest_files = get_rel_paths_manifest_engine_controller_files(registered_model_output)
@@ -385,7 +385,7 @@ def registermodel_entrypoint(
                     ACFTUserError, pii_safe_message="Engine controller manifest is empty."
                 )
             )
-    manifest_dict_enginecontroller["storageItems"] = construct_storge_items(engine_controller_manifest_files)
+    manifest_dict_enginecontroller["storageItems"] = construct_storge_items(engine_controller_manifest_files, run_id)
 
     output_manifest_pipe = registered_model_output + "/manifest.pipe.json"
     with open(output_manifest_pipe, 'w') as f:
@@ -411,7 +411,6 @@ def registermodel_entrypoint(
     properties.update(
         {
             "pipeManifestPath": pipe_manifest_path,
-            "intellectualPropertyPublisher": "nopublisher",
             "modelPath": ".",  # hordcode it for now
             "componentVersion": "1",
             "engineControllerManifestPath": engine_controller_manifest_path,

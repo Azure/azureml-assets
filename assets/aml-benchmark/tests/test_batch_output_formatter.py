@@ -7,6 +7,7 @@ from typing import Optional
 import json
 import os
 import uuid
+import pytest
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
@@ -24,7 +25,10 @@ class TestBatchOutputFormatterComponent:
 
     EXP_NAME = "batch-output-formatter-test"
 
-    def test_batch_output_formatter(self, temp_dir: str):
+    @pytest.mark.parametrize(
+            'model_type', [(None), ("vision_oss")]
+    )
+    def test_batch_output_formatter(self, model_type: str, temp_dir: str):
         """Test method for batch inference preparer."""
         ml_client = get_mlclient()
         pipeline_job = self._get_pipeline_job(
@@ -32,6 +36,7 @@ class TestBatchOutputFormatterComponent:
             'label',
             'http://test-endpoint.com',
             temp_dir,
+            model_type,
         )
         # submit the pipeline job
         pipeline_job = ml_client.create_or_update(
@@ -52,6 +57,7 @@ class TestBatchOutputFormatterComponent:
             label_key: str,
             endpoint_url: str,
             temp_dir: Optional[str] = None,
+            model_type: Optional[str] = None,
     ) -> Job:
         pipeline_job = load_yaml_pipeline("batch_output_formatter.yaml")
 
@@ -63,6 +69,8 @@ class TestBatchOutputFormatterComponent:
                     f2.write(f.read())
 
         # set the pipeline inputs
+        if model_type:
+            pipeline_job.jobs['run_batch_output_formatter'].inputs.model_type = model_type
         pipeline_job.inputs.batch_inference_output = Input(
             type="uri_folder", path=temp_dir
         )
@@ -108,4 +116,4 @@ class TestBatchOutputFormatterComponent:
         )
         self._check_output_data(
             os.path.join(
-                output_dir, "ground_truth"), "ground_truth.jsonl", ["ground_truth"])
+                output_dir, "ground_truth"), "ground_truth.jsonl", ["label"])

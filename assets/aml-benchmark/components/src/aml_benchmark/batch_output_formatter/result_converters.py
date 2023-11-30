@@ -31,7 +31,7 @@ class ResultConverters:
 
     def __init__(
             self, model_type: str, metadata_key: str, data_id_key: str,
-            label_key: str, additional_columns: str, ground_truth_df: Optional[pd.DataFrame], 
+            label_key: str, additional_columns: str, ground_truth_df: Optional[pd.DataFrame],
             fallback_value: str, is_performance_test: bool = False
     ) -> None:
         """Init for the result converter."""
@@ -100,7 +100,9 @@ class ResultConverters:
             if self._metadata_key:
                 ground_truth = self._get_request(result)[self._metadata_key][self._label_key]
                 if self.additional_columns:
-                    additional_columns = self._get_additional_columns_data(self._get_request(result)[self._metadata_key])
+                    additional_columns = self._get_additional_columns_data(
+                        self._get_request(result)[self._metadata_key]
+                        )
             elif self.METADATA_KEY_IN_RESULT in result:
                 ground_truth = result[self.METADATA_KEY_IN_RESULT][self._label_key]
                 if self.additional_columns:
@@ -109,6 +111,8 @@ class ResultConverters:
                 use_ground_truth_input = True
         elif self._model.is_aoai_model():
             use_ground_truth_input = True
+        elif self._model.is_vision_oss_model():
+            use_ground_truth_input = False
         if use_ground_truth_input:  # Ask about edge case.
             request_payload = self._get_request(result)
             payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
@@ -123,6 +127,8 @@ class ResultConverters:
             prediction = ResultConverters._get_oss_response_result(result)
         elif self._model.is_aoai_model():
             prediction = ResultConverters._get_aoai_response_result(result)
+        elif self._model.is_vision_oss_model():
+            prediction = ResultConverters._get_vision_oss_response_results(result)
         return {ResultConverters.PREDICTION_COL_NAME: prediction}
 
     def _get_fallback_output(self, is_perf: bool = False) -> Dict[str, Any]:
@@ -206,3 +212,8 @@ class ResultConverters:
         if '0' in response:
             return response['0']
         return response['output']
+
+    @staticmethod
+    def _get_vision_oss_response_results(result: Dict[str, Any]) -> Any:
+        response = ResultConverters._get_response(result)
+        return response

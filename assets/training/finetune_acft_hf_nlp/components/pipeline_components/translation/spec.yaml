@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: translation_pipeline
-version: 0.0.27
+version: 0.0.28
 type: pipeline
 display_name: Translation Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for translation task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/translation_pipeline) to learn more.
@@ -30,6 +30,11 @@ inputs:
     default: Standard_nc24rs_v3
     description: Instance type to be used for model_evaluation components in case of serverless compute, eg. standard_nc24rs_v3. 
       The parameter compute_model_evaluation must be set to 'serverless' for instance_type to be used
+  shm_size_finetune:
+    type: string
+    optional: true
+    default: 5g
+    description: Shared memory size to be used for finetune component. It is useful while using Nebula (via DeepSpeed) which uses shared memory to save model and optimizer states.
   num_nodes_finetune:
     type: integer
     min: 1
@@ -499,7 +504,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.25
+    component: azureml:ft_nlp_common_validation:0.0.26
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -509,6 +514,7 @@ jobs:
       compute_model_import: '${{parent.inputs.compute_model_import}}'
       compute_data_preprocess: '${{parent.inputs.compute_preprocess}}'
       task_name: 'translation'
+      num_nodes_finetune: '${{parent.inputs.num_nodes_finetune}}'
       number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
       train_file_path: '${{parent.inputs.train_file_path}}'
       validation_file_path: '${{parent.inputs.validation_file_path}}'
@@ -517,9 +523,17 @@ jobs:
       validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
       test_mltable_path: '${{parent.inputs.test_mltable_path}}'
       user_column_names: '${{parent.inputs.source_lang}},${{parent.inputs.target_lang}}'
+      num_train_epochs: '${{parent.inputs.num_train_epochs}}'
+      max_steps: '${{parent.inputs.max_steps}}'
+      per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
+      per_device_eval_batch_size: '${{parent.inputs.per_device_eval_batch_size}}'
+      learning_rate: '${{parent.inputs.learning_rate}}'
+      adam_beta1: '${{parent.inputs.adam_beta1}}'
+      adam_beta2: '${{parent.inputs.adam_beta2}}'
+      adam_epsilon: '${{parent.inputs.adam_epsilon}}'
   translation_model_import:
     type: command
-    component: azureml:translation_model_import:0.0.25
+    component: azureml:translation_model_import:0.0.26
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -530,7 +544,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   translation_datapreprocess:
     type: command
-    component: azureml:translation_datapreprocess:0.0.25
+    component: azureml:translation_datapreprocess:0.0.26
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -549,7 +563,7 @@ jobs:
       model_selector_output: '${{parent.jobs.translation_model_import.outputs.output_dir}}'
   translation_finetune:
     type: command
-    component: azureml:translation_finetune:0.0.25
+    component: azureml:translation_finetune:0.0.26
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -557,6 +571,7 @@ jobs:
     resources:
       instance_count: '${{parent.inputs.num_nodes_finetune}}'
       instance_type: '${{parent.inputs.instance_type_finetune}}'
+      shm_size: '${{parent.inputs.shm_size_finetune}}'
     inputs:
       apply_lora: '${{parent.inputs.apply_lora}}'
       merge_lora_weights: '${{parent.inputs.merge_lora_weights}}'
@@ -606,7 +621,7 @@ jobs:
       # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.25
+    component: azureml:ft_nlp_model_converter:0.0.26
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -626,7 +641,7 @@ jobs:
       test_data: '${{parent.jobs.translation_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.target_lang}}'
       input_column_names: '${{parent.inputs.source_lang}}'
-      batch_size: '${{parent.inputs.batch_size}}'
+      batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.output_dir}}'
   compute_metrics:
