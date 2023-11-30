@@ -24,7 +24,7 @@ from promptflow.azure import PFClient
 from azure.identity import DefaultAzureCredential
 from utils import flow_utils
 from promptflow.azure._load_functions import load_flow
-from promptflow.azure._utils.gerneral import is_remote_uri
+from promptflow._sdk._utils import is_remote_uri
 
 
 TEST_FOLDER = "test"
