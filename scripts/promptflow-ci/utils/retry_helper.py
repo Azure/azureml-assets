@@ -10,6 +10,7 @@ from .logging_utils import log_debug, log_error, log_warning
 
 
 def retry_helper(retry_count=3):
+    """Retry helper wrapper."""
     def retry(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

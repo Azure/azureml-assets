@@ -10,7 +10,7 @@ from azureml.core.authentication import ServicePrincipalAuthentication
 
 
 def get_service_principal_authentication_header(tenant_id, client_id, client_secret, request_id=None):
-    """Get SP auth header"""
+    """Get SP auth header."""
     auth = ServicePrincipalAuthentication(
         tenant_id=tenant_id,
         service_principal_id=client_id,
@@ -27,7 +27,7 @@ def get_service_principal_authentication_header(tenant_id, client_id, client_sec
 
 
 def get_interactive_login_authentication_header(request_id=None):
-    """Get login auth header"""
+    """Get login auth header."""
     interactive_auth = InteractiveLoginAuthentication()
     header = interactive_auth.get_authentication_header()
     if request_id is None:

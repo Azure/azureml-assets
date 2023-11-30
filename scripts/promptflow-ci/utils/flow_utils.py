@@ -26,7 +26,7 @@ def resolve_flow_run_identifier(flow_run_identifier):
 
 
 def _validate_meta(meta, flow_dir):
-    """Validate meta type"""
+    """Validate meta type."""
     if meta["type"] not in ["standard", "evaluate", "chat", "rag"]:
         raise ValueError(f"Unknown type in meta.json. model dir: {flow_dir}.")
     stage = meta["properties"]["promptflow.stage"]
@@ -35,12 +35,7 @@ def _validate_meta(meta, flow_dir):
 
 
 def _general_copy(src, dst, make_dirs=True):
-    """Wrapped `shutil.copy2` function for possible "Function not implemented"
-    exception raised by it.
-
-    Background: `shutil.copy2` will throw OSError when dealing with Azure File.
-    See https://stackoverflow.com/questions/51616058 for more information.
-    """
+    """Call _copy to copy."""
     if make_dirs:
         os.makedirs(os.path.dirname(dst), exist_ok=True)
     if hasattr(os, "listxattr"):
@@ -51,7 +46,7 @@ def _general_copy(src, dst, make_dirs=True):
 
 
 def _copy(src: Path, dst: Path) -> None:
-    """Copy files"""
+    """Copy files."""
     if not src.exists():
         raise ValueError(f"Path {src} does not exist.")
     if src.is_file():

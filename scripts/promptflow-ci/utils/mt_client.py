@@ -90,7 +90,7 @@ class MTClient:
 
     @retry_helper()
     def submit_flow(self, json_body, experiment_id):
-        """Submit flow with a created flow run id or evaluation flow run id"""
+        """Submit flow with a created flow run id or evaluation flow run id."""
         url = self.submit_flow_api_without_endpoint_name_format.format(
             self.api_endpoint, experiment_id)
         # We need to update flow run id in case retry happens, submit same json body with same flow run id will cause
@@ -110,6 +110,7 @@ class MTClient:
 
     @retry_helper()
     def get_run_status(self, experiment_id, flow_id, run_id):
+        """Get run status."""
         url = self.get_flow_run_status_api_format.format(
             self.api_endpoint, flow_id, run_id, experiment_id)
         result = self._get(url)

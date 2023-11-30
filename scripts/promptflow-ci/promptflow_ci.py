@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Promptflow CI Script"""
+"""Promptflow CI script."""
 
 import argparse
 import os
