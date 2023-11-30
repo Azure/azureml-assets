@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
-display_name: clip-perf
+display_name: clip-base-perf
 experiment_name: pipeline_generator
 description: benchmark_clip
 jobs:
@@ -10,7 +10,7 @@ jobs:
     inputs:
       input_dataset:
         type: uri_folder
-        path: azureml:10_samples_large:1
+        path: azureml:10_samples_huge:1
       model_type: vision_oss
       batch_input_pattern: '{
         "input_data": {
@@ -18,8 +18,10 @@ jobs:
             "image",
             "text"
           ],
-          "index": [0],
+          "index": [0,1,2],
           "data": [
+            ["###<image>", "###<text>"],
+            ["###<image>", "###<text>"],
             ["###<image>", "###<text>"]
           ]
         },
