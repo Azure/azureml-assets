@@ -32,8 +32,7 @@ _ALLOWED_MAX_STRING_LENGTH = 128
 
 @dataclass
 class ComponentInput:
-    """Dataclass for Ftaas pipeline component inputs.
-    """
+    """Dataclass for Ftaas pipeline component inputs."""
 
     value: str
     allowed_max_length: int = _ALLOWED_MAX_STRING_LENGTH
@@ -41,8 +40,7 @@ class ComponentInput:
 
 @dataclass
 class ComponentStr:
-    """Dataclass for Ftaas pipeline component inputs.
-    """
+    """Dataclass for Ftaas pipeline component inputs."""
 
     value: str
     choices: list

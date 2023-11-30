@@ -32,8 +32,7 @@ _COMPONENTS_SCRIPTS_REL_PATH = Path("entry_point", "ftaas", "data_import")
 
 @dataclass
 class ComponentInput:
-    """Dataclass for Ftaas pipeline component inputs.
-    """
+    """Dataclass for Ftaas pipeline component inputs."""
 
     value: str
     allowed_max_length: int = 128
@@ -41,8 +40,7 @@ class ComponentInput:
 
 @dataclass
 class ComponentStr:
-    """Dataclass for Ftaas pipeline component inputs.
-    """
+    """Dataclass for Ftaas pipeline component inputs."""
 
     value: str
     choices: list
