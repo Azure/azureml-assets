@@ -15,6 +15,7 @@ from .logging_utils import log_debug
 
 class MTClient:
     """MTClient class."""
+
     flow_api_endpoint = "{MTServiceRoute}/api/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/" \
                         "providers/Microsoft.MachineLearningServices/workspaces/{WorkspaceName}/flows"
     create_flow_api_format = "{0}/?experimentId={1}"
