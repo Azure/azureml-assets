@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import copy
 import os
 import random
 import re
@@ -11,7 +10,7 @@ import shutil
 from unittest import mock
 import yaml
 
-from utils.logging_utils import log_error, log_debug, log_warning
+from utils.logging_utils import log_error, log_debug
 
 
 def create_flow_run_identifier(flow_id, flow_run_id):
