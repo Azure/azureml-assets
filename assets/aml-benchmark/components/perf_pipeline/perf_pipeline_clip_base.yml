@@ -1,5 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
+name: clip_base_perf_pipeline
 display_name: clip-base-perf
 experiment_name: pipeline_generator
 description: benchmark_clip
@@ -18,19 +19,17 @@ jobs:
             "image",
             "text"
           ],
-          "index": [0,1,2],
+          "index": [0],
           "data": [
-            ["###<image>", "###<text>"],
-            ["###<image>", "###<text>"],
             ["###<image>", "###<text>"]
           ]
         },
         "params": {}
       }'
-      endpoint_url: https://clip-base-cpu.eastus.inference.ml.azure.com/score
+      endpoint_url: https://clip-base-gpu.eastus.inference.ml.azure.com/score
       is_performance_test: False
       deployment_name: openai-clip-vit-base-patch32-5
-      connections_name: clip-base-cpu
+      connections_name: clip-base-gpu
       handle_response_failure: use_fallback
       ensure_ascii: false
       initial_worker_count: 1
@@ -49,6 +48,7 @@ jobs:
         type: uri_file
         path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
   performance:
+    compute: azureml:serverless
     type: command
     component: azureml://registries/azureml/components/compute_performance_metrics/labels/latest
     limits:
@@ -67,6 +67,7 @@ jobs:
         type: uri_file
         path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
   aggregator:
+    compute: azureml:serverless
     type: command
     component: azureml://registries/azureml/components/benchmark_result_aggregator/labels/latest
     limits:

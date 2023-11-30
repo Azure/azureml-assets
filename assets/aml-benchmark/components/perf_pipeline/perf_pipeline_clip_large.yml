@@ -19,19 +19,17 @@ jobs:
             "image",
             "text"
           ],
-          "index": [0,1,2],
+          "index": [0],
           "data": [
-            ["###<image>", "###<text>"],
-            ["###<image>", "###<text>"],
             ["###<image>", "###<text>"]
           ]
         },
         "params": {}
       }'
-      endpoint_url: https://clip-large-ic-cpu.eastus.inference.ml.azure.com/score
+      endpoint_url: https://clip-large-gpu.eastus.inference.ml.azure.com/score
       is_performance_test: False
       deployment_name: openai-clip-vit-large-patch14-3
-      connections_name: clip-large-cpu-3
+      connections_name: clip-large-gpu
       handle_response_failure: use_fallback
       ensure_ascii: false
       initial_worker_count: 1
