@@ -1,26 +1,28 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 """This module provides a decorator to log the execution time of functions."""
-
 import os
 import time
+import io
+import base64
+
+import torch
+
 from logging_config import configure_logger
+from PIL.Image import Image
 
 logger = configure_logger(__name__)
 
 
 def log_execution_time(func):
-    """
-    Decorate a function to log the execution time.
+    """Decorate a function to log the execution time.
 
     :param func: The function to be decorated.
     :return: The decorated function.
     """
 
     def wrapper(*args, **kwargs):
-        """
-        Calculate and log the execution time.
+        """Calculate and log the execution time.
 
         :param args: Positional arguments for the decorated function.
         :param kwargs: Keyword arguments for the decorated function.
@@ -30,10 +32,11 @@ def log_execution_time(func):
         result = func(*args, **kwargs)
         end_time = time.time()
         elapsed_time = end_time - start_time
-        if func.__name__ == "wait_until_server_healthy" and \
-           os.environ.get("LOGGING_WORKER_ID", "") == str(os.getpid()):
+        if func.__name__ == "wait_until_server_healthy" and os.environ.get("LOGGING_WORKER_ID", "") == str(
+            os.getpid(),
+        ):
             logger.info(
-                f"Function {func.__name__} took {elapsed_time:.4f} seconds to execute."
+                f"Function {func.__name__} took {elapsed_time:.4f} seconds to execute.",
             )
         return result
 
@@ -43,8 +46,8 @@ def log_execution_time(func):
 def box_logger(message: str):
     """Log a message, but in a box."""
     row = len(message)
-    h = ''.join(['+'] + ['-' * row] + ['+'])
-    result = '\n' + h + '\n' + message + '\n' + h
+    h = "".join(["+"] + ["-" * row] + ["+"])
+    result = "\n" + h + "\n" + message + "\n" + h
     logger.info(result)
 
 
@@ -75,7 +78,7 @@ def map_env_vars_to_vllm_server_args() -> dict:
         "QUANTIZATION": "quantization",
         "ENGINE_USE_RAY": "engine-use-ray",
         "DISABLE_LOG_REQUESTS": "disable-log-requests",
-        "MAX_LOG_LEN": "max-log-len"
+        "MAX_LOG_LEN": "max-log-len",
     }
 
     cli_args = {}
@@ -86,3 +89,31 @@ def map_env_vars_to_vllm_server_args() -> dict:
     box_logger(f"vLLM server arguments: {cli_args}")
 
     return cli_args
+
+
+def image_to_base64(img: Image, format: str) -> str:
+    """
+    Convert image into Base64 encoded string.
+
+    :param img: image object
+    :type img: PIL.Image.Image
+    :param format: image format
+    :type format: str
+    :return: base64 encoded string
+    :rtype: str
+    """
+    buffered = io.BytesIO()
+    img.save(buffered, format=format)
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    return img_str
+
+
+def get_gpu_device_capability() -> float:
+    """
+    Get the GPU device capability version.
+
+    :return: GPU device capability version
+    :rtype: float
+    """
+    properties = torch.cuda.get_device_properties(0)
+    return float(f"{properties.major}.{properties.minor}")

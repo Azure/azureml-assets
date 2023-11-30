@@ -1,18 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 """This module provides the FMScore class for running inference engines with given prompts and parameters."""
-
 import os
 from typing import Dict, List
+
 from configs import EngineConfig, TaskConfig
 from constants import TaskType
 from engine.engine import InferenceResult
+from logging_config import configure_logger
 from managed_inference import MIRPayload
 from prompt_formatter import Llama2Formatter
-from replica_manager import ReplicaManagerConfig, ReplicaManager
+from replica_manager import ReplicaManager, ReplicaManagerConfig
 from utils import log_execution_time
-from logging_config import configure_logger
 
 logger = configure_logger(__name__)
 
@@ -42,7 +41,7 @@ class FMScore:
         replica_manager_config = ReplicaManagerConfig(
             engine_config=self.engine_config,
             task_config=self.task_config,
-            num_replicas=int(os.environ.get("NUM_REPLICAS", -1))
+            num_replicas=int(os.environ.get("NUM_REPLICAS", -1)),
         )
         replica_manager = ReplicaManager(replica_manager_config)
         replica_manager.initialize()
@@ -50,8 +49,7 @@ class FMScore:
 
     @log_execution_time
     def run(self, payload: MIRPayload) -> List[InferenceResult]:
-        """
-        Run the engine with the given prompts and parameters.
+        """Run the engine with the given prompts and parameters.
 
         :param payload: The parsed input from managed inference that contains the parameters and prompts from the user
         :return: A list of InferenceResult objects, each containing the response and metadata related to the inference
