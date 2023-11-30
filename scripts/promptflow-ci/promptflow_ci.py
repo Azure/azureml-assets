@@ -349,12 +349,13 @@ if __name__ == "__main__":
     # Filter out skipped flows
     if args.skipped_flows != "":
         skipped_flows = args.skipped_flows.split(",")
+        skipped_flows = [flow.replace("_", "-") for flow in skipped_flows]
         log_debug(f"Skipped flows: {skipped_flows}")
         flows_dirs = [flow_dir for flow_dir in changed_models if Path(
             flow_dir).name not in skipped_flows]
 
     flows_dirs = [Path(os.path.join(dir, TEST_FOLDER))
-                  for dir in changed_models]
+                  for dir in flows_dirs]
 
     log_debug(flows_dirs)
     if len(flows_dirs) == 0:
