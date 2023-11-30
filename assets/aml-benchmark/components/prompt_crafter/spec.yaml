@@ -100,7 +100,7 @@ inputs:
     description: |
       This will be used as the ground truth column if present in the input.
       If not present, the output_pattern will be used as the ground truth.
-  c:
+  additional_columns:
     type: string
     optional: true
     default: ''
