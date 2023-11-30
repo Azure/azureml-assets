@@ -14,6 +14,7 @@ BYPASS_GALLERY_CHECK = {
 
 model_names = {}
 
+
 def bypass_gallary_check(yaml_file):
     for file in BYPASS_GALLERY_CHECK:
         if os.path.samefile(yaml_file, file):
@@ -67,5 +68,6 @@ if __name__ == "__main__":
             print(error)
         exit(1)
     else:
-        print(f"Check passed. Found {len(errors)} errors when checking models' spec.yaml.")
+        print(
+            f"Check passed. Found {len(errors)} errors when checking models' spec.yaml.")
         exit(0)

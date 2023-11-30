@@ -82,7 +82,7 @@ def _assign_flow_values(flow_dirs, tmp_folder_path):
             if "inputs" in flow_node:
                 if "deployment_name" in flow_node["inputs"]:
                     if flow_node["source"].get("tool") == "promptflow.tools.embedding.embedding":
-                        flow_node["inputs"]["deployment_name"] =  "text-embedding-ada-002"
+                        flow_node["inputs"]["deployment_name"] = "text-embedding-ada-002"
                     else:
                         flow_node["inputs"]["deployment_name"] = "gpt-35-turbo"
                 if "connection" in flow_node["inputs"]:
@@ -91,43 +91,6 @@ def _assign_flow_values(flow_dirs, tmp_folder_path):
             yaml.dump(flow_dag, dag_file, allow_unicode=True)
     log_debug("=======Complete overriding values for flows=======\n")
     return updated_bulk_test_main_flows_dirs
-    log_debug("\n=======Start adding variants for flows=======")
-
-    for bulk_test_main_flows_dir in bulk_test_main_flows_dirs:
-        with open(Path(bulk_test_main_flows_dir) / "flow.dag.yaml", "r") as dag_file:
-            flow_dag = yaml.safe_load(dag_file)
-        nodes = flow_dag["nodes"]
-        nodes_with_llm_tool = [(index, node) for index, node in enumerate(
-            nodes) if node["type"] == "llm"]
-        if len(nodes_with_llm_tool) == 0:
-            log_warning(f"flow {Path(bulk_test_main_flows_dir).name} doesn't have nodes wit llm type tools. Skip adding llm "
-                  f"node variant.")
-            continue
-        for index, node in nodes_with_llm_tool:
-            if "use_variants" in node:
-                log_debug(
-                    f"flow {Path(bulk_test_main_flows_dir).name} already has variants. Skip adding llm node variant.")
-                return
-        # Select the first node to a one variant for it
-        node_to_add_variant = copy.deepcopy(nodes_with_llm_tool[0][1])
-        index_of_node_to_add_variant = nodes_with_llm_tool[0][0]
-        nodes[index_of_node_to_add_variant] = {
-            "name": node_to_add_variant["name"], "use_variants": True}
-        # tool_name_for_added_variant = f"{node_to_add_variant['tool']}__variant_1"
-        log_debug(f"Adding one variant for node {node_to_add_variant['name']} in bulk_test_main_flow "
-              f"{Path(bulk_test_main_flows_dir).name}")
-        node_variants = {}
-        node_name = node_to_add_variant.pop("name")
-        default_variant = {"node": node_to_add_variant}
-        variants = {"variant_0": default_variant}
-        # Add one variant for the node
-        variants["variant_1"] = copy.deepcopy(default_variant)
-        node_variants[node_name] = {
-            "default_variant_id": "variant_0", "variants": variants}
-        flow_dag["node_variants"] = node_variants
-        with open(Path(bulk_test_main_flows_dir) / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
-            yaml.dump(flow_dag, dag_file, allow_unicode=True)
-    log_debug("=======Complete adding variants for flows=======\n")
 
 
 def construct_create_flow_payload_of_new_contract(flow, flow_meta, properties):
@@ -155,8 +118,14 @@ def construct_create_flow_payload_of_new_contract(flow, flow_meta, properties):
     }
 
 
-def construct_submit_flow_payload_of_new_contract(flow_id, batch_data_inputs, runtime_name, flow_dag, flow_submit_mode):
-    flow_run_id = f"run_{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(100000,999999)}"
+def construct_submit_flow_payload_of_new_contract(
+    flow_id,
+    batch_data_inputs,
+    runtime_name,
+    flow_dag,
+    flow_submit_mode
+):
+    flow_run_id = f"run_{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(100000, 999999)}"
     tuning_node_names = [node["name"]
                          for node in flow_dag["nodes"] if "use_variants" in node]
     submit_flow_payload = {
@@ -174,7 +143,6 @@ def construct_submit_flow_payload_of_new_contract(flow_id, batch_data_inputs, ru
         "useFlowSnapshotToSubmit": True,
     }
     return submit_flow_payload
-
 
 
 def construct_flow_link(aml_resource_uri, subscription, resource_group, workspace, experiment_id, flow_id, ux_flight):

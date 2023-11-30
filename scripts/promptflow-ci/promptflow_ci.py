@@ -49,7 +49,6 @@ def download_blob_to_file(container_name, container_path, storage_name, target_d
     log_debug(f"Current container_name: {container_name}")
     # Create the BlobServiceClient object
     # Because container has been enabled anonymous access, the ContainerClient should not contain credential.
-    # Refer to https://stackoverflow.com/questions/60830598/getting-authorizationpermissionmismatch-on-a-public-container
     container_client = ContainerClient(account_url, container_name)
 
     log_debug(f"Downloading blobs under path {container_path} to {target_dir}")
@@ -245,7 +244,12 @@ def _resolve_data_to_asset_id(test_data):
     return test_data
 
 
-def check_flow_run_status(flow_runs_to_check, submitted_run_identifiers, check_run_status_interval, check_run_status_max_attempts):
+def check_flow_run_status(
+    flow_runs_to_check,
+    submitted_run_identifiers,
+    check_run_status_interval,
+    check_run_status_max_attempts
+):
     for flow_run_identifier in flow_runs_to_check:
         flow_id, flow_run_id = flow_utils.resolve_flow_run_identifier(
             flow_run_identifier)

@@ -10,6 +10,7 @@ from .authentication import get_service_principal_authentication_header, \
 from .retry_helper import retry_helper
 from .logging_utils import log_debug
 
+
 class MTClient:
     flow_api_endpoint = "{MTServiceRoute}/api/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/" \
                         "providers/Microsoft.MachineLearningServices/workspaces/{WorkspaceName}/flows"
@@ -51,7 +52,8 @@ class MTClient:
 
         resp = method(url, **{**kwargs, "headers": header})
         if method.__name__ == "post":
-            log_debug(f"[Request] {method.__name__} API Request id: {header['x-ms-client-request-id']}")
+            log_debug(
+                f"[Request] {method.__name__} API Request id: {header['x-ms-client-request-id']}")
         if resp.status_code != 200:
             raise requests.exceptions.HTTPError(
                 f"{method.__name__} on url {url} failed with status code [{resp.status_code}. Error: {resp.json()}].",
@@ -72,14 +74,16 @@ class MTClient:
 
     @retry_helper()
     def create_flow_from_sample(self, json_body, experiment_id):
-        url = self.create_flow_from_sample_api_format.format(self.api_endpoint, experiment_id)
+        url = self.create_flow_from_sample_api_format.format(
+            self.api_endpoint, experiment_id)
         result = self._post(url, json_body)
         return result
 
     @retry_helper()
     def submit_flow(self, json_body, experiment_id):
         """Submit flow with a created flow run id or evaluation flow run id"""
-        url = self.submit_flow_api_without_endpoint_name_format.format(self.api_endpoint, experiment_id)
+        url = self.submit_flow_api_without_endpoint_name_format.format(
+            self.api_endpoint, experiment_id)
         # We need to update flow run id in case retry happens, submit same json body with same flow run id will cause
         # 409 error.
         # Update flow run id
@@ -97,7 +101,8 @@ class MTClient:
 
     @retry_helper()
     def get_run_status(self, experiment_id, flow_id, run_id):
-        url = self.get_flow_run_status_api_format.format(self.api_endpoint, flow_id, run_id, experiment_id)
+        url = self.get_flow_run_status_api_format.format(
+            self.api_endpoint, flow_id, run_id, experiment_id)
         result = self._get(url)
         return result
 
@@ -112,7 +117,8 @@ def get_mt_client(
         is_local=False,
         mt_service_route="https://eastus2euap.api.azureml.ms/flow") -> MTClient:
     if (is_local):
-        mt_client = MTClient(mt_service_route, subscription_id, resource_group, workspace_name)
+        mt_client = MTClient(mt_service_route, subscription_id,
+                             resource_group, workspace_name)
     else:
         mt_client = MTClient(mt_service_route, subscription_id, resource_group, workspace_name, tenant_id, client_id,
                              client_secret)
