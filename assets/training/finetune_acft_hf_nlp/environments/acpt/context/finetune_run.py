@@ -32,12 +32,18 @@ _ALLOWED_MAX_STRING_LENGTH = 128
 
 @dataclass
 class ComponentInput:
+    """Dataclass for Ftaas pipeline component inputs.
+    """
+
     value: str
     allowed_max_length: int = _ALLOWED_MAX_STRING_LENGTH
 
 
 @dataclass
 class ComponentStr:
+    """Dataclass for Ftaas pipeline component inputs.
+    """
+
     value: str
     choices: list
     allowed_max_length: int = _ALLOWED_MAX_STRING_LENGTH
@@ -50,6 +56,7 @@ class FtaasPipelineInputsValidator:
     NOTE The default values entered for each parameter is a dummy value.
     The actual values for them will be read from env variables.
     """
+
     _AZUREML_CR_DATA_CAPABILITY_PATH = "AZUREML_CR_DATA_CAPABILITY_PATH"
     _AZUREML_PARAMETER_PREFIX = "AZUREML_PARAMETER_"
     _AZUREML_INPUT_PREFIXES = ["/mnt", "azureml:/"]
@@ -173,7 +180,7 @@ class FtaasPipelineInputsValidator:
             logger.warning(f"Couldn't validate the parameter: {param_name}")
 
     def _int_param_validator(self, param_name: str):
-        """Validate an int field"""
+        """Validate an int field."""
         env_var_name = self._AZUREML_PARAMETER_PREFIX + param_name
         user_passed_value = os.environ.get(env_var_name, None)
         if user_passed_value is not None:
@@ -192,7 +199,7 @@ class FtaasPipelineInputsValidator:
             logger.warning(f"Couldn't validate the parameter: {param_name}")
 
     def _float_param_validator(self, param_name: str):
-        """Validate a float field"""
+        """Validate a float field."""
         env_var_name = self._AZUREML_PARAMETER_PREFIX + param_name
         user_passed_value = os.environ.get(env_var_name, None)
         if user_passed_value is not None:
@@ -211,8 +218,7 @@ class FtaasPipelineInputsValidator:
             logger.warning(f"Couldn't validate the parameter: {param_name}")
 
     def _component_input_validator(self, param_name: str):
-        """Validate a string field"""
-
+        """Validate a string field."""
         user_passed_value = os.path.join(os.environ[self._AZUREML_CR_DATA_CAPABILITY_PATH], f'INPUT_{param_name}')
 
         param = getattr(fields(self), param_name)
@@ -244,6 +250,7 @@ class FtaasPipelineInputsValidator:
             logger.warning(f"Couldn't validate the parameter: {param_name}")
 
     def __post_init__(self):
+        """Validate a string field."""
         self._validate_fields()
 
 
@@ -293,6 +300,7 @@ def decode_output_from_env_var(param_name: str) -> Optional[str]:
 
 
 def add_optional_param(cmd, component_param_name: str, argparse_param_name: Optional[str] = None):
+    """Add optional parameters."""
     if argparse_param_name is None:
         argparse_param_name = component_param_name
     param_val = decode_param_from_env_var(component_param_name)
@@ -301,13 +309,14 @@ def add_optional_param(cmd, component_param_name: str, argparse_param_name: Opti
 
 
 def add_optional_input(cmd, input_name):
+    """Add optional inputs."""
     input_val = decode_input_from_env_var(input_name)
     if input_val is not None and os.path.exists(input_val):
         cmd += ["--" + input_name, input_val]
 
 
 def _run_subprocess_cmd(cmd: List[str], component_name: str):
-    """Utility function to run the subprocess command."""
+    """Run the subprocess command."""
     logger.info(f"Starting the command: {cmd}")
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     for line in process.stdout:
@@ -328,8 +337,7 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str):
 
 
 def _initiate_run():
-    """Runs the model selector, preprocess, finetune and registration script."""
-
+    """Run the model selector, preprocess, finetune and registration script."""
     # model selector
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.model_selector",
@@ -450,6 +458,7 @@ def _initiate_run():
 
 @swallow_all_exceptions(time_delay=60)
 def run():
+    """Run the main function."""
     # validate inputs
     FtaasPipelineInputsValidator()
 
