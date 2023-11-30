@@ -24,6 +24,7 @@ def resolve_flow_run_identifier(flow_run_identifier):
 
 
 def _validate_meta(meta, flow_dir):
+    """Validate meta type"""
     if meta["type"] not in ["standard", "evaluate", "chat", "rag"]:
         raise ValueError(f"Unknown type in meta.json. model dir: {flow_dir}.")
     stage = meta["properties"]["promptflow.stage"]
@@ -48,6 +49,7 @@ def _general_copy(src, dst, make_dirs=True):
 
 
 def _copy(src: Path, dst: Path) -> None:
+    """Copy files"""
     if not src.exists():
         raise ValueError(f"Path {src} does not exist.")
     if src.is_file():
@@ -93,6 +95,7 @@ def _assign_flow_values(flow_dirs, tmp_folder_path):
 
 
 def construct_create_flow_payload_of_new_contract(flow, flow_meta, properties):
+    """Construct create flow payload."""
     flow_type = flow_meta.get("type", None)
     if flow_type:
         mapping = {
@@ -124,6 +127,7 @@ def construct_submit_flow_payload_of_new_contract(
     flow_dag,
     flow_submit_mode
 ):
+    """Construct submit flow payload."""
     flow_run_id = f"run_{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(100000, 999999)}"
     tuning_node_names = [node["name"]
                          for node in flow_dag["nodes"] if "use_variants" in node]
@@ -145,6 +149,7 @@ def construct_submit_flow_payload_of_new_contract(
 
 
 def construct_flow_link(aml_resource_uri, subscription, resource_group, workspace, experiment_id, flow_id, ux_flight):
+    """Construct flow link."""
     flow_link_format = (
         "{aml_resource_uri}/prompts/flow/{experiment_id}/{flow_id}/details?wsid=/subscriptions/"
         "{subscription}/resourceGroups/{resource_group}/providers/Microsoft.MachineLearningServices/"
@@ -163,12 +168,14 @@ def construct_flow_link(aml_resource_uri, subscription, resource_group, workspac
 
 def get_flow_link(create_flow_response_json, aml_resource_uri, subscription, resource_group, workspace, experiment_id,
                   ux_flight):
+    """Get flow link."""
     flow_id = create_flow_response_json["flowId"]
     return construct_flow_link(aml_resource_uri, subscription, resource_group, workspace, experiment_id, flow_id,
                                ux_flight)
 
 
 def get_flow_run_ids(bulk_test_response_json):
+    """Get flow run ids from response."""
     bulk_test_id = bulk_test_response_json["bulkTestId"]
     flow_run_logs = bulk_test_response_json["flowRunLogs"]
     flow_run_ids = [run_id for run_id in list(
@@ -180,6 +187,7 @@ def get_flow_run_ids(bulk_test_response_json):
 def construct_flow_run_link(
     aml_resource_uri, subscription, resource_group, workspace, experiment_id, flow_id, flow_run_id
 ):
+    """Construct flow run link."""
     bulk_test_run_link_format = (
         "{aml_resource_uri}/prompts/flow/{experiment_id}/{flow_id}/run/{flow_run_id}/details?wsid=/"
         "subscriptions/{subscription}/resourceGroups/{resource_group}/providers/"
@@ -199,6 +207,7 @@ def construct_flow_run_link(
 def get_flow_run_link(
     bulk_test_response_json, aml_resource_uri, subscription, resource_group, workspace, experiment_id, flow_run_id
 ):
+    """Get flow run link."""
     flow_run_resource_id = bulk_test_response_json["flowRunResourceId"]
     flow_id, _ = _resolve_flow_run_resource_id(flow_run_resource_id)
     link = construct_flow_run_link(

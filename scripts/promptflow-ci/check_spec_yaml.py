@@ -16,12 +16,14 @@ model_names = {}
 
 
 def bypass_gallary_check(yaml_file):
+    """Bypass some checks."""
     for file in BYPASS_GALLERY_CHECK:
         if os.path.samefile(yaml_file, file):
             return True
 
 
 def check_spec_yaml(yaml_file):
+    """Check spec yaml fields."""
     with open(yaml_file, 'r') as file:
         model_yaml = yaml.safe_load(file)
 

@@ -12,6 +12,7 @@ from .logging_utils import log_debug
 
 
 class MTClient:
+    """MTClient class."""
     flow_api_endpoint = "{MTServiceRoute}/api/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/" \
                         "providers/Microsoft.MachineLearningServices/workspaces/{WorkspaceName}/flows"
     create_flow_api_format = "{0}/?experimentId={1}"
@@ -29,6 +30,7 @@ class MTClient:
     def __init__(self, mt_service_route,
                  subscription_id, resource_group_name, workspace_name,
                  tenant_id=None, client_id=None, client_secret=None):
+        """MT Client init."""
         self.mt_service_route = mt_service_route
         self.subscription_id = subscription_id
         self.resource_group_name = resource_group_name
@@ -43,6 +45,7 @@ class MTClient:
         self.client_secret = client_secret
 
     def _request(self, method, url, **kwargs):
+        """MT client request call."""
         if self.tenant_id is None or self.client_id is None or self.client_secret is None:
             # Interactive login authentication for local debugging
             header = get_interactive_login_authentication_header()
@@ -61,19 +64,23 @@ class MTClient:
         return resp.json()
 
     def _get(self, url):
+        """Mt client get request."""
         return self._request(requests.get, url)
 
     def _post(self, url, json_body):
+        """Mt client post request."""
         return self._request(requests.post, url, json=json_body)
 
     @retry_helper()
     def create_or_update_flow(self, json_body):
+        """Create flow."""
         url = self.api_endpoint
         result = self._post(url, json_body)
         return result
 
     @retry_helper()
     def create_flow_from_sample(self, json_body, experiment_id):
+        """Create flow from sample json."""
         url = self.create_flow_from_sample_api_format.format(
             self.api_endpoint, experiment_id)
         result = self._post(url, json_body)
@@ -116,6 +123,7 @@ def get_mt_client(
         client_secret,
         is_local=False,
         mt_service_route="https://eastus2euap.api.azureml.ms/flow") -> MTClient:
+    """Get mt client."""
     if (is_local):
         mt_client = MTClient(mt_service_route, subscription_id,
                              resource_group, workspace_name)

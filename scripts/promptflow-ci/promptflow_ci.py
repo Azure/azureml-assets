@@ -31,6 +31,7 @@ MODELS_ROOT = "assets/promptflow/models/"
 
 
 def validate_downlaod(model_dir):
+    """Download models in model_dir."""
     yaml_file = os.path.join(model_dir, MODEL_FILE)
     with open(yaml_file, 'r') as file:
         model_yaml = yaml.safe_load(file)
@@ -44,6 +45,7 @@ def validate_downlaod(model_dir):
 
 
 def download_blob_to_file(container_name, container_path, storage_name, target_dir):
+    """Download blobs to target_dir."""
     account_url = f"https://{storage_name}.blob.core.windows.net"
     log_debug(f"\nCurrent storage_name: {storage_name}")
     log_debug(f"Current container_name: {container_name}")
@@ -66,6 +68,7 @@ def download_blob_to_file(container_name, container_path, storage_name, target_d
 
 
 def get_changed_models(diff_files):
+    """Get changed models dir."""
     changed_models = []
     deleted_models_path = []
     for file_path in diff_files:
@@ -87,6 +90,7 @@ def get_changed_models(diff_files):
 
 
 def get_all_models():
+    """Get all models dir."""
     all_models = [os.path.join(MODELS_ROOT, model)
                   for model in os.listdir(MODELS_ROOT)]
     log_debug(f"Find {len(all_models)} models: {all_models}.")
@@ -95,6 +99,7 @@ def get_all_models():
 
 
 def _dump_workspace_config(subscription_id, resource_group, workspace_name):
+    """Dump workspace config to config.json."""
     workspace_config = {
         "subscription_id": subscription_id,
         "resource_group": resource_group,
@@ -106,6 +111,7 @@ def _dump_workspace_config(subscription_id, resource_group, workspace_name):
 
 
 def create_flows(flows_dirs):
+    """Create flows from flows dir."""
     # key: flow dir name, value: (flow graph, flow create result, flow type)
     flows_creation_info = {}
     flow_validation_errors = []
@@ -212,6 +218,7 @@ def create_flows(flows_dirs):
 
 
 def _resolve_data_to_asset_id(test_data):
+    """Resolve data to asset id."""
     from azure.ai.ml._artifacts._artifact_utilities import _upload_and_generate_remote_uri
     from azure.ai.ml.constants._common import AssetTypes
 
@@ -250,6 +257,7 @@ def check_flow_run_status(
     check_run_status_interval,
     check_run_status_max_attempts
 ):
+    """check flow run status."""
     for flow_run_identifier in flow_runs_to_check:
         flow_id, flow_run_id = flow_utils.resolve_flow_run_identifier(
             flow_run_identifier)
@@ -275,24 +283,6 @@ def check_flow_run_status(
 
             current_attempt += 1
             time.sleep(check_run_status_interval)
-
-
-def get_bulk_test_main_flows_dirs(flows_root, flow_dirs):
-    bulk_test_main_flows_dirs = []
-    for flow_dir in flow_dirs:
-        flow_dir = Path(flow_dir).name.replace("-", "_")
-        script_flow_dir = Path(os.path.join(
-            os.getcwd(), "scripts", "promptflow-ci", "test_configs", "flows", flow_dir))
-        if (script_flow_dir / "bulk_test_config_of_new_contract.json").exists():
-            with open(script_flow_dir / "bulk_test_config_of_new_contract.json", 'r') as config:
-                bulk_test_config = json.load(config)
-                main_flow_folder_name = bulk_test_config["mainFlowFolderName"].replace(
-                    "_", "-")
-            if os.path.join(flows_root, main_flow_folder_name) not in bulk_test_main_flows_dirs:
-                bulk_test_main_flows_dirs.append(
-                    os.path.join(flows_root, main_flow_folder_name))
-
-    return bulk_test_main_flows_dirs
 
 
 if __name__ == "__main__":
