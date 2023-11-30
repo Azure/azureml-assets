@@ -10,6 +10,7 @@ dependencies:
     - responsibleai~=0.30.0
     - raiwidgets~=0.30.0
     - pyarrow
+    - pyarrow-hotfix>=0.5
     - markupsafe<=2.0.1
     - itsdangerous==2.0.1
     - mlflow
