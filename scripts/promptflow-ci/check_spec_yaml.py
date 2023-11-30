@@ -39,10 +39,9 @@ def check_spec_yaml(yaml_file):
                 f"properties.azureml.promptflow.section must be gallery, "
                 f"it's {properties.get('azureml.promptflow.section')} in {yaml_file}")
     if properties.get("azureml.promptflow.type") not in {"chat", "evaluate", "standard"}:
-        if not os.path.samefile(yaml_file, "assets/promptflow/models/bring-your-own-data-qna/spec.yaml"):
-            raise Exception(
-                f"properties.azureml.promptflow.type must in {'chat', 'evaluate', 'standard'}, "
-                f"it's {properties.get('azureml.promptflow.type')} in {yaml_file}")
+        raise Exception(
+            f"properties.azureml.promptflow.type must in {'chat', 'evaluate', 'standard'}, "
+            f"it's {properties.get('azureml.promptflow.type')} in {yaml_file}")
     name = properties.get("azureml.promptflow.name")
     if name in model_names.keys():
         raise Exception(

@@ -64,7 +64,7 @@ jobs:
 
       - name: Validate prompt flows
         run: |
-          python scripts/promptflow-ci/promptflow_ci.py --tenant_id ${{ secrets.TENANT_ID }} --client_id ${{ secrets.CLIENT_ID }} --client_secret ${{ secrets.CLIENT_SECRET }} --skipped_flows ${{ vars.SKIPPED_FLOWS }}
+          python scripts/promptflow-ci/promptflow_ci.py --tenant_id ${{ secrets.TENANT_ID }} --client_id ${{ secrets.CLIENT_ID }} --client_secret ${{ secrets.CLIENT_SECRET }}
 
       - name: Run cspell for typo check
         working-directory: ${{ env.PROMPTFLOW_DIR }}
