@@ -28,4 +28,4 @@ dependencies:
     - ml-wrappers~=0.5.3
     - nlp-feature-extractors==0.1.0
     - datasets
-    - typing-extensions<4.6.1git s
+    - typing-extensions<4.6.1
