@@ -8,6 +8,8 @@ RUN apt-get -y update && \
     apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
         software-properties-common gnupg\
+    && apt-get install --only-upgrade \
+        python3-urllib3 procps libprocps8 libk5crypto3 libgssapi-krb5-2 libkrb5-3 libkrb5support0 \
     && add-apt-repository -y ppa:deadsnakes \
     && apt-get install -y --no-install-recommends \
         python3.9-venv \
@@ -26,6 +28,6 @@ RUN v="8.4.1-1+cuda11.6" &&\
         libnvinfer-dev=${v} libnvonnxparsers-dev=${v} libnvparsers-dev=${v} libnvinfer-plugin-dev=${v} \
         python3-libnvinfer=${v} libnvinfer-samples=${v}
 
-RUN pip install --upgrade pip && pip install --upgrade setuptools
+RUN pip install --upgrade pip && pip install --upgrade setuptools pyarrow
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
