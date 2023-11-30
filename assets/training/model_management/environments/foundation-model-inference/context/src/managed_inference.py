@@ -1,12 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 """This module provides the MIRPayload class that codifies the payload that is received in the scoring script."""
-
 import json
 import os
 from dataclasses import dataclass
+import pandas as pd
 from typing import Any, Dict, List, Tuple, Union
+
 from configs import SerializableDataClass
 from constants import TaskType
 from logging_config import configure_logger
@@ -32,8 +32,7 @@ class MIRPayload(SerializableDataClass):
         return MIRPayload(query, params, task_type)
 
     def convert_query_to_list(self) -> None:
-        """
-        Convert the query parameter into a list.
+        """Convert the query parameter into a list.
 
         FMScore.run expects a list of prompts. In the case of chat completion, a single string
         is produced and needs to be put inside of a list.
@@ -78,6 +77,36 @@ def get_processed_input_data_for_chat_completion(dialog: List[str]) -> str:
     return chat_conv
 
 
+def process_input_data_for_text_to_image(inputs: Dict[str, any]) -> Tuple[List[str], Dict[str, Any]]:
+    """Process text to image task input request to make it suitable for model.
+
+    :param inputs: input data
+    :type inputs: Dict[str, any]
+    :raises Exception: if input data is not in expected format
+    :return: Processed input data for model and parameters
+    :rtype: Tuple[List[str], Dict[str, Any]]
+    """
+    try:
+        params = inputs.pop("parameters", {})
+        if "columns" in inputs and "data" in inputs:
+            input_df = pd.DataFrame(**inputs)
+            input_data = input_df["prompt"].to_list()
+        return input_data, params
+    except Exception as e:
+        raise Exception(
+            json.dumps(
+                {
+                    "error": (
+                        "Expected input format: \n"
+                        '{"input_data": {"columns": ["prompt"], \n'
+                        '"data": ["prompt sample 1", "prompt sample 2"]}\n'
+                    ),
+                    "exception": str(e),
+                }
+            )
+        )
+
+
 def get_request_data(data) -> (Tuple)[Union[str, List[str]], Dict[str, Any], str]:
     """Process and validate inference request.
 
@@ -87,14 +116,17 @@ def get_request_data(data) -> (Tuple)[Union[str, List[str]], Dict[str, Any], str
     try:
         inputs = data.get("input_data", None)
         task_type = data.get("task_type", TaskType.TEXT_GENERATION)
+        if not isinstance(inputs, dict):
+            raise Exception("Invalid input data")
+
         if task_type == "chat-completion":
             task_type = TaskType.CONVERSATIONAL
+        elif task_type == TaskType.TEXT_TO_IMAGE:
+            input_data, params = process_input_data_for_text_to_image(inputs)
+            return input_data, params, task_type
 
         input_data = []  # type: Union[str, List[str]]
         params = {}  # type: Dict[str, Any]
-
-        if not isinstance(inputs, dict):
-            raise Exception("Invalid input data")
 
         input_data = inputs["input_string"]
         params = inputs.get("parameters", {})
@@ -124,6 +156,6 @@ def get_request_data(data) -> (Tuple)[Union[str, List[str]], Dict[str, Any], str
                         '{"role": "assistant", "content": "str2"} ....]'
                     ),
                     "exception": str(e),
-                }
-            )
+                },
+            ),
         )

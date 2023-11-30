@@ -1,8 +1,6 @@
 # Licensed under the MIT License.
 # Copyright (c) Microsoft Corporation.
-
 """Module for handling conversation data."""
-
 import json
 from dataclasses import dataclass, field
 from enum import Enum
@@ -59,7 +57,7 @@ class Conversation:
             first_role = self.messages[0].role
             if first_role not in [Role.SYSTEM, Role.USER]:
                 raise ValueError(
-                    "The first message should be from the system or the user."
+                    "The first message should be from the system or the user.",
                 )
 
     def add_message(self, message: Message):
@@ -67,7 +65,7 @@ class Conversation:
         if len(self.messages) == 0:
             if message.role not in [Role.SYSTEM, Role.USER]:
                 raise ValueError(
-                    "The first message should be from the system or the user."
+                    "The first message should be from the system or the user.",
                 )
         self.messages.append(message)
 
@@ -93,7 +91,7 @@ if __name__ == "__main__":
     conv = Conversation([Message(Role.SYSTEM, "You are a helpful assistant.")])
     conv.add_message(Message(Role.USER, "Who won the world series in 2020?"))
     conv.add_message(
-        Message(Role.ASSISTANT, "The Los Angeles Dodgers won the World Series in 2020.")
+        Message(Role.ASSISTANT, "The Los Angeles Dodgers won the World Series in 2020."),
     )
 
     json_str = conv.to_json()

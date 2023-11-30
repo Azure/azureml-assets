@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 """This module defines the EngineName and TaskType enums."""
-
 from enum import Enum
 
 
@@ -24,6 +22,7 @@ class TaskType(str, Enum):
 
     TEXT_GENERATION = "text-generation"
     CONVERSATIONAL = "conversational"
+    TEXT_TO_IMAGE = "text-to-image"
 
     def __str__(self):
         """Return the string representation of the task type."""
@@ -35,6 +34,7 @@ class SupportedTask:
 
     TEXT_GENERATION = "text-generation"
     CHAT_COMPLETION = "chat-completion"
+    TEXT_TO_IMAGE = "text-to-image"
 
 
 class ServerSetupParams:
