@@ -1,4 +1,4 @@
-The "QnA with Your Own Data Using Faiss Index" is a Q&A model with GPT3.5 using information from vector search to make the answer more grounded. It involves embedding user's question with LLM, and then using Faiss Index Lookup to find relevant documents based on vectors. By utilizing vector search, users can incorporate their domain knowledge into the prompts, leading to more accurate and relevant answers. The model then uses GPT3.5 to generate an answer to the question with the documents as augmented prompt.
+This is a flow demonstrating Q&A with GPT using information from vector search to make the answer more grounded. It involves embedding user's question with `LLM`, and then using `Faiss Index Lookup` to find relevant documents based on vectors. By utilizing vector search, users can incorporate their domain knowledge into the prompts, leading to more accurate and relevant answers. The flow then uses GPT to generate an answer to the question with the documents as augmented prompt.
 
 
 ### Inference samples

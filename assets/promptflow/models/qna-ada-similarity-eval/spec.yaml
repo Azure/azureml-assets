@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Compute the cosine similarity between the answer and the ground truth embedded with ada embedding.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 3
+version: 4

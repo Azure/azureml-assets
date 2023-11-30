@@ -1,4 +1,4 @@
-The "Web Classification" is a model demonstrating multi-class classification with LLM. Given an url, it will classify the url into one web category with just a few shots, simple summarization and classification prompts.
+This sample demonstrates multi-class classification with LLM. Given an URL, it will classify the URL into one web category with just a few shots, simple summarization and classification prompts.
 
 
 ### Inference samples
