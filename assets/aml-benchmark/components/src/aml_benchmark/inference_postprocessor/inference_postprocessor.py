@@ -167,7 +167,8 @@ class InferencePostprocessor(object):
         """
         Read the ground truth dataset if provided.
 
-        If ground truth dataset is n-D array, then read only the provided ground truth column name and the additional columns.
+        If ground truth dataset is n-D array, then read only the provided ground truth column name
+        and the additional columns.
         """
         result_df = pd.DataFrame()
         if self.ground_truth_dataset:
