@@ -1,4 +1,4 @@
-This sample demonstrates the application of Q&A using GPT, enhanced by incorporating information from Wikipedia to make the answer more grounded. This process involves searching for a relevant Wikipedia link and extracting its page contents. The Wikipedia contents serve as an augmented prompt for the GPT chat API to generate a response.
+The "Ask Wikipedia" is a Q&A model that employs GPT3.5 to answer questions using information sourced from Wikipedia, ensuring more grounded responses. This process involves identifying the relevant Wikipedia link and extracting its contents. These contents are then used as an augmented prompt, enabling GPT3.5 to generate an accurate response to the question.
 
 
 ### Inference samples

@@ -1,4 +1,4 @@
-The Q&A f1-score evaluation flow will evaluate the Q&A Retrieval Augmented Generation systems using f1-score based on the word counts in predicted answer and ground truth.
+The "QnA F1 Score Evaluation" is a model to evaluate the Q&A Retrieval Augmented Generation systems using f1 score based on the word counts in predicted answer and ground truth.
 
 
 ### Inference samples

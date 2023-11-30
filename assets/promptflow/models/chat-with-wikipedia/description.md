@@ -1,4 +1,4 @@
-This is a companion sample flow to "Ask Wikipedia". It demonstrates how to create a chatbot that can remember previous interactions and use the conversation history to generate next message.
+The "Chat with Wikipedia" is a pre-trained chat model with GPT3.5: it combines conversation history and information from Wikipedia to make the answer more grounded. It involves finding a relevant Wikipedia link and getting page contents for the question. It can remember previous interactions and generate the next message based on the conversation history and the new search content.
 
 
 ### Inference samples

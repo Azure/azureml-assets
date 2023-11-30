@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Compute the coherence of the answer base on the question using llm.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 4
+version: 3

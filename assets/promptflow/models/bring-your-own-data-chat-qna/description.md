@@ -1,4 +1,4 @@
-This sample demonstrates multi-round Q&A chatbot powered by GPT. It utilizes indexed files from Azure Machine Learning to provide grounded answers. You can ask a wide range of questions related to Azure Machine Learning and receive responses. The process involves embedding the raw query, using vector search to find most relevant context in user data, and then using GPT to chat with you with the documents. This sample also contains multiple prompt variants that you can tune.
+The "Bring Your Own Data Chat QnA" is a pre-trained chat model, enhanced by GPT3.5, that leverages your personally indexed data and chat history to deliver more concrete and relevant answers. It involves processing the raw query through an embedding procedure, followed by a "Vector Search" to pinpoint the most pertinent context within the user's data. Subsequently, GPT3.5 is employed to generate a comprehensive answer to the question using the sourced documents.
 
 
 ### Inference samples
