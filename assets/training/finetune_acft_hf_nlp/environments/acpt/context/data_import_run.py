@@ -22,7 +22,8 @@ from azureml.acft.common_components import get_logger_app, set_logging_parameter
 from azureml._common._error_definition.azureml_error import AzureMLError
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import")
+logger = get_logger_app(
+    "azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import")
 
 
 COMPONENT_NAME = "run_data_import"
@@ -86,22 +87,23 @@ class FtaasPipelineInputsValidator:
         param = getattr(fields(self), param_name)
         if param.value not in param.choices:
             raise ACFTValidationException._with_error(
-                    AzureMLError.create(
-                        ACFTUserError,
-                        pii_safe_message=(
-                            f"Invalid value set for {param_name}: {user_passed_value}, allowed values are {param.choices}"
-                        )
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        f"Invalid value set for {param_name}: {user_passed_value}, allowed values are {param.choices}"
                     )
                 )
+            )
         if len(param.value) > param.allowed_max_length:
             raise ACFTValidationException._with_error(
-                    AzureMLError.create(
-                        ACFTUserError,
-                        pii_safe_message=(
-                            f"Invalid value set for {param_name}: {user_passed_value}, exceeds allowed max_length limit (128)"
-                        )
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        f"Invalid value set for {param_name}: {user_passed_value}, \
+                            exceeds allowed max_length limit (128)"
                     )
                 )
+            )
         if user_passed_value is not None:
             if not isinstance(user_passed_value, str):
                 raise ACFTValidationException._with_error(
@@ -156,31 +158,35 @@ class FtaasPipelineInputsValidator:
     def _component_input_validator(self, param_name: str):
         """Validate a string field"""
 
-        user_passed_value = os.path.join(os.environ[self._AZUREML_CR_DATA_CAPABILITY_PATH], f'INPUT_{param_name}')
+        user_passed_value = os.path.join(
+            os.environ[self._AZUREML_CR_DATA_CAPABILITY_PATH], f'INPUT_{param_name}')
 
         param = getattr(fields(self), param_name)
         if len(param.value) > param.allowed_max_length:
             raise ACFTValidationException._with_error(
-                    AzureMLError.create(
-                        ACFTUserError,
-                        pii_safe_message=(
-                            f"Invalid value set for {param_name}: {user_passed_value}, exceeds allowed max_length limit (128)"
-                        )
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        f"Invalid value set for {param_name}: {user_passed_value}, \
+                            exceeds allowed max_length limit (128)"
                     )
                 )
+            )
 
         if (
             user_passed_value is not None and
-            not any([user_passed_value.startswith(prefix) for prefix in self._AZUREML_INPUT_PREFIXES])
+            not any([user_passed_value.startswith(prefix)
+                    for prefix in self._AZUREML_INPUT_PREFIXES])
         ):
             raise ACFTValidationException._with_error(
-                    AzureMLError.create(
-                        ACFTUserError,
-                        pii_safe_message=(
-                            f"Possible prefixes for {param_name} are {self._AZUREML_INPUT_PREFIXES}. Found {user_passed_value}"
-                        )
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        f"Possible prefixes for {param_name} are {self._AZUREML_INPUT_PREFIXES}. \
+                            Found {user_passed_value}"
                     )
                 )
+            )
         else:
             logger.warning(f"Couldn't validate the parameter: {param_name}")
 
@@ -196,7 +202,8 @@ def _copy_components_scripts():
     component_scripts_path = Path(site_pkgs_root, _COMPONENTS_SCRIPTS_REL_PATH)
     if component_scripts_path.is_dir():
         dst_folder = Path(__file__).parent.resolve()
-        logger.info(f"Copying files from {component_scripts_path} to {dst_folder}")
+        logger.info(
+            f"Copying files from {component_scripts_path} to {dst_folder}")
         shutil.copytree(component_scripts_path, dst_folder, dirs_exist_ok=True)
     else:
         ACFTValidationException._with_error(
@@ -259,7 +266,8 @@ def add_train_validation_file_path_input(cmd, input_name):
 def _run_subprocess_cmd(cmd: List[str], component_name: str):
     """Utility function to run the subprocess command."""
     logger.info(f"Starting the command: {cmd}")
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     for line in process.stdout:
         logger.info(line.strip())
 
@@ -286,7 +294,8 @@ def _initiate_run():
         "--output_dataset", decode_output_from_env_var("output_dataset")
     ]
     add_train_validation_file_path_input(cmd=cmd, input_name="train_file_path")
-    add_train_validation_file_path_input(cmd=cmd, input_name="validation_file_path")
+    add_train_validation_file_path_input(
+        cmd=cmd, input_name="validation_file_path")
     logger.info(f"Starting the command: {cmd}")
 
     _run_subprocess_cmd(cmd=cmd, component_name="Data Import")

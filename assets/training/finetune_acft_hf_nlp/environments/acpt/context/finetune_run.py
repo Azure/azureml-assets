@@ -66,7 +66,8 @@ class FtaasPipelineInputsValidator:
             "help": (
                 "key for text in an example. format your data keeping in mind that"
                 "text is concatenated with ground_truth while finetuning in the form - text + groundtruth."
-                'for eg. "text"="knock knock\n", "ground_truth"="whos there"; will be treated as "knock knock\nwhos there'
+                'for eg. "text"="knock knock\n", \
+                    "ground_truth"="whos there"; will be treated as "knock knock\nwhos there'
             )
         }
     )
@@ -76,9 +77,10 @@ class FtaasPipelineInputsValidator:
             "help": (
                 "Key for ground_truth in an example."
                 "we take separate column for ground_truth to enable use cases like summarization, translation, "
-                "question_answering, etc. which can be repurposed in form of text-generation where both text and ground_truth are needed."
-                "This separation is useful for calculating metrics."
-                'for eg. "text"="Summarize this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of the dialogue}'
+                "question_answering, etc. which can be repurposed in form of text-generation where both text "
+                "and ground_truth are needed. This separation is useful for calculating metrics."
+                'for eg. "text"="Summarize this dialog:\n{input_dialogue}\nSummary:\n \
+                    ", "ground_truth"="{summary of the dialogue}'
             )
         }
     )
@@ -142,7 +144,8 @@ class FtaasPipelineInputsValidator:
                     AzureMLError.create(
                         ACFTUserError,
                         pii_safe_message=(
-                            f"Invalid value set for {param_name}: {user_passed_value}, allowed values are {param.choices}"
+                            f"Invalid value set for {param_name}: {user_passed_value}, \
+                                allowed values are {param.choices}"
                         )
                     )
                 )
@@ -151,7 +154,8 @@ class FtaasPipelineInputsValidator:
                     AzureMLError.create(
                         ACFTUserError,
                         pii_safe_message=(
-                            f"Invalid value set for {param_name}: {user_passed_value}, exceeds allowed max_length limit (128)"
+                            f"Invalid value set for {param_name}: {user_passed_value}, \
+                                exceeds allowed max_length limit (128)"
                         )
                     )
                 )
@@ -217,7 +221,8 @@ class FtaasPipelineInputsValidator:
                     AzureMLError.create(
                         ACFTUserError,
                         pii_safe_message=(
-                            f"Invalid value set for {param_name}: {user_passed_value}, exceeds allowed max_length limit (128)"
+                            f"Invalid value set for {param_name}: {user_passed_value}, \
+                                exceeds allowed max_length limit (128)"
                         )
                     )
                 )
@@ -230,7 +235,8 @@ class FtaasPipelineInputsValidator:
                     AzureMLError.create(
                         ACFTUserError,
                         pii_safe_message=(
-                            f"Possible prefixes for {param_name} are {self._AZUREML_INPUT_PREFIXES}. Found {user_passed_value}"
+                            f"Possible prefixes for {param_name} are {self._AZUREML_INPUT_PREFIXES}. \
+                                Found {user_passed_value}"
                         )
                     )
                 )
@@ -343,7 +349,8 @@ def _initiate_run():
         "--max_seq_length", decode_param_from_env_var("max_seq_length"),
         "--train_file_path", os.path.join(decode_input_from_env_var("dataset_input"), "train_input.jsonl"),
         "--test_file_path", os.path.join(decode_input_from_env_var("dataset_input"), "train_input.jsonl"),
-        "--model_selector_output", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "model_selector_output"),
+        "--model_selector_output", 
+        os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "model_selector_output"),
         "--output_dir", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "preprocess_output")
     ]
     # add optional param ground_truth_key
@@ -397,7 +404,8 @@ def _initiate_run():
         "--apply_ort", decode_param_from_env_var('apply_ort'),
         "--apply_deepspeed", decode_param_from_env_var('apply_deepspeed'),
         "--deepspeed_stage", decode_param_from_env_var('deepspeed_stage'),
-        "--model_selector_output", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "model_selector_output"),
+        "--model_selector_output",
+        os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "model_selector_output"),
         "--preprocess_output", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "preprocess_output"),
         "--system_properties", decode_param_from_env_var("system_properties"),
         "--pytorch_model_folder", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "pytorch_model_folder"),
