@@ -65,7 +65,7 @@ Named Entity Recognition|[CoNLL-2003](https://www.kaggle.com/datasets/alaakhaled
 ```json
 {
     "input_data": {
-        "input_string": ["Stephen Curry got three championship rings"]
+        ["Stephen\nCurry\nis\na\nsuper\nstar!"]
     }
 }
 ```
@@ -73,18 +73,5 @@ Named Entity Recognition|[CoNLL-2003](https://www.kaggle.com/datasets/alaakhaled
 #### Sample output
 
 ```json
-[
- {'end': 7,
-  'entity': 'B-PER',
-  'index': 1,
-  'score': 0.99977773,
-  'start': 0,
-  'word': 'Stephen'},
- {'end': 13,
-  'entity': 'I-PER',
-  'index': 2,
-  'score': 0.9997737,
-  'start': 8,
-  'word': 'Curry'}
-]
+["Stephen B-PER Curry I-PER is O a O super O star! O"]
 ```
