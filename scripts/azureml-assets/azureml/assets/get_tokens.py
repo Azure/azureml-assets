@@ -30,6 +30,10 @@ def get_tokens(input_dirs: List[Path],
         pattern (re.Pattern, optional): Regex pattern for assets to copy. Defaults to None.
     """
     json_info = defaultdict(dict)
+    
+    # placeholder test
+    print('In updated get_tokens')
+    json_info['abc'] = 'def'
 
     # Filter to only models
     for asset_config in util.find_assets(
