@@ -6,7 +6,10 @@ WORKDIR /
 RUN apt-get update && apt-get -y upgrade
 
 COPY . .
+# upgrade torch
 RUN pip install --no-cache-dir -e .
+RUN pip install --upgrade --index-url https://download.pytorch.org/whl/cu118 torch==2.0.1
+RUN pip install triton==2.1.0
 RUN pip list    # show installed packages
 
 # Copy scoring file

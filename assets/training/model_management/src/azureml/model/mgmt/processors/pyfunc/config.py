@@ -40,9 +40,19 @@ class SupportedTasks(_CustomEnum):
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
     TEXT_TO_IMAGE_INPAINTING = "text-to-image-inpainting"
+    IMAGE_TO_IMAGE = "image-to-image"
 
     # LLaVA task
     IMAGE_TEXT_TO_TEXT = "image-text-to-text"
+
+    # mask generation
+    MASK_GENERATION = "mask-generation"
+
+    # AutoML Tasks
+    IMAGE_CLASSIFICATION = "image-classification"
+    IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
+    IMAGE_OBJECT_DETECTION = "image-object-detection"
+    IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
 
 
 class SupportedTextToImageModelFamily(_CustomEnum):

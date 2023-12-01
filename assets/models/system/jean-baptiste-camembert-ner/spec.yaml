@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Jean-Baptiste-camembert-ner
 path: ./
 properties:
-  SHA: cc63721791a6e1d60f4764997bbb311667ec75d8
+  SHA: ef35fe7767c1dad71f5c853838cdd80d0b3441ed
   datasets: Jean-Baptiste/wikiner_fr
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
@@ -49,5 +49,5 @@ tags:
     apply_deepspeed: 'true'
     apply_lora: 'true'
     apply_ort: 'true'
-  task: text-named-entity-recognition
-version: 11
+  task: token-classification
+version: 12

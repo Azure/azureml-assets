@@ -19,6 +19,6 @@ properties:
     model_id: Salesforce/blip-image-captioning-base
 tags:
    Preview: ''
-   license: mit
+   license: bsd-3-clause
    task: image-to-text
 version: 1

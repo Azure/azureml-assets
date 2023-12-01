@@ -49,7 +49,9 @@ class EndpointDeploymentBase(OBOComponentBase):
                 "embedding": embedding_connection_id,
                 "chat": chat_connection_id,
             }.items():
-                connection = get_connection_by_id_v2(connection_id)
+                connection = get_connection_by_id_v2(
+                    connection_id, credential=self.mlclient_credential
+                )
                 credential = connection_to_credential(connection)
                 if hasattr(credential, "key"):
                     secrets.update(

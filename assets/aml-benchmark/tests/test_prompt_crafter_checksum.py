@@ -12,7 +12,7 @@ from .test_utils import get_src_dir
 
 sys.path.append(get_src_dir())
 try:
-    from prompt_crafter.package.prompt_crafter import PromptCrafter
+    from aml_benchmark.prompt_crafter.package.prompt_crafter import PromptCrafter
 except ImportError:
     raise ImportError("Please install the package 'prompt_crafter' to run this test.")
 

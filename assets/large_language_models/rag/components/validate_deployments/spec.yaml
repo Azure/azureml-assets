@@ -4,9 +4,9 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.40
+version: 0.0.46
 name: llm_rag_validate_deployments
-display_name: LLM – Validate Deployments
+display_name: LLM - Validate Deployments
 is_deterministic: false
 
 description: |
@@ -49,12 +49,12 @@ inputs:
       - "True"
       - "False"
      default: "False"
-     description: "Boolean to inform whether to check the ACS connqection associated with acs_config."
+     description: "Boolean to inform whether to check the ACS connection associated with acs_config."
 outputs:
   output_data:
     type: uri_file
 
-environment: azureml:llm-rag@latest
+environment: azureml:llm-rag-embeddings@latest
 code: '../src'
 command: >-
   python validate_deployments.py

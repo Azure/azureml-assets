@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.19
+version: 0.0.20.oss
 
 # Pipeline inputs
 inputs:
@@ -177,7 +177,7 @@ outputs:
 
 jobs:
   validation_trigger_import:
-    component: azureml:validation_trigger_import:0.0.3
+    component: azureml://registries/azureml/components/validation_trigger_import/versions/0.0.3
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -210,7 +210,7 @@ jobs:
         type: uri_file
 
   download_model:
-    component: azureml:download_model:0.0.16
+    component: azureml://registries/azureml-preview-test1/components/download_model/versions/0.0.16.oss
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -228,7 +228,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.16
+    component: azureml://registries/azureml-preview-test1/components/convert_model_to_mlflow/versions/0.0.19.oss
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -253,7 +253,7 @@ jobs:
         type: uri_file
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.6
+    component: azureml://registries/azureml-preview-test1/components/mlflow_model_local_validation/versions/0.0.6.oss
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -266,7 +266,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.10
+    component: azureml://registries/azureml/components/register_model/versions/0.0.10
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

@@ -639,12 +639,10 @@ def main():
         args.is_continual_finetuning = True
         if args.model_family in (MODEL_FAMILY_CLS.MMDETECTION_IMAGE, MODEL_FAMILY_CLS.MMTRACKING_VIDEO):
             args.model_weights_path_or_url = os.path.join(args.model_path, args.model_weights_path_or_url)
-            args.model_metafile_path = os.path.join(args.model_path, args.model_metafile_path)
     elif hasattr(args, "mlflow_model_path") and args.mlflow_model_path:
         args.model_name_or_path = os.path.join(args.model_path, args.mlflow_model_path)
         args.is_continual_finetuning = True
         if args.model_family in (MODEL_FAMILY_CLS.MMDETECTION_IMAGE, MODEL_FAMILY_CLS.MMTRACKING_VIDEO):
-            args.model_metafile_path = os.path.join(args.model_path, args.model_metafile_path)
             args.model_weights_path_or_url = os.path.join(args.model_path, args.model_weights_path_or_url)
     elif hasattr(args, "model_name") and args.model_name:
         args.model_name_or_path = args.model_name
@@ -758,7 +756,7 @@ def main():
     args.output_dir = SettingParameters.DEFAULT_OUTPUT_DIR
 
     # TODO: overwriting the save_as_mlflow_model flag to True. Otherwise, it will fail the pipeline service since it
-    #  expects the mlflow model folder to create model asset. It can be modified iff outputs of the component can be
+    #  expects the mlflow model folder to create model asset. It can be modified if outputs of the component can be
     #  optional.
     args.save_as_mlflow_model = True
 

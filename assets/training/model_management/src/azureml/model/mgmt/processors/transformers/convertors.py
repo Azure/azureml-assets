@@ -42,7 +42,7 @@ from transformers import (
     AutoModelForSequenceClassification,
     AutoModelForQuestionAnswering,
     AutoModelForSeq2SeqLM,
-    AutoModelWithLMHead,
+    AutoModelForCausalLM,
     AutoModelForMaskedLM,
     AutoModelForImageClassification,
     AutoTokenizer,
@@ -184,7 +184,9 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         # set metadata info
         metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
-                                              is_finetuned_model=False)
+                                              is_finetuned_model=False,
+                                              base_model_task=self._task)
+
         try:
             # create a conda environment for OSS transformers Flavor
             python_version = platform.python_version()
@@ -329,8 +331,8 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         PIP_LIST = ['accelerate', 'cffi', 'dill', 'google-api-core', 'numpy',
                     'packaging', 'pillow', 'protobuf', 'pyyaml', 'requests', 'scikit-learn',
-                    'scipy', 'sentencepiece', 'torch']
-        ADD_PACKAGE_LIST = ['mlflow==2.8.0', 'torchvision==0.14.1', 'transformers==4.31.0']
+                    'scipy', 'sentencepiece', 'torch', 'mlflow']
+        ADD_PACKAGE_LIST = ['torchvision==0.14.1', 'transformers==4.34.1']
 
         conda_list_cmd = ["conda", "list", "--json"]
         try:
@@ -475,8 +477,8 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         "text-classification": AutoModelForSequenceClassification,
         "token-classification": AutoModelForTokenClassification,
         "question-answering": AutoModelForQuestionAnswering,
-        "summarization": AutoModelWithLMHead,
-        "text-generation": AutoModelWithLMHead,
+        "summarization": AutoModelForSeq2SeqLM,
+        "text-generation": AutoModelForCausalLM,
         "translation": AutoModelForSeq2SeqLM,
     }
 

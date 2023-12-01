@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.1
+name: chatbot
+display_name: Chatbot
+description: Chatbot
+
+tags:
+  modality: completion
+  task: chat-completions
+
+data_uri: ./prompt
+template_path: prompt.yaml

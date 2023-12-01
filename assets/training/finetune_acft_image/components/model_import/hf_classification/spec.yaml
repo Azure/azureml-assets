@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.8
+version: 0.0.9
 name: transformers_image_classification_model_import
 display_name: Image Classification HuggingFace Transformers Model Import
 description: Import PyTorch / MLflow model
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/3
+environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/10
 
 code: ../../../src/model_selector
 
@@ -40,6 +40,12 @@ inputs:
     optional: true
     description: Mlflow Model registered in AzureML Asset.
 
+  validation_output:
+    # Output of validation component
+    type: uri_file
+    optional: true
+    description: Validation status.
+
   download_from_source:
     type: boolean
     optional: true
@@ -59,4 +65,3 @@ command: >-
   $[[--mlflow_model ${{inputs.mlflow_model}}]]
   $[[--download_from_source ${{inputs.download_from_source}}]]
   --output_dir ${{outputs.output_dir}}
-

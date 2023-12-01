@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: ft_nlp_common_validation
-version: 0.0.23
+version: 0.0.26
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/28
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/31
 
 code: ../../../src/validation
 
@@ -48,6 +48,13 @@ inputs:
     optional: true
     default: SingleLabelClassification
     description: Finetuning task type
+
+  num_nodes_finetune:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: number of nodes to be used for finetuning (used for distributed training)
 
   number_of_gpu_to_use_finetuning:
     type: integer
@@ -98,6 +105,46 @@ inputs:
     type: string
     optional: true
     description: Validation parameters propagated from pipeline.
+  
+  num_train_epochs:
+    type: integer
+    optional: true
+    description: Number of training epochs
+  
+  max_steps:
+    type: integer
+    optional: true
+    description: Maximum number of training steps
+  
+  per_device_train_batch_size:
+    type: integer
+    optional: true
+    description: Batch size per GPU/CPU for training
+
+  per_device_eval_batch_size:
+    type: integer
+    optional: true
+    description: Batch size per GPU/CPU for evaluation
+  
+  learning_rate:
+    type: number
+    optional: true
+    description: Learning rate for optimizer
+  
+  adam_beta1:
+    type: number
+    optional: true
+    description: Beta1 hyperparameter for the Adam optimizer
+  
+  adam_beta2:
+    type: number
+    optional: true
+    description: Beta2 hyperparameter for the Adam optimizer
+  
+  adam_epsilon:
+    type: number
+    optional: true
+    description: Epsilon hyperparameter for the Adam optimizer
 
 outputs:
   validation_info:

@@ -1,21 +1,17 @@
 $schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
 
-_type: chat
+template: |
+  I am a grade {{grade_level}} {{subject}} teacher trying to teach my students about {{content_area}}. Please generate a lesson plan that helps me teach {{concept}}, to grade level {{grade_level}} {{subject}}. In the lesson plan, include:
 
-messages:
-- role: user
-  content: |
-    I am a grade {{grade_level}} {{subject}} teacher trying to teach my students about {{content_area}}. Please generate a lesson plan that helps me teach {{concept}}, to grade level {{grade_level}} {{subject}}. In the lesson plan, include:
+  - A bulleted list of learning outcomes
 
-    - A bulleted list of learning outcomes
+  - Material types suggestion (a video, presentation, or article) for learning the concepts (that I could search for)
 
-    - Material types suggestion (a video, presentation, or article) for learning the concepts (that I could search for)
+  - A small group activity
 
-    - A small group activity
+  - A set of exit ticket prompts to assess student understanding. First prompt should check for basic understanding, second prompt should prompt students to think more deeply, and third prompt should push higher order thinking.
 
-    - A set of exit ticket prompts to assess student understanding. First prompt should check for basic understanding, second prompt should prompt students to think more deeply, and third prompt should push higher order thinking.
-
-    - An overview of standards alignment
+  - An overview of standards alignment
 
 input_variables:
 - name: concept
@@ -30,5 +26,15 @@ input_variables:
 - name: subject
   description: subject
   default: science
+
+execution_settings:
+  default:
+    temperature: 0.5
+    max_tokens: 1600
+    top_p: 0.7
+    frequency_penalty: 0.7
+    presence_penalty: 0
+    number_of_responses: 1
+    stop_sequences: []
 
 template_format: handlebars

@@ -4,6 +4,7 @@
 """Asset config classes."""
 
 import re
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from enum import Enum
 from functools import total_ordering
@@ -11,10 +12,18 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from packaging import version
 from typing import Dict, List, Set, Tuple, Union
+import requests
+import sys
 from azure.ai.ml._azure_environments import (
     AzureEnvironments,
     _get_default_cloud_name,
     _get_storage_endpoint_from_metadata
+)
+from azure.identity import AzureCliCredential
+from azure.storage.blob import (
+    BlobServiceClient,
+    ContainerSasPermissions,
+    generate_container_sas
 )
 
 
@@ -483,7 +492,11 @@ class LocalAssetPath(AssetPath):
 class AzureBlobstoreAssetPath(AssetPath):
     """Azure Blobstore asset path."""
 
-    DEFAULT_BLOBSTORE_URI = "https://{}.blob.core.windows.net/{}/{}"
+    AZURE_CLOUD_SUFFIX = "core.windows.net"
+
+    CONTAINER_ANONYMOUS_ACCESS_CHECK_TIMEOUT = 15
+
+    AZURE_CLI_PROCESS_LOGIN_TIMEOUT = 60
 
     def __init__(self, storage_name: str, container_name: str, container_path: str):
         """Create a Blobstore path.
@@ -498,6 +511,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         self._storage_name = storage_name
         self._container_name = container_name
         self._container_path = container_path
+        self._token = None
 
         # AzureCloud, USGov, and China clouds should all pull from the same endpoint
         # associated with AzureCloud. If the cloud is not one of these, then the
@@ -506,18 +520,136 @@ class AzureBlobstoreAssetPath(AssetPath):
         if _get_default_cloud_name() in [AzureEnvironments.ENV_DEFAULT,
                                          AzureEnvironments.ENV_US_GOVERNMENT,
                                          AzureEnvironments.ENV_CHINA]:
-            uri = AzureBlobstoreAssetPath.DEFAULT_BLOBSTORE_URI.format(
-                storage_name,
-                container_name,
-                container_path)
+            cloud_suffix = AzureBlobstoreAssetPath.AZURE_CLOUD_SUFFIX
         else:
-            uri = "https://{}.blob.{}/{}/{}".format(
-                storage_name,
-                _get_storage_endpoint_from_metadata(),
-                container_name,
-                container_path)
+            cloud_suffix = _get_storage_endpoint_from_metadata()
+        self._account_uri = f"https://{storage_name}.blob.{cloud_suffix}"
 
-        super().__init__(PathType.AZUREBLOB, uri)
+        # Its possible that the account URL may need additional tweaking to add a SAS
+        # token if the account does not allow for anonymous access. However, for
+        # performance reasons take a lazy approach to determining this and wait
+        # until a client of this class actually attempts to reference the URI
+        super().__init__(
+            PathType.AZUREBLOB,
+            None,
+        )
+
+    def get_uri(self, token_expiration: timedelta = timedelta(hours=1)) -> str:
+        """Get Asset URI.
+
+        :param token_expiration: Amount of time until token expiration
+        :type token_expiration: timedelta
+        """
+        # There are 3 values token can be set to
+        # None = no attempts have been made to create a SAS token
+        # Empty string = container is public (no SAS token required)
+        # Neither of the above = the SAS token
+
+        # Build the simple, non-SAS URI for quick use later in the function.
+        # Its possible that the account URI may need additional tweaking to add a SAS
+        # token if the account does not allow for anonymous access.
+        uri = f"{self._account_uri}/{self._container_name}/{self._container_path}"
+
+        # If a SAS token has been explicitly set, then assume that the URI+token is valid.
+        # Simply append the token and return. If no SAS token is set, then proceed to rest of function.
+        if self.token is not None:
+            if self.token:
+                uri += "?" + self.token
+            return uri
+
+        # The first test is to see if we can simply list the contents of the container
+        # using a very simple and quick HTTP request. In order for this to work,
+        # container must support anonymous read access. If this succeeds, we can
+        # return the URI "as-is".
+        try:
+            list_container_url = f"{self._account_uri}/{self._container_name}?restype=container&comp=list&maxresults=1"
+            response = requests.get(
+                list_container_url,
+                timeout=AzureBlobstoreAssetPath.CONTAINER_ANONYMOUS_ACCESS_CHECK_TIMEOUT
+            )
+
+            if response.status_code >= 200 and response.status_code <= 299:
+                self._token = ""
+                return uri
+        except Exception:
+            # If we fail pass through to the next approach
+            pass
+
+        # Our second approach is to use the azure python SDK to view the properties
+        # of the container. If the container allows for anonymous access then we can
+        # return the URI "as-is".
+        #
+        # This approach is slower than the first approach, which is why we
+        # tried the simple HTTP request approach first.
+        #
+        # It also requires Azure Credentials to be configured which may or may
+        # not be present depending on the execution environment. If these credentials
+        # do not exist then fail gracefully, return the URI "as-is", and hope for the best.
+        try:
+            blob_service_client = BlobServiceClient(
+                account_url=self._account_uri,
+                credential=AzureCliCredential(
+                    process_timeout=AzureBlobstoreAssetPath.AZURE_CLI_PROCESS_LOGIN_TIMEOUT
+                )
+            )
+            container_client = blob_service_client.get_container_client(container=self._container_name)
+
+            # If the container allows for anonymous access then we can return the URI "as-is"
+            if container_client.get_container_properties().public_access is not None:
+                self._token = ""
+                return uri
+
+            # Our final approach is to generate a SAS token for the container and append
+            # it to the URI
+            start_time = datetime.now(timezone.utc)
+            expiry_time = start_time + token_expiration
+
+            key = blob_service_client.get_user_delegation_key(start_time, expiry_time)
+
+            self._token = generate_container_sas(
+                account_name=self._storage_name,
+                container_name=self._container_name,
+                user_delegation_key=key,
+                permission=ContainerSasPermissions(read=True, list=True),
+                expiry=expiry_time,
+                start=start_time
+            )
+
+            uri += "?" + self._token
+            return uri
+
+        except Exception as e:
+            # If we fail then simply return the URI "as-is" and hope for the best
+            print(f"Failed to generate SAS token for storage {self._storage_name} "
+                  f"and container {self._container_name}: {e}",
+                  file=sys.stderr)
+            self._token = ""
+            return uri
+
+    @property
+    def uri(self) -> str:
+        """Asset URI."""
+        return self.get_uri()
+
+    @property
+    def storage_name(self) -> str:
+        """Storage name."""
+        return self._storage_name
+
+    @property
+    def container_name(self) -> str:
+        """Container name."""
+        return self._container_name
+
+    @property
+    def token(self) -> str:
+        """Sas token."""
+        return self._token
+
+    @token.setter
+    def token(self, value: str):
+        """Set sas token."""
+        self._token = value
 
 
 class GitAssetPath(AssetPath):
