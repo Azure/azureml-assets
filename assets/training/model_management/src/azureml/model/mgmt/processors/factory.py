@@ -182,7 +182,7 @@ class TextToImageMLflowConvertorFactory(MLflowConvertorFactoryInterface):
 
         def is_supported():
             supported = any([model_family in misc for model_family in
-                             SupportedTextToImageModelFamily.__dict__.values()])
+                             SupportedTextToImageModelFamily.list_values()])
             return supported
         if misc and is_supported():
             try:
