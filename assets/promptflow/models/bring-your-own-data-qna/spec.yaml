@@ -4,9 +4,9 @@ path: ./
 properties:
   is-promptflow: true
   azureml.promptflow.section: gallery
-  azureml.promptflow.type: rag
-  azureml.promptflow.name: Bring Your Own Data QnA
-  azureml.promptflow.description: Create flows for Q&A with GPT3.5 using data from your own indexed files to make the answer more grounded for entreprise chat scenarios.
+  azureml.promptflow.type: standard
+  azureml.promptflow.name: Q&A on Your Data
+  azureml.promptflow.description: Use LLM and data from your own indexed files to ground multi-round question and answering capabilities.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 6
+version: 7
