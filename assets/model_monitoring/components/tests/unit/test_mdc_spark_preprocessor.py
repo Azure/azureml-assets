@@ -4,14 +4,18 @@
 """test class for mdc preprocessor."""
 
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructField, StringType, DoubleType, BooleanType, LongType, ArrayType, StructType
+from pyspark.sql.types import (
+    StructField, StringType, DoubleType, BooleanType, IntegerType, LongType, TimestampType,
+    ArrayType, StructType, MapType
+)
 import pytest
 import os
 import sys
 import json
 from datetime import datetime
 from model_data_collector_preprocessor.spark_run import (
-    _mdc_uri_folder_to_raw_spark_df, _extract_data_and_correlation_id, _mdc_uri_folder_to_preprocessed_spark_df
+    _mdc_uri_folder_to_raw_spark_df, _extract_data_and_correlation_id, _mdc_uri_folder_to_preprocessed_spark_df,
+    _convert_complex_columns_to_json_string
 )
 from shared_utilities.momo_exceptions import DataNotFoundError
 
@@ -431,6 +435,51 @@ class TestMDCSparkPreprocessor:
             expected_df.printSchema()
 
             assert_spark_dataframe_equal(actual_df, expected_df)
+
+    def test_convert_complex_column_to_json_string(self):
+        """Test _convert_complex_columns_to_json_string()."""
+        schema_in = StructType([
+            StructField("string", StringType()),
+            StructField("integer", LongType()),
+            StructField("double", DoubleType()),
+            StructField("bool", BooleanType()),
+            StructField("timestamp", TimestampType()),
+            StructField("array", ArrayType(IntegerType())),
+            StructField("struct", StructType([
+                StructField("f1", StringType()),
+                StructField("f2", IntegerType())
+            ])),
+            StructField("map", MapType(StringType(), LongType()))
+        ])
+        data_in = [
+            [r"a\bc", 1, 0.618, True, datetime(2023, 12, 1, 16, 23, 16), [1, 2], ('"a\\', 1), {"k1": 1, "k2": 9}],
+            ["xyz", 2, 3.14, False, datetime(2023, 12, 1, 16, 25, 37), [4, 5, 6], ("b", 8), {"k1": 7, "k3": 3}],
+        ]
+        spark = SparkSession.builder.getOrCreate()
+        df_in = spark.createDataFrame(data_in, schema=schema_in)
+
+        df_actual = _convert_complex_columns_to_json_string(df_in)
+
+        df_actual.show()
+        df_actual.printSchema()
+
+        schema_out = StructType([
+            StructField("string", StringType()),
+            StructField("integer", LongType()),
+            StructField("double", DoubleType()),
+            StructField("bool", BooleanType()),
+            StructField("timestamp", TimestampType()),
+            StructField("array", StringType()),
+            StructField("struct", StringType()),
+            StructField("map", StringType())
+        ])
+        data_out = [
+            [r"a\bc", 1, 0.618, True, datetime(2023, 12, 1, 16, 23, 16), "[1,2]", r'{"f1":"\"a\\","f2":1}', '{"k1":1,"k2":9}'],  # noqa
+            ["xyz", 2, 3.14, False, datetime(2023, 12, 1, 16, 25, 37), "[4,5,6]", '{"f1":"b","f2":8}', '{"k3":3,"k1":7}'],  # noqa
+        ]
+        df_out = spark.createDataFrame(data_out, schema=schema_out)
+
+        assert_spark_dataframe_equal(df_actual, df_out)
 
 
 def assert_spark_dataframe_equal(df1, df2):
