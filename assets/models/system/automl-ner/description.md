@@ -36,7 +36,7 @@ championship O
 rings O
 ```
 
-Please see [documentation](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#named-entity-recognition-ner) for data requirements.
+Please see [documentation](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#named-entity-recognition-ner) for data requirements.
 
 #### Language Setting
 
