@@ -184,8 +184,7 @@ class TextToImageMLflowConvertorFactory(MLflowConvertorFactoryInterface):
             supported = any([model_family in misc for model_family in
                              SupportedTextToImageModelFamily.__dict__.values()])
             return supported
-
-        if misc and is_supported:
+        if misc and is_supported():
             try:
                 converter = TextToImageMLflowConvertorFactory.STABLE_DIFFUSION_TASK_MAP[translate_params["task"]]
                 return converter(

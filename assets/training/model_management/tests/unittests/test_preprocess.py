@@ -500,7 +500,7 @@ class TestTextToImageMLflowConvertorFactory(unittest.TestCase):
         """Test unsupported model family case."""
         with self.assertRaises(Exception) as context:
             TextToImageMLflowConvertorFactory.create_mlflow_convertor("model_dir", "output_dir", "temp_dir",
-                                                                      {"misc": "unsupported_model_family",
+                                                                      {"misc": ["unsupported_model_family"],
                                                                        "task": "some_task"})
         self.assertTrue('Unsupported model family for text to image model' in str(context.exception))
 
