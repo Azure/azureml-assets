@@ -40,13 +40,13 @@ Please see [documentation](https://learn.microsoft.com/azure/machine-learning/ho
 
 #### Language Setting
 
-Currently, language selection defaults to English. But Automated ML supports 104 languages leveraging language specific and multilingual pre-trained text DNN models. Please see [Language setting](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#language-settings) for documentation.
+Currently, language selection defaults to English. But Automated ML supports 104 languages leveraging language specific and multilingual pre-trained text DNN models. Please see [Language setting](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#language-settings) for documentation.
 
 #### Train a Model
 
-You can initiate [individual trials](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli#data-validation), or perform a [manual sweeps](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#model-sweeping-and-hyperparameter-tuning-preview), which explores multiple hyperparameter values near the more promising models and hyperparameter configurations. 
+You can initiate [individual trials](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli#data-validation), or perform a [manual sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#model-sweeping-and-hyperparameter-tuning-preview), which explores multiple hyperparameter values near the more promising models and hyperparameter configurations. 
 
-For more information, see [Model sweeping and hyperparameter tuning](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#model-sweeping-and-hyperparameter-tuning-preview).
+For more information, see [Model sweeping and hyperparameter tuning](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#model-sweeping-and-hyperparameter-tuning-preview).
 
 ### Code samples
 
