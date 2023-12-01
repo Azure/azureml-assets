@@ -9,7 +9,7 @@ With this functionality, you can:
 * Either download or deploy the resulting model as a endpoint in Azure Machine Learning.
 * Scale the operationalization process with the help of Azure Machine Learning's MLOps and ML Pipelines capabilities.
 
-See [How to train nlp models](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli) for more information.
+See [How to train nlp models](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli) for more information.
 
 ### Documentation
 
