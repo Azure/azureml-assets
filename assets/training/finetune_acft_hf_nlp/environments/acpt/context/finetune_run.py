@@ -353,8 +353,8 @@ def _initiate_run():
         "--batch_size", decode_param_from_env_var("batch_size"),
         "--pad_to_max_length", decode_param_from_env_var("pad_to_max_length"),
         "--max_seq_length", decode_param_from_env_var("max_seq_length"),
-        "--train_file_path", os.path.join(decode_input_from_env_var("dataset_input"), "train_input.jsonl"),
-        "--test_file_path", os.path.join(decode_input_from_env_var("dataset_input"), "train_input.jsonl"),
+        "--train_file_path", os.path.join(decode_input_from_env_var("dataset_input") or "", "train_input.jsonl"),
+        "--test_file_path", os.path.join(decode_input_from_env_var("dataset_input") or "", "train_input.jsonl"),
         "--model_selector_output",
         os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "model_selector_output"),
         "--output_dir", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "preprocess_output")
@@ -362,7 +362,10 @@ def _initiate_run():
     # add optional param ground_truth_key
     add_optional_param(cmd, "ground_truth_key")
     # add optional input validation_file_path
-    add_optional_input(cmd, "validation_file_path")
+    validation_file_path = os.path.join(decode_input_from_env_var("dataset_input") or "", "validation_input.jsonl")
+    if os.path.isfile(validation_file_path):
+        cmd += ["--validation_file_path", validation_file_path]
+
     _run_subprocess_cmd(cmd, component_name="Preprocess")
 
     # finetune
