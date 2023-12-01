@@ -5,7 +5,7 @@ AutoML Named entity recognition (NER) is a sub-task of information extraction (I
 With this functionality, you can:
 * Directly use datasets coming from [Azure Machine Learning data labeling](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-text-labeling-projects?view=azureml-api-2)
 * Utilize labeled data to create NLP models without any training code.
-* Enhance model performance by selecting the appropriate algorithm and fine-tuning the hyperparameters selecting the appropriate algorithm from a [large selection of models](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli#supported-model-algorithms) or let AutoML find the best model for you.
+* Enhance model performance by selecting the appropriate algorithm and fine-tuning the hyperparameters selecting the appropriate algorithm from a [large selection of models](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli#supported-model-algorithms) or let AutoML find the best model for you.
 * Either download or deploy the resulting model as a endpoint in Azure Machine Learning.
 * Scale the operationalization process with the help of Azure Machine Learning's MLOps and ML Pipelines capabilities.
 
