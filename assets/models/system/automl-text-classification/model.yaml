@@ -1,5 +1,5 @@
 path:
-  container_name: finetuning-image-models
+  container_name: finetuning-models
   container_path: AutoML-mlflow/AutoML-Text-Classification/1701458187/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
