@@ -20,7 +20,7 @@ Please see [documentation](https://learn.microsoft.com/en-us/azure/machine-learn
 
 #### Language Setting
 
-Currently, language selection defaults to English. But Automated ML supports 104 languages leveraging language specific and multilingual pre-trained text DNN models. Please see [langugage setting](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#language-settings) for documentation.
+Currently, language selection defaults to English. But Automated ML supports 104 languages leveraging language specific and multilingual pre-trained text DNN models. Please see [Language setting](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#language-settings) for documentation.
 
 #### Train a Model
 

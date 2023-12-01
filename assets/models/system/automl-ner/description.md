@@ -40,7 +40,7 @@ Please see [documentation](https://learn.microsoft.com/en-us/azure/machine-learn
 
 #### Language Setting
 
-Currently, language selection defaults to English. But Automated ML supports 104 languages leveraging language specific and multilingual pre-trained text DNN models. Please see [langugage setting](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#language-settings) for documentation.
+Currently, language selection defaults to English. But Automated ML supports 104 languages leveraging language specific and multilingual pre-trained text DNN models. Please see [Language setting](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#language-settings) for documentation.
 
 #### Train a Model
 
@@ -53,7 +53,8 @@ For more information, see [Model sweeping and hyperparameter tuning](https://lea
 
 Task|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|
-Named Entity Recognition|[CoNLL-2003](https://www.kaggle.com/datasets/alaakhaled/conll003-englishversion?select=valid.txt)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-nlp-text-named-entity-recognition-task-distributed-sweeping/automl-nlp-text-ner-task-distributed-with-sweeping.ipynb" target="_blank">automl-nlp-text-ner-task-distributed-with-sweeping.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-text-ner-conll-distributed-sweeping/cli-automl-text-ner-conll2003-distributed-sweeping.yml" target="_blank">/automl-nlp-text-ner-task-distributed-with-sweeping.ipynb</a>
+Named Entity Recognition|[CoNLL-2003](https://www.kaggle.com/datasets/alaakhaled/conll003-englishversion?select=valid.txt)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-nlp-text-named-entity-recognition-task-distributed-sweeping/automl-nlp-text-ner-task-distributed-with-sweeping.ipynb" target="_blank">automl-nlp-text-ner-task-distributed-with-sweeping.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-text-ner-conll-distributed-sweeping/cli-automl-text-ner-conll2003-distributed-sweeping.yml" target="_blank">cli-automl-text-ner-conll2003-distributed-sweeping.yml
+</a>
 
 
 
