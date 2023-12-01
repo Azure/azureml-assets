@@ -5,13 +5,13 @@ properties:
   is-promptflow: true
   azureml.promptflow.section: gallery
   azureml.promptflow.type: chat
-  azureml.promptflow.name: Bring Your Own Data Chat QnA
-  azureml.promptflow.description: Create flow for multi-round Q&A with GPT3.5 using
-    data from your own indexed files to make the answer more grounded for enterprise
-    chat scenarios.
+  azureml.promptflow.name: Multi-Round Q&A on Your Data
+  azureml.promptflow.description: Create a chatbot that uses LLM and data from your
+    own indexed files to ground multi-round question and answering capabilities in
+    enterprise chat scenarios.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 5
+version: 6
 description: |-
   The "Bring Your Own Data Chat QnA" is a pre-trained chat model, enhanced by GPT3.5, that leverages your personally indexed data and chat history to deliver more concrete and relevant answers. It involves processing the raw query through an embedding procedure, followed by a "Vector Search" to pinpoint the most pertinent context within the user's data. Subsequently, GPT3.5 is employed to generate a comprehensive answer to the question using the sourced documents.
 

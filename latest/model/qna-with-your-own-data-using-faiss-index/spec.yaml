@@ -10,7 +10,7 @@ properties:
     index to make the answer more grounded.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 3
+version: 4
 description: |-
   The "QnA with Your Own Data Using Faiss Index" is a Q&A model with GPT3.5 using information from vector search to make the answer more grounded. It involves embedding user's question with LLM, and then using Faiss Index Lookup to find relevant documents based on vectors. By utilizing vector search, users can incorporate their domain knowledge into the prompts, leading to more accurate and relevant answers. The model then uses GPT3.5 to generate an answer to the question with the documents as augmented prompt.
 
