@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_text_generation_data_import
-version: 0.0.3
+version: 0.0.4
 type: command
 
 is_deterministic: true
@@ -8,9 +8,7 @@ is_deterministic: true
 display_name: OSS Text Generation Data Import
 description: FTaaS component to copy user training data to output
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/30
-
-code: ../../../src/
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/32
 
 inputs:
   # Inputs
@@ -40,6 +38,4 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python data_import/data_import.py --task_name TextGeneration --train_file_path '${{inputs.train_file_path}}'
-  $[[--validation_file_path '${{inputs.validation_file_path}}']] --output_dataset
-  '${{outputs.output_dataset}}'
+  python /azureml/data_import/run.py
