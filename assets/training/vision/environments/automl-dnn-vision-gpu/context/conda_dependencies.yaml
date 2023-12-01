@@ -15,6 +15,7 @@ dependencies:
 - wheel=0.38.1
 - pip:
   - cryptography>=41.0.4
+  - pyarrow-hotfix>=0.5
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
@@ -27,3 +28,4 @@ dependencies:
   - azureml-train-automl-runtime=={{latest-pypi-version}}
   - azureml-automl-dnn-vision=={{latest-pypi-version}}
   - azureml-dataprep>=2.24.4
+  - pyarrow-hotfix

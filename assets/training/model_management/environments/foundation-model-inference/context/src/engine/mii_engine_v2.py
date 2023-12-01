@@ -1,12 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 """Mii Engine module.
 
 This module contains the MiiEngineV2 class which is responsible for initializing the MII server and client,
 generating responses for given prompts, and managing the allocation of processes and load balancing.
 """
-
 import math
 import os
 import time
@@ -74,7 +72,7 @@ class MiiEngineV2(BaseEngine):
                 inference_time_ms=inference_time_ms,
                 time_per_token_ms=time_per_token_ms,
                 generated_tokens=response_tokens,
-                prompt_num=i
+                prompt_num=i,
             )
             inference_results.append(result)
         return inference_results
@@ -86,7 +84,7 @@ class MiiEngineV2(BaseEngine):
         if self.engine_config.tensor_parallel is not None:
             if self.engine_config.tensor_parallel > DEVICE_COUNT:
                 raise ValueError(
-                    f"TENSOR_PARALLEL ({self.engine_config.tensor_parallel}) is larger than the available GPUs"
+                    f"TENSOR_PARALLEL ({self.engine_config.tensor_parallel}) is larger than the available GPUs",
                 )
             replica_num = int(DEVICE_COUNT / self.engine_config.tensor_parallel)
         else:
@@ -118,8 +116,8 @@ class MiiEngineV2(BaseEngine):
                 "sync_debug": False,
                 "task": "text-generation",
                 "tensor_parallel": self.engine_config.tensor_parallel,
-                "tokenizer": self.engine_config.model_id
-            }
+                "tokenizer": self.engine_config.model_id,
+            },
         }
         mii_config = mii.config.MIIConfig(**default_mii_config)
         return mii_config
@@ -127,7 +125,7 @@ class MiiEngineV2(BaseEngine):
     def _calculate_replicas(self, model_size_in_gb) -> int:
         """Calculate the number of replicas."""
         # Check GPU size and calculate number of replicas it can handle
-        gpu_size_in_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
+        gpu_size_in_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
         # For now, max 1 replica per 1 GPU
         # Taking in extra memory for cache
         # TODO: improve this logic based on the amount of KV cache required and token length
@@ -135,7 +133,7 @@ class MiiEngineV2(BaseEngine):
         if num_possible_replicas == 0:
             logger.debug(
                 "Tensor parallel / model replica calculation with extra memory for cache "
-                "results in 0 replicas. Calculating without extra memory for cache."
+                "results in 0 replicas. Calculating without extra memory for cache.",
             )
             num_possible_replicas = int(DEVICE_COUNT / math.ceil((model_size_in_gb) / gpu_size_in_gb))
             if num_possible_replicas == 0:
@@ -164,4 +162,4 @@ class MiiEngineV2(BaseEngine):
                 # Add the size to the total size
                 total_size += file_size
         # Return the total size
-        return math.ceil(total_size / (1024 ** 3))
+        return math.ceil(total_size / (1024**3))

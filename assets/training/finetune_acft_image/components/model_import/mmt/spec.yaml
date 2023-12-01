@@ -40,6 +40,12 @@ inputs:
     optional: true
     description: Mlflow Model registered in AzureML Asset.
 
+  validation_output:
+    # Output of validation component
+    type: uri_file
+    optional: true
+    description: Validation status.
+
   download_from_source:
     type: boolean
     optional: true

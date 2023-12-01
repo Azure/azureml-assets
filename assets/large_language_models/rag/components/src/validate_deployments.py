@@ -36,7 +36,7 @@ MAX_RETRIES = 3
 SLEEP_DURATION = 2
 
 
-def get_cognitive_services_client(ws):
+def get_cognitive_services_client(subscription_id):
     """Get cognitive services client."""
     client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID", None)
     if os.environ.get("OBO_ENDPOINT"):
@@ -50,7 +50,7 @@ def get_cognitive_services_client(ws):
         print("Using Azure CLI for authentication")
         credential = AzureCliCredential()
     client = CognitiveServicesManagementClient(
-        credential=credential, subscription_id=ws.subscription_id)
+        credential=credential, subscription_id=subscription_id)
     return client
 
 
@@ -60,7 +60,10 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
     account_name = model_params["default_aoai_name"]
     deployment_name = model_params["deployment_id"]
 
-    client = get_cognitive_services_client(ws)
+    activity_logger.info(
+            f"[Validate Deployments]: Searching {deployment_name} deployment under account {account_name}"
+            + f"in resource group {resource_group_name}.")
+    client = get_cognitive_services_client(ws.subscription_id)
     try:
         response = client.deployments.get(
             resource_group_name=resource_group_name,
@@ -68,24 +71,34 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
             deployment_name=deployment_name,
         )
     except HttpResponseError as ex:
-        # Hack: Use proxy url to access AOAI deployment with specific app version
-        if ex.reason == 'Forbidden':
-            proxy_url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}' \
-                + f'/providers/Microsoft.MachineLearningServices/workspaces/{ws.name}' \
-                + '/endpoints/Azure.OpenAI/deployments/{deploymentName}'
-            api_version = '2023-10-01'
+        activity_logger.warning(f"[Validate Deployments]: Got error response: '{ex.reason}'.")
 
-            activity_logger.warn(
-                f"[Validate Deployments]: Validating deployment {model_params['deployment_id']} hit "
-                + f"authorization error.\nTry to use proxy url '{proxy_url}' with app version '{api_version}'.")
+        connection_id_embedding = model_params["connection"]
+        connection = get_connection_by_id_v2(connection_id_embedding)
+        hub_workspace_details = split_details(connection.metadata["ProxyResourceId"], start=1)
+        proxy_subscription_id = hub_workspace_details["subscriptions"]
+        proxy_resource_group = hub_workspace_details["resourceGroups"]
+        proxy_workspace_name = hub_workspace_details["workspaces"]
 
-            client.deployments.get.metadata['url'] = proxy_url
-            response = client.deployments.get(
-                resource_group_name=resource_group_name,
+        # Hack: Use proxy url template to access AOAI deployment with specific app version
+        # 1st and 3rd line cannot be f-string otherwise it will fail the check.
+        proxy_url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}' \
+            + f'/providers/Microsoft.MachineLearningServices/workspaces/{proxy_workspace_name}' \
+            + '/endpoints/Azure.OpenAI/deployments/{deploymentName}'
+        api_version = '2023-10-01'
+
+        activity_logger.info(f"Try to use proxy url '{proxy_url}' with app version '{api_version}'.")
+
+        # create new client with proxy subscription id
+        client = get_cognitive_services_client(proxy_subscription_id)
+
+        client.deployments.get.metadata['url'] = proxy_url
+        response = client.deployments.get(
+                resource_group_name=proxy_resource_group,
                 account_name=account_name,
                 deployment_name=deployment_name,
-                api_version=api_version
-            )
+                api_version=api_version,
+        )
 
     response_status = str.lower(response.properties.provisioning_state)
     if (response_status != "succeeded"):
@@ -352,7 +365,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
             embedding_params["connection"] = connection_id_embedding
             if is_default_connection(connection):
                 activity_logger.info(
-                    "[Validate Deployments]: Completion model using Default AOAI connection, parsing ResourceId")
+                    "[Validate Deployments]: Embedding model using Default AOAI connection, parsing ResourceId")
                 cog_workspace_details = split_details(
                     connection_metadata["ResourceId"], start=1)
                 embedding_params["default_aoai_name"] = cog_workspace_details["accounts"]
