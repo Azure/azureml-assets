@@ -5,7 +5,7 @@
 
 """Entry script for Batch resource manager."""
 
-from typing import List, Generator
+from typing import List, Generator, Optional
 import argparse
 import json
 import subprocess
@@ -16,7 +16,7 @@ import traceback
 from azureml.core import Run
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
-from aml_benchmark.utils.aml_run_utils import str2bool
+from aml_benchmark.utils.aml_run_utils import str2bool, get_dependent_run
 from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.utils.online_endpoint.online_endpoint_factory import OnlineEndpointFactory
 from aml_benchmark.utils.online_endpoint.online_endpoint import OnlineEndpoint, ResourceState
@@ -24,6 +24,7 @@ from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndp
 from aml_benchmark.utils.exceptions import BenchmarkUserException
 from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from azureml._common._error_definition.azureml_error import AzureMLError
+from azureml._restclient.constants import RunStatus
 
 
 logger = get_logger(__name__)
@@ -40,7 +41,7 @@ def parse_args() -> argparse.Namespace:
         help="Delete managed resources create during the run.",
     )
     parser.add_argument(
-        "--deployment_metadata_dir", default=None, type=str,
+        "--deployment_metadata", default=None, type=str,
         help="Directory contains deployment metadata.",
     )
     parser.add_argument("--cli_file", type=str, help="cli_file", default=None)
@@ -68,8 +69,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--redeploy_model",
         default=False, type=str2bool,
+        help="Force redeploy models or not.",
+    )
+    parser.add_argument(
+        "--wait_finetuned_step",
+        default=False, type=str2bool,
         help="Force redeploymodels or not.",
     )
+    parser.add_argument(
+        "--finetuned_step_name", type=str, help="finetuned_step_name", default=None)
     parser.add_argument(
         "--delete_managed_deployment",
         default=False, type=str2bool,
@@ -95,7 +103,7 @@ def parse_args() -> argparse.Namespace:
 
 def delete_managed_resources_maybe(
         output_metadata_dir: bool,
-        deployment_metadata: dict,
+        deployment_metadata_dict: dict,
         online_endpoint: OnlineEndpoint
 ) -> None:
     """Delete managed resources if delete_managed_resources is True."""
@@ -104,7 +112,7 @@ def delete_managed_resources_maybe(
     is_deployment_deleted = False
     is_connections_deleted = False
     # For some OAI model, the deployment needs to be delete
-    if deployment_metadata.get('is_managed_deployment', True):
+    if deployment_metadata_dict.get('is_managed_deployment', True):
         logger.info("Deleting deployment.")
         try:
             online_endpoint.delete_deployment()
@@ -112,7 +120,7 @@ def delete_managed_resources_maybe(
         except Exception as e:
             logger.error(f"Failed to delete deployment with error {e}.")
             logger.error(traceback.format_exception(*sys.exc_info()))
-    if deployment_metadata.get('is_managed_connections', True):
+    if deployment_metadata_dict.get('is_managed_connections', True):
         logger.info("Deleting connections.")
         try:
             online_endpoint.delete_connections()
@@ -120,7 +128,7 @@ def delete_managed_resources_maybe(
         except Exception as e:
             logger.error(f"Failed to delete connections with error {e}.")
             logger.error(traceback.format_exception(*sys.exc_info()))
-    if deployment_metadata.get('is_managed_endpoint', True):
+    if deployment_metadata_dict.get('is_managed_endpoint', True):
         logger.info("Deleting endpoint.")
         try:
             online_endpoint.delete_endpoint()
@@ -215,18 +223,26 @@ def _online_endpoint_generator(
                     additional_deployment_env_vars) if additional_deployment_env_vars else {},
                 deployment_env=deployment_env
             )
-            if do_quota_validation and online_model.is_aoai_model():
-                current_quota = online_endpoint.model_quota()
-                logger.info(
-                    "Current quota for model {} is {}.".format(online_model.model_name, current_quota))
-                if current_quota < deployment_sku:
-                    logger.warning(
-                        f"For {region}, current quota is less than sku {deployment_sku}, skip it now.")
-                    continue
-                if use_max_quota:
-                    if online_model.is_finetuned:
-                        current_quota = min(current_quota, 50)
-                    online_endpoint._sku = current_quota
+            try:
+                if do_quota_validation and online_model.is_aoai_model():
+                    current_quota = online_endpoint.model_quota()
+                    logger.info(
+                        "Current quota for model {} is {}.".format(
+                            online_model.model_name, current_quota))
+                    if current_quota < deployment_sku:
+                        logger.warning(
+                            f"For {region}, current quota is less than sku {deployment_sku}, skip it now.")
+                        continue
+                    if use_max_quota:
+                        if online_model.is_finetuned:
+                            current_quota = min(current_quota, 50)
+                        online_endpoint._sku = current_quota
+            except Exception as e:
+                logger.warning(f"Failed to get quota with error {e}.")
+                logger.warning(
+                    "To leverage quota validation, please make sure the "
+                    "managed identity has contributor role on the resource group.")
+                logger.warning(traceback.format_exception(*sys.exc_info()))
 
             yield online_endpoint
 
@@ -269,6 +285,7 @@ def deploy_model_in_list_maybe(
         except Exception as e:
             logger.error(f"Failed to deploy endpoint with error {e}.")
             continue
+        managed_deployment = False
         try:
             managed_deployment = deploy_model_maybe(
                 online_endpoint, output_metadata_dir, managed_endpoint, redeploy_model)
@@ -287,6 +304,22 @@ def deploy_model_in_list_maybe(
     return False
 
 
+def _wait_finetuned_step(finetuned_step_name: Optional[str]) -> None:
+    """Wait for finetuned step to finish."""
+    finetuned_step_name = finetuned_step_name if finetuned_step_name else "openai_completions_finetune_pipeline"
+    running_states = RunStatus.get_running_statuses()
+    wait_step_run = get_dependent_run(finetuned_step_name)
+    while wait_step_run and wait_step_run.get_status() in running_states:
+        logger.info("Waiting for finetuned step to finish.")
+        time.sleep(60)
+    if not wait_step_run or wait_step_run.get_status() != RunStatus.COMPLETED:
+        raise BenchmarkUserException._with_error(
+            AzureMLError.create(
+                BenchmarkUserError,
+                error_details=f"Finetuned wait step {finetuned_step_name} is failed. Or wait step not found.")
+            )
+
+
 @swallow_all_exceptions(logger)
 def main(
     model: str,
@@ -300,7 +333,7 @@ def main(
     deployment_name: str,
     deployment_sku: str,
     output_metadata_dir: str,
-    deployment_metadata_dir: str,
+    deployment_metadata: str,
     deletion_model: bool,
     connections_name: str,
     additional_deployment_env_vars: str,
@@ -315,7 +348,9 @@ def main(
     finetuned_workspace: str,
     delete_managed_deployment: bool,
     deployment_retries: int,
-    deployment_retry_interval_seconds: int
+    deployment_retry_interval_seconds: int,
+    wait_finetuned_step: bool,
+    finetuned_step_name: str
 ) -> None:
     """
     Entry function of the script.
@@ -347,6 +382,9 @@ def main(
             ], check=True
         )
     if not deletion_model:
+        if wait_finetuned_step:
+            logger.info("Wait for finetuned step to finish.")
+            _wait_finetuned_step(finetuned_step_name)
         subscriptions_list = [
             s.strip() for s in endpoint_subscription_id.split(',')] if endpoint_subscription_id else [None]
         locations_list = [
@@ -360,7 +398,8 @@ def main(
                 if finetuned_subscription_id else workspace.subscription_id
         online_model = OnlineEndpointModel(
             model, model_version, model_type, endpoint_name, is_finetuned_model,
-            finetuned_subscription_id, finetuned_resource_group, finetuned_workspace
+            finetuned_subscription_id, finetuned_resource_group, finetuned_workspace,
+            finetuned_step_name
         )
         is_deployment_successful = False
         while deployment_retries > 0:
@@ -395,7 +434,7 @@ def main(
                     error_details=f"Deployment is not successful after {deployment_retries} retries.")
                 )
     elif delete_managed_deployment:
-        if not deployment_metadata_dir:
+        if not deployment_metadata:
             logger.info("Delete deployment using input parameters.")
             online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name)
             online_endpoint = OnlineEndpointFactory.get_online_endpoint(
@@ -409,12 +448,12 @@ def main(
                 endpoint_location,
                 connections_name=connections_name
             )
-            deployment_metadata = {}
+            deployment_metadata_dict = {}
         else:
-            deployment_metadata = EndpointUtilities.load_endpoint_metadata_json(deployment_metadata_dir)
-            logger.info("Loaded deployment metadata {}.".format(deployment_metadata))
-            online_endpoint = OnlineEndpointFactory.from_metadata(deployment_metadata)
-        delete_managed_resources_maybe(output_metadata_dir, deployment_metadata, online_endpoint)
+            deployment_metadata_dict = EndpointUtilities.load_endpoint_metadata_json(deployment_metadata)
+            logger.info("Loaded deployment metadata {}.".format(deployment_metadata_dict))
+            online_endpoint = OnlineEndpointFactory.from_metadata(deployment_metadata_dict)
+        delete_managed_resources_maybe(output_metadata_dir, deployment_metadata_dict, online_endpoint)
     else:
         logger.info("Skip deletion as delete_managed_deployment is False.")
 
@@ -433,7 +472,7 @@ if __name__ == "__main__":
         args.deployment_name,
         args.deployment_sku,
         args.output_metadata,
-        args.deployment_metadata_dir,
+        args.deployment_metadata,
         args.deletion_model,
         args.connections_name,
         args.additional_deployment_env_vars,
@@ -448,5 +487,7 @@ if __name__ == "__main__":
         args.finetuned_workspace,
         args.delete_managed_deployment,
         args.deployment_retries,
-        args.deployment_retry_interval_seconds
+        args.deployment_retry_interval_seconds,
+        args.wait_finetuned_step,
+        args.finetuned_step_name
     )

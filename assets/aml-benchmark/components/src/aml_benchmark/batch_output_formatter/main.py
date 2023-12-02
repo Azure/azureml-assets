@@ -38,7 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--label_key", type=str, help="label key")
     parser.add_argument("--handle_response_failure", type=str, help="how to handler failed response.")
     parser.add_argument("--fallback_value", type=str, help="The fallback value.", default='')
-    parser.add_argument("--deployment_config_dir", type=str, help="model_type", default=None)
+    parser.add_argument("--deployment_config", type=str, help="model_type", default=None)
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
@@ -60,7 +60,7 @@ def main(
         fallback_value: str,
         is_performance_test: bool,
         endpoint_url: str,
-        deployment_config_dir: str
+        deployment_config: str
 ) -> None:
     """
     Entry script for the script.
@@ -94,8 +94,8 @@ def main(
         ground_truth_df = pd.DataFrame(read_jsonl_files(input_file_paths))
     else:
         ground_truth_df = None
-    if deployment_config_dir:
-        online_model = EndpointUtilities.get_model_from_deployment_config_file(deployment_config_dir)
+    if deployment_config:
+        online_model = EndpointUtilities.get_model_from_deployment_config_file(deployment_config)
     else:
         online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
 
@@ -142,5 +142,5 @@ if __name__ == "__main__":
         fallback_value=args.fallback_value,
         is_performance_test=args.is_performance_test,
         endpoint_url=args.endpoint_url,
-        deployment_config_dir=args.deployment_config_dir
+        deployment_config=args.deployment_config
     )

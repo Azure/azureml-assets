@@ -5,7 +5,13 @@
 
 
 from typing import Optional
+from azureml.core import Run, Model
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.error_definitions import BenchmarkUserError
+from azureml._common._error_definition.azureml_error import AzureMLError
+
 from ..logging import get_logger
+from ..aml_run_utils import get_dependent_run
 
 
 logger = get_logger(__name__)
@@ -22,7 +28,8 @@ class OnlineEndpointModel:
             is_finetuned: Optional[bool] = False,
             finetuned_subscription_id: Optional[str] = None,
             finetuned_resource_group: Optional[str] = None,
-            finetuned_workspace: Optional[str] = None
+            finetuned_workspace: Optional[str] = None,
+            model_depend_step: Optional[str] = None
     ):
         """Init method."""
         if model is not None and model.startswith('azureml:'):
@@ -41,6 +48,7 @@ class OnlineEndpointModel:
         self._finetuned_subscription_id = finetuned_subscription_id
         self._finetuned_resource_group = finetuned_resource_group
         self._finetuned_workspace = finetuned_workspace
+        self._model_depend_step = model_depend_step
 
     @property
     def model_name(self) -> str:
@@ -50,6 +58,27 @@ class OnlineEndpointModel:
     @property
     def model_version(self) -> str:
         """Get the model version."""
+        if self._model_version is None and self.is_finetuned:
+            logger.warning('Model version is None. Trying to get the latest one.')
+            finetuned_run_id = None
+            if self._model_depend_step is not None:
+                finetuned_run = get_dependent_run(self._model_depend_step)
+                ws = Run.get_context().experiment.workspace
+                finetuned_run_id = finetuned_run.id
+            models = list(Model.list(ws, self._model_name, run_id=finetuned_run_id))
+            if len(models) == 0:
+                raise BenchmarkUserException._with_error(
+                    AzureMLError.create(
+                        BenchmarkUserError,
+                        error_details=f"No associate version with model name {self._model_name} "
+                                      f"in step {self._model_depend_step} can be found. Please make sure the finetuned step"
+                                      f" {self._model_depend_step} has successfully registered the model."
+                    )
+                )
+            self._model_version = str(models[0].version)
+            if len(models) > 1:
+                logger.warning(
+                    f"Multiple models with name {self._model_name} are found. Use first one with version  {self._model_version} now.")
         return self._model_version
 
     @property

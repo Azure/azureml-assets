@@ -112,3 +112,25 @@ def str2bool(v):
         raise BenchmarkValidationException._with_error(
             AzureMLError.create(BenchmarkValidationError, error_details='Boolean value expected.')
         )
+
+
+def get_run_name(run: Run) -> str:
+    """Get the run name."""
+    if run.display_name:
+        return run.display_name
+    if run.name:
+        return run.name
+    return run.get_details().get("properties", {}).get("azureml.moduleName")
+
+
+def get_dependent_run(dependent_step) -> Optional[Run]:
+    """Get the dependent run."""
+    current_run = Run.get_context()
+    pipeline_run = current_run.parent.parent.parent
+    logger.info(f"Checking pipeline run {pipeline_run.id}.")
+    for run in pipeline_run.get_children():
+        run_name = get_run_name(run)
+        logger.info(f"Checking run {run.id} with module_name {run_name}.")
+        if run_name == dependent_step:
+            return run
+    return None

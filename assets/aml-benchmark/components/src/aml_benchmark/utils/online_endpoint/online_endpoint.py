@@ -18,13 +18,13 @@ from requests.models import Response
 from azureml.core import Run
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import WorkspaceConnection, AccessKeyConfiguration
-from azure.identity import ManagedIdentityCredential
 from azureml._restclient.clientbase import ClientBase
 from azureml._common._error_definition.azureml_error import AzureMLError
 
 from ..error_definitions import BenchmarkValidationError
 from ..exceptions import BenchmarkValidationException
 from ..logging import get_logger
+from .authentication_manager import AuthenticationManager
 from .online_endpoint_model import OnlineEndpointModel
 
 
@@ -43,7 +43,6 @@ class ResourceState(Enum):
 class OnlineEndpoint:
     """Class for AOAI and OSS online endpoint."""
 
-    ENV_CLIENT_ID_KEY = "DEFAULT_IDENTITY_CLIENT_ID"
     SCOPE_AML = "https://ml.azure.com/.default"
     SCOPE_ARM = "https://management.azure.com/.default"
 
@@ -71,11 +70,8 @@ class OnlineEndpoint:
         self._endpoint_name = endpoint_name
         self._deployment_name = deployment_name
         self._generated_deployment_name = False
-        if self._get_client_id() is None:
-            logger.info("Client id is not provided.")
-            self._credential = None
-        else:
-            self._credential = self.get_credential()
+        authentication_manager = AuthenticationManager()
+        self._credential = authentication_manager.credential
         self._curr_worspace = None
         self._managed_identity_required = False
         self._ml_client = None
@@ -135,13 +131,6 @@ class OnlineEndpoint:
             self._subscription_id = self.curr_workspace.subscription_id
             logger.info(f"Subscription id is not provided, use the one from workspace. {self._subscription_id}")
         return self._subscription_id
-
-    @staticmethod
-    def get_credential() -> ManagedIdentityCredential:
-        """Get the credential."""
-        client_id = os.environ.get(OnlineEndpoint.ENV_CLIENT_ID_KEY, None)
-        credential = ManagedIdentityCredential(client_id=client_id)
-        return credential
 
     @property
     def scoring_url(self) -> str:

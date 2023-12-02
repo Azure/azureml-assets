@@ -189,6 +189,23 @@ inputs:
     optional: True
     default: 60
     description: The interval seconds for deployment retry.
+  wait_finetuned_step:
+    type: boolean
+    optional: True
+    default: False
+    description: If waiting the finetuned step to finish.
+  finetuned_step_name:
+    type: string
+    optional: True
+    description: The finetuned step name.
+  authentication_type:
+    type: string
+    optional: False
+    description: Authentication type for end endpoint.
+    default: azureml_workspace_connection
+    enum:
+      - azureml_workspace_connection
+      - managed_identity
 outputs:
   predictions:
     type: uri_file
@@ -225,6 +242,8 @@ jobs:
       finetuned_workspace: ${{parent.inputs.finetuned_workspace}}
       deployment_retries: ${{parent.inputs.deployment_retries}}
       deployment_retry_interval_seconds: ${{parent.inputs.deployment_retry_interval_seconds}}
+      wait_finetuned_step: ${{parent.inputs.wait_finetuned_step}}
+      finetuned_step_name: ${{parent.inputs.finetuned_step_name}}
   # Preparer
   batch_inference_preparer: 
     type: command
@@ -245,21 +264,26 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml:batch_benchmark_score:0.0.3
+    component: azureml://registries/azureml-batch-score/components/batch_score_llm/versions/1.8.20231130.2
     inputs:
-      model_type: oai
-      online_endpoint_url: "a_url"
-      deployment_name: ${{parent.inputs.deployment_name}}
-      connections_name: "a_connection_name"
+      append_row_safe_output: true
+      api_type: completion
+      scoring_url: "a_url"
       debug_mode: ${{parent.inputs.debug_mode}}
       additional_headers: ${{parent.inputs.additional_headers}}
       ensure_ascii: ${{parent.inputs.ensure_ascii}}
       max_retry_time_interval: ${{parent.inputs.max_retry_time_interval}}
+      tally_failed_requests: true
+      tally_exclusions: none
+      segment_large_requests: disabled
+      segment_max_token_size: 600
+      output_behavior: append_row
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
-      deployment_metadata_dir: ${{parent.jobs.model_deployment.outputs.output_metadata}}
-      mini_batch_size: ${{parent.inputs.mini_batch_size}}
+      configuration_file: ${{parent.jobs.model_deployment.outputs.output_metadata}}
+      authentication_type: ${{parent.inputs.authentication_type}}
+      async_mode: false
     outputs:
       job_out_path:
         type: uri_file
@@ -301,6 +325,6 @@ jobs:
     type: command
     component: azureml:batch_resource_manager:0.0.1
     inputs:
-      deployment_metadata_dir: ${{parent.jobs.model_deployment.outputs.output_metadata}}
+      deployment_metadata: ${{parent.jobs.model_deployment.outputs.output_metadata}}
       wait_input: ${{parent.jobs.endpoint_batch_score.outputs.job_out_path}}
       delete_managed_deployment: ${{parent.inputs.delete_managed_deployment}}

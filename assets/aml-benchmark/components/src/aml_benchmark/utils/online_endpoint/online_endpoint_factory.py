@@ -78,7 +78,7 @@ class OnlineEndpointFactory:
             deployment_name=metadata_dict['deployment_name'],
             sku=None,
             location=None,
-            connections_name=metadata_dict['connections_name']
+            connections_name=metadata_dict['connection_name']
         )
 
     @staticmethod

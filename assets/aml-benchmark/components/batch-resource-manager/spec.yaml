@@ -98,8 +98,8 @@ inputs:
     optional: True
     default: True
     description: If using max quota or not for AOAI model.
-  deployment_metadata_dir:
-    type: uri_folder
+  deployment_metadata:
+    type: uri_file
     optional: True
     description: The deployment metadata directory that contains deployment details.
   additional_deployment_env_vars:
@@ -121,9 +121,18 @@ inputs:
     optional: True
     default: 60
     description: The interval seconds for deployment retry.
+  wait_finetuned_step:
+    type: boolean
+    optional: True
+    default: False
+    description: If waiting the finetuned step to finish.
+  finetuned_step_name:
+    type: string
+    optional: True
+    description: The finetuned step name.
 outputs:
   output_metadata:
-    type: uri_folder
+    type: uri_file
     description: Path to the folder where the deployment metadata will be stored.
 
 code: ../src
@@ -147,7 +156,7 @@ command: >-
   $[[--use_max_quota ${{inputs.use_max_quota}}]]
   $[[--do_quota_validation ${{inputs.do_quota_validation}}]]
   $[[--redeploy_model ${{inputs.redeploy_model}}]]
-  $[[--deployment_metadata_dir ${{inputs.deployment_metadata_dir}}]]
+  $[[--deployment_metadata ${{inputs.deployment_metadata}}]]
   $[[--deployment_env ${{inputs.deployment_env}}]]
   $[[--additional_deployment_env_vars  '${{inputs.additional_deployment_env_vars}}']]
   $[[--is_finetuned_model ${{inputs.is_finetuned_model}}]]
@@ -156,3 +165,5 @@ command: >-
   $[[--finetuned_workspace ${{inputs.finetuned_workspace}}]]
   $[[--deployment_retries ${{inputs.deployment_retries}}]]
   $[[--deployment_retry_interval_seconds ${{inputs.deployment_retry_interval_seconds}}]]
+  $[[--wait_finetuned_step ${{inputs.wait_finetuned_step}}]]
+  $[[--finetuned_step_name ${{inputs.finetuned_step_name}}]]
