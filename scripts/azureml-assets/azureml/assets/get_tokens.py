@@ -33,7 +33,20 @@ def get_tokens(input_dirs: List[Path],
     
     # placeholder test
     print('In updated get_tokens')
-    json_info['abc'] = 'def'
+
+    # Check prompt asssets
+    for asset_config in util.find_assets(
+            input_dirs, asset_config_filename, types=[AssetType.PROMPT], pattern=pattern):
+        print('found asset', asset_config)
+        prompt_config: assets.GenericAssetConfig = asset_config.extra_config_as_object()
+        path = prompt_config.path
+        print('found path:', path)
+        account_name = prompt_config.path.storage_name
+        container_name = prompt_config.path.container_name
+        print('found account', account_name, 'container', container_name)
+        _ = path.get_uri(token_expiration=timedelta(days=1))
+        token = path.token
+        json_info[account_name][container_name] = token
 
     # Filter to only models
     for asset_config in util.find_assets(

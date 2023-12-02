@@ -987,6 +987,53 @@ class EnvironmentConfig(Config):
         return PublishVisibility(visibility) if visibility else None
 
 
+class GenericAssetConfig(Config):
+    """Generic Asset Config class."""
+
+    """
+    Example:
+
+    path: 
+
+        ## Azure Blobstore example
+        type: azureblob
+        storage_name: my_storage
+        container_name: my_container
+        container_path: foo/bar
+
+    """
+
+    def __init__(self, file_name: Path):
+        """Initialize object for the Generic Asset Properties extracted from extra_config."""
+        super().__init__(file_name)
+        self._path = None
+        self._validate()
+
+    def _validate(self):
+        """Validate the yaml file."""
+        pass
+
+    @property
+    def path(self) -> AssetPath:
+        """Model Path."""
+        if self._path:
+            return self._path
+        path = self._yaml.get('path', {})
+        if path and path.get('type'):
+            path_type = path.get('type')
+            if path_type == PathType.AZUREBLOB.value:
+                self._path = AzureBlobstoreAssetPath(
+                    storage_name=path['storage_name'],
+                    container_name=path['container_name'],
+                    container_path=path['container_path'],
+                )
+            else:
+                raise NotImplementedError("Unrecognized path type.")
+        else:
+            return None
+        return self._path
+
+
 @total_ordering
 class AssetConfig(Config):
     """Asset config file.
@@ -1251,6 +1298,8 @@ class AssetConfig(Config):
                     self._extra_config = EnvironmentConfig(extra_config_with_path)
                 elif self.type == AssetType.MODEL:
                     self._extra_config = ModelConfig(extra_config_with_path)
+                elif self.type == AssetType.PROMPT:
+                    self._extra_config = GenericAssetConfig(extra_config_with_path)
                 else:
                     raise Exception(f"extra_config loading for asset type {self.type.value} is unimplemented")
         return self._extra_config
