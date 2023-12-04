@@ -1000,7 +1000,11 @@ class GenericAssetConfig(Config):
     """
 
     def __init__(self, file_name: Path):
-        """Initialize object for the Generic Asset Properties extracted from extra_config."""
+        """Initialize object for the Generic Asset Properties extracted from extra_config prompt.yaml.
+        
+        Args:
+            file_name (Path): Prompt config file to load and validate.
+        """
         super().__init__(file_name)
         self._path = None
         self._validate()
