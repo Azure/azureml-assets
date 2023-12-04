@@ -25,7 +25,7 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
-RUN pip install 'pyarrow==14.0.1'
+RUN pip install 'pyarrow>=14.0.1'
 
 # Install huggingface evaluate package from source
 # see issue https://github.com/huggingface/datasets/issues/6182

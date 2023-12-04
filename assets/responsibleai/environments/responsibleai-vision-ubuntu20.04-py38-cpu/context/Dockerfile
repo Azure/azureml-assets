@@ -38,7 +38,7 @@ RUN pip install 'shap==0.41.0' \
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
-RUN pip install 'pyarrow==14.0.1'
+RUN pip install 'pyarrow>=14.0.1'
 
 RUN pip freeze
 
