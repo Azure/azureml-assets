@@ -1012,7 +1012,9 @@ class GenericAssetConfig(Config):
 
     def _validate(self):
         """Validate the yaml file."""
-        pass
+        Config._validate_exists('generic_asset.path', self.remote_path)
+        Config._validate_enum('generic_asset.path.type', self.remote_path.type.value, PathType, True)
+        Config._validate_exists('generic_asset.local_path', self.local_path)
 
     @property
     def remote_path(self) -> AssetPath:
