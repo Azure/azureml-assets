@@ -1041,7 +1041,7 @@ class GenericAssetConfig(Config):
 
     @property
     def local_path(self) -> str:
-        """Remote storage path (Azure Blob is the only supported type)."""
+        """Local file path to copy remote files into."""
         return self._yaml.get('local_path')
 
 
