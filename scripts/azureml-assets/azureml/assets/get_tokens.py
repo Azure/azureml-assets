@@ -55,7 +55,7 @@ def get_tokens(input_dirs: List[Path],
         json.dump(json_info, json_token_file)
 
 
-def add_token_info(path: AzureBlobstoreAssetPath, json_info: dict):
+def add_token_info(path: AzureBlobstoreAssetPath, json_info: defaultdict(dict)):
     """Generate a SAS token and add it to the json info token dictionary.
 
     Args:
