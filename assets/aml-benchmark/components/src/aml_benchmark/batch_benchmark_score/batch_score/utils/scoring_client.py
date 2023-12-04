@@ -124,7 +124,7 @@ class ScoringClient:
         model_response_reason = None
         client_exception = None
 
-        headers = self.__header_handler.get_headers()
+        headers = self.__header_handler.get_headers(payload=scoring_request.cleaned_payload)
 
         target_endpoint_url = self.__online_endpoint_url
 

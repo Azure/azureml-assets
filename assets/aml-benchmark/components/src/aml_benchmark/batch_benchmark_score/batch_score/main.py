@@ -41,6 +41,7 @@ from .utils.common.json_encoder_extensions import setup_encoder
 from .header_handlers.header_handler import HeaderHandler
 from .header_handlers.oss.oss_header_handler import OSSHeaderHandler
 from .header_handlers.oai.oai_header_handler import OAIHeaderHandler
+from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.claudie.claudie_header_handler import ClaudieHeaderHandler
 
 
 par: parallel.Parallel = None
@@ -59,7 +60,7 @@ def init():
     parser = ArgumentParser()
 
     setup_arguments(parser)
-    args, unknown_args = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
     setup_logger("DEBUG" if args.debug_mode else "INFO", args.app_insights_connection_string)
     logger = get_logger()
 
@@ -379,6 +380,19 @@ def setup_header_handler(
             connections_name=connections_name,
             online_endpoint_model=model
         )
+    if model.is_claudie_model():
+        return ClaudieHeaderHandler(
+            token_provider=token_provider, user_agent_segment=args.user_agent_segment,
+            batch_pool=args.batch_pool,
+            quota_audience=args.quota_audience,
+            additional_headers=input_headers,
+            endpoint_name=endpoint_name,
+            endpoint_subscription=endpoint_subscription_id,
+            endpoint_resource_group=endpoint_resource_group,
+            deployment_name=deployment_name,
+            connections_name=connections_name,
+            online_endpoint_model=model
+            )
     return OSSHeaderHandler(
         token_provider=token_provider, user_agent_segment=args.user_agent_segment,
         batch_pool=args.batch_pool,
