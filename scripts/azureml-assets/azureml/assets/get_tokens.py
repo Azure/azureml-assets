@@ -10,7 +10,7 @@ from typing import List
 
 import azureml.assets as assets
 import azureml.assets.util as util
-from azureml.assets.config import AssetType, AzureBlobstoreAssetPath
+from azureml.assets.config import AssetType, AzureBlobstoreAssetPath, GENERIC_ASSET_TYPES
 
 from collections import defaultdict
 from datetime import timedelta
@@ -21,7 +21,7 @@ def get_tokens(input_dirs: List[Path],
                asset_config_filename: str,
                json_output_path: str,
                pattern: re.Pattern = None):
-    """Generate SAS tokens for models and prompts to JSON output file.
+    """Generate SAS tokens for models and generic assets to JSON output file.
 
     Args:
         input_dirs (List[Path]): List of directories to search for assets.
@@ -31,13 +31,13 @@ def get_tokens(input_dirs: List[Path],
     """
     json_info = defaultdict(dict)
 
-    # Generate SAS tokens for prompt assets
+    # Generate SAS tokens for generic assets
     for asset_config in util.find_assets(
-            input_dirs, asset_config_filename, types=[AssetType.PROMPT], pattern=pattern):
+            input_dirs, asset_config_filename, types=GENERIC_ASSET_TYPES, pattern=pattern):
 
-        prompt_config: assets.GenericAssetConfig = asset_config.extra_config_as_object()
-        if (prompt_config and isinstance(prompt_config.remote_path, AzureBlobstoreAssetPath)):
-            add_token_info(prompt_config.remote_path, json_info)
+        generic_config: assets.GenericAssetConfig = asset_config.extra_config_as_object()
+        if (generic_config and isinstance(generic_config.remote_path, AzureBlobstoreAssetPath)):
+            add_token_info(generic_config.remote_path, json_info)
 
     # Generate SAS tokens for models
     for asset_config in util.find_assets(
