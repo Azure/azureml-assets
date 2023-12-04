@@ -10,3 +10,4 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 # Vulnerability fix
 RUN pip install datasets==2.14.7
+RUN pip install pyarrow==14.0.1
