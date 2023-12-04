@@ -1,8 +1,7 @@
-'''
-Created on Nov 30, 2023
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
-@author: nirovins
-'''
+"""Class for Claudie online endpoint."""
 from typing import Dict, Optional, Tuple
 
 import hashlib
