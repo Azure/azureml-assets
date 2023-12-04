@@ -991,7 +991,6 @@ class GenericAssetConfig(Config):
 
     Example:
 
-
     # Remote storage path for asset data
     remote_path:
         type: azureblob
