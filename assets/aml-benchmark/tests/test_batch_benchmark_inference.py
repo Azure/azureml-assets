@@ -119,6 +119,7 @@ class TestBatchBenchmarkInferenceComponent:
         pipeline_job.inputs.max_worker_count = 10
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
         pipeline_job.inputs.label_column_name = label_column_name
+        pipeline_job.inputs.mini_batch_size = '100KB'
         pipeline_job.name = str(uuid.uuid4())
         pipeline_job.display_name = display_name
 
