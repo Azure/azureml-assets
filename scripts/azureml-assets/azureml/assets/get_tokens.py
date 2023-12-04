@@ -30,7 +30,6 @@ def get_tokens(input_dirs: List[Path],
         pattern (re.Pattern, optional): Regex pattern for assets to copy. Defaults to None.
     """
     json_info = defaultdict(dict)
-    
 
     # Generate SAS tokens for prompt assets
     for asset_config in util.find_assets(
@@ -49,7 +48,7 @@ def get_tokens(input_dirs: List[Path],
 
         if not isinstance(path, AzureBlobstoreAssetPath):
             continue
-            
+
         add_token_info(path, json_info)
 
     with open(json_output_path, 'w') as json_token_file:

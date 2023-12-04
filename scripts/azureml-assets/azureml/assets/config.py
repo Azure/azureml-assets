@@ -1036,7 +1036,6 @@ class GenericAssetConfig(Config):
             return None
         return self._path
 
-
     @property
     def local_path(self) -> str:
         """Remote storage path (Azure Blob is the only supported type)."""
