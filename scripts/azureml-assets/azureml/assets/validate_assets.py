@@ -37,7 +37,56 @@ MODEL_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]{0,254}$")
 
 # model validations
 MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
-MODEL_VALIDATION_JOB_DETAILS = "job_details.json"
+VALIDATION_SUMMARY = "results.json"
+
+
+class MLFlowModelProperties:
+    """Commonly defined model properties."""
+
+    EVALUATION_RECOMMENDED_SKU = "evaluation-recommended-sku"
+    FINETINE_RECOMMENDED_SKU = "finetune-recommended-sku"
+    INFERENCE_RECOMMENDED_SKU = "inference-recommended-sku"
+    COMPUTE_ALLOW_LIST = "computes_allow_list"
+    FINETUNING_TASKS = "finetuning-tasks"
+
+
+class MLFlowModelTags:
+    """Commonly defined model tags."""
+
+    EVALUATION_COMPUTE_ALLOWLIST = "evaluation_compute_allow_list"
+    FINETUNE_COMPUTE_ALLOWLIST = "finetune_compute_allow_list"
+    INFERENCE_COMPUTE_ALLOWLIST = "inference_compute_allow_list"
+    INFERENCE_SUPPORTED_ENVS = "inference_supported_envs"
+    FINETUNING_DEFAULTS = "model_specific_defaults"
+    TASK = "task"
+
+
+class ValidationState:
+    """Enums for storing validation results state.
+    
+    Keeping it consistent with Job state enums. Only the essential ones would be used here.
+    """
+
+    NOT_STARTED = JobStatus.NOT_STARTED
+    COMPLETED = JobStatus.COMPLETED
+    FAILED = JobStatus.FAILED
+
+
+class OverallSummary:
+    """Enum to capture status of all validations."""
+
+    BATCH_DEPLOYMENT = "BatchDeployment"
+    ONLINE_DEPLOYMENT = "OnlineDeployment"
+    VALIDATION_RUN = "ValidationRun"
+
+    @staticmethod
+    def get_default_summary():
+        return {
+            OverallSummary.BATCH_DEPLOYMENT: ValidationState.NOT_STARTED,
+            OverallSummary.BATCH_ONLINE_DEPLOYMENTDEPLOYMENT: ValidationState.NOT_STARTED,
+            OverallSummary.VALIDATION_RUN: ValidationState.NOT_STARTED,
+        }
+
 
 # Environment naming convention
 ENVIRONMENT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9.-]{0,254}$")
@@ -382,14 +431,36 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
 
 def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_asset_config: assets.AssetConfig) -> int:
     """Check if current model asset and validated one matches and has a successful run."""
-    # latest_asset_config is expected to be non null
-    if not validated_asset_config:
-        logger.log_error(f"Validated asset config is None for {latest_asset_config.name}")
-        return 1
-
-    logger.print(f"Comparing validated and latest model asset files for {latest_asset_config.name}")
-
     try:
+        latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
+        if latest_asset_config.type != assets.config.ModelType.MLFLOW.value:
+            logger.print("Bypass validation for non-mlflow model")
+
+        validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
+
+        # latest_asset_config is expected to be non null
+        if not validated_asset_config:
+            logger.log_error(f"Validated asset config is None for {latest_asset_config.name}")
+            return 1
+
+        logger.print(f"Comparing validated and latest model asset files for {latest_asset_config.name}")
+
+        if not (
+            latest_model_config.path.type == validated_model_config.path.type and
+            latest_model_config.path.uri == validated_model_config.path.uri and
+            latest_model_config.description == validated_model_config.description and
+            latest_model_config.type == validated_model_config.type
+        ):
+            logger.log_error(
+                "Validated model config does not match with latest model. "
+                "Either last validation run for model had failed or its still running."
+            )
+            logger.log_warning(f"latest_model_config: [{latest_model_config._yaml}]")
+            logger.log_warning(f"validated_model_config: [{validated_model_config._yaml}]")
+            if latest_model_config.description != validated_model_config.description:
+                logger.log_warning("Description does not match, for latest and validated asset")
+            return 1
+
         # check if spec has changes
         latest_model = load_model(latest_asset_config.spec_with_path)
         validated_model = load_model(validated_asset_config.spec_with_path)
@@ -418,41 +489,51 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
             logger.log_warning(f"validated_model description: [{validated_model.description}]")
             return 1
 
-        latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
-        validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
-        if not (
-            latest_model_config.path.type == validated_model_config.path.type and
-            latest_model_config.path.uri == validated_model_config.path.uri and
-            latest_model_config.description == validated_model_config.description and
-            latest_model_config.type == validated_model_config.type
-        ):
-            logger.log_error(
-                "Validated model config does not match with latest model. "
-                "Either last validation run for model had failed or its still running."
-            )
-            logger.log_warning(f"latest_model_config: [{latest_model_config._yaml}]")
-            logger.log_warning(f"validated_model_config: [{validated_model_config._yaml}]")
-            if latest_model_config.description != validated_model_config.description:
-                logger.log_warning("Description does not match, for latest and validated asset")
-            return 1
-
         # check validation results now
         validation_results_dir = validated_asset_config.file_path / MODEL_VALIDATION_RESULTS_FOLDER
-        validation_job_details_path = validation_results_dir / MODEL_VALIDATION_JOB_DETAILS
+        validation_job_details_path = validation_results_dir / VALIDATION_SUMMARY
         if not validation_job_details_path.exists():
             logger.log_error(
-                f"{MODEL_VALIDATION_JOB_DETAILS} missing for model {latest_asset_config.name}. "
+                f"{VALIDATION_SUMMARY} missing for model {latest_asset_config.name}. "
                 "Either last validation run for model had failed or its still running."
             )
             return 1
 
         with open(validation_job_details_path) as f:
             job_details = json.load(f)
-            run_status = job_details.get("status", JobStatus.NOT_STARTED)
-            if run_status != JobStatus.COMPLETED:
+            validation_run_status = job_details.get(OverallSummary.VALIDATION_RUN, ValidationState.NOT_STARTED)
+            batch_deployment_status = job_details.get(OverallSummary.BATCH_DEPLOYMENT, ValidationState.NOT_STARTED)
+            online_deployment_status = job_details.get(OverallSummary.ONLINE_DEPLOYMENT, ValidationState.NOT_STARTED)
+
+            if validation_run_status != ValidationState.COMPLETED:
                 logger.log_error(
-                    f"run status for model {latest_asset_config.name} is {run_status}. "
+                    f"run status for model {latest_asset_config.name} is {validation_run_status}. "
                     "Please ensure that there is a completed model validation job."
+                )
+                return 1
+
+            # check is batch supported?
+            supports_batch_str = latest_model.tags.get("disable-batch", "true")
+            supports_batch = True if supports_batch_str.lower() == "true" else False
+
+            if supports_batch and batch_deployment_status != ValidationState.COMPLETED:
+                logger.log_error(
+                    f"batch deployment is supported for {latest_model.name} but its status is {batch_deployment_status}. "
+                    "Please ensure that that batch is validated for the model."
+                )
+                return 1
+            
+            # check if online inference is supported
+            supports_inference = (
+                True if latest_model.tags.get(MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST, None) \
+                    or latest_model.properties.get(MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU)
+                else False
+            )
+
+            if supports_inference and online_deployment_status != ValidationState.COMPLETED:
+                logger.log_error(
+                    f"Online deployment is supported for {latest_model.name} but its status is {online_deployment_status}. "
+                    "Please ensure that that online inference is validated for the model."
                 )
                 return 1
 
