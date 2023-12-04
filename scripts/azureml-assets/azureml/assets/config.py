@@ -668,9 +668,8 @@ class GitAssetPath(AssetPath):
 
 
 class ModelConfig(Config):
-    """Model Config class."""
+    """Model Config class.
 
-    """
     Example:
 
     path: # should contain local_path or should contain package object
