@@ -1,0 +1,15 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.2
+name: apple_cycle_analyst
+display_name: Apple Cycle Analyst
+description: Examine the test image to determine the specific stage of the apple's
+  growth or lifecycle it represents.
+
+tags:
+  modality: image
+  task: summarization
+
+data_uri: ./prompt
+template_path: prompt.yaml
