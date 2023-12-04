@@ -61,7 +61,7 @@ class MLFlowModelTags:
     TASK = "task"
 
 
-class ValidationState:
+class ModelValidationState:
     """Enums for storing validation results state.
 
     Keeping it consistent with Job state enums. Only the essential ones would be used here.
@@ -72,7 +72,7 @@ class ValidationState:
     FAILED = JobStatus.FAILED
 
 
-class OverallSummary:
+class ModelValidationOverallSummary:
     """Enum to capture status of all validations."""
 
     BATCH_DEPLOYMENT = "BatchDeployment"
@@ -81,10 +81,11 @@ class OverallSummary:
 
     @staticmethod
     def get_default_summary():
+        """Return model validation default summary."""
         return {
-            OverallSummary.BATCH_DEPLOYMENT: ValidationState.NOT_STARTED,
-            OverallSummary.BATCH_ONLINE_DEPLOYMENTDEPLOYMENT: ValidationState.NOT_STARTED,
-            OverallSummary.VALIDATION_RUN: ValidationState.NOT_STARTED,
+            ModelValidationOverallSummary.BATCH_DEPLOYMENT: ModelValidationState.NOT_STARTED,
+            ModelValidationOverallSummary.BATCH_ONLINE_DEPLOYMENTDEPLOYMENT: ModelValidationState.NOT_STARTED,
+            ModelValidationOverallSummary.VALIDATION_RUN: ModelValidationState.NOT_STARTED,
         }
 
 
@@ -501,13 +502,14 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
 
         with open(validation_job_details_path) as f:
             overall_summary = json.load(f)
-            validation_run_status = overall_summary.get(OverallSummary.VALIDATION_RUN, ValidationState.NOT_STARTED)
-            batch_deployment_status = overall_summary.get(OverallSummary.BATCH_DEPLOYMENT, ValidationState.NOT_STARTED)
+            validation_run_status = overall_summary.get(
+                ModelValidationOverallSummary.VALIDATION_RUN, ModelValidationState.NOT_STARTED)
+            batch_deployment_status = overall_summary.get(
+                ModelValidationOverallSummary.BATCH_DEPLOYMENT, ModelValidationState.NOT_STARTED)
             online_deployment_status = overall_summary.get(
-                OverallSummary.ONLINE_DEPLOYMENT, ValidationState.NOT_STARTED
-            )
+                ModelValidationOverallSummary.ONLINE_DEPLOYMENT, ModelValidationState.NOT_STARTED)
 
-            if validation_run_status != ValidationState.COMPLETED:
+            if validation_run_status != ModelValidationState.COMPLETED:
                 logger.log_error(
                     f"run status for model {latest_asset_config.name} is {validation_run_status}. "
                     "Please ensure that there is a completed model validation job."
@@ -518,7 +520,7 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
             supports_batch_str = latest_model.tags.get("disable-batch", "true")
             supports_batch = True if supports_batch_str.lower() == "true" else False
 
-            if supports_batch and batch_deployment_status != ValidationState.COMPLETED:
+            if supports_batch and batch_deployment_status != ModelValidationState.COMPLETED:
                 logger.log_error(
                     f"batch deployment is supported for {latest_model.name}. "
                     f"But its status is {batch_deployment_status}. "
