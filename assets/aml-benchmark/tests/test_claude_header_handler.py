@@ -1,29 +1,29 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests for ClaudieHeaderHandler"""
+"""Tests for ClaudeHeaderHandler"""
 
 import unittest
 
 from unittest.mock import Mock
 
-from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.claudie.claudie_header_handler import (
-    ClaudieHeaderHandler)
+from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.claude.claude_header_handler import (
+    ClaudeHeaderHandler)
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 
 
-class TestClaudieHeaderHandler(unittest.TestCase):
-    """Tests for ClaudieHeaderHandler"""
+class TestClaudeHeaderHandler(unittest.TestCase):
+    """Tests for ClaudeHeaderHandler"""
 
-    def test_claudie_header_handler(self):
-        """Test that ClaudieHeaderHandler is created with the correct fields."""
+    def test_claude_header_handler(self):
+        """Test that ClaudeHeaderHandler is created with the correct fields."""
         model = OnlineEndpointModel(
             model=None,
             model_version=None,
             model_type=None,
             endpoint_url='https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-v2.1/invoke'
         )
-        handler = ClaudieHeaderHandler(
+        handler = ClaudeHeaderHandler(
             token_provider=Mock(),
             online_endpoint_model=model
         )

@@ -1,30 +1,30 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests for claudie endpoint."""
+"""Tests for claude endpoint."""
 import os
 import unittest
 
 from ddt import ddt, data
 
-from aml_benchmark.utils.online_endpoint.claudie_online_endpoint import ClaudieOnlineEndpoint
+from aml_benchmark.utils.online_endpoint.claude_online_endpoint import ClaudeOnlineEndpoint
 from aml_benchmark.batch_benchmark_score.batch_score.utils.exceptions import BenchmarkUserException
 from aml_benchmark.batch_benchmark_score.batch_score.utils.error_definitions import BenchmarkUserError
 from unittest.mock import patch
 
 
 @ddt
-class TestClaudieOnlineEndpoint(unittest.TestCase):
+class TestClaudeOnlineEndpoint(unittest.TestCase):
 
     def setUp(self):
-        os.environ[ClaudieOnlineEndpoint.ACCESS_KEY] = 'MockAccessKey'
-        os.environ[ClaudieOnlineEndpoint.SECRET_KEY] = 'SuperSecretMockKey'
+        os.environ[ClaudeOnlineEndpoint.ACCESS_KEY] = 'MockAccessKey'
+        os.environ[ClaudeOnlineEndpoint.SECRET_KEY] = 'SuperSecretMockKey'
         unittest.TestCase.setUp(self)
 
     def test_no_region_raises(self):
         """Test that the exception is raised if no region is set."""
         with self.assertRaises(BenchmarkUserException) as cm:
-            ClaudieOnlineEndpoint(
+            ClaudeOnlineEndpoint(
                 workspace_name='mock_ws',
                 resource_group='mock_rg',
                 subscription_id='mock_subscription',
@@ -38,7 +38,7 @@ class TestClaudieOnlineEndpoint(unittest.TestCase):
     def test_no_model_raises(self):
         """Test that the exception is raised if no region is set."""
         with self.assertRaises(BenchmarkUserException) as cm:
-            ClaudieOnlineEndpoint(
+            ClaudeOnlineEndpoint(
                 workspace_name='mock_ws',
                 resource_group='mock_rg',
                 subscription_id='mock_subscription',
@@ -52,7 +52,7 @@ class TestClaudieOnlineEndpoint(unittest.TestCase):
     def test_no_payload_raises(self):
         """Test that the exception is raised if no region is set."""
         with self.assertRaises(BenchmarkUserException) as cm:
-            ClaudieOnlineEndpoint(
+            ClaudeOnlineEndpoint(
                 workspace_name='mock_ws',
                 resource_group='mock_rg',
                 subscription_id='mock_subscription',
@@ -62,16 +62,16 @@ class TestClaudieOnlineEndpoint(unittest.TestCase):
                          BenchmarkUserError().code)
         self.assertEqual(cm.exception.args[0], 'Please provide the payload parameter.')
 
-    @data([ClaudieOnlineEndpoint.ACCESS_KEY],
-          [ClaudieOnlineEndpoint.SECRET_KEY],
-          [ClaudieOnlineEndpoint.ACCESS_KEY, ClaudieOnlineEndpoint.SECRET_KEY]
+    @data([ClaudeOnlineEndpoint.ACCESS_KEY],
+          [ClaudeOnlineEndpoint.SECRET_KEY],
+          [ClaudeOnlineEndpoint.ACCESS_KEY, ClaudeOnlineEndpoint.SECRET_KEY]
           )
     def test_no_key(self, keys_to_delete):
         """Assert that the exception is raised if the keys were not provided."""
         for k in keys_to_delete:
             del os.environ[k]
         with self.assertRaises(BenchmarkUserException) as cm:
-            ClaudieOnlineEndpoint(
+            ClaudeOnlineEndpoint(
                 workspace_name='mock_ws',
                 resource_group='mock_rg',
                 subscription_id='mock_subscription',
@@ -80,12 +80,12 @@ class TestClaudieOnlineEndpoint(unittest.TestCase):
                 payload='foo')
         self.assertEqual(cm.exception._azureml_error.error_definition.code,
                          BenchmarkUserError().code)
-        self.assertIn(ClaudieOnlineEndpoint.ACCESS_KEY, cm.exception.args[0])
-        self.assertIn(ClaudieOnlineEndpoint.SECRET_KEY, cm.exception.args[0])
+        self.assertIn(ClaudeOnlineEndpoint.ACCESS_KEY, cm.exception.args[0])
+        self.assertIn(ClaudeOnlineEndpoint.SECRET_KEY, cm.exception.args[0])
 
     def test_scoring_url(self):
         """Check that the returned url is correct."""
-        endpoint = ClaudieOnlineEndpoint(
+        endpoint = ClaudeOnlineEndpoint(
             workspace_name='mock_ws',
             resource_group='mock_rg',
             subscription_id='mock_subscription',
@@ -97,7 +97,7 @@ class TestClaudieOnlineEndpoint(unittest.TestCase):
 
     def test_hex_digest(self):
         """Test that we are correcly calculating the hexdigest of a payload."""
-        endpoint = ClaudieOnlineEndpoint(
+        endpoint = ClaudeOnlineEndpoint(
             workspace_name='mock_ws',
             resource_group='mock_rg',
             subscription_id='mock_subscription',
@@ -110,7 +110,7 @@ class TestClaudieOnlineEndpoint(unittest.TestCase):
 
     def test_canonical_headers(self):
         """Test that canonical headers are being returned correctly."""
-        endpoint = ClaudieOnlineEndpoint(
+        endpoint = ClaudeOnlineEndpoint(
             workspace_name='mock_ws',
             resource_group='mock_rg',
             subscription_id='mock_subscription',
@@ -139,10 +139,10 @@ class TestClaudieOnlineEndpoint(unittest.TestCase):
     def test_get_endpoint_authorization_header(self):
         """Check the correctness of a signature."""
         with patch(
-            ('aml_benchmark.utils.online_endpoint.claudie_online_endpoint'
-             '.ClaudieOnlineEndpoint._get_date_and_time'),
+            ('aml_benchmark.utils.online_endpoint.claude_online_endpoint'
+             '.ClaudeOnlineEndpoint._get_date_and_time'),
                 return_value=('20231201T192721Z', '20231201')):
-            endpoint = ClaudieOnlineEndpoint(
+            endpoint = ClaudeOnlineEndpoint(
                 workspace_name='mock_ws',
                 resource_group='mock_rg',
                 subscription_id='mock_subscription',

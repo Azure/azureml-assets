@@ -25,10 +25,11 @@ class OnlineEndpointModel:
             self._model_path = model
             if model_version is None:
                 self._model_version = model.split('/')[-1]
-        elif self._get_model_type_from_url(endpoint_url) == 'claudie':
+        elif self._get_model_type_from_url(endpoint_url) == 'claude':
             self._model_path = endpoint_url
             self._model_name = 'anthropic.claude'
             self._model_version = re.findall(r'anthropic.claude-v(\d+[.]*\d*)/', endpoint_url)[0]
+            self._model_type = 'claude'
         else:
             self._model_name = model
             self._model_path = None
@@ -70,9 +71,9 @@ class OnlineEndpointModel:
         """Check if the model is llama model."""
         return self._model_type == 'oss'
 
-    def is_claudie_model(self) -> bool:
-        """Check if the model is claudie model."""
-        return self._model_type == 'claudie'
+    def is_claude_model(self) -> bool:
+        """Check if the model is claude model."""
+        return self._model_type == 'claude'
 
     def is_vision_oss_model(self) -> bool:
         """Check if the model is a vision oss model."""
@@ -85,5 +86,5 @@ class OnlineEndpointModel:
         if ".".join(['openai', 'azure', 'com']) in endpoint_url:
             return 'oai'
         if "claude" in endpoint_url:
-            return 'claudie'
+            return 'claude'
         return 'oss'

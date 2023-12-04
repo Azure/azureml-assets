@@ -7,13 +7,13 @@ from typing import Any, Dict, Optional
 import re
 
 from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.header_handler import HeaderHandler
-from aml_benchmark.utils.online_endpoint.claudie_online_endpoint import ClaudieOnlineEndpoint
+from aml_benchmark.utils.online_endpoint.claude_online_endpoint import ClaudeOnlineEndpoint
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from aml_benchmark.batch_benchmark_score.batch_score.utils.token_provider import TokenProvider
 
 
-class ClaudieHeaderHandler(HeaderHandler):
-    """Class for ClaudieHeaderHandler."""
+class ClaudeHeaderHandler(HeaderHandler):
+    """Class for ClaudeHeaderHandler."""
 
     def __init__(
         self,
@@ -43,7 +43,7 @@ class ClaudieHeaderHandler(HeaderHandler):
         :return: The headers for scoring on the endpoint.
         """
 
-        endpoint = ClaudieOnlineEndpoint(
+        endpoint = ClaudeOnlineEndpoint(
             workspace_name=None,
             resource_group=None,
             subscription_id=None,

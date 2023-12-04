@@ -26,8 +26,8 @@ class TestOnlineEndpointModel(unittest.TestCase):
         self.assertEqual(claudie_model.model_name, 'anthropic.claude')
         self.assertEqual(claudie_model.model_path, path)
         self.assertEqual(claudie_model.model_version, expected_version)
-        self.assertEqual(claudie_model.model_type, 'claudie')
-        self.assertTrue(claudie_model.is_claudie_model())
+        self.assertEqual(claudie_model.model_type, 'claude')
+        self.assertTrue(claudie_model.is_claude_model())
 
 
 if __name__ == "__main__":

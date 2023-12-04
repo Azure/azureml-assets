@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Class for Claudie online endpoint."""
+"""Class for Claude online endpoint."""
 from typing import Dict, Optional, Tuple
 
 import hashlib
@@ -17,9 +17,9 @@ from aml_benchmark.batch_benchmark_score.batch_score.utils.error_definitions imp
 from azureml._common._error_definition.azureml_error import AzureMLError
 
 
-class ClaudieOnlineEndpoint(OnlineEndpoint):
+class ClaudeOnlineEndpoint(OnlineEndpoint):
     """
-    The class for Claudie Online endpoint.
+    The class for Claude Online endpoint.
 
     **Note:** Please see last three parameters in the list, the rest is not relevant
               to external endpoints.
@@ -62,7 +62,7 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
         model_identifier: str = None,
         payload: str = None,
     ):
-        """Constructor."""
+        """Init method."""
         super().__init__(
             workspace_name,
             resource_group,
@@ -86,16 +86,16 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
                 )
         self._aws_region = aws_region
         self._model_identifier = model_identifier
-        self._payload_sha_256 = ClaudieOnlineEndpoint._sha256_sum(payload)
-        self._access_key = os.environ.get(ClaudieOnlineEndpoint.ACCESS_KEY)
-        self._secret_key = os.environ.get(ClaudieOnlineEndpoint.SECRET_KEY)
+        self._payload_sha_256 = ClaudeOnlineEndpoint._sha256_sum(payload)
+        self._access_key = os.environ.get(ClaudeOnlineEndpoint.ACCESS_KEY)
+        self._secret_key = os.environ.get(ClaudeOnlineEndpoint.SECRET_KEY)
         if not self._access_key or not self._secret_key:
             raise BenchmarkUserException._with_error(
                 AzureMLError.create(
                     BenchmarkUserError,
                     error_details=("AccessKey or SecretKey are empty"
-                                   f"Please provide AccessKey in {ClaudieOnlineEndpoint.ACCESS_KEY} "
-                                   f"and SecretKey in {ClaudieOnlineEndpoint.SECRET_KEY} environmental variables."))
+                                   f"Please provide AccessKey in {ClaudeOnlineEndpoint.ACCESS_KEY} "
+                                   f"and SecretKey in {ClaudeOnlineEndpoint.SECRET_KEY} environmental variables."))
             )
         self._aws_region = aws_region
 
@@ -118,7 +118,7 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
 
     @property
     def scoring_url(self) -> str:
-        """Return the scoring URI for the Claudie endpoint."""
+        """Return the scoring URI for the Claude endpoint."""
         return f"https://bedrock-runtime.{self._aws_region}.amazonaws.com/model/{self._model_identifier}/invoke"
 
     def _get_canonical_headers(self, timestamp: str) -> Dict[str, str]:
@@ -159,7 +159,7 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
         date_region_key = hmac.new(
             date_key, self._aws_region.encode('utf-8'), hashlib.sha256).digest()
         date_region_service_key = hmac.new(
-            date_region_key, ClaudieOnlineEndpoint._SERVICE.encode('utf-8'),
+            date_region_key, ClaudeOnlineEndpoint._SERVICE.encode('utf-8'),
             hashlib.sha256).digest()
         return hmac.new(
             date_region_service_key, "aws4_request".encode('utf-8'), hashlib.sha256).digest()
@@ -176,7 +176,7 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
 
     def get_endpoint_authorization_header(self) -> Dict[str, str]:
         """
-        Get authentication headers for the Claudie model.
+        Get authentication headers for the Claude model.
 
         :return: The dictionary representation of headers.
         """
@@ -191,10 +191,10 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
             f"{signed_headers_str}\n"
             f"{self.payload_hash}"
         )
-        hashed_canonocal_request = ClaudieOnlineEndpoint._sha256_sum(canonical_request_str)
+        hashed_canonocal_request = ClaudeOnlineEndpoint._sha256_sum(canonical_request_str)
         string_to_sign = ("AWS4-HMAC-SHA256\n"
                           f"{date_time}\n"
-                          f"{date}/{self._aws_region}/{ClaudieOnlineEndpoint._SERVICE}/aws4_request\n"
+                          f"{date}/{self._aws_region}/{ClaudeOnlineEndpoint._SERVICE}/aws4_request\n"
                           f"{hashed_canonocal_request}"
                           )
         signing_key = self._get_signing_key(date_time)
@@ -202,7 +202,7 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
         # Finally we will add the signature into the headers
         headers['Authorization'] = (
             'AWS4-HMAC-SHA256 Credential='
-            f'{self._access_key}/{date}/{self._aws_region}/{ClaudieOnlineEndpoint._SERVICE}/aws4_request, '
+            f'{self._access_key}/{date}/{self._aws_region}/{ClaudeOnlineEndpoint._SERVICE}/aws4_request, '
             f'SignedHeaders={signed_headers_str}, '
             f'Signature={signature}'
         )

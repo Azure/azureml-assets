@@ -41,7 +41,7 @@ from .utils.common.json_encoder_extensions import setup_encoder
 from .header_handlers.header_handler import HeaderHandler
 from .header_handlers.oss.oss_header_handler import OSSHeaderHandler
 from .header_handlers.oai.oai_header_handler import OAIHeaderHandler
-from .header_handlers.claudie.claudie_header_handler import ClaudieHeaderHandler
+from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.claude.claude_header_handler import ClaudeHeaderHandler
 
 
 par: parallel.Parallel = None
@@ -384,8 +384,8 @@ def setup_header_handler(
             connections_name=connections_name,
             online_endpoint_model=model
         )
-    if model.is_claudie_model():
-        return ClaudieHeaderHandler(
+    if model.is_claude_model():
+        return ClaudeHeaderHandler(
             token_provider=token_provider, user_agent_segment=args.user_agent_segment,
             batch_pool=args.batch_pool,
             quota_audience=args.quota_audience,
