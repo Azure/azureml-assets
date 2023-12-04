@@ -1001,7 +1001,6 @@ class GenericAssetConfig(Config):
         container_path: foo/bar
     # Local folder path to copy remote files into
     local_path: ./prompt
-
     """
 
     def __init__(self, file_name: Path):
