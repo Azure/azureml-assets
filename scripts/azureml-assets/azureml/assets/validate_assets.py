@@ -518,21 +518,23 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
 
             if supports_batch and batch_deployment_status != ValidationState.COMPLETED:
                 logger.log_error(
-                    f"batch deployment is supported for {latest_model.name} but its status is {batch_deployment_status}. "
+                    f"batch deployment is supported for {latest_model.name}. "
+                    f"But its status is {batch_deployment_status}. "
                     "Please ensure that that batch is validated for the model."
                 )
                 return 1
 
             # check if online inference is supported
             supports_inference = (
-                True if latest_model.tags.get(MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST, None) \
-                    or latest_model.properties.get(MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU)
+                True if latest_model.tags.get(MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST, None)
+                  or latest_model.properties.get(MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU)
                 else False
             )
 
             if supports_inference and online_deployment_status != ValidationState.COMPLETED:
                 logger.log_error(
-                    f"Online deployment is supported for {latest_model.name} but its status is {online_deployment_status}. "
+                    f"Online deployment is supported for {latest_model.name}. "
+                    f"But its status is {online_deployment_status}. "
                     "Please ensure that that online inference is validated for the model."
                 )
                 return 1
