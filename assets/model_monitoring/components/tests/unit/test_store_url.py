@@ -160,6 +160,56 @@ class TestStoreUrl:
         assert_credentials_are_equal(store_url.get_credential(), expected_credential)
         assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
 
+    @pytest.mark.parametrize(
+        "base_url, relative_path, expected_root_path, expected_abfs_url",
+        [
+            ("https://my_account.blob.core.windows.net/my_container/path/to/base", "path/to/folder", "path/to/base",
+             "abfss://my_container@my_account.dfs.core.windows.net/path/to/base/path/to/folder"),
+            ("https://my_account.dfs.core.windows.net/my_container/path/to/base/", "folder", "path/to/base",
+             "abfss://my_container@my_account.dfs.core.windows.net/path/to/base/folder"),
+            ("wasbs://my_container@my_account.blob.core.windows.net/path/to/base", "/folder", "path/to/base",
+             "abfss://my_container@my_account.dfs.core.windows.net/path/to/base/folder"),
+            ("abfss://my_container@my_account.dfs.core.windows.net/path/to/base/", "folder/", "path/to/base",
+             "abfss://my_container@my_account.dfs.core.windows.net/path/to/base/folder/"),
+            ("http://my_account.blob.core.windows.net/my_container/path/to/base", "/folder/", "path/to/base",
+             "abfs://my_container@my_account.dfs.core.windows.net/path/to/base/folder/"),
+            ("http://my_account.dfs.core.windows.net/my_container/path/to/base/", "", "path/to/base",
+             "abfs://my_container@my_account.dfs.core.windows.net/path/to/base"),
+            ("wasb://my_container@my_account.blob.core.windows.net/path/to/base", "/", "path/to/base",
+             "abfs://my_container@my_account.dfs.core.windows.net/path/to/base/"),
+            ("https://my_account.blob.core.windows.net/my_container/base", "folder", "base",
+             "abfss://my_container@my_account.dfs.core.windows.net/base/folder"),
+            ("https://my_account.dfs.core.windows.net/my_container/base/", "/folder", "base",
+             "abfss://my_container@my_account.dfs.core.windows.net/base/folder"),
+            ("http://my_account.blob.core.windows.net/my_container/", "folder/", "",
+             "abfs://my_container@my_account.dfs.core.windows.net/folder/"),
+            ("http://my_account.dfs.core.windows.net/my_container", "", "",
+             "abfs://my_container@my_account.dfs.core.windows.net"),
+            ("abfs://my_container@my_account.dfs.core.windows.net", "/", "",
+             "abfs://my_container@my_account.dfs.core.windows.net/"),
+            ("file:///path/to/base", "path/to/folder", "path/to/base", "file:///path/to/base/path/to/folder"),
+            (r"d:\path\to\base", "folder/to/path", r"\path\to\base", r"d:\path\to\base/folder/to/path")
+        ]
+    )
+    def test_get_abfs_url_with_relative_path(self, base_url, relative_path, expected_root_path, expected_abfs_url):
+        store_url = StoreUrl(base_url)
+
+        assert store_url.path == expected_root_path
+        assert store_url.get_abfs_url(relative_path) == expected_abfs_url
+
+    @pytest.mark.parametrize(
+        "credential_info, expected_credential",
+        [
+            ('{"account_key": "my_account_key"}', "my_account_key"),
+            ('{"sas_token": "my_sas_token"}', AzureSasCredential("my_sas_token")),
+            ('{"tenant_id": "00000", "client_id": "my_client_id", "client_secret": "my_client_secret"}',
+             ClientSecretCredential("00000", "my_client_id", "my_client_secret")),
+        ]
+    )
+    def test_static_get_credential(self, credential_info, expected_credential):
+        credential = StoreUrl._get_credential(credential_info)
+        assert_credentials_are_equal(credential, expected_credential)
+
 
 def assert_credentials_are_equal(credential1, credential2):
     if credential1 is None:
