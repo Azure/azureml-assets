@@ -34,6 +34,7 @@ RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot
 
 RUN pip install cryptography==41.0.4 langchain==0.0.317
 
+RUN pip install pyarrow>=14.0.1
 # RUN pip install plotly~=5.13.1 azure-kusto-data==4.2.0 recognizers-text-suite~=1.0.2a2
 
 # For GUNICORN_CMD_ARGS, we need to set the timeout to be 0 so that the server will not timeout

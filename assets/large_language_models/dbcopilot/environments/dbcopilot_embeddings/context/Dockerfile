@@ -34,6 +34,8 @@ RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot
 # fix for https://portal.microsofticm.com/imp/v3/incidents/incident/418102604/summary
 RUN pip install cryptography==41.0.4 langchain==0.0.317
 
+RUN pip install pyarrow>=14.0.1
+
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
