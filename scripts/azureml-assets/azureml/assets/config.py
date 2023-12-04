@@ -994,13 +994,11 @@ class GenericAssetConfig(Config):
 
     Example:
         # Remote storage path for asset data
-        remote_path:
+        path:
             type: azureblob
             storage_name: my_storage
             container_name: my_container
             container_path: foo/bar
-        # Local folder path to copy remote files into
-        local_path: ./prompt
     """
 
     def __init__(self, file_name: Path):
@@ -1015,16 +1013,15 @@ class GenericAssetConfig(Config):
 
     def _validate(self):
         """Validate the yaml file."""
-        Config._validate_exists('generic_asset.path', self.remote_path)
-        Config._validate_enum('generic_asset.path.type', self.remote_path.type.value, PathType, True)
-        Config._validate_exists('generic_asset.local_path', self.local_path)
+        Config._validate_exists('generic_asset.path', self.path)
+        Config._validate_enum('generic_asset.path.type', self.path.type.value, PathType, True)
 
     @property
-    def remote_path(self) -> AssetPath:
+    def path(self) -> AssetPath:
         """Remote storage path (Azure Blob is the only supported type)."""
         if self._path:
             return self._path
-        path = self._yaml.get('remote_path', {})
+        path = self._yaml.get('path', {})
         if path and path.get('type'):
             path_type = path.get('type')
             if path_type == PathType.AZUREBLOB.value:
@@ -1038,11 +1035,6 @@ class GenericAssetConfig(Config):
         else:
             return None
         return self._path
-
-    @property
-    def local_path(self) -> str:
-        """Local file path to copy remote files into."""
-        return self._yaml.get('local_path')
 
 
 @total_ordering
