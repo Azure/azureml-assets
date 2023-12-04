@@ -500,10 +500,10 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
             return 1
 
         with open(validation_job_details_path) as f:
-            job_details = json.load(f)
-            validation_run_status = job_details.get(OverallSummary.VALIDATION_RUN, ValidationState.NOT_STARTED)
-            batch_deployment_status = job_details.get(OverallSummary.BATCH_DEPLOYMENT, ValidationState.NOT_STARTED)
-            online_deployment_status = job_details.get(OverallSummary.ONLINE_DEPLOYMENT, ValidationState.NOT_STARTED)
+            overall_summary = json.load(f)
+            validation_run_status = overall_summary.get(OverallSummary.VALIDATION_RUN, ValidationState.NOT_STARTED)
+            batch_deployment_status = overall_summary.get(OverallSummary.BATCH_DEPLOYMENT, ValidationState.NOT_STARTED)
+            online_deployment_status = overall_summary.get(OverallSummary.ONLINE_DEPLOYMENT, ValidationState.NOT_STARTED)
 
             if validation_run_status != ValidationState.COMPLETED:
                 logger.log_error(
