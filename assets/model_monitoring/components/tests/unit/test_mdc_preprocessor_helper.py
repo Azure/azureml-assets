@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Test class for mdc_preprocessor_helper.py."""
+"""Test file for MDC preprocessor helper."""
 
 from unittest.mock import Mock
 import pytest
@@ -17,7 +17,8 @@ from test_store_url import assert_credentials_are_equal
 
 @pytest.mark.unit
 class TestMDCPreprocessorHelper:
-    """Test class for MDC Preprocessor."""
+    """Test class for MDC preprocessor helper."""
+
     @pytest.mark.parametrize(
         "start_hour, end_hour, expected_hours",
         [

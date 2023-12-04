@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test file for StoreUrl."""
+
 import pytest
 from unittest.mock import Mock
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
@@ -14,6 +16,7 @@ from model_data_collector_preprocessor.store_url import StoreUrl
 @pytest.mark.unit
 class TestStoreUrl:
     """Test class for StoreUrl."""
+
     @pytest.mark.parametrize(
         "store_base_url, expected_hdfs_path, expected_abfs_path, expected_container_client",
         [
@@ -59,6 +62,7 @@ class TestStoreUrl:
         ]
     )
     def test_store_url(self, store_base_url, expected_hdfs_path, expected_abfs_path, expected_container_client):
+        """Test StoreUrl constructor with http(s), abfs(s), wasb(s) and local file path."""
         store_url = StoreUrl(store_base_url)
 
         assert store_url.get_hdfs_url() == expected_hdfs_path
@@ -131,6 +135,7 @@ class TestStoreUrl:
         self, azureml_path, datastore_type, credential_type, expected_protocol, expected_hdfs_path, expected_abfs_path,
         expected_credential, expected_container_client
     ):
+        """Test StoreUrl constructor with azureml path."""
         mock_datastore = Mock(datastore_type=datastore_type, protocol=expected_protocol, endpoint="core.windows.net",
                               account_name="my_account", container_name="my_container")
         if datastore_type == "AzureBlob":
@@ -196,6 +201,7 @@ class TestStoreUrl:
         ]
     )
     def test_get_abfs_url_with_relative_path(self, base_url, relative_path, expected_root_path, expected_abfs_url):
+        """Test get_abfs_url() with relative path."""
         store_url = StoreUrl(base_url)
 
         assert store_url.path == expected_root_path
@@ -203,6 +209,7 @@ class TestStoreUrl:
 
 
 def assert_credentials_are_equal(credential1, credential2):
+    """Assert 2 credentials are equal."""
     if credential1 is None:
         assert credential2 is None
     elif isinstance(credential1, ClientSecretCredential):
@@ -226,6 +233,7 @@ def assert_credentials_are_equal(credential1, credential2):
 
 
 def assert_container_clients_are_equal(container_client1, container_client2):
+    """Assert 2 container clients are equal."""
     def assert_container_clients_properties_are_equal():
         assert container_client1.account_name == container_client2.account_name
         assert container_client1.url == container_client2.url

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Contains StoreUrl class."""
+
 from urllib.parse import urlparse
 import os
 import re
@@ -17,6 +19,7 @@ class StoreUrl:
     """Helper class to Convert base_path to HDFS path."""
 
     def __init__(self, base_url: str, ws: Workspace = None):
+        """Initialize a StoreUrl instance with a store url string."""
         self._base_url = base_url
         self._set_properties(ws)
 
