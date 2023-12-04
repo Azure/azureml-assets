@@ -48,8 +48,7 @@ class EndpointUtilities:
             "subscription_id": online_endpoint.subscription_id,
             "model_path": online_endpoint.model.model_path,
             "model_type": online_endpoint.model.model_type,
-            "connection_name": online_endpoint.connections_name,
-            "authentication_type": "azureml_workspace_connection"
+            "connection_name": online_endpoint.connections_name
         }
         with open(output_path, 'w') as metadata_file:
             json.dump(endpoint_metadata, metadata_file)
