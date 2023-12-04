@@ -9,7 +9,7 @@ import hashlib
 import hmac
 import os
 
-from datetime import datetime
+from datetime import datetime, UTC
 
 from aml_benchmark.utils.online_endpoint.online_endpoint import OnlineEndpoint
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
@@ -49,20 +49,20 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
     _SERVICE = 'bedrock'
 
     def __init__(
-            self,
-            workspace_name: str,
-            resource_group: str,
-            subscription_id: str,
-            online_endpoint_url: Optional[str] = None,
-            endpoint_name: Optional[str] = None,
-            deployment_name: Optional[str] = None,
-            sku: Optional[str] = None,
-            online_endpoint_model: Optional[OnlineEndpointModel] = None,
-            connections_name: Optional[str] = None,
-            aws_region: str = None,
-            model_identifier: str = None,
-            payload: str = None,
-            ):
+        self,
+        workspace_name: str,
+        resource_group: str,
+        subscription_id: str,
+        online_endpoint_url: Optional[str] = None,
+        endpoint_name: Optional[str] = None,
+        deployment_name: Optional[str] = None,
+        sku: Optional[str] = None,
+        online_endpoint_model: Optional[OnlineEndpointModel] = None,
+        connections_name: Optional[str] = None,
+        aws_region: str = None,
+        model_identifier: str = None,
+        payload: str = None,
+    ):
         '''
         Constructor
         '''
@@ -80,13 +80,13 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
         for name, param in (
             ('aws_region', aws_region),
             ('model_identifier', model_identifier),
-            ('payload', payload)):
+                ('payload', payload)):
             if not param:
                 raise BenchmarkUserException._with_error(
                     AzureMLError.create(
                         BenchmarkUserError,
                         error_details=(f"Please provide the {name} parameter."))
-                    )
+                )
         self._aws_region = aws_region
         self._model_identifier = model_identifier
         self._payload_sha_256 = ClaudieOnlineEndpoint._sha256_sum(payload)
@@ -99,7 +99,7 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
                     error_details=("AccessKey or SecretKey are empty"
                                    f"Please provide AccessKey in {ClaudieOnlineEndpoint.ACCESS_KEY} "
                                    f"and SecretKey in {ClaudieOnlineEndpoint.SECRET_KEY} environmental variables."))
-                )
+            )
         self._aws_region = aws_region
 
     @staticmethod
@@ -118,7 +118,6 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
     def payload_hash(self) -> str:
         """Return the payload Sha256 hash."""
         return self._payload_sha_256
-        
 
     @property
     def scoring_url(self) -> str:
@@ -138,7 +137,7 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
             'X-Amz-Content-Sha256': self.payload_hash,
             'X-Amz-Date': timestamp
         }
-    
+
     def _get_canonical_header_string_and_signed_headers(self, headers) -> Tuple[str, str]:
         """
         Return the tuple with canonical headers as a string and signing headers.
@@ -162,7 +161,7 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
             f"AWS4{self._secret_key}".encode('utf-8'), timestamp[:8].encode('utf-8'), hashlib.sha256).digest()
         date_region_key = hmac.new(
             date_key, self._aws_region.encode('utf-8'), hashlib.sha256).digest()
-        date_region_service_key =  hmac.new(
+        date_region_service_key = hmac.new(
             date_region_key, ClaudieOnlineEndpoint._SERVICE.encode('utf-8'),
             hashlib.sha256).digest()
         return hmac.new(
@@ -175,7 +174,7 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
         **Note:** This method is modtly done for ability to test header generation.
         :return: The tuple with datetime and date.
         """
-        date_time = datetime.now().strftime('%Y%m%dT%H%M%SZ')
+        date_time = datetime.now(tz=UTC).strftime('%Y%m%dT%H%M%SZ')
         return date_time, date_time[:8]
 
     def get_endpoint_authorization_header(self) -> Dict[str, str]:
@@ -197,10 +196,10 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
         )
         hashed_canonocal_request = ClaudieOnlineEndpoint._sha256_sum(canonical_request_str)
         string_to_sign = ("AWS4-HMAC-SHA256\n"
-            f"{date_time}\n"
-            f"{date}/{self._aws_region}/{ClaudieOnlineEndpoint._SERVICE}/aws4_request\n"
-            f"{hashed_canonocal_request}"
-        )
+                          f"{date_time}\n"
+                          f"{date}/{self._aws_region}/{ClaudieOnlineEndpoint._SERVICE}/aws4_request\n"
+                          f"{hashed_canonocal_request}"
+                          )
         signing_key = self._get_signing_key(date_time)
         signature = hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
         # Finally we will add the signature into the headers
@@ -209,5 +208,5 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
             f'{self._access_key}/{date}/{self._aws_region}/{ClaudieOnlineEndpoint._SERVICE}/aws4_request, '
             f'SignedHeaders={signed_headers_str}, '
             f'Signature={signature}'
-            )
+        )
         return headers

@@ -15,14 +15,13 @@ from aml_benchmark.batch_benchmark_score.batch_score.utils.token_provider import
 class ClaudieHeaderHandler(HeaderHandler):
     """Class for ClaudieHeaderHandler."""
 
-
     def __init__(
-            self,
-            token_provider: TokenProvider, user_agent_segment: str = None, batch_pool: str = None,
-            quota_audience: str = None, additional_headers: str = None, endpoint_name: str = None,
-            endpoint_subscription: str = None, endpoint_resource_group: str = None, deployment_name: str = None,
-            connections_name: str = None, online_endpoint_model: OnlineEndpointModel = None
-            ) -> None:
+        self,
+        token_provider: TokenProvider, user_agent_segment: str = None, batch_pool: str = None,
+        quota_audience: str = None, additional_headers: str = None, endpoint_name: str = None,
+        endpoint_subscription: str = None, endpoint_resource_group: str = None, deployment_name: str = None,
+        connections_name: str = None, online_endpoint_model: OnlineEndpointModel = None
+    ) -> None:
         '''
         Constructor
         '''
@@ -34,8 +33,7 @@ class ClaudieHeaderHandler(HeaderHandler):
         )
         self._aws_region = match_regex.group('aws_region')
         self._model_identifier = match_regex.group('model_identifier')
-        
-    
+
     def get_headers(self, additional_headers: Dict[str, Any] = None, payload: Optional[Any] = None) -> Dict[str, Any]:
         """
         Return the authentication headers specific for the Claudie.
@@ -44,7 +42,7 @@ class ClaudieHeaderHandler(HeaderHandler):
         :param payload: the payload to be sent to the endpoint.
         :return: The headers for scoring on the endpoint.
         """
-        
+
         endpoint = ClaudieOnlineEndpoint(
             workspace_name=None,
             resource_group=None,

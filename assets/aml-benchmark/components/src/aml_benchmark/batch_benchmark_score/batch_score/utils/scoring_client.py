@@ -159,7 +159,7 @@ class ScoringClient:
             worker_id,
             target_endpoint_url,
             scoring_request.internal_id,
-            headers["x-ms-client-request-id"]))
+            headers.get("x-ms-client-request-id")))
 
         payload_correlation_id = str(uuid.uuid4())
         lu.get_logger().debug(
@@ -256,9 +256,9 @@ class ScoringClient:
             (endpoint_base_url, response_status, model_response_code, is_retriable))
 
         get_events_client().emit_request_completed(
-            latency=(end-start) * 1000,
+            latency=(end - start) * 1000,
             request_internal_id=scoring_request.internal_id,
-            client_request_id=headers["x-ms-client-request-id"],
+            client_request_id=headers.get("x-ms-client-request-id"),
             endpoint_uri=target_endpoint_url,
             status_code="0" if response_status is None else str(response_status),
             model_response_code="" if model_response_code is None else model_response_code,
@@ -275,7 +275,7 @@ class ScoringClient:
                     worker_id,
                     datetime.fromtimestamp(end, timezone.utc),
                     scoring_request.internal_id,
-                    headers["x-ms-client-request-id"],
+                    headers.get("x-ms-client-request-id"),
                     scoring_request.total_wait_time))
 
             result = ScoringResult(

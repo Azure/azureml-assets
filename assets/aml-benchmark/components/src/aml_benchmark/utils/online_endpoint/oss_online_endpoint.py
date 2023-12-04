@@ -181,7 +181,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
                     BenchmarkValidationError,
                     error_details=f"Deployment creation failed. Detailed Response:\n{err}."
                                   f" Please fix the issue and try to submit the job again.")
-                )
+            )
 
     def _get_deployment_state_identity(self) -> ResourceState:
         return self._get_status_identity("deployment")
@@ -238,7 +238,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
                 BenchmarkValidationError,
                 error_details='Endpoint {} does not exist. To use auto-deploy, '
                               'please assign managed identity to the compute.'.format(self.endpoint_name))
-            )
+        )
 
     def _get_default_deployment_identity(self, endpoint: ManagedOnlineDeployment) -> str:
         """Get the default deployment name using managed identity."""

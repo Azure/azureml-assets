@@ -223,4 +223,4 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                 AzureMLError.create(
                     BenchmarkValidationError,
                     error_details='SKU for AOAI model must be int.')
-                )
+            )

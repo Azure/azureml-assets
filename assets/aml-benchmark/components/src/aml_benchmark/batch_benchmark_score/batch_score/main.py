@@ -41,7 +41,7 @@ from .utils.common.json_encoder_extensions import setup_encoder
 from .header_handlers.header_handler import HeaderHandler
 from .header_handlers.oss.oss_header_handler import OSSHeaderHandler
 from .header_handlers.oai.oai_header_handler import OAIHeaderHandler
-from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.claudie.claudie_header_handler import ClaudieHeaderHandler
+from .header_handlers.claudie.claudie_header_handler import ClaudieHeaderHandler
 
 
 par: parallel.Parallel = None
@@ -140,11 +140,15 @@ def run(input_data: pd.DataFrame, mini_batch_context):
             lu.get_logger().info("save_mini_batch_results is disabled")
 
     except Exception as e:
+        if sys.version_info < (3, 10):
+            stacktrace = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+        else:
+            stacktrace = traceback.format_exception(e)
         get_events_client().emit_mini_batch_completed(
             input_row_count=len(data_list),
             output_row_count=len(ret),
             exception=type(e).__name__,
-            stacktrace=traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+            stacktrace=stacktrace
         )
         raise e
     else:
@@ -392,7 +396,7 @@ def setup_header_handler(
             deployment_name=deployment_name,
             connections_name=connections_name,
             online_endpoint_model=model
-            )
+        )
     return OSSHeaderHandler(
         token_provider=token_provider, user_agent_segment=args.user_agent_segment,
         batch_pool=args.batch_pool,

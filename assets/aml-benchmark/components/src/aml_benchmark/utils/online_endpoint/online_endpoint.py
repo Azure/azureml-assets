@@ -306,7 +306,7 @@ class OnlineEndpoint:
                 AzureMLError.create(
                     BenchmarkValidationError,
                     error_details=msg if msg else default_msg)
-                )
+            )
 
     def _validate_settings(self) -> None:
         """Validate the settings."""
@@ -319,7 +319,7 @@ class OnlineEndpoint:
                 AzureMLError.create(
                     BenchmarkValidationError,
                     error_details='Managed identity is required for this scenario.')
-                )
+            )
 
     def _validate_model(self, validate_version: bool = True) -> None:
         """Validate the model."""
@@ -328,13 +328,13 @@ class OnlineEndpoint:
                 AzureMLError.create(
                     BenchmarkValidationError,
                     error_details='Model is required for managed deployment.')
-                )
+            )
         if validate_version and self._model.model_version is None:
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(
                     BenchmarkValidationError,
                     error_details='Model version is required for managed deployment.')
-                )
+            )
 
     @property
     def ml_client(self) -> MLClient:

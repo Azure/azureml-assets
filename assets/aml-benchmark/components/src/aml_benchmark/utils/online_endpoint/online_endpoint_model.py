@@ -28,7 +28,7 @@ class OnlineEndpointModel:
         elif self._get_model_type_from_url(endpoint_url) == 'claudie':
             self._model_path = endpoint_url
             self._model_name = 'anthropic.claude'
-            self._model_version=re.findall(r'anthropic.claude-v(\d+[.]*\d*)/', endpoint_url)[0]
+            self._model_version = re.findall(r'anthropic.claude-v(\d+[.]*\d*)/', endpoint_url)[0]
         else:
             self._model_name = model
             self._model_path = None

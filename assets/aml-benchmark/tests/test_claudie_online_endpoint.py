@@ -86,38 +86,38 @@ class TestClaudieOnlineEndpoint(unittest.TestCase):
     def test_scoring_url(self):
         """Check that the returned url is correct."""
         endpoint = ClaudieOnlineEndpoint(
-                workspace_name='mock_ws',
-                resource_group='mock_rg',
-                subscription_id='mock_subscription',
-                aws_region='us-east-1',
-                model_identifier='anthropic.claude-v2',
-                payload='foo')
+            workspace_name='mock_ws',
+            resource_group='mock_rg',
+            subscription_id='mock_subscription',
+            aws_region='us-east-1',
+            model_identifier='anthropic.claude-v2',
+            payload='foo')
         self.assertEqual(endpoint.scoring_url,
                          'https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-v2/invoke')
 
     def test_hex_digest(self):
         """Test that we are correcly calculating the hexdigest of a payload."""
         endpoint = ClaudieOnlineEndpoint(
-                workspace_name='mock_ws',
-                resource_group='mock_rg',
-                subscription_id='mock_subscription',
-                aws_region='us-east-1',
-                model_identifier='anthropic.claude-v2',
-                payload=('{"prompt":"\\n\\nHuman:story of two dogs\\n'
-                         '\\nAssistant:","max_tokens_to_sample":100}'))
+            workspace_name='mock_ws',
+            resource_group='mock_rg',
+            subscription_id='mock_subscription',
+            aws_region='us-east-1',
+            model_identifier='anthropic.claude-v2',
+            payload=('{"prompt":"\\n\\nHuman:story of two dogs\\n'
+                     '\\nAssistant:","max_tokens_to_sample":100}'))
         self.assertEqual(endpoint.payload_hash,
                          '09b8e66f6aea38a57a8cf0dd388f168f4c76a9c9e5b63afbed46c1553613211b')
 
     def test_canonical_headers(self):
         """Test that canonical headers are being returned correctly."""
         endpoint = ClaudieOnlineEndpoint(
-                workspace_name='mock_ws',
-                resource_group='mock_rg',
-                subscription_id='mock_subscription',
-                aws_region='us-east-1',
-                model_identifier='anthropic.claude-v2',
-                payload=('{"prompt":"\\n\\nHuman:story of two dogs\\n'
-                         '\\nAssistant:","max_tokens_to_sample":100}'))
+            workspace_name='mock_ws',
+            resource_group='mock_rg',
+            subscription_id='mock_subscription',
+            aws_region='us-east-1',
+            model_identifier='anthropic.claude-v2',
+            payload=('{"prompt":"\\n\\nHuman:story of two dogs\\n'
+                     '\\nAssistant:","max_tokens_to_sample":100}'))
         expected_headers = {
             'accept': 'application/json',
             'host': 'bedrock-runtime.us-east-1.amazonaws.com',
@@ -126,7 +126,8 @@ class TestClaudieOnlineEndpoint(unittest.TestCase):
             'X-Amz-Date': '20231201T192721Z'
         }
         self.assertDictEqual(expected_headers, endpoint._get_canonical_headers('20231201T192721Z'))
-        canonical_headers_str, signed_headers_str = endpoint._get_canonical_header_string_and_signed_headers(expected_headers)
+        canonical_headers_str, signed_headers_str = endpoint._get_canonical_header_string_and_signed_headers(
+            expected_headers)
         self.assertEqual(canonical_headers_str,
                          ('accept:application/json\ncontent-type:application/json\n'
                           'host:bedrock-runtime.us-east-1.amazonaws.com\nx-amz-content-sha256'
@@ -135,11 +136,12 @@ class TestClaudieOnlineEndpoint(unittest.TestCase):
         self.assertEqual(signed_headers_str,
                          'accept;content-type;host;x-amz-content-sha256;x-amz-date')
 
-    def test_get_endpoint_authorization_header(self): 
+    def test_get_endpoint_authorization_header(self):
         """Check the correctness of a signature."""
         with patch(
-            'aml_benchmark.utils.online_endpoint.claudie_online_endpoint.ClaudieOnlineEndpoint._get_date_and_time',
-            return_value=('20231201T192721Z', '20231201')):
+            ('aml_benchmark.utils.online_endpoint.claudie_online_endpoint'
+             '.ClaudieOnlineEndpoint._get_date_and_time'),
+                return_value=('20231201T192721Z', '20231201')):
             endpoint = ClaudieOnlineEndpoint(
                 workspace_name='mock_ws',
                 resource_group='mock_rg',
