@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 import os
 import re
 from typing import Union
-import json
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
@@ -80,13 +79,14 @@ class StoreUrl:
             raise InvalidInputError(f"Unsupported datastore type: {self._datastore.datastore_type}, "
                                     "only Azure Blob and Azure Data Lake Gen2 are supported.")
 
-    def get_container_client(self, credential_info: str = None) -> Union[FileSystemClient, ContainerClient, None]:
+    def get_container_client(self, credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None) \
+            -> Union[FileSystemClient, ContainerClient, None]:
         """
         Get container client for this store url.
 
-        :param credential: if provided, it contains the credential info to authorize the container to access the data,
+        :param credential: if provided, it contains the credential to authorize the container to access the data,
         if not provided, will retrieve credential from datastore. It's a special handling for access dataref file in
-        executors. It is a json string that contain account_key, sas_token or tenant_id, client_id and client_secret.
+        executors.
         """
         if not self.account_name:
             # local or not supported store type
@@ -96,7 +96,7 @@ class StoreUrl:
         if self.store_type == "blob" and self._datastore and self._datastore.credential_type:
             return self._datastore.blob_service.get_container_client(self.container_name)
         # TODO fallback to DefaultAzureCredential for credential less datastore for now, may need better fallback logic
-        credential = StoreUrl._get_credential(credential_info) or self.get_credential()
+        credential = credential or self.get_credential()
         account_url_scheme = "https" if self._is_secure() else "http"
         if self.store_type == "blob":
             return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.core.windows.net",
@@ -129,12 +129,13 @@ class StoreUrl:
             or self._base_url.startswith("/") or self._base_url.startswith(".") \
             or re.match(r"^[a-zA-Z]:[/\\]", self._base_url)
 
-    def read_file_content(self, relative_path: str = None, credential_info: str = None) -> str:
+    def read_file_content(self, relative_path: str = None,
+                          credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None) -> str:
         """Read file content from the store."""
         if self.is_local_path():
             return self._read_local_file_content(relative_path)
 
-        container_client = self.get_container_client(credential_info)
+        container_client = self.get_container_client(credential)
         full_path = f"{self.path}/{relative_path}" if relative_path else self.path
         if isinstance(container_client, FileSystemClient):
             with container_client.get_file_client(full_path) as file_client:
@@ -215,27 +216,3 @@ class StoreUrl:
     def _is_secure(self):
         """Check if the store url is secure."""
         return self._scheme in ["wasbs", "abfss"]
-
-    @staticmethod
-    def _get_credential(credential_info: str) -> Union[str, ClientSecretCredential, AzureSasCredential, None]:
-        """Get credential from credential info string."""
-        if not credential_info:
-            return None
-
-        credential_dict: dict = json.loads(credential_info)
-
-        account_key = credential_dict.get("account_key", None)
-        if account_key:
-            return account_key
-
-        sas_token = credential_dict.get("sas_token", None)
-        if sas_token:
-            return AzureSasCredential(sas_token)
-
-        tenant_id = credential_dict.get("tenant_id", None)
-        client_id = credential_dict.get("client_id", None)
-        client_secret = credential_dict.get("client_secret", None)
-        if tenant_id and client_id and client_secret:
-            return ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
-
-        raise InvalidInputError(f"Fail to retrieve credential from credential info {credential_info}.")

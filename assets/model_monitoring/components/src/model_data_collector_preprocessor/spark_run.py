@@ -61,7 +61,7 @@ def _load_dataref_into_data_column(df: DataFrame, store_url: StoreUrl) -> DataFr
 
         store_url = StoreUrl(path)
         credential = deserialize_credential(broadcasted_credential.value)
-        return store_url.read_file_content(credential_info=credential)
+        return store_url.read_file_content(credential=credential)
 
     spark = init_spark()
     serialized_credential = serialize_credential(store_url.get_credential())

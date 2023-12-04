@@ -197,19 +197,6 @@ class TestStoreUrl:
         assert store_url.path == expected_root_path
         assert store_url.get_abfs_url(relative_path) == expected_abfs_url
 
-    @pytest.mark.parametrize(
-        "credential_info, expected_credential",
-        [
-            ('{"account_key": "my_account_key"}', "my_account_key"),
-            ('{"sas_token": "my_sas_token"}', AzureSasCredential("my_sas_token")),
-            ('{"tenant_id": "00000", "client_id": "my_client_id", "client_secret": "my_client_secret"}',
-             ClientSecretCredential("00000", "my_client_id", "my_client_secret")),
-        ]
-    )
-    def test_static_get_credential(self, credential_info, expected_credential):
-        credential = StoreUrl._get_credential(credential_info)
-        assert_credentials_are_equal(credential, expected_credential)
-
 
 def assert_credentials_are_equal(credential1, credential2):
     if credential1 is None:
