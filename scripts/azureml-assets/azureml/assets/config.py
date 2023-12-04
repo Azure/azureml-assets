@@ -1018,7 +1018,7 @@ class GenericAssetConfig(Config):
 
     @property
     def path(self) -> AssetPath:
-        """Remote storage path (Azure Blob is the only supported type)."""
+        """Remote Storage Path (Azure Blob is the only supported type)."""
         if self._path:
             return self._path
         path = self._yaml.get('path', {})
