@@ -693,7 +693,7 @@ class ModelConfig(Config):
 
     def __init__(self, file_name: Path):
         """Initialize object for the Model Properties extracted from extra_config model.yaml.
-        
+
         Args:
             file_name (Path): Model config file to load and validate.
         """
@@ -1005,7 +1005,7 @@ class GenericAssetConfig(Config):
 
     def __init__(self, file_name: Path):
         """Initialize object for the Generic Asset Properties extracted from storage.yaml.
-        
+
         Args:
             file_name (Path): Storage config file to load and validate.
         """
