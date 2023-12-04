@@ -28,4 +28,3 @@ dependencies:
   - azureml-train-automl-runtime=={{latest-pypi-version}}
   - azureml-automl-dnn-vision=={{latest-pypi-version}}
   - azureml-dataprep>=2.24.4
-  - pyarrow-hotfix
