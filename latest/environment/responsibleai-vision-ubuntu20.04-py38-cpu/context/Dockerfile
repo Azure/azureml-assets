@@ -36,6 +36,10 @@ RUN pip install 'shap==0.41.0' \
                 'scipy==1.10.0' \
                 'statsmodels==0.14.0'
 
+# azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
+# so we install pyarrow in extra step to avoid conflict
+RUN pip install 'pyarrow>=14.0.1'
+
 RUN pip freeze
 
 # This is needed for mpi to locate libpython

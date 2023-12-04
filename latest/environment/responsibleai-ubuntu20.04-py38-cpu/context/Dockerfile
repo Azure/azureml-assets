@@ -32,6 +32,10 @@ RUN pip install 'azureml-dataset-runtime==1.54.0' \
                 'azureml-mlflow==1.54.0' \
                 'azureml-telemetry==1.54.0'
 
+# azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
+# so we install pyarrow in extra step to avoid conflict
+RUN pip install 'pyarrow>=14.0.1'
+
 # To resolve vulnerability issue
 RUN pip install 'Werkzeug==2.2.3'
 
