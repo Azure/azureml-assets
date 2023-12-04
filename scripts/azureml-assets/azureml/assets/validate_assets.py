@@ -536,7 +536,7 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
                 else False
             )
 
-            if supports_inference and online_deployment_status != ValidationState.COMPLETED:
+            if supports_inference and online_deployment_status != ModelValidationState.COMPLETED:
                 logger.log_error(
                     f"Online deployment is supported for {latest_model.name}. "
                     f"But its status is {online_deployment_status}. "
