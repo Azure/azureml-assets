@@ -94,7 +94,7 @@ inputs:
 
   learning_rate:
     type: number
-    default: 0.00002
+    default: 3e-04
     optional: true
     description: Start learning rate.
 
@@ -186,12 +186,13 @@ jobs:
       optim: adamw_hf
       learning_rate: '${{parent.inputs.learning_rate}}'
       warmup_steps: 0
-      weight_decay: 0.0
+      weight_decay: 0.1
       adam_beta1: 0.9
-      adam_beta2: 0.999
+      adam_beta2: 0.95
+      adam_epsilon: 1e-05
       gradient_accumulation_steps: 1
       eval_accumulation_steps: 1
-      lr_scheduler_type: linear
+      lr_scheduler_type: cosine
       precision: 16
       seed: 42
       enable_full_determinism: "false"
