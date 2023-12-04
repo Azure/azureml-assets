@@ -671,25 +671,24 @@ class ModelConfig(Config):
     """Model Config class.
 
     Example:
+        path: # should contain local_path or should contain package object
+            ##Local path example
+            type: local
+            uri: "../models/bert-base-uncased" # the local path to the model
 
-    path: # should contain local_path or should contain package object
-        ##Local path example
-        type: local
-        uri: "../models/bert-base-uncased" # the local path to the model
+            ## GIT path example
+            type: git
+            uri: https://huggingface.co/bert-base-uncased
+            branch: main
 
-        ## GIT path example
-        type: git
-        uri: https://huggingface.co/bert-base-uncased
-        branch: main
-
-        ## Azure Blobstore example
-        type: azureblob
-        storage_name: my_storage
-        container_name: my_container
-        container_path: foo/bar
-    publish:
-        description: model_card.md
-        type: mlflow_model
+            ## Azure Blobstore example
+            type: azureblob
+            storage_name: my_storage
+            container_name: my_container
+            container_path: foo/bar
+        publish:
+            description: model_card.md
+            type: mlflow_model
     """
 
     def __init__(self, file_name: Path):
@@ -990,15 +989,14 @@ class GenericAssetConfig(Config):
     """Generic Asset Config class.
 
     Example:
-
-    # Remote storage path for asset data
-    remote_path:
-        type: azureblob
-        storage_name: my_storage
-        container_name: my_container
-        container_path: foo/bar
-    # Local folder path to copy remote files into
-    local_path: ./prompt
+        # Remote storage path for asset data
+        remote_path:
+            type: azureblob
+            storage_name: my_storage
+            container_name: my_container
+            container_path: foo/bar
+        # Local folder path to copy remote files into
+        local_path: ./prompt
     """
 
     def __init__(self, file_name: Path):
