@@ -32,24 +32,19 @@ def get_tokens(input_dirs: List[Path],
     json_info = defaultdict(dict)
 
     # Generate SAS tokens for generic assets
+    asset_types = [AssetType.MODEL] + GENERIC_ASSET_TYPES
     for asset_config in util.find_assets(
-            input_dirs, asset_config_filename, types=GENERIC_ASSET_TYPES, pattern=pattern):
+            input_dirs, asset_config_filename, types=asset_types, pattern=pattern):
 
-        generic_config: assets.GenericAssetConfig = asset_config.extra_config_as_object()
-        if (generic_config and isinstance(generic_config.remote_path, AzureBlobstoreAssetPath)):
-            add_token_info(generic_config.remote_path, json_info)
+        if asset_config.type == AssetType.MODEL:
+            model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+            if isinstance(model_config.path, AzureBlobstoreAssetPath):
+                add_token_info(model_config.path, json_info)
 
-    # Generate SAS tokens for models
-    for asset_config in util.find_assets(
-            input_dirs, asset_config_filename, types=[AssetType.MODEL], pattern=pattern):
-
-        model_config: assets.ModelConfig = asset_config.extra_config_as_object()
-        path = model_config.path
-
-        if not isinstance(path, AzureBlobstoreAssetPath):
-            continue
-
-        add_token_info(path, json_info)
+        elif asset_config.type in GENERIC_ASSET_TYPES:
+            generic_config: assets.GenericAssetConfig = asset_config.extra_config_as_object()
+            if (generic_config and isinstance(generic_config.remote_path, AzureBlobstoreAssetPath)):
+                add_token_info(generic_config.remote_path, json_info)
 
     with open(json_output_path, 'w') as json_token_file:
         json.dump(json_info, json_token_file)
