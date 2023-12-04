@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import pytest
 from unittest.mock import Mock
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
@@ -10,6 +13,7 @@ from model_data_collector_preprocessor.store_url import StoreUrl
 
 @pytest.mark.unit
 class TestStoreUrl:
+    """Test class for StoreUrl."""
     @pytest.mark.parametrize(
         "store_base_url, expected_hdfs_path, expected_abfs_path, expected_container_client",
         [
