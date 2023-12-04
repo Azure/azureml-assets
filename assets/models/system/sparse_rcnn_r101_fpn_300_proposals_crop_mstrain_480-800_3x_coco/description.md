@@ -6,7 +6,6 @@ We present Sparse R-CNN, a purely sparse method for object detection in images. 
 
 > <b>Deprecation Warning</b>: This model is only compatible with mmdet <= 2.28 and is deprecated. We recommend using `mmd-3x-sparse-rcnn_r101_fpn_300-proposals_crop-ms-480-800-3x_coco`, the corresponding mmdet >= 3.1.0 model instead, from <a href="https://ml.azure.com/model/catalog" target="_blank">the AzureML model catalog</a>. In our model catalog, the models prefixed with mmdet-3x are compatible with mmdet >= 3.1.0.
 
-
 ### Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
