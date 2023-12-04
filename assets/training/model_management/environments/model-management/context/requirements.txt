@@ -11,7 +11,5 @@ applicationinsights=={{latest-pypi-version}}
 azureml-automl-core=={{latest-pypi-version}}
 azureml-telemetry=={{latest-pypi-version}}
 azureml-automl-dnn-vision=={{latest-pypi-version}}
-mlflow=={{latest-pypi-version}}
 pyarrow=={{latest-pypi-version}}
-urllib3=={{latest-pypi-version}}
 Pillow=={{latest-pypi-version}}
