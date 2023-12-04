@@ -10,3 +10,11 @@ class DataNotFoundError(Exception):
     def __init__(self, message):
         """Initialize a DataNotFoundError."""
         super().__init__(message)
+
+
+class InvalidInputError(ValueError):
+    """Exception raised when input is invalid."""
+
+    def __init__(self, message):
+        """Initialize a InvalidInputError."""
+        super().__init__(message)
