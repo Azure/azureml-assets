@@ -60,7 +60,7 @@ def add_token_info(path: AzureBlobstoreAssetPath, json_info: defaultdict(dict)):
 
     Args:
         storage_path (AzureBlobstoreAssetPath): Blob storage path to update.
-        json_info (dict): Dictionary used to generate the JSON token file.
+        json_info (defaultdict(dict)): Dictionary used to generate the JSON token file.
     """
     account_name = path.storage_name
     container_name = path.container_name
