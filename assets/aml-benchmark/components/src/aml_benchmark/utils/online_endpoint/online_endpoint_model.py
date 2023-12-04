@@ -71,7 +71,7 @@ class OnlineEndpointModel:
         return self._model_type == 'oss'
 
     def is_claudie_model(self) -> bool:
-        """Check if the model is claudie model"""
+        """Check if the model is claudie model."""
         return self._model_type == 'claudie'
 
     def is_vision_oss_model(self) -> bool:

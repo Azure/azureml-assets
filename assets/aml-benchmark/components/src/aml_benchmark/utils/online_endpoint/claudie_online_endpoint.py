@@ -62,9 +62,7 @@ class ClaudieOnlineEndpoint(OnlineEndpoint):
         model_identifier: str = None,
         payload: str = None,
     ):
-        '''
-        Constructor
-        '''
+        """Constructor."""
         super().__init__(
             workspace_name,
             resource_group,
