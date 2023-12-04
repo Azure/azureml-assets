@@ -988,10 +988,10 @@ class EnvironmentConfig(Config):
 
 
 class GenericAssetConfig(Config):
-    """Generic Asset Config class."""
+    """Generic Asset Config class.
 
-    """
     Example:
+
 
     # Remote storage path for asset data
     remote_path:
