@@ -63,7 +63,7 @@ class MLFlowModelTags:
 
 class ValidationState:
     """Enums for storing validation results state.
-    
+
     Keeping it consistent with Job state enums. Only the essential ones would be used here.
     """
 
@@ -522,7 +522,7 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
                     "Please ensure that that batch is validated for the model."
                 )
                 return 1
-            
+
             # check if online inference is supported
             supports_inference = (
                 True if latest_model.tags.get(MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST, None) \
