@@ -218,6 +218,7 @@ def assert_credentials_are_equal(credential1, credential2):
         assert isinstance(credential2, ClientSecretCredential)
         assert credential1._tenant_id == credential2._tenant_id
         assert credential1._client_id == credential2._client_id
+        assert credential1._client_credential == credential2._client_credential
     elif isinstance(credential1, AzureSasCredential):
         assert isinstance(credential2, AzureSasCredential)
         assert credential1.signature == credential2.signature

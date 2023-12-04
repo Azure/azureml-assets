@@ -37,7 +37,7 @@ class StoreUrl:
         :param relative_path: relative path to the base path
         :return: always abfs(s) url, this is very helpful to access append blob in blob store
         """
-        scheme = "abfss" if (not self._is_local_path()) and self._is_secure() else "abfs"
+        scheme = "abfss" if (not self.is_local_path()) and self._is_secure() else "abfs"
         return self._get_url(scheme=scheme, store_type="dfs", relative_path=relative_path)
 
     def _get_url(self, scheme=None, store_type=None, relative_path=None) -> str:
@@ -45,7 +45,7 @@ class StoreUrl:
             return f"{self._base_url}/{relative_path}" if relative_path else self._base_url
 
         scheme = scheme or self._scheme
-        store_type = store_type or self._store_type
+        store_type = store_type or self.store_type
         url = f"{scheme}://{self.container_name}@{self.account_name}.{store_type}.{self._endpoint}"
         if self.path:
             url = f"{url}/{self.path}"
@@ -93,23 +93,23 @@ class StoreUrl:
             return None
 
         # blob, has cred datastore
-        if self._store_type == "blob" and self._datastore and self._datastore.credential_type:
+        if self.store_type == "blob" and self._datastore and self._datastore.credential_type:
             return self._datastore.blob_service.get_container_client(self.container_name)
         # TODO fallback to DefaultAzureCredential for credential less datastore for now, may need better fallback logic
         credential = StoreUrl._get_credential(credential_info) or self.get_credential()
         account_url_scheme = "https" if self._is_secure() else "http"
-        if self._store_type == "blob":
+        if self.store_type == "blob":
             return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.core.windows.net",
                                    container_name=self.container_name, credential=credential)
-        elif self._store_type == "dfs":
+        elif self.store_type == "dfs":
             return FileSystemClient(account_url=f"{account_url_scheme}://{self.account_name}.dfs.core.windows.net",
                                     file_system_name=self.container_name, credential=credential)
         else:
-            raise InvalidInputError(f"Unsupported store type: {self._store_type}, only blob and dfs are supported.")
+            raise InvalidInputError(f"Unsupported store type: {self.store_type}, only blob and dfs are supported.")
 
     def is_folder_exists(self, relative_path: str) -> bool:
         """Check if the folder exists in the store."""
-        if self._is_local_path():
+        if self.is_local_path():
             return self._is_local_folder_exists(relative_path)
 
         container_client = self.get_container_client()
@@ -121,7 +121,7 @@ class StoreUrl:
             blobs = container_client.list_blobs(name_starts_with=full_path)
             return any(blobs)
 
-    def _is_local_path(self) -> bool:
+    def is_local_path(self) -> bool:
         """Check if the store url is a local path."""
         if not self._base_url:
             return False
@@ -129,8 +129,29 @@ class StoreUrl:
             or self._base_url.startswith("/") or self._base_url.startswith(".") \
             or re.match(r"^[a-zA-Z]:[/\\]", self._base_url)
 
-    def _is_local_folder_exists(self, relative_path: str) -> bool:
-        return os.path.isdir(os.path.join(self._base_url, relative_path))
+    def read_file_content(self, relative_path: str = None, credential_info: str = None) -> str:
+        """Read file content from the store."""
+        if self.is_local_path():
+            return self._read_local_file_content(relative_path)
+
+        container_client = self.get_container_client(credential_info)
+        full_path = f"{self.path}/{relative_path}" if relative_path else self.path
+        if isinstance(container_client, FileSystemClient):
+            with container_client.get_file_client(full_path) as file_client:
+                return file_client.download_file().readall().decode()
+        else:
+            with container_client.get_blob_client(full_path) as blob_client:
+                return blob_client.download_blob().readall().decode()
+
+    def _read_local_file_content(self, relative_path: str = None) -> str:
+        """Read file content from local path."""
+        full_path = os.path.join(self._base_url, relative_path) if relative_path else self._base_url
+        with open(full_path) as f:
+            return f.read()
+
+    def _is_local_folder_exists(self, relative_path: str = None) -> bool:
+        full_path = os.path.join(self._base_url, relative_path) if relative_path else self._base_url
+        return os.path.isdir(full_path)
 
     _SCHEME_MAP = {"blob&https": "wasbs", "blob&http": "wasb", "dfs&https": "abfss", "dfs&http": "abfs"}
 
@@ -144,8 +165,8 @@ class StoreUrl:
             matches = re.match(pattern, self._base_url)
             if not matches:
                 raise InvalidInputError(f"Unsupported uri as uri_folder: {self._base_url}")
-            self._store_type = matches.group("store_type")
-            self._scheme = StoreUrl._SCHEME_MAP[f"{self._store_type}&{matches.group('scheme')}"]
+            self.store_type = matches.group("store_type")
+            self._scheme = StoreUrl._SCHEME_MAP[f"{self.store_type}&{matches.group('scheme')}"]
             self.account_name = matches.group("account_name")
             self.container_name = matches.group("container")
             self.path = matches.group("path").strip("/")
@@ -157,7 +178,7 @@ class StoreUrl:
             if not matches:
                 raise InvalidInputError(f"Unsupported uri as uri_folder: {self._base_url}")
             self._scheme = matches.group("scheme")
-            self._store_type = matches.group("store_type")
+            self.store_type = matches.group("store_type")
             self.account_name = matches.group("account_name")
             self.container_name = matches.group("container")
             self.path = matches.group("path").strip("/")
@@ -174,13 +195,14 @@ class StoreUrl:
                 if datastore_type not in ["AzureBlob", "AzureDataLakeGen2"]:
                     raise InvalidInputError("Only Azure Blob and Azure Data Lake Gen2 are supported, "
                                             f"but got {self._datastore.type}.")
-                self._store_type = "dfs" if datastore_type == "AzureDataLakeGen2" else "blob"
-                self._scheme = StoreUrl._SCHEME_MAP[f"{self._store_type}&{self._datastore.protocol}"]
+                self.store_type = "dfs" if datastore_type == "AzureDataLakeGen2" else "blob"
+                self._scheme = StoreUrl._SCHEME_MAP[f"{self.store_type}&{self._datastore.protocol}"]
                 self.account_name = self._datastore.account_name
                 self.container_name = self._datastore.container_name
         else:
             # file or other scheme, return original path directly
             self.account_name = None  # _account_name is None is the indicator that return the original base_path
+            self._scheme = url.scheme
             self.path = url.path.strip("/")
             self._datastore = None  # indicator of no credential
 

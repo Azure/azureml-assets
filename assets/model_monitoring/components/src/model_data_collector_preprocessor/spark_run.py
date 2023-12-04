@@ -16,42 +16,38 @@ from shared_utilities.event_utils import add_tags_to_root_run
 from shared_utilities.constants import (
     MDC_CORRELATION_ID_COLUMN, MDC_DATA_COLUMN, MDC_DATAREF_COLUMN, AML_MOMO_ERROR_TAG
 )
-from mdc_preprocessor_helper import (
-    get_hdfs_path_and_container_client, get_file_list, set_data_access_config
-)
-try:
-    # used in UDF from executor, need to import from root of code in real cluster run
-    from model_data_collector_preprocessor.mdc_preprocessor_helper import read_json_content
-except (ImportError, ModuleNotFoundError):
-    # for remote UT, import from mdc_preprocessor_helper
-    from mdc_preprocessor_helper import read_json_content
+from mdc_preprocessor_helper import get_file_list, set_data_access_config, serialize_credential
+from model_data_collector_preprocessor.store_url import StoreUrl
+from model_data_collector_preprocessor.mdc_preprocessor_helper import deserialize_credential
+# from store_url import StoreUrl
 
 
-def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: datetime, input_data: str,
+def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: datetime, store_url: StoreUrl,
                                     add_tags_func=None) -> DataFrame:
     def handle_data_not_found():
         add_tags_func({AML_MOMO_ERROR_TAG: "No data found for the given time window."})
         raise DataNotFoundError(
-            f"No data found for the given time window: {start_datetime} to {end_datetime} in input {input_data}. "
+            f"No data found for the given time window: {start_datetime} to {end_datetime} "
+            f"in input {store_url.get_hdfs_url}. "
             "We expect folder pattern <root>/YYYY/MM/DD/HH/<your_log>.jsonl")
 
     add_tags_func = add_tags_func or add_tags_to_root_run
 
-    spark = init_spark()
-    hdfs_path, container_client = get_hdfs_path_and_container_client(input_data, spark=spark)
-    file_list = get_file_list(start_datetime, end_datetime, input_data, hdfs_path, container_client)
+    file_list = get_file_list(start_datetime, end_datetime, store_url=store_url)
     if not file_list:
         handle_data_not_found()
     # print("DEBUG file_list:", file_list)
 
-    set_data_access_config(container_client, spark)
+    spark = init_spark()
+    set_data_access_config(spark, store_url=store_url)
     df = spark.read.json(file_list)
     if df.rdd.isEmpty():
         handle_data_not_found()
+
     return df
 
 
-def _load_dataref_into_data_column(df: DataFrame, input_data: str) -> DataFrame:
+def _load_dataref_into_data_column(df: DataFrame, store_url: StoreUrl) -> DataFrame:
     if MDC_DATAREF_COLUMN not in df.columns:
         return df  # no dataref column, return df directly
     if MDC_DATA_COLUMN not in df.columns:
@@ -60,22 +56,19 @@ def _load_dataref_into_data_column(df: DataFrame, input_data: str) -> DataFrame:
 
     @udf(returnType=StringType())
     def load_json_str(path):
-        sas_token = broadcast_credential.value
-        return read_json_content(path, sas_token)
+        if not path:
+            return None
+
+        store_url = StoreUrl(path)
+        credential = deserialize_credential(broadcasted_credential.value)
+        return store_url.read_file_content(credential_info=credential)
+
+    spark = init_spark()
+    serialized_credential = serialize_credential(store_url.get_credential())
+    broadcasted_credential = spark.sparkContext.broadcast(serialized_credential)
 
     # TODO separate df into 2 parts, one with dataref, one without, then only handle the one with dataref, and
     #      union the 2 parts back together
-
-    # broadcast the sas_token to all executors, so that they can access the dataref files
-    _, container_client = get_hdfs_path_and_container_client(input_data)
-    spark = init_spark()
-    if container_client:
-        # TODO need to depends on the storage type(blob or gen2) to get the credential
-        sas_token = spark.conf.get(f"spark.hadoop.fs.azure.sas.{container_client.container_name}."
-                                   f"{container_client.account_name}.blob.core.windows.net")
-        broadcast_credential = spark.sparkContext.broadcast(sas_token)
-    else:
-        broadcast_credential = spark.sparkContext.broadcast(None)
 
     # load json string from dataref to ref_json_str column
     df = df.withColumn("ref_json_str", load_json_str(df[MDC_DATAREF_COLUMN]))
@@ -115,19 +108,19 @@ def _convert_complex_columns_to_json_string(df: DataFrame) -> DataFrame:
 
 
 def _mdc_uri_folder_to_preprocessed_spark_df(
-        data_window_start: datetime, data_window_end: datetime, input_data: str, extract_correlation_id: bool,
+        data_window_start: str, data_window_end: str, store_url: StoreUrl, extract_correlation_id: bool,
         add_tags_func=None) -> DataFrame:
     """Read raw MDC data, preprocess, and return in a Spark DataFrame."""
     # Parse the dates
     start_datetime = parser.parse(data_window_start)
     end_datetime = parser.parse(data_window_end)
 
-    df = _mdc_uri_folder_to_raw_spark_df(start_datetime, end_datetime, input_data, add_tags_func)
+    df = _mdc_uri_folder_to_raw_spark_df(start_datetime, end_datetime, store_url, add_tags_func)
     print("df converted from MDC raw uri folder:")
     df.select("data").show(truncate=False)
     df.printSchema()
 
-    df = _load_dataref_into_data_column(df, input_data)
+    df = _load_dataref_into_data_column(df, store_url)
     df.select("data").show(truncate=False)
     df.printSchema()
 
@@ -153,7 +146,8 @@ def mdc_preprocessor(
         preprocessed_data: The mltable path pointing to location where the outputted mltable will be written to.
         extract_correlation_id: The boolean to extract correlation Id from the MDC logs.
     """
-    transformed_df = _mdc_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, input_data,
+    store_url = StoreUrl(input_data)
+    transformed_df = _mdc_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url,
                                                               extract_correlation_id)
     # TODO remove this step after we switch our interface from mltable to uri_folder
     transformed_df = _convert_complex_columns_to_json_string(transformed_df)

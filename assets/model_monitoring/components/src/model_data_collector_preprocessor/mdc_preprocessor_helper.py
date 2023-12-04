@@ -4,26 +4,24 @@
 """Helper methods for MDC preprocessor Component."""
 
 import os
-import re
 from typing import List, Union
 from datetime import datetime, timedelta
-from azure.storage.filedatalake import FileSystemClient
-from azure.storage.blob import ContainerClient
+import json
+from azure.core.credentials import AzureSasCredential
+from azure.identity import ClientSecretCredential
 from pyspark.sql import SparkSession
-from shared_utilities.momo_exceptions import InvalidInputError
-from store_url import StoreUrl
+from model_data_collector_preprocessor.store_url import StoreUrl
 
 
-def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str,
-                  store_url: StoreUrl = None) -> List[str]:
+def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: StoreUrl = None,
+                  input_data: str = None) -> List[str]:
     """Get the available file list for the given time window under the input_data folder."""
-    if _is_local_path(input_data):
+    store_url = store_url or StoreUrl(input_data)
+    if store_url.is_local_path():
         # for local testing
-        return _get_local_file_list(start_datetime, end_datetime, input_data)
+        return _get_local_file_list(start_datetime, end_datetime, store_url._base_url)
 
     file_list = []
-    store_url = store_url or StoreUrl(input_data)
-
     if end_datetime.minute == 0 and end_datetime.second == 0:
         # if end_datetime is a whole hour, the last hour folder is not needed
         end_datetime -= timedelta(seconds=1)
@@ -37,53 +35,93 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, input_data: 
     return file_list
 
 
-def set_data_access_config(container_client: Union[FileSystemClient, ContainerClient], spark: SparkSession):
+def set_data_access_config(spark: SparkSession, input_data: str = None, store_url: StoreUrl = None):
     """
     Set data access relative spark configs.
 
     This is a special handling to access blob storage with abfs protocol, which enable Spark to access
     append blob in blob storage.
     """
-    if isinstance(container_client, FileSystemClient) or container_client is None:
-        # already a gen2 store, or local path, neither need to set config
+    def set_sas_config(sas_token):
+        account_name = store_url.account_name
+        container_name = store_url.container_name
+        spark.conf.set(f"fs.azure.account.auth.type.{account_name}.dfs.core.windows.net", "SAS")
+        spark.conf.set(f"fs.azure.sas.token.provider.type.{account_name}.dfs.core.windows.net",
+                       "com.microsoft.azure.synapse.tokenlibrary.ConfBasedSASProvider")
+        spark.conf.set(f"spark.storage.synapse.{container_name}.{account_name}.dfs.core.windows.net.sas", sas_token)
+
+    store_url = store_url or StoreUrl(input_data)
+    if store_url.is_local_path() or store_url.store_type == "dfs":
+        # already a gen2 store, local path, no need to set config
         return
 
-    container_name = container_client.container_name
-    account_name = container_client.account_name
-    sas_token = spark.conf.get(
-        f"spark.hadoop.fs.azure.sas.{container_name}.{account_name}.blob.core.windows.net", None)
-    if not sas_token:
-        raise InvalidInputError("Credential less datastore is not supported as input of the Model Monitoring for now.")
+    credential = store_url.get_credential()
+    if not credential:
+        # no credential, no need to set config
+        return
+    elif isinstance(credential, str):
+        # account_key
+        spark.conf.set(f"fs.azure.account.auth.type.{store_url.account_name}.dfs.core.windows.net", "SharedKey")
+        spark.conf.set(f"fs.azure.account.key.{store_url.account_name}.dfs.core.windows.net", credential)
+    elif isinstance(credential, AzureSasCredential):
+        # sas token
+        sas_token = credential.signature
+        set_sas_config(sas_token)
+    else:
+        # TODO fallback to spark conf "spark.hadoop.fs.azure.sas.my_container.my_account.blob.core.windows.net"
+        return
 
-    # in Synapse doc, it uses sc._jsc.hadoopConfiguration().set to set first two configs
-    # per testing, use spark.conf.set() also works
-    spark.conf.set(f"fs.azure.account.auth.type.{account_name}.dfs.core.windows.net", "SAS")
-    spark.conf.set(f"fs.azure.sas.token.provider.type.{account_name}.dfs.core.windows.net",
-                   "com.microsoft.azure.synapse.tokenlibrary.ConfBasedSASProvider")
-    spark.conf.set(f"spark.storage.synapse.{container_name}.{account_name}.dfs.core.windows.net.sas", sas_token)
+
+def serialize_credential(credential) -> str:
+    """Serialize the credential and broadcast to all executors."""
+    if isinstance(credential, str):
+        # account key
+        cred_dict = {"account_key": credential}
+    elif isinstance(credential, AzureSasCredential):
+        # sas token
+        cred_dict = {"sas_token": credential.signature}
+    elif isinstance(credential, ClientSecretCredential):
+        # service principal
+        cred_dict = {
+            "tenant_id": credential._tenant_id,
+            "client_id": credential._client_id,
+            "client_secret": credential._client_credential
+        }
+    else:
+        # TODO support credential pass through for credential less data
+        cred_dict = {}
+
+    return json.dumps(cred_dict)
 
 
-def read_json_content(path: str, credential_info: str) -> str:
-    """Read json content from path."""
-    if not path:
+def deserialize_credential(credential_value: str) -> Union[str, AzureSasCredential, ClientSecretCredential]:
+    """Deserialize the credential from broadcasted value."""
+    if not credential_value:
+        # no credential
         return None
 
-    if _is_local_path(path):
-        with open(path) as f:
-            json_str = f.read()
-        return json_str
+    try:
+        cred_dict = json.loads(credential_value)
+    except json.JSONDecodeError:
+        # unrecognized credential
+        return None
 
-    store_url = StoreUrl(path)
-    file_path = store_url.path
-    container_client = store_url.get_container_client(credential_info)
-    if isinstance(container_client, FileSystemClient):
-        with container_client.get_file_client(file_path) as file_client:
-            json_bytes = file_client.download_file().readall()
-    else:  # must be ContainerClient
-        with container_client.get_blob_client(file_path) as blob_client:
-            json_bytes = blob_client.download_blob().readall()
+    account_key = cred_dict.get("account_key")
+    if account_key:
+        return account_key
 
-    return json_bytes.decode()
+    sas_token = cred_dict.get("sas_token")
+    if sas_token:
+        return AzureSasCredential(sas_token)
+
+    tenant_id = cred_dict.get("tenant_id")
+    client_id = cred_dict.get("client_id")
+    client_secret = cred_dict.get("client_secret")
+    if tenant_id and client_id and client_secret:
+        return ClientSecretCredential(tenant_id, client_id, client_secret)
+
+    # unrecognized credential
+    return None
 
 
 def _get_local_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str) -> List[str]:
@@ -102,19 +140,3 @@ def _get_local_file_list(start_datetime: datetime, end_datetime: datetime, input
                     file_list.append(full_qualify_file)  # local winutils/hadoop package doesn't support wildcard
         cur_datetime += timedelta(hours=1)
     return file_list
-
-
-def _is_local_path(path: str) -> bool:
-    if not path:
-        return False
-    return os.path.isdir(path) or os.path.isfile(path) or path.startswith("file://") or path.startswith("/") \
-        or path.startswith(".") or re.match(r"^[a-zA-Z]:[/\\]", path)
-
-
-def _folder_exists(container_client: Union[ContainerClient, FileSystemClient], folder_path: str) -> bool:
-    """Check if hdfs folder exists."""
-    if isinstance(container_client, FileSystemClient):
-        return container_client.get_directory_client(folder_path).exists()
-    else:
-        blobs = container_client.list_blobs(name_starts_with=folder_path)
-        return any(blobs)

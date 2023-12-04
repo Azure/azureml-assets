@@ -17,6 +17,7 @@ from model_data_collector_preprocessor.spark_run import (
     _mdc_uri_folder_to_raw_spark_df, _extract_data_and_correlation_id, _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string
 )
+from model_data_collector_preprocessor.store_url import StoreUrl
 from shared_utilities.momo_exceptions import DataNotFoundError
 
 
@@ -118,11 +119,12 @@ class TestMDCSparkPreprocessor:
         print("working dir:", os.getcwd())
 
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        input_url = StoreUrl(f"{tests_path}/unit/raw_mdc_data/")
 
         df = _mdc_uri_folder_to_raw_spark_df(
             window_start_time,
             window_end_time,
-            f"{tests_path}/unit/raw_mdc_data/"
+            input_url
         )
         columns = ["correlationid"]
         if "data" in df.columns:
@@ -160,12 +162,13 @@ class TestMDCSparkPreprocessor:
 
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
         root_folder = f"{tests_path}/unit/raw_mdc_data/" if root_folder_exists else f"{tests_path}/unit/raw_mdc_data1/"
+        input_url = StoreUrl(root_folder)
 
         with pytest.raises(DataNotFoundError):
             df = _mdc_uri_folder_to_raw_spark_df(
                 window_start_time,
                 window_end_time,
-                root_folder,
+                input_url,
                 my_add_tags
             )
             df.show()
@@ -184,11 +187,12 @@ class TestMDCSparkPreprocessor:
         print("working dir:", os.getcwd())
 
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        input_url = StoreUrl(f"{tests_path}/unit/raw_mdc_data/")
 
         df = _mdc_uri_folder_to_raw_spark_df(
             window_start_time,
             window_end_time,
-            f"{tests_path}/unit/raw_mdc_data/",
+            input_url
         )
         df = df.select("correlationid", "data")
         print("preprocessed dataframe:")
@@ -404,7 +408,7 @@ class TestMDCSparkPreprocessor:
             (datetime(2023, 10, 11, 20), datetime(2023, 10, 11, 21), _preprocessed_schema, _preprocessed_data),
             # data and dataref mix
             # comment out the mix scenario due to package not found error from executor in remote run
-            # (datetime(2023, 10, 15, 17), datetime(2023, 10, 15, 18), _preprocessed_schema, _preprocessed_data),
+            (datetime(2023, 10, 15, 17), datetime(2023, 10, 15, 18), _preprocessed_schema, _preprocessed_data),
             # dataref only
             # dataref only is not supported yet due to lack of schema
             # (datetime(2023, 10, 16, 21), datetime(2023, 10, 16, 22), _preprocessed_schema, _preprocessed_data),
@@ -419,11 +423,12 @@ class TestMDCSparkPreprocessor:
 
         print("testing mdc_uri_folder_to_preprocessed_spark_df...")
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        input_url = StoreUrl(f"{tests_path}/unit/raw_mdc_data/")
 
         for extract_correlation_id in [True, False]:
             actual_df = _mdc_uri_folder_to_preprocessed_spark_df(
                 window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
-                f"{tests_path}/unit/raw_mdc_data/", extract_correlation_id, my_add_tags)
+                input_url, extract_correlation_id, my_add_tags)
             print("raw dataframe:")
             actual_df.show(truncate=False)
             actual_df.printSchema()
