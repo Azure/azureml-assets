@@ -2,23 +2,27 @@
 # Licensed under the MIT License.
 
 """File containing function for model selector component."""
+import shutil
 from pathlib import Path
 import argparse
 import json
 from argparse import Namespace
 import copy
 import yaml
+from typing import Optional, Dict, Any
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
-from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, HfModelTypes
+from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, MLFlowHFFlavourConstants
 
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
+
+from finetune_config import FinetuneConfig
 
 
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.model_selector.model_selector")
@@ -36,215 +40,6 @@ class ModelSelectorConstants:
 
     ASSET_ID_NOT_FOUND = "ASSET_ID_NOT_FOUND",
     MODEL_NAME_NOT_FOUND = "MODEL_NAME_NOT_FOUND"
-
-
-# user config passed along with model, will be prefered over default settings
-# NOTE Deleted `load_model_kwargs` for trust_remote_code=True as for falcon models
-# we are adding a hack and overriding :meth `from_pretrained` for Text, Token and
-# QnA auto classes in finetune.py.
-# Don't forget to add back the `load_model_kwargs` once the hack to override methods
-# is removed
-ACFT_CONFIG = {
-    "tiiuae/falcon-7b": {
-        "load_config_kwargs": {
-            "trust_remote_code": True,
-        },
-        "load_tokenizer_kwargs": {
-            # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
-            "pad_token": "<|endoftext|>",
-            "trust_remote_code": True,
-        },
-        "finetune_args": {},
-        "mlflow_ft_conf": {
-            "mlflow_hftransformers_misc_conf": {
-                "config_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_hf_load_kwargs": {
-                    "model_input_names": ["input_ids", "attention_mask"],
-                    "return_token_type_ids": False,
-                },
-                "model_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
-            },
-            "mlflow_save_model_kwargs": {
-                "extra_pip_requirements": ["einops"],
-            },
-        },
-    },
-    "tiiuae/falcon-40b": {
-        "load_config_kwargs": {
-            "trust_remote_code": True,
-        },
-        "load_tokenizer_kwargs": {
-            # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
-            "pad_token": "<|endoftext|>",
-            "trust_remote_code": True,
-        },
-        "finetune_args": {},
-        "mlflow_ft_conf": {
-            "mlflow_hftransformers_misc_conf": {
-                "config_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_hf_load_kwargs": {
-                    "model_input_names": ["input_ids", "attention_mask"],
-                    "return_token_type_ids": False,
-                },
-                "model_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
-            },
-            "mlflow_save_model_kwargs": {
-                "extra_pip_requirements": ["einops"],
-            },
-        },
-    },
-    HfModelTypes.REFINEDWEBMODEL: {
-        "load_config_kwargs": {
-            "trust_remote_code": True,
-        },
-        "load_tokenizer_kwargs": {
-            # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
-            "pad_token": "<|endoftext|>",
-            "trust_remote_code": True,
-        },
-        "finetune_args": {},
-        "mlflow_ft_conf": {
-            "mlflow_hftransformers_misc_conf": {
-                "config_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_hf_load_kwargs": {
-                    "model_input_names": ["input_ids", "attention_mask"],
-                    "return_token_type_ids": False,
-                },
-                "model_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
-            },
-            "mlflow_save_model_kwargs": {
-                "extra_pip_requirements": ["einops"],
-            },
-        },
-    },
-    HfModelTypes.FALCON: {
-        "load_config_kwargs": {
-            "trust_remote_code": True,
-        },
-        "load_tokenizer_kwargs": {
-            # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
-            "pad_token": "<|endoftext|>",
-            "trust_remote_code": True,
-        },
-        "finetune_args": {},
-        "mlflow_ft_conf": {
-            "mlflow_hftransformers_misc_conf": {
-                "config_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_hf_load_kwargs": {
-                    "model_input_names": ["input_ids", "attention_mask"],
-                    "return_token_type_ids": False,
-                },
-                "model_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-            },
-            "mlflow_save_model_kwargs": {
-                "extra_pip_requirements": ["einops"],
-            },
-        },
-    },
-    REFINED_WEB: {
-        "load_config_kwargs": {
-            "trust_remote_code": True,
-        },
-        "load_tokenizer_kwargs": {
-            # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
-            "pad_token": "<|endoftext|>",
-            "trust_remote_code": True,
-        },
-        "finetune_args": {},
-        "mlflow_ft_conf": {
-            "mlflow_hftransformers_misc_conf": {
-                "config_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_hf_load_kwargs": {
-                    "model_input_names": ["input_ids", "attention_mask"],
-                    "return_token_type_ids": False,
-                },
-                "model_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
-            },
-            "mlflow_save_model_kwargs": {
-                "extra_pip_requirements": ["einops"],
-            },
-        },
-    },
-    HfModelTypes.LLAMA: {
-        "load_tokenizer_kwargs": {
-            "add_eos_token": True,
-            "padding_side": "right"
-        },
-        "mlflow_ft_conf": {
-            "mlflow_hftransformers_misc_conf": {
-                "tokenizer_hf_load_kwargs": {
-                    "add_eos_token": True,
-                    "padding_side": "right",
-                },
-            }
-        }
-    },
-    MIXFORMER_SEQUENTIAL: {
-        "load_config_kwargs": {
-            "trust_remote_code": True,
-        },
-        "load_tokenizer_kwargs": {
-            # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
-            "pad_token": "<|endoftext|>",
-            "trust_remote_code": True,
-        },
-        "finetune_args": {},
-        "mlflow_ft_conf": {
-            "mlflow_hftransformers_misc_conf": {
-                "config_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_hf_load_kwargs": {
-                    # "model_input_names": ["input_ids", "attention_mask"],
-                    "return_token_type_ids": False,
-                },
-                "model_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                    "ignore_mismatched_sizes": True,
-                },
-                "hf_predict_module": "phi_predict"
-                # "tokenizer_config": {
-                #     "return_token_type_ids": False,
-                # },
-            },
-            "mlflow_save_model_kwargs": {
-                "extra_pip_requirements": ["einops"],
-            },
-        }
-    }
-}
 
 
 FLAVOR_MAP = {
@@ -348,8 +143,14 @@ def get_parser():
     return parser
 
 
-def model_selector(args: Namespace):
-    """Model selector."""
+def model_selector(args: Namespace) -> Dict[str, Any]:
+    """Model selector main.
+
+    :param args - component args
+    :type Namespace
+    :return Meta data saved by model selector component (model selector args)
+    :rtype Dict[str, Any]
+    """
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     if args.huggingface_id is not None:
@@ -367,120 +168,90 @@ def model_selector(args: Namespace):
     task_runner = get_task_runner(task_name=args.task_name)()
     task_runner.run_modelselector(**vars(args))
 
-    # load user provided finetune_config.json
-    ft_config_path = getattr(args, "finetune_config_path", None)
-    # if ft_config_path is not provided check inside pytorch/mlflow model folder
-    if ft_config_path is None:
-        model_path = getattr(args, "pytorch_model_path", None) \
-            if getattr(args, "pytorch_model_path", None) is not None else getattr(args, "mlflow_model_path", None)
-        if model_path is not None:
-            ft_model_config_path = Path(model_path, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)
-            if ft_model_config_path.is_file():
-                ft_config_path = str(ft_model_config_path)
-    if ft_config_path is not None:
-        try:
-            with open(ft_config_path, "r") as rptr:
-                ft_config_data = json.load(rptr)
-        except Exception as e:
-            logger.info(f"Unable to load {SaveFileConstants.ACFT_CONFIG_SAVE_PATH} - {e}")
-            ft_config_data = {}
-    else:
-        logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
-        ft_config_data = {}
-
     # read model selector args
-    # fetch model details
     model_selector_args_save_path = Path(args.output_dir, SaveFileConstants.MODEL_SELECTOR_ARGS_SAVE_PATH)
     with open(model_selector_args_save_path, "r") as rptr:
         model_selector_args = json.load(rptr)
-    model_name = model_selector_args.get("model_name", ModelSelectorConstants.MODEL_NAME_NOT_FOUND)
-    logger.info(f"Model name - {model_name}")
 
-    # fetch model_type
+    return model_selector_args
+
+
+def fetch_model_type(model_path: str) -> Optional[str]:
+    """Fetch the model type.
+
+    :param model_path - path to the model artifacts
+    :type str
+    :return model type
+    :rtype Optional[str]
+    """
     model_type = None
     try:
         # fetch model_type
-        model_base_path = Path(args.output_dir, model_name)
-        model_config_path = Path(model_base_path, "config.json")
-        if model_base_path.is_dir() and model_config_path.is_file():
+        model_config_path = Path(model_path, "config.json")
+        if model_config_path.is_file():
             with open(model_config_path, "r") as fp:
                 model_config = json.load(fp)
                 model_type = model_config.get("model_type", None)
         else:
-            logger.info(f"Model config.json does not exist for {model_name}")
+            logger.info(f"Model config.json does not exist for {model_path}")
     except Exception:
-        logger.info(f"Unable to fetch model_type for {model_name}")
+        logger.info(f"Unable to fetch model_type for {model_path}")
 
-    if model_type is not None and model_type in ACFT_CONFIG:
-        model_ft_config = copy.deepcopy(ACFT_CONFIG[model_type])
-        model_ft_config.update(ft_config_data)
-        ft_config_data = copy.deepcopy(model_ft_config)
-        logger.info(f"Updated FT config from model_type data - {ft_config_data}")
-    elif model_name is not None and model_name in ACFT_CONFIG:
-        model_ft_config = copy.deepcopy(ACFT_CONFIG[model_name])
-        model_ft_config.update(ft_config_data)
-        ft_config_data = copy.deepcopy(model_ft_config)
-        logger.info(f"Updated FT config from model_name data - {ft_config_data}")
-    else:
-        logger.info(f"Not updating FT config data - {ft_config_data}")
+    return model_type
 
-    # for base curated models forward MLmodel info
-    if getattr(args, "mlflow_model_path", None) is not None:
-        import shutil
-        from azureml.acft.contrib.hf.nlp.constants.constants import MLFlowHFFlavourConstants
-        mlflow_config_file = Path(args.mlflow_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
-        if mlflow_config_file.is_file():
-            shutil.copy(str(mlflow_config_file), args.output_dir)
-            logger.info("Copied MLmodel file to output dir")
 
-            # pass mlflow data to ft config if available
-            mlflow_ftconf_data = {}
-            mlflow_data = None
-            try:
-                with open(str(mlflow_config_file), "r") as fp:
-                    mlflow_data = yaml.safe_load(fp)
-                if mlflow_data and "flavors" in mlflow_data:
-                    for key in mlflow_data["flavors"]:
-                        if key in FLAVOR_MAP.keys():
-                            for key2 in mlflow_data["flavors"][key]:
-                                if key2 == "generator_config" and args.task_name == "TextGeneration":
-                                    generator_config = mlflow_data["flavors"][key]["generator_config"]
-                                    mlflow_ftconf_data_temp = {
-                                            "load_config_kwargs": copy.deepcopy(generator_config),
-                                            "mlflow_ft_conf": {
-                                                "mlflow_hftransformers_misc_conf": {
-                                                    "generator_config": copy.deepcopy(generator_config),
-                                                },
+def read_base_model_finetune_config(mlflow_model_path: str, task_name: str) -> Dict[str, Any]:
+    """Read the finetune config from base model.
+
+    :param mlflow_model_path - Path to the mlflow model
+    :type str
+    :param task_name - Finetune task
+    :type str
+    :return base model finetune config
+    :type Optional[Dict[str, Any]]
+    """
+    if mlflow_model_path is None:
+        return {}
+
+    mlflow_config_file = Path(mlflow_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
+    mlflow_ftconf_data = {}
+    if mlflow_config_file.is_file():
+        # pass mlflow data to ft config if available
+        mlflow_data = None
+        try:
+            with open(str(mlflow_config_file), "r") as fp:
+                mlflow_data = yaml.safe_load(fp)
+            if mlflow_data and "flavors" in mlflow_data:
+                for key in mlflow_data["flavors"]:
+                    if key in FLAVOR_MAP:
+                        for key2 in mlflow_data["flavors"][key]:
+                            if key2 == "generator_config" and task_name == "TextGeneration":
+                                generator_config = mlflow_data["flavors"][key]["generator_config"]
+                                mlflow_ftconf_data_temp = {
+                                        "load_config_kwargs": copy.deepcopy(generator_config),
+                                        "mlflow_ft_conf": {
+                                            "mlflow_hftransformers_misc_conf": {
+                                                "generator_config": copy.deepcopy(generator_config),
                                             },
-                                        }
-                                    mlflow_ftconf_data = deep_update(mlflow_ftconf_data_temp, mlflow_ftconf_data)
-                                elif key2 == "model_hf_load_kwargs":
-                                    model_hf_load_kwargs = mlflow_data["flavors"][key]["model_hf_load_kwargs"]
-                                    mlflow_ftconf_data_temp = {
-                                            "mlflow_ft_conf": {
-                                                "mlflow_hftransformers_misc_conf": {
-                                                    "model_hf_load_kwargs": copy.deepcopy(model_hf_load_kwargs),
-                                                },
+                                        },
+                                    }
+                                mlflow_ftconf_data = deep_update(mlflow_ftconf_data_temp, mlflow_ftconf_data)
+                            elif key2 == "model_hf_load_kwargs":
+                                model_hf_load_kwargs = mlflow_data["flavors"][key]["model_hf_load_kwargs"]
+                                mlflow_ftconf_data_temp = {
+                                        "mlflow_ft_conf": {
+                                            "mlflow_hftransformers_misc_conf": {
+                                                "model_hf_load_kwargs": copy.deepcopy(model_hf_load_kwargs),
                                             },
-                                        }
-                                    mlflow_ftconf_data = deep_update(mlflow_ftconf_data_temp, mlflow_ftconf_data)
-                ft_config_data = deep_update(mlflow_ftconf_data, ft_config_data)
-                logger.info(f"Updated FT config data - {ft_config_data}")
-            except Exception:
-                logger.info("Unable to read MLModel file")
-        else:
-            logger.info("MLmodel file does not exist")
+                                        },
+                                    }
+                                mlflow_ftconf_data = deep_update(mlflow_ftconf_data_temp, mlflow_ftconf_data)
+        except Exception:
+            logger.info("Error while updating base model finetune config from MlModel file.")
     else:
-        logger.info("mlflow_model_path is empty")
+        logger.info("MLmodel file does not exist")
 
-    # saving FT config
-    with open(str(Path(args.output_dir, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)), "w") as rptr:
-        json.dump(ft_config_data, rptr, indent=2)
-    logger.info(f"Saved {SaveFileConstants.ACFT_CONFIG_SAVE_PATH}")
-
-    # additional logging
-    logger.info(f"Model name: {getattr(args, 'model_name', None)}")
-    logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+    return mlflow_ftconf_data
 
 
 @swallow_all_exceptions(time_delay=60)
@@ -503,7 +274,49 @@ def main():
     # Adding flavor map to args
     setattr(args, "flavor_map", FLAVOR_MAP)
 
-    model_selector(args)
+    # run model selector
+    model_selector_args = model_selector(args)
+    model_name = model_selector_args.get("model_name", ModelSelectorConstants.MODEL_NAME_NOT_FOUND)
+    logger.info(f"Model name - {model_name}")
+    logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+
+    # load ft config and update ACFT config
+    # finetune_config_dict = load_finetune_config(args)
+    ft_config_obj = FinetuneConfig(
+        task_name=args.task_name,
+        model_name=model_name,
+        model_type=fetch_model_type(str(Path(args.output_dir, model_name))),
+        artifacts_finetune_config_path=str(
+            Path(
+                args.pytorch_model_path or args.mlflow_model_path or "",
+                SaveFileConstants.ACFT_CONFIG_SAVE_PATH
+            )
+        ),
+        io_finetune_config_path=args.finetune_config_path
+    )
+    finetune_config = ft_config_obj.get_finetune_config()
+
+    # read finetune config from base mlmodel file
+    # Priority order: io_finetune_config > artifacts_finetune_config > base_model_finetune_config
+    updated_finetune_config = deep_update(
+        read_base_model_finetune_config(
+            args.mlflow_model_path,
+            args.task_name
+        ),
+        finetune_config
+    )
+    logger.info(f"Updated finetune config with base model config: {updated_finetune_config}")
+    # save FT config
+    with open(str(Path(args.output_dir, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)), "w") as rptr:
+        json.dump(updated_finetune_config, rptr, indent=2)
+    logger.info(f"Saved {SaveFileConstants.ACFT_CONFIG_SAVE_PATH}")
+
+    # copy the mlmodel file to output dir. This is only applicable for mlflow model
+    if args.mlflow_model_path is not None:
+        mlflow_config_file = Path(args.mlflow_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
+        if mlflow_config_file.is_file():
+            shutil.copy(str(mlflow_config_file), args.output_dir)
+            logger.info("Copied MLmodel file to output dir")
 
 
 if __name__ == "__main__":
