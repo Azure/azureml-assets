@@ -43,7 +43,7 @@ def get_tokens(input_dirs: List[Path],
 
         elif asset_config.type in GENERIC_ASSET_TYPES:
             generic_config: assets.GenericAssetConfig = asset_config.extra_config_as_object()
-            if (generic_config and isinstance(generic_config.path, AzureBlobstoreAssetPath)):
+            if generic_config and isinstance(generic_config.path, AzureBlobstoreAssetPath):
                 add_token_info(generic_config.path, json_info)
 
     with open(json_output_path, 'w') as json_token_file:
