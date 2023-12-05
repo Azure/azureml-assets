@@ -668,33 +668,35 @@ class GitAssetPath(AssetPath):
 
 
 class ModelConfig(Config):
-    """Model Config class."""
+    """Model Config class.
 
-    """
     Example:
+        path: # should contain local_path or should contain package object
+            ##Local path example
+            type: local
+            uri: "../models/bert-base-uncased" # the local path to the model
 
-    path: # should contain local_path or should contain package object
-        ##Local path example
-        type: local
-        uri: "../models/bert-base-uncased" # the local path to the model
+            ## GIT path example
+            type: git
+            uri: https://huggingface.co/bert-base-uncased
+            branch: main
 
-        ## GIT path example
-        type: git
-        uri: https://huggingface.co/bert-base-uncased
-        branch: main
-
-        ## Azure Blobstore example
-        type: azureblob
-        storage_name: my_storage
-        container_name: my_container
-        container_path: foo/bar
-    publish:
-        description: model_card.md
-        type: mlflow_model
+            ## Azure Blobstore example
+            type: azureblob
+            storage_name: my_storage
+            container_name: my_container
+            container_path: foo/bar
+        publish:
+            description: model_card.md
+            type: mlflow_model
     """
 
     def __init__(self, file_name: Path):
-        """Initialize object for the Model Properties extracted from extra_config model.yaml."""
+        """Initialize object for the Model Properties extracted from extra_config model.yaml.
+
+        Args:
+            file_name (Path): Model config file to load and validate.
+        """
         super().__init__(file_name)
         self._path = None
         self._description = ""
@@ -987,6 +989,54 @@ class EnvironmentConfig(Config):
         return PublishVisibility(visibility) if visibility else None
 
 
+class GenericAssetConfig(Config):
+    """Generic Asset Config class.
+
+    Example:
+        # Remote storage path for asset data
+        path:
+            type: azureblob
+            storage_name: my_storage
+            container_name: my_container
+            container_path: foo/bar
+    """
+
+    def __init__(self, file_name: Path):
+        """Initialize object for the Generic Asset Properties extracted from storage.yaml.
+
+        Args:
+            file_name (Path): Storage config file to load and validate.
+        """
+        super().__init__(file_name)
+        self._path = None
+        self._validate()
+
+    def _validate(self):
+        """Validate the yaml file."""
+        Config._validate_exists('generic_asset.path', self.path)
+        Config._validate_enum('generic_asset.path.type', self.path.type.value, PathType, True)
+
+    @property
+    def path(self) -> AssetPath:
+        """Remote Storage Path (Azure Blob is the only supported type)."""
+        if self._path:
+            return self._path
+        path = self._yaml.get('path', {})
+        if path and path.get('type'):
+            path_type = path.get('type')
+            if path_type == PathType.AZUREBLOB.value:
+                self._path = AzureBlobstoreAssetPath(
+                    storage_name=path['storage_name'],
+                    container_name=path['container_name'],
+                    container_path=path['container_path'],
+                )
+            else:
+                raise NotImplementedError("Unrecognized path type.")
+        else:
+            return None
+        return self._path
+
+
 @total_ordering
 class AssetConfig(Config):
     """Asset config file.
@@ -1251,6 +1301,8 @@ class AssetConfig(Config):
                     self._extra_config = EnvironmentConfig(extra_config_with_path)
                 elif self.type == AssetType.MODEL:
                     self._extra_config = ModelConfig(extra_config_with_path)
+                elif self.type == AssetType.PROMPT:
+                    self._extra_config = GenericAssetConfig(extra_config_with_path)
                 else:
                     raise Exception(f"extra_config loading for asset type {self.type.value} is unimplemented")
         return self._extra_config
