@@ -18,7 +18,7 @@ import re
 import torch
 
 # set up transformers cache
-from azureml.acft.common_components.utils import transformer_utils
+from azureml.acft.common_components.utils import transformer_utils  # noqa: F401
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
 from azureml.acft.contrib.hf.nlp.constants.constants import (
