@@ -12,23 +12,18 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT
 )
 
-testdata = [('True'), ('False')]
-
 
 def _submit_mdc_preprocessor_job(
-    ml_client: MLClient,
-    get_component,
-    experiment_name,
-    extract_correlation_id,
-    input_data
+    ml_client: MLClient, get_component, experiment_name,
+    extract_correlation_id, input_data, start_time, end_time
 ):
     mdc_preprocessor_component = get_component(COMPONENT_NAME_MDC_PREPROCESSOR)
 
     @pipeline
     def _mdc_preprocessor_e2e():
         mdc_preprocessor_output: Spark = mdc_preprocessor_component(
-            data_window_start="2023-01-29T00:00:00Z",
-            data_window_end="2023-02-03T00:00:00Z",
+            data_window_start=start_time,
+            data_window_end=end_time,
             input_data=Input(path=input_data, mode="direct", type="uri_folder"),
             extract_correlation_id=extract_correlation_id
         )
@@ -61,17 +56,28 @@ def _submit_mdc_preprocessor_job(
 class TestMDCPreprocessorE2E:
     """Test class."""
 
-    @pytest.mark.parametrize("extract_correlation_id", testdata)
+    @pytest.mark.parametrize(
+        "input_data, start_time, end_time",
+        [
+            # traditional model
+            (DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT, "2023-01-29T00:00:00Z", "2023-02-03T00:00:00Z"),
+            # LLM model, disable until we generate the LLM logs in the gated test workspace
+            # (DATA_ASSET_LLM_INPUTS, "2023-10-24T22:00:00Z", "2023-10-24T23:00:00Z")
+        ]
+    )
     def test_mdc_preprocessor_successful(
-        self, ml_client: MLClient, get_component, test_suite_name, extract_correlation_id
+        self, ml_client: MLClient, get_component, test_suite_name, input_data, start_time, end_time
     ):
         """Test the happy path scenario for MDC preprocessor."""
-        pipeline_job = _submit_mdc_preprocessor_job(
-            ml_client,
-            get_component,
-            test_suite_name,
-            extract_correlation_id,
-            DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT
-        )
+        for extract_correlation_id in [True, False]:
+            pipeline_job = _submit_mdc_preprocessor_job(
+                ml_client,
+                get_component,
+                test_suite_name,
+                extract_correlation_id,
+                input_data,
+                start_time,
+                end_time
+            )
 
         assert pipeline_job.status == 'Completed'

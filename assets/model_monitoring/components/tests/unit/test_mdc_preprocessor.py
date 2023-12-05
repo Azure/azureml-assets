@@ -6,7 +6,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructField, StringType, DoubleType, LongType, BooleanType
 import pytest
-from unittest.mock import Mock
 import fsspec
 import shutil
 import json
@@ -19,8 +18,6 @@ from model_data_collector_preprocessor.run import (
     _raw_mdc_uri_folder_to_preprocessed_spark_df,
     _extract_data_and_correlation_id,
     mdc_preprocessor,
-    _convert_to_azureml_long_form,
-    _get_datastore_from_input_path,
 )
 from shared_utilities.momo_exceptions import DataNotFoundError
 
@@ -370,81 +367,3 @@ class TestMDCPreprocessor:
                 expected_pdf_ = expected_pdf.drop(columns=["correlationid"], inplace=False)
             actual_pdf = out_df.toPandas()
             assert_frame_equal(actual_pdf, expected_pdf_)
-
-    @pytest.mark.parametrize(
-        "url_str, converted",
-        [
-            ("https://my_account.blob.core.windows.net/my_container/path/to/file", True),
-            ("wasbs://my_container@my_account.blob.core.windows.net/path/to/file", True),
-            ("abfss://my_container@my_account.dfs.core.windows.net/path/to/file", True),
-            (
-                "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name"
-                "/datastores/my_datastore/paths/path/to/file",
-                True
-            ),
-            ("azureml://datastores/my_datastore/paths/path/to/file", True),
-            ("azureml:my_asset:my_version", False),
-            ("file://path/to/file", False),
-            ("path/to/file", False),
-        ]
-    )
-    def test_convert_to_azureml_long_form(self, url_str: str, converted: bool):
-        """Test convert_to_azureml_long_form()."""
-        converted_path = _convert_to_azureml_long_form(url_str, "my_datastore", "my_sub_id",
-                                                       "my_rg_name", "my_ws_name")
-        azureml_long = "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name" \
-            "/datastores/my_datastore/paths/path/to/file"
-        expected_path = azureml_long if converted else url_str
-        assert converted_path == expected_path
-
-    @pytest.mark.parametrize(
-        "input_path, expected_datastore",
-        [
-            (
-                "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name"
-                "/datastores/long_form_datastore/paths/path/to/file",
-                "long_form_datastore"
-            ),
-            ("azureml://datastores/short_form_datastore/paths/path/to/file", "short_form_datastore"),
-            ("file://path/to/folder", None),
-        ]
-    )
-    def test_get_datastore_from_input_path(self, input_path, expected_datastore):
-        """Test get_datastore_from_input_path()."""
-        datastore = _get_datastore_from_input_path(input_path)
-        assert datastore == expected_datastore
-
-    @pytest.mark.parametrize(
-        "input_path",
-        [
-            "wasbs://my_container@my_account.blob.core.windows.net/path/to/file",
-            "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
-        ]
-    )
-    def test_get_datastore_from_input_path_throw_error(self, input_path):
-        """Test get_datastore_from_input_path() with invalid input."""
-        with pytest.raises(ValueError):
-            _get_datastore_from_input_path(input_path)
-
-    @pytest.mark.parametrize(
-        "datastore, path, expected_datastore",
-        [
-            ("asset_datastore", None, "asset_datastore"),
-            (
-                None,
-                "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name"
-                "/datastores/long_form_datastore/paths/path/to/folder",
-                "long_form_datastore"
-            ),
-            (None, "azureml://datastores/short_form_datastore/paths/path/to/folder", "short_form_datastore"),
-            # (None, "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder", "workspaceblobstore")
-        ]
-    )
-    def test_get_datastore_from_input_path_with_asset_path(self, datastore, path, expected_datastore):
-        """Test get_datastore_from_input_path() with asset path."""
-        mock_data_asset = Mock(datastore=datastore, path=path)
-        mock_ml_client = Mock()
-        mock_ml_client.data.get.return_value = mock_data_asset
-
-        datastore = _get_datastore_from_input_path("azureml:my_asset:my_version", mock_ml_client)
-        assert datastore == expected_datastore
