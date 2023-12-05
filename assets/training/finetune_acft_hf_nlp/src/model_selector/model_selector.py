@@ -288,7 +288,7 @@ def main():
         model_type=fetch_model_type(str(Path(args.output_dir, model_name))),
         artifacts_finetune_config_path=str(
             Path(
-                args.pytorch_model_path or args.mlflow_model_path,
+                args.pytorch_model_path or args.mlflow_model_path or "",
                 SaveFileConstants.ACFT_CONFIG_SAVE_PATH
             )
         ),
