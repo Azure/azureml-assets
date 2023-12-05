@@ -104,7 +104,7 @@ class ResultConverters:
         elif self._model.is_aoai_model():
             use_ground_truth_input = True
         elif self._model.is_vision_oss_model():
-            use_ground_truth_input = False
+            use_ground_truth_input = True
         if use_ground_truth_input:
             request_payload = self._get_request(result)
             payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
