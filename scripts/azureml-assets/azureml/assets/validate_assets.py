@@ -432,23 +432,33 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
 
 def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_asset_config: assets.AssetConfig) -> int:
     """Check if current model asset and validated one matches and has a successful run."""
-    latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
-    if latest_model_config.type != assets.config.ModelType.MLFLOW:
-        logger.print(
-            f"Bypass validation for {latest_asset_config.name} as model type is: {latest_model_config.type.value}")
-        return 0
-
     try:
+        latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
         validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
+
+        if latest_model_config.type != assets.config.ModelType.MLFLOW:
+            logger.print(
+                f"Bypass validation for {latest_asset_config.name} as model type is: {latest_model_config.type.value}"
+            )
+            return 0
+
         if not validated_asset_config:
             logger.log_error(f"Validated asset config is None for {latest_asset_config.name}")
             return 1
 
         logger.print(f"Comparing validated and latest model asset files for {latest_asset_config.name}")
 
+        latest_model_path_uri = latest_model_config.path.uri
+        if (latest_model_config.path.type == assets.PathType.AZUREBLOB):
+            latest_model_path_uri = latest_model_config.path.uri.split("?")[0]
+        
+        validated_model_path_uri = validated_model_config.path.uri
+        if (latest_model_config.path.type == assets.PathType.AZUREBLOB):
+            validated_model_path_uri = validated_model_config.path.uri.split("?")[0]
+
         if not (
             latest_model_config.path.type == validated_model_config.path.type and
-            latest_model_config.path.uri == validated_model_config.path.uri and
+            latest_model_path_uri == validated_model_path_uri and
             latest_model_config.description == validated_model_config.description and
             latest_model_config.type == validated_model_config.type
         ):
@@ -456,10 +466,22 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
                 "Validated model config does not match with latest model. "
                 "Either last validation run for model had failed or its still running."
             )
-            logger.log_warning(f"latest_model_config: [{latest_model_config._yaml}]")
-            logger.log_warning(f"validated_model_config: [{validated_model_config._yaml}]")
+
+            if latest_model_config.type != validated_model_config.type:
+                logger.log_warning(f"latest_model_config_type: [{latest_model_config.type}]")
+                logger.log_warning(f"validated_model_config_type: [{validated_model_config.type}]")
+
+            if latest_model_config.path.type != validated_model_config.path.type:
+                logger.log_warning(f"latest_model_config_path_type: [{latest_model_config.path.type}]")
+                logger.log_warning(f"validated_model_config_path_type: [{validated_model_config.path.type}]")
+
+            if latest_model_path_uri != validated_model_path_uri:
+                logger.log_warning(f"latest_model_config_path_uri: [{latest_model_path_uri}]")
+                logger.log_warning(f"validated_model_config_path_uri: [{validated_model_path_uri}]")
+
             if latest_model_config.description != validated_model_config.description:
                 logger.log_warning("Description does not match, for latest and validated asset")
+
             return 1
 
         # check if spec has changes
