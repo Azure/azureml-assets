@@ -1,5 +1,5 @@
 name: batch_output_formatter
-version: 0.0.3
+version: 0.0.4.test1
 display_name: Batch Output Formatter
 is_deterministic: True
 type: command
@@ -7,7 +7,7 @@ description: Output Formatter for batch inference output
 inputs:
   model_type:
     type: string
-    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss', 'claude')
     optional: True
   batch_inference_output:
     type: uri_folder

@@ -1,6 +1,6 @@
 $schema: http://azureml/sdk-2-0/ParallelComponent.json
 name: batch_benchmark_score
-version: 0.0.3
+version: 0.0.4.test1
 display_name: Batch Benchmark Score
 is_deterministic: False
 type: parallel
@@ -11,7 +11,7 @@ inputs:
     description: The data to be split and scored in parallel.
   model_type:
     type: string
-    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss', 'claude')
     optional: True
   online_endpoint_url:
     type: string
