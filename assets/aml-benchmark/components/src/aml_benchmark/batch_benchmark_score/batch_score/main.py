@@ -41,7 +41,8 @@ from .utils.common.json_encoder_extensions import setup_encoder
 from .header_handlers.header_handler import HeaderHandler
 from .header_handlers.oss.oss_header_handler import OSSHeaderHandler
 from .header_handlers.oai.oai_header_handler import OAIHeaderHandler
-from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.claude.claude_header_handler import ClaudeHeaderHandler
+from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.claude.claude_header_handler import (
+    ClaudeHeaderHandler)
 
 
 par: parallel.Parallel = None

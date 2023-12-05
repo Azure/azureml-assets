@@ -10,57 +10,41 @@ from ddt import ddt, data
 from aml_benchmark.utils.online_endpoint.claude_online_endpoint import ClaudeOnlineEndpoint
 from aml_benchmark.batch_benchmark_score.batch_score.utils.exceptions import BenchmarkUserException
 from aml_benchmark.batch_benchmark_score.batch_score.utils.error_definitions import BenchmarkUserError
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 
 @ddt
 class TestClaudeOnlineEndpoint(unittest.TestCase):
 
     def setUp(self):
-        os.environ[ClaudeOnlineEndpoint.ACCESS_KEY] = 'MockAccessKey'
-        os.environ[ClaudeOnlineEndpoint.SECRET_KEY] = 'SuperSecretMockKey'
+        self.returned_cred = {'properties': {'credentials': {'keys': {
+            ClaudeOnlineEndpoint.ACCESS_KEY: 'MockAccessKey',
+            ClaudeOnlineEndpoint.SECRET_KEY: 'SuperSecretMockKey'
+        }}}}
         unittest.TestCase.setUp(self)
 
-    def test_no_region_raises(self):
+    @data(
+        'connections_name',
+        'aws_region',
+        'model_identifier',
+        'payload'
+    )
+    def test_no_param_raises(self, param):
         """Test that the exception is raised if no region is set."""
+        kwargs = dict(
+            workspace_name='mock_ws',
+            resource_group='mock_rg',
+            subscription_id='mock_subscription',
+            connections_name='mock_connection',
+            aws_region='us-east-1',
+            model_identifier='anthropic.claude-v2',
+            payload='foo')
+        kwargs[param] = None
         with self.assertRaises(BenchmarkUserException) as cm:
-            ClaudeOnlineEndpoint(
-                workspace_name='mock_ws',
-                resource_group='mock_rg',
-                subscription_id='mock_subscription',
-                aws_region=None,
-                model_identifier='anthropic.claude-v2',
-                payload='foo')
+            ClaudeOnlineEndpoint(**kwargs)
         self.assertEqual(cm.exception._azureml_error.error_definition.code,
                          BenchmarkUserError().code)
-        self.assertEqual(cm.exception.args[0], 'Please provide the aws_region parameter.')
-
-    def test_no_model_raises(self):
-        """Test that the exception is raised if no region is set."""
-        with self.assertRaises(BenchmarkUserException) as cm:
-            ClaudeOnlineEndpoint(
-                workspace_name='mock_ws',
-                resource_group='mock_rg',
-                subscription_id='mock_subscription',
-                aws_region='us-east-1',
-                model_identifier=None,
-                payload='foo')
-        self.assertEqual(cm.exception._azureml_error.error_definition.code,
-                         BenchmarkUserError().code)
-        self.assertEqual(cm.exception.args[0], 'Please provide the model_identifier parameter.')
-
-    def test_no_payload_raises(self):
-        """Test that the exception is raised if no region is set."""
-        with self.assertRaises(BenchmarkUserException) as cm:
-            ClaudeOnlineEndpoint(
-                workspace_name='mock_ws',
-                resource_group='mock_rg',
-                subscription_id='mock_subscription',
-                aws_region='us-east-1',
-                model_identifier='anthropic.claude-v2')
-        self.assertEqual(cm.exception._azureml_error.error_definition.code,
-                         BenchmarkUserError().code)
-        self.assertEqual(cm.exception.args[0], 'Please provide the payload parameter.')
+        self.assertEqual(cm.exception.args[0], f'Please provide the {param} parameter.')
 
     @data([ClaudeOnlineEndpoint.ACCESS_KEY],
           [ClaudeOnlineEndpoint.SECRET_KEY],
@@ -69,15 +53,20 @@ class TestClaudeOnlineEndpoint(unittest.TestCase):
     def test_no_key(self, keys_to_delete):
         """Assert that the exception is raised if the keys were not provided."""
         for k in keys_to_delete:
-            del os.environ[k]
+            del self.returned_cred['properties']['credentials']['keys'][k]
         with self.assertRaises(BenchmarkUserException) as cm:
-            ClaudeOnlineEndpoint(
-                workspace_name='mock_ws',
-                resource_group='mock_rg',
-                subscription_id='mock_subscription',
-                aws_region='us-east-1',
-                model_identifier='anthropic.claude-v2',
-                payload='foo')
+            with patch(
+                ('aml_benchmark.utils.online_endpoint.claude_online_endpoint'
+                 '.ClaudeOnlineEndpoint._get_connections_by_name'),
+                    return_value=self.returned_cred):
+                ClaudeOnlineEndpoint(
+                    workspace_name='mock_ws',
+                    resource_group='mock_rg',
+                    subscription_id='mock_subscription',
+                    connections_name='mock_connection',
+                    aws_region='us-east-1',
+                    model_identifier='anthropic.claude-v2',
+                    payload='foo')
         self.assertEqual(cm.exception._azureml_error.error_definition.code,
                          BenchmarkUserError().code)
         self.assertIn(ClaudeOnlineEndpoint.ACCESS_KEY, cm.exception.args[0])
@@ -85,39 +74,54 @@ class TestClaudeOnlineEndpoint(unittest.TestCase):
 
     def test_scoring_url(self):
         """Check that the returned url is correct."""
-        endpoint = ClaudeOnlineEndpoint(
-            workspace_name='mock_ws',
-            resource_group='mock_rg',
-            subscription_id='mock_subscription',
-            aws_region='us-east-1',
-            model_identifier='anthropic.claude-v2',
-            payload='foo')
-        self.assertEqual(endpoint.scoring_url,
-                         'https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-v2/invoke')
+        with patch(
+            ('aml_benchmark.utils.online_endpoint.claude_online_endpoint'
+             '.ClaudeOnlineEndpoint._get_connections_by_name'),
+                return_value=self.returned_cred):
+            endpoint = ClaudeOnlineEndpoint(
+                workspace_name='mock_ws',
+                resource_group='mock_rg',
+                subscription_id='mock_subscription',
+                connections_name='mock_connection',
+                aws_region='us-east-1',
+                model_identifier='anthropic.claude-v2',
+                payload='foo')
+            self.assertEqual(endpoint.scoring_url,
+                             'https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-v2/invoke')
 
     def test_hex_digest(self):
         """Test that we are correcly calculating the hexdigest of a payload."""
-        endpoint = ClaudeOnlineEndpoint(
-            workspace_name='mock_ws',
-            resource_group='mock_rg',
-            subscription_id='mock_subscription',
-            aws_region='us-east-1',
-            model_identifier='anthropic.claude-v2',
-            payload=('{"prompt":"\\n\\nHuman:story of two dogs\\n'
-                     '\\nAssistant:","max_tokens_to_sample":100}'))
+        with patch(
+            ('aml_benchmark.utils.online_endpoint.claude_online_endpoint'
+             '.ClaudeOnlineEndpoint._get_connections_by_name'),
+                return_value=self.returned_cred):
+            endpoint = ClaudeOnlineEndpoint(
+                workspace_name='mock_ws',
+                resource_group='mock_rg',
+                subscription_id='mock_subscription',
+                connections_name='mock_connection',
+                aws_region='us-east-1',
+                model_identifier='anthropic.claude-v2',
+                payload=('{"prompt":"\\n\\nHuman:story of two dogs\\n'
+                         '\\nAssistant:","max_tokens_to_sample":100}'))
         self.assertEqual(endpoint.payload_hash,
                          '09b8e66f6aea38a57a8cf0dd388f168f4c76a9c9e5b63afbed46c1553613211b')
 
     def test_canonical_headers(self):
         """Test that canonical headers are being returned correctly."""
-        endpoint = ClaudeOnlineEndpoint(
-            workspace_name='mock_ws',
-            resource_group='mock_rg',
-            subscription_id='mock_subscription',
-            aws_region='us-east-1',
-            model_identifier='anthropic.claude-v2',
-            payload=('{"prompt":"\\n\\nHuman:story of two dogs\\n'
-                     '\\nAssistant:","max_tokens_to_sample":100}'))
+        with patch(
+            ('aml_benchmark.utils.online_endpoint.claude_online_endpoint'
+             '.ClaudeOnlineEndpoint._get_connections_by_name'),
+                return_value=self.returned_cred):
+            endpoint = ClaudeOnlineEndpoint(
+                workspace_name='mock_ws',
+                resource_group='mock_rg',
+                subscription_id='mock_subscription',
+                connections_name='mock_connection',
+                aws_region='us-east-1',
+                model_identifier='anthropic.claude-v2',
+                payload=('{"prompt":"\\n\\nHuman:story of two dogs\\n'
+                         '\\nAssistant:","max_tokens_to_sample":100}'))
         expected_headers = {
             'accept': 'application/json',
             'host': 'bedrock-runtime.us-east-1.amazonaws.com',
@@ -142,14 +146,19 @@ class TestClaudeOnlineEndpoint(unittest.TestCase):
             ('aml_benchmark.utils.online_endpoint.claude_online_endpoint'
              '.ClaudeOnlineEndpoint._get_date_and_time'),
                 return_value=('20231201T192721Z', '20231201')):
-            endpoint = ClaudeOnlineEndpoint(
-                workspace_name='mock_ws',
-                resource_group='mock_rg',
-                subscription_id='mock_subscription',
-                aws_region='us-east-1',
-                model_identifier='anthropic.claude-v2',
-                payload=('{"prompt":"\\n\\nHuman:story of two dogs\\n'
-                         '\\nAssistant:","max_tokens_to_sample":100}'))
+            with patch(
+                ('aml_benchmark.utils.online_endpoint.claude_online_endpoint'
+                 '.ClaudeOnlineEndpoint._get_connections_by_name'),
+                    return_value=self.returned_cred):
+                endpoint = ClaudeOnlineEndpoint(
+                    workspace_name='mock_ws',
+                    resource_group='mock_rg',
+                    subscription_id='mock_subscription',
+                    connections_name='mock_connection',
+                    aws_region='us-east-1',
+                    model_identifier='anthropic.claude-v2',
+                    payload=('{"prompt":"\\n\\nHuman:story of two dogs\\n'
+                             '\\nAssistant:","max_tokens_to_sample":100}'))
             headers = endpoint.get_endpoint_authorization_header()
         self.assertIn('Authorization', headers.keys())
         self.assertEqual(headers['Authorization'],

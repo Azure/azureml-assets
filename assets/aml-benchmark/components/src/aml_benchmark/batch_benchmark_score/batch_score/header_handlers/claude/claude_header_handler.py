@@ -33,6 +33,8 @@ class ClaudeHeaderHandler(HeaderHandler):
         )
         self._aws_region = match_regex.group('aws_region')
         self._model_identifier = match_regex.group('model_identifier')
+        self._model = online_endpoint_model
+        self._connection_name = connections_name
 
     def get_headers(self, additional_headers: Dict[str, Any] = None, payload: Optional[Any] = None) -> Dict[str, Any]:
         """
@@ -47,9 +49,11 @@ class ClaudeHeaderHandler(HeaderHandler):
             workspace_name=None,
             resource_group=None,
             subscription_id=None,
+            connections_name=self._connection_name,
             aws_region=self._aws_region,
             model_identifier=self._model_identifier,
-            payload=payload
+            payload=payload,
+            online_endpoint_model=self._model
         )
         headers = endpoint.get_endpoint_authorization_header()
         if additional_headers:

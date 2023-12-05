@@ -21,22 +21,19 @@ class ClaudeOnlineEndpoint(OnlineEndpoint):
     """
     The class for Claude Online endpoint.
 
-    **Note:** Please see last three parameters in the list, the rest is not relevant
-              to external endpoints.
-    Plaese provide AccessKey and SecretKey as an environmental variables.
+    **Note:** To use the Claude end point, please create a connection in the Azure workspoace, with
+    at least two secrets: AccessKey and SecretKey.
     For reference see https://docs.aws.amazon.com/IAM/latest/UserGuide/create-signed-request.html
-    :param workspace_name: The name of the workspace
-                           (may be any string, it is not relevant to external endpoints)
-    :param resource_group: The name of the resource group
-                           (may be any string, it is not relevant to external endpoints)
+    :param workspace_name: The name of the workspace, containing connections with AccessKey and SecretKey.
+    :param resource_group: The name of the resource group with workspace,
+                           containing connections with AccessKey and SecretKey.
     :param subscription_id: The Azure subscription ID.
-                           (may be any string, it is not relevant to external endpoints)
     :param online_endpoint_url: Endpoint url (not used)
     :param endpoint_name: Endpoint name (not used)
     :param deployment_name: The deployment name (not used)
     :param sku: Compute sku (not used)
     :param online_endpoint_model: Online endpoint model (not used)
-    :param connections_name: Connection name (not used)
+    :param connections_name: The workspcase connection name used ti retrieve the secrets.
     :param aws_region: The region, where the endpoint is located, for example, 'us-east-1'
     :param model_identifier: The model to be used, for example 'anthropic.claude-v2'
     :param payload: The request payload i.e. prompt. To get Authentication header it needs to be hashed.
@@ -75,6 +72,7 @@ class ClaudeOnlineEndpoint(OnlineEndpoint):
             connections_name
         )
         for name, param in (
+            ('connections_name', connections_name),
             ('aws_region', aws_region),
             ('model_identifier', model_identifier),
                 ('payload', payload)):
@@ -87,16 +85,7 @@ class ClaudeOnlineEndpoint(OnlineEndpoint):
         self._aws_region = aws_region
         self._model_identifier = model_identifier
         self._payload_sha_256 = ClaudeOnlineEndpoint._sha256_sum(payload)
-        self._access_key = os.environ.get(ClaudeOnlineEndpoint.ACCESS_KEY)
-        self._secret_key = os.environ.get(ClaudeOnlineEndpoint.SECRET_KEY)
-        if not self._access_key or not self._secret_key:
-            raise BenchmarkUserException._with_error(
-                AzureMLError.create(
-                    BenchmarkUserError,
-                    error_details=("AccessKey or SecretKey are empty"
-                                   f"Please provide AccessKey in {ClaudeOnlineEndpoint.ACCESS_KEY} "
-                                   f"and SecretKey in {ClaudeOnlineEndpoint.SECRET_KEY} environmental variables."))
-            )
+        self._access_key, self._secret_key = self._get_keys_from_connections()
         self._aws_region = aws_region
 
     @staticmethod
@@ -173,6 +162,22 @@ class ClaudeOnlineEndpoint(OnlineEndpoint):
         """
         date_time = datetime.now(tz=UTC).strftime('%Y%m%dT%H%M%SZ')
         return date_time, date_time[:8]
+
+    def _get_keys_from_connections(self) -> Tuple[str, str]:
+        """Get the authorization header."""
+        resp = self._get_connections_by_name()
+        try:
+            credentials = resp['properties'].get('credentials')['keys']
+            return credentials[ClaudeOnlineEndpoint.ACCESS_KEY], credentials[ClaudeOnlineEndpoint.SECRET_KEY]
+        except KeyError:
+            raise BenchmarkUserException._with_error(
+                AzureMLError.create(
+                    BenchmarkUserError,
+                    error_details=("AccessKey or SecretKey are empty"
+                                   f"Please provide AccessKey in {ClaudeOnlineEndpoint.ACCESS_KEY} "
+                                   f"and SecretKey in {ClaudeOnlineEndpoint.SECRET_KEY} the connections "
+                                   "of the workspace."))
+            )
 
     def get_endpoint_authorization_header(self) -> Dict[str, str]:
         """
