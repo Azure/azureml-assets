@@ -22,9 +22,7 @@ class ClaudeHeaderHandler(HeaderHandler):
         endpoint_subscription: str = None, endpoint_resource_group: str = None, deployment_name: str = None,
         connections_name: str = None, online_endpoint_model: OnlineEndpointModel = None
     ) -> None:
-        '''
-        Constructor
-        '''
+        """Init method."""
         super().__init__(
             token_provider, user_agent_segment, batch_pool, quota_audience, additional_headers)
         match_regex = re.search(
@@ -44,7 +42,6 @@ class ClaudeHeaderHandler(HeaderHandler):
         :param payload: the payload to be sent to the endpoint.
         :return: The headers for scoring on the endpoint.
         """
-
         endpoint = ClaudeOnlineEndpoint(
             workspace_name=None,
             resource_group=None,
