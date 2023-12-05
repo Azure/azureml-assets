@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.19 (2023-12-04)
+### 🐛 Bugs Fixed
+- [#1875](https://github.com/Azure/azureml-assets/pull/1875) Generate SAS tokens for prompts in addition to models
+
 ## 1.16.18 (2023-11-20)
 ### 🐛 Bugs Fixed
 - [#1760](https://github.com/Azure/azureml-assets/pull/1760) Generate SAS tokens for multiple models and output in JSON
