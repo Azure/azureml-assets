@@ -448,9 +448,17 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
 
         logger.print(f"Comparing validated and latest model asset files for {latest_asset_config.name}")
 
+        latest_model_path_uri = latest_model_config.path.uri
+        if (latest_model_config.path.type == assets.PathType.AZUREBLOB):
+            latest_model_path_uri = latest_model_config.path.uri.split("?")[0]
+        
+        validated_model_path_uri = validated_model_config.path.uri
+        if (latest_model_config.path.type == assets.PathType.AZUREBLOB):
+            validated_model_path_uri = validated_model_config.path.split("?")[0]
+
         if not (
             latest_model_config.path.type == validated_model_config.path.type and
-            latest_model_config.path.uri == validated_model_config.path.uri and
+            latest_model_path_uri == validated_model_path_uri and
             latest_model_config.description == validated_model_config.description and
             latest_model_config.type == validated_model_config.type
         ):
@@ -467,12 +475,13 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
                 logger.log_warning(f"latest_model_config_path_type: [{latest_model_config.path.type}]")
                 logger.log_warning(f"validated_model_config_path_type: [{validated_model_config.path.type}]")
 
-            if latest_model_config.path.uri != validated_model_config.path.uri:
-                logger.log_warning(f"latest_model_config_path_uri: [{latest_model_config.path.uri}]")
-                logger.log_warning(f"validated_model_config_path_uri: [{validated_model_config.path.uri}]")
+            if latest_model_path_uri != validated_model_path_uri:
+                logger.log_warning(f"latest_model_config_path_uri: [{latest_model_path_uri}]")
+                logger.log_warning(f"validated_model_config_path_uri: [{validated_model_path_uri}]")
 
             if latest_model_config.description != validated_model_config.description:
                 logger.log_warning("Description does not match, for latest and validated asset")
+
             return 1
 
         # check if spec has changes
