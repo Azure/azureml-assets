@@ -6,7 +6,6 @@ from typing import Dict, Optional, Tuple
 
 import hashlib
 import hmac
-import os
 
 from datetime import datetime, UTC
 
