@@ -130,6 +130,14 @@ inputs:
     type: uri_file
     optional: True
     description: The endpoint configuration file. If provided, the value will override the input value.
+  authentication_type:
+    type: string
+    optional: False
+    description: Authentication type for end endpoint.
+    default: azureml_workspace_connection
+    enum:
+      - azureml_workspace_connection
+      - managed_identity
 outputs:
   predictions:
     type: uri_file
