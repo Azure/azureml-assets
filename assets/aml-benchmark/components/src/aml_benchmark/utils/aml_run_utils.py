@@ -123,10 +123,19 @@ def get_run_name(run: Run) -> str:
     return run.get_details().get("properties", {}).get("azureml.moduleName")
 
 
+def get_root_run() -> Run:
+    """Get the root run."""
+    current_run = Run.get_context()
+    pipeline_run = current_run
+    while pipeline_run.parent is not None:
+        pipeline_run = pipeline_run.parent
+        logger.info(f"using upper level runs {pipeline_run.id}")
+    return pipeline_run
+
+
 def get_dependent_run(dependent_step) -> Optional[Run]:
     """Get the dependent run."""
-    current_run = Run.get_context()
-    pipeline_run = current_run.parent.parent.parent
+    pipeline_run = get_root_run()
     logger.info(f"Checking pipeline run {pipeline_run.id}.")
     for run in pipeline_run.get_children():
         run_name = get_run_name(run)
@@ -134,3 +143,10 @@ def get_dependent_run(dependent_step) -> Optional[Run]:
         if run_name == dependent_step:
             return run
     return None
+
+
+def get_current_step_raw_input_value(input_asset_name: str) -> Optional[str]:
+    """Get the input asset."""
+    current_run = Run.get_context()
+    step = get_root_run().get_details()['runDefinition']['Jobs'].get(current_run.display_name, {})
+    return step.get('inputs', {}).get(input_asset_name, {}).get('value')

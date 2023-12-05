@@ -11,7 +11,11 @@ from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from azureml._common._error_definition.azureml_error import AzureMLError
 
 from ..logging import get_logger
-from ..aml_run_utils import get_dependent_run
+from ..aml_run_utils import (
+    get_dependent_run,
+    get_run_name,
+    get_current_step_raw_input_value
+)
 
 
 logger = get_logger(__name__)
@@ -59,20 +63,21 @@ class OnlineEndpointModel:
     def model_version(self) -> str:
         """Get the model version."""
         if self._model_version is None and self.is_finetuned:
-            logger.warning('Model version is None. Trying to get the latest one.')
+            logger.warning('Model version is None. Trying to get one from the run.')
             finetuned_run_id = None
-            if self._model_depend_step is not None:
-                finetuned_run = get_dependent_run(self._model_depend_step)
+            if self.model_depend_step is not None:
+                finetuned_run = get_dependent_run(self.model_depend_step)
                 ws = Run.get_context().experiment.workspace
-                finetuned_run_id = finetuned_run.id
+                finetuned_run_id = self._get_model_registered_run_id(finetuned_run)
+                logger.info(f"Finetuned run id is {finetuned_run_id}")
             models = list(Model.list(ws, self._model_name, run_id=finetuned_run_id))
             if len(models) == 0:
                 raise BenchmarkUserException._with_error(
                     AzureMLError.create(
                         BenchmarkUserError,
                         error_details=f"No associate version with model name {self._model_name} "
-                                      f"in step {self._model_depend_step} can be found. Please make sure the finetuned step"
-                                      f" {self._model_depend_step} has successfully registered the model."
+                                      f"in step {self.model_depend_step} can be found. Please make sure the finetuned step"
+                                      f" {self.model_depend_step} has successfully registered the model."
                     )
                 )
             self._model_version = str(models[0].version)
@@ -80,6 +85,15 @@ class OnlineEndpointModel:
                 logger.warning(
                     f"Multiple models with name {self._model_name} are found. Use first one with version  {self._model_version} now.")
         return self._model_version
+
+    @property
+    def model_depend_step(self) -> str:
+        """Get the model depend step."""
+        if self._model_depend_step is None:
+            raw_input = get_current_step_raw_input_value('wait_input')
+            if raw_input:
+                self._model_depend_step = raw_input.split('.')[2]
+        return self._model_depend_step
 
     @property
     def model_type(self) -> str:
@@ -133,3 +147,13 @@ class OnlineEndpointModel:
             if base_url in endpoint_url:
                 return 'oai'
         return 'oss'
+
+    @staticmethod
+    def _get_model_registered_run_id(finetuned_run: Run) -> str:
+        """Get the run id of the step that registered the model."""
+        step_runs = list(finetuned_run.get_children())[0].get_children()
+        for s in step_runs:
+            if get_run_name(s) == 'openai_completions_finetune':
+                if s.properties['azureml.isreused'].lower() == 'true':
+                    return s.properties['azureml.rootpipelinerunid']
+        return finetuned_run.id
