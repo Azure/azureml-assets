@@ -454,7 +454,7 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
         
         validated_model_path_uri = validated_model_config.path.uri
         if (latest_model_config.path.type == assets.PathType.AZUREBLOB):
-            validated_model_path_uri = validated_model_config.path.split("?")[0]
+            validated_model_path_uri = validated_model_config.path.uri.split("?")[0]
 
         if not (
             latest_model_config.path.type == validated_model_config.path.type and
