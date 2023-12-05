@@ -2,15 +2,14 @@
 # Licensed under the MIT License.
 
 """Tests for claude endpoint."""
-import os
 import unittest
 
 from ddt import ddt, data
+from unittest.mock import patch
 
 from aml_benchmark.utils.online_endpoint.claude_online_endpoint import ClaudeOnlineEndpoint
 from aml_benchmark.batch_benchmark_score.batch_score.utils.exceptions import BenchmarkUserException
 from aml_benchmark.batch_benchmark_score.batch_score.utils.error_definitions import BenchmarkUserError
-from unittest.mock import patch, MagicMock
 
 
 @ddt
