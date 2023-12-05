@@ -434,7 +434,8 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
     """Check if current model asset and validated one matches and has a successful run."""
     latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
     if latest_model_config.type != assets.config.ModelType.MLFLOW:
-        logger.print(f"Bypass validation for {latest_asset_config.name} as model type is: {latest_model_config.type.value}")
+        logger.print(
+            f"Bypass validation for {latest_asset_config.name} as model type is: {latest_model_config.type.value}")
         return 0
 
     try:
