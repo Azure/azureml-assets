@@ -228,7 +228,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml://registries/azureml-preview-test1/components/convert_model_to_mlflow/versions/0.0.19.oss
+    component: C:\\Users\\bhavanatumma\\source\\azureml-assets\\assets\\training\\model_management\\components\\convert_model_to_mlflow\\spec.yaml # azureml://registries/azureml-preview-test1/components/convert_model_to_mlflow/versions/0.0.19.oss
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

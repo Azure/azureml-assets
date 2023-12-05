@@ -210,13 +210,13 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                 trust_remote_code_val = True
 
             # handle OSS model loading with device map
-            try:
-                model_pipeline = transformers.pipeline(task=self._task, model=model, device_map="auto",
-                                                       trust_remote_code=trust_remote_code_val)
-                logger.info("OSS model loaded with device_map auto")
-            except Exception as e:
-                logger.error("OSS Model load failed with exception: {}, reloading without device_map auto".format(e))
-                model_pipeline = transformers.pipeline(task=self._task, model=model, trust_remote_code=trust_remote_code_val)
+            # try:
+            #     model_pipeline = transformers.pipeline(task=self._task, model=model, device_map="auto",
+            #                                            trust_remote_code=trust_remote_code_val)
+            #     logger.info("OSS model loaded with device_map auto")
+            # except Exception as e:
+            #     logger.error("OSS Model load failed with exception: {}, reloading without device_map auto".format(e))
+            model_pipeline = transformers.pipeline(task=self._task, model=model, trust_remote_code=trust_remote_code_val)
 
                 # pass in signature for a text-classification model
             if self._task == SupportedNLPTasks.TEXT_CLASSIFICATION.value:
@@ -227,7 +227,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
             mlflow.transformers.save_model(
                 transformers_model=model_pipeline,
-                conda_env=curated_conda_env,
+                conda_env=None, # curated_conda_env,
                 code_paths=code_paths,
                 signature=self._signatures,
                 input_example=input_example,
