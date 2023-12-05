@@ -17,6 +17,8 @@ import re
 
 import torch
 
+# set up transformers cache
+from azureml.acft.common_components.utils import transformer_utils
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -67,6 +69,7 @@ DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.j
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
 MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
+MISTRAL = "mistral"
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -183,6 +186,7 @@ DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_TASK
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
+    MISTRAL
 ]
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
@@ -871,6 +875,13 @@ def finetune(args: Namespace):
             ft_config = json.load(rptr)
             setattr(args, "finetune_config", ft_config)
             logger.info("Added finetune config to `component_args`")
+            # Read the lora parameters from finetune config
+            if "lora_algo" in ft_config:
+                logger.info(f'Setting lora_algo to: {ft_config.get("lora_algo")}')
+                setattr(args, "lora_algo", ft_config.get("lora_algo"))
+            if "lora_target_modules" in ft_config:
+                logger.info(f'Setting lora_target_modules to: {ft_config.get("lora_target_modules")}')
+                setattr(args, "lora_target_modules", ft_config.get("lora_target_modules"))
     else:
         logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
         setattr(args, "finetune_config", {})
