@@ -14,8 +14,10 @@ from aml_benchmark.batch_benchmark_score.batch_score.utils.error_definitions imp
 
 @ddt
 class TestClaudeOnlineEndpoint(unittest.TestCase):
+    """Tests for ClaudeOnlineEndpoint."""
 
     def setUp(self):
+        """Set variables for unittest."""
         self.returned_cred = {'properties': {'credentials': {'keys': {
             ClaudeOnlineEndpoint.ACCESS_KEY: 'MockAccessKey',
             ClaudeOnlineEndpoint.SECRET_KEY: 'SuperSecretMockKey'

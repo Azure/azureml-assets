@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests for OnlineEndpointModel"""
+"""Tests for OnlineEndpointModel."""
 
 import unittest
 from ddt import ddt, data, unpack
@@ -10,7 +10,7 @@ from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndp
 
 @ddt
 class TestOnlineEndpointModel(unittest.TestCase):
-    """Tests for OnlineEndpointModel"""
+    """Tests for OnlineEndpointModel."""
 
     @data(['https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-v2/invoke', '2'],
           ['https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-v2.1/invoke', '2.1'])

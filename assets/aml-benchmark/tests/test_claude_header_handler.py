@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests for ClaudeHeaderHandler"""
+"""Tests for ClaudeHeaderHandler."""
 
 import unittest
 
@@ -13,7 +13,7 @@ from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndp
 
 
 class TestClaudeHeaderHandler(unittest.TestCase):
-    """Tests for ClaudeHeaderHandler"""
+    """Tests for ClaudeHeaderHandler."""
 
     def test_claude_header_handler(self):
         """Test that ClaudeHeaderHandler is created with the correct fields."""
