@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.20 (2023-12-5)
+### 🐛 Bugs Fixed
+- [#1871](https://github.com/Azure/azureml-assets/pull/1871) Update model validations criteria
+
 ## 1.16.18 (2023-11-20)
 ### 🐛 Bugs Fixed
 - [#1760](https://github.com/Azure/azureml-assets/pull/1760) Generate SAS tokens for multiple models and output in JSON

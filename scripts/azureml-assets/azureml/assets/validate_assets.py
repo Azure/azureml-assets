@@ -432,14 +432,14 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
 
 def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_asset_config: assets.AssetConfig) -> int:
     """Check if current model asset and validated one matches and has a successful run."""
+    latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
+    if latest_model_config.type != assets.config.ModelType.MLFLOW:
+        logger.print(
+            f"Bypass validation for {latest_asset_config.name} as model type is: {latest_model_config.type.value}")
+        return 0
+
     try:
-        latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
-        if latest_asset_config.type != assets.config.ModelType.MLFLOW.value:
-            logger.print("Bypass validation for non-mlflow model")
-
         validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
-
-        # latest_asset_config is expected to be non null
         if not validated_asset_config:
             logger.log_error(f"Validated asset config is None for {latest_asset_config.name}")
             return 1
