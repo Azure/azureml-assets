@@ -13,14 +13,15 @@ dependencies:
   - azure-ml-component==0.9.18.post2
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-contrib-services=={{latest-pypi-version}}
-  - torch-tb-profiler~=0.4.0
   - azureml-automl-common-tools=={{latest-pypi-version}}
   - azureml-inference-server-http~=0.8.0
   - inference-schema~=1.5.0
-  - regex
   - opencv-python-headless
+  - pyarrow>=14.0.1
   - pycocotools
   - Pillow
+  - regex
   - torch
+  - torch-tb-profiler~=0.4.0
   - torchvision
   - git+https://github.com/facebookresearch/segment-anything.git
