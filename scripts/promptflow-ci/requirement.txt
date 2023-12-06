@@ -5,3 +5,4 @@ bs4
 azureml-core
 promptflow
 azure-ai-ml
+azure-cli-core
