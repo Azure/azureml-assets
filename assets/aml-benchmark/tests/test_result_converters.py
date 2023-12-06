@@ -4,6 +4,7 @@
 """Test the functionality of the prompt factory which powers the prompt crafter."""
 
 import json
+import hashlib
 import os
 import pytest
 import re
@@ -14,7 +15,6 @@ import pandas as pd
 
 from .test_utils import get_src_dir
 from pandas._testing.asserters import assert_frame_equal
-import hashlib
 from aml_benchmark.batch_inference_preparer.endpoint_data_preparer import EndpointDataPreparer
 
 
