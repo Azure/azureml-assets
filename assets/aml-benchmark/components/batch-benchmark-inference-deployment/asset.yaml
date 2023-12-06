@@ -1,8 +1,0 @@
-type: component
-spec: spec.yaml
-categories: ["Benchmarking"]
-test:
-  pytest:
-    enabled: true
-    pip_requirements: ../../requirements.txt
-    tests_dir: ../../tests
