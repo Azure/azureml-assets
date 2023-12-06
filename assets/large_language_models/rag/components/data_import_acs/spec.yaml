@@ -17,18 +17,18 @@ description: |
 inputs:
   num_docs :
     type: integer
-      description: "Number of documents to import from ACS instance"
-      default: 50
-    acs_config:
-      type: string
-      description: "Values for connecting to ACS instance. Required keys: 'endpoint', 'endpoint_key_name', 'index_name', 'content_key', 'title_key'. 'content_key' defaults to 'content' and 'title_key' defaults to 'title'"
-    use_existing:
-      type: string
-      description: "Use an existing ACS which is already embedded - directly output MLIndex config"
-      default: "False"
-      enum:
-        - "True"
-        - "False"
+    description: "Number of documents to import from ACS instance"
+    default: 50
+  acs_config:
+    type: string
+    description: "Values for connecting to ACS instance. Required keys: 'endpoint', 'endpoint_key_name', 'index_name', 'content_key', 'title_key'. 'content_key' defaults to 'content' and 'title_key' defaults to 'title'"
+  use_existing:
+    type: string
+    description: "Use an existing ACS which is already embedded - directly output MLIndex config"
+    default: "False"
+    enum:
+      - "True"
+      - "False"
 
 outputs:
   output_data:
