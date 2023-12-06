@@ -1,6 +1,6 @@
 azureml-acft-accelerator==0.0.37
 azureml-evaluate-mlflow==0.0.37
-azureml-acft-common-components==0.0.37
+azureml-acft-common-components==0.0.37.post1
 azureml-acft-contrib-hf-nlp==0.0.37
 azureml-acft-multimodal-components==0.0.37
 # needed by multimodal
