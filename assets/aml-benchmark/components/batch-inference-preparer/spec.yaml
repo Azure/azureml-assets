@@ -51,15 +51,6 @@ inputs:
     type: integer
     description: The number of top samples send to endpoint.
     optional: True
-  deployment_config_dir:
-    type: uri_folder
-    description: The folder that contains the deployment config.
-    optional: True
-  bypass_dataset_conversion:
-    type: boolean
-    description: If false, the dataset will be converted to jsonl.
-    optional: True
-    default: False
 outputs:
   formatted_data:
     type: mltable
@@ -81,5 +72,3 @@ command: >-
   $[[--n_samples ${{inputs.n_samples}}]]
   $[[--endpoint_url ${{inputs.endpoint_url}}]]
   $[[--label_key ${{inputs.label_column_name}}]]
-  $[[--deployment_config_dir ${{inputs.deployment_config_dir}}]]
-  $[[--bypass_dataset_conversion ${{inputs.bypass_dataset_conversion}}]]

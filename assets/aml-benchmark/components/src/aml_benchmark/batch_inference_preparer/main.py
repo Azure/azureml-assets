@@ -11,7 +11,6 @@ from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.aml_run_utils import str2bool
 from .endpoint_data_preparer import EndpointDataPreparer
-from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 
@@ -43,10 +42,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--formatted_data", type=str, help="path to output location")
     parser.add_argument("--endpoint_url", type=str, help="endpoint_url", default=None)
     parser.add_argument("--model_type", type=str, help="model_type", default=None)
-    parser.add_argument("--deployment_config_dir", type=str, help="model_type", default=None)
     parser.add_argument("--output_metadata", type=str, help="path to ground_truth location", default=None)
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
-    parser.add_argument("--bypass_dataset_conversion", default=False, type=str2bool, help="bypass_dataset_conversion")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
     return args
@@ -61,10 +58,7 @@ def main(
     n_samples: int,
     endpoint_url: str,
     is_performance_test: bool,
-    label_key: str,
-    deployment_config_dir: str,
-    output_metadata: str,
-    bypass_dataset_conversion: bool
+    label_key: str
 ) -> None:
     """
     Entry function of the script.
@@ -80,10 +74,7 @@ def main(
     :param is_performance_test: Whether it is performance test.
     :return: None
     """
-    if deployment_config_dir:
-        online_model = EndpointUtilities.get_model_from_deployment_config_file(deployment_config_dir)
-    else:
-        online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
+    online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
 
     endpoint_data_preparer = EndpointDataPreparer(
         online_model._model_type, batch_input_pattern, label_key=label_key)
@@ -104,10 +95,7 @@ def main(
     logger.info("Process data now.")
     if not is_performance_test:
         for index, row in df.iterrows():
-            if not bypass_dataset_conversion:
-                new_data = endpoint_data_preparer.convert_input_dict(row)
-            else:
-                new_data = row
+            new_data = endpoint_data_preparer.convert_input_dict(row)
             validate_errors = endpoint_data_preparer.validate_output(new_data)
             ground_truth_data = endpoint_data_preparer.convert_ground_truth(row, new_data)
             if not validate_errors:
@@ -151,8 +139,5 @@ if __name__ == "__main__":
         n_samples=args.n_samples,
         endpoint_url=args.endpoint_url,
         is_performance_test=args.is_performance_test,
-        label_key=args.label_key,
-        deployment_config_dir=args.deployment_config_dir,
-        output_metadata=args.output_metadata,
-        bypass_dataset_conversion=args.bypass_dataset_conversion
+        label_key=args.label_key
     )

@@ -38,7 +38,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--label_key", type=str, help="label key")
     parser.add_argument("--handle_response_failure", type=str, help="how to handler failed response.")
     parser.add_argument("--fallback_value", type=str, help="The fallback value.", default='')
-    parser.add_argument("--deployment_config", type=str, help="model_type", default=None)
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
@@ -59,8 +58,7 @@ def main(
         handle_response_failure: str,
         fallback_value: str,
         is_performance_test: bool,
-        endpoint_url: str,
-        deployment_config: str
+        endpoint_url: str
 ) -> None:
     """
     Entry script for the script.
@@ -94,10 +92,7 @@ def main(
         ground_truth_df = pd.DataFrame(read_jsonl_files(input_file_paths))
     else:
         ground_truth_df = None
-    if deployment_config:
-        online_model = EndpointUtilities.get_model_from_deployment_config_file(deployment_config)
-    else:
-        online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
+    online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
 
     rc = ResultConverters(
         online_model._model_type, metadata_key, data_id_key,
@@ -141,6 +136,5 @@ if __name__ == "__main__":
         handle_response_failure=args.handle_response_failure,
         fallback_value=args.fallback_value,
         is_performance_test=args.is_performance_test,
-        endpoint_url=args.endpoint_url,
-        deployment_config=args.deployment_config
+        endpoint_url=args.endpoint_url
     )
