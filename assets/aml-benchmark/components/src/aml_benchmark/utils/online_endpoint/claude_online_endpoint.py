@@ -7,7 +7,7 @@ from typing import Dict, Optional, Tuple
 import hashlib
 import hmac
 
-from datetime import datetime, UTC
+from datetime import datetime
 
 from aml_benchmark.utils.online_endpoint.online_endpoint import OnlineEndpoint
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
@@ -159,7 +159,7 @@ class ClaudeOnlineEndpoint(OnlineEndpoint):
         **Note:** This method is modtly done for ability to test header generation.
         :return: The tuple with datetime and date.
         """
-        date_time = datetime.now(tz=UTC).strftime('%Y%m%dT%H%M%SZ')
+        date_time = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
         return date_time, date_time[:8]
 
     def _get_keys_from_connections(self) -> Tuple[str, str]:
