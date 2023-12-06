@@ -6,7 +6,7 @@ display_name: Prompt Crafter
 description: This component is used to create prompts from a given dataset. From a 
   given jinja prompt template, it will generate prompts. It can also create 
   few-shot prompts given a few-shot dataset and the number of shots.
-version: 0.0.2
+version: 0.0.2.3
 is_deterministic: true
 
 inputs:
@@ -51,6 +51,27 @@ inputs:
       (2) {{choices.option[1]}}\n
       (3) {{choices.option[2]}}\n
       (4) {{choices.option[3]}}\n"
+  few_shot_pattern:
+    type: string
+    optional: true
+    description: |
+      The pattern used to generate the few shot portion of a prompt. It should be a valid jinja template.
+      If this pattern is not provided, few shot prompts are generated from a concatenation of prompt_pattern and output_pattern.
+
+      Example:
+      Input Data : 
+      {"question":"Example Question?",
+      "choices":{"option":["Answer1","Answer2","Answer3","Answer4"]},
+      "answerKey":"D"}
+
+      The few shot pattern for the above input data can be:
+      "Question: {{question}}\n
+      Choices are: 
+      (1) {{choices.option[0]}}\n
+      (2) {{choices.option[1]}}\n
+      (3) {{choices.option[2]}}\n
+      (4) {{choices.option[3]}}\n
+      Answer: {{answerKey}}"
   n_shots:
     type: integer
     optional: false
@@ -116,6 +137,7 @@ command: >-
   $[[--random_seed ${{inputs.random_seed}}]]
   --prompt_pattern '${{inputs.prompt_pattern}}'
   --output_pattern '${{inputs.output_pattern}}'
+  $[[--few_shot_pattern '${{inputs.few_shot_pattern}}']]
   $[[--system_message '${{inputs.system_message}}']]
   $[[--ground_truth_column_name '${{inputs.ground_truth_column_name}}']]
   $[[--prefix '${{inputs.prefix}}']]
