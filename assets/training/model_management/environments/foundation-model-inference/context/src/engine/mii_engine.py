@@ -1,21 +1,20 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 """Mii Engine module.
 
 This module contains the MiiEngine class which is responsible for initializing the MII server and client,
 generating responses for given prompts, and managing the allocation of processes and load balancing.
 """
-
-from configs import EngineConfig, TaskConfig
-from engine.engine import BaseEngine, InferenceResult
 import math
 import os
+import time
+from typing import Dict, List
+
+import mii
 import psutil
 import torch
-import time
-import mii
-from typing import Dict, List
+from configs import EngineConfig, TaskConfig
+from engine.engine import BaseEngine, InferenceResult
 from logging_config import configure_logger
 from utils import log_execution_time
 
@@ -38,6 +37,9 @@ class MiiEngine(BaseEngine):
         self.task_config = task_config
         self.model = None
         self.mii_config = self._get_mii_config()
+        self.custom_model_config_builder = config.custom_model_config_builder
+        if self.custom_model_config_builder:
+            self.custom_model_config_builder.update_mii_model_config(self.mii_config.model_config)
 
     def load_model(self, env=None):
         """Initialize MII server and MII client."""
@@ -52,7 +54,9 @@ class MiiEngine(BaseEngine):
         self.wait_until_server_healthy("localhost", self.mii_config.port_number)
         if self.model is None:
             self.model = mii.MIIClient(
-                self.mii_config.model_config.task, "localhost", self.mii_config.port_number
+                self.mii_config.model_config.task,
+                "localhost",
+                self.mii_config.port_number,
             )
 
     @log_execution_time
@@ -65,10 +69,15 @@ class MiiEngine(BaseEngine):
         start_time = time.time()
         responses = self.model.query(queries, **params)
         inference_time_ms = (time.time() - start_time) * 1000
+
+        if self.custom_model_config_builder is not None:
+            return self.custom_model_config_builder.post_processing(responses, inference_time_ms, prompts=prompts)
+
         inference_results = []  # type: List[InferenceResult]
+        return_full_text = params.pop("return_full_text", True)
         for i, res in enumerate(responses.response):
             generated_text = res
-            generated_text = self._del_prompt_if_req(prompts[i], generated_text, params)
+            generated_text = self._del_prompt_if_req(prompts[i], generated_text, return_full_text=return_full_text)
             response_tokens = self.get_tokens(generated_text)
             time_per_token_ms = inference_time_ms / len(response_tokens) if len(response_tokens) > 0 else 0
             result = InferenceResult(
@@ -76,7 +85,7 @@ class MiiEngine(BaseEngine):
                 inference_time_ms=inference_time_ms,
                 time_per_token_ms=time_per_token_ms,
                 generated_tokens=response_tokens,
-                prompt_num=i
+                prompt_num=i,
             )
             inference_results.append(result)
         return inference_results
@@ -95,7 +104,7 @@ class MiiEngine(BaseEngine):
         if self.engine_config.tensor_parallel is not None:
             if self.engine_config.tensor_parallel > DEVICE_COUNT:
                 raise ValueError(
-                    f"TENSOR_PARALLEL ({self.engine_config.tensor_parallel}) is larger than the available GPUs"
+                    f"TENSOR_PARALLEL ({self.engine_config.tensor_parallel}) is larger than the available GPUs",
                 )
             replica_num = int(DEVICE_COUNT / self.engine_config.tensor_parallel)
         else:
@@ -128,8 +137,8 @@ class MiiEngine(BaseEngine):
                 # "task": self.task_config.task_type,
                 "task": "text-generation",
                 "tensor_parallel": self.engine_config.tensor_parallel,
-                "trust_remote_code": False
-            }
+                "trust_remote_code": False,
+            },
         }
         mii_config = mii.MIIConfig(**default_mii_config)
         return mii_config
@@ -143,7 +152,7 @@ class MiiEngine(BaseEngine):
         # Check RAM required for loading the model
         # If meta tensor is available and if so, skip RAM check.
         if not meta_tensor:
-            total_ram_in_gb = psutil.virtual_memory().total / (1024 ** 3)
+            total_ram_in_gb = psutil.virtual_memory().total / (1024**3)
             total_required_ram_in_gb = model_size_in_gb * DEVICE_COUNT
             if total_ram_in_gb < total_required_ram_in_gb:
                 raise ValueError("Total RAM is smaller than required RAM.")
@@ -151,7 +160,7 @@ class MiiEngine(BaseEngine):
     def _calculate_replicas(self, model_size_in_gb) -> int:
         """Calculate the number of replicas."""
         # Check GPU size and calculate number of replicas it can handle
-        gpu_size_in_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
+        gpu_size_in_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
         # For now, max 1 replica per 1 GPU
         # Taking in extra memory for cache
         # TODO: improve this logic based on the amount of KV cache required and token length
@@ -159,7 +168,7 @@ class MiiEngine(BaseEngine):
         if num_possible_replicas == 0:
             logger.debug(
                 "Tensor parallel / model replica calculation with extra memory for cache "
-                "results in 0 replicas. Calculating without extra memory for cache."
+                "results in 0 replicas. Calculating without extra memory for cache.",
             )
             num_possible_replicas = int(DEVICE_COUNT / math.ceil((model_size_in_gb) / gpu_size_in_gb))
             if num_possible_replicas == 0:
@@ -188,4 +197,4 @@ class MiiEngine(BaseEngine):
                 # Add the size to the total size
                 total_size += file_size
         # Return the total size
-        return math.ceil(total_size / (1024 ** 3))
+        return math.ceil(total_size / (1024**3))

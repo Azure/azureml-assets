@@ -39,16 +39,13 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: image width that is input to the network. Default 
-                 is -1 which means it would be overwritten by image_scale in model config. 
+    description: Image width that is input to the network. Default is -1 which means it would be overwritten by image_scale in model config. 
 
   image_height:
     type: integer
     default: -1
     optional: true
-    description: image height that is input to the network. Default 
-                 is -1 which means it would be overwritten by image_scale in model config.
-                
+    description: Image height that is input to the network. Default is -1 which means it would be overwritten by image_scale in model config.
 
   task_name:
     type: string
@@ -231,7 +228,8 @@ inputs:
     enum:
       - epoch
       - steps
-    description: The checkpoint save strategy to adopt during training. Please note that the save_strategy and evaluation_strategy should match.
+    description: The checkpoint save strategy to adopt during training. Please note that the save_strategy and  
+     evaluation_strategy should match.
 
   save_steps:
     type: integer
@@ -289,7 +287,7 @@ outputs:
 
 command: >-
 
-  python finetune.py 
+  python finetune.py
   --model_path ${{inputs.model_path}}
   --train_mltable_path ${{inputs.training_data}}
   $[[--valid_mltable_path ${{inputs.validation_data}}]]

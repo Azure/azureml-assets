@@ -98,6 +98,11 @@ inputs:
     type: integer
     optional: True
     description: The maximum time (in seconds) spent retrying a payload. If unspecified, payloads are retried unlimited times.
+  mini_batch_size:
+    type: string
+    optional: true
+    default: 100KB
+    description: The mini batch size for parallel run.
   initial_worker_count:
     type: integer
     optional: False
@@ -166,6 +171,7 @@ jobs:
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
+      mini_batch_size: ${{parent.inputs.mini_batch_size}}
     outputs:
       job_out_path:
         type: uri_file

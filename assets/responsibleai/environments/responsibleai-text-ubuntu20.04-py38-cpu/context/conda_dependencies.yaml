@@ -16,7 +16,6 @@ dependencies:
     - numpy==1.22.0
     - responsibleai~=0.32.0
     - raiwidgets~=0.32.0
-    - pyarrow
     - azure-core==1.29.5
     - mlflow
     - markupsafe<=2.1.2

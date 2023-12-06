@@ -1,5 +1,5 @@
 name: acft-transformers-image-gpu
-version: "8"
+version: "12"
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml

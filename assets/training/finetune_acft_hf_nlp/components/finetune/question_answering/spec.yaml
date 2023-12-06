@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: question_answering_finetune
-version: 0.0.25
+version: 0.0.27
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Question Answering Finetune
 description: Component to finetune Hugging Face pretrained models for extractive question answering task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/question_answering_finetune) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/30
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/33
 
 code: ../../../src/finetune
 

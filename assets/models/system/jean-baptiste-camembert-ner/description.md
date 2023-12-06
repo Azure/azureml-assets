@@ -31,7 +31,7 @@ Token Classification | Token Classification | <a href="https://huggingface.co/da
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["Je m'appelle jean-baptiste et je vis à montréal", "george washington est allé à washington"]
     }
 }

@@ -19,4 +19,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y
 
+# vulnearbility fix
+RUN pip install pyarrow==14.0.1
+
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
