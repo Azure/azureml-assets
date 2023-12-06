@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - main
+      - yuhaliu/add_ci_for_promptflow
     paths:
       - 'assets/promptflow/models/**'
       - '.github/workflows/promptflow_ci.yml'
