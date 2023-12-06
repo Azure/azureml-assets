@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from src.batch_score.common.configuration.configuration import Configuration
 from src.batch_score.common.post_processing.callback_factory import CallbackFactory
 from src.batch_score.common.post_processing.mini_batch_context import MiniBatchContext

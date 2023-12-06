@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import pytest
 
 from src.batch_score.batch_pool.quota.estimators import EmbeddingsEstimator

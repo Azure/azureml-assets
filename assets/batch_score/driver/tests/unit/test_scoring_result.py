@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from src.batch_score.common.scoring.scoring_result import (
     ScoringResult,
     ScoringResultStatus,

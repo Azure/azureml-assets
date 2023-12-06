@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 # https://huggingface.co/datasets/cnn_dailymail
 from datasets import load_dataset
 import pandas as pd

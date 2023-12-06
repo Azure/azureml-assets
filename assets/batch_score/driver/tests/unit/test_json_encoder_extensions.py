@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import json
 
 import src.batch_score.utils.json_encoder_extensions as json_encoder_extensions

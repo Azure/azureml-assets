@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 class MiniBatchContext(object):
     def __init__(self, raw_mini_batch_context, target_result_len) -> None:
         self.__target_result_len = target_result_len

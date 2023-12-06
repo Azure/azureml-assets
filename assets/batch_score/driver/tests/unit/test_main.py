@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import pytest
 import src.batch_score.main as main
 from aiohttp import TraceConfig

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from src.batch_score.common.configuration.client_settings import ClientSettingsKey
 
 def test_string_equality_as_dictionary_key():

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import src.batch_score.common.auth.token_provider as tp
 
 

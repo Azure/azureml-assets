@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import pytest
 
 from src.batch_score.header_handlers.open_ai.completion_header_handler import (

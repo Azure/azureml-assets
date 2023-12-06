@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from ...telemetry import logging_utils as lu
 from .request_modifier import RequestModifier
 

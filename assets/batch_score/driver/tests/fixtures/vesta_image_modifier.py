@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import pytest
 
 from src.batch_score.common.request_modification.modifiers.vesta_chat_completion_image_modifier import (

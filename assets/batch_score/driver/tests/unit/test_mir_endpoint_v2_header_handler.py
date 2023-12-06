@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from src.batch_score.header_handlers.mir_endpoint_v2_header_handler import MIREndpointV2HeaderHandler
 from src.batch_score.common.auth.auth_provider import WorkspaceConnectionAuthProvider
 

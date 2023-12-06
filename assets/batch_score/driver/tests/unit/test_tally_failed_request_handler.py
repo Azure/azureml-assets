@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import pytest
 
 import src.batch_score.common.scoring.tally_failed_request_handler as tally_failed_request_handler

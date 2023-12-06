@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from ...common.auth.token_provider import TokenProvider
 from ..header_handler import HeaderHandler
 

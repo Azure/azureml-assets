@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 # Copied from https://github.com/Azure/azureai-insiders/tree/main/previews/batch-inference-using-aoai
 # and then modified.
 

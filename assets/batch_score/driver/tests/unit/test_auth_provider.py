@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import pytest
 from src.batch_score.common.auth.auth_provider import EndpointType, WorkspaceConnectionAuthProvider
 
