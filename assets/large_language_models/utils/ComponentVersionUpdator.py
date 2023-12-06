@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 r"""
-Helper File to Update Large Langauge Model Versions.
+Helper File to Update Large Language Model Versions.
 
 Utility File for incrementing, synchronizing, and updating all LLM versions.
 Also checks Environments are tagging latest.
