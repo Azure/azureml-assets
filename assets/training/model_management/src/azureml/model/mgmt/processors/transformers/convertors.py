@@ -227,7 +227,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
             mlflow.transformers.save_model(
                 transformers_model=model_pipeline,
-                conda_env=None, # curated_conda_env,
+                conda_env=curated_conda_env,
                 code_paths=code_paths,
                 signature=self._signatures,
                 input_example=input_example,
