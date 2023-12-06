@@ -13,8 +13,8 @@ dependencies:
   - cpuonly
   - pycocotools==2.0.4
   - pip:
-    - responsibleai~=0.32.0
-    - raiwidgets~=0.32.0
+    - responsibleai~=0.32.1
+    - raiwidgets~=0.32.1
     - mlflow
     - markupsafe<=2.1.2
     - itsdangerous<=2.1.2
