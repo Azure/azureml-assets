@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: playground-ayod-rag
+path: ./
+properties:
+  is-promptflow: true
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: chat
+  azureml.promptflow.name: Multi-turn Playground AYOD RAG
+  azureml.promptflow.description: Create a RAG based chatbot that uses LLM and data from your own indexed files to ground multi-turn question and answering capabilities in enterprise chat scenarios.
+  inference-min-sku-spec: 2|0|14|28
+  inference-recommended-sku: Standard_DS3_v2
+version: 6
