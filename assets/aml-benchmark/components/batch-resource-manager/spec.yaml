@@ -9,6 +9,7 @@ version: 0.0.1
 inputs:
   wait_input:
     type: uri_file
+    mode: direct
     optional: True
   endpoint_name:
     type: string

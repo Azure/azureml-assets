@@ -23,6 +23,7 @@ logger = get_logger(__name__)
 
 class AOAIOnlineEndpoint(OnlineEndpoint):
     """Class for AOAI online endpoint."""
+
     FINETUNED_MAX_SKU = 50
 
     def __init__(

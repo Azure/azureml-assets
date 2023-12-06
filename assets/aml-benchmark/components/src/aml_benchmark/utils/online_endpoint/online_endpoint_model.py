@@ -23,6 +23,7 @@ logger = get_logger(__name__)
 
 class OnlineEndpointModel:
     """Class for online endpoint model."""
+
     AOAI_ENDPOINT_URL_BASE = [
         'openai.azure.com', 'api.cognitive.microsoft.com', 'cognitiveservices.azure.com/']
 

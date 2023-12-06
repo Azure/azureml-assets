@@ -145,7 +145,7 @@ def delete_managed_resources_maybe(
 
 
 def deploy_endpoint_maybe(online_endpoint: OnlineEndpoint) -> bool:
-    """Deploy the endpoint if it is not deployed"""
+    """Deploy the endpoint if it is not deployed."""
     managed_endpoint = False
     logger.info(
         f'input endpoint state: {online_endpoint.endpoint_state()} in '
@@ -267,6 +267,7 @@ def deploy_model_in_list_maybe(
         deployment_env: str,
         redeploy_model: bool
 ) -> bool:
+    """Deploy the model using different regions."""
     for online_endpoint in _online_endpoint_generator(
                 subscriptions_list,
                 locations_list,

@@ -16,9 +16,11 @@ logger = get_logger(__name__)
 
 class AuthenticationManager:
     """Class for authentication related information used for the run."""
+
     ENV_CLIENT_ID_KEY = "DEFAULT_IDENTITY_CLIENT_ID"
 
     def __init__(self) -> None:
+        """Init method."""
         if self._get_client_id() is None:
             logger.info("Client id is not provided.")
             self._credential = None
