@@ -1,0 +1,2 @@
+{"input_data":{"columns":["image","text"],"index":[0],"data":[["image1","label1, label2, label3"]]},"params":{}}
+{"input_data":{"columns":["image","text"],"index":[0],"data":[["image2","label1, label2, label3"]]},"params":{}}

@@ -9,28 +9,22 @@ generating responses for given prompts, and managing the server processes.
 
 # flake8: noqa
 
+import copy
 import json
 import os
-import socket
 import subprocess
 import time
-import copy
 from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import requests
 import torch.cuda
-
 from configs import EngineConfig, TaskConfig
-from engine.engine import AbstractEngine, InferenceResult
+from engine import BaseEngine, InferenceResult
 from logging_config import configure_logger
 from utils import log_execution_time
 
 logger = configure_logger(__name__)
-
-DEFAULT_HOST = "0.0.0.0"
-DEFAULT_PORT = 8000
-
 
 # fmt: off
 VLLM_SAMPLING_PARAMS = {
@@ -57,7 +51,7 @@ VLLM_SAMPLING_PARAMS = {
 # fmt: on
 
 
-class VLLMEngine(AbstractEngine):
+class VLLMEngine(BaseEngine):
     """VLLM Engine class.
 
     This class is responsible for initializing the VLLM server, generating responses for given prompts,
@@ -68,29 +62,37 @@ class VLLMEngine(AbstractEngine):
         """Initialize the VLLMEngine with the given engine and task configurations."""
         self.engine_config: EngineConfig = engine_config
         self.task_config: TaskConfig = task_config
-        self._server_process: Optional[subprocess.Popen] = None
         self._vllm_args: Dict = self.engine_config.vllm_config or {}
+        self._model_config: Dict = self.engine_config.model_config or {}
 
         # Not all vllm arguments require a value
         self._vllm_additional_args: List[str] = []
-        self._verify_and_convert_float_type()
         self._load_vllm_defaults()
+        self._verify_and_convert_float_type()
+        self._verify_and_modify_tensor_parallel_size()
 
     @log_execution_time
-    def load_model(self):
+    def load_model(self, env: Dict = None):
         """Load the model from the pretrained model specified in the engine configuration."""
-        self._start_server(self._vllm_args, self._vllm_additional_args)
+        if env is None:
+            env = os.environ.copy()
+        self._start_server(self._vllm_args, self._vllm_additional_args, env=env)
 
     def init_client(self):
         """Initialize client[s] for the engine to receive requests on."""
         self.wait_until_server_healthy(self._vllm_args["host"], self._vllm_args["port"])
 
+    @property
+    def server_url(self) -> str:
+        """Return the URL of the VLLM server."""
+        return f"http://{self._vllm_args['host']}:{self._vllm_args['port']}"
+
     def _load_vllm_defaults(self):
         """Load default values for VLLM server arguments, if not provided."""
         if "host" not in self._vllm_args:
-            self._vllm_args["host"] = DEFAULT_HOST
+            self._vllm_args["host"] = self.engine_config.host
         if "port" not in self._vllm_args:
-            self._vllm_args["port"] = DEFAULT_PORT
+            self._vllm_args["port"] = self.engine_config.port
         if "tensor-parallel-size" not in self._vllm_args:
             self._vllm_args["tensor-parallel-size"] = (
                 self.engine_config.tensor_parallel
@@ -99,21 +101,23 @@ class VLLMEngine(AbstractEngine):
             )
         if "model" not in self._vllm_args:
             self._vllm_args["model"] = self.engine_config.model_id
-        if "model_name" in self._vllm_args:
-            if self._vllm_args["model_name"] == "falcon":
-                self._vllm_args["gpu-memory-utilization"] = 1
-                self._vllm_additional_args.append("trust-remote-code")
-            del self._vllm_args["model_name"]
-    
+
+        model_type = self._model_config.get("model_type", "")
+
+        # TODO: Remove "RefinedWebModel" and "RefinedWeb" once falcon's model_type param gets updated
+        if model_type == "falcon" or model_type == "RefinedWebModel" or model_type == "RefinedWeb":
+            self._vllm_args["gpu-memory-utilization"] = 0.95
+            self._vllm_additional_args.append("trust-remote-code")
+        self._vllm_additional_args.append("disable-log-requests")
+
     def _verify_and_convert_float_type(self):
-        """
-        Check to see whether the model's float type is compatible with the compute type selected.
+        """Check to see whether the model's float type is compatible with the compute type selected.
 
         Bfloat16 is only supported on GPUs such as A100s. V100s do not support bfloat16, only float16.
         Converting from bfloat16 to float16 is ok in this case.
         """
         # Check if the GPU supports the dtype.
-        dtype = self._vllm_args.get("dtype", "auto")
+        dtype = self._model_config.get("torch_dtype", "auto")
         if dtype == "bfloat16":
             compute_capability = torch.cuda.get_device_capability()
             if compute_capability[0] < 8:
@@ -122,33 +126,49 @@ class VLLMEngine(AbstractEngine):
                 # Cast bfloat16 to float16
                 self._vllm_args["dtype"] = "float16"
                 logger.warning(
-                    "Bfloat16 is only supported on GPUs with compute capability "
+                    "bfloat16 is only supported on GPUs with compute capability "
                     f"of at least 8.0. Your {gpu_name} GPU has compute capability "
                     f"{compute_capability[0]}.{compute_capability[1]}. "
-                    f"Bfloat16 will be converted to float16.")
+                    f"bfloat16 will be converted to float16.",
+                )
 
-    def _start_server(self, server_kwargs: Dict, server_args: List):
+    def _verify_and_modify_tensor_parallel_size(self):
+        """Check to see if the tensor parallel size is compatible with the models's number of attention heads."""
+        model_type = self._model_config.get("model_type", "")
+        num_attention_heads = self._model_config.get("num_attention_heads", 1)
+
+        # TODO: Remove "RefinedWebModel" and "RefinedWeb" once falcon's model_type param gets updated
+        if model_type == "falcon" or model_type == "RefinedWebModel" or model_type == "RefinedWeb":
+            num_attention_heads = self._model_config.get("n_head", 1)
+
+        tensor_parallel_size = self._vllm_args["tensor-parallel-size"]
+        new_tensor_parallel_size = tensor_parallel_size
+        if tensor_parallel_size != 0:
+            while num_attention_heads % new_tensor_parallel_size != 0:
+                new_tensor_parallel_size -= 1
+        if tensor_parallel_size != new_tensor_parallel_size:
+            logger.warning(
+                "Tensor parallel size was incompatible with the number of attention heads the model has. "
+                f"Number of attention heads ({num_attention_heads}) must be divisible by "
+                f"tensor-parallel-size ({tensor_parallel_size}). To make them compatible, "
+                f"tensor-parallel-size was reduced from {tensor_parallel_size} to "
+                f"{new_tensor_parallel_size}. If deploying Falcon-7b or Falcon-7b-Instruct, consider "
+                "choosing a Standard_NC6s_v3 sku as tensor-parallel-size must be 1 for those models.",
+            )
+        self._vllm_args["tensor-parallel-size"] = new_tensor_parallel_size
+
+    def _start_server(self, server_kwargs: Dict, server_args: List, env: Dict):
         """Start the VLLM server with the given arguments."""
         cmd = ["python", "-m", "vllm.entrypoints.api_server"]
         cmd.extend([f"--{k}={v}" for k, v in server_kwargs.items()])
         cmd.extend([f"--{arg}" for arg in server_args])
         logger.info(f"Starting VLLM server with command: {cmd}")
-        self._server_process = subprocess.Popen(cmd)
+        subprocess.Popen(cmd, env=env)
         logger.info("Starting VLLM server...")
-
-    def _stop_server(self):
-        """Stop the VLLM server."""
-        if self._server_process:
-            self._server_process.terminate()
-            logger.info("VLLM server stopped.")
 
     def _get_generate_uri(self) -> str:
         """Get the URI for the generate endpoint of the VLLM server."""
-        return f"http://{self._vllm_args['host']}:{self._vllm_args['port']}/generate"
-
-    def __del__(self):
-        """Stop the VLLM server when the VLLMEngine object is deleted."""
-        self._stop_server()
+        return f"{self.server_url}/generate"
 
     def _gen_params_to_vllm_params(self, params: Dict) -> Dict:
         """Convert generation parameters to VLLM parameters."""
@@ -174,7 +194,7 @@ class VLLMEngine(AbstractEngine):
         unsupported_keys = set(params.keys()) - set(VLLM_SAMPLING_PARAMS.keys())
         for key in unsupported_keys:
             logger.warning(
-                f"Warning: Parameter '{key}' is not supported by VLLM and will be removed."
+                f"Warning: Parameter '{key}' is not supported by VLLM and will be removed.",
             )
             del params[key]
 
@@ -185,22 +205,29 @@ class VLLMEngine(AbstractEngine):
         """Generate responses for the given prompts with the given parameters."""
         # pop _batch_size from params if it exists, set it to 1 by default (for testing only)
         batch_size = params.pop("_batch_size", 1)
+        # we need to pop and pass in return_full_text by itself as well, since its not a vLLM official param
+        return_full_text = params.pop("return_full_text", True)
 
         results = []
+        start_time = time.time()
         with ThreadPoolExecutor(max_workers=batch_size) as executor:
             results = list(
                 executor.map(
-                    lambda prompt: self._generate_single_prompt(prompt, params), prompts
-                )
+                    lambda prompt: self._generate_single_prompt(prompt, params, return_full_text),
+                    prompts,
+                ),
             )
-
+        inference_time_ms = (time.time() - start_time) * 1000
+        for i, result in enumerate(results):
+            result.inference_time_ms = inference_time_ms
+            result.prompt_num = i
         return results
 
     @log_execution_time
-    def _generate_single_prompt(self, prompt: str, params: Dict) -> InferenceResult:
+    def _generate_single_prompt(self, prompt: str, params: Dict, return_full_text: bool) -> InferenceResult:
         """Generate a response for a single prompt with the given parameters."""
         api_url = self._get_generate_uri()
-        unfiltered_params = copy.deepcopy(params)
+
         params = self._gen_params_to_vllm_params(params)
         headers = {"User-Agent": "VLLMEngine Client"}
 
@@ -215,22 +242,13 @@ class VLLMEngine(AbstractEngine):
         if response.status_code == 200:
             # take the first candidate from the list of candidates (if beam search was used)
             output = json.loads(response.content)["text"][0]
-            generated_text = self._del_prompt_if_req(prompt, output, unfiltered_params)
+            generated_text = self._del_prompt_if_req(prompt, output, return_full_text=return_full_text)
             inference_time_ms = (end_time - start_time) * 1000
-            logger.info(f"Inference time: {inference_time_ms} ms")
-
-            # TODO: Until mii returns the num tokens, approximate num_tokens. roughly, 75 words ~= 100 tokens
-            num_tokens = (
-                len(self._del_prompt_if_req(prompt, output, unfiltered_params, force=True).split(" "))
-                // 75
-                * 100
-            )
-            time_per_token_ms = inference_time_ms / num_tokens if num_tokens > 0 else 0
-            logger.info(
-                f"Num tokens: {num_tokens}, Time per token: {time_per_token_ms} ms"
-            )
-            res = InferenceResult(generated_text, inference_time_ms, time_per_token_ms)
+            response_tokens = self.get_tokens(generated_text)
+            time_per_token_ms = inference_time_ms / len(response_tokens) if len(response_tokens) > 0 else 0
+            # TODO: setting inference_time_ms to None until mii inference time can also be recorded per prompt
+            res = InferenceResult(generated_text, None, time_per_token_ms, response_tokens, 0)
         else:
-            res = InferenceResult(None, None, None, error=response.content)
+            res = InferenceResult(None, None, None, None, None, error=response.content)
 
         return res

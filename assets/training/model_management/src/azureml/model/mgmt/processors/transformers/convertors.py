@@ -40,7 +40,7 @@ from transformers import (
     AutoModelForSequenceClassification,
     AutoModelForQuestionAnswering,
     AutoModelForSeq2SeqLM,
-    AutoModelWithLMHead,
+    AutoModelForCausalLM,
     AutoModelForMaskedLM,
     AutoModelForImageClassification,
     AutoTokenizer,
@@ -382,8 +382,8 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         "text-classification": AutoModelForSequenceClassification,
         "token-classification": AutoModelForTokenClassification,
         "question-answering": AutoModelForQuestionAnswering,
-        "summarization": AutoModelWithLMHead,
-        "text-generation": AutoModelWithLMHead,
+        "summarization": AutoModelForSeq2SeqLM,
+        "text-generation": AutoModelForCausalLM,
         "translation": AutoModelForSeq2SeqLM,
     }
 

@@ -1,38 +1,34 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 """Run script to infer."""
 # flake8: noqa
 
+import dataclasses
 import json
 import os
-import yaml
-import torch
-import pandas as pd
+
 import numpy as np
-
-from mlflow.pyfunc.scoring_server import _get_jsonable_obj
-
+import pandas as pd
+import torch
+import yaml
 from azure.ai.contentsafety import ContentSafetyClient
+from azure.ai.contentsafety.models import AnalyzeTextOptions, AnalyzeImageOptions, ImageData
 from azure.core.credentials import AzureKeyCredential
-from azure.ai.contentsafety.models import AnalyzeTextOptions
 from azure.core.pipeline.policies import HeadersPolicy
-
 from azureml.ai.monitoring import Collector
-
-
-from constants import EngineName, TaskType, SupportedTask
+from constants import EngineName, SupportedTask, TaskType
+from model_config_factory import ModelConfigFactory
 from fm_score import FMScore
 from logging_config import configure_logger
 from managed_inference import MIRPayload
+from mlflow.pyfunc.scoring_server import _get_jsonable_obj
+from utils import box_logger, map_env_vars_to_vllm_server_args
 
 logger = configure_logger(__name__)
-
 
 # AACS
 g_aacs_threshold = int(os.environ.get("CONTENT_SAFETY_THRESHOLD", 2))
 g_aacs_client = None
-
 
 # default values
 DEVICE_COUNT = torch.cuda.device_count()
@@ -40,10 +36,12 @@ MLMODEL_PATH = "mlflow_model_folder/MLmodel"
 DEFAULT_MLFLOW_MODEL_PATH = "mlflow_model_folder/data/model"
 task_type = SupportedTask.TEXT_GENERATION
 g_fmscorer: FMScore = None
+g_model_signature = None
 
-# metrics tracking
+# # metrics tracking
 g_collector = Collector(
-    name="inference_metrics", on_error=lambda e: logger.info("ex:{}".format(e))
+    name="inference_metrics",
+    on_error=lambda e: logger.info("ex:{}".format(e)),
 )
 
 
@@ -58,7 +56,7 @@ class CsChunkingUtils:
 
     def chunkstring(self, string, length):
         """Chunk strings in a given length."""
-        return (string[0 + i: length + i] for i in range(0, len(string), length))
+        return (string[0 + i : length + i] for i in range(0, len(string), length))
 
     def split_by(self, input):
         """Split the input."""
@@ -115,39 +113,83 @@ def analyze_text(text):
     chunking_utils = CsChunkingUtils(chunking_n=1000, delimiter=".")
     split_text = chunking_utils.split_by(text)
 
-    result = [
-        analyze_response(g_aacs_client.analyze_text(AnalyzeTextOptions(text=i)))
-        for i in split_text
-    ]
+    result = [analyze_response(g_aacs_client.analyze_text(AnalyzeTextOptions(text=i))) for i in split_text]
     severity = max(result)
     logger.info(f"Analyzed, severity {severity}")
 
     return severity
 
 
-def iterate(obj):
+def analyze_image(image_in_byte64: str) -> int:
+    """Analyze image severity using azure content safety service.
+
+    :param image_in_byte64: image in base64 format
+    :type image_in_byte64: str
+    :return: maximum severity of all categories
+    :rtype: int
+    """
+    print("Analyzing image...")
+    if image_in_byte64 is None:
+        return 0
+    request = AnalyzeImageOptions(image=ImageData(content=image_in_byte64))
+    safety_response = g_aacs_client.analyze_image(request)
+    severity = analyze_response(safety_response)
+    print(f"Image Analyzed, severity {severity}")
+    return severity
+
+
+def _check_data_type_from_model_signature(key: str) -> str:
+    """Check key data type from model signature.
+
+    :param key: key of data (to analyze by AACS) in model input or output
+    :type key: str
+    :return: data type of key from model signature else return "str"
+    :rtype: str
+    """
+    if g_model_signature is None or key is None:
+        return "str"
+    input_schema = g_model_signature["inputs"]
+    output_schema = g_model_signature["outputs"]
+
+    def _get_type(schema):
+        if type(schema) == str:
+            schema = json.loads(schema)
+
+        for item in schema:
+            if item["name"] == key:
+                return item["type"]
+        return None
+
+    return _get_type(input_schema) or _get_type(output_schema) or "str"
+
+
+def iterate(obj, current_key=None):
     """Iterate through obj and check content severity."""
     if isinstance(obj, dict):
         severity = 0
         for key, value in obj.items():
-            obj[key], value_severity = iterate(value)
+            obj[key], value_severity = iterate(value, current_key=key)
             severity = max(severity, value_severity)
         return obj, severity
     elif isinstance(obj, list) or isinstance(obj, np.ndarray):
         severity = 0
         for idx in range(len(obj)):
-            obj[idx], value_severity = iterate(obj[idx])
+            obj[idx], value_severity = iterate(obj[idx], current_key=current_key)
             severity = max(severity, value_severity)
         return obj, severity
     elif isinstance(obj, pd.DataFrame):
         severity = 0
+        columns = list(obj.columns)
         for i in range(obj.shape[0]):  # iterate over rows
             for j in range(obj.shape[1]):  # iterate over columns
-                obj.at[i, j], value_severity = iterate(obj.at[i, j])
+                obj.at[i, j], value_severity = iterate(obj.at[i, j], current_key=columns[j])
                 severity = max(severity, value_severity)
         return obj, severity
     elif isinstance(obj, str):
-        severity = analyze_text(obj)
+        if current_key and _check_data_type_from_model_signature(current_key) == "binary":
+            severity = analyze_image(obj)
+        else:
+            severity = analyze_text(obj)
         if severity > g_aacs_threshold:
             return "", severity
         else:
@@ -190,20 +232,20 @@ def get_aacs_access_key():
     uai_client_id = os.environ.get("UAI_CLIENT_ID")
     if not uai_client_id:
         raise RuntimeError(
-            "Cannot get AACS access key, both UAI_CLIENT_ID and "
-            "CONTENT_SAFETY_KEY are not set, exiting..."
+            "Cannot get AACS access key, both UAI_CLIENT_ID and " "CONTENT_SAFETY_KEY are not set, exiting...",
         )
 
     subscription_id = os.environ.get("SUBSCRIPTION_ID")
     resource_group_name = os.environ.get("RESOURCE_GROUP_NAME")
     aacs_account_name = os.environ.get("CONTENT_SAFETY_ACCOUNT_NAME")
-    from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
     from azure.identity import ManagedIdentityCredential
+    from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 
     credential = ManagedIdentityCredential(client_id=uai_client_id)
     cs_client = CognitiveServicesManagementClient(credential, subscription_id)
     key = cs_client.accounts.list_keys(
-        resource_group_name=resource_group_name, account_name=aacs_account_name
+        resource_group_name=resource_group_name,
+        account_name=aacs_account_name,
     ).key1
 
     return key
@@ -231,10 +273,7 @@ def _init_cuda_visible_devices():
     if "CUDA_VISIBLE_DEVICES" in os.environ:
         return
 
-    if (
-        "NVIDIA_VISIBLE_DEVICES" in os.environ
-        and os.environ["NVIDIA_VISIBLE_DEVICES"] != "all"
-    ):
+    if "NVIDIA_VISIBLE_DEVICES" in os.environ and os.environ["NVIDIA_VISIBLE_DEVICES"] != "all":
         # map the gpu ids to integers
         gpu_ids = os.environ["NVIDIA_VISIBLE_DEVICES"].split(",")
         gpu_ids = [str(i) for i in range(len(gpu_ids)) if gpu_ids[i] != "-1"]
@@ -243,8 +282,6 @@ def _init_cuda_visible_devices():
     else:
         # if no GPU is available, don't set anything
         return
-
-    logger.info(f"Setting CUDA_VISIBLE_DEVICES to {gpu_ids}")
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(gpu_ids)
 
 
@@ -253,9 +290,10 @@ def init():
     global g_fmscorer
     global task_type
     global g_aacs_client
+    global g_model_signature
 
+    AACS_error = None
     try:
-        logger.info("Setting up AACS")
         endpoint = os.environ.get("CONTENT_SAFETY_ENDPOINT", None)
         key = get_aacs_access_key()
 
@@ -266,65 +304,26 @@ def init():
 
         # Create a Content Safety client
         headers_policy = HeadersPolicy()
-        headers_policy.add_header("ms-azure-ai-sender", "llama")
+        headers_policy.add_header("ms-azure-ai-sender", "fm-optimized-inference")
         g_aacs_client = ContentSafetyClient(
-            endpoint, AzureKeyCredential(key), headers_policy=headers_policy
+            endpoint,
+            AzureKeyCredential(key),
+            headers_policy=headers_policy,
         )
     except Exception as e:
-        logger.error(f"AACS not configured. Bypassing content moderation. Error {e}")
-
+        AACS_error = e
     try:
         model_path = os.path.join(
-            os.getenv("AZUREML_MODEL_DIR", ""), DEFAULT_MLFLOW_MODEL_PATH
+            os.getenv("AZUREML_MODEL_DIR", ""),
+            DEFAULT_MLFLOW_MODEL_PATH,
         )
 
         config_path = os.path.join(
-            os.getenv("AZUREML_MODEL_DIR", ""), DEFAULT_MLFLOW_MODEL_PATH, "config.json"
+            os.getenv("AZUREML_MODEL_DIR", ""),
+            DEFAULT_MLFLOW_MODEL_PATH,
+            "config.json",
         )
-
-        _init_cuda_visible_devices()
-
-        for k, v in os.environ.items():
-            logger.info(f"env: {k} = {v}")
-
-        abs_mlmodel_path = os.path.join(
-            os.getenv("AZUREML_MODEL_DIR", ""), MLMODEL_PATH
-        )
-        mlmodel = {}
-        if abs_mlmodel_path and os.path.exists(abs_mlmodel_path):
-            with open(abs_mlmodel_path) as f:
-                mlmodel = yaml.safe_load(f)
-
-        model_name = ""
-        if mlmodel:
-            flavors = mlmodel.get("flavors", {})
-            if "hftransformersv2" in flavors:
-                task_type = flavors["hftransformersv2"]["task_type"]
-                model_generator_configs = flavors["hftransformersv2"].get(
-                    "generator_config", {}
-                )
-                logger.info(f"model_generator_configs: {model_generator_configs}")
-                if task_type not in (
-                    SupportedTask.TEXT_GENERATION,
-                    SupportedTask.CHAT_COMPLETION,
-                ):
-                    raise Exception(f"Unsupported task_type {task_type}")
-
-                # update default gen configs with model configs
-                default_generator_configs = get_generator_params(
-                    model_generator_configs
-                )
-                logger.info(
-                    f"updated default_generator_configs: "
-                    f"{default_generator_configs}"
-                )
-                huggingface_id = flavors["hftransformersv2"].get("huggingface_id", "")
-                if "falcon" in huggingface_id:
-                    model_name = "falcon"
-
-        logger.info(f"Loading model from path {model_path} for task_type: {task_type}")
-        logger.info(f"List model_path = {os.listdir(model_path)}")
-
+        
         default_engine = EngineName.VLLM
         tensor_parallel = os.getenv("TENSOR_PARALLEL", None)
         if tensor_parallel:
@@ -334,7 +333,61 @@ def init():
             "model_id": model_path,
             "tensor_parallel": tensor_parallel
         }
-        if engine_config["engine_name"] == EngineName.MII:
+
+        _init_cuda_visible_devices()
+
+        abs_mlmodel_path = os.path.join(
+            os.getenv("AZUREML_MODEL_DIR", ""),
+            MLMODEL_PATH,
+        )
+        mlmodel = {}
+        if abs_mlmodel_path and os.path.exists(abs_mlmodel_path):
+            with open(abs_mlmodel_path) as f:
+                mlmodel = yaml.safe_load(f)
+
+        default_generator_configs = ""
+        task_config = None
+        if mlmodel:
+            flavors = mlmodel.get("flavors", {})
+            g_model_signature = mlmodel.get("signature", None)
+            if "hftransformersv2" in flavors:
+                task_type = flavors["hftransformersv2"]["task_type"]
+                model_generator_configs = flavors["hftransformersv2"].get(
+                    "generator_config",
+                    {},
+                )
+
+                if task_type not in (
+                    SupportedTask.TEXT_GENERATION,
+                    SupportedTask.CHAT_COMPLETION,
+                ):
+                    raise Exception(f"Unsupported task_type {task_type}")
+
+                # update default gen configs with model configs
+                default_generator_configs = get_generator_params(
+                    model_generator_configs,
+                )
+            elif "python_function" in flavors:
+
+                task_type = mlmodel["metadata"]["base_model_task"]
+                if task_type not in (TaskType.TEXT_TO_IMAGE):
+                    raise Exception(f"Unsupported task_type {task_type}")
+
+                model_type = mlmodel["metadata"].get("model_type", "")
+                
+                model_config_builder = ModelConfigFactory.get_config_builder(task=task_type, model_type=model_type)
+                engine_config.update(
+                                        {
+                                            "engine_name": model_config_builder.engine,
+                                            "mii_config": model_config_builder.get_optimization_config(),
+                                            "custom_model_config_builder": model_config_builder,
+                                            "model_id": os.path.join(os.getenv("AZUREML_MODEL_DIR", ""), model_config_builder.model_path),
+                                            "tensor_parallel": model_config_builder.tensor_parallel
+                                        }
+                                    )
+                task_config = model_config_builder.get_task_config()
+
+        if engine_config["engine_name"] in [EngineName.MII, EngineName.MII_V1] and "mii_config" not in engine_config:
             mii_engine_config = {
                 "deployment_name": os.getenv("DEPLOYMENT_NAME", "llama-deployment"),
                 "mii_configs": {},
@@ -343,23 +396,19 @@ def init():
             engine_config["mii_config"] = mii_engine_config
 
         if engine_config["engine_name"] == EngineName.VLLM:
-            dtype = "auto"
+            model_config = {}
+            vllm_config = map_env_vars_to_vllm_server_args()
             if config_path and os.path.exists(config_path):
                 with open(config_path) as config_content:
-                    content = json.load(config_content)
-                    dtype = content.get("torch_dtype", "auto")
-            vllm_config = {
-                "tensor-parallel-size": tensor_parallel if tensor_parallel else DEVICE_COUNT,
-                "dtype": dtype,
-                "model_name": model_name
-            }
+                    model_config = json.load(config_content)
             engine_config["vllm_config"] = vllm_config
+            engine_config["model_config"] = model_config
 
         task_config = {
             "task_type": TaskType.CONVERSATIONAL
             if task_type == SupportedTask.CHAT_COMPLETION
             else TaskType.TEXT_GENERATION,
-        }
+        } if task_config is None else task_config
 
         config = {
             "engine": engine_config,
@@ -368,6 +417,14 @@ def init():
 
         g_fmscorer = FMScore(config)
         g_fmscorer.init()
+        if os.environ.get("LOGGING_WORKER_ID", "") == str(os.getpid()):
+            for k, v in os.environ.items():
+                logger.info(f"env: {k} = {v}")
+            logger.info(
+                f"updated default_generator_configs: " f"{default_generator_configs}",
+            )
+            if AACS_error:
+                logger.warning(f"AACS was not configured. Content moderation bypassed in setup. Error {AACS_error}")
 
     except Exception as e:
         raise Exception(f"Error in creating client or server: {e}") from e
@@ -382,18 +439,17 @@ def run(data):
         data, severity = get_safe_input(data)
         if severity > g_aacs_threshold:
             logger.warning(
-                f"Input severity ({severity}) greater than aacs threshold "
-                f"({g_aacs_threshold})."
+                f"Input severity ({severity}) greater than aacs threshold " f"({g_aacs_threshold}).",
             )
             return {}
 
         data = json.loads(data)
-        data.update({'task_type': task_type})
+        data.update({"task_type": task_type})
 
         payload = MIRPayload.from_dict(data)
         payload.update_params(get_generator_params(payload.params))
         logger.info(
-            f"Processing new request with parameters: {payload.params}"
+            f"Processing new request with parameters: {payload.params}",
         )
 
         result_dict = {}
@@ -403,16 +459,26 @@ def run(data):
             inference_results = g_fmscorer.run(payload)
             outputs = {str(i): res.response for i, res in enumerate(inference_results)}
             result_dict = {
-                "output": f"{outputs['0']}"
+                "output": f"{outputs['0']}",
             }  # outputs will only have one key for chat-completion
-
+        elif task_type == SupportedTask.TEXT_TO_IMAGE:
+            inference_results = g_fmscorer.run(payload)
+            result_dict = [dataclasses.asdict(res.response) for res in inference_results]
         else:
             assert task_type == SupportedTask.TEXT_GENERATION and isinstance(
-                payload.query, list
+                payload.query,
+                list,
             ), "query should be a list for text-generation"
             inference_results = g_fmscorer.run(payload)
             outputs = {str(i): res.response for i, res in enumerate(inference_results)}
             result_dict = pd.DataFrame([outputs])
+
+        for result in inference_results:
+            result.print_results()
+        all_logged_results = f""" ### Inference Results ###\n \
+Total Generation Time: {inference_results[0].inference_time_ms}\n \
+Throughput (prompt/sec): {len(inference_results) / (inference_results[0].inference_time_ms / 1000):.2f}"""
+        box_logger(all_logged_results)
 
         stats_dict = [vars(result) for result in inference_results]
         g_collector.collect(stats_dict)
@@ -433,7 +499,7 @@ if __name__ == "__main__":
                 "input_data": {
                     "input_string": ["the meaning of life is"],
                     "parameters": {"max_new_tokens": 256, "do_sample": True},
-                }
+                },
             },
             {
                 "input_data": {
@@ -447,7 +513,7 @@ if __name__ == "__main__":
                         "do_sample": True,
                         # "_batch_size": 32,
                     },
-                }
+                },
             },
         ],
         "chat-completion": [
@@ -475,9 +541,17 @@ if __name__ == "__main__":
                         "do_sample": True,
                         "max_new_tokens": 100,
                     },
-                }
-            }
+                },
+            },
         ],
+        TaskType.TEXT_TO_IMAGE: [
+            {
+                "input_data": {
+                        "columns": ["prompt"],
+                        "data": ["Photograph of a dog with severed leg and bleeding profusely from deep laceration to the lower extremities, exposing tissues and nerve.", "lion holding hunted deer in grass fields"]
+                    }
+            }
+        ]
     }
 
     for sample_ip in valid_inputs[task_type]:

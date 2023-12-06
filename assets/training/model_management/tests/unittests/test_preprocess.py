@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """Test preprocess."""
-
 import os
 import json
 import pytest
@@ -196,7 +195,9 @@ class TestFactoryModule(unittest.TestCase):
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
 
-        for task in [PyFuncSupportedTasks.TEXT_TO_IMAGE.value, PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value]:
+        for task in [PyFuncSupportedTasks.TEXT_TO_IMAGE.value,
+                     PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value,
+                     PyFuncSupportedTasks.IMAGE_TO_IMAGE.value]:
             translate_params = {"task": task}
             mock_convertor = mock_text_to_image_factory.create_mlflow_convertor.return_value
             result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
@@ -525,4 +526,16 @@ class TestTextToImageMLflowConvertorFactory(unittest.TestCase):
         convertor = TextToImageMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir,
                                                                               translate_params)
         assert convertor._task == PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value
+        assert os.path.join("pyfunc", "text_to_image") in convertor.MODEL_DIR
+
+    def test_create_mlflow_converter_for_image_to_image_task(self):
+        """Test image text to image model mlflow convertor."""
+        model_dir = "model_dir"
+        output_dir = "output_dir"
+        temp_dir = "temp_dir"
+        translate_params = {"misc": [SupportedTextToImageModelFamily.STABLE_DIFFUSION.value],
+                            "task": PyFuncSupportedTasks.IMAGE_TO_IMAGE.value}
+        convertor = TextToImageMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir,
+                                                                              translate_params)
+        assert convertor._task == PyFuncSupportedTasks.IMAGE_TO_IMAGE.value
         assert os.path.join("pyfunc", "text_to_image") in convertor.MODEL_DIR

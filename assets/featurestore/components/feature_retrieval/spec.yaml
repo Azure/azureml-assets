@@ -1,12 +1,12 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 
 name: feature_retrieval
-version: 0.5.0
+version: 1.0.0
 type: spark
 
 display_name: Feature Retrieval
 description: Retrieval component to be used to retrieve offline features from feature store.
-is_deterministic: true
+is_deterministic: false
 
 code: ../src
 entry:
@@ -62,5 +62,5 @@ conf:
       - python=3.8
       - pip:
         - protobuf==3.19.6
-        - azureml-featurestore==0.1.0b5
+        - azureml-featurestore~=1.0.0
     name: fs_env

@@ -6,7 +6,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructField, StringType, DoubleType, LongType, BooleanType
 import pytest
-from unittest.mock import Mock
 import fsspec
 import shutil
 import json
@@ -19,9 +18,8 @@ from model_data_collector_preprocessor.run import (
     _raw_mdc_uri_folder_to_preprocessed_spark_df,
     _extract_data_and_correlation_id,
     mdc_preprocessor,
-    _convert_to_azureml_long_form,
-    _get_datastore_from_input_path,
 )
+from shared_utilities.momo_exceptions import DataNotFoundError
 
 
 @pytest.fixture(scope="module")
@@ -105,6 +103,66 @@ class TestMDCPreprocessor:
 
         assert_frame_equal(pdf_actual, pdf_expected)
 
+    @pytest.mark.skip(reason="pending on a mltable column to_string() bug")
+    @pytest.mark.parametrize(
+        "window_start_time, window_end_time",
+        [
+            ("2023-11-12T10:00:00", "2023-11-12T11:00:00"),
+        ]
+    )
+    def test_uri_folder_to_spark_df_with_complex_type(self, mdc_preprocessor_test_setup,
+                                                      window_start_time, window_end_time):
+        """Test uri_folder_to_spark_df()."""
+        fs = fsspec.filesystem("file")
+        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        preprocessed_output = f"{tests_path}/unit/preprocessed_mdc_data"
+        shutil.rmtree(f"{preprocessed_output}temp", True)
+
+        pdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
+            window_start_time,
+            window_end_time,
+            f"{tests_path}/unit/raw_mdc_data/",
+            preprocessed_output,
+            False,
+            fs
+        )
+        pdf.show()
+
+    @pytest.mark.parametrize(
+        "window_start_time, window_end_time, root_folder_exists",
+        [
+            ("2023-11-03T15:00:00", "2023-11-03T16:00:00", True),  # no window folder
+            ("2023-11-06T15:00:00", "2023-11-06T16:00:00", True),  # has window folder, no file
+            ("2023-11-06T17:00:00", "2023-11-06T18:00:00", True),  # has window folder and file, but empty file
+            ("2023-11-08T14:00:00", "2023-11-08T16:00:00", False),  # root folder not exists
+        ]
+    )
+    def test_uri_folder_to_spark_df_no_data(self, mdc_preprocessor_test_setup,
+                                            window_start_time, window_end_time, root_folder_exists):
+        """Test uri_folder_to_spark_df()."""
+        def my_add_tags(tags: dict):
+            print("my_add_tags:", tags)
+        print("testing test_uri_folder_to_spark_df...")
+        print("working dir:", os.getcwd())
+
+        fs = fsspec.filesystem("file")
+        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        preprocessed_output = f"{tests_path}/unit/preprocessed_mdc_data"
+        shutil.rmtree(f"{preprocessed_output}temp", True)
+        root_folder = f"{tests_path}/unit/raw_mdc_data/" if root_folder_exists else f"{tests_path}/unit/raw_mdc_data1/"
+
+        with pytest.raises(DataNotFoundError):
+            df = _raw_mdc_uri_folder_to_preprocessed_spark_df(
+                window_start_time,
+                window_end_time,
+                root_folder,
+                preprocessed_output,
+                False,
+                fs,
+                my_add_tags
+            )
+            df.show()
+
     @pytest.mark.skip(reason="can't set PYTHONPATH for executor in remote run.")
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, extract_correlation_id",
@@ -112,8 +170,6 @@ class TestMDCPreprocessor:
             # chat history
             ("2023-10-30T16:00:00", "2023-10-30T17:00:00", False),
             ("2023-10-30T16:00:00", "2023-10-30T17:00:00", True),
-            # ("2023-10-24T22:00:00", "2023-10-24T23:00:00", False),
-            # ("2023-10-24T22:00:00", "2023-10-24T23:00:00", True),
         ]
     )
     def test_uri_folder_to_spark_df_with_chat_history(
@@ -196,19 +252,19 @@ class TestMDCPreprocessor:
                     StructField("f0", StringType()), StructField("f1", DoubleType()), StructField("f2", LongType()),
                 ]
             ),
-            # struct fields
+            # struct fields, with escape characters
             (
                 [
-                    [json.dumps([{"simple_field": "v0", "struct_field": {"f0": "t0", "f1": 1,   "f2": 4}}]), "cid0"],  # noqa
-                    [json.dumps([{"simple_field": "v1", "struct_field": {"f0": "t1", "f1": 1.2}},
-                                 {"simple_field": "v2", "struct_field": {"f0": "t2", "f1": 1.3, "f2": 5}}]), "cid1"],  # noqa
-                    [json.dumps([{"simple_field": "v3", "struct_field": {"f0": "t3",            "f2": 6}}]), "cid2"],  # noqa
+                    [json.dumps([{"simple_field": "v0", "struct_field": {"f0": "t\\0",  "f1": 1,    "f2": 4}}]), "cid0"],  # noqa
+                    [json.dumps([{"simple_field": "v1", "struct_field": {"f0": "t\"1",  "f1": 1.2}},
+                                 {"simple_field": "v2", "struct_field": {"f0": "\"t2\"","f1": 1.3,  "f2": 5}}]), "cid1"],  # noqa
+                    [json.dumps([{"simple_field": "v3", "struct_field": {"f0": "\"[\\\"t3\\\"]\"",                "f2": 6}}]), "cid2"],  # noqa
                 ],
                 pd.DataFrame([
-                    {"simple_field": "v0", "struct_field": json.dumps({"f0": "t0", "f1": 1,   "f2": 4}), "correlationid": "cid0_0"},  # noqa
-                    {"simple_field": "v1", "struct_field": json.dumps({"f0": "t1", "f1": 1.2}),          "correlationid": "cid1_0"},  # noqa
-                    {"simple_field": "v2", "struct_field": json.dumps({"f0": "t2", "f1": 1.3, "f2": 5}), "correlationid": "cid1_1"},  # noqa
-                    {"simple_field": "v3", "struct_field": json.dumps({"f0": "t3",            "f2": 6}), "correlationid": "cid2_0"},  # noqa
+                    {"simple_field": "v0", "struct_field": json.dumps({"f0": "t\\0",    "f1": 1,   "f2": 4}),   "correlationid": "cid0_0"},  # noqa
+                    {"simple_field": "v1", "struct_field": json.dumps({"f0": "t\"1",    "f1": 1.2}),            "correlationid": "cid1_0"},  # noqa
+                    {"simple_field": "v2", "struct_field": json.dumps({"f0": "\"t2\"",  "f1": 1.3, "f2": 5}),   "correlationid": "cid1_1"},  # noqa
+                    {"simple_field": "v3", "struct_field": json.dumps({"f0": "\"[\\\"t3\\\"]\"",                 "f2": 6}),   "correlationid": "cid2_0"},  # noqa
                 ]),
                 [
                     StructField("simple_field", StringType()),
@@ -311,81 +367,3 @@ class TestMDCPreprocessor:
                 expected_pdf_ = expected_pdf.drop(columns=["correlationid"], inplace=False)
             actual_pdf = out_df.toPandas()
             assert_frame_equal(actual_pdf, expected_pdf_)
-
-    @pytest.mark.parametrize(
-        "url_str, converted",
-        [
-            ("https://my_account.blob.core.windows.net/my_container/path/to/file", True),
-            ("wasbs://my_container@my_account.blob.core.windows.net/path/to/file", True),
-            ("abfss://my_container@my_account.dfs.core.windows.net/path/to/file", True),
-            (
-                "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name"
-                "/datastores/my_datastore/paths/path/to/file",
-                True
-            ),
-            ("azureml://datastores/my_datastore/paths/path/to/file", True),
-            ("azureml:my_asset:my_version", False),
-            ("file://path/to/file", False),
-            ("path/to/file", False),
-        ]
-    )
-    def test_convert_to_azureml_long_form(self, url_str: str, converted: bool):
-        """Test convert_to_azureml_long_form()."""
-        converted_path = _convert_to_azureml_long_form(url_str, "my_datastore", "my_sub_id",
-                                                       "my_rg_name", "my_ws_name")
-        azureml_long = "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name" \
-            "/datastores/my_datastore/paths/path/to/file"
-        expected_path = azureml_long if converted else url_str
-        assert converted_path == expected_path
-
-    @pytest.mark.parametrize(
-        "input_path, expected_datastore",
-        [
-            (
-                "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name"
-                "/datastores/long_form_datastore/paths/path/to/file",
-                "long_form_datastore"
-            ),
-            ("azureml://datastores/short_form_datastore/paths/path/to/file", "short_form_datastore"),
-            ("file://path/to/folder", None),
-        ]
-    )
-    def test_get_datastore_from_input_path(self, input_path, expected_datastore):
-        """Test get_datastore_from_input_path()."""
-        datastore = _get_datastore_from_input_path(input_path)
-        assert datastore == expected_datastore
-
-    @pytest.mark.parametrize(
-        "input_path",
-        [
-            "wasbs://my_container@my_account.blob.core.windows.net/path/to/file",
-            "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
-        ]
-    )
-    def test_get_datastore_from_input_path_throw_error(self, input_path):
-        """Test get_datastore_from_input_path() with invalid input."""
-        with pytest.raises(ValueError):
-            _get_datastore_from_input_path(input_path)
-
-    @pytest.mark.parametrize(
-        "datastore, path, expected_datastore",
-        [
-            ("asset_datastore", None, "asset_datastore"),
-            (
-                None,
-                "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name"
-                "/datastores/long_form_datastore/paths/path/to/folder",
-                "long_form_datastore"
-            ),
-            (None, "azureml://datastores/short_form_datastore/paths/path/to/folder", "short_form_datastore"),
-            # (None, "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder", "workspaceblobstore")
-        ]
-    )
-    def test_get_datastore_from_input_path_with_asset_path(self, datastore, path, expected_datastore):
-        """Test get_datastore_from_input_path() with asset path."""
-        mock_data_asset = Mock(datastore=datastore, path=path)
-        mock_ml_client = Mock()
-        mock_ml_client.data.get.return_value = mock_data_asset
-
-        datastore = _get_datastore_from_input_path("azureml:my_asset:my_version", mock_ml_client)
-        assert datastore == expected_datastore

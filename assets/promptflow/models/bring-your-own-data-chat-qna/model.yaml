@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: samples/bring_your_own_data_chat_qna/v4/model_folder
+  container_path: samples/bring_your_own_data_chat_qna/v6/model_folder
   storage_name: promptflowsamples
   type: azureblob
 publish:
