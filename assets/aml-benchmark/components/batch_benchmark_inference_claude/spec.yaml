@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference_claude
 display_name: Batch Benchmark Inference with claude support
 description: Components for batch endpoint inference
-version: 0.0.4.test1
+version: 0.0.4.test3
 
 inputs:
   input_dataset:
@@ -141,7 +141,7 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: azureml://registries/azureml-preview-test1/components/batch_inference_preparer/versions/0.0.4.test1
+    component: azureml://registries/azureml-preview-test1/components/batch_inference_preparer/versions/0.0.4.test2
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       model_type: ${{parent.inputs.model_type}}
@@ -158,7 +158,7 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml://registries/azureml-preview-test1/components/batch_benchmark_score/versions/0.0.4.test1
+    component: azureml://registries/azureml-preview-test1/components/batch_benchmark_score/versions/0.0.4.test3
     inputs:
       model_type: ${{parent.inputs.model_type}}
       online_endpoint_url: ${{parent.inputs.endpoint_url}}
@@ -189,7 +189,7 @@ jobs:
   # Reformat
   batch_output_formatter: 
     type: command
-    component: azureml://registries/azureml-preview-test1/components/batch_output_formatter/versions/0.0.4.test1
+    component: azureml://registries/azureml-preview-test1/components/batch_output_formatter/versions/0.0.4.test2
     inputs:
       model_type: ${{parent.inputs.model_type}}
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}

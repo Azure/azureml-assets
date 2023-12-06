@@ -4,7 +4,7 @@ type: command
 name: batch_inference_preparer
 display_name: Batch Inference Preparer
 description: Prepare the jsonl file and endpoint for batch inference component.
-version: 0.0.4.test1
+version: 0.0.4.test2
 
 inputs:
   input_dataset: 

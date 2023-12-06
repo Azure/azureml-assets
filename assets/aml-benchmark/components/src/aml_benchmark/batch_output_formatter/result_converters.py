@@ -101,7 +101,7 @@ class ResultConverters:
                 ground_truth = result[self.METADATA_KEY_IN_RESULT][self._label_key]
             else:
                 use_ground_truth_input = True
-        elif self._model.is_aoai_model():
+        elif self._model.is_aoai_model() or self._model.is_claude_model():
             use_ground_truth_input = True
         elif self._model.is_vision_oss_model():
             use_ground_truth_input = False
