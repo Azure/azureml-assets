@@ -11,7 +11,6 @@ from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
-from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from .result_converters import ResultConverters
 

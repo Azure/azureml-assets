@@ -75,15 +75,17 @@ class OnlineEndpointModel:
                 raise BenchmarkUserException._with_error(
                     AzureMLError.create(
                         BenchmarkUserError,
-                        error_details=f"No associate version with model name {self._model_name} "
-                                      f"in step {self.model_depend_step} can be found. Please make sure the finetuned step"
-                                      f" {self.model_depend_step} has successfully registered the model."
+                        error_details=f"No associate version with model name {self._model_name} in step "
+                                      f"{self.model_depend_step} can be found. Please make sure the finetuned "
+                                      f"step {self.model_depend_step} has successfully registered the model."
                     )
                 )
             self._model_version = str(models[0].version)
             if len(models) > 1:
                 logger.warning(
-                    f"Multiple models with name {self._model_name} are found. Use first one with version  {self._model_version} now.")
+                    f"Multiple models with name {self._model_name} are found. "
+                    f"Use first one with version  {self._model_version} now."
+                )
         return self._model_version
 
     @property

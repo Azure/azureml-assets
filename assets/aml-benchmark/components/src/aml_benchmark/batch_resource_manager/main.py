@@ -93,9 +93,9 @@ def parse_args() -> argparse.Namespace:
         default=False, type=str2bool,
         help="Flag on if this is a finetuned model.",
     )
-    parser.add_argument("--deployment_retries" , default=5, type=int, help="Number of retries for deployment.")
+    parser.add_argument("--deployment_retries", default=5, type=int, help="Number of retries for deployment.")
     parser.add_argument(
-        "--deployment_retry_interval_seconds" , default=600, type=int, help="Retry interval for deployment.")
+        "--deployment_retry_interval_seconds", default=600, type=int, help="Retry interval for deployment.")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
     return args
@@ -208,6 +208,9 @@ def _online_endpoint_generator(
         deployment_sku = int(deployment_sku)
     for subscription in subscription_lists:
         for region in region_lists:
+            if region is None:
+                logger.info("No region received, using workspace region.")
+                region = Run.get_context().experiment.workspace.location
             logger.info("Checking {} in region {}.".format(subscription, region))
             online_endpoint = OnlineEndpointFactory.get_online_endpoint(
                 endpoint_workspace,
