@@ -73,9 +73,9 @@ inputs:
     description: "Format of the output chunk file"
 
 outputs:
-   output_chunks:
-     type: uri_folder
-     description: "Uri Folder containing chunks. Each chunk will be a separate file in the folder"
+    output_chunks:
+      type: uri_folder
+      description: "Uri Folder containing chunks. Each chunk will be a separate file in the folder"
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src'

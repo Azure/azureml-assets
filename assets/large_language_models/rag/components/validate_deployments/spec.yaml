@@ -15,47 +15,48 @@ description: |
   This validation is done only if customer is using Azure Open AI models or creating an ACS index.
 
 inputs:
-   llm_config:
-     type: string
-     optional: true
-     default: '{"type": "azure_open_ai", "model_name": "gpt-35-turbo", "deployment_name": "gpt-35-turbo", "temperature": 0, "max_tokens": 2000}'
-     description: "JSON Configuration for what model to use for question generation. Must contain following keys: 'type' (value must be 'azure_open_ai' or 'azure'), 'model_name' (name of model to use for summary), 'deployment_name' (name of deployment for model), 'temperature' (randomness in response, float from 0 to 1), 'max_tokens' (number of tokens for response)."
-   embeddings_model:
+  llm_config:
+    type: string
+    optional: true
+    default: '{"type": "azure_open_ai", "model_name": "gpt-35-turbo", "deployment_name": "gpt-35-turbo", "temperature": 0, "max_tokens": 2000}'
+    description: "JSON Configuration for what model to use for question generation. Must contain following keys: 'type' (value must be 'azure_open_ai' or 'azure'), 'model_name' (name of model to use for summary), 'deployment_name' (name of deployment for model), 'temperature' (randomness in response, float from 0 to 1), 'max_tokens' (number of tokens for response)."
+  embeddings_model:
     type: string
     optional: true
     description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2' or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
-   check_embeddings:
-     type: string
-     enum:
+  check_embeddings:
+    type: string
+    enum:
       - "True"
       - "False"
-     default: "True"
-     description: "Boolean to inform whether to check the embeddings model deployment or not"
-   check_completion:
-     type: string
-     enum:
+    default: "True"
+    description: "Boolean to inform whether to check the embeddings model deployment or not"
+  check_completion:
+    type: string
+    enum:
       - "True"
       - "False"
-     default: "True"
-     description: "Boolean to inform whether to check the completion model deployment or not"
-   acs_config:
-     type: string
-     optional: true
-     description: "JSON Configuration for the ACS configuration of Azure Search instance to upload embeddings to. Required params: endpoint, index_name"
-   check_acs:
-     type: string
-     optional: true
-     enum:
+    default: "True"
+    description: "Boolean to inform whether to check the completion model deployment or not"
+  acs_config:
+    type: string
+    optional: true
+    description: "JSON Configuration for the ACS configuration of Azure Search instance to upload embeddings to. Required params: endpoint, index_name"
+  check_acs:
+    type: string
+    optional: true
+    enum:
       - "True"
       - "False"
-     default: "False"
-     description: "Boolean to inform whether to check the ACS connection associated with acs_config."
+    default: "False"
+    description: "Boolean to inform whether to check the ACS connection associated with acs_config."
 outputs:
   output_data:
     type: uri_file
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src'
+
 command: >-
   python validate_deployments.py
   --check_embeddings ${{inputs.check_embeddings}}

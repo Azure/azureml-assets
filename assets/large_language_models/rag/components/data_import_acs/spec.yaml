@@ -15,30 +15,36 @@ description: |
   Documents collected can then be used in other components without having to query the ACS index again, allowing for a consistent dataset for chunking, data generation, etc.
 
 inputs:
-   num_docs :
-     type: integer
-     description: "Number of documents to import from ACS instance"
-     default: 50
-   acs_config:
-     type: string
-     description: "Values for connecting to ACS instance. Required keys: 'endpoint', 'endpoint_key_name', 'index_name', 'content_key', 'title_key'. 'content_key' defaults to 'content' and 'title_key' defaults to 'title'"
-   use_existing:
-    type: string
-    description: "Use an existing ACS which is already embedded - directly output MLIndex config"
-    default: "False"
-    enum:
-      - "True"
-      - "False"
+  num_docs :
+    type: integer
+      description: "Number of documents to import from ACS instance"
+      default: 50
+    acs_config:
+      type: string
+      description: "Values for connecting to ACS instance. Required keys: 'endpoint', 'endpoint_key_name', 'index_name', 'content_key', 'title_key'. 'content_key' defaults to 'content' and 'title_key' defaults to 'title'"
+    use_existing:
+      type: string
+      description: "Use an existing ACS which is already embedded - directly output MLIndex config"
+      default: "False"
+      enum:
+        - "True"
+        - "False"
 
 outputs:
-   output_data:
-     type: uri_folder
-     description: "Uri folder containing the documents' content saved as md files"
-   ml_index:
-     type: uri_folder
-     description: "Uri folder containing an MLIndex yaml representing the ACS Index. Can be used with azureml-rag package"
+  output_data:
+    type: uri_folder
+    description: "Uri folder containing the documents' content saved as md files"
+  ml_index:
+    type: uri_folder
+    description: "Uri folder containing an MLIndex yaml representing the ACS Index. Can be used with azureml-rag package"
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/embeddings/'
+
 command: >-
-  python data_import_acs.py --num_docs ${{inputs.num_docs}} --output_data ${{outputs.output_data}} --ml_index ${{outputs.ml_index}} --acs_config '${{inputs.acs_config}}' --use_existing '${{inputs.use_existing}}'
+  python data_import_acs.py
+    --num_docs ${{inputs.num_docs}}
+    --output_data ${{outputs.output_data}}
+    --ml_index ${{outputs.ml_index}}
+    --acs_config '${{inputs.acs_config}}'
+    --use_existing '${{inputs.use_existing}}'

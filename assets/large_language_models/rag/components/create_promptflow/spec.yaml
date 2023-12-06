@@ -43,6 +43,7 @@ inputs:
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src'
+
 command: >-
   python flow_creation.py
   --mlindex_asset_id '${{inputs.mlindex_asset_id}}'

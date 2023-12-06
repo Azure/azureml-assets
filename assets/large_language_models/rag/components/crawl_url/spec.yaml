@@ -58,8 +58,8 @@ inputs:
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
 
-command: 
-  'python -m azureml.rag.tasks.crawl_url
+command: >-
+  python -m azureml.rag.tasks.crawl_url
           --url ${{inputs.url}}        
           --output_path ${{outputs.output_path}}        
           $[[--max_crawl_depth ${{inputs.max_crawl_depth}}]]        
@@ -68,5 +68,4 @@ command:
           $[[--max_file_size ${{inputs.max_file_size}}]]        
           $[[--max_redirects ${{inputs.max_redirects}}]]        
           $[[--max_files ${{inputs.max_files}}]]        
-          $[[--support_http ${{inputs.support_http}}]]        '
-...
+          $[[--support_http ${{inputs.support_http}}]]

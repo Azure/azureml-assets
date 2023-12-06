@@ -43,9 +43,10 @@ outputs:
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
+
 command: >-
   python -m azureml.rag.tasks.update_acs
-  --embeddings ${{inputs.embeddings}}
-  --acs_config '${{inputs.acs_config}}'
-  --output ${{outputs.index}}
-  $[[--connection_id '${{inputs.index_connection_id}}']]
+    --embeddings ${{inputs.embeddings}}
+    --acs_config '${{inputs.acs_config}}'
+    --output ${{outputs.index}}
+    $[[--connection_id '${{inputs.index_connection_id}}']]
