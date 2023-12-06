@@ -1,5 +1,5 @@
 name: acft-hf-nlp-gpu
-version: "31"
+version: "33"
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml
