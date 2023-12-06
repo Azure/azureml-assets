@@ -17,10 +17,11 @@ env:
   PROMPTFLOW_DIR: "assets/promptflow/models"
   SUB_ID: "96aede12-2f73-41cb-b983-6d11a904839b"
 
+permissions:
+  # Required for OIDC login to Azure
+  id-token: write
+
 jobs:
-  permissions:
-    # Required for OIDC login to Azure
-    id-token: write
   check_spec_yaml:
     runs-on: ubuntu-latest
     name: Check spec.yaml fields
