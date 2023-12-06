@@ -1,0 +1,15 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.3
+name: social_media_post_analysis
+display_name: Social Media Post Analysis
+description: Analyze short videos to generate tags, content summaries, and targeted
+  promotions while ensuring better content moderation and risk management
+
+tags:
+  modality: video
+  task: summarization
+
+data_uri: ./prompt
+template_path: prompt.yaml

@@ -1,0 +1,15 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.3
+name: advertising_summary
+display_name: Advertising Summary
+description: Summarize an advertisement and identify issues (i.e. not showing logo
+  early, etc.)
+
+tags:
+  modality: video
+  task: summarization
+
+data_uri: ./prompt
+template_path: prompt.yaml
