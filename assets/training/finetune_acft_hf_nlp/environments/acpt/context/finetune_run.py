@@ -316,9 +316,8 @@ def add_optional_input(cmd, input_name):
 def _run_subprocess_cmd(cmd: List[str], component_name: str):
     """Run the subprocess command."""
     logger.info(f"Starting the command: {cmd}")
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    for line in process.stdout:
-        logger.info(line.strip())
+    # Not setting stdout and stderr will stream all the logs directly to stdout
+    process = subprocess.Popen(cmd)
 
     # get the return code
     return_code = process.wait()
