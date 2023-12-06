@@ -53,4 +53,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: text-classification
-version: 10
+version: 11
