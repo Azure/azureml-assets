@@ -5,7 +5,7 @@
 
 import uuid
 
-from azureml.core.authentication import InteractiveLoginAuthentication
+from azureml.core.authentication import AzureCliAuthentication
 from azureml.core.authentication import ServicePrincipalAuthentication
 
 
@@ -26,9 +26,9 @@ def get_service_principal_authentication_header(tenant_id, client_id, client_sec
     return header
 
 
-def get_interactive_login_authentication_header(request_id=None):
+def get_azure_cli_authentication_header(request_id=None):
     """Get login auth header."""
-    interactive_auth = InteractiveLoginAuthentication()
+    interactive_auth = AzureCliAuthentication()
     header = interactive_auth.get_authentication_header()
     if request_id is None:
         request_id = str(uuid.uuid4())

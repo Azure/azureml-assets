@@ -8,7 +8,7 @@ from datetime import datetime
 import requests
 
 from .authentication import get_service_principal_authentication_header, \
-    get_interactive_login_authentication_header
+    get_azure_cli_authentication_header
 from .retry_helper import retry_helper
 from .logging_utils import log_debug
 
@@ -51,7 +51,7 @@ class MTClient:
         """MT client request call."""
         if self.tenant_id is None or self.client_id is None or self.client_secret is None:
             # Interactive login authentication for local debugging
-            header = get_interactive_login_authentication_header()
+            header = get_azure_cli_authentication_header()
         else:
             header = get_service_principal_authentication_header(tenant_id=self.tenant_id, client_id=self.client_id,
                                                                  client_secret=self.client_secret)
