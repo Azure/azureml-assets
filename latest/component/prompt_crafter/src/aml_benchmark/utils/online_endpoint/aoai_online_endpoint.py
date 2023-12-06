@@ -5,9 +5,11 @@
 
 
 from typing import Optional
+import time
 
 from azureml._model_management._util import get_requests_session
 from azureml._common._error_definition.azureml_error import AzureMLError
+from azure.ai.ml.entities import AccessKeyConfiguration, ApiKeyConfiguration
 
 from ..error_definitions import BenchmarkValidationError
 from ..exceptions import BenchmarkValidationException
@@ -21,6 +23,8 @@ logger = get_logger(__name__)
 
 class AOAIOnlineEndpoint(OnlineEndpoint):
     """Class for AOAI online endpoint."""
+
+    FINETUNED_MAX_SKU = 50
 
     def __init__(
             self,
@@ -71,16 +75,28 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def endpoint_state(self) -> ResourceState:
         """Check if the endpoint exists."""
         resp = self._call_endpoint(get_requests_session().get, self._aoai_account_url)
-        logger.info("Calling {} returned {} with content {}.".format(
+        logger.info("Calling(GET) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
         return self._get_resource_state(resp)
 
-    def deployment_state(self) -> ResourceState:
+    def deployment_state(self, check_model: bool = False) -> ResourceState:
         """Check if the deployment exists."""
         resp = self._call_endpoint(get_requests_session().get, self._aoai_deployment_url)
-        logger.info("Calling {} returned {} with content {}.".format(
-            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
-        return self._get_resource_state(resp)
+        content = self._get_content_from_response(resp)
+        logger.info("Calling(GET)  {} returned {} with content {}.".format(
+            self._aoai_deployment_url, resp.status_code, content))
+        status = self._get_resource_state(resp)
+        provisioning_state = content.get('properties', {}).get('provisioningState', None)
+        if status == ResourceState.SUCCESS:
+            if check_model:
+                self._is_same_deployed_model(content)
+            if provisioning_state is not None and provisioning_state.lower() == 'failed':
+                return ResourceState.FAILURE
+            if provisioning_state is not None and provisioning_state.lower() == 'succeeded':
+                return ResourceState.SUCCESS
+            if provisioning_state is not None:
+                return ResourceState.NOT_READY
+        return status
 
     def create_endpoint(self):
         """Create the endpoint."""
@@ -98,7 +114,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         }
         resp = self._call_endpoint(get_requests_session().put, self._aoai_account_url, payload=payload)
         self._raise_if_not_success(resp)
-        logger.info("Calling {} returned {} with content {}.".format(
+        logger.info("Calling(PUT) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
 
     def create_deployment(self):
@@ -117,15 +133,21 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                     "format": "OpenAI",
                     "name": self._model.model_name,
                     "version": self._model.model_version
-                },
-                "raiPolicyName": "Microsoft.Default",
-                "versionUpgradeOption": "OnceNewDefaultVersionAvailable"
+                }
             }
         }
+        if self._model.is_finetuned:
+            payload['properties']['model']['source'] = self._model.source
+        else:
+            payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
+            payload['properties']["raiPolicyName"] = "Microsoft.Default"
         resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
         self._raise_if_not_success(resp)
-        logger.info("Calling {} returned {} with content {}.".format(
+        logger.info("Calling(PUT) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
+        while self.deployment_state() == ResourceState.NOT_READY:
+            logger.info("Deployment is not ready yet, waiting for 30 seconds...")
+            time.sleep(30)
 
     def get_endpoint_authorization_header(self) -> dict:
         """Get the authorization header."""
@@ -147,20 +169,21 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
 
     def delete_endpoint(self):
         """Delete the endpoint."""
-        resp = self._call_endpoint(get_requests_session().delete, self._aoai_account_url)
-        self._raise_if_not_success(resp)
-        logger.info("Calling {} returned {} with content {}.".format(
-            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
+        self._delete_resource(self._aoai_account_url)
 
     def delete_deployment(self):
         """Delete the deployment."""
-        resp = self._call_endpoint(get_requests_session().delete, self._aoai_deployment_url)
+        self._delete_resource(self._aoai_deployment_url)
+
+    def _delete_resource(self, resource_url: str) -> None:
+        """Delete the resource."""
+        resp = self._call_endpoint(get_requests_session().delete, resource_url)
         self._raise_if_not_success(resp)
-        logger.info("Calling {} returned {} with content {}.".format(
-            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
+        logger.info("Calling(DELETE) {} returned {} with content {}.".format(
+            resource_url, resp.status_code, self._get_content_from_response(resp)))
 
     @property
-    def sku(self) -> str:
+    def sku(self) -> int:
         """Get the sku."""
         return int(self._sku) if self._sku else 120
 
@@ -204,13 +227,59 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         """Aoai deployment url."""
         return f'{self._aoai_deployment_base_url}?api-version={self._api_version}'
 
+    @property
+    def _aoai_subscription_usage_url(self) -> str:
+        url_list = [
+            self._arm_base_subscription, 'providers/Microsoft.CognitiveServices',
+            'locations', self._location, f'usages?api-version={self._api_version}'
+        ]
+        return "/".join(url_list)
+
     def _get_scoring_url(self) -> str:
         """Get the scoring url."""
         url_list = [
-            f'https://{self.endpoint_name}.openai.azure.com', 'openai', 'deployments',
+            self._scoring_url_base, 'openai', 'deployments',
             self.deployment_name, 'chat', 'completions?api-version=2023-07-01-preview'
         ]
         return '/'.join(url_list)
+
+    @property
+    def _scoring_url_base(self) -> str:
+        """Get the scoring url base."""
+        try:
+            # The base can be https://{self.endpoint_name}.openai.azure.com or
+            # https://region.api.cognitive.microsoft.com
+            resp = self._call_endpoint(get_requests_session().get, self._aoai_account_url)
+            self._raise_if_not_success(resp)
+            content = self._get_content_from_response(resp)
+            logger.info("Calling(GET) {} returned {} with content {}.".format(
+                self._aoai_account_url, resp.status_code, self._get_content_from_response(resp)))
+            url = content['properties']['endpoint']
+            if url.endswith('/'):
+                url = url[:-1]
+            return url
+        except Exception as e:
+            logger.warning(f'Failed to get the scoring url base. Error: {e}, using the default one')
+            return f'https://{self.endpoint_name}.openai.azure.com'
+
+    def _is_same_deployed_model(self, content) -> str:
+        if self._model.model_name is None or self._model.model_version is None:
+            logger.info("No model info input, cannot compare.")
+            return None
+        model = content.get('properties', {}).get('model', {})
+        model_name = model.get('name', '')
+        model_version = model.get('version', '')
+        model_source = model.get('source', '')
+        if model_name == self._model.model_name and model_version == self._model.model_version \
+                and model_source == self._model.source:
+            logger.info("The deployed model is the same as the input model. Skipping deployment now.")
+        else:
+            logger.warning(
+                "The deployed model is different from the input model. "
+                f"The deployed model is {model_name}:{model_version} with source {model_source}, "
+                f"the input model is {self._model.model_name}:{self._model.model_version} "
+                f"with source {self._model.source}. "
+                "Skipping deployment now.")
 
     def _validate_settings(self) -> None:
         """Validate settings."""
@@ -224,3 +293,25 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                     BenchmarkValidationError,
                     error_details='SKU for AOAI model must be int.')
                 )
+
+    def _get_access_key_config(self) -> AccessKeyConfiguration:
+        return ApiKeyConfiguration(
+            key=self._get_endpoint_token()
+        )
+
+    def model_quota(self):
+        """Get the model quota."""
+        logger.info(self._aoai_subscription_usage_url)
+        resp = self._call_endpoint(get_requests_session().get, self._aoai_subscription_usage_url)
+        content = {}
+        quota = -1
+        try:
+            self._raise_if_not_success(resp)
+            content = self._get_content_from_response(resp)
+        except Exception as e:
+            logger.error(f'Failed to get the model quota. {e}')
+        for result in content.get('value'):
+            if result.get("name", {}).get("value", "").lower() == f"OpenAI.Standard.{self._model.model_name}".lower():
+                quota = result['limit'] - result['currentValue']
+                break
+        return quota

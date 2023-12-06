@@ -24,7 +24,9 @@ class OnlineEndpointFactory:
             deployment_name: Optional[str] = None,
             sku: Optional[str] = None,
             location: Optional[str] = None,
-            connections_name: Optional[str] = None
+            connections_name: Optional[str] = None,
+            additional_deployment_env_vars: dict = {},
+            deployment_env: str = None
     ) -> OnlineEndpoint:
         """Get the online endpoint."""
         online_endpoint_url = endpoint if OnlineEndpointFactory._is_endpoint_url(endpoint) else None
@@ -52,7 +54,9 @@ class OnlineEndpointFactory:
                 endpoint_name,
                 deployment_name,
                 sku,
-                connections_name=connections_name
+                connections_name=connections_name,
+                additional_deployment_env_vars=additional_deployment_env_vars,
+                deployment_env=deployment_env
             )
 
     @staticmethod
@@ -66,15 +70,15 @@ class OnlineEndpointFactory:
             metadata_dict['model_type']
         )
         return OnlineEndpointFactory.get_online_endpoint(
-            metadata_dict['workspace_name'],
-            metadata_dict['resource_group'],
-            metadata_dict['subscription_id'],
-            online_endpoint_model,
-            metadata_dict['scoring_url'],
-            metadata_dict['deployment_name'],
-            None,
-            None,
-            metadata_dict['connections_name']
+            workspace_name=metadata_dict['workspace_name'],
+            resource_group=metadata_dict['resource_group'],
+            subscription_id=metadata_dict['subscription_id'],
+            online_endpoint_model=online_endpoint_model,
+            endpoint=metadata_dict['endpoint_name'],
+            deployment_name=metadata_dict['deployment_name'],
+            sku=None,
+            location=None,
+            connections_name=metadata_dict['connection_name']
         )
 
     @staticmethod

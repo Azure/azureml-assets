@@ -113,6 +113,10 @@ inputs:
     optional: true
     default: 100KB
     description: The mini batch size for parallel run.
+  endpoint_config_file:
+    type: uri_file
+    optional: true
+    description: The endpoint config file.
   initial_worker_count:
     type: integer
     optional: false
@@ -186,6 +190,7 @@ jobs:
       max_worker_count: ${{parent.inputs.max_worker_count}}
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
       mini_batch_size: ${{parent.inputs.mini_batch_size}}
+      deployment_metadata: ${{parent.inputs.endpoint_config_file}}
     outputs:
       job_out_path:
         type: uri_file

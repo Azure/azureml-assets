@@ -35,6 +35,10 @@ inputs:
     optional: true
     description: A stringified json expressing additional headers to be added to each
       request.
+  mini_batch_size:
+    type: string
+    optional: true
+    description: The mini batch size for parallel run.
   user_agent_segment:
     type: string
     optional: true
@@ -66,10 +70,10 @@ inputs:
     optional: false
     default: false
     description: Enable debug mode will print all the debug logs in the score step.
-  mini_batch_size:
-    type: string
+  deployment_metadata:
+    type: uri_file
     optional: true
-    description: The mini batch size for parallel run.
+    description: The deployment metadata directory that contains deployment details.
 outputs:
   job_out_path:
     type: uri_file
@@ -90,8 +94,8 @@ task:
     append_row --initial_worker_count ${{inputs.initial_worker_count}} --max_worker_count
     ${{inputs.max_worker_count}} $[[--max_retry_time_interval ${{inputs.max_retry_time_interval}}]]
     --save_mini_batch_results enabled --mini_batch_results_out_directory ${{outputs.mini_batch_results_out_directory}}
-    --connections_name ${{inputs.connections_name}}  $[[--deployment_name ${{inputs.deployment_name}}]]  $[[--mini_batch_size
-    ${{inputs.mini_batch_size}}]]
+    --connections_name ${{inputs.connections_name}}  $[[--deployment_name ${{inputs.deployment_name}}]]
+    $[[--input_metadata ${{inputs.deployment_metadata}}]] $[[--mini_batch_size ${{inputs.mini_batch_size}}]]
   entry_script: aml_benchmark.batch_benchmark_score.batch_score.main
   type: run_function
   append_row_to: ${{outputs.job_out_path}}

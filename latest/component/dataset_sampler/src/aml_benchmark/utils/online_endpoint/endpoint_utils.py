@@ -5,7 +5,6 @@
 
 
 from typing import Any
-import os
 import json
 import hashlib
 import re
@@ -30,7 +29,7 @@ class EndpointUtilities:
             is_managed_endpoint: bool,
             is_managed_deployment: bool,
             is_managed_connections: bool,
-            output_dir: str
+            output_path: str
     ):
         """Dump endpoint info metadata json."""
         headers = {'Content-Type': 'application/json'}
@@ -49,15 +48,15 @@ class EndpointUtilities:
             "subscription_id": online_endpoint.subscription_id,
             "model_path": online_endpoint.model.model_path,
             "model_type": online_endpoint.model.model_type,
-            "connections_name": online_endpoint.connections_name,
+            "connection_name": online_endpoint.connections_name
         }
-        with open(os.path.join(output_dir, EndpointUtilities.METADATA_FILE), 'w') as metadata_file:
+        with open(output_path, 'w') as metadata_file:
             json.dump(endpoint_metadata, metadata_file)
 
     @staticmethod
-    def load_endpoint_metadata_json(output_dir: str) -> dict:
+    def load_endpoint_metadata_json(output_path: str) -> dict:
         """Load endpoint info metadata json."""
-        with open(os.path.join(output_dir, EndpointUtilities.METADATA_FILE), 'r') as metadata_file:
+        with open(output_path, 'r') as metadata_file:
             return json.load(metadata_file)
 
     @staticmethod
@@ -65,7 +64,7 @@ class EndpointUtilities:
         is_endpoint_deleted: bool,
         is_deployment_deleted: bool,
         is_connections_deleted: bool,
-        output_dir: str
+        output_path: str
     ) -> None:
         """Dump delete status."""
         delete_status = {
@@ -73,7 +72,7 @@ class EndpointUtilities:
             "is_deployment_deleted": is_deployment_deleted,
             "is_connections_deleted": is_connections_deleted,
         }
-        with open(os.path.join(output_dir, EndpointUtilities.DELETE_STATUS_FILE), 'w') as delete_status_file:
+        with open(output_path, 'w') as delete_status_file:
             json.dump(delete_status, delete_status_file)
 
     @staticmethod
@@ -106,3 +105,14 @@ class EndpointUtilities:
                 "Failed to get the prompt from payload {} use the full payload now.".format(e))
             prompt = str(payload)
         return EndpointUtilities._hash_string_character(str(prompt))
+
+    @staticmethod
+    def get_model_from_deployment_config_file(dir_path: str) -> OnlineEndpointModel:
+        """Get the online endpoint model from deployment config file."""
+        config = EndpointUtilities.load_endpoint_metadata_json(dir_path)
+        return OnlineEndpointModel(
+            config['model_path'],
+            None,
+            config['model_type'],
+            config['scoring_url']
+        )

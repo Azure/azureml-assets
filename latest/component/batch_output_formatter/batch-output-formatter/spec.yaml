@@ -19,7 +19,7 @@ inputs:
     description: The label column name.
   endpoint_url:
     type: string
-    optional: false
+    optional: true
   ground_truth_input:
     type: uri_folder
     description: The raw batch inference output.
@@ -61,7 +61,7 @@ command: >-
   --prediction_data ${{outputs.predictions}}
   --perf_data ${{outputs.performance_metadata}}
   --predict_ground_truth_data ${{outputs.ground_truth}}
-  --endpoint_url ${{inputs.endpoint_url}}
+  $[[--endpoint_url ${{inputs.endpoint_url}}]]
   $[[--label_key ${{inputs.label_column_name}}]]
   --handle_response_failure ${{inputs.handle_response_failure}}
   --is_performance_test ${{inputs.is_performance_test}}
