@@ -11,9 +11,9 @@ dependencies:
 - pip:
   - setuptools==65.5.1
   - wheel~=0.38.1
-  - azureml-core==1.54.0
+  - azureml-core==1.54.0.post1
   - azureml-defaults==1.54.0
-  - azureml-mlflow==1.54.0
+  - azureml-mlflow==1.54.0.post1
   - azureml-telemetry==1.54.0
   - azureml-automl-common-tools==1.54.0
   - tensorflow~=2.11.1

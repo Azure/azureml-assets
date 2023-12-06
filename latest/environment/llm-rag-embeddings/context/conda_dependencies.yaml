@@ -20,10 +20,10 @@ dependencies:
   - azure-search-documents==11.4.0b8
     # Azure ML
   - azureml-contrib-services
-  - azureml-core==1.54.0
+  - azureml-core==1.54.0.post1
   - azureml-dataprep>=4.12.7 # Change back to latest version once azureml-fsspec is compatible
   - azureml-inference-server-http==0.7.6
-  - azureml-mlflow==1.54.0
+  - azureml-mlflow==1.54.0.post1
   - azureml-telemetry==1.54.0
     # Other public packages
   - beautifulsoup4~=4.11.2

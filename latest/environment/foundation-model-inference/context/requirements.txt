@@ -11,7 +11,7 @@ azure-ai-ml==1.12.1
 azure-identity==1.15.0
 azureml-ai-monitoring==0.1.0b4
 azureml-inference-server-http==1.0.0
-azureml-mlflow==1.54.0
+azureml-mlflow==1.54.0.post1
 cryptography~=41.0.5
 certifi==2023.07.22
 requests~=2.31.0
