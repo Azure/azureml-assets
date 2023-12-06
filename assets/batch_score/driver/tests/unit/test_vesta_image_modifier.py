@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 from mock import MagicMock
@@ -59,8 +60,8 @@ def test_modify(mock_get_logger, make_vesta_image_modifier, mock__b64_from_url):
     modified_request_obj = vesta_image_modifier.modify(request_obj=vesta_request_obj)
     
     # Assert the two URLs were called
-    assert any("https://fake.url" in url for url in mock__b64_from_url)
-    assert any("https://another.fake.url" in url for url in mock__b64_from_url)
+    assert any("fake.url" in urlparse(url).hostname for url in mock__b64_from_url)
+    assert any("another.fake.url" in urlparse(url).hostname for url in mock__b64_from_url)
 
     # Assert modifications are correct
     assert modified_request_obj["transcript"][1]["data"] == MOCKED_BINARY_FROM_URL

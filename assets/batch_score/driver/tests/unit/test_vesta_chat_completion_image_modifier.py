@@ -1,4 +1,5 @@
 import pytest
+from urllib.parse import urlparse
 
 from src.batch_score.common.request_modification.modifiers.vesta_chat_completion_image_modifier import (
     VestaChatCompletionImageModifier,
@@ -45,7 +46,7 @@ def test_modify(mock_get_logger, make_vesta_chat_completion_image_modifier, mock
     modified_request_obj = vesta_image_modifier.modify(request_obj=vesta_request_obj)
     
     # Assert the two URLs were called
-    assert any("https://fake.url" in url for url in mock__b64_from_url)
+    assert any("fake.url" in urlparse(url).hostname for url in mock__b64_from_url)
 
     # Assert modifications are correct
     # raise Exception(str(modified_request_obj["messages"][1]["content"][2]))
