@@ -362,7 +362,7 @@ def setup_header_handler(
     endpoint_subscription_id = input_metadata.get("subscription_id", args.endpoint_subscription_id)
     endpoint_name = input_metadata.get("endpoint_name", scoring_url.split('/')[2].split('.')[0])
     deployment_name = input_metadata.get("deployment_name", args.deployment_name)
-    connections_name = input_metadata.get("connections_name", args.connections_name)
+    connections_name = input_metadata.get("connection_name", args.connections_name)
 
     model = OnlineEndpointModel(
         model=None, model_version=None, model_type=model_type, endpoint_url=scoring_url)
