@@ -1,0 +1,21 @@
+from ...common.auth.token_provider import TokenProvider
+from ..header_handler import HeaderHandler
+
+
+class RateLimiterHeaderHandler(HeaderHandler):
+    def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
+        bearer_token = self._token_provider.get_token(scope=TokenProvider.SCOPE_ARM)
+        user_agent = self._get_user_agent()
+
+        headers = {
+            "Authorization": f"Bearer {bearer_token}",
+            "Content-Type": "application/json",
+            "User-Agent": user_agent,
+        }
+
+        headers.update(self._additional_headers)
+
+        if additional_headers:
+            headers.update(additional_headers)
+
+        return headers
