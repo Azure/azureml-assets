@@ -9,7 +9,7 @@ class ChatCompletionEstimator(DV3Estimator):
     def _get_prompt(self, request_obj: any) -> str:
         messages = request_obj.get("messages", None)
         prompt: str = None
-        
+
         if messages:
             for message in messages:
                 content: str = message.get("content", None)

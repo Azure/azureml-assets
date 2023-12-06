@@ -18,16 +18,18 @@ class ExceptionTrace(TraceConfig):
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}ExceptionTrace exceptiom: {params.exception}")
 
+
 class RequestEndTrace(TraceConfig):
     def __init__(self):
         super().__init__()
         self.on_request_end.append(self.__on_request_end)
-    
+
     async def __on_request_end(self, session, trace_config_ctx, params: aiohttp.TraceRequestEndParams):
         prefix = ""
         if trace_config_ctx.trace_request_ctx and "worker_id" in trace_config_ctx.trace_request_ctx:
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}RequestEndTrace response: {params.response}")
+
 
 class RequestRedirectTrace(TraceConfig):
     def __init__(self):
@@ -40,6 +42,7 @@ class RequestRedirectTrace(TraceConfig):
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}RequestRedirectTrace response: {params.response}")
 
+
 class ResponseChunkReceivedTrace(TraceConfig):
     def __init__(self):
         super().__init__()
@@ -50,6 +53,7 @@ class ResponseChunkReceivedTrace(TraceConfig):
         if trace_config_ctx.trace_request_ctx and "worker_id" in trace_config_ctx.trace_request_ctx:
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}ResponseChunkReceivedTrace chunk: {params.chunk}")
+
 
 class ConnectionCreateStartTrace(TraceConfig):
     def __init__(self):
@@ -62,6 +66,7 @@ class ConnectionCreateStartTrace(TraceConfig):
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}ConnectionCreateStartTrace: Connection creation started")
 
+
 class ConnectionCreateEndTrace(TraceConfig):
     def __init__(self):
         super().__init__()
@@ -73,6 +78,7 @@ class ConnectionCreateEndTrace(TraceConfig):
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}ConnectionCreateEndTrace: Connection creation ended")
 
+
 class ConnectionReuseconnTrace(TraceConfig):
     def __init__(self):
         super().__init__()
@@ -83,6 +89,3 @@ class ConnectionReuseconnTrace(TraceConfig):
         if trace_config_ctx.trace_request_ctx and "worker_id" in trace_config_ctx.trace_request_ctx:
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}ConnectionReuseconnTrace: Connection reused")
-
-
-

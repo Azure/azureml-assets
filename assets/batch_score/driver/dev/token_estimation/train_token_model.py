@@ -22,7 +22,7 @@ def main(argv):
 
     parser.add_argument('--test')
     parser.add_argument('--train', nargs='+', required=True)
-    
+
     parser.add_argument('--split-fraction', type=float, default=0.2,
                         help='If no test data is provided, use this random fraction of the training data instead.')
 
@@ -67,9 +67,9 @@ def load_tokenizer():
 
 def load_data(paths: 'list[str]', tokenizer: Encoding, *, sample: bool = True):
     encoded_x = {
-        'bytes': [], # Histogram
-        'chars': [], # Total count
-        'words': [], # Total count
+        'bytes': [],  # Histogram
+        'chars': [],  # Total count
+        'words': [],  # Total count
     }
 
     encoded_y = []
@@ -142,23 +142,23 @@ def print_stats(model: LinearRegression, test_x, test_y, *, name=''):
     pred_y = model.predict(test_x)
 
     print()
-    print(f'=====')
+    print('=====')
     print(f'Model {name}')
-    print(f'=====')
+    print('=====')
     print()
-    print(f'Coefficients:', model.coef_, sep='\n')
-    print(f'---')
+    print('Coefficients: ', model.coef_, sep='\n')
+    print('---')
     print(f'Min: {test_y.min()}')
     print(f'Avg: {int(test_y.mean())}')
     print(f'Max: {test_y.max()}')
-    print(f'---')
+    print('---')
     print(f'R^2:  {model.score(test_x, test_y)}')
     print(f'MSE:  {np.square(pred_y - test_y).mean()}')
     print(f'MAE%: {100*(np.abs(pred_y - test_y)/test_y).mean()}')
-    print(f'---')
+    print('---')
     print(f'Min AE: {np.abs(pred_y - test_y).min()}')
     print(f'Max AE: {np.abs(pred_y - test_y).max()}')
-    print(f'---')
+    print('---')
     print(f'Min AE%: {100*(np.abs(pred_y - test_y)/test_y).min()}')
     print(f'Max AE%: {100*(np.abs(pred_y - test_y)/test_y).max()}')
 
@@ -179,4 +179,3 @@ def write_eval(y, path: str):
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
-

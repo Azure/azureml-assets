@@ -30,7 +30,7 @@ class HeaderHandler(ABC):
             self._additional_headers = {}
 
     @abstractclassmethod
-    def get_headers(self, additional_headers: "dict[str, any]" = None)-> "dict[str, any]":
+    def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
         pass
 
     # read-only

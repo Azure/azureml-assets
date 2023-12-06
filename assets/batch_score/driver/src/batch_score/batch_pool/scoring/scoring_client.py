@@ -136,16 +136,16 @@ class ScoringClient:
         except (asyncio.TimeoutError, aiohttp.ServerConnectionError, aiohttp.ClientConnectionError, aiohttp.ClientPayloadError) as e:
             client_exception = e
             fully_qualified_exception_name = type(client_exception).__module__ + "." + type(client_exception).__name__
-            response_status = -408 # Manually attribute -408 as a tell to retry on this exception
+            response_status = -408  # Manually attribute -408 as a tell to retry on this exception
 
             lu.get_logger().error("Worker {}: Score failed: {} -- internal_id: {} x-ms-client-request-id: {}".format(
-                worker_id, 
+                worker_id,
                 fully_qualified_exception_name,
                 scoring_request.internal_id,
                 headers["x-ms-client-request-id"]))
         except Exception as e:
             client_exception = e
-            response_status = -500 # Manually attribute -500 as a tell to not retry unhandled exceptions
+            response_status = -500  # Manually attribute -500 as a tell to not retry unhandled exceptions
 
             lu.get_logger().error("Worker {}: Score failed: unhandled exception -- internal_id: {} x-ms-client-request-id: {}. Exception: {}".format(
                 worker_id,
@@ -160,10 +160,9 @@ class ScoringClient:
         end = time.time()
 
         retriable_type = scoring_utils.get_retriable_type(response_status=response_status,
-                                                  response_payload=response_payload,
-                                                  model_response_code=model_response_code,
-                                                  model_response_reason=model_response_reason)
-        
+                                                          response_payload=response_payload,
+                                                          model_response_code=model_response_code,
+                                                          model_response_reason=model_response_reason)
         is_retriable = scoring_utils.is_retriable(retriable_type)
 
         # Record endpoint url and response_status
@@ -211,7 +210,7 @@ class ScoringClient:
             get_events_client().emit_tokens_generated(result.completion_tokens, result.prompt_tokens, target_endpoint_url)
         elif is_retriable:
             raise RetriableException(status_code=response_status, response_payload=response_payload, model_response_code=model_response_code, model_response_reason=model_response_reason)
-        else: # Score failed
+        else:  # Score failed
             result = ScoringResult(
                 status=ScoringResultStatus.FAILURE,
                 start=start,
@@ -239,7 +238,6 @@ class ScoringClient:
             # aiohttp.ClientSession's timeout, which is set in `Conductor.__configure_session_timeout`
             return None
 
-
     def get_retry_timeout_generator(default_timeout: aiohttp.ClientTimeout):
         """
         A Python generator that yields aiohttp.ClientTimeout objects.
@@ -251,7 +249,6 @@ class ScoringClient:
             else:
                 yield aiohttp.ClientTimeout(timeout)
         yield default_timeout
-
 
     async def _get_target_endpoint_url(self, session, scoring_request, worker_id):
         if self.__routing_client is None:
@@ -287,7 +284,7 @@ class ScoringClient:
     def _validate_init_params(self):
         # Check for invalid parameter combination
         if self.__routing_client is not None and \
-            (self.__online_endpoint_url is not None or "azureml-model-deployment" in self.__header_handler.get_headers()):
+                (self.__online_endpoint_url is not None or "azureml-model-deployment" in self.__header_handler.get_headers()):
             lu.get_logger().error("Invalid parameter combination. batch_pool AND (online_endpoint_url or azureml-model-deployment header) are provided.")
-            
+
             raise Exception("Invalid parameter combination")

@@ -61,7 +61,13 @@ from .common.telemetry.trace_configs import (
     ResponseChunkReceivedTrace,
 )
 from .header_handlers.meds.meds_header_handler import MedsHeaderHandler
-from .header_handlers.open_ai import *
+from .header_handlers.open_ai import (
+    ChatCompletionHeaderHandler,
+    CompletionHeaderHandler,
+    OpenAIHeaderHandler,
+    SaharaHeaderHandler,
+    VestaHeaderHandler,
+)
 from .header_handlers.mir_endpoint_v2_header_handler import MIREndpointV2HeaderHandler
 from .header_handlers.open_ai.vesta_chat_completion_header_handler import (
     VestaChatCompletionHeaderHandler,
@@ -74,6 +80,7 @@ from .utils.json_encoder_extensions import setup_encoder
 
 par: parallel.Parallel = None
 configuration: Configuration = None
+
 
 def init():
     global par
@@ -124,6 +131,7 @@ def init():
 
     get_events_client().emit_batch_driver_init(job_params=vars(configuration))
 
+
 def run(input_data: pd.DataFrame, mini_batch_context):
     global par
     global configuration
@@ -148,7 +156,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
             save_mini_batch_results(ret, configuration.mini_batch_results_out_directory, mini_batch_context)
         else:
             lu.get_logger().info("save_mini_batch_results is disabled")
-        
+
     except Exception as e:
         get_events_client().emit_mini_batch_completed(
             input_row_count=len(data_list),
@@ -166,6 +174,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
         set_mini_batch_id(None)
 
     return get_return_value(ret, configuration.output_behavior)
+
 
 def enqueue(input_data: pd.DataFrame, mini_batch_context):
     global par
@@ -199,12 +208,14 @@ def enqueue(input_data: pd.DataFrame, mini_batch_context):
         lu.get_logger().info("Completed enqueueing mini-batch {}.".format(mini_batch_id))
         set_mini_batch_id(None)
 
+
 def check_all_tasks_processed() -> bool:
     global par
     global configuration
 
     lu.get_logger().debug("check_all_tasks_processed")
     return par.check_all_tasks_processed()
+
 
 def get_finished_batch_result() -> "dict[str, dict[str, any]]":
     global par
@@ -213,12 +224,14 @@ def get_finished_batch_result() -> "dict[str, dict[str, any]]":
     lu.get_logger().debug("get_finished_batch_result")
     return par.get_finished_batch_result()
 
+
 def get_processing_batch_number() -> int:
     global par
     global configuration
 
     lu.get_logger().debug("get_processing_batch_number")
     return par.get_processing_batch_number()
+
 
 def shutdown():
     global par
@@ -229,24 +242,33 @@ def shutdown():
 
     par.shutdown()
 
+
 def setup_trace_configs():
     is_enabled = os.environ.get(constants.BATCH_SCORE_TRACE_LOGGING, None)
     trace_configs = None
 
     if is_enabled and is_enabled.lower() == "true":
         lu.get_logger().info("Trace logging enabled, populating trace_configs.")
-        trace_configs = [ExceptionTrace(), ResponseChunkReceivedTrace(), RequestEndTrace(), RequestRedirectTrace(), ConnectionCreateStartTrace(), ConnectionCreateEndTrace(), ConnectionReuseconnTrace()]
+        trace_configs = [ExceptionTrace(),
+                         ResponseChunkReceivedTrace(),
+                         RequestEndTrace(),
+                         RequestRedirectTrace(),
+                         ConnectionCreateStartTrace(),
+                         ConnectionCreateEndTrace(),
+                         ConnectionReuseconnTrace()]
     else:
         lu.get_logger().info("Trace logging disabled")
 
     return trace_configs
 
+
 def setup_loop() -> asyncio.AbstractEventLoop:
     if sys.platform == 'win32':
         # For windows environment
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-    
+
     return asyncio.new_event_loop()
+
 
 def setup_input_to_request_transformer() -> InputTransformer:
     """This tranformer is used to modify each row of the input data before it is sent to MIR for scoring."""
@@ -258,6 +280,7 @@ def setup_input_to_request_transformer() -> InputTransformer:
 
     return InputTransformer(modifiers=modifiers)
 
+
 def setup_input_to_log_transformer() -> InputTransformer:
     """This tranformer is used to modify each row of the input data before it is logged."""
     modifiers: "list[RequestModifier]" = []
@@ -265,11 +288,12 @@ def setup_input_to_log_transformer() -> InputTransformer:
         modifiers.append(VestaEncodedImageScrubber())
     elif configuration.is_vesta_chat_completion():
         modifiers.append(VestaChatCompletionEncodedImageScrubber())
-    
+
     if not _should_emit_prompts_to_job_log():
         modifiers.append(PromptRedactionModifier())
 
     return InputTransformer(modifiers=modifiers)
+
 
 def setup_input_to_output_transformer() -> InputTransformer:
     """This tranformer is used to modify each row of the input data before it written to output."""
@@ -278,8 +302,9 @@ def setup_input_to_output_transformer() -> InputTransformer:
         modifiers.append(VestaEncodedImageScrubber())
     elif configuration.is_vesta_chat_completion():
         modifiers.append(VestaChatCompletionEncodedImageScrubber())
-    
+
     return InputTransformer(modifiers=modifiers)
+
 
 def setup_scoring_client(
     configuration: Configuration,
@@ -296,7 +321,8 @@ def setup_scoring_client(
             routing_client=routing_client,
             connection_name=configuration.connection_name
         )
-    
+
+
 def setup_aoai_scoring_client(
     configuration: Configuration
 ) -> AoaiScoringClient:
@@ -309,7 +335,8 @@ def setup_aoai_scoring_client(
     scoring_client.validate()
 
     return scoring_client
-    
+
+
 def setup_mir_scoring_client(
     token_provider: TokenProvider,
     routing_client: RoutingClient,
@@ -343,7 +370,7 @@ def setup_mir_scoring_client(
 
     '''Get the auth token from workspace connection and add that to the header. Additionally, add the 'Content-Type' header.
     The presence of workspace connection also signifies that this can be any MIR endpoint, so this will not add OAI specific headers.
-    '''    
+    '''
     if connection_name is not None:
         header_handler = MIREndpointV2HeaderHandler(connection_name)
     else:
@@ -358,6 +385,7 @@ def setup_mir_scoring_client(
     )
 
     return scoring_client
+
 
 def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
     routing_client: RoutingClient = None
@@ -377,32 +405,57 @@ def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
 
     return routing_client
 
+
 def setup_header_handler(routing_client: RoutingClient, token_provider: TokenProvider) -> OpenAIHeaderHandler:
     if configuration.is_sahara(routing_client=routing_client):
-        return SaharaHeaderHandler(token_provider=token_provider, user_agent_segment=configuration.user_agent_segment, batch_pool=configuration.batch_pool, quota_audience=configuration.quota_audience, additional_headers=configuration.additional_headers)
+        return SaharaHeaderHandler(token_provider=token_provider,
+                                   user_agent_segment=configuration.user_agent_segment,
+                                   batch_pool=configuration.batch_pool,
+                                   quota_audience=configuration.quota_audience,
+                                   additional_headers=configuration.additional_headers)
     if configuration.is_vesta():
-        return VestaHeaderHandler(token_provider=token_provider, user_agent_segment=configuration.user_agent_segment, batch_pool=configuration.batch_pool, quota_audience=configuration.quota_audience, additional_headers=configuration.additional_headers)
+        return VestaHeaderHandler(token_provider=token_provider,
+                                  user_agent_segment=configuration.user_agent_segment,
+                                  batch_pool=configuration.batch_pool,
+                                  quota_audience=configuration.quota_audience,
+                                  additional_headers=configuration.additional_headers)
     if configuration.is_vesta_chat_completion():
-        return VestaChatCompletionHeaderHandler(token_provider=token_provider, user_agent_segment=configuration.user_agent_segment, batch_pool=configuration.batch_pool, quota_audience=configuration.quota_audience, additional_headers=configuration.additional_headers)
+        return VestaChatCompletionHeaderHandler(token_provider=token_provider,
+                                                user_agent_segment=configuration.user_agent_segment,
+                                                batch_pool=configuration.batch_pool,
+                                                quota_audience=configuration.quota_audience,
+                                                additional_headers=configuration.additional_headers)
     # TODO: Embeddings should probably have its own handler
     if configuration.is_completion() or configuration.is_embeddings():
-        return CompletionHeaderHandler(token_provider=token_provider, user_agent_segment=configuration.user_agent_segment, batch_pool=configuration.batch_pool, quota_audience=configuration.quota_audience, additional_headers=configuration.additional_headers)
+        return CompletionHeaderHandler(token_provider=token_provider,
+                                       user_agent_segment=configuration.user_agent_segment,
+                                       batch_pool=configuration.batch_pool,
+                                       quota_audience=configuration.quota_audience,
+                                       additional_headers=configuration.additional_headers)
     if configuration.is_chat_completion():
-        return ChatCompletionHeaderHandler(token_provider=token_provider, user_agent_segment=configuration.user_agent_segment, batch_pool=configuration.batch_pool, quota_audience=configuration.quota_audience, additional_headers=configuration.additional_headers)
-    
+        return ChatCompletionHeaderHandler(token_provider=token_provider,
+                                           user_agent_segment=configuration.user_agent_segment,
+                                           batch_pool=configuration.batch_pool,
+                                           quota_audience=configuration.quota_audience,
+                                           additional_headers=configuration.additional_headers)
+
     get_logger().info("No OpenAI model matched, defaulting to base OpenAI header handler.")
-    return OpenAIHeaderHandler(token_provider=token_provider, user_agent_segment=configuration.user_agent_segment, batch_pool=configuration.batch_pool, quota_audience=configuration.quota_audience, additional_headers=configuration.additional_headers)
+    return OpenAIHeaderHandler(token_provider=token_provider,
+                               user_agent_segment=configuration.user_agent_segment,
+                               batch_pool=configuration.batch_pool,
+                               quota_audience=configuration.quota_audience,
+                               additional_headers=configuration.additional_headers)
 
 
 def _should_emit_prompts_to_job_log() -> bool:
     emit_prompts_to_job_log_env_var = os.environ.get(constants.BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG)
     if emit_prompts_to_job_log_env_var is None:
-        # Disable emitting prompts to job log by default for LLM component, 
+        # Disable emitting prompts to job log by default for LLM compone
         # keep it enabled by default for all other components.
         if configuration.scoring_url is not None:
             emit_prompts_to_job_log_env_var = "False"
         else:
             emit_prompts_to_job_log_env_var = "True"
-    
+
     should_emit_prompts_to_job_log = str2bool(emit_prompts_to_job_log_env_var)
     lu.get_logger().info("Emitting prompts to job log is {}.".format("enabled" if should_emit_prompts_to_job_log else "disabled"))

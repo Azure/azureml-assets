@@ -10,7 +10,7 @@ class MiniBatchContext(object):
     @property
     def mini_batch_id(self):
         return self.raw_mini_batch_context.minibatch_index
-    
+
     @property
     def target_result_len(self):
         return self.__target_result_len

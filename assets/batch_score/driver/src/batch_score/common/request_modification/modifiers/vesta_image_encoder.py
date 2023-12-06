@@ -42,7 +42,7 @@ class ImageEncoder():
 
         # Inlined image data
         else:
-            lu.get_logger().debug(f"Image is already encoded, no encoding necessary.")
+            lu.get_logger().debug("Image is already encoded, no encoding necessary.")
             return image_data
 
     def _b64_from_url(self, url: str) -> str:
@@ -51,7 +51,7 @@ class ImageEncoder():
         if resp.status_code != 200:
             lu.get_logger().info(f"URL '{url}' responded with an unsuccessful response: {resp.status_code}, {resp.reason}.")
             raise UnsuccessfulUrlResponse()
-        
+
         img = resp.content
         end = time.time()
         lu.get_logger().debug(f"URL request latency: {end - start}")
@@ -69,16 +69,19 @@ class ImageEncoder():
             lu.get_logger().debug(f"File request latency: {end - start}")
 
             encoded_string = base64.b64encode(image).decode()
-        
+
         return encoded_string
+
 
 class UnsuccessfulUrlResponse(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(f"{ImageEncoder.IMAGE_URL} used in data, but url did not respond succesfully.")
 
+
 class FolderNotMounted(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(f"{ImageEncoder.IMAGE_FILE} used in data, but no folder is mounted.")
+
 
 class VestaImageModificationException(RequestModificationException):
     def __init__(self) -> None:

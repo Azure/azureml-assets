@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import asyncio
-import sys
 
 from ...utils.common import convert_result_list
 from ..configuration.configuration import Configuration
@@ -54,7 +53,7 @@ class Parallel:
         scoring_requests, failed_scoring_results = self.generate_scoring_requests(payloads, mini_batch_context)
 
         self.__conductor.enqueue(scoring_requests, failed_scoring_results, mini_batch_context)
-    
+
     def log_start(self, payloads):
         lu.get_logger().info("Scoring {} requests".format(len(payloads)))
         lu.get_logger().info("ParallelDriver: async mode is {}".format(self._configuration.async_mode))
@@ -72,7 +71,7 @@ class Parallel:
                 scoring_requests.append(scoring_request)
             except RequestModificationException as e:
                 lu.get_logger().error(f"ParallelDriver: RequestModificationException raised: {e}")
-                lu.get_logger().info(f"ParallelDriver: Faking failed ScoringResult, omit=False")
+                lu.get_logger().info("ParallelDriver: Faking failed ScoringResult, omit=False")
                 failed_scoring_results.append(ScoringResult.Failed(scoring_request))
 
         return scoring_requests, failed_scoring_results
@@ -82,7 +81,7 @@ class Parallel:
 
     def get_finished_batch_result(self):
         return self.__conductor.get_finished_batch_result()
-    
+
     def get_processing_batch_number(self):
         return self.__conductor.get_processing_batch_number()
 

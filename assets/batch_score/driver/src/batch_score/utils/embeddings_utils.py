@@ -69,7 +69,7 @@ def _convert_to_list_of_output_items(result: dict, token_count_estimates: "tuple
     else:
         # Result has error; response_obj["error"]. Copy this for each request in batch below.
         numresults = -1
-        error_message = f"The batch request resulted in an error. See job output for the error message."
+        error_message = "The batch request resulted in an error. See job output for the error message."
         lu.get_logger().error(error_message)
 
     # Input can be large. Pop and iterate through the batch to avoid copying repeatedly.
@@ -130,7 +130,7 @@ def __tiktoken_estimates_succeeded(token_count_estimates: "tuple[int]", input_le
     length_matches = token_est_length == input_length
     if not length_matches:
         lu.get_logger().warn(f"Input length {input_length} does not match token estimate length {token_est_length}. " +
-                              "Skipping prompt_tokens count overrides.")
+                             "Skipping prompt_tokens count overrides.")
     return length_matches
 
 

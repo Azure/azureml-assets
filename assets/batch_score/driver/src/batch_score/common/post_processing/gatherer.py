@@ -16,7 +16,7 @@ class Gatherer:
             self.handled_scoring_result_count = 0
             self.handled_minibatch_count = 0
             self.returned_minibatch_count = 0
-        
+
         def emit_scoring_result_handled(self):
             self.handled_scoring_result_count += 1
 
@@ -49,7 +49,7 @@ class Gatherer:
                 else:
                     await asyncio.sleep(1)
                     continue
-                
+
                 mini_batch_id = scoring_result.mini_batch_context.mini_batch_id
                 set_mini_batch_id(mini_batch_id)
 
@@ -71,11 +71,11 @@ class Gatherer:
                     else:
                         lu.get_logger().error("Gatherer: Received 'none' mini batch id in scoring result. Exception: {}".format(e))
                         lu.get_logger().error("Gatherer: Skipping the scoring result. Current unfinished mini batch count: {}".format(len(self.__result_list_map)))
-        
+
         set_mini_batch_id(None)
         lu.get_logger().info("Gatherer: Received None, exiting")
         return
-    
+
     def _move_minibatch_to_finished_result_list_queue(self, scoring_result):
         mini_batch_context = scoring_result.mini_batch_context
         mini_batch_id = mini_batch_context.mini_batch_id
@@ -85,7 +85,7 @@ class Gatherer:
         result_after_callback = self.__finished_callback(ret, mini_batch_context)
         self._add_to_finished_result_list_map(result_after_callback, mini_batch_context)
 
-    def _add_to_finished_result_list_map(self, result_list, mini_batch_context, exception = None):
+    def _add_to_finished_result_list_map(self, result_list, mini_batch_context, exception=None):
         self.__finished_result_list_map[mini_batch_context.mini_batch_id] = {
             "ret": result_list,
             "mini_batch_context": mini_batch_context.raw_mini_batch_context,
@@ -105,6 +105,6 @@ class Gatherer:
         self.__finished_result_list_map.clear()
         self.__metrics.emit_minibatch_returned(len(result_map))
         return result_map
-    
+
     def get_returned_minibatch_count(self):
         return self.__metrics.returned_minibatch_count

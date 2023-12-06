@@ -22,11 +22,13 @@ class ClientSettingsKey(str, Enum):
     CONCURRENCY_ADDITIVE_INCREASE = 'CONCURRENCY_ADDITIVE_INCREASE'
     CONCURRENCY_MULTIPLICATIVE_DECREASE = 'CONCURRENCY_MULTIPLICATIVE_DECREASE'
 
+
 class ClientSettingsProvider(ABC):
     @abstractmethod
     def get_client_setting(self, key: ClientSettingsKey) -> str:
         '''Returns the value of the client setting if it exists. Otherwise returns None.'''
         pass
+
 
 class NullClientSettingsProvider(ClientSettingsProvider):
     def get_client_setting(self, key: ClientSettingsKey) -> str:

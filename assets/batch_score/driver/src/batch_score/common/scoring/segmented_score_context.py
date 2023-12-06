@@ -27,10 +27,10 @@ class SegmentedScoreContext:
             self.__original_max_tokens = int(payload_object.get("max_tokens"))
 
         if ("n" in payload_object and (int)(payload_object["n"]) > 1) or \
-            ("stream" in payload_object and str2bool(payload_object["stream"])) or \
-            (self.__original_max_tokens is not None and self.__original_max_tokens <= segment_max_token_size):
+                ("stream" in payload_object and str2bool(payload_object["stream"])) or \
+                (self.__original_max_tokens is not None and self.__original_max_tokens <= segment_max_token_size):
             self.__supports_segmentation = False
-            
+
         self.__segment_max_token_size = segment_max_token_size
         self.__segmented_results: list[ScoringResult] = []
         self.__total_tokens_generated = 0
@@ -44,24 +44,24 @@ class SegmentedScoreContext:
         timeout: aiohttp.ClientTimeout = None,
         worker_id: str = "1"
     ) -> ScoringResult:
-        if self.__next_scoring_request == None:
+        if self.__next_scoring_request is None:
             self.__next_scoring_request = self.__create_next_scoring_request()
 
         next_scoring_request = self.__next_scoring_request
 
         next_result = await scoring_client.score_once(session, next_scoring_request, timeout, worker_id=worker_id)
-        
+
         # Scoring terminated with non-retriable response, reset self.__next_scoring_request
         self.__next_scoring_request = None
 
         if next_result.status == ScoringResultStatus.SUCCESS:
-            self.__add_successful_result(next_result)            
+            self.__add_successful_result(next_result)
 
         return next_result
 
     def has_more(self) -> bool:
         if len(self.__segmented_results) > 0:
-            if self.__original_max_tokens == None:
+            if self.__original_max_tokens is None:
                 # No provided max_tokens scenario
                 return self.__last_stop_reason is None or self.__last_stop_reason != "stop"
             elif self.__supports_segmentation:
@@ -74,7 +74,7 @@ class SegmentedScoreContext:
 
                 return (self.__last_stop_reason is None or self.__last_stop_reason != "stop") and \
                     self.__total_tokens_generated < self.__original_max_tokens
-            else: # not self.__supports_segmentation
+            else:  # not self.__supports_segmentation
                 return False
 
         return True
@@ -100,12 +100,12 @@ class SegmentedScoreContext:
             return final_result
 
     def __merge_logprobs(self, final_result: ScoringResult):
-        logprobs_properties = [ "tokens", "token_logprobs", "top_logprobs", "text_offset"]
-        
+        logprobs_properties = ["tokens", "token_logprobs", "top_logprobs", "text_offset"]
+
         if "logprobs" in final_result.response_body["choices"][0]:
             final_logprobs = final_result.response_body["choices"][0]["logprobs"]
 
-            if final_logprobs != None:
+            if final_logprobs is not None:
                 for logprobs_property in logprobs_properties:
                     final_logprobs[logprobs_property] = []
 
@@ -129,18 +129,16 @@ class SegmentedScoreContext:
         from the final result's `completion_tokens` value due to slight variations in the prompt token
         count as the input grows.
         """
-        usage_properties = ["prompt_tokens", "completion_tokens", "total_tokens"]
 
         if "usage" in final_result.response_body:
             final_usage = final_result.response_body["usage"]
 
-            if final_usage != None:
+            if final_usage is not None:
                 prompt_tokens = self.__get_usage(self.__segmented_results[0], "prompt_tokens")
                 total_tokens = final_usage["total_tokens"]
                 completion_tokens = total_tokens - prompt_tokens
                 final_usage["prompt_tokens"] = prompt_tokens
                 final_usage["completion_tokens"] = completion_tokens
-
 
     def __add_successful_result(self, result: ScoringResult):
         self.__segmented_results.append(result)

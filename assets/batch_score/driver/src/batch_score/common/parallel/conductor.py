@@ -25,13 +25,13 @@ from .worker import QueueItem, Worker
 
 class Conductor:
     def __init__(
-        self, 
+        self,
         configuration: Configuration,
         loop: asyncio.AbstractEventLoop,
         scoring_client: ScoringClient,
         routing_client: RoutingClient,
         trace_configs: "list[TraceConfig]" = None,
-        finished_callback = None,
+        finished_callback=None,
     ):
         self._configuration = configuration
         self.__loop: asyncio.AbstractEventLoop = loop
@@ -69,7 +69,8 @@ class Conductor:
     async def run(self, requests: "list[ScoringRequest]") -> "list[ScoringResult]":
         self.__add_requests(requests)
 
-        lu.get_logger().info("Conductor: Starting with {} running workers and {} target worker count. There are {} workers in the worker pool.".format(len(list(filter(lambda worker: worker.is_running, self.__workers))), self.__target_worker_count, len(self.__workers)))
+        lu.get_logger().info("Conductor: Starting with {} running workers and {} target worker count. There are {} workers in the worker pool."
+                             .format(len(list(filter(lambda worker: worker.is_running, self.__workers))), self.__target_worker_count, len(self.__workers)))
 
         target_result_len = len(self.__scoring_request_queue)
 
@@ -88,7 +89,7 @@ class Conductor:
         self.__scoring_result_queue.clear()
 
         return ret
-    
+
     def enqueue(self, requests: "list[ScoringRequest]", failed_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
         self.__minibatch_index_set.add(mini_batch_context.mini_batch_id)
         if len(requests) == 0:
@@ -98,7 +99,7 @@ class Conductor:
                 input_row_count=mini_batch_context.target_result_len,
                 output_row_count=0)
             return
-        
+
         self.__add_requests(requests)
         self.__add_failed_scoring_results(failed_results)
 
@@ -106,24 +107,26 @@ class Conductor:
 
     def check_all_tasks_processed(self):
         lu.get_logger().info("Conductor: Checking if all tasks are processed, ")
-        lu.get_logger().info("Conductor: len minibatch_index_set is {}, self.__gatherer.get_returned_minibatch_count() is {}".format(len(self.__minibatch_index_set), self.__gatherer.get_returned_minibatch_count()))
+        lu.get_logger().info("Conductor: len minibatch_index_set is {}, self.__gatherer.get_returned_minibatch_count() is {}"
+                             .format(len(self.__minibatch_index_set), self.__gatherer.get_returned_minibatch_count()))
         # no input items, no output items, and minibatch set count is equal to minibatch return count
         return len(self.__scoring_request_queue) == 0 and len(self.__scoring_result_queue) == 0 and len(self.__minibatch_index_set) == self.__gatherer.get_returned_minibatch_count()
 
     def get_finished_batch_result(self):
         return self.__gatherer.get_finished_minibatch_result()
-    
+
     def get_processing_batch_number(self):
         lu.get_logger().info("Conductor: Getting number of processing mini batches.")
-        lu.get_logger().info("Conductor: len minibatch_index_set is {}, self.__gatherer.get_returned_minibatch_count() is {}".format(len(self.__minibatch_index_set), self.__gatherer.get_returned_minibatch_count()))
+        lu.get_logger().info("Conductor: len minibatch_index_set is {}, self.__gatherer.get_returned_minibatch_count() is {}"
+                             .format(len(self.__minibatch_index_set), self.__gatherer.get_returned_minibatch_count()))
         return len(self.__minibatch_index_set) - self.__gatherer.get_returned_minibatch_count()
 
     def shutdown(self):
         if self._configuration.async_mode:
             asyncio.run(self._release())
-        
+
         self._close_session()
-    
+
     def __add_requests(self, requests: "list[ScoringRequest]"):
         for request in requests:
             timeout_generator = ScoringClient.get_retry_timeout_generator(self.__client_session.timeout)
@@ -162,8 +165,8 @@ class Conductor:
         client_session = aiohttp.ClientSession(
             timeout=timeout,
             trace_configs=self.__trace_configs,
-            loop = self.__loop)
-        
+            loop=self.__loop)
+
         return client_session
 
     async def __sleep(self, duration: int,  tasks: "list[asyncio.Task]", target_result_len: int = None) -> "list[asyncio.Task]":
@@ -219,7 +222,7 @@ class Conductor:
         get_events_client().emit_worker_concurrency(self.__target_worker_count)
         lu.get_logger().info("Conductor: __target_worker_count set to {}".format(self.__target_worker_count))
         return adjustments.next_adjustment_delay
-    
+
     def _init_workers(self):
         lu.get_logger().debug("Conductor: Initializing {} workers".format(self._configuration.initial_worker_count))
 
@@ -250,7 +253,7 @@ class Conductor:
     async def _release(self):
         for task in self.__tasks:
             task.cancel()
-            
+
         for worker in self.__workers:
             worker.stop()
 

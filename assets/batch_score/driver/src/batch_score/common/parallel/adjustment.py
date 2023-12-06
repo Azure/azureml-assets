@@ -17,11 +17,13 @@ class ConcurrencyAdjustment:
         self.new_concurrency = new_concurrency
         self.next_adjustment_delay = next_adjustment_delay
 
+
 # Abstract class for concurrency adjustment strategies
 class ConcurrencyAdjustmentStrategy(ABC):
     @abstractmethod
     def calculate_next_concurrency(self, current_concurrency: int) -> ConcurrencyAdjustment:
         pass
+
 
 # Additive increase/multiplicative decrease
 # https://en.wikipedia.org/wiki/Additive_increase/multiplicative_decrease
@@ -37,7 +39,7 @@ class AIMD(ConcurrencyAdjustmentStrategy):
     ):
         self.__confidence: int = 0
         self._last_adjustment_time: pd.Timestamp = None
-        self.__request_metrics=request_metrics
+        self.__request_metrics = request_metrics
         self.__congestion_detector = congestion.WaitTimeCongestionDetector(client_settings_provider)
 
         self.__client_settings_provider = client_settings_provider
@@ -52,17 +54,17 @@ class AIMD(ConcurrencyAdjustmentStrategy):
         congestionState = self.__congestion_detector.detect(self.__request_metrics, self._last_adjustment_time, now)
 
         if congestionState == congestion.CongestionState.FREE:
-            self.__confidence = max(self.__confidence, 0) # Reset confidence
-            self.__confidence = min(self.__confidence + 1, 3) # Increase confidence
+            self.__confidence = max(self.__confidence, 0)  # Reset confidence
+            self.__confidence = min(self.__confidence + 1, 3)  # Increase confidence
 
-            new_concurrency = current_concurrency + self.__additive_increase + self.__confidence # Augment based on confidence
+            new_concurrency = current_concurrency + self.__additive_increase + self.__confidence  # Augment based on confidence
         elif congestionState == congestion.CongestionState.CONGESTED:
-            self.__confidence = min(self.__confidence, 0) # Reset confidence
-            self.__confidence = max(self.__confidence - 1, -3) # Decrease confidence
+            self.__confidence = min(self.__confidence, 0)  # Reset confidence
+            self.__confidence = max(self.__confidence - 1, -3)  # Decrease confidence
 
-            new_concurrency = max(int(current_concurrency * self.__multiplicative_decrease), 1) # Minimum value concurrency is 1
+            new_concurrency = max(int(current_concurrency * self.__multiplicative_decrease), 1)  # Minimum value concurrency is 1
         else:
-            self.__confidence = 0 # Reset confidence
+            self.__confidence = 0  # Reset confidence
 
         lu.get_logger().info("AIMD: current_concurrency: {} -- new_concurrency: {} -- __confidence: {}".format(
             current_concurrency,
@@ -78,7 +80,7 @@ class AIMD(ConcurrencyAdjustmentStrategy):
             os.environ.get("BATCH_SCORE_CONCURRENCY_ADJUSTMENT_INTERVAL")
             or self.__client_settings_provider.get_client_setting(ClientSettingsKey.CONCURRENCY_ADJUSTMENT_INTERVAL)
             or self.DEFAULT_ADJUSTMENT_INTERVAL))
-        
+
         self.__additive_increase = int(float(
             os.environ.get("BATCH_SCORE_CONCURRENCY_INCREASE_AMOUNT")
             or self.__client_settings_provider.get_client_setting(ClientSettingsKey.CONCURRENCY_ADDITIVE_INCREASE)

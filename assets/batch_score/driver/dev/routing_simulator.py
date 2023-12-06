@@ -36,7 +36,9 @@ class RoutingSimulator(ServiceSimulator):
                 path = self.path.split("?")[0]
 
                 if path.endswith("/listEndpoints"):
-                    service_namespace, endpoint_pool = re.search(r"/serviceNamespaces/([^/]+)/endpointPools/([^/]+)", path, re.IGNORECASE).groups()
+                    service_namespace, endpoint_pool = re.search(r"/serviceNamespaces/([^/]+)/endpointPools/([^/]+)",
+                                                                 path,
+                                                                 re.IGNORECASE).groups()
 
                     self.send_json_response({
                         "serviceNamespace": service_namespace,

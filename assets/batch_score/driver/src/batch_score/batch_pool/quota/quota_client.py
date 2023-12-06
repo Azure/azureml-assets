@@ -29,7 +29,7 @@ from ...header_handlers.rate_limiter.rate_limiter_header_handler import (
     RateLimiterHeaderHandler,
 )
 from ...utils import common
-from .estimators import *
+from .estimators import ChatCompletionEstimator, CompletionEstimator, EmbeddingsEstimator, VestaEstimator
 
 
 class QuotaClient:
@@ -156,12 +156,12 @@ class QuotaClient:
                 try:
                     # Unit is milliseconds, normalize to seconds.
                     return float(x_ms_retry_after_ms) / 1000
-                except:
+                except Exception:
                     lu.get_logger().debug(f"QuotaClient: Cannot parse x-ms-retry-after-ms: {x_ms_retry_after_ms}")
             elif (retry_after := exception.headers.get("Retry-After")):
                 try:
                     return float(retry_after)
-                except:
+                except Exception:
                     lu.get_logger().debug(f"QuotaClient: Cannot parse Retry-After: {retry_after}")
 
         return None
@@ -262,7 +262,7 @@ class QuotaClient:
         try:
             if result.status == ScoringResultStatus.SUCCESS:
                 result_cost = self.__estimator.estimate_response_cost(result.request_obj, result.response_body)
-                #TODO: Eventify this trace
+                # TODO: Eventify this trace
                 lu.get_logger().info(f"QuotaClient: Actual usage for quota lease {lease_id} was {result_cost} tokens "
                                      f"({quota_capacity} tokens were reserved).")
         except Exception:
@@ -317,9 +317,9 @@ class QuotaLease:
 
                 renewal = self.__expiration - (1 - self.RENEWAL_FRACTION) * self.__duration
 
-                delay = common.backoff(attempt) # Try to wait this long ...
-                delay = max(delay, (renewal - now).total_seconds()) # But no sooner than the renewal target ...
-                delay = min(delay, (self.__expiration - now).total_seconds() - 1) # And no later than the expiration.
+                delay = common.backoff(attempt)  # Try to wait this long ...
+                delay = max(delay, (renewal - now).total_seconds())  # But no sooner than the renewal target ...
+                delay = min(delay, (self.__expiration - now).total_seconds() - 1)  # And no later than the expiration.
 
                 await asyncio.sleep(delay)
 
@@ -340,7 +340,7 @@ class QuotaLease:
                 lu.get_logger().exception(f"QuotaClient: Failed to renew quota lease {self.__lease_id}.")
 
     def __parse_duration(self, value: str) -> timedelta:
-        if (match := re.match(r"^(\d+):(\d+):(\d+)$", value)): # .NET TimeSpan default format
+        if (match := re.match(r"^(\d+):(\d+):(\d+)$", value)):  # .NET TimeSpan default format
             return timedelta(hours=int(match.group(1)),
                              minutes=int(match.group(2)),
                              seconds=int(match.group(3)))

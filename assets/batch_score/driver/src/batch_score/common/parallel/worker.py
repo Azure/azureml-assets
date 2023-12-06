@@ -30,21 +30,22 @@ from .request_metrics import RequestMetrics
 
 
 class QueueItem:
-    def __init__(self, scoring_request: ScoringRequest, segmented_score_context: SegmentedScoreContext = None, timeout_generator = None):
+    def __init__(self, scoring_request: ScoringRequest, segmented_score_context: SegmentedScoreContext = None, timeout_generator=None):
         self.scoring_request = scoring_request
-        self.segmented_score_context=segmented_score_context
+        self.segmented_score_context = segmented_score_context
         self.timeout_generator = timeout_generator
+
 
 class Worker:
     NO_DEPLOYMENTS_BACK_OFF = 120
 
     def __init__(
-        self, 
+        self,
         configuration: Configuration,
-        scoring_client: ScoringClient, 
-        client_session: aiohttp.ClientSession, 
+        scoring_client: ScoringClient,
+        client_session: aiohttp.ClientSession,
         client_settings_provider: ClientSettingsProvider,
-        scoring_request_queue: "deque[QueueItem]", 
+        scoring_request_queue: "deque[QueueItem]",
         request_metrics: RequestMetrics,
         id: str,
         empty_wait_interval: int = 1,
@@ -64,7 +65,7 @@ class Worker:
         self.__enable_delay_after_success = str2bool(os.environ.get("BATCH_SCORE_DELAY_AFTER_SUCCESSFUL_REQUEST", "True"))
 
         lu.get_logger().debug("Worker {}: Created".format(self.id))
-    
+
     def is_running(self) -> bool:
         return self.__is_running
 
@@ -91,7 +92,7 @@ class Worker:
 
             start, end = 0, 0
 
-            # If the request's scoring duration exceeds the limit, 
+            # If the request's scoring duration exceeds the limit,
             # log as failure and don't add it back to the queue
             if self._request_exceeds_max_retry_time_interval(queue_item.scoring_request):
                 result = ScoringResult.Failed(queue_item.scoring_request)
@@ -119,7 +120,7 @@ class Worker:
                 end = time.time()
 
                 # Back-off 1 second before adding ScoringRequest back to the queue
-                # TODO: consider adjusting back-off. 
+                # TODO: consider adjusting back-off.
                 #   - None-429s: increase backoff for consecutive retries
                 #   - 429s: vary backoff based on request cost to prevent large request starvation
                 back_off = e.retry_after or 1
@@ -129,17 +130,17 @@ class Worker:
                 # To activate this, set BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS to True.
                 # And to override the default back-off time, set BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF to a value in seconds.
                 if is_zero_traffic_group_error(e.status_code, e.response_payload) \
-                    and str2bool(os.environ.get(constants.BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS, "False")):
-                        back_off = int(
-                            os.environ.get(constants.BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF)
-                            or self.__client_settings_provider.get_client_setting(ClientSettingsKey.NO_DEPLOYMENTS_BACK_OFF)
-                            or self.NO_DEPLOYMENTS_BACK_OFF)
+                        and str2bool(os.environ.get(constants.BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS, "False")):
+                    back_off = int(
+                        os.environ.get(constants.BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF)
+                        or self.__client_settings_provider.get_client_setting(ClientSettingsKey.NO_DEPLOYMENTS_BACK_OFF)
+                        or self.NO_DEPLOYMENTS_BACK_OFF)
 
-                        wait_time = back_off
-                        queue_item.scoring_request.total_wait_time += wait_time
-                        # Reset timeout generator since this error is not due to timeout or model congestion.
-                        queue_item.timeout_generator = ScoringClient.get_retry_timeout_generator(
-                            self.__client_session.timeout)
+                    wait_time = back_off
+                    queue_item.scoring_request.total_wait_time += wait_time
+                    # Reset timeout generator since this error is not due to timeout or model congestion.
+                    queue_item.timeout_generator = ScoringClient.get_retry_timeout_generator(
+                        self.__client_session.timeout)
 
                 elif e.status_code == 429 or e.model_response_code == "429":
                     wait_time = back_off
@@ -157,13 +158,13 @@ class Worker:
                         queue_item.scoring_request.total_wait_time += wait_time
 
                 self.__request_metrics.add_result(
-                    request_id = queue_item.scoring_request.internal_id,
-                    response_code = e.status_code,
-                    response_payload = e.response_payload,
-                    model_response_code = e.model_response_code,
-                    model_response_reason = e.model_response_reason,
-                    additional_wait_time = wait_time,
-                    request_total_wait_time = queue_item.scoring_request.total_wait_time)
+                    request_id=queue_item.scoring_request.internal_id,
+                    response_code=e.status_code,
+                    response_payload=e.response_payload,
+                    model_response_code=e.model_response_code,
+                    model_response_reason=e.model_response_reason,
+                    additional_wait_time=wait_time,
+                    request_total_wait_time=queue_item.scoring_request.total_wait_time)
 
                 self._log_score_failed_with_retriable_exception(queue_item.scoring_request, back_off, wait_time)
 
@@ -172,7 +173,7 @@ class Worker:
                 queue_item.scoring_request.scoring_duration += end - start
                 self.__scoring_request_queue.append(queue_item)
 
-            except Exception as e:
+            except Exception:
                 end = time.time()
 
                 self._log_score_failed_with_unhandled_exception(queue_item.scoring_request, traceback.format_exc())
@@ -188,7 +189,7 @@ class Worker:
             set_mini_batch_id(None)
         else:
             lu.get_logger().debug("Worker {}: Finished".format(self.id))
-    
+
     def _request_exceeds_max_retry_time_interval(self, scoring_request: ScoringRequest) -> bool:
         if self._configuration.max_retry_time_interval is None:
             return False
@@ -196,14 +197,10 @@ class Worker:
         return scoring_request.scoring_duration > self._configuration.max_retry_time_interval
 
     def _log_score_failed_with_max_retry_time_interval_exceeded(self, scoring_request: ScoringRequest):
-        lu.get_logger().error("Worker {}: Score failed: Payload scored for {} seconds, which exceeded the maximum time interval of {} seconds. internal_id: {}, total_wait_time: {}, retry_count: {}".format(
-            self.id,
-            round(scoring_request.scoring_duration, 2),
-            self._configuration.max_retry_time_interval,
-            scoring_request.internal_id,
-            scoring_request.total_wait_time,
-            scoring_request.retry_count))
-    
+        lu.get_logger().error(f"Worker {self.id}: Score failed: Payload scored for {round(scoring_request.scoring_duration, 2)} seconds, "
+                              + f"which exceeded the maximum time interval of {self._configuration.max_retry_time_interval} seconds. "
+                              + f"internal_id: {scoring_request.internal_id}, total_wait_time: {scoring_request.total_wait_time}, retry_count: {scoring_request.retry_count}")
+
     def _log_score_failed_with_permanent_exception(self, scoring_request: ScoringRequest, exception: PermanentException):
         lu.get_logger().error("Worker {}: Score failed: {}. internal_id: {}, total_wait_time: {}, retry_count: {}".format(
             self.id,
@@ -211,7 +208,7 @@ class Worker:
             scoring_request.internal_id,
             scoring_request.total_wait_time,
             scoring_request.retry_count))
-    
+
     def _log_score_failed_with_retriable_exception(self, scoring_request: ScoringRequest, back_off: int, wait_time: int):
         lu.get_logger().debug("Worker {}: Encountered retriable exception. internal_id: {}, back_off: {}, wait_time: {}, total_wait_time: {}, retry_count: {}".format(
             self.id,
@@ -220,13 +217,12 @@ class Worker:
             wait_time,
             scoring_request.total_wait_time,
             scoring_request.retry_count))
-    
+
     def _log_score_failed_with_unhandled_exception(self, scoring_request: ScoringRequest, trace: str):
         lu.get_logger().error("Worker {}: Encountered unhandled exception. internal_id: {}, error: {}".format(
             self.id,
             scoring_request.internal_id,
             trace))
-
 
     async def __process_queue_item(self, queue_item: QueueItem):
         if queue_item.timeout_generator is None:
@@ -269,7 +265,7 @@ class Worker:
 
     def __add_result(self, scoring_request: ScoringRequest, scoring_result: ScoringResult):
         self.__scoring_result_queue.append(scoring_result)
-        
+
         self.__request_metrics.add_result(
             scoring_request.internal_id,
             scoring_result.status,
@@ -278,5 +274,5 @@ class Worker:
             "" if not scoring_result.response_headers else scoring_result.response_headers.get("ms-azureml-model-error-reason", ""),
             0,
             scoring_request.total_wait_time)
-        
+
         lu.get_events_client().emit_row_completed(1, str(scoring_result.status))

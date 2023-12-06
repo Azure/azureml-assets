@@ -8,6 +8,7 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 
+
 class ServiceSimulator:
     def __init__(self, handler):
         self.__server = ThreadingHTTPServer(("localhost", 0), handler)

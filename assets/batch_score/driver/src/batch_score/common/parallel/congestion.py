@@ -19,10 +19,12 @@ class CongestionState(Enum):
     FREE = 3
     UNKNOWN = 4
 
+
 class CongestionDetector(ABC):
     @abstractmethod
     def detect(self, request_metrics: RequestMetrics, start_time: pd.Timestamp, end_time: pd.Timestamp = None) -> CongestionState:
         pass
+
 
 class WaitTimeCongestionDetector(CongestionDetector):
     DEFAULT_CONGESTION_P90_THRESHOLD = 10
@@ -78,10 +80,10 @@ class WaitTimeCongestionDetector(CongestionDetector):
             os.environ.get("BATCH_SCORE_CONGESTION_THRESHOLD_P90_WAITTIME")
             or self.__client_settings_provider.get_client_setting(ClientSettingsKey.CONGESTION_THRESHOLD_P90_WAIT_TIME)
             or self.DEFAULT_CONGESTION_P90_THRESHOLD)
-        
+
         self.__saturation_threshold = float(
             os.environ.get("BATCH_SCORE_SATURATION_THRESHOLD_P90_WAITTIME")
             or self.__client_settings_provider.get_client_setting(ClientSettingsKey.SATURATION_THRESHOLD_P90_WAIT_TIME)
             or self.DEFAULT_SATURATION_P90_THRESHOLD)
-        
+
         lu.get_logger().info(f"WaitTimeCongestionDetector using congestion threshold: {self.__congestion_threshold}, saturation threshold: {self.__saturation_threshold}")

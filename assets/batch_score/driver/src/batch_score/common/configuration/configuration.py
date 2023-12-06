@@ -69,11 +69,10 @@ class Configuration(Namespace):
 
     def _validate_online_endpoint_url_and_request_path(self):
         if (self.online_endpoint_url
-            and self.request_path is not None
-            and self.request_path not in ScoringClient.DEFAULT_REQUEST_PATHS
-        ):
+                and self.request_path is not None
+                and self.request_path not in ScoringClient.DEFAULT_REQUEST_PATHS):
             raise ValueError("The optional parameter 'online_endpoint_url' is not allowed in combination with 'request_path'. "
-                            "Please put the entire scoring url in the `online_endpoint_url` parameter and remove 'request_path'.")
+                             "Please put the entire scoring url in the `online_endpoint_url` parameter and remove 'request_path'.")
 
     def _validate_segment_large_requests(self):
         if self.segment_large_requests == 'enabled' and not self.is_completion():
@@ -117,10 +116,10 @@ class Configuration(Namespace):
         return self.request_path == ScoringClient.VESTA_CHAT_COMPLETIONS_API_PATH or\
             (self.online_endpoint_url and self.online_endpoint_url.endswith(ScoringClient.VESTA_CHAT_COMPLETIONS_API_PATH)) or\
             (self.scoring_url and self.api_type == constants.VESTA_CHAT_COMPLETION_API_TYPE)
-    
+
     def is_aoai_endpoint(self) -> bool:
         return self.scoring_url and any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
-    
+
     def is_serverless_endpoint(self) -> bool:
         return self.scoring_url and constants.SERVERLESS_ENDPOINT_DOMAIN_SUFFIX in self.scoring_url
 

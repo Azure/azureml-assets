@@ -32,14 +32,14 @@ class ScoringRequest:
         self.__cleaned_payload_obj = json.loads(original_payload)
         self.__loggable_payload_obj = json.loads(original_payload)
 
-        # Pop _batch_request_metadata property from payload, if present 
+        # Pop _batch_request_metadata property from payload, if present
         # Override with request_metadata, if present
         # In case both exist, we call pop twice to make sure these properties
         # are removed from the cleaned payload object
         # These properties do not need to be sent to the model & will be added to the output file directly
         self.__request_metadata = self.__cleaned_payload_obj.pop(self.__BATCH_REQUEST_METADATA, None)
         self.__request_metadata = self.__cleaned_payload_obj.pop(self.__REQUEST_METADATA, self.__request_metadata)
-        
+
         # Apply any modifiers to the original payload
         if self.__input_to_request_transformer:
             self.__cleaned_payload_obj = self.__input_to_request_transformer.apply_modifications(self.__cleaned_payload_obj)
@@ -54,7 +54,7 @@ class ScoringRequest:
         self.__estimated_tokens_per_item_in_batch: tuple[int] = ()
 
         self.mini_batch_context: MiniBatchContext = mini_batch_context
-        self.request_history: list[ScoringAttempt] = [] # Stack
+        self.request_history: list[ScoringAttempt] = []  # Stack
         self.retry_count: int = 0
         self.total_wait_time: int = 0
 
@@ -72,7 +72,7 @@ class ScoringRequest:
     @property
     def original_payload_obj(self):
         return self.__original_payload_obj
-    
+
     # read-only
     @property
     def cleaned_payload_obj(self):

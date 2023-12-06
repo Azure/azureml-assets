@@ -6,7 +6,7 @@ from ...utils.common import str2bool
 from .. import constants
 
 
-#TODO: Name this ARGUMENT_SPECIFICATION
+# TODO: Name this ARGUMENT_SPECIFICATION
 COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     # TODO: headers with booleans fail during session.post.
     #  Prevent users from providing additional_headers that json.loads with boolean values.
@@ -94,8 +94,8 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     '--batch_size_per_request': {
         'default': 1,
         'help': 'The number of rows to score against the model in a single HTTP request.'
-               ' Only supported for the Embeddings API.'
-               ' Must be between 1 and 2000.',
+                ' Only supported for the Embeddings API.'
+                ' Must be between 1 and 2000.',
         'required': False,
         'type': int,
     },

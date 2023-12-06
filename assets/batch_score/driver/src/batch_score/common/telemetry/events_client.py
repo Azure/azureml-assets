@@ -25,7 +25,7 @@ class EventsClient:
     def emit_tokens_generated(
         self,
         generated_tokens: int,
-        context_tokens = int,
+        context_tokens: int,
         endpoint_uri: str = "",
     ):
         pass
@@ -88,6 +88,7 @@ class EventsClient:
     ):
         pass
 
+
 class AppInsightsEventsClient(EventsClient):
     def __init__(self,
                  custom_dimensions: dict,
@@ -105,7 +106,7 @@ class AppInsightsEventsClient(EventsClient):
         self.__logger.propagate = False
         self.__logger.setLevel(logging.INFO)
 
-        azure_handler = AzureEventHandler(connection_string = app_insights_connection_string)
+        azure_handler = AzureEventHandler(connection_string=app_insights_connection_string)
         self.__logger.addHandler(azure_handler)
 
     def _common_custom_dimensions(self, custom_dimensions):
@@ -186,9 +187,9 @@ class AppInsightsEventsClient(EventsClient):
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
         custom_dimensions["WorkerConcurrency"] = worker_concurrency
-        
-        extra = { 
-            "custom_dimensions": custom_dimensions 
+
+        extra = {
+            "custom_dimensions": custom_dimensions
         }
         self.__logger.info("worker_concurrency", extra=extra)
 

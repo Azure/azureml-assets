@@ -17,22 +17,24 @@ from .events_client import AppInsightsEventsClient, EventsClient
 
 _default_logger_name = "BatchScoreComponent"
 _custom_dimensions = {}
-_default_logger:logging.LoggerAdapter = None
-_events_client:EventsClient = None
+_default_logger: logging.LoggerAdapter = None
+_events_client: EventsClient = None
 
 _ctx_worker_id = ContextVar("Async worker ID", default=None)
 _ctx_mini_batch_id = ContextVar("Async mini-batch ID", default=None)
 _ctx_quota_audience = ContextVar("Async quota audience", default=None)
 _ctx_batch_pool = ContextVar("Async batch pool", default=None)
 
+
 class UTCFormatter(logging.Formatter):
     converter = time.gmtime
+
 
 class CustomerLogs(logging.Filter):
 
     def __init__(self, log_level: str):
         self.log_level = logging.getLevelName(log_level)
-        
+
     def filter(self, record):
         """
         Customers can see:
@@ -47,6 +49,7 @@ class CustomerLogs(logging.Filter):
             if message.startswith(internal_class):
                 return False
         return record.levelno >= self.log_level
+
 
 class AppInsightsLogs(logging.Filter):
     def filter(self, record):
@@ -79,7 +82,7 @@ def setup_logger(log_level: str, app_insights_connection_string: str = None):
         level = logging.getLevelName(logging.DEBUG)
         print(f"Enabling application insights logs, level: {level}")
         azure_formatter = logging.Formatter('%(message)s')
-        azure_handler = AzureLogHandler(connection_string = app_insights_connection_string)
+        azure_handler = AzureLogHandler(connection_string=app_insights_connection_string)
         azure_handler.setFormatter(azure_formatter)
         azure_handler.setLevel(level)
         azure_handler.addFilter(AppInsightsLogs())
@@ -95,7 +98,7 @@ def setup_logger(log_level: str, app_insights_connection_string: str = None):
         _events_client = EventsClient()
 
 
-def set_default_logger_format(default_format, root_handlers = None):
+def set_default_logger_format(default_format, root_handlers=None):
     # This overrides the basicConfig on the root logging handler that is writing logs to stdout
     # Root will always be in debug
     log_level = 'DEBUG'
@@ -111,6 +114,7 @@ def set_default_logger_format(default_format, root_handlers = None):
         logging.basicConfig(format=default_format, level=log_level)
     logging.root.handlers.extend(root_handlers)
 
+
 def get_logger():
     custom_dimensions = _custom_dimensions.copy()
     custom_dimensions["WorkerId"] = _ctx_worker_id.get()
@@ -124,20 +128,26 @@ def get_logger():
 
     return logging.LoggerAdapter(_default_logger, extra)
 
+
 def get_events_client():
     return _events_client
+
 
 def set_worker_id(worker_id: int):
     _ctx_worker_id.set(worker_id)
 
+
 def set_mini_batch_id(mini_batch_id: int):
     _ctx_mini_batch_id.set(mini_batch_id)
+
 
 def set_quota_audience(quota_audience: str):
     _ctx_quota_audience.set(quota_audience)
 
+
 def set_batch_pool(batch_pool: str):
     _ctx_batch_pool.set(batch_pool)
+
 
 def __calculate_custom_dimensions():
     custom_dimensions = {}
@@ -152,7 +162,7 @@ def __calculate_custom_dimensions():
         custom_dimensions["ParentRunId"] = run.parent.id
         custom_dimensions["StepName"] = run.name
         custom_dimensions["ExperimentName"] = run.experiment.name
-    except:
+    except Exception:
         print("Failed to get run context")
 
     try:
@@ -162,11 +172,11 @@ def __calculate_custom_dimensions():
         args, unknown_args = parser.parse_known_args()
 
         arg_value = getattr(args, prs_internal_arg_name)
-        if arg_value != None:
+        if arg_value is not None:
             agent_args = json.loads(arg_value)
-            
+
             custom_dimensions["PRSAgentName"] = agent_args["agent_name"]
-    except:
+    except Exception:
         print("Failed to get PRS agent name")
 
     try:
@@ -176,7 +186,7 @@ def __calculate_custom_dimensions():
             custom_dimensions["ClusterName"] = compute_context["cluster_name"]
             if "node_id" in compute_context:
                 custom_dimensions["NodeId"] = compute_context["node_id"]["Literal"]
-    except:
+    except Exception:
         print("Failed to parse compute context")
 
     return custom_dimensions

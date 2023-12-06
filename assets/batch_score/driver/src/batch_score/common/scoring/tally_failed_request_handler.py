@@ -13,13 +13,14 @@ class TallyFailedRequestHandler(object):
             self.__exclusions = [exclusion.strip().lower() for exclusion in tally_exclusions.split('|')]
 
             if "none" in self.__exclusions and len(self.__exclusions) > 1:
-                raise Exception(f"Conflicting tally_exclusions: \"none\" specified alongside other exclusions.")
+                raise Exception("Conflicting tally_exclusions: \"none\" specified alongside other exclusions.")
 
     def should_tally(self, response_status: int, model_response_status: int) -> bool:
         if not self.__enabled:
             return False
 
-        failure_category = TallyFailedRequestHandler._categorize(response_status=response_status, model_response_status=model_response_status)        
+        failure_category = TallyFailedRequestHandler._categorize(response_status=response_status,
+                                                                 model_response_status=model_response_status)
         should_tally = failure_category not in self.__exclusions
 
         lu.get_logger().debug(f"should_tally: {should_tally}")

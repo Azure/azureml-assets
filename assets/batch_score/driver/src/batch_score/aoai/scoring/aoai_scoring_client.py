@@ -44,6 +44,7 @@ class UnrecognizedScoringApiException(Exception):
     def __str__(self):
         return f"Unrecognized scoring URL '{self.scoring_url}' does not contain any of {self.expected_scoring_apis}."
 
+
 # TO DO: Rename to LLMScoringClient
 class AoaiScoringClient:
 
@@ -83,7 +84,7 @@ class AoaiScoringClient:
             scoring_url: str = None,
             tally_handler: TallyFailedRequestHandler = None,
             additional_headers: str = None):
-        
+
         self.__auth_provider: AuthProvider = auth_provider
         self.__scoring_url: str = scoring_url
         self.__tally_handler = tally_handler
@@ -100,7 +101,7 @@ class AoaiScoringClient:
                          timeout: aiohttp.ClientTimeout = None,
                          worker_id: str = "1") -> ScoringResult:
 
-        """ Score a single request until terminal status is reached. 
+        """ Score a single request until terminal status is reached.
         """
         response = None
         response_payload = None
@@ -114,7 +115,7 @@ class AoaiScoringClient:
 
         headers = self.__get_headers()
         get_logger().debug(headers)
-        
+
         ScoreStartLog(internal_id=scoring_request.internal_id,
                       x_ms_client_request_id=headers["x-ms-client-request-id"],
                       timestamp=datetime.fromtimestamp(start, timezone.utc),
@@ -123,7 +124,7 @@ class AoaiScoringClient:
         try:
             # request_body = json.dumps(scoring_request.request_payload)
             request_body = scoring_request.cleaned_payload
-            async with session.post(url = self.__scoring_url, headers=headers, data=request_body) as response:
+            async with session.post(url=self.__scoring_url, headers=headers, data=request_body) as response:
                 response_status = response.status
                 response_headers = response.headers
                 model_response_code = response_headers.get("ms-azureml-model-error-statuscode")
@@ -137,7 +138,7 @@ class AoaiScoringClient:
 
                     try:
                         response_payload = json.loads(error_response)
-                    except:
+                    except Exception:
                         response_payload = error_response
 
                     error = f"request failed with status {response_status}."
@@ -157,7 +158,7 @@ class AoaiScoringClient:
                                         x_ms_client_request_id=headers["x-ms-client-request-id"],
                                         exception_type=type(e).__name__,
                                         exception=e).log()
-            
+
         except Exception as e:
             error = traceback.format_exc()
 
@@ -190,8 +191,8 @@ class AoaiScoringClient:
 
         elif is_retriable:
             raise RetriableException(status_code=response_status, response_payload=response_payload)
-            
-        else: # Score failed
+
+        else:  # Score failed
             result = ScoringResult(
                 status=ScoringResultStatus.FAILURE,
                 start=start,
@@ -202,7 +203,7 @@ class AoaiScoringClient:
                 response_headers=response_headers,
                 num_retries=0
             )
-        
+
         if result.status == ScoringResultStatus.FAILURE and self.__tally_handler.should_tally(response_status=response_status, model_response_status=model_response_code):
             result.omit = True
 
@@ -222,7 +223,7 @@ class AoaiScoringClient:
         headers.update(self.__additional_headers)
 
         return headers
-    
+
     @staticmethod
     def create(
         configuration: Configuration,
@@ -268,7 +269,7 @@ class AoaiScoringClient:
         error_msg = f"Failed to score a sample. Error: {json.dumps(result.response_body)}"
         get_logger().error(error_msg)
         raise Exception(error_msg)
-    
+
     async def _score_sample(self):
         """ Score with a sample request.
         """
@@ -284,14 +285,14 @@ class AoaiScoringClient:
                 scoring_request,
                 timeout,
                 worker_id="confirm_scoring_endpoint_accessibility")
-     
+
     @staticmethod
     def _infer_api(scoring_url: str) -> ScoringRequest:
         """ Infer the scoring API type from the scoring URL.
         """
         # Order matters. The first one that matches is returned.
         # Chat completion API must be checked before completion API.
-        expected_scoring_apis=[
+        expected_scoring_apis = [
             AoaiScoringClient.EMBEDDING_API,
             AoaiScoringClient.CHAT_COMPLETION_API,
             AoaiScoringClient.COMPLETION_API,

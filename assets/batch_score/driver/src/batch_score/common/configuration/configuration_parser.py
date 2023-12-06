@@ -7,13 +7,12 @@ from argparse import ArgumentParser
 from .. import constants
 from .configuration import Configuration
 from .command_line_argument_specification import COMMAND_LINE_ARGUMENT_SPECIFICATION
-from .configuration import Configuration
 
 
 class ConfigurationParser:
     def parse_configuration(self, args: "list[str]" = None) -> Configuration:
         ''' Parses the command line arguments and returns a Configuration object.
-            If args are provided, they are parsed. Otherwise, sys.argv is parsed. 
+            If args are provided, they are parsed. Otherwise, sys.argv is parsed.
         '''
 
         parsed_args, _ = self._setup_parser().parse_known_args(args=args)
@@ -22,16 +21,16 @@ class ConfigurationParser:
         args_dict = ConfigurationParser._set_defaults(args_dict)
 
         return Configuration(**args_dict)
-    
+
     @staticmethod
     def _update_configuration_from_file(args: dict) -> dict:
         # Read from JSON file and override parameter values
         if args['configuration_file'] is None:
             return args
-        
+
         with open(args['configuration_file'], 'r') as json_file:
             configuration = json.load(json_file)
-        
+
         # TODO: Override all parameter values specified in the file
         for arg in ["scoring_url", "authentication_type", "connection_name"]:
             if arg in configuration and configuration.get(arg) is not None:
