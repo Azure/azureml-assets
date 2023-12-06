@@ -239,7 +239,7 @@ def parse_asset_yamls(files: List[str], root: str) -> Component:
             continue
 
         for field in target_fields:
-            if field in yml and (not isinstance(yml[field], str)  or r'{{' not in yml[field]):
+            if field in yml and (not isinstance(yml[field], str) or r'{{' not in yml[field]):
                 extractor = target_fields[field]
                 comp[field] = extractor(yml[field])
 
@@ -247,7 +247,7 @@ def parse_asset_yamls(files: List[str], root: str) -> Component:
                     comp['version_file'] = file_path
 
         for field in validate_fields:
-            if field in yml and (not isinstance(yml[field], str)  or r'{{' not in yml[field]):
+            if field in yml and (not isinstance(yml[field], str) or r'{{' not in yml[field]):
                 validate_fields[field](comp['name'], yml[field])
 
     if len(comp) == 0:
