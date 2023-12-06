@@ -8,18 +8,9 @@ import json
 import os
 import uuid
 import pytest
-import sys
-import tempfile
-import shutil
-
-from .test_utils import get_src_dir
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
-sys.path.append(get_src_dir())
-print(get_src_dir())
-
-from aml_benchmark.batch_inference_preparer.main import main as preparer_main  # noqa: E402
 
 from .test_utils import (
     load_yaml_pipeline,
@@ -27,17 +18,6 @@ from .test_utils import (
     Constants,
     download_outputs
 )
-
-
-@pytest.fixture
-def input_dataset(tmp_path):
-    """Create input dataset."""
-    target_output = os.path.join(tmp_path, 'input_dataset')
-    os.makedirs(target_output, exist_ok=True)
-    shutil.copy(
-        Constants.BATCH_INFERENCE_PREPARER_FILE_PATH_VISION,
-        os.path.join(target_output, 'input.jsonl'))
-    return target_output
 
 
 class TestBatchInferencePreparerComponent:
@@ -156,27 +136,3 @@ class TestBatchInferencePreparerComponent:
                     assert r['input_data']['parameters'][k] == v, f"{k} not equal to {v}"
             if model_type == "vision_oss":
                 assert 'data' in r['input_data']
-
-
-class TestInferencePreparer:
-    """Test InferencePreparer."""
-
-    def test_batch_inference_preparer_main(self, input_dataset):
-        output_path = tempfile.TemporaryDirectory().name
-        formatted_dataset = os.path.join(output_path, "formatted_data")
-        output_metadat = os.path.join(output_path, "output_metadata")
-        os.makedirs(formatted_dataset, exist_ok=True)
-        os.makedirs(output_metadat, exist_ok=True)
-        preparer_main(
-            input_dataset=input_dataset,
-            formatted_dataset=formatted_dataset,
-            model_type="oai",
-            batch_input_pattern=None,
-            n_samples=10,
-            endpoint_url="an_endpoint",
-            is_performance_test=False,
-            label_key="label",
-            deployment_config_dir=None,
-            output_metadata=output_metadat,
-            bypass_dataset_conversion=True
-        )

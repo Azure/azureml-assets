@@ -58,6 +58,7 @@ def main(
     n_samples: int,
     endpoint_url: str,
     is_performance_test: bool,
+    output_metadata: str,
     label_key: str
 ) -> None:
     """
@@ -139,5 +140,6 @@ if __name__ == "__main__":
         n_samples=args.n_samples,
         endpoint_url=args.endpoint_url,
         is_performance_test=args.is_performance_test,
+        output_metadata=args.output_metadata,
         label_key=args.label_key
     )
