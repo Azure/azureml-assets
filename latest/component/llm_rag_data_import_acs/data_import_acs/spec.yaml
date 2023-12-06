@@ -4,7 +4,7 @@ type: command
 tags:
   Preview: ""
 
-version: 0.0.38
+version: 0.0.39
 name: llm_rag_data_import_acs
 display_name: LLM - Import Data from ACS
 is_deterministic: false
@@ -44,7 +44,11 @@ outputs:
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/embeddings/'
+
 command: >-
-  python data_import_acs.py --num_docs ${{inputs.num_docs}} --output_data ${{outputs.output_data}}
-  --ml_index ${{outputs.ml_index}} --acs_config '${{inputs.acs_config}}' --use_existing
-  '${{inputs.use_existing}}'
+  python data_import_acs.py
+    --num_docs ${{inputs.num_docs}}
+    --output_data ${{outputs.output_data}}
+    --ml_index ${{outputs.ml_index}}
+    --acs_config '${{inputs.acs_config}}'
+    --use_existing '${{inputs.use_existing}}'

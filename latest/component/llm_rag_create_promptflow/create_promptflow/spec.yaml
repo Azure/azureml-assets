@@ -4,7 +4,7 @@ type: command
 tags:
   Preview: ""
 
-version: 0.0.53
+version: 0.0.54
 name: llm_rag_create_promptflow
 display_name: LLM - Create Prompt Flow
 is_deterministic: true
@@ -48,6 +48,7 @@ inputs:
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src'
+
 command: >-
   python flow_creation.py
   --mlindex_asset_id '${{inputs.mlindex_asset_id}}'

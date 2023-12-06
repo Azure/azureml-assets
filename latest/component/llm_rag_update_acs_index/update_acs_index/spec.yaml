@@ -4,7 +4,7 @@ type: command
 tags:
   Preview: ""
 
-version: 0.0.41
+version: 0.0.42
 name: llm_rag_update_acs_index
 display_name: LLM - Update ACS Index
 is_deterministic: true
@@ -46,9 +46,10 @@ outputs:
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
+
 command: >-
   python -m azureml.rag.tasks.update_acs
-  --embeddings ${{inputs.embeddings}}
-  --acs_config '${{inputs.acs_config}}'
-  --output ${{outputs.index}}
-  $[[--connection_id '${{inputs.index_connection_id}}']]
+    --embeddings ${{inputs.embeddings}}
+    --acs_config '${{inputs.acs_config}}'
+    --output ${{outputs.index}}
+    $[[--connection_id '${{inputs.index_connection_id}}']]

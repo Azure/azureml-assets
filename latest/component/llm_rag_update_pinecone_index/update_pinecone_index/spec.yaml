@@ -4,7 +4,7 @@ type: command
 tags:
   Preview: ""
 
-version: 0.0.9
+version: 0.0.10
 name: llm_rag_update_pinecone_index
 display_name: LLM - Update Pinecone Index
 is_deterministic: true
@@ -43,6 +43,7 @@ outputs:
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
+
 command: >-
   python -m azureml.rag.tasks.update_pinecone
   --embeddings ${{inputs.embeddings}}

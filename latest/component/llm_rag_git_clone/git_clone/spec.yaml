@@ -4,7 +4,7 @@ type: command
 tags:
   Preview: ""
 
-version: 0.0.41
+version: 0.0.42
 name: llm_rag_git_clone
 display_name: LLM - Clone Git Repo
 is_deterministic: true
@@ -40,6 +40,7 @@ outputs:
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
+
 command: >-
   python -m azureml.rag.tasks.git_clone
   --git-repository ${{inputs.git_repository}}
