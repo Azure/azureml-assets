@@ -35,6 +35,8 @@ class EvaluatorFactory:
         Returns: evaluator object
 
         """
+        if metrics_config is None:
+            metrics_config = {}
         return self._evaluators[task_type](task_type, metrics_config)
 
 
