@@ -1,0 +1,17 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: gorilla-llm-gorilla-7b-hf-delta-v0
+path: ./
+properties:
+  SHA: 1a2335cb7efddba41e189a3fffe5aaa258f3db37
+  datasets : gorilla-llm/APIBench
+  model_id : gorilla-llm/gorilla-7b-hf-delta-v0
+  languages : api, en
+tags:
+  Preview: ''
+  license : apache-2.0
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'true'
+    apply_ort: 'true'
+  task: text-generation
+version: 2

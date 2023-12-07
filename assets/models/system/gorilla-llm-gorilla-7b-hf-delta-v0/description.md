@@ -1,6 +1,6 @@
-The T5-Large is a text-to-text transfer transformer (T5) model with 770 million parameters. It has been developed by Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, Peter J. Liu. The T5 model is a language model that is pre-trained on a multi-task mixture of unsupervised and supervised tasks. The model is versatile and can be used for many NLP tasks such as translation, summarization, question answering, and classification. The license of T5-Large is Apache 2.0. The model is made available on GitHub and is well-documented on Hugging Face.  A code sample is provided to get started with this model. The input and output are always text strings. The T5 framework was introduced to bring together transfer learning techniques for NLP and convert all language problems into the text to text format. The T5 model was pre-trained on the Colossal Clean Crawled Corpus (C4). The full details of the training procedure can be found in the research paper. The evaluation of T5-Large is not provided. The information regarding bias, risks, limitations, and recommendations is not available. The authors of the Model Card for T5-Large are not specified.
+Gorilla, developed by UC Berkeley, introduces a groundbreaking approach enabling Large Language Models (LLMs) to utilize APIs by generating semantically- and syntactically-correct API calls in response to natural language queries. This innovation allows LLMs to accurately invoke over 1,600 APIs, with a focus on reducing hallucination. The project also introduces APIBench, a comprehensive collection of APIs designed for easy training. Gorilla offers a pre-trained model, gorilla-7b-hf-delta-v0, capable of utilizing Hugging Face APIs with a 0-shot fine-tuning approach. The model can understand prompts in natural language, making it versatile for various tasks. The training pipeline includes both standard fine-tuning and a novel retriever-aware approach. For those interested in contributing or having their APIs incorporated, Gorilla invites participation through Discord, pull requests, or email. The model, based on the transformer architecture, represents an auto-regressive language model and was last updated on May 27, 2023. For further details, the website, GitHub, and associated paper provide additional information.
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/t5-large" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/gorilla-llm/gorilla-7b-hf-delta-v0" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
 
@@ -42,11 +42,11 @@ Translation | Translation | <a href="https://huggingface.co/datasets/wmt16/viewe
 #### Sample output
 ```json
 [
-    {
-        "0": "Mein Name ist John und ich lebe in Seattle."
-    },
-    {
-        "0": "Berlin ist die Hauptstadt Deutschlands."
-    }
+  {
+    "0": "My name is John and I live in Seattle\");prespresprespresprespresprespresprespres"
+  },
+  {
+    "0": "Berlin is the capital of Germany.?,includesincludesincludesincludesincludesincludesincludesincludesincludesincludesincludesincludes"
+  }
 ]
 ```

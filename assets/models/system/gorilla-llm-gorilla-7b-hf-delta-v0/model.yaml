@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/gorilla-llm-gorilla-7b-hf-delta-v0/1701270239/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
