@@ -1,0 +1,22 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: chat
+
+messages:
+- role: system
+  content:
+    - Your task is to assist in analyzing and optimizing creative assets. You will be presented with advertisement videos for products. First describe the video in detail paying close attention to Product characteristics highlighted, Background images, Lighting, Color Palette and Human characteristics for persons in the video. Finally provide a summary of the video and talk about the main message the advertisement video tries to convey to the viewer.
+
+starter_messages:
+- role: user
+  content:
+    - type: text
+      text: Summarize the ad video
+    - type: video
+      image_url: video1.mp4
+
+execution_settings:
+  gptv:
+    enhance: true
+
+template_format: handlebars

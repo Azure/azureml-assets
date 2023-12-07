@@ -8,7 +8,7 @@ compute: azureml:gpu-cluster
 jobs:
   optimize:
     type: command
-    component: azureml:olive_optimizer_gpu:0.0.6
+    component: azureml:olive_optimizer_gpu:0.0.7
     inputs:
       config:
         type: uri_file

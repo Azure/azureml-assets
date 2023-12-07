@@ -58,8 +58,8 @@ def main(
     n_samples: int,
     endpoint_url: str,
     is_performance_test: bool,
-    label_key: str,
-    output_metadata: str
+    output_metadata: str,
+    label_key: str
 ) -> None:
     """
     Entry function of the script.
@@ -140,6 +140,6 @@ if __name__ == "__main__":
         n_samples=args.n_samples,
         endpoint_url=args.endpoint_url,
         is_performance_test=args.is_performance_test,
-        label_key=args.label_key,
-        output_metadata=args.output_metadata
+        output_metadata=args.output_metadata,
+        label_key=args.label_key
     )
