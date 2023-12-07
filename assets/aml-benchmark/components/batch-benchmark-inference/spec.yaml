@@ -126,10 +126,6 @@ inputs:
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
-  endpoint_configuration_file:
-    type: uri_file
-    optional: True
-    description: The endpoint configuration file. If provided, the value will override the input value.
   authentication_type:
     type: string
     optional: False
@@ -189,7 +185,7 @@ jobs:
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
-      configuration_file: ${{parent.inputs.endpoint_configuration_file}}
+      configuration_file: ${{parent.inputs.endpoint_config_file}}
       async_mode: false
       save_mini_batch_results: enabled
       mini_batch_size: ${{parent.inputs.mini_batch_size}}
