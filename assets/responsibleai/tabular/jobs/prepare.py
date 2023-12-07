@@ -3,7 +3,7 @@
 
 import os
 import pandas as pd
-from sklearn.datasets import load_boston
+from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 
 data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources')
@@ -13,7 +13,7 @@ def fetch_and_write_boston_dataset():
     train_path = os.path.join(data_dir, "boston_train")
     test_path = os.path.join(data_dir, "boston_test")
 
-    data = load_boston()
+    data = fetch_openml(data_id=531)
     target_feature = "y"
     data_df = pd.DataFrame(data.data, columns=data.feature_names)
 
