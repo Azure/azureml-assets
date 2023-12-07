@@ -119,11 +119,10 @@ jobs:
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
       
-      - name: Use Python 3.11
+      - name: Use Python 3.8 or newer
         uses: actions/setup-python@v4
         with:
-        # We limit python to 3.11 to allow package installation.
-          python-version: '>=3.11'
+          python-version: '>=3.8'
     
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
