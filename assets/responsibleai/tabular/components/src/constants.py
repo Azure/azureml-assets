@@ -67,6 +67,8 @@ class PropertyKeyValues:
 
     RAI_INSIGHTS_DROPPED_FEATURE_KEY = "dropped_features"
     RAI_INSIGHTS_IDENTITY_FEATURE_KEY = "identity_feature_name"
+    RAI_INSIGHTS_DATETIME_FEATURES_KEY = "datetime_features"
+    RAI_INSIGHTS_TIME_SERIES_ID_FEATURES_KEY = "time_series_id_features"
 
 
 class RAIToolType:
@@ -75,3 +77,6 @@ class RAIToolType:
     ERROR_ANALYSIS = "error_analysis"
     EXPLANATION = "explanation"
     SCORECARD = "scorecard"
+
+
+MLFLOW_MODEL_SERVER_PORT = 5432

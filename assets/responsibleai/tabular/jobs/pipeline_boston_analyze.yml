@@ -25,8 +25,8 @@ jobs:
     inputs:
       training_data: ${{parent.inputs.my_training_data}}
       target_column_name: ${{parent.inputs.target_column_name}}
-      categorical_features: '[]'
-      continuous_features: '["CRIM", "ZN", "INDUS", "CHAS", "NOX", "RM", "AGE","DIS", "RAD", "TAX", "PTRATIO", "B", "LSTAT"]'
+      categorical_features: '["CHAS", "RAD"]'
+      continuous_features: '["CRIM", "ZN", "INDUS", "NOX", "RM", "AGE", "DIS", "TAX", "PTRATIO", "B", "LSTAT"]'
       model_name: 'boston_model'
     outputs:
       model_output: ${{parent.outputs.boston_model}}
@@ -43,7 +43,7 @@ jobs:
       train_dataset: ${{parent.inputs.my_training_data}}
       test_dataset: ${{parent.inputs.my_test_data}}
       target_column_name: ${{parent.inputs.target_column_name}}
-      categorical_column_names: '[]'
+      categorical_column_names: '["CHAS", "RAD"]'
 
   explain_01:
     type: command

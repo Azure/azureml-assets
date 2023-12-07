@@ -1,4 +1,4 @@
-azure-ai-ml==0.1.0b4
+azure-ai-ml~=1.0.0
 azure.identity==1.10.0
-azureml-core==1.43.0
+azureml-core~=1.53.0
 azureml-mlflow
