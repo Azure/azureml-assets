@@ -15,7 +15,6 @@ dependencies:
   - pip:
     - responsibleai~=0.32.0
     - raiwidgets~=0.32.0
-    - pyarrow
     - mlflow
     - markupsafe<=2.1.2
     - itsdangerous<=2.1.2

@@ -1,19 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 """This class provides model replication and load balancing functionality."""
-
 import os
 import random
 import tempfile
 import time
-import torch
 from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import List
 
-from configs import EngineConfig
-from configs import TaskConfig
+import torch
+from configs import EngineConfig, TaskConfig
 from engine import BaseEngine
 from logging_config import configure_logger
 
@@ -59,8 +57,7 @@ class ReplicaManagerConfig:
 
     @staticmethod
     def _get_cuda_visible_devices():
-        """
-        Get the CUDA_VISIBLE_DEVICES environment variable or set it to all available GPUs.
+        """Get the CUDA_VISIBLE_DEVICES environment variable or set it to all available GPUs.
 
         Returns a comma-separated string of GPU IDs, e.g. "0,1,2,3"
         """
@@ -209,21 +206,27 @@ class ReplicaManager:
         if self._replica_config.num_replicas >= 1:
             # num_replicas is set by the user
             if self._replica_config.engine_config.tensor_parallel in [None, ""]:
-                raise ValueError("Tensor parallel must be specified when using multiple replicas. "
-                                 "Set it using environment variable 'TENSOR_PARALLEL'.")
+                raise ValueError(
+                    "Tensor parallel must be specified when using multiple replicas. "
+                    "Set it using environment variable 'TENSOR_PARALLEL'.",
+                )
 
             total_gpus_needed = self._replica_config.num_replicas * self._replica_config.engine_config.tensor_parallel
             gpu_ids_list = [int(gpu_id.strip()) for gpu_id in self._replica_config.gpu_ids.split(",")]
             if total_gpus_needed > len(gpu_ids_list):
                 raise ValueError(
                     f"Insufficient GPUs: Need {total_gpus_needed} but only {len(gpu_ids_list)} are available. "
-                    f"Reduce NUM_REPLICAS or TENSOR_PARALLEL to fit within the available GPUs.")
+                    f"Reduce NUM_REPLICAS or TENSOR_PARALLEL to fit within the available GPUs.",
+                )
         else:
             # use 1 replica by default, if not specified by the user
             self._replica_config.num_replicas = 1
 
-        self._tensor_parallel = self._replica_config.engine_config.tensor_parallel \
-            if self._replica_config.engine_config.tensor_parallel else self._get_tensor_parallel()
+        self._tensor_parallel = (
+            self._replica_config.engine_config.tensor_parallel
+            if self._replica_config.engine_config.tensor_parallel
+            else self._get_tensor_parallel()
+        )
 
 
 if __name__ == "__main__":

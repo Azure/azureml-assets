@@ -6,17 +6,16 @@
 import os
 import socket
 import time
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Any
-from configs import EngineConfig
-
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
+import torch
+from configs import EngineConfig
 from constants import ServerSetupParams, TaskType
 from logging_config import configure_logger
-from utils import log_execution_time, box_logger
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from utils import box_logger, log_execution_time
 
 logger = configure_logger(__name__)
 
@@ -38,7 +37,7 @@ class InferenceResult:
             msg = f"## Inference Results ##\n ERROR: {self.error}"
         else:
             # TODO: record time per prompt in mii so we can show inference time for each prompt
-            msg = f''' ## Prompt {self.prompt_num} Results ##\n Total Tokens Generated: {len(self.generated_tokens)}'''
+            msg = f""" ## Prompt {self.prompt_num} Results ##\n Total Tokens Generated: {len(self.generated_tokens)}"""
         box_logger(msg)
 
 
@@ -65,13 +64,17 @@ class BaseEngine(ABC):
         raise NotImplementedError("generate method not implemented.")
 
     def _del_prompt_if_req(
-        self, prompt: str, response: str, params: Dict, force: bool = False
+        self,
+        prompt: str,
+        response: str,
+        return_full_text: bool = True,
+        force: bool = False,
     ) -> str:
         """Delete the prompt from the response if required."""
         if force:
             return response[len(prompt):].strip()
-        if self.task_config.task_type == TaskType.TEXT_GENERATION:
-            if "return_full_text" in params and not params["return_full_text"]:
+        elif self.task_config.task_type == TaskType.TEXT_GENERATION:
+            if not return_full_text:
                 return response[len(prompt):].strip()
             return response
         elif self.task_config.task_type == TaskType.CONVERSATIONAL:
@@ -106,7 +109,7 @@ class BaseEngine(ABC):
     @log_execution_time
     def get_tokens(self, response: str):
         """Load tokenizer and get tokens from a prompt."""
-        if not hasattr(self, 'tokenizer'):
+        if not hasattr(self, "tokenizer"):
             self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.model_id)
         tokens = self.tokenizer.encode(response)
         return tokens
@@ -138,13 +141,12 @@ class HfEngine(BaseEngine):
                 input_ids = self.tokenizer.encode(prompt, return_tensors="pt")
                 output = self.model.generate(input_ids, max_new_tokens=20)
                 generated_text = self.tokenizer.decode(
-                    output[0], skip_special_tokens=True
+                    output[0],
+                    skip_special_tokens=True,
                 )
                 inference_time_ms = (time.time() - start_time) * 1000
                 num_tokens = len(output[0])
-                time_per_token_ms = (
-                    inference_time_ms / num_tokens if num_tokens > 0 else 0
-                )
+                time_per_token_ms = inference_time_ms / num_tokens if num_tokens > 0 else 0
                 result = InferenceResult(
                     response=generated_text,
                     inference_time_ms=inference_time_ms,

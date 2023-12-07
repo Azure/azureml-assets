@@ -18,6 +18,8 @@ COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR = 'generation_safety_qua
 # MDC-generated target dataset of an iris model. The data contains drift.
 # Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
 DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT = "azureml:uri_folder_iris_model_inputs_with_drift:1"
+# TODO generate this data asset in the gated test workspace
+DATA_ASSET_LLM_INPUTS = "azureml:ChatHistoryModelInput:1"
 
 
 # MDC-generated target dataset of an iris model. The data contains no drift.

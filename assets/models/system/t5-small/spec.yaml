@@ -52,5 +52,5 @@ tags:
     apply_deepspeed: 'true'
     apply_lora: 'true'
     apply_ort: 'true'
-  task: translation
+  task: text-translation
 version: 10
