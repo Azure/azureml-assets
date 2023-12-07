@@ -1,0 +1,5 @@
+path:
+  container_name: prompts
+  container_path: gptv/insurance_report/v1
+  storage_name: automlcesdkdataresources
+  type: azureblob
