@@ -189,7 +189,7 @@ class ClaudeOnlineEndpoint(OnlineEndpoint):
         canonical_headers_str, signed_headers_str = self._get_canonical_header_string_and_signed_headers(headers)
         canonical_request_str = (
             "POST\n"
-            "/model/anthropic.claude-v2/invoke\n"
+            f"/model/{self._model_identifier}/invoke\n"
             "\n"   # No query string
             f"{canonical_headers_str}\n"
             f"{signed_headers_str}\n"
