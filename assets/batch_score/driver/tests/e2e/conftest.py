@@ -15,6 +15,7 @@ from .util import _set_and_get_component_name_ver, create_copy
 def mark_as_e2e_test():
     pass
 
+
 def pytest_configure():
     print("Pytest configure started.")
     # ML_Client set up
@@ -44,17 +45,21 @@ def pytest_unconfigure():
 def batch_score_yml_component():
     return register_component("batch_score.yml")
 
+
 @pytest.fixture(scope="module")
 def batch_score_embeddings_yml_component():
     return register_component("batch_score_embeddings.yml")
+
 
 @pytest.fixture(scope="module")
 def batch_score_vesta_chat_completion_yml_component():
     return register_component("batch_score_vesta_chat_completion.yml")
 
+
 @pytest.fixture(scope="module")
 def llm_batch_score_yml_component():
     return register_component("batch_score_llm.yml")
+
 
 def register_component(component_yml_name):
     # Copy component to a temporary file to not muddle dev environments

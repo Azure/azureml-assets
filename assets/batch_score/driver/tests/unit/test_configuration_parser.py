@@ -17,15 +17,17 @@ def test_success_defaults():
 
     # Assert
     assert configuration.batch_size_per_request == 1
-    assert configuration.additional_headers == None
+    assert configuration.additional_headers is None
+
 
 def test_success_scoring_url_copied_to_endpoint_url():
     # Act
     scoring_url = "https://non-existent-endpoint.centralus.inference.ml.azure.com/score"
-    configuration = ConfigurationParser().parse_configuration([ "--scoring_url", scoring_url])
+    configuration = ConfigurationParser().parse_configuration(["--scoring_url", scoring_url])
 
     # Assert
     assert configuration.online_endpoint_url == scoring_url
+
 
 @pytest.mark.parametrize(
     'api_type, segment_large_requests',
@@ -47,6 +49,7 @@ def test_success_set_default_for_segment_large_requests(api_type, segment_large_
 
     # Assert
     assert configuration.segment_large_requests == segment_large_requests
+
 
 @pytest.mark.parametrize('request_path', [
     "v1/engines/davinci/completions",

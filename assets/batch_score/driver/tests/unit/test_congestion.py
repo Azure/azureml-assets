@@ -24,6 +24,7 @@ env_vars = {
     "BATCH_SCORE_SATURATION_THRESHOLD_P90_WAITTIME": "50",
 }
 
+
 class TestWaitTimeCongestionDetector:
     @pytest.mark.parametrize(
         "make_routing_client, mock_get_client_setting, client_settings, expected_congestion_threshold, expected_saturation_threshold",
@@ -54,7 +55,12 @@ class TestWaitTimeCongestionDetector:
         ],
         indirect=fixture_names,
     )
-    def test_init_env_var_overrides_client_setting_overrides_class_default(self, make_routing_client, mock_get_client_setting, client_settings, expected_congestion_threshold, expected_saturation_threshold):
+    def test_init_env_var_overrides_client_setting_overrides_class_default(self,
+                                                                           make_routing_client,
+                                                                           mock_get_client_setting,
+                                                                           client_settings,
+                                                                           expected_congestion_threshold,
+                                                                           expected_saturation_threshold):
         # Class defaults are used when there are no client settings or environment variables.
         self._clear_env_vars()
 
@@ -89,7 +95,7 @@ class TestWaitTimeCongestionDetector:
         actual_congestion_state = congestion_detector.detect(RequestMetrics(), pd.Timestamp.utcnow())
 
         assert actual_congestion_state == CongestionState.UNKNOWN
-    
+
     @pytest.mark.parametrize(
         "make_routing_client, response_code, expected_congestion_state",
         # For context, see https://dev.azure.com/msdata/Vienna/_workitems/edit/2832428
@@ -112,7 +118,6 @@ class TestWaitTimeCongestionDetector:
         actual_congestion_state = congestion_detector.detect(test_request_metrics, start_time)
 
         assert actual_congestion_state == expected_congestion_state
-
 
     def test_free_congestion_case(self, make_routing_client):
         congestion_detector = WaitTimeCongestionDetector(client_settings_provider=make_routing_client())

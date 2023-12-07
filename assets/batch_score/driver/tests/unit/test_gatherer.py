@@ -15,8 +15,10 @@ from tests.fixtures.test_mini_batch_context import TestMiniBatchContext
 def __get_callback(ret, mini_batch_context):
     return ret
 
+
 def __get_callback_throwing_exception():
     raise Exception("test")
+
 
 def test_add_empty_result(mock_get_logger):
     mini_batch_id = 1
@@ -32,15 +34,18 @@ def test_add_empty_result(mock_get_logger):
     assert gatherer.get_returned_minibatch_count() == 0
     assert len(gatherer.get_finished_minibatch_result()) == 1
 
+
 # Since the gather runs forever, we need to stop the gatherer manually.
 async def wait_and_stop(gatherer):
     await asyncio.sleep(1)
     gatherer._Gatherer__working = False
 
+
 async def run_once(gatherer):
     await asyncio.gather(
         wait_and_stop(gatherer),
         asyncio.create_task(gatherer.run()))
+
 
 @pytest.mark.timeout(5)
 @pytest.mark.asyncio
@@ -70,6 +75,7 @@ async def test_run_success(mock_get_logger, make_scoring_result):
     finished_minibatch_result = gatherer.get_finished_minibatch_result()
     assert len(finished_minibatch_result) == 0
     assert gatherer.get_returned_minibatch_count() == 1
+
 
 @pytest.mark.timeout(5)
 @pytest.mark.asyncio
@@ -101,6 +107,7 @@ async def test_run_failed_results(mock_get_logger, make_scoring_result):
     assert len(finished_minibatch_result[mini_batch_id]["ret"]) == 2
 
     assert gatherer.get_returned_minibatch_count() == 1
+
 
 @pytest.mark.timeout(5)
 @pytest.mark.asyncio

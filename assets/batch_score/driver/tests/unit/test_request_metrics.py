@@ -98,7 +98,7 @@ class TestRequestMetrics:
         except ValueError as e:
             assert 'Expected columns' in str(e)
         else:
-            assert False # If a ValueError exception wasn't raised, the test failed.
+            assert False  # If a ValueError exception wasn't raised, the test failed.
 
     def test_init_using_dataframe_with_invalid_index(self):
         request_metrics = RequestMetrics()
@@ -118,4 +118,4 @@ class TestRequestMetrics:
         except ValueError as e:
             assert 'Expected index name' in str(e)
         else:
-            assert False # If a ValueError exception wasn't raised, the test failed.
+            assert False  # If a ValueError exception wasn't raised, the test failed.

@@ -19,11 +19,11 @@ from src.batch_score.common.scoring.scoring_result import (
 
 @pytest.mark.asyncio
 async def test_successful_scoring_appends_result_no_segmentation(
-    mock_get_events_client, 
-    make_worker, 
-    mock_get_logger,
-    mock__score_once):
-    
+        mock_get_events_client,
+        make_worker,
+        mock_get_logger,
+        mock__score_once):
+
     metrics = await _run_worker(make_worker)
 
     assert not metrics.empty
@@ -44,7 +44,7 @@ async def test_successful_scoring_appends_result_with_segmentation(
 
     monkeypatch.setattr("src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext.score_next_once", mock_score)
     with patch('src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext.has_more',
-            side_effect=[True, True, True, False]) as has_more:
+               side_effect=[True, True, True, False]):
         metrics = await _run_worker(make_worker, segment_large_requests='enabled')
 
     assert not metrics.empty
@@ -53,9 +53,9 @@ async def test_successful_scoring_appends_result_with_segmentation(
 
 @pytest.mark.asyncio
 async def test_request_exceeds_max_retry_time_interval_and_fails(
-    mock_get_events_client, 
-    make_worker, 
-    mock_get_logger):
+        mock_get_events_client,
+        make_worker,
+        mock_get_logger):
 
     # 1 second maximum
     max_retry_time_interval = 1
@@ -70,25 +70,26 @@ async def test_request_exceeds_max_retry_time_interval_and_fails(
 
     queue = deque()
     queue.append(queue_item)
-    
+
     worker = make_worker(
         scoring_request_queue=queue,
         max_retry_time_interval=max_retry_time_interval)
 
-    ret = await worker.start()
+    await worker.start()
 
     assert mock_get_logger.error.called
     assert mock_get_events_client.emit_row_completed.called
 
     assert (worker._Worker__request_metrics._RequestMetrics__df["response_code"].head(1) == ScoringResultStatus.FAILURE).all()
 
+
 @pytest.mark.asyncio
 async def test_model_429_does_not_contribute_to_request_total_wait_time(
-    mock_get_events_client,
-    make_worker,
-    mock_get_logger,
-    mock__score_once,
-    mock_get_client_setting):
+        mock_get_events_client,
+        make_worker,
+        mock_get_logger,
+        mock__score_once,
+        mock_get_client_setting):
 
     mock__score_once['raise_exception'] = RetriableException(status_code=424, model_response_code='429', retry_after=0.01)
     mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
@@ -98,13 +99,14 @@ async def test_model_429_does_not_contribute_to_request_total_wait_time(
     assert not metrics.empty
     assert metrics.iloc[0]['request_total_wait_time'] == 0
 
+
 @pytest.mark.asyncio
 async def test_quota_429_contributes_to_request_total_wait_time(
-    mock_get_events_client,
-    make_worker,
-    mock_get_logger,
-    mock__score_once,
-    mock_get_client_setting):
+        mock_get_events_client,
+        make_worker,
+        mock_get_logger,
+        mock__score_once,
+        mock_get_client_setting):
 
     mock__score_once['raise_exception'] = QuotaUnavailableException(retry_after=0.01)
     mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
@@ -126,7 +128,7 @@ no_deployments_test_cases = [
     # Both env vars absent. Defaults to no wait.
     (
         *fixture_names,
-        {}, # env vars
+        {},  # env vars
         0,  # expected wait time
     ),
     # Poll env var absent. Back off env var present. Defaults to no wait.
@@ -155,6 +157,8 @@ no_deployments_test_cases = [
         2,
     ),
 ]
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "mock_get_events_client, make_worker, mock_get_logger, mock__score_once, mock_get_client_setting, monkeypatch, env_vars, expected_wait_time",
@@ -162,18 +166,18 @@ no_deployments_test_cases = [
     indirect=['mock_get_events_client', 'make_worker', 'mock_get_logger', 'mock__score_once', 'mock_get_client_setting', 'monkeypatch'],
 )
 async def test_no_deployments_in_traffic_group(
-    mock_get_events_client,
-    make_worker,
-    mock_get_logger,
-    mock__score_once,
-    mock_get_client_setting,
-    monkeypatch,
-    env_vars,
-    expected_wait_time):
+        mock_get_events_client,
+        make_worker,
+        mock_get_logger,
+        mock__score_once,
+        mock_get_client_setting,
+        monkeypatch,
+        env_vars,
+        expected_wait_time):
 
     for var, value in env_vars.items():
         monkeypatch.setenv(var, value)
-    
+
     if 'BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF' not in env_vars:
         monkeypatch.setattr(Worker, 'NO_DEPLOYMENTS_BACK_OFF', expected_wait_time)
 
@@ -184,6 +188,7 @@ async def test_no_deployments_in_traffic_group(
     assert not metrics.empty
     assert metrics.iloc[0]['request_total_wait_time'] == expected_wait_time
 
+
 async def _run_worker(make_worker, segment_large_requests='disabled'):
     payload = '{"fake": "payload"}'
     queue_item = QueueItem(scoring_request=ScoringRequest(payload))
@@ -192,13 +197,13 @@ async def _run_worker(make_worker, segment_large_requests='disabled'):
     start_time = pd.Timestamp.utcnow()
     request_metrics = RequestMetrics()
     assert request_metrics.get_metrics(start_time).empty
-    
+
     worker = make_worker(
         scoring_request_queue=queue,
         segment_large_requests=segment_large_requests,
-        max_retry_time_interval=0.001, # A small timeout keeps the test fast.
+        max_retry_time_interval=0.001,  # A small timeout keeps the test fast.
         request_metrics=request_metrics)
-    
+
     worker._Worker__count_only_quota_429s_toward_total_request_time = True
 
     # Disable quota client so we don't make quota requests during the unit test.

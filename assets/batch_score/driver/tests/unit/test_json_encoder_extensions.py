@@ -8,7 +8,7 @@ import src.batch_score.utils.json_encoder_extensions as json_encoder_extensions
 
 def test_unconfigured_get_default_encoder(mock_get_logger):
     encoder = json_encoder_extensions.get_default_encoder()
-    assert encoder.ensure_ascii == True
+    assert encoder.ensure_ascii is True
 
     serialized_obj = json.dumps("こんにちは世界!", cls=json_encoder_extensions.BatchComponentJSONEncoder)
     assert serialized_obj == '"\\u3053\\u3093\\u306b\\u3061\\u306f\\u4e16\\u754c!"'
@@ -18,10 +18,11 @@ def test_configured_get_default_encoder(mock_get_logger):
     json_encoder_extensions.setup_encoder(ensure_ascii=False)
 
     encoder = json_encoder_extensions.get_default_encoder()
-    assert encoder.ensure_ascii == False
+    assert encoder.ensure_ascii is False
 
     serialized_obj = json.dumps("こんにちは世界!", cls=json_encoder_extensions.BatchComponentJSONEncoder)
     assert serialized_obj == '"こんにちは世界!"'
+
 
 def test_configuration_instantiation_is_singular(mock_get_logger):
     json_encoder_extensions.setup_encoder(ensure_ascii=False)
@@ -45,8 +46,7 @@ def test_derived_numpy_array_encoder(mock_get_logger):
 
     serialized_obj = json.dumps("こんにちは世界!", cls=json_encoder_extensions.NumpyArrayEncoder)
     assert serialized_obj == '"こんにちは世界!"'
-    
+
     arr = numpy.array([0, 1, 2])
     serialized_obj = json.dumps(arr, cls=json_encoder_extensions.NumpyArrayEncoder)
-    assert serialized_obj == "[0, 1, 2]" 
-
+    assert serialized_obj == "[0, 1, 2]"

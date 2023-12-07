@@ -43,4 +43,3 @@ def test_copy():
 
     assert result.status == result2.status
     assert result2.estimated_token_counts == (1, 2, 3)
-

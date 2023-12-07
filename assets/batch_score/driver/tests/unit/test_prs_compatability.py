@@ -19,4 +19,3 @@ def test_prs_code_importing():
 
     sys.path.pop()
     assert module
-

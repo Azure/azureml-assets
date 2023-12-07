@@ -17,8 +17,9 @@ def make_input_transformer():
         return InputTransformer(
             modifiers=modifiers
         )
-    
+
     return make
+
 
 class FakeRequestModifier(RequestModifier):
     def __init__(self, prefix: str = "modified") -> None:
@@ -29,11 +30,12 @@ class FakeRequestModifier(RequestModifier):
         self.__counter = self.__counter + 1
         return {f"{self.__prefix}": f"{self.__counter}"}
 
+
 class FakeInputOutputModifier(RequestModifier):
     CHANGED_OUTPUT = "<CHANGED OUTPUT>"
 
     def modify(self, request_obj: any) -> any:
         for key in request_obj:
             request_obj[key] = FakeInputOutputModifier.CHANGED_OUTPUT
-        
+
         return request_obj

@@ -27,6 +27,7 @@ def test_estimate_response_cost(request_obj, response_obj, expected_cost):
 
     assert estimator.estimate_response_cost(request_obj, response_obj) == expected_cost
 
+
 def test_invalid_get_prompt():
     estimator = CompletionEstimator()
 

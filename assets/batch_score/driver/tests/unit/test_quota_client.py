@@ -33,7 +33,7 @@ async def test_quota_client(make_quota_client, make_completion_header_handler):
         quota_estimator="completion"
     )
 
-    async with quota_client.reserve_capacity(client_session, scope, scoring_request) as lease:
+    async with quota_client.reserve_capacity(client_session, scope, scoring_request):
         request_lease_url = ("https://azureml-drl-us.azureml.ms/ratelimiter/v1.0"
                              "/servicenamespaces/cool-namespace"
                              "/scopes/endpointPools:cool-pool:trafficGroups:batch"
@@ -74,7 +74,7 @@ async def test_quota_client_throttle(make_quota_client, make_completion_header_h
     )
 
     with pytest.raises(QuotaUnavailableException) as exc_info:
-        async with quota_client.reserve_capacity(client_session, scope, scoring_request) as lease:
+        async with quota_client.reserve_capacity(client_session, scope, scoring_request):
             pass
 
     assert exc_info.value.retry_after == retry_after
@@ -87,7 +87,7 @@ async def test_quota_client_throttle(make_quota_client, make_completion_header_h
 @pytest.mark.parametrize("input, expected_counts", [
     ("There was a farmer who had a cow", (8,)),
     (["There was a farmer who had a cow"], (8,)),
-    (["There was a farmer who had a cow", "and bingo was her name oh.", "B", "I", "N", "G", "O"], (8,7,1,1,1,1,1)),
+    (["There was a farmer who had a cow", "and bingo was her name oh.", "B", "I", "N", "G", "O"], (8, 7, 1, 1, 1, 1, 1)),
 ])
 async def test_quota_client_embeddings(make_quota_client, make_completion_header_handler, input, expected_counts):
     batch_pool = "cool-pool"
@@ -109,7 +109,7 @@ async def test_quota_client_embeddings(make_quota_client, make_completion_header
     )
 
     with pytest.raises(QuotaUnavailableException) as exc_info:
-        async with quota_client.reserve_capacity(client_session, scope, scoring_request) as lease:
+        async with quota_client.reserve_capacity(client_session, scope, scoring_request):
             pass
 
     assert exc_info.value.retry_after == 123

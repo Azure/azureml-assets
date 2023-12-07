@@ -75,6 +75,8 @@ test_cases = [
         },
     ],
 ]
+
+
 @pytest.mark.parametrize(
     "mock_get_logger, request_obj, redacted_request_obj",
     [['mock_get_logger', *test] for test in test_cases],

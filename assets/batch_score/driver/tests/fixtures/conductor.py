@@ -42,8 +42,9 @@ def make_conductor(make_routing_client, make_scoring_client):
             scoring_client=scoring_client,
             trace_configs=trace_configs,
         )
-    
+
     return make
+
 
 @pytest.fixture
 def mock_run(monkeypatch):
@@ -51,8 +52,14 @@ def mock_run(monkeypatch):
 
     async def _run(self, requests: "list[ScoringRequest]") -> "list[ScoringResult]":
         passed_requests.extend(requests)
-        return [ScoringResult(status=ScoringResultStatus.SUCCESS, response_body={"usage": {}}, 
-                              omit=False, start=0, end=0, request_obj=json.loads(scoring_request.cleaned_payload), request_metadata=scoring_request.request_metadata, response_headers=None, num_retries=0) for scoring_request in requests]
-    
+        return [ScoringResult(status=ScoringResultStatus.SUCCESS,
+                              response_body={"usage": {}},
+                              omit=False,
+                              start=0,
+                              end=0,
+                              request_obj=json.loads(scoring_request.cleaned_payload),
+                              request_metadata=scoring_request.request_metadata,
+                              response_headers=None, num_retries=0) for scoring_request in requests]
+
     monkeypatch.setattr("src.batch_score.common.parallel.conductor.Conductor.run", _run)
     return passed_requests

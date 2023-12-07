@@ -14,5 +14,5 @@ def make_AIMD(mock_get_logger):
     # TODO: request_metrics=make_request_metrics()
     def make(request_metrics=None):
         return AIMD(request_metrics=request_metrics)
-    
+
     return make

@@ -10,23 +10,22 @@ from .util import _submit_job_and_monitor_till_completion, set_component
 
 # Common configuration
 source_dir = os.getcwd()
-gated_pipeline_filepath =  os.path.join(source_dir, "driver", "tests", "e2e", "prs_pipeline_templates", "base.yml")
+gated_pipeline_filepath = os.path.join(source_dir, "driver", "tests", "e2e", "prs_pipeline_templates", "base.yml")
 
 RUN_NAME = "batch_score_aoai_endpoint_test"
-JOB_NAME = "gated_batch_score" # Should be equivalent to base.yml's job name
-YAML_COMPONENT = {"jobs": { JOB_NAME: { "component": None }}} # Placeholder for component name set below.
-YAML_APPLICATION_INSIGHTS = { "jobs": { JOB_NAME: {
+JOB_NAME = "gated_batch_score"  # Should be equivalent to base.yml's job name
+YAML_COMPONENT = {"jobs": {JOB_NAME: {"component": None}}}  # Placeholder for component name set below.
+YAML_APPLICATION_INSIGHTS = {"jobs": {JOB_NAME: {
     "inputs": {
-        # https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/c0afea91-faba-4d71-bcb6-b08134f69982/resourceGroups/batchscore-test-centralus/providers/Microsoft.Insights/components/wsbatchscorece2707952777/overview
-        "app_insights_connection_string": "InstrumentationKey=b8c396eb-7709-40a1-8363-527341518ab4;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/" 
+        "app_insights_connection_string": "InstrumentationKey="
     }
 }}}
-YAML_ENV_VARS_REDACT_PROMPTS = {"jobs": { JOB_NAME: {
+YAML_ENV_VARS_REDACT_PROMPTS = {"jobs": {JOB_NAME: {
     "environment_variables": {
         "BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG": "false",
-    }    
+    }
 }}}
-YAML_DISALLOW_FAILED_REQUESTS = {"jobs": { JOB_NAME: {
+YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
     "inputs": {
         "tally_failed_requests": True
     },
@@ -35,7 +34,7 @@ YAML_DISALLOW_FAILED_REQUESTS = {"jobs": { JOB_NAME: {
 }}}
 
 # Scoring configuration
-YAML_SERVERLESS_COMPLETION_ENDPOINT = {"jobs": { JOB_NAME: {
+YAML_SERVERLESS_COMPLETION_ENDPOINT = {"jobs": {JOB_NAME: {
     "inputs": {
         "api_type": "completion",
         "scoring_url": "https://llama-completion.eastus2.inference.ai.azure.com/v1/completions",
@@ -45,7 +44,7 @@ YAML_SERVERLESS_COMPLETION_ENDPOINT = {"jobs": { JOB_NAME: {
 }}}
 
 # Input data assets
-YAML_COMPLETION_TEST_DATA_ASSET = { "inputs": { "pipeline_job_data_path": { "path": "azureml:e2e_llama_completion_data:1" }}}
+YAML_COMPLETION_TEST_DATA_ASSET = {"inputs": {"pipeline_job_data_path": {"path": "azureml:e2e_llama_completion_data:1"}}}
 
 
 @pytest.mark.smoke

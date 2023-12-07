@@ -26,32 +26,12 @@ def _submit_job_and_monitor_till_completion(
     assert job.status == "Preparing"
 
     try:
-        job = _wait_until_termination(ml_client=pytest.ml_client,
-                                    pipeline_job=job)
+        job = _wait_until_termination(ml_client=pytest.ml_client, pipeline_job=job)
 
         assert job.status == "Completed"
-    except:
+    except Exception:
         raise Exception(f"Exception raised while waiting for termination. Studio url: {job.studio_url}")
 
-def _submit_job_and_monitor_till_completion(
-    ml_client: MLClient,
-    pipeline_filepath: str,
-    yaml_overrides: "list[dict]" = None,
-):
-    job = _submit_batch_score_job(
-        ml_client=pytest.ml_client,
-        pipeline_filepath=pipeline_filepath,
-        yaml_overrides=yaml_overrides)
-
-    assert job.status == "Preparing"
-
-    try:
-        job = _wait_until_termination(ml_client=pytest.ml_client,
-                                    pipeline_job=job)
-
-        assert job.status == "Completed"
-    except:
-        raise Exception(f"Exception raised while waiting for termination. Studio url: {job.studio_url}")
 
 def _submit_batch_score_job(ml_client: MLClient,
                             pipeline_filepath: str,
@@ -81,10 +61,11 @@ def _submit_batch_score_job(ml_client: MLClient,
         print(f"Pipeline job {pipeline_job.name} created.")
 
         return pipeline_job
-    except:
+    except Exception:
         raise
     finally:
         tmpDir.cleanup()
+
 
 def _wait_until_termination(ml_client: MLClient,
                             pipeline_job: Job):
@@ -96,6 +77,7 @@ def _wait_until_termination(ml_client: MLClient,
 
     return job
 
+
 def _update_yaml(filename: str, yaml_override: dict):
     """
     Helper function to update a value in a yaml
@@ -104,13 +86,14 @@ def _update_yaml(filename: str, yaml_override: dict):
 
     with open(filename) as f:
         yml: dict = yaml.safe_load(f)
-    
+
     yml = deep_update(yml, yaml_override)
     print(f"Updated keys with yaml_override: {yaml_override}")
 
     with open(filename, 'w') as f:
         yaml.safe_dump(yml, f, default_flow_style=False)
     print(f"Final file: {yml}")
+
 
 def _get_current_datetime():
     t = datetime.now()
@@ -123,32 +106,34 @@ def _set_and_get_component_name_ver(component_filepath: str) -> "tuple[str, str]
 
     if 'name' in yml:
         yml['name'] = f"{yml['name']}_devops_test"
-        
+
     if 'version' in yml:
         yml['version'] = _get_current_datetime()
-    
+
     with open(component_filepath, 'w') as f:
         yaml.safe_dump(yml, f, default_flow_style=False)
 
     print(f"Pinning component {yml['name']} with version {yml['version']}.")
 
     return yml['name'], yml['version']
-    
+
 
 # TODO: add function to check pipeline output files are correct
 def validate_successful_run():
     pass
 
+
 def create_copy(source: str, destination: str = None) -> "tuple[tempfile.TemporaryDirectory, str]":
     try:
         # source is a folder
         shutil.copytree(source, destination, dirs_exist_ok=True)
-    except OSError as exc: # python >2.5
+    except OSError as exc:  # python >2.5
         # source is a file
         if exc.errno in (errno.ENOTDIR, errno.EINVAL):
             shutil.copy(source, destination)
         else:
             raise
+
 
 def set_component(component_name: str, component_version: str, component_config: dict, job_name: str) -> None:
     """

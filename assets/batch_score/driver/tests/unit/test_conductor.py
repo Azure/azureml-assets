@@ -66,6 +66,7 @@ async def test_run_returns_same_number_of_results_as_requests(
     results3 = await conductor.run(requests=requests3)
     assert len(results3) == len(requests3)
 
+
 @pytest.mark.parametrize("segment_large_requests, max_retry_time_interval",
                          [("disabled", None), ("disabled", 102), ("enabled", None), ("enabled", 102)])
 def test_get_session_timeout_env_var(monkeypatch, make_conductor, segment_large_requests, max_retry_time_interval):
@@ -76,10 +77,11 @@ def test_get_session_timeout_env_var(monkeypatch, make_conductor, segment_large_
         max_retry_time_interval=max_retry_time_interval,
     )
     # Test env var takes precedence even when max retry or segmentation are set
-    monkeypatch.setattr(os, 'environ', {'BATCH_SCORE_REQUEST_TIMEOUT' : '101'})
+    monkeypatch.setattr(os, 'environ', {'BATCH_SCORE_REQUEST_TIMEOUT': '101'})
 
     session = conductor._Conductor__get_session()
     assert session.timeout.total == 101
+
 
 @pytest.mark.parametrize("segment_large_requests", ["disabled", "enabled"])
 def test_get_session_timeout_max_retry(make_conductor, segment_large_requests):
@@ -92,6 +94,7 @@ def test_get_session_timeout_max_retry(make_conductor, segment_large_requests):
     # Test max retry takes precedence even when segmentation enabled
     session = conductor._Conductor__get_session()
     assert session.timeout.total == 102
+
 
 @pytest.mark.parametrize("segment_large_requests, expected_default", [("disabled", 1800), ("enabled", 600)])
 def test_get_session_timeout_defaults(make_conductor, segment_large_requests, expected_default):

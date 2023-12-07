@@ -11,12 +11,13 @@ def test_get_headers_no_additional_headers(mocker):
     mocker.patch.object(WorkspaceConnectionAuthProvider, 'get_auth_headers', return_value={'Authorization': 'Bearer 123'})
 
     # Act
-    headers= handler.get_headers()
+    headers = handler.get_headers()
 
     # Assert
     assert len(headers) == 3
     _assert_default_headers(headers)
-    
+
+
 def test_get_headers_with_additional_headers(mocker):
     # Arrange
     additional_headers = '{"hello": "world"}'
@@ -24,7 +25,7 @@ def test_get_headers_with_additional_headers(mocker):
     mocker.patch.object(WorkspaceConnectionAuthProvider, 'get_auth_headers', return_value={'Authorization': 'Bearer 123'})
 
     # Act
-    headers= handler.get_headers()
+    headers = handler.get_headers()
 
     # Assert
     assert len(headers) == 4

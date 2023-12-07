@@ -31,7 +31,7 @@ def test_setup_trace_configs_disabled_scenario(mock_os_environ_get: MagicMock, m
 
     trace_configs = main.setup_trace_configs()
 
-    assert trace_configs == None
+    assert trace_configs is None
     assert mock_get_logger.info.called
 
 

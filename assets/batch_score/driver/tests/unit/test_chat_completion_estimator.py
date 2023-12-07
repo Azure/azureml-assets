@@ -23,12 +23,14 @@ def test_estimate_response_cost(request_obj, response_obj, expected_cost):
 
     assert estimator.estimate_response_cost(request_obj, response_obj) == expected_cost
 
+
 def test_valid__get_prompt():
     estimator = ChatCompletionEstimator()
 
     chat_completion_payload = {"messages": [{"role": "user", "content": "Hello "}, {"role": "user", "content": "World!"}]}
 
     assert estimator._get_prompt(chat_completion_payload) == "Hello World!"
+
 
 def test_invalid_get_prompt():
     estimator = ChatCompletionEstimator()

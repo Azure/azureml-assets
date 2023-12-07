@@ -18,11 +18,13 @@ CLASSIFICATION_TESTS = [
     [404, "Specified traffic group could not be found", "", "", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
     [403, None, "", "", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
 ]
+
+
 @pytest.mark.parametrize("response_status, response_payload, model_response_code, model_response_reason, expected_classification", CLASSIFICATION_TESTS)
 def test_classify_response(response_status: int, response_payload: any, model_response_code: str, model_response_reason: str, expected_classification: Enum):
     classification = scoring_utils.get_retriable_type(response_status=response_status,
-                                                response_payload=response_payload,
-                                                model_response_code=model_response_code,
-                                                model_response_reason=model_response_reason)
+                                                      response_payload=response_payload,
+                                                      model_response_code=model_response_code,
+                                                      model_response_reason=model_response_reason)
 
-    assert classification == expected_classification 
+    assert classification == expected_classification

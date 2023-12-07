@@ -20,21 +20,21 @@ class TestRoutingClient:
                 {},
                 ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME,
                 None,
-            ), 
+            ),
             (
                 {
                     'unrecognized key': 'unrevealed value',
                 },
                 ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME,
                 None,
-            ), 
+            ),
             (
                 {
                     ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME: 'true',
                 },
                 ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME,
                 'true',
-            ), 
+            ),
             (
                 {
                     ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME: 'true',
@@ -42,7 +42,7 @@ class TestRoutingClient:
                 },
                 ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME,
                 'true',
-            ), 
+            ),
             (
                 {
                     ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME: 'true',
@@ -64,7 +64,7 @@ class TestRoutingClient:
         routing_client._RoutingClient__client_settings = client_settings_from_endpoint_discovery_service
 
         assert expected_value == routing_client.get_client_setting(key)
-    
+
     # If the exception handling fails, this test will hang indefinitely.
     # So we expect the test to pass in 5 seconds if the code is correct.
     @pytest.mark.timeout(5)
@@ -79,7 +79,6 @@ class TestRoutingClient:
         mock_refresh_pool_routes['exception_to_raise'] = None
 
         await routing_client._RoutingClient__check_and_refresh_pool_routes(session=None)
-
 
     # If the exception handling fails, this test will hang indefinitely.
     # So we expect the test to pass in 5 seconds if the code is correct.
