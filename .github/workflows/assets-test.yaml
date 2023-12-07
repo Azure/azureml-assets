@@ -70,10 +70,10 @@ jobs:
           separator: ','
           sha: ${{ env.merge_commit_hash || github.sha }}
 
-      - name: Use Python 3.8 or newer up to 3.11
+      - name: Use Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: '>=3.8,<=3.11'
+          python-version: '3.11'
     
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
