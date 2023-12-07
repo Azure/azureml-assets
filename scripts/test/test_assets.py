@@ -167,6 +167,7 @@ if __name__ == '__main__':
                           asset_config_filename=args.asset_config_filename,
                           package_versions=args.package_versions_file,
                           changed_files=changed_files,
+                          python_version=args.python_version,
                           reports_dir=args.reports_dir)
     if not success:
         sys.exit(1)
