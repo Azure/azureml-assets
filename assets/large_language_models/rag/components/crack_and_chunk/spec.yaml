@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.28
+version: 0.0.45
 name: llm_rag_crack_and_chunk
 display_name: LLM - Crack and Chunk Data
 is_deterministic: true
@@ -13,7 +13,7 @@ description: |
   Creates chunks no larger than `chunk_size` from `input_data`, extracted document titles are prepended to each chunk
 
   LLM models have token limits for the prompts passed to them, this is a limiting factor at embedding time and even more limiting at prompt completion time as only so much context can be passed along with instructions to the LLM and user queries.
-  Chunking allows splitting source data of various formats into small but coherent snippets of information which can be 'packed' into LLM prompts when asking for answers to user querys related to the sorce documents.
+  Chunking allows splitting source data of various formats into small but coherent snippets of information which can be 'packed' into LLM prompts when asking for answers to user query related to the source documents.
 
   Supported formats: md, txt, html/htm, pdf, ppt(x), doc(x), xls(x), py
 
@@ -41,6 +41,10 @@ inputs:
     type: integer
     default: 0
     description: "Number of tokens to overlap between chunks."
+  doc_intel_connection_id:
+    type: string
+    optional: true
+    description: "Connection id for Document Intelligence service. If provided, will be used to extract content from .pdf document."
   data_source_url:
     type: string
     optional: true
@@ -62,27 +66,28 @@ inputs:
     description:  "Whether to use RecursiveCharacterTextSplitter to split documents into chunks"
   output_format:
     type: string
-    default: "csv"
+    default: "jsonl"
     enum:
     - "csv"
     - "jsonl"
     description: "Format of the output chunk file"
 
 outputs:
-   output_chunks:
-     type: uri_folder
-     description: "Uri Folder containing chunks. Each chunk will be a separate file in the folder"
+    output_chunks:
+      type: uri_folder
+      description: "Uri Folder containing chunks. Each chunk will be a separate file in the folder"
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src'
 command: >-
   python -m azureml.rag.tasks.crack_and_chunk
-  --input_data ${{inputs.input_data}}
+  --input_data '${{inputs.input_data}}'
   $[[--input_glob '${{inputs.input_glob}}']]
   $[[--allowed_extensions ${{inputs.allowed_extensions}}]]
-  --output_title_chunk ${{outputs.output_chunks}}
+  --output_chunks ${{outputs.output_chunks}}
   --chunk_size ${{inputs.chunk_size}}
   --chunk_overlap ${{inputs.chunk_overlap}}
+  $[[--doc_intel_connection_id ${{inputs.doc_intel_connection_id}}]]
   $[[--data_source_url ${{inputs.data_source_url}}]]
   $[[--document_path_replacement_regex '${{inputs.document_path_replacement_regex}}']]
   --max_sample_files ${{inputs.max_sample_files}}

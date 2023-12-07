@@ -3,8 +3,8 @@
 
 """This file contains unit tests for the Data Drift Output Metrics component."""
 
-from feature_importance_metrics.compute_feature_importance import determine_task_type
-from feature_importance_metrics.feature_importance_utilities import compute_categorical_features
+from feature_importance_metrics.compute_feature_importance import determine_task_type, get_train_test_data
+from feature_importance_metrics.feature_importance_utilities import compute_categorical_features, is_categorical_column
 from feature_importance_metrics.compute_feature_attribution_drift import (
     drop_metadata_columns, calculate_attribution_drift)
 import pytest
@@ -22,7 +22,6 @@ def get_fraud_data():
         "ACCOUNTID": ["A1176337474875483", "A1343835256155075",
                       "A1343835256155076", "A1706480214256418"],
         "TRANSACTIONAMOUNT": [146161.99, 57487.200000000004,  227728.76, 59340.0],
-        "LOCALHOUR": [16, 22, 16, 8],
         "TIMESTAMP": ["2023-01-30T16:25:17.000Z",
                       "2023-01-30T16:58:44.000Z",
                       "2023-01-30T22:46:37.000Z",
@@ -36,6 +35,15 @@ def get_fraud_data():
 
 
 @pytest.fixture
+def get_complex_dtype_data():
+    """Return time data as pandas dataframe."""
+    return pd.DataFrame({
+        "Time": [pd.Timedelta('1 days 06:05:01.000030')],
+        "DateTime": pd.DatetimeIndex(['2018-04-24 00:00:00'], dtype='datetime64[ns]', freq=None)
+    })
+
+
+@pytest.fixture
 def get_zipcode_data():
     """Return zipcode data as pandas dataframe."""
     return pd.DataFrame({
@@ -44,14 +52,37 @@ def get_zipcode_data():
         })
 
 
+@pytest.fixture
+def get_large_data():
+    """Return large zipcode data as pandas dataframe."""
+    return pd.DataFrame({
+            "zipcode": [10001] * 10003,
+            "location": ["Seattle"] * 10003
+        })
+
+
 @pytest.mark.unit
 class TestComputeFeatureImportanceMetrics:
     """Test class for feature importance component and utilities."""
 
+    def test_get_train_test_data(self, get_large_data):
+        """Test split data ."""
+        train_data, test_data = get_train_test_data(get_large_data)
+        assert len(train_data.index) == 5003
+        assert len(test_data.index) == 5000
+
+    def test_is_categorical_column(self, get_complex_dtype_data):
+        """Test whether a column is categorical."""
+        result = is_categorical_column(get_complex_dtype_data, "Time")
+        assert not result
+        result = is_categorical_column(get_complex_dtype_data, "DateTime")
+        assert not result
+
     def test_compute_categorical_features(self, get_fraud_data):
         """Test determine categorical features."""
         categorical_features = compute_categorical_features(get_fraud_data, "IS_FRAUD")
-        assert categorical_features == ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP", "ISPROXYIP"]
+        assert categorical_features == ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP",
+                                        "ISPROXYIP"]
 
     def test_compute_categorical_features_integer(self, get_zipcode_data):
         """Test determine categorical features with integers as categorical."""
@@ -60,17 +91,22 @@ class TestComputeFeatureImportanceMetrics:
 
     def test_determine_task_type_classification(self, get_fraud_data, get_zipcode_data):
         """Test deteremine task type for classification scenario."""
-        task_type = determine_task_type("ISPROXYIP", get_fraud_data)
+        task_type = determine_task_type(None, "ISPROXYIP", get_fraud_data)
         assert task_type == "classification"
-
-        task_type = determine_task_type("zipcode", get_zipcode_data)
+        task_type = determine_task_type("invalid", "zipcode", get_zipcode_data)
+        assert task_type == "classification"
+        task_type = determine_task_type("Classification", "zipcode", get_zipcode_data)
+        assert task_type == "classification"
+        task_type = determine_task_type("Classification", "TIMESTAMP", get_fraud_data)
         assert task_type == "classification"
 
     def test_determine_task_type_regression(self, get_fraud_data):
         """Test deteremine task type for regression scenario."""
-        task_type = determine_task_type("TRANSACTIONAMOUNTUSD", get_fraud_data)
+        task_type = determine_task_type(None, "TRANSACTIONAMOUNTUSD", get_fraud_data)
         assert task_type == "regression"
-        task_type = determine_task_type("PHYSICALITEMCOUNT", get_fraud_data)
+        task_type = determine_task_type("invalid", "TRANSACTIONAMOUNTUSD", get_fraud_data)
+        assert task_type == "regression"
+        task_type = determine_task_type("Regression", "TRANSACTIONAMOUNTUSD", get_fraud_data)
         assert task_type == "regression"
 
     def test_drop_metadata_columns(self):

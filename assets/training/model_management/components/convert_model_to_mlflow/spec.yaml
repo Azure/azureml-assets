@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: convert_model_to_mlflow
-version: 0.0.15
+version: 0.0.17
 type: command
 
 is_deterministic: True
@@ -9,7 +9,7 @@ is_deterministic: True
 display_name: Convert models to MLflow
 description: Component converts models from supported frameworks to MLflow model packaging format
 
-environment: azureml://registries/azureml/environments/model-management/versions/13
+environment: azureml://registries/azureml/environments/model-management/versions/17
 
 code: ../../src/
 command: >
@@ -27,6 +27,7 @@ command: >
   $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]]
   $[[--hf-use-experimental-features ${{inputs.hf_use_experimental_features}}]]
   $[[--extra-pip-requirements "${{inputs.extra_pip_requirements}}"]]
+  $[[--inference-base-image "${{inputs.inference_base_image}}"]]
   --model-framework ${{inputs.model_framework}}
   --model-path ${{inputs.model_path}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
@@ -44,6 +45,7 @@ inputs:
       - Huggingface
       - MMLab
       - llava
+      - AutoML
     default: Huggingface
     optional: false
     description: Framework from which model is imported from.
@@ -60,11 +62,18 @@ inputs:
       - text-classification
       - translation
       - image-classification
+      - image-classification-multilabel
       - image-object-detection
       - image-instance-segmentation
+      - image-to-text
       - text-to-image
+      - text-to-image-inpainting
       - image-text-to-text
+      - image-to-image
       - zero-shot-image-classification
+      - mask-generation
+      - video-multi-object-tracking
+      - visual-question-answering
     description: A Hugging face task on which model was trained on. A required parameter for transformers MLflow flavor. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
 
@@ -124,6 +133,13 @@ inputs:
       Extra pip dependencies that MLflow model should capture as part of conversion. This would be used to create environment while loading the model for inference.
       Pip dependencies expressed as below. Do not use quotes for passing.
       eg: pkg1==1.0, pkg2, pkg3==1.0
+    optional: true
+  
+  inference_base_image:
+    type: string
+    description: |
+      The docker image to use in model inference.
+      This image id is assigned to `azureml.base_image` key in metadata section of mlmodel file.
     optional: true
 
   model_download_metadata:

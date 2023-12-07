@@ -1,0 +1,4 @@
+type: prompt
+spec: spec.yaml
+extra_config: storage.yaml
+categories: ["GPTV"]

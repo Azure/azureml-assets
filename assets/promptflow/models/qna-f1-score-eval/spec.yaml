@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Compute the F1 Score based on words in answer and ground truth.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 1
+version: 3

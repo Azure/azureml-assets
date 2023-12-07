@@ -25,6 +25,6 @@ dependencies:
   - lightgbm==3.2.1
   - msrest==0.6.21
   - mltable=={{latest-pypi-version}}
-  - cryptography==41.0.3
-  - aiohttp==3.8.5
-  - certifi==2023.07.22
+  - openai~=0.27.4
+  - azure-ai-ml=={{latest-pypi-version}}
+  - mldesigner=={{latest-pypi-version:pre}}

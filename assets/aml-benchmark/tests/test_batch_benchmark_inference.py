@@ -7,11 +7,12 @@ from typing import Optional
 import json
 import os
 import uuid
+import pytest
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
-from utils import (
+from .test_utils import (
     get_mlclient,
     Constants,
     download_outputs,
@@ -25,29 +26,51 @@ class TestBatchBenchmarkInferenceComponent:
 
     EXP_NAME = "batch-benchmark-inference-test"
 
-    def test_batch_benchmark_inference(self, temp_dir: str):
+    LLM_REQUEST = ('{'
+                   '   "input_data":'
+                   '   {'
+                   '       "input_string": ["###<prompt>"],'
+                   '       "parameters":'
+                   '       {'
+                   '           "temperature": 0.6,'
+                   '           "max_new_tokens": 100,'
+                   '           "do_sample": true'
+                   '       }'
+                   '   },'
+                   '   "_batch_request_metadata": ###<_batch_request_metadata>'
+                   '}')
+    VISION_REQUEST = ('{'
+                      '"input_data": {'
+                      '  "columns": ['
+                      '    "image",'
+                      '    "text"'
+                      '  ],'
+                      '  "index": [0],'
+                      '  "data": ['
+                      '    ["###<image>", "###<text>"]'
+                      '  ]'
+                      '},'
+                      '"params": {}'
+                      '}')
+
+    @pytest.mark.parametrize(
+            'model_type', [("vision_oss")]
+    )
+    def test_batch_benchmark_inference(self, model_type: str, temp_dir: str):
         """Test batch inference preparer."""
+        self._model_type = model_type
         ml_client = get_mlclient()
-        score_url, deployment_name = deploy_fake_test_endpoint_maybe(ml_client)
+        score_url, deployment_name, connections_name = deploy_fake_test_endpoint_maybe(ml_client)
+        request = self.VISION_REQUEST if model_type == "vision_oss" else self.LLM_REQUEST
         pipeline_job = self._get_pipeline_job(
             self.test_batch_benchmark_inference.__name__,
             score_url,
-            '{"azureml-model-deployment": "' + deployment_name + '"}',
-            '{'
-            '   "input_data":'
-            '   {'
-            '       "input_string": ["###<prompt>"],'
-            '       "parameters":'
-            '       {'
-            '           "temperature": 0.6,'
-            '           "max_new_tokens": 100,'
-            '           "do_sample": true'
-            '       }'
-            '   },'
-            '   "_batch_request_metadata": ###<_batch_request_metadata>'
-            '}',
+            deployment_name,
+            connections_name,
+            request,
             'label',
             temp_dir,
+            model_type,
         )
         # submit the pipeline job
         pipeline_job = ml_client.create_or_update(
@@ -66,10 +89,12 @@ class TestBatchBenchmarkInferenceComponent:
                 self,
                 display_name: str,
                 online_endpoint_url: str,
-                additional_headers: str,
+                deployment_name: str,
+                connections_name: str,
                 batch_input_pattern: str,
-                label_key: str,
+                label_column_name: str,
                 temp_dir: Optional[str] = None,
+                model_type: Optional[str] = None,
             ) -> Job:
         temp_yaml = self._create_inference_yaml()
         pipeline_job = load_yaml_pipeline('batch-benchmark-inference.yaml')
@@ -77,7 +102,9 @@ class TestBatchBenchmarkInferenceComponent:
         # avoid blob exists error when running pytest with multiple workers
         if temp_dir is not None:
             file_path = os.path.join(temp_dir, uuid.uuid4().hex + ".jsonl")
-            with open(Constants.BATCH_INFERENCE_PREPARER_FILE_PATH, "r") as f:
+            batch_input_file = Constants.BATCH_INFERENCE_PREPARER_FILE_PATH_VISION \
+                if model_type == "vision_oss" else Constants.BATCH_INFERENCE_PREPARER_FILE_PATH
+            with open(batch_input_file, "r") as f:
                 with open(file_path, "w") as f2:
                     f2.write(f.read())
 
@@ -85,12 +112,13 @@ class TestBatchBenchmarkInferenceComponent:
         pipeline_job.inputs.input_dataset = Input(
             type="uri_folder", path=temp_dir
         )
-        pipeline_job.inputs.online_endpoint_url = online_endpoint_url
-        pipeline_job.inputs.additional_headers = additional_headers
+        pipeline_job.inputs.endpoint_url = online_endpoint_url
+        pipeline_job.inputs.connections_name = connections_name
+        pipeline_job.inputs.deployment_name = deployment_name
         pipeline_job.inputs.initial_worker_count = 1
         pipeline_job.inputs.max_worker_count = 10
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
-        pipeline_job.inputs.label_key = label_key
+        pipeline_job.inputs.label_column_name = label_column_name
         pipeline_job.name = str(uuid.uuid4())
         pipeline_job.display_name = display_name
 
@@ -122,30 +150,38 @@ class TestBatchBenchmarkInferenceComponent:
         param_mapping_dict = {
             "input_dataset:": ['  input_dataset:\n', '    type: uri_folder\n', '    path: ../data/\n'],
             "batch_input_pattern:": ["  batch_input_pattern: wrong_pattern\n"],
-            "online_endpoint_url:": ["  online_endpoint_url: a_bad_url\n"],
+            "endpoint_url:": ["  endpoint_url: a_bad_url\n"],
+            "handle_response_failure:": ["  handle_response_failure: true\n"],
+            "connections_name:": ["  connections_name: a_bad_connection\n"],
+            "fallback_value:": ["  fallback_value: a_value\n"],
+            "deployment_name:": ["  deployment_name: a_bad_deployment\n"],
             "debug_mode:": ["  debug_mode: false\n"],
-            "additional_headers:": ["  additional_headers: 'some_header'\n"],
+            "additional_headers:": ["  additional_headers: '{}'\n"],
             "ensure_ascii:": ["  ensure_ascii: false\n"],
+            "is_performance_test:": ["  is_performance_test: false\n"],
             "max_retry_time_interval:": ["  max_retry_time_interval: 600\n"],
             "initial_worker_count:": ["  initial_worker_count: 1\n"],
             "max_worker_count:": ["  max_worker_count: 10\n"],
+            "data_id_key:": ["  data_id_key: data_id\n"],
             "instance_count:": ["  instance_count: 1\n"],
             "max_concurrency_per_instance:": ["  max_concurrency_per_instance: 1\n"],
             "ground_truth_input:": ['  ground_truth_input:\n', '    type: uri_folder\n', '    path: ../data/\n'],
             "metadata_key:": ["  metadata_key: _batch_request_metadata\n"],
-            "label_key:": ["  label_key: label\n"],
+            "label_column_name:": ["  label_column_name: label\n"],
             "n_samples:": ["  n_samples: 10\n"],
-            "prediction_data:": [
-                '  prediction_data:\n', '    type: uri_file\n',
-                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/prediction.jsonl\n'],
-            "perf_data:": [
-                '  perf_data:\n', '    type: uri_file\n',
-                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/perf_data.jsonl\n'],
-            "ground_truth_data:": [
-                '  ground_truth_data:\n', '    type: uri_file\n',
+            "predictions:": [
+                '  predictions:\n', '    type: uri_file\n',
+                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/predictions.jsonl\n'],
+            "performance_metadata:": [
+                '  performance_metadata:\n', '    type: uri_file\n',
+                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/performance_metadata.jsonl\n'],
+            "ground_truth:": [
+                '  ground_truth:\n', '    type: uri_file\n',
                 '    path: azureml://datastores/${{default_datastore}}'
-                '/paths/${{name}}/ground_truth_data.jsonl\n']
+                '/paths/${{name}}/ground_truth.jsonl\n']
         }
+        if self._model_type:
+            param_mapping_dict['model_type:'] = [f"  model_type: {self._model_type}\n"]
         if current_section == "inputs" or current_section == "outputs":
             line_key = self._get_yml_key(line)
             if line_key in param_mapping_dict:
@@ -176,7 +212,10 @@ class TestBatchBenchmarkInferenceComponent:
         if current_section == "inputs" or current_section == "outputs":
             if line.startswith("      "):
                 return False
-            return self._get_yml_key(line) not in {'optional:', 'type:', 'default:', 'description:'}
+            if "model_type" in line and not self._model_type:
+                return False
+            return self._get_yml_key(line) not in {
+                'optional:', 'type:', 'default:', 'description:', 'enum:'}
         return True
 
     def _read_data(self, file_path):
@@ -197,18 +236,19 @@ class TestBatchBenchmarkInferenceComponent:
         self._check_columns_in_dfs(expected_col_list, dfs)
 
     def _verify_output(self, job, output_dir):
-        prediction_data = job.outputs.prediction_data.port_name
-        perf_data = job.outputs.perf_data.port_name
-        ground_truth_data = job.outputs.ground_truth_data.port_name
-        for output_name in [prediction_data, perf_data, ground_truth_data]:
+        prediction_data = job.outputs.predictions.port_name
+        performance_metadata = job.outputs.performance_metadata.port_name
+        ground_truth = job.outputs.ground_truth.port_name
+        for output_name in [prediction_data, performance_metadata, ground_truth]:
             download_outputs(
                 job_name=job.name, output_name=output_name, download_path=output_dir
             )
         output_dir = os.path.join(output_dir, "named-outputs")
         self._check_output_data(
-            os.path.join(output_dir, "prediction_data"), "prediction_data", ["prediction"])
+            os.path.join(output_dir, "predictions"), "predictions.jsonl", ["prediction"])
         self._check_output_data(
-            os.path.join(output_dir, "perf_data"), "perf_data", ["start", "end", "latency"])
+            os.path.join(output_dir, "performance_metadata.jsonl"),
+            "performance_metadata", ["start", "end", "latency"])
         self._check_output_data(
             os.path.join(
-                output_dir, "ground_truth_data"), "ground_truth_data", ["ground_truth"])
+                output_dir, "ground_truth"), "ground_truth.jsonl", ["label"])

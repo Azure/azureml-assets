@@ -1,0 +1,36 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+template: | 
+  Explain what the below SQL query does. Also answer why someone might be interested in this time period, and why a company might be interested in this SQL query.
+
+  Details: Temperature = 0.8; MaxTokens = 150+; Stop sequences: #
+  SELECT c.customer_id
+  FROM Customers c
+  JOIN Streaming s
+  ON c.customer_id = s.customer_id
+  WHERE c.signup_date BETWEEN '2020-03-01' AND '2020-03-31'
+  AND s.watch_date BETWEEN c.signup_date AND DATE_ADD(c.signup_date, INTERVAL 30 DAY)
+  GROUP BY c.customer_id
+  HAVING SUM(s.watch_minutes) > 50 * 60
+
+  Explanation:
+
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
+execution_settings:
+  default:
+    bestOf: 1,
+    frequencyPenalty: 0,
+    responseLength: 60,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1  
+  text-davinci-003:
+    model_id: text-davinci-003
+    bestOf: 1,
+    frequencyPenalty: 0,
+    responseLength: 60,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1  
+    
+template_format: handlebars

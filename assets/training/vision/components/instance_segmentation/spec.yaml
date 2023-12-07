@@ -5,7 +5,7 @@ description: Component to finetune AutoML legacy models for instance segmentatio
 
 name: train_instance_segmentation_model
 display_name: Image Instance Segmentation AutoML Legacy Model Finetune
-version: 0.0.4
+version: 0.0.6
 
 is_deterministic: false
 
@@ -219,8 +219,8 @@ outputs:
     type: custom_model
 
 code: ../src
- 
-environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/1
+
+environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/5
 
 command: >-
   python -m instance_segmentation.run
@@ -261,7 +261,7 @@ command: >-
   $[[--validation_iou_threshold ${{inputs.validation_iou_threshold}}]]
   $[[--validation_metric_type ${{inputs.validation_metric_type}}]]
   $[[--warmup_cosine_lr_cycles ${{inputs.warmup_cosine_lr_cycles}}]]
-  $[[--warmup_cosine_lr_warmup_epochs ${{inputs.warmup_cosine_lr_warmup_epochs}}]]  
+  $[[--warmup_cosine_lr_warmup_epochs ${{inputs.warmup_cosine_lr_warmup_epochs}}]]
   $[[--weight_decay ${{inputs.weight_decay}}]]
   --mlflow_model_output ${{outputs.mlflow_model_folder}}
   --pytorch_model_output ${{outputs.pytorch_model_folder}}

@@ -50,7 +50,8 @@ jobs:
       prediction:
         type: uri_folder
         path: ${{parent.jobs.evaluation.outputs.predictions}}
-      task: text-classification
+      task: question-answering
+      ground_truth_column_name: ground_truth
     outputs:
       evaluation_result:
         type: uri_folder

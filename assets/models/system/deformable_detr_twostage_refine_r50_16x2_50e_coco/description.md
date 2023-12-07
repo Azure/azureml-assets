@@ -4,6 +4,8 @@ DETR has been recently proposed to eliminate the need for many hand-designed com
 
 > The above abstract is from MMDetection website. Review the <a href="https://github.com/open-mmlab/mmdetection/tree/v2.28.2/configs/deformable_detr" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
+> <b>Deprecation Warning</b>: This model is only compatible with mmdet <= 2.28 and is deprecated. We recommend using `mmd-3x-deformable-detr_refine_twostage_r50_16xb2-50e_coco`, the corresponding mmdet >= 3.1.0 model instead, from <a href="https://ml.azure.com/model/catalog" target="_blank">the AzureML model catalog</a>. In our model catalog, the models prefixed with mmdet-3x are compatible with mmdet >= 3.1.0.
+
 ### Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML

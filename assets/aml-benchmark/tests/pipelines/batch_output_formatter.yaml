@@ -10,18 +10,21 @@ inputs:
   batch_inference_output:
     type: uri_folder
     path: ../data/
-  label_key: label
+  label_column_name: label
+  endpoint_url: http://test-endpoint.com
+  handle_response_failure: use_fallback
+  is_performance_test: False
 
 outputs:
-  prediction_data:
+  predictions:
     type: uri_file
-    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/prediction.jsonl
-  perf_data:
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/predictions.jsonl
+  performance_metadata:
     type: uri_file
-    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/perf_data.jsonl
-  ground_truth_data:
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/performance_metadata.jsonl
+  ground_truth:
     type: uri_file
-    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/ground_truth_data.jsonl
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/ground_truth.jsonl
 
 jobs:
   run_batch_output_formatter:
@@ -31,8 +34,11 @@ jobs:
       timeout: 900
     inputs:
       batch_inference_output: ${{parent.inputs.batch_inference_output}}
-      label_key: ${{parent.inputs.label_key}}
+      label_column_name: ${{parent.inputs.label_column_name}}
+      endpoint_url: ${{parent.inputs.endpoint_url}}
+      handle_response_failure: ${{parent.inputs.handle_response_failure}}
+      is_performance_test: ${{parent.inputs.is_performance_test}}
     outputs:
-      prediction_data: ${{parent.outputs.prediction_data}}
-      perf_data: ${{parent.outputs.perf_data}}
-      ground_truth_data: ${{parent.outputs.ground_truth_data}}
+      predictions: ${{parent.outputs.predictions}}
+      performance_metadata: ${{parent.outputs.performance_metadata}}
+      ground_truth: ${{parent.outputs.ground_truth}}

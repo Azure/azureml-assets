@@ -1,0 +1,6 @@
+azureml-rag[cognitive_search,data_generation]>=0.2.8
+plotly~=5.13.1
+azure-kusto-data==4.2.0
+recognizers-text-suite~=1.0.2a2
+azureml-contrib-services
+azure-cosmos~=4.4.0

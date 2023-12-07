@@ -5,8 +5,8 @@ properties:
   is-promptflow: true
   azureml.promptflow.section: gallery
   azureml.promptflow.type: chat
-  azureml.promptflow.name: Use Functions with Chat Models
-  azureml.promptflow.description: Combining external functions to extend the capabilities of GPT chat models.
+  azureml.promptflow.name: Use GPT Function Calling
+  azureml.promptflow.description: Learn how to use GPT function calling to extend the capabilities of GPT models with external data sources.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 3
+version: 7

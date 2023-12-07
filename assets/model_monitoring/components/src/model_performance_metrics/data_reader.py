@@ -60,7 +60,7 @@ class BaseTaskReader:
         """
         df = read_mltable_in_spark(file_name)
         if columns is not None:
-            df.select(columns)  # We might need to accept multiple columns in code-gen
+            df = df.select(columns)  # We might need to accept multiple columns in code-gen
         return df.toPandas()
 
     def read_data(self, ground_truths, ground_truths_column_name, predictions, predictions_column_name):

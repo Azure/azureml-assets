@@ -9,6 +9,11 @@ import stat
 import sys
 from pathlib import Path
 from azureml.assets.util import logger
+from azure.ai.ml._azure_environments import (
+    AzureEnvironments,
+    _get_default_cloud_name,
+    _get_storage_endpoint_from_metadata
+)
 
 
 def _onerror(func, path, exc_info):
@@ -67,6 +72,18 @@ def copy_azure_artifacts(src_uri: str, dstn_uri: str) -> bool:
     try:
         download_cmd = f"azcopy copy '{src_uri}' '{dstn_uri}' " \
                        "--recursive --skip-version-check --output-level essential"
+
+        # AzureCloud, USGov, and China clouds should all the trusted Microsoft
+        # suffixes built into azcop by default. If the cloud is not one of these,
+        # then we need to add the appropriate cloud-specific suffix ourselves.
+        if _get_default_cloud_name() not in [AzureEnvironments.ENV_DEFAULT,
+                                             AzureEnvironments.ENV_US_GOVERNMENT,
+                                             AzureEnvironments.ENV_CHINA]:
+            suffix = _get_storage_endpoint_from_metadata()
+            if not suffix.startswith("."):
+                suffix = "." + suffix
+            download_cmd += f" --trusted-microsoft-suffixes {suffix}"
+
         result = run_cmd(download_cmd)
         logger.print(f"azcopy result {result}")
         # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.

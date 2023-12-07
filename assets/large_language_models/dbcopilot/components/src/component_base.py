@@ -57,7 +57,7 @@ def main_entry_point(function_name: str):
                         )
                     else:
                         parser.add_argument(
-                            f"--{param.name}", type=type_value, required=param.default
+                            f"--{param.name}", type=type_value, default=param.default
                         )
 
                 # Parse the command-line arguments
@@ -68,6 +68,7 @@ def main_entry_point(function_name: str):
                 except Exception as ex:
                     raise ex
                 finally:
+                    logging.info("finally")
                     time.sleep(5)
         return cls
 

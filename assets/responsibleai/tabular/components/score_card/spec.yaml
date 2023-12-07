@@ -17,7 +17,7 @@ outputs:
   scorecard:
     type: path
 
-environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/25
+environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/37
 
 code: ../src/
 

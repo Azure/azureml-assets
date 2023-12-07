@@ -3,14 +3,22 @@
 
 """File containing function for finetune component."""
 
+import os
 import json
+import yaml
+import logging
 import argparse
+import shutil
 from pathlib import Path
 from argparse import Namespace
 from copy import deepcopy
+from typing import Dict, Any
+import re
 
 import torch
 
+# set up transformers cache
+from azureml.acft.common_components.utils import transformer_utils  # noqa: F401
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -19,14 +27,18 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     HfModelTypes,
     MLFlowHFFlavourConstants,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+    MLFLOW_FLAVORS,
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
+from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
-from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
+from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError, ACFTSystemError
+from azureml.acft.common_components.utils.mlflow_utils import update_acft_metadata
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
+from azureml.acft.common_components.utils.logging_utils import SystemSettings
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
@@ -38,9 +50,26 @@ from azureml._common._error_definition.azureml_error import AzureMLError  # type
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
+UNWANTED_PACKAGES = [
+    "apex>",
+    "apex<",
+    "apex=",
+    "mlflow>",
+    "mlflow<",
+    "mlflow=",
+    "transformers=",
+    "transformers>",
+    "transformers<",
+]
+PINNED_PACAKGES = ["transformers==4.34.0", "mlflow==2.8.0"]
+
+DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
+DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
+MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
+MISTRAL = "mistral"
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -50,8 +79,8 @@ RUN_PROPERTIES = {
     "showMetricsAtRoot": "true",
 }
 
-add_run_properties(ROOT_RUN_PROPERTIES, logger, add_to_root=True)
-add_run_properties(RUN_PROPERTIES, logger)
+add_run_properties(ROOT_RUN_PROPERTIES, add_to_root=True)
+add_run_properties(RUN_PROPERTIES)
 
 # mlflow model task based signature for inference
 MLFLOW_MODEL_SIGNATURES = {
@@ -81,15 +110,49 @@ MLFLOW_MODEL_SIGNATURES = {
     },
 }
 
+
+MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS = {
+    Tasks.SINGLE_LABEL_CLASSIFICATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+        "params": '[{"name": "return_all_scores", "dtype" : "boolean", "default" : true, "shape" : null}]',
+    },
+    Tasks.MULTI_LABEL_CLASSIFICATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.NAMED_ENTITY_RECOGNITION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.QUESTION_ANSWERING: {
+        "inputs": '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.SUMMARIZATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.TRANSLATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+}
+
+
+MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR = {
+    MLFLOW_FLAVORS.TRANSFORMERS: MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS,
+    MLFLOW_FLAVORS.HFTRANSFORMERS: MLFLOW_MODEL_SIGNATURES,
+    MLFLOW_FLAVORS.HFTRANSFORMERSV2: MLFLOW_MODEL_SIGNATURES,
+}
+
+
 IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.LLAMA,
     HfModelTypes.GPT_NEOX,  # dolly
     HfModelTypes.FALCON,
     HfModelTypes.REFINEDWEBMODEL,  # falcon
 ]
-
-
-FORCE_4BIT_QUANTIZATION_MODELS = ["Llama-2-70b", "tiiuae-falcon-40b"]
 
 
 QLORA_SUPPORTED_MODEL_TYPES = [
@@ -108,6 +171,32 @@ MLFLOW_HFTRANSFORMERS_MISC_CONF = {
         },
     },
 }
+
+
+ACFT_REGEX_PREFIX = "acft_regex:"
+
+DEEPSPEED_STAGE3_SUPPORTED_TASKS = [
+    Tasks.TEXT_GENERATION,
+]
+DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_TASKS)
+# the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_TASKS and matches other words
+DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST})$)(\\w*)"
+
+
+DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
+    HfModelTypes.LLAMA,
+    HfModelTypes.FALCON,
+    MISTRAL
+]
+DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
+# the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
+DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST})$)(\\w*)"
+
+
+FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
+    HfModelTypes.LLAMA,
+    HfModelTypes.FALCON,
+]
 
 
 def str2bool(arg):
@@ -137,6 +226,17 @@ def get_parser():
         type=str2bool,
         default="false",
         help="If set to true, will enable deepspeed for training",
+    )
+    parser.add_argument(
+        "--deepspeed_stage",
+        type=int,
+        default=2,
+        choices=[2, 3],
+        help=(
+            "This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default "
+            "choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config "
+            "information via deepspeed port."
+        )
     )
     parser.add_argument(
         "--deepspeed",
@@ -232,6 +332,24 @@ def get_parser():
         default=1,
         type=int,
         help="Number of updates steps to accumulate the gradients for, before performing a backward/update pass",
+    )
+    parser.add_argument(
+        "--gradient_checkpointing",
+        default="false",
+        type=str2bool,
+        help="Enable / disable gradient checkpointing",
+    )
+    parser.add_argument(
+        "--fp16",
+        default="false",
+        type=str2bool,
+        help="Enable mixed precision training",
+    )
+    parser.add_argument(
+        "--bf16",
+        default="false",
+        type=str2bool,
+        help="Enable mixed precision training",
     )
     parser.add_argument(
         "--lr_scheduler_type",
@@ -441,6 +559,275 @@ def copy_preprocess_args(args: Namespace) -> Namespace:
     return args
 
 
+def get_deepspeed_config_json(args: Namespace) -> Dict[str, Any]:
+    """Fetch deepspeed config json from file.
+
+    :param args: User passed args
+    :type Namespace
+    """
+    # load deepspeed config
+    try:
+        with open(args.deepspeed, "r", encoding="utf-8") as fp:
+            ds_config_json = json.load(fp)
+            return ds_config_json
+    except Exception:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "Invalid deepspeed config file. Unable to load json file."
+                )
+            )
+        )
+
+
+def identify_deepspeed_stage(deepspeed_config_json: Dict[str, Any]) -> int:
+    """Read the deepspeed stage from the deepspeed config."""
+    zero_optimization_config = deepspeed_config_json.get("zero_optimization", {})
+
+    ds_stage = zero_optimization_config.get("stage", None)
+    if not isinstance(ds_stage, int):
+        raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        "Invalid deepspeed config file. Stage information is missing from the config file."
+                    )
+                )
+            )
+
+    logger.info(f"Identified deepspeed stage: {ds_stage}.")
+
+    return ds_stage
+
+
+def is_match(user_value: Any, match_value: Any) -> bool:
+    """Match if given user value is same value/regex match as expected match value."""
+    is_match = False
+    if user_value and isinstance(user_value, str) and isinstance(match_value, str) and \
+            match_value.startswith(ACFT_REGEX_PREFIX):
+        regex_str = match_value[len(ACFT_REGEX_PREFIX):]
+        re_match = re.match(regex_str, user_value)
+        if re_match is not None:
+            # if there is a regex match then value is matched with value in source
+            is_match = True
+            logger.info(f"Regex matched: {user_value} with {regex_str}.")
+        else:
+            # if there is no regex match
+            is_match = False
+            logger.info(f"Regex not matched: {user_value} with {regex_str}.")
+    else:
+        is_match = bool(user_value == match_value)
+
+    logger.info(f"Is match - {is_match}")
+
+    return is_match
+
+
+def check_for_invalid_ds_zero3_settings(args: Namespace):
+    """Check if invalid ds3 settings are selected by the user.
+
+    If fail_run is enabled for a setting raise an User Error otherwise reset the args using the valid_settings.
+    :param args: User passed args
+    :type Namespace
+    """
+    invalid_ds_zero3_settings = [
+        dict(
+            invalid_settings=dict(
+                apply_lora=True,
+                task_name=f"{ACFT_REGEX_PREFIX}{DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX}",
+                model_type=f"{ACFT_REGEX_PREFIX}{DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX}",
+            ),
+            fail_run=True,
+            valid_settings=None
+        ),
+        dict(
+            invalid_settings=dict(apply_ort=True),
+            fail_run=True,
+            valid_settings=None
+        ),
+        dict(
+            invalid_settings=dict(auto_find_batch_size=True),
+            fail_run=False,
+            valid_settings=dict(auto_find_batch_size=False)
+        )
+    ]
+    for setting in invalid_ds_zero3_settings:
+        invalid_settings = setting["invalid_settings"]
+        fail_run = setting["fail_run"]
+        valid_settings = setting["valid_settings"]
+        if all([is_match(getattr(args, key, None), value) for key, value in invalid_settings.items()]):
+            if fail_run:
+                raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            f"Invalid settings found. Deep Speed stage3 doesn't work with {invalid_settings}."
+                        )
+                    )
+                )
+            else:
+                if valid_settings is None:
+                    raise ACFTValidationException._with_error(
+                        AzureMLError.create(
+                            ACFTSystemError,
+                            pii_safe_message="Valid settings cannot be None."
+                        )
+                    )
+                logger.info(
+                    "Found invalid settings with deepspeed stage3."
+                    f"Reconfiguring the user parameters: {valid_settings}."
+                )
+                for key, value in valid_settings.items():
+                    setattr(args, key, value)
+
+
+def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
+    """Validate the deepspeed zero3 config file.
+
+    :param deepspeed_config: path to the deepspeed config file
+    :type str
+    """
+    zero_optimization_config = deepspeed_config_json.get("zero_optimization", {})
+
+    if not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "stage3_gather_16bit_weights_on_model_save should be "
+                    "`true` in deepspeed stage 3 config."
+                )
+            )
+        )
+
+
+def setup_deepspeed_nebula(ds_config_json: Dict[str, Any], pytorch_model_folder: str,
+                           model_name_or_path: str) -> Dict[str, Any]:
+    """Set nebula settings in ds config if it has been enabled."""
+    nebula: Dict = ds_config_json.get("nebula", {})
+    if not nebula:
+        return ds_config_json
+    enabled = nebula.get("enabled", False)
+    if not enabled:
+        del ds_config_json["nebula"]
+        return ds_config_json
+    nebula_dirname = "nebula_checkpoints"
+    nebula["persistent_storage_path"] = os.path.abspath(os.path.join(pytorch_model_folder, nebula_dirname))
+    nebula["persistent_time_interval"] = nebula.get("persistent_time_interval", 30)
+    nebula["num_of_version_in_retention"] = nebula.get("num_of_version_in_retention", 2)
+    nebula["enable_nebula_load"] = True
+    logger.info(f"Nebula settings: {nebula}")
+
+    model_name_or_path = Path(model_name_or_path)
+    if model_name_or_path.is_dir():
+        logger.info(f"Copying checkpoints from {model_name_or_path} to {pytorch_model_folder}...")
+        try:
+            shutil.copytree(model_name_or_path, pytorch_model_folder, dirs_exist_ok=True)
+        except Exception as e:
+            shutil.rmtree(pytorch_model_folder, ignore_errors=True)
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(ACFTSystemError, pii_safe_message=f"shutil copy failed with err: {e}"))
+
+    ds_config_json["nebula"] = nebula
+    return ds_config_json
+
+
+def resolve_deepspeed_config(args: Namespace) -> str:
+    """Identify the right deepspeed config to be used based on user passed parameters."""
+    # Check for deepspeed config via input port
+    if getattr(args, "deepspeed", None) is not None:
+        logger.info(f"Found deepspeed config via input port - {args.deepspeed}.")
+        return args.deepspeed
+
+    default_deepspeed_config = (
+        DEFAULT_DEEPSPEED_STAGE2_CONFIG
+        if args.deepspeed_stage == 2 else
+        DEFAULT_DEEPSPEED_STAGE3_CONFIG
+    )
+    logger.info(f"Using default deepspeed config: {default_deepspeed_config}")
+    return default_deepspeed_config
+
+
+def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
+    """Deepspeed initialization and validation.
+
+    :param args: User passed args
+    :type Namespace
+    :param do_validate: Validates the deepspeed config file in case of deepspeed stage3
+    :type bool
+    """
+    logger.info("Setting up deespeed.")
+    # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
+    args.deepspeed = resolve_deepspeed_config(args)
+    if args.deepspeed is None:
+        logger.info("Deepspeed is not enabled. Nothing to setup!")
+        return
+
+    # load deepspeed config
+    ds_config_json = get_deepspeed_config_json(args)
+
+    # add validations for deepspeed stage3
+    if do_validate and identify_deepspeed_stage(ds_config_json) == 3:
+        # activate few deepspeed stage3 specific configurations
+        enable_ds3_model_specific_args(args)
+        # validate the ds config file
+        logger.info("Validating deepspeed config.")
+        validate_ds_zero3_config(ds_config_json)
+        # check for invalid settings
+        logger.info("Checking for invalid deepspeed configurations.")
+        check_for_invalid_ds_zero3_settings(args)
+
+    ds_config_json = setup_deepspeed_nebula(ds_config_json, args.pytorch_model_folder, args.model_name_or_path)
+    args.deepspeed = ds_config_json  # replace file path with updated dict
+
+
+def enable_ds3_model_specific_args(args: Namespace):
+    """Override or enable few model specific parameters.
+
+    Invoke the function only when deepspeed stage3 is enabled.
+    """
+    if (
+        hasattr(args, "model_type")
+        and args.model_type in FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES
+    ):
+        logger.info(
+            f"Identified model type: {args.model_type}. Forcing `gradient_checkpointing` to True."
+        )
+        setattr(args, "gradient_checkpointing", True)
+
+
+def setup_automl_nlp(args: Namespace) -> None:
+    """Set automl nlp related args."""
+    if args.task_name in [Tasks.NLP_MULTICLASS, Tasks.NLP_MULTILABEL, Tasks.NLP_NER]:
+        # Disable adding prefixes to logger for NLP Tasks.
+        args.set_log_prefix = False
+        logger.info(f"Using log prefix - {args.set_log_prefix}")
+
+
+def _load_mlflow_model(model_path: str) -> str:
+    mlflow_config_file = Path(model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
+    mlmodel_data = None
+    if mlflow_config_file.is_file():
+        try:
+            with open(mlflow_config_file, "r") as rptr:
+                mlmodel_data = yaml.safe_load(rptr)
+        except Exception as e:
+            logger.info(f"Unable to load MLmodel file - {e}")
+    else:
+        logger.info("MLmodel file does not exist")
+    return mlmodel_data
+
+
+def _get_model_flavor(mlflow_flavors: list, mlmodel_data: dict) -> str:
+    for each_flavor in mlflow_flavors:
+        if each_flavor in mlmodel_data["flavors"]:
+            logger.info(f"Current mlflow flavor - {each_flavor}")
+            return each_flavor
+    logger.info("MLmodel file does not have any mlflow flavor")
+    return None
+
+
 def finetune(args: Namespace):
     """Finetune."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
@@ -453,20 +840,13 @@ def finetune(args: Namespace):
     else:
         args.model_name_or_path = args.model_name
 
-    # Enable QLoRA finetune for Llama-70B
+    # fetch model asset id
     model_asset_id = getattr(args, "model_asset_id", None) or ""
-    if any(
-        [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
-    ):
-        logger.info(
-            f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
-        )
-        setattr(args, "apply_lora", True)
-        setattr(args, "precision", 4)
 
     # additional logging
     logger.info(f"Model name: {getattr(args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+    logger.info(f"Model asset id: {model_asset_id}")
     logger.info(f"enable LoRA: {getattr(args, 'apply_lora', None)}")
     logger.info(f"enable DeepSpeed: {getattr(args, 'apply_deepspeed', None)}")
     logger.info(f"enable ORT: {getattr(args, 'apply_ort', None)}")
@@ -495,6 +875,13 @@ def finetune(args: Namespace):
             ft_config = json.load(rptr)
             setattr(args, "finetune_config", ft_config)
             logger.info("Added finetune config to `component_args`")
+            # Read the lora parameters from finetune config
+            if "lora_algo" in ft_config:
+                logger.info(f'Setting lora_algo to: {ft_config.get("lora_algo")}')
+                setattr(args, "lora_algo", ft_config.get("lora_algo"))
+            if "lora_target_modules" in ft_config:
+                logger.info(f'Setting lora_target_modules to: {ft_config.get("lora_target_modules")}')
+                setattr(args, "lora_target_modules", ft_config.get("lora_target_modules"))
     else:
         logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
         setattr(args, "finetune_config", {})
@@ -503,18 +890,31 @@ def finetune(args: Namespace):
     mlflow_ft_conf = {
         "mlflow_model_signature": {},
         "mlflow_hftransformers_misc_conf": {},
+        "mlflow_flavor": None,
     }
 
-    # set task based mlflow_model_signature
-    if getattr(args, "task_name", None) is not None and args.task_name in MLFLOW_MODEL_SIGNATURES:
-        mlflow_ft_conf["mlflow_model_signature"] = deep_update(
-            mlflow_ft_conf["mlflow_model_signature"],
-            MLFLOW_MODEL_SIGNATURES[args.task_name],
-        )
-        logger.info(
-                    f"Adding mlflow model signature for task {args.task_name} - "
-                    f"{MLFLOW_MODEL_SIGNATURES[args.task_name]}"
-                )
+    mlmodel_data = _load_mlflow_model(args.model_selector_output)
+    mlflow_flavor = None
+    if mlmodel_data is not None:
+        mlflow_flavors = [
+            MLFLOW_FLAVORS.TRANSFORMERS,
+            MLFLOW_FLAVORS.HFTRANSFORMERS,
+            MLFLOW_FLAVORS.HFTRANSFORMERSV2,
+        ]
+        mlflow_flavor = _get_model_flavor(mlflow_flavors, mlmodel_data)
+        mlflow_ft_conf["mlflow_flavor"] = mlflow_flavor
+        # set task based mlflow_model_signature
+        if getattr(args, "task_name", None) is not None:
+            if mlflow_flavor is not None and mlflow_flavor in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR.keys():
+                if args.task_name in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[mlflow_flavor]:
+                    mlflow_ft_conf["mlflow_model_signature"] = deep_update(
+                        mlflow_ft_conf["mlflow_model_signature"],
+                        MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[mlflow_flavor][args.task_name],
+                    )
+                    logger.info(
+                                f"Adding mlflow model signature for task {args.task_name} - "
+                                f"{MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[mlflow_flavor][args.task_name]}"
+                            )
 
     # remove mlflow_model_signature if empty
     if "mlflow_model_signature" in mlflow_ft_conf \
@@ -538,6 +938,7 @@ def finetune(args: Namespace):
             mlflow_hftransformers_misc_conf,
         )
 
+    metadata = {}
     # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
     mlflow_config_file = Path(args.model_selector_output, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
     if mlflow_config_file.is_file():
@@ -546,6 +947,7 @@ def finetune(args: Namespace):
         try:
             with open(mlflow_config_file, "r") as rptr:
                 mlflow_data = yaml.safe_load(rptr)
+                metadata = mlflow_data.get("metadata", {})
         except Exception as e:
             logger.info(f"Unable to load MLmodel file - {e}")
         if mlflow_data is not None:
@@ -561,6 +963,24 @@ def finetune(args: Namespace):
             logger.info("MLmodel file is empty")
     else:
         logger.info("MLmodel file does not exist")
+    if mlmodel_data is not None:
+        # pass base model MLmodel file data if available
+        mlflow_hftransformers_misc_conf = mlflow_ft_conf.get("mlflow_hftransformers_misc_conf", {})
+        mlflow_hftransformers_misc_conf.update({"base_model_mlmodel": mlmodel_data})
+        mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = deep_update(
+            mlflow_ft_conf["mlflow_hftransformers_misc_conf"],
+            mlflow_hftransformers_misc_conf,
+        )
+        logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
+    else:
+        logger.info("MLmodel file is empty")
+
+    # if input is pytorch model, read metadata if the metadata.json exists.
+    if not metadata:
+        metadatapath = os.path.join(model_name_or_path, ModelSelectorDefaults.MODEL_DEFAULTS_PATH)
+        if os.path.isfile(metadatapath):
+            with open(metadatapath, "r") as rptr:
+                metadata = json.load(rptr)
 
     logger.info(f"FT MLFlow config - {mlflow_ft_conf}")
 
@@ -574,13 +994,10 @@ def finetune(args: Namespace):
     if args.precision == 16:
         if torch.cuda.is_bf16_supported():
             args.bf16 = True
-            logger.info(
-                "Setting bfloat16 to True to avoid loss overflow issues. "
-                "If deepspeed is enabled, bf16 should be set to true in the deepspeed config."
-            )
+            logger.info("Setting bfloat16 to True.")
         else:
             args.fp16 = True
-            logger.info("Setting float16 to True")
+            logger.info("Setting float16 to True.")
     args.finetune_in_8bit = bool(args.precision == 8)  # 8 bit finetune
     args.finetune_in_4bit = bool(args.precision == 4)  # 4 bit finetune
 
@@ -601,41 +1018,12 @@ def finetune(args: Namespace):
 
     setattr(args, "apply_ort", can_apply_ort(args, logger))
 
-    # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
-    if args.apply_deepspeed and args.deepspeed is None:
-        args.deepspeed = "./zero2.json"
-    elif not args.apply_deepspeed:
+    # Deepspeed enabled
+    if args.apply_deepspeed:
+        setup_and_validate_deepspeed(args)
+    else:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
-
-    if args.deepspeed:
-        if getattr(args, "auto_find_batch_size", False):
-            logger.info(
-                "Auto find batch size with deepspeed has breaking change with transformers 4.31.0. "
-                "Resetting auto_find_batch_size to false."
-            )
-            setattr(args, "auto_find_batch_size", False)
-        with open(args.deepspeed, "r") as fp:
-            ds_data = json.load(fp)
-        zero_optimization_config = ds_data.get("zero_optimization", {})
-        ds_stage = zero_optimization_config.get("stage", None)
-        # `apply_lora=true` is not supported with stage3 deepspeed config
-        if ds_stage == 3 and args.apply_lora:
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(ACFTUserError, error=(
-                    "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
-                    )
-                )
-            )
-        # `stage3_gather_16bit_weights_on_model_save=false` is not supported for stage3 deepspeed config
-        if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(ACFTUserError, error=(
-                    "stage3_gather_16bit_weights_on_model_save should be "
-                    "`true` in deepspeed stage 3 config"
-                    )
-                )
-            )
 
     if (
         not isinstance(args.evaluation_steps_interval, float) or
@@ -649,9 +1037,56 @@ def finetune(args: Namespace):
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
 
+    args.model_metadata = update_acft_metadata(metadata=metadata,
+                                               finetuning_task=args.task_name,
+                                               base_model_asset_id=model_asset_id)
+
+    setup_automl_nlp(args)
+
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
+
+    # remove unwanted packages and add pinned packages in requirements.txt and conda.yaml
+    # TODO: Workaround for now, we need to find better solution
+    if mlflow_flavor == MLFLOW_FLAVORS.TRANSFORMERS:
+        _update_packages(getattr(args, 'mlflow_model_folder', None))
+
+
+def _update_packages(model_save_path: str):
+    req_file_path = os.path.join(model_save_path, "requirements.txt")
+    conda_file_path = os.path.join(model_save_path, "conda.yaml")
+    requirements = None
+    if os.path.exists(req_file_path):
+        with open(req_file_path, "r") as f:
+            requirements = f.readlines()
+        if requirements:
+            for package in UNWANTED_PACKAGES:
+                requirements = [item for item in requirements if not item.startswith(package)]
+            pinned_packages = [pin_pack + '\n' for pin_pack in PINNED_PACAKGES]
+            requirements[-1:-1] = pinned_packages
+            with open(req_file_path, "w") as f:
+                f.writelines(requirements)
+            logger.info("Updated requirements.txt file")
+
+    conda_dict = None
+    if os.path.exists(conda_file_path):
+        with open(conda_file_path, "r") as f:
+            conda_dict = yaml.safe_load(f)
+        if conda_dict is not None and "dependencies" in conda_dict:
+            for i in range(len(conda_dict["dependencies"])):
+                if "pip" in conda_dict["dependencies"][i] and isinstance(conda_dict["dependencies"][i], dict):
+                    pip_list = conda_dict["dependencies"][i]["pip"]
+                    if len(pip_list) > 0:
+                        for package in UNWANTED_PACKAGES:
+                            pip_list = [item for item in pip_list if not item.startswith(package)]
+                        pip_list.extend(PINNED_PACAKGES)
+                        conda_dict["dependencies"][i]["pip"] = pip_list
+                        break
+
+            with open(conda_file_path, "w") as f:
+                yaml.safe_dump(conda_dict, f)
+            logger.info("Updated conda.yaml file")
 
 
 def can_apply_ort(args: Namespace, logger):
@@ -660,7 +1095,8 @@ def can_apply_ort(args: Namespace, logger):
         logger.warning("Enabling ORT has a breaking change with summarization and translation tasks "
                        "so diabling ORT for SUMMARIZATION and TRANSLATION tasks")
         return False
-    return args.apply_ort
+    logger.warning("Disabling ORT for all tasks")
+    return False
 
 
 @swallow_all_exceptions(time_delay=60)
@@ -675,6 +1111,9 @@ def main():
     # Copy the args generated in the preprocess step
     args = copy_preprocess_args(args)
 
+    # Appending the global rank to log file generated by each process. This is to avoid issues in multi-node runs
+    # where having the same file name in each node is causing issues during file upload.
+    SystemSettings.LOG_FILENAME = SystemSettings.LOG_FILENAME + f'.{os.environ["RANK"]}'
     # Set logging parameters
     set_logging_parameters(
         task_type=args.task_name,
@@ -684,6 +1123,7 @@ def main():
             LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME,
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+        log_level=logging.INFO,
     )
 
     # XXX Hack to support model loading in accelerator package for falcon models
@@ -694,6 +1134,7 @@ def main():
         HfModelTypes.REFINEDWEBMODEL,
         HfModelTypes.FALCON,
         REFINED_WEB,
+        MIXFORMER_SEQUENTIAL
     ]:
         from functools import partial
         from transformers.models.auto import (

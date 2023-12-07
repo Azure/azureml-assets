@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.1
+name: chain_of_thought_reasoning
+display_name: Chain of thought reasoning
+description: Chain of thought reasoning
+
+tags:
+  modality: completion
+  task: reasoning-and-insights
+
+data_uri: ./prompt
+template_path: prompt.yaml

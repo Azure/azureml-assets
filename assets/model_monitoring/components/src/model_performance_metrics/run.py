@@ -8,10 +8,7 @@ import constants
 
 from compute_metrics import EvaluatorFactory
 from data_reader import DataReaderFactory
-from shared_utilities.patch_mltable import patch_all
 from utils import write_to_mltable
-
-patch_all()
 
 
 def run():

@@ -10,7 +10,4 @@ wget=={{latest-pypi-version}}
 applicationinsights=={{latest-pypi-version}}
 azureml-automl-core=={{latest-pypi-version}}
 azureml-telemetry=={{latest-pypi-version}}
-cryptography==41.0.3
-scipy==1.10.0
-aiohttp==3.8.5
-certifi==2023.07.22
+azureml-automl-dnn-vision=={{latest-pypi-version}}

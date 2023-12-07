@@ -1,0 +1,71 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+tags:
+    Preview: ""
+
+version: 0.0.3
+name: llm_rag_crawl_url
+display_name: LLM - Crawl URL to Retrieve Data
+is_deterministic: true
+
+description: "Crawls the given URL and nested links to `max_crawl_depth`. Data is stored to `output_path`."
+outputs:
+  output_path:
+    type: uri_folder
+    description: Where to save crawled data.
+inputs:
+  url:
+    type: string
+    optional: False
+    description: URL to crawl.
+  max_crawl_depth:
+    type: integer
+    optional: True
+    default: 1
+    description: Maximum depth to crawl. 0 doesn't crawl any nested links.
+  max_crawl_time:
+    type: integer
+    optional: True
+    default: 60
+    description: Maximum time in seconds to crawl.
+  max_download_time:
+    type: integer
+    optional: True
+    default: 15
+    description: Maximum time in seconds to wait for a page to download.
+  max_file_size:
+    type: integer
+    optional: True
+    default: 5000000
+    description: Maximum file size in bytes to download.
+  max_redirects:
+    type: integer
+    optional: True
+    default: 3
+    description: Maximum number of redirects to follow.
+  max_files:
+    type: integer
+    optional: True
+    default: 1000
+    description: Maximum number of files to download.
+  support_http:
+    type: boolean
+    optional: True
+    default: False
+    description: Whether to support crawling http links.
+
+environment: azureml:llm-rag-embeddings@latest
+code: '../src/'
+
+command: >-
+  python -m azureml.rag.tasks.crawl_url
+          --url ${{inputs.url}}        
+          --output_path ${{outputs.output_path}}        
+          $[[--max_crawl_depth ${{inputs.max_crawl_depth}}]]        
+          $[[--max_crawl_time ${{inputs.max_crawl_time}}]]        
+          $[[--max_download_time ${{inputs.max_download_time}}]]        
+          $[[--max_file_size ${{inputs.max_file_size}}]]        
+          $[[--max_redirects ${{inputs.max_redirects}}]]        
+          $[[--max_files ${{inputs.max_files}}]]        
+          $[[--support_http ${{inputs.support_http}}]]

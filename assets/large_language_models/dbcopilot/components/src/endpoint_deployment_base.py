@@ -1,13 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 """The component deploys the endpoint for db copilot."""
-import json
 import logging
 import os
-import shutil
-import tempfile
-from dataclasses import asdict
-from typing import Dict
+from typing import Dict, Optional
 
 from azure.ai.ml.entities import (
     CodeConfiguration,
@@ -16,14 +12,14 @@ from azure.ai.ml.entities import (
     ManagedIdentityConfiguration,
     ManagedOnlineDeployment,
     ManagedOnlineEndpoint,
+    Model,
     OnlineRequestSettings,
 )
 from azureml.rag.utils.connections import (
+    connection_to_credential,
     get_connection_by_id_v2,
-    workspace_connection_to_credential,
 )
 from component_base import OBOComponentBase, main_entry_point
-from db_copilot_tool.contracts.db_copilot_config import DBCopilotConfig
 
 
 @main_entry_point("deploy")
@@ -33,18 +29,6 @@ class EndpointDeploymentBase(OBOComponentBase):
     def __init__(self) -> None:
         """Initialize the class."""
         super().__init__()
-
-    parameter_type_mapping: Dict[str, str] = {
-        "grounding_embedding_uri": "uri_folder",
-        "example_embedding_uri": "uri_folder",
-        "db_context_uri": "uri_folder",
-    }
-
-    parameter_mode_mapping: Dict[str, str] = {
-        "db_context_uri": "direct",
-        "grounding_embedding_uri": "direct",
-        "example_embedding_uri": "direct",
-    }
 
     def get_secrets(self):
         """Get aoai secrets."""
@@ -65,15 +49,15 @@ class EndpointDeploymentBase(OBOComponentBase):
                 "embedding": embedding_connection_id,
                 "chat": chat_connection_id,
             }.items():
-                connection = get_connection_by_id_v2(connection_id)
-                credential = workspace_connection_to_credential(connection)
+                connection = get_connection_by_id_v2(
+                    connection_id, credential=self.mlclient_credential
+                )
+                credential = connection_to_credential(connection)
                 if hasattr(credential, "key"):
                     secrets.update(
                         {
                             f"{connection_type}-aoai-api-key": credential.key,
-                            f"{connection_type}-aoai-api-base": connection[
-                                "properties"
-                            ].get("target", {}),
+                            f"{connection_type}-aoai-api-base": connection.target,
                         }
                     )
                     logging.info("Using workspace connection key for OpenAI")
@@ -92,6 +76,8 @@ class EndpointDeploymentBase(OBOComponentBase):
         code_dir: str,
         score_script: str = "score.py",
         extra_environment_variables: Dict[str, str] = None,
+        model: Optional[Model] = None,
+        sku: str = "Standard_DS3_v2",
     ):
         from utils.asset_utils import get_full_env_path
 
@@ -125,10 +111,11 @@ class EndpointDeploymentBase(OBOComponentBase):
             endpoint_name=endpoint_name,
             environment=env,
             environment_variables=environment_variables,
+            model=model,
             code_configuration=CodeConfiguration(
                 code=code_dir, scoring_script=score_script
             ),
-            instance_type="Standard_DS3_v2",
+            instance_type=sku,
             instance_count=1,
             request_settings=OnlineRequestSettings(
                 request_timeout_ms=90000,
@@ -147,85 +134,18 @@ class EndpointDeploymentBase(OBOComponentBase):
             )
             endpoint_poller.result()
             logging.info(f"Created endpoint {endpoint_name}")
-        deployment_poller = ml_client.online_deployments.begin_create_or_update(
-            deployment=deployment, local=False
-        )
-        deployment_result = deployment_poller.result()
-        logging.info(
-            f"Created deployment {deployment_name}. Result: {deployment_result}"
-        )
-
-    def deploy(
-        self,
-        deployment_name: str,
-        endpoint_name: str,
-        grounding_embedding_uri: str,
-        embedding_aoai_deployment_name: str,
-        chat_aoai_deployment_name: str,
-        db_context_uri: str,
-        asset_uri: str,
-        mir_environment: str,
-        example_embedding_uri: str = None,
-        selected_tables: str = None,
-        max_tables: int = None,
-        max_columns: int = None,
-        max_rows: int = None,
-        max_text_length: int = None,
-        tools: str = None,
-        temperature: float = 0.0,
-        top_p: float = 0.0,
-    ):
-        """deploy_endpoint."""
-        from utils.asset_utils import get_datastore_uri
-
-        workspace = self.workspace
-        # find datastore uri
-
-        datastore_uri = get_datastore_uri(workspace, asset_uri)
-        logging.info(f"Datastore uri: {datastore_uri}")
-        secrets_dict = self.get_secrets()
-        if selected_tables:
-            selected_tables = json.loads(selected_tables)
-            if not isinstance(selected_tables, list):
-                raise ValueError("selected_tables must be a list")
-
-        if tools:
-            tools = json.loads(tools)
-            if not isinstance(tools, list):
-                raise ValueError("tools must be a dict")
-
-        config = DBCopilotConfig(
-            grounding_embedding_uri=grounding_embedding_uri,
-            example_embedding_uri=example_embedding_uri,
-            db_context_uri=db_context_uri,
-            chat_aoai_deployment_name=chat_aoai_deployment_name,
-            datastore_uri=datastore_uri,
-            embedding_aoai_deployment_name=embedding_aoai_deployment_name,
-            history_cache_enabled=True,
-            selected_tables=selected_tables,
-            max_tables=max_tables,
-            max_columns=max_columns,
-            max_rows=max_rows,
-            max_text_length=max_text_length,
-            tools=tools,
-            temperature=temperature,
-            top_p=top_p,
-        )
-        logging.info(f"DBCopilotConfig: {config}")
-        # mir_environment = get_full_env_path(self.mlclient_credential, mir_environment)
-        with tempfile.TemporaryDirectory() as code_dir:
-            logging.info("code_dir: %s", code_dir)
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            shutil.copytree(
-                os.path.join(current_dir, "db_copilot_mir/code"),
-                code_dir,
-                dirs_exist_ok=True,
+        try:
+            deployment_poller = ml_client.online_deployments.begin_create_or_update(
+                deployment=deployment, local=False
             )
-            with open(os.path.join(code_dir, "secrets.json"), "w") as f:
-                json.dump(secrets_dict, f)
-            logging.info("dumped secrets to secrets.json")
-            with open(os.path.join(code_dir, "db_copilot_config.json"), "w") as f:
-                json.dump(asdict(config), f)
-            self._deploy_endpoint(
-                mir_environment, endpoint_name, deployment_name, code_dir
+            deployment_result = deployment_poller.result()
+            logging.info(
+                f"Created deployment {deployment_name}. Result: {deployment_result}"
             )
+        except Exception as e:
+            logging.error(f"Deployment failed: {e}")
+            logs = ml_client.online_deployments.get_logs(
+                name=deployment_name, endpoint_name=endpoint_name, lines=100
+            )
+            logging.error(f"Endpoint deployment logs: {logs}")
+            raise e
