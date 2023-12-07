@@ -57,10 +57,6 @@ inputs:
     type: boolean
     default: False
     description: If true, the performance test will be run and the input dataset will be neglected.
-  deployment_name:
-    type: string
-    optional: True
-    description: The deployment name. Only needed for managed OSS deployment.
   connections_name:
     type: string
     optional: False
@@ -103,6 +99,10 @@ inputs:
     optional: true
     default: 100KB
     description: The mini batch size for parallel run.
+  endpoint_config_file:
+    type: uri_file
+    optional: True
+    description: The endpoint config file.
   initial_worker_count:
     type: integer
     optional: False
@@ -170,7 +170,7 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml://registries/azureml-preview-test1/components/batch_score_llm_benchmark/versions/1
+    component: azureml://registries/azureml-preview-test1/components/batch_score_llm_benchmark/versions/1.8.20231206.1
     inputs:
       append_row_safe_output: true
       api_type: completion
@@ -193,7 +193,7 @@ jobs:
       async_mode: false
       save_mini_batch_results: enabled
       mini_batch_size: ${{parent.inputs.mini_batch_size}}
-      deployment_name: ${{parent.inputs.deployment_name}}
+      deployment_metadata: ${{parent.inputs.endpoint_config_file}}
     outputs:
       job_out_path:
         type: uri_file
