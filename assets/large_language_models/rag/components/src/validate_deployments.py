@@ -133,7 +133,7 @@ def check_deployment_status(model_params, model_type, activity_logger=None):
 
     openai.api_type = model_params["openai_api_type"]
     openai.api_version = model_params["openai_api_version"]
-    openai.api_base = model_params["openai_api_base"]
+    openai.base_url = model_params["openai_api_base"]
     openai.api_key = model_params["openai_api_key"]
     if (model_params["openai_api_type"].lower() != "azure" or not model_params["deployment_id"]):
         # If OAI (not-azure), just pass through validation
@@ -202,7 +202,7 @@ def check_deployment_status(model_params, model_type, activity_logger=None):
                     'question': "Did you receive the question?"
                 })
             except BadRequestError as ex:
-                activity_logger.info("ValidationFailed: completion model deployment validation failed due to the "
+                activity_logger.info("ValidationFailed: completion model deployment validation failed due to the " 
                                      + "following exception: {}.".format(traceback.format_exc()))
                 activity_logger.exception(
                     "ValidationFailed with exception: completion model deployment validation failed due to the "
