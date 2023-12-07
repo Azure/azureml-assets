@@ -132,7 +132,10 @@ class ResultConverters:
 
     def is_result_success(self, result: Dict[str, Any]) -> bool:
         """Check if the result contains a successful response."""
-        if result['status'].lower() != "success":
+        if 'status' in result and result['status'].lower() != "success":
+            return False
+        if self._get_response(result) is None:
+            logger.warning('Response is None which indicates the failure of the request.')
             return False
         # handle the scenario the 200 with failure in response.
         try:
@@ -166,7 +169,7 @@ class ResultConverters:
 
     @staticmethod
     def _get_response(result: Dict[str, Any]) -> Any:
-        return result['response']
+        return result.get('response', None)
 
     def _get_request_content(self, result: Dict[str, Any]) -> Any:
         if self._model.is_aoai_model():
