@@ -193,7 +193,6 @@ jobs:
       async_mode: false
       save_mini_batch_results: enabled
       mini_batch_size: ${{parent.inputs.mini_batch_size}}
-      deployment_metadata: ${{parent.inputs.endpoint_config_file}}
     outputs:
       job_out_path:
         type: uri_file
