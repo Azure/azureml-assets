@@ -2,17 +2,17 @@
 # Licensed under the MIT License.
 
 r"""
-Helper File to Update Large Langauge Model Versions.
+Helper File to Update Large Language Model Versions.
 
 Utility File for incrementing, synchronizing, and updating all LLM versions.
 Also checks Environments are tagging latest.
 
 To update all:
-\\azureml-assets\assets>
+\\azureml-assets\assets\large_language_models>
 python utils\ComponentVersionUpdator.py --input_folder . --update_all
 
 To only update component pipelines with updated components:
-\\azureml-assets\assets>
+\\azureml-assets\assets\large_language_models>
 python utils\ComponentVersionUpdator.py --input_folder .
 """
 
@@ -96,7 +96,11 @@ class Pipeline(Component):
             sub_comp_str = yaml_data['jobs'][s_c]['component']
             sub_comp = parse_component(sub_comp_str)
 
-            new_version = comp_assets_all[sub_comp.name].version
+            try:
+                new_version = comp_assets_all[sub_comp.name].version
+            except KeyError as e:
+                print(f"[{self.name}] Cannot find sub-component {e}, assuming that it comes from a skipped directory.")
+                continue
 
             if sub_comp.version != new_version:
                 needs_update = True
@@ -185,6 +189,8 @@ validate_fields = {
 
 skip_dirs = [
     "oai_v2_1p",  # owned by oai team
+    "prompts",
+    "dbcopilot"
 ]
 
 
@@ -192,10 +198,15 @@ def generate_assets(folder_path: List[str]) -> Tuple[Dict[str, Component], Dict[
     """Walk the file tree and pull out all the components and component pipelines."""
     comp_assets_all = {}
     pipe_assets_all = {}
-    for root, _, files in os.walk(folder_path):
-        if [d for d in skip_dirs if d in root]:
-            print(f"Skipping {root}")
-            continue
+    for root, dirs, files in os.walk(folder_path, topdown=True):
+        # https://stackoverflow.com/questions/19859840/excluding-directories-in-os-walk
+        new_dirs = []
+        for d in dirs:
+            if d not in skip_dirs:
+                new_dirs.append(d)
+            else:
+                print(f"Going to skip dir '{d}' in root '{root}'")
+        dirs[:] = new_dirs
         comp = parse_asset_yamls(files, root)
         if comp is not None:
             if isinstance(comp, Pipeline):
@@ -228,7 +239,7 @@ def parse_asset_yamls(files: List[str], root: str) -> Component:
             continue
 
         for field in target_fields:
-            if field in yml and (type(yml[field]) is not str or r'{{' not in yml[field]):
+            if field in yml and (not isinstance(yml[field], str) or r'{{' not in yml[field]):
                 extractor = target_fields[field]
                 comp[field] = extractor(yml[field])
 
@@ -236,7 +247,7 @@ def parse_asset_yamls(files: List[str], root: str) -> Component:
                     comp['version_file'] = file_path
 
         for field in validate_fields:
-            if field in yml and (type(yml[field]) is not str or r'{{' not in yml[field]):
+            if field in yml and (not isinstance(yml[field], str) or r'{{' not in yml[field]):
                 validate_fields[field](comp['name'], yml[field])
 
     if len(comp) == 0:

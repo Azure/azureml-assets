@@ -37,6 +37,8 @@ def load_model(model_uri, device, task):
         aml_args["model_hf_load_kwargs"]["device_map"] = constants.DEVICE.AUTO
     elif device == constants.DEVICE.GPU and torch.cuda.is_available():
         aml_args["model_hf_load_kwargs"]["device_map"] = torch.cuda.current_device()
+    elif isinstance(device, int) and device >= 0:
+        aml_args["model_hf_load_kwargs"]["device_map"] = device
     else:
         if device == constants.DEVICE.GPU:
             logger.warning("Device_map set as GPU, but the compute doesn't have a GPU.")

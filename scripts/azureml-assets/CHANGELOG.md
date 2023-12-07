@@ -3,6 +3,84 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.20 (2023-12-5)
+### 🐛 Bugs Fixed
+- [#1871](https://github.com/Azure/azureml-assets/pull/1871) Update model validations criteria
+
+## 1.16.19 (2023-12-04)
+### 🐛 Bugs Fixed
+- [#1875](https://github.com/Azure/azureml-assets/pull/1875) Generate SAS tokens for prompts in addition to models
+
+## 1.16.18 (2023-11-20)
+### 🐛 Bugs Fixed
+- [#1760](https://github.com/Azure/azureml-assets/pull/1760) Generate SAS tokens for multiple models and output in JSON
+
+## 1.16.17 (2023-11-07)
+### 🐛 Bugs Fixed
+- [#1703](https://github.com/Azure/azureml-assets/pull/1703) Support for storage account access for model copy with SAS token
+
+## 1.16.16 (2023-11-03)
+### 🐛 Bugs Fixed
+- [#1643](https://github.com/Azure/azureml-assets/pull/1643) Optimizing SAS token generation when needed to access storage accounts
+
+## 1.16.15 (2023-10-30)
+### 🐛 Bugs Fixed
+- [#1523](https://github.com/Azure/azureml-assets/pull/1523) Support for storage accounts that are not configured for anonymous access
+
+## 1.16.14
+### 🐛 Bugs Fixed
+- [#1574](https://github.com/Azure/azureml-assets/pull/1574) Fix fetching validated model assets
+
+## 1.16.13
+### 🚀 New Features
+- [#1569](https://github.com/Azure/azureml-assets/pull/1569) Add model validations
+
+## 1.16.12 (2023-10-12)
+### 🐛 Bugs Fixed
+- [#1458](https://github.com/Azure/azureml-assets/pull/1458) Update schema for prompt and benchmark assets
+
+## 1.16.11 (2023-10-09)
+### 🐛 Bugs Fixed
+- [#1428](https://github.com/Azure/azureml-assets/pull/1428) Azcopy fixes to support additional clouds
+
+## 1.16.10 (2023-10-06)
+### 🐛 Bugs Fixed
+- [#1411](https://github.com/Azure/azureml-assets/pull/1411) Prevent Config._expand_path from returning directories
+
+## 1.16.9 (2023-10-05)
+### 🚀 New Features
+- [#1345](https://github.com/Azure/azureml-assets/pull/1345) Add sample prompt assets and prompt publishing
+
+## 1.16.8 (2023-10-05)
+### 🐛 Bugs Fixed
+- [#1393](https://github.com/Azure/azureml-assets/pull/1393) Fix mlflow model and keep parent mlflow_model_folder
+
+
+## 1.16.7 (2023-10-03)
+### 🐛 Bugs Fixed
+- [#1363](https://github.com/Azure/azureml-assets/pull/1363) Fix AzureBlobstoreAssetPath storage account
+  URI logic
+
+## 1.16.6 (2023-10-02)
+### 🐛 Bugs Fixed
+- [#1357](https://github.com/Azure/azureml-assets/pull/1357) Fix validate_assets arg
+
+## 1.16.5 (2023-09-29)
+### 🐛 Bugs Fixed
+- [#1341](https://github.com/Azure/azureml-assets/pull/1341) Prevent nested directory creation during model upload
+
+## 1.16.4 (2023-09-27)
+### 🚀 New Features
+- [#1327](https://github.com/Azure/azureml-assets/pull/1327) Support prompt asset type
+
+## 1.16.3 (2023-09-26)
+### 🐛 Bugs Fixed
+- [#1317](https://github.com/Azure/azureml-assets/pull/1317) Improve sovereign cloud support by removing direct reference to Azure Public Cloud
+
+## 1.16.2 (2023-09-23)
+### 🐛 Bugs Fixed
+- [#1288](https://github.com/Azure/azureml-assets/pull/1288) Add arg for no-op model updates
+
 ## 1.16.1 (2023-09-22)
 ### 🐛 Bugs Fixed
 - [#1288](https://github.com/Azure/azureml-assets/pull/1288) Support to keep latest model version intact

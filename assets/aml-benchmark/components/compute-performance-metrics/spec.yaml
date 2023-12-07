@@ -44,6 +44,11 @@ inputs:
     type: string
     description: The name of the column that contains the output character count information. Ex. "output_char_count"
     optional: True
+  is_batch_inference_result:
+    type: boolean
+    description: If True, we will use the time between the first and last request to calculate the tokens per second and request per second. If False, we will use individual request time to calculate the tokens per second and request per second.
+    optional: False
+    default: True
 
 outputs:
   performance_result:
@@ -53,12 +58,13 @@ outputs:
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
-  python -m compute_performance_metrics.main
+  python -m aml_benchmark.perf_metrics.main
   --performance_data ${{inputs.performance_data}}
   --batch_size_column_name ${{inputs.batch_size_column_name}}
   --start_time_column_name ${{inputs.start_time_column_name}}
   --end_time_column_name ${{inputs.end_time_column_name}}
   --performance_result ${{outputs.performance_result}}
+  --is_batch_inference_result ${{inputs.is_batch_inference_result}}
   $[[--percentiles ${{inputs.percentiles}}]]
   $[[--input_token_count_column_name ${{inputs.input_token_count_column_name}}]]
   $[[--output_token_count_column_name ${{inputs.output_token_count_column_name}}]]

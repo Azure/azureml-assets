@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Compute the similarity of the answer base on the question and ground truth using llm.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 1
+version: 3

@@ -2,8 +2,8 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 type: command
 tags: {}
 name: llm_dbcopilot_deploy_endpoint
-display_name: DBCopilot Deploy Endpoint Component
-version: 0.0.1
+display_name: LLM - DBCopilot Deploy Endpoint Component
+version: 0.0.13
 inputs:
   deployment_name:
     type: string
@@ -62,7 +62,10 @@ inputs:
   knowledge_pieces:
     type: string
     optional: true
+  sku:
+    type: string
+    optional: true
 outputs: {}
 code: ../src
 environment: azureml:llm-dbcopilot-embeddings@latest
-command: python endpoint_deployment.py --deployment_name '${{inputs.deployment_name}}' --endpoint_name '${{inputs.endpoint_name}}' --grounding_embedding_uri '${{inputs.grounding_embedding_uri}}' --embedding_aoai_deployment_name '${{inputs.embedding_aoai_deployment_name}}' --chat_aoai_deployment_name '${{inputs.chat_aoai_deployment_name}}' --db_context_uri '${{inputs.db_context_uri}}' --asset_uri '${{inputs.asset_uri}}' --mir_environment '${{inputs.mir_environment}}' $[[--example_embedding_uri '${{inputs.example_embedding_uri}}']] $[[--selected_tables '${{inputs.selected_tables}}']] $[[--max_tables '${{inputs.max_tables}}']] $[[--max_columns '${{inputs.max_columns}}']] $[[--max_rows '${{inputs.max_rows}}']] $[[--max_text_length '${{inputs.max_text_length}}']] $[[--tools '${{inputs.tools}}']] $[[--temperature '${{inputs.temperature}}']] $[[--top_p '${{inputs.top_p}}']] $[[--knowledge_pieces '${{inputs.knowledge_pieces}}']]
+command: python endpoint_deployment.py --deployment_name '${{inputs.deployment_name}}' --endpoint_name '${{inputs.endpoint_name}}' --grounding_embedding_uri '${{inputs.grounding_embedding_uri}}' --embedding_aoai_deployment_name '${{inputs.embedding_aoai_deployment_name}}' --chat_aoai_deployment_name '${{inputs.chat_aoai_deployment_name}}' --db_context_uri '${{inputs.db_context_uri}}' --asset_uri '${{inputs.asset_uri}}' --mir_environment '${{inputs.mir_environment}}' $[[--example_embedding_uri '${{inputs.example_embedding_uri}}']] $[[--selected_tables '${{inputs.selected_tables}}']] $[[--max_tables '${{inputs.max_tables}}']] $[[--max_columns '${{inputs.max_columns}}']] $[[--max_rows '${{inputs.max_rows}}']] $[[--max_text_length '${{inputs.max_text_length}}']] $[[--tools '${{inputs.tools}}']] $[[--temperature '${{inputs.temperature}}']] $[[--top_p '${{inputs.top_p}}']] $[[--knowledge_pieces '${{inputs.knowledge_pieces}}']] $[[--sku '${{inputs.sku}}']]

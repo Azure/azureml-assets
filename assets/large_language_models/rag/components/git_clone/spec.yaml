@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.26
+version: 0.0.42
 name: llm_rag_git_clone
 display_name: LLM - Clone Git Repo
 is_deterministic: true
@@ -24,18 +24,24 @@ inputs:
     type: string
     optional: true
     description: "<PREFIX>-USER and <PREFIX>-PASS are the expected names of two Secrets in the Workspace Key Vault which will be used for authenticated when pulling the given git repo."
+  git_connection_id:
+    type: string
+    optional: true
+    description: "The connection id of the git provider to use."
 
 outputs:
-   output_data:
-     type: uri_folder
-     description: "Uri folder containing all files from the git repo"
-     mode: upload
+  output_data:
+    type: uri_folder
+    description: "Uri folder containing all files from the git repo"
+    mode: upload
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
+
 command: >-
   python -m azureml.rag.tasks.git_clone
   --git-repository ${{inputs.git_repository}}
   $[[--branch-name ${{inputs.branch_name}}]]
   $[[--authentication-key-prefix ${{inputs.authentication_key_prefix}}]]
+  $[[--git-connection-id ${{inputs.git_connection_id}}]]
   --output-data ${{outputs.output_data}}

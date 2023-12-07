@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.1.1
+name: json_formatter_assistant
+display_name: JSON Formatter Assistant
+description: JSON Formatter Assistant
+
+tags:
+  modality: chat
+  task: chat-completions
+
+data_uri: ./prompt
+template_path: prompt.yaml

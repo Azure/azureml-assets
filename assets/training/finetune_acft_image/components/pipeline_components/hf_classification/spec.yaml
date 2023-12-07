@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.8
+version: 0.0.9
 name: transformers_image_classification_pipeline
 display_name: Image Classification HuggingFace Transformers Pipeline
 description: Pipeline component for image classification using HuggingFace transformers models.
@@ -12,12 +12,12 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: Compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'.
+    description: Compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   compute_finetune:
     type: string
     optional: false
-    description: Compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'.
+    description: Compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   instance_count:
     type: integer
@@ -85,13 +85,13 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: Final Image width after augmentation that is input to the network. Default value is -1 which means it would be overwritten by default image width in Hugging Face feature extractor. If either image_width or image_height is set to -1, default value would be used for both width and height.
+    description: Final image width after augmentation that is input to the network. Default value is -1 which means it would be overwritten by default image width in Hugging Face feature extractor. If either image_width or image_height is set to -1, default value would be used for both width and height.
 
   image_height:
     type: integer
     default: -1
     optional: true
-    description: Final Image height after augmentation that is input to the network. Default value is -1 which means it would be overwritten by default image height in Hugging Face feature extractor. If either image_width or image_height is set to -1, default value would be used for both width and height.
+    description: Final image height after augmentation that is input to the network. Default value is -1 which means it would be overwritten by default image height in Hugging Face feature extractor. If either image_width or image_height is set to -1, default value would be used for both width and height.
 
   task_name:
     type: string
@@ -211,7 +211,7 @@ inputs:
       - adafactor
       - adagrad
       - adamw_ort_fused
-    description: optimizer to be used while training. 'adamw_ort_fused' optimizer is only supported for ORT training. If left empty, will be chosen automatically based on the task type and model selected.
+    description: Optimizer to be used while training. 'adamw_ort_fused' optimizer is only supported for ORT training. If left empty, will be chosen automatically based on the task type and model selected.
 
   weight_decay:
     type: number
@@ -393,16 +393,17 @@ outputs:
 jobs:
   image_classification_model_import:
     type: command
-    component: azureml:transformers_image_classification_model_import:0.0.8
+    component: azureml:transformers_image_classification_model_import:0.0.9
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
       model_name: ${{parent.inputs.model_name}}
       pytorch_model: ${{parent.inputs.pytorch_model}}
       mlflow_model: ${{parent.inputs.mlflow_model}}
+      download_from_source: ${{parent.inputs.download_from_source}}
   image_classification_finetune:
     type: command
-    component: azureml:transformers_image_classification_finetune:0.0.8
+    component: azureml:transformers_image_classification_finetune:0.0.9
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -456,30 +457,30 @@ jobs:
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.15
-    compute: ${{parent.inputs.compute_model_evaluation}}
+    component: azureml:model_prediction:0.0.17
+    compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
-      task: ${{parent.inputs.task_name}}
+      task: '${{parent.inputs.task_name}}'
+      test_data: '${{parent.inputs.test_data}}'
+      mlflow_model: '${{parent.jobs.image_classification_finetune.outputs.mlflow_model_folder}}'
       label_column_name: '${{parent.inputs.label_column_name}}'
       input_column_names: '${{parent.inputs.input_column_names}}'
-      batch_size: ${{parent.inputs.test_batch_size}}
+      batch_size: '${{parent.inputs.test_batch_size}}'
       device: auto
-      evaluation_config: ${{parent.inputs.evaluation_config}}
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-      test_data: ${{parent.inputs.test_data}}
-      mlflow_model: ${{parent.jobs.image_classification_finetune.outputs.mlflow_model_folder}}
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.15
-    compute: ${{parent.inputs.compute_model_evaluation}}
+    component: azureml:compute_metrics:0.0.17
+    compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
-      task: ${{parent.inputs.task_name}}
-      ground_truth: ${{parent.jobs.model_prediction.outputs.ground_truth}}
+      task: '${{parent.inputs.task_name}}'
+      ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
       ground_truth_column_name: '${{parent.inputs.label_column_name}}'
-      prediction: ${{parent.jobs.model_prediction.outputs.predictions}}
+      prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
       prediction_column_name: predictions
-      prediction_probabilities: ${{parent.jobs.model_prediction.outputs.prediction_probabilities}}
-      evaluation_config: ${{parent.inputs.evaluation_config}}
+      prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
     outputs:
-      evaluation_result: ${{parent.outputs.evaluation_result}}
+      evaluation_result: '${{parent.outputs.evaluation_result}}'

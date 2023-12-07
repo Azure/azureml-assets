@@ -4,6 +4,7 @@
 """Asset config classes."""
 
 import re
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from enum import Enum
 from functools import total_ordering
@@ -11,6 +12,19 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from packaging import version
 from typing import Dict, List, Set, Tuple, Union
+import requests
+import sys
+from azure.ai.ml._azure_environments import (
+    AzureEnvironments,
+    _get_default_cloud_name,
+    _get_storage_endpoint_from_metadata
+)
+from azure.identity import AzureCliCredential
+from azure.storage.blob import (
+    BlobServiceClient,
+    ContainerSasPermissions,
+    generate_container_sas
+)
 
 
 class ValidationException(Exception):
@@ -23,7 +37,9 @@ class AssetType(Enum):
     COMPONENT = 'component'
     DATA = 'data'
     ENVIRONMENT = 'environment'
+    EVALUATIONRESULT = 'evaluationresult'
     MODEL = 'model'
+    PROMPT = 'prompt'
 
 
 class ComponentType(Enum):
@@ -71,6 +87,13 @@ class ModelType(Enum):
     TRITON = 'triton_model'
 
 
+class GenericAssetType(Enum):
+    """Enum for generic asset types."""
+
+    PROMPT = 'prompt'
+    EVALUATIONRESULT = 'evaluationresult'
+
+
 class Os(Enum):
     """Operating system types."""
 
@@ -110,8 +133,10 @@ DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 EXCLUDE_PREFIX = "!"
 FULL_ASSET_NAME_DELIMITER = "/"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
+GENERIC_ASSET_TYPES = [AssetType.EVALUATIONRESULT, AssetType.PROMPT]
 PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
 PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: 'mcr.microsoft.com'}
+STANDARD_ASSET_TYPES = [AssetType.COMPONENT, AssetType.DATA, AssetType.ENVIRONMENT, AssetType.MODEL]
 TEMPLATE_CHECK = re.compile(r"\{\{.*\}\}")
 VERSION_AUTO = "auto"
 
@@ -236,15 +261,14 @@ class Config:
             ValidationException: If the path doesn't exist.
 
         Returns:
-            List[Path]: If path is a file or empty directory, just return it.
+            List[Path]: If path is a file, just return it.
                         Otherwise, return the files contained by the directory.
         """
         if not path.exists():
             raise ValidationException(f"{path} not found")
         if path.is_dir():
-            contents = list(path.rglob("*"))
-            if contents:
-                return contents
+            contents = [p for p in path.rglob("*") if p.is_file()]
+            return contents
         return [path]
 
 
@@ -355,6 +379,22 @@ class Spec(Config):
         return self._append_to_file_path(data_path) if data_path else None
 
     @property
+    def generic_asset_data_path(self) -> str:
+        """Data path for a generic asset."""
+        if self.type == GenericAssetType.PROMPT.value:
+            return self._yaml.get('data_uri')
+        elif self.type == GenericAssetType.EVALUATIONRESULT.value:
+            return self._yaml.get('path')
+        else:
+            return None
+
+    @property
+    def generic_asset_data_path_with_path(self) -> Path:
+        """Data path for a generic asset, relative to spec file's parent directory."""
+        dir = self.generic_asset_data_path
+        return self._append_to_file_path(dir) if dir else None
+
+    @property
     def release_paths(self) -> List[Path]:
         """Files that are required to create this asset."""
         release_paths = super().release_paths
@@ -368,6 +408,12 @@ class Spec(Config):
         data_path = self.data_path_with_path
         if data_path:
             release_paths.extend(Config._expand_path(data_path))
+
+        # Add files from generic assets
+        data_path = self.generic_asset_data_path_with_path
+        if data_path:
+            release_paths.extend(Config._expand_path(data_path))
+
         return release_paths
 
     @property
@@ -446,7 +492,11 @@ class LocalAssetPath(AssetPath):
 class AzureBlobstoreAssetPath(AssetPath):
     """Azure Blobstore asset path."""
 
-    BLOBSTORE_URI = "https://{}.blob.core.windows.net/{}/{}"
+    AZURE_CLOUD_SUFFIX = "core.windows.net"
+
+    CONTAINER_ANONYMOUS_ACCESS_CHECK_TIMEOUT = 15
+
+    AZURE_CLI_PROCESS_LOGIN_TIMEOUT = 60
 
     def __init__(self, storage_name: str, container_name: str, container_path: str):
         """Create a Blobstore path.
@@ -461,8 +511,145 @@ class AzureBlobstoreAssetPath(AssetPath):
         self._storage_name = storage_name
         self._container_name = container_name
         self._container_path = container_path
-        uri = AzureBlobstoreAssetPath.BLOBSTORE_URI.format(storage_name, container_name, container_path)
-        super().__init__(PathType.AZUREBLOB, uri)
+        self._token = None
+
+        # AzureCloud, USGov, and China clouds should all pull from the same endpoint
+        # associated with AzureCloud. If the cloud is not one of these, then the
+        # endpoint will be dynamically acquired based on the currently configured
+        # cloud.
+        if _get_default_cloud_name() in [AzureEnvironments.ENV_DEFAULT,
+                                         AzureEnvironments.ENV_US_GOVERNMENT,
+                                         AzureEnvironments.ENV_CHINA]:
+            cloud_suffix = AzureBlobstoreAssetPath.AZURE_CLOUD_SUFFIX
+        else:
+            cloud_suffix = _get_storage_endpoint_from_metadata()
+        self._account_uri = f"https://{storage_name}.blob.{cloud_suffix}"
+
+        # Its possible that the account URL may need additional tweaking to add a SAS
+        # token if the account does not allow for anonymous access. However, for
+        # performance reasons take a lazy approach to determining this and wait
+        # until a client of this class actually attempts to reference the URI
+        super().__init__(
+            PathType.AZUREBLOB,
+            None,
+        )
+
+    def get_uri(self, token_expiration: timedelta = timedelta(hours=1)) -> str:
+        """Get Asset URI.
+
+        :param token_expiration: Amount of time until token expiration
+        :type token_expiration: timedelta
+        """
+        # There are 3 values token can be set to
+        # None = no attempts have been made to create a SAS token
+        # Empty string = container is public (no SAS token required)
+        # Neither of the above = the SAS token
+
+        # Build the simple, non-SAS URI for quick use later in the function.
+        # Its possible that the account URI may need additional tweaking to add a SAS
+        # token if the account does not allow for anonymous access.
+        uri = f"{self._account_uri}/{self._container_name}/{self._container_path}"
+
+        # If a SAS token has been explicitly set, then assume that the URI+token is valid.
+        # Simply append the token and return. If no SAS token is set, then proceed to rest of function.
+        if self.token is not None:
+            if self.token:
+                uri += "?" + self.token
+            return uri
+
+        # The first test is to see if we can simply list the contents of the container
+        # using a very simple and quick HTTP request. In order for this to work,
+        # container must support anonymous read access. If this succeeds, we can
+        # return the URI "as-is".
+        try:
+            list_container_url = f"{self._account_uri}/{self._container_name}?restype=container&comp=list&maxresults=1"
+            response = requests.get(
+                list_container_url,
+                timeout=AzureBlobstoreAssetPath.CONTAINER_ANONYMOUS_ACCESS_CHECK_TIMEOUT
+            )
+
+            if response.status_code >= 200 and response.status_code <= 299:
+                self._token = ""
+                return uri
+        except Exception:
+            # If we fail pass through to the next approach
+            pass
+
+        # Our second approach is to use the azure python SDK to view the properties
+        # of the container. If the container allows for anonymous access then we can
+        # return the URI "as-is".
+        #
+        # This approach is slower than the first approach, which is why we
+        # tried the simple HTTP request approach first.
+        #
+        # It also requires Azure Credentials to be configured which may or may
+        # not be present depending on the execution environment. If these credentials
+        # do not exist then fail gracefully, return the URI "as-is", and hope for the best.
+        try:
+            blob_service_client = BlobServiceClient(
+                account_url=self._account_uri,
+                credential=AzureCliCredential(
+                    process_timeout=AzureBlobstoreAssetPath.AZURE_CLI_PROCESS_LOGIN_TIMEOUT
+                )
+            )
+            container_client = blob_service_client.get_container_client(container=self._container_name)
+
+            # If the container allows for anonymous access then we can return the URI "as-is"
+            if container_client.get_container_properties().public_access is not None:
+                self._token = ""
+                return uri
+
+            # Our final approach is to generate a SAS token for the container and append
+            # it to the URI
+            start_time = datetime.now(timezone.utc)
+            expiry_time = start_time + token_expiration
+
+            key = blob_service_client.get_user_delegation_key(start_time, expiry_time)
+
+            self._token = generate_container_sas(
+                account_name=self._storage_name,
+                container_name=self._container_name,
+                user_delegation_key=key,
+                permission=ContainerSasPermissions(read=True, list=True),
+                expiry=expiry_time,
+                start=start_time
+            )
+
+            uri += "?" + self._token
+            return uri
+
+        except Exception as e:
+            # If we fail then simply return the URI "as-is" and hope for the best
+            print(f"Failed to generate SAS token for storage {self._storage_name} "
+                  f"and container {self._container_name}: {e}",
+                  file=sys.stderr)
+            self._token = ""
+            return uri
+
+    @property
+    def uri(self) -> str:
+        """Asset URI."""
+        return self.get_uri()
+
+    @property
+    def storage_name(self) -> str:
+        """Storage name."""
+        return self._storage_name
+
+    @property
+    def container_name(self) -> str:
+        """Container name."""
+        return self._container_name
+
+    @property
+    def token(self) -> str:
+        """Sas token."""
+        return self._token
+
+    @token.setter
+    def token(self, value: str):
+        """Set sas token."""
+        self._token = value
 
 
 class GitAssetPath(AssetPath):
@@ -481,33 +668,35 @@ class GitAssetPath(AssetPath):
 
 
 class ModelConfig(Config):
-    """Model Config class."""
+    """Model Config class.
 
-    """
     Example:
+        path: # should contain local_path or should contain package object
+            ##Local path example
+            type: local
+            uri: "../models/bert-base-uncased" # the local path to the model
 
-    path: # should contain local_path or should contain package object
-        ##Local path example
-        type: local
-        uri: "../models/bert-base-uncased" # the local path to the model
+            ## GIT path example
+            type: git
+            uri: https://huggingface.co/bert-base-uncased
+            branch: main
 
-        ## GIT path example
-        type: git
-        uri: https://huggingface.co/bert-base-uncased
-        branch: main
-
-        ## Azure Blobstore example
-        type: azureblob
-        storage_name: my_storage
-        container_name: my_container
-        container_path: foo/bar
-    publish:
-        description: model_card.md
-        type: mlflow_model
+            ## Azure Blobstore example
+            type: azureblob
+            storage_name: my_storage
+            container_name: my_container
+            container_path: foo/bar
+        publish:
+            description: model_card.md
+            type: mlflow_model
     """
 
     def __init__(self, file_name: Path):
-        """Initialize object for the Model Properties extracted from extra_config model.yaml."""
+        """Initialize object for the Model Properties extracted from extra_config model.yaml.
+
+        Args:
+            file_name (Path): Model config file to load and validate.
+        """
         super().__init__(file_name)
         self._path = None
         self._description = ""
@@ -800,6 +989,54 @@ class EnvironmentConfig(Config):
         return PublishVisibility(visibility) if visibility else None
 
 
+class GenericAssetConfig(Config):
+    """Generic Asset Config class.
+
+    Example:
+        # Remote storage path for asset data
+        path:
+            type: azureblob
+            storage_name: my_storage
+            container_name: my_container
+            container_path: foo/bar
+    """
+
+    def __init__(self, file_name: Path):
+        """Initialize object for the Generic Asset Properties extracted from storage.yaml.
+
+        Args:
+            file_name (Path): Storage config file to load and validate.
+        """
+        super().__init__(file_name)
+        self._path = None
+        self._validate()
+
+    def _validate(self):
+        """Validate the yaml file."""
+        Config._validate_exists('generic_asset.path', self.path)
+        Config._validate_enum('generic_asset.path.type', self.path.type.value, PathType, True)
+
+    @property
+    def path(self) -> AssetPath:
+        """Remote Storage Path (Azure Blob is the only supported type)."""
+        if self._path:
+            return self._path
+        path = self._yaml.get('path', {})
+        if path and path.get('type'):
+            path_type = path.get('type')
+            if path_type == PathType.AZUREBLOB.value:
+                self._path = AzureBlobstoreAssetPath(
+                    storage_name=path['storage_name'],
+                    container_name=path['container_name'],
+                    container_path=path['container_path'],
+                )
+            else:
+                raise NotImplementedError("Unrecognized path type.")
+        else:
+            return None
+        return self._path
+
+
 @total_ordering
 class AssetConfig(Config):
     """Asset config file.
@@ -1064,6 +1301,8 @@ class AssetConfig(Config):
                     self._extra_config = EnvironmentConfig(extra_config_with_path)
                 elif self.type == AssetType.MODEL:
                     self._extra_config = ModelConfig(extra_config_with_path)
+                elif self.type == AssetType.PROMPT:
+                    self._extra_config = GenericAssetConfig(extra_config_with_path)
                 else:
                     raise Exception(f"extra_config loading for asset type {self.type.value} is unimplemented")
         return self._extra_config

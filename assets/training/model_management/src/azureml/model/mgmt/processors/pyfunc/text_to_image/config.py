@@ -17,12 +17,14 @@ class Tasks(_CustomEnum):
     """Task types supported by stable diffusion."""
 
     TEXT_TO_IMAGE = "text-to-image"
+    TEXT_TO_IMAGE_INPAINTING = "text-to-image-inpainting"
+    IMAGE_TO_IMAGE = "image-to-image"
 
 
 class DatatypeLiterals:
     """Literals related to data type."""
 
-    IMAGE_FORMAT = "JPEG"
+    IMAGE_FORMAT = "PNG"
     STR_ENCODING = "utf-8"
 
 
@@ -42,6 +44,12 @@ class MLflowSchemaLiterals:
     OUTPUT_COLUMN_IMAGE = "generated_image"
     OUTPUT_COLUMN_NSFW_FLAG_TYPE = DataType.boolean
     OUTPUT_COLUMN_NSFW_FLAG = "nsfw_content_detected"
+
+    # Extra constants for inpainting task
+    INPUT_COLUMN_IMAGE = "image"
+    INPUT_COLUMN_IMAGE_TYPE = DataType.binary
+    INPUT_COLUMN_MASK_IMAGE = "mask_image"
+    INPUT_COLUMN_MASK_IMAGE_TYPE = DataType.binary
 
 
 class BatchConstants:

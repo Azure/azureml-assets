@@ -7,15 +7,15 @@ from abc import ABC, abstractmethod
 from azureml.model.mgmt.config import ModelFramework
 from azureml.model.mgmt.processors.transformers.config import (
     SupportedASRModelFamily,
-    SupportedDiffusersTask,
     SupportedNLPTasks,
     SupportedTasks,
-    SupportedTextToImageModelFamily,
     SupportedVisionTasks,
 )
 from azureml.model.mgmt.processors.pyfunc.config import (
     MMLabDetectionTasks,
-    SupportedTasks as PyFuncSupportedTasks
+    MMLabTrackingTasks,
+    SupportedTasks as PyFuncSupportedTasks,
+    SupportedTextToImageModelFamily,
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.processors.transformers.convertors import (
@@ -24,10 +24,16 @@ from azureml.model.mgmt.processors.transformers.convertors import (
     WhisperMLflowConvertor,
 )
 from azureml.model.mgmt.processors.pyfunc.convertors import (
+    AutoMLMLFlowConvertor,
+    BLIPMLFlowConvertor,
     MMLabDetectionMLflowConvertor,
+    MMLabTrackingMLflowConvertor,
     CLIPMLFlowConvertor,
     StableDiffusionMlflowConvertor,
+    StableDiffusionInpaintingMlflowConvertor,
+    StableDiffusionImageToImageMlflowConvertor,
     LLaVAMLFlowConvertor,
+    SegmentAnythingMLFlowConvertor,
 )
 
 
@@ -46,15 +52,26 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return VisionMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
-        elif SupportedDiffusersTask.has_value(task):
-            return DiffusersMLflowConvertorFactory.create_mlflow_convertor(
+        elif task in [PyFuncSupportedTasks.TEXT_TO_IMAGE.value,
+                      PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value,
+                      PyFuncSupportedTasks.IMAGE_TO_IMAGE.value]:
+            return TextToImageMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         elif task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
             return ASRMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
         # Models from Hugging face framework exported in PyFunc mlflow flavor
-        elif task == PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
+        elif task in \
+                [PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, PyFuncSupportedTasks.EMBEDDINGS.value]:
             return CLIPMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif task in [PyFuncSupportedTasks.IMAGE_TO_TEXT.value, PyFuncSupportedTasks.VISUAL_QUESTION_ANSWERING.value]:
+            return BLIPMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif task == PyFuncSupportedTasks.MASK_GENERATION.value:
+            return SegmentAnythingMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
@@ -63,6 +80,10 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
         # Models from MMLAB model framework exported in PyFunc mlflow flavor
         if MMLabDetectionTasks.has_value(task):
             return MMLabDetectionMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif MMLabTrackingTasks.has_value(task):
+            return MMLabTrackingMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
@@ -75,6 +96,21 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             )
         else:
             raise Exception(f"Models from {model_framework} for {task} not supported for MLflow conversion")
+    elif model_framework == ModelFramework.AutoML.value:
+        # Models from AutML model framework exported in PyFunc mlflow flavor
+        if task in [
+            PyFuncSupportedTasks.IMAGE_CLASSIFICATION.value,
+            PyFuncSupportedTasks.IMAGE_CLASSIFICATION_MULTILABEL.value,
+            PyFuncSupportedTasks.IMAGE_OBJECT_DETECTION.value,
+            PyFuncSupportedTasks.IMAGE_INSTANCE_SEGMENTATION.value,
+        ]:
+            return AutoMLMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        else:
+            raise Exception(
+                f"Models from {model_framework} for {task} not supported for MLflow conversion"
+            )
     else:
         raise Exception(f"Models from {model_framework} not supported for MLflow conversion")
 
@@ -130,20 +166,31 @@ class ASRMLflowConvertorFactory(MLflowConvertorFactoryInterface):
         raise Exception("Unsupported ASR model family")
 
 
-class DiffusersMLflowConvertorFactory(MLflowConvertorFactoryInterface):
-    """Factory class for diffusor model family."""
+class TextToImageMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for text to image model."""
+
+    STABLE_DIFFUSION_TASK_MAP = {
+        PyFuncSupportedTasks.TEXT_TO_IMAGE.value: StableDiffusionMlflowConvertor,
+        PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value: StableDiffusionInpaintingMlflowConvertor,
+        PyFuncSupportedTasks.IMAGE_TO_IMAGE.value: StableDiffusionImageToImageMlflowConvertor,
+
+    }
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for diffusers."""
         misc = translate_params["misc"]
         if misc and SupportedTextToImageModelFamily.STABLE_DIFFUSION.value in misc:
-            return StableDiffusionMlflowConvertor(
-                model_dir=model_dir,
-                output_dir=output_dir,
-                temp_dir=temp_dir,
-                translate_params=translate_params,
-            )
-        raise Exception("Unsupported diffuser model family")
+            try:
+                converter = TextToImageMLflowConvertorFactory.STABLE_DIFFUSION_TASK_MAP[translate_params["task"]]
+                return converter(
+                    model_dir=model_dir,
+                    output_dir=output_dir,
+                    temp_dir=temp_dir,
+                    translate_params=translate_params,
+                )
+            except KeyError:
+                raise Exception("Unsupported task for stable diffusion model family")
+        raise Exception("Unsupported model family for text to image model")
 
 
 class MMLabDetectionMLflowConvertorFactory(MLflowConvertorFactoryInterface):
@@ -172,12 +219,64 @@ class CLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
         )
 
 
+class BLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for BLIP model family."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for BLIP model family."""
+        return BLIPMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
 class LLaVAMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for LLaVA model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for LLaVA model."""
         return LLaVAMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class SegmentAnythingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for segment anything (SAM) model."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for segment anything (SAM) model."""
+        return SegmentAnythingMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class MMLabTrackingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for MMTrack video model family."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for vision tasks."""
+        return MMLabTrackingMLflowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class AutoMLMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for AutoML models."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for AutoML models."""
+        return AutoMLMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,

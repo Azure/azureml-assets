@@ -5,13 +5,19 @@
 
 import argparse
 import re
-from pyspark.sql.functions import col, udf, sum
-from pyspark.sql.types import IntegerType
+from pyspark.sql.functions import col, lit, sum, udf
+from pyspark.sql.types import IntegerType, StructField, StructType, StringType
 from shared_utilities.io_utils import (
     init_spark,
     save_spark_df_as_mltable,
-    try_read_mltable_in_spark_with_warning,
+    try_read_mltable_in_spark_with_error,
 )
+
+GROUP_COLUMN = "group"
+GROUP_DIMENSION_COLUMN = "group_dimension"
+METRIC_NAME_COLUMN = "metric_name"
+METRIC_VALUE_COLUMN = "metric_value"
+THRESHOLD_COLUMN = "threshold_value"
 
 THRESHOLD_PARAMS = [
     "groundedness_passrate_threshold",
@@ -35,27 +41,34 @@ ALL_METRIC_NAMES = [
 ]
 
 
+def _get_per_instance_threshold(df, metric_name):
+    return df.filter(col(METRIC_NAME_COLUMN).contains(metric_name)).select(THRESHOLD_COLUMN
+                                                                           ).collect()[0][THRESHOLD_COLUMN]
+
+
 def _calculate_passrate(df, metric_name):
-    threshold = df.filter(col("metric_name").contains(metric_name)).select("threshold_value"
-                                                                           ).collect()[0]["threshold_value"]
+    threshold = _get_per_instance_threshold(df, metric_name)
 
     df_with_buckets = df.filter(
-        col("metric_name").contains(metric_name)
+        col(METRIC_NAME_COLUMN).contains(metric_name)
     ).withColumn(
         "bucket",
         udf(lambda group: int(group), IntegerType())(
-            col("group")
+            col(GROUP_COLUMN)
         ),
     )
     passing = (
         df_with_buckets.filter(col("bucket") >= int(threshold))
-        .select(sum("metric_value"))
+        .select(sum(METRIC_VALUE_COLUMN))
         .head()[0]
     )
-    total = df_with_buckets.select(sum("metric_value")).head()[0]
+    total = df_with_buckets.select(sum(METRIC_VALUE_COLUMN)).head()[0]
+    # if there are no metric value, we should mark as fail since there was probably a
+    # parsing error or request error that resulted in no metrics
     if total == 0:
-        return 1
-    return passing / total
+        return "NaN"
+    passrate = passing / total
+    return str(passrate)
 
 
 def run():
@@ -73,18 +86,13 @@ def run():
     parser.add_argument("--coherence_passrate_threshold", type=float, default=0.7)
 
     args = parser.parse_args()
-
-    histogram_df = try_read_mltable_in_spark_with_warning(args.annotation_histogram, "annotation_histogram")
-
-    if not histogram_df:
-        print("No histogram to annotate. Skipping computing annotation metrics.")
-        return
+    histogram_df = try_read_mltable_in_spark_with_error(args.annotation_histogram, "annotation_histogram")
 
     spark = init_spark()
     # Cast to float because metric_value was integer so far
     # but we're adding percentages now.
     histogram_df = histogram_df.withColumn(
-        "metric_value", histogram_df["metric_value"].cast("float")
+        METRIC_VALUE_COLUMN, histogram_df[METRIC_VALUE_COLUMN].cast("float")
     )
     threshold_args = {
         arg: getattr(args, arg) for arg in THRESHOLD_PARAMS if hasattr(args, arg)
@@ -96,7 +104,19 @@ def run():
                            m in input_metric_names]
     compact_metric_names = list(set(pruned_metric_names))
 
-    aggregated_metrics_df = histogram_df
+    aggregated_metrics_df = histogram_df.withColumn(GROUP_DIMENSION_COLUMN, lit(""))
+
+    # overwrite threshold value column
+    aggregated_metrics_df = aggregated_metrics_df.withColumn(THRESHOLD_COLUMN, lit("nan").cast("float"))
+    metadata_schema = StructType(
+            [
+                StructField(GROUP_COLUMN, StringType(), True),
+                StructField(METRIC_VALUE_COLUMN, StringType(), True),
+                StructField(METRIC_NAME_COLUMN, StringType(), True),
+                StructField(THRESHOLD_COLUMN, StringType(), True),
+                StructField(GROUP_DIMENSION_COLUMN, StringType(), True)
+            ]
+        )
     for metric_name in compact_metric_names:
         passrate_threshold = threshold_args[f"{metric_name.lower()}_passrate_threshold"]
         full_pass_rate_metric_name = f"Aggregated{metric_name}PassRate"
@@ -109,14 +129,30 @@ def run():
                             _calculate_passrate(histogram_df, metric_name),
                             full_pass_rate_metric_name,
                             passrate_threshold,
+                            ""
                         )
                     ],
-                    histogram_df.schema,
+                    metadata_schema,
                 )
             aggregated_metrics_df = aggregated_metrics_df.union(metric_df)
         if full_per_instance_score_metric_name not in input_metric_names:
-            aggregated_metrics_df = aggregated_metrics_df.filter(col("metric_name")
+            aggregated_metrics_df = aggregated_metrics_df.filter(col(METRIC_NAME_COLUMN)
                                                                  != full_per_instance_score_metric_name)
+        else:
+            threshold = _get_per_instance_threshold(histogram_df, metric_name)
+            threshold_row = spark.createDataFrame(
+                    [
+                        (
+                            "",
+                            "",
+                            full_per_instance_score_metric_name,
+                            threshold,
+                            "",
+                        )
+                    ],
+                    metadata_schema,
+                )
+            aggregated_metrics_df = aggregated_metrics_df.union(threshold_row)
     save_spark_df_as_mltable(aggregated_metrics_df, args.signal_metrics)
 
 

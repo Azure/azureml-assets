@@ -16,7 +16,7 @@ import pytest
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
-from utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
@@ -555,7 +555,7 @@ class TestDatasetSamplerScript:
         src_dir = get_src_dir()
         args = [
             f"cd {src_dir} &&",
-            "python -m dataset_sampler.main",
+            "python -m aml_benchmark.dataset_sampler.main",
             "--dataset",
             dataset,
             "--sampling_style",

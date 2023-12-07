@@ -42,19 +42,19 @@ class ExampleGrounding(ComponentBase):
         ):
             with open(os.path.join(grounding_context, "db_type.json"), "r") as f:
                 database_type = json.load(f)
-                db_type = DatabaseType(database_type)
-                tools = json.loads(tools) if tools else None
-                if tools:
-                    assert isinstance(tools, list) or isinstance(tools, dict)
-                examples = InContextLearningAgent.get_examples(
-                    example_uri=sample_folder,
-                    db_type=db_type,
-                    tools=tools,
-                    include_built_in=include_builtin,
-                )
-                agent = InContextLearningAgent(
-                    embedding_config=EmbeddingConfig(), examples=examples
-                )
+            db_type = DatabaseType(database_type)
+            tools = json.loads(tools) if tools else None
+            if tools:
+                assert isinstance(tools, list) or isinstance(tools, dict)
+            examples = InContextLearningAgent.get_examples(
+                example_uri=sample_folder,
+                db_type=db_type,
+                tools=tools,
+                include_built_in=include_builtin,
+            )
+            agent = InContextLearningAgent(
+                embedding_config=EmbeddingConfig(), examples=examples
+            )
 
-                assert isinstance(agent.embedding_service, DummyEmbeddingService)
-                agent.embedding_service.dump(output_chunk_file)
+            assert isinstance(agent.embedding_service, DummyEmbeddingService)
+            agent.embedding_service.dump(output_chunk_file)

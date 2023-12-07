@@ -52,6 +52,14 @@ def _get_parser():
     )
 
     parser.add_argument(
+        "--inference-base-image",
+        type=str,
+        required=False,
+        help="The azureml base image to use in model inference. \
+            This ACR id is added in metadata of Mlmodel (mlflow)."
+    )
+
+    parser.add_argument(
         "--model-framework",
         type=str,
         default=ModelFramework.HUGGINGFACE.value,
@@ -98,6 +106,7 @@ def run():
     hf_tokenizer_class = args.hf_tokenizer_class
     hf_use_experimental_features = False if args.hf_use_experimental_features.lower() == "false" else True
     extra_pip_requirements = args.extra_pip_requirements
+    inference_base_image = args.inference_base_image
 
     model_download_metadata_path = args.model_download_metadata
     model_path = args.model_path
@@ -143,6 +152,7 @@ def run():
     preprocess_args[HF_CONF.HF_PRETRAINED_CLASS.value] = hf_model_class
     preprocess_args[HF_CONF.HF_TOKENIZER_CLASS.value] = hf_tokenizer_class
     preprocess_args[HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value] = hf_use_experimental_features
+    preprocess_args["inference_base_image"] = inference_base_image
 
     # update custom dimensions with input parameters
     custom_dimensions.update_custom_dimensions(preprocess_args)

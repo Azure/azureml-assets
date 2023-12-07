@@ -59,4 +59,6 @@ Note: "image1" and "image2" string should be in base64 format or publicly access
 
 #### Model inference - visualization for a sample image
 
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_microsoft-swinv2-base-patch4-window12-192-22k_MC.png" alt="mc visualization">
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_microsoft-swinv2-base-patch4-window12-192-22k_MC_new.png" alt="mc visualization">
+
+Note: The labels provided by swinv2 model are class indices appended to "LABEL_"(starting from "LABEL_0" to "LABEL_21841"). For e.g. "LABEL_3500" for "Giraffe". For visualization purpose, we explictly mapped these labels to imagenet-21k class names which are shown above in the sample image.

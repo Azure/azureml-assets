@@ -6,6 +6,9 @@
 from enum import Enum
 
 
+MAX_PROMPT_LENGTH = 800
+
+
 class _CustomEnum(Enum):
     @classmethod
     def has_value(cls, value):

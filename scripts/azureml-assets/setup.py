@@ -7,10 +7,11 @@ from setuptools import setup, find_packages
 
 setup(
    name="azureml-assets",
-   version="1.16.1",
+   version="1.16.20",
    description="Utilities for publishing assets to Azure Machine Learning system registries.",
    author="Microsoft Corp",
    packages=find_packages(),
+   include_package_data=True,
    install_requires=[
       "GitPython>=3.1",
       "ruamel.yaml==0.17.21",

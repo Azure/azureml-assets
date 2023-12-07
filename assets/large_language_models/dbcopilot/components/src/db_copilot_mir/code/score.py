@@ -50,16 +50,17 @@ def init():
                 history_service=history_service,
             )
 
-    def stream_generate(
-            question: str,
-            session_id: Optional[str],
-            temperature: float = None,
-            top_p: float = None,
-    ):
-        """generate."""
-        for cells in db_copilot.stream_generate(question, session_id, temperature, top_p):
-            logging.info("Cells: %s", cells)
-            yield json.dumps(cells)
+
+def stream_generate(
+    question: str,
+    session_id: Optional[str],
+    temperature: float = None,
+    top_p: float = None,
+):
+    """generate."""
+    for cells in db_copilot.stream_generate(question, session_id, temperature, top_p):
+        logging.info("Cells: %s", cells)
+        yield json.dumps(cells)
 
 
 def generate(

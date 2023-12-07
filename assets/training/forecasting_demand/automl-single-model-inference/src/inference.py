@@ -5,6 +5,7 @@
 import argparse
 import json
 import os
+import pickle
 
 import azureml.automl.core.shared.constants as automl_constants
 import numpy as np
@@ -13,7 +14,6 @@ from azureml._common._error_definition import AzureMLError, error_decorator
 from azureml._common._error_definition.user_error import BadArgument
 from azureml.automl.core.shared.forecasting_exception import ForecastingDataException
 from azureml.core import Run
-from sklearn.externals import joblib
 
 try:
     import torch  # noqa: F401
@@ -136,7 +136,8 @@ def _get_model(model_full_path):
             fitted_model = torch.load(fh, map_location=map_location)
     else:
         # Load the sklearn pipeline.
-        fitted_model = joblib.load(model_full_path)
+        with open(model_full_path, 'rb') as fp:
+            fitted_model = pickle.load(fp)
 
     print("Model loading succeeded.")
     return fitted_model
