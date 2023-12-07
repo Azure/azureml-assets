@@ -4,7 +4,7 @@ type: command
 tags:
   Preview: ""
 
-version: 0.0.3
+version: 0.0.4
 name: llm_rag_crawl_url
 display_name: LLM - Crawl URL to Retrieve Data
 is_deterministic: true
@@ -61,12 +61,8 @@ code: '../src/'
 
 command: >-
   python -m azureml.rag.tasks.crawl_url
-          --url ${{inputs.url}}        
-          --output_path ${{outputs.output_path}}        
-          $[[--max_crawl_depth ${{inputs.max_crawl_depth}}]]        
-          $[[--max_crawl_time ${{inputs.max_crawl_time}}]]        
-          $[[--max_download_time ${{inputs.max_download_time}}]]        
-          $[[--max_file_size ${{inputs.max_file_size}}]]        
-          $[[--max_redirects ${{inputs.max_redirects}}]]        
-          $[[--max_files ${{inputs.max_files}}]]        
-          $[[--support_http ${{inputs.support_http}}]]
+  --url ${{inputs.url}}         --output_path ${{outputs.output_path}}         $[[--max_crawl_depth
+  ${{inputs.max_crawl_depth}}]]         $[[--max_crawl_time ${{inputs.max_crawl_time}}]]         $[[--max_download_time
+  ${{inputs.max_download_time}}]]         $[[--max_file_size ${{inputs.max_file_size}}]]         $[[--max_redirects
+  ${{inputs.max_redirects}}]]         $[[--max_files ${{inputs.max_files}}]]         $[[--support_http
+  ${{inputs.support_http}}]]
