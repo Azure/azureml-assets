@@ -157,6 +157,6 @@ class OnlineEndpointModel:
         step_runs = list(finetuned_run.get_children())[0].get_children()
         for s in step_runs:
             if get_run_name(s) == 'openai_completions_finetune':
-                if s.properties['azureml.isreused'].lower() == 'true':
+                if s.properties.get('azureml.isreused', "").lower() == 'true':
                     return s.properties['azureml.rootpipelinerunid']
         return finetuned_run.id
