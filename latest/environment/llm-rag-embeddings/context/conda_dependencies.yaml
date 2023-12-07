@@ -7,7 +7,7 @@ dependencies:
 - pip=23.3.1
 - pip:
     # RAG package
-  - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone]==0.2.23
+  - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone]==0.2.23.1
     # Azure AI
   - azure-ai-formrecognizer==3.3.1
   - azure-ai-ml==1.12.1
