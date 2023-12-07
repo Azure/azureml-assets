@@ -4,7 +4,7 @@ azure-ai-ml>=1.9.0
 azure-identity>=1.14.0
 azureml-core>=1.52.0
 azureml-telemetry>=1.52.0
-azureml-dataprep[pandas]>=4.12.0a,<4.14.0a
+azureml-dataprep[pandas]>=4.12.0
 mltable>=1.5.0
 datasets
 pytest
