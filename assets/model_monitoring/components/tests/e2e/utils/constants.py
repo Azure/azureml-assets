@@ -9,7 +9,6 @@ COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR = "data_quality_signal_monitor"
 COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR = (
     "feature_attribution_drift_signal_monitor"
 )
-COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR = "model_performance_compute_metrics_monitor"
 COMPONENT_NAME_CREATE_MANIFEST = "model_monitor_create_manifest"
 COMPONENT_NAME_MDC_PREPROCESSOR = "model_data_collector_preprocessor"
 COMPONENT_NAME_METRIC_OUTPUTTER = "model_monitor_metric_outputter"
