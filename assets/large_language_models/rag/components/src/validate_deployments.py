@@ -202,7 +202,7 @@ def check_deployment_status(model_params, model_type, activity_logger=None):
                     'question': "Did you receive the question?"
                 })
             except BadRequestError as ex:
-                activity_logger.info("ValidationFailed: completion model deployment validation failed due to the " 
+                activity_logger.info("ValidationFailed: completion model deployment validation failed due to the "
                                      + "following exception: {}.".format(traceback.format_exc()))
                 activity_logger.exception(
                     "ValidationFailed with exception: completion model deployment validation failed due to the "
