@@ -1,0 +1,41 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+
+name: model_performance_signal_monitor
+display_name: Model Performance - Signal Monitor
+description: Computes the model performance.
+
+inputs:
+  baseline_data:
+    type: mltable
+    path: azureml:iris_baseline:1
+  baseline_data_target_column: target
+  production_data:
+    type: mltable
+    path: azureml:iris_baseline:1
+  production_data_target_column: target
+outputs:
+  signal_output:
+    type: uri_folder
+    mode: direct
+jobs:
+  compute_metrics:
+    type: spark
+    component: ../model_performance_compute_metrics/spec.yaml
+    inputs:
+      task: tabular-classification
+      baseline_data:
+        type: mltable
+        path: ${{parent.inputs.baseline_data}}
+      baseline_data_target_column: ${{parent.inputs.baseline_data_target_column}}
+      production_data:
+        type: mltable
+        path: ${{parent.inputs.production_data}}        
+      production_data_target_column: ${{parent.inputs.production_data_target_column}}
+    outputs:
+      signal_outputs: ${{parent.outputs.signal_output}}
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
