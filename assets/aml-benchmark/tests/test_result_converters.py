@@ -21,7 +21,7 @@ sys.path.append(get_src_dir())
 print(get_src_dir())
 
 
-from aml_benchmark.batch_output_formatter import main
+from aml_benchmark.batch_output_formatter import main  # noqa: E402
 from aml_benchmark.batch_output_formatter.result_converters import ResultConverters  # noqa: E402
 
 
