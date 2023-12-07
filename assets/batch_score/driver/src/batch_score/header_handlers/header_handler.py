@@ -44,7 +44,8 @@ class HeaderHandler(ABC):
         return self._quota_audience
 
     def _get_user_agent(self) -> str:
-        workload_id = ":".join([x for x in [self._batch_pool, self._quota_audience, self._user_agent_segment] if x is not None])
+        workload_id = ":".join(
+            [x for x in [self._batch_pool, self._quota_audience, self._user_agent_segment] if x is not None])
 
         return 'BatchScore:{}/{}/Run:{}:{}'.format(
             constants.BATCH_SCORE_COMPONENT_VERSION,

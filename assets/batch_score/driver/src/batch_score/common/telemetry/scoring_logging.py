@@ -33,7 +33,10 @@ class ScoreStartLog(BaseLog):
         self.scoring_url = scoring_url
 
     def log(self):
-        get_logger().info(f"Score start: url={self.scoring_url} internal_id={self.internal_id} x-ms-client-request-id=[{self.x_ms_client_request_id}]")
+        msg = "Score start: url={} internal_id={} x-ms-client-request-id=[{}]"
+        get_logger().info(msg.format(self.scoring_url,
+                                     self.internal_id,
+                                     self.x_ms_client_request_id))
 
 
 class ScoreFailedLog(BaseLog):
@@ -84,4 +87,5 @@ class ScoreSucceedLog(BaseLog):
         self.duration = duration
 
     def log(self):
-        get_logger().info(f"Score succeeded after {self.duration:.3f}s: internal_id={self.internal_id} x-ms-client-request-id=[{self.x_ms_client_request_id}]")
+        msg = "Score succeeded after {%.3f}s: internal_id={} x-ms-client-request-id=[{}]"
+        get_logger().info(msg.format(self.duration, self.internal_id, self.x_ms_client_request_id))

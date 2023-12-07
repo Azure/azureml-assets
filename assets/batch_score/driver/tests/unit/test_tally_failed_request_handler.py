@@ -3,7 +3,7 @@
 
 import pytest
 
-import src.batch_score.common.scoring.tally_failed_request_handler as tally_failed_request_handler
+from src.batch_score.common.scoring.tally_failed_request_handler import TallyFailedRequestHandler
 
 INVALID_SETUP_TESTS = [
     [True, "none|bad_request_in_model"],
@@ -35,7 +35,11 @@ DISABLED_HANDLER_TESTS = [
 
 
 @pytest.mark.parametrize("exclusion_str, response_status, model_response_status", DISABLED_HANDLER_TESTS)
-def test_disabled_handler(mock_get_logger, exclusion_str: str, response_status: int, model_response_status: int, make_tally_failed_request_handler):
+def test_disabled_handler(mock_get_logger,
+                          exclusion_str: str,
+                          response_status: int,
+                          model_response_status: int,
+                          make_tally_failed_request_handler):
     handler = make_tally_failed_request_handler(enabled=False, tally_exclusions=exclusion_str)
 
     assert not handler.should_tally(response_status=response_status, model_response_status=model_response_status)
@@ -47,7 +51,11 @@ ENABLED_HANDLER_NO_TALLY_TESTS = [
 
 
 @pytest.mark.parametrize("exclusion_str, response_status, model_response_status", ENABLED_HANDLER_NO_TALLY_TESTS)
-def test_enabled_handler_no_tally(mock_get_logger, exclusion_str: str, response_status: int, model_response_status: int, make_tally_failed_request_handler):
+def test_enabled_handler_no_tally(mock_get_logger,
+                                  exclusion_str: str,
+                                  response_status: int,
+                                  model_response_status: int,
+                                  make_tally_failed_request_handler):
     handler = make_tally_failed_request_handler(enabled=True, tally_exclusions=exclusion_str)
 
     assert not handler.should_tally(response_status=response_status, model_response_status=model_response_status)
@@ -64,7 +72,11 @@ ENABLED_HANDLER_TALLY_TESTS = [
 
 
 @pytest.mark.parametrize("exclusion_str, response_status, model_response_status", ENABLED_HANDLER_TALLY_TESTS)
-def test_enabled_handler_tally(mock_get_logger, exclusion_str: str, response_status: int, model_response_status: int, make_tally_failed_request_handler):
+def test_enabled_handler_tally(mock_get_logger,
+                               exclusion_str: str,
+                               response_status: int,
+                               model_response_status: int,
+                               make_tally_failed_request_handler):
     handler = make_tally_failed_request_handler(enabled=True, tally_exclusions=exclusion_str)
 
     assert handler.should_tally(response_status=response_status, model_response_status=model_response_status)
@@ -82,7 +94,8 @@ CATEGORIZE_TESTS = [
 
 @pytest.mark.parametrize("expected_category, response_status, model_response_status", CATEGORIZE_TESTS)
 def test_categorize(mock_get_logger, expected_category: str, response_status: int, model_response_status: int):
-    assert tally_failed_request_handler.TallyFailedRequestHandler._categorize(response_status=response_status, model_response_status=model_response_status) == expected_category
+    assert TallyFailedRequestHandler._categorize(response_status=response_status,
+                                                 model_response_status=model_response_status) == expected_category
 
     assert mock_get_logger.debug.called or mock_get_logger.info.called
 

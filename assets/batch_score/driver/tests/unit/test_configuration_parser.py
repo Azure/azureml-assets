@@ -60,15 +60,27 @@ def test_success_set_default_for_segment_large_requests(api_type, segment_large_
 @pytest.mark.parametrize('header, pool, expected_values', [
     ("{}", "pool", {"azureml-collect-request": 'false', "azureml-inferencing-offer-name": 'azureml_vanilla'}),
     ("{}", None, {}),
-    ('{"something":"else"}', "pool", {"azureml-collect-request": 'false', "something": "else", "azureml-inferencing-offer-name": 'azureml_vanilla'}),
+    ('{"something":"else"}',
+     "pool",
+     {"azureml-collect-request": 'false', "something": "else", "azureml-inferencing-offer-name": 'azureml_vanilla'}),
     ('{"something":"else"}', None, {"something": "else"}),
-    ('{"Azureml-collect-request":"False"}', "pool", {"Azureml-collect-request": "False", "azureml-inferencing-offer-name": 'azureml_vanilla'}),
+    ('{"Azureml-collect-request":"False"}',
+     "pool",
+     {"Azureml-collect-request": "False", "azureml-inferencing-offer-name": 'azureml_vanilla'}),
     ('{"Azureml-collect-request":"False"}', None, {"Azureml-collect-request": "False"}),
-    ('{"Azureml-collect-request": true}', "pool", {"Azureml-collect-request": True, "azureml-inferencing-offer-name": 'azureml_vanilla'}),
+    ('{"Azureml-collect-request": true}',
+     "pool",
+     {"Azureml-collect-request": True, "azureml-inferencing-offer-name": 'azureml_vanilla'}),
     ('{"Azureml-collect-request": true}', None, {"Azureml-collect-request": True}),
-    ('{"Azureml-inferencing-Offer-naMe": "another_offering"}', None, {"Azureml-inferencing-Offer-naMe": "another_offering"}),
-    ('{"azureml-collect-request": "true","some":"else"}', "pool", {"azureml-collect-request": "true", "some": "else", "azureml-inferencing-offer-name": 'azureml_vanilla'}),
-    ('{"Azureml-inferencing-offer-name": "my_custom_offering","some":"else"}', "pool", {"azureml-collect-request": "false", "some": "else", "Azureml-inferencing-offer-name": 'my_custom_offering'})
+    ('{"Azureml-inferencing-Offer-naMe": "another_offering"}',
+     None,
+     {"Azureml-inferencing-Offer-naMe": "another_offering"}),
+    ('{"azureml-collect-request": "true","some":"else"}',
+     "pool",
+     {"azureml-collect-request": "true", "some": "else", "azureml-inferencing-offer-name": 'azureml_vanilla'}),
+    ('{"Azureml-inferencing-offer-name": "my_custom_offering","some":"else"}',
+     "pool",
+     {"azureml-collect-request": "false", "some": "else", "Azureml-inferencing-offer-name": 'my_custom_offering'})
 ])
 def test_success_additional_header(header, pool, expected_values, request_path):
     # TODO: headers with booleans fail during session.post.
@@ -99,7 +111,10 @@ def test_success_batch_size_one():
 
 def test_success_batch_size_greater_than_one_with_embeddings_api():
     # Act
-    configuration = ConfigurationParser().parse_configuration(["--request_path", "v1/engines/davinci/embeddings", "--batch_size_per_request", '20'])
+    configuration = ConfigurationParser().parse_configuration(["--request_path",
+                                                               "v1/engines/davinci/embeddings",
+                                                               "--batch_size_per_request",
+                                                               '20'])
 
     # Assert
     assert configuration.batch_size_per_request == 20
@@ -128,7 +143,10 @@ def test_invalid_batch_size_greater_than_max_with_embeddings_api():
 def test_invalid_batch_size_greater_than_one_with_completions_api():
     # Act
     with pytest.raises(ValueError) as excinfo:
-        _ = ConfigurationParser().parse_configuration(["--request_path", "v1/engines/davinci/chat/completions", "--batch_size_per_request", '2'])
+        _ = ConfigurationParser().parse_configuration(["--request_path",
+                                                       "v1/engines/davinci/chat/completions",
+                                                       "--batch_size_per_request",
+                                                       '2'])
 
     # Assert
     assert "The optional parameter 'batch_size_per_request' is only allowed to be greater than 1 for the Embeddings " \
@@ -143,17 +161,23 @@ def test_invalid_batch_size_greater_than_one_with_completions_api():
 def test_invalid_segment_large_requests_with_unsupported_api(request_path):
     # Act
     with pytest.raises(ValueError) as excinfo:
-        _ = ConfigurationParser().parse_configuration(["--request_path", request_path, "--segment_large_requests", 'enabled'])
+        _ = ConfigurationParser().parse_configuration(["--request_path",
+                                                       request_path,
+                                                       "--segment_large_requests", 'enabled'])
 
     # Assert
-    assert ("The optional parameter 'segment_large_requests' is supported only with the Completion API."
-            "Please set 'segment_large_requests' to 'disabled' or remove it from the configuration.") in str(excinfo.value)
+    assert "The optional parameter 'segment_large_requests' is supported only with the Completion API." \
+           "Please set 'segment_large_requests' to 'disabled' or remove it from the configuration." \
+           in str(excinfo.value)
 
 
 def test_invalid_request_path_with_online_endpoint_url():
     # Act
     with pytest.raises(ValueError) as excinfo:
-        _ = ConfigurationParser().parse_configuration(["--request_path", "v1/engines/ada/embeddings", "--online_endpoint_url", 'test.azure'])
+        _ = ConfigurationParser().parse_configuration(["--request_path",
+                                                       "v1/engines/ada/embeddings",
+                                                       "--online_endpoint_url",
+                                                       'test.azure'])
 
     # Assert
     assert "The optional parameter 'online_endpoint_url' is not allowed in combination with 'request_path'. " \
@@ -162,10 +186,14 @@ def test_invalid_request_path_with_online_endpoint_url():
 
 
 @pytest.mark.parametrize("scoring_url, expected_is_aoai_endpoint", [
-    ("https://batchscore.openai.azure.com/openai/deployments/turbo/completions?api-version=2023-03-15-preview", True),
-    ("https://batchscore.api.cognitive.microsoft.com/openai/deployments/turbo/chat/completions?api-version=2023-03-15-preview", True),
-    ("https://batchscore.cognitiveservices.azure.com/openai/deployments/turbo/chat/completions?api-version=2023-03-15-preview", True),
-    ("https://batchscore.azure.com/openai/deployments/turbo/completions?api-version=2023-03-15-preview", False),
+    ("https://batchscore.openai.azure.com/openai"
+     "/deployments/turbo/completions?api-version=2023-03-15-preview", True),
+    ("https://batchscore.api.cognitive.microsoft.com/openai"
+     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", True),
+    ("https://batchscore.cognitiveservices.azure.com/openai"
+     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", True),
+    ("https://batchscore.azure.com/openai"
+     "/deployments/turbo/completions?api-version=2023-03-15-preview", False),
     ("https://llama-completion.eastus2.inference.ai.azure.com/v1/completions", False)
 ])
 def test_is_aoai_endpoint(scoring_url, expected_is_aoai_endpoint):
@@ -177,10 +205,14 @@ def test_is_aoai_endpoint(scoring_url, expected_is_aoai_endpoint):
 
 
 @pytest.mark.parametrize("scoring_url, expected_is_serverless_endpoint", [
-    ("https://batchscore.openai.azure.com/openai/deployments/turbo/completions?api-version=2023-03-15-preview", False),
-    ("https://batchscore.api.cognitive.microsoft.com/openai/deployments/turbo/chat/completions?api-version=2023-03-15-preview", False),
-    ("https://batchscore.cognitiveservices.azure.com/openai/deployments/turbo/chat/completions?api-version=2023-03-15-preview", False),
-    ("https://batchscore.azure.com/openai/deployments/turbo/completions?api-version=2023-03-15-preview", False),
+    ("https://batchscore.openai.azure.com/openai"
+     "/deployments/turbo/completions?api-version=2023-03-15-preview", False),
+    ("https://batchscore.api.cognitive.microsoft.com/openai"
+     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", False),
+    ("https://batchscore.cognitiveservices.azure.com/openai"
+     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", False),
+    ("https://batchscore.azure.com/openai"
+     "/deployments/turbo/completions?api-version=2023-03-15-preview", False),
     ("https://llama-completion.eastus2.inference.ai.azure.com/v1/completions", True)
 ])
 def test_is_serverless_endpoint(scoring_url, expected_is_serverless_endpoint):
@@ -192,9 +224,12 @@ def test_is_serverless_endpoint(scoring_url, expected_is_serverless_endpoint):
 
 
 @pytest.mark.parametrize('scoring_url, expected_endpoint_type', [
-    ("https://batchscore.openai.azure.com/openai/deployments/turbo/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
-    ("https://batchscore.api.cognitive.microsoft.com/openai/deployments/turbo/chat/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
-    ("https://batchscore.cognitiveservices.azure.com/openai/deployments/turbo/chat/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
+    ("https://batchscore.openai.azure.com/openai"
+     "/deployments/turbo/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
+    ("https://batchscore.api.cognitive.microsoft.com/openai"
+     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
+    ("https://batchscore.cognitiveservices.azure.com/openai"
+     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
     ("https://batchscore.inference.ml.azure.com/v1/completions", EndpointType.MIR),
     ("https://llama-completion.eastus2.inference.ai.azure.com/v1/completions", EndpointType.Serverless)
 ])

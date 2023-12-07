@@ -57,12 +57,14 @@ class AIMD(ConcurrencyAdjustmentStrategy):
             self.__confidence = max(self.__confidence, 0)  # Reset confidence
             self.__confidence = min(self.__confidence + 1, 3)  # Increase confidence
 
-            new_concurrency = current_concurrency + self.__additive_increase + self.__confidence  # Augment based on confidence
+            # Augment based on confidence
+            new_concurrency = current_concurrency + self.__additive_increase + self.__confidence
         elif congestionState == congestion.CongestionState.CONGESTED:
             self.__confidence = min(self.__confidence, 0)  # Reset confidence
             self.__confidence = max(self.__confidence - 1, -3)  # Decrease confidence
 
-            new_concurrency = max(int(current_concurrency * self.__multiplicative_decrease), 1)  # Minimum value concurrency is 1
+            # Minimum value concurrency is 1
+            new_concurrency = max(int(current_concurrency * self.__multiplicative_decrease), 1)
         else:
             self.__confidence = 0  # Reset confidence
 
@@ -88,10 +90,13 @@ class AIMD(ConcurrencyAdjustmentStrategy):
 
         self.__multiplicative_decrease = float(
             os.environ.get("BATCH_SCORE_CONCURRENCY_DECREASE_RATE")
-            or self.__client_settings_provider.get_client_setting(ClientSettingsKey.CONCURRENCY_MULTIPLICATIVE_DECREASE)
+            or self.__client_settings_provider.get_client_setting(
+                ClientSettingsKey.CONCURRENCY_MULTIPLICATIVE_DECREASE)
             or self.DEFAULT_MULTIPLICATIVE_DECREASE)
 
-        lu.get_logger().info("AIMD: using configurations CongestionDetector: WaitTimeCongestionDetector, adjustment_interval: {}, additive_increase: {}, multiplicative_decrease: {}".format(
+        msg = "AIMD: using configurations CongestionDetector: WaitTimeCongestionDetector, adjustment_interval: {}," \
+              + " additive_increase: {}, multiplicative_decrease: {}"
+        lu.get_logger().info(msg.format(
             self.__adjustment_interval,
             self.__additive_increase,
             self.__multiplicative_decrease))

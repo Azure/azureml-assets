@@ -48,7 +48,10 @@ class ResponseChunkReceivedTrace(TraceConfig):
         super().__init__()
         self.on_response_chunk_received.append(self.__on_response_chunk_received)
 
-    async def __on_response_chunk_received(self, session, trace_config_ctx, params: aiohttp.TraceResponseChunkReceivedParams):
+    async def __on_response_chunk_received(self,
+                                           session,
+                                           trace_config_ctx,
+                                           params: aiohttp.TraceResponseChunkReceivedParams):
         prefix = ""
         if trace_config_ctx.trace_request_ctx and "worker_id" in trace_config_ctx.trace_request_ctx:
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
@@ -60,7 +63,10 @@ class ConnectionCreateStartTrace(TraceConfig):
         super().__init__()
         self.on_connection_create_start.append(self.__on_connection_create_start)
 
-    async def __on_connection_create_start(self, session, trace_config_ctx, params: aiohttp.TraceConnectionCreateStartParams):
+    async def __on_connection_create_start(self,
+                                           session,
+                                           trace_config_ctx,
+                                           params: aiohttp.TraceConnectionCreateStartParams):
         prefix = ""
         if trace_config_ctx.trace_request_ctx and "worker_id" in trace_config_ctx.trace_request_ctx:
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
@@ -72,7 +78,10 @@ class ConnectionCreateEndTrace(TraceConfig):
         super().__init__()
         self.on_connection_create_end.append(self.__on_connection_create_end)
 
-    async def __on_connection_create_end(self, session, trace_config_ctx, params: aiohttp.TraceConnectionCreateEndParams):
+    async def __on_connection_create_end(self,
+                                         session,
+                                         trace_config_ctx,
+                                         params: aiohttp.TraceConnectionCreateEndParams):
         prefix = ""
         if trace_config_ctx.trace_request_ctx and "worker_id" in trace_config_ctx.trace_request_ctx:
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
@@ -84,7 +93,10 @@ class ConnectionReuseconnTrace(TraceConfig):
         super().__init__()
         self.on_connection_reuseconn.append(self.__on_connection_reuseconn)
 
-    async def __on_connection_reuseconn(self, session, trace_config_ctx, params: aiohttp.TraceConnectionReuseconnParams):
+    async def __on_connection_reuseconn(self,
+                                        session,
+                                        trace_config_ctx,
+                                        params: aiohttp.TraceConnectionReuseconnParams):
         prefix = ""
         if trace_config_ctx.trace_request_ctx and "worker_id" in trace_config_ctx.trace_request_ctx:
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])

@@ -165,7 +165,8 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     '--output_behavior': {
         # TODO: add the choices 'append_row' and 'summary_only'.
         'default': None,
-        'help': 'If set to `append_row`, the output of each scoring request is appended to the single, potentially large output file.'
+        'help': 'If set to `append_row`, the output of each scoring request is appended to the single,'
+                ' potentially large output file.'
                 ' If set to `summary_only`, the output file contains only the summary of the scoring run.'
                 ' Use the `save_mini_batch_results` parameter to save the results of individual minibatches.',
         'required': False,
@@ -191,7 +192,8 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     },
     '--save_mini_batch_results': {
         'default': None,
-        'help': 'If enabled, the results of individual minibatches are stored in the directory specified by `mini_batch_results_out_directory`.',
+        'help': 'If enabled, the results of individual minibatches are stored in the directory specified'
+                ' by `mini_batch_results_out_directory`.',
         'required': False,
         'type': str,
     },

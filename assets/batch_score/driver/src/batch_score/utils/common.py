@@ -54,7 +54,8 @@ def convert_result_list(results: "list[ScoringResult]", batch_size_per_request: 
             output["request_metadata"] = scoringResult.request_metadata
 
         if batch_size_per_request > 1:
-            batch_output_list = embeddings._convert_to_list_of_output_items(output, scoringResult.estimated_token_counts)
+            batch_output_list = embeddings._convert_to_list_of_output_items(output,
+                                                                            scoringResult.estimated_token_counts)
             output_list.extend(batch_output_list)
         else:
             output_list.append(output)
@@ -62,13 +63,21 @@ def convert_result_list(results: "list[ScoringResult]", batch_size_per_request: 
     return list(map(__stringify_output, output_list))
 
 
-def convert_to_list(data: pd.DataFrame, additional_properties: str = None, batch_size_per_request: int = 1) -> "list[str]":
+def convert_to_list(data: pd.DataFrame,
+                    additional_properties: str = None,
+                    batch_size_per_request: int = 1) -> "list[str]":
     columns = data.keys()
     payloads = []
     additional_properties_list = None
 
     # Per https://platform.openai.com/docs/api-reference/
-    int_forceable_properties = ["max_tokens", "n", "logprobs", "best_of", "n_epochs", "batch_size", "classification_n_classes"]
+    int_forceable_properties = ["max_tokens",
+                                "n",
+                                "logprobs",
+                                "best_of",
+                                "n_epochs",
+                                "batch_size",
+                                "classification_n_classes"]
 
     if additional_properties is not None:
         additional_properties_list = json.loads(additional_properties)

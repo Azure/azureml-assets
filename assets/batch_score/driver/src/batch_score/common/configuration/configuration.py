@@ -64,19 +64,22 @@ class Configuration(Namespace):
                              " Valid range is 1-2000.")
 
         if self.batch_size_per_request > 1 and not self.is_embeddings():
-            raise ValueError("The optional parameter 'batch_size_per_request' is only allowed to be greater than 1 for the Embeddings API."
-                             " Valid range is 1-2000.")
+            raise ValueError("The optional parameter 'batch_size_per_request' is only allowed to be greater than 1"
+                             " for the Embeddings API. Valid range is 1-2000.")
 
     def _validate_online_endpoint_url_and_request_path(self):
         if (self.online_endpoint_url
                 and self.request_path is not None
                 and self.request_path not in ScoringClient.DEFAULT_REQUEST_PATHS):
-            raise ValueError("The optional parameter 'online_endpoint_url' is not allowed in combination with 'request_path'. "
-                             "Please put the entire scoring url in the `online_endpoint_url` parameter and remove 'request_path'.")
+            raise ValueError("The optional parameter 'online_endpoint_url' is not allowed"
+                             " in combination with 'request_path'. "
+                             "Please put the entire scoring url in the `online_endpoint_url` parameter"
+                             " and remove 'request_path'.")
 
     def _validate_segment_large_requests(self):
         if self.segment_large_requests == 'enabled' and not self.is_completion():
-            raise ValueError("The optional parameter 'segment_large_requests' is supported only with the Completion API."
+            raise ValueError("The optional parameter 'segment_large_requests' is supported only"
+                             " with the Completion API."
                              "Please set 'segment_large_requests' to 'disabled' or remove it from the configuration.")
 
     def log(self):
@@ -96,7 +99,8 @@ class Configuration(Namespace):
 
     def is_chat_completion(self) -> bool:
         return self.request_path == ScoringClient.DV_CHAT_COMPLETIONS_API_PATH or\
-            (self.online_endpoint_url and self.online_endpoint_url.endswith(ScoringClient.DV_CHAT_COMPLETIONS_API_PATH)) or\
+            (self.online_endpoint_url and
+             self.online_endpoint_url.endswith(ScoringClient.DV_CHAT_COMPLETIONS_API_PATH)) or\
             (self.scoring_url and self.api_type == constants.CHAT_COMPLETION_API_TYPE)
 
     def is_completion(self) -> bool:
@@ -105,7 +109,8 @@ class Configuration(Namespace):
             (self.scoring_url and self.api_type == constants.COMPLETION_API_TYPE)
 
     def is_sahara(self, routing_client: RoutingClient) -> bool:
-        return routing_client and routing_client.target_batch_pool and routing_client.target_batch_pool.lower() == "sahara-global"
+        return routing_client and routing_client.target_batch_pool and\
+               routing_client.target_batch_pool.lower() == "sahara-global"
 
     def is_vesta(self) -> bool:
         return self.request_path == ScoringClient.VESTA_RAINBOW_API_PATH or\
@@ -114,11 +119,13 @@ class Configuration(Namespace):
 
     def is_vesta_chat_completion(self) -> bool:
         return self.request_path == ScoringClient.VESTA_CHAT_COMPLETIONS_API_PATH or\
-            (self.online_endpoint_url and self.online_endpoint_url.endswith(ScoringClient.VESTA_CHAT_COMPLETIONS_API_PATH)) or\
+            (self.online_endpoint_url and
+             self.online_endpoint_url.endswith(ScoringClient.VESTA_CHAT_COMPLETIONS_API_PATH)) or\
             (self.scoring_url and self.api_type == constants.VESTA_CHAT_COMPLETION_API_TYPE)
 
     def is_aoai_endpoint(self) -> bool:
-        return self.scoring_url and any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
+        return self.scoring_url and\
+               any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
 
     def is_serverless_endpoint(self) -> bool:
         return self.scoring_url and constants.SERVERLESS_ENDPOINT_DOMAIN_SUFFIX in self.scoring_url

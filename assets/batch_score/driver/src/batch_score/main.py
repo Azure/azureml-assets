@@ -97,7 +97,9 @@ def init():
 
     token_provider = TokenProvider(token_file_path=configuration.token_file_path)
     routing_client = setup_routing_client(token_provider=token_provider)
-    scoring_client = setup_scoring_client(configuration=configuration, token_provider=token_provider, routing_client=routing_client)
+    scoring_client = setup_scoring_client(configuration=configuration,
+                                          token_provider=token_provider,
+                                          routing_client=routing_client)
     trace_configs = setup_trace_configs()
     input_to_request_transformer = setup_input_to_request_transformer()
     input_to_log_transformer = setup_input_to_log_transformer()
@@ -274,9 +276,11 @@ def setup_input_to_request_transformer() -> InputTransformer:
     """This tranformer is used to modify each row of the input data before it is sent to MIR for scoring."""
     modifiers: "list[RequestModifier]" = []
     if configuration.is_vesta():
-        modifiers.append(VestaImageModifier(image_encoder=ImageEncoder(image_input_folder_str=configuration.image_input_folder)))
+        modifiers.append(VestaImageModifier(
+            image_encoder=ImageEncoder(image_input_folder_str=configuration.image_input_folder)))
     elif configuration.is_vesta_chat_completion():
-        modifiers.append(VestaChatCompletionImageModifier(image_encoder=ImageEncoder(image_input_folder_str=configuration.image_input_folder)))
+        modifiers.append(VestaChatCompletionImageModifier(
+            image_encoder=ImageEncoder(image_input_folder_str=configuration.image_input_folder)))
 
     return InputTransformer(modifiers=modifiers)
 
@@ -368,8 +372,10 @@ def setup_mir_scoring_client(
 
     header_handler = None
 
-    '''Get the auth token from workspace connection and add that to the header. Additionally, add the 'Content-Type' header.
-    The presence of workspace connection also signifies that this can be any MIR endpoint, so this will not add OAI specific headers.
+    '''Get the auth token from workspace connection and add that to the header.
+    Additionally, add the 'Content-Type' header.
+    The presence of workspace connection also signifies that this can be any MIR endpoint,
+    so this will not add OAI specific headers.
     '''
     if connection_name is not None:
         header_handler = MIREndpointV2HeaderHandler(connection_name)
@@ -458,4 +464,5 @@ def _should_emit_prompts_to_job_log() -> bool:
             emit_prompts_to_job_log_env_var = "True"
 
     should_emit_prompts_to_job_log = str2bool(emit_prompts_to_job_log_env_var)
-    lu.get_logger().info("Emitting prompts to job log is {}.".format("enabled" if should_emit_prompts_to_job_log else "disabled"))
+    lu.get_logger().info("Emitting prompts to job log is {}.".format(
+        "enabled" if should_emit_prompts_to_job_log else "disabled"))

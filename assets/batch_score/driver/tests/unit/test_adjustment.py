@@ -116,7 +116,10 @@ adjustment_tests = [['make_routing_client', *test] for test in adjustment_tests]
     adjustment_tests,
     indirect=['make_routing_client'],
 )
-def test_calculate_next_concurrency(make_routing_client, initial_concurrency, congestion_states_to_return, expected_new_concurrency_values):
+def test_calculate_next_concurrency(make_routing_client,
+                                    initial_concurrency,
+                                    congestion_states_to_return,
+                                    expected_new_concurrency_values):
     aimd = AIMD(request_metrics=RequestMetrics(), client_settings_provider=make_routing_client())
 
     # TODO: introduce DI to accept congestion detector in constructor
@@ -145,7 +148,8 @@ env_vars = {
 
 
 @pytest.mark.parametrize(
-    "make_routing_client, mock_get_client_setting, client_settings, expected_adjustment_interval, expected_additive_increase, expected_multiplicative_decrease",
+    "make_routing_client, mock_get_client_setting, client_settings, expected_adjustment_interval,"
+    "expected_additive_increase, expected_multiplicative_decrease",
     [
         (
             *fixture_names,
@@ -223,5 +227,8 @@ class MockCongestionDetector(CongestionDetector):
     def __init__(self, congestion_states_to_return: 'list[CongestionState]') -> None:
         self.congestion_states_to_return = congestion_states_to_return.copy()
 
-    def detect(self, request_metrics: RequestMetrics, start_time: pd.Timestamp, end_time: pd.Timestamp = None) -> CongestionState:
+    def detect(self,
+               request_metrics: RequestMetrics,
+               start_time: pd.Timestamp,
+               end_time: pd.Timestamp = None) -> CongestionState:
         return self.congestion_states_to_return.pop(0)

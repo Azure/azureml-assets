@@ -28,7 +28,11 @@ def pytest_configure():
 
     # Prepare to copy components in fixtures below to a temporary file to not muddle dev environments
     pytest.source_dir = os.getcwd()
-    pytest.copied_batch_score_component_filepath = os.path.join(pytest.source_dir, "yamls", "components", "v2", "batch_score_devops_copy.yml")
+    pytest.copied_batch_score_component_filepath = os.path.join(pytest.source_dir,
+                                                                "yamls",
+                                                                "components",
+                                                                "v2",
+                                                                "batch_score_devops_copy.yml")
 
 
 def pytest_unconfigure():

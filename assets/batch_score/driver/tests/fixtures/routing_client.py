@@ -9,7 +9,10 @@ from src.batch_score.batch_pool.routing.routing_client import RoutingClient
 
 @pytest.fixture
 def make_routing_client(make_completion_header_handler):
-    def make(service_namespace: str = None, target_batch_pool: str = None, header_handler=make_completion_header_handler(), request_path: str = None):
+    def make(service_namespace: str = None,
+             target_batch_pool: str = None,
+             header_handler=make_completion_header_handler(),
+             request_path: str = None):
         return RoutingClient(
             service_namespace=service_namespace,
             target_batch_pool=target_batch_pool,
@@ -25,7 +28,8 @@ def mock_get_quota_scope(monkeypatch):
     async def _get_quota_scope(self, session):
         return "endpointPools:MOCK-POOL:trafficGroups:MOCK-GROUP"
 
-    monkeypatch.setattr("src.batch_score.batch_pool.routing.routing_client.RoutingClient.get_quota_scope", _get_quota_scope)
+    monkeypatch.setattr("src.batch_score.batch_pool.routing.routing_client.RoutingClient.get_quota_scope",
+                        _get_quota_scope)
 
 
 @pytest.fixture
@@ -35,7 +39,8 @@ def mock_get_client_setting(monkeypatch):
     def _get_client_setting(self, key):
         return state.get(key)
 
-    monkeypatch.setattr("src.batch_score.batch_pool.routing.routing_client.RoutingClient.get_client_setting", _get_client_setting)
+    monkeypatch.setattr("src.batch_score.batch_pool.routing.routing_client.RoutingClient.get_client_setting",
+                        _get_client_setting)
 
     return state
 
@@ -52,6 +57,7 @@ def mock_refresh_pool_routes(monkeypatch):
 
         pass
 
-    monkeypatch.setattr("src.batch_score.batch_pool.routing.routing_client.RoutingClient.refresh_pool_routes", _refresh_pool_routes)
+    monkeypatch.setattr("src.batch_score.batch_pool.routing.routing_client.RoutingClient.refresh_pool_routes",
+                        _refresh_pool_routes)
 
     return state

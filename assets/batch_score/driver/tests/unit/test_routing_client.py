@@ -68,7 +68,8 @@ class TestRoutingClient:
     # If the exception handling fails, this test will hang indefinitely.
     # So we expect the test to pass in 5 seconds if the code is correct.
     @pytest.mark.timeout(5)
-    async def test_exception_handling_for__check_and_refresh_pool_routes_no_exception_raised(self, mock_refresh_pool_routes):
+    async def test_exception_handling_for__check_and_refresh_pool_routes_no_exception_raised(
+            self, mock_refresh_pool_routes):
         routing_client = RoutingClient(
             service_namespace="MOCK-NAMESPACE",
             target_batch_pool="MOCK-POOL",
@@ -83,7 +84,8 @@ class TestRoutingClient:
     # If the exception handling fails, this test will hang indefinitely.
     # So we expect the test to pass in 5 seconds if the code is correct.
     @pytest.mark.timeout(5)
-    async def test_exception_handling_for__check_and_refresh_pool_routes_exception_is_raised(self, mock_refresh_pool_routes):
+    async def test_exception_handling_for__check_and_refresh_pool_routes_exception_is_raised(
+            self, mock_refresh_pool_routes):
         routing_client = RoutingClient(
             service_namespace="MOCK-NAMESPACE",
             target_batch_pool="MOCK-POOL",

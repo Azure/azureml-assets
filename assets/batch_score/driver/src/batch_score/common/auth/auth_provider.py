@@ -81,7 +81,8 @@ class IdentityAuthProvider(AuthProvider):
         return self.__access_token.token
 
     def __is_token_expired(self) -> bool:
-        return not self.__access_token or self.__access_token.expires_on <= datetime.now(timezone.utc).timestamp() + (5 * 60)
+        return not self.__access_token or \
+            self.__access_token.expires_on <= datetime.now(timezone.utc).timestamp() + (5 * 60)
 
 
 class MissingApiKeyNameException(Exception):
@@ -90,8 +91,10 @@ class MissingApiKeyNameException(Exception):
 
     def __str__(self):
         return ("'api_key_name' cannot be empty when using the authentication_type 'api_key'."
-                "Please set 'api_key_name' to the name of the key vault secret that contains the API key of the scoring_url."
-                "The secret must be placed in the key vault that is linked to the AzureML workspace in which the batch scoring job runs.")
+                "Please set 'api_key_name' to the name of the key vault secret "
+                "that contains the API key of the scoring_url."
+                "The secret must be placed in the key vault that is linked to the AzureML workspace "
+                "in which the batch scoring job runs.")
 
 
 class ApiKeyAuthProvider(AuthProvider):

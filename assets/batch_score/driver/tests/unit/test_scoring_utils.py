@@ -20,8 +20,13 @@ CLASSIFICATION_TESTS = [
 ]
 
 
-@pytest.mark.parametrize("response_status, response_payload, model_response_code, model_response_reason, expected_classification", CLASSIFICATION_TESTS)
-def test_classify_response(response_status: int, response_payload: any, model_response_code: str, model_response_reason: str, expected_classification: Enum):
+@pytest.mark.parametrize("response_status, response_payload, model_response_code, "
+                         "model_response_reason, expected_classification", CLASSIFICATION_TESTS)
+def test_classify_response(response_status: int,
+                           response_payload: any,
+                           model_response_code: str,
+                           model_response_reason: str,
+                           expected_classification: Enum):
     classification = scoring_utils.get_retriable_type(response_status=response_status,
                                                       response_payload=response_payload,
                                                       model_response_code=model_response_code,

@@ -19,7 +19,8 @@ def test_start_with_request_modifier(
         make_parallel_driver,
         make_input_transformer):
 
-    parallel_driver: Parallel = make_parallel_driver(input_to_request_transformer=make_input_transformer(modifiers=[FakeRequestModifier()]))
+    parallel_driver: Parallel = make_parallel_driver(
+        input_to_request_transformer=make_input_transformer(modifiers=[FakeRequestModifier()]))
 
     payloads = ['{"fake": "payload"}', '{"raise_exception": true}']
     results = parallel_driver.run(payloads=payloads)
@@ -35,7 +36,8 @@ def test_start_applies_input_to_output_transformer_to_result(
         make_input_transformer):
     """Tests the input_to_output_transformer is applied to scoring request objects that are part of the output."""
 
-    parallel_driver: Parallel = make_parallel_driver(input_to_output_transformer=make_input_transformer(modifiers=[FakeOutputRequestModifier()]))
+    parallel_driver: Parallel = make_parallel_driver(
+        input_to_output_transformer=make_input_transformer(modifiers=[FakeOutputRequestModifier()]))
 
     payloads = ['{"raise_exception": true}']
     results = parallel_driver.run(payloads=payloads)

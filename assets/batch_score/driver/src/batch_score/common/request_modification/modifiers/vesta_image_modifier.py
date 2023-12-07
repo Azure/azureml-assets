@@ -25,7 +25,9 @@ class VestaImageModifier(RequestModifier):
     def is_vesta_payload(request_obj: any):
         payload_type = VestaImageModifier.vesta_payload_type(request_obj=request_obj)
 
-        return payload_type is not None and (payload_type in request_obj) and all("type" in transcript for transcript in request_obj[payload_type])
+        return (payload_type is not None and
+                (payload_type in request_obj) and
+                all("type" in transcript for transcript in request_obj[payload_type]))
 
     def __init__(self, image_encoder: "ImageEncoder" = None) -> None:
         self.__image_encoder: ImageEncoder = image_encoder

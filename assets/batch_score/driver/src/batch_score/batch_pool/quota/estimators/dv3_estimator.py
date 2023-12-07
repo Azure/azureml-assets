@@ -26,7 +26,8 @@ class DV3Estimator(QuotaEstimator):
             return self.__calc_tokens_for_one_prompt(prompt)
         else:
             lu.get_logger().debug(
-                f"Prompt is of type '{prompt.__class__.__qualname__}' and length '{len(prompt)}'. Calculating each input within.")
+                f"Prompt is of type '{prompt.__class__.__qualname__}' and length '{len(prompt)}'. " +
+                "Calculating each input within.")
             return self.__calc_tokens_for_batch(prompt)
 
     def estimate_request_cost(self, request_obj: any) -> int:
@@ -37,13 +38,15 @@ class DV3Estimator(QuotaEstimator):
             est_tokens = self.__calc_total_tokens_with_tiktoken(prompt)
         except BaseException as e:
             # This behavior can happen on some kinds of very long prompts:
-            # TikToken first splits the prompt into words via regex (mostly via whitespace and punctuation), then splits each word into tokens.
-            # The first part is fast, but the second part seems to take O(n) stack space and O(n^2) time, for n = word length. Experimentally,
-            # a word above ~30k characters will be very slow, and somewhere around ~1M characters it will hit a stack overflow. The problem
-            # only happens when there's a single huge word -- a prompt of 1M normal-sized words works fine (although DV3 itself will reject it).
-            #
-            # We're specifically catching BaseException here because the stack overflow error is thrown from the Rust runtime as a PanicException,
-            # which inherits from BaseException, not Exception, so normal `except` statements would catch it.
+            # TikToken first splits the prompt into words via regex (mostly via whitespace and punctuation),
+            # then splits each word into tokens. The first part is fast, but the second part seems to take O(n)
+            # stack space and O(n^2) time, for n = word length. Experimentally, a word above ~30k characters will
+            # be very slow, and somewhere around ~1M characters it will hit a stack overflow. The problem
+            # only happens when there's a single huge word -- a prompt of 1M normal-sized words works fine
+            # (although DV3 itself will reject it).
+            # We're specifically catching BaseException here because the stack overflow error is thrown from the
+            # Rust runtime as a PanicException, which inherits from BaseException, not Exception,
+            # so normal `except` statements would catch it.
             #
             # See: https://github.com/openai/tiktoken/issues/15
             lu.get_logger().error(f"TikToken library call failed, falling back to estimator: {e}")
@@ -72,7 +75,8 @@ class DV3Estimator(QuotaEstimator):
 
         return Encoding(
             name="cl100k_base",
-            pat_str=r"""(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+""",
+            pat_str=r"""(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| """
+                    + r"""?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+""",
             mergeable_ranks=bpe_ranks,
             special_tokens={
                 "<|endoftext|>": 100257,

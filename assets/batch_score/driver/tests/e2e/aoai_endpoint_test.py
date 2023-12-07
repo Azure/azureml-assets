@@ -30,10 +30,12 @@ YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
 }}}
 
 # Scoring configuration
+AOAI_DEPLOYMENT_URI = "https://sunjoli-aoai.openai.azure.com/openai/deployments"
+
 YAML_AOAI_COMPLETION_ENDPOINT = {"jobs": {JOB_NAME: {
     "inputs": {
         "api_type": "completion",
-        "scoring_url": "https://sunjoli-aoai.openai.azure.com/openai/deployments/turbo/completions?api-version=2023-03-15-preview",
+        "scoring_url": f"{AOAI_DEPLOYMENT_URI}/turbo/completions?api-version=2023-03-15-preview",
         "authentication_type": "azureml_workspace_connection",
         "connection_name": "batchscore-connection"
     }
@@ -42,7 +44,7 @@ YAML_AOAI_COMPLETION_ENDPOINT = {"jobs": {JOB_NAME: {
 YAML_AOAI_CHAT_COMPLETION_ENDPOINT = {"jobs": {JOB_NAME: {
     "inputs": {
         "api_type": "chat_completion",
-        "scoring_url": "https://sunjoli-aoai.openai.azure.com/openai/deployments/turbo/chat/completions?api-version=2023-03-15-preview",
+        "scoring_url": f"{AOAI_DEPLOYMENT_URI}/turbo/chat/completions?api-version=2023-03-15-preview",
         "authentication_type": "azureml_workspace_connection",
         "connection_name": "batchscore-connection"
     }
@@ -51,7 +53,7 @@ YAML_AOAI_CHAT_COMPLETION_ENDPOINT = {"jobs": {JOB_NAME: {
 YAML_AOAI_EMBEDDINGS_ENDPOINT = {"jobs": {JOB_NAME: {
     "inputs": {
         "api_type": "embeddings",
-        "scoring_url": "https://sunjoli-aoai.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2022-12-01",
+        "scoring_url": f"{AOAI_DEPLOYMENT_URI}/text-embedding-ada-002/embeddings?api-version=2022-12-01",
         "authentication_type": "azureml_workspace_connection",
         "connection_name": "batchscore-connection"
     }
@@ -62,16 +64,29 @@ YAML_AOAI_COMPLETION_ENDPOINT_CONFIG_FILE = {"jobs": {JOB_NAME: {
         "api_type": "completion",
         "scoring_url": "unused",
         "configuration_file": {
-            "path": "azureml://locations/centralus/workspaces/537a35e5-5a1e-4f35-9589-de93638b2e84/data/e2e_completion_scoring_config/versions/2",
+            "path": "azureml://locations/centralus/workspaces/537a35e5-5a1e-4f35-9589-de93638b2e84/"
+                    "data/e2e_completion_scoring_config/versions/2",
             "type": "uri_file"
         }
     }
 }}}
 
 # Input data assets
-YAML_AOAI_COMPLETION_TEST_DATA_ASSET = {"inputs": {"pipeline_job_data_path": {"path": "azureml:e2e_aoai_test_data:1"}}}
-YAML_AOAI_CHAT_COMPLETION_TEST_DATA_ASSET = {"inputs": {"pipeline_job_data_path": {"path": "azureml:e2e_aoai_chat_completion_test_data:1"}}}
-YAML_AOAI_EMBEDDING_TEST_DATA_ASSET = {"inputs": {"pipeline_job_data_path": {"path": "azureml:e2e_aoai_embedding_test_data:1"}}}
+YAML_AOAI_COMPLETION_TEST_DATA_ASSET = {"inputs": {
+    "pipeline_job_data_path": {
+        "path": "azureml:e2e_aoai_test_data:1"
+    }
+}}
+YAML_AOAI_CHAT_COMPLETION_TEST_DATA_ASSET = {"inputs": {
+    "pipeline_job_data_path": {
+        "path": "azureml:e2e_aoai_chat_completion_test_data:1"
+    }
+}}
+YAML_AOAI_EMBEDDING_TEST_DATA_ASSET = {"inputs": {
+    "pipeline_job_data_path": {
+        "path": "azureml:e2e_aoai_embedding_test_data:1"
+    }
+}}
 
 
 @pytest.mark.smoke

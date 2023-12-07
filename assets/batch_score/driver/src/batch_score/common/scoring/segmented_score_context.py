@@ -114,7 +114,8 @@ class SegmentedScoreContext:
                         current_logprobs = current_result.response_body["choices"][0]["logprobs"]
 
                         for logprobs_property in logprobs_properties:
-                            if logprobs_property in current_logprobs and current_logprobs[logprobs_property] is not None:
+                            if logprobs_property in current_logprobs and \
+                                    current_logprobs[logprobs_property] is not None:
                                 final_logprobs[logprobs_property].extend(current_logprobs[logprobs_property])
 
     def __get_usage(self, segmented_result: ScoringResult, usage_key: str):
@@ -152,7 +153,10 @@ class SegmentedScoreContext:
 
         # Total generated tokens may be slightly different from the final result's "completion_tokens" value due to
         # small variations in prompt token count as the input grows across segments.
-        lu.get_logger().debug("Completed segmented request with stop reason {}, generated {} tokens, has more: {}".format(self.__last_stop_reason, self.__total_tokens_generated, self.has_more()))
+        msg = "Completed segmented request with stop reason {}, generated {} tokens, has more: {}"
+        lu.get_logger().debug(msg.format(self.__last_stop_reason,
+                                         self.__total_tokens_generated,
+                                         self.has_more()))
 
     def __create_next_scoring_request(self) -> ScoringRequest:
         if not self.__supports_segmentation:
@@ -165,8 +169,10 @@ class SegmentedScoreContext:
 
         max_tokens = self.__segment_max_token_size
         if self.__original_max_tokens is not None:
-            max_tokens = min(self.__segment_max_token_size, self.__original_max_tokens - self.__total_tokens_generated)
+            max_tokens = min(self.__segment_max_token_size,
+                             self.__original_max_tokens - self.__total_tokens_generated)
 
         payload_object["max_tokens"] = max_tokens
 
-        return self.__original_scoring_request.copy_with_new_payload(json.dumps(payload_object, cls=BatchComponentJSONEncoder))
+        return self.__original_scoring_request.copy_with_new_payload(
+            json.dumps(payload_object, cls=BatchComponentJSONEncoder))

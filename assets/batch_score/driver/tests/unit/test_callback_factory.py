@@ -10,7 +10,10 @@ from tests.fixtures.scoring_result import get_test_request_obj
 from tests.fixtures.test_mini_batch_context import TestMiniBatchContext
 
 
-def test_generate_callback_success(mock_get_logger, mock_get_events_client, make_input_transformer, make_scoring_result):
+def test_generate_callback_success(mock_get_logger,
+                                   mock_get_events_client,
+                                   make_input_transformer,
+                                   make_scoring_result):
     mock_input_to_output_transformer = make_input_transformer(modifiers=[FakeInputOutputModifier()])
 
     mini_batch_context = MiniBatchContext(
@@ -31,7 +34,10 @@ def test_generate_callback_success(mock_get_logger, mock_get_events_client, make
     assert mock_get_events_client.emit_mini_batch_completed.called
 
 
-def test_generate_callback_exception_with_mini_batch_id(mock_get_logger, mock_get_events_client, make_input_transformer, make_scoring_result):
+def test_generate_callback_exception_with_mini_batch_id(mock_get_logger,
+                                                        mock_get_events_client,
+                                                        make_input_transformer,
+                                                        make_scoring_result):
     mock_input_to_output_transformer = make_input_transformer(modifiers=[FakeInputOutputModifier()])
 
     mini_batch_context = MiniBatchContext(

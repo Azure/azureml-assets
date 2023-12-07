@@ -97,7 +97,8 @@ class ScoringClient:
         if timeout is None:
             timeout = session.timeout
 
-        lu.get_logger().debug("Worker_id: {}, internal_id: {}, Timeout: {}s".format(worker_id, scoring_request.internal_id, timeout.total))
+        lu.get_logger().debug("Worker_id: {}, internal_id: {}, Timeout: {}s"
+                              .format(worker_id, scoring_request.internal_id, timeout.total))
 
         start = time.time()
 
@@ -125,15 +126,20 @@ class ScoringClient:
                     response_payload = await response.json()
                 else:
                     response_payload = await response.text()
-                    lu.get_logger().error("Worker {}: Score failed -- internal_id: {} status: {} reason: {} -- response headers: {} | response payload: {}".format(
-                        worker_id,
-                        scoring_request.internal_id,
-                        "NONE" if response is None else response.status,
-                        "NONE" if response is None else response.reason,
-                        "NONE" if response is None else response.headers,
-                        response_payload))
+                    msg = "Worker {}: Score failed -- internal_id: {} "
+                    msg += "status: {} reason: {} -- response headers: {} | response payload: {}"
 
-        except (asyncio.TimeoutError, aiohttp.ServerConnectionError, aiohttp.ClientConnectionError, aiohttp.ClientPayloadError) as e:
+                    lu.get_logger().error(msg.format(worker_id,
+                                                     scoring_request.internal_id,
+                                                     "NONE" if response is None else response.status,
+                                                     "NONE" if response is None else response.reason,
+                                                     "NONE" if response is None else response.headers,
+                                                     response_payload))
+
+        except (asyncio.TimeoutError,
+                aiohttp.ServerConnectionError,
+                aiohttp.ClientConnectionError,
+                aiohttp.ClientPayloadError) as e:
             client_exception = e
             fully_qualified_exception_name = type(client_exception).__module__ + "." + type(client_exception).__name__
             response_status = -408  # Manually attribute -408 as a tell to retry on this exception
@@ -147,11 +153,12 @@ class ScoringClient:
             client_exception = e
             response_status = -500  # Manually attribute -500 as a tell to not retry unhandled exceptions
 
-            lu.get_logger().error("Worker {}: Score failed: unhandled exception -- internal_id: {} x-ms-client-request-id: {}. Exception: {}".format(
-                worker_id,
-                scoring_request.internal_id,
-                headers["x-ms-client-request-id"],
-                traceback.format_exc()))
+            msg = "Worker {}: Score failed: unhandled exception -- internal_id: {} "
+            msg += "x-ms-client-request-id: {}. Exception: {}"
+            lu.get_logger().error(msg.format(worker_id,
+                                             scoring_request.internal_id,
+                                             headers["x-ms-client-request-id"],
+                                             traceback.format_exc()))
 
         finally:
             if self.__routing_client is not None:
@@ -187,12 +194,13 @@ class ScoringClient:
         result: ScoringResult = None
 
         if response_status == 200:
-            lu.get_logger().info("Worker {}: Score succeeded after {:.3f}s -- internal_id: {} x-ms-client-request-id: {} total_wait_time: {}".format(
-                worker_id,
-                end - start,
-                scoring_request.internal_id,
-                headers["x-ms-client-request-id"],
-                scoring_request.total_wait_time))
+            msg = "Worker {}: Score succeeded after {:.3f}s -- internal_id: {} "
+            msg += "x-ms-client-request-id: {} total_wait_time: {}"
+            lu.get_logger().info(msg.format(worker_id,
+                                            end - start,
+                                            scoring_request.internal_id,
+                                            headers["x-ms-client-request-id"],
+                                            scoring_request.total_wait_time))
 
             result = ScoringResult(
                 status=ScoringResultStatus.SUCCESS,
@@ -207,9 +215,14 @@ class ScoringClient:
                 mini_batch_context=scoring_request.mini_batch_context
             )
 
-            get_events_client().emit_tokens_generated(result.completion_tokens, result.prompt_tokens, target_endpoint_url)
+            get_events_client().emit_tokens_generated(result.completion_tokens,
+                                                      result.prompt_tokens,
+                                                      target_endpoint_url)
         elif is_retriable:
-            raise RetriableException(status_code=response_status, response_payload=response_payload, model_response_code=model_response_code, model_response_reason=model_response_reason)
+            raise RetriableException(status_code=response_status,
+                                     response_payload=response_payload,
+                                     model_response_code=model_response_code,
+                                     model_response_reason=model_response_reason)
         else:  # Score failed
             result = ScoringResult(
                 status=ScoringResultStatus.FAILURE,
@@ -223,7 +236,9 @@ class ScoringClient:
                 mini_batch_context=scoring_request.mini_batch_context
             )
 
-        if result.status == ScoringResultStatus.FAILURE and self.__tally_handler.should_tally(response_status=response_status, model_response_status=model_response_code):
+        if result.status == ScoringResultStatus.FAILURE and \
+                self.__tally_handler.should_tally(response_status=response_status,
+                                                  model_response_status=model_response_code):
             result.omit = True
 
         return result
@@ -255,14 +270,17 @@ class ScoringClient:
             return self.__online_endpoint_url
 
         exclude_endpoint = None
-        # If the most recent response_status for this request was insufficient, exclude the corresponding endpoint on this next attempt
+        # If the most recent response_status for this request was insufficient, exclude the corresponding
+        # endpoint on this next attempt
         if len(scoring_request.request_history) > 0:
             latest_attempt = scoring_request.request_history[-1]
             if latest_attempt.retriable_type == RetriableType.RETRY_ON_DIFFERENT_ENDPOINT:
                 exclude_endpoint = latest_attempt.endpoint_base_url
-                lu.get_logger().debug("{}: Excluding endpoint '{}' from consideration for the next attempt of this scoring_request".format(worker_id, exclude_endpoint))
+                msg = "{}: Excluding endpoint '{}' from consideration for the next attempt of this scoring_request"
+                lu.get_logger().debug(msg.format(worker_id, exclude_endpoint))
 
-        target_endpoint_url = await self.__routing_client.get_target_endpoint(session=session, exclude_endpoint=exclude_endpoint)
+        target_endpoint_url = await self.__routing_client.get_target_endpoint(session=session,
+                                                                              exclude_endpoint=exclude_endpoint)
         return target_endpoint_url
 
     def _log_score_start(self, scoring_request, worker_id, target_endpoint_url, headers):
@@ -270,21 +288,23 @@ class ScoringClient:
         redacted_headers = headers.copy()
         redacted_headers["Authorization"] = "Redacted"
 
-        lu.get_logger().info("Worker {}: Score started -- url={} internal_id={} x-ms-client-request-id=[{}] request headers={}".format(
-            worker_id,
-            target_endpoint_url,
-            scoring_request.internal_id,
-            headers["x-ms-client-request-id"],
-            redacted_headers))
+        msg = "Worker {}: Score started -- url={} internal_id={} x-ms-client-request-id=[{}] request headers={}"
+        lu.get_logger().info(msg.format(worker_id,
+                                        target_endpoint_url,
+                                        scoring_request.internal_id,
+                                        headers["x-ms-client-request-id"],
+                                        redacted_headers))
 
         payload_correlation_id = str(uuid.uuid4())
-        lu.get_logger().debug("AppInsRedact: Worker {}: Score request payload [payload_correlation_id: {}]: {}".format(
-            worker_id, payload_correlation_id, scoring_request.loggable_payload))
+        msg = "AppInsRedact: Worker {}: Score request payload [payload_correlation_id: {}]: {}"
+        lu.get_logger().debug(msg.format(worker_id, payload_correlation_id, scoring_request.loggable_payload))
 
     def _validate_init_params(self):
         # Check for invalid parameter combination
         if self.__routing_client is not None and \
-                (self.__online_endpoint_url is not None or "azureml-model-deployment" in self.__header_handler.get_headers()):
-            lu.get_logger().error("Invalid parameter combination. batch_pool AND (online_endpoint_url or azureml-model-deployment header) are provided.")
+                (self.__online_endpoint_url is not None or
+                 "azureml-model-deployment" in self.__header_handler.get_headers()):
+            lu.get_logger().error("Invalid parameter combination. batch_pool AND " +
+                                  "(online_endpoint_url or azureml-model-deployment header) are provided.")
 
             raise Exception("Invalid parameter combination")

@@ -103,7 +103,10 @@ def test_convert_result_list_batch_size_one(tiktoken_failed):
     result_list = []
     inputstring = __get_input_batch(batch_size_per_request)[0]
     outputlist = __get_output_data(batch_size_per_request)
-    result = __get_scoring_result_for_batch(batch_size_per_request, inputstring, outputlist, tiktoken_failed=tiktoken_failed)
+    result = __get_scoring_result_for_batch(batch_size_per_request,
+                                            inputstring,
+                                            outputlist,
+                                            tiktoken_failed=tiktoken_failed)
     result_list.append(result)
 
     # Act
@@ -284,9 +287,10 @@ def test_endpoint_response_is_not_json(mock_get_logger):
         request_obj={"input": inputs},
         response_body=json.dumps({"object": "list",
                                   "error": {
-                                      "message": "This model's maximum context length is 8190 tokens, however you requested 10001 " +
-                                                 "tokens (10001 in your prompt; 0 for the completion). Please reduce your prompt; " +
-                                                 "or completion length.",
+                                      "message": "This model's maximum context length is 8190 tokens, "
+                                                 "however you requested 10001 tokens "
+                                                 "(10001 in your prompt; 0 for the completion). "
+                                                 "Please reduce your prompt; or completion length.",
                                       "type": "invalid_request_error",
                                       "param": None,
                                       "code": None
@@ -339,9 +343,10 @@ def __get_failed_scoring_result_for_batch(inputlist, tiktoken_failed=False):
         request_obj={"input": inputlist},
         response_body={"object": "list",
                        "error": {
-                           "message": "This model's maximum context length is 8190 tokens, however you requested 10001 " +
-                                      "tokens (10001 in your prompt; 0 for the completion). Please reduce your prompt; " +
-                                      "or completion length.",
+                           "message": "This model's maximum context length is 8190 tokens, "
+                                      "however you requested 10001 tokens "
+                                      "(10001 in your prompt; 0 for the completion). "
+                                      "Please reduce your prompt; or completion length.",
                            "type": "invalid_request_error",
                            "param": None,
                            "code": None

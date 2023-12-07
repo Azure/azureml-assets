@@ -49,7 +49,8 @@ class ImageEncoder():
         start = time.time()
         resp = requests.get(url)
         if resp.status_code != 200:
-            lu.get_logger().info(f"URL '{url}' responded with an unsuccessful response: {resp.status_code}, {resp.reason}.")
+            msg = f"URL '{url}' responded with an unsuccessful response: {resp.status_code}, {resp.reason}."
+            lu.get_logger().info(msg)
             raise UnsuccessfulUrlResponse()
 
         img = resp.content

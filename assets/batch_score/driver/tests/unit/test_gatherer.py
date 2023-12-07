@@ -61,7 +61,9 @@ async def test_run_success(mock_get_logger, make_scoring_result):
     scoring_result_queue = deque()
     scoring_result_queue.append(scoring_result)
 
-    gatherer = Gatherer(scoring_result_queue=scoring_result_queue, failed_scoring_result_queue=deque(), callback=__get_callback)
+    gatherer = Gatherer(scoring_result_queue=scoring_result_queue,
+                        failed_scoring_result_queue=deque(),
+                        callback=__get_callback)
     await run_once(gatherer)
 
     assert gatherer.get_returned_minibatch_count() == 0
@@ -91,7 +93,8 @@ async def test_run_failed_results(mock_get_logger, make_scoring_result):
     scoring_result_queue = deque()
     scoring_result_queue.append(scoring_result)
 
-    failed_scoring_result = make_scoring_result(status=ScoringResultStatus.FAILURE, request_obj=get_test_request_obj())
+    failed_scoring_result = make_scoring_result(status=ScoringResultStatus.FAILURE,
+                                                request_obj=get_test_request_obj())
     failed_scoring_result.mini_batch_context = mini_batch_context
 
     failed_scoring_result_queue = deque()
@@ -123,7 +126,9 @@ async def test_run_exception(mock_get_logger, make_scoring_result):
     scoring_result_queue = deque()
     scoring_result_queue.append(scoring_result)
 
-    gatherer = Gatherer(scoring_result_queue=scoring_result_queue, failed_scoring_result_queue=deque(), callback=__get_callback_throwing_exception)
+    gatherer = Gatherer(scoring_result_queue=scoring_result_queue,
+                        failed_scoring_result_queue=deque(),
+                        callback=__get_callback_throwing_exception)
     await run_once(gatherer)
 
     assert gatherer.get_returned_minibatch_count() == 0

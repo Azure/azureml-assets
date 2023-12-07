@@ -8,7 +8,8 @@ from tests.fixtures.input_transformer import FakeRequestModifier
 
 
 def test_input_transformer(mock_get_logger, make_input_transformer):
-    input_transformer: InputTransformer = make_input_transformer(modifiers=[FakeRequestModifier(prefix="first"), FakeRequestModifier(prefix="second")])
+    input_transformer: InputTransformer = make_input_transformer(modifiers=[FakeRequestModifier(prefix="first"),
+                                                                            FakeRequestModifier(prefix="second")])
 
     modified_obj = input_transformer.apply_modifications({"mock": "value"})
 

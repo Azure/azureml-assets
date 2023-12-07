@@ -44,7 +44,9 @@ YAML_SERVERLESS_COMPLETION_ENDPOINT = {"jobs": {JOB_NAME: {
 }}}
 
 # Input data assets
-YAML_COMPLETION_TEST_DATA_ASSET = {"inputs": {"pipeline_job_data_path": {"path": "azureml:e2e_llama_completion_data:1"}}}
+YAML_COMPLETION_TEST_DATA_ASSET = {"inputs": {
+    "pipeline_job_data_path": {"path": "azureml:e2e_llama_completion_data:1"}
+}}
 
 
 @pytest.mark.smoke

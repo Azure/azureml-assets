@@ -8,7 +8,9 @@ from src.batch_score.common.auth.auth_provider import WorkspaceConnectionAuthPro
 def test_get_headers_no_additional_headers(mocker):
     # Arrange
     handler = MIREndpointV2HeaderHandler('my_connection')
-    mocker.patch.object(WorkspaceConnectionAuthProvider, 'get_auth_headers', return_value={'Authorization': 'Bearer 123'})
+    mocker.patch.object(WorkspaceConnectionAuthProvider,
+                        'get_auth_headers',
+                        return_value={'Authorization': 'Bearer 123'})
 
     # Act
     headers = handler.get_headers()
@@ -22,7 +24,9 @@ def test_get_headers_with_additional_headers(mocker):
     # Arrange
     additional_headers = '{"hello": "world"}'
     handler = MIREndpointV2HeaderHandler('my_connection', additional_headers)
-    mocker.patch.object(WorkspaceConnectionAuthProvider, 'get_auth_headers', return_value={'Authorization': 'Bearer 123'})
+    mocker.patch.object(WorkspaceConnectionAuthProvider,
+                        'get_auth_headers',
+                        return_value={'Authorization': 'Bearer 123'})
 
     # Act
     headers = handler.get_headers()

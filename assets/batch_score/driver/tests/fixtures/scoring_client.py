@@ -9,7 +9,10 @@ from src.batch_score.common.scoring.scoring_result import ScoringResult
 
 
 @pytest.fixture()
-def make_scoring_client(make_completion_header_handler, make_quota_client, make_routing_client, make_tally_failed_request_handler):
+def make_scoring_client(make_completion_header_handler,
+                        make_quota_client,
+                        make_routing_client,
+                        make_tally_failed_request_handler):
     def make(header_handler=make_completion_header_handler(),
              quota_client=make_quota_client(),
              routing_client=make_routing_client(),

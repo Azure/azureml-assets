@@ -42,7 +42,8 @@ async def test_successful_scoring_appends_result_with_segmentation(
     async def mock_score(*args, **kwargs):
         return make_scoring_result(request_obj={"prompt": "payload"})
 
-    monkeypatch.setattr("src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext.score_next_once", mock_score)
+    monkeypatch.setattr("src.batch_score.common.scoring.segmented_score_context"
+                        ".SegmentedScoreContext.score_next_once", mock_score)
     with patch('src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext.has_more',
                side_effect=[True, True, True, False]):
         metrics = await _run_worker(make_worker, segment_large_requests='enabled')
@@ -80,7 +81,8 @@ async def test_request_exceeds_max_retry_time_interval_and_fails(
     assert mock_get_logger.error.called
     assert mock_get_events_client.emit_row_completed.called
 
-    assert (worker._Worker__request_metrics._RequestMetrics__df["response_code"].head(1) == ScoringResultStatus.FAILURE).all()
+    assert (worker._Worker__request_metrics._RequestMetrics__df["response_code"].head(1)
+            == ScoringResultStatus.FAILURE).all()
 
 
 @pytest.mark.asyncio
@@ -91,7 +93,9 @@ async def test_model_429_does_not_contribute_to_request_total_wait_time(
         mock__score_once,
         mock_get_client_setting):
 
-    mock__score_once['raise_exception'] = RetriableException(status_code=424, model_response_code='429', retry_after=0.01)
+    mock__score_once['raise_exception'] = RetriableException(status_code=424,
+                                                             model_response_code='429',
+                                                             retry_after=0.01)
     mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
 
     metrics = await _run_worker(make_worker)
@@ -161,9 +165,15 @@ no_deployments_test_cases = [
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "mock_get_events_client, make_worker, mock_get_logger, mock__score_once, mock_get_client_setting, monkeypatch, env_vars, expected_wait_time",
+    "mock_get_events_client, make_worker, mock_get_logger, mock__score_once, "
+    "mock_get_client_setting, monkeypatch, env_vars, expected_wait_time",
     no_deployments_test_cases,
-    indirect=['mock_get_events_client', 'make_worker', 'mock_get_logger', 'mock__score_once', 'mock_get_client_setting', 'monkeypatch'],
+    indirect=['mock_get_events_client',
+              'make_worker',
+              'mock_get_logger',
+              'mock__score_once',
+              'mock_get_client_setting',
+              'monkeypatch'],
 )
 async def test_no_deployments_in_traffic_group(
         mock_get_events_client,
@@ -181,7 +191,9 @@ async def test_no_deployments_in_traffic_group(
     if 'BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF' not in env_vars:
         monkeypatch.setattr(Worker, 'NO_DEPLOYMENTS_BACK_OFF', expected_wait_time)
 
-    mock__score_once['raise_exception'] = RetriableException(status_code=404, response_payload='Specified traffic group could not be found')
+    mock__score_once['raise_exception'] = RetriableException(
+        status_code=404,
+        response_payload='Specified traffic group could not be found')
 
     metrics = await _run_worker(make_worker)
 

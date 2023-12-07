@@ -27,7 +27,8 @@ env_vars = {
 
 class TestWaitTimeCongestionDetector:
     @pytest.mark.parametrize(
-        "make_routing_client, mock_get_client_setting, client_settings, expected_congestion_threshold, expected_saturation_threshold",
+        "make_routing_client, mock_get_client_setting, client_settings, "
+        "expected_congestion_threshold, expected_saturation_threshold",
         [
             (
                 *fixture_names,
@@ -75,8 +76,10 @@ class TestWaitTimeCongestionDetector:
 
         detector_client_setting = WaitTimeCongestionDetector(client_settings_provider=make_routing_client())
 
-        assert expected_congestion_threshold == detector_client_setting._WaitTimeCongestionDetector__congestion_threshold
-        assert expected_saturation_threshold == detector_client_setting._WaitTimeCongestionDetector__saturation_threshold
+        assert expected_congestion_threshold == \
+            detector_client_setting._WaitTimeCongestionDetector__congestion_threshold
+        assert expected_saturation_threshold == \
+            detector_client_setting._WaitTimeCongestionDetector__saturation_threshold
 
         # Environment variables override client settings.
         os.environ.update(env_vars)
@@ -105,7 +108,10 @@ class TestWaitTimeCongestionDetector:
         + [('make_routing_client', ScoringResultStatus.SUCCESS, CongestionState.FREE)],
         indirect=['make_routing_client'],
     )
-    def test_detect_ignores_non_success_responses(self, make_routing_client, response_code, expected_congestion_state):
+    def test_detect_ignores_non_success_responses(self,
+                                                  make_routing_client,
+                                                  response_code,
+                                                  expected_congestion_state):
         congestion_detector = WaitTimeCongestionDetector(client_settings_provider=make_routing_client())
 
         start_time = pd.Timestamp.utcnow()
@@ -161,7 +167,12 @@ class TestWaitTimeCongestionDetector:
 
         assert actual_congestion_state == CongestionState.CONGESTED
 
-    def _add_result(self, request_metrics, request_id, additional_wait_time=10, request_total_wait_time=20, response_code=ScoringResultStatus.SUCCESS):
+    def _add_result(self,
+                    request_metrics,
+                    request_id,
+                    additional_wait_time=10,
+                    request_total_wait_time=20,
+                    response_code=ScoringResultStatus.SUCCESS):
         request_metrics.add_result(
             request_id=request_id,
             response_code=response_code,

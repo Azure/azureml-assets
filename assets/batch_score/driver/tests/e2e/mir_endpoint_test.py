@@ -50,17 +50,20 @@ YAML_GLOBAL_POOL = {"jobs": {JOB_NAME: {
 }}}
 YAML_SINGLE_ENDPOINT = {"jobs": {JOB_NAME: {
     "inputs": {
-        "online_endpoint_url": "https://real-dv3-stable.centralus.inference.ml.azure.com/v1/engines/davinci/completions"  # Using shared dv3 endpoint
+        "online_endpoint_url": ("https://real-dv3-stable.centralus.inference.ml.azure.com"
+                                "/v1/engines/davinci/completions")  # Using shared dv3 endpoint
     }
 }}}
 YAML_SINGLE_ENDPOINT_USING_SCORING_URL_PARAMETER = {"jobs": {JOB_NAME: {
     "inputs": {
-        "scoring_url": "https://real-dv3-stable.centralus.inference.ml.azure.com/v1/engines/davinci/completions"  # Using shared dv3 endpoint
+        "scoring_url": ("https://real-dv3-stable.centralus.inference.ml.azure.com"
+                        "/v1/engines/davinci/completions")  # Using shared dv3 endpoint
     }
 }}}
 YAML_SINGLE_ENDPOINT_EMBEDDINGS = {"jobs": {JOB_NAME: {
     "inputs": {
-        "online_endpoint_url": "https://real-ada-stable.centralus.inference.ml.azure.com/v1/engines/davinci/embeddings"  # Using shared dv3 endpoint
+        "online_endpoint_url": ("https://real-ada-stable.centralus.inference.ml.azure.com"
+                                "/v1/engines/davinci/embeddings")  # Using shared dv3 endpoint
     }
 }}}
 YAML_ENV_VARS_REDACT_PROMPTS = {"jobs": {JOB_NAME: {
@@ -128,9 +131,15 @@ def test_gated_embeddings_batch_score(batch_score_embeddings_yml_component):
 @pytest.mark.timeout(15 * 60)
 @pytest.mark.skip(reason="Enable this after creating a test endpoint for vesta")
 def test_gated_vesta_chat_completion_batch_score(batch_score_vesta_chat_completion_yml_component):
-    set_component(*batch_score_vesta_chat_completion_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
+    set_component(*batch_score_vesta_chat_completion_yml_component,
+                  component_config=YAML_COMPONENT,
+                  job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
-    batch_pool = {"jobs": {JOB_NAME: {"inputs": {"batch_pool": "gptv-eval-global", "quota_audience": "common", "service_namespace": "prometheus"}}}}
+    batch_pool = {"jobs": {JOB_NAME: {"inputs": {
+        "batch_pool": "gptv-eval-global",
+        "quota_audience": "common",
+        "service_namespace": "prometheus"}
+    }}}
     yaml_update = deep_update(YAML_COMPONENT,
                               YAML_SMOKE_VESTA_CHAT_COMPLETION_TEST_DATA_ASSET,
                               YAML_APPLICATION_INSIGHTS,
@@ -163,7 +172,8 @@ def test_gated_batch_score_single_endpoint(batch_score_yml_component):
         yaml_overrides=[yaml_update])
 
 
-# This test confirms that we can score an MIR endpoint using the scoring_url parameter and the batch_score_llm.yml component.
+# This test confirms that we can score an MIR endpoint using the scoring_url parameter
+# and the batch_score_llm.yml component.
 @pytest.mark.smoke
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)

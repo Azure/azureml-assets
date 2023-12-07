@@ -43,7 +43,9 @@ class CallbackFactory:
     def apply_input_transformer(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
         return apply_input_transformer(self.__input_to_output_transformer, scoring_results)
 
-    def save_mini_batch_result_and_emit(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
+    def save_mini_batch_result_and_emit(self,
+                                        scoring_results: "list[ScoringResult]",
+                                        mini_batch_context: MiniBatchContext):
         mini_batch_id = mini_batch_context.mini_batch_id
         set_mini_batch_id(mini_batch_context.mini_batch_id)
         lu.get_logger().info("Start saving result of data subset {}.".format(mini_batch_id))

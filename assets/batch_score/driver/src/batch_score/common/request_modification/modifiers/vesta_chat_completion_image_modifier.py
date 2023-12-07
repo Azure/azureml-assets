@@ -20,7 +20,8 @@ class VestaChatCompletionImageModifier(RequestModifier):
         if "Column1" in request_obj:
             request_obj = json.loads(request_obj["Column1"])
 
-        lu.get_logger().debug("Image Modifier: Input data type = {}, Input data = {}".format(type(request_obj), request_obj))
+        msg = "Image Modifier: Input data type = {}, Input data = {}"
+        lu.get_logger().debug(msg.format(type(request_obj), request_obj))
         if VestaChatCompletionImageModifier.is_vesta_chat_completion_payload(request_obj=request_obj):
             for message in request_obj["messages"]:
                 for content in message["content"]:

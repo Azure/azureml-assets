@@ -9,13 +9,17 @@ from ..telemetry import logging_utils as lu
 from .mini_batch_context import MiniBatchContext
 
 
-def apply_input_transformer(input_to_output_transformer: InputTransformer, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext = None):
+def apply_input_transformer(input_to_output_transformer: InputTransformer,
+                            scoring_results: "list[ScoringResult]",
+                            mini_batch_context: MiniBatchContext = None):
     if input_to_output_transformer:
         lu.get_logger().debug("Start applying input to output transformer.")
         for scoring_result in scoring_results:
-            # None request_obj values may be present, if a RequestModificationException was thrown during ScoringRequest creation
+            # None request_obj values may be present,
+            # if a RequestModificationException was thrown during ScoringRequest creation
             if not scoring_result.omit and scoring_result.request_obj:
-                scoring_result.request_obj = input_to_output_transformer.apply_modifications(request_obj=scoring_result.request_obj)
+                scoring_result.request_obj = input_to_output_transformer.apply_modifications(
+                    request_obj=scoring_result.request_obj)
 
         lu.get_logger().debug("Completed input to output transform.")
     return scoring_results

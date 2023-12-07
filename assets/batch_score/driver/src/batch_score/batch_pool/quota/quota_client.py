@@ -94,7 +94,11 @@ class QuotaClient:
                 request.estimated_token_counts = estimated_cost
                 request.estimated_cost = 1
 
-        lease = await self.__acquire_lease(session, scope, request.estimated_cost, request.internal_id, request.retry_count)
+        lease = await self.__acquire_lease(session,
+                                           scope,
+                                           request.estimated_cost,
+                                           request.internal_id,
+                                           request.retry_count)
 
         try:
             yield lease
@@ -111,7 +115,12 @@ class QuotaClient:
     def audience(self):
         return self.__audience
 
-    async def __acquire_lease(self, session: ClientSession, scope: str, capacity: int, request_id: str, retry_count: int):
+    async def __acquire_lease(self,
+                              session: ClientSession,
+                              scope: str,
+                              capacity: int,
+                              request_id: str,
+                              retry_count: int):
         if not self.__enabled:
             return NullQuotaLease()
 
@@ -138,7 +147,8 @@ class QuotaClient:
                     # Something happened that we don't know how to handle.
                     # Rather than terminating the job or looping endlessly,
                     # we'll let the request go through and hope for the best.
-                    lu.get_logger().exception("QuotaClient: Unexpected error while acquiring quota lease. Proceeding without one.")
+                    lu.get_logger().exception(
+                        "QuotaClient: Unexpected error while acquiring quota lease. Proceeding without one.")
                     return NullQuotaLease()
 
         lu.get_logger().error("QuotaClient: Retries exhausted while acquiring quota lease. Proceeding without one.")
@@ -206,7 +216,8 @@ class QuotaClient:
         return self.__header_handler.get_headers(additional_headers=additional_headers)
 
     def __get_url(self, scope: str, api_name: str) -> str:
-        return f"{self.__base_url}/v1.0/servicenamespaces/{self.__namespace}/scopes/{scope}/audiences/{self.__audience}/{api_name}"
+        return f"{self.__base_url}/v1.0/servicenamespaces/{self.__namespace}" \
+               + f"/scopes/{scope}/audiences/{self.__audience}/{api_name}"
 
     async def _api_release_lease(self, session: ClientSession, scope: str, lease_id: str, request_id: str):
         url = self.__get_url(scope, "releaseLease")
@@ -218,7 +229,11 @@ class QuotaClient:
         }
 
         async with session.post(url, headers=headers, json=body) as response:
-            get_events_client().emit_quota_operation("ReleaseLease", response.status, lease_id=lease_id, amount=None, scoring_request_internal_id=request_id)
+            get_events_client().emit_quota_operation("ReleaseLease",
+                                                     response.status,
+                                                     lease_id=lease_id,
+                                                     amount=None,
+                                                     scoring_request_internal_id=request_id)
             response.raise_for_status()
 
     async def _api_renew_lease(self, session: ClientSession, scope: str, lease_id: str, request_id: str):
@@ -231,14 +246,23 @@ class QuotaClient:
         }
 
         async with session.post(url, headers=headers, json=body) as response:
-            get_events_client().emit_quota_operation("RenewLease", response.status, lease_id=lease_id, amount=None, scoring_request_internal_id=request_id)
+            get_events_client().emit_quota_operation("RenewLease",
+                                                     response.status,
+                                                     lease_id=lease_id,
+                                                     amount=None,
+                                                     scoring_request_internal_id=request_id)
             response.raise_for_status()
             try:
                 return await response.json()
             except ContentTypeError:
                 return None
 
-    async def _api_request_lease(self, session: ClientSession, scope: str, amount: int, request_id: str, retry_count: int):
+    async def _api_request_lease(self,
+                                 session: ClientSession,
+                                 scope: str,
+                                 amount: int,
+                                 request_id: str,
+                                 retry_count: int):
         url = self.__get_url(scope, "requestLease")
         headers = self.__get_headers(request_id=request_id, retry_count=retry_count)
 
@@ -256,7 +280,11 @@ class QuotaClient:
                 lease_id = lease.get("leaseId") if isinstance(lease, dict) else None
                 return lease
             finally:
-                get_events_client().emit_quota_operation("RequestLease", response.status, lease_id=lease_id, amount=amount, scoring_request_internal_id=request_id)
+                get_events_client().emit_quota_operation("RequestLease",
+                                                         response.status,
+                                                         lease_id=lease_id,
+                                                         amount=amount,
+                                                         scoring_request_internal_id=request_id)
 
     def _report_result(self, lease_id: int, quota_capacity: int, result: ScoringResult):
         try:
@@ -275,7 +303,13 @@ class QuotaLease:
     # Percentage of lease duration after which we'll automatically renew.
     RENEWAL_FRACTION = 0.7
 
-    def __init__(self, client: QuotaClient, session: ClientSession, scope: str, lease: Dict[str, any], capacity: int, request_id: str):
+    def __init__(self,
+                 client: QuotaClient,
+                 session: ClientSession,
+                 scope: str,
+                 lease: Dict[str, any],
+                 capacity: int,
+                 request_id: str):
         self.__client = client
         self.__session = session
         self.__scope = scope
@@ -284,7 +318,8 @@ class QuotaLease:
 
         self.__set_lease(lease)
 
-        lu.get_logger().debug(f"QuotaClient: Acquired quota lease {self.__lease_id} ({self.__capacity} tokens) until {self.__expiration}.")
+        lu.get_logger().debug(f"QuotaClient: Acquired quota lease {self.__lease_id}"
+                              + f"({self.__capacity} tokens) until {self.__expiration}.")
 
         self.__task = asyncio.create_task(self.__keep_alive())
 
@@ -324,7 +359,10 @@ class QuotaLease:
                 await asyncio.sleep(delay)
 
                 old_lease_id = self.__lease_id
-                response = await self.__client._api_renew_lease(self.__session, self.__scope, self.__lease_id, self.__request_id)
+                response = await self.__client._api_renew_lease(self.__session,
+                                                                self.__scope,
+                                                                self.__lease_id,
+                                                                self.__request_id)
 
                 if response:
                     self.__set_lease(response)
@@ -333,7 +371,8 @@ class QuotaLease:
 
                 attempt = 0
 
-                lu.get_logger().debug(f"QuotaClient: Renewed quota lease {old_lease_id}; new lease {self.__lease_id} valid until {self.__expiration}.")
+                lu.get_logger().debug(f"QuotaClient: Renewed quota lease {old_lease_id};"
+                                      + f"new lease {self.__lease_id} valid until {self.__expiration}.")
             except Exception:
                 attempt += 1
 
@@ -373,7 +412,8 @@ class QuotaUnavailableException(RetriableException):
 
 class QuotaPermanentlyUnavailableException(PermanentException):
     def __init__(self, scope: str, audience: str, capacity: int, status_code: int, message: str):
-        message = f"Audience {audience} under scope {scope} does not have enough quota to satisfy a request of {capacity} tokens. Rate limiter service returned {status_code}: {message}"
+        message = f"Audience {audience} under scope {scope} does not have enough quota to " \
+                + f"satisfy a request of {capacity} tokens. Rate limiter service returned {status_code}: {message}"
         super().__init__(message, status_code)
 
         self.scope = scope

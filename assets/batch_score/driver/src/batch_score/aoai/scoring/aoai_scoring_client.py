@@ -204,7 +204,9 @@ class AoaiScoringClient:
                 num_retries=0
             )
 
-        if result.status == ScoringResultStatus.FAILURE and self.__tally_handler.should_tally(response_status=response_status, model_response_status=model_response_code):
+        if result.status == ScoringResultStatus.FAILURE and \
+                self.__tally_handler.should_tally(response_status=response_status,
+                                                  model_response_status=model_response_code):
             result.omit = True
 
         return result

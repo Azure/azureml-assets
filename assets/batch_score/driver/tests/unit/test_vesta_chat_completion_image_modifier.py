@@ -13,16 +13,21 @@ from src.batch_score.common.request_modification.modifiers.vesta_image_encoder i
 )
 from tests.fixtures.vesta_image_modifier import MOCKED_BINARY_FROM_URL
 
+CHECK_VESTA_CHAT_COMPLETION_PAYLOAD_TESTS = [
+    [True, {"messages": [{"role": "user",
+                          "content": [{"image": "base64encoded"}, "Transcribe this image please"]}]}],
+    [False, {"messages": [{"role": "user",
+                           "content": [{"image": "base64encoded"}, "Transcribe this image please"]},
+                          {"hello": "world"}]}],
+    [False, {"messages": [{"hello": "world"}]}],
+    [False, {"invalid": [{"role": "user",
+                          "content": [{"image": "base64encoded"}, "Transcribe this image please"]}]}]
+]
 
-def test_is_vesta_chat_completion_payload():
-    assert VestaChatCompletionImageModifier.is_vesta_chat_completion_payload(request_obj={"messages": [{"role": "user",
-                                                                                                        "content": [{"image": "base64encoded"}, "Transcribe this image please"]}]}) is True
-    assert VestaChatCompletionImageModifier.is_vesta_chat_completion_payload(request_obj={"messages": [{"role": "user",
-                                                                                                        "content": [{"image": "base64encoded"}, "Transcribe this image please"]},
-                                                                                                       {"hello": "world"}]}) is False
-    assert VestaChatCompletionImageModifier.is_vesta_chat_completion_payload(request_obj={"messages": [{"hello": "world"}]}) is False
-    assert VestaChatCompletionImageModifier.is_vesta_chat_completion_payload(request_obj={"invalid": [{"role": "user",
-                                                                                                       "content": [{"image": "base64encoded"}, "Transcribe this image please"]}]}) is False
+
+@pytest.mark.parametrize("expected_result, request_obj", CHECK_VESTA_CHAT_COMPLETION_PAYLOAD_TESTS)
+def test_is_vesta_chat_completion_payload(request_obj, expected_result):
+    assert VestaChatCompletionImageModifier.is_vesta_chat_completion_payload(request_obj) == expected_result
 
 
 def test_modify(mock_get_logger, make_vesta_chat_completion_image_modifier, mock__b64_from_url):
@@ -67,7 +72,7 @@ def test_modify(mock_get_logger, make_vesta_chat_completion_image_modifier, mock
 
 def test_modify_invalid_image(mock_get_logger, make_vesta_chat_completion_image_modifier, mock_encode_b64):
     vesta_request_obj = {"messages": [{"role": "user", "content": [{"image": "invalid_image"}]}]}
-    vesta_chat_completion_image_modifier: VestaChatCompletionImageModifier = make_vesta_chat_completion_image_modifier()
+    vesta_chat_completion_image_modifier = make_vesta_chat_completion_image_modifier()
 
     mock_encode_b64["exception"] = FolderNotMounted()
     with pytest.raises(VestaImageModificationException):

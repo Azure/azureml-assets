@@ -45,7 +45,13 @@ class CustomerLogs(logging.Filter):
         if record.levelno > 20:
             return True
         message = record.getMessage()
-        for internal_class in ['AIMD', 'Conductor', 'Gatherer', 'ParallelDriver', 'QuotaClient', 'RoutingClient', 'WaitTimeCongestionDetector']:
+        for internal_class in ['AIMD',
+                               'Conductor',
+                               'Gatherer',
+                               'ParallelDriver',
+                               'QuotaClient',
+                               'RoutingClient',
+                               'WaitTimeCongestionDetector']:
             if message.startswith(internal_class):
                 return False
         return record.levelno >= self.log_level
@@ -93,7 +99,12 @@ def setup_logger(log_level: str, app_insights_connection_string: str = None):
     _default_logger = logger
 
     if app_insights_connection_string is not None:
-        _events_client = AppInsightsEventsClient(_custom_dimensions, app_insights_connection_string, _ctx_worker_id, _ctx_mini_batch_id, _ctx_quota_audience, _ctx_batch_pool)
+        _events_client = AppInsightsEventsClient(_custom_dimensions,
+                                                 app_insights_connection_string,
+                                                 _ctx_worker_id,
+                                                 _ctx_mini_batch_id,
+                                                 _ctx_quota_audience,
+                                                 _ctx_batch_pool)
     else:
         _events_client = EventsClient()
 

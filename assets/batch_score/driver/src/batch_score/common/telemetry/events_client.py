@@ -210,7 +210,12 @@ class AppInsightsEventsClient(EventsClient):
 
         self.__logger.info("rows_completed", extra=extra)
 
-    def emit_quota_operation(self, operation: str, status_code: int, lease_id: str, amount: int, scoring_request_internal_id: str):
+    def emit_quota_operation(self,
+                             operation: str,
+                             status_code: int,
+                             lease_id: str,
+                             amount: int,
+                             scoring_request_internal_id: str):
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 

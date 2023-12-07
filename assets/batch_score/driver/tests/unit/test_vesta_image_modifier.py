@@ -32,8 +32,10 @@ def test_vesta_payload_type():
 
 def test_is_vesta_payload():
     assert VestaImageModifier.is_vesta_payload(request_obj={"prompt": [{"type": "text", "data": "foobar"}]}) is True
-    assert VestaImageModifier.is_vesta_payload(request_obj={"transcript": [{"type": "text", "data": "foobar"}]}) is True
-    assert VestaImageModifier.is_vesta_payload(request_obj={"transcript": [{"type": "text", "data": "foobar"}, {"hello": "world"}]}) is False
+    assert VestaImageModifier.is_vesta_payload(
+        request_obj={"transcript": [{"type": "text", "data": "foobar"}]}) is True
+    assert VestaImageModifier.is_vesta_payload(
+        request_obj={"transcript": [{"type": "text", "data": "foobar"}, {"hello": "world"}]}) is False
     assert VestaImageModifier.is_vesta_payload(request_obj={"transcript": [{"hello": "world"}]}) is False
     assert VestaImageModifier.is_vesta_payload(request_obj={"prompt": [{"hello": "world"}]}) is False
     assert VestaImageModifier.is_vesta_payload(request_obj={"invalid": [{"hello": "world"}]}) is False

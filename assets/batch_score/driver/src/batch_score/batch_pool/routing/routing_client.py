@@ -64,9 +64,12 @@ class RoutingClient(ClientSettingsProvider):
         while retry_count < self.__MAX_RETRY or self.__target_distribution_percentages == {}:
             response_status = None
             try:
-                lu.get_logger().debug("RoutingClient: Getting updated Pool Routes from '{}'...".format(self.__LIST_ROUTES_URL))
+                lu.get_logger().debug("RoutingClient: Getting updated Pool Routes from '{}'..."
+                                      .format(self.__LIST_ROUTES_URL))
                 request = {"trafficGroup": constants.TRAFFIC_GROUP}
-                async with session.post(url=self.__LIST_ROUTES_URL, headers=self.__header_handler.get_headers(), json=request) as response:
+                async with session.post(url=self.__LIST_ROUTES_URL,
+                                        headers=self.__header_handler.get_headers(),
+                                        json=request) as response:
                     response_status = response.status
                     if response_status == 200:
                         response_body = await response.json()
@@ -76,9 +79,11 @@ class RoutingClient(ClientSettingsProvider):
                         self.__last_refresh = datetime.now(timezone.utc)
                         if "clientSettings" in response_body:
                             self.__client_settings = response_body["clientSettings"]
-                            lu.get_logger().debug("RoutingClient: Client settings returned by Model Endpoint Discovery Service: {}".format(self.__client_settings))
+                            lu.get_logger().debug("RoutingClient: Client settings returned by"
+                                                  + f"Model Endpoint Discovery Service: {self.__client_settings}")
                         else:
-                            lu.get_logger().warning("No client settings returned by Model Endpoint Discovery Service.")
+                            lu.get_logger().warning("No client settings returned by"
+                                                    + "Model Endpoint Discovery Service.")
 
                         lu.get_logger().debug("RoutingClient: Successfully updated routing pools")
                     else:
@@ -96,7 +101,8 @@ class RoutingClient(ClientSettingsProvider):
 
                 if self.__last_refresh is None:
                     if retry_count < self.__MAX_RETRY:
-                        lu.get_logger().debug("RoutingClient: No pre-existing routing pools are available - force retry")
+                        lu.get_logger().debug("RoutingClient: No pre-existing routing pools are available"
+                                              + "- force retry")
                         response_status = -1
                     else:
                         response_status = 0  # Manually attribute no pool routes to 0 as a tell to stop retry
@@ -120,7 +126,7 @@ class RoutingClient(ClientSettingsProvider):
             elif response_classification == RoutingResponseType.SUCCESS:
                 return
 
-        lu.get_logger().info("RoutingClient: Exhausted all {} retries, using existing routing pool.".format(self.__MAX_RETRY))
+        lu.get_logger().info(f"RoutingClient: Exhausted all {self.__MAX_RETRY} retries, using existing routing pool.")
         self.__last_refresh = datetime.now(timezone.utc)
 
     def is_expired(self) -> bool:
@@ -157,7 +163,8 @@ class RoutingClient(ClientSettingsProvider):
         if len(self.__target_distribution_percentages) == 0:
             raise Exception("__target_distribution_percentages is empty.")
         else:
-            lu.get_logger().debug(f"RoutingClient: Original target distribution percentages: {self.__target_distribution_percentages}")
+            lu.get_logger().debug("RoutingClient: Original target distribution percentages: "
+                                  + f"{self.__target_distribution_percentages}")
 
         use_distribution = self.__target_distribution_percentages
         effective_distribution = self.__calc_effective_dist(self.__current_distribution_counts)
@@ -166,9 +173,12 @@ class RoutingClient(ClientSettingsProvider):
         # otherwise:
         if not all(value == 0 for value in self.__current_distribution_counts.values()):
             distribution_delta = {endpoint: self.__target_distribution_percentages[endpoint]
-                                  - (0 if endpoint not in effective_distribution else effective_distribution[endpoint]) for endpoint in self.__target_distribution_percentages}
+                                  - (0 if endpoint not in effective_distribution
+                                     else effective_distribution[endpoint])
+                                  for endpoint in self.__target_distribution_percentages}
 
-            # If the __target_distribution_percentages and effective_distribution are equivalent, use __target_distribution_percentages to distribute
+            # If the __target_distribution_percentages and effective_distribution are equivalent,
+            # use __target_distribution_percentages to distribute
             # otherwise:
             if not all(value == 0 for value in distribution_delta.values()):
                 max_key = None
@@ -180,16 +190,17 @@ class RoutingClient(ClientSettingsProvider):
                         max_key = key
                         max_value = value
 
-                lu.get_logger().debug(f"RoutingClient: Calculated largest distribution delta at max_key: {max_key}, max_value: {max_value}")
+                lu.get_logger().debug("RoutingClient: Calculated largest distribution delta at "
+                                      + f"max_key: {max_key}, max_value: {max_value}")
 
                 # Pick max_key to 100%
                 use_distribution = {max_key: 1}
         else:
             lu.get_logger().debug("RoutingClient: No active requests, using target distribution to pick endpoint")
 
-        lu.get_logger().info("RoutingClient: Estimated cost distribution: {}".format(self.__current_distribution_costs))
-        lu.get_logger().info("RoutingClient: Effective distribution: {}".format(effective_distribution))
-        lu.get_logger().info("RoutingClient: Using distribution: {}".format(use_distribution))
+        lu.get_logger().info(f"RoutingClient: Estimated cost distribution: {self.__current_distribution_costs}")
+        lu.get_logger().info(f"RoutingClient: Effective distribution: {effective_distribution}")
+        lu.get_logger().info(f"RoutingClient: Using distribution: {use_distribution}")
 
         endpoint_base_url = self.__pick_endpoint(distribution=use_distribution)
         return f"{endpoint_base_url}/{self.__request_path}"
@@ -236,7 +247,8 @@ class RoutingClient(ClientSettingsProvider):
             lu.get_logger().debug("RoutingClient: pool has been refreshed")
             future.set_result(True)
         except InvalidPoolRoutes as e:
-            lu.get_logger().error("RoutingClient: Fatal exception encountered when refreshing Routing Client pool routes: {}".format(e))
+            lu.get_logger().error("RoutingClient: Fatal exception encountered"
+                                  + "when refreshing Routing Client pool routes: {}".format(e))
             future.set_exception(e)
         except Exception as e:
             lu.get_logger().error("RoutingClient: Failed to refresh Routing Client pool routes: {}".format(e))

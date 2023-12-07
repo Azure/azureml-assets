@@ -58,7 +58,8 @@ def mock_encode_b64(monkeypatch):
 
         return MOCKED_IMAGE_ENCODING
 
-    monkeypatch.setattr("src.batch_score.common.request_modification.modifiers.vesta_image_encoder.ImageEncoder.encode_b64", _encode_b64)
+    monkeypatch.setattr("src.batch_score.common.request_modification.modifiers"
+                        ".vesta_image_encoder.ImageEncoder.encode_b64", _encode_b64)
     return state
 
 
@@ -70,7 +71,8 @@ def mock__b64_from_file(monkeypatch):
         requested_files.append(path)
         return MOCKED_BINARY_FROM_FILE
 
-    monkeypatch.setattr("src.batch_score.common.request_modification.modifiers.vesta_image_encoder.ImageEncoder._b64_from_file", __b64_from_file)
+    monkeypatch.setattr("src.batch_score.common.request_modification.modifiers"
+                        ".vesta_image_encoder.ImageEncoder._b64_from_file", __b64_from_file)
     return requested_files
 
 
@@ -82,5 +84,6 @@ def mock__b64_from_url(monkeypatch):
         requested_urls.append(url)
         return MOCKED_BINARY_FROM_URL
 
-    monkeypatch.setattr("src.batch_score.common.request_modification.modifiers.vesta_image_encoder.ImageEncoder._b64_from_url", __b64_from_url)
+    monkeypatch.setattr("src.batch_score.common.request_modification.modifiers"
+                        ".vesta_image_encoder.ImageEncoder._b64_from_url", __b64_from_url)
     return requested_urls
