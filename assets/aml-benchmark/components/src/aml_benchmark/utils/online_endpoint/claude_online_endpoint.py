@@ -8,6 +8,7 @@ import hashlib
 import hmac
 
 from datetime import datetime
+from urllib.parse import quote
 
 from aml_benchmark.utils.online_endpoint.online_endpoint import OnlineEndpoint
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
@@ -187,9 +188,10 @@ class ClaudeOnlineEndpoint(OnlineEndpoint):
         date_time, date = self._get_date_and_time()
         headers = self._get_canonical_headers(date_time)
         canonical_headers_str, signed_headers_str = self._get_canonical_header_string_and_signed_headers(headers)
+        canonic_uri = quote(f"/model/{self._model_identifier}/invoke")
         canonical_request_str = (
             "POST\n"
-            f"/model/{self._model_identifier}/invoke\n"
+            f"{canonic_uri}\n"
             "\n"   # No query string
             f"{canonical_headers_str}\n"
             f"{signed_headers_str}\n"

@@ -12,15 +12,14 @@ import sys
 import tempfile
 import pandas as pd
 
-from .test_utils import get_src_dir
 from pandas._testing.asserters import assert_frame_equal
-from aml_benchmark.batch_inference_preparer.endpoint_data_preparer import EndpointDataPreparer
+from .test_utils import get_src_dir
 
 
 sys.path.append(get_src_dir())
 print(get_src_dir())
 
-
+from aml_benchmark.batch_inference_preparer.endpoint_data_preparer import EndpointDataPreparer  # noqa: E402
 from aml_benchmark.batch_output_formatter import main  # noqa: E402
 from aml_benchmark.batch_output_formatter.result_converters import ResultConverters  # noqa: E402
 

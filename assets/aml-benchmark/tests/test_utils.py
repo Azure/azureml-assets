@@ -298,10 +298,10 @@ def assert_logged_params(job_name: str, exp_name: str, **expected_params: Any) -
 
 def _deploy_endpoint(ml_client, endpoint_name):
     endpoint = ManagedOnlineEndpoint(
-            name=endpoint_name,
-            description="this is a sample endpoint",
-            auth_mode="key"
-        )
+        name=endpoint_name,
+        description="this is a sample endpoint",
+        auth_mode="key"
+    )
     ml_client.online_endpoints.begin_create_or_update(endpoint).wait()
     endpoint = ml_client.online_endpoints.get(name=endpoint_name)
     return endpoint
@@ -370,6 +370,8 @@ def deploy_fake_test_endpoint_maybe(
                 print("deploying using {}".format(endpoint_name))
                 endpoint = _deploy_endpoint(ml_client, endpoint_name)
                 deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
+            else:
+                raise
     if endpoint is None:
         endpoint = ml_client.online_endpoints.get(name=endpoint_name)
     wps_connection = WorkspaceConnection(

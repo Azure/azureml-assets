@@ -3,9 +3,17 @@
 
 """Tests for OnlineEndpointModel."""
 
+import sys
 import unittest
 from ddt import ddt, data, unpack
-from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+
+from .test_utils import get_src_dir
+
+
+sys.path.append(get_src_dir())
+print(get_src_dir())
+
+from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel  # noqa: E402
 
 
 @ddt
@@ -13,7 +21,7 @@ class TestOnlineEndpointModel(unittest.TestCase):
     """Tests for OnlineEndpointModel."""
 
     @data(['https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-v2/invoke', '2'],
-          ['https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-v2.1/invoke', '2.1'])
+          ['https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-v2:1/invoke', '2:1'])
     @unpack
     def test_claudie_endpoint(self, path, expected_version):
         """Test that claudie endpoint has the correct name."""
