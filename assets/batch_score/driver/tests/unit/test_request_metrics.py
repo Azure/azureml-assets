@@ -11,6 +11,8 @@ from src.batch_score.common.parallel.adjustment import RequestMetrics
 
 
 class TestRequestMetrics:
+    """Request metrics unit tests."""
+
     def test_add_result_and_get_metrics(self):
         """Test add result and get metrics."""
         request_metrics = RequestMetrics()
