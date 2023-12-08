@@ -177,7 +177,7 @@ jobs:
       additional_headers: ${{parent.inputs.additional_headers}}
       ensure_ascii: ${{parent.inputs.ensure_ascii}}
       max_retry_time_interval: ${{parent.inputs.max_retry_time_interval}}
-      tally_failed_requests: true
+      tally_failed_requests: false
       tally_exclusions: none
       segment_large_requests: disabled
       segment_max_token_size: 600
