@@ -89,6 +89,36 @@ class ModelValidationOverallSummary:
         }
 
 
+class ModelProperties:
+    """Commonly defined model properties."""
+
+    EVALUATION_RECOMMENDED_SKU = "evaluation-recommended-sku"
+    EVALUATION_MIN_SKU_SPEC = "evaluation-min-sku-spec"
+    FINETUNE_RECOMMENDED_SKU = "finetune-recommended-sku"
+    FINETUNE_MIN_SKU_SPEC = "evaluation-min-sku-spec"
+    INFERENCE_RECOMMENDED_SKU = "inference-recommended-sku"
+    INFERENCE_MIN_SKU_SPEC = "evaluation-min-sku-spec"
+    FINETUNING_TASKS = "finetuning-tasks"
+
+
+class ModelTags:
+    """Commonly defined model tags."""
+
+    EVALUATION_COMPUTE_ALLOWLIST = "evaluation_compute_allow_list"
+    FINETUNE_COMPUTE_ALLOWLIST = "finetune_compute_allow_list"
+    FINETUNING_DEFAULTS = "model_specific_defaults"
+    INFERENCE_COMPUTE_ALLOWLIST = "inference_compute_allow_list"
+    INFERENCE_SUPPORTED_ENVS = "inference_supported_envs"
+
+    TASK = "task"
+    LICENSE = "license"
+    AUTHOR = "author"
+
+
+SUPPORTED_INFERNCE_SKU_FINE_NAME = "supported_inference_skus.json"
+SUPPORTED_INFERNCE_SKU_FILE_PATH = Path(__file__) / "config" / SUPPORTED_INFERNCE_SKU_FINE_NAME
+
+
 # Environment naming convention
 ENVIRONMENT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9.-]{0,254}$")
 COMMON_VERSION = r"[0-9]+(?:\.[0-9]+)?(?=-|$)"
@@ -430,7 +460,7 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
     return error_count
 
 
-def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_asset_config: assets.AssetConfig) -> int:
+def confirm_model_validation_results(latest_asset_config: assets.AssetConfig, validated_asset_config: assets.AssetConfig) -> int:
     """Check if current model asset and validated one matches and has a successful run."""
     try:
         latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
@@ -574,6 +604,126 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
         return 1
 
 
+def validate_model_spec(asset_config: assets.AssetConfig):
+    model = load_model(asset_config.spec_with_path)
+    if asset_config.type != assets.config.ModelType.MLFLOW:
+        logger.print(
+            f"Bypass validation for {asset_config.name} as model type is: {asset_config.type.value}"
+        )
+        return 0
+
+    # confirm must have tags
+    if not model.tags.get(ModelTags.TASK):
+        _log_error(asset_config.file_name_with_path, f"{ModelTags.TASK} missing")
+        return 1
+    
+    if not model.tags.get(ModelTags.LICENSE):
+        _log_error(asset_config.file_name_with_path, f"{ModelTags.LICENSE} missing")
+        return 1
+
+    if not model.tags.get(ModelTags.INFERENCE_COMPUTE_ALLOWLIST):
+        _log_error(
+            asset_config.file_name_with_path, 
+            (
+                f"{ModelTags.INFERENCE_COMPUTE_ALLOWLIST} missing. "
+                "Inference is the min requirement for model in system registry."
+            )
+        )
+        return 1
+
+    supports_eval = False
+    supports_ft = False
+
+    if not model.tags.get(ModelTags.EVALUATION_COMPUTE_ALLOWLIST):
+        supports_eval = True
+
+    if not model.tags.get(ModelTags.FINETUNE_COMPUTE_ALLOWLIST):
+        supports_ft = True
+
+    # check properties
+
+    # make sure min sku spec and recommended sku exists for inference
+    if not model.properties.get(ModelProperties.INFERENCE_MIN_SKU_SPEC):
+        _log_error(
+            asset_config.file_name_with_path,
+            f"{ModelProperties.INFERENCE_MIN_SKU_SPEC} is missing for inference"
+        )
+        return 1
+
+    if not model.properties.get(ModelProperties.INFERENCE_RECOMMENDED_SKU):
+        _log_error(
+            asset_config.file_name_with_path,
+            f"{ModelProperties.INFERENCE_RECOMMENDED_SKU} is missing for inference"
+        )
+        return 1
+
+    if (model.properties[ModelProperties.INFERENCE_RECOMMENDED_SKU].split(",") 
+            != model.tags[ModelTags.INFERENCE_COMPUTE_ALLOWLIST]):
+        _log_error(
+            asset_config.file_name_with_path,
+            f"{ModelProperties.INFERENCE_RECOMMENDED_SKU} {ModelTags.INFERENCE_COMPUTE_ALLOWLIST} does not match"
+        )
+        return 1
+
+    # check valid computes for inference
+    with open(SUPPORTED_INFERNCE_SKU_FILE_PATH) as f:
+        supported_skus = set(json.load(f))
+        unsupported_skus_in_spec = [
+            sku for sku in model.tags[ModelTags.INFERENCE_COMPUTE_ALLOWLIST] if sku not in supported_skus
+        ]
+        _log_error(asset_config.file_name_with_path, f"Unsupported inference SKU in spec: {unsupported_skus_in_spec}")
+
+    if supports_eval:
+        # make sure min sku spec and recommended sku exists
+        if not model.properties.get(ModelProperties.EVALUATION_MIN_SKU_SPEC):
+            _log_error(
+                asset_config.file_name_with_path,
+                f"{ModelProperties.EVALUATION_MIN_SKU_SPEC} is missing for supported scenario"
+            )
+            return 1
+
+        if not model.properties.get(ModelProperties.EVALUATION_RECOMMENDED_SKU):
+            _log_error(
+                asset_config.file_name_with_path,
+                f"{ModelProperties.EVALUATION_RECOMMENDED_SKU} is missing for supported scenario"
+            )
+            return 1
+
+        recommended_sku = model.properties[ModelProperties.EVALUATION_RECOMMENDED_SKU]
+        if recommended_sku.split(",") != model.tags[ModelTags.EVALUATION_COMPUTE_ALLOWLIST]:
+            _log_error(
+                asset_config.file_name_with_path,
+                f"{ModelProperties.EVALUATION_RECOMMENDED_SKU} {ModelTags.EVALUATION_COMPUTE_ALLOWLIST} does not match"
+            )
+            return 1
+
+    if supports_ft:
+        # make sure min sku spec and recommended sku exists
+        if not model.properties.get(ModelProperties.FINETUNE_MIN_SKU_SPEC):
+            _log_error(
+                asset_config.file_name_with_path,
+                f"{ModelProperties.FINETUNE_MIN_SKU_SPEC} is missing for supported scenario"
+            )
+            return 1
+
+        if not model.properties.get(ModelProperties.FINETUNE_RECOMMENDED_SKU):
+            _log_error(
+                asset_config.file_name_with_path,
+                f"{ModelProperties.EVALUATION_RECOMMENDED_SKU} is missing for supported scenario"
+            )
+            return 1
+
+        recommended_sku = model.properties[ModelProperties.FINETUNE_RECOMMENDED_SKU].split(",")
+        if recommended_sku != model.tags[ModelTags.FINETUNE_COMPUTE_ALLOWLIST]:
+            _log_error(
+                asset_config.file_name_with_path,
+                f"{ModelProperties.FINETUNE_RECOMMENDED_SKU} {ModelTags.FINETUNE_COMPUTE_ALLOWLIST} does not match"
+            )
+            return 1
+
+    return 0
+
+
 def get_validated_models_assets_map(model_validation_results_dir: str):
     """Return model assets map."""
     try:
@@ -653,7 +803,11 @@ def validate_assets(input_dirs: List[Path],
 
         # validated_model_map would be ampty for non-drop scenario
         if validated_model_map and asset_config.type == assets.AssetType.MODEL:
-            error_count += validate_model_assets(asset_config, validated_model_map.get(asset_config.name, None))
+            error_count += confirm_model_validation_results(asset_config, validated_model_map.get(asset_config.name, None))
+
+        if asset_config.type == assets.AssetType.MODEL:
+            validate_model_spec(asset_config)
+            pass
 
         # Populate dictionary of image names to asset config paths
         environment_config = None
