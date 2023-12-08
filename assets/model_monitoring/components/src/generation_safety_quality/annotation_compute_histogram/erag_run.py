@@ -484,52 +484,46 @@ def _query_relevance_score(
 
     # Copy request_data to avoid modifying the original dict.
     prompts = [RELEVANCE_ANNOTATION_TEMPLATE.replace("{input_samples", f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1]}, indent=4)}") for turn in turns]
-    msgs = [{"role": "user", "content": prompt} for prompt in prompts]
-    print("prompts:", prompts)
-    request_data = {
-        "model": model,
-        "temperature": temperature,
-        "top_p": top_p,
-        "n": num_samples,
-        "max_tokens": max_tokens,
-        "frequency_penalty": frequency_penalty,
-        "presence_penalty": presence_penalty,
-        "messages": msgs
-    }
+    # print("prompts:", prompts)
+    ratings = []
+    for prompt in prompts:
+        request_data = {
+            "model": model,
+            "temperature": temperature,
+            "top_p": top_p,
+            "n": num_samples,
+            "max_tokens": max_tokens,
+            "frequency_penalty": frequency_penalty,
+            "presence_penalty": presence_penalty,
+            "messages": [{"role": "user", "content": prompt}]
+        }
 
-    if stop:
-        request_data["stop"] = stop
+        if stop:
+            request_data["stop"] = stop
 
-    response = {}
-    try:
-        response, time_taken = _request_api(
-            session=session,
-            endpoint_url=endpoint_url,
-            token_manager=token_manager,
-            **request_data,
-        )
+        response = {}
+        try:
+            response, time_taken = _request_api(
+                session=session,
+                endpoint_url=endpoint_url,
+                token_manager=token_manager,
+                **request_data,
+            )
 
-        # Append time taken to the line
-        response["response_time_sec"] = time_taken
-        print("===response===")
-        print(response)
+            # Append time taken to the line
+            response["response_time_sec"] = time_taken
+            print(response["samples"][0])
+            rating = json.loads(response["samples"][0])["rating"]
+            # print("===response===")
+            # print("rating=", rating, type(rating))
+            ratings.append(rating)
 
-    except Exception as e:  # noqa: B902
-        response["finish_reason"] = ["error"]
-        response["error"] = [str(e)]
-        raise e
-
-        # error_count += 1
-        # error_rate = error_count / request_count
-
-        # if we count too many errors, we stop and raise an exception
-        # if error_count > IGNORE_FAILED_REQUESTS_COUNT or (
-        #     request_count >= MIN_REQUEST_COUNT
-        #     and error_rate >= request_error_rate_threshold
-        # ):
-        #     raise e
-
-    # job.response_data = response
+        except Exception as e:  # noqa: B902
+            response["finish_reason"] = ["error"]
+            response["error"] = [str(e)]
+            raise e
+    
+    return ratings
 
 
 def _check_and_format_azure_endpoint_url(
@@ -641,26 +635,27 @@ def run():
     )
 
     with httpClient.client as session:
-        _query_relevance_score(
+        ratings = _query_relevance_score(
             [
-                # (
-                #     "What's the highest mountain in the world?",
-                #     "Mount Everest is the highest mountain in the world. It is located between Nepal and Tibet, "
-                #     "an autonomous region of China. With an elevation of 29,032 feet (8,849 meters), it is considered "
-                #     "the tallest point on Earth"
-                # ),
+                (
+                    "What's the highest mountain in the world?",
+                    "Mount Everest is the highest mountain in the world. It is located between Nepal and Tibet, "
+                    "an autonomous region of China. With an elevation of 29,032 feet (8,849 meters), it is considered "
+                    "the tallest point on Earth"
+                ),
                 (
                     "Should I upgrade to windows11?",
                     "In general, a new prod is better than the old one."
                 ),
-                # (
-                #     "should I upgrade to windows11?",
-                #     "Yes, windows11 has many powerful new features than its previous version, like Copilot, the most powerful LLM, it derserves upgrading."
-                # )
+                (
+                    "should I upgrade to windows 11?",
+                    "Whether to upgrade to Windows 11 depends on several factors. First, your hardware compatibility, as Windows 11 has specific system requirements. Second, your essential applications are compatible with Windows 11. Third, consider if the new features and interface of Windows 11 appeal to you. Lastly, support for Windows 10 will continue until October 14, 2025."
+                )
             ],
             session, endpoint_url, token_manager,
             **request_args,
         )
+    print(ratings)
     # calculate_flow_input_output_relevance_score()
     # make two cohorts by good and bad relevance
     # get question, indexed doc relevance from node_run_info.lookup.output[0/1/2].score for the 2 cohorts
