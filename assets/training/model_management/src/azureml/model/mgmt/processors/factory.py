@@ -181,6 +181,7 @@ class TextToImageMLflowConvertorFactory(MLflowConvertorFactoryInterface):
         misc = translate_params["misc"]
         kwargs = {}
         model_family = None
+
         def get_text_to_image_model_family():
             if not misc:
                 return None
@@ -193,7 +194,7 @@ class TextToImageMLflowConvertorFactory(MLflowConvertorFactoryInterface):
             model_family = get_text_to_image_model_family()
             if not model_family:
                 raise Exception("Unsupported model family for text to image model")
-            kwargs.update({"model_family" : model_family})
+            kwargs.update({"model_family": model_family})
         try:
             converter = TextToImageMLflowConvertorFactory.STABLE_DIFFUSION_TASK_MAP[translate_params["task"]]
             return converter(

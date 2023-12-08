@@ -53,4 +53,3 @@ class SupportedTasks(_CustomEnum):
     IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
     IMAGE_OBJECT_DETECTION = "image-object-detection"
     IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
-
