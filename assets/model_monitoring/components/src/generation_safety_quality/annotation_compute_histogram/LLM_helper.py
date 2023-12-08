@@ -1,5 +1,4 @@
 import os
-import argparse
 import re
 import json
 import time
@@ -402,10 +401,10 @@ class _HTTPClientWithRetry:
 
 
 def _request_api(
-    session,
-    endpoint_url: str,
-    token_manager: _APITokenManager,
-    **request_params):
+        session,
+        endpoint_url: str,
+        token_manager: _APITokenManager,
+        **request_params):
     """Make REST call to API and return parsed result."""
     token = token_manager.get_token()
 
@@ -482,13 +481,13 @@ def _check_and_format_azure_endpoint_url(url_pattern, domain_pattern_re, domain,
 
 
 def query_relevance_score(
-    turns: List[Tuple[str, str]],
-    session: requests.Session,
-    endpoint_url: str,
-    token_manager: _APITokenManager,
-    # request_error_rate_threshold: float,
-    model: str, temperature: float, top_p: float, num_samples: int,
-    frequency_penalty: float, presence_penalty: float, max_tokens=3000, stop: str = None) -> List[int]:
+        turns: List[Tuple[str, str]],
+        session: requests.Session,
+        endpoint_url: str,
+        token_manager: _APITokenManager,
+        # request_error_rate_threshold: float,
+        model: str, temperature: float, top_p: float, num_samples: int,
+        frequency_penalty: float, presence_penalty: float, max_tokens=3000, stop: str = None) -> List[int]:
     # if we count too many errors, we stop and raise an exception
     # error_count = 0
     # request_count = 0
