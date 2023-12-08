@@ -147,7 +147,7 @@ retry_settings:
 
 input_data: ${{inputs.data_input_table}}
 
-code: ../../../driver/src
+code: ../../../src
 
 task:
   type: run_function
