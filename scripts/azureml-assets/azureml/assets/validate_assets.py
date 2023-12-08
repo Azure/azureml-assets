@@ -608,6 +608,7 @@ def confirm_model_validation_results(
 
 
 def validate_model_spec(asset_config: assets.AssetConfig):
+    """Validate model spec."""
     model = load_model(asset_config.spec_with_path)
     if asset_config.type != assets.config.ModelType.MLFLOW:
         logger.print(
@@ -811,7 +812,6 @@ def validate_assets(input_dirs: List[Path],
 
         if asset_config.type == assets.AssetType.MODEL:
             validate_model_spec(asset_config)
-            pass
 
         # Populate dictionary of image names to asset config paths
         environment_config = None
