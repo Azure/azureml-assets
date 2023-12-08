@@ -4,7 +4,6 @@
 """This file contains the core logic for data drift evaluate metrics threshold component."""
 
 from shared_utilities.constants import (
-    TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST_METRIC_NAME,
     AGGREGATED_COHERENCE_PASS_RATE_METRIC_NAME,
     AGGREGATED_GROUNDEDNESS_PASS_RATE_METRIC_NAME,
     AGGREGATED_FLUENCY_PASS_RATE_METRIC_NAME,
@@ -22,15 +21,16 @@ import pyspark
 import pyspark.sql.functions as F
 
 
-Metric_Value_Should_Greater_Than_Threshold = [  TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST_METRIC_NAME,
-                                                PEARSONS_CHI_SQUARED_TEST_METRIC_NAME,
-                                                NORMALIZED_DISCOUNTED_CUMULATIVE_GAIN_METRIC_NAME,
-                                                AGGREGATED_COHERENCE_PASS_RATE_METRIC_NAME,
-                                                AGGREGATED_GROUNDEDNESS_PASS_RATE_METRIC_NAME,
-                                                AGGREGATED_FLUENCY_PASS_RATE_METRIC_NAME,
-                                                AGGREGATED_SIMILARITY_PASS_RATE_METRIC_NAME,
-                                                AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME
-                                                ]
+Metric_Value_Should_Greater_Than_Threshold = [TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST_METRIC_NAME,
+                                              PEARSONS_CHI_SQUARED_TEST_METRIC_NAME,
+                                              NORMALIZED_DISCOUNTED_CUMULATIVE_GAIN_METRIC_NAME,
+                                              AGGREGATED_COHERENCE_PASS_RATE_METRIC_NAME,
+                                              AGGREGATED_GROUNDEDNESS_PASS_RATE_METRIC_NAME,
+                                              AGGREGATED_FLUENCY_PASS_RATE_METRIC_NAME,
+                                              AGGREGATED_SIMILARITY_PASS_RATE_METRIC_NAME,
+                                              AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME
+                                            ]
+
 
 def _generate_error_message(df, signal_name: str):
     """Generate the error message for the given thresholds."""
@@ -71,21 +71,21 @@ def evaluate_metrics_threshold(
     return send_email_for_breached(metrics_threshold_breached_df, notification_emails, signal_name)
 
 
-def calculate_metrics_breach( metrics_threshold_df: pyspark.sql.DataFrame):
-     metrics_threshold_breached_df = metrics_threshold_df.where(
+def calculate_metrics_breach(metrics_threshold_df: pyspark.sql.DataFrame):
+    metrics_threshold_breached_df = metrics_threshold_df.where(
         (F.col(SIGNAL_METRICS_METRIC_NAME).isin(Metric_Value_Should_Greater_Than_Threshold) &
          (F.col(SIGNAL_METRICS_METRIC_VALUE) < F.col(SIGNAL_METRICS_THRESHOLD_VALUE))) |
         (~F.col(SIGNAL_METRICS_METRIC_NAME).isin(Metric_Value_Should_Greater_Than_Threshold) &
-        (F.col(SIGNAL_METRICS_METRIC_VALUE) > F.col(SIGNAL_METRICS_THRESHOLD_VALUE)))
+         (F.col(SIGNAL_METRICS_METRIC_VALUE) > F.col(SIGNAL_METRICS_THRESHOLD_VALUE)))
         )
-     return metrics_threshold_breached_df
+    return metrics_threshold_breached_df
 
 
 def send_email_for_breached(metrics_threshold_breached_df: pyspark.sql.DataFrame,
                             signal_name: str,
                             notification_emails: str):
     if metrics_threshold_breached_df.count() > 0:
-        error_message = _generate_error_message(metrics_to_evaluate_df, signal_name)
+        error_message = _generate_error_message(metrics_threshold_breached_df, signal_name)
         post_warning_event(error_message)
         if notification_emails is not None and notification_emails != "":
             post_email_event(signal_name, notification_emails, error_message)

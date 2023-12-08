@@ -24,7 +24,6 @@ from src.shared_utilities.constants import (
     TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST_METRIC_NAME,
 )
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
-import pyspark
 import pytest
 
 
@@ -39,7 +38,7 @@ metrics_breached = [
             (AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME, 3.0, 5.0),
             (JENSEN_SHANNON_DISTANCE_METRIC_NAME, 0.8, 0.5),
             (POPULATION_STABILITY_INDEX_METRIC_NAME, 0.8, 0.5),
-            (NORMALIZED_WASSERSTEN_DISTANCE_METRIC_NAME, 0.8, 0.5),                                                                       
+            (NORMALIZED_WASSERSTEN_DISTANCE_METRIC_NAME, 0.8, 0.5),
         ]
 columns = [SIGNAL_METRICS_METRIC_NAME, SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_THRESHOLD_VALUE]
 metrics_breached_df = create_pyspark_dataframe(metrics_breached, columns)
@@ -55,7 +54,7 @@ metrics_not_breached = [
             (AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME, 5.0, 3.0),
             (JENSEN_SHANNON_DISTANCE_METRIC_NAME, 0.4, 0.5),
             (POPULATION_STABILITY_INDEX_METRIC_NAME, 0.4, 0.5),
-            (NORMALIZED_WASSERSTEN_DISTANCE_METRIC_NAME, 0.4, 0.5),                                                                       
+            (NORMALIZED_WASSERSTEN_DISTANCE_METRIC_NAME, 0.4, 0.5),
         ]
 columns = [SIGNAL_METRICS_METRIC_NAME, SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_THRESHOLD_VALUE]
 metrics_not_breached_df = create_pyspark_dataframe(metrics_not_breached, columns)
@@ -63,7 +62,8 @@ metrics_not_breached_df = create_pyspark_dataframe(metrics_not_breached, columns
 spark = SparkSession.builder.getOrCreate()
 emptyRDD = spark.sparkContext.emptyRDD()
 
-@pytest.mark.local
+
+@pytest.mark.unit
 class TestEvaluateMetricsThreshold:
     """Test class for evaluate metrics threshold component."""
 
