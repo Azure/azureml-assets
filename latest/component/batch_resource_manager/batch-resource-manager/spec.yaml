@@ -4,7 +4,7 @@ is_deterministic: false
 name: batch_resource_manager
 display_name: Batch Inference Resource Manager
 description: Resource Manager for batch inference.
-version: 0.0.1
+version: 0.0.2
 
 inputs:
   wait_input:

@@ -14,7 +14,8 @@ from ..logging import get_logger
 from ..aml_run_utils import (
     get_dependent_run,
     get_run_name,
-    get_current_step_raw_input_value
+    get_current_step_raw_input_value,
+    get_root_run
 )
 
 
@@ -155,8 +156,9 @@ class OnlineEndpointModel:
     def _get_model_registered_run_id(finetuned_run: Run) -> str:
         """Get the run id of the step that registered the model."""
         step_runs = list(finetuned_run.get_children())[0].get_children()
+        root_run_id = finetuned_run.properties.get('azureml.rootpipelinerunid',  get_root_run().id)
         for s in step_runs:
             if get_run_name(s) == 'openai_completions_finetune':
-                if s.properties['azureml.isreused'].lower() == 'true':
-                    return s.properties['azureml.rootpipelinerunid']
-        return finetuned_run.id
+                if s.properties.get('azureml.isreused', "").lower() == 'true':
+                    return s.properties.get('azureml.rootpipelinerunid', root_run_id)
+        return root_run_id

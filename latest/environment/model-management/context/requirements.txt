@@ -10,4 +10,4 @@ wget==3.2
 applicationinsights==0.11.10
 azureml-automl-core==1.54.0
 azureml-telemetry==1.54.0
-azureml-automl-dnn-vision==1.54.0
+azureml-automl-dnn-vision==1.54.0.post1
