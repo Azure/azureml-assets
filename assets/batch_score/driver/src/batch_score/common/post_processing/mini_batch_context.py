@@ -3,6 +3,7 @@
 
 """Mini batch context."""
 
+
 class MiniBatchContext(object):
     """Mini batch context."""
 

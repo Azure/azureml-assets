@@ -5,6 +5,7 @@
 
 from .dv3_estimator import DV3Estimator
 
+
 class EmbeddingsEstimator(DV3Estimator):
     """Estimator for the /embeddings API."""
 

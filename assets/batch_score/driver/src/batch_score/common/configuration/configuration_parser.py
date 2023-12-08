@@ -10,6 +10,7 @@ from .. import constants
 from .configuration import Configuration
 from .command_line_argument_specification import COMMAND_LINE_ARGUMENT_SPECIFICATION
 
+
 class ConfigurationParser:
     """Configuration parser."""
 

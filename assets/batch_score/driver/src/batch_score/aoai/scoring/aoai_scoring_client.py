@@ -37,6 +37,7 @@ from ...common.telemetry.scoring_logging import (
     ScoreSucceedLog,
 )
 
+
 class UnrecognizedScoringApiException(Exception):
     """Unrecognized scoring api exception."""
 

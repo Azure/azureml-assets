@@ -3,6 +3,7 @@
 
 """This file contains a mock PRS mini batch context class."""
 
+
 class TestMiniBatchContext:
     """Mock PRS mini batch context class."""
     __test__ = False

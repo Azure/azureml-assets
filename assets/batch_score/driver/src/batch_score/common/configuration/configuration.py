@@ -118,7 +118,7 @@ class Configuration(Namespace):
     def is_sahara(self, routing_client: RoutingClient) -> bool:
         """Check if the target endpoint is for sahara models."""
         return routing_client and routing_client.target_batch_pool and\
-               routing_client.target_batch_pool.lower() == "sahara-global"
+            routing_client.target_batch_pool.lower() == "sahara-global"
 
     def is_vesta(self) -> bool:
         """Check if the target endpoint is for vesta models."""
@@ -136,7 +136,7 @@ class Configuration(Namespace):
     def is_aoai_endpoint(self) -> bool:
         """Check if the target endpoint is for Azure OpenAI models."""
         return self.scoring_url and\
-               any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
+            any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
 
     def is_serverless_endpoint(self) -> bool:
         """Check if the target endpoint is MIR serverless."""
