@@ -1,4 +1,4 @@
-name: batch-score-env
+name: batch-score
 channels:
   - defaults
 dependencies:

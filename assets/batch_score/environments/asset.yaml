@@ -1,4 +1,4 @@
-name: batch-score-env
+name: batch-score
 version: 0.0.1
 type: environment
 spec: spec.yaml

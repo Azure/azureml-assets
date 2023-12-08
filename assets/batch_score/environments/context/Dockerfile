@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04
 
 WORKDIR /
 
-ENV CONDA_PREFIX=/azureml-envs/batch-score-env
+ENV CONDA_PREFIX=/azureml-envs/batch-score
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
