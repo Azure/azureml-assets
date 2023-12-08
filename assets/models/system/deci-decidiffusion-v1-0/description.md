@@ -25,7 +25,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 {
    "input_data": {
         "columns": ["prompt"],
-        "data": ["a photograph of an astronaut riding a horse"],
+        "data": ["A photo of an astronaut riding a horse on Mars"],
         "index": [0]
     }
 }
@@ -36,7 +36,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 ```json
 [
     {
-        "prompt": "a photograph of an astronaut riding a horse",
+        "prompt": "A photo of an astronaut riding a horse on Mars",
         "generated_image": "image",
         "nsfw_content_detected": null
     }
@@ -46,7 +46,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 > Note:
 >
 > - "image" string is in base64 format.
-> - The `stabilityai-stable-diffusion-2-1` model doesn't check for the NSFW content in generated image. We highly recommend to use the model with <a href="https://learn.microsoft.com/en-us/azure/ai-services/content-safety/studio-quickstart" target="_blank">Azure AI Content Safety (AACS)</a>. Please refer sample <a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image" target="_blank">online</a>  and <a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" target="_blank">batch</a> notebooks for AACS integrated deployments.
+> - The `deci-decidiffusion-v1-0` model checks for the NSFW content in generated image. We highly recommend to use the model with <a href="https://learn.microsoft.com/en-us/azure/ai-services/content-safety/studio-quickstart" target="_blank">Azure AI Content Safety (AACS)</a>. Please refer sample <a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image" target="_blank">online</a>  and <a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" target="_blank">batch</a> notebooks for AACS integrated deployments.
 
 #### Model inference: visualization for the prompt - "a photograph of an astronaut riding a horse"
 
