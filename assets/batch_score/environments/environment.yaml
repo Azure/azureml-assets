@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/batch-score
+  name: azureml/curated/batch-score-llm
   os: linux
   context:
     dir: context

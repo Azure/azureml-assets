@@ -1,4 +1,4 @@
-name: batch-score
+name: batch-score-llm
 channels:
   - defaults
 dependencies:
