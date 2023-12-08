@@ -127,7 +127,6 @@ class ResultConverters:
             request_payload = self._get_request(result)
             payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
             ground_truth = self._lookup_dict.get(payload_hash, '')
-            print("ground_truth": ground_truth)
             if isinstance(ground_truth, dict):
                 ground_truth[self.ground_truth_column_name] = ground_truth.pop('_ground_truth_column')
                 return ground_truth

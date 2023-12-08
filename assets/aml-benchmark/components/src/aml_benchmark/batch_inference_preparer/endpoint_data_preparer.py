@@ -17,8 +17,8 @@ class EndpointDataPreparer:
     PAYLOAD_HASH = "payload_id"
     PAYLOAD_GROUNDTRUTH = "label"
 
-    def __init__(self, model_type: str, 
-                 batch_input_pattern: str, 
+    def __init__(self, model_type: str,
+                 batch_input_pattern: str,
                  label_key: str = None,
                  additional_columns: str = None):
         """Init for endpoint data preparer."""
