@@ -460,7 +460,10 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
     return error_count
 
 
-def confirm_model_validation_results(latest_asset_config: assets.AssetConfig, validated_asset_config: assets.AssetConfig) -> int:
+def confirm_model_validation_results(
+    latest_asset_config: assets.AssetConfig,
+    validated_asset_config: assets.AssetConfig
+) -> int:
     """Check if current model asset and validated one matches and has a successful run."""
     try:
         latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
@@ -616,14 +619,14 @@ def validate_model_spec(asset_config: assets.AssetConfig):
     if not model.tags.get(ModelTags.TASK):
         _log_error(asset_config.file_name_with_path, f"{ModelTags.TASK} missing")
         return 1
-    
+
     if not model.tags.get(ModelTags.LICENSE):
         _log_error(asset_config.file_name_with_path, f"{ModelTags.LICENSE} missing")
         return 1
 
     if not model.tags.get(ModelTags.INFERENCE_COMPUTE_ALLOWLIST):
         _log_error(
-            asset_config.file_name_with_path, 
+            asset_config.file_name_with_path,
             (
                 f"{ModelTags.INFERENCE_COMPUTE_ALLOWLIST} missing. "
                 "Inference is the min requirement for model in system registry."
@@ -657,7 +660,7 @@ def validate_model_spec(asset_config: assets.AssetConfig):
         )
         return 1
 
-    if (model.properties[ModelProperties.INFERENCE_RECOMMENDED_SKU].split(",") 
+    if (model.properties[ModelProperties.INFERENCE_RECOMMENDED_SKU].split(",")
             != model.tags[ModelTags.INFERENCE_COMPUTE_ALLOWLIST]):
         _log_error(
             asset_config.file_name_with_path,
@@ -803,7 +806,8 @@ def validate_assets(input_dirs: List[Path],
 
         # validated_model_map would be ampty for non-drop scenario
         if validated_model_map and asset_config.type == assets.AssetType.MODEL:
-            error_count += confirm_model_validation_results(asset_config, validated_model_map.get(asset_config.name, None))
+            error_count += confirm_model_validation_results(
+                asset_config, validated_model_map.get(asset_config.name, None))
 
         if asset_config.type == assets.AssetType.MODEL:
             validate_model_spec(asset_config)
