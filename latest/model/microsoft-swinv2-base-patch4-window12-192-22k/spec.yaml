@@ -29,7 +29,7 @@ tags:
     apply_deepspeed: 'true'
     apply_ort: 'true'
   task: image-classification
-version: 12
+version: 13
 description: |-
   The Swin Transformer is a type of Vision Transformer used in both image classification and dense recognition tasks. It builds hierarchical feature maps by merging image patches in deeper layers and has linear computation complexity to input image size due to computation of self-attention only within each local window. Previous vision Transformers produce feature maps of a single low resolution and have quadratic computation complexity to input image size due to the computation of self-attention globally. Swin Transformer v2 has three main improvements which are a residual-post-norm method, a log-spaced continuous position bias method, and a self-supervised pre-training method called SimMIM. These improvements combined with cosine attention help improve training stability and reduce the need for vast labeled images.
 

@@ -29,7 +29,7 @@ tags:
     apply_deepspeed: 'true'
     apply_ort: 'true'
   task: image-classification
-version: 10
+version: 11
 description: |
   The Vision Transformer (ViT) is a BERT-like transformer encoder model which is pretrained on a large collection of images in a supervised fashion, such as ImageNet-21k. The ImageNet dataset comprises 1 million images and 1000 classes at a resolution of 224x224, which the model was fine-tuned on. The model assumes that the image is presented as a sequence of fixed-size patches, which are linearly embedded, and that a [CLS] token is added to the beginning of the sequence for classification tasks. The model also requires absolute position embeddings to be added before feeding the sequence to the layers of the Transformer encoder. By pretraining the model in this way, it is possible to create an inner representation of images that can be used to extract features and classifiers useful for downstream tasks. For instance, if a dataset of labeled images is available, a linear layer can be placed on top of the pre-trained encoder, with the last hidden state of the [CLS] token serving as a representation of the entire image.
 

@@ -29,7 +29,7 @@ tags:
     apply_deepspeed: 'true'
     apply_ort: 'true'
   task: image-classification
-version: 11
+version: 12
 description: |
   The BEiT is a vision transformer that is similar to the BERT model, but is also capable of image analysis. The model is pre-trained on a large collection of images, and uses patches to analyze images. It uses relative position embeddings and mean-pooling to classify images, and can be used to extract image features for downstream tasks by placing a linear layer on top of the pre-trained encoder. You can place a linear layer on top of the [CLS] token or mean-pool the final hidden states of the patch embeddings, depending on the specifics of your task.
 
