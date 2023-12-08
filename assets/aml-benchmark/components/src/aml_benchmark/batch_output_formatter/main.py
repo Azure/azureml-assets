@@ -92,6 +92,7 @@ def main(
     if ground_truth_input:
         input_file_paths = resolve_io_path(ground_truth_input)
         ground_truth_df = pd.DataFrame(read_jsonl_files(input_file_paths))
+        print(ground_truth_df)
     else:
         ground_truth_df = None
     online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
@@ -114,11 +115,13 @@ def main(
             if not is_performance_test:
                 ground_truth.append(rc.convert_result_ground_truth(row))
             else:
+                print("is performance test")
                 ground_truth.append({"ground_truth": ''})
     logger.info("Output data now.")
     new_df = pd.DataFrame(new_df)
     perf_df = pd.DataFrame(perf_df)
     ground_truth = pd.DataFrame(ground_truth)
+    print(ground_truth)
     new_df.to_json(prediction_data, orient="records", lines=True)
     perf_df.to_json(perf_data, orient="records", lines=True)
     ground_truth.to_json(predict_ground_truth_data, orient="records", lines=True)

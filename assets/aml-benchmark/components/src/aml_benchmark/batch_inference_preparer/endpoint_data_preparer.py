@@ -17,11 +17,15 @@ class EndpointDataPreparer:
     PAYLOAD_HASH = "payload_id"
     PAYLOAD_GROUNDTRUTH = "label"
 
-    def __init__(self, model_type: str, batch_input_pattern: str, label_key: str = None):
+    def __init__(self, model_type: str, 
+                 batch_input_pattern: str, 
+                 label_key: str = None,
+                 additional_columns: str = None):
         """Init for endpoint data preparer."""
         self._model = OnlineEndpointModel(model_type=model_type, model=None, model_version=None)
         self._batch_input_pattern = batch_input_pattern
         self._label_key = label_key
+        self._additional_columns = additional_columns
 
     def convert_input_dict(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Convert input dict to the corresponding payload."""
@@ -32,10 +36,14 @@ class EndpointDataPreparer:
     ) -> Dict[str, Any]:
         """Convert the ground truth to the corresponding payload with id."""
         row_id = EndpointUtilities.hash_payload_prompt(payload, self._model)
-        return {
+        result = {
             EndpointDataPreparer.PAYLOAD_HASH: row_id,
             EndpointDataPreparer.PAYLOAD_GROUNDTRUTH: origin_json_dict.get(self._label_key, ""),
         }
+        if self._additional_columns is not None:
+            for column in self._additional_columns.split(","):
+                result[column] = origin_json_dict.get(column, "")
+        return result
 
     def validate_output(self, output_payload_dict: Dict[str, Any]):
         """Validate the output payload."""

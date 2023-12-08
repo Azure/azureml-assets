@@ -111,6 +111,7 @@ class TestInferencePostprocessorComponent:
         prediction_column_name: str,
         ground_truth_dataset: str,
         ground_truth_column_name: str,
+        additional_columns: str,
         separator: str,
         regex_expr: str,
         remove_prefixes: str,
@@ -168,6 +169,7 @@ class TestInferencePostprocessorComponent:
             prediction_column_name,
             ground_truth_dataset,
             ground_truth_column_name,
+            additional_columns,
             separator,
             regex_expr,
             remove_prefixes,
@@ -201,6 +203,7 @@ class TestInferencePostprocessorComponent:
             if ground_truth_dataset
             else None,
             ground_truth_column_name=ground_truth_column_name,
+            additional_columns=additional_columns,
             separator=separator,
             regex_expr=regex_expr,
             remove_prefixes=remove_prefixes,
@@ -218,6 +221,7 @@ class TestInferencePostprocessorComponent:
         prediction_column_name: str,
         ground_truth_dataset: str,
         ground_truth_column_name: str,
+        additional_columns: str,
         separator: str,
         regex_expr: str,
         remove_prefixes: str,
@@ -244,6 +248,7 @@ class TestInferencePostprocessorComponent:
         else:
             pipeline_job.inputs.ground_truth_dataset = None
         pipeline_job.inputs.ground_truth_column_name = ground_truth_column_name if ground_truth_column_name else None
+        pipeline_job.inputs.additional_columns = additional_columns if additional_columns else None
         pipeline_job.inputs.separator = separator if separator else None
         pipeline_job.inputs.regex_expr = regex_expr if regex_expr else None
         pipeline_job.inputs.remove_prefixes = remove_prefixes if remove_prefixes else None
@@ -345,6 +350,7 @@ class TestInferencePostprocessorScript:
         prediction_column_name: str,
         ground_truth_dataset: str,
         ground_truth_column_name: str,
+        additional_columns: str,
         separator: str,
         regex_expr: str,
         remove_prefixes: str,
@@ -408,6 +414,8 @@ class TestInferencePostprocessorScript:
             argss.extend(["--ground_truth_dataset", ground_truth_dataset])
         if ground_truth_column_name is not None:
             argss.extend(["--ground_truth_column_name", ground_truth_column_name])
+        if additional_columns is not None:
+            argss.extend(["--additional_columns", additional_columns])
         if template is not None:
             argss.extend(["--template", f"'{template}'"])
         if script_path is not None:

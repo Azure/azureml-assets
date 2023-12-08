@@ -69,6 +69,7 @@ class TestBatchBenchmarkInferenceComponent:
             connections_name,
             request,
             'label',
+            'question',
             temp_dir,
             model_type,
         )
@@ -93,6 +94,7 @@ class TestBatchBenchmarkInferenceComponent:
                 connections_name: str,
                 batch_input_pattern: str,
                 label_column_name: str,
+                additional_columns: Optional[str] = None,
                 temp_dir: Optional[str] = None,
                 model_type: Optional[str] = None,
             ) -> Job:
@@ -119,6 +121,7 @@ class TestBatchBenchmarkInferenceComponent:
         pipeline_job.inputs.max_worker_count = 10
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
         pipeline_job.inputs.label_column_name = label_column_name
+        pipeline_job.inputs.additional_columns = additional_columns
         pipeline_job.name = str(uuid.uuid4())
         pipeline_job.display_name = display_name
 
@@ -168,6 +171,7 @@ class TestBatchBenchmarkInferenceComponent:
             "ground_truth_input:": ['  ground_truth_input:\n', '    type: uri_folder\n', '    path: ../data/\n'],
             "metadata_key:": ["  metadata_key: _batch_request_metadata\n"],
             "label_column_name:": ["  label_column_name: label\n"],
+            "additional_columns:": ["  additional_columns: question\n"],
             "n_samples:": ["  n_samples: 10\n"],
             "predictions:": [
                 '  predictions:\n', '    type: uri_file\n',

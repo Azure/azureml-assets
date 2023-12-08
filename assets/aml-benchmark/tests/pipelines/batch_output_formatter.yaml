@@ -12,6 +12,7 @@ inputs:
     path: ../data/
   label_column_name: label
   endpoint_url: http://test-endpoint.com
+  additional_columns: question
   handle_response_failure: use_fallback
   is_performance_test: False
 
@@ -35,6 +36,7 @@ jobs:
     inputs:
       batch_inference_output: ${{parent.inputs.batch_inference_output}}
       label_column_name: ${{parent.inputs.label_column_name}}
+      additional_columns: ${{parent.inputs.additional_columns}}
       endpoint_url: ${{parent.inputs.endpoint_url}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
