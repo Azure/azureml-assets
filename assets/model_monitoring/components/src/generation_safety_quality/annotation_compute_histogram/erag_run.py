@@ -1,3 +1,67 @@
+import argparse
+from pyspark.sql import functions as F
+from pyspark.sql.types import StringType, DoubleType, IntegerType
+import json
+from shared_utilities import io_utils
+from LLM_helper import (
+    PROMPT, COMPLETION, CONTEXT, GROUND_TRUTH, OPENAI_REQUEST_PARAMS, API_KEY,
+    AZURE_OPENAI_API_COMPLETION_URL_PATTERN, AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
+    _WorkspaceConnectionTokenManager, _HTTPClientWithRetry,
+    _check_and_format_azure_endpoint_url,
+    query_relevance_score
+)
+
+
+@F.udf(StringType())
+def get_output(output):
+    return json.loads(output)["output"]
+
+
+@F.udf(DoubleType())
+def get_lookup_score(node_run_info_json_str):
+    node_run_info = json.loads(node_run_info_json_str)
+    lookup_outputs = node_run_info["lookup"]["output"]
+    total = 0.0
+    count = 0
+    for lookup_output in lookup_outputs:
+        count += 1
+        total += lookup_output["score"]
+    return total / count
+
+
+@F.udf(IntegerType())
+def get_overall_score(question, answer, workspace_connection_arm_id, model_deployment_name,
+                      api_call_retry_max_count, api_call_retry_backoff_factor, request_args):
+    token_manager = _WorkspaceConnectionTokenManager(
+        connection_name=workspace_connection_arm_id,
+        auth_header=API_KEY)
+    azure_endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
+    azure_openai_api_version = token_manager.get_api_version()
+
+    azure_endpoint_url = _check_and_format_azure_endpoint_url(
+        AZURE_OPENAI_API_COMPLETION_URL_PATTERN,
+        AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
+        azure_endpoint_domain_name,
+        azure_openai_api_version,
+        model_deployment_name  # model
+    )
+    httpClient = _HTTPClientWithRetry(
+        n_retry=api_call_retry_max_count,
+        backoff_factor=api_call_retry_backoff_factor,
+    )
+
+    request_args = json.loads(request_args)
+    rating = 3.14
+    with httpClient.client as session:
+        rating = query_relevance_score(
+            (question, answer),
+            session, azure_endpoint_url, token_manager,
+            **request_args,
+        )
+    # print(rating)
+    return rating
+
+
 def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("--production_dataset", type=str, required=True)
@@ -64,52 +128,25 @@ def run():
         arg: getattr(args, arg) for arg in OPENAI_REQUEST_PARAMS if hasattr(args, arg)
     }
     request_args["model"] = args.model_deployment_name
-    # request_args["n"] = args.num_samples
 
-    token_manager = _WorkspaceConnectionTokenManager(
-            connection_name=args.workspace_connection_arm_id,
-            auth_header=API_KEY)
-    azure_endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
-    azure_openai_api_version = token_manager.get_api_version()
+    df = io_utils.try_read_mltable_in_spark_with_error(args.production_dataset, "joined_data")
 
-    azure_endpoint_url = _check_and_format_azure_endpoint_url(
-        AZURE_OPENAI_API_COMPLETION_URL_PATTERN,
-        AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-        azure_endpoint_domain_name,
-        azure_openai_api_version,
-        args.model_deployment_name  # mdoel
-    )
-    endpoint_url = azure_endpoint_url
+    df = df.withColumn("answer", get_output(F.col("output")))\
+           .withColumn("lookup_score", get_lookup_score(F.col("node_run_info")))\
+           .drop("node_run_info", "run_info", "output")
 
-    print(f"Determined endpoint URL {endpoint_url}")
-
-    httpClient = _HTTPClientWithRetry(
-        n_retry=args.api_call_retry_max_count,
-        backoff_factor=args.api_call_retry_backoff_factor,
-    )
-
-    with httpClient.client as session:
-        ratings = _query_relevance_score(
-            [
-                (
-                    "What's the highest mountain in the world?",
-                    "Mount Everest is the highest mountain in the world. It is located between Nepal and Tibet, "
-                    "an autonomous region of China. With an elevation of 29,032 feet (8,849 meters), it is considered "
-                    "the tallest point on Earth"
-                ),
-                (
-                    "Should I upgrade to windows11?",
-                    "In general, a new prod is better than the old one."
-                ),
-                (
-                    "should I upgrade to windows 11?",
-                    "Whether to upgrade to Windows 11 depends on several factors. First, your hardware compatibility, as Windows 11 has specific system requirements. Second, your essential applications are compatible with Windows 11. Third, consider if the new features and interface of Windows 11 appeal to you. Lastly, support for Windows 10 will continue until October 14, 2025."
-                )
-            ],
-            session, endpoint_url, token_manager,
-            **request_args,
+    df = df.withColumn(
+        "overall_score",
+        get_overall_score(
+            F.col("question"), F.col("answer"),
+            F.lit(args.workspace_connection_arm_id), F.lit(args.model_deployment_name),
+            F.lit(args.api_call_retry_max_count), F.lit(args.api_call_retry_backoff_factor),
+            F.lit(json.dumps(request_args))
         )
-    print(ratings)
+    )
+
+    # question, output, run_info, node_run_info
+    df = io_utils.try_read_mltable_in_spark_with_error(args.production_dataset)
     # calculate_flow_input_output_relevance_score()
     # make two cohorts by good and bad relevance
     # get question, indexed doc relevance from node_run_info.lookup.output[0/1/2].score for the 2 cohorts
