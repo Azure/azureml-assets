@@ -56,6 +56,7 @@ class TestRoutingClient:
         ],
     )
     async def test_get_client_settings(self, client_settings_from_endpoint_discovery_service, key, expected_value):
+        """Test get client settings."""
         routing_client = RoutingClient(
             service_namespace="MOCK-NAMESPACE",
             target_batch_pool="MOCK-POOL",
@@ -72,6 +73,7 @@ class TestRoutingClient:
     @pytest.mark.timeout(5)
     async def test_exception_handling_for__check_and_refresh_pool_routes_no_exception_raised(
             self, mock_refresh_pool_routes):
+        """Test check and refresh pool routes exception handling."""
         routing_client = RoutingClient(
             service_namespace="MOCK-NAMESPACE",
             target_batch_pool="MOCK-POOL",
@@ -88,6 +90,7 @@ class TestRoutingClient:
     @pytest.mark.timeout(5)
     async def test_exception_handling_for__check_and_refresh_pool_routes_exception_is_raised(
             self, mock_refresh_pool_routes):
+        """Test check and refresh pool routes exception raised."""
         routing_client = RoutingClient(
             service_namespace="MOCK-NAMESPACE",
             target_batch_pool="MOCK-POOL",
@@ -106,6 +109,7 @@ class TestRoutingClient:
             self,
             monkeypatch,
             make_completion_header_handler):
+        """Test get quota scope invalid pool routes raised."""
         routing_client = RoutingClient(
             service_namespace="MOCK-NAMESPACE",
             target_batch_pool="MOCK-POOL",

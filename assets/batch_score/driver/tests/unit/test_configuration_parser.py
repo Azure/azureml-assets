@@ -14,6 +14,7 @@ from src.batch_score.common.configuration.configuration_parser import (
 
 
 def test_success_defaults():
+    """Test success defaults."""
     # Act
     configuration = ConfigurationParser().parse_configuration()
 
@@ -23,6 +24,7 @@ def test_success_defaults():
 
 
 def test_success_scoring_url_copied_to_endpoint_url():
+    """Test success scoring url copied to endpoint url."""
     # Act
     scoring_url = "https://non-existent-endpoint.centralus.inference.ml.azure.com/score"
     configuration = ConfigurationParser().parse_configuration(["--scoring_url", scoring_url])
@@ -42,6 +44,7 @@ def test_success_scoring_url_copied_to_endpoint_url():
     ],
 )
 def test_success_set_default_for_segment_large_requests(api_type, segment_large_requests):
+    """Test success set default segment large requests case."""
     # Act
     scoring_url = "https://non-existent-endpoint.centralus.inference.ml.azure.com/score"
     configuration = ConfigurationParser().parse_configuration([
@@ -85,6 +88,7 @@ def test_success_set_default_for_segment_large_requests(api_type, segment_large_
      {"azureml-collect-request": "false", "some": "else", "Azureml-inferencing-offer-name": 'my_custom_offering'})
 ])
 def test_success_additional_header(header, pool, expected_values, request_path):
+    """Test success additional header."""
     # TODO: headers with booleans fail during session.post.
     #  Prevent users from providing additional_headers that json.loads with boolean values.
     # Act
@@ -104,6 +108,7 @@ def test_success_additional_header(header, pool, expected_values, request_path):
 
 
 def test_success_batch_size_one():
+    """Test success batch size one case."""
     # Act
     configuration = ConfigurationParser().parse_configuration(["--batch_size_per_request", '1'])
 
@@ -112,6 +117,7 @@ def test_success_batch_size_one():
 
 
 def test_success_batch_size_greater_than_one_with_embeddings_api():
+    """Test success batch size greater than one with embeddings api case."""
     # Act
     configuration = ConfigurationParser().parse_configuration(["--request_path",
                                                                "v1/engines/davinci/embeddings",
@@ -123,6 +129,7 @@ def test_success_batch_size_greater_than_one_with_embeddings_api():
 
 
 def test_invalid_batch_size_zero():
+    """Test invalid batch size zero case."""
     # Act
     with pytest.raises(ValueError) as excinfo:
         _ = ConfigurationParser().parse_configuration(["--batch_size_per_request", '0'])
@@ -133,6 +140,7 @@ def test_invalid_batch_size_zero():
 
 
 def test_invalid_batch_size_greater_than_max_with_embeddings_api():
+    """Test invalid batch size greater than max with embeddings api case."""
     # Act
     with pytest.raises(ValueError) as excinfo:
         _ = ConfigurationParser().parse_configuration(["--batch_size_per_request", '2001'])
@@ -143,6 +151,7 @@ def test_invalid_batch_size_greater_than_max_with_embeddings_api():
 
 
 def test_invalid_batch_size_greater_than_one_with_completions_api():
+    """Test invalid batch size greater than one with completions api case."""
     # Act
     with pytest.raises(ValueError) as excinfo:
         _ = ConfigurationParser().parse_configuration(["--request_path",
@@ -161,6 +170,7 @@ def test_invalid_batch_size_greater_than_one_with_completions_api():
     "v1/rainbow",
 ])
 def test_invalid_segment_large_requests_with_unsupported_api(request_path):
+    """Test invalid segment large request with unsupported api case."""
     # Act
     with pytest.raises(ValueError) as excinfo:
         _ = ConfigurationParser().parse_configuration(["--request_path",
@@ -174,6 +184,7 @@ def test_invalid_segment_large_requests_with_unsupported_api(request_path):
 
 
 def test_invalid_request_path_with_online_endpoint_url():
+    """Test invalid request path with online endpoint url case."""
     # Act
     with pytest.raises(ValueError) as excinfo:
         _ = ConfigurationParser().parse_configuration(["--request_path",
@@ -199,6 +210,7 @@ def test_invalid_request_path_with_online_endpoint_url():
     ("https://llama-completion.eastus2.inference.ai.azure.com/v1/completions", False)
 ])
 def test_is_aoai_endpoint(scoring_url, expected_is_aoai_endpoint):
+    """Test is AOAI endpoint."""
     # Act
     configuration = ConfigurationParser().parse_configuration(["--scoring_url", scoring_url])
 
@@ -218,6 +230,7 @@ def test_is_aoai_endpoint(scoring_url, expected_is_aoai_endpoint):
     ("https://llama-completion.eastus2.inference.ai.azure.com/v1/completions", True)
 ])
 def test_is_serverless_endpoint(scoring_url, expected_is_serverless_endpoint):
+    """Test is serverless endpoint."""
     # Act
     configuration = ConfigurationParser().parse_configuration(["--scoring_url", scoring_url])
 
@@ -236,6 +249,7 @@ def test_is_serverless_endpoint(scoring_url, expected_is_serverless_endpoint):
     ("https://llama-completion.eastus2.inference.ai.azure.com/v1/completions", EndpointType.Serverless)
 ])
 def test_get_endpoint_type(scoring_url, expected_endpoint_type):
+    """Test get endpoint type."""
     # Arrange
     configuration = ConfigurationParser().parse_configuration(["--scoring_url", scoring_url])
     # Act & Assert

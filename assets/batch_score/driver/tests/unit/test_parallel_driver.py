@@ -20,7 +20,7 @@ def test_start_with_request_modifier(
         mock_run,
         make_parallel_driver,
         make_input_transformer):
-
+    """Test start with request modifier."""
     parallel_driver: Parallel = make_parallel_driver(
         input_to_request_transformer=make_input_transformer(modifiers=[FakeRequestModifier()]))
 
@@ -53,7 +53,7 @@ def test_start_parses_request_metadata_over_batch_metadata_from_input(
         mock_AIMD,
         mock_run,
         make_parallel_driver):
-
+    """Test start parses request metadata over batch metadata from input."""
     parallel_driver: Parallel = make_parallel_driver()
 
     payloads = ['{"prompt": "hey", "request_metadata": "foo", "_batch_request_metadata": "bar"}']
@@ -71,7 +71,7 @@ def test_start_parses_batch_metadata_from_input(
         mock_AIMD,
         mock_run,
         make_parallel_driver):
-
+    """Test start parses batch metadata from input."""
     parallel_driver: Parallel = make_parallel_driver()
 
     payloads = ['{"prompt": "hey", "_batch_request_metadata": "bar"}']
@@ -88,7 +88,7 @@ def test_start_parses_request_metadata_from_input(
         mock_AIMD,
         mock_run,
         make_parallel_driver):
-
+    """Test start parses request metadata from input."""
     parallel_driver: Parallel = make_parallel_driver()
 
     payloads = ['{"prompt": "hey", "request_metadata": "foo"}']
@@ -101,7 +101,10 @@ def test_start_parses_request_metadata_from_input(
 
 
 class FakeRequestModifier(RequestModifier):
+    """Mock request modifier."""
+
     def modify(self, request_obj: any) -> any:
+        """Mock modify function."""
         if "raise_exception" in request_obj and request_obj["raise_exception"] is True:
             raise FakeRequestModifierRaiseException()
         else:
@@ -109,9 +112,12 @@ class FakeRequestModifier(RequestModifier):
 
 
 class FakeOutputRequestModifier(RequestModifier):
+    """Mock output request modifier."""
+
     CHANGED_OUTPUT = "<CHANGED OUTPUT>"
 
     def modify(self, request_obj: any) -> any:
+        """Mock modify function."""
         for key in request_obj:
             request_obj[key] = FakeOutputRequestModifier.CHANGED_OUTPUT
 
@@ -119,14 +125,22 @@ class FakeOutputRequestModifier(RequestModifier):
 
 
 class FakeRequestModifierRaiseException(RequestModificationException):
+    """Mock request modifier raise exception."""
+
     def __init__(self, message: str = "Faked RequestModificationException") -> None:
+        """Init function."""
         super().__init__(message)
 
 
 @pytest.fixture()
 def mock_AIMD(monkeypatch):
+    """Mock AIMD."""
+
     class FakeAIMD():
+        """Mock AIMD."""
+
         def __init__(self, *args, **kwargs) -> None:
+            """Init function."""
             pass
 
     monkeypatch.setattr("src.batch_score.common.parallel.adjustment.AIMD.__init__", FakeAIMD.__init__)

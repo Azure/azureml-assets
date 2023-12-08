@@ -11,6 +11,7 @@ from src.batch_score.common.request_modification.modifiers.vesta_encoded_image_s
 
 
 def test_image_scrubber(make_vesta_encoded_image_scrubber):
+    """Test image scrubber."""
     scrubber: VestaEncodedImageScrubber = make_vesta_encoded_image_scrubber()
 
     request_obj = {"non-vesta-obj": "val"}

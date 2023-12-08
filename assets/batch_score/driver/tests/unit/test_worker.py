@@ -25,7 +25,7 @@ async def test_successful_scoring_appends_result_no_segmentation(
         make_worker,
         mock_get_logger,
         mock__score_once):
-
+    """Test successful scoring appends result no segmentation."""
     metrics = await _run_worker(make_worker)
 
     assert not metrics.empty
@@ -40,7 +40,7 @@ async def test_successful_scoring_appends_result_with_segmentation(
         make_worker,
         mock_get_logger,
         make_scoring_result):
-
+    """Test successful scoring appends result with segmentation."""
     async def mock_score(*args, **kwargs):
         return make_scoring_result(request_obj={"prompt": "payload"})
 
@@ -59,7 +59,7 @@ async def test_request_exceeds_max_retry_time_interval_and_fails(
         mock_get_events_client,
         make_worker,
         mock_get_logger):
-
+    """Test request exceeds max retry time interval and fails."""
     # 1 second maximum
     max_retry_time_interval = 1
 
@@ -94,7 +94,7 @@ async def test_model_429_does_not_contribute_to_request_total_wait_time(
         mock_get_logger,
         mock__score_once,
         mock_get_client_setting):
-
+    """Test model 429 does not contribute to request total wait time."""
     mock__score_once['raise_exception'] = RetriableException(status_code=424,
                                                              model_response_code='429',
                                                              retry_after=0.01)
@@ -113,7 +113,7 @@ async def test_quota_429_contributes_to_request_total_wait_time(
         mock_get_logger,
         mock__score_once,
         mock_get_client_setting):
-
+    """Test quota 429 contributes to request total wait time."""
     mock__score_once['raise_exception'] = QuotaUnavailableException(retry_after=0.01)
     mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
 
@@ -186,7 +186,7 @@ async def test_no_deployments_in_traffic_group(
         monkeypatch,
         env_vars,
         expected_wait_time):
-
+    """Test no deployments in traffic group."""
     for var, value in env_vars.items():
         monkeypatch.setenv(var, value)
 

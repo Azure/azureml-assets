@@ -28,6 +28,8 @@ env_vars = {
 
 
 class TestWaitTimeCongestionDetector:
+    """Wait time congestion detector unit tests."""
+
     @pytest.mark.parametrize(
         "make_routing_client, mock_get_client_setting, client_settings, "
         "expected_congestion_threshold, expected_saturation_threshold",
@@ -64,6 +66,7 @@ class TestWaitTimeCongestionDetector:
                                                                            client_settings,
                                                                            expected_congestion_threshold,
                                                                            expected_saturation_threshold):
+        """Test client settings override class default, env vars override client settings."""
         # Class defaults are used when there are no client settings or environment variables.
         self._clear_env_vars()
 
@@ -114,6 +117,7 @@ class TestWaitTimeCongestionDetector:
                                                   make_routing_client,
                                                   response_code,
                                                   expected_congestion_state):
+        """Test detect ignores non-success responses."""
         congestion_detector = WaitTimeCongestionDetector(client_settings_provider=make_routing_client())
 
         start_time = pd.Timestamp.utcnow()
@@ -128,6 +132,7 @@ class TestWaitTimeCongestionDetector:
         assert actual_congestion_state == expected_congestion_state
 
     def test_free_congestion_case(self, make_routing_client):
+        """Test free congestion case."""
         congestion_detector = WaitTimeCongestionDetector(client_settings_provider=make_routing_client())
 
         start_time = pd.Timestamp.utcnow()
@@ -142,6 +147,7 @@ class TestWaitTimeCongestionDetector:
         assert actual_congestion_state == CongestionState.FREE
 
     def test_saturated_congestion_case(self, make_routing_client):
+        """Test saturated congestion case."""
         congestion_detector = WaitTimeCongestionDetector(client_settings_provider=make_routing_client())
 
         start_time = pd.Timestamp.utcnow()
@@ -156,6 +162,7 @@ class TestWaitTimeCongestionDetector:
         assert actual_congestion_state == CongestionState.SATURATED
 
     def test_congested_congestion_case(self, make_routing_client):
+        """Test congested congestion case."""
         congestion_detector = WaitTimeCongestionDetector(client_settings_provider=make_routing_client())
 
         start_time = pd.Timestamp.utcnow()

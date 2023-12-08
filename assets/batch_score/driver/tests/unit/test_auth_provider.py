@@ -9,6 +9,7 @@ from src.batch_score.common.auth.auth_provider import EndpointType, WorkspaceCon
 
 @pytest.mark.skip('Need to fix the mock.')
 def test_workspace_connection_auth_provider_get_auth_headers(mocker):
+    """Test workspace connection auth provider get auth headers."""
     # Arrange
     mocker.patch.object(WorkspaceConnectionAuthProvider,
                         '_get_workspace_connection_by_name',

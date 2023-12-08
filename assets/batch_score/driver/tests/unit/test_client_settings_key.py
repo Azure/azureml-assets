@@ -7,7 +7,7 @@ from src.batch_score.common.configuration.client_settings import ClientSettingsK
 
 
 def test_string_equality_as_dictionary_key():
-    '''Ensure that the enum is equivalent to its string value when used as a dictionary key.'''
+    """Ensure that the enum is equivalent to its string value when used as a dictionary key."""
     # See question: https://stackoverflow.com/questions/58608361/string-based-enum-in-python
     # And answer: https://stackoverflow.com/a/58608362
 

@@ -10,6 +10,7 @@ from tests.fixtures.input_transformer import FakeRequestModifier
 
 
 def test_input_transformer(mock_get_logger, make_input_transformer):
+    """Test input transformer success."""
     input_transformer: InputTransformer = make_input_transformer(modifiers=[FakeRequestModifier(prefix="first"),
                                                                             FakeRequestModifier(prefix="second")])
 
@@ -19,6 +20,7 @@ def test_input_transformer(mock_get_logger, make_input_transformer):
 
 
 def test_empty_input_transformer(mock_get_logger, make_input_transformer):
+    """Test empty input transformer."""
     input_transformer: InputTransformer = make_input_transformer(modifiers=None)
     modified_obj = input_transformer.apply_modifications({"mock": "value"})
     assert modified_obj["mock"] == "value"

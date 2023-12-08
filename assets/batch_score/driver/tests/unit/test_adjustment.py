@@ -122,6 +122,7 @@ def test_calculate_next_concurrency(make_routing_client,
                                     initial_concurrency,
                                     congestion_states_to_return,
                                     expected_new_concurrency_values):
+    """Test calculate next concurrency."""
     aimd = AIMD(request_metrics=RequestMetrics(), client_settings_provider=make_routing_client())
 
     # TODO: introduce DI to accept congestion detector in constructor
@@ -190,6 +191,7 @@ def test_init_env_var_overrides_client_setting_overrides_class_default(
         expected_adjustment_interval,
         expected_additive_increase,
         expected_multiplicative_decrease):
+    """Test init env var overrides client setting overrides class default."""
     # Class defaults are used when there are no client settings or environment variables.
     clear_env_vars()
 
@@ -226,11 +228,15 @@ def clear_env_vars():
 
 
 class MockCongestionDetector(CongestionDetector):
+    """Mock congestion detector."""
+
     def __init__(self, congestion_states_to_return: 'list[CongestionState]') -> None:
+        """Init function."""
         self.congestion_states_to_return = congestion_states_to_return.copy()
 
     def detect(self,
                request_metrics: RequestMetrics,
                start_time: pd.Timestamp,
                end_time: pd.Timestamp = None) -> CongestionState:
+        """Mock detect function."""
         return self.congestion_states_to_return.pop(0)

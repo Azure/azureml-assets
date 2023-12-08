@@ -29,10 +29,12 @@ CHECK_VESTA_CHAT_COMPLETION_PAYLOAD_TESTS = [
 
 @pytest.mark.parametrize("expected_result, request_obj", CHECK_VESTA_CHAT_COMPLETION_PAYLOAD_TESTS)
 def test_is_vesta_chat_completion_payload(request_obj, expected_result):
+    """Test is vesta chat completion payload."""
     assert VestaChatCompletionImageModifier.is_vesta_chat_completion_payload(request_obj) == expected_result
 
 
 def test_modify(mock_get_logger, make_vesta_chat_completion_image_modifier, mock__b64_from_url):
+    """Test modify."""
     vesta_request_obj = {
         "messages": [
             {
@@ -73,6 +75,7 @@ def test_modify(mock_get_logger, make_vesta_chat_completion_image_modifier, mock
 
 
 def test_modify_invalid_image(mock_get_logger, make_vesta_chat_completion_image_modifier, mock_encode_b64):
+    """Test modify invalid image case."""
     vesta_request_obj = {"messages": [{"role": "user", "content": [{"image": "invalid_image"}]}]}
     vesta_chat_completion_image_modifier = make_vesta_chat_completion_image_modifier()
 

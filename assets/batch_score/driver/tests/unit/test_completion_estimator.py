@@ -16,6 +16,7 @@ from src.batch_score.batch_pool.quota.estimators import CompletionEstimator
     ({"prompt": " x"*1000000, "max_tokens": 10}, 1000000 + 10),
 ])
 def test_estimate_request_cost(request_obj, expected_cost):
+    """Test estimate request cost."""
     estimator = CompletionEstimator()
 
     assert estimator.estimate_request_cost(request_obj) == expected_cost
@@ -25,12 +26,14 @@ def test_estimate_request_cost(request_obj, expected_cost):
     ({"prompt": "Hello world!", "max_tokens": 10}, {"usage": {"prompt_tokens": 123}}, 123 + 10),
 ])
 def test_estimate_response_cost(request_obj, response_obj, expected_cost):
+    """Test estimate response cost."""
     estimator = CompletionEstimator()
 
     assert estimator.estimate_response_cost(request_obj, response_obj) == expected_cost
 
 
 def test_invalid_get_prompt():
+    """Test get prompt invalid case."""
     estimator = CompletionEstimator()
 
     chat_completion_payload = {"messages": [{"role": "user", "content": "Hello!"}]}

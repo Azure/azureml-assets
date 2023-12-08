@@ -40,6 +40,7 @@ VALID_DATAFRAMES = [
 
 @pytest.mark.parametrize("obj_list, expected_result", VALID_DATAFRAMES)
 def test_convert_to_list_happy_path(obj_list: "list[any]", expected_result: "list[str]"):
+    """Test convert to list happy path."""
     with tempfile.TemporaryDirectory() as tmp_dir:
         with open(file=os.path.join(tmp_dir, "data.txt"), mode="w+") as text_file:
             for obj in obj_list:
@@ -61,6 +62,7 @@ def test_convert_to_list_happy_path(obj_list: "list[any]", expected_result: "lis
     ({"max_tokens": 11})
 ])
 def test_convert_to_list_batch_size_20(additional_properties):
+    """Test convert to list batch size 20 case."""
     batch_size_per_request = 20
     num_batches = 4
     full_batches = num_batches - 1
@@ -100,6 +102,7 @@ def test_convert_to_list_batch_size_20(additional_properties):
 @pytest.mark.parametrize("tiktoken_failed",
                          [True, False])
 def test_convert_result_list_batch_size_one(tiktoken_failed):
+    """Test convert result list batch size one case."""
     # Arrange
     batch_size_per_request = 1
     result_list = []
@@ -128,6 +131,7 @@ def test_convert_result_list_batch_size_one(tiktoken_failed):
 @pytest.mark.parametrize("tiktoken_failed",
                          [True, False])
 def test_convert_result_list_failed_result(tiktoken_failed):
+    """Test convert result list failed result case."""
     # Arrange
     batch_size_per_request = 1
     result_list = []
@@ -152,6 +156,7 @@ def test_convert_result_list_failed_result(tiktoken_failed):
 @pytest.mark.parametrize("tiktoken_failed",
                          [True, False])
 def test_convert_result_list_failed_result_batch(tiktoken_failed):
+    """Test convert result list failed result batch case."""
     # Arrange
     batch_size_per_request = 2
 
@@ -186,6 +191,7 @@ def test_convert_result_list_batch_20(
         reorder_results,
         online_endpoint_url,
         tiktoken_fails):
+    """Test convert result list batch size 20 case."""
     # Arrange
     batch_size_per_request = 20
     num_batches = 4
@@ -257,6 +263,7 @@ def test_convert_result_list_batch_20(
 
 
 def test_incorrect_data_length_raises():
+    """Test incorrect data length raises."""
     # Arrange
     batch_size_per_request = 2
     result_list = []
@@ -274,6 +281,7 @@ def test_incorrect_data_length_raises():
 
 
 def test_endpoint_response_is_not_json(mock_get_logger):
+    """Test endpoint response is not json."""
     # Arrange failed response payload as a string
     batch_size_per_request = 10
     inputs = __get_input_batch(batch_size_per_request)

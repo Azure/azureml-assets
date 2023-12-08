@@ -9,6 +9,7 @@ import src.batch_score.utils.json_encoder_extensions as json_encoder_extensions
 
 
 def test_unconfigured_get_default_encoder(mock_get_logger):
+    """Test get default encoder unconfigured case."""
     encoder = json_encoder_extensions.get_default_encoder()
     assert encoder.ensure_ascii is True
 
@@ -17,6 +18,7 @@ def test_unconfigured_get_default_encoder(mock_get_logger):
 
 
 def test_configured_get_default_encoder(mock_get_logger):
+    """Test get default encoder configured case."""
     json_encoder_extensions.setup_encoder(ensure_ascii=False)
 
     encoder = json_encoder_extensions.get_default_encoder()
@@ -27,6 +29,7 @@ def test_configured_get_default_encoder(mock_get_logger):
 
 
 def test_configuration_instantiation_is_singular(mock_get_logger):
+    """Test configuration instantiation is singular."""
     json_encoder_extensions.setup_encoder(ensure_ascii=False)
     first_encoder = json_encoder_extensions.get_default_encoder()
 
@@ -38,6 +41,7 @@ def test_configuration_instantiation_is_singular(mock_get_logger):
 
 
 def test_derived_numpy_array_encoder(mock_get_logger):
+    """Test derived numpy array encoder."""
     import numpy
 
     ensure_ascii_scenario = False

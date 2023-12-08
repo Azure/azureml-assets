@@ -20,6 +20,7 @@ CLASSIFICATION_TESTS = [
 def test_classify_response(mock_get_logger,
                            response_status: int,
                            expected_classification: routing_utils.RoutingResponseType):
+    """Test classify response."""
     classification = routing_utils.classify_response(response_status=response_status)
 
     assert mock_get_logger.info.called or mock_get_logger.debug.called

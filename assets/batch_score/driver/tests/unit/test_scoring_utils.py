@@ -29,6 +29,7 @@ def test_classify_response(response_status: int,
                            model_response_code: str,
                            model_response_reason: str,
                            expected_classification: Enum):
+    """Test classify response."""
     classification = scoring_utils.get_retriable_type(response_status=response_status,
                                                       response_payload=response_payload,
                                                       model_response_code=model_response_code,

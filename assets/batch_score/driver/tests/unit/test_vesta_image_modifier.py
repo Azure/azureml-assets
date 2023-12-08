@@ -26,6 +26,7 @@ from tests.fixtures.vesta_image_modifier import (
 
 
 def test_vesta_payload_type():
+    """Test vesta payload tpye."""
     assert VestaImageModifier.vesta_payload_type(request_obj={"transcript": []}) == "transcript"
     assert VestaImageModifier.vesta_payload_type(request_obj={"prompt": []}) == "prompt"
     assert VestaImageModifier.vesta_payload_type(request_obj={"foobar123": []}) is None
@@ -33,6 +34,7 @@ def test_vesta_payload_type():
 
 
 def test_is_vesta_payload():
+    """Test is vesta payload."""
     assert VestaImageModifier.is_vesta_payload(request_obj={"prompt": [{"type": "text", "data": "foobar"}]}) is True
     assert VestaImageModifier.is_vesta_payload(
         request_obj={"transcript": [{"type": "text", "data": "foobar"}]}) is True
@@ -44,6 +46,7 @@ def test_is_vesta_payload():
 
 
 def test_modify(mock_get_logger, make_vesta_image_modifier, mock__b64_from_url):
+    """Test modify."""
     vesta_request_obj = {
         "transcript": [
             {
@@ -86,6 +89,7 @@ def test_modify(mock_get_logger, make_vesta_image_modifier, mock__b64_from_url):
 
 
 def test_modify_invalid_image(mock_get_logger, make_vesta_image_modifier, mock_encode_b64):
+    """Test modify invalid image."""
     vesta_request_obj = {"transcript": [{"type": "image", "data": "invalid_data"}]}
     vesta_image_modifier: VestaImageModifier = make_vesta_image_modifier()
 
@@ -99,6 +103,7 @@ def test_modify_invalid_image(mock_get_logger, make_vesta_image_modifier, mock_e
 
 
 def test_encode_b64_file(mock_get_logger, make_image_encoder, mock__b64_from_file):
+    """Test encode b64 file."""
     path_prefix = "E:/fake/folder/"
     image_encoder: ImageEncoder = make_image_encoder(image_input_folder_str=path_prefix)
 
@@ -116,6 +121,7 @@ def test_encode_b64_file(mock_get_logger, make_image_encoder, mock__b64_from_fil
 
 
 def test_encode_b64_url(mock_get_logger, make_image_encoder, mock__b64_from_url):
+    """Test encode b64 url."""
     image_encoder: ImageEncoder = make_image_encoder(image_input_folder_str=None)
 
     image_target = "https://fake.url"
@@ -128,6 +134,7 @@ def test_encode_b64_url(mock_get_logger, make_image_encoder, mock__b64_from_url)
 
 
 def test__b64_from_url(mock_get_logger: MagicMock, monkeypatch, make_image_encoder):
+    """Test b64 from url."""
     image_encoder: ImageEncoder = make_image_encoder()
     target_url = "https://fake.url"
 
@@ -151,6 +158,7 @@ def test__b64_from_url(mock_get_logger: MagicMock, monkeypatch, make_image_encod
 
 
 def test_encode_b64_raw(mock_get_logger, make_image_encoder):
+    """Test encode b64 raw."""
     image_encoder: ImageEncoder = make_image_encoder(image_input_folder_str=None)
     image_data = "MOCK_DATA"
     encoding = image_encoder.encode_b64(image_data=image_data)
