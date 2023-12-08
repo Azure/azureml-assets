@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: rai_vision_insights
 display_name: RAI Vision Insights
-version: 0.0.11
+version: 0.0.12
 tags:
   Preview: ""
 type: command
