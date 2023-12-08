@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.6
+name: insurance_report
+display_name: Insurance Report
+description: Car Insurance Damage report writing
+
+tags:
+  modality: video
+  task: summarization
+
+data_uri: ./prompt
+template_path: prompt.yaml
