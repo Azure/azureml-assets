@@ -29,7 +29,7 @@ def test_estimate_request_cost(request_obj, expected_cost):
      123 + 10),
 ])
 def test_estimate_response_cost(request_obj, response_obj, expected_cost):
-    """Test estimate response cost."""    
+    """Test estimate response cost."""
 
     estimator = ChatCompletionEstimator()
 
