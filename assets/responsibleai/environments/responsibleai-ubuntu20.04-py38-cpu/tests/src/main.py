@@ -23,7 +23,6 @@ def main(args):
     # setup parameters
     params = {
         "fit_intercept": args.fit_intercept,
-        "normalize": args.normalize,
         "positive": args.positive,
     }
 
@@ -86,7 +85,6 @@ def parse_args():
     parser.add_argument("--diabetes-csv", type=str)
     parser.add_argument("--random_state", type=int, default=42)
     parser.add_argument("--fit_intercept", type=bool, default=True)
-    parser.add_argument("--normalize", type=bool, default=False)
     parser.add_argument("--positive", type=bool, default=False)
 
     # parse args
