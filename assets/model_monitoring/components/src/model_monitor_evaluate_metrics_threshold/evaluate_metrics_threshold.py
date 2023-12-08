@@ -28,8 +28,7 @@ Metric_Value_Should_Greater_Than_Threshold = [TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST
                                               AGGREGATED_GROUNDEDNESS_PASS_RATE_METRIC_NAME,
                                               AGGREGATED_FLUENCY_PASS_RATE_METRIC_NAME,
                                               AGGREGATED_SIMILARITY_PASS_RATE_METRIC_NAME,
-                                              AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME
-                                            ]
+                                              AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME]
 
 
 def _generate_error_message(df, signal_name: str):

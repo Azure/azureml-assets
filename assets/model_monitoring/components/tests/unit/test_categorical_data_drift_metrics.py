@@ -9,7 +9,7 @@ It compares the drift measures of metrics implemented in Spark against their Sci
 
 from data_drift_compute_metrics.categorical_data_drift_metrics import compute_categorical_data_drift_measures_tests
 from shared_utilities.io_utils import init_spark
-from shared_utilities.constants import(
+from shared_utilities.constants import (
     JENSEN_SHANNON_DISTANCE_METRIC_NAME,
     PEARSONS_CHI_SQUARED_TEST_METRIC_NAME,
     POPULATION_STABILITY_INDEX_METRIC_NAME
