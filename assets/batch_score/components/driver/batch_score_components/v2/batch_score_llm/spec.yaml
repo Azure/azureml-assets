@@ -180,6 +180,6 @@ task:
   environment:
     name: "prs-env-2"
     version: 1
-    image: mcr.microsoft.com/azureml/openmpi3.1.2-ubuntu18.04
-    conda_file: environment_parallel.yml
+    image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04
+    conda_file: environment_parallel.yaml
   append_row_to: ${{outputs.job_out_path}}
