@@ -105,8 +105,7 @@ class ClassifierEvaluator(Evaluator):
         y_pred = self._convert_predictions(metrics_dto.predictions)
         y_test = self._convert_predictions(metrics_dto.ground_truth)
         if "metrics" not in self.metrics_config:
-            self.metrics_config["metrics"] = [Metric.Accuracy, Metric.PrecisionMacro, Metric.RecallMacro,
-                                              Metric.F1Macro]
+            self.metrics_config["metrics"] = [Metric.Accuracy, Metric.PrecisionMacro, Metric.RecallMacro] # TODO: Metric.F1Macro
         metrics = compute_metrics(task_type=constants.Tasks.CLASSIFICATION, y_test=y_test, y_pred=y_pred
                                   , **self.metrics_config)
         return metrics

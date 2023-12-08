@@ -13,7 +13,20 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_model_performance_signal_monitor_job(
-    ml_client, get_component, experiment_name, task, baseline_data, baseline_data_target_column, production_data, production_data_target_column, regression_rmse_threshold, regression_meanabserror_threshold
+    ml_client,
+    get_component,
+    experiment_name,
+    task,
+    baseline_data,
+    baseline_data_target_column,
+    production_data,
+    production_data_target_column,
+    regression_rmse_threshold,
+    regression_meanabserror_threshold,
+    classification_precision_threshold,
+    classification_accuracy_threshold,
+    classification_recall_threshold,
+
 ):
     mp_signal_monitor = get_component(COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR)
 
@@ -27,6 +40,9 @@ def _submit_model_performance_signal_monitor_job(
             production_data_target_column=production_data_target_column,
             regression_rmse_threshold=regression_rmse_threshold,
             regression_meanabserror_threshold=regression_meanabserror_threshold,
+            classification_precision_threshold=classification_precision_threshold,
+            classification_accuracy_threshold=classification_accuracy_threshold,
+            classification_recall_threshold=classification_recall_threshold,
             signal_name="my_test_model_performance_signal",
             monitor_name="my_test_model_monitor",
             monitor_current_time="2023-02-02T00:00:00Z",
@@ -83,8 +99,11 @@ class TestModelPerformanceModelMonitor:
             "target",
             DATA_ASSET_IRIS_BASELINE_DATA,
             "target",
-            0.1,
-            0.1
+            None,
+            None,
+            0.9,
+            0.9,
+            0.9,
         )
 
         assert pipeline_job.status == "Completed"       

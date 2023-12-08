@@ -81,4 +81,9 @@ args: >-
   $[[--baseline_data_target_column ${{inputs.baseline_data_target_column}}]]
   --production_data ${{inputs.production_data}}
   $[[--production_data_target_column ${{inputs.production_data_target_column}}]]
+  $[[--regression_rmse_threshold ${{inputs.regression_rmse_threshold}}]]
+  $[[--regression_meanabserror_threshold ${{inputs.regression_meanabserror_threshold}}]]
+  $[[--classification_precision_threshold ${{inputs.classification_precision_threshold}}]]
+  $[[--classification_accuracy_threshold ${{inputs.classification_accuracy_threshold}}]]
+  $[[--classification_recall_threshold ${{inputs.classification_recall_threshold}}]]
   --signal_metrics ${{outputs.signal_metrics}}
