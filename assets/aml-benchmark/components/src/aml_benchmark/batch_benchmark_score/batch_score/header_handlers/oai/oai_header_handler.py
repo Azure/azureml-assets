@@ -33,7 +33,7 @@ class OAIHeaderHandler(HeaderHandler):
         self._connections_name = connections_name
         self._model = online_endpoint_model
 
-    def get_headers(self, additional_headers: Dict[str, Any] = None, palyoad: Optional[Any] = None) -> Dict[str, Any]:
+    def get_headers(self, additional_headers: Dict[str, Any] = None, payload: Optional[Any] = None) -> Dict[str, Any]:
         """Get handers."""
         online_endpoint = AOAIOnlineEndpoint(
             workspace_name=None, resource_group=self._endpoint_resource_group,
