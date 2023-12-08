@@ -4,7 +4,7 @@ tags:
   Preview: ""
 name: llm_ingest_db_to_faiss
 display_name: LLM - SQL Datastore to FAISS Pipeline
-version: 0.0.51
+version: 0.0.52
 description: Single job pipeline to chunk data from AzureML sql data store, and create FAISS embeddings index
 settings:
   default_compute: serverless
@@ -100,7 +100,7 @@ jobs:
       output_chunk_file:
         type: uri_folder
       output_grounding_context_file: ${{parent.outputs.db_context}}
-    component: "azureml:llm_dbcopilot_grounding:0.0.38"
+    component: "azureml:llm_dbcopilot_grounding:0.0.39"
     type: command
   generate_meta_embeddings:
     type: command
@@ -203,5 +203,5 @@ jobs:
         path: ${{parent.inputs.chat_aoai_deployment_name}}
       llm_config:
         path: ${{parent.inputs.llm_config}}
-    component: "azureml:llm_dbcopilot_create_promptflow:0.0.38"
+    component: "azureml:llm_dbcopilot_create_promptflow:0.0.39"
     type: command
