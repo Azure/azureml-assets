@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for JSON encoder extensions."""
+
 import json
 
 import src.batch_score.utils.json_encoder_extensions as json_encoder_extensions

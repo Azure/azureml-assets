@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for prompt redaction modifier."""
+
 import pytest
 
 from src.batch_score.common.request_modification.modifiers.prompt_redaction_modifier import (

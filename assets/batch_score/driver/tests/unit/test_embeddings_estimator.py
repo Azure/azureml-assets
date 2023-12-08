@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for embeddings estimator."""
+
 import pytest
 
 from src.batch_score.batch_pool.quota.estimators import EmbeddingsEstimator

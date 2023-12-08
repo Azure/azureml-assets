@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for vesta chat completion image modifier."""
+
 import pytest
 from urllib.parse import urlparse
 

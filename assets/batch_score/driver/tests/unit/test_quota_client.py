@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for quota client."""
+
 import json
 from contextlib import asynccontextmanager
 

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for vesta chat completion encoded image scrubber."""
+
 import pytest
 
 from src.batch_score.common.request_modification.modifiers.vesta_chat_completion_encoded_image_scrubber import (

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for input transformer."""
+
 from src.batch_score.common.request_modification.input_transformer import (
     InputTransformer,
 )

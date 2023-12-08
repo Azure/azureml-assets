@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""End-to-end test configuration."""
+
 import os
 
 import pytest
@@ -10,13 +12,14 @@ from azure.identity import DefaultAzureCredential
 from .util import _set_and_get_component_name_ver, create_copy
 
 
-# Marks all tests in this directory as unit tests
 @pytest.fixture(autouse=True, params=[pytest.param(None, marks=pytest.mark.e2e)])
 def mark_as_e2e_test():
+    """Mark all tests in this directory as unit tests."""
     pass
 
 
 def pytest_configure():
+    """Configure pytest."""
     print("Pytest configure started.")
     # ML_Client set up
     pytest.ml_client = MLClient(
@@ -36,6 +39,7 @@ def pytest_configure():
 
 
 def pytest_unconfigure():
+    """Unconfigure pytest."""
     print("Pytest unconfigure started.")
 
     # Delete copied component to not muddle dev environments
@@ -47,25 +51,30 @@ def pytest_unconfigure():
 
 @pytest.fixture(scope="module")
 def batch_score_yml_component():
+    """Register batch score component."""
     return register_component("batch_score.yml")
 
 
 @pytest.fixture(scope="module")
 def batch_score_embeddings_yml_component():
+    """Register batch score embeddings component."""
     return register_component("batch_score_embeddings.yml")
 
 
 @pytest.fixture(scope="module")
 def batch_score_vesta_chat_completion_yml_component():
+    """Register batch score vesta chat completion component."""
     return register_component("batch_score_vesta_chat_completion.yml")
 
 
 @pytest.fixture(scope="module")
 def llm_batch_score_yml_component():
+    """Register llm batch score component."""
     return register_component("batch_score_llm.yml")
 
 
 def register_component(component_yml_name):
+    """Register component."""
     # Copy component to a temporary file to not muddle dev environments
     batch_score_component_filepath = os.path.join(pytest.source_dir, "yamls", "components", "v2", component_yml_name)
     create_copy(batch_score_component_filepath, pytest.copied_batch_score_component_filepath)

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains end-to-end tests for MIR endpoints."""
+
 import os
 
 import pytest
@@ -91,6 +93,7 @@ YAML_ASYNC_MODE_ENABLED = {"jobs": {JOB_NAME: {
 @pytest.mark.timeout(15 * 60)
 @pytest.mark.parametrize("async_mode", [False, True])
 def test_gated_batch_score(batch_score_yml_component, async_mode):
+    """Test gate for batch score model."""
     set_component(*batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
     yaml_update = deep_update(YAML_COMPONENT,
@@ -110,6 +113,7 @@ def test_gated_batch_score(batch_score_yml_component, async_mode):
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)
 def test_gated_embeddings_batch_score(batch_score_embeddings_yml_component):
+    """Test gate for batch score embeddings model."""
     set_component(*batch_score_embeddings_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
     ada_pool = {"jobs": {JOB_NAME: {"inputs": {"batch_pool": "batch-score-ada"}}}}
@@ -131,6 +135,7 @@ def test_gated_embeddings_batch_score(batch_score_embeddings_yml_component):
 @pytest.mark.timeout(15 * 60)
 @pytest.mark.skip(reason="Enable this after creating a test endpoint for vesta")
 def test_gated_vesta_chat_completion_batch_score(batch_score_vesta_chat_completion_yml_component):
+    """Test gate for batch score vesta chat completion model."""
     set_component(*batch_score_vesta_chat_completion_yml_component,
                   component_config=YAML_COMPONENT,
                   job_name=JOB_NAME)
@@ -157,6 +162,7 @@ def test_gated_vesta_chat_completion_batch_score(batch_score_vesta_chat_completi
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)
 def test_gated_batch_score_single_endpoint(batch_score_yml_component):
+    """Test gate for batch score single endpoint model."""
     set_component(*batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
     yaml_update = deep_update(YAML_COMPONENT,
@@ -178,6 +184,7 @@ def test_gated_batch_score_single_endpoint(batch_score_yml_component):
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)
 def test_gated_batch_score_single_endpoint_using_soring_url_parameter(llm_batch_score_yml_component):
+    """Test gate for batch score single endpoint model using scoring url parameter."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
     yaml_update = deep_update(YAML_COMPONENT,
@@ -197,6 +204,7 @@ def test_gated_batch_score_single_endpoint_using_soring_url_parameter(llm_batch_
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)
 def test_gated_embeddings_batch_score_single_endpoint(batch_score_embeddings_yml_component):
+    """Test gate for batch score single endpoint embeddings model."""
     set_component(*batch_score_embeddings_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
     yaml_update = deep_update(YAML_COMPONENT,
@@ -215,6 +223,7 @@ def test_gated_embeddings_batch_score_single_endpoint(batch_score_embeddings_yml
 @pytest.mark.e2e
 @pytest.mark.timeout(8 * 60 * 60)
 def test_nightly_batch_score(batch_score_yml_component):
+    """Nightly test batch score."""
     set_component(*batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_nightly"}
     yaml_2_by_2 = {"jobs": {JOB_NAME: {
@@ -244,6 +253,7 @@ def test_nightly_batch_score(batch_score_yml_component):
 @pytest.mark.e2e
 @pytest.mark.timeout(2 * 24 * 60 * 60)
 def test_longhaul_batch_score(batch_score_yml_component):
+    """Long haul test batch score."""
     set_component(*batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_longhaul"}
     yaml_2_by_2 = {"jobs": {JOB_NAME: {

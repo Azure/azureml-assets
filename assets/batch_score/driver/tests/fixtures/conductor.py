@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains fixtures to mock conductor."""
+
 import asyncio
 import json
 
@@ -18,6 +20,7 @@ from src.batch_score.common.scoring.scoring_result import (
 
 @pytest.fixture
 def make_conductor(make_routing_client, make_scoring_client):
+    """Make a mock conductor."""
     def make(loop=asyncio.get_event_loop(),
              routing_client=None,
              scoring_client=make_scoring_client(),
@@ -48,6 +51,7 @@ def make_conductor(make_routing_client, make_scoring_client):
 
 @pytest.fixture
 def mock_run(monkeypatch):
+    """Mock run function."""
     passed_requests = []
 
     async def _run(self, requests: "list[ScoringRequest]") -> "list[ScoringResult]":

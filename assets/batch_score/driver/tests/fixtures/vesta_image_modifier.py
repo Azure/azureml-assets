@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains fixtures to mock vesta image modifier."""
+
 import pytest
 
 from src.batch_score.common.request_modification.modifiers.vesta_chat_completion_image_modifier import (
@@ -20,7 +22,9 @@ MOCKED_BINARY_FROM_URL = "MOCKED_BINARY_FROM_URL"
 
 @pytest.fixture
 def make_vesta_image_modifier(make_image_encoder):
+    """Mock vesta image modifier."""
     def make(image_encoder: ImageEncoder = make_image_encoder()):
+        """Make a mock vesta image modifier."""
         return VestaImageModifier(
             image_encoder=image_encoder
         )
@@ -30,7 +34,9 @@ def make_vesta_image_modifier(make_image_encoder):
 
 @pytest.fixture
 def make_vesta_chat_completion_image_modifier(make_image_encoder):
+    """Mock vesta chat completion image modifier."""
     def make(image_encoder: ImageEncoder = make_image_encoder()):
+        """Make a mock vesta chat completion image modifier."""
         return VestaChatCompletionImageModifier(
             image_encoder=image_encoder
         )
@@ -40,7 +46,9 @@ def make_vesta_chat_completion_image_modifier(make_image_encoder):
 
 @pytest.fixture
 def make_image_encoder():
+    """Mock image encoder."""
     def make(image_input_folder_str: str = None):
+        """Make a mock image encoder."""
         return ImageEncoder(
             image_input_folder_str=image_input_folder_str
         )
@@ -50,6 +58,7 @@ def make_image_encoder():
 
 @pytest.fixture
 def mock_encode_b64(monkeypatch):
+    """Mock encode b64."""
     state = {"exception": None}
 
     def _encode_b64(self, image_data) -> str:
@@ -65,6 +74,7 @@ def mock_encode_b64(monkeypatch):
 
 @pytest.fixture
 def mock__b64_from_file(monkeypatch):
+    """Mock b64 from file."""
     requested_files = []
 
     def __b64_from_file(self, path: str):
@@ -78,6 +88,7 @@ def mock__b64_from_file(monkeypatch):
 
 @pytest.fixture
 def mock__b64_from_url(monkeypatch):
+    """Mock b64 from url."""
     requested_urls = []
 
     def __b64_from_url(self, url: str):

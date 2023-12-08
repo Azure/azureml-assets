@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains fixtures to mock routing client."""
+
 import aiohttp
 import pytest
 
@@ -9,10 +11,12 @@ from src.batch_score.batch_pool.routing.routing_client import RoutingClient
 
 @pytest.fixture
 def make_routing_client(make_completion_header_handler):
+    """Mock routing client."""
     def make(service_namespace: str = None,
              target_batch_pool: str = None,
              header_handler=make_completion_header_handler(),
              request_path: str = None):
+        """Make a mock routing client."""
         return RoutingClient(
             service_namespace=service_namespace,
             target_batch_pool=target_batch_pool,
@@ -25,6 +29,7 @@ def make_routing_client(make_completion_header_handler):
 
 @pytest.fixture
 def mock_get_quota_scope(monkeypatch):
+    """Mock get quota scope."""
     async def _get_quota_scope(self, session):
         return "endpointPools:MOCK-POOL:trafficGroups:MOCK-GROUP"
 
@@ -34,6 +39,7 @@ def mock_get_quota_scope(monkeypatch):
 
 @pytest.fixture
 def mock_get_client_setting(monkeypatch):
+    """Mock get client setting."""
     state = {}
 
     def _get_client_setting(self, key):
@@ -47,6 +53,7 @@ def mock_get_client_setting(monkeypatch):
 
 @pytest.fixture
 def mock_refresh_pool_routes(monkeypatch):
+    """Mock refresh pool routes."""
     state = {
         "exception_to_raise": None,
     }

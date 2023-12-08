@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for token provider."""
+
 import src.batch_score.common.auth.token_provider as tp
 
 

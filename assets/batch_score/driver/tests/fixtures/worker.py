@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains fixtures to mock worker."""
+
 from collections import deque
 
 import aiohttp
@@ -14,6 +16,7 @@ from src.batch_score.common.parallel.worker import Worker
 
 @pytest.fixture
 def make_worker(make_scoring_client, make_routing_client):
+    """Mock worker."""
     def make(
             scoring_client=None,
             client_session=aiohttp.ClientSession(),
@@ -25,7 +28,7 @@ def make_worker(make_scoring_client, make_routing_client):
             segment_max_token_size=None,
             id=1,
             max_retry_time_interval=1):
-
+        """Make a mock worker."""
         configuration = Configuration(
             async_mode=False,
             max_retry_time_interval=max_retry_time_interval,

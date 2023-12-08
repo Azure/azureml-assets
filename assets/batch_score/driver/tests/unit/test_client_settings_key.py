@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for client settings key."""
+
 from src.batch_score.common.configuration.client_settings import ClientSettingsKey
 
 
