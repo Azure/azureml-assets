@@ -49,4 +49,5 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 > - The `stabilityai-stable-diffusion-2-1` model doesn't check for the NSFW content in generated image. We highly recommend to use the model with <a href="https://learn.microsoft.com/en-us/azure/ai-services/content-safety/studio-quickstart" target="_blank">Azure AI Content Safety (AACS)</a>. Please refer sample <a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image" target="_blank">online</a>  and <a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" target="_blank">batch</a> notebooks for AACS integrated deployments.
 
 #### Model inference: visualization for the prompt - "a photograph of an astronaut riding a horse"
-Need to add
+
+<img src='https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_deci_decidiffusion_v1_0.png' alt='deci_decidiffusion_v1_0 visualization'>
