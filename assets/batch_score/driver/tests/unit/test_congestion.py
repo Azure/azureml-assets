@@ -98,6 +98,7 @@ class TestWaitTimeCongestionDetector:
         self._clear_env_vars()
 
     def test_unknown_congestion_case(self, make_routing_client):
+        """Test unknown congestion case."""
         congestion_detector = WaitTimeCongestionDetector(client_settings_provider=make_routing_client())
 
         actual_congestion_state = congestion_detector.detect(RequestMetrics(), pd.Timestamp.utcnow())

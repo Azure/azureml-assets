@@ -222,6 +222,7 @@ def test_init_env_var_overrides_client_setting_overrides_class_default(
 
 
 def clear_env_vars():
+    """Clear env vars."""
     for key in env_vars.keys():
         if key in os.environ:
             del os.environ[key]

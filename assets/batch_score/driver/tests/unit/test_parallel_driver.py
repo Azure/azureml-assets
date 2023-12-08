@@ -37,7 +37,6 @@ def test_start_applies_input_to_output_transformer_to_result(
         make_parallel_driver,
         make_input_transformer):
     """Tests the input_to_output_transformer is applied to scoring request objects that are part of the output."""
-
     parallel_driver: Parallel = make_parallel_driver(
         input_to_output_transformer=make_input_transformer(modifiers=[FakeOutputRequestModifier()]))
 

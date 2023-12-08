@@ -14,7 +14,6 @@ from src.batch_score.common.scoring.scoring_result import RetriableException
 @pytest.mark.asyncio
 async def test_score_once_pool_scenario(mock_get_logger, make_scoring_client, mock_get_quota_scope, mock__score_once):
     """Test score once pool scenario."""
-
     mock_client_session = MagicMock()
     mock_scoring_request = MagicMock()
 
@@ -30,7 +29,6 @@ async def test_score_once_pool_scenario(mock_get_logger, make_scoring_client, mo
 @pytest.mark.asyncio
 async def test_score_once_endpoint_scenario(mock_get_logger, make_scoring_client, mock__score_once):
     """Test score once endpoint scenario."""
-
     mock_client_session = MagicMock()
     mock_scoring_request = MagicMock()
     mock_timeout = MagicMock()

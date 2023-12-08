@@ -6,6 +6,7 @@
 
 class TestMiniBatchContext:
     """Mock PRS mini batch context class."""
+
     __test__ = False
 
     def __init__(self, minibatch_index):

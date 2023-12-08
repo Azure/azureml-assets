@@ -15,6 +15,8 @@ from src.batch_score.common.configuration.client_settings import ClientSettingsK
 
 @pytest.mark.asyncio
 class TestRoutingClient:
+    """Test routing client."""
+
     @pytest.mark.parametrize(
         "client_settings_from_endpoint_discovery_service, key, expected_value",
         [

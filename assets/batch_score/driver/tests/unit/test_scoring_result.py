@@ -11,7 +11,6 @@ from src.batch_score.common.scoring.scoring_result import (
 
 def test_copy():
     """Test copy."""
-
     result = ScoringResult(
         ScoringResultStatus.SUCCESS,
         0,
