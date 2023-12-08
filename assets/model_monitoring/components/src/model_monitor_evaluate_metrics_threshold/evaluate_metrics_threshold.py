@@ -71,6 +71,7 @@ def evaluate_metrics_threshold(
 
 
 def calculate_metrics_breach(metrics_threshold_df: pyspark.sql.DataFrame):
+    """Calculate the breached metrics by the given thresholds."""   
     metrics_threshold_breached_df = metrics_threshold_df.where(
         (F.col(SIGNAL_METRICS_METRIC_NAME).isin(Metric_Value_Should_Greater_Than_Threshold) &
          (F.col(SIGNAL_METRICS_METRIC_VALUE) < F.col(SIGNAL_METRICS_THRESHOLD_VALUE))) |
@@ -83,6 +84,7 @@ def calculate_metrics_breach(metrics_threshold_df: pyspark.sql.DataFrame):
 def send_email_for_breached(metrics_threshold_breached_df: pyspark.sql.DataFrame,
                             signal_name: str,
                             notification_emails: str):
+    """Send email notification for the breached metrics.""" 
     if metrics_threshold_breached_df.count() > 0:
         error_message = _generate_error_message(metrics_threshold_breached_df, signal_name)
         post_warning_event(error_message)
