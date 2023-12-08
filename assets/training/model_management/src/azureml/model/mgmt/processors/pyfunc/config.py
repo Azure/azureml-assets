@@ -54,9 +54,3 @@ class SupportedTasks(_CustomEnum):
     IMAGE_OBJECT_DETECTION = "image-object-detection"
     IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
 
-
-class SupportedTextToImageModelFamily(_CustomEnum):
-    """Supported text to image models."""
-
-    STABLE_DIFFUSION = "stable-diffusion"
-    DECI_DIFFUSION = "decidiffusion"
