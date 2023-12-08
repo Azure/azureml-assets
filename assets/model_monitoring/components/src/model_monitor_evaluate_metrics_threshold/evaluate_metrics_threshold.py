@@ -21,6 +21,9 @@ import pyspark
 import pyspark.sql.functions as F
 
 
+# For the list of metrics, the users expect the value should be greater than the threshold,
+# We should raise alert when the metric value is less than the threshold.
+# For the metrics not in the list, we should alert when the metrics value is greater than the threshold.
 Metric_Value_Should_Greater_Than_Threshold = [TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST_METRIC_NAME,
                                               PEARSONS_CHI_SQUARED_TEST_METRIC_NAME,
                                               NORMALIZED_DISCOUNTED_CUMULATIVE_GAIN_METRIC_NAME,
