@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_text_generation_pipeline
-version: 0.0.3
+version: 0.0.7
 type: pipeline
 display_name: OSS Text Generation Pipeline
 description: FTaaS Pipeline component for text generation
@@ -83,7 +83,7 @@ inputs:
 
   learning_rate:
     type: number
-    default: 0.00002
+    default: 3e-04
     optional: true
     description: Start learning rate.
 
@@ -126,7 +126,7 @@ outputs:
 jobs:
   oss_text_generation_data_import:
     type: command
-    component: azureml:oss_text_generation_data_import:0.0.3
+    component: azureml:oss_text_generation_data_import:0.0.7
     compute: '${{parent.inputs.compute_data_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_import}}'
@@ -141,7 +141,7 @@ jobs:
       system_properties: '${{parent.inputs.system_properties}}'
   oss_text_generation_finetune:
     type: command
-    component: azureml:oss_text_generation_finetune:0.0.3
+    component: azureml:oss_text_generation_finetune:0.0.7
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -171,12 +171,13 @@ jobs:
       optim: adamw_hf
       learning_rate: '${{parent.inputs.learning_rate}}'
       warmup_steps: 0
-      weight_decay: 0.0
+      weight_decay: 0.1
       adam_beta1: 0.9
-      adam_beta2: 0.999
+      adam_beta2: 0.95
+      adam_epsilon: 1e-05
       gradient_accumulation_steps: 1
       eval_accumulation_steps: 1
-      lr_scheduler_type: linear
+      lr_scheduler_type: cosine
       precision: 16
       seed: 42
       enable_full_determinism: "false"

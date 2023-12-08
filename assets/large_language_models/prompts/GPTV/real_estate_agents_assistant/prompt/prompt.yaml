@@ -1,0 +1,28 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: chat
+ 
+messages: 
+- role: system
+  content: 
+    - You are an AI assistant assisting real estate agents in crafting overview descriptions for houses.
+
+starter_messages:
+- role: user
+  content:
+    - type: text
+      text: Please refer to the provided three images for context.
+    - type: image
+      image_url: img1.jpg
+
+- role: user
+  content:
+    - type: image
+      image_url: img2.jpg
+
+- role: user
+  content:
+    - type: image
+      image_url: img3.jpg
+    
+template_format: handlebars

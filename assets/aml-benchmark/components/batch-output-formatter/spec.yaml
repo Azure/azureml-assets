@@ -23,7 +23,7 @@ inputs:
     description: Name(s) of additional column(s) that could be useful to compute metrics.
   endpoint_url:
     type: string
-    optional: False
+    optional: True
   ground_truth_input:
     type: uri_folder
     description: The raw batch inference output.
@@ -65,7 +65,7 @@ command: >-
   --prediction_data ${{outputs.predictions}}
   --perf_data ${{outputs.performance_metadata}}
   --predict_ground_truth_data ${{outputs.ground_truth}}
-  --endpoint_url ${{inputs.endpoint_url}}
+  $[[--endpoint_url ${{inputs.endpoint_url}}]]
   $[[--label_key ${{inputs.label_column_name}}]]
   $[[--additional_columns ${{inputs.additional_columns}}]]
   --handle_response_failure ${{inputs.handle_response_failure}}

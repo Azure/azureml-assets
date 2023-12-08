@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 """Configuration classes for the Engine and Task."""
 from dataclasses import asdict, dataclass, field
-from typing import Dict, Type, TypeVar, Optional
+from typing import Dict, Optional, Type, TypeVar
 
+from custom_model_configurations.base_configuration_builder import ModelConfigurationBuilder
 from constants import TaskType
 
 
@@ -59,6 +59,7 @@ class EngineConfig(SerializableDataClass):
     mii_config: Optional[MiiEngineConfig] = None
     vllm_config: Optional[Dict] = None
     model_config: Optional[Dict] = None
+    custom_model_config_builder: Optional[ModelConfigurationBuilder] = None
 
     @classmethod
     def from_dict(cls: Type[TypeVar("T")], d: Dict) -> TypeVar("T"):

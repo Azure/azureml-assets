@@ -31,7 +31,7 @@ def parse_args() -> argparse.Namespace:
         help="The ground truth data mapping 1-1 to the prediction data.")
 
     parser.add_argument("--perf_data", type=str, help="path to output location")
-    parser.add_argument("--endpoint_url", type=str, help="endpoint_url")
+    parser.add_argument("--endpoint_url", type=str, help="endpoint_url", default=None)
     parser.add_argument("--metadata_key", type=str, help="metadata key", default=None)
     parser.add_argument("--data_id_key", type=str, help="metadata key", default=None)
     parser.add_argument("--label_key", type=str, help="label key")
@@ -95,6 +95,7 @@ def main(
     else:
         ground_truth_df = None
     online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
+
     rc = ResultConverters(
         online_model._model_type, metadata_key, data_id_key,
         label_key, additional_columns, ground_truth_df,
