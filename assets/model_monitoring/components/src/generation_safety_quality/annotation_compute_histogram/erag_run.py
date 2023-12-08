@@ -2,6 +2,7 @@ import argparse
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType, DoubleType, IntegerType
 import json
+from scipy import stats
 from shared_utilities import io_utils
 from LLM_helper import (
     PROMPT, COMPLETION, CONTEXT, GROUND_TRUTH, OPENAI_REQUEST_PARAMS, API_KEY,
@@ -60,6 +61,21 @@ def get_overall_score(question, answer, workspace_connection_arm_id, model_deplo
         )
     # print(rating)
     return rating
+
+
+class Action:
+    def __init__(self, title, description, questions=None, index_id=None):
+        self.title = title
+        self.description = description
+        self.index_id = index_id
+        self.questions = questions
+
+
+class ActionEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Action):
+            return obj.__dict__
+        return super().default(obj)
 
 
 def run():
@@ -145,16 +161,34 @@ def run():
         )
     )
 
-    # question, output, run_info, node_run_info
-    df = io_utils.try_read_mltable_in_spark_with_error(args.production_dataset)
-    # calculate_flow_input_output_relevance_score()
-    # make two cohorts by good and bad relevance
-    # get question, indexed doc relevance from node_run_info.lookup.output[0/1/2].score for the 2 cohorts
-    # use t-test to check if they have statistics significant difference
-    # if yes:
-    # 	generate update index action
-    # else:
-    # 	generate general action
+    pdf = df.toPandas()
+    # Separate the data into groups
+    good_answers = pdf[pdf['overall_score'] >= 4]['lookup_score']
+    bad_answers = pdf[pdf['overall_score'] < 4][['lookup_score', 'question', 'answer', 'overall_score']]
+
+    # Perform the t-test
+    t_stat, p_value = stats.ttest_ind(good_answers, bad_answers['lookup_score'])
+
+    print(f"T-statistic: {t_stat}, P-value: {p_value}")
+
+    if t_stat > 0 and p_value < 0.05:
+        action = Action(
+            title="Update the doc index",
+            description="Poor answers are caused by poor indexing, please update the doc index",
+            questions=[row['question'] for _, row in bad_answers.iterrows()],
+            index_id=None,  # TODO fill in the index id
+        )
+    else:
+        action = Action(
+            title="Check steps other than doc index",
+            description="Poor answers are not caused by poor indexing, please check other steps in the flow, or maybe the questions are not clear enough",
+            questions=[row['question'] for _, row in bad_answers.iterrows()]
+        )
+
+    # TODO dump above action to a json file somewhere in the default store, maybe leverage the azureml filesystem
+    import json
+    print(json.dumps(action, cls=ActionEncoder, indent=2))
+    # json.dump(action, AzureMLFileSystem('azureml://datastores/workspacedefaultblob/path/to/action.json', 'w'), cls=ActionEncoder, indent=2)
 
 
 if __name__ == "__main__":
