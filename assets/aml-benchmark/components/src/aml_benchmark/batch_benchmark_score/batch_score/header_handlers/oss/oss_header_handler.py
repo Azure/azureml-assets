@@ -35,7 +35,7 @@ class OSSHeaderHandler(HeaderHandler):
         self._connections_name = connections_name
         self._model = online_endpoint_model
 
-    def get_headers(self, additional_headers: Dict[str, Any] = None, payoad: Optional[Any] = None) -> Dict[str, Any]:
+    def get_headers(self, additional_headers: Dict[str, Any] = None, palyoad: Optional[Any] = None) -> Dict[str, Any]:
         """Get handers."""
         online_endpoint = OSSOnlineEndpoint(
             workspace_name=self._endpoint_workspace, resource_group=self._endpoint_resource_group,
