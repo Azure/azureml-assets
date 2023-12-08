@@ -127,6 +127,7 @@ def get_mlclient(registry_name: Optional[str] = None) -> MLClient:
     """
     try:
         credential = AzureCliCredential()
+        credential.get_token("https://management.azure.com/.default")
     except Exception as ex:
         print(f"Unable to authenticate via Azure CLI:\n{ex}")
         credential = DefaultAzureCredential()
