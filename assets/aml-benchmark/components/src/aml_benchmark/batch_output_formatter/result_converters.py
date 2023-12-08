@@ -123,7 +123,7 @@ class ResultConverters:
             use_ground_truth_input = True
         elif self._model.is_vision_oss_model():
             use_ground_truth_input = False
-        if use_ground_truth_input:  # Ask about edge case.
+        if use_ground_truth_input:
             request_payload = self._get_request(result)
             payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
             ground_truth = self._lookup_dict.get(payload_hash, '')

@@ -25,7 +25,7 @@ class EndpointDataPreparer:
         self._model = OnlineEndpointModel(model_type=model_type, model=None, model_version=None)
         self._batch_input_pattern = batch_input_pattern
         self._label_key = label_key
-        self._additional_columns = additional_columns
+        self._additional_columns = additional_columns.split(",") if additional_columns else None
 
     def convert_input_dict(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Convert input dict to the corresponding payload."""
@@ -40,8 +40,8 @@ class EndpointDataPreparer:
             EndpointDataPreparer.PAYLOAD_HASH: row_id,
             EndpointDataPreparer.PAYLOAD_GROUNDTRUTH: origin_json_dict.get(self._label_key, ""),
         }
-        if self._additional_columns is not None:
-            for column in self._additional_columns.split(","):
+        if self._additional_columns:
+            for column in self._additional_columns:
                 result[column] = origin_json_dict.get(column, "")
         return result
 
