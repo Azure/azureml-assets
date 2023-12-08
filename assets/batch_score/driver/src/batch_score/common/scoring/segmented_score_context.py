@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Segmented score context."""
+
 import json
 
 import aiohttp
@@ -14,7 +16,10 @@ from .scoring_result import ScoringResult, ScoringResultStatus
 
 
 class SegmentedScoreContext:
+    """Segmented score context."""
+
     def __init__(self, original_scoring_request: ScoringRequest, segment_max_token_size: int):
+        """Init function."""
         self.__original_scoring_request = original_scoring_request
         self.__supports_segmentation = True
         self.__next_scoring_request: ScoringRequest = None
@@ -44,6 +49,7 @@ class SegmentedScoreContext:
         timeout: aiohttp.ClientTimeout = None,
         worker_id: str = "1"
     ) -> ScoringResult:
+        """Make a scoring call with the next segment and return the result."""
         if self.__next_scoring_request is None:
             self.__next_scoring_request = self.__create_next_scoring_request()
 
@@ -60,6 +66,7 @@ class SegmentedScoreContext:
         return next_result
 
     def has_more(self) -> bool:
+        """Check whether there is any more segment."""
         if len(self.__segmented_results) > 0:
             if self.__original_max_tokens is None:
                 # No provided max_tokens scenario
@@ -80,6 +87,7 @@ class SegmentedScoreContext:
         return True
 
     def build_scoring_result(self, final_result: ScoringResult):
+        """Build scoring result."""
         if not self.__supports_segmentation or len(self.__segmented_results) <= 1:
             return final_result
         else:
@@ -122,15 +130,13 @@ class SegmentedScoreContext:
         return segmented_result.response_body["usage"][usage_key]
 
     def __merge_usage(self, final_result: ScoringResult):
+        """Update the `usage` section of the final scoring result."""
         """
-        Update the `usage` section of the final scoring result.
-
         NOTE: Completion tokens is computed to be the difference of total tokens of the final segment and
         prompt tokens of the initial segment. Across all segments, the sum of `completion_tokens` may differ
         from the final result's `completion_tokens` value due to slight variations in the prompt token
         count as the input grows.
         """
-
         if "usage" in final_result.response_body:
             final_usage = final_result.response_body["usage"]
 

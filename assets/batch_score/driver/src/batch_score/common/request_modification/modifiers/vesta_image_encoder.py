@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Vesta image encoder."""
+
 import base64
 import os
 import time
@@ -13,15 +15,19 @@ from .request_modifier import RequestModificationException
 
 
 class ImageEncoder():
+    """Vesta image encoder."""
+
     IMAGE_URL = "ImageUrl!"
     IMAGE_FILE = "ImageFile!"
 
     def __init__(self, image_input_folder_str: str = None) -> None:
+        """Init function."""
         self.__image_input_folder_str: str = None
         if image_input_folder_str:
             self.__image_input_folder_str = str(Path(image_input_folder_str))
 
     def encode_b64(self, image_data: str) -> str:
+        """Encode the image data in base64 format."""
         # Image URL to fetch
         if image_data.startswith(ImageEncoder.IMAGE_URL):
             url = image_data[len(ImageEncoder.IMAGE_URL):]
@@ -75,15 +81,24 @@ class ImageEncoder():
 
 
 class UnsuccessfulUrlResponse(Exception):
+    """Unsuccessful url response."""
+
     def __init__(self, *args: object) -> None:
+        """Init function."""
         super().__init__(f"{ImageEncoder.IMAGE_URL} used in data, but url did not respond succesfully.")
 
 
 class FolderNotMounted(Exception):
+    """Folder not mounted."""
+
     def __init__(self, *args: object) -> None:
+        """Init function."""
         super().__init__(f"{ImageEncoder.IMAGE_FILE} used in data, but no folder is mounted.")
 
 
 class VestaImageModificationException(RequestModificationException):
+    """Vesta image modification exception."""
+
     def __init__(self) -> None:
+        """Init function."""
         super().__init__("The ImageEncoder raised an exception")

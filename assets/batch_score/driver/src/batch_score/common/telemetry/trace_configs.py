@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Trace log configurations."""
+
 import aiohttp
 from aiohttp import TraceConfig
 
@@ -8,7 +10,10 @@ from ..telemetry import logging_utils as lu
 
 
 class ExceptionTrace(TraceConfig):
+    """Exception trace configuration."""
+
     def __init__(self):
+        """Init function."""
         super().__init__()
         self.on_request_exception.append(self.__on_request_exception)
 
@@ -20,7 +25,10 @@ class ExceptionTrace(TraceConfig):
 
 
 class RequestEndTrace(TraceConfig):
+    """Request end trace configuration."""
+
     def __init__(self):
+        """Init function."""
         super().__init__()
         self.on_request_end.append(self.__on_request_end)
 
@@ -32,7 +40,10 @@ class RequestEndTrace(TraceConfig):
 
 
 class RequestRedirectTrace(TraceConfig):
+    """Request Redirect trace configuration."""
+
     def __init__(self):
+        """Init function."""
         super().__init__()
         self.on_request_redirect.append(self.__on_request_redirect)
 
@@ -44,7 +55,10 @@ class RequestRedirectTrace(TraceConfig):
 
 
 class ResponseChunkReceivedTrace(TraceConfig):
+    """Response chunk received trace configuration."""
+
     def __init__(self):
+        """Init function."""
         super().__init__()
         self.on_response_chunk_received.append(self.__on_response_chunk_received)
 
@@ -59,7 +73,10 @@ class ResponseChunkReceivedTrace(TraceConfig):
 
 
 class ConnectionCreateStartTrace(TraceConfig):
+    """Connection create start trace configuration."""
+
     def __init__(self):
+        """Init function."""
         super().__init__()
         self.on_connection_create_start.append(self.__on_connection_create_start)
 
@@ -74,7 +91,10 @@ class ConnectionCreateStartTrace(TraceConfig):
 
 
 class ConnectionCreateEndTrace(TraceConfig):
+    """Connection create end trace configuration."""
+
     def __init__(self):
+        """Init function."""
         super().__init__()
         self.on_connection_create_end.append(self.__on_connection_create_end)
 
@@ -89,7 +109,10 @@ class ConnectionCreateEndTrace(TraceConfig):
 
 
 class ConnectionReuseconnTrace(TraceConfig):
+    """Connection reuse trace configuration."""
+
     def __init__(self):
+        """Init function."""
         super().__init__()
         self.on_connection_reuseconn.append(self.__on_connection_reuseconn)
 

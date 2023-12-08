@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Scoring client."""
+
 import asyncio
 import time
 import traceback
@@ -27,6 +29,8 @@ from ..routing.routing_client import RoutingClient
 
 
 class ScoringClient:
+    """Scoring client."""
+
     DV_COMPLETION_API_PATH = "v1/engines/davinci/completions"
     DV_EMBEDDINGS_API_PATH = "v1/engines/davinci/embeddings"
     DV_CHAT_COMPLETIONS_API_PATH = "v1/engines/davinci/chat/completions"
@@ -48,6 +52,7 @@ class ScoringClient:
             routing_client: RoutingClient = None,
             online_endpoint_url: str = None,
             tally_handler: TallyFailedRequestHandler = None):
+        """Init function."""
         self.__header_handler = header_handler
         self.__routing_client = routing_client
         self.__quota_client = quota_client
@@ -63,6 +68,7 @@ class ScoringClient:
             timeout: aiohttp.ClientTimeout = None,
             worker_id: str = "1"
     ) -> ScoringResult:
+        """Make a scoring call to the endpoint and return the result."""
         if self.__routing_client and self.__quota_client:
             quota_scope = await self.__routing_client.get_quota_scope(session)
 
@@ -85,6 +91,7 @@ class ScoringClient:
             timeout: aiohttp.ClientTimeout = None,
             worker_id: str = "1"
     ) -> ScoringResult:
+        """Make a scoring call to the endpoint and return the result."""
         response = None
         response_payload = None
         response_status = None
@@ -244,6 +251,7 @@ class ScoringClient:
         return result
 
     def get_next_retry_timeout(timeout_generator):
+        """Get next retry timeout."""
         try:
             return next(timeout_generator)
         except StopIteration:
@@ -254,9 +262,7 @@ class ScoringClient:
             return None
 
     def get_retry_timeout_generator(default_timeout: aiohttp.ClientTimeout):
-        """
-        A Python generator that yields aiohttp.ClientTimeout objects.
-        """
+        """Get a Python generator that yields aiohttp.ClientTimeout objects."""
         for iteration in range(2, 10):
             timeout = max(ScoringClient.MINIMUM_SCORING_TIMEOUT, int(2.7 ** iteration))
             if timeout >= default_timeout.total:

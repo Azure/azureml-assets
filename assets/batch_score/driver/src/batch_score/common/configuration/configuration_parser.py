@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Configuration parser."""
+
 import json
 from argparse import ArgumentParser
 
@@ -8,13 +10,12 @@ from .. import constants
 from .configuration import Configuration
 from .command_line_argument_specification import COMMAND_LINE_ARGUMENT_SPECIFICATION
 
-
 class ConfigurationParser:
-    def parse_configuration(self, args: "list[str]" = None) -> Configuration:
-        ''' Parses the command line arguments and returns a Configuration object.
-            If args are provided, they are parsed. Otherwise, sys.argv is parsed.
-        '''
+    """Configuration parser."""
 
+    def parse_configuration(self, args: "list[str]" = None) -> Configuration:
+        """Parse the command line arguments and returns a Configuration object."""
+        """If args are provided, they are parsed. Otherwise, sys.argv is parsed."""
         parsed_args, _ = self._setup_parser().parse_known_args(args=args)
         args_dict = vars(parsed_args)
         args_dict = ConfigurationParser._update_configuration_from_file(args_dict)

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Vesta chat completion encoded image scrubber."""
+
 import json
 
 from ...telemetry import logging_utils as lu
@@ -10,7 +12,10 @@ from .vesta_image_encoder import ImageEncoder
 
 
 class VestaChatCompletionEncodedImageScrubber(RequestModifier):
+    """Vesta chat completion encoded image scrubber."""
+
     def modify(self, request_obj: any) -> any:
+        """Modify the request object."""
         if "Column1" in request_obj:
             request_obj = json.loads(request_obj["Column1"])
 

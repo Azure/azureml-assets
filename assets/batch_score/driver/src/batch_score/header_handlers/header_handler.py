@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Header handler base class."""
+
 import json
 import os
 from abc import ABC, abstractclassmethod
@@ -10,12 +12,15 @@ from ..common.auth.token_provider import TokenProvider
 
 
 class HeaderHandler(ABC):
+    """Header handler base class."""
+
     def __init__(self,
                  token_provider: TokenProvider,
                  user_agent_segment: str = None,
                  batch_pool: str = None,
                  quota_audience: str = None,
                  additional_headers: str = None) -> None:
+        """Init function."""
         if user_agent_segment and (":" in user_agent_segment or "/" in user_agent_segment):
             raise Exception("user_agent_segment should not contain characters ':' or '/'")
 
@@ -31,16 +36,19 @@ class HeaderHandler(ABC):
 
     @abstractclassmethod
     def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
+        """Get headers."""
         pass
 
     # read-only
     @property
     def batch_pool(self):
+        """Get the batch pool."""
         return self._batch_pool
 
     # read-only
     @property
     def quota_audience(self):
+        """Get the quota audience."""
         return self._quota_audience
 
     def _get_user_agent(self) -> str:

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Token provider."""
+
 import os
 from datetime import datetime, timezone
 from typing import Dict
@@ -16,11 +18,14 @@ from ..telemetry import logging_utils as lu
 
 
 class TokenProvider:
+    """Token provider."""
+
     SCOPE_AML = "https://ml.azure.com/.default"
     SCOPE_ARM = "https://management.azure.com/.default"
     CLIENT_ID_ENV_VAR = "DEFAULT_IDENTITY_CLIENT_ID"
 
     def __init__(self, client_id=None, token_file_path: str = None) -> None:
+        """Init function."""
         if not client_id:
             client_id = os.environ.get(self.CLIENT_ID_ENV_VAR)
 
@@ -36,6 +41,7 @@ class TokenProvider:
             self.__credential = DefaultAzureCredential()
 
     def get_token(self, scope: str) -> str:
+        """Get auth token."""
         if self.__credential is not None:
             return self.__get_msi_access_token(scope).token
 

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Common utilities."""
+
 import collections.abc
 import json
 from argparse import ArgumentParser
@@ -15,6 +17,7 @@ from .json_encoder_extensions import BatchComponentJSONEncoder, NumpyArrayEncode
 
 
 def get_base_url(url: str) -> str:
+    """Get base url."""
     if not url:
         return url
 
@@ -23,10 +26,12 @@ def get_base_url(url: str) -> str:
 
 
 def backoff(attempt: int, base_delay: float = 1, exponent: float = 2, max_delay: float = 20):
+    """Calculate backoff delay time."""
     return min(max_delay, base_delay * attempt**exponent)
 
 
 def str2bool(v):
+    """Convert string to boolean."""
     if isinstance(v, bool):
         return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -38,6 +43,7 @@ def str2bool(v):
 
 
 def convert_result_list(results: "list[ScoringResult]", batch_size_per_request: int) -> "list[str]":
+    """Convert scoring results to the result list."""
     output_list: list[dict[str, str]] = []
     for scoringResult in results:
         output: dict[str, str] = {}
@@ -66,6 +72,7 @@ def convert_result_list(results: "list[ScoringResult]", batch_size_per_request: 
 def convert_to_list(data: pd.DataFrame,
                     additional_properties: str = None,
                     batch_size_per_request: int = 1) -> "list[str]":
+    """Convert the input panda data frame to a list of payload strings."""
     columns = data.keys()
     payloads = []
     additional_properties_list = None

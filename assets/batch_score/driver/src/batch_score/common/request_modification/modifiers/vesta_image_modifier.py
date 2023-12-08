@@ -1,14 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Vesta image modifier."""
+
 from ...telemetry import logging_utils as lu
 from .request_modifier import RequestModifier
 from .vesta_image_encoder import ImageEncoder, VestaImageModificationException
 
 
 class VestaImageModifier(RequestModifier):
+    """Vesta image modifier."""
+
     @staticmethod
     def vesta_payload_type(request_obj: any) -> str:
+        """Get Vesta payload type."""
         payload_type = None
 
         if "transcript" in request_obj:
@@ -23,6 +28,7 @@ class VestaImageModifier(RequestModifier):
 
     @staticmethod
     def is_vesta_payload(request_obj: any):
+        """Check whether the payload is in Vesta format."""
         payload_type = VestaImageModifier.vesta_payload_type(request_obj=request_obj)
 
         return (payload_type is not None and
@@ -30,9 +36,11 @@ class VestaImageModifier(RequestModifier):
                 all("type" in transcript for transcript in request_obj[payload_type]))
 
     def __init__(self, image_encoder: "ImageEncoder" = None) -> None:
+        """Init function."""
         self.__image_encoder: ImageEncoder = image_encoder
 
     def modify(self, request_obj: any) -> any:
+        """Modify the request object."""
         if VestaImageModifier.is_vesta_payload(request_obj=request_obj):
             for transcript_dict in request_obj[VestaImageModifier.vesta_payload_type(request_obj=request_obj)]:
                 if transcript_dict["type"] == "image" or transcript_dict["type"] == "image_hr":

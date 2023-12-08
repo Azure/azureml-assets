@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Conductor that orchestrates workers to process payload."""
+
 import asyncio
 import os
 from collections import deque
@@ -24,6 +26,8 @@ from .worker import QueueItem, Worker
 
 
 class Conductor:
+    """Conductor that orchestrates workers to process payload."""
+
     def __init__(
         self,
         configuration: Configuration,
@@ -33,6 +37,7 @@ class Conductor:
         trace_configs: "list[TraceConfig]" = None,
         finished_callback=None,
     ):
+        """Init function."""
         self._configuration = configuration
         self.__loop: asyncio.AbstractEventLoop = loop
         self.__scoring_client: ScoringClient = scoring_client
@@ -69,6 +74,7 @@ class Conductor:
             self.__loop.run_in_executor(None, self.__loop.run_forever)
 
     async def run(self, requests: "list[ScoringRequest]") -> "list[ScoringResult]":
+        """Run function."""
         self.__add_requests(requests)
 
         msg = "Conductor: Starting with {} running workers and {} target worker count." \
@@ -99,6 +105,7 @@ class Conductor:
                 requests: "list[ScoringRequest]",
                 failed_results: "list[ScoringResult]",
                 mini_batch_context: MiniBatchContext):
+        """Enqueue function."""
         self.__minibatch_index_set.add(mini_batch_context.mini_batch_id)
         if len(requests) == 0:
             msg = "Conductor: Encountered empty requests in minibatch id {}, adding empty results."
@@ -115,6 +122,7 @@ class Conductor:
         lu.get_logger().info("Conductor: Enqueued {} scoring requests. ".format(len(requests)))
 
     def check_all_tasks_processed(self):
+        """Check all tasks processed function."""
         lu.get_logger().info("Conductor: Checking if all tasks are processed, ")
         msg = "Conductor: len minibatch_index_set is {}, self.__gatherer.get_returned_minibatch_count() is {}"
         lu.get_logger().info(msg.format(len(self.__minibatch_index_set),
@@ -125,9 +133,11 @@ class Conductor:
             len(self.__minibatch_index_set) == self.__gatherer.get_returned_minibatch_count()
 
     def get_finished_batch_result(self):
+        """Get finished batch result function."""
         return self.__gatherer.get_finished_minibatch_result()
 
     def get_processing_batch_number(self):
+        """Get processing batch number function."""
         lu.get_logger().info("Conductor: Getting number of processing mini batches.")
         msg = "Conductor: len minibatch_index_set is {}, self.__gatherer.get_returned_minibatch_count() is {}"
         lu.get_logger().info(msg.format(len(self.__minibatch_index_set),
@@ -135,6 +145,7 @@ class Conductor:
         return len(self.__minibatch_index_set) - self.__gatherer.get_returned_minibatch_count()
 
     def shutdown(self):
+        """Shutdown function."""
         if self._configuration.async_mode:
             asyncio.run(self._release())
 
@@ -187,8 +198,7 @@ class Conductor:
                       duration: int,
                       tasks: "list[asyncio.Task]",
                       target_result_len: int = None) -> "list[asyncio.Task]":
-        """Waits for the configured sleep interval, but wakes up early if the workers finish."""
-
+        """Wait for the configured sleep interval, but wakes up early if the workers finish."""
         sleep_task = asyncio.create_task(asyncio.sleep(duration))
         tasks = [*tasks, sleep_task]
 
@@ -201,7 +211,7 @@ class Conductor:
         return list(tasks)
 
     def _adjust_worker_concurrency(self):
-        '''Adjusts the number of running workers to match the target worker count.'''
+        """Adjust the number of running workers to match the target worker count."""
         while len(self.__workers) < self.__target_worker_count:
             worker = Worker(
                 configuration=self._configuration,
@@ -223,7 +233,7 @@ class Conductor:
                 worker.stop()
 
     def _update_target_worker_count(self):
-        '''Update the target worker count and returns the amount of time to sleep before the next adjustment.'''
+        """Update the target worker count and returns the amount of time to sleep before the next adjustment."""
         adjustments = self.__cas.calculate_next_concurrency(self.__target_worker_count)
 
         if adjustments.new_concurrency <= self.__target_worker_count or \

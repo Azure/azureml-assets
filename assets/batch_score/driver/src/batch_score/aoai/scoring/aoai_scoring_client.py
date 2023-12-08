@@ -4,6 +4,8 @@
 # Copied from https://github.com/Azure/azureai-insiders/tree/main/previews/batch-inference-using-aoai
 # and then modified.
 
+"""Scoring client targeting to Azure OpenAI endpoints."""
+
 import asyncio
 import json
 import time
@@ -35,18 +37,22 @@ from ...common.telemetry.scoring_logging import (
     ScoreSucceedLog,
 )
 
-
 class UnrecognizedScoringApiException(Exception):
+    """Unrecognized scoring api exception."""
+
     def __init__(self, scoring_url: str, expected_scoring_apis: 'list[str]'):
+        """Init function."""
         self.scoring_url = scoring_url
         self.expected_scoring_apis = expected_scoring_apis
 
     def __str__(self):
+        """Str function."""
         return f"Unrecognized scoring URL '{self.scoring_url}' does not contain any of {self.expected_scoring_apis}."
 
 
 # TO DO: Rename to LLMScoringClient
 class AoaiScoringClient:
+    """AOAI scoring client."""
 
     RETRIABLE_STATUS_CODE = [408, 429, 500, 502, 503, 504]
 
@@ -84,7 +90,7 @@ class AoaiScoringClient:
             scoring_url: str = None,
             tally_handler: TallyFailedRequestHandler = None,
             additional_headers: str = None):
-
+        """Init function."""
         self.__auth_provider: AuthProvider = auth_provider
         self.__scoring_url: str = scoring_url
         self.__tally_handler = tally_handler
@@ -100,9 +106,7 @@ class AoaiScoringClient:
                          # TODO: use timeout and worker id
                          timeout: aiohttp.ClientTimeout = None,
                          worker_id: str = "1") -> ScoringResult:
-
-        """ Score a single request until terminal status is reached.
-        """
+        """Score a single request until terminal status is reached."""
         response = None
         response_payload = None
         response_status = None
@@ -212,8 +216,7 @@ class AoaiScoringClient:
         return result
 
     def __get_headers(self) -> "dict[str, any]":
-        """ Retrieve request headers.
-        """
+        """Retrieve request headers."""
         headers = {
             'Content-Type': 'application/json',
             'x-ms-client-request-id': str(uuid.uuid4())
@@ -231,8 +234,7 @@ class AoaiScoringClient:
         configuration: Configuration,
         tally_handler: TallyFailedRequestHandler
     ) -> 'AoaiScoringClient':
-        """ Create a client using command line arguments.
-        """
+        """Create a client using command line arguments."""
         auth_provider: AuthProvider = None
 
         if configuration.authentication_type == "api_key":
@@ -255,8 +257,7 @@ class AoaiScoringClient:
         return scoring_client
 
     def validate(self):
-        """ Validate the scoring client by scoring a sample.
-        """
+        """Validate the scoring client by scoring a sample."""
         try:
             get_logger().info("Validating the scoring client by scoring a sample.")
             result = asyncio.run(self._score_sample())
@@ -273,8 +274,7 @@ class AoaiScoringClient:
         raise Exception(error_msg)
 
     async def _score_sample(self):
-        """ Score with a sample request.
-        """
+        """Score with a sample request."""
         api = AoaiScoringClient._infer_api(self.__scoring_url)
         scoring_request = AoaiScoringClient._get_sample_scoring_request(api)
 
@@ -290,8 +290,7 @@ class AoaiScoringClient:
 
     @staticmethod
     def _infer_api(scoring_url: str) -> ScoringRequest:
-        """ Infer the scoring API type from the scoring URL.
-        """
+        """Infer the scoring API type from the scoring URL."""
         # Order matters. The first one that matches is returned.
         # Chat completion API must be checked before completion API.
         expected_scoring_apis = [
@@ -308,7 +307,6 @@ class AoaiScoringClient:
 
     @staticmethod
     def _get_sample_scoring_request(api: str) -> ScoringRequest:
-        """ Get a sample scoring request.
-        """
+        """Get a sample scoring request."""
         payload = json.dumps(AoaiScoringClient.SAMPLE_PAYLOADS[api])
         return ScoringRequest(original_payload=payload)

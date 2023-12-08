@@ -1,13 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Vesta encoded image scrubber."""
+
 from ...telemetry import logging_utils as lu
 from .request_modifier import RequestModifier
 from .vesta_image_modifier import ImageEncoder, VestaImageModifier
 
 
 class VestaEncodedImageScrubber(RequestModifier):
+    """Vesta encoded image scrubber."""
+
     def modify(self, request_obj: any) -> any:
+        """Modify the request object."""
         if VestaImageModifier.is_vesta_payload(request_obj=request_obj):
             for transcript_dict in request_obj[VestaImageModifier.vesta_payload_type(request_obj=request_obj)]:
                 if transcript_dict["type"] == "image" or transcript_dict["type"] == "image_hr":

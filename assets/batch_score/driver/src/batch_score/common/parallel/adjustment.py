@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Concurrency adjustment."""
+
 import os
 from abc import ABC, abstractmethod
 
@@ -13,21 +15,29 @@ from .request_metrics import RequestMetrics
 
 
 class ConcurrencyAdjustment:
+    """Concurrency adjustment."""
+
     def __init__(self, new_concurrency: int, next_adjustment_delay: int):
+        """Init function."""
         self.new_concurrency = new_concurrency
         self.next_adjustment_delay = next_adjustment_delay
 
 
 # Abstract class for concurrency adjustment strategies
 class ConcurrencyAdjustmentStrategy(ABC):
+    """Concurrency adjustment strategy."""
+
     @abstractmethod
     def calculate_next_concurrency(self, current_concurrency: int) -> ConcurrencyAdjustment:
+        """Calculate next concurrency."""
         pass
 
 
 # Additive increase/multiplicative decrease
 # https://en.wikipedia.org/wiki/Additive_increase/multiplicative_decrease
 class AIMD(ConcurrencyAdjustmentStrategy):
+    """Additive increase multiplicative decrease strategy."""
+
     DEFAULT_ADJUSTMENT_INTERVAL = 180
     DEFAULT_ADDITIVE_INCREASE = 1
     DEFAULT_MULTIPLICATIVE_DECREASE = 0.75
@@ -37,6 +47,7 @@ class AIMD(ConcurrencyAdjustmentStrategy):
         request_metrics: RequestMetrics,
         client_settings_provider: ClientSettingsProvider,
     ):
+        """Init function."""
         self.__confidence: int = 0
         self._last_adjustment_time: pd.Timestamp = None
         self.__request_metrics = request_metrics
@@ -46,6 +57,7 @@ class AIMD(ConcurrencyAdjustmentStrategy):
         self._refresh_concurrency_settings()
 
     def calculate_next_concurrency(self, current_concurrency: int) -> ConcurrencyAdjustment:
+        """Calculate next concurrency."""
         self._refresh_concurrency_settings()
 
         new_concurrency = current_concurrency

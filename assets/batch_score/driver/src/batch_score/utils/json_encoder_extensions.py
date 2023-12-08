@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Json encoder extensions."""
+
 import json
 
 import numpy
@@ -9,7 +11,10 @@ from ..common.telemetry import logging_utils as lu
 
 
 class BatchComponentJSONEncoderConfiguration():
+    """Batch component JSON encoder configuration."""
+
     def __init__(self, ensure_ascii: bool) -> None:
+        """Init function."""
         global _default_encoder_configuration
 
         if _default_encoder_configuration:
@@ -19,6 +24,8 @@ class BatchComponentJSONEncoderConfiguration():
 
 
 class BatchComponentJSONEncoder(json.JSONEncoder):
+    """Batch component Json encoder."""
+
     def __init__(self, *,
                  skipkeys: bool = None,
                  ensure_ascii: bool = None,
@@ -28,6 +35,7 @@ class BatchComponentJSONEncoder(json.JSONEncoder):
                  indent=None,
                  separators=None,
                  default=None) -> None:
+        """Init function."""
         global _default_encoder_configuration
         if _default_encoder_configuration:
             super().__init__(
@@ -39,7 +47,10 @@ class BatchComponentJSONEncoder(json.JSONEncoder):
 
 
 class NumpyArrayEncoder(BatchComponentJSONEncoder):
+    """Numpy array encoder."""
+
     def default(self, obj):
+        """Encode the object as a numpy ND array."""
         if isinstance(obj, numpy.ndarray):
             return obj.tolist()
         return super().default(self, obj)
@@ -50,6 +61,7 @@ _default_encoder_configuration: BatchComponentJSONEncoderConfiguration = None
 
 
 def setup_encoder(ensure_ascii: bool = True):
+    """Set up encoder."""
     global _default_encoder_configuration
     if not _default_encoder_configuration:
         _default_encoder_configuration = BatchComponentJSONEncoderConfiguration(
@@ -58,4 +70,5 @@ def setup_encoder(ensure_ascii: bool = True):
 
 
 def get_default_encoder() -> json.JSONEncoder:
+    """Get default encoder."""
     return BatchComponentJSONEncoder()

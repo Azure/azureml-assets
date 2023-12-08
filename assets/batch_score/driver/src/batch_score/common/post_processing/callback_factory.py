@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""A factory to create post-gathering callbacks used in async mode."""
+
 import traceback
 
 from ...utils.common import convert_result_list
@@ -17,6 +19,7 @@ from .result_utils import (
 
 
 def add_callback(callback, cur):
+    """Append a callback to a list."""
     def wrapper(scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
         scoring_results = callback(scoring_results, mini_batch_context)
         return cur(scoring_results, mini_batch_context)
@@ -24,28 +27,35 @@ def add_callback(callback, cur):
 
 
 class CallbackFactory:
+    """A factory to create post-gathering callbacks used in async mode."""
+
     def __init__(self,
                  configuration: Configuration,
                  input_to_output_transformer):
+        """Init function."""
         self._configuration = configuration
         self.__input_to_output_transformer = input_to_output_transformer
 
     def generate_callback(self):
+        """Generate a list of callbacks used in async mode."""
         callback = self.save_mini_batch_result_and_emit
         callback = add_callback(self.convert_result_list, callback)
         callback = add_callback(self.apply_input_transformer, callback)
         return callback
 
     def convert_result_list(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
+        """Convert result list."""
         return convert_result_list(results=scoring_results,
                                    batch_size_per_request=self._configuration.batch_size_per_request)
 
     def apply_input_transformer(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
+        """Apply input transformer."""
         return apply_input_transformer(self.__input_to_output_transformer, scoring_results)
 
     def save_mini_batch_result_and_emit(self,
                                         scoring_results: "list[ScoringResult]",
                                         mini_batch_context: MiniBatchContext):
+        """Save mini batch result and emit."""
         mini_batch_id = mini_batch_context.mini_batch_id
         set_mini_batch_id(mini_batch_context.mini_batch_id)
         lu.get_logger().info("Start saving result of data subset {}.".format(mini_batch_id))

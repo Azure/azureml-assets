@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Gatherer to resememble scoring results by mini batch."""
+
 import asyncio
 import copy
 from collections import defaultdict, deque
@@ -11,25 +13,34 @@ from ..telemetry.logging_utils import set_mini_batch_id
 
 
 class Gatherer:
+    """Gatherer to resememble scoring results by mini batch."""
+
     class Metrics:
+        """Gatherer metrics."""
+
         def __init__(self):
+            """Init function."""
             self.handled_scoring_result_count = 0
             self.handled_minibatch_count = 0
             self.returned_minibatch_count = 0
 
         def emit_scoring_result_handled(self):
+            """Increase the metric of handled scoring result count."""
             self.handled_scoring_result_count += 1
 
         def emit_minibatch_handled(self):
+            """Increase the metric of handled mini batch count."""
             self.handled_minibatch_count += 1
 
         def emit_minibatch_returned(self, minibatch_count):
+            """Increase the metric of returned mini batch count."""
             self.returned_minibatch_count += minibatch_count
 
     def __init__(self,
                  scoring_result_queue: "deque[ScoringResult]",
                  failed_scoring_result_queue: "deque[ScoringResult]",
                  callback):
+        """Init function."""
         self.__finished_callback = callback
         self.__scoring_result_queue = scoring_result_queue
         self.__failed_scoring_result_queue = failed_scoring_result_queue
@@ -42,6 +53,7 @@ class Gatherer:
         self.__finished_result_list_map = {}
 
     async def run(self):
+        """Run function."""
         while self.__working:
             mini_batch_id = None
             try:
@@ -104,9 +116,11 @@ class Gatherer:
         self.__metrics.emit_minibatch_handled()
 
     def add_empty_result(self, mini_batch_context):
+        """Add empty result to the mini batch and mark it as finished."""
         self._add_to_finished_result_list_map([], mini_batch_context)
 
     def get_finished_minibatch_result(self) -> "dict[str, dict[str, any]]":
+        """Get finished mini batch result."""
         result_map = copy.deepcopy(self.__finished_result_list_map)
         msg = "Gatherer: get_finished_minibatch_result. Mini batch IDs: {}"
         lu.get_logger().info(msg.format(list(result_map.keys())))
@@ -115,4 +129,5 @@ class Gatherer:
         return result_map
 
     def get_returned_minibatch_count(self):
+        """Get the metric of returned mini batch count."""
         return self.__metrics.returned_minibatch_count

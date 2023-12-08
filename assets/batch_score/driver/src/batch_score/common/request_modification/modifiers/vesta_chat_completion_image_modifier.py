@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Vesta chat completion image modifier."""
+
 import json
 
 from ...telemetry import logging_utils as lu
@@ -9,14 +11,19 @@ from .vesta_image_encoder import ImageEncoder, VestaImageModificationException
 
 
 class VestaChatCompletionImageModifier(RequestModifier):
+    """Vesta chat completion image modifier."""
+
     @staticmethod
     def is_vesta_chat_completion_payload(request_obj: any):
+        """Check whether the payload is in Vesta chat completion format."""
         return ("messages" in request_obj) and all("content" in message for message in request_obj["messages"])
 
     def __init__(self, image_encoder: "ImageEncoder" = None) -> None:
+        """Init function."""
         self.__image_encoder: ImageEncoder = image_encoder
 
     def modify(self, request_obj: any) -> any:
+        """Modify the request object."""
         if "Column1" in request_obj:
             request_obj = json.loads(request_obj["Column1"])
 

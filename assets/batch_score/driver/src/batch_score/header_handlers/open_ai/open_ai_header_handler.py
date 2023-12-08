@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""OpenAI header handler."""
+
 import uuid
 
 from ...common import constants
@@ -9,17 +11,21 @@ from ..header_handler import HeaderHandler
 
 
 class OpenAIHeaderHandler(HeaderHandler):
+    """OpenAI header handler."""
+
     def __init__(self,
                  token_provider: TokenProvider,
                  user_agent_segment: str = None,
                  batch_pool: str = None,
                  quota_audience: str = None,
                  additional_headers: str = None) -> None:
+        """Init function."""
         super().__init__(token_provider, user_agent_segment, batch_pool, quota_audience, additional_headers)
         if batch_pool is not None:
             self.__set_default_additional_headers()
 
     def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
+        """Get headers for OpenAI requests."""
         bearer_token = self._token_provider.get_token(scope=TokenProvider.SCOPE_AML)
         user_agent = self._get_user_agent()
 
@@ -39,9 +45,7 @@ class OpenAIHeaderHandler(HeaderHandler):
         return headers
 
     def __set_default_additional_headers(self):
-        """
-        This sets the default values for case-insensitive keys.
-        """
+        """Set the default values for case-insensitive keys."""
         azureml_collect_request_key = "azureml-collect-request"
         azureml_inferencing_offer_name_key = "azureml-inferencing-offer-name"
 

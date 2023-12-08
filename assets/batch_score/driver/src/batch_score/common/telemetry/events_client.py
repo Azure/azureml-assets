@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Client to emit telemetry events."""
+
 import json
 import logging
 from contextvars import ContextVar
@@ -9,6 +11,8 @@ from opencensus.ext.azure.log_exporter import AzureEventHandler
 
 
 class EventsClient:
+    """Client to emit telemetry events."""
+
     def emit_request_completed(
         self,
         latency: int,
@@ -20,6 +24,7 @@ class EventsClient:
         client_exception: str = "",
         is_retriable: bool = False
     ):
+        """Emit an event for request completed."""
         pass
 
     def emit_tokens_generated(
@@ -28,6 +33,7 @@ class EventsClient:
         context_tokens: int,
         endpoint_uri: str = "",
     ):
+        """Emit an event for tokens generated."""
         pass
 
     def emit_request_concurrency(
@@ -36,12 +42,14 @@ class EventsClient:
         active_requests: int,
         estimated_cost: int
     ):
+        """Emit an event for request concurrency."""
         pass
 
     def emit_worker_concurrency(
         self,
         worker_concurrency: int
     ):
+        """Emit an event for worker concurrency."""
         pass
 
     def emit_row_completed(
@@ -49,6 +57,7 @@ class EventsClient:
         row_count: int,
         result: str = "SUCCESS"
     ):
+        """Emit an event for row completed."""
         pass
 
     def emit_quota_operation(
@@ -59,12 +68,14 @@ class EventsClient:
         amount: int,
         scoring_request_internal_id: str
     ):
+        """Emit an event for quota operation."""
         pass
 
     def emit_mini_batch_started(
         self,
         input_row_count: int
     ):
+        """Emit an event for mini batch started."""
         pass
 
     def emit_mini_batch_completed(
@@ -74,22 +85,27 @@ class EventsClient:
         exception: str = None,
         stacktrace: str = None
     ):
+        """Emit an event for mini batch completed."""
         pass
 
     def emit_batch_driver_init(
         self,
         job_params: dict,
     ):
+        """Emit an event for batch driver init."""
         pass
 
     def emit_batch_driver_shutdown(
         self,
         job_params: dict,
     ):
+        """Emit an event for batch driver shutdown."""
         pass
 
 
 class AppInsightsEventsClient(EventsClient):
+    """Application insight event client."""
+
     def __init__(self,
                  custom_dimensions: dict,
                  app_insights_connection_string: str,
@@ -97,6 +113,7 @@ class AppInsightsEventsClient(EventsClient):
                  mini_batch_id: ContextVar,
                  quota_audience: ContextVar,
                  batch_pool: ContextVar):
+        """Init function."""
         self.__custom_dimensions = custom_dimensions
         self.__worker_id = worker_id
         self.__mini_batch_id = mini_batch_id
@@ -126,6 +143,7 @@ class AppInsightsEventsClient(EventsClient):
         client_exception: str = "",
         is_retriable: bool = False
     ):
+        """Emit an event for request completed."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -149,6 +167,7 @@ class AppInsightsEventsClient(EventsClient):
         context_tokens: int,
         endpoint_uri: str = "",
     ):
+        """Emit an event for tokens generated."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -167,6 +186,7 @@ class AppInsightsEventsClient(EventsClient):
         active_requests: int,
         quota_reserved: int
     ):
+        """Emit an event for request concurrency."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -183,6 +203,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         worker_concurrency: int
     ):
+        """Emit an event for worker concurrency."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -198,6 +219,7 @@ class AppInsightsEventsClient(EventsClient):
         row_count: int,
         result: str = "SUCCESS"
     ):
+        """Emit an event for row completed."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -216,6 +238,7 @@ class AppInsightsEventsClient(EventsClient):
                              lease_id: str,
                              amount: int,
                              scoring_request_internal_id: str):
+        """Emit an event for quota operation."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -235,6 +258,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         input_row_count: int
     ):
+        """Emit an event for mini batch started."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -253,6 +277,7 @@ class AppInsightsEventsClient(EventsClient):
         exception: str = None,
         stacktrace: str = None
     ):
+        """Emit an event for mini batch completed."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -271,6 +296,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         job_params: dict,
     ):
+        """Emit an event for batch driver init."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -287,6 +313,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         job_params: dict,
     ):
+        """Emit an event for batch driver shutdown."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 

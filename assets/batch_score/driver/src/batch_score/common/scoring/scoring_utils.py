@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Scoring utilities."""
+
 from enum import Enum
 
 
@@ -11,16 +13,20 @@ ZeroTrafficGroupError = "Specified traffic group could not be found"
 
 
 class RetriableType(Enum):
+    """Retriable type."""
+
     NOT_RETRIABLE = 1
     RETRY_ON_SAME_ENDPOINT = 2
     RETRY_ON_DIFFERENT_ENDPOINT = 3
 
 
 def is_retriable(retriable_type: RetriableType):
+    """Check whether the type is retriable."""
     return retriable_type != RetriableType.NOT_RETRIABLE
 
 
 def is_zero_traffic_group_error(response_status: int, response_payload: any = None):
+    """Check whether the response indicates a zero traffic group error."""
     return response_status == 404 and ZeroTrafficGroupError in response_payload
 
 
@@ -31,6 +37,7 @@ def get_retriable_type(response_status: int,
                        response_payload: any = None,
                        model_response_code: str = None,
                        model_response_reason: str = None):
+    """Get retriable type from response and model response."""
     if response_status in [408, -408]:
         return RetriableType.RETRY_ON_SAME_ENDPOINT
 

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Dv3 estimator."""
+
 import json
 import os
 from abc import abstractmethod
@@ -15,13 +17,17 @@ from .quota_estimator import QuotaEstimator
 
 
 class DV3Estimator(QuotaEstimator):
+    """Dv3 estimator."""
+
     DEFAULT_MAX_TOKENS = 10
 
     def __init__(self):
+        """Init function."""
         self.__coeffs = self.__load_coeffs()
         self.__tokenizer = self.__load_tokenizer()
 
     def calc_tokens_with_tiktoken(self, prompt) -> "int | tuple[int]":
+        """Calculate token with tiktoken library."""
         if isinstance(prompt, str):
             return self.__calc_tokens_for_one_prompt(prompt)
         else:
@@ -31,6 +37,7 @@ class DV3Estimator(QuotaEstimator):
             return self.__calc_tokens_for_batch(prompt)
 
     def estimate_request_cost(self, request_obj: any) -> int:
+        """Estimate request cost."""
         prompt = self._get_prompt(request_obj)
         max_tokens = request_obj.get("max_tokens", self.DEFAULT_MAX_TOKENS)
 
@@ -56,6 +63,7 @@ class DV3Estimator(QuotaEstimator):
         return est_tokens + max_tokens
 
     def estimate_response_cost(self, request_obj: any, response_obj: any) -> int:
+        """Estimate response cost."""
         # Cost is total input + max output tokens.
         return response_obj["usage"]["prompt_tokens"] + request_obj.get("max_tokens", self.DEFAULT_MAX_TOKENS)
 

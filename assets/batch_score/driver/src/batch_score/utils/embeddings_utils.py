@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Embeddings utilities."""
+
 from copy import deepcopy
 
 import pandas as pd
@@ -13,6 +15,7 @@ estimator = None
 
 def _convert_to_list_of_input_batches(data: pd.DataFrame,
                                       batch_size_per_request: int) -> "list[dict]":
+    """Convert input data to a list of input batches."""
     """
     This method is specific for APIs that allow batching, currently only Embeddings.
     That means the data has the "input" column.
@@ -32,6 +35,7 @@ def _convert_to_list_of_input_batches(data: pd.DataFrame,
 
 
 def _convert_to_list_of_output_items(result: dict, token_count_estimates: "tuple[int]") -> "list[dict]":
+    """Convert results to a list of output items."""
     """
     Only used by the Embeddings API with batched HTTP requests, this method takes
     a scoring result as dictionary of "request", "response", and (optional) "request_metadata".
@@ -90,6 +94,7 @@ def _convert_to_list_of_output_items(result: dict, token_count_estimates: "tuple
 
 
 def __build_output_idx_to_embedding_mapping(response_data):
+    """Build a mapping from output index to embedding."""
     """
     Given response data, return a dictionary of the index and embedding info for each element of the batch.
     Unsure if the responses are always in the correct order by input index, ensure output order by mapping out index.
@@ -104,9 +109,8 @@ def __build_output_idx_to_embedding_mapping(response_data):
 
 
 def __override_prompt_tokens(output_obj, token_count):
+    """Set the token_count as the value for `prompt_tokens` in response's usage info."""
     """
-    Sets the token_count as the value for `prompt_tokens` in response's usage info.
-
     Args:
         output_obj: The dictionary of info for response, request
         token_count: The tiktoken count for this input string
@@ -119,9 +123,8 @@ def __override_prompt_tokens(output_obj, token_count):
 
 
 def __tiktoken_estimates_succeeded(token_count_estimates: "tuple[int]", input_length: int) -> bool:
+    """Return True if the length of the batch of inputs matches the length of the tiktoken estimates."""
     """
-    Returns True if the length of the batch of inputs matches the length of the tiktoken estimates.
-
     Args:
         token_count_estimates: The tuple of tiktoken estimates for the inputs in this batch
         input_length: The length of inputs in this batch
@@ -135,9 +138,8 @@ def __tiktoken_estimates_succeeded(token_count_estimates: "tuple[int]", input_le
 
 
 def __tiktoken_estimates_retry(request_obj: dict) -> "tuple[int]":
+    """Return token counts for the inputs within a batch."""
     """
-    Returns token counts for the inputs within a batch.
-
     Args:
         request_obj: The request dictionary.
     """
@@ -154,13 +156,11 @@ def __tiktoken_estimates_retry(request_obj: dict) -> "tuple[int]":
 
 
 def __validate_response_data_length(numrequests, numresults):
+    """Validate the number of outputs from the API response matches the number of requests in the batch."""
     """
-    Validate the number of outputs from the API response matches the number of requests in the batch.
-
     Args:
         numrequests: The number of requests in this batch.
         numresults: The number of results in the response data.
-
     Raises:
         Exception if response length and request length do not match.
     """

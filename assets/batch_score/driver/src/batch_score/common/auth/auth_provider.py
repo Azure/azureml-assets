@@ -4,6 +4,8 @@
 # Copied from https://github.com/Azure/azureai-insiders/tree/main/previews/batch-inference-using-aoai
 # and then modified.
 
+"""Authentication provider."""
+
 import json
 import os
 from abc import abstractmethod
@@ -28,13 +30,16 @@ EndpointType = Enum('EndpointType', ['AOAI', 'Serverless', 'MIR'])
 
 
 class AuthProvider:
+    """Authentication provider."""
 
     @abstractmethod
     def get_auth_headers(self) -> dict:
+        """Get auth headers."""
         pass
 
 
 class IdentityAuthProvider(AuthProvider):
+    """Identity auth provider."""
 
     SCOPE_COGNITIVE = "https://cognitiveservices.azure.com/.default"
 
@@ -42,7 +47,7 @@ class IdentityAuthProvider(AuthProvider):
             self,
             use_user_identity: bool,
             managed_identity_client_id: str = None):
-
+        """Init function."""
         # The identity used to score an AOAI deployment must have
         # the role "Cognitive Services User" on the AOAI resource.
         # The role "Contributor" is not sufficient.
@@ -63,6 +68,7 @@ class IdentityAuthProvider(AuthProvider):
         self.__access_token: AccessToken = None
 
     def get_auth_headers(self) -> dict:
+        """Get auth headers."""
         return {
             'Authorization': 'Bearer ' + self.__get_access_token(),
         }
@@ -86,10 +92,14 @@ class IdentityAuthProvider(AuthProvider):
 
 
 class MissingApiKeyNameException(Exception):
+    """Missing API key name exception."""
+
     def __init__(self):
+        """Init function."""
         pass
 
     def __str__(self):
+        """Str function."""
         return ("'api_key_name' cannot be empty when using the authentication_type 'api_key'."
                 "Please set 'api_key_name' to the name of the key vault secret "
                 "that contains the API key of the scoring_url."
@@ -98,11 +108,12 @@ class MissingApiKeyNameException(Exception):
 
 
 class ApiKeyAuthProvider(AuthProvider):
+    """Api key auth provider."""
 
     def __init__(
             self,
             api_key_name) -> None:
-
+        """Init function."""
         if api_key_name is None:
             ex = MissingApiKeyNameException()
             get_logger().error(str(ex))
@@ -112,6 +123,7 @@ class ApiKeyAuthProvider(AuthProvider):
         self.__api_key = self.__get_api_key()
 
     def get_auth_headers(self) -> dict:
+        """Get auth headers."""
         return {
             'api-key': self.__api_key,
         }
@@ -123,8 +135,10 @@ class ApiKeyAuthProvider(AuthProvider):
 
 
 class WorkspaceConnectionAuthProvider(AuthProvider):
+    """Workspace connection auth provider."""
 
     def __init__(self, connection_name, endpoint_type) -> None:
+        """Init function."""
         self._current_workspace = None
         self._connection_name = connection_name
         self._endpoint_type = endpoint_type

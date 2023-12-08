@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Result utilities."""
+
 import os
 
 from ..request_modification.input_transformer import InputTransformer
@@ -12,6 +14,7 @@ from .mini_batch_context import MiniBatchContext
 def apply_input_transformer(input_to_output_transformer: InputTransformer,
                             scoring_results: "list[ScoringResult]",
                             mini_batch_context: MiniBatchContext = None):
+    """Apply input to output transformation to the scoring results."""
     if input_to_output_transformer:
         lu.get_logger().debug("Start applying input to output transformer.")
         for scoring_result in scoring_results:
@@ -26,6 +29,7 @@ def apply_input_transformer(input_to_output_transformer: InputTransformer,
 
 
 def get_return_value(ret: 'list[str]', output_behavior: str):
+    """Get return value according to the output behavior."""
     if (output_behavior == "summary_only"):
         lu.get_logger().info("Returning results in summary_only mode.")
         # PRS confirmed there is no way to allow users to toggle the output_action behavior in the v2 component.
@@ -39,6 +43,7 @@ def get_return_value(ret: 'list[str]', output_behavior: str):
 
 
 def save_mini_batch_results(mini_batch_results: list, mini_batch_results_out_directory: str, raw_mini_batch_context):
+    """Save mini batch results."""
     lu.get_logger().debug("mini_batch_results_out_directory: {}".format(mini_batch_results_out_directory))
 
     filename = f"{raw_mini_batch_context.minibatch_index}.jsonl"

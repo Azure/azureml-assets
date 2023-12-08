@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Entry script for batch score component."""
+
 import asyncio
 import os
 import sys
@@ -83,6 +85,7 @@ configuration: Configuration = None
 
 
 def init():
+    """Init function of the component."""
     global par
     global configuration
 
@@ -135,6 +138,7 @@ def init():
 
 
 def run(input_data: pd.DataFrame, mini_batch_context):
+    """Run function of the component. Used in sync mode only."""
     global par
     global configuration
 
@@ -179,6 +183,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
 
 
 def enqueue(input_data: pd.DataFrame, mini_batch_context):
+    """Enqueue function of the component. Used in async mode only."""
     global par
     global configuration
 
@@ -212,6 +217,7 @@ def enqueue(input_data: pd.DataFrame, mini_batch_context):
 
 
 def check_all_tasks_processed() -> bool:
+    """Check if all enqueued tasks are processed. Used in async mode only."""
     global par
     global configuration
 
@@ -220,6 +226,7 @@ def check_all_tasks_processed() -> bool:
 
 
 def get_finished_batch_result() -> "dict[str, dict[str, any]]":
+    """Get result of finished mini batches. Used in async mode only."""
     global par
     global configuration
 
@@ -228,6 +235,7 @@ def get_finished_batch_result() -> "dict[str, dict[str, any]]":
 
 
 def get_processing_batch_number() -> int:
+    """Get number of mini batches are being processed. Used in async mode only."""
     global par
     global configuration
 
@@ -236,6 +244,7 @@ def get_processing_batch_number() -> int:
 
 
 def shutdown():
+    """Shutdown function of the component."""
     global par
     global configuration
 
@@ -246,6 +255,7 @@ def shutdown():
 
 
 def setup_trace_configs():
+    """Set up trace log configurations."""
     is_enabled = os.environ.get(constants.BATCH_SCORE_TRACE_LOGGING, None)
     trace_configs = None
 
@@ -265,6 +275,7 @@ def setup_trace_configs():
 
 
 def setup_loop() -> asyncio.AbstractEventLoop:
+    """Set up event loop."""
     if sys.platform == 'win32':
         # For windows environment
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -273,7 +284,7 @@ def setup_loop() -> asyncio.AbstractEventLoop:
 
 
 def setup_input_to_request_transformer() -> InputTransformer:
-    """This tranformer is used to modify each row of the input data before it is sent to MIR for scoring."""
+    """Set up the tranformer used to modify each row of the input data before it is sent to MIR for scoring."""
     modifiers: "list[RequestModifier]" = []
     if configuration.is_vesta():
         modifiers.append(VestaImageModifier(
@@ -286,7 +297,7 @@ def setup_input_to_request_transformer() -> InputTransformer:
 
 
 def setup_input_to_log_transformer() -> InputTransformer:
-    """This tranformer is used to modify each row of the input data before it is logged."""
+    """Set up the tranformer used to modify each row of the input data before it is logged."""
     modifiers: "list[RequestModifier]" = []
     if configuration.is_vesta():
         modifiers.append(VestaEncodedImageScrubber())
@@ -300,7 +311,7 @@ def setup_input_to_log_transformer() -> InputTransformer:
 
 
 def setup_input_to_output_transformer() -> InputTransformer:
-    """This tranformer is used to modify each row of the input data before it written to output."""
+    """Set up the tranformer used to modify each row of the input data before it written to output."""
     modifiers: "list[RequestModifier]" = []
     if configuration.is_vesta():
         modifiers.append(VestaEncodedImageScrubber())
@@ -315,6 +326,7 @@ def setup_scoring_client(
     token_provider: TokenProvider,
     routing_client: RoutingClient,
 ) -> "ScoringClient | AoaiScoringClient":
+    """Set up scoring client."""
     if (configuration.is_aoai_endpoint() or configuration.is_serverless_endpoint()):
         get_logger().info("Using LLM scoring client.")
         return setup_aoai_scoring_client(configuration=configuration)
@@ -330,6 +342,7 @@ def setup_scoring_client(
 def setup_aoai_scoring_client(
     configuration: Configuration
 ) -> AoaiScoringClient:
+    """Set up AOAI scoring client."""
     tally_handler = TallyFailedRequestHandler(
         enabled=configuration.tally_failed_requests,
         tally_exclusions=configuration.tally_exclusions
@@ -346,6 +359,7 @@ def setup_mir_scoring_client(
     routing_client: RoutingClient,
     connection_name: str
 ) -> ScoringClient:
+    """Set up MIR scoring client."""
     quota_client: QuotaClient = None
     if configuration.batch_pool and configuration.quota_audience and configuration.service_namespace:
         set_batch_pool(configuration.batch_pool)
@@ -372,11 +386,12 @@ def setup_mir_scoring_client(
 
     header_handler = None
 
-    '''Get the auth token from workspace connection and add that to the header.
+    """
+    Get the auth token from workspace connection and add that to the header.
     Additionally, add the 'Content-Type' header.
     The presence of workspace connection also signifies that this can be any MIR endpoint,
     so this will not add OAI specific headers.
-    '''
+    """
     if connection_name is not None:
         header_handler = MIREndpointV2HeaderHandler(connection_name)
     else:
@@ -394,6 +409,7 @@ def setup_mir_scoring_client(
 
 
 def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
+    """Set up routing client."""
     routing_client: RoutingClient = None
     if configuration.batch_pool and configuration.service_namespace:
         meds_header_handler = MedsHeaderHandler(
@@ -413,6 +429,7 @@ def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
 
 
 def setup_header_handler(routing_client: RoutingClient, token_provider: TokenProvider) -> OpenAIHeaderHandler:
+    """Set up header handler."""
     if configuration.is_sahara(routing_client=routing_client):
         return SaharaHeaderHandler(token_provider=token_provider,
                                    user_agent_segment=configuration.user_agent_segment,
