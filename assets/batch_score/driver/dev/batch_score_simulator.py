@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Batch score simulator."""
+
 import mltable
 import os
 
@@ -40,13 +42,17 @@ class MiniBatchContext(object):
 
 # Simulate PRS with a single Processor on a single Node
 class Simulator:
+    """PRS Simulator."""
+
     def __init__(self, data_input_folder_path):
+        """Init function."""
         self.__mltable_data: mltable = mltable.load(data_input_folder_path)
         self.__df_data = self.__mltable_data.to_pandas_dataframe()
         self.__minibatch_size = 500  # lines
         self.__cur_index = 0
 
     def start(self):
+        """Start the simulator."""
         main.init()
         results: list[str] = []
 

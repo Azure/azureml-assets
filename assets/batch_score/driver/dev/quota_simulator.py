@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Quota simulator."""
+
 import json
 import os
 
@@ -19,7 +21,10 @@ CAPACITY = int(os.environ.get("QUOTA_SIMULATOR_CAPACITY") or 2048)
 
 
 class QuotaSimulator(ServiceSimulator):
+    """Quota simulator."""
+
     def __init__(self):
+        """Init function."""
         super().__init__(handler=partial(self.RequestHandler, simulator=self))
 
         self._leases = {}
@@ -27,6 +32,7 @@ class QuotaSimulator(ServiceSimulator):
 
     @classmethod
     def initialize(cls):
+        """Initialize function."""
         if not cls.arg_pattern_is_present(ARG_HOST_PATTERN):
             print("Not starting quota simulator")
             return
@@ -39,11 +45,15 @@ class QuotaSimulator(ServiceSimulator):
         cls.arg_pattern_replace(ARG_HOST_PATTERN, quota.host)
 
     class RequestHandler(ServiceSimulator.RequestHandler):
+        """Simulator request handler."""
+
         def __init__(self, *args, simulator: 'QuotaSimulator', **kwargs):
+            """Init function."""
             self.__simulator = simulator
             super().__init__(*args, **kwargs)
 
         def do_POST(self):
+            """Simulate a POST request."""
             try:
                 path = self.path.split("?")[0]
 
