@@ -47,16 +47,13 @@ class ResultConverters:
             print(ground_truth_df)
             logger.info("receive ground truth columns {}".format(ground_truth_df.columns))
             for index, row in ground_truth_df.iterrows():
-                if self._additional_columns is not None:
+                self._lookup_dict[row[EndpointDataPreparer.PAYLOAD_HASH]] = \
+                    {self.ground_truth_column_name: row[EndpointDataPreparer.PAYLOAD_GROUNDTRUTH]}
+                if self._additional_columns:
                     print(self._additional_columns)
-                    self._lookup_dict[row[EndpointDataPreparer.PAYLOAD_HASH]] = \
-                        {"_ground_truth_column": row[EndpointDataPreparer.PAYLOAD_GROUNDTRUTH]}
                     for column in self._additional_columns:
                         self._lookup_dict[row[EndpointDataPreparer.PAYLOAD_HASH]][column] = \
                             row[column]
-                else:
-                    self._lookup_dict[row[EndpointDataPreparer.PAYLOAD_HASH]] = \
-                        row[EndpointDataPreparer.PAYLOAD_GROUNDTRUTH]
 
     def convert_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the input result to predictions."""
@@ -105,18 +102,13 @@ class ResultConverters:
         """Convert the result to ground truth."""
         ground_truth = ''
         use_ground_truth_input = False
-        additional_columns = None
         if self._model.is_oss_model():
+            if self._additional_columns:
+                use_ground_truth_input = True
             if self._metadata_key:
                 ground_truth = self._get_request(result)[self._metadata_key][self._label_key]
-                if self._additional_columns:
-                    additional_columns = self._get_additional_columns_data(
-                        self._get_request(result)[self._metadata_key]
-                        )
             elif self.METADATA_KEY_IN_RESULT in result:
                 ground_truth = result[self.METADATA_KEY_IN_RESULT][self._label_key]
-                if self._additional_columns:
-                    additional_columns = self._get_additional_columns_data(result[self.METADATA_KEY_IN_RESULT])
             else:
                 use_ground_truth_input = True
         elif self._model.is_aoai_model():
@@ -127,12 +119,7 @@ class ResultConverters:
             request_payload = self._get_request(result)
             payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
             ground_truth = self._lookup_dict.get(payload_hash, '')
-            if isinstance(ground_truth, dict):
-                ground_truth[self.ground_truth_column_name] = ground_truth.pop('_ground_truth_column')
-                return ground_truth
-        if additional_columns:
-            results = additional_columns.copy()
-            results = results[self.ground_truth_column_name] = ground_truth
+            return ground_truth
         else:
             results = {self.ground_truth_column_name: ground_truth}
         return results
