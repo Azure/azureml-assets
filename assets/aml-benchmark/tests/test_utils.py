@@ -12,7 +12,7 @@ import uuid
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
-from azure.identity import DefaultAzureCredential, AzureCliCredential
+from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
 from azure.ai.ml.entities import (
     ManagedOnlineEndpoint,
     ManagedOnlineDeployment,
@@ -126,11 +126,13 @@ def get_mlclient(registry_name: Optional[str] = None) -> MLClient:
     :return: MLClient instance.
     """
     try:
-        credential = DefaultAzureCredential()
+        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+        credential = ManagedIdentityCredential(client_id=msi_client_id)
         credential.get_token("https://management.azure.com/.default")
+        # credential = AzureCliCredential()
     except Exception as ex:
-        print(f"Unable to authenticate via Default authentication:\n{ex}")
-        credential = AzureCliCredential()
+        print(f"Unable to authenticate via Azure CLI:\n{ex}")
+        credential = DefaultAzureCredential()
         credential.get_token("https://management.azure.com/.default")
     try:
         ml_client = MLClient.from_config(credential=credential)
