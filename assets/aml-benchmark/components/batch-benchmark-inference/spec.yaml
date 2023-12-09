@@ -15,6 +15,10 @@ inputs:
     type: string
     description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
     optional: True
+    enum:
+      - oai
+      - oss
+      - vision_oss
   batch_input_pattern:
     type: string
     description: >- 
