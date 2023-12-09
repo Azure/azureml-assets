@@ -64,7 +64,6 @@ def test_asset(asset_config: assets.AssetConfig, env_name: str, reports_dir: str
         report_file = reports_dir / asset_config.type.value / f"{asset_config.name}.xml"
         cmd.append(f"--junitxml={report_file}")
         cmd.append(f"--junit-prefix={asset_config.type.value}/{asset_config.name}")
-        cmd.append("-x")
     cmd.append(asset_config.pytest_tests_dir)
 
     # Run tests
