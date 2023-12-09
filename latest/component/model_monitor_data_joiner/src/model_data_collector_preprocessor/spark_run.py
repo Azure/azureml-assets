@@ -28,7 +28,7 @@ def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: date
         add_tags_func({AML_MOMO_ERROR_TAG: "No data found for the given time window."})
         raise DataNotFoundError(
             f"No data found for the given time window: {start_datetime} to {end_datetime} "
-            f"in input {store_url.get_hdfs_url}. "
+            f"in input {store_url.get_hdfs_url()}. "
             "We expect folder pattern <root>/YYYY/MM/DD/HH/<your_log>.jsonl")
 
     add_tags_func = add_tags_func or add_tags_to_root_run
