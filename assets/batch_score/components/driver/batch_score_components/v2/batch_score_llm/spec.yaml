@@ -177,9 +177,5 @@ task:
     --save_mini_batch_results ${{inputs.save_mini_batch_results}}
     --mini_batch_results_out_directory ${{outputs.mini_batch_results_out_directory}}
     --amlbi_async_mode ${{inputs.async_mode}}
-  environment:
-    name: "prs-env-2"
-    version: 1
-    image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04
-    conda_file: environment_parallel.yaml
+  environment: azureml://registries/azureml/environments/batch-score-llm/versions/0.0.1
   append_row_to: ${{outputs.job_out_path}}
