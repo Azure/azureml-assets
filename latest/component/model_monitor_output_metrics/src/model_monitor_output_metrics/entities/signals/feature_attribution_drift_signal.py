@@ -9,6 +9,7 @@ from model_monitor_output_metrics.entities.feature_metrics import FeatureMetrics
 from model_monitor_output_metrics.entities.row_count_metrics import RowCountMetrics
 from model_monitor_output_metrics.entities.signal_type import SignalType
 from model_monitor_output_metrics.entities.signals.signal import Signal
+from shared_utilities.constants import NORMALIZED_DISCOUNTED_CUMULATIVE_GAIN_METRIC_NAME
 from shared_utilities.run_metrics_utils import get_or_create_run_id
 from shared_utilities.df_utils import row_has_value, add_value_if_present
 
@@ -70,7 +71,7 @@ class FeatureAttributionDriftSignal(Signal):
         feature_metric_cache = {}
         global_metric_cache = {}
         for metric in metrics:
-            if metric["metric_name"] == "NormalizedDiscountedCumulativeGain":
+            if metric["metric_name"] == NORMALIZED_DISCOUNTED_CUMULATIVE_GAIN_METRIC_NAME:
 
                 run_id = get_or_create_run_id(
                     monitor_name=monitor_name,
