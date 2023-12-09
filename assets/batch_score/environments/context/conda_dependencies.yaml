@@ -5,17 +5,17 @@ dependencies:
   - python=3.8
   - pip
   - pip:
-      - mlflow
-      - azureml-core
-      - azureml-dataprep>=4.12.6
-      - azureml-dataset-runtime[pandas,fuse]
-      - azureml-telemetry
-      - azure.identity
-      - pandas
-      - pillow
-      - aiohttp
-      - aiofiles
-      - requests
-      - opencensus-ext-azure
-      - mltable
-      - tiktoken
+      - mlflow==2.9.1
+      - azureml-core==1.54.0.post1
+      - azureml-dataprep==4.12.7
+      - azureml-dataset-runtime[pandas,fuse]==1.54.0.post1
+      - azureml-telemetry==1.54.0
+      - azure.identity==1.15.0
+      - pandas==1.5.3
+      - pillow==10.1.0
+      - aiohttp==3.9.1
+      - aiofiles==23.2.1
+      - requests==2.31.0
+      - opencensus-ext-azure==1.1.12
+      - mltable==1.5.0
+      - tiktoken==0.5.2
