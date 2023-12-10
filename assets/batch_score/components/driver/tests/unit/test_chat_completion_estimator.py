@@ -5,7 +5,7 @@
 
 import pytest
 
-from src.batch_score.batch_pool.quota.estimators import ChatCompletionEstimator
+from src.batch_score.batch_pool.quota.estimators.chat_completion_estimator import ChatCompletionEstimator
 
 
 @pytest.mark.parametrize("request_obj, expected_cost", [

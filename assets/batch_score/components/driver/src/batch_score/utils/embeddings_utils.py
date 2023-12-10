@@ -7,7 +7,7 @@ from copy import deepcopy
 
 import pandas as pd
 
-from ..batch_pool.quota.estimators import EmbeddingsEstimator
+from ..batch_pool.quota.estimators.embeddings_estimator import EmbeddingsEstimator
 from ..common.telemetry import logging_utils as lu
 
 estimator = None

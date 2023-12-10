@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 from mock import patch
 
-from src.batch_score.batch_pool.quota import QuotaUnavailableException
+from src.batch_score.batch_pool.quota.quota_client import QuotaUnavailableException
 from src.batch_score.common.parallel.request_metrics import RequestMetrics
 from src.batch_score.common.parallel.worker import QueueItem, Worker
 from src.batch_score.common.scoring.scoring_request import ScoringRequest
