@@ -7,6 +7,21 @@ import pytest
 import requests
 
 from src.batch_score.common.telemetry.logging_utils import setup_logger
+from tests.fixtures.adjustment import *
+from tests.fixtures.completion_header_handler import *
+from tests.fixtures.conductor import *
+from tests.fixtures.input_transformer import *
+from tests.fixtures.logging_utils import *
+from tests.fixtures.parallel_driver import *
+from tests.fixtures.quota_client import *
+from tests.fixtures.routing_client import *
+from tests.fixtures.scoring_client import *
+from tests.fixtures.scoring_result import *
+from tests.fixtures.tally_failed_request_handler import *
+from tests.fixtures.token_provider import *
+from tests.fixtures.vesta_encoded_image_scrubber import *
+from tests.fixtures.vesta_image_modifier import *
+from tests.fixtures.worker import *
 
 
 @pytest.fixture(autouse=True, params=[pytest.param(None, marks=pytest.mark.unit)])
