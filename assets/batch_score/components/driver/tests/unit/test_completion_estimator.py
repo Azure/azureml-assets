@@ -5,7 +5,7 @@
 
 import pytest
 
-from src.batch_score.batch_pool.quota.estimators import CompletionEstimator
+from src.batch_score.batch_pool.quota.estimators.completion_estimator import CompletionEstimator
 
 
 @pytest.mark.parametrize("request_obj, expected_cost", [

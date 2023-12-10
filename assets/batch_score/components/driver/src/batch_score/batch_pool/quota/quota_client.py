@@ -31,7 +31,10 @@ from ...header_handlers.rate_limiter.rate_limiter_header_handler import (
     RateLimiterHeaderHandler,
 )
 from ...utils import common
-from .estimators import ChatCompletionEstimator, CompletionEstimator, EmbeddingsEstimator, VestaEstimator
+from .estimators.chat_completion_estimator import ChatCompletionEstimator
+from .estimators.completion_estimator import CompletionEstimator
+from .estimators.embeddings_estimator import EmbeddingsEstimator
+from .estimators.vesta_estimator import VestaEstimator
 
 
 class QuotaClient:

@@ -63,13 +63,11 @@ from .common.telemetry.trace_configs import (
     ResponseChunkReceivedTrace,
 )
 from .header_handlers.meds.meds_header_handler import MedsHeaderHandler
-from .header_handlers.open_ai import (
-    ChatCompletionHeaderHandler,
-    CompletionHeaderHandler,
-    OpenAIHeaderHandler,
-    SaharaHeaderHandler,
-    VestaHeaderHandler,
-)
+from .header_handlers.open_ai.chat_completion_header_handler import ChatCompletionHeaderHandler
+from .header_handlers.open_ai.completion_header_handler import CompletionHeaderHandler
+from .header_handlers.open_ai.open_ai_header_handler import OpenAIHeaderHandler
+from .header_handlers.open_ai.sahara_header_handler import SaharaHeaderHandler
+from .header_handlers.open_ai.vesta_header_handler import VestaHeaderHandler
 from .header_handlers.mir_endpoint_v2_header_handler import MIREndpointV2HeaderHandler
 from .header_handlers.open_ai.vesta_chat_completion_header_handler import (
     VestaChatCompletionHeaderHandler,

@@ -5,7 +5,7 @@
 
 import pytest
 
-from src.batch_score.batch_pool.quota.estimators import EmbeddingsEstimator
+from src.batch_score.batch_pool.quota.estimators.embeddings_estimator import EmbeddingsEstimator
 
 
 @pytest.mark.parametrize("input_prompt, expected_count", [

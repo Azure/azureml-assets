@@ -24,7 +24,7 @@ from ...common.telemetry import logging_utils as lu
 from ...common.telemetry.logging_utils import get_events_client
 from ...header_handlers.open_ai.open_ai_header_handler import OpenAIHeaderHandler
 from ...utils.common import get_base_url
-from ..quota import QuotaClient
+from ..quota.quota_client import QuotaClient
 from ..routing.routing_client import RoutingClient
 
 
