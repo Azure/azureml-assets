@@ -13,7 +13,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 env:
-  batchScoreComponentsRootPath: assets/batch_score/components
+  # batchScoreComponentsRootPath: assets/batch_score/components
   testsRootPath: assets/batch_score/components/driver/tests
   pytest_report_folder: results
   pytest_report_file: junit3.xml
@@ -57,7 +57,7 @@ jobs:
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 
       - name: Test asset
-        run: python -m pytest unit --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.batchScoreComponentsRootPath }} -o log_level=DEBUG -n 8
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ testsRootPath }}/unit -o log_level=DEBUG -n 8
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
