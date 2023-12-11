@@ -1,4 +1,8 @@
-"""This file contains the core logic for feature attribution drift component."""
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains utility functions for model performance metrics."""
+
 import pandas as pd
 from datetime import datetime
 
@@ -9,7 +13,19 @@ from pyspark.sql.types import (
     StructField,
     StringType,
 )
+from shared_utilities.constants import (
+    ACCURACY_METRIC_NAME,
+    PERCISION_METRIC_NAME,
+    RECALL_METRIC_NAME,
+    MEAN_ABSOLUTE_ERROR_METRIC_NAME,
+    ROOT_MEAN_SQUARED_ERROR_METRIC_NAME,
+    SIGNAL_METRICS_GROUP,
+    SIGNAL_METRICS_METRIC_NAME,
+    SIGNAL_METRICS_METRIC_VALUE,
+    SIGNAL_METRICS_THRESHOLD_VALUE, 
+)
 from shared_utilities.io_utils import init_spark, save_spark_df_as_mltable
+
 
 
 def log_time_and_message(message):
@@ -33,23 +49,6 @@ def convert_pandas_to_spark(pandas_data):
     return spark.createDataFrame(pandas_data)
 
 
-def write_to_mltable(metrics_artifacts, output_data_file_name):
-    """
-
-    Args:
-        metrics_artifacts:
-        output_data_file_name:
-
-    Returns:
-
-    """
-    log_time_and_message("Begin writing metric to mltable")
-    # ToDo: We might need to support this for vector metrices as well
-    metrics_data = pd.DataFrame([metrics_artifacts[constants.Metric.Metrics]])
-    spark_data = convert_pandas_to_spark(metrics_data)
-    save_spark_df_as_mltable(spark_data, output_data_file_name)
-
-
 def construct_signal_metrics(
         metrics_artifacts,
         output_data_file_name,
@@ -57,7 +56,8 @@ def construct_signal_metrics(
         regression_meanabserror_threshold,
         classification_precision_threshold,
         classification_accuracy_threshold,
-        classification_recall_threshold
+        classification_recall_threshold,
+        predictions_column_name,
         ):
     """
     Args:
@@ -74,11 +74,11 @@ def construct_signal_metrics(
         "root_mean_squared_error": regression_rmse_threshold
     }
     metrics_name_to_output_metrics_name_map = {
-        "accuracy": "Accuracy",
-        "precision_score_macro": "Precision",
-        "recall_score_macro": "Recall",
-        "mean_absolute_error": "MeanAbsoluteError",
-        "root_mean_squared_error": "RootMeanSquaredError"       
+        "accuracy": ACCURACY_METRIC_NAME,
+        "precision_score_macro": PERCISION_METRIC_NAME,
+        "recall_score_macro": RECALL_METRIC_NAME,
+        "mean_absolute_error": MEAN_ABSOLUTE_ERROR_METRIC_NAME,
+        "root_mean_squared_error": ROOT_MEAN_SQUARED_ERROR_METRIC_NAME
     }
     metrics_data_pd = pd.DataFrame([metrics_artifacts[constants.Metric.Metrics]]).reset_index()
     metrics_data_pd.iteritems = metrics_data_pd.items
@@ -88,17 +88,18 @@ def construct_signal_metrics(
     metrics_data_df.show()
     # construct the signal output schema
     schema = StructType([
-            StructField("metric_name", StringType(), True),
-            StructField("metric_value", DoubleType(), True),
-            StructField("threshold_value", StringType(), True),
+            StructField(SIGNAL_METRICS_METRIC_NAME, StringType(), True),
+            StructField(SIGNAL_METRICS_METRIC_VALUE, DoubleType(), True),
+            StructField(SIGNAL_METRICS_THRESHOLD_VALUE, StringType(), True),
+            StructField(SIGNAL_METRICS_GROUP, StringType(), True)
     ])
     spark = init_spark()
-    metric_names = metrics_data_df.columns
 
     signal_output_df = spark.createDataFrame(
                 [(metrics_name_to_output_metrics_name_map[col_],
                   metrics_data_df.first()[col_],
-                  metrics_name_to_threshold_map[col_]) for col_ in metrics_data_df.columns],
+                  metrics_name_to_threshold_map[col_],
+                  predictions_column_name) for col_ in metrics_data_df.columns],
                  schema)
 
     save_spark_df_as_mltable(signal_output_df, output_data_file_name)

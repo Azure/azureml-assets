@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-version: 0.0.4
-name: property_listing_video 
-display_name: Property Listing Video
-description: Provide a summary and highlights of the property
+version: 0.0.7
+name: insurance_report 
+display_name: Insurance Report
+description: Car Insurance Damage report writing
 
 tags:
   modality: video

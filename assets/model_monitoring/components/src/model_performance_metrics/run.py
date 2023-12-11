@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Entry script for Data Drift Compute Metrics Spark Component."""
+
+"""Entry script for Model Performance Compute Metrics Spark Component."""
 
 import argparse
 import constants
@@ -9,6 +10,7 @@ import constants
 from compute_metrics import EvaluatorFactory
 from data_reader import DataReaderFactory
 from utils import construct_signal_metrics
+
 
 
 def run():
@@ -47,7 +49,8 @@ def run():
                              args.regression_meanabserror_threshold,
                              args.classification_precision_threshold,
                              args.classification_accuracy_threshold,
-                             args.classification_recall_threshold
+                             args.classification_recall_threshold,
+                             args.predictions_column_name
                              )
 
 
