@@ -126,6 +126,15 @@ class PublishVisibility(Enum):
     UNLISTED = 'unlisted'
 
 
+class SystemRegisty:
+    """Prod System registries where assets lie."""
+
+    AZUREML = "azureml"
+    AZUREML_META = "azureml-meta"
+    AZUREML_MSR = "azureml-msr"
+    NVIDIA_AI = "nvida-ai"
+
+
 DEFAULT_ASSET_FILENAME = "asset.yaml"
 DEFAULT_DESCRIPTION_FILE = "description.md"
 DEFAULT_DOCKERFILE = "Dockerfile"

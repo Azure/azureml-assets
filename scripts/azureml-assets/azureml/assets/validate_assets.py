@@ -13,7 +13,10 @@ from ruamel.yaml import YAML
 from typing import List
 
 from azure.ai.ml import load_model
+from azure.ai.ml import MLClient
 from azure.ai.ml.operations._run_history_constants import JobStatus
+from azure.identity import AzureCliCredential
+
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets import PublishLocation, PublishVisibility
@@ -40,6 +43,13 @@ MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
 VALIDATION_SUMMARY = "results.json"
 SUPPORTED_INFERNCE_SKU_FILE_NAME = "supported_inference_skus.json"
 SUPPORTED_INFERNCE_SKU_FILE_PATH = Path(__file__) / "config" / SUPPORTED_INFERNCE_SKU_FILE_NAME
+
+# create mlclient for prod registries
+credential = AzureCliCredential()
+mlclient_azureml = MLClient(credential, registry_name=assets.config.SystemRegisty.AZUREML)
+mlclient_azureml_meta = MLClient(credential, registry_name=assets.config.SystemRegisty.AZUREML_META)
+mlclient_azureml_msr = MLClient(credential, registry_name=assets.config.SystemRegisty.AZUREML_MSR)
+mlclient_nvidia_ai = MLClient(credential, registry_name=assets.config.SystemRegisty.NVIDIA_AI)
 
 
 class MLFlowModelProperties:
@@ -585,7 +595,7 @@ def confirm_model_validation_results(
         return 1
 
 
-def validate_model_spec(asset_config: assets.AssetConfig):
+def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: dict):
     """Validate model spec."""
     model = load_model(asset_config.spec_with_path)
     if asset_config.type != assets.config.ModelType.MLFLOW:
@@ -708,8 +718,63 @@ def validate_model_spec(asset_config: assets.AssetConfig):
                 asset_config.file_name_with_path,
                 f"{MLFlowModelProperties.FINETUNING_TASKS} not set for supporting finetuning scenario"
             )
+            return 1
 
-    return 0
+    # make sure version is prod model version + 1
+    logger.print("checking model version in prod registries")
+
+    registered_model = None
+    registry_name = None
+
+    try:
+        registered_model = mlclient_azureml.model.get(name=model.name, label="latest")
+        registry_name = assets.config.SystemRegisty.AZUREML
+    except Exception:
+        logger.log_warning(f"Unable to fetch model details from {assets.config.SystemRegisty.AZUREML} registry")
+
+    if not registered_model:
+        try:
+            registered_model = mlclient_azureml_meta.model.get(name=model.name, label="latest")
+            registry_name = assets.config.SystemRegisty.AZUREML_META
+        except Exception:
+            logger.log_warning(f"Unable to fetch model details from {assets.config.SystemRegisty.AZUREML_META} registry")
+
+    if not registered_model:
+        try:
+            registered_model = mlclient_azureml_msr.model.get(name=model.name, label="latest")
+            registry_name = assets.config.SystemRegisty.AZUREML_MSR
+        except Exception:
+            logger.log_warning(f"Unable to fetch model details from {assets.config.SystemRegisty.AZUREML_MSR} registry")
+
+    if not registered_model:
+        try:
+            registered_model = mlclient_azureml_msr.model.get(name=model.name, label="latest")
+            registry_name = assets.config.SystemRegisty.NVIDIA_AI
+        except Exception:
+            logger.log_warning(f"Unable to fetch model details from {assets.config.SystemRegisty.NVIDIA_AI} registry")
+
+    if not registered_model:
+        _log_warning(
+            asset_config.file_name_with_path,
+            f"Exception in fetching current model version. This could happen becuase of multiple reasons:\n"
+            "1. Model is not registered. In that case make sure model version is set to 1\n"
+            "2. Model was registered but deleted and there is no active version registered. "
+            "In this case have to make sure current model version is +1 of deleted one",
+            "3. Issue with initializing mlclient."
+        )
+    else:
+        logger.print(f"found registered model in {registry_name} with version: {registered_model.version}")
+        if model.version <= registered_model.version:
+            _log_error(
+                f"model version: {model.version} should be greater than "
+                "registered model version: {registered_model.version}")
+            return 1
+        elif model.version > registered_model and model.version != registered_model.version + 1:
+            # currently throw warning as need to understand how to get all deleted versions of model
+            _log_warning(f"Model version is not exactly 1 greater than reg. version {registered_model.version} ")
+
+    # test validation results
+    return confirm_model_validation_results(asset_config, validated_model_map.get(asset_config.name, None))
 
 
 def get_validated_models_assets_map(model_validation_results_dir: str):
@@ -790,12 +855,8 @@ def validate_assets(input_dirs: List[Path],
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
         # validated_model_map would be ampty for non-drop scenario
-        if validated_model_map and asset_config.type == assets.AssetType.MODEL:
-            error_count += confirm_model_validation_results(
-                asset_config, validated_model_map.get(asset_config.name, None))
-
         if asset_config.type == assets.AssetType.MODEL:
-            validate_model_spec(asset_config)
+            error_count += validate_model_spec(asset_config, validated_model_map)
 
         # Populate dictionary of image names to asset config paths
         environment_config = None
