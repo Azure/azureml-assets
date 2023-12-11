@@ -1,4 +1,6 @@
+import pytest
 import unittest
+
 from shared_utilities.io_utils import init_spark
 from model_performance_metrics.data_reader import DataReaderFactory, BaseTaskReader, MetricsDTO
 from model_performance_metrics.compute_metrics import EvaluatorFactory, ClassifierEvaluator, RegressorEvaluator
@@ -29,6 +31,7 @@ test_data_regression = [{
 }]
 
 
+@pytest.mark.unit
 class TestModelPerformanceComputeMetrics(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
