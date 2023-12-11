@@ -1,7 +1,7 @@
 fmops/distilbert-prompt-injection model from Hugging Face. this model is based on DistilBERT, which is a smaller and faster version of BERT (Bidirectional Encoder Representations from Transformers), designed for efficient training and deployment. DistilBERT retains much of BERT's performance while using fewer parameters, making it more resource-efficient.
 
 The model predicts that the input text belongs to LABEL_0 with a high confidence score of 99.6%. The second label (LABEL_1) has a very low confidence score of 0.4%.
-This suggests that, based on the input text, the model is highly confident in predicting the first label (LABEL_0) and less confident in predicting the second label (LABEL_1).
+This suggests that, based on the input text, the model is highly confident in predicting the first label (LABEL_0) and less confident in predicting the second label (LABEL_1)
 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/fmops/distilbert-prompt-injection" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
