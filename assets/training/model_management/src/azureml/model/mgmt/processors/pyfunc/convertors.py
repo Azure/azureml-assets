@@ -23,6 +23,8 @@ from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.pyfunc.config import (
     MMLabDetectionTasks, MMLabTrackingTasks, SupportedTasks)
 
+from azureml.model.mgmt.processors.pyfunc.automl.nlp.config import \
+    MLflowSchemaLiterals as AutoMLMLFlowSchemaLiterals
 from azureml.model.mgmt.processors.pyfunc.clip.config import \
     MLflowSchemaLiterals as CLIPMLFlowSchemaLiterals, MLflowLiterals as CLIPMLflowLiterals
 from azureml.model.mgmt.processors.pyfunc.blip.config import \
@@ -83,12 +85,14 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
     def _save(
         self,
-        mlflow_model_wrapper: PyFuncModel,
-        artifacts_dict: Dict[str, str],
-        code_path: List[str],
+        mlflow_model_wrapper: Optional[PyFuncModel] = None,
+        artifacts_dict: Optional[Dict[str, str]] = None,
+        code_path: Optional[List[str]] = None,
         pip_requirements: Optional[str] = None,
         conda_env: Optional[str] = None,
-        metadata: Optional[Dict] = {}
+        metadata: Optional[Dict] = {},
+        loader_module: Optional[str] = None,
+        data_path: Optional[str] = None,
     ):
         """Save Mlflow model to output directory.
 
@@ -121,6 +125,8 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
             signature=signatures,
             code_path=code_path,
             metadata=metadata,
+            loader_module=loader_module,
+            data_path=data_path
         )
 
         logger.info("Model saved successfully.")
@@ -825,10 +831,10 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
         return artifacts_dict
 
 
-class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
+class AutoMLImagesMLFlowConvertor(PyFuncMLFLowConvertor):
     """PyFunc MLfLow convertor for AutoML models."""
 
-    MODEL_DIR = os.path.join(os.path.dirname(__file__), "automl")
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "automl", "images")
     MLflowLiteral_Model = "model"
     MLflowLiteral_Settings = "settings"
 
@@ -1039,4 +1045,51 @@ class AutoMLMLFlowConvertor(PyFuncMLFLowConvertor):
             artifacts_dict=artifacts_dict,
             conda_env=conda_env_file,
             code_path=None,
+        )
+
+
+class AutoMLNLPMLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for AutoML NLP models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "automl", "nlp")
+    MODEL_DIR_LITERAL = "model_dir"
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for AutoML NLP models."""
+        super().__init__(**kwargs)
+        if self._task not in [
+            SupportedTasks.TEXT_CLASSIFICATION.value,
+            SupportedTasks.TEXT_CLASSIFICATION_MULTILABEL.value,
+            SupportedTasks.TEXT_NER.value
+        ]:
+            raise Exception("Unsupported task")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+        input_schema = Schema(
+            [
+                ColSpec(AutoMLMLFlowSchemaLiterals.INPUT_COLUMN_TEXT_DATA_TYPE,
+                        AutoMLMLFlowSchemaLiterals.INPUT_COLUMN_TEXT),
+            ]
+        )
+
+        return ModelSignature(inputs=input_schema)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = [
+            os.path.join(self.MODEL_DIR, "config.py"),
+        ]
+        super()._save(
+            loader_module="azureml.automl.dnn.nlp",
+            data_path=os.path.join(self._model_dir, "mlflow-model/data/_model_impl_4e9ot4tr.pkl"),
+            conda_env=conda_env_file,
+            code_path=code_path,
         )

@@ -18,13 +18,16 @@ from azureml.model.mgmt.processors.pyfunc.config import (
     SupportedTextToImageModelFamily,
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
+"""
 from azureml.model.mgmt.processors.transformers.convertors import (
     NLPMLflowConvertor,
     VisionMLflowConvertor,
     WhisperMLflowConvertor,
 )
+"""
 from azureml.model.mgmt.processors.pyfunc.convertors import (
-    AutoMLMLFlowConvertor,
+    AutoMLImagesMLFlowConvertor,
+    AutoMLNLPMLFlowConvertor,
     BLIPMLFlowConvertor,
     MMLabDetectionMLflowConvertor,
     MMLabTrackingMLflowConvertor,
@@ -104,7 +107,15 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             PyFuncSupportedTasks.IMAGE_OBJECT_DETECTION.value,
             PyFuncSupportedTasks.IMAGE_INSTANCE_SEGMENTATION.value,
         ]:
-            return AutoMLMLflowConvertorFactory.create_mlflow_convertor(
+            return AutoMLImagesMLFlowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif task in [
+            PyFuncSupportedTasks.TEXT_CLASSIFICATION.value,
+            PyFuncSupportedTasks.TEXT_CLASSIFICATION_MULTILABEL.value,
+            PyFuncSupportedTasks.TEXT_NER.value,
+        ]:
+            return AutoMLNLPMLFlowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
@@ -129,7 +140,7 @@ class NLPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for NLP tasks."""
-        return NLPMLflowConvertor(
+        return CLIPMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,
@@ -142,13 +153,12 @@ class VisionMLflowConvertorFactory(MLflowConvertorFactoryInterface):
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for vision tasks."""
-        return VisionMLflowConvertor(
+        return CLIPMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,
             translate_params=translate_params,
         )
-
 
 class ASRMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for ASR model family."""
@@ -157,7 +167,7 @@ class ASRMLflowConvertorFactory(MLflowConvertorFactoryInterface):
         """Create MLflow convertor for ASR tasks."""
         misc = translate_params["misc"]
         if misc and SupportedASRModelFamily.WHISPER.value in misc:
-            return WhisperMLflowConvertor(
+            return CLIPMLFlowConvertor(
                 model_dir=model_dir,
                 output_dir=output_dir,
                 temp_dir=temp_dir,
@@ -271,12 +281,25 @@ class MMLabTrackingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
         )
 
 
-class AutoMLMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+class AutoMLImagesMLFlowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for AutoML models."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for AutoML models."""
-        return AutoMLMLFlowConvertor(
+        return AutoMLImagesMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class AutoMLNLPMLFlowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for AutoML models."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for AutoML models."""
+        return AutoMLNLPMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,

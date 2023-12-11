@@ -53,6 +53,9 @@ class SupportedTasks(_CustomEnum):
     IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
     IMAGE_OBJECT_DETECTION = "image-object-detection"
     IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
+    TEXT_CLASSIFICATION = 'text-classification'
+    TEXT_CLASSIFICATION_MULTILABEL = 'text-classification-multilabel'
+    TEXT_NER = 'text-ner'
 
 
 class SupportedTextToImageModelFamily(_CustomEnum):
