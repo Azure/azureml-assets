@@ -4,8 +4,7 @@ _type: chat
  
 messages: 
 - role: system
-  content: 
-    - You are an AI assistant assisting real estate agents in crafting overview descriptions for houses.
+  content: You are an AI assistant assisting real estate agents in crafting overview descriptions for houses.
 
 starter_messages:
 - role: user

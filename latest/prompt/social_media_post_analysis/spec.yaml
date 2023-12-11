@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-version: 0.0.3
+version: 0.0.4
 name: social_media_post_analysis
 display_name: Social Media Post Analysis
 description: Analyze short videos to generate tags, content summaries, and targeted
