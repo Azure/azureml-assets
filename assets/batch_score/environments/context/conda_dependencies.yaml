@@ -7,7 +7,7 @@ dependencies:
   - pip:
       - mlflow==2.9.1
       - azureml-core==1.54.0.post1
-      - azureml-dataprep==4.14.0
+      - azureml-dataprep==4.12.7
       - azureml-dataset-runtime[pandas,fuse]==1.54.0.post1
       - azureml-telemetry==1.54.0
       - azure.identity==1.15.0
