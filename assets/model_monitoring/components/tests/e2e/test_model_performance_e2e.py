@@ -67,7 +67,7 @@ class TestModelPerformanceModelMonitor:
     """Test class."""
 
     def test_monitoring_regression_successful(
-        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+        self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test model performance on regression model."""
         pipeline_job = _submit_model_performance_signal_monitor_job(
@@ -85,9 +85,8 @@ class TestModelPerformanceModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-
     def test_monitoring_classification_successful(
-        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+        self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test model performance on classification model."""
         pipeline_job = _submit_model_performance_signal_monitor_job(
@@ -106,5 +105,4 @@ class TestModelPerformanceModelMonitor:
             0.9,
         )
 
-        assert pipeline_job.status == "Completed"       
-
+        assert pipeline_job.status == "Completed"

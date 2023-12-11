@@ -22,10 +22,9 @@ from shared_utilities.constants import (
     SIGNAL_METRICS_GROUP,
     SIGNAL_METRICS_METRIC_NAME,
     SIGNAL_METRICS_METRIC_VALUE,
-    SIGNAL_METRICS_THRESHOLD_VALUE, 
+    SIGNAL_METRICS_THRESHOLD_VALUE,
 )
 from shared_utilities.io_utils import init_spark, save_spark_df_as_mltable
-
 
 
 def log_time_and_message(message):
@@ -63,8 +62,13 @@ def construct_signal_metrics(
     Args:
         metrics_artifacts:
         output_data_file_name:
-
-    Returns:    
+        predictions_column_name:
+        regression_rmse_threshold:
+        regression_meanabserror_threshold:
+        classification_precision_threshold:
+        classification_accuracy_threshold:
+        classification_recall_threshold:
+    Returns:
     """
     metrics_name_to_threshold_map = {
         "accuracy": classification_accuracy_threshold,
@@ -100,6 +104,6 @@ def construct_signal_metrics(
                   metrics_data_df.first()[col_],
                   metrics_name_to_threshold_map[col_],
                   predictions_column_name) for col_ in metrics_data_df.columns],
-                 schema)
+                  schema)
 
     save_spark_df_as_mltable(signal_output_df, output_data_file_name)

@@ -12,7 +12,6 @@ from data_reader import DataReaderFactory
 from utils import construct_signal_metrics
 
 
-
 def run():
     """Compute metrics."""
     # Parse argument

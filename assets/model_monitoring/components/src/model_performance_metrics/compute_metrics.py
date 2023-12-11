@@ -110,7 +110,8 @@ class ClassifierEvaluator(Evaluator):
         y_test = self._convert_predictions(metrics_dto.ground_truth)
         if "metrics" not in self.metrics_config:
             self.metrics_config["metrics"] = [Metric.Accuracy, Metric.PrecisionMacro, Metric.RecallMacro]
-             # Metric.F1Macro is not in, because F1 can be calculated from Recall and our current interface do not have threshold for F1.
+            # Metric.F1Macro is not in the list, because F1 can be calculated from Recall and precision
+            # and our current interface do not have threshold for F1.
         metrics = compute_metrics(task_type=constants.Tasks.CLASSIFICATION, y_test=y_test, y_pred=y_pred,
                                   **self.metrics_config)
         return metrics
