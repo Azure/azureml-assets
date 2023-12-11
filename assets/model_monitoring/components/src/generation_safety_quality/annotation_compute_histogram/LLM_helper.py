@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""LLM helper functions, please leave it as it is"""
+
 import os
 import re
 import json
@@ -480,7 +485,7 @@ def _check_and_format_azure_endpoint_url(url_pattern, domain_pattern_re, domain,
     return url
 
 
-def query_relevance_score(
+def query_relevance_scores(
         turns: List[Tuple[str, str]],
         session: requests.Session,
         endpoint_url: str,
@@ -488,14 +493,7 @@ def query_relevance_score(
         # request_error_rate_threshold: float,
         model: str, temperature: float, top_p: float, num_samples: int,
         frequency_penalty: float, presence_penalty: float, max_tokens=3000, stop: str = None) -> List[int]:
-    # if we count too many errors, we stop and raise an exception
-    # error_count = 0
-    # request_count = 0
-
-    # request_count += 1
-
-    # Copy request_data to avoid modifying the original dict.
-    prompts = [RELEVANCE_ANNOTATION_TEMPLATE.replace("{input_samples", f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1]}, indent=4)}") for turn in turns]
+    prompts = [RELEVANCE_ANNOTATION_TEMPLATE.replace("{input_samples", f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1]}, indent=4)}") for turn in turns]  # noqa: E501
     # print("prompts:", prompts)
     ratings = []
     for prompt in prompts:
@@ -536,3 +534,80 @@ def query_relevance_score(
             raise e
 
     return ratings
+
+
+def query_relevance_score(
+        turn: Tuple[str, str],
+        session: requests.Session,
+        endpoint_url: str,
+        token_manager: _APITokenManager,
+        # request_error_rate_threshold: float,
+        model: str, temperature: float, top_p: float, num_samples: int,
+        frequency_penalty: float, presence_penalty: float, max_tokens=3000, stop: str = None) -> int:
+    turns = [turn]
+    return query_relevance_scores(turns, session, endpoint_url, token_manager, model, temperature, top_p, num_samples,
+                                  frequency_penalty, presence_penalty, max_tokens, stop)[0]
+
+
+TOPIC_TEMPLATE = "\n\n".join(
+    [
+        "System:",
+        "You are an AI assistant. You will be given a set of questions. Please categorize these quesitons into a few topics based on their intent, "
+        "please try your best to avoid categorize question into its own topic whenever appropriate, and format your answer in this json format:",
+        '{ "<topic_0>": ["<question_00>", "<question_01>", ...], "<topic_1>": ["<question_10>", "<question_11>", ...], ... }',
+        "If there are too many topics, please sort the topics with the querestion counts belong to it, in descent order, and returns the top 10."
+        "User:",
+        "Here are the queries:",
+        "{queries}",
+    ]
+)
+
+
+def query_topic(
+        queries,
+        session: requests.Session,
+        endpoint_url: str,
+        token_manager: _APITokenManager,
+        # request_error_rate_threshold: float,
+        model: str, temperature: float, top_p: float, num_samples: int,
+        frequency_penalty: float, presence_penalty: float, max_tokens=3000, stop: str = None) -> List[int]:
+
+    # Copy request_data to avoid modifying the original dict.
+    prompt = TOPIC_TEMPLATE.replace("{queries}", json.dumps(queries))
+
+    print("prompt:", prompt)
+    request_data = {
+        "model": model,
+        "temperature": temperature,
+        "top_p": top_p,
+        "n": num_samples,
+        "max_tokens": max_tokens,
+        "frequency_penalty": frequency_penalty,
+        "presence_penalty": presence_penalty,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+
+    if stop:
+        request_data["stop"] = stop
+
+    response = {}
+    try:
+        response, time_taken = _request_api(
+            session=session,
+            endpoint_url=endpoint_url,
+            token_manager=token_manager,
+            **request_data,
+        )
+
+        # Append time taken to the line
+        response["response_time_sec"] = time_taken
+        print(response["samples"][0])
+        topics = response["samples"][0]
+    except Exception as e:  # noqa: B902
+        response["finish_reason"] = ["error"]
+        response["error"] = [str(e)]
+        raise e
+
+    return topics
