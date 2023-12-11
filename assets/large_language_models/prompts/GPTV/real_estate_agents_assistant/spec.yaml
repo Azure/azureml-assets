@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-version: 0.0.15
+version: 0.0.14
 name: real_estate_agents_assistant
 display_name: Real estate agents Assistant
 description: Provide overview descriptions for houses.
