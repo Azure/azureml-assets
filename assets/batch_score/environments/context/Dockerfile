@@ -9,7 +9,7 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-RUN apt-get update && apt-get install curl, libc6 -y
+RUN apt-get update && apt-get -y install curl
 
 # Create conda environment
 COPY conda_dependencies.yaml .
