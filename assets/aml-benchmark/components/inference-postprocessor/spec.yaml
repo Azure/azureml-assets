@@ -32,7 +32,8 @@ inputs:
   additional_columns:
     type: string
     description: >-
-      Name(s) of additional columns that could be helpful to compute some metrics, seperated by ",".
+      Name(s) of additional columns that could be helpful for computing some metrics. Seperated by comma (",").
+    optional: True
   remove_prefixes:
     type: string
     description: >-
@@ -137,7 +138,7 @@ command: >-
   --prediction_column_name ${{inputs.prediction_column_name}}
   $[[--ground_truth_dataset ${{inputs.ground_truth_dataset}}]]
   $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
-  $[[--ground_truth_column_name ${{inputs.additional_columns}}]]
+  $[[--additional_columns ${{inputs.additional_columns}}]]
   $[[--separator '${{inputs.separator}}']]
   $[[--find_first '${{inputs.find_first}}']]
   $[[--regex_expr '${{inputs.regex_expr}}']]
