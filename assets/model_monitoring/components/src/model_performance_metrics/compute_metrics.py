@@ -107,8 +107,8 @@ class ClassifierEvaluator(Evaluator):
         if "metrics" not in self.metrics_config:
             self.metrics_config["metrics"] = [Metric.Accuracy, Metric.PrecisionMacro, Metric.RecallMacro,
                                               Metric.F1Macro]
-        metrics = compute_metrics(task_type=constants.Tasks.CLASSIFICATION, y_test=y_test, y_pred=y_pred
-                                  , **self.metrics_config)
+        metrics = compute_metrics(task_type=constants.Tasks.CLASSIFICATION, y_test=y_test, y_pred=y_pred,
+                                  **self.metrics_config)
         return metrics
 
 
@@ -142,8 +142,8 @@ class RegressorEvaluator(Evaluator):
         y_test = self._convert_predictions(metrics_dto.ground_truth)
         if "metrics" not in self.metrics_config:
             self.metrics_config["metrics"] = [Metric.RMSE, Metric.MeanAbsError]
-        metrics = compute_metrics(task_type=constants.Tasks.REGRESSION, y_test=y_test, y_pred=y_pred
-                                  , **self.metrics_config)
+        metrics = compute_metrics(task_type=constants.Tasks.REGRESSION, y_test=y_test, y_pred=y_pred,
+                                  **self.metrics_config)
         return metrics
 
 
