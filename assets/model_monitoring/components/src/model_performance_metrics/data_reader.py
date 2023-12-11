@@ -47,7 +47,7 @@ class BaseTaskReader:
 
     def __init__(self, task):
         """
-        Base class for task reader.
+        Class for task reader.
 
         Args:
             task: str
