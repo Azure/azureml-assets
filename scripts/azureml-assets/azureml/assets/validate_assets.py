@@ -38,15 +38,20 @@ MODEL_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]{0,254}$")
 # model validations
 MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
 VALIDATION_SUMMARY = "results.json"
+SUPPORTED_INFERNCE_SKU_FILE_NAME = "supported_inference_skus.json"
+SUPPORTED_INFERNCE_SKU_FILE_PATH = Path(__file__) / "config" / SUPPORTED_INFERNCE_SKU_FILE_NAME
 
 
 class MLFlowModelProperties:
     """Commonly defined model properties."""
 
     EVALUATION_RECOMMENDED_SKU = "evaluation-recommended-sku"
-    FINETINE_RECOMMENDED_SKU = "finetune-recommended-sku"
+    EVALUATION_MIN_SKU_SPEC = "evaluation-min-sku-spec"
+    FINETUNE_RECOMMENDED_SKU = "finetune-recommended-sku"
+    FINETUNE_MIN_SKU_SPEC = "finetune-min-sku-spec"
     INFERENCE_RECOMMENDED_SKU = "inference-recommended-sku"
-    COMPUTE_ALLOW_LIST = "computes_allow_list"
+    INFERENCE_MIN_SKU_SPEC = "inference-min-sku-spec"
+
     FINETUNING_TASKS = "finetuning-tasks"
 
 
@@ -55,10 +60,13 @@ class MLFlowModelTags:
 
     EVALUATION_COMPUTE_ALLOWLIST = "evaluation_compute_allow_list"
     FINETUNE_COMPUTE_ALLOWLIST = "finetune_compute_allow_list"
+    FINETUNING_DEFAULTS = "model_specific_defaults"
     INFERENCE_COMPUTE_ALLOWLIST = "inference_compute_allow_list"
     INFERENCE_SUPPORTED_ENVS = "inference_supported_envs"
-    FINETUNING_DEFAULTS = "model_specific_defaults"
+
     TASK = "task"
+    LICENSE = "license"
+    AUTHOR = "author"
 
 
 class ModelValidationState:
@@ -87,36 +95,6 @@ class ModelValidationOverallSummary:
             ModelValidationOverallSummary.BATCH_ONLINE_DEPLOYMENTDEPLOYMENT: ModelValidationState.NOT_STARTED,
             ModelValidationOverallSummary.VALIDATION_RUN: ModelValidationState.NOT_STARTED,
         }
-
-
-class ModelProperties:
-    """Commonly defined model properties."""
-
-    EVALUATION_RECOMMENDED_SKU = "evaluation-recommended-sku"
-    EVALUATION_MIN_SKU_SPEC = "evaluation-min-sku-spec"
-    FINETUNE_RECOMMENDED_SKU = "finetune-recommended-sku"
-    FINETUNE_MIN_SKU_SPEC = "evaluation-min-sku-spec"
-    INFERENCE_RECOMMENDED_SKU = "inference-recommended-sku"
-    INFERENCE_MIN_SKU_SPEC = "evaluation-min-sku-spec"
-    FINETUNING_TASKS = "finetuning-tasks"
-
-
-class ModelTags:
-    """Commonly defined model tags."""
-
-    EVALUATION_COMPUTE_ALLOWLIST = "evaluation_compute_allow_list"
-    FINETUNE_COMPUTE_ALLOWLIST = "finetune_compute_allow_list"
-    FINETUNING_DEFAULTS = "model_specific_defaults"
-    INFERENCE_COMPUTE_ALLOWLIST = "inference_compute_allow_list"
-    INFERENCE_SUPPORTED_ENVS = "inference_supported_envs"
-
-    TASK = "task"
-    LICENSE = "license"
-    AUTHOR = "author"
-
-
-SUPPORTED_INFERNCE_SKU_FINE_NAME = "supported_inference_skus.json"
-SUPPORTED_INFERNCE_SKU_FILE_PATH = Path(__file__) / "config" / SUPPORTED_INFERNCE_SKU_FINE_NAME
 
 
 # Environment naming convention
@@ -617,19 +595,19 @@ def validate_model_spec(asset_config: assets.AssetConfig):
         return 0
 
     # confirm must have tags
-    if not model.tags.get(ModelTags.TASK):
-        _log_error(asset_config.file_name_with_path, f"{ModelTags.TASK} missing")
+    if not model.tags.get(MLFlowModelTags.TASK):
+        _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.TASK} missing")
         return 1
 
-    if not model.tags.get(ModelTags.LICENSE):
-        _log_error(asset_config.file_name_with_path, f"{ModelTags.LICENSE} missing")
+    if not model.tags.get(MLFlowModelTags.LICENSE):
+        _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
         return 1
 
-    if not model.tags.get(ModelTags.INFERENCE_COMPUTE_ALLOWLIST):
+    if not model.tags.get(MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST):
         _log_error(
             asset_config.file_name_with_path,
             (
-                f"{ModelTags.INFERENCE_COMPUTE_ALLOWLIST} missing. "
+                f"{MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST} missing. "
                 "Inference is the min requirement for model in system registry."
             )
         )
@@ -638,34 +616,34 @@ def validate_model_spec(asset_config: assets.AssetConfig):
     supports_eval = False
     supports_ft = False
 
-    if not model.tags.get(ModelTags.EVALUATION_COMPUTE_ALLOWLIST):
+    if not model.tags.get(MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST):
         supports_eval = True
 
-    if not model.tags.get(ModelTags.FINETUNE_COMPUTE_ALLOWLIST):
+    if not model.tags.get(MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST):
         supports_ft = True
 
     # check properties
 
     # make sure min sku spec and recommended sku exists for inference
-    if not model.properties.get(ModelProperties.INFERENCE_MIN_SKU_SPEC):
+    if not model.properties.get(MLFlowModelProperties.INFERENCE_MIN_SKU_SPEC):
         _log_error(
             asset_config.file_name_with_path,
-            f"{ModelProperties.INFERENCE_MIN_SKU_SPEC} is missing for inference"
+            f"{MLFlowModelProperties.INFERENCE_MIN_SKU_SPEC} is missing for inference"
         )
         return 1
 
-    if not model.properties.get(ModelProperties.INFERENCE_RECOMMENDED_SKU):
+    if not model.properties.get(MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU):
         _log_error(
             asset_config.file_name_with_path,
-            f"{ModelProperties.INFERENCE_RECOMMENDED_SKU} is missing for inference"
+            f"{MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU} is missing for inference"
         )
         return 1
 
-    if (model.properties[ModelProperties.INFERENCE_RECOMMENDED_SKU].split(",")
-            != model.tags[ModelTags.INFERENCE_COMPUTE_ALLOWLIST]):
+    if (model.properties[MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU].split(",")
+            != model.tags[MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST]):
         _log_error(
             asset_config.file_name_with_path,
-            f"{ModelProperties.INFERENCE_RECOMMENDED_SKU} {ModelTags.INFERENCE_COMPUTE_ALLOWLIST} does not match"
+            f"{MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU} {MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST} does not match"
         )
         return 1
 
@@ -673,57 +651,63 @@ def validate_model_spec(asset_config: assets.AssetConfig):
     with open(SUPPORTED_INFERNCE_SKU_FILE_PATH) as f:
         supported_skus = set(json.load(f))
         unsupported_skus_in_spec = [
-            sku for sku in model.tags[ModelTags.INFERENCE_COMPUTE_ALLOWLIST] if sku not in supported_skus
+            sku for sku in model.tags[MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST] if sku not in supported_skus
         ]
         _log_error(asset_config.file_name_with_path, f"Unsupported inference SKU in spec: {unsupported_skus_in_spec}")
 
     if supports_eval:
         # make sure min sku spec and recommended sku exists
-        if not model.properties.get(ModelProperties.EVALUATION_MIN_SKU_SPEC):
+        if not model.properties.get(MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC):
             _log_error(
                 asset_config.file_name_with_path,
-                f"{ModelProperties.EVALUATION_MIN_SKU_SPEC} is missing for supported scenario"
+                f"{MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC} is missing for supported scenario"
             )
             return 1
 
-        if not model.properties.get(ModelProperties.EVALUATION_RECOMMENDED_SKU):
+        if not model.properties.get(MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU):
             _log_error(
                 asset_config.file_name_with_path,
-                f"{ModelProperties.EVALUATION_RECOMMENDED_SKU} is missing for supported scenario"
+                f"{MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU} is missing for supported scenario"
             )
             return 1
 
-        recommended_sku = model.properties[ModelProperties.EVALUATION_RECOMMENDED_SKU]
-        if recommended_sku.split(",") != model.tags[ModelTags.EVALUATION_COMPUTE_ALLOWLIST]:
+        recommended_sku = model.properties[MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU]
+        if recommended_sku.split(",") != model.tags[MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST]:
             _log_error(
                 asset_config.file_name_with_path,
-                f"{ModelProperties.EVALUATION_RECOMMENDED_SKU} {ModelTags.EVALUATION_COMPUTE_ALLOWLIST} does not match"
+                f"{MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU} {MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST} does not match"
             )
             return 1
 
     if supports_ft:
         # make sure min sku spec and recommended sku exists
-        if not model.properties.get(ModelProperties.FINETUNE_MIN_SKU_SPEC):
+        if not model.properties.get(MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC):
             _log_error(
                 asset_config.file_name_with_path,
-                f"{ModelProperties.FINETUNE_MIN_SKU_SPEC} is missing for supported scenario"
+                f"{MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC} is missing for supported scenario"
             )
             return 1
 
-        if not model.properties.get(ModelProperties.FINETUNE_RECOMMENDED_SKU):
+        if not model.properties.get(MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU):
             _log_error(
                 asset_config.file_name_with_path,
-                f"{ModelProperties.EVALUATION_RECOMMENDED_SKU} is missing for supported scenario"
+                f"{MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU} is missing for supported scenario"
             )
             return 1
 
-        recommended_sku = model.properties[ModelProperties.FINETUNE_RECOMMENDED_SKU].split(",")
-        if recommended_sku != model.tags[ModelTags.FINETUNE_COMPUTE_ALLOWLIST]:
+        recommended_sku = model.properties[MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU].split(",")
+        if recommended_sku != model.tags[MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST]:
             _log_error(
                 asset_config.file_name_with_path,
-                f"{ModelProperties.FINETUNE_RECOMMENDED_SKU} {ModelTags.FINETUNE_COMPUTE_ALLOWLIST} does not match"
+                f"{MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU} {MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST} does not match"
             )
             return 1
+
+        if not model.properties.get(MLFlowModelProperties.FINETUNING_TASKS):
+            _log_error(
+                asset_config.file_name_with_path,
+                f"{MLFlowModelProperties.FINETUNING_TASKS} not set for supporting finetuning scenario"
+            )
 
     return 0
 
