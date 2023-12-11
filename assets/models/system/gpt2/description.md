@@ -1,50 +1,82 @@
-GPT-2 is a transformer-based language model intended for AI researchers and practitioners. It was trained on unfiltered content from Reddit and may have biases. It is best used for text generation, but the training data has not been publicly released. It has several limitations and should be used with caution in situations that require truth and in systems that interact with humans. There are different versions of the model, including GPT-Large, GPT-Medium, and GPT-Xl, available for different use cases. The information provided by the OpenAI team is to complete and give specific examples of bias in their model.
+GPT-2 is a transformers model pretrained on a very large corpus of English data in a self-supervised fashion. This means it was pretrained on the raw texts only, with no humans labelling them in any way (which is why it can use lots of publicly available data) with an automatic process to generate inputs and labels from those texts. More precisely, it was trained to guess the next word in sentences.
+
+This is the smallest version of GPT-2, with 124M parameters.
+
+## Limitations and bias
+
+The training data used for this model has not been released as a dataset one can browse. We know it contains a lot of
+unfiltered content from the internet, which is far from neutral. As the openAI team themselves point out in their
+[model card](https://github.com/openai/gpt-2/blob/master/model_card.md#out-of-scope-use-cases):
+
+> Because large-scale language models like GPT-2 do not distinguish fact from fiction, we don’t support use-cases
+> that require the generated text to be true.
+>
+> Additionally, language models like GPT-2 reflect the biases inherent to the systems they were trained on, so we do
+> not recommend that they be deployed into systems that interact with humans > unless the deployers first carry out a
+> study of biases relevant to the intended use-case. We found no statistically significant difference in gender, race,
+> and religious bias probes between 774M and 1.5B, implying all versions of GPT-2 should be approached with similar
+> levels of caution around use cases that are sensitive to biases around human attributes.
+
+*Note: This bias will also affect all fine-tuned versions of this model.*
+
+## Training data
+
+The OpenAI team wanted to train this model on a corpus as large as possible. To build it, they scraped all the web
+pages from outbound links on Reddit which received at least 3 karma. Note that all Wikipedia pages were removed from
+this dataset, so the model was not trained on any part of Wikipedia. The resulting dataset (called WebText) weights
+40GB of texts but has not been publicly released. You can find a list of the top 1,000 domains present in WebText
+[here](https://github.com/openai/gpt-2/blob/master/domains.txt).
+
+## Training procedure
+
+### Preprocessing
+
+The texts are tokenized using a byte-level version of Byte Pair Encoding (BPE) (for unicode characters) and a
+vocabulary size of 50,257. The inputs are sequences of 1024 consecutive tokens.
+
+The larger model was trained on 256 cloud TPU v3 cores. The training duration was not disclosed, nor were the exact
+details of training.
+
+## Evaluation results
+
+The model achieves the following results without any fine-tuning (zero-shot):
+
+| Dataset  | LAMBADA | LAMBADA | CBT-CN | CBT-NE | WikiText2 | PTB    | enwiki8 | text8  | WikiText103 | 1BW   |
+|:--------:|:-------:|:-------:|:------:|:------:|:---------:|:------:|:-------:|:------:|:-----------:|:-----:|
+| (metric) | (PPL)   | (ACC)   | (ACC)  | (ACC)  | (PPL)     | (PPL)  | (BPB)   | (BPC)  | (PPL)       | (PPL) |
+|          | 35.13   | 45.99   | 87.65  | 83.4   | 29.41     | 65.85  | 1.16    | 1,17   | 37.50       | 75.20 |
 
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/gpt2" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
-
-### Inference samples
+# Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
+## Sample inputs and outputs (for real-time inference)
 
-### Finetuning samples
-
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
-
-
-### Model Evaluation
-
-Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|--|
-Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
-
-
-### Sample inputs and outputs (for real-time inference)
-
-#### Sample input
+### Sample input
 ```json
 {
-    "input_data": {
-        "input_string": ["My name is John and I am", "Once upon a time,"]
+    "input_data": [
+        "Once upon a time, far far away,",
+        "Long time ago, there was a man"
+    ],
+    "params": {
+        "top_p": 1.0,
+        "temperature": 1.0,
+        "max_new_tokens": 50,
+        "do_sample": true,
+        "return_full_text": true
     }
 }
 ```
 
-#### Sample output
+### Sample output
 ```json
 [
-    {
-        "0": "My name is John and I am a student at UC Berkeley. It is my main interest to do research in the humanities. I am going to share"
-    },
-    {
-        "0": "Once upon a time, they were just another small family, only three. She says one day that her father was getting a new license"
-    }
+  "Once upon a time, far far away, of this world he lived. As soon as his son's dying in a car explosion, he came to an awareness that this world was far from the real thing. He was aware of the life that he had left behind him.\n\nThis awareness",
+  "Long time ago, there was a man who took that question away from me: not the first case where someone called me. He had called me, but he was so upset and depressed about it from the bottom of his heart, he was crying, and he thought my name was Kimber"
 ]
 ```
