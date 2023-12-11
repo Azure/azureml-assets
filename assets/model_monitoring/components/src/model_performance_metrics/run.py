@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-
 """Entry script for Model Performance Compute Metrics Spark Component."""
 
 import argparse
@@ -34,7 +33,6 @@ def run():
     parser.add_argument("--classification_recall_threshold", type=str,
                         dest="classification_recall_threshold", required=False, default=None)
     parser.add_argument("--signal_metrics", type=str)
-
     args = parser.parse_args()
 
     metrics_data = DataReaderFactory().get_reader(args.task).read_data(args.ground_truths,
@@ -44,12 +42,12 @@ def run():
     metrics = EvaluatorFactory().get_evaluator(task_type=args.task, metrics_config={}).evaluate(metrics_data)
     construct_signal_metrics(metrics,
                              args.signal_metrics,
+                             args.predictions_column_name,
                              args.regression_rmse_threshold,
                              args.regression_meanabserror_threshold,
                              args.classification_precision_threshold,
                              args.classification_accuracy_threshold,
-                             args.classification_recall_threshold,
-                             args.predictions_column_name
+                             args.classification_recall_threshold
                              )
 
 

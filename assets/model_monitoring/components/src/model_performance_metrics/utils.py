@@ -30,7 +30,7 @@ from shared_utilities.io_utils import init_spark, save_spark_df_as_mltable
 def log_time_and_message(message):
     """Print the time in addition to message for logging purposes.
 
-    :param message: The message to be printed after the time
+    : param message: The message to be printed after the time
     : type message: string
     """
     print(f"[{datetime.now()}] {message}")
@@ -60,14 +60,14 @@ def construct_signal_metrics(
         ):
     """
     Args:
-        metrics_artifacts:
-        output_data_file_name:
-        predictions_column_name:
-        regression_rmse_threshold:
-        regression_meanabserror_threshold:
-        classification_precision_threshold:
-        classification_accuracy_threshold:
-        classification_recall_threshold:
+        metrics_artifacts: metrics artifacts
+        output_data_file_name: output data file name
+        predictions_column_name: prediction column name
+        regression_rmse_threshold: rmse threshold
+        regression_meanabserror_threshold: mean abs error threshold
+        classification_precision_threshold: precision threshold
+        classification_accuracy_threshold: accuracy threshold
+        classification_recall_threshold: recall threshold
     Returns:
     """
     metrics_name_to_threshold_map = {

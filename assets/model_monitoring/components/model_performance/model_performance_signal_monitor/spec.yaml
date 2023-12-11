@@ -12,7 +12,6 @@ inputs:
     default: tabular-classification
     enum: [
       tabular-classification,
-      tabular-classification-multilabel,
       tabular-regression
     ]
     description: "Task type"
