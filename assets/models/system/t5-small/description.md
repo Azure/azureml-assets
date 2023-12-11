@@ -1,52 +1,99 @@
-T5 Small is a text-to-text transformer model with 60 million parameters. It is developed by a group of researchers and is based on the Text-To-Text Transfer Transformer (T5) framework, which allows for a unified text-to-text format for input and output of all NLP tasks. T5-Small can be trained for multiple NLP tasks such as machine translation, document summarization, question answering, classification, and even regression tasks. It is pre-trained on the Colossal Clean Crawled Corpus (C4) and a multi-task mixture of unsupervised and supervised tasks in various languages, such as English, French, Romanian and German. You can use the code provided to get started with the model and refer to the resources provided for more information on the model.
+The developers of the Text-To-Text Transfer Transformer (T5) [write](https://ai.googleblog.com/2020/02/exploring-transfer-learning-with-t5.html): 
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/t5-small" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+> With T5, we propose reframing all NLP tasks into a unified text-to-text-format where the input and output are always text strings, in contrast to BERT-style models that can only output either a class label or a span of the input. Our text-to-text framework allows us to use the same model, loss function, and hyperparameters on any NLP task.
 
-### Inference samples
+T5-Small is the checkpoint with 60 million parameters. 
+
+**Resources for more information:**
+  - [Research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf)
+  - [Google's T5 Blog Post](https://ai.googleblog.com/2020/02/exploring-transfer-learning-with-t5.html) 
+  - [GitHub Repo](https://github.com/google-research/text-to-text-transfer-transformer)
+  - [Hugging Face T5 Docs](https://huggingface.co/docs/transformers/model_doc/t5)
+
+# Training Details
+
+## Training Data
+
+The model is pre-trained on the [Colossal Clean Crawled Corpus (C4)](https://www.tensorflow.org/datasets/catalog/c4), which was developed and released in the context of the same [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) as T5.
+
+The model was pre-trained on a on a **multi-task mixture of unsupervised (1.) and supervised tasks (2.)**.
+Thereby, the following datasets were being used for (1.) and (2.):
+
+1. **Datasets used for Unsupervised denoising objective**:
+
+- [C4](https://huggingface.co/datasets/c4)
+- [Wiki-DPR](https://huggingface.co/datasets/wiki_dpr)
+
+
+2. **Datasets used for Supervised text-to-text language modeling objective**
+
+- Sentence acceptability judgment
+  - CoLA [Warstadt et al., 2018](https://arxiv.org/abs/1805.12471)
+- Sentiment analysis 
+  - SST-2 [Socher et al., 2013](https://nlp.stanford.edu/~socherr/EMNLP2013_RNTN.pdf)
+- Paraphrasing/sentence similarity
+  - MRPC [Dolan and Brockett, 2005](https://aclanthology.org/I05-5002)
+  - STS-B [Ceret al., 2017](https://arxiv.org/abs/1708.00055)
+  - QQP [Iyer et al., 2017](https://quoradata.quora.com/First-Quora-Dataset-Release-Question-Pairs)
+- Natural language inference
+  - MNLI [Williams et al., 2017](https://arxiv.org/abs/1704.05426)
+  - QNLI [Rajpurkar et al.,2016](https://arxiv.org/abs/1606.05250)
+  - RTE [Dagan et al., 2005](https://link.springer.com/chapter/10.1007/11736790_9) 
+  - CB [De Marneff et al., 2019](https://semanticsarchive.net/Archive/Tg3ZGI2M/Marneffe.pdf)
+- Sentence completion
+  - COPA [Roemmele et al., 2011](https://www.researchgate.net/publication/221251392_Choice_of_Plausible_Alternatives_An_Evaluation_of_Commonsense_Causal_Reasoning)
+- Word sense disambiguation
+  - WIC [Pilehvar and Camacho-Collados, 2018](https://arxiv.org/abs/1808.09121)
+- Question answering
+  - MultiRC [Khashabi et al., 2018](https://aclanthology.org/N18-1023)
+  - ReCoRD [Zhang et al., 2018](https://arxiv.org/abs/1810.12885)
+  - BoolQ [Clark et al., 2019](https://arxiv.org/abs/1905.10044)
+
+## Training Procedure
+
+In their [abstract](https://jmlr.org/papers/volume21/20-074/20-074.pdf), the model developers write: 
+
+> In this paper, we explore the landscape of transfer learning techniques for NLP by introducing a unified framework that converts every language problem into a text-to-text format. Our systematic study compares pre-training objectives, architectures, unlabeled datasets, transfer approaches, and other factors on dozens of language understanding tasks. 
+
+The framework introduced, the T5 framework, involves a training procedure that brings together the approaches studied in the paper. See the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) for further details.
+
+# Evaluation
+
+## Testing Data, Factors & Metrics
+
+The developers evaluated the model on 24 tasks, see the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) for full details.
+
+## Results 
+
+For full results for T5-small, see the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf), Table 14.
+
+# Environmental Impact
+
+Carbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700).
+
+# Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|<a href="https://aka.ms/azureml-infer-online-sdk-translation" target="_blank">translation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-translation" target="_blank">translation-online-endpoint.sh</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-translation" target="_blank">translation-batch-endpoint.ipynb</a>| coming soon
 
+## Sample inputs and outputs (for real-time inference)
 
-### Finetuning samples
-
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Summarization|News Summary|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">CNN DailyMail</a>|<a href="https://aka.ms/azureml-ft-sdk-news-summary" target="_blank">news-summary.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-news-summary" target="_blank">news-summary.sh</a>
-Translation|Translate English to Romanian|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">WMT16</a>|<a href="https://aka.ms/azureml-ft-sdk-translation" target="_blank">translate-english-to-romanian.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-translation" target="_blank">translate-english-to-romanian.sh</a>
-
-
-### Model Evaluation
-
-Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|--|
-Translation | Translation | <a href="https://huggingface.co/datasets/wmt16/viewer/ro-en/train" target="_blank">wmt16/ro-en</a> | <a href="https://aka.ms/azureml-eval-sdk-translation" target="_blank">evaluate-model-translation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-translation" target="_blank">evaluate-model-translation.yml</a>
-
-
-### Sample inputs and outputs (for real-time inference)
-
-#### Sample input
+### Sample input
 ```json
 {
-    "input_data": {
-        "input_string": ["My name is John and I live in Seattle", "Berlin is the capital of Germany."]
-    },
-    "parameters": {
-        "task_type": "translation_en_to_fr"
-    }
+    "input_data": [
+        "translate English to French: Life is so beautiful, once you learn how to live with it",
+        "translate English to German: Berlin is the capital of Germany"
+    ]
 }
 ```
 
-#### Sample output
+### Sample output
 ```json
 [
-    {
-        "0": "Mon nom est John et je vivais à Seattle."
-    },
-    {
-        "0": "Berlin est la capitale de l'Allemagne."
-    }
+  "La vie est tellement belle, une fois que vous en apprendrez comment vivre avec elle",
+  "Berlin ist die Hauptstadt Deutschlands"
 ]
 ```
