@@ -29,6 +29,10 @@ inputs:
       Key in ground truth dataset that contains ground truth. If ground_truth_dataset is given, then,
       this is required input.
     optional: True
+  additional_columns:
+    type: string
+    description: >-
+      Name(s) of additional columns that could be helpful to compute some metrics, seperated by ",".
   remove_prefixes:
     type: string
     description: >-
@@ -133,6 +137,7 @@ command: >-
   --prediction_column_name ${{inputs.prediction_column_name}}
   $[[--ground_truth_dataset ${{inputs.ground_truth_dataset}}]]
   $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
+  $[[--ground_truth_column_name ${{inputs.additional_columns}}]]
   $[[--separator '${{inputs.separator}}']]
   $[[--find_first '${{inputs.find_first}}']]
   $[[--regex_expr '${{inputs.regex_expr}}']]
