@@ -38,13 +38,16 @@ test_data_regression = [{
 
 @pytest.mark.unit
 class TestModelPerformanceComputeMetrics(unittest.TestCase):
+    """Unit test class for model performance compute metrics."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize the unit test class."""
         super(TestModelPerformanceComputeMetrics, self).__init__(*args, **kwargs)
         self._test_suite_name = "test_model_performance_compute_metrics"
         self.spark = init_spark()
 
     def get_test_cases_with_res(self, task_type):
+        """Get test cases with expected results."""
         if task_type == "tabular-classification":
             for test_case in test_data_classification:
                 yield MetricsDTO(test_case["ground_truth"]["label"], test_case["predictions"]["label"]), \
@@ -57,14 +60,17 @@ class TestModelPerformanceComputeMetrics(unittest.TestCase):
             raise Exception("Invalid task type")
 
     def test_data_reader_factory(self):
+        """Test data reader factory."""
         assert isinstance(DataReaderFactory().get_reader("tabular-classification"), BaseTaskReader)
         assert isinstance(DataReaderFactory().get_reader("tabular-regression"), BaseTaskReader)
 
     def test_evaluator_factory(self):
+        """Test evaluator factory."""
         assert isinstance(EvaluatorFactory().get_evaluator("tabular-classification"), ClassifierEvaluator)
         assert isinstance(EvaluatorFactory().get_evaluator("tabular-regression"), RegressorEvaluator)
 
     def test_classifier_evaluator(self):
+        """Test classifier evaluator."""
         classifier_evaluator = EvaluatorFactory().get_evaluator("tabular-classification")
         for metrics_dto, expected_result in self.get_test_cases_with_res("tabular-classification"):
             metrics = classifier_evaluator.evaluate(metrics_dto)
@@ -72,6 +78,7 @@ class TestModelPerformanceComputeMetrics(unittest.TestCase):
                 self.assertAlmostEqual(metrics["metrics"][key], expected_result[key])
 
     def test_regressor_evaluator(self):
+        """Test regressor evaluator."""
         regressor_evaluator = EvaluatorFactory().get_evaluator("tabular-regression")
         for metrics_dto, expected_result in self.get_test_cases_with_res("tabular-regression"):
             metrics = regressor_evaluator.evaluate(metrics_dto)

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+""" This file contains the evaluator for model performance compute metrics."""
+
 from abc import abstractmethod
 import ast
 import numpy as np
@@ -16,9 +18,7 @@ class EvaluatorFactory:
     """Evaluator Factory Class."""
 
     def __init__(self):
-        """
-        Initialize evaluator factory and register evaluators for each task type.
-        """
+        """Initialize evaluator factory and register evaluators for each task type."""
         self._evaluators = {
             TASK.CLASSIFICATION: ClassifierEvaluator,
             TASK.CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
@@ -28,12 +28,12 @@ class EvaluatorFactory:
     def get_evaluator(self, task_type, metrics_config=None):
         """
         Get evaluator based on task type.
+
         Args:
             task_type: task type
             metrics_config: metrics config
 
         Returns: evaluator object
-
         """
         if metrics_config is None:
             metrics_config = {}
@@ -46,6 +46,7 @@ class Evaluator:
     def __init__(self, task_type, metrics_config):
         """
         Initialize evaluator.
+
         Args:
             task_type: string
             metrics_config: dict
@@ -84,10 +85,12 @@ class Evaluator:
 
 
 class ClassifierEvaluator(Evaluator):
+    """Evaluator for Compute Metrics classification mode."""
 
     def __init__(self, task_type, metrics_config):
         """
         Initialize classifier evaluator.
+
         Args:
             task_type: string
             metrics_config: dict
@@ -95,7 +98,8 @@ class ClassifierEvaluator(Evaluator):
         super().__init__(task_type, metrics_config)
 
     def evaluate(self, metrics_dto, **kwargs):
-        """Evaluate classification.
+        """
+        Evaluate classification.
 
         Args:
             metrics_dto: metrics dto
@@ -113,14 +117,16 @@ class ClassifierEvaluator(Evaluator):
 
 
 class RegressorEvaluator(Evaluator):
-    """Regressor Evaluator.
+    """
+    Regressor Evaluator.
 
     Args:
         Evaluator (_type_): _description_
     """
 
     def __init__(self, task_type, metrics_config):
-        """__init__.
+        """
+        Initialize Regressor Evaluator.
 
         Args:
             task_type: string
@@ -130,6 +136,7 @@ class RegressorEvaluator(Evaluator):
 
     def evaluate(self, metrics_dto, **kwargs):
         """
+        Evaluate Regression.
 
         Args:
             metrics_dto: metrics dto
@@ -148,11 +155,12 @@ class RegressorEvaluator(Evaluator):
 
 
 class ClassifierMultilabelEvaluator(Evaluator):
-    """Classifier Multilabel.
-    """
+    """Classifier Multilabel."""
 
     def __init__(self, task_type, metrics_config):
         """
+        Initilaize Multilabel Classifier.
+
         Args:
             task_type: string
             metrics_config: dict
@@ -160,7 +168,8 @@ class ClassifierMultilabelEvaluator(Evaluator):
         super().__init__(task_type, metrics_config)
 
     def _convert_predictions(self, preds):
-        """Convert predictions to np array.
+        """
+        Convert predictions to np array.
 
         Args:
             preds: predictions
@@ -175,6 +184,7 @@ class ClassifierMultilabelEvaluator(Evaluator):
     def evaluate(self, metrics_dto, **kwargs):
         """
         Evaluate multilabel classification.
+
         Args:
             metrics_dto: Metrics DTO
 

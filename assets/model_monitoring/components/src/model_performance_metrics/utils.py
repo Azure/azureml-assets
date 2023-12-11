@@ -12,9 +12,10 @@ from shared_utilities.io_utils import init_spark, save_spark_df_as_mltable
 
 
 def log_time_and_message(message):
-    """Print the time in addition to message for logging purposes.
+    """
+    Print the time in addition to message for logging purposes.
 
-    :param message: The message to be printed after the time
+    : param message: The message to be printed after the time
     : type message: string
     """
     print(f"[{datetime.now()}] {message}")
@@ -34,6 +35,7 @@ def convert_pandas_to_spark(pandas_data):
 
 def write_to_mltable(metrics_artifacts, output_data_file_name):
     """
+    Write metrics to mltable.
 
     Args:
         metrics_artifacts:
