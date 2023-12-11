@@ -21,11 +21,11 @@ def _submit_model_performance_signal_monitor_job(
     baseline_data_target_column,
     production_data,
     production_data_target_column,
-    regression_rmse_threshold,
-    regression_meanabserror_threshold,
-    classification_precision_threshold,
-    classification_accuracy_threshold,
-    classification_recall_threshold,
+    regression_rmse_threshold=None,
+    regression_meanabserror_threshold=None,
+    classification_precision_threshold=None,
+    classification_accuracy_threshold=None,
+    classification_recall_threshold=None,
 
 ):
     mp_signal_monitor = get_component(COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR)

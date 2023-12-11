@@ -52,12 +52,12 @@ def convert_pandas_to_spark(pandas_data):
 def construct_signal_metrics(
         metrics_artifacts,
         output_data_file_name,
-        regression_rmse_threshold,
-        regression_meanabserror_threshold,
-        classification_precision_threshold,
-        classification_accuracy_threshold,
-        classification_recall_threshold,
         predictions_column_name,
+        regression_rmse_threshold=None,
+        regression_meanabserror_threshold=None,
+        classification_precision_threshold=None,
+        classification_accuracy_threshold=None,
+        classification_recall_threshold=None,
         ):
     """
     Args:
