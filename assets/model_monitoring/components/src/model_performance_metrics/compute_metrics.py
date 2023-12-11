@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-""" This file contains the evaluator for model performance compute metrics."""
+"""This file contains the evaluator for model performance compute metrics."""
 
 from abc import abstractmethod
 import ast

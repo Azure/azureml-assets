@@ -38,10 +38,8 @@ def write_to_mltable(metrics_artifacts, output_data_file_name):
     Write metrics to mltable.
 
     Args:
-        metrics_artifacts:
-        output_data_file_name:
-
-    Returns:
+        metrics_artifacts: metrics artifacts
+        output_data_file_name: output data file name
 
     """
     log_time_and_message("Begin writing metric to mltable")

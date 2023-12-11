@@ -7,15 +7,15 @@ from shared_utilities.io_utils import read_mltable_in_spark
 
 
 class DataReaderFactory:
-    """ Data reader factory class."""
+    """Data reader factory class."""
 
     def __init__(self):
-        """Data reader factory to get the reader for the task."""
+        """Reader factory to get the reader for the task."""
         self.default_reader = BaseTaskReader
 
     def get_reader(self, task):
         """
-        Data reader factory to get the reader for the task.
+        Get reader for the task.
 
         Args:
             task: str
@@ -28,6 +28,7 @@ class DataReaderFactory:
 
 
 class MetricsDTO:
+    """Metrics DTO."""
 
     def __init__(self, ground_truth, predictions):
         """
@@ -42,7 +43,7 @@ class MetricsDTO:
 
 
 class BaseTaskReader:
-    """Base class for task reader."""
+    """Class for task reader."""
 
     def __init__(self, task):
         """
@@ -79,7 +80,7 @@ class BaseTaskReader:
             predictions: str
             predictions_column_name: str
 
-        Returns:
+        Returns: MetricsDTO
 
         """
         ground_truth = self._read_mltable_to_pd_dataframe(ground_truths,
