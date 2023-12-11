@@ -10,7 +10,7 @@ from typing import List
 
 import azureml.assets as assets
 import azureml.assets.util as util
-from azureml.assets.config import AssetType, AzureBlobstoreAssetPath
+from azureml.assets.config import AssetType, AzureBlobstoreAssetPath, GENERIC_ASSET_TYPES
 
 from collections import defaultdict
 from datetime import timedelta
@@ -21,7 +21,7 @@ def get_tokens(input_dirs: List[Path],
                asset_config_filename: str,
                json_output_path: str,
                pattern: re.Pattern = None):
-    """Generate SAS tokens for models to JSON output file.
+    """Generate SAS tokens for models and generic assets to JSON output file.
 
     Args:
         input_dirs (List[Path]): List of directories to search for assets.
@@ -31,32 +31,45 @@ def get_tokens(input_dirs: List[Path],
     """
     json_info = defaultdict(dict)
 
-    # Filter to only models
+    # Generate SAS tokens for generic assets
+    asset_types = [AssetType.MODEL] + GENERIC_ASSET_TYPES
     for asset_config in util.find_assets(
-            input_dirs, asset_config_filename, types=[AssetType.MODEL], pattern=pattern):
+            input_dirs, asset_config_filename, types=asset_types, pattern=pattern):
 
-        model_config: assets.ModelConfig = asset_config.extra_config_as_object()
-        path = model_config.path
+        if asset_config.type == AssetType.MODEL:
+            model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+            if isinstance(model_config.path, AzureBlobstoreAssetPath):
+                add_token_info(model_config.path, json_info)
 
-        if not isinstance(path, AzureBlobstoreAssetPath):
-            continue
-
-        account_name = model_config.path.storage_name
-        container_name = model_config.path.container_name
-
-        if container_name in json_info[account_name]:
-            continue
-
-        _ = model_config.path.get_uri(token_expiration=timedelta(days=1))
-        token = model_config.path.token
-
-        if token is not None and len(token) == 0:
-            token = None
-
-        json_info[account_name][container_name] = token
+        elif asset_config.type in GENERIC_ASSET_TYPES:
+            generic_config: assets.GenericAssetConfig = asset_config.extra_config_as_object()
+            if generic_config and isinstance(generic_config.path, AzureBlobstoreAssetPath):
+                add_token_info(generic_config.path, json_info)
 
     with open(json_output_path, 'w') as json_token_file:
         json.dump(json_info, json_token_file)
+
+
+def add_token_info(path: AzureBlobstoreAssetPath, json_info: defaultdict(dict)):
+    """Generate a SAS token and add it to the json info token dictionary.
+
+    Args:
+        storage_path (AzureBlobstoreAssetPath): Blob storage path to update.
+        json_info (defaultdict(dict)): Dictionary used to generate the JSON token file.
+    """
+    account_name = path.storage_name
+    container_name = path.container_name
+
+    if container_name in json_info[account_name]:
+        return
+
+    _ = path.get_uri(token_expiration=timedelta(days=1))
+    token = path.token
+
+    if token is not None and len(token) == 0:
+        token = None
+
+    json_info[account_name][container_name] = token
 
 
 if __name__ == '__main__':

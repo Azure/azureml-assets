@@ -40,6 +40,14 @@ databricks/dolly-v2-7b|	0.392|	0.633838|	0.607735|	0.686517|	0.406997|	0.750816|
 databricks/dolly-v1-6b|	0.41|	0.62963|	0.643252|	0.676758|	0.384812|	0.773667|	0.687768|	0.583431
 EleutherAI/gpt-neox-20b|	0.402|	0.683923|	0.656669|	0.7142|	0.408703| 0.784004|	0.695413|	0.602236
 
+# Finetuning samples
+
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+
+
 # Model Evaluation
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
@@ -63,7 +71,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
             "What is your favourite condiment?"
         ],
         "parameters": {
-            "max_new_tokens": 50,
+            "max_new_tokens": 100,
             "do_sample": true,
             "return_full_text": false
         }
@@ -75,7 +83,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 [
     {
-        "0": "I am a big fan of Salt and Pepper. I use it on nearly every meal."
+        "0": "I really enjoy wasabi mayo. The spice found in wasabi is a perfect compliment to the mayo's sweetness."
     }
 ]
 ```

@@ -1,0 +1,21 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: chat
+
+messages:
+- role: system
+  content: You are a social media video expert. You are to extract key details about the main themes, brands visible, and potential promotional opportunities. Your goal is to generate a comprehensive summary that advertisers can utilize for targeted promotions.
+
+starter_messages:
+- role: user
+  content:
+    - type: text
+      text: Analyze the content, themes, brands, and notable elements of the social media video
+    - type: video
+      image_url: video1.mp4
+
+execution_settings:
+  gptv:
+    enhance: true
+
+template_format: handlebars

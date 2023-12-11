@@ -1,0 +1,24 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: chat
+ 
+messages: 
+- role: system
+  content: You're a professional defect detector. Your job is to compare the test image with reference image, please answer the question with "No defect detected" or "Defect detected" also explain your decision as detail as possible.
+
+starter_messages:
+- role: user
+  content:
+    - type: text
+      text: Here is the reference image
+    - type: image
+      image_url: img1.jpg
+
+- role: user
+  content:
+    - type: text
+      text: Here is the test image
+    - type: image
+      image_url: img2.jpg
+
+template_format: handlebars

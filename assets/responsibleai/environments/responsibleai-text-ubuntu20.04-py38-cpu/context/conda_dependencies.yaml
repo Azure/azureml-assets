@@ -11,17 +11,15 @@ dependencies:
   - pytorch
   - captum
   - cpuonly
-  - pycocotools==2.0.4
   - pip:
     - numpy==1.22.0
-    - responsibleai~=0.32.0
-    - raiwidgets~=0.32.0
-    - pyarrow
+    - responsibleai~=0.32.1
+    - raiwidgets~=0.32.1
     - azure-core==1.29.5
     - mlflow
     - markupsafe<=2.1.2
     - itsdangerous<=2.1.2
-    - responsibleai-text[qa]==0.2.3
+    - responsibleai-text[qa]==0.2.4
     - click<8.0.0
     - mltable==1.5.0
     - transformers>=4.17.0

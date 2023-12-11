@@ -1,0 +1,21 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: chat
+
+messages:
+- role: system
+  content: You are a car insurance and accident expert. Extract detailed information about the car's make, model, damage extent, license plate, airbag deployment status, and any other observations. Output results as JSON.
+
+starter_messages:
+- role: user
+  content:
+    - type: text
+      text: Provide details from car damage in the video
+    - type: video
+      image_url: video1.mp4
+
+execution_settings:
+  gptv:
+    enhance: true
+
+template_format: handlebars
