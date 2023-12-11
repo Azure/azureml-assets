@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+# flake8: noqa: F401,F403
+
 """Global test level fixtures."""
 
 import pytest
