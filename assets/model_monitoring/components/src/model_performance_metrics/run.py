@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Entry script for Data Drift Compute Metrics Spark Component."""
+"""Entry script for Model Performance Compute Metrics Spark Component."""
 
 import argparse
 import constants

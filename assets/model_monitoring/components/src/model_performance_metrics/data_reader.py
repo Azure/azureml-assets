@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains the data reader for model performance compute metrics."""
+
 from shared_utilities.io_utils import read_mltable_in_spark
 
 
@@ -50,7 +55,7 @@ class BaseTaskReader:
 
     def _read_mltable_to_pd_dataframe(self, file_name, columns):
         """
-        Rwad mltable to pandas dataframe
+        Read mltable to pandas dataframe
         Args:
             file_name: str
             columns: list

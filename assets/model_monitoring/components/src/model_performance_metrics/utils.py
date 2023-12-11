@@ -1,4 +1,8 @@
-"""This file contains the core logic for feature attribution drift component."""
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains utility functions for model performance metrics."""
+
 import pandas as pd
 from datetime import datetime
 
