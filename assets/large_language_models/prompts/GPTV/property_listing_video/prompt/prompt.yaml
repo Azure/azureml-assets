@@ -4,8 +4,7 @@ _type: chat
 
 messages:
 - role: system
-  content:
-    - Given the following images of a residential property, create a compelling and professional real estate listing
+  content: Given the following images of a residential property, create a compelling and professional real estate listing
 
 starter_messages:
 - role: user
