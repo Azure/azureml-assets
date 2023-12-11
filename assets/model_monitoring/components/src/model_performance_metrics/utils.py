@@ -104,6 +104,6 @@ def construct_signal_metrics(
                   metrics_data_df.first()[col_],
                   metrics_name_to_threshold_map[col_],
                   predictions_column_name) for col_ in metrics_data_df.columns],
-                  schema)
+                schema)
 
     save_spark_df_as_mltable(signal_output_df, output_data_file_name)
