@@ -694,10 +694,13 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     with open(SUPPORTED_INFERNCE_SKU_FILE_PATH) as f:
         supported_inference_skus = set(json.load(f))
         unsupported_skus_in_spec = [
-            sku for sku in model.tags.get(MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST, []) if sku not in supported_inference_skus
+            sku
+            for sku in model.tags.get(MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST, [])
+            if sku not in supported_inference_skus
         ]
         if unsupported_skus_in_spec:
-            _log_error(asset_config.file_name_with_path, f"Unsupported inference SKU in spec: {unsupported_skus_in_spec}")
+            _log_error(asset_config.file_name_with_path,
+                       f"Unsupported inference SKU in spec: {unsupported_skus_in_spec}")
             error_count += 1
 
     if supports_eval:
