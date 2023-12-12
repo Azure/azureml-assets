@@ -12,15 +12,15 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from typing import List
 
-from azure.ai.ml import load_model
-from azure.ai.ml import MLClient
+from azure.ai.ml import MLClient, load_model
+from azure.ai.ml.entities import Model
 from azure.ai.ml.operations._run_history_constants import JobStatus
 from azure.identity import AzureCliCredential
 
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets import PublishLocation, PublishVisibility
-from azureml.assets.config import ValidationException
+from azureml.assets.config import ValidationException, SystemRegisty
 from azureml.assets.util import logger
 
 ERROR_TEMPLATE = "Validation of {file} failed: {error}"
@@ -46,11 +46,14 @@ SUPPORTED_INFERNCE_SKU_FILE_PATH = Path(__file__) / "config" / SUPPORTED_INFERNC
 
 # create mlclient for prod registries
 credential = AzureCliCredential()
-mlclient_azureml = MLClient(credential, registry_name=assets.config.SystemRegisty.AZUREML)
-mlclient_azureml_meta = MLClient(credential, registry_name=assets.config.SystemRegisty.AZUREML_META)
-mlclient_azureml_msr = MLClient(credential, registry_name=assets.config.SystemRegisty.AZUREML_MSR)
-mlclient_nvidia_ai = MLClient(credential, registry_name=assets.config.SystemRegisty.NVIDIA_AI)
-
+# mlclient for prod registries mapped to registry name
+# create once and use it wherever needed
+mlclient_reg_map = {
+    SystemRegisty.AZUREML: MLClient(credential, registry_name=SystemRegisty.AZUREML),
+    SystemRegisty.AZUREML_META: MLClient(credential, registry_name=SystemRegisty.AZUREML_META),
+    SystemRegisty.AZUREML_MSR: MLClient(credential, registry_name=SystemRegisty.AZUREML_MSR),
+    SystemRegisty.NVIDIA_AI: MLClient(credential, registry_name=SystemRegisty.NVIDIA_AI),
+}
 
 class MLFlowModelProperties:
     """Commonly defined model properties."""
@@ -452,11 +455,17 @@ def confirm_model_validation_results(
     latest_asset_config: assets.AssetConfig,
     validated_asset_config: assets.AssetConfig
 ) -> int:
-    """Check if current model asset and validated one matches and has a successful run."""
+    """Compare latest model with validation results.
+
+    Args:
+        latest_asset_config (assets.AssetConfig): asset config for latest model
+        validated_asset_config (assets.AssetConfig): asset cofig for validated model
+
+    Returns:
+        int: 1 if asset in invalid else 0
+    """
     try:
         latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
-        validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
-
         if latest_model_config.type != assets.config.ModelType.MLFLOW:
             logger.print(
                 f"Bypass validation for {latest_asset_config.name} as model type is: {latest_model_config.type.value}"
@@ -467,6 +476,7 @@ def confirm_model_validation_results(
             logger.log_error(f"Validated asset config is None for {latest_asset_config.name}")
             return 1
 
+        validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
         logger.print(f"Comparing validated and latest model asset files for {latest_asset_config.name}")
 
         latest_model_path_uri = latest_model_config.path.uri
@@ -595,8 +605,70 @@ def confirm_model_validation_results(
         return 1
 
 
-def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: dict):
-    """Validate model spec."""
+def validate_model_scenario(
+    asset_file_name_with_path: Path,
+    model: Model,
+    min_sku_prop_name: str,
+    recommended_skus_prop_name: str,
+    compute_allowlist_tags_name: str,
+) -> bool:
+    """Validate model properties, tags for different scenarios.
+
+    Args:
+        asset_file_name_with_path (Path): file path to model asset
+        model (Model): model loaded from spec
+        min_sku_prop_name str: min sku property name for the scenario
+        recommended_skus_prop_name str: recommended sku property name for the scenario
+        compute_allowlist_tags_name str: compute allowlist tag name for the scenario
+
+    Returns:
+        bool: True if required tags and propeties are correctly present
+    """
+    min_sku =  model.properties.get(min_sku_prop_name, None)
+    recommended_skus =  model.properties.get(recommended_skus_prop_name, None)
+    compute_allowlists =  model.tags.get(compute_allowlist_tags_name, None)
+
+    # TODO: add min_sku validation than just its existence
+
+    if not min_sku:
+        _log_error(
+            asset_file_name_with_path,
+            f"{min_sku_prop_name} is missing in model properties"
+        )
+        return False
+
+    if not recommended_skus:
+        _log_error(asset_file_name_with_path,
+            f"{recommended_skus_prop_name} is missing in model properties"
+        )
+        return False
+
+    if not compute_allowlists:
+        _log_error(asset_file_name_with_path,
+            f"{compute_allowlist_tags_name} is missing in model tags"
+        )
+        return False
+
+    if (recommended_skus.split(",")
+            != compute_allowlists):
+        _log_error(asset_file_name_with_path,
+            f"{recommended_skus_prop_name} and {recommended_skus_prop_name} does not match for model"
+        )
+        return False
+
+    return True
+
+
+def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: dict) -> int:
+    """Validate model properties, tags for different scenarios.
+
+    Args:
+        asset_config (assets.AssetConfig): asset config for model spec
+        validated_model_map (dict): Validated model asset configs mapped to model name
+
+    Returns:
+        1 if asset in invalid else 0
+    """
     model = load_model(asset_config.spec_with_path)
     if asset_config.type != assets.config.ModelType.MLFLOW:
         logger.print(
@@ -623,38 +695,18 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
         )
         return 1
 
-    supports_eval = False
-    supports_ft = False
-
-    if not model.tags.get(MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST):
-        supports_eval = True
-
-    if not model.tags.get(MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST):
-        supports_ft = True
+    supports_eval = model.tags.get(MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST) is not None
+    supports_ft = model.tags.get(MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST) is not None
 
     # check properties
-
-    # make sure min sku spec and recommended sku exists for inference
-    if not model.properties.get(MLFlowModelProperties.INFERENCE_MIN_SKU_SPEC):
-        _log_error(
-            asset_config.file_name_with_path,
-            f"{MLFlowModelProperties.INFERENCE_MIN_SKU_SPEC} is missing for inference"
-        )
-        return 1
-
-    if not model.properties.get(MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU):
-        _log_error(
-            asset_config.file_name_with_path,
-            f"{MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU} is missing for inference"
-        )
-        return 1
-
-    if (model.properties[MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU].split(",")
-            != model.tags[MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST]):
-        _log_error(
-            asset_config.file_name_with_path,
-            f"{MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU} {MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST} does not match"
-        )
+    # validate inference compute req.
+    if not validate_model_scenario(
+        asset_config.file_name_with_path, 
+        model, 
+        MLFlowModelProperties.INFERENCE_MIN_SKU_SPEC,
+        MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU,
+        MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST,
+    ):
         return 1
 
     # check valid computes for inference
@@ -666,58 +718,30 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
         _log_error(asset_config.file_name_with_path, f"Unsupported inference SKU in spec: {unsupported_skus_in_spec}")
 
     if supports_eval:
-        # make sure min sku spec and recommended sku exists
-        if not model.properties.get(MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC):
-            _log_error(
-                asset_config.file_name_with_path,
-                f"{MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC} is missing for supported scenario"
-            )
-            return 1
-
-        if not model.properties.get(MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU):
-            _log_error(
-                asset_config.file_name_with_path,
-                f"{MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU} is missing for supported scenario"
-            )
-            return 1
-
-        recommended_sku = model.properties[MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU]
-        if recommended_sku.split(",") != model.tags[MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST]:
-            _log_error(
-                asset_config.file_name_with_path,
-                f"{MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU} {MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST} does not match"
-            )
+        if not validate_model_scenario(
+            asset_config.file_name_with_path, 
+            model, 
+            MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC,
+            MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU,
+            MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST,
+        ):
             return 1
 
     if supports_ft:
-        # make sure min sku spec and recommended sku exists
-        if not model.properties.get(MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC):
-            _log_error(
-                asset_config.file_name_with_path,
-                f"{MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC} is missing for supported scenario"
-            )
-            return 1
-
-        if not model.properties.get(MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU):
-            _log_error(
-                asset_config.file_name_with_path,
-                f"{MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU} is missing for supported scenario"
-            )
-            return 1
-
-        recommended_sku = model.properties[MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU].split(",")
-        if recommended_sku != model.tags[MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST]:
-            _log_error(
-                asset_config.file_name_with_path,
-                f"{MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU} {MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST} does not match"
-            )
-            return 1
-
         if not model.properties.get(MLFlowModelProperties.FINETUNING_TASKS):
             _log_error(
                 asset_config.file_name_with_path,
                 f"{MLFlowModelProperties.FINETUNING_TASKS} not set for supporting finetuning scenario"
             )
+            return 1
+
+        if not validate_model_scenario(
+            asset_config.file_name_with_path,
+            model,
+            MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC,
+            MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU,
+            MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST,
+        ):
             return 1
 
     # make sure version is prod model version + 1
@@ -726,32 +750,14 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
     registered_model = None
     registry_name = None
 
-    try:
-        registered_model = mlclient_azureml.model.get(name=model.name, label="latest")
-        registry_name = assets.config.SystemRegisty.AZUREML
-    except Exception:
-        logger.log_warning(f"Unable to fetch model details from {assets.config.SystemRegisty.AZUREML} registry")
-
-    if not registered_model:
+    for reg_name, mlclient_reg in mlclient_reg_map.items():
         try:
-            registered_model = mlclient_azureml_meta.model.get(name=model.name, label="latest")
-            registry_name = assets.config.SystemRegisty.AZUREML_META
+            registered_model = mlclient_reg.model.get(name=model.name, label="latest")
+            if registered_model:
+                registry_name = reg_name
+                break
         except Exception:
-            logger.log_warning(f"Unable to fetch model details from {assets.config.SystemRegisty.AZUREML_META} registry")
-
-    if not registered_model:
-        try:
-            registered_model = mlclient_azureml_msr.model.get(name=model.name, label="latest")
-            registry_name = assets.config.SystemRegisty.AZUREML_MSR
-        except Exception:
-            logger.log_warning(f"Unable to fetch model details from {assets.config.SystemRegisty.AZUREML_MSR} registry")
-
-    if not registered_model:
-        try:
-            registered_model = mlclient_azureml_msr.model.get(name=model.name, label="latest")
-            registry_name = assets.config.SystemRegisty.NVIDIA_AI
-        except Exception:
-            logger.log_warning(f"Unable to fetch model details from {assets.config.SystemRegisty.NVIDIA_AI} registry")
+            logger.log_warning(f"Unable to fetch model details from {reg_name} registry")
 
     if not registered_model:
         _log_warning(
