@@ -32,9 +32,10 @@ def pytest_configure():
     # Prepare to copy components in fixtures below to a temporary file to not muddle dev environments
     pytest.source_dir = os.getcwd()
     pytest.copied_batch_score_component_filepath = os.path.join(pytest.source_dir,
-                                                                "yamls",
-                                                                "components",
+                                                                "driver",
+                                                                "batch_score_components",
                                                                 "v2",
+                                                                "batch_score_llm",
                                                                 "batch_score_devops_copy.yml")
 
 
@@ -50,33 +51,20 @@ def pytest_unconfigure():
 
 
 @pytest.fixture(scope="module")
-def batch_score_yml_component():
-    """Register batch score component."""
-    return register_component("batch_score.yml")
-
-
-@pytest.fixture(scope="module")
-def batch_score_embeddings_yml_component():
-    """Register batch score embeddings component."""
-    return register_component("batch_score_embeddings.yml")
-
-
-@pytest.fixture(scope="module")
-def batch_score_vesta_chat_completion_yml_component():
-    """Register batch score vesta chat completion component."""
-    return register_component("batch_score_vesta_chat_completion.yml")
-
-
-@pytest.fixture(scope="module")
 def llm_batch_score_yml_component():
     """Register llm batch score component."""
-    return register_component("batch_score_llm.yml")
+    return register_component("spec.yaml")
 
 
 def register_component(component_yml_name):
     """Register component."""
     # Copy component to a temporary file to not muddle dev environments
-    batch_score_component_filepath = os.path.join(pytest.source_dir, "yamls", "components", "v2", component_yml_name)
+    batch_score_component_filepath = os.path.join(pytest.source_dir,
+                                                  "driver",
+                                                  "batch_score_components",
+                                                  "v2",
+                                                  "batch_score_llm",
+                                                  component_yml_name)
     create_copy(batch_score_component_filepath, pytest.copied_batch_score_component_filepath)
 
     # pins batch_component version

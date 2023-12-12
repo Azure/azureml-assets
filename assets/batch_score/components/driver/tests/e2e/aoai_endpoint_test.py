@@ -18,9 +18,10 @@ gated_pipeline_filepath = os.path.join(source_dir, "driver", "tests", "e2e", "pr
 RUN_NAME = "batch_score_aoai_endpoint_test"
 JOB_NAME = "gated_batch_score"  # Should be equivalent to base.yml's job name
 YAML_COMPONENT = {"jobs": {JOB_NAME: {"component": None}}}  # Placeholder for component name set below.
-YAML_APPLICATION_INSIGHTS = {"jobs": {JOB_NAME: {
+YAML_APPLICATION_INSIGHTS = { "jobs": { JOB_NAME: {
     "inputs": {
-        "app_insights_connection_string": "InstrumentationKey="
+        # https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/c0afea91-faba-4d71-bcb6-b08134f69982/resourceGroups/batchscore-test-centralus/providers/Microsoft.Insights/components/wsbatchscorece2707952777/overview
+        "app_insights_connection_string": "InstrumentationKey=b8c396eb-7709-40a1-8363-527341518ab4;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/" 
     }
 }}}
 YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
