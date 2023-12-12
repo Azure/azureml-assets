@@ -22,3 +22,4 @@ RUN pip list
 
 ## Delete
 RUN rm requirements.txt
+# dummy number to change when needing to force rebuild without changing the definition: 1

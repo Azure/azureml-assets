@@ -16,3 +16,5 @@ RUN pip install "azureml-evaluate-mlflow==0.0.38"
 # This can be removed once datasets is upgraded to >= 2.14.7
 RUN pip install -r requirements.txt --no-cache-dir
 RUN python -m nltk.downloader punkt
+
+# dummy number to change when needing to force rebuild without changing the definition: 1
