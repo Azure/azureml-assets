@@ -327,7 +327,7 @@ class TestInferencePostprocessorScript:
             ),
             (
                 "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None, None,
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question", None, None,
                 None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
                 None, None, None,
             ),
