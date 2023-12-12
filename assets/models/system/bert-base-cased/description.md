@@ -21,7 +21,6 @@ It was introduced in
 [this repository](https://github.com/google-research/bert). This model is case-sensitive: it makes a difference between
 english and English.
 
-
 ## Training data
 
 The BERT model was pretrained on [BookCorpus](https://yknzhu.wixsite.com/mbweb), a dataset consisting of 11,038

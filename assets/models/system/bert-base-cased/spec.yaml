@@ -9,9 +9,9 @@ properties:
   languages: en
 tags:
   Preview: ""
-  OSS: ""
   license: apache-2.0
   task: fill-mask
+  huggingface_model_id: bert-base-cased
   inference_compute_allow_list:
     [
       Standard_DS3_v2,
