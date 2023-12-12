@@ -77,29 +77,29 @@ class TestInferencePostprocessorComponent:
 
     @pytest.mark.parametrize(
         "dataset_name, prediction_dataset, prediction_column_name, ground_truth_dataset, ground_truth_column_name, \
-        separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
+        additional_columns, separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
         label_map, find_first",
         [
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None,
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question", None,
                 None, None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
                 None, None, None,
             ),
             (
                 "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
-                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
+                None, None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
                 None, None, None, None,
             ),
             (
                 "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None,
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question", None, None,
                 None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
                 None, None, None,
             ),
             (
                 "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
-                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
+                None, None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None,
             ),
         ],
@@ -203,7 +203,7 @@ class TestInferencePostprocessorComponent:
             if ground_truth_dataset
             else None,
             ground_truth_column_name=ground_truth_column_name,
-            additional_columns=additional_columns,
+            additional_columns=[additional_columns],
             separator=separator,
             regex_expr=regex_expr,
             remove_prefixes=remove_prefixes,
@@ -311,34 +311,34 @@ class TestInferencePostprocessorScript:
 
     @pytest.mark.parametrize(
         "dataset_name, prediction_dataset, prediction_column_name, ground_truth_dataset, ground_truth_column_name, \
-        separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
+        additional_columns, separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
         label_map, find_first",
         [
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None,
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question", None,
                 None, None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
                 None, None, None,
             ),
             (
                 "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
-                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
+                None, None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
                 None, None, None, None,
             ),
             (
                 "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None,
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None, None,
                 None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
                 None, None, None,
             ),
             (
                 "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
-                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
+                None, None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None,
             ),
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "\n\n",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, "\n\n",
                 None, None, ".", "last", None, None, None, None,
             ),
         ],
