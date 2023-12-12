@@ -4,14 +4,14 @@ path: ./
 properties:
   SHA: 60e31e6bdcf582ad103b807cb74b73ee1d2c4b17
   datasets: Publicly available sources
-  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2
+  inference-min-sku-spec: 24|4|448|2948
+  inference-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2
   languages: en
 tags:
   Preview: ''
   inference_compute_allow_list:
-  - Standard_NC12s_v3
   - Standard_NC24s_v3
   - Standard_ND40rs_v2
   license: other
   task: text-generation
-version: 1
+version: 2

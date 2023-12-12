@@ -51,51 +51,47 @@ Orca 2 is licensed under the [Microsoft Research License](https://huggingface.co
 
 Llama 2 is licensed under the [LLAMA 2 Community License](https://ai.meta.com/llama/license/), Copyright © Meta Platforms, Inc. All Rights Reserved.
 
-### Sample inputs and outputs (for real-time inference)
 
-#### Sample input
+# Inference samples
+
+## Sample inputs and outputs (for real-time inference)
+
+### Sample input
 ```json
 {
-	  "input_data": {
-	    "input_string": [
-	      "<|im_start|>system\nYou are Orca, an AI language model created by Microsoft. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior.<|im_end|>\n<|im_start|>user\nHow can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?<|im_end|>\n<|im_start|>assistant"
-	    ]
-	  }
-}
-```
-
-#### Sample output
-```json
-{
-  "output": [
-    "<|im_start|>system You are Orca, an AI language model created by Microsoft. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior.<|im_end|> <|im_start|>user How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?<|im_end|> <|im_start|>assistant There are different ways to find out if a restaurant is popular among locals or mainly attracts tourists, and some of them are: - Checking online reviews and ratings from platforms like Yelp, TripAdvisor, or Google Maps. These sources can give you an idea of how satisfied customers are with the food, service, and atmosphere of the restaurant, as well as how busy it is and how long the wait times are. - Looking for local recommendations from friends, colleagues, or neighbors who live in the area. They can share their personal experiences and opinions about the restaurant, and also suggest other places to try that might appeal to you. - Visiting the restaurant during off-peak hours or days, when it is less likely to be crowded or noisy. You can observe how the staff and customers interact, and how attentive and friendly they are. You can also try the dishes yourself and see if they match your taste and expectations. - Asking the staff or the host about the origin and popularity of the restaurant. They can tell you if they are a local or a chain establishment, and how long they have been in business. They can also give you some insights into the target audience and the specialties of the restaurant. Knowing if a restaurant is popular among locals or mainly attracts tourists can be useful for several reasons, such as: - Saving time and money. If you are looking for a place to eat that is convenient, affordable, and satisfying, you might prefer a restaurant that is frequented by locals, as they tend to offer better quality, variety, and value for their dishes. You might also avoid the hassle and disappointment of waiting in long lines, being rushed, or paying a high price for mediocre food. - Enhancing your cultural and social experience. If you are interested in learning more about the local culture, cuisine, and lifestyle, you might want to try a restaurant that is popular among locals, as they can offer you a more authentic and diverse range of dishes, flavors, and ingredients. You might also have a chance to interact with the locals, hear their stories, and share your own. - Avoiding tourist traps and scams. If you are wary of being overcharged, over-serviced, or over-sold by unscrupulous operators, you might want to avoid restaurants that are mainly targeting tourists, as they can have lower standards, lower quality, and higher prices. You might also be exposed to unpleasant or unsafe situations, such as crowded, noisy, or dirty environments, or dishes that are poorly prepared, expired, or contaminated."
-  ]
-}
-```
-
-#### Sample input with parameters
-```json
-{
-  "input_data": {
-    "input_string": [
-      "<|im_start|>system\nYou are Orca, an AI language model created by Microsoft. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior.<|im_end|>\n<|im_start|>user\nHow can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?<|im_end|>\n<|im_start|>assistant"
+    "input_data": [
+        "How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?"
     ],
-    "parameters": {
-      "top_p": 0.9,
-      "temperature": 0.6,
-      "max_new_tokens": 120,
-      "do_sample": true,
-      "return_full_text": false
-    }
-  }
+    "params": {}
 }
 ```
 
-#### Sample output
+### Sample output
+```json
+[
+  "How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?\n\nTo determine if a restaurant is popular among locals or mainly attracts tourists, you can consider the following factors:\n\n1. Location: If the restaurant is located in a popular tourist area, it is more likely to attract"
+]
+```
+
+### Sample input with parameters
 ```json
 {
-  "output": [
-    " There are different ways to determine if a restaurant is popular among locals or mainly attracts tourists, such as: - Looking at online reviews and ratings from different sources, such as Yelp, TripAdvisor, Google, etc. If a restaurant has mostly positive reviews from locals who live nearby or frequent the area, it might indicate that it is popular among locals. If a restaurant has mostly positive reviews from tourists who visited once or rarely come back, it might indicate that it is mainly attracts tourists. - Asking locals for their"
-  ]
+    "input_data": [
+        "How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?"
+    ],
+    "params": {
+        "top_p": 0.9,
+        "temperature": 0.2,
+        "max_new_tokens": 500,
+        "do_sample": true,
+        "return_full_text": false
+    }
 }
+```
+
+### Sample output
+```json
+[
+  "There are several ways to determine if a restaurant is popular among locals or mainly attracts tourists. Some of these methods include:\n\n1. Observe the clientele: If the restaurant is mostly filled with tourists, you might notice that they are speaking different languages, wearing casual clothing, or carrying cameras. On the other hand, if the restaurant is popular among locals, you might see more people in business attire and speaking the local language.\n\n2. Check online reviews: Look for reviews on websites like TripAdvisor, Yelp, or Google Reviews. These platforms often have a mix of reviews from both locals and tourists, and you can get an idea of the overall sentiment towards the restaurant.\n\n3. Ask locals for recommendations: If you know someone who lives in the area, they can give you an insider's perspective on which restaurants are popular among locals.\n\n4. Visit the restaurant during off-peak hours: If the restaurant is popular among locals, it might be less crowded during off-peak hours, such as early in the morning or late at night. If it's mainly a tourist spot, you might find it packed during these times.\n\nThis information can be useful because it can help you decide whether you want to try a new restaurant or stick to a place that is popular among locals. Eating at a local favorite can give you a more authentic dining experience, as well as help support the local economy. On the other hand, if you're looking for a place to grab a quick bite or a meal that caters to tourists, a restaurant that attracts more tourists might be more suitable."
+]
 ```
