@@ -41,7 +41,7 @@ MODEL_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]{0,254}$")
 MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
 VALIDATION_SUMMARY = "results.json"
 SUPPORTED_INFERNCE_SKU_FILE_NAME = "supported_inference_skus.json"
-SUPPORTED_INFERNCE_SKU_FILE_PATH = Path(__file__) / "config" / SUPPORTED_INFERNCE_SKU_FILE_NAME
+SUPPORTED_INFERNCE_SKU_FILE_PATH = Path(__file__).parent / "config" / SUPPORTED_INFERNCE_SKU_FILE_NAME
 
 
 class MLFlowModelProperties:
@@ -663,7 +663,7 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
     model_config: assets.ModelConfig = asset_config.extra_config_as_object()
     if model_config.type != assets.config.ModelType.MLFLOW:
         logger.print(
-            f"Bypass validation for {asset_config.name} as model type is: {asset_config.type.value}"
+            f"Bypass validation for {asset_config.name} as model type is: {model_config.type.value}"
         )
         return 0
 
