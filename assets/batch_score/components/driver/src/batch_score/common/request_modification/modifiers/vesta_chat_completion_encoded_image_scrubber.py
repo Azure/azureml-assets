@@ -27,6 +27,8 @@ class VestaChatCompletionEncodedImageScrubber(RequestModifier):
                             content["image"] = self._scrub_image_encoding(content["image"])
                         if "image_hr" in content:
                             content["image_hr"] = self._scrub_image_encoding(content["image_hr"])
+                        if "image_url" in content and "url" in content["image_url"]:
+                            content["image_url"]["url"] = self._scrub_image_encoding(content["image_url"]["url"])
             return request_obj
         else:
             lu.get_logger().error("Input data does not match Vesta chat completion schema")
