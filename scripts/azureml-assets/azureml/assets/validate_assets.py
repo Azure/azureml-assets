@@ -46,6 +46,7 @@ SUPPORTED_INFERNCE_SKU_FILE_PATH = Path(__file__) / "config" / SUPPORTED_INFERNC
 
 # create mlclient for prod registries
 credential = AzureCliCredential()
+
 # mlclient for prod registries mapped to registry name
 # create once and use it wherever needed
 mlclient_reg_map = {
@@ -54,6 +55,7 @@ mlclient_reg_map = {
     SystemRegisty.AZUREML_MSR: MLClient(credential, registry_name=SystemRegisty.AZUREML_MSR),
     SystemRegisty.NVIDIA_AI: MLClient(credential, registry_name=SystemRegisty.NVIDIA_AI),
 }
+
 
 class MLFlowModelProperties:
     """Commonly defined model properties."""
@@ -624,23 +626,18 @@ def validate_model_scenario(
     Returns:
         bool: True if required tags and propeties are correctly present
     """
-    min_sku =  model.properties.get(min_sku_prop_name, None)
-    recommended_skus =  model.properties.get(recommended_skus_prop_name, None)
-    compute_allowlists =  model.tags.get(compute_allowlist_tags_name, None)
+    min_sku = model.properties.get(min_sku_prop_name, None)
+    recommended_skus = model.properties.get(recommended_skus_prop_name, None)
+    compute_allowlists = model.tags.get(compute_allowlist_tags_name, None)
 
     # TODO: add min_sku validation than just its existence
 
     if not min_sku:
-        _log_error(
-            asset_file_name_with_path,
-            f"{min_sku_prop_name} is missing in model properties"
-        )
+        _log_error(asset_file_name_with_path, f"{min_sku_prop_name} is missing in model properties")
         return False
 
     if not recommended_skus:
-        _log_error(asset_file_name_with_path,
-            f"{recommended_skus_prop_name} is missing in model properties"
-        )
+        _log_error(asset_file_name_with_path, f"{recommended_skus_prop_name} is missing in model properties")
         return False
 
     if not compute_allowlists:
@@ -651,7 +648,8 @@ def validate_model_scenario(
 
     if (recommended_skus.split(",")
             != compute_allowlists):
-        _log_error(asset_file_name_with_path,
+        _log_error(
+            asset_file_name_with_path,
             f"{recommended_skus_prop_name} and {recommended_skus_prop_name} does not match for model"
         )
         return False
@@ -701,8 +699,8 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
     # check properties
     # validate inference compute req.
     if not validate_model_scenario(
-        asset_config.file_name_with_path, 
-        model, 
+        asset_config.file_name_with_path,
+        model,
         MLFlowModelProperties.INFERENCE_MIN_SKU_SPEC,
         MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU,
         MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST,
@@ -719,8 +717,8 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
 
     if supports_eval:
         if not validate_model_scenario(
-            asset_config.file_name_with_path, 
-            model, 
+            asset_config.file_name_with_path,
+            model,
             MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC,
             MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU,
             MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST,
@@ -762,7 +760,7 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
     if not registered_model:
         _log_warning(
             asset_config.file_name_with_path,
-            f"Exception in fetching current model version. This could happen becuase of multiple reasons:\n"
+            "Exception in fetching current model version. This could happen becuase of multiple reasons:\n"
             "1. Model is not registered. In that case make sure model version is set to 1\n"
             "2. Model was registered but deleted and there is no active version registered. "
             "In this case have to make sure current model version is +1 of deleted one",
