@@ -9,9 +9,9 @@ properties:
   languages: en
 tags:
   Preview: ""
-  OSS: ""
   license: mit
   task: text-generation
+  huggingface_model_id: gpt2
   inference-compute-allowlist:
     [
       Standard_DS3_v2,

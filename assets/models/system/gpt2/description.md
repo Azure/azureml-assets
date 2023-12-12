@@ -37,13 +37,24 @@ The model achieves the following results without any fine-tuning (zero-shot):
 | (metric) | (PPL)   | (ACC)   | (ACC)  | (ACC)  | (PPL)     | (PPL)  | (BPB)   | (BPC)  | (PPL)       | (PPL) |
 |          | 35.13   | 45.99   | 87.65  | 83.4   | 29.41     | 65.85  | 1.16    | 1,17   | 37.50       | 75.20 |
 
+## Limitations and bias
+
+The training data used for this model has not been released as a dataset one can browse. We know it contains a lot of
+unfiltered content from the internet, which is far from neutral. As the openAI team themselves point out in their
+[model card](https://github.com/openai/gpt-2/blob/master/model_card.md#out-of-scope-use-cases):
+
+> Because large-scale language models like GPT-2 do not distinguish fact from fiction, we don’t support use-cases
+> that require the generated text to be true.
+>
+> Additionally, language models like GPT-2 reflect the biases inherent to the systems they were trained on, so we do
+> not recommend that they be deployed into systems that interact with humans > unless the deployers first carry out a
+> study of biases relevant to the intended use-case. We found no statistically significant difference in gender, race,
+> and religious bias probes between 774M and 1.5B, implying all versions of GPT-2 should be approached with similar
+> levels of caution around use cases that are sensitive to biases around human attributes.
+
+*Note: This bias will also affect all fine-tuned versions of this model.*
 
 # Inference samples
-
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 ## Sample inputs and outputs (for real-time inference)
 
@@ -71,20 +82,3 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
   "Long time ago, there was a man who took that question away from me: not the first case where someone called me. He had called me, but he was so upset and depressed about it from the bottom of his heart, he was crying, and he thought my name was Kimber"
 ]
 ```
-
-## Limitations and bias
-
-The training data used for this model has not been released as a dataset one can browse. We know it contains a lot of
-unfiltered content from the internet, which is far from neutral. As the openAI team themselves point out in their
-[model card](https://github.com/openai/gpt-2/blob/master/model_card.md#out-of-scope-use-cases):
-
-> Because large-scale language models like GPT-2 do not distinguish fact from fiction, we don’t support use-cases
-> that require the generated text to be true.
->
-> Additionally, language models like GPT-2 reflect the biases inherent to the systems they were trained on, so we do
-> not recommend that they be deployed into systems that interact with humans > unless the deployers first carry out a
-> study of biases relevant to the intended use-case. We found no statistically significant difference in gender, race,
-> and religious bias probes between 774M and 1.5B, implying all versions of GPT-2 should be approached with similar
-> levels of caution around use cases that are sensitive to biases around human attributes.
-
-*Note: This bias will also affect all fine-tuned versions of this model.*
