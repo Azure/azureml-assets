@@ -649,12 +649,11 @@ def validate_model_scenario(
     return error_count
 
 
-def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: dict) -> int:
-    """Validate model properties, tags for different scenarios.
+def validate_model_spec(asset_config: assets.AssetConfig) -> int:
+    """Validate model spec.
 
     Args:
         asset_config (assets.AssetConfig): asset config for model spec
-        validated_model_map (dict): Validated model asset configs mapped to model name
 
     Returns:
         int: error count
@@ -726,8 +725,6 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
             MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST,
         )
 
-    # test validation results
-    error_count += confirm_model_validation_results(asset_config, validated_model_map.get(asset_config.name, None))
     return error_count
 
 
@@ -810,7 +807,13 @@ def validate_assets(input_dirs: List[Path],
 
         # validated_model_map would be ampty for non-drop scenario
         if asset_config.type == assets.AssetType.MODEL:
-            error_count += validate_model_spec(asset_config, validated_model_map)
+            error_count += validate_model_spec(asset_config)
+            # should run during drop creation only
+            if validated_model_map:
+                error_count += confirm_model_validation_results(
+                    asset_config,
+                    validated_model_map.get(asset_config.name, None)
+                )
 
         # Populate dictionary of image names to asset config paths
         environment_config = None
