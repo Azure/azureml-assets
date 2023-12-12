@@ -78,7 +78,9 @@ YAML_ENV_VARS_REDACT_PROMPTS = {"jobs": {JOB_NAME: {
 YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
     "inputs": {
         "tally_failed_requests": True
-    }
+    },
+    "error_threshold": 0,
+    "mini_batch_error_threshold": 0,
 }}}
 
 YAML_ASYNC_MODE_ENABLED = {"jobs": {JOB_NAME: {
