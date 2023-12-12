@@ -12,15 +12,14 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from typing import List
 
-from azure.ai.ml import MLClient, load_model
+from azure.ai.ml import load_model
 from azure.ai.ml.entities import Model
 from azure.ai.ml.operations._run_history_constants import JobStatus
-from azure.identity import AzureCliCredential
 
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets import PublishLocation, PublishVisibility
-from azureml.assets.config import ValidationException, SystemRegisty
+from azureml.assets.config import ValidationException
 from azureml.assets.util import logger
 
 ERROR_TEMPLATE = "Validation of {file} failed: {error}"
@@ -43,18 +42,6 @@ MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
 VALIDATION_SUMMARY = "results.json"
 SUPPORTED_INFERNCE_SKU_FILE_NAME = "supported_inference_skus.json"
 SUPPORTED_INFERNCE_SKU_FILE_PATH = Path(__file__) / "config" / SUPPORTED_INFERNCE_SKU_FILE_NAME
-
-# create mlclient for prod registries
-credential = AzureCliCredential()
-
-# mlclient for prod registries mapped to registry name
-# create once and use it wherever needed
-mlclient_reg_map = {
-    SystemRegisty.AZUREML: MLClient(credential, registry_name=SystemRegisty.AZUREML),
-    SystemRegisty.AZUREML_META: MLClient(credential, registry_name=SystemRegisty.AZUREML_META),
-    SystemRegisty.AZUREML_MSR: MLClient(credential, registry_name=SystemRegisty.AZUREML_MSR),
-    SystemRegisty.NVIDIA_AI: MLClient(credential, registry_name=SystemRegisty.NVIDIA_AI),
-}
 
 
 class MLFlowModelProperties:
