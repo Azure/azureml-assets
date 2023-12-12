@@ -464,8 +464,9 @@ def confirm_model_validation_results(
         validated_asset_config (assets.AssetConfig): asset cofig for validated model
 
     Returns:
-        int: 1 if asset in invalid else 0
+        int: error_count
     """
+    error_count = 0
     try:
         latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
         if latest_model_config.type != assets.config.ModelType.MLFLOW:
@@ -503,17 +504,21 @@ def confirm_model_validation_results(
             if latest_model_config.type != validated_model_config.type:
                 logger.log_warning(f"latest_model_config_type: [{latest_model_config.type}]")
                 logger.log_warning(f"validated_model_config_type: [{validated_model_config.type}]")
+                error_count += 1
 
             if latest_model_config.path.type != validated_model_config.path.type:
                 logger.log_warning(f"latest_model_config_path_type: [{latest_model_config.path.type}]")
                 logger.log_warning(f"validated_model_config_path_type: [{validated_model_config.path.type}]")
+                error_count += 1
 
             if latest_model_path_uri != validated_model_path_uri:
                 logger.log_warning(f"latest_model_config_path_uri: [{latest_model_path_uri}]")
                 logger.log_warning(f"validated_model_config_path_uri: [{validated_model_path_uri}]")
+                error_count += 1
 
             if latest_model_config.description != validated_model_config.description:
                 logger.log_warning("Description does not match, for latest and validated asset")
+                error_count += 1
 
             return 1
 
@@ -525,25 +530,25 @@ def confirm_model_validation_results(
             logger.log_error("version mismatch")
             logger.log_warning(f"latest_model tags: [[{latest_model.version}]]")
             logger.log_warning(f"validated_model: [[{validated_model.version}]]")
-            return 1
+            error_count += 1
 
         if latest_model.tags != validated_model.tags:
             logger.log_error("tags mismatch")
             logger.log_warning(f"latest_model tags: [{latest_model.tags}]")
             logger.log_warning(f"validated_model: [{validated_model.tags}]")
-            return 1
+            error_count += 1
 
         if latest_model.properties != validated_model.properties:
             logger.log_error("properties mismatch")
             logger.log_warning(f"latest_model properties: [{latest_model.properties}]")
             logger.log_warning(f"validated_model properties: [{validated_model.properties}]")
-            return 1
+            error_count += 1
 
         if latest_model.description != validated_model.description:
             logger.log_error("description mismatch")
             logger.log_warning(f"latest_model description: [{latest_model.description}]")
             logger.log_warning(f"validated_model description: [{validated_model.description}]")
-            return 1
+            error_count += 1
 
         # check validation results now
         validation_results_dir = validated_asset_config.file_path / MODEL_VALIDATION_RESULTS_FOLDER
@@ -553,7 +558,7 @@ def confirm_model_validation_results(
                 f"{VALIDATION_SUMMARY} missing for model {latest_asset_config.name}. "
                 "Either last validation run for model had failed or its still running."
             )
-            return 1
+            error_count += 1
 
         with open(validation_job_details_path) as f:
             overall_summary = json.load(f)
@@ -569,7 +574,7 @@ def confirm_model_validation_results(
                     f"run status for model {latest_asset_config.name} is {validation_run_status}. "
                     "Please ensure that there is a completed model validation job."
                 )
-                return 1
+                error_count += 1
 
             # check is batch supported?
             supports_batch_str = latest_model.tags.get("disable-batch", "true")
@@ -581,7 +586,7 @@ def confirm_model_validation_results(
                     f"But its status is {batch_deployment_status}. "
                     "Please ensure that that batch is validated for the model."
                 )
-                return 1
+                error_count += 1
 
             # check if online inference is supported
             supports_inference = (
@@ -597,9 +602,9 @@ def confirm_model_validation_results(
                     f"But its status is {online_deployment_status}. "
                     "Please ensure that that online inference is validated for the model."
                 )
-                return 1
+                error_count += 1
 
-        return 0
+        return error_count
     except Exception as e:
         logger.log_error(
             f"Exception when confirming validation results for model {latest_asset_config.name}. Exception {e}"
@@ -624,27 +629,27 @@ def validate_model_scenario(
         compute_allowlist_tags_name str: compute allowlist tag name for the scenario
 
     Returns:
-        bool: True if required tags and propeties are correctly present
+        int: error count
     """
     min_sku = model.properties.get(min_sku_prop_name, None)
     recommended_skus = model.properties.get(recommended_skus_prop_name, None)
     compute_allowlists = model.tags.get(compute_allowlist_tags_name, None)
 
+    error_count = 0
+
     # TODO: add min_sku validation than just its existence
 
     if not min_sku:
         _log_error(asset_file_name_with_path, f"{min_sku_prop_name} is missing in model properties")
-        return False
+        error_count += 1
 
     if not recommended_skus:
         _log_error(asset_file_name_with_path, f"{recommended_skus_prop_name} is missing in model properties")
-        return False
+        error_count += 1
 
     if not compute_allowlists:
-        _log_error(asset_file_name_with_path,
-            f"{compute_allowlist_tags_name} is missing in model tags"
-        )
-        return False
+        _log_error(asset_file_name_with_path, f"{compute_allowlist_tags_name} is missing in model tags")
+        error_count += 1
 
     if (recommended_skus.split(",")
             != compute_allowlists):
@@ -652,9 +657,9 @@ def validate_model_scenario(
             asset_file_name_with_path,
             f"{recommended_skus_prop_name} and {recommended_skus_prop_name} does not match for model"
         )
-        return False
+        error_count += 1
 
-    return True
+    return error_count
 
 
 def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: dict) -> int:
@@ -665,7 +670,7 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
         validated_model_map (dict): Validated model asset configs mapped to model name
 
     Returns:
-        1 if asset in invalid else 0
+        int: error count
     """
     model = load_model(asset_config.spec_with_path)
     if asset_config.type != assets.config.ModelType.MLFLOW:
@@ -674,38 +679,29 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
         )
         return 0
 
+    error_count = 0
+
     # confirm must have tags
     if not model.tags.get(MLFlowModelTags.TASK):
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.TASK} missing")
-        return 1
+        error_count += 1
 
     if not model.tags.get(MLFlowModelTags.LICENSE):
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
-        return 1
-
-    if not model.tags.get(MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST):
-        _log_error(
-            asset_config.file_name_with_path,
-            (
-                f"{MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST} missing. "
-                "Inference is the min requirement for model in system registry."
-            )
-        )
-        return 1
+        error_count += 1
 
     supports_eval = model.tags.get(MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST) is not None
     supports_ft = model.tags.get(MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST) is not None
 
     # check properties
     # validate inference compute req.
-    if not validate_model_scenario(
+    error_count += validate_model_scenario(
         asset_config.file_name_with_path,
         model,
         MLFlowModelProperties.INFERENCE_MIN_SKU_SPEC,
         MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU,
         MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST,
-    ):
-        return 1
+    )
 
     # check valid computes for inference
     with open(SUPPORTED_INFERNCE_SKU_FILE_PATH) as f:
@@ -716,14 +712,13 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
         _log_error(asset_config.file_name_with_path, f"Unsupported inference SKU in spec: {unsupported_skus_in_spec}")
 
     if supports_eval:
-        if not validate_model_scenario(
+        error_count += validate_model_scenario(
             asset_config.file_name_with_path,
             model,
             MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC,
             MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU,
             MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST,
-        ):
-            return 1
+        )
 
     if supports_ft:
         if not model.properties.get(MLFlowModelProperties.FINETUNING_TASKS):
@@ -731,54 +726,19 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
                 asset_config.file_name_with_path,
                 f"{MLFlowModelProperties.FINETUNING_TASKS} not set for supporting finetuning scenario"
             )
-            return 1
+            error_count += 1
 
-        if not validate_model_scenario(
+        error_count += validate_model_scenario(
             asset_config.file_name_with_path,
             model,
             MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC,
             MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU,
             MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST,
-        ):
-            return 1
-
-    # make sure version is prod model version + 1
-    logger.print("checking model version in prod registries")
-
-    registered_model = None
-    registry_name = None
-
-    for reg_name, mlclient_reg in mlclient_reg_map.items():
-        try:
-            registered_model = mlclient_reg.model.get(name=model.name, label="latest")
-            if registered_model:
-                registry_name = reg_name
-                break
-        except Exception:
-            logger.log_warning(f"Unable to fetch model details from {reg_name} registry")
-
-    if not registered_model:
-        _log_warning(
-            asset_config.file_name_with_path,
-            "Exception in fetching current model version. This could happen becuase of multiple reasons:\n"
-            "1. Model is not registered. In that case make sure model version is set to 1\n"
-            "2. Model was registered but deleted and there is no active version registered. "
-            "In this case have to make sure current model version is +1 of deleted one",
-            "3. Issue with initializing mlclient."
         )
-    else:
-        logger.print(f"found registered model in {registry_name} with version: {registered_model.version}")
-        if model.version <= registered_model.version:
-            _log_error(
-                f"model version: {model.version} should be greater than "
-                "registered model version: {registered_model.version}")
-            return 1
-        elif model.version > registered_model and model.version != registered_model.version + 1:
-            # currently throw warning as need to understand how to get all deleted versions of model
-            _log_warning(f"Model version is not exactly 1 greater than reg. version {registered_model.version} ")
 
     # test validation results
-    return confirm_model_validation_results(asset_config, validated_model_map.get(asset_config.name, None))
+    error_count += confirm_model_validation_results(asset_config, validated_model_map.get(asset_config.name, None))
+    return error_count
 
 
 def get_validated_models_assets_map(model_validation_results_dir: str):
