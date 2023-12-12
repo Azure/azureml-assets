@@ -77,8 +77,8 @@ class TestInferencePostprocessorComponent:
 
     @pytest.mark.parametrize(
         "dataset_name, prediction_dataset, prediction_column_name, ground_truth_dataset, ground_truth_column_name, \
-        additional_columns, separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
-        label_map, find_first",
+        additional_columns, separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, \
+        script_path, label_map, find_first",
         [
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
@@ -311,8 +311,8 @@ class TestInferencePostprocessorScript:
 
     @pytest.mark.parametrize(
         "dataset_name, prediction_dataset, prediction_column_name, ground_truth_dataset, ground_truth_column_name, \
-        additional_columns, separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
-        label_map, find_first",
+        additional_columns, separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, \
+        script_path, label_map, find_first",
         [
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
