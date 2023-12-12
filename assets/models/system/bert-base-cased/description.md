@@ -76,13 +76,12 @@ Note that this model is primarily aimed at being fine-tuned on tasks that use th
 to make decisions, such as sequence classification, token classification or question answering. For tasks such as text
 generation you should look at model like GPT2.
 
+# Limitations and bias
+
+Even if the training data used for this model could be characterized as fairly neutral, this model can have biased
+predictions. This bias will also affect all fine-tuned versions of this model.
 
 # Inference samples
-
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a>| coming soon
 
 ## Sample inputs and outputs (for real-time inference)
 
@@ -103,8 +102,3 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank
   "beautiful"
 ]
 ```
-
-# Limitations and bias
-
-Even if the training data used for this model could be characterized as fairly neutral, this model can have biased
-predictions. This bias will also affect all fine-tuned versions of this model.
