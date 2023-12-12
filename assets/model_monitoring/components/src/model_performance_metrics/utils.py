@@ -59,6 +59,8 @@ def construct_signal_metrics(
         classification_recall_threshold=None,
         ):
     """
+        Construct the signal metrics.
+
     Args:
         metrics_artifacts: metrics artifacts
         output_data_file_name: output data file name
@@ -85,6 +87,9 @@ def construct_signal_metrics(
         "root_mean_squared_error": ROOT_MEAN_SQUARED_ERROR_METRIC_NAME
     }
     metrics_data_pd = pd.DataFrame([metrics_artifacts[constants.Metric.Metrics]]).reset_index()
+    # spark 3.3 cannot convert pandas to spark by "createDataFrame" because no iteritems in panda dataframe
+    # The workaround here is to assign iteritems manuals with items
+    # when we update to spark 3.4.1, we do not need this workaround anymore
     metrics_data_pd.iteritems = metrics_data_pd.items
     metrics_data_df = convert_pandas_to_spark(metrics_data_pd)
     # remove the index column
