@@ -10,10 +10,10 @@ properties:
 tags:
   Featured: ''
   Preview: ''
-  OSS: ''
   author: Databricks, Inc.
   license: mit
   task: text-generation
+  huggingface_model_id: databricks/dolly-v2-12b
   inference_compute_allow_list:
   - Standard_NC24ads_A100_v4
   - Standard_NC48ads_A100_v4
