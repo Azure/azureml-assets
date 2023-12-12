@@ -1,0 +1,17 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: fmops-distilbert-prompt-injection
+path: ./
+properties:
+  SHA: c5da1fefd33c98c447b50dd806fe86aeb9e8c26c
+  datasets : deepset/prompt-injections
+  model_id : fmops/distilbert-prompt-injection
+  languages : en, de, es
+tags:
+  Preview: ''
+  license : apache-2.0
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'true'
+    apply_ort: 'true'
+  task: text-classification
+version: 1
