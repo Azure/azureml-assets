@@ -9,9 +9,9 @@ properties:
   languages: en, fr, ro, de
 tags:
   Preview: ""
-  OSS: ""
   license: apache-2.0
   task: text-translation
+  huggingface_model_id: t5-small
   inference_compute_allow_list:
     [
       Standard_DS3_v2,
