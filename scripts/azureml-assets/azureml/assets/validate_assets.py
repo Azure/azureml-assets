@@ -660,7 +660,8 @@ def validate_model_spec(asset_config: assets.AssetConfig, validated_model_map: d
         int: error count
     """
     model = load_model(asset_config.spec_with_path)
-    if asset_config.type != assets.config.ModelType.MLFLOW:
+    model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+    if model_config.type != assets.config.ModelType.MLFLOW:
         logger.print(
             f"Bypass validation for {asset_config.name} as model type is: {asset_config.type.value}"
         )
