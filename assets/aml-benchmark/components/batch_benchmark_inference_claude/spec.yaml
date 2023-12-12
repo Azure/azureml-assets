@@ -13,7 +13,7 @@ inputs:
     optional: True
   model_type:
     type: string
-    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss, 'claude')
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss', 'claude')
     optional: True
   batch_input_pattern:
     type: string
@@ -35,7 +35,6 @@ inputs:
         },
         "_batch_request_metadata": ###<_batch_request_metadata>
       }
-
       For AOAI model, the following pattern can be used,
       {
           "messages":
@@ -48,11 +47,22 @@ inputs:
             "max_tokens": 800,
             "stop": null
       }
+      For Vision OSS, the input should be as follows
+      {
+          "image": "image1",
+          "text": "label1, label2, label3"
+      }
+      For Claude model, another pattern should be used
+      {
+          "prompt": "Prompt text \n\nHuman:<example>\n### Question: Question text\n###Answer:\n\nAssistant:",
+          "prompt_length": 775,
+          "completion": "The correct answer"
+      }
     optional: False
   endpoint_url:
     type: string
     optional: False
-    description: The endpointurl.
+    description: The endpoint url.
   is_performance_test:
     type: boolean
     default: False
