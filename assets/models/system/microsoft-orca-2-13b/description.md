@@ -9,29 +9,29 @@ Orca 2 is built for research purposes only and provides a single turn response i
 
 # Training Details
 
-## Compute
-* We trained Orca 2 on 32 NVIDIA A100 GPUs with 80GB memory with bfloat16.
-* For the 13B checkpoint, it took ~17 hours to train Orca 2 on FLAN dataset for one epoch, ~40 hours to train on 5 million ChatGPT data for 3 epochs and ~23 hours to continue training on ~1.8 million GPT-4 data for 4 epochs.
-
 ## Training Procedure
 
-#### Progressive Learning
+### 1. Progressive Learning
 We start with LLaMA-2-7B or LLaMA-2-13B checkpoint and finetune it on the train split of FLAN-v2 dataset for one epoch. Note that FLAN-v2 dataset contains both zero-shot and few-shot problems. We then train on 5 million ChatGPT data from Orca 1 for 3 epochs. Then we train on the combination of 1 million GPT-4 data from Orca 1 and Orca 2’s 817K data for 4 epochs.
 
-#### Tokenization
+### 2. Tokenization
 We utilize the LLaMA Byte Pair Encoding (BPE) tokenizer for processing the input examples. Notably, the LLaMA tokenizer splits all numbers into individual digits,
 and fallbacks to bytes to decompose unknown UTF-8 characters. To deal with variable
 length sequences we add a padding token *[[PAD]]* into the LLaMA tokenizer vocabulary. We also add the ChatML special tokens *<|im_start|>* and *<|im_end|>*. The resulting vocabulary contains 32,003 tokens.
 
-#### Packing
+### 3. Packing
 To optimize the training process and utilize computational resources efficiently,
 we employ the packing technique [25]. This method involves concatenating multiple input examples into a single sequence, which is then used for training the model. The packing is performed such that the total length of the concatenated sequence does not exceed max_len = 4096 tokens. Particularly, we shuffle the input examples and then partition the examples into groups such that length of the concatenated sequence in each group is at most max_len. Padding tokens are then added to the concatenated sequence to achieve a uniform input sequence length of max_len.
 
-#### Loss
+### 4. Loss
 For the purpose of training Orca 2, we compute the loss only on the tokens generated
 by the teacher model, i.e., it learns to generate responses conditioned on the system
 instruction and task instructions. This approach ensures that the model focuses on
 learning from the most relevant and informative tokens, improving the overall efficiency and effectiveness of the training process.
+
+## Technical Specifications
+* We trained Orca 2 on 32 NVIDIA A100 GPUs with 80GB memory with bfloat16.
+* For the 13B checkpoint, it took ~17 hours to train Orca 2 on FLAN dataset for one epoch, ~40 hours to train on 5 million ChatGPT data for 3 epochs and ~23 hours to continue training on ~1.8 million GPT-4 data for 4 epochs.
 
 # Evaluation Results
 
