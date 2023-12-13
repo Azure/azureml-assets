@@ -3,107 +3,114 @@ name: t5-small
 path: ./
 properties:
   SHA: df1b051c49625cf57a3d0d8d3863ed4d13564fe4
-  datasets: c4
-  evaluation-min-sku-spec: 8|0|28|56
-  evaluation-recommended-sku: Standard_DS4_v2
-  finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC24rs_v3
-  finetuning-tasks: summarization, translation
-  inference-min-sku-spec: 2|0|7|14
-  inference-recommended-sku: Standard_DS2_v2, Standard_D2a_v4, Standard_D2as_v4, Standard_DS3_v2,
-    Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
-    Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4,
-    Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4,
-    Standard_D96as_v4, Standard_F4s_v2, Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds,
-    Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2,
-    Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E2s_v3, Standard_E4s_v3,
-    Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3,
-    Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
-    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
-    Standard_ND40rs_v2
+  inference-min-sku-spec: 4|0|14|28
+  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
+    Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
+    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
+    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F4s_v2, Standard_FX4mds,
+    Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2,
+    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds,
+    Standard_E2s_v3, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3,
+    Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
+    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   languages: en, fr, ro, de
 tags:
-  Preview: ''
-  computes_allow_list:
-  - Standard_NV12s_v3
-  - Standard_NV24s_v3
-  - Standard_NV48s_v3
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
-  - Standard_NC6s_v2
-  - Standard_NC12s_v2
-  - Standard_NC24s_v2
-  - Standard_NC24rs_v2
-  - Standard_NC4as_T4_v3
-  - Standard_NC8as_T4_v3
-  - Standard_NC16as_T4_v3
-  - Standard_NC64as_T4_v3
-  - Standard_ND6s
-  - Standard_ND12s
-  - Standard_ND24s
-  - Standard_ND24rs
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
+  Preview: ""
   license: apache-2.0
-  model_specific_defaults:
-    apply_deepspeed: 'true'
-    apply_lora: 'true'
-    apply_ort: 'true'
   task: text-translation
-version: 10
+  huggingface_model_id: t5-small
+  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
+    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4,
+    Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4,
+    Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F4s_v2,
+    Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2,
+    Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds,
+    Standard_FX48mds, Standard_E2s_v3, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3,
+    Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3,
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
+    Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+version: 11
 description: |
-  T5 Small is a text-to-text transformer model with 60 million parameters. It is developed by a group of researchers and is based on the Text-To-Text Transfer Transformer (T5) framework, which allows for a unified text-to-text format for input and output of all NLP tasks. T5-Small can be trained for multiple NLP tasks such as machine translation, document summarization, question answering, classification, and even regression tasks. It is pre-trained on the Colossal Clean Crawled Corpus (C4) and a multi-task mixture of unsupervised and supervised tasks in various languages, such as English, French, Romanian and German. You can use the code provided to get started with the model and refer to the resources provided for more information on the model.
+  The developers of the Text-To-Text Transfer Transformer (T5) [write](https://ai.googleblog.com/2020/02/exploring-transfer-learning-with-t5.html): 
 
-  > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/t5-small" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+  > With T5, we propose reframing all NLP tasks into a unified text-to-text-format where the input and output are always text strings, in contrast to BERT-style models that can only output either a class label or a span of the input. Our text-to-text framework allows us to use the same model, loss function, and hyperparameters on any NLP task.
 
-  ### Inference samples
+  T5-Small is the checkpoint with 60 million parameters. 
 
-  Inference type|Python sample (Notebook)|CLI with YAML
-  |--|--|--|
-  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-translation" target="_blank">translation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-translation" target="_blank">translation-online-endpoint.sh</a>
-  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-translation" target="_blank">translation-batch-endpoint.ipynb</a>| coming soon
+  # Training Details
 
+  ## Training Data
 
-  ### Finetuning samples
+  The model is pre-trained on the [Colossal Clean Crawled Corpus (C4)](https://www.tensorflow.org/datasets/catalog/c4), which was developed and released in the context of the same [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) as T5.
 
-  Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-  |--|--|--|--|--|
-  Summarization|News Summary|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">CNN DailyMail</a>|<a href="https://aka.ms/azureml-ft-sdk-news-summary" target="_blank">news-summary.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-news-summary" target="_blank">news-summary.sh</a>
-  Translation|Translate English to Romanian|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">WMT16</a>|<a href="https://aka.ms/azureml-ft-sdk-translation" target="_blank">translate-english-to-romanian.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-translation" target="_blank">translate-english-to-romanian.sh</a>
+  The model was pre-trained on a on a **multi-task mixture of unsupervised (1.) and supervised tasks (2.)**.
+  Thereby, the following datasets were being used for (1.) and (2.):
 
+  1. **Datasets used for Unsupervised denoising objective**:
 
-  ### Model Evaluation
-
-  Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-  |--|--|--|--|--|
-  Translation | Translation | <a href="https://huggingface.co/datasets/wmt16/viewer/ro-en/train" target="_blank">wmt16/ro-en</a> | <a href="https://aka.ms/azureml-eval-sdk-translation" target="_blank">evaluate-model-translation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-translation" target="_blank">evaluate-model-translation.yml</a>
+  - [C4](https://huggingface.co/datasets/c4)
+  - [Wiki-DPR](https://huggingface.co/datasets/wiki_dpr)
 
 
-  ### Sample inputs and outputs (for real-time inference)
+  2. **Datasets used for Supervised text-to-text language modeling objective**
 
-  #### Sample input
+  - Sentence acceptability judgment
+    - CoLA [Warstadt et al., 2018](https://arxiv.org/abs/1805.12471)
+  - Sentiment analysis 
+    - SST-2 [Socher et al., 2013](https://nlp.stanford.edu/~socherr/EMNLP2013_RNTN.pdf)
+  - Paraphrasing/sentence similarity
+    - MRPC [Dolan and Brockett, 2005](https://aclanthology.org/I05-5002)
+    - STS-B [Ceret al., 2017](https://arxiv.org/abs/1708.00055)
+    - QQP [Iyer et al., 2017](https://quoradata.quora.com/First-Quora-Dataset-Release-Question-Pairs)
+  - Natural language inference
+    - MNLI [Williams et al., 2017](https://arxiv.org/abs/1704.05426)
+    - QNLI [Rajpurkar et al.,2016](https://arxiv.org/abs/1606.05250)
+    - RTE [Dagan et al., 2005](https://link.springer.com/chapter/10.1007/11736790_9) 
+    - CB [De Marneff et al., 2019](https://semanticsarchive.net/Archive/Tg3ZGI2M/Marneffe.pdf)
+  - Sentence completion
+    - COPA [Roemmele et al., 2011](https://www.researchgate.net/publication/221251392_Choice_of_Plausible_Alternatives_An_Evaluation_of_Commonsense_Causal_Reasoning)
+  - Word sense disambiguation
+    - WIC [Pilehvar and Camacho-Collados, 2018](https://arxiv.org/abs/1808.09121)
+  - Question answering
+    - MultiRC [Khashabi et al., 2018](https://aclanthology.org/N18-1023)
+    - ReCoRD [Zhang et al., 2018](https://arxiv.org/abs/1810.12885)
+    - BoolQ [Clark et al., 2019](https://arxiv.org/abs/1905.10044)
+
+  ## Training Procedure
+
+  In their [abstract](https://jmlr.org/papers/volume21/20-074/20-074.pdf), the model developers write: 
+
+  > In this paper, we explore the landscape of transfer learning techniques for NLP by introducing a unified framework that converts every language problem into a text-to-text format. Our systematic study compares pre-training objectives, architectures, unlabeled datasets, transfer approaches, and other factors on dozens of language understanding tasks. 
+
+  The framework introduced, the T5 framework, involves a training procedure that brings together the approaches studied in the paper. See the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) for further details.
+
+  ## Evaluation Results 
+
+  For full results for T5-small, see the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf), Table 14.
+
+  ## Testing Data, Factors & Metrics
+
+  The developers evaluated the model on 24 tasks, see the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) for full details.
+
+  # Sample inputs and outputs
+
+  ### Sample input
   ```json
   {
-      "input_data": {
-          "input_string": ["My name is John and I live in Seattle", "Berlin is the capital of Germany."]
-      },
-      "parameters": {
-          "task_type": "translation_en_to_fr"
-      }
+      "input_data": [
+          "translate English to French: Life is so beautiful, once you learn how to live with it",
+          "translate English to German: Berlin is the capital of Germany"
+      ]
   }
   ```
 
-  #### Sample output
+  ### Sample output
   ```json
   [
-      {
-          "0": "Mon nom est John et je vivais à Seattle."
-      },
-      {
-          "0": "Berlin est la capitale de l'Allemagne."
-      }
+    "La vie est tellement belle, une fois que vous en apprendrez comment vivre avec elle",
+    "Berlin ist die Hauptstadt Deutschlands"
   ]
   ```
