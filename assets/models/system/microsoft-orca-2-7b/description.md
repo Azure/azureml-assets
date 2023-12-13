@@ -18,7 +18,7 @@ Orca 2 is built for research purposes only and provides a single turn response i
 * GPUs: 32 NVIDIA A100 GPUs with 80GB memory with bfloat16
 * Training time: ~17 hours to train Orca 2 on FLAN dataset for one epoch, ~40 hours to train on 5 million ChatGPT data for 3 epochs and ~23 hours to continue training on ~1.8 million GPT-4 data for 4 epochs
 
-#	Limitations and Biases
+# Limitations and Biases
 
 Orca 2, built upon the LLaMA 2 model family, retains many of its limitations, as well as the common limitations of other large language models or limitation caused by its training process, including:
 

@@ -24,7 +24,7 @@ and the Orca 2 dataset
 ~40 hours to train on 5 million ChatGPT data for 3 epochs and ~23 hours to continue
 training on ~1.8 million GPT-4 data for 4 epochs
 
-#	Limitations and Biases
+# Limitations and Biases
 
 Orca 2, built upon the LLaMA 2 model family, retains many of its limitations, as well as the common limitations of other large language models or limitation caused by its training process, including:
 
