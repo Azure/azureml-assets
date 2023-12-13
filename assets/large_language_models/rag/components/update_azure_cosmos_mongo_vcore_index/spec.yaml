@@ -5,7 +5,7 @@ tags:
     Preview: ""
 
 version: 0.0.1
-name: llm_rag_update_azure_cosmos_mongo_vcore_index
+name: llm_rag_update_cosmos_mongo_vcore_index
 display_name: LLM - Update Azure Cosmos Mongo vCore Index
 is_deterministic: true
 
