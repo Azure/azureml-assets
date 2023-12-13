@@ -55,7 +55,8 @@ YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
 @pytest.mark.smoke
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)
-def test_gated_batch_score_single_endpoint_using_soring_url_parameter(llm_batch_score_yml_component):
+def test_gated_batch_score_single_endpoint_using_scoring_url_parameter(llm_batch_score_yml_component):
+    """Test gate for batch score single endpoint using scoring url parameter."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
     yaml_update = deep_update(YAML_COMPONENT,

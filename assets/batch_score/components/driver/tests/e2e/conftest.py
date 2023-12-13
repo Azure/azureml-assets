@@ -113,7 +113,7 @@ def pytest_unconfigure():
 
 @pytest.fixture(autouse=True, scope="session")
 def register_components(main_worker_lock, asset_version):
-
+    """Register components."""
     if not _is_main_worker(main_worker_lock):
         return
 
@@ -125,22 +125,26 @@ def register_components(main_worker_lock, asset_version):
 
 @pytest.fixture(scope="session")
 def batch_score_yml_component(asset_version):
-    return get_component_metadata("batch_score.yml", asset_version)
+    """Get batch score component."""
+    return _get_component_metadata("batch_score.yml", asset_version)
 
 
 @pytest.fixture(scope="session")
 def batch_score_embeddings_yml_component(asset_version):
-    return get_component_metadata("batch_score_embeddings.yml", asset_version)
+    """Get batch score embeddings component."""
+    return _get_component_metadata("batch_score_embeddings.yml", asset_version)
 
 
 @pytest.fixture(scope="session")
 def llm_batch_score_yml_component(asset_version):
-    return get_component_metadata("../llm/batch_score_llm.yml", asset_version)
+    """Get batch score llm component."""
+    return _get_component_metadata("../llm/batch_score_llm.yml", asset_version)
 
 
 @pytest.fixture(scope="session")
 def batch_score_vesta_chat_completion_yml_component(asset_version):
-    return get_component_metadata("batch_score_vesta_chat_completion.yml", asset_version)
+    """Get batch score vesta chat completion component."""
+    return _get_component_metadata("batch_score_vesta_chat_completion.yml", asset_version)
 
 
 def register_component(component_yml_name, asset_version):
@@ -162,7 +166,7 @@ def register_component(component_yml_name, asset_version):
     return component_name, component_version
 
 
-def get_component_metadata(component_yml_name, asset_version):
+def _get_component_metadata(component_yml_name, asset_version):
     batch_score_component_filepath = os.path.join(
         pytest.source_dir, "yamls", "components", "v2", component_yml_name
     )

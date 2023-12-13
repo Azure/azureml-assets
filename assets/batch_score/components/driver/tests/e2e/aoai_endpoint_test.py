@@ -31,7 +31,7 @@ YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
 
 
 # Scoring configuration
-def get_file_config_yaml(data_asset_path: str):
+def _get_file_config_yaml(data_asset_path: str):
     return {
         "jobs": {
             JOB_NAME: {
@@ -46,9 +46,9 @@ def get_file_config_yaml(data_asset_path: str):
     }
 
 
-YAML_AOAI_COMPLETION_FILE_CONFIG = get_file_config_yaml("azureml:aoai_completion_configuration:5")
-YAML_AOAI_CHAT_COMPLETION_FILE_CONFIG = get_file_config_yaml("azureml:aoai_chat_completion_configuration:5")
-YAML_AOAI_EMBEDDING_FILE_CONFIG = get_file_config_yaml("azureml:aoai_embedding_configuration:5")
+YAML_AOAI_COMPLETION_FILE_CONFIG = _get_file_config_yaml("azureml:aoai_completion_configuration:5")
+YAML_AOAI_CHAT_COMPLETION_FILE_CONFIG = _get_file_config_yaml("azureml:aoai_chat_completion_configuration:5")
+YAML_AOAI_EMBEDDING_FILE_CONFIG = _get_file_config_yaml("azureml:aoai_embedding_configuration:5")
 
 # Input data assets
 YAML_AOAI_COMPLETION_TEST_DATA_ASSET = {"inputs": {

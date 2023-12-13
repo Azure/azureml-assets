@@ -176,6 +176,7 @@ def test_gated_vesta_chat_completion_batch_score(batch_score_vesta_chat_completi
 @pytest.mark.timeout(15 * 60)
 @pytest.mark.skip(reason="Disabling to unblock PR gate timeouts")
 def test_gated_vesta_chat_completion_with_image_urls_batch_score(batch_score_vesta_chat_completion_yml_component):
+    """Test gate for batch score vesta chat completion model with image urls."""
     set_component(*batch_score_vesta_chat_completion_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
     batch_pool = {"jobs": {JOB_NAME: {
