@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Configuration parser factory."""
+
 import sys
 
 from .configuration_parser import ConfigurationParser

@@ -39,13 +39,13 @@
         "inference_endpoint": {
             "oneOf": [
                 {
-                    "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_target/azure_openai.json"
+                    "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_endpoint/azure_openai.json"
                 },
                 {
-                    "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_target/azureml_online_endpoint.json"
+                    "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_endpoint/azureml_online_endpoint.json"
                 },
                 {
-                    "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_target/azureml_serverless_endpoint.json"
+                    "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_endpoint/azureml_serverless_endpoint.json"
                 }
             ]
         },
