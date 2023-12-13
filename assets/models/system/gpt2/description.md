@@ -4,6 +4,8 @@ This is the smallest version of GPT-2, with 124M parameters.
 
 # Training Details
 
+See the [associated paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) for details on the modeling architecture, objective, compute infrastructure, and training details
+
 ## Training Data
 
 The OpenAI team wanted to train this model on a corpus as large as possible. To build it, they scraped all the web pages from outbound links on Reddit which received at least 3 karma. Note that all Wikipedia pages were removed from

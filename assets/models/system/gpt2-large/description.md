@@ -1,10 +1,8 @@
 GPT-2 Large is the 774M parameter version of GPT-2, a transformer-based language model created and released by OpenAI. The model is a pretrained model on English language using a causal language modeling (CLM)
 
-# Technical Specifications
+# Training Details
 
 See the [associated paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) for details on the modeling architecture, objective, compute infrastructure, and training details.
-
-# Training Details
 
 ## Training Data
 
