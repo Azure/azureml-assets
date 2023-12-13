@@ -4,7 +4,7 @@ type: command
 tags:
   Preview: ""
 
-version: 0.0.11
+version: 0.0.12
 name: llm_rag_update_pinecone_index
 display_name: LLM - Update Pinecone Index
 is_deterministic: true
@@ -13,10 +13,11 @@ description: |
   Uploads `embeddings` into Pinecone index specified in `pinecone_config`. The Index will be created if it doesn't exist.
 
   Each record in the Index will have the following metadata populated:
-  - "id", String,
-  - "content", String,
-  - "sourcepage", String
-  - "sourcefile", String
+  - "id", String
+  - "content", String
+  - "url", String
+  - "filepath", String
+  - "title", String
   - "metadata_json_string", String
 
   "metadata_json_string" contains all metadata for a document/record serialized as a JSON string.

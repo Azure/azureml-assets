@@ -1,0 +1,53 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+tags:
+  Preview: ""
+
+version: 0.0.1
+name: llm_rag_update_milvus_index
+display_name: LLM - Update Milvus Index
+is_deterministic: true
+
+description: |
+  Uploads `embeddings` into Milvus collection/index specified in `milvus_config`. The collection/index will be created if it doesn't exist.
+
+  The collection/index will have the following fields populated:
+  - "id", String, key=True
+  - "content", String
+  - "contentVector", Collection(Single)
+  - "url", String
+  - "filepath", String
+  - "title", String
+  - "metadata_json_string", String
+
+  "metadata_json_string" contains all metadata for a document serialized as a JSON string.
+
+inputs:
+  embeddings:
+    type: uri_folder
+    mode: direct
+    description: "Embeddings output produced from parallel_create_embeddings."
+  milvus_config:
+    type: string
+    description: 'JSON string containing the Milvus configuration. e.g. {"collection_name":
+      "my-collection"}'
+  connection_id:
+    type: string
+    optional: true
+    description: "The connection id of the Milvus provider to use."
+outputs:
+  index:
+    type: uri_folder
+    description: "Uri folder containing the MLIndex yaml describing the newly created/updated\
+      \ Milvus collection/index."
+
+environment: azureml:llm-rag-embeddings@latest
+code: '../src/'
+
+command: >-
+  python -m azureml.rag.tasks.update_milvus
+  --embeddings ${{inputs.embeddings}}
+  --milvus_config '${{inputs.milvus_config}}'
+  --output ${{outputs.index}}
+  $[[--connection_id '${{inputs.connection_id}}']]

@@ -1,0 +1,54 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+tags:
+  Preview: ""
+
+version: 0.0.1
+name: llm_rag_update_cosmos_mongo_vcore_index
+display_name: LLM - Update Azure Cosmos Mongo vCore Index
+is_deterministic: true
+
+description: |
+  Uploads `embeddings` into Azure Cosmos Mongo vCore collection/index specified in `azure_cosmos_mongo_vcore_config`. The collection/index will be created if it doesn't exist.
+
+  The collection/index will have the following fields populated:
+  - "_id", String, key=True
+  - "content", String
+  - "contentVector", Collection(Single)
+  - "url", String
+  - "filepath", String
+  - "title", String
+  - "metadata_json_string", String
+
+  "metadata_json_string" contains all metadata for a document serialized as a JSON string.
+
+inputs:
+  embeddings:
+    type: uri_folder
+    mode: direct
+    description: "Embeddings output produced from parallel_create_embeddings."
+  azure_cosmos_mongo_vcore_config:
+    type: string
+    description: 'JSON string containing the Azure Cosmos Mongo vCore configuration.
+      e.g. {"database_name": "my-db", "collection_name": "my-collection", "index_name":
+      "my-index"}'
+  connection_id:
+    type: string
+    optional: true
+    description: "The connection id of the Azure Cosmos Mongo vCore provider to use."
+outputs:
+  index:
+    type: uri_folder
+    description: "Uri folder containing the MLIndex yaml describing the newly created/updated\
+      \ Azure Cosmos Mongo vCore collection/index."
+
+environment: azureml:llm-rag-embeddings@latest
+code: '../src/'
+
+command: >-
+  python -m azureml.rag.tasks.update_azure_cosmos_mongo_vcore
+  --embeddings ${{inputs.embeddings}}
+  --azure_cosmos_mongo_vcore_config '${{inputs.azure_cosmos_mongo_vcore_config}}'
+  --output ${{outputs.index}}
+  $[[--connection_id '${{inputs.connection_id}}']]
