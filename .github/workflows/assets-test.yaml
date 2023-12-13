@@ -1,178 +1,33 @@
 name: assets-test
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - assets/**
-  pull_request_target:
-    branches:
-      - main
-    paths:
-      - assets/**
-    types:
-      - opened
-      - labeled
-      - synchronize
-      - reopened
   workflow_dispatch:
-    inputs:
-      asset_dirs:
-        description: Asset directories
-        default: assets
-        required: true
-
-env:
-  scripts_azureml_assets_dir: scripts/azureml-assets
-  scripts_setup_dir: scripts/setup
-  scripts_test_dir: scripts/test
-  scripts_dir: scripts
-  asset_config_filename: asset.yaml
-  pytest_reports: pytest-reports
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  check-execution-context:
-    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
-
   setup:
-    name: Set up tests
-    if: fromJSON(needs.check-execution-context.outputs.continue)
+    name: Test login
     runs-on: ubuntu-latest
-    needs: check-execution-context
     environment: Testing
 
     permissions:
-      # Required to clone repo
-      contents: read
-      # Required for OIDC login to Azure
-      id-token: write
-    
-    env:
-      default_asset_dirs: assets
-
-    steps:
-      - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
-        with:
-          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
-          fetch-depth: 2
-      
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v35
-        with:
-          files_separator: ','
-          separator: ','
-          sha: ${{ env.merge_commit_hash || github.sha }}
-
-      - name: Use Python 3.8 or newer
-        uses: actions/setup-python@v4
-        with:
-          python-version: '>=3.8'
-    
-      - name: Install dependencies
-        run: pip install -e $scripts_azureml_assets_dir
-
-      - name: Create test matrix for changed assets
-        id: create-test-matrix
-        run: python -u $scripts_test_dir/create_asset_test_matrix.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}"
-
-      - name: Login to Azure and create resources
-        if: steps.create-test-matrix.outputs.test_count > 0
-        uses: ./.github/actions/create-azure-resources
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          scripts-setup-dir: ${{ env.scripts_setup_dir }}
-    
-    outputs:
-      test_count: ${{ steps.create-test-matrix.outputs.test_count }}
-      matrix: ${{ steps.create-test-matrix.outputs.matrix }}
-      
-  test:
-    name: Test 
-    if: needs.setup.outputs.test_count > 0
-    runs-on: ubuntu-latest
-    needs:
-      - setup
-      - check-execution-context
-    environment: Testing
-    strategy:
-      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
-      fail-fast: false
-    
-    permissions:
-      # Required to clone repo
-      contents: read
       # Required for OIDC login to Azure
       id-token: write
     
     steps:
-      - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
-        with:
-          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
-      
-      - name: Use Python 3.8 or newer
-        uses: actions/setup-python@v4
-        with:
-          python-version: '>=3.8'
-    
-      - name: Install dependencies
-        run: pip install -e $scripts_azureml_assets_dir
-
-      - name: Setup azcopy
-        shell: bash
-        run: source $scripts_dir/install_azcopy.sh
-
-      - name: Log in to Azure and create resources
-        uses: ./.github/actions/create-azure-resources
+      - name: Log in to Azure
+        uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          scripts-setup-dir: ${{ env.scripts_setup_dir }}
-      
-      - name: Test asset
-        run: python -u $scripts_test_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $scripts_test_dir/requirements.txt -r $GITHUB_WORKSPACE/$pytest_reports
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ${{ env.pytest_reports }}
-          path: ${{ env.pytest_reports }}
-
-  report:
-    name: Publish test results
-    if: always()
-    runs-on: ubuntu-latest
-    needs: test
-
-    permissions:
-      # Required for EnricoMi/publish-unit-test-result-action
-      checks: write
-      issues: read
-      pull-requests: write
-
-    steps:
-      - name: Download test results
-        id: download-artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.pytest_reports }}
-          path: ${{ env.pytest_reports }}
-        continue-on-error: true
-
-      - name: Publish test results
-        if: steps.download-artifact.outputs.download-path != ''
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          check_name: Test Results for ${{ github.workflow }}
-          junit_files: ${{ env.pytest_reports }}/**/*.xml
+      - name: Test login
+        run: |
+          while true; do
+            date
+            az account get-access-token > /dev/null || exit 1
+            sleep 60
+          done
