@@ -11,7 +11,8 @@ tags:
   Preview: ""
   license: mit
   task: text-generation
-  huggingface_model_id: gpt2-large
+  author: OpenAI
+  huggingface_model_id: gpt2-medium
   inference-compute-allowlist:
     [
       Standard_DS4_v2,

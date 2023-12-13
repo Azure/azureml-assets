@@ -2,33 +2,20 @@ GPT-2 is a transformers model pretrained on a very large corpus of English data 
 
 This is the smallest version of GPT-2, with 124M parameters.
 
-**Resources for more information:**
-  - [Research Paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)
-  - [OpenAI Blog Post](https://openai.com/blog/better-language-models/)
-  - [GitHub Repo](https://github.com/openai/gpt-2)
-  - [OpenAI Model Card for GPT-2](https://github.com/openai/gpt-2/blob/master/model_card.md)
-  - Test the full generation capabilities here: https://transformer.huggingface.co/doc/gpt2-large
+# Training Details
 
+## Training Data
 
-## Training data
+The OpenAI team wanted to train this model on a corpus as large as possible. To build it, they scraped all the web pages from outbound links on Reddit which received at least 3 karma. Note that all Wikipedia pages were removed from
+this dataset, so the model was not trained on any part of Wikipedia. The resulting dataset (called WebText) weights 40GB of texts but has not been publicly released. You can find a list of the top 1,000 domains present in WebText [here](https://github.com/openai/gpt-2/blob/master/domains.txt).
 
-The OpenAI team wanted to train this model on a corpus as large as possible. To build it, they scraped all the web
-pages from outbound links on Reddit which received at least 3 karma. Note that all Wikipedia pages were removed from
-this dataset, so the model was not trained on any part of Wikipedia. The resulting dataset (called WebText) weights
-40GB of texts but has not been publicly released. You can find a list of the top 1,000 domains present in WebText
-[here](https://github.com/openai/gpt-2/blob/master/domains.txt).
+## Preprocessing
 
-## Training procedure
+The texts are tokenized using a byte-level version of Byte Pair Encoding (BPE) (for unicode characters) and a vocabulary size of 50,257. The inputs are sequences of 1024 consecutive tokens.
 
-### Preprocessing
+The larger model was trained on 256 cloud TPU v3 cores. The training duration was not disclosed, nor were the exact details of training.
 
-The texts are tokenized using a byte-level version of Byte Pair Encoding (BPE) (for unicode characters) and a
-vocabulary size of 50,257. The inputs are sequences of 1024 consecutive tokens.
-
-The larger model was trained on 256 cloud TPU v3 cores. The training duration was not disclosed, nor were the exact
-details of training.
-
-## Evaluation results
+# Evaluation Results
 
 The model achieves the following results without any fine-tuning (zero-shot):
 
@@ -37,11 +24,9 @@ The model achieves the following results without any fine-tuning (zero-shot):
 | (metric) | (PPL)   | (ACC)   | (ACC)  | (ACC)  | (PPL)     | (PPL)  | (BPB)   | (BPC)  | (PPL)       | (PPL) |
 |          | 35.13   | 45.99   | 87.65  | 83.4   | 29.41     | 65.85  | 1.16    | 1,17   | 37.50       | 75.20 |
 
-## Limitations and bias
+# Limitations and bias
 
-The training data used for this model has not been released as a dataset one can browse. We know it contains a lot of
-unfiltered content from the internet, which is far from neutral. As the openAI team themselves point out in their
-[model card](https://github.com/openai/gpt-2/blob/master/model_card.md#out-of-scope-use-cases):
+The training data used for this model has not been released as a dataset one can browse. We know it contains a lot of unfiltered content from the internet, which is far from neutral. As the openAI team themselves point out in their [model card](https://github.com/openai/gpt-2/blob/master/model_card.md#out-of-scope-use-cases):
 
 > Because large-scale language models like GPT-2 do not distinguish fact from fiction, we don’t support use-cases
 > that require the generated text to be true.
@@ -54,21 +39,18 @@ unfiltered content from the internet, which is far from neutral. As the openAI t
 
 *Note: This bias will also affect all fine-tuned versions of this model.*
 
-# Inference samples
-
-## Sample inputs and outputs (for real-time inference)
+# Sample inputs and outputs
 
 ### Sample input
 ```json
 {
     "input_data": [
-        "Once upon a time, far far away,",
-        "Long time ago, there was a man"
+        "I believe the meaning of life is"
     ],
     "params": {
         "top_p": 1.0,
-        "temperature": 1.0,
-        "max_new_tokens": 50,
+        "temperature": 0.8,
+        "max_new_tokens": 100,
         "do_sample": true,
         "return_full_text": true
     }
@@ -78,7 +60,6 @@ unfiltered content from the internet, which is far from neutral. As the openAI t
 ### Sample output
 ```json
 [
-  "Once upon a time, far far away, of this world he lived. As soon as his son's dying in a car explosion, he came to an awareness that this world was far from the real thing. He was aware of the life that he had left behind him.\n\nThis awareness",
-  "Long time ago, there was a man who took that question away from me: not the first case where someone called me. He had called me, but he was so upset and depressed about it from the bottom of his heart, he was crying, and he thought my name was Kimber"
+  "I believe the meaning of life is to give way to you in the present moment to the things you love the most. We don't need to worry about your feelings of guilt, anger, or pain; we need to find ways to make things easier for you and help you get back to normal.\n\nAs a mother, I've always considered that the meaning of the world came from the love we gave each other. I believe that love is a life-sustaining energy that can help us reach our goal of one day"
 ]
 ```
