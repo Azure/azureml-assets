@@ -44,7 +44,7 @@ EleutherAI/gpt-neox-20b|	0.402|	0.683923|	0.656669|	0.7142|	0.408703| 0.784004|	
 
 # Inference samples
 
-## Sample inputs and outputs (for real-time inference)
+# Sample inputs and outputs
 
 ### Sample input
 ```json
