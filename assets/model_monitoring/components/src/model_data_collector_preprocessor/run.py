@@ -6,28 +6,30 @@
 import argparse
 
 import pandas as pd
+import numpy as np
 from pyspark.sql import DataFrame
 from dateutil import parser
 import mltable
 from mltable import MLTable
 import tempfile
-
+import json
 from fsspec import AbstractFileSystem
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
-from pyspark.sql.functions import col, lit
-from shared_utilities.event_utils import post_warning_event
+from pyspark.sql.functions import lit
+from shared_utilities.momo_exceptions import DataNotFoundError
 from shared_utilities.io_utils import (
     init_spark,
-    try_read_mltable_in_spark,
+    try_read_mltable_in_spark_with_error,
     save_spark_df_as_mltable,
 )
-
+from shared_utilities.event_utils import add_tags_to_root_run
 from shared_utilities.constants import (
-    MDC_CHAT_HISTORY_COLUMN,
     MDC_CORRELATION_ID_COLUMN,
     MDC_DATA_COLUMN,
-    MDC_DATAREF_COLUMN
+    MDC_DATAREF_COLUMN,
+    SCHEMA_INFER_ROW_COUNT,
+    AML_MOMO_ERROR_TAG
 )
 
 from typing import Tuple
@@ -125,8 +127,13 @@ def _raw_mdc_uri_folder_to_mltable(
     return table
 
 
-def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, fs: AbstractFileSystem) -> DataFrame:
-    """Convert MLTable to Spark DataFrame."""
+def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str,
+                                 fs: AbstractFileSystem = None, add_tags_func=None) -> DataFrame:
+    """
+    Convert MLTable to Spark DataFrame.
+
+    A DataNotFoundError will be raised if no data in mltable, otherwise a non empty Spark DataFrame will be returned.
+    """
     with tempfile.TemporaryDirectory() as mltable_temp_path:
         # Save MLTable to temp location
         table.save(mltable_temp_path)
@@ -136,7 +143,7 @@ def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, f
         fs = fs or AzureMachineLearningFileSystem(des_path)  # for testing
         print("MLTable path:", des_path)
         # TODO: Evaluate if we need to overwrite
-        # Richard: why we need to upload the mltable folder to azureml://?
+        # upload the mltable folder to azureml://, so it is available for all executors
         fs.upload(
             lpath=mltable_temp_path,
             rpath=des_path,
@@ -145,7 +152,13 @@ def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, f
         )
 
     # Read mltable from preprocessed_data
-    return try_read_mltable_in_spark(des_path, "preprocessed_data")
+    try:
+        return try_read_mltable_in_spark_with_error(des_path, "preprocessed_data")
+    except DataNotFoundError as e:
+        tags = {AML_MOMO_ERROR_TAG: "DataNotFoundError"}
+        add_tags_func = add_tags_func or add_tags_to_root_run
+        add_tags_func(tags)
+        raise e
 
 
 def _get_data_columns(df: DataFrame) -> list:
@@ -158,7 +171,7 @@ def _get_data_columns(df: DataFrame) -> list:
     return columns
 
 
-def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool, datastore: str) -> DataFrame:
+def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool, datastore: str = None) -> DataFrame:
     """
     Extract data and correlation id from the MDC logs.
 
@@ -166,7 +179,23 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
     otherwise, return the dataref content which is a url to the json file.
     """
 
-    def read_data(row):
+    def safe_dumps(x):
+        if type(x) in [dict, list]:
+            return json.dumps(x)
+        elif type(x) is np.ndarray:
+            return json.dumps(x.tolist())
+        else:
+            return x
+
+    def convert_object_to_str(dataframe: pd.DataFrame) -> pd.DataFrame:
+        columns = dataframe.columns
+        for column in columns:
+            if dataframe[column].dtype == "object":
+                dataframe[column] = dataframe[column].apply(safe_dumps)
+
+        return dataframe
+
+    def read_data(row) -> str:
         data = getattr(row, MDC_DATA_COLUMN, None)
         if data:
             return data
@@ -178,20 +207,31 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
         return data_url
         # TODO: Move this to tracking stream if both data and dataref are NULL
 
-    # Output MLTable
+    def row_to_pdf(row) -> pd.DataFrame:
+        df = pd.read_json(read_data(row))
+        df = convert_object_to_str(df)
+        return df
+
     data_columns = _get_data_columns(df)
-    first_data_row = df.select(data_columns).rdd.map(lambda x: x).first()
+    data_rows = df.select(data_columns).rdd.take(SCHEMA_INFER_ROW_COUNT)  # TODO: make it an argument user can define
 
     spark = init_spark()
-    data_as_df = spark.createDataFrame(pd.read_json(read_data(first_data_row)))
+    infer_pdf = pd.concat([row_to_pdf(row) for row in data_rows], ignore_index=True)
+    data_as_df = spark.createDataFrame(infer_pdf)
+    # data_as_df.show()
+    # data_as_df.printSchema()
 
-    # The temporary workaround to remove the chat_history column if it exists.
-    # We are removing the column because the pyspark DF is unable to parse it.
-    # This version of the MDC is applied only to GSQ.
-    if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
-        data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
+    def extract_data_and_correlation_id(entry, correlationid):
+        result = pd.read_json(entry)
+        result = convert_object_to_str(result)
+        result[MDC_CORRELATION_ID_COLUMN] = ""
+        for index, row in result.iterrows():
+            result.loc[index, MDC_CORRELATION_ID_COLUMN] = (
+                correlationid + "_" + str(index)
+            )
+        return result
 
-    def tranform_df_function_with_correlation_id(iterator):
+    def transform_df_function_with_correlation_id(iterator):
         for df in iterator:
             yield pd.concat(
                 extract_data_and_correlation_id(
@@ -201,28 +241,19 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
                 for row in df.itertuples()
             )
 
-    def extract_data_and_correlation_id(entry, correlationid):
-        result = pd.read_json(entry)
-        result[MDC_CORRELATION_ID_COLUMN] = ""
-        for index, row in result.iterrows():
-            result.loc[index, MDC_CORRELATION_ID_COLUMN] = (
-                correlationid + "_" + str(index)
-            )
-        return result
-
     def transform_df_function_without_correlation_id(iterator):
         for df in iterator:
-            yield pd.concat(
-                pd.read_json(read_data(row)) for row in df.itertuples()
+            pdf = pd.concat(
+                convert_object_to_str(pd.read_json(read_data(row))) for row in df.itertuples()
             )
+            yield pdf
 
-    data_columns = _get_data_columns(df)
     if extract_correlation_id:
         # Add empty column to get the correlationId in the schema
         data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
         data_columns.append(MDC_CORRELATION_ID_COLUMN)
         transformed_df = df.select(data_columns).mapInPandas(
-            tranform_df_function_with_correlation_id, schema=data_as_df.schema
+            transform_df_function_with_correlation_id, schema=data_as_df.schema
         )
     else:
         # TODO: if neither data and dataref move to tracking stream (or throw ModelMonitoringException?)
@@ -235,7 +266,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
 def _raw_mdc_uri_folder_to_preprocessed_spark_df(
         data_window_start: datetime, data_window_end: datetime,
         input_data: str, preprocessed_input_data: str, extract_correlation_id: bool,
-        fs: AbstractFileSystem = None) -> DataFrame:
+        fs: AbstractFileSystem = None, add_tags_func=None) -> DataFrame:
     """Read raw MDC data, preprocess, and return in a Spark DataFrame."""
     # Parse the dates
     start_datetime = parser.parse(data_window_start)
@@ -244,21 +275,16 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
     table = _raw_mdc_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
     # print("MLTable:", table)
 
-    df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs)
+    df = _convert_mltable_to_spark_df(table, preprocessed_input_data, fs, add_tags_func)
     # print("df after converting mltable to spark df:")
-    # df.show()
-
-    if not df:
-        print("Skipping the Model Data Collector preprocessor.")
-        post_warning_event(
-            "Although data was found, the window for this current run contains no data. "
-            + "Please visit aka.ms/mlmonitoringhelp for more information."
-        )
-        return
+    # df.select("data").show(truncate=False)
+    # df.printSchema()
 
     datastore = _get_datastore_from_input_path(input_data)
     # print("Datastore:", datastore)
     transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id, datastore)
+    # transformed_df.show()
+    # transformed_df.printSchema()
 
     return transformed_df
 

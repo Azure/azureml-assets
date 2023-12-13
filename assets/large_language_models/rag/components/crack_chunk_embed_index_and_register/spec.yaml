@@ -1,0 +1,135 @@
+name: llm_rag_crack_chunk_embed_index_and_register
+version: 0.0.5
+tags:
+    Preview: ""
+
+display_name: Crack, Chunk, Embed, Index, and Register Data
+is_deterministic: True
+type: command
+description: |
+  Creates chunks no larger than `chunk_size` from `input_data`, extracted document titles are prepended to each chunk\n\n
+
+  LLM models have token limits for the prompts passed to them, this is a limiting factor at embedding time and even more limiting at prompt completion time as only so much context can be passed along with instructions to the LLM and user queries.\n
+  Chunking allows splitting source data of various formats into small but coherent snippets of information which can be 'packed' into LLM prompts when asking for answers to user querys related to the sorce documents.\n\n
+  
+  Supported formats: md, txt, html/htm, pdf, ppt(x), doc(x), xls(x), py\n\n
+  
+  Also generates embeddings vectors for data chunks if configured.\n\n
+  
+  If `embeddings_container` is supplied, input chunks are compared to existing chunks in the Embeddings Container and only changed/new chunks are embedded, existing chunks being reused.\n\n
+  
+  After indexing completes, a MLIndex yaml and supporting files are registered as an AzureML data asset.\n\n"
+
+inputs:
+  input_data:
+    type: uri_folder
+    optional: False
+  embeddings_container:
+    type: uri_folder
+    optional: True
+    description: Folder containing previously generated embeddings. Should be parent folder of the 'embeddings' output path used for for this component. Will compare input data to existing embeddings and only embed changed/new data, reusing existing chunks.
+  asset_uri:
+    type: uri_folder
+    optional: False
+    description: Where to save MLIndex
+  input_glob:
+    type: string
+    optional: False
+    default: '**/*'
+    description: Limit files opened from `input_data`, defaults to '**/*'
+  chunk_size:
+    type: integer
+    optional: False
+    default: 768
+    description: Maximum number of tokens per chunk.
+  chunk_overlap:
+    type: integer
+    optional: False
+    default: 0
+    description: Number of tokens to overlap between chunks.
+  use_rcts:
+    type: boolean
+    optional: False
+    default: True
+    description: Use langchain RecursiveTextSplitter to split chunks.
+  citation_url:
+    type: string
+    optional: True
+    description: Base URL to join with file paths to create full source file URL for chunk metadata.
+  citation_replacement_regex:
+    type: string
+    optional: True
+    description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern' to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)\", \"replacement_pattern\": \"\\1/\\2\"}' would remove '/articles' from the middle of the url."
+  doc_intel_connection_id:
+    type: string
+    optional: True
+    description: AzureML Connection ID for Custom Workspace Connection containing the `endpoint` key and `api_key` secret for an Azure AI Document Intelligence Service.
+  embeddings_model:
+    type: string
+    optional: False
+    default: hugging_face://model/sentence-transformers/all-mpnet-base-v2
+    description: The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2' or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'
+  embeddings_connection_id:
+    type: string
+    optional: False
+    description: The connection id of the Embeddings Model provider to use.
+  batch_size:
+    type: integer
+    optional: False
+    default: 100
+    description: Batch size to use when embedding data.
+  num_workers:
+    type: integer
+    optional: False
+    default: -1
+    description: Number of workers to use when embedding data.
+  asset_name:
+    type: string
+    optional: False
+    description: Name of the asset to register.
+  acs_config:
+    type: string
+    optional: False
+    description: 'JSON string containing the ACS configuration. e.g. {"index_name": "my-index"}'
+  index_connection_id:
+    type: string
+    optional: True
+    description: The connection id of the ACS provider to use.
+  validate_deployments:
+    type: string
+    optional: True
+    description: Enables Validation of Model and Index deployments.
+  llm_config:
+    type: string
+    optional: True
+    description: JSON string containing the LLM configuration.
+  llm_connection_id:
+    type: string
+    optional: True
+    description: The connection id of the LLM provider to use.
+
+environment: azureml:llm-rag-embeddings@latest
+code: '../src/'
+
+command: >-
+  python -m azureml.rag.tasks.crack_chunk_embed_index_and_register
+  --input_data '${{inputs.input_data}}'
+  --input_glob '${{inputs.input_glob}}'
+  --chunk_size ${{inputs.chunk_size}}
+  --chunk_overlap ${{inputs.chunk_overlap}}
+  --use_rcts ${{inputs.use_rcts}}
+  $[[--citation_url ${{inputs.citation_url}}]]
+  $[[--citation_replacement_regex '${{inputs.citation_replacement_regex}}']]
+  $[[--doc_intel_connection_id ${{inputs.doc_intel_connection_id}}]]
+  --embeddings_model ${{inputs.embeddings_model}}
+  --embeddings_connection_id ${{inputs.embeddings_connection_id}}
+  $[[--embeddings_container ${{inputs.embeddings_container}}]]
+  --batch_size ${{inputs.batch_size}}
+  --num_workers ${{inputs.num_workers}}
+  --asset_name ${{inputs.asset_name}}
+  --index_config '${{inputs.acs_config}}'
+  $[[--index_connection_id ${{inputs.index_connection_id}}]]
+  --asset_uri ${{inputs.asset_uri}}
+  $[[--validate_deployments ${{inputs.validate_deployments}}]]
+  $[[--llm_config ${{inputs.llm_config}}]]
+  $[[--llm_connection_id ${{inputs.llm_connection_id}}]]

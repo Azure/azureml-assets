@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_classification_model_import
-version: 0.0.24
+version: 0.0.27
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Text Classification Model Import
 description: Component to import PyTorch / MLFlow model. See [docs](https://aka.ms/azureml/components/text_classification_model_import) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/28
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/33
 
 code: ../../../src/model_selector
 
@@ -32,7 +32,7 @@ inputs:
   # This is also a huggingface model folder expect that the folder structure is slightly different. You could invoke a model import pipeline to convert the standard huggingface model into MLflow format. Please refer to this [notebook](https://aka.ms/azureml-import-model) for steps to do the same
   # NOTE The pytorch_model_path take priority over mlflow_model_path, in case both inputs are passed
   mlflow_model_path:
-    type:  mlflow_model
+    type: mlflow_model
     optional: true
     description: MLflow model asset path
     mode: rw_mount

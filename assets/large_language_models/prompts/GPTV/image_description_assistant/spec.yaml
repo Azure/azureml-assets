@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.13
+name: image_description_assistant
+display_name: Image Description Assistant
+description: Image Content Description Prompt
+
+tags:
+  modality: image
+  task: summarization
+
+data_uri: ./prompt
+template_path: prompt.yaml

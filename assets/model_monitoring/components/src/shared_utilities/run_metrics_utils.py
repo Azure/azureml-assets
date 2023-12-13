@@ -99,7 +99,14 @@ def get_or_create_run_id(
         print("No run with matching filter found. Creating a new run.")
         with mlflow.start_run(run_id=_get_or_create_parent_run_id(monitor_name)) as current_run:
             print(f"Current parent run id: {current_run.info.run_id}")
-            with mlflow.start_run(nested=True) as nested_run:
+            run_name = f"{signal_name}_{metric_name}"
+            with mlflow.start_run(
+                nested=True,
+                run_name=run_name,
+                tags=_create_run_tags(
+                    monitor_name, signal_name, feature_name, metric_name
+                ),
+            ) as nested_run:
                 run_id = nested_run.info.run_id
 
         print(f"Created child run with id '{run_id}'.")

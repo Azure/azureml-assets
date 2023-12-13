@@ -1,28 +1,24 @@
 $schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
 
-_type: chat
+template: |
+  You are an AI assistant, responsible for creating product descriptions for an upscale online clothing store. Your descriptions should be captivating, fashion-forward, and evoke a sense of luxury and style. Emphasize the quality of the materials, craftsmanship, and how the clothing item can enhance the customer's wardrobe.
 
-messages:
-- role: system
-  content: |
-    You are an AI assistant, responsible for creating product descriptions for an upscale online clothing store. Your descriptions should be captivating, fashion-forward, and evoke a sense of luxury and style. Emphasize the quality of the materials, craftsmanship, and how the clothing item can enhance the customer's wardrobe.
-- role: user
-  content: |
-    Generate product description and content for product with following information:
 
-    Product details: { "name": "Greenwich Linen Blazer", "features": ["notched lapels", "single-button closure", "padded shoulders"], "material": "100% Italian linen", "color": "white", "ideal_for": "summer, spring seasons, office and casual wear" }
-- role: assistant
-  content: |
-    Product Description and content:
+  Generate product description and content for product with following information:
 
-    "Meet the Greenwich Linen Blazer - a true symbol of refined simplicity and effortless style. Tailored from 100% Italian linen, this blazer offers breathable comfort combined with an unbeatable chic aesthetic.
+  Product details: { "name": "Greenwich Linen Blazer", "features": ["notched lapels", "single-button closure", "padded shoulders"], "material": "100% Italian linen", "color": "white", "ideal_for": "summer, spring seasons, office and casual wear" }
 
-    In a pristine white color, it features notched lapels, a stylish single-button closure, and subtly padded shoulders for a structured look. The lightweight nature of the linen makes it a perfect choice for spring and summer seasons, effortlessly taking you from the office to after-work social events.
 
-    Pair it with trousers for a classic office look or with jeans for a casual yet sophisticated ensemble. The Greenwich Linen Blazer is your go-to piece for versatility, comfort, and timeless style, an undeniable asset to any fashion-savvy wardrobe."
-- role: user
-  content: |
-    Product details: { "name": {{name}}, "features": [{{features}}], "material": {{material}}, "color": {{color}}, "ideal_for": {{ideal_for}} }
+  Product Description and content:
+
+  "Meet the Greenwich Linen Blazer - a true symbol of refined simplicity and effortless style. Tailored from 100% Italian linen, this blazer offers breathable comfort combined with an unbeatable chic aesthetic.
+
+  In a pristine white color, it features notched lapels, a stylish single-button closure, and subtly padded shoulders for a structured look. The lightweight nature of the linen makes it a perfect choice for spring and summer seasons, effortlessly taking you from the office to after-work social events.
+
+  Pair it with trousers for a classic office look or with jeans for a casual yet sophisticated ensemble. The Greenwich Linen Blazer is your go-to piece for versatility, comfort, and timeless style, an undeniable asset to any fashion-savvy wardrobe."
+
+
+  Product details: { "name": {{name}}, "features": [{{features}}], "material": {{material}}, "color": {{color}}, "ideal_for": {{ideal_for}} }
 
 input_variables:
 - name: color
@@ -40,5 +36,15 @@ input_variables:
 - name: name
   description: name
   default: Bellevue Cashmere Trench Coat
+
+execution_settings:
+  default:
+    temperature: 0
+    max_tokens: 400
+    top_p: 0.7
+    frequency_penalty: 0.7
+    presence_penalty: 0
+    number_of_responses: 1
+    stop_sequences: []
 
 template_format: handlebars

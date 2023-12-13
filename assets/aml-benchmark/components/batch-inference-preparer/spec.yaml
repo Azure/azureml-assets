@@ -4,16 +4,16 @@ type: command
 name: batch_inference_preparer
 display_name: Batch Inference Preparer
 description: Prepare the jsonl file and endpoint for batch inference component.
-version: 0.0.2
+version: 0.0.3
 
 inputs:
   input_dataset: 
     type: uri_folder
     description: Input jsonl dataset that contains prompt. For the performance test, this one will be neglected.
     optional: True
-  perf_jsonl:
+  model_type:
     type: string
-    description: Input jsonl containing data for inference request for performance test.
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
     optional: True
   batch_input_pattern:
     type: string
@@ -62,11 +62,12 @@ outputs:
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
-  python -m batch_inference_preparer.main
+  python -m aml_benchmark.batch_inference_preparer.main
   --batch_input_pattern '${{inputs.batch_input_pattern}}'
   --formatted_data ${{outputs.formatted_data}}
   --output_metadata ${{outputs.ground_truth_metadata}}
   --is_performance_test ${{inputs.is_performance_test}}
+  $[[--model_type ${{inputs.model_type}}]]
   $[[--input_dataset ${{inputs.input_dataset}}]]
   $[[--perf_jsonl ${{inputs.perf_jsonl}}]]
   $[[--n_samples ${{inputs.n_samples}}]]

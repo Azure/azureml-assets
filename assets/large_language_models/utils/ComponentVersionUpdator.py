@@ -2,17 +2,17 @@
 # Licensed under the MIT License.
 
 r"""
-Helper File to Update Large Langauge Model Versions.
+Helper File to Update Large Language Model Versions.
 
 Utility File for incrementing, synchronizing, and updating all LLM versions.
 Also checks Environments are tagging latest.
 
 To update all:
-\\azureml-assets\assets>
+\\azureml-assets\assets\large_language_models>
 python utils\ComponentVersionUpdator.py --input_folder . --update_all
 
 To only update component pipelines with updated components:
-\\azureml-assets\assets>
+\\azureml-assets\assets\large_language_models>
 python utils\ComponentVersionUpdator.py --input_folder .
 """
 
@@ -239,7 +239,7 @@ def parse_asset_yamls(files: List[str], root: str) -> Component:
             continue
 
         for field in target_fields:
-            if field in yml and (type(yml[field]) is not str or r'{{' not in yml[field]):
+            if field in yml and (not isinstance(yml[field], str) or r'{{' not in yml[field]):
                 extractor = target_fields[field]
                 comp[field] = extractor(yml[field])
 
@@ -247,7 +247,7 @@ def parse_asset_yamls(files: List[str], root: str) -> Component:
                     comp['version_file'] = file_path
 
         for field in validate_fields:
-            if field in yml and (type(yml[field]) is not str or r'{{' not in yml[field]):
+            if field in yml and (not isinstance(yml[field], str) or r'{{' not in yml[field]):
                 validate_fields[field](comp['name'], yml[field])
 
     if len(comp) == 0:

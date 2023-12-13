@@ -18,6 +18,7 @@ class Tasks(_CustomEnum):
 
     TEXT_TO_IMAGE = "text-to-image"
     TEXT_TO_IMAGE_INPAINTING = "text-to-image-inpainting"
+    IMAGE_TO_IMAGE = "image-to-image"
 
 
 class DatatypeLiterals:

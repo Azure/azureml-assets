@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 """Configuration classes for the Engine and Task."""
 from dataclasses import asdict, dataclass, field
-from typing import Dict, Type, TypeVar, Optional
+from typing import Dict, Optional, Type, TypeVar
 
+from custom_model_configurations.base_configuration_builder import ModelConfigurationBuilder
 from constants import TaskType
 
 
@@ -47,12 +47,19 @@ class MiiEngineConfig(SerializableDataClass):
 class EngineConfig(SerializableDataClass):
     """Configuration for the Engine."""
 
+    DEFAULT_HOST = "0.0.0.0"
+    DEFAULT_PORT = 8000
+
     engine_name: str
     model_id: str
+    host: str = DEFAULT_HOST
+    port: int = DEFAULT_PORT
     tensor_parallel: Optional[int] = None
     trust_remote_code: bool = True
     mii_config: Optional[MiiEngineConfig] = None
     vllm_config: Optional[Dict] = None
+    model_config: Optional[Dict] = None
+    custom_model_config_builder: Optional[ModelConfigurationBuilder] = None
 
     @classmethod
     def from_dict(cls: Type[TypeVar("T")], d: Dict) -> TypeVar("T"):

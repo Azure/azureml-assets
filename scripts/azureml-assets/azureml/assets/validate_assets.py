@@ -9,6 +9,7 @@ import re
 import sys
 from collections import defaultdict
 from pathlib import Path
+from ruamel.yaml import YAML
 from typing import List
 
 from azure.ai.ml import load_model
@@ -36,7 +37,57 @@ MODEL_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]{0,254}$")
 
 # model validations
 MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
-MODEL_VALIDATION_JOB_DETAILS = "job_details.json"
+VALIDATION_SUMMARY = "results.json"
+
+
+class MLFlowModelProperties:
+    """Commonly defined model properties."""
+
+    EVALUATION_RECOMMENDED_SKU = "evaluation-recommended-sku"
+    FINETINE_RECOMMENDED_SKU = "finetune-recommended-sku"
+    INFERENCE_RECOMMENDED_SKU = "inference-recommended-sku"
+    COMPUTE_ALLOW_LIST = "computes_allow_list"
+    FINETUNING_TASKS = "finetuning-tasks"
+
+
+class MLFlowModelTags:
+    """Commonly defined model tags."""
+
+    EVALUATION_COMPUTE_ALLOWLIST = "evaluation_compute_allow_list"
+    FINETUNE_COMPUTE_ALLOWLIST = "finetune_compute_allow_list"
+    INFERENCE_COMPUTE_ALLOWLIST = "inference_compute_allow_list"
+    INFERENCE_SUPPORTED_ENVS = "inference_supported_envs"
+    FINETUNING_DEFAULTS = "model_specific_defaults"
+    TASK = "task"
+
+
+class ModelValidationState:
+    """Enums for storing validation results state.
+
+    Keeping it consistent with Job state enums. Only the essential ones would be used here.
+    """
+
+    NOT_STARTED = JobStatus.NOT_STARTED
+    COMPLETED = JobStatus.COMPLETED
+    FAILED = JobStatus.FAILED
+
+
+class ModelValidationOverallSummary:
+    """Enum to capture status of all validations."""
+
+    BATCH_DEPLOYMENT = "BatchDeployment"
+    ONLINE_DEPLOYMENT = "OnlineDeployment"
+    VALIDATION_RUN = "ValidationRun"
+
+    @staticmethod
+    def get_default_summary():
+        """Return model validation default summary."""
+        return {
+            ModelValidationOverallSummary.BATCH_DEPLOYMENT: ModelValidationState.NOT_STARTED,
+            ModelValidationOverallSummary.BATCH_ONLINE_DEPLOYMENTDEPLOYMENT: ModelValidationState.NOT_STARTED,
+            ModelValidationOverallSummary.VALIDATION_RUN: ModelValidationState.NOT_STARTED,
+        }
+
 
 # Environment naming convention
 ENVIRONMENT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9.-]{0,254}$")
@@ -71,6 +122,9 @@ IMAGE_NAME_PATTERN = re.compile(r"^azureml/curated/(.+)")
 BUILD_CONTEXT_DISALLOWED_PATTERNS = [
     re.compile(r"extra-index-url", re.IGNORECASE),
 ]
+
+# Directory path for config files related to asset validation, relative to the current source path
+CONFIG_DIRECTORY = "config"
 
 
 def _log_error(file: Path, error: str) -> None:
@@ -320,16 +374,116 @@ def validate_categories(asset_config: assets.AssetConfig) -> int:
     return 0
 
 
+def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) -> int:
+    """Validate proper tags for an asset.
+
+    Args:
+        asset_config (AssetConfig): Asset config.
+        valid_tags_filename (str): Yaml filename in the config directory defining valid tags for the asset.
+
+    Returns:
+        int: Number of errors.
+    """
+    error_count = 0
+
+    with open(Path(__file__).parent / CONFIG_DIRECTORY / valid_tags_filename) as f:
+        valid_tags = YAML().load(f)
+
+    asset_spec = asset_config._spec._yaml
+    asset_tags = asset_spec.get('tags')
+
+    for tag in valid_tags:
+        tag_info = valid_tags[tag]
+        if tag_info.get('required') and (not asset_tags or tag not in asset_tags):
+            _log_error(asset_config.file_name_with_path,
+                       f"Asset '{asset_config.name}' is missing required tag '{tag}'")
+            error_count += 1
+            continue
+
+        if not asset_tags or tag not in asset_tags:
+            continue
+
+        tag_value = asset_tags[tag]
+        if not isinstance(tag_value, str):
+            _log_error(asset_config.file_name_with_path,
+                       f"Asset '{asset_config.name}' has non-string '{type(tag_value)}' for tag '{tag}'")
+            error_count += 1
+            continue
+
+        valid_tag_values = tag_info.get('values')
+        if valid_tag_values:
+            if tag_info.get('allow_multiple'):
+                tag_values = tag_value.split(',')
+                for single_tag_value in tag_values:
+                    if single_tag_value not in valid_tag_values:
+                        _log_error(asset_config.file_name_with_path,
+                                   f"Asset '{asset_config.name}' has invalid value '{single_tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")  # noqa: E501
+                        error_count += 1
+                        continue
+            else:
+                if tag_value not in valid_tag_values:
+                    _log_error(asset_config.file_name_with_path,
+                               f"Asset '{asset_config.name}' has invalid value '{tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")  # noqa: E501
+                    error_count += 1
+                    continue
+
+    return error_count
+
+
 def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_asset_config: assets.AssetConfig) -> int:
     """Check if current model asset and validated one matches and has a successful run."""
-    # latest_asset_config is expected to be non null
-    if not validated_asset_config:
-        logger.log_error(f"Validated asset config is None for {latest_asset_config.name}")
-        return 1
-
-    logger.print(f"Comparing validated and latest model asset files for {latest_asset_config.name}")
-
     try:
+        latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
+        validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
+
+        if latest_model_config.type != assets.config.ModelType.MLFLOW:
+            logger.print(
+                f"Bypass validation for {latest_asset_config.name} as model type is: {latest_model_config.type.value}"
+            )
+            return 0
+
+        if not validated_asset_config:
+            logger.log_error(f"Validated asset config is None for {latest_asset_config.name}")
+            return 1
+
+        logger.print(f"Comparing validated and latest model asset files for {latest_asset_config.name}")
+
+        latest_model_path_uri = latest_model_config.path.uri
+        if (latest_model_config.path.type == assets.PathType.AZUREBLOB):
+            latest_model_path_uri = latest_model_config.path.uri.split("?")[0]
+
+        validated_model_path_uri = validated_model_config.path.uri
+        if (latest_model_config.path.type == assets.PathType.AZUREBLOB):
+            validated_model_path_uri = validated_model_config.path.uri.split("?")[0]
+
+        if not (
+            latest_model_config.path.type == validated_model_config.path.type and
+            latest_model_path_uri == validated_model_path_uri and
+            latest_model_config.description == validated_model_config.description and
+            latest_model_config.type == validated_model_config.type
+        ):
+            logger.log_error(
+                "Validated model config does not match with latest model. "
+                "Either last validation run for model had failed or its still running."
+            )
+
+            if latest_model_config.type != validated_model_config.type:
+                logger.log_warning(f"latest_model_config_type: [{latest_model_config.type}]")
+                logger.log_warning(f"validated_model_config_type: [{validated_model_config.type}]")
+
+            if latest_model_config.path.type != validated_model_config.path.type:
+                logger.log_warning(f"latest_model_config_path_type: [{latest_model_config.path.type}]")
+                logger.log_warning(f"validated_model_config_path_type: [{validated_model_config.path.type}]")
+
+            if latest_model_path_uri != validated_model_path_uri:
+                logger.log_warning(f"latest_model_config_path_uri: [{latest_model_path_uri}]")
+                logger.log_warning(f"validated_model_config_path_uri: [{validated_model_path_uri}]")
+
+            if latest_model_config.description != validated_model_config.description:
+                logger.log_warning("Description does not match, for latest and validated asset")
+
+            return 1
+
         # check if spec has changes
         latest_model = load_model(latest_asset_config.spec_with_path)
         validated_model = load_model(validated_asset_config.spec_with_path)
@@ -358,41 +512,57 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
             logger.log_warning(f"validated_model description: [{validated_model.description}]")
             return 1
 
-        latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
-        validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
-        if not (
-            latest_model_config.path.type == validated_model_config.path.type and
-            latest_model_config.path.uri == validated_model_config.path.uri and
-            latest_model_config.description == validated_model_config.description and
-            latest_model_config.type == validated_model_config.type
-        ):
-            logger.log_error(
-                "Validated model config does not match with latest model. "
-                "Either last validation run for model had failed or its still running."
-            )
-            logger.log_warning(f"latest_model_config: [{latest_model_config._yaml}]")
-            logger.log_warning(f"validated_model_config: [{validated_model_config._yaml}]")
-            if latest_model_config.description != validated_model_config.description:
-                logger.log_warning("Description does not match, for latest and validated asset")
-            return 1
-
         # check validation results now
         validation_results_dir = validated_asset_config.file_path / MODEL_VALIDATION_RESULTS_FOLDER
-        validation_job_details_path = validation_results_dir / MODEL_VALIDATION_JOB_DETAILS
+        validation_job_details_path = validation_results_dir / VALIDATION_SUMMARY
         if not validation_job_details_path.exists():
             logger.log_error(
-                f"{MODEL_VALIDATION_JOB_DETAILS} missing for model {latest_asset_config.name}. "
+                f"{VALIDATION_SUMMARY} missing for model {latest_asset_config.name}. "
                 "Either last validation run for model had failed or its still running."
             )
             return 1
 
         with open(validation_job_details_path) as f:
-            job_details = json.load(f)
-            run_status = job_details.get("status", JobStatus.NOT_STARTED)
-            if run_status != JobStatus.COMPLETED:
+            overall_summary = json.load(f)
+            validation_run_status = overall_summary.get(
+                ModelValidationOverallSummary.VALIDATION_RUN, ModelValidationState.NOT_STARTED)
+            batch_deployment_status = overall_summary.get(
+                ModelValidationOverallSummary.BATCH_DEPLOYMENT, ModelValidationState.NOT_STARTED)
+            online_deployment_status = overall_summary.get(
+                ModelValidationOverallSummary.ONLINE_DEPLOYMENT, ModelValidationState.NOT_STARTED)
+
+            if validation_run_status != ModelValidationState.COMPLETED:
                 logger.log_error(
-                    f"run status for model {latest_asset_config.name} is {run_status}. "
+                    f"run status for model {latest_asset_config.name} is {validation_run_status}. "
                     "Please ensure that there is a completed model validation job."
+                )
+                return 1
+
+            # check is batch supported?
+            supports_batch_str = latest_model.tags.get("disable-batch", "true")
+            supports_batch = True if supports_batch_str.lower() == "true" else False
+
+            if supports_batch and batch_deployment_status != ModelValidationState.COMPLETED:
+                logger.log_error(
+                    f"batch deployment is supported for {latest_model.name}. "
+                    f"But its status is {batch_deployment_status}. "
+                    "Please ensure that that batch is validated for the model."
+                )
+                return 1
+
+            # check if online inference is supported
+            supports_inference = (
+                True
+                if latest_model.tags.get(MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST, None)
+                or latest_model.properties.get(MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU)
+                else False
+            )
+
+            if supports_inference and online_deployment_status != ModelValidationState.COMPLETED:
+                logger.log_error(
+                    f"Online deployment is supported for {latest_model.name}. "
+                    f"But its status is {online_deployment_status}. "
+                    "Please ensure that that online inference is validated for the model."
                 )
                 return 1
 
@@ -517,6 +687,12 @@ def validate_assets(input_dirs: List[Path],
                 error_count += validate_dockerfile(asset_config.extra_config_as_object())
                 if check_build_context:
                     error_count += validate_build_context(asset_config.extra_config_as_object())
+
+            if asset_config.type == assets.AssetType.PROMPT or asset_config.type == assets.AssetType.EVALUATIONRESULT:
+                error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
+
+            if asset_config.type == assets.AssetType.PROMPT:
+                error_count += validate_tags(asset_config, 'tag_values_prompt.yaml')
 
             # Validate categories
             if check_categories:

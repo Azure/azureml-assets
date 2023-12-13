@@ -11,8 +11,8 @@ from categorical_data_drift_metrics import compute_categorical_data_drift_measur
 from io_utils import get_output_spark_df
 from shared_utilities.df_utils import (
     get_common_columns,
-    get_numerical_columns,
-    get_categorical_columns,
+    get_numerical_cols_with_df,
+    get_categorical_cols_with_df,
 )
 
 
@@ -26,9 +26,11 @@ def compute_data_drift_measures_tests(
 ):
     """Compute Data drift metrics and tests."""
     common_columns_dict = get_common_columns(baseline_df, production_df)
-    numerical_columns_names = get_numerical_columns(common_columns_dict)
-    categorical_columns_names = get_categorical_columns(common_columns_dict)
-
+    numerical_columns_names = get_numerical_cols_with_df(common_columns_dict,
+                                                         baseline_df)
+    categorical_columns_names = get_categorical_cols_with_df(
+        common_columns_dict,
+        baseline_df)
     baseline_df = baseline_df.dropna()
     production_df = production_df.dropna()
 
@@ -40,6 +42,11 @@ def compute_data_drift_measures_tests(
 
     numerical_production_df = production_df.select(numerical_columns_names)
     categorical_production_df = production_df.select(categorical_columns_names)
+
+    if len(numerical_columns_names) == 0 and \
+       len(categorical_columns_names) == 0:
+        raise ValueError("No common columns found between production data and baseline"
+              "data. We dont support this scenario.")
 
     if len(numerical_columns_names) != 0:
         numerical_df = compute_numerical_data_drift_measures_tests(
@@ -62,7 +69,6 @@ def compute_data_drift_measures_tests(
             categorical_columns_names,
             categorical_threshold,
         )
-
     # TODO: fix this if, else
     if len(numerical_columns_names) != 0 and len(categorical_columns_names) != 0:
         output_df = numerical_df.union(categorical_df)
@@ -87,7 +93,8 @@ def compute_data_drift_measures_tests(
         "",
         ""
     ]
-    row_count_metric_df = get_output_spark_df([baseline_count_row, target_count_row])
+    row_count_metric_df = get_output_spark_df([baseline_count_row,
+                                               target_count_row])
     row_count_metric_df = row_count_metric_df \
         .withColumn("threshold_value", F.lit("nan").cast("float"))
     output_df = output_df.union(row_count_metric_df)

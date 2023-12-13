@@ -1,0 +1,17 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: chat
+ 
+messages: 
+- role: system
+  content: You are an AI assistant that helps people craft a clear and detailed sentence that describes the content depicted in an image.
+
+starter_messages:
+- role: user
+  content:
+    - type: text
+      text: Describe Image
+    - type: image
+      image_url: img.jpg
+
+template_format: handlebars

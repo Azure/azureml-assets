@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.38
+version: 0.0.46
 name: llm_rag_crack_and_chunk
 display_name: LLM - Crack and Chunk Data
 is_deterministic: true
@@ -73,15 +73,15 @@ inputs:
     description: "Format of the output chunk file"
 
 outputs:
-   output_chunks:
-     type: uri_folder
-     description: "Uri Folder containing chunks. Each chunk will be a separate file in the folder"
+    output_chunks:
+      type: uri_folder
+      description: "Uri Folder containing chunks. Each chunk will be a separate file in the folder"
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src'
 command: >-
   python -m azureml.rag.tasks.crack_and_chunk
-  --input_data ${{inputs.input_data}}
+  --input_data '${{inputs.input_data}}'
   $[[--input_glob '${{inputs.input_glob}}']]
   $[[--allowed_extensions ${{inputs.allowed_extensions}}]]
   --output_chunks ${{outputs.output_chunks}}

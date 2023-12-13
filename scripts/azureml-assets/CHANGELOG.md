@@ -3,6 +3,26 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.20 (2023-12-5)
+### 🐛 Bugs Fixed
+- [#1871](https://github.com/Azure/azureml-assets/pull/1871) Update model validations criteria
+
+## 1.16.19 (2023-12-04)
+### 🐛 Bugs Fixed
+- [#1875](https://github.com/Azure/azureml-assets/pull/1875) Generate SAS tokens for prompts in addition to models
+
+## 1.16.18 (2023-11-20)
+### 🐛 Bugs Fixed
+- [#1760](https://github.com/Azure/azureml-assets/pull/1760) Generate SAS tokens for multiple models and output in JSON
+
+## 1.16.17 (2023-11-07)
+### 🐛 Bugs Fixed
+- [#1703](https://github.com/Azure/azureml-assets/pull/1703) Support for storage account access for model copy with SAS token
+
+## 1.16.16 (2023-11-03)
+### 🐛 Bugs Fixed
+- [#1643](https://github.com/Azure/azureml-assets/pull/1643) Optimizing SAS token generation when needed to access storage accounts
+
 ## 1.16.15 (2023-10-30)
 ### 🐛 Bugs Fixed
 - [#1523](https://github.com/Azure/azureml-assets/pull/1523) Support for storage accounts that are not configured for anonymous access

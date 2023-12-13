@@ -2,20 +2,20 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: databricks-dolly-v2-12b
 path: ./
 properties:
-  SHA: 7dde7ac26ddcb679e0429fed1b6f751c1ffab1fb
-  datasets: databricks/databricks-dolly-15k
-  evaluation-min-sku-spec: 16|0|64|128
-  evaluation-recommended-sku: Standard_NC24s_v3
-  inference-min-sku-spec: 0|24|448|1344
-  inference-recommended-sku: Standard_FX36mds, Standard_FX48mds, Standard_NC24s_v3,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  SHA: 19308160448536e378e3db21a73a751579ee7fdd
+  inference-min-sku-spec: 24|1|220|64
+  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
   languages: en
 tags:
   Featured: ''
   Preview: ''
-  computes_allow_list:
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  license: mit
+  author: Databricks
+  license: apache-2.0
   task: text-generation
-version: 11
+  huggingface_model_id: databricks/dolly-v2-12b
+  inference_compute_allow_list:
+  - Standard_NC24ads_A100_v4
+  - Standard_NC48ads_A100_v4
+  - Standard_NC96ads_A100_v4
+  - Standard_ND96amsr_A100_v4
+version: 15

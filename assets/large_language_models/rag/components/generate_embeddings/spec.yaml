@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.32
+version: 0.0.39
 name: llm_rag_generate_embeddings
 display_name: LLM - Generate Embeddings
 is_deterministic: true
@@ -43,9 +43,9 @@ inputs:
     description: "Number of workers to use when embedding data. -1 means use half all available CPUs"
 
   deployment_validation:
-     type: uri_file
-     description: "Uri file containing information on if the Azure OpenAI deployments, if used, have been validated"
-     optional: True
+    type: uri_file
+    description: "Uri file containing information on if the Azure OpenAI deployments, if used, have been validated"
+    optional: True
 
 outputs:
   embeddings:
@@ -55,6 +55,7 @@ outputs:
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src'
+
 command: >-
   python -m azureml.rag.tasks.embed
   --chunks_source ${{inputs.chunks_source}}

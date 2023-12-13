@@ -4,16 +4,16 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.2
+version: 0.0.3
 
 inputs:
   input_dataset:
     type: uri_folder
     description: Input jsonl dataset that contains prompt.  For the performance test, this one will be neglected.
     optional: True
-  perf_jsonl:
+  model_type:
     type: string
-    description: Input jsonl containing data for inference request for performance test.
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
     optional: True
   batch_input_pattern:
     type: string
@@ -98,6 +98,15 @@ inputs:
     type: integer
     optional: True
     description: The maximum time (in seconds) spent retrying a payload. If unspecified, payloads are retried unlimited times.
+  mini_batch_size:
+    type: string
+    optional: true
+    default: 100KB
+    description: The mini batch size for parallel run.
+  endpoint_config_file:
+    type: uri_file
+    optional: True
+    description: The endpoint config file.
   initial_worker_count:
     type: integer
     optional: False
@@ -136,10 +145,10 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: ../batch-inference-preparer/spec.yaml
+    component: azureml:batch_inference_preparer:0.0.3
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
-      perf_jsonl: ${{parent.inputs.perf_jsonl}}
+      model_type: ${{parent.inputs.model_type}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
       n_samples: ${{parent.inputs.n_samples}}
@@ -153,8 +162,9 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml://registries/azureml/components/batch_benchmark_score/versions/0.0.1
+    component: azureml:batch_benchmark_score:0.0.3
     inputs:
+      model_type: ${{parent.inputs.model_type}}
       online_endpoint_url: ${{parent.inputs.endpoint_url}}
       deployment_name: ${{parent.inputs.deployment_name}}
       connections_name: ${{parent.inputs.connections_name}}
@@ -165,6 +175,8 @@ jobs:
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
+      mini_batch_size: ${{parent.inputs.mini_batch_size}}
+      deployment_metadata: ${{parent.inputs.endpoint_config_file}}
     outputs:
       job_out_path:
         type: uri_file
@@ -182,8 +194,9 @@ jobs:
   # Reformat
   batch_output_formatter: 
     type: command
-    component: ../batch-output-formatter/spec.yaml
+    component: azureml:batch_output_formatter:0.0.3
     inputs:
+      model_type: ${{parent.inputs.model_type}}
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
       label_column_name: ${{parent.inputs.label_column_name}}
       ground_truth_input: ${{parent.jobs.batch_inference_preparer.outputs.ground_truth_metadata}}

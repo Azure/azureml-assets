@@ -6,7 +6,7 @@ properties:
   azureml.promptflow.section: gallery
   azureml.promptflow.type: standard
   azureml.promptflow.name: Web Classification
-  azureml.promptflow.description: Create flows that use large language models to classify URLs into multiple categories.
+  azureml.promptflow.description: Use LLM to classify URLs into multiple categories.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 2
+version: 5

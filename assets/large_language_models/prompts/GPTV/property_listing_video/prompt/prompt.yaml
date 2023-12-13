@@ -1,0 +1,21 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: chat
+
+messages:
+- role: system
+  content: Given the following images of a residential property, create a compelling and professional real estate listing
+
+starter_messages:
+- role: user
+  content:
+    - type: text
+      text: Describe the property in the video
+    - type: video
+      image_url: video1.mp4
+
+execution_settings:
+  gptv:
+    enhance: true
+
+template_format: handlebars

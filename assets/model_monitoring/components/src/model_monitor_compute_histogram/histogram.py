@@ -17,7 +17,7 @@ from shared_utilities.constants import (
     CATEGORICAL_FEATURE_CATEGORY,
     NUMERICAL_FEATURE_CATEGORY,
 )
-from shared_utilities.df_utils import get_categorical_columns, get_numerical_columns
+from shared_utilities.df_utils import get_categorical_cols_with_df, get_numerical_cols_with_df
 from shared_utilities.histogram_utils import get_histograms
 from shared_utilities.io_utils import init_spark
 
@@ -139,17 +139,21 @@ def compute_histograms(
     for (column_name, data_type) in df_dtypes.items():
         columns_dict[column_name] = data_type
 
-    numerical_columns = get_numerical_columns(columns_dict)
-    categorical_columns = get_categorical_columns(columns_dict)
+    numerical_columns = get_numerical_cols_with_df(columns_dict,
+                                                   df)
+    categorical_columns = get_categorical_cols_with_df(columns_dict,
+                                                       df)
 
     # Numerical column histogram generation
 
     bin_edges = _to_bin_edges(histogram_buckets)
     histogram_dict = get_histograms(df, bin_edges, numerical_columns)
 
-    numerical_histogram_rows = generate_numerical_histogram_rows(histogram_dict)
+    numerical_histogram_rows = generate_numerical_histogram_rows(
+        histogram_dict)
 
-    baseline_numerical_histogram_df = create_histogram_df(numerical_histogram_rows)
+    baseline_numerical_histogram_df = create_histogram_df(
+        numerical_histogram_rows)
 
     # Categorical column histogram generation
     categorical_histogram_rows = generate_categorical_histogram_rows(
@@ -158,7 +162,9 @@ def compute_histograms(
 
     categorical_histogram_df = create_histogram_df(categorical_histogram_rows)
 
-    # Generate baseline and production histogram with numerical and categorical columns
-    histogram_df = baseline_numerical_histogram_df.union(categorical_histogram_df)
+    # Generate baseline and production histogram with numerical and
+    # categorical columns
+    histogram_df = baseline_numerical_histogram_df.union(
+        categorical_histogram_df)
 
     return histogram_df

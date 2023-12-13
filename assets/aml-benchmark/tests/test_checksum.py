@@ -10,7 +10,7 @@ from .test_utils import get_src_dir
 
 sys.path.append(get_src_dir())
 try:
-    from prompt_crafter.package.checksum import SHA256Checksum
+    from aml_benchmark.prompt_crafter.package.checksum import SHA256Checksum
 except ImportError:
     raise ImportError("Please install the package 'prompt_crafter' to run this test.")
 

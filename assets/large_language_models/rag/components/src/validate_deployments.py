@@ -13,12 +13,13 @@ from azureml.rag.utils.connections import get_connection_by_id_v2, workspace_con
 from azureml.rag.utils.connections import get_connection_credential
 import time
 from typing import Tuple
+from azure.core.exceptions import HttpResponseError
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
 from azure.identity import ManagedIdentityCredential, AzureCliCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
-from openai.error import InvalidRequestError
+from openai import BadRequestError
 from azureml.rag.utils.logging import (
     get_logger,
     enable_stdout_logging,
@@ -35,7 +36,7 @@ MAX_RETRIES = 3
 SLEEP_DURATION = 2
 
 
-def get_cognitive_services_client(ws):
+def get_cognitive_services_client(subscription_id):
     """Get cognitive services client."""
     client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID", None)
     if os.environ.get("OBO_ENDPOINT"):
@@ -49,21 +50,59 @@ def get_cognitive_services_client(ws):
         print("Using Azure CLI for authentication")
         credential = AzureCliCredential()
     client = CognitiveServicesManagementClient(
-        credential=credential, subscription_id=ws.subscription_id)
+        credential=credential, subscription_id=subscription_id)
     return client
 
 
 def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=None):
-    """Validate default aoai deployments and attempt creation if does not exist."""
-    client = get_cognitive_services_client(ws)
-    response = client.deployments.get(
-        resource_group_name=model_params.get("resource_group", ws.resource_group),
-        account_name=model_params["default_aoai_name"],
-        deployment_name=model_params["deployment_id"],
-    )
+    """Validate default AOAI deployments and attempt creation if does not exist."""
+    resource_group_name = model_params.get("resource_group", ws.resource_group)
+    account_name = model_params["default_aoai_name"]
+    deployment_name = model_params["deployment_id"]
+
+    activity_logger.info(
+            f"[Validate Deployments]: Searching {deployment_name} deployment under account {account_name}"
+            + f"in resource group {resource_group_name}.")
+    client = get_cognitive_services_client(ws.subscription_id)
+    try:
+        response = client.deployments.get(
+            resource_group_name=resource_group_name,
+            account_name=account_name,
+            deployment_name=deployment_name,
+        )
+    except HttpResponseError as ex:
+        activity_logger.warning(f"[Validate Deployments]: Got error response: '{ex.reason}'.")
+
+        connection_id_embedding = model_params["connection"]
+        connection = get_connection_by_id_v2(connection_id_embedding)
+        hub_workspace_details = split_details(connection.metadata["ProxyResourceId"], start=1)
+        proxy_subscription_id = hub_workspace_details["subscriptions"]
+        proxy_resource_group = hub_workspace_details["resourceGroups"]
+        proxy_workspace_name = hub_workspace_details["workspaces"]
+
+        # Hack: Use proxy url template to access AOAI deployment with specific app version
+        # 1st and 3rd line cannot be f-string otherwise it will fail the check.
+        proxy_url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}' \
+            + f'/providers/Microsoft.MachineLearningServices/workspaces/{proxy_workspace_name}' \
+            + '/endpoints/Azure.OpenAI/deployments/{deploymentName}'
+        api_version = '2023-10-01'
+
+        activity_logger.info(f"Try to use proxy url '{proxy_url}' with app version '{api_version}'.")
+
+        # create new client with proxy subscription id
+        client = get_cognitive_services_client(proxy_subscription_id)
+
+        client.deployments.get.metadata['url'] = proxy_url
+        response = client.deployments.get(
+                resource_group_name=proxy_resource_group,
+                account_name=account_name,
+                deployment_name=deployment_name,
+                api_version=api_version,
+        )
+
     response_status = str.lower(response.properties.provisioning_state)
     if (response_status != "succeeded"):
-        # log this becauase we need to find out what the possible states are
+        # Log this because we need to find out what the possible states are
         print(
             f"Deployment is not yet in status 'succeeded'. Current status is: {response_status}")
     if (response_status == "failed" or response_status == "deleting"):
@@ -94,7 +133,7 @@ def check_deployment_status(model_params, model_type, activity_logger=None):
 
     openai.api_type = model_params["openai_api_type"]
     openai.api_version = model_params["openai_api_version"]
-    openai.api_base = model_params["openai_api_base"]
+    openai.base_url = model_params["openai_api_base"]
     openai.api_key = model_params["openai_api_key"]
     if (model_params["openai_api_type"].lower() != "azure" or not model_params["deployment_id"]):
         # If OAI (not-azure), just pass through validation
@@ -162,7 +201,7 @@ def check_deployment_status(model_params, model_type, activity_logger=None):
                     'context': "Say Yes if you received the the question",
                     'question': "Did you receive the question?"
                 })
-            except InvalidRequestError as ex:
+            except BadRequestError as ex:
                 activity_logger.info("ValidationFailed: completion model deployment validation failed due to the "
                                      + "following exception: {}.".format(traceback.format_exc()))
                 activity_logger.exception(
@@ -185,7 +224,7 @@ def check_deployment_status(model_params, model_type, activity_logger=None):
             try:
                 embeddings.embed_query(
                     "Embed this query to test if deployment exists")
-            except InvalidRequestError as ex:
+            except BadRequestError as ex:
                 activity_logger.info(
                     "ValidationFailed: embeddings deployment validation failed due to the following exception: {}."
                     .format(traceback.format_exc()))
@@ -326,7 +365,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
             embedding_params["connection"] = connection_id_embedding
             if is_default_connection(connection):
                 activity_logger.info(
-                    "[Validate Deployments]: Completion model using Default AOAI connection, parsing ResourceId")
+                    "[Validate Deployments]: Embedding model using Default AOAI connection, parsing ResourceId")
                 cog_workspace_details = split_details(
                     connection_metadata["ResourceId"], start=1)
                 embedding_params["default_aoai_name"] = cog_workspace_details["accounts"]
@@ -354,7 +393,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
 
     poll_on_deployment(completion_params,
                        embedding_params, activity_logger)
-    # dummy output to allow step ordering
+    # Dummy output to allow step ordering
     with open(parser_args.output_data, "w") as f:
         json.dump({"deployment_validation_success": "true"}, f)
 
@@ -561,4 +600,4 @@ if __name__ == "__main__":
     finally:
         if _logger_factory.appinsights:
             _logger_factory.appinsights.flush()
-            time.sleep(5)  # wait for appinsights to send telemetry
+            time.sleep(5)  # wait for AppInsights to send telemetry

@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.36
+version: 0.0.43
 name: llm_rag_git_clone
 display_name: LLM - Clone Git Repo
 is_deterministic: true
@@ -30,13 +30,14 @@ inputs:
     description: "The connection id of the git provider to use."
 
 outputs:
-   output_data:
-     type: uri_folder
-     description: "Uri folder containing all files from the git repo"
-     mode: upload
+  output_data:
+    type: uri_folder
+    description: "Uri folder containing all files from the git repo"
+    mode: upload
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
+
 command: >-
   python -m azureml.rag.tasks.git_clone
   --git-repository ${{inputs.git_repository}}

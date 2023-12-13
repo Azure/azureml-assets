@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.37
+version: 0.0.44
 name: llm_rag_create_faiss_index
 display_name: LLM - Create FAISS Index
 is_deterministic: true
@@ -26,6 +26,7 @@ outputs:
 
 environment: azureml:llm-rag-embeddings@latest
 code: '../src/'
+
 command: >-
   python -m azureml.rag.tasks.build_faiss
   --embeddings ${{inputs.embeddings}}
