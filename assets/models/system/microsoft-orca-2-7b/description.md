@@ -9,6 +9,8 @@ Orca 2 is built for research purposes only and provides a single turn response i
 
 # Training Details
 
+We trained Orca 2 on 32 NVIDIA A100 GPUs with 80GB memory with bfloat16. For the 13B checkpoint, it took ~17 hours to train Orca 2 on FLAN dataset for one epoch, ~40 hours to train on 5 million ChatGPT data for 3 epochs and ~23 hours to continue training on ~1.8 million GPT-4 data for 4 epochs.
+
 ## Training Procedure
 
 ### 1. Progressive Learning
@@ -28,10 +30,6 @@ For the purpose of training Orca 2, we compute the loss only on the tokens gener
 by the teacher model, i.e., it learns to generate responses conditioned on the system
 instruction and task instructions. This approach ensures that the model focuses on
 learning from the most relevant and informative tokens, improving the overall efficiency and effectiveness of the training process.
-
-## Technical Specifications
-* We trained Orca 2 on 32 NVIDIA A100 GPUs with 80GB memory with bfloat16.
-* For the 13B checkpoint, it took ~17 hours to train Orca 2 on FLAN dataset for one epoch, ~40 hours to train on 5 million ChatGPT data for 3 epochs and ~23 hours to continue training on ~1.8 million GPT-4 data for 4 epochs.
 
 # Evaluation Results
 
