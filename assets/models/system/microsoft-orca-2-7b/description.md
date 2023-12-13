@@ -2,19 +2,23 @@
 
 Orca 2 is a finetuned version of LLAMA-2. Orca 2’s training data is a synthetic dataset that was created to enhance the small model’s reasoning abilities. All synthetic training data was moderated using the Microsoft Azure content filters. More details about the model can be found in the [Orca 2 paper](https://arxiv.org/pdf/2311.11045.pdf).
 
-### Intended Uses
-
 Orca 2 is built for research purposes only and provides a single turn response in tasks such as reasoning over user given data, reading comprehension, math problem solving and text summarization. The model is designed to excel particularly in reasoning.
 
 **Out of scope**
 
 * This is a research model, intended to show that we can use capable models and complex workflows (advanced prompts, multiple calls) to create synthetic data that can teach Small Language Models (SLMs) new capabilities. We chose reasoning because it is a widely useful capability that SLMs lack.
-
 * The model is not optimized for chat and has not been trained with RLHF or DPO. It is best used after being finetuned for chat or for a specific task.
-
 * Beyond reasoning, the model inherits capabilities and limitations of its base (LLAMA-2 base). We have already seen that the benefits of the Orca training can be applied to other base model too.
 
-### Limitations
+# Training Details
+
+* Architecture: a finetuned version of LLAMA-2
+* Dataset size: ~817K training instances
+* Training: trained with progressive learning, with subsets of data obtained from combining the original FLAN annotations, Orca 1 dataset and the Orca 2 dataset
+* GPUs: 32 NVIDIA A100 GPUs with 80GB memory with bfloat16
+* Training time: ~17 hours to train Orca 2 on FLAN dataset for one epoch, ~40 hours to train on 5 million ChatGPT data for 3 epochs and ~23 hours to continue training on ~1.8 million GPT-4 data for 4 epochs
+
+#	Limitations and Biases
 
 Orca 2, built upon the LLaMA 2 model family, retains many of its limitations, as well as the common limitations of other large language models or limitation caused by its training process, including:
 
@@ -31,60 +35,26 @@ Orca 2, built upon the LLaMA 2 model family, retains many of its limitations, as
 
 This model is solely designed for research settings, and its testing has only been carried out in such environments. It should not be used in downstream applications, as additional analysis is needed to assess potential harm or bias in the proposed application.
 
-**Training:**
-
-**Model**
-
-* Architecture: a finetuned version of LLAMA-2
-* Dataset size: ~817K training instances
-* Training: trained with progressive learning, with
-subsets of data obtained from combining the original FLAN annotations, Orca 1 dataset
-and the Orca 2 dataset
-* GPUs: 32 NVIDIA A100 GPUs with 80GB memory with bfloat16
-* Training time: ~17 hours to train Orca 2 on FLAN dataset for one epoch,
-~40 hours to train on 5 million ChatGPT data for 3 epochs and ~23 hours to continue
-training on ~1.8 million GPT-4 data for 4 epochs
-
-**License:**
+# License
 
 Orca 2 is licensed under the [Microsoft Research License](https://huggingface.co/microsoft/Orca-2-7b/blob/main/LICENSE).
 
 Llama 2 is licensed under the [LLAMA 2 Community License](https://ai.meta.com/llama/license/), Copyright © Meta Platforms, Inc. All Rights Reserved.
 
-
-# Inference samples
-
-## Sample inputs and outputs (for real-time inference)
+# Sample inputs and outputs
 
 ### Sample input
 ```json
 {
     "input_data": [
-        "How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?"
-    ],
-    "params": {}
-}
-```
-
-### Sample output
-```json
-[
-  "How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?\n\nTo determine if a restaurant is popular among locals or mainly attracts tourists, you can consider the following factors:\n\n1. Location: If the restaurant is located in a popular tourist area, it is more likely to attract"
-]
-```
-
-### Sample input with parameters
-```json
-{
-    "input_data": [
-        "How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?"
+        "I believe the meaning of life is"
     ],
     "params": {
         "top_p": 0.9,
         "temperature": 0.2,
-        "max_new_tokens": 500,
+        "max_new_tokens": 100,
         "do_sample": true,
-        "return_full_text": false
+        "return_full_text": true
     }
 }
 ```
@@ -92,6 +62,6 @@ Llama 2 is licensed under the [LLAMA 2 Community License](https://ai.meta.com/ll
 ### Sample output
 ```json
 [
-  "There are several ways to determine if a restaurant is popular among locals or mainly attracts tourists. Some of these methods include:\n\n1. Observe the clientele: If the restaurant is mostly filled with tourists, you might notice that they are speaking different languages, wearing casual clothing, or carrying cameras. On the other hand, if the restaurant is popular among locals, you might see more people in business attire and speaking the local language.\n\n2. Check online reviews: Look for reviews on websites like TripAdvisor, Yelp, or Google Reviews. These platforms often have a mix of reviews from both locals and tourists, and you can get an idea of the overall sentiment towards the restaurant.\n\n3. Ask locals for recommendations: If you know someone who lives in the area, they can give you an insider's perspective on which restaurants are popular among locals.\n\n4. Visit the restaurant during off-peak hours: If the restaurant is popular among locals, it might be less crowded during off-peak hours, such as early in the morning or late at night. If it's mainly a tourist spot, you might find it packed during these times.\n\nThis information can be useful because it can help you decide whether you want to try a new restaurant or stick to a place that is popular among locals. Eating at a local favorite can give you a more authentic dining experience, as well as help support the local economy. On the other hand, if you're looking for a place to grab a quick bite or a meal that caters to tourists, a restaurant that attracts more tourists might be more suitable."
+  "I believe the meaning of life is to be happy and to help others be happy too. I think that happiness is a state of mind and it can be achieved by doing things that make us feel good, like spending time with loved ones, pursuing our passions, and helping others. I also believe that happiness is contagious and when we are happy, we tend to spread that happiness to others, creating a positive ripple effect.\n\nIn my opinion, the meaning of life is to find your purpose and"
 ]
 ```

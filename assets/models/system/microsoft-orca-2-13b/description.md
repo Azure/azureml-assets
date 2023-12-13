@@ -2,8 +2,6 @@
 
 Orca 2 is a finetuned version of LLAMA-2. Orca 2’s training data is a synthetic dataset that was created to enhance the small model’s reasoning abilities. All synthetic training data was moderated using the Microsoft Azure content filters. More details about the model can be found in the [Orca 2 paper](https://arxiv.org/pdf/2311.11045.pdf).
 
-### Intended Uses
-
 Orca 2 is built for research purposes only and provides a single turn response in tasks such as reasoning over user given data, reading comprehension, math problem solving and text summarization. The model is designed to excel particularly in reasoning.
 
 **Out of scope**
@@ -14,7 +12,19 @@ Orca 2 is built for research purposes only and provides a single turn response i
 
 * Beyond reasoning, the model inherits capabilities and limitations of its base (LLAMA-2 base). We have already seen that the benefits of the Orca training can be applied to other base model too.
 
-### Limitations
+# Training Details
+
+* Architecture: a finetuned version of LLAMA-2
+* Dataset size: ~817K training instances
+* Training: trained with progressive learning, with
+subsets of data obtained from combining the original FLAN annotations, Orca 1 dataset
+and the Orca 2 dataset
+* GPUs: 32 NVIDIA A100 GPUs with 80GB memory with bfloat16
+* Training time: ~17 hours to train Orca 2 on FLAN dataset for one epoch,
+~40 hours to train on 5 million ChatGPT data for 3 epochs and ~23 hours to continue
+training on ~1.8 million GPT-4 data for 4 epochs
+
+#	Limitations and Biases
 
 Orca 2, built upon the LLaMA 2 model family, retains many of its limitations, as well as the common limitations of other large language models or limitation caused by its training process, including:
 
@@ -31,64 +41,34 @@ Orca 2, built upon the LLaMA 2 model family, retains many of its limitations, as
 
 This model is solely designed for research settings, and its testing has only been carried out in such environments. It should not be used in downstream applications, as additional analysis is needed to assess potential harm or bias in the proposed application.
 
-**Training:**
 
-**Model**
-
-* Architecture: a finetuned version of LLAMA-2
-* Dataset size: ~817K training instances
-* Training: trained with progressive learning, with
-subsets of data obtained from combining the original FLAN annotations, Orca 1 dataset
-and the Orca 2 dataset
-* GPUs: 32 NVIDIA A100 GPUs with 80GB memory with bfloat16
-* Training time: ~17 hours to train Orca 2 on FLAN dataset for one epoch,
-~40 hours to train on 5 million ChatGPT data for 3 epochs and ~23 hours to continue
-training on ~1.8 million GPT-4 data for 4 epochs
-
-**License:**
+# License
 
 Orca 2 is licensed under the [Microsoft Research License](https://huggingface.co/microsoft/Orca-2-13b/blob/main/LICENSE).
 
 Llama 2 is licensed under the [LLAMA 2 Community License](https://ai.meta.com/llama/license/), Copyright © Meta Platforms, Inc. All Rights Reserved.
 
-### Sample inputs and outputs (for real-time inference)
+# Sample inputs and outputs
 
-#### Sample input
+### Sample input
 ```json
 {
     "input_data": [
-        "How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?"
-    ],
-    "params": {}
-}
-```
-
-#### Sample output
-```json
-[
-  "How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?\n\nWhen planning a trip, it's essential to know if a restaurant is popular among locals or mainly attracts tourists. This information can be useful for several reasons:\n\n1. Authenticity: Local restaurants are more"
-]
-```
-
-#### Sample input with parameters
-```json
-{
-    "input_data": [
-        "How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?"
+        "I believe the meaning of life is"
     ],
     "params": {
         "top_p": 0.9,
         "temperature": 0.2,
-        "max_new_tokens": 500,
+        "max_new_tokens": 100,
         "do_sample": true,
         "return_full_text": true
     }
 }
 ```
 
-#### Sample output
+### Sample output
 ```json
 [
-  "How can you determine if a restaurant is popular among locals or mainly attracts tourists, and why might this information be useful?\n\nWhen you are trying to decide where to eat, it can be helpful to know if a restaurant is popular among locals or mainly attracts tourists. This information can be useful for a few reasons:\n\n1. Local popularity: If a restaurant is popular among locals, it is likely that the food is authentic and well-prepared. Locals are more likely to frequent establishments that serve high-quality, traditional dishes, as they have a better understanding of what constitutes good food in their region.\n\n2. Tourist traps: Restaurants that mainly attract tourists may not offer the best value for your money, as they often charge higher prices for dishes that are not necessarily authentic or of high quality. Additionally, these restaurants may not provide the best customer service, as they are more focused on catering to tourists who may not have high expectations.\n\n3. Atmosphere: Restaurants that are popular among locals are more likely to have a relaxed, authentic atmosphere, as they cater to people who live in the area and are familiar with the local culture. On the other hand, tourist-heavy restaurants may have a more commercial, contrived atmosphere, as they are trying to create an experience that appeals to a wide range of visitors.\n\nTo determine if a restaurant is popular among locals or mainly attracts tourists, you can look at online reviews, ask locals for recommendations, or simply observe the clientele when you visit the area. If the restaurant is filled with people who appear to be local residents, it is likely that it is popular among locals. If the restaurant is crowded with tourists, it may be more of a tourist trap."
+  "I believe the meaning of life is to find your purpose and live it out. I think that everyone has a unique purpose in life, and it's up to each individual to discover what that purpose is and then pursue it with passion and determination.\n\nI also believe that the meaning of life is to create positive change in the world. This can be done through various means, such as helping others, making the world a better place, or simply being a positive influence on those around you.\n\nIn conclusion,"
 ]
 ```

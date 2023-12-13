@@ -11,6 +11,7 @@ tags:
   Preview: ""
   license: other
   task: text-generation
+  author: Microsoft
   huggingface_model_id: microsoft/Orca-2-7b
   inference_compute_allow_list:
     [
