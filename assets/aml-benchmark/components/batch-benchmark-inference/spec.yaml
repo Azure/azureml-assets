@@ -15,6 +15,10 @@ inputs:
     type: string
     description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
     optional: True
+    enum:
+      - oai
+      - oss
+      - vision_oss
   batch_input_pattern:
     type: string
     description: >- 
@@ -57,10 +61,6 @@ inputs:
     type: boolean
     default: False
     description: If true, the performance test will be run and the input dataset will be neglected.
-  deployment_name:
-    type: string
-    optional: True
-    description: The deployment name. Only needed for managed OSS deployment.
   connections_name:
     type: string
     optional: False
@@ -130,6 +130,14 @@ inputs:
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
+  authentication_type:
+    type: string
+    optional: False
+    description: Authentication type for end endpoint.
+    default: azureml_workspace_connection
+    enum:
+      - azureml_workspace_connection
+      - managed_identity
 outputs:
   predictions:
     type: uri_file
@@ -162,21 +170,29 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml:batch_benchmark_score:0.0.3
+    component: azureml://registries/azureml-preview-test1/components/batch_score_llm_benchmark/versions/1.8.20231206.1
     inputs:
-      model_type: ${{parent.inputs.model_type}}
-      online_endpoint_url: ${{parent.inputs.endpoint_url}}
-      deployment_name: ${{parent.inputs.deployment_name}}
-      connections_name: ${{parent.inputs.connections_name}}
+      append_row_safe_output: true
+      api_type: completion
+      scoring_url: ${{parent.inputs.endpoint_url}}
+      connection_name: ${{parent.inputs.connections_name}}
+      authentication_type: ${{parent.inputs.authentication_type}}
       debug_mode: ${{parent.inputs.debug_mode}}
       additional_headers: ${{parent.inputs.additional_headers}}
       ensure_ascii: ${{parent.inputs.ensure_ascii}}
       max_retry_time_interval: ${{parent.inputs.max_retry_time_interval}}
+      tally_failed_requests: false
+      tally_exclusions: none
+      segment_large_requests: disabled
+      segment_max_token_size: 600
+      output_behavior: append_row
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
+      configuration_file: ${{parent.inputs.endpoint_config_file}}
+      async_mode: false
+      save_mini_batch_results: enabled
       mini_batch_size: ${{parent.inputs.mini_batch_size}}
-      deployment_metadata: ${{parent.inputs.endpoint_config_file}}
     outputs:
       job_out_path:
         type: uri_file

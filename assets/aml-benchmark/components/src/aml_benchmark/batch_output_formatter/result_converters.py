@@ -71,13 +71,22 @@ class ResultConverters:
                         "Cannot find {} in result {}. Using default now.".format(old_key, result))
                     usage[new_key] = ResultConverters.DEFAULT_ISO_FORMAT
                     continue
-                dt = datetime.datetime.utcfromtimestamp(result[old_key] / 1000)
+                # Batch score component output the time in seconds.
+                dt = datetime.datetime.utcfromtimestamp(result[old_key])
                 usage[new_key] = dt.astimezone().isoformat()
             else:
                 # For the latency scenarios, no need to do the conversion.
                 usage[new_key] = usage[old_key] if old_key in usage else result.get(old_key, -1)
             if old_key in usage:
                 del usage[old_key]
+        if usage['time_taken_ms'] == -1:
+            usage['time_taken_ms'] = (result.get('end', -1) - result.get('start', 0)) * 1000
+        if self._model.is_oss_model():
+            usage['input_token_count'] = self._get_oss_input_token(usage)
+            usage['output_token_count'] = self._get_oss_output_token(result, usage)
+        for k in ["output_token_count", "input_token_count"]:
+            if usage[k] == -1:
+                del usage[k]
         usage['batch_size'] = result.get('batch_size', 1)
         return usage
 
