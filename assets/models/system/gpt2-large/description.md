@@ -31,7 +31,7 @@ useful for downstream tasks.
 The texts are tokenized using a byte-level version of Byte Pair Encoding (BPE) (for unicode characters) and a
 vocabulary size of 50,257. The inputs are sequences of 1024 consecutive tokens.
 
-## Evaluation Results
+# Evaluation Results
 
 The following evaluation information is extracted from the [associated paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf).
 
