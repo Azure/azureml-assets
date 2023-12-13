@@ -32,3 +32,4 @@ ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=3600
 EXPOSE 5001 8883 8888
 CMD [ "runsvdir", "/var/runit" ]
+# dummy number to change when needing to force rebuild without changing the definition: 1
