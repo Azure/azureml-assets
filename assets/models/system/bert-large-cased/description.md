@@ -46,7 +46,7 @@ The details of the masking procedure for each sentence are the following:
 
 The model was trained on 4 cloud TPUs in Pod configuration (16 TPU chips total) for one million steps with a batch size of 256. The sequence length was limited to 128 tokens for 90% of the steps and 512 for the remaining 10%. The optimizer used is Adam with a learning rate of 1e-4, \\(\beta_{1} = 0.9\\) and \\(\beta_{2} = 0.999\\), a weight decay of 0.01, learning rate warmup for 10,000 steps and linear decay of the learning rate after.
 
-# Evaluation results
+# Evaluation Results
 
 When fine-tuned on downstream tasks, this model achieves the following results:
 
@@ -55,7 +55,7 @@ Model                                    | SQUAD 1.1 F1/EM | Multi NLI Accuracy
 BERT-Large, Cased (Original)             | 91.5/84.8       | 86.09
 
 
-# Limitations and bias
+# Limitations and Biases
 
 You can use the raw model for either masked language modeling or next sentence prediction, but it's mostly intended to be fine-tuned on a downstream task. See the [model hub](https://huggingface.co/models?filter=bert) to look for fine-tuned versions on a task that interests you.
 
