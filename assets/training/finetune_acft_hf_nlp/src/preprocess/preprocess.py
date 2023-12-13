@@ -7,7 +7,10 @@ import json
 import argparse
 from pathlib import Path
 from argparse import Namespace
+from typing import Any
+from functools import partial
 
+from transformers.trainer_utils import get_last_checkpoint
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -50,6 +53,13 @@ def str2bool(arg):
         raise ValueError(f"Invalid argument {arg} to while converting string to boolean")
 
 
+def default_missing_path(arg_str: str, default: Any = None):
+    """If path of the arg is missing, reset the value to default. Use this type with paths."""
+    if isinstance(arg_str, str) and not Path(arg_str).is_file():
+        return default
+    return arg_str
+
+
 def get_parser():
     """
     Add arguments and returns the parser. Here we add all the arguments for all the tasks.
@@ -58,23 +68,29 @@ def get_parser():
     """
     parser = argparse.ArgumentParser(description="Model Preprocessing", allow_abbrev=False)
 
+    # NOTE that the default is present in both :param `type` and `default`. In case of change, we need to update
+    # in both places
     parser.add_argument(
         "--train_file_path",
-        type=str,
+        type=partial(default_missing_path, default=None),
         required=False,
         default=None,
         help="Train data path",
     )
+    # NOTE that the default is present in both :param `type` and `default`. In case of change, we need to update
+    # in both places
     parser.add_argument(
         "--validation_file_path",
-        type=str,
+        type=partial(default_missing_path, default=None),
         required=False,
         default=None,
         help="Validation data path",
     )
+    # NOTE that the default is present in both :param `type` and `default`. In case of change, we need to update
+    # in both places
     parser.add_argument(
         "--test_file_path",
-        type=str,
+        type=partial(default_missing_path, default=None),
         required=False,
         default=None,
         help="Test data path",
@@ -166,6 +182,10 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
         model_name_or_path = Path(parsed_args.model_selector_output, parsed_args.model_name)
         # Transformers lib searches for tokenizer files locally only if the folder path is same as model's name
         if model_name_or_path.is_dir():
+            last_checkpoint = get_last_checkpoint(model_name_or_path)
+            if last_checkpoint:
+                model_name_or_path = last_checkpoint
+            logger.info(f"Copying content from {model_name_or_path} to {parsed_args.model_name}")
             copy_and_overwrite(str(model_name_or_path), parsed_args.model_name)
         parsed_args.model_name_or_path = parsed_args.model_name
 
@@ -183,6 +203,7 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
     # additional logging
     logger.info(f"Model name: {getattr(parsed_args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(parsed_args, 'task_name', None)}")
+    logger.info(f"Model asset id: {getattr(parsed_args, 'model_asset_id', None)}")
 
     if getattr(parsed_args, "task_name", None) == Tasks.TRANSLATION and \
             getattr(parsed_args, "model_name", None) is not None:
@@ -200,7 +221,7 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
         if model_type == HfModelTypes.T5 and \
                 (src_lang not in T5_CODE2LANG_MAP or tgt_lang not in T5_CODE2LANG_MAP):
             raise ACFTValidationException._with_error(
-                AzureMLError.create(ACFTUserError, error=(
+                AzureMLError.create(ACFTUserError, pii_safe_message=(
                     "Either source or target language is not supported for T5. Supported languages are "
                     f"{list(T5_CODE2LANG_MAP.keys())}"
                 ))

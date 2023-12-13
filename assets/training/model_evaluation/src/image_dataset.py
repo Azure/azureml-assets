@@ -131,9 +131,9 @@ def is_valid_image(image_path):
     :param image_path: The image path
     """
     try:
-        img = Image.open(image_path)
-        if len(img.getbands()) != 3:
-            return False
+        with Image.open(image_path) as img:
+            if len(img.getbands()) != 3:
+                return False
     except Exception:
         return False
     return True

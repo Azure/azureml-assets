@@ -1,11 +1,3 @@
-## Install dbcopilot
---extra-index-url https://azuremlsdktestpypi.azureedge.net/dbcopilot
-dbcopilot==0.4.20230809.3
---extra-index-url https://azuremlsdktestpypi.azureedge.net/dbcopilottool
-db_copilot_tool==0.1.8
-## Install promptflow
---extra-index-url https://azuremlsdktestpypi.azureedge.net/promptflow/
-promptflow-sdk-bundle==0.0.100832450
-## Install embeddingstore
---extra-index-url https://azuremlsdktestpypi.azureedge.net/promptflow/
-promptflow_vectordb==0.1.1
+promptflow[azure]==0.1.0b8
+promptflow-tools==0.1.0b10
+promptflow-vectordb==0.1.2

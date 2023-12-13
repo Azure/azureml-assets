@@ -44,12 +44,12 @@ inputs:
 outputs:
   output_dataset:
     type: uri_file
-    description: Path to the output file.
+    description: Path to the jsonl file where the sampled dataset will be saved.
 
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
-  python -m dataset_sampler.main 
+  python -m aml_benchmark.dataset_sampler.main 
   --dataset ${{inputs.dataset}} 
   --sampling_style ${{inputs.sampling_style}} 
   $[[--sampling_ratio ${{inputs.sampling_ratio}}]] 

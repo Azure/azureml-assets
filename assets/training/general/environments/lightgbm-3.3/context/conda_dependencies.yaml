@@ -21,7 +21,7 @@ dependencies:
   - distributed~=2021.10.0
   - adlfs~=0.7.0
   # vulnerabilities
-  - cryptography>=41.0.2
+  - cryptography>=41.0.4
   - aiohttp>=3.8.5
   - certifi >= 2023.07.22
   - requests >= 2.31.0

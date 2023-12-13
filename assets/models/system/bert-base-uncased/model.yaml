@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/bert-base-uncased/0a6aa91/mlflow_model_folder
+  container_path: huggingface/bert-base-uncased/1698812981/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

@@ -4,21 +4,53 @@ channels:
 - anaconda
 dependencies:
 - python=3.8
-- pip=21.3.1
+- pip=23.3.1
 - pip:
-  - azureml-rag[faiss,cognitive_search,document_parsing,data_generation]==0.2.2
-  - langchain==0.0.236
-  - azureml-core=={{latest-pypi-version}}
-  - azure-search-documents==11.4.0b8
-  - psutil~=5.8.0
-  - pandas~=1.1.5
-  - GitPython>=3.1
-  - msrest>=0.6.18
+    # RAG package
+  - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone]==0.2.23.1
+    # Azure AI
+  - azure-ai-formrecognizer==3.3.1
+  - azure-ai-ml=={{latest-pypi-version}}
+    # Azure
   - azure-core<2.0.0,>=1.8.0,!=1.22.0
-  - azure-mgmt-core<2.0.0,>=1.3.0
+  - azure-identity==1.12.0
   - azure-keyvault-secrets==4.6.0
-    # package dependency needed for aml run token authentication
+  - azure-mgmt-cognitiveservices~=13.4.0
+  - azure-mgmt-core<2.0.0,>=1.3.0
+  - azure-search-documents==11.4.0b8
+    # Azure ML
+  - azureml-contrib-services
+  - azureml-core=={{latest-pypi-version}}
+  - azureml-dataprep>=4.12.7 # Change back to latest version once azureml-fsspec is compatible
+  - azureml-inference-server-http==0.7.6
+  - azureml-mlflow=={{latest-pypi-version}}
+  - azureml-telemetry=={{latest-pypi-version}}
+    # Other public packages
+  - beautifulsoup4~=4.11.2
+  - datasets~=2.10.1
+  - faiss-cpu~=1.7.3
+  - GitPython>=3.1
+  - inference-schema==1.4
+  - langchain==0.0.317
+  - lxml
+  - markdown
+  - mlflow>=2.6.0
+  - mlflow-skinny==2.3.2
+  - msal~=1.22.0
+  - msrest>=0.6.18
+  - nltk==3.8.1
+  - openai>=0.27.4
+  - pandas~=1.1.5
+  - polling2~=0.5.0
+  - psutil~=5.8.0
+  - pymssql==2.2.7
+  - pypdf~=3.17.1
+  - sentence-transformers
+  - sqlalchemy==1.4.46
+  - tika~=2.6.0
+    # Package dependency needed for AML run token authentication
   - python-dateutil>=2.7.3,<3.0.0
   - PyJWT<3.0.0
   - pytz
-  - cryptography>=41.0.3
+  - cryptography>=41.0.4
+  

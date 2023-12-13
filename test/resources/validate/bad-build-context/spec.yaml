@@ -1,0 +1,21 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  An environment for tasks such as regression, clustering, and classification with Scikit-learn. Contains the Azure ML SDK and additional python packages.
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+build:
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
+os_type: linux
+
+tags:
+  Scikit-learn: "1.0"
+  OS: Ubuntu20.04
+  Training: ""
+  Preview: ""
+  OpenMpi: "4.1.0"
+  Python: "3.8"

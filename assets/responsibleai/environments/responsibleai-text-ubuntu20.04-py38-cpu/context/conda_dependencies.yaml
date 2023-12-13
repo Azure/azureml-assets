@@ -11,21 +11,19 @@ dependencies:
   - pytorch
   - captum
   - cpuonly
-  - pycocotools==2.0.4
   - pip:
     - numpy==1.22.0
-    - responsibleai~=0.30.0
-    - raiwidgets~=0.30.0
-    - pyarrow
-    - azure-core==1.25.1
+    - responsibleai~=0.32.1
+    - raiwidgets~=0.32.1
+    - azure-core==1.29.5
     - mlflow
-    - markupsafe<2.1.0
-    - itsdangerous==2.0.1
-    - responsibleai-text[qa]==0.2.1
+    - markupsafe<=2.1.2
+    - itsdangerous<=2.1.2
+    - responsibleai-text[qa]==0.2.4
     - click<8.0.0
-    - mltable==1.4.1
+    - mltable==1.5.0
     - transformers>=4.17.0
-    - ml-wrappers~=0.5.2
+    - ml-wrappers~=0.5.3
     - nlp-feature-extractors==0.1.0
     - datasets
     - typing-extensions<4.6.1

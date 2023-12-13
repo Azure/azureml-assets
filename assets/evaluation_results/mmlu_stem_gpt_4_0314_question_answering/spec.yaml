@@ -1,0 +1,32 @@
+type: evaluationresult
+name: mmlu_stem_gpt_4_0314_question_answering
+version: 1.0.0
+display_name: mmlu_stem_gpt_4_0314_question_answering
+description: gpt-4-0314 run for mmlu_stem dataset
+dataset_family: mmlu
+dataset_name: mmlu_stem
+
+model_name: gpt-4-0314
+model_version: "314"
+model_asset_id: azureml://registries/azure-openai-preview/models/gpt-4/versions/629591.2a481b56
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azure-openai-preview/models/gpt-4/versions/629591.2a481b56
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.7757691
+
+path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

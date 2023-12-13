@@ -13,5 +13,6 @@ inference-schema~=1.5.0
 MarkupSafe==2.1.2
 regex
 pybind11
-cryptography>=41.0.3
+urllib3>=1.26.18
+cryptography>=41.0.4
 aiohttp>=3.8.5

@@ -1,0 +1,31 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: chat
+
+messages:
+- role: system
+  content: As a professional apple cycle analyst, your task is to examine the test image based on the provided reference image to determine the specific stage of the apple's growth or lifecycle it represents. You should only consider the apple itself, not the background or any other objects in the image.
+
+- role: user
+  content:
+    - type: image
+      image_url: img1.jpg
+
+- role: assistant
+  content: |
+    The reference image shows the life cycle of an apple fruit from fresh to rotten. From left to right:
+    The first apple is fresh, showing a bright red and yellow coloration, indicating that it is ripe and ready to be eaten.
+    The second apple starts to lose its vibrant colors, showing signs of aging. The skin begins to wrinkle, and it's not as firm as the fresh apple.
+    The third apple is further along in the rotting process, with a more wrinkled appearance, and it has lost more of its color, indicating it is becoming overripe or starting to decay.
+    The fourth apple is significantly decayed, with a highly wrinkled and darkened skin. It is in the advanced stages of rotting, making it unsuitable for consumption.
+    The fifth apple is completely rotten. The skin is dark, highly wrinkled, and shriveled, showing that the apple has decomposed and is no longer edible.
+
+starter_messages:
+- role: user
+  content:
+    - type: text
+      text: Check this image
+    - type: image
+      image_url: img2.jpg
+
+template_format: handlebars

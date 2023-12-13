@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.13
+name: defect_detector
+display_name: Defect detector
+description: Find defects on a test image based a reference image.
+
+tags:
+  modality: image
+  task: summarization
+
+data_uri: ./prompt
+template_path: prompt.yaml

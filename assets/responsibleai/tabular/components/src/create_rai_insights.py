@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument("--title", type=str, required=True)
 
     parser.add_argument(
-        "--task_type", type=str, required=True, choices=["classification", "regression"]
+        "--task_type", type=str, required=True, choices=["classification", "regression", "forecasting"]
     )
 
     parser.add_argument("--train_dataset", type=str, required=True)
@@ -66,7 +66,10 @@ def parse_args():
     parser.add_argument(
         "--feature_metadata",
         type=str,
-        help="identity_feature_name:Optional[str], dropped_features:Optional[List[str]]",
+        help="identity_feature_name:Optional[str], "
+             "dropped_features:Optional[List[str]], "
+             "datetime_features:Optional[List[str]], "
+             "time_series_id_features:Optional[List[str]]",
     )
 
     parser.add_argument(
@@ -101,14 +104,13 @@ def create_constructor_arg_dict(args):
     )
     feature_metadata = FeatureMetadata()
     try:
-        if PropertyKeyValues.RAI_INSIGHTS_DROPPED_FEATURE_KEY in feature_metadata_dict.keys():
-            feature_metadata.dropped_features = feature_metadata_dict[
-                PropertyKeyValues.RAI_INSIGHTS_DROPPED_FEATURE_KEY
-            ]
-        if PropertyKeyValues.RAI_INSIGHTS_IDENTITY_FEATURE_KEY in feature_metadata_dict.keys():
-            feature_metadata.identity_feature_name = feature_metadata_dict[
-                PropertyKeyValues.RAI_INSIGHTS_IDENTITY_FEATURE_KEY
-            ]
+        for key in [
+                PropertyKeyValues.RAI_INSIGHTS_DROPPED_FEATURE_KEY,
+                PropertyKeyValues.RAI_INSIGHTS_IDENTITY_FEATURE_KEY,
+                PropertyKeyValues.RAI_INSIGHTS_DATETIME_FEATURES_KEY,
+                PropertyKeyValues.RAI_INSIGHTS_TIME_SERIES_ID_FEATURES_KEY]:
+            if key in feature_metadata_dict.keys():
+                setattr(feature_metadata, key, feature_metadata_dict[key])
     except AttributeError as e:
         raise UserConfigValidationException(f"Feature metadata should be parsed to a dictionary. {e}")
 
@@ -160,12 +162,16 @@ def main(args):
 
     model_estimator = None
     model_id = None
+    # For now, the separate conda env will only be used for forecasting.
+    # At a later point, we might enable this for all task types.
+    use_separate_conda_env = args.task_type == "forecasting"
     if args.model_info_path:
         model_id = fetch_model_id(args.model_info_path)
         _logger.info("Loading model: {0}".format(model_id))
         model_estimator = load_mlflow_model(
             workspace=my_run.experiment.workspace,
             use_model_dependency=args.use_model_dependency,
+            use_separate_conda_env=use_separate_conda_env,
             model_id=model_id,
         )
     elif args.model_input and args.model_info:
@@ -174,6 +180,7 @@ def main(args):
         model_estimator = load_mlflow_model(
             workspace=my_run.experiment.workspace,
             use_model_dependency=args.use_model_dependency,
+            use_separate_conda_env=use_separate_conda_env,
             model_path=args.model_input,
         )
 
@@ -186,7 +193,7 @@ def main(args):
     # Make sure that it actually loads
     _logger.info("Creating RAIInsights object")
     _ = RAIInsights(
-        model=model_estimator, train=train_df, test=test_df, **constructor_args
+        model=model_estimator, train=train_df, test=test_df, forecasting_enabled=True, **constructor_args
     )
 
     _logger.info("Saving JSON for tool components")

@@ -9,6 +9,11 @@ It compares the drift measures of metrics implemented in Spark against their Sci
 
 from data_drift_compute_metrics.categorical_data_drift_metrics import compute_categorical_data_drift_measures_tests
 from shared_utilities.io_utils import init_spark
+from shared_utilities.constants import (
+    JENSEN_SHANNON_DISTANCE_METRIC_NAME,
+    PEARSONS_CHI_SQUARED_TEST_METRIC_NAME,
+    POPULATION_STABILITY_INDEX_METRIC_NAME
+)
 from scipy.spatial import distance
 from scipy.stats import chisquare
 import pandas as pd
@@ -20,9 +25,9 @@ import math
 import random
 
 distance_measures = [
-    "JensenShannonDistance",
-    "PopulationStabilityIndex",
-    "PearsonsChiSquaredTest",
+    JENSEN_SHANNON_DISTANCE_METRIC_NAME,
+    POPULATION_STABILITY_INDEX_METRIC_NAME,
+    PEARSONS_CHI_SQUARED_TEST_METRIC_NAME,
 ]
 
 
@@ -251,11 +256,11 @@ class TestComputeCategoricalDataDriftMetrics(unittest.TestCase):
                 x = self.create_categorical_data_from_dict(test_case['baseline_col'])
                 y = self.create_categorical_data_from_dict(test_case['production_col'])
 
-                if distance_measure == "JensenShannonDistance":
+                if distance_measure == JENSEN_SHANNON_DISTANCE_METRIC_NAME:
                     expected_distance = self.jensen_shannon_distance_categorical(x, y)
-                elif distance_measure == "PopulationStabilityIndex":
+                elif distance_measure == POPULATION_STABILITY_INDEX_METRIC_NAME:
                     expected_distance = self.psi_categorical(x, y)
-                elif distance_measure == "PearsonsChiSquaredTest":
+                elif distance_measure == PEARSONS_CHI_SQUARED_TEST_METRIC_NAME:
                     expected_distance = self.chi_squared_test_categorical(x, y)
                 else:
                     raise ValueError(f"Distance measure {distance_measure} not in {distance_measures}")
@@ -279,8 +284,8 @@ class TestComputeCategoricalDataDriftMetrics(unittest.TestCase):
                 print('-------------------------')
                 print(f'test: {test_case["name"]}')
                 print(f'test scenario: {test_case["scenario"]}')
-                print(f'expected value: {self.round_to_n_significant_digits(expected_distance,4)}')
-                print(f'measured value: {self.round_to_n_significant_digits(metric_value,4)}')
+                print(f'expected value: {self.round_to_n_significant_digits(expected_distance, 4)}')
+                print(f'measured value: {self.round_to_n_significant_digits(metric_value, 4)}')
 
                 if (abs(expected_distance) < 1e-6):
                     self.assertAlmostEqual(metric_value, 0, 6)

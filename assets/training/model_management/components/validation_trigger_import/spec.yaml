@@ -170,7 +170,7 @@ outputs:
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/7
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/9
 code: ../../src
 command: python -u run_model_validate.py --validation-info ${{outputs.validation_info}}
 
