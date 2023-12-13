@@ -63,9 +63,6 @@ outputs:
 jobs:
   openai_data_import:
     type: command
-    resources:
-      properties:
-        quota_enforcement_resource_id: ${{parent.inputs.quota_enforcement_resource_id}}
     component: azureml://registries/azure-openai-v2/components/openai_data_import/versions/0.3.5
     inputs:
       train_dataset: ${{parent.inputs.train_dataset}}
@@ -74,8 +71,6 @@ jobs:
   openai_completions_finetune:
     type: command
     resources:
-      properties:
-        quota_enforcement_resource_id: ${{parent.inputs.quota_enforcement_resource_id}}
     component: azureml://registries/azure-openai-v2/components/openai_completions_finetune/versions/0.4.5
     inputs:
       input_dataset: ${{parent.jobs.openai_data_import.outputs.out_dataset}}
