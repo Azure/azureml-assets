@@ -26,5 +26,6 @@ from src.batch_score.common.configuration.file_configuration_parser import (
     ],
 )
 def test_factory_returns_parser(args, expected_parser_type):
+    """Test configuration parser factory."""
     parser = ConfigurationParserFactory().get_parser(args=args)
     assert isinstance(parser, expected_parser_type)
