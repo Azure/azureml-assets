@@ -7,7 +7,6 @@ from .config import (
     ComponentType,
     Config,
     DEFAULT_ASSET_FILENAME,
-    DEFAULT_PYTHON_VERSION,
     ModelConfig,
     ModelFlavor,
     ModelTaskName,

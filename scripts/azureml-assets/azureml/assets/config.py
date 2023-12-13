@@ -139,7 +139,6 @@ PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: 'mcr.microsoft.com'}
 STANDARD_ASSET_TYPES = [AssetType.COMPONENT, AssetType.DATA, AssetType.ENVIRONMENT, AssetType.MODEL]
 TEMPLATE_CHECK = re.compile(r"\{\{.*\}\}")
 VERSION_AUTO = "auto"
-DEFAULT_PYTHON_VERSION = "3.11"
 
 
 class Config:
