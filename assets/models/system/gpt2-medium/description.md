@@ -32,7 +32,7 @@ The model achieves the following results without any fine-tuning (zero-shot):
 | (metric) | (PPL)   | (ACC)   | (ACC)  | (ACC)  | (PPL)     | (PPL)  | (BPB)   | (BPC)  | (PPL)       | (PPL) |
 |          | 15.60   | 55.48   | 92.35  | 87.1   | 22.76     | 47.33  | 1.01    | 1.06   | 26.37       | 55.72 |
 
-# Risks, Limitations and Biases
+# Limitations and Biases
 
 Significant research has explored bias and fairness issues with language models (see, e.g., [Sheng et al. (2021)](https://aclanthology.org/2021.acl-long.330.pdf) and [Bender et al. (2021)](https://dl.acm.org/doi/pdf/10.1145/3442188.3445922)). 
 
