@@ -292,7 +292,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                 AzureMLError.create(
                     BenchmarkValidationError,
                     error_details='SKU for AOAI model must be int.')
-                )
+            )
 
     def _get_access_key_config(self) -> AccessKeyConfiguration:
         return ApiKeyConfiguration(

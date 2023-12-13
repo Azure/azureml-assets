@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """The base class for header handlers.."""
+from typing import Any, Optional, Dict
 
 import json
 import os
@@ -42,7 +43,7 @@ class HeaderHandler(ABC):
             self._additional_headers = {}
 
     @abstractclassmethod
-    def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
+    def get_headers(self, additional_headers: Dict[str, Any] = None, payoad: Optional[Any] = None) -> Dict[str, Any]:
         """Get headers interface."""
         pass
 

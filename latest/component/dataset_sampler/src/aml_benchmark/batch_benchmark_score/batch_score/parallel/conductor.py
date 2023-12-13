@@ -172,7 +172,7 @@ class Conductor:
         return self.__client_session
 
     async def __sleep(
-            self, duration: int,  tasks: "list[asyncio.Task]", target_result_len: int) -> "list[asyncio.Task]":
+            self, duration: int, tasks: "list[asyncio.Task]", target_result_len: int) -> "list[asyncio.Task]":
         """Wait for the configured sleep interval, but wakes up early if the workers finish."""
         sleep_task = asyncio.create_task(asyncio.sleep(duration))
         tasks = [*tasks, sleep_task]
