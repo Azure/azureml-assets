@@ -1,5 +1,5 @@
 {
-    "$id": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_target/azure_openai.json",
+    "$id": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_endpoint/azure_openai.json",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "unevaluatedProperties": false,
     "required": [
