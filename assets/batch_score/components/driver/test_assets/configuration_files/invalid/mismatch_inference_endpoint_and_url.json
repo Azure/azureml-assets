@@ -1,0 +1,12 @@
+{
+    "api": {
+        "type": "completion"
+    },
+    "authentication": {
+        "type": "managed_identity"
+    },
+    "inference_endpoint": {
+        "type": "azure_openai",
+        "url": "https://llama-completion.eastus2.inference.ai.azure.com/v1/completions"
+    }
+}
