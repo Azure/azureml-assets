@@ -10,7 +10,6 @@ tags:
   Preview: ""
   license: mit
   task: text-generation
-  author: OpenAI
   huggingface_model_id: gpt2
   inference-compute-allowlist:
     [
