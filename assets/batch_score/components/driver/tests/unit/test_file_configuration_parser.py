@@ -19,7 +19,7 @@ configs_root = (
     / "for_e2e_tests"
 )
 
-TEST_AOAI_DEPLOYMENT_URI = 'https://test-aoai.openai.azure.com/openai/deployments'
+TEST_AOAI_DEPLOYMENT_URI = 'https://sunjoli-aoai.openai.azure.com/openai/deployments'
 
 
 @pytest.mark.parametrize(
