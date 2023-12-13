@@ -27,7 +27,9 @@ jobs:
       - name: Test login
         run: |
           while true; do
-            date
-            az account get-access-token > /dev/null || exit 1
+            date -u
+            expires=$(az account get-access-token | jq -r '.expiresOn')
+            [ "$expires" == "" ] && exit
+            echo "Token expires at $expires"
             sleep 60
           done
