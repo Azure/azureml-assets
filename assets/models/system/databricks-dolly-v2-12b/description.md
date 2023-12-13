@@ -56,6 +56,6 @@ databricks-dolly-15k: The training data on which dolly-v2-12b is instruction tun
 ### Sample output
 ```json
 [
-  "I believe the meaning of life is to find what you love and do it very well. I love to write, I love to paint, I love to sing, I love to dance, I love to act, I love to direct, I love to play all kinds of music, I love to see beautiful things, I love to give beautiful things, and I love to have beautiful experiences.\n life is a journey not a destination. so enjoy the ride.\n\nI am a very positive person. I believe that you should"
+    "I believe the meaning of life is to find what you love and do that thing until you die. I love to write, code, and spend time with my family. I started this blog to document my learning journey in the tech industry and share things I love with others. I hope you enjoy the content and feel free to leave a comment."
 ]
 ```
