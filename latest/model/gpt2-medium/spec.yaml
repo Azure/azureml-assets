@@ -2,101 +2,98 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: gpt2-medium
 path: ./
 properties:
-  SHA: 425b0cc90498ac177aa51ba07be26fc2fea6af9d
-  datasets: ''
-  evaluation-min-sku-spec: 8|0|28|56
-  evaluation-recommended-sku: Standard_DS4_v2
-  finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC24rs_v3
-  finetuning-tasks: text-classification, token-classification
-  inference-min-sku-spec: 4|0|14|28
-  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
-    Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
-    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
-    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_F8s_v2,
-    Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2,
-    Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3,
-    Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3,
-    Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
-    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
-    Standard_ND40rs_v2
+  SHA: f65d4965d1221eff2bcf34f53a2ba12120e18f24
+  inference-min-sku-spec: 8|0|28|56
+  inference-recommended-sku: Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2,
+    Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4,
+    Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4,
+    Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2,
+    Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds,
+    Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3,
+    Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
+    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   languages: en
 tags:
-  Preview: ''
-  computes_allow_list:
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
-  - Standard_NC6s_v2
-  - Standard_NC12s_v2
-  - Standard_NC24s_v2
-  - Standard_NC24rs_v2
-  - Standard_NC4as_T4_v3
-  - Standard_NC8as_T4_v3
-  - Standard_NC16as_T4_v3
-  - Standard_NC64as_T4_v3
-  - Standard_ND6s
-  - Standard_ND12s
-  - Standard_ND24s
-  - Standard_ND24rs
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
+  Preview: ""
   license: mit
-  model_specific_defaults:
-    apply_deepspeed: 'true'
-    apply_lora: 'true'
-    apply_ort: 'true'
   task: text-generation
-version: 11
+  huggingface_model_id: gpt2-medium
+  inference-compute-allowlist: [Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
+    Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4,
+    Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4,
+    Standard_D96as_v4, Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2,
+    Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds,
+    Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3,
+    Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3,
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
+    Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+
+version: 12
 description: |
-  The GPT-2 Transformer-based language model is designed primarily for use by AI researchers and practitioners. The intended uses of the language model include understanding the behavior, capability, biases, and constraints of large-scale generative language models. Secondary use cases of the language model include writing assistance, creative writing and art, and entertainment. The model is trained on a big corpus of English data, but the training data has not been released for public browsing. The authors of the model do not support use of the model to generate text that requires truth, nor do they recommend deployment of the language model in systems that interact with humans because of the biases inherent in the model. The model was pretrained on raw texts in a self-supervised manner with an automatic process that generates inputs and labels based on the words in the texts. The inputs were tokenized using byte-level pairing encoding with a vocabulary size of 50,257 and a sequence length of 1024 tokens. The authors of the model warn that the predictions generated by the model may contain harmful stereotypes and offensive content.
+  GPT-2 Medium is the **355M parameter** version of GPT-2, a transformer-based language model created and released by OpenAI. The model is a pretrained model on English language using a causal language modeling (CLM) objective. 
 
-  > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/gpt2-medium" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+  # Training Details
 
-  ### Inference samples
+  See the [associated paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) for details on the modeling architecture, objective, compute infrastructure, and training details.
 
-  Inference type|Python sample (Notebook)|CLI with YAML
-  |--|--|--|
-  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
-  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
+  ## Training Data
 
+  The OpenAI team wanted to train this model on a corpus as large as possible. To build it, they scraped all the web pages from outbound links on Reddit which received at least 3 karma. Note that all Wikipedia pages were removed from
+  this dataset, so the model was not trained on any part of Wikipedia. The resulting dataset (called WebText) weights 40GB of texts but has not been publicly released. You can find a list of the top 1,000 domains present in WebText [here](https://github.com/openai/gpt-2/blob/master/domains.txt).
 
-  ### Finetuning samples
+  ## Training Procedure
 
-  Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-  |--|--|--|--|--|
-  Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-  Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+  The model is pretrained on a very large corpus of English data in a self-supervised fashion. This means it was pretrained on the raw texts only, with no humans labelling them in any way (which is why it can use lots of publicly available data) with an automatic process to generate inputs and labels from those texts. More precisely, it was trained to guess the next word in sentences.
 
+  More precisely, inputs are sequences of continuous text of a certain length and the targets are the same sequence, shifted one token (word or piece of word) to the right. The model uses internally a mask-mechanism to make sure the predictions for the token `i` only uses the inputs from `1` to `i` but not the future tokens.
 
-  ### Model Evaluation
+  This way, the model learns an inner representation of the English language that can then be used to extract features useful for downstream tasks.
 
-  Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-  |--|--|--|--|--|
-  Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+  The texts are tokenized using a byte-level version of Byte Pair Encoding (BPE) (for unicode characters) and a vocabulary size of 50,257. The inputs are sequences of 1024 consecutive tokens.
 
+  # Evaluation Results
 
-  ### Sample inputs and outputs (for real-time inference)
+  The following evaluation information is extracted from the [associated paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf).
 
-  #### Sample input
+  The model achieves the following results without any fine-tuning (zero-shot):
+
+  | Dataset  | LAMBADA | LAMBADA | CBT-CN | CBT-NE | WikiText2 | PTB    | enwiki8 | text8  | WikiText103 | 1BW   |
+  |:--------:|:-------:|:-------:|:------:|:------:|:---------:|:------:|:-------:|:------:|:-----------:|:-----:|
+  | (metric) | (PPL)   | (ACC)   | (ACC)  | (ACC)  | (PPL)     | (PPL)  | (BPB)   | (BPC)  | (PPL)       | (PPL) |
+  |          | 15.60   | 55.48   | 92.35  | 87.1   | 22.76     | 47.33  | 1.01    | 1.06   | 26.37       | 55.72 |
+
+  # Limitations and Biases
+
+  Significant research has explored bias and fairness issues with language models (see, e.g., [Sheng et al. (2021)](https://aclanthology.org/2021.acl-long.330.pdf) and [Bender et al. (2021)](https://dl.acm.org/doi/pdf/10.1145/3442188.3445922)). 
+
+  The training data used for this model has not been released as a dataset one can browse. We know it contains a lot of unfiltered content from the internet, which is far from neutral. Predictions generated by the model can include disturbing and harmful stereotypes across protected classes; identity characteristics; and sensitive, social, and occupational groups.
+
+  *Note: This bias will also affect all fine-tuned versions of this model. Users (both direct and downstream) should be made aware of the risks, biases and limitations of the model.*
+
+  # Sample inputs and outputs
+
+  ### Sample input
   ```json
   {
-      "input_data": {
-          "input_string": ["My name is John and I am", "Once upon a time,"]
+      "input_data": [
+          "I believe the meaning of life is"
+      ],
+      "params": {
+          "top_p": 1.0,
+          "temperature": 0.8,
+          "max_new_tokens": 100,
+          "do_sample": true,
+          "return_full_text": true
       }
   }
   ```
 
-  #### Sample output
+  ### Sample output
   ```json
   [
-      {
-          "0": "My name is John and I am part of the world's largest open computer lab, one of the largest academic computer labs in the world, with over"
-      },
-      {
-          "0": "Once upon a time, when I was twenty myself, I read John Milton's Paradise Lost in a small magazine. I was struck by a passage:"
-      }
+    "I believe the meaning of life is to give way to you in the present moment to the things you love the most. We don't need to worry about your feelings of guilt, anger, or pain; we need to find ways to make things easier for you and help you get back to normal.\n\nAs a mother, I've always considered that the meaning of the world came from the love we gave each other. I believe that love is a life-sustaining energy that can help us reach our goal of one day"
   ]
   ```
