@@ -20,6 +20,7 @@ def test_image_scrubber_invalid_request_raises_exception(make_vesta_encoded_imag
 
 
 def test_image_scrubber_image_data_scrubbed(make_vesta_encoded_image_scrubber):
+    """Test image scrubber when data should be scrubbed."""
     scrubber: VestaEncodedImageScrubber = make_vesta_encoded_image_scrubber()
 
     request_obj = {"transcript": [{"type": "image", "data": "some-encoded-image"}]}
@@ -28,6 +29,7 @@ def test_image_scrubber_image_data_scrubbed(make_vesta_encoded_image_scrubber):
 
 
 def test_image_scrubber_image_data_unchanged(make_vesta_encoded_image_scrubber):
+    """Test image scrubber when data should be unchanged."""
     scrubber: VestaEncodedImageScrubber = make_vesta_encoded_image_scrubber()
 
     image_url_data = "ImageUrl!some-url"

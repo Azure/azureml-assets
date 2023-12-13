@@ -70,6 +70,7 @@ TEST_AOAI_DEPLOYMENT_URI = 'https://sunjoli-aoai.openai.azure.com/openai/deploym
     ],
 )
 def test_aoai_completion(file_name, override_expected_config):
+    """Test parsing configuration for completion model on AOAI endpoints."""
     args = [
         "--async_mode", "True",
         "--configuration_file", str(configs_root / file_name),
@@ -78,14 +79,14 @@ def test_aoai_completion(file_name, override_expected_config):
     parser = FileConfigurationParser(FileConfigurationValidator())
     configuration = parser.parse_configuration(args)
 
-    expected_configuration = get_base_configuration()
+    expected_configuration = _get_base_configuration()
     for key, value in override_expected_config.items():
         expected_configuration[key] = value
 
     assert vars(configuration) == expected_configuration
 
 
-def get_base_configuration():
+def _get_base_configuration():
     return {
         "additional_headers": "{}",
         "additional_properties": "{}",
