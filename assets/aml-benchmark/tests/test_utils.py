@@ -127,6 +127,7 @@ def get_mlclient(registry_name: Optional[str] = None) -> MLClient:
     """
     try:
         credential = AzureCliCredential()
+        credential.get_token("https://management.azure.com/.default")
     except Exception as ex:
         print(f"Unable to authenticate via Azure CLI:\n{ex}")
         credential = DefaultAzureCredential()
@@ -298,10 +299,10 @@ def assert_logged_params(job_name: str, exp_name: str, **expected_params: Any) -
 
 def _deploy_endpoint(ml_client, endpoint_name):
     endpoint = ManagedOnlineEndpoint(
-            name=endpoint_name,
-            description="this is a sample endpoint",
-            auth_mode="key"
-        )
+        name=endpoint_name,
+        description="this is a sample endpoint",
+        auth_mode="key"
+    )
     ml_client.online_endpoints.begin_create_or_update(endpoint).wait()
     endpoint = ml_client.online_endpoints.get(name=endpoint_name)
     return endpoint
@@ -341,12 +342,14 @@ def deploy_fake_test_endpoint_maybe(
         while should_wait:
             endpoint = ml_client.online_endpoints.get(name=endpoint_name)
             if endpoint.provisioning_state.lower() in ["creating", "updating", 'deleting', 'provisioning']:
+                print("Found endpoint in transitional state.")
                 time.sleep(30)
                 continue
             deployment = ml_client.online_deployments.get(
                 endpoint_name=endpoint_name, name=deployment_name)
             if deployment.provisioning_state.lower() == 'failed':
-                ml_client.online_endpoints.begin_delete(name=endpoint_name)
+                print("Found endpoint in the failed state, removing.")
+                ml_client.online_endpoints.begin_delete(name=endpoint_name).wait()
                 should_deploy = True
                 break
             elif deployment.provisioning_state.lower() == 'succeeded':
@@ -366,10 +369,12 @@ def deploy_fake_test_endpoint_maybe(
             print("Failed deployment due to {}.".format(e))
             print("Trying deploy using a new name now.")
             if "There is already an endpoint with this name" in str(e):
-                endpoint_name = "aml-benchmark-test-" + str(uuid.uuid4().hex)
+                endpoint_name = f"aml-benchmark-test-{str(uuid.uuid4().hex)}"[:32]
                 print("deploying using {}".format(endpoint_name))
                 endpoint = _deploy_endpoint(ml_client, endpoint_name)
                 deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
+            else:
+                raise
     if endpoint is None:
         endpoint = ml_client.online_endpoints.get(name=endpoint_name)
     wps_connection = WorkspaceConnection(
