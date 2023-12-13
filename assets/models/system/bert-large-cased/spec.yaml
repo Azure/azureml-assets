@@ -11,6 +11,7 @@ tags:
   Preview: ""
   license: apache-2.0
   task: fill-mask
+  author: Google Research
   huggingface_model_id: bert-large-cased
   inference_compute_allow_list:
     [
