@@ -1,7 +1,8 @@
-__Deci/DeciDiffusion-v1-0__ model model proficient in generating lifelike images based on textual descriptions. Grounded in latent diffusion methodology, it systematically converts random noise into an image aligning with the provided text. This innovation is the creation of Deci, an entity specializing in optimizing AI models for enhanced speed and efficiency. Boasting a threefold increase in speed compared to Stable Diffusion 1.5, DeciDiffusion 1.0 achieves this feat while maintaining image quality. The model underwent training on a substantial dataset named LAION-v2, encompassing images and texts, and underwent additional fine-tuning using a selection of artistic images known as LAION-ART1.
+__Deci/DeciDiffusion-v1-0__ DeciDiffusion 1.0 is a diffusion-based text-to-image generation model. While it maintains foundational architecture elements from Stable Diffusion, such as the Variational Autoencoder (VAE) and CLIP's pre-trained Text Encoder, DeciDiffusion introduces significant enhancements. The primary innovation is the substitution of U-Net with the more efficient U-Net-NAS, a design pioneered by Deci. This novel component streamlines the model by reducing the number of parameters, leading to superior computational efficiency.
 
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/Deci/DeciDiffusion-v1-0" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
+> Review the <a href="https://huggingface.co/Deci/DeciDiffusion-v1-0" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
 
