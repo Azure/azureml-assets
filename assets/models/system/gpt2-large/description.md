@@ -1,50 +1,74 @@
-The OpenAI GPT-2 is a language model that is intended to be used primarily by AI researchers and practitioners. It is capable of performing various uses, including writing assistance and creative writing, but is not recommended to be deployed in human interaction systems without a thorough study of its biases. The training data used to create this model was scraped from Reddit, excluding all pages of Wikipedia, and has not been publicly released. The model was trained on a very large corpus of English data in a self-supervised fashion, meaning it was pretrained on raw texts without human labeling. The evaluation information for this model comes from its associated paper and is evaluated on various language model benchmarks. The results are reported using invertible de-tokenizers to remove pre-processing artifacts.
+GPT-2 Large is the 774M parameter version of GPT-2, a transformer-based language model created and released by OpenAI. The model is a pretrained model on English language using a causal language modeling (CLM)
 
+# Training Details
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/gpt2-large" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+See the [associated paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) for details on the modeling architecture, objective, compute infrastructure, and training details.
 
-### Inference samples
+## Training Data
 
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
+The OpenAI team wanted to train this model on a corpus as large as possible. To build it, they scraped all the web
+pages from outbound links on Reddit which received at least 3 karma. Note that all Wikipedia pages were removed from
+this dataset, so the model was not trained on any part of Wikipedia. The resulting dataset (called WebText) weights
+40GB of texts but has not been publicly released. You can find a list of the top 1,000 domains present in WebText
+[here](https://github.com/openai/gpt-2/blob/master/domains.txt).
 
+## Training Procedure
 
-### Finetuning samples
+The model is pretrained on a very large corpus of English data in a self-supervised fashion. This
+means it was pretrained on the raw texts only, with no humans labelling them in any way (which is why it can use lots
+of publicly available data) with an automatic process to generate inputs and labels from those texts. More precisely,
+it was trained to guess the next word in sentences.
 
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+More precisely, inputs are sequences of continuous text of a certain length and the targets are the same sequence,
+shifted one token (word or piece of word) to the right. The model uses internally a mask-mechanism to make sure the
+predictions for the token `i` only uses the inputs from `1` to `i` but not the future tokens.
 
+This way, the model learns an inner representation of the English language that can then be used to extract features
+useful for downstream tasks.
 
-### Model Evaluation
+The texts are tokenized using a byte-level version of Byte Pair Encoding (BPE) (for unicode characters) and a
+vocabulary size of 50,257. The inputs are sequences of 1024 consecutive tokens.
 
-Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|--|
-Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+# Evaluation Results
 
+The following evaluation information is extracted from the [associated paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf).
 
-### Sample inputs and outputs (for real-time inference)
+The model achieves the following results without any fine-tuning (zero-shot):
 
-#### Sample input
+| Dataset  | LAMBADA | LAMBADA | CBT-CN | CBT-NE | WikiText2 | PTB    | enwiki8 | text8  | WikiText103 | 1BW   |
+|:--------:|:-------:|:-------:|:------:|:------:|:---------:|:------:|:-------:|:------:|:-----------:|:-----:|
+| (metric) | (PPL)   | (ACC)   | (ACC)  | (ACC)  | (PPL)     | (PPL)  | (BPB)   | (BPC)  | (PPL)       | (PPL) |
+|          | 10.87   | 60.12   | 93.45  | 88.0   | 19.93     | 40.31  | 0.97    | 1.02   | 22.05       | 44.575|
+
+# Limitations and Biases
+
+Significant research has explored bias and fairness issues with language models (see, e.g., [Sheng et al. (2021)](https://aclanthology.org/2021.acl-long.330.pdf) and [Bender et al. (2021)](https://dl.acm.org/doi/pdf/10.1145/3442188.3445922)). 
+
+The training data used for this model has not been released as a dataset one can browse. We know it contains a lot of unfiltered content from the internet, which is far from neutral. Predictions generated by the model can include disturbing and harmful stereotypes across protected classes; identity characteristics; and sensitive, social, and occupational groups.
+
+*Note: This bias will also affect all fine-tuned versions of this model. Users (both direct and downstream) should be made aware of the risks, biases and limitations of the model.*
+
+# Sample inputs and outputs
+
+### Sample input
 ```json
 {
-    "input_data": {
-        "input_string": ["My name is John and I am", "Once upon a time,"]
+    "input_data": [
+        "I believe the meaning of life is"
+    ],
+    "params": {
+        "top_p": 1.0,
+        "temperature": 0.8,
+        "max_new_tokens": 100,
+        "do_sample": true,
+        "return_full_text": true
     }
 }
 ```
 
-#### Sample output
+### Sample output
 ```json
 [
-    {
-        "0": "My name is John and I am a very good cook. My specialty is lasagna. I am not your typical lasagna producer. My wife and"
-    },
-    {
-        "0": "Once upon a time, everyone believed that you had to be a member of the priesthood to be worthy of the blessings of salvation in the next life."
-    }
+  "I believe the meaning of life is to give way to you in the present moment to the things you love the most. We don't need to worry about your feelings of guilt, anger, or pain; we need to find ways to make things easier for you and help you get back to normal.\n\nAs a mother, I've always considered that the meaning of the world came from the love we gave each other. I believe that love is a life-sustaining energy that can help us reach our goal of one day"
 ]
 ```
