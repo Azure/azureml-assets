@@ -242,7 +242,7 @@ class AoaiScoringClient:
             auth_provider = ApiKeyAuthProvider(configuration.api_key_name)
         elif configuration.authentication_type == "managed_identity":
             auth_provider = IdentityAuthProvider(use_user_identity=False)
-        elif configuration.authentication_type == "azureml_workspace_connection":
+        elif configuration.authentication_type in ["azureml_workspace_connection", "connection"]:
             endpoint_type = configuration.get_endpoint_type()
             auth_provider = WorkspaceConnectionAuthProvider(configuration.connection_name, endpoint_type)
         else:
