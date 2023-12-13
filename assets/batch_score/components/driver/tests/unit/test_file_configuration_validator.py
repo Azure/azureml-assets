@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains unit tests for file configuration validator."""
+
 import os
 from pathlib import Path
 

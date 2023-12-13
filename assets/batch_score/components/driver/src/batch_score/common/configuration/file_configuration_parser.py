@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""File configuration parser."""
+
 import json
 from argparse import ArgumentParser
 
