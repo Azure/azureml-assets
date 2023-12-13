@@ -4,15 +4,9 @@ The developers of the Text-To-Text Transfer Transformer (T5) [write](https://ai.
 
 T5-Base is the checkpoint with 220 million parameters. 
 
-**Resources for more information:**
-- [Research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf)
-- [Google's T5 Blog Post](https://ai.googleblog.com/2020/02/exploring-transfer-learning-with-t5.html) 
-- [GitHub Repo](https://github.com/google-research/text-to-text-transfer-transformer)
-- [Hugging Face T5 Docs](https://huggingface.co/docs/transformers/model_doc/t5)
+# Training Details
 
-## Training Details
-
-### Training Data
+## Training Data
 
 The model is pre-trained on the [Colossal Clean Crawled Corpus (C4)](https://www.tensorflow.org/datasets/catalog/c4), which was developed and released in the context of the same [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) as T5.
 
@@ -49,7 +43,7 @@ Thereby, the following datasets were being used for (1.) and (2.):
   - ReCoRD [Zhang et al., 2018](https://arxiv.org/abs/1810.12885)
   - BoolQ [Clark et al., 2019](https://arxiv.org/abs/1905.10044)
 
-### Training Procedure
+## Training Procedure
 
 In their [abstract](https://jmlr.org/papers/volume21/20-074/20-074.pdf), the model developers write: 
 
@@ -57,24 +51,15 @@ In their [abstract](https://jmlr.org/papers/volume21/20-074/20-074.pdf), the mod
 
 The framework introduced, the T5 framework, involves a training procedure that brings together the approaches studied in the paper. See the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) for further details.
 
-## Evaluation
-
-### Testing Data, Factors & Metrics
-
-The developers evaluated the model on 24 tasks, see the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) for full details.
-
-### Results 
+# Evaluation Results
 
 For full results for T5-Base, see the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf), Table 14.
 
-## Environmental Impact
+## Testing Data, Factors & Metrics
 
-Carbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700).
+The developers evaluated the model on 24 tasks, see the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) for full details.
 
-
-# Inference samples
-
-## Sample inputs and outputs (for real-time inference)
+# Sample inputs and outputs
 
 ### Sample input
 ```json

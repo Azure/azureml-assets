@@ -11,6 +11,7 @@ tags:
   Preview: ""
   license: apache-2.0
   task: text-translation
+  author: Google Research
   huggingface_model_id: t5-large
   inference_compute_allow_list:
     [
