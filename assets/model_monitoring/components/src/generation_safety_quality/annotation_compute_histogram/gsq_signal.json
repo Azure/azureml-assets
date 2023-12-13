@@ -1,0 +1,201 @@
+{
+    "signalName": "gsq-signal",
+    "signalType": "GenerationSafetyQuality",
+    "version": "1.0.0",
+    "metrics": {
+        "AcceptableFluencyScorePerInstance": {
+            "groups": {
+                "1": {
+                    "value": "7.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "174d5acf-2836-4b49-9c13-8e1f7e0cea52",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                },
+                "3": {
+                    "value": "6.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "c2983157-cb8f-4517-a387-8076571ad7e9",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                },
+                "5": {
+                    "value": "10.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "52cb1dad-9f31-4ded-bc07-c71589a60a48",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                },
+                "4": {
+                    "value": "12.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "e89d994c-8868-402e-8188-a7b997416a0f",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                },
+                "2": {
+                    "value": "2.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "f3ce80aa-75f4-42f6-b203-3ae078a8d0cb",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                }
+            },
+            "value": "",
+            "threshold": "4",
+            "timeseries": {
+                "runId": "174d5acf-2836-4b49-9c13-8e1f7e0cea52",
+                "metricNames": {
+                    "value": "value",
+                    "threshold": "threshold"
+                }
+            },
+            "samples": {
+                "Violations": {
+                    "uri": "azureml_d7336442-7b64-47e1-87cb-0503e8fc5e91_output_data_fluency_violations:1"
+                }
+            }
+        },
+        "AcceptableCoherenceScorePerInstance": {
+            "groups": {
+                "1": {
+                    "value": "5.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "867ce926-da93-4da9-b1af-1deaeb2ff964",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                },
+                "3": {
+                    "value": "3.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "ddf9c27b-f9ca-44c8-a793-b60e43832581",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                },
+                "5": {
+                    "value": "14.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "c55f36ff-e051-4c00-b531-892f3cceb441",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                },
+                "4": {
+                    "value": "11.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "db752099-1900-4685-92a6-804d0907ac9e",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                },
+                "2": {
+                    "value": "4.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "004eb62f-b771-4a4d-bdf8-54f9bd151150",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                }
+            },
+            "value": "",
+            "threshold": "4",
+            "timeseries": {
+                "runId": "867ce926-da93-4da9-b1af-1deaeb2ff964",
+                "metricNames": {
+                    "value": "value",
+                    "threshold": "threshold"
+                }
+            },
+            "samples": {
+                "Violations": {
+                    "uri": "azureml_d7336442-7b64-47e1-87cb-0503e8fc5e91_output_data_coherence_violations:1"
+                }
+            }
+        },
+        "RowCount": {
+            "groups": {
+                "production_data": {
+                    "value": "37.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "9d8c72bd-a896-4a8f-8a6e-48e3a0d08c35",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                },
+                "reference_data": {
+                    "value": "37.0",
+                    "threshold": "NaN",
+                    "timeseries": {
+                        "runId": "22de8011-3398-426c-ae47-1fdcfad6ac26",
+                        "metricNames": {
+                            "value": "value",
+                            "threshold": "threshold"
+                        }
+                    }
+                }
+            }
+        },
+        "AggregatedFluencyPassRate": {
+            "value": "0.5945945945945946",
+            "threshold": "0.7",
+            "timeseries": {
+                "runId": "51900d8b-22ab-4529-9ee2-7504f45e5957",
+                "metricNames": {
+                    "value": "value",
+                    "threshold": "threshold"
+                }
+            }
+        },
+        "AggregatedCoherencePassRate": {
+            "value": "0.6756756756756757",
+            "threshold": "0.7",
+            "timeseries": {
+                "runId": "1dc89b78-ed0f-4a62-87e1-86e39dafe029",
+                "metricNames": {
+                    "value": "value",
+                    "threshold": "threshold"
+                }
+            }
+        }
+    }
+}

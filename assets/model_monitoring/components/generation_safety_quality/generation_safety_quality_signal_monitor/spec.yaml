@@ -4,7 +4,7 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.5.4
+version: 0.5.6
 is_deterministic: true
 inputs:
   monitor_name:
@@ -97,7 +97,7 @@ outputs:
 jobs:
   compute_histogram:
     type: spark
-    component: azureml://registries/yunzhan-westus2/components/gsq_annotation_compute_histogram/versions/0.5.4
+    component: azureml://registries/yunzhan-westus2/components/gsq_annotation_compute_histogram/versions/0.5.6
     inputs:
       production_dataset:
         type: mltable
@@ -130,63 +130,10 @@ jobs:
         type: mltable
       similarity_violations:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
-  compute_metrics:
-    type: spark
-    component: azureml://registries/yunzhan-westus2/components/gsq_annotation_compute_metrics/versions/0.4.4
-    inputs:
-      annotation_histogram:
-        type: mltable
-        path: ${{parent.jobs.compute_histogram.outputs.histogram}}
-      metric_names: ${{parent.inputs.metric_names}}
-      groundedness_passrate_threshold: ${{parent.inputs.groundedness_passrate_threshold}}
-      similarity_passrate_threshold: ${{parent.inputs.similarity_passrate_threshold}}
-      relevance_passrate_threshold: ${{parent.inputs.relevance_passrate_threshold}}
-      fluency_passrate_threshold: ${{parent.inputs.fluency_passrate_threshold}}
-      coherence_passrate_threshold: ${{parent.inputs.coherence_passrate_threshold}}
-    outputs:
-      signal_metrics:
-        type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
-  output_signal_metrics: 
-    type: spark
-    component: azureml://registries/yunzhan-westus2/components/model_monitor_metric_outputter/versions/0.3.12
-    inputs:
-      signal_metrics:
-        type: mltable
-        path: ${{parent.jobs.compute_metrics.outputs.signal_metrics}}
-      signal_type: "GenerationSafetyQuality"
-      signal_name: ${{parent.inputs.signal_name}}
-      samples_index: ${{parent.jobs.compute_histogram.outputs.samples_index}}
-      metric_timestamp: ${{parent.inputs.monitor_current_time}}
-      monitor_name: ${{parent.inputs.monitor_name}}
-    outputs:
       signal_output:
         type: uri_folder
         path: ${{parent.outputs.signal_output}}
         mode: direct
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
-  evaluate_metric_thresholds:
-    type: spark
-    component: azureml://registries/yunzhan-westus2/components/model_monitor_evaluate_metrics_threshold/versions/0.3.5
-    inputs:
-      signal_metrics:
-        type: mltable
-        path: ${{parent.jobs.compute_metrics.outputs.signal_metrics}}
-      notification_emails: ${{parent.inputs.notification_emails}}
-      signal_name: ${{parent.inputs.signal_name}}
     resources:
       instance_type: standard_e4s_v3
       runtime_version: "3.3"

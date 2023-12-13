@@ -4,7 +4,7 @@ type: spark
 name: gsq_annotation_compute_histogram
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-version: 0.5.4
+version: 0.5.6
 is_deterministic: false
 inputs:
   production_dataset: 
@@ -84,12 +84,14 @@ outputs:
   relevance_violations:
     type: mltable
     mode: direct
-
+  signal_output:
+    type: uri_folder
+    mode: direct
 conf:
   spark.driver.cores: 1
-  spark.driver.memory: 16g
+  spark.driver.memory: 8g
   spark.executor.cores: 2
-  spark.executor.memory: 16g
+  spark.executor.memory: 8g
   spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
@@ -131,6 +133,7 @@ entry:
 
 args: >-
   --production_dataset ${{inputs.production_dataset}}
+  --signal_output ${{outputs.signal_output}}
   --metric_names ${{inputs.metric_names}}
   --model_deployment_name ${{inputs.model_deployment_name}}
   --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
