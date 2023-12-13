@@ -10,7 +10,7 @@ properties:
 tags:
   Featured: ''
   Preview: ''
-  author: Databricks, Inc.
+  author: databricks
   license: apache-2.0
   task: text-generation
   huggingface_model_id: databricks/dolly-v2-12b
