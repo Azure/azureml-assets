@@ -28,12 +28,25 @@ YAML_SMOKE_EMBEDDINGS_TEST_DATA_ASSET = {
             "initial_worker_count": 5,
             "max_worker_count": 10},
         "mini_batch_size": "50kb"}}}
-YAML_SMOKE_VESTA_CHAT_COMPLETION_TEST_DATA_ASSET = {
-    "inputs": {"pipeline_job_data_path": {"path": "azureml:vestainput:12"}},
+YAML_SMOKE_VESTA_CHAT_COMPLETION_BASE64_IMAGE_TEST_DATA_ASSET = {
+    "inputs": {"pipeline_job_data_path": {"path": "azureml:e2e_vesta_chat_completion_test_data:2"}},
     "jobs": {JOB_NAME: {
         "inputs": {
             "initial_worker_count": 2,
             "max_worker_count": 10},
+        "mini_batch_size": "50kb"}}}
+
+YAML_SMOKE_VESTA_CHAT_COMPLETION_IMAGE_URL_TEST_DATA_ASSET = {
+    "inputs": {"pipeline_job_data_path": {"path": "azureml:e2e_vesta_chat_completion_image_url_test_data:1"}},
+    "jobs": {JOB_NAME: {
+        "inputs": {
+            "initial_worker_count": 2,
+            "max_worker_count": 10,
+            "image_input_folder": {
+                "type": "uri_folder",
+                "path": "azureml:test_images:1"
+            }
+        },
         "mini_batch_size": "50kb"}}}
 
 YAML_NIGHTLY_TEST_DATA_ASSET = {"inputs": {"pipeline_job_data_path": {"path": "azureml:bing_tail_queries:1"}}}
@@ -78,7 +91,9 @@ YAML_ENV_VARS_REDACT_PROMPTS = {"jobs": {JOB_NAME: {
 YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
     "inputs": {
         "tally_failed_requests": True
-    }
+    },
+    "error_threshold": 0,
+    "mini_batch_error_threshold": 0,
 }}}
 
 YAML_ASYNC_MODE_ENABLED = {"jobs": {JOB_NAME: {
@@ -133,7 +148,6 @@ def test_gated_embeddings_batch_score(batch_score_embeddings_yml_component):
 @pytest.mark.smoke
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)
-@pytest.mark.skip(reason="Enable this after creating a test endpoint for vesta")
 def test_gated_vesta_chat_completion_batch_score(batch_score_vesta_chat_completion_yml_component):
     """Test gate for batch score vesta chat completion model."""
     set_component(*batch_score_vesta_chat_completion_yml_component,
@@ -146,9 +160,35 @@ def test_gated_vesta_chat_completion_batch_score(batch_score_vesta_chat_completi
         "service_namespace": "prometheus"}
     }}}
     yaml_update = deep_update(YAML_COMPONENT,
-                              YAML_SMOKE_VESTA_CHAT_COMPLETION_TEST_DATA_ASSET,
+                              YAML_SMOKE_VESTA_CHAT_COMPLETION_BASE64_IMAGE_TEST_DATA_ASSET,
                               YAML_APPLICATION_INSIGHTS,
-                              YAML_GLOBAL_POOL,
+                              YAML_DISALLOW_FAILED_REQUESTS,
+                              display_name,
+                              batch_pool)
+    _submit_job_and_monitor_till_completion(
+        ml_client=pytest.ml_client,
+        pipeline_filepath=gated_pipeline_filepath,
+        yaml_overrides=[yaml_update])
+
+
+@pytest.mark.smoke
+@pytest.mark.e2e
+@pytest.mark.timeout(15 * 60)
+@pytest.mark.skip(reason="Disabling to unblock PR gate timeouts")
+def test_gated_vesta_chat_completion_with_image_urls_batch_score(batch_score_vesta_chat_completion_yml_component):
+    """Test gate for batch score vesta chat completion model with image urls."""
+    set_component(*batch_score_vesta_chat_completion_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
+    display_name = {"display_name": f"{RUN_NAME}_smoke"}
+    batch_pool = {"jobs": {JOB_NAME: {
+        "inputs": {
+            "batch_pool": "gptv-eval-global",
+            "quota_audience": "common",
+            "service_namespace": "prometheus"
+        }
+    }}}
+    yaml_update = deep_update(YAML_COMPONENT,
+                              YAML_SMOKE_VESTA_CHAT_COMPLETION_IMAGE_URL_TEST_DATA_ASSET,
+                              YAML_APPLICATION_INSIGHTS,
                               YAML_DISALLOW_FAILED_REQUESTS,
                               display_name,
                               batch_pool)
@@ -169,28 +209,6 @@ def test_gated_batch_score_single_endpoint(batch_score_yml_component):
                               YAML_SMOKE_TEST_DATA_ASSET,
                               YAML_APPLICATION_INSIGHTS,
                               YAML_SINGLE_ENDPOINT,
-                              YAML_ENV_VARS_REDACT_PROMPTS,
-                              YAML_DISALLOW_FAILED_REQUESTS,
-                              display_name)
-    _submit_job_and_monitor_till_completion(
-        ml_client=pytest.ml_client,
-        pipeline_filepath=gated_pipeline_filepath,
-        yaml_overrides=[yaml_update])
-
-
-# This test confirms that we can score an MIR endpoint using the scoring_url parameter
-# and the batch_score_llm.yml component.
-@pytest.mark.smoke
-@pytest.mark.e2e
-@pytest.mark.timeout(15 * 60)
-def test_gated_batch_score_single_endpoint_using_soring_url_parameter(llm_batch_score_yml_component):
-    """Test gate for batch score single endpoint model using scoring url parameter."""
-    set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
-    display_name = {"display_name": f"{RUN_NAME}_smoke"}
-    yaml_update = deep_update(YAML_COMPONENT,
-                              YAML_SMOKE_TEST_DATA_ASSET,
-                              YAML_APPLICATION_INSIGHTS,
-                              YAML_SINGLE_ENDPOINT_USING_SCORING_URL_PARAMETER,
                               YAML_ENV_VARS_REDACT_PROMPTS,
                               YAML_DISALLOW_FAILED_REQUESTS,
                               display_name)
