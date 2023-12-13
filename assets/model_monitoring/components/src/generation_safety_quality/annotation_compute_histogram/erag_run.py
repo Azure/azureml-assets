@@ -2,7 +2,7 @@ import os
 import argparse
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import StringType, DoubleType, IntegerType, ArrayType
+from pyspark.sql.types import StringType, DoubleType, IntegerType
 import json
 import uuid
 from datetime import datetime
@@ -676,19 +676,6 @@ def get_lookup_score(node_run_info_json_str):
         return -1.0
 
 
-@F.udf(ArrayType(DoubleType()))
-def get_embedding(node_run_info_json_str):
-    node_run_info = json.loads(node_run_info_json_str)
-    try:
-        api_calls = node_run_info["lookup"]["api_calls"]
-        # TODO search for the element with name "search"
-        embedding = api_calls[0]["children"][0]["output"]["data"][0]["embedding"]
-        return embedding
-    except KeyError:
-        print("no embedding")
-        return None
-
-
 def get_index_content(node_run_info_str):
     node_run_info = json.loads(node_run_info_str)
     return node_run_info["lookup"]["inputs"]["mlindex_content"]
@@ -817,28 +804,28 @@ def run():
     parser.add_argument("--similarity_violations", type=str, required=True)
 
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
-    args = parser.parse_args()
-    # args = parser.parse_args(args=[
-    #     '--production_dataset',
-    #     # 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/521f5fe6-857f-478c-b0cf-18338b21d4d2/joined_data/',
-    #     # "azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/7da8f8d1-6c68-466a-833f-a8afd235ff93/joined_data/",
-    #     'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/a1fd59ea-d94c-41d3-8c22-5a0fda7303f1/joined_data/',
-    #     '--metric_names', 'AcceptableRelevanceScorePerInstance,AggregatedRelevancePassRate',
-    #     '--model_deployment_name', 'gpt-35-turbo-v0301',
-    #     '--workspace_connection_arm_id', '/subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourceGroups/azureml-rag-ci/providers/Microsoft.MachineLearningServices/workspaces/azureml-rag-westus2/connections/azure_open_ai',
-    #     '--prompt_column_name', 'question',
-    #     '--completion_column_name', 'output', '--context_column_name', 'context',
-    #     '--ground_truth_column_name', 'ground_truth', '--sample_rate', '0.1', '--groundedness_rating_threshold', '4',
-    #     '--relevance_rating_threshold', '4', '--similarity_rating_threshold', '4', '--fluency_rating_threshold', '4',
-    #     '--coherence_rating_threshold', '4', '--histogram',
-    #     'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/histogram/',
-    #     '--samples_index', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/samples_index/',
-    #     '--groundedness_violations', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/groundedness_violations/',
-    #     '--fluency_violations', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/fluency_violations/',
-    #     '--similarity_violations', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/similarity_violations/',
-    #     '--coherence_violations', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/coherence_violations/',
-    #     '--relevance_violations', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/relevance_violations/'
-    # ])
+    # args = parser.parse_args()
+    args = parser.parse_args(args=[
+        '--production_dataset',
+        # 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/521f5fe6-857f-478c-b0cf-18338b21d4d2/joined_data/',
+        # "azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/7da8f8d1-6c68-466a-833f-a8afd235ff93/joined_data/",
+        'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/a1fd59ea-d94c-41d3-8c22-5a0fda7303f1/joined_data/',
+        '--metric_names', 'AcceptableRelevanceScorePerInstance,AggregatedRelevancePassRate',
+        '--model_deployment_name', 'gpt-35-turbo-v0301',
+        '--workspace_connection_arm_id', '/subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourceGroups/azureml-rag-ci/providers/Microsoft.MachineLearningServices/workspaces/azureml-rag-westus2/connections/azure_open_ai',
+        '--prompt_column_name', 'question',
+        '--completion_column_name', 'output', '--context_column_name', 'context',
+        '--ground_truth_column_name', 'ground_truth', '--sample_rate', '0.1', '--groundedness_rating_threshold', '4',
+        '--relevance_rating_threshold', '4', '--similarity_rating_threshold', '4', '--fluency_rating_threshold', '4',
+        '--coherence_rating_threshold', '4', '--histogram',
+        'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/histogram/',
+        '--samples_index', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/samples_index/',
+        '--groundedness_violations', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/groundedness_violations/',
+        '--fluency_violations', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/fluency_violations/',
+        '--similarity_violations', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/similarity_violations/',
+        '--coherence_violations', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/coherence_violations/',
+        '--relevance_violations', 'azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-westus2/datastores/workspaceblobstore/paths/azureml/48b56276-c08b-44ed-afc8-f7e03013932b/relevance_violations/'
+    ])
 
     request_args = {
         arg: getattr(args, arg) for arg in OPENAI_REQUEST_PARAMS if hasattr(args, arg)
@@ -850,12 +837,10 @@ def run():
     df.printSchema()
 
     node_run_info_json_str = df.first()["node_run_info"]
-    index = get_index_content(node_run_info_json_str)
+    index_content = get_index_content(node_run_info_json_str)
 
     df = df.withColumn("answer", get_answer(F.col("output")))\
            .withColumn("lookup_score", get_lookup_score(F.col("node_run_info")))\
-           .withColumn("embedding", get_embedding(F.col("node_run_info")))\
-           .withColumn("index", F.lit(index))\
            .drop("node_run_info", "run_info", "output", "chat_history", "flow_info", "flow_run_info")
     df = df.where(df["answer"].isNotNull())
     df.show()
@@ -874,18 +859,14 @@ def run():
     pdf = df.toPandas()
     # Separate the data into groups
     good_answers = pdf[pdf['overall_score'] >= 4]['lookup_score']
-    bad_answers = pdf[pdf['overall_score'] <= 2][['lookup_score', 'question', 'answer', 'embedding', 'overall_score']]
+    bad_answers = pdf[pdf['overall_score'] <= 2][['lookup_score', 'question', 'answer', 'overall_score']]
 
     # get bad samples for topic categorization
     n_sampels = 100
     print(len(bad_answers))
     bad_samples = bad_answers[[
-        'question', 'answer', 'embedding', 'overall_score'
+        'question', 'answer', 'overall_score'
     ]].sample(n=min(n_sampels, len(bad_answers)))
-    bad_samples['embedding'] = bad_samples['embedding'].apply(lambda v: list(v) if v is not None else [])
-
-    # get the content of the index meta yaml
-    index_yaml = pdf.loc[0]["index"]
 
     # Perform the t-test
     t_stat, p_value = stats.ttest_ind(good_answers, bad_answers['lookup_score'])
@@ -897,7 +878,7 @@ def run():
             title="Update the doc index",
             description="Poor answers are caused by poor indexing, please update the doc index",
             samples=bad_samples.to_dict(orient='records'),
-            index=index_yaml,
+            index=index_content,
         )
     else:
         action = Action(
