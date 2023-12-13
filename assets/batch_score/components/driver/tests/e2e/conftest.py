@@ -119,7 +119,7 @@ def register_components(main_worker_lock, asset_version):
 
     register_component("batch_score.yml", asset_version)
     register_component("batch_score_embeddings.yml", asset_version)
-    register_component("batch_score_llm.yml", asset_version)
+    register_component("../llm/batch_score_llm.yml", asset_version)
     register_component("batch_score_vesta_chat_completion.yml", asset_version)
 
 
@@ -135,7 +135,7 @@ def batch_score_embeddings_yml_component(asset_version):
 
 @pytest.fixture(scope="session")
 def llm_batch_score_yml_component(asset_version):
-    return get_component_metadata("batch_score_llm.yml", asset_version)
+    return get_component_metadata("../llm/batch_score_llm.yml", asset_version)
 
 
 @pytest.fixture(scope="session")

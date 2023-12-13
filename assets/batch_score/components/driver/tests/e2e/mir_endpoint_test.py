@@ -217,28 +217,6 @@ def test_gated_batch_score_single_endpoint(batch_score_yml_component):
         yaml_overrides=[yaml_update])
 
 
-# This test confirms that we can score an MIR endpoint using the scoring_url parameter
-# and the batch_score_llm.yml component.
-@pytest.mark.smoke
-@pytest.mark.e2e
-@pytest.mark.timeout(15 * 60)
-def test_gated_batch_score_single_endpoint_using_soring_url_parameter(llm_batch_score_yml_component):
-    """Test gate for batch score single endpoint model using scoring url parameter."""
-    set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
-    display_name = {"display_name": f"{RUN_NAME}_smoke"}
-    yaml_update = deep_update(YAML_COMPONENT,
-                              YAML_SMOKE_TEST_DATA_ASSET,
-                              YAML_APPLICATION_INSIGHTS,
-                              YAML_SINGLE_ENDPOINT_USING_SCORING_URL_PARAMETER,
-                              YAML_ENV_VARS_REDACT_PROMPTS,
-                              YAML_DISALLOW_FAILED_REQUESTS,
-                              display_name)
-    _submit_job_and_monitor_till_completion(
-        ml_client=pytest.ml_client,
-        pipeline_filepath=gated_pipeline_filepath,
-        yaml_overrides=[yaml_update])
-
-
 @pytest.mark.smoke
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)
