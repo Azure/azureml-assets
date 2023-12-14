@@ -670,13 +670,13 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     try:
         model = load_model(asset_config.spec_with_path)
     except Exception:
-        _log_error(asset_config.file_name_with_path, f"Invalid spec file")
+        _log_error(asset_config.file_name_with_path, "Invalid spec file")
         return 1
 
     try:
         model_config: assets.ModelConfig = asset_config.extra_config_as_object()
     except Exception:
-        _log_error(asset_config.file_name_with_path, f"Invalid model config")
+        _log_error(asset_config.file_name_with_path, "Invalid model config")
         return 1
 
     if model_config.type != assets.config.ModelType.MLFLOW:
