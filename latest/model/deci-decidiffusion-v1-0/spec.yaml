@@ -1,0 +1,78 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: deci-decidiffusion-v1-0
+path: ./
+properties:
+  SHA: 10c31ce02b006ae5ceb774dcafdc3a0bcba992ef
+  datasets: LAION-v2
+  inference-min-sku-spec: 4|1|28|176
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_NC24rs_v3, Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+    Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4,
+    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  huggingface_model_id: Deci/DeciDiffusion-v1-0
+tags:
+  Preview: ''
+  license: creativeml-openrail++-m
+  task: text-to-image
+  author: deci-ai
+  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_NC24rs_v3, Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+    Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4,
+    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
+
+version: 1
+description: |-
+  __Deci/DeciDiffusion-v1-0__ DeciDiffusion 1.0 is a diffusion-based text-to-image generation model. While it maintains foundational architecture elements from Stable Diffusion, such as the Variational Autoencoder (VAE) and CLIP's pre-trained Text Encoder, DeciDiffusion introduces significant enhancements. The primary innovation is the substitution of U-Net with the more efficient U-Net-NAS, a design pioneered by Deci. This novel component streamlines the model by reducing the number of parameters, leading to superior computational efficiency.
+
+
+
+  > Review the <a href="https://huggingface.co/Deci/DeciDiffusion-v1-0" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
+  ### Inference samples
+
+  Inference type|Python sample (Notebook)|CLI with YAML
+  |--|--|--|
+  Real time|<a href="https://aka.ms/azureml-infer-sdk-text-to-image" target="_blank">text-to-image-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-text-to-image" target="_blank">text-to-image-online-endpoint.sh</a>
+  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-to-image" target="_blank">text-to-image-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-text-to-image" target="_blank">text-to-image-batch-endpoint.sh</a>
+
+  <h3> Inference with <a href="https://learn.microsoft.com/en-us/azure/ai-services/content-safety/studio-quickstart", target="_blank">Azure AI Content Safety (AACS)</a> samples </h3>
+
+  Inference type|Python sample (Notebook)
+  |--|--|
+  Real time|<a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image" target="_blank">safe-text-to-image-online-deployment.ipynb</a>
+  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" target="_blank">safe-text-to-image-batch-endpoint.ipynb</a>
+
+  ### Sample inputs and outputs (for real-time inference)
+
+  #### Sample input
+
+  ```json
+  {
+     "input_data": {
+          "columns": ["prompt"],
+          "data": ["A photo of an astronaut riding a horse on Mars"],
+          "index": [0]
+      }
+  }
+  ```
+
+  #### Sample output
+
+  ```json
+  [
+      {
+          "prompt": "A photo of an astronaut riding a horse on Mars",
+          "generated_image": "image",
+          "nsfw_content_detected": null
+      }
+  ]
+  ```
+
+  > Note:
+  >
+  > - "image" string is in base64 format.
+  > - The `deci-decidiffusion-v1-0` model checks for the NSFW content in generated image. We highly recommend to use the model with <a href="https://learn.microsoft.com/en-us/azure/ai-services/content-safety/studio-quickstart" target="_blank">Azure AI Content Safety (AACS)</a>. Please refer sample <a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image" target="_blank">online</a>  and <a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" target="_blank">batch</a> notebooks for AACS integrated deployments.
+
+  #### Model inference: visualization for the prompt - "a photograph of an astronaut riding a horse"
+
+  <img src='https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_deci_decidiffusion_v1_0.png' alt='deci_decidiffusion_v1_0 visualization'>
