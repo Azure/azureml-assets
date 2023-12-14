@@ -12,6 +12,11 @@ class _CustomEnum(Enum):
     def has_value(cls, value):
         return value in cls._value2member_map_
 
+    @classmethod
+    def list_values(cls):
+        _dict = list(cls._value2member_map_.values())
+        return [_enum.value for _enum in _dict]
+
 
 class Tasks(_CustomEnum):
     """Task types supported by stable diffusion."""
@@ -56,3 +61,10 @@ class BatchConstants:
     """Constants related to Batch inference."""
 
     BATCH_OUTPUT_PATH = "AZUREML_BI_OUTPUT_PATH"
+
+
+class SupportedTextToImageModelFamily(_CustomEnum):
+    """Supported text to image models."""
+
+    STABLE_DIFFUSION = "stable-diffusion"
+    DECI_DIFFUSION = "decidiffusion"

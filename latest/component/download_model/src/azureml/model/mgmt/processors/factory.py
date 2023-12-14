@@ -15,8 +15,8 @@ from azureml.model.mgmt.processors.pyfunc.config import (
     MMLabDetectionTasks,
     MMLabTrackingTasks,
     SupportedTasks as PyFuncSupportedTasks,
-    SupportedTextToImageModelFamily,
 )
+from azureml.model.mgmt.processors.pyfunc.text_to_image.config import SupportedTextToImageModelFamily
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.processors.transformers.convertors import (
     NLPMLflowConvertor,
@@ -179,18 +179,33 @@ class TextToImageMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for diffusers."""
         misc = translate_params["misc"]
-        if misc and SupportedTextToImageModelFamily.STABLE_DIFFUSION.value in misc:
-            try:
-                converter = TextToImageMLflowConvertorFactory.STABLE_DIFFUSION_TASK_MAP[translate_params["task"]]
-                return converter(
-                    model_dir=model_dir,
-                    output_dir=output_dir,
-                    temp_dir=temp_dir,
-                    translate_params=translate_params,
-                )
-            except KeyError:
-                raise Exception("Unsupported task for stable diffusion model family")
-        raise Exception("Unsupported model family for text to image model")
+        kwargs = {}
+        model_family = None
+
+        def get_text_to_image_model_family():
+            if not misc:
+                return None
+            for model_family in SupportedTextToImageModelFamily.list_values():
+                if model_family in misc:
+                    return model_family
+            return None
+
+        if translate_params["task"] == PyFuncSupportedTasks.TEXT_TO_IMAGE.value:
+            model_family = get_text_to_image_model_family()
+            if not model_family:
+                raise Exception("Unsupported model family for text to image model")
+            kwargs.update({"model_family": model_family})
+        try:
+            converter = TextToImageMLflowConvertorFactory.STABLE_DIFFUSION_TASK_MAP[translate_params["task"]]
+            return converter(
+                model_dir=model_dir,
+                output_dir=output_dir,
+                temp_dir=temp_dir,
+                translate_params=translate_params,
+                **kwargs
+            )
+        except KeyError:
+            raise Exception("Unsupported task for stable diffusion model family")
 
 
 class MMLabDetectionMLflowConvertorFactory(MLflowConvertorFactoryInterface):
