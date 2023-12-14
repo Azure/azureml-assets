@@ -452,7 +452,8 @@ def confirm_model_validation_results(
         validated_asset_config (assets.AssetConfig): asset cofig for validated model
 
     Returns:
-        int: error_count
+        int: Number of errors.
+
     """
     error_count = 0
     try:
