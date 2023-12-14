@@ -5,6 +5,7 @@
 
 
 from typing import Optional
+import re
 from azureml.core import Run, Model
 from aml_benchmark.utils.exceptions import BenchmarkUserException
 from aml_benchmark.utils.error_definitions import BenchmarkUserError
@@ -14,7 +15,8 @@ from ..logging import get_logger
 from ..aml_run_utils import (
     get_dependent_run,
     get_run_name,
-    get_current_step_raw_input_value
+    get_current_step_raw_input_value,
+    get_root_run
 )
 
 
@@ -42,6 +44,11 @@ class OnlineEndpointModel:
             self._model_path = model
             if model_version is None:
                 self._model_version = model.split('/')[-1]
+        elif self._get_model_type_from_url(endpoint_url) == 'claude':
+            self._model_path = endpoint_url
+            self._model_name = 'anthropic.claude'
+            self._model_version = re.findall(r'anthropic.claude-v(\d+[:]*\d*)/', endpoint_url)[0]
+            self._model_type = 'claude'
         else:
             self._model_name = model
             self._model_path = None
@@ -138,6 +145,10 @@ class OnlineEndpointModel:
         """Check if the model is llama model."""
         return self._model_type == 'oss'
 
+    def is_claude_model(self) -> bool:
+        """Check if the model is claude model."""
+        return self._model_type == 'claude'
+
     def is_vision_oss_model(self) -> bool:
         """Check if the model is a vision oss model."""
         return self._model_type == "vision_oss"
@@ -146,6 +157,8 @@ class OnlineEndpointModel:
         if endpoint_url is None:
             logger.warning('Endpoint url is None. Default to oss.')
             return 'oss'
+        if "claude" in endpoint_url:
+            return 'claude'
         for base_url in OnlineEndpointModel.AOAI_ENDPOINT_URL_BASE:
             if base_url in endpoint_url:
                 return 'oai'
@@ -155,8 +168,9 @@ class OnlineEndpointModel:
     def _get_model_registered_run_id(finetuned_run: Run) -> str:
         """Get the run id of the step that registered the model."""
         step_runs = list(finetuned_run.get_children())[0].get_children()
+        root_run_id = finetuned_run.properties.get('azureml.rootpipelinerunid',  get_root_run().id)
         for s in step_runs:
             if get_run_name(s) == 'openai_completions_finetune':
-                if s.properties['azureml.isreused'].lower() == 'true':
-                    return s.properties['azureml.rootpipelinerunid']
-        return finetuned_run.id
+                if s.properties.get('azureml.isreused', "").lower() == 'true':
+                    return s.properties.get('azureml.rootpipelinerunid', root_run_id)
+        return root_run_id

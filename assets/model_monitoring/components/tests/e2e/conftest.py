@@ -420,12 +420,56 @@ def publish_data_quality_model_monitor_component(
 
 
 @pytest.fixture(scope="session", autouse=True)
+def publish_model_performance_model_monitor_component(
+    main_worker_lock,
+    publish_command_components,
+    model_monitoring_components,
+    components_directory,
+    root_temporary_directory,
+    asset_version,
+    ml_client,
+):
+    """Publish the data drift model monitor pipeline component to the test workspace."""
+    if not _is_main_worker(main_worker_lock):
+        return
+
+    print_header("Publishing Model Performance Model Monitor")
+    out_directory = os.path.join(root_temporary_directory, "command_components")
+    os.makedirs(out_directory, exist_ok=True)
+
+    for component in model_monitoring_components:
+        if component["name"] != "model_performance_signal_monitor":
+            continue
+        print(f"Publishing {component['name']}..")
+        component["jobs"]["compute_metrics"][
+            "component"
+        ] = f"azureml:model_performance_compute_metrics:{asset_version}"
+        component["jobs"]["output_signal_metrics"][
+            "component"
+        ] = f"azureml:model_monitor_metric_outputter:{asset_version}"
+        component["jobs"]["evaluate_metric_thresholds"][
+            "component"
+        ] = f"azureml:model_monitor_evaluate_metrics_threshold:{asset_version}"
+
+        component["version"] = asset_version
+
+        spec_path = os.path.join(
+            out_directory, f"{component['name']}-{generate_random_filename('yaml')}"
+        )
+
+        write_to_yaml(spec_path, component)
+        ml_client.components.create_or_update(load_component(spec_path))
+        print(f"Successfully published {component['name']}.")
+
+
+@pytest.fixture(scope="session", autouse=True)
 def release_lock(
     publish_data_quality_model_monitor_component,
     publish_prediction_drift_model_monitor_component,
     publish_data_drift_model_monitor_component,
     publish_feature_attr_drift_signal_monitor_component,
     publish_command_components,
+    publish_model_performance_model_monitor_component,
     main_worker_lock,
 ):
     """Release the main worker lock."""

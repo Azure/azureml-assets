@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: microsoft_azureml_rai_tabular_causal
 display_name: Add Causal to RAI Insights Dashboard
 description: Add Causal to RAI Insights Dashboard [Learn More](https://aka.ms/RAIComponents)
-version: 0.9.0
+version: 0.10.0
 type: command
 
 inputs:

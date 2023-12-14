@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-version: 0.0.13
+version: 0.0.14
 name: listing_assistant
 display_name: Listing Assistant
 description: Generate enticing vacation rental listings from images with specific formatting instructions.
