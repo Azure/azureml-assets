@@ -1,12 +1,17 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Run Utils."""
+
 from azureml.core import Run
 from azureml.core.compute import ComputeTarget
 from azureml.model.mgmt.config import LoggerConfig
 
 
-class RunDetails:
-    """RunDetails."""
+class JobRunDetails:
+    """Job Run details."""
 
-    # static instance of RunDetails
+    # static instance of JobRunDetails
     _instance = None
 
     def __init__(self):
@@ -16,10 +21,10 @@ class RunDetails:
 
     @staticmethod
     def get_run_details():
-        """Method to fetch run details instance. This should be called instead of calling RunDetails constructor."""
-        if not RunDetails._instance:
-            RunDetails._instance = RunDetails()
-        return RunDetails._instance
+        """Get JobRunDetails details. This should be called instead of calling JobRunDetails constructor."""
+        if not JobRunDetails._instance:
+            JobRunDetails._instance = JobRunDetails()
+        return JobRunDetails._instance
 
     @property
     def run_id(self):
@@ -129,9 +134,9 @@ class RunDetails:
         return cur_attribute
 
     def __str__(self):
-        """Run details to string."""
+        """Job Run details to string."""
         return (
-            "RunDetails:\n"
+            "JobRunDetails:\n"
             + f"\nrun_id: {self.run_id},\n"
             + f"parent_run_id: {self.parent_run_id},\n"
             + f"subscription_id: {self.subscription_id},\n"

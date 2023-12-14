@@ -1,22 +1,22 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Test download."""
+"""Test run details."""
 
 import platform
 import sys
 import unittest
 from unittest.mock import MagicMock
 from azureml.core import Run, Workspace
-from azureml.model.mgmt.utils.logging_utils import RunDetails, CustomDimensions
+from azureml.model.mgmt.utils.logging_utils import JobRunDetails, CustomDimensions
 from azureml.model.mgmt.config import AppName, LoggerConfig
 
 
-class TestRunUtilities(unittest.TestCase):
+class TestJobRunUtilities(unittest.TestCase):
     """Test run details."""
 
     def setUp(self):
-        """Set up RunDetails object."""
+        """Set up JobRunDetails object."""
         self.run = MagicMock(spec=Run)
         self.workspace = MagicMock(spec=Workspace)
         self.run.get_context.return_value = self.run
@@ -45,13 +45,13 @@ class TestRunUtilities(unittest.TestCase):
 
     def test_run_details_properties(self):
         """Test run details with mock object."""
-        run_details = RunDetails()
+        run_details = JobRunDetails()
         run_details._run = self.run
 
         self.assertEqual(run_details.run_id, "mock_run_id")
         self.assertEqual(run_details.parent_run_id, "mock_parent_run_id")
         self.assertEqual(
-            run_details.run_details, {"target": "mock_compute", "properties": {"azureml.moduleid": "mock_asset_id"}}
+            run_details.details, {"target": "mock_compute", "properties": {"azureml.moduleid": "mock_asset_id"}}
         )
         self.assertEqual(run_details.workspace, self.workspace)
         self.assertEqual(run_details.workspace_name, "mock_workspace_name")
@@ -63,19 +63,19 @@ class TestRunUtilities(unittest.TestCase):
         self.assertEqual(run_details.component_asset_id, "mock_asset_id")
         self.assertEqual(run_details.root_attribute, "mock_parent_run_id")
 
-        run_details._run_details = {"target": "mock_compute2"}
-        self.assertEqual(run_details.run_details, {"target": "mock_compute2"})
+        run_details._details = {"target": "mock_compute2"}
+        self.assertEqual(run_details.details, {"target": "mock_compute2"})
         self.assertEqual(run_details.compute, "mock_compute2")
         self.assertEqual(run_details.component_asset_id, LoggerConfig.ASSET_NOT_FOUND)
 
     def test_offline_run_details_properties(self):
         """Test mock details for offline run."""
-        run_details = RunDetails()
+        run_details = JobRunDetails()
         run_details._run = Run.get_context()
 
         assert run_details.run_id.startswith("OfflineRun_")
         self.assertEqual(run_details.parent_run_id, LoggerConfig.OFFLINE_RUN_MESSAGE)
-        self.assertEqual(run_details.run_details, LoggerConfig.OFFLINE_RUN_MESSAGE)
+        self.assertEqual(run_details.details, LoggerConfig.OFFLINE_RUN_MESSAGE)
         self.assertEqual(run_details.workspace, LoggerConfig.OFFLINE_RUN_MESSAGE)
         self.assertEqual(run_details.workspace_name, LoggerConfig.OFFLINE_RUN_MESSAGE)
         self.assertEqual(run_details.experiment_id, LoggerConfig.OFFLINE_RUN_MESSAGE)
@@ -88,7 +88,7 @@ class TestRunUtilities(unittest.TestCase):
 
     def test_custom_dimensions(self):
         """Test custom dimensions."""
-        run_details = RunDetails()
+        run_details = JobRunDetails()
         run_details._run = self.run
         custom_dimensions = CustomDimensions(run_details)
         self.assertEqual(custom_dimensions.run_id, "mock_run_id")

@@ -13,7 +13,7 @@ from azureml.telemetry import get_telemetry_log_handler
 from azureml.telemetry._telemetry_formatter import ExceptionFormatter
 
 from utils.config import AppName, LoggerConfig
-from utils.run_utils import RunDetails
+from utils.run_utils import JobRunDetails
 
 
 class CustomDimensions:
@@ -127,9 +127,8 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
         )
 
         formatter = ExceptionFormatter(
-            fmt=(
-                "%(asctime)s [{}] [{}] [%(module)s] %(funcName)s +%(lineno)s: %(levelname)-8s [%(process)d]"
-                " %(message)s \n".format(app_name, run_details.run_id)
+            fmt="%(asctime)s [{}] [{}] [%(module)s] %(funcName)s: %(levelname)-8s %(message)s\n".format(
+                app_name, run_details.run_id
             )
         )
         appinsights_handler.setFormatter(formatter)
@@ -140,5 +139,5 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
     return logger
 
 
-run_details = RunDetails.get_run_details()
+run_details = JobRunDetails.get_run_details()
 custom_dimensions = CustomDimensions(run_details=run_details)

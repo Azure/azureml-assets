@@ -16,10 +16,9 @@ from azure.ai.ml.entities import Model
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 
-from utils.common_utils import get_mlclient
+from utils.common_utils import get_mlclient, get_job_asset_uri
 from utils.config import AppName, ComponentVariables
 from utils.logging_utils import custom_dimensions, get_logger
-from utils.run_utils import RunDetails
 from utils.exceptions import (
     swallow_all_exceptions,
     UnSupportedModelTypeError,
@@ -105,14 +104,6 @@ def is_model_available(ml_client, model_name, model_version):
     return is_available
 
 
-def get_input_asset_id(input_name: str):
-    run_details: RunDetails = RunDetails.get_run_details()
-    input_assets = run_details.input_assets.get(input_name, None)
-    if (input_assets and "asset" in input_assets and "assetId" in input_assets["asset"]):
-       return input_assets["asset"]["assetId"]
-    return None
-
-
 @swallow_all_exceptions(logger)
 def main():
     """Run main function."""
@@ -160,9 +151,11 @@ def main():
         logger.info(f"Updated model_name = {model_name}")
 
     # check if we can have lineage and update the model path for ws import
-    if not registry_name and get_input_asset_id("model_path"):
+    job_asset_id = get_job_asset_uri("model_path")
+    logger.info(f"job_asset_id {job_asset_id}")
+    if not registry_name and job_asset_id:
         logger.info("Using model output of previous job as run lineage to register the model")
-        model_path = get_input_asset_id("model_path")
+        model_path = job_asset_id
     elif model_type == AssetTypes.MLFLOW_MODEL:
         if not os.path.exists(os.path.join(model_path, MLFLOW_MODEL_FOLDER)):
             logger.info(f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`")

@@ -20,6 +20,8 @@ command: >
   $[[--validation-info ${{inputs.validation_info}}]]
   --model-download-metadata ${{outputs.model_download_metadata}}
   --model-output-dir ${{outputs.model_output}}
+  --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
+  --is-mlflow-model ${{outputs.is_mlflow_model}}
 
 inputs:
   model_source:
@@ -50,11 +52,21 @@ outputs:
   model_download_metadata:
     type: uri_file
     description: File name to which model download details will be written. File would contain details that could be useful for model registration in forms of model tags and properties
+    mode: rw_mount
 
   model_output:
     type: uri_folder
     description: Path to the dowloaded model
     mode: rw_mount
+
+  mlflow_model_folder:
+    type: uri_folder
+    description: Download dir if model downloaded is already an mlflow model
+    mode: rw_mount
+
+  is_mlflow_model:
+    type: boolean
+    is_control: true
 
 tags:
     Preview: ""
