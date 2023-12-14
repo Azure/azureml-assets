@@ -40,10 +40,8 @@ MODEL_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]{0,254}$")
 # model validations
 MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
 VALIDATION_SUMMARY = "results.json"
-SUPPORTED_INFERENCE_SKU_FILE_NAME = "supported_inference_skus.json"
-
-SUPPORTED_INFERENCE_SKU_FILE_PATH = Path(__file__).parent / "config" / SUPPORTED_INFERENCE_SKU_FILE_NAME
-
+SUPPORTED_INFERENCE_SKU_FILE_NAME = "config/supported_inference_skus.json"
+SUPPORTED_INFERENCE_SKU_FILE_PATH = Path(__file__).parent / SUPPORTED_INFERENCE_SKU_FILE_NAME
 
 
 class MLFlowModelProperties:
@@ -492,25 +490,29 @@ def confirm_model_validation_results(
             )
 
             if latest_model_config.type != validated_model_config.type:
-                logger.log_warning(f"latest_model_config_type: [{latest_model_config.type}]")
-                logger.log_warning(f"validated_model_config_type: [{validated_model_config.type}]")
+                logger.log_warning(
+                    f"latest_model_config_type: [{latest_model_config.type}] and "
+                    f"validated_model_config_type: [{validated_model_config.type}] does not match."
+                )
                 error_count += 1
 
             if latest_model_config.path.type != validated_model_config.path.type:
-                logger.log_warning(f"latest_model_config_path_type: [{latest_model_config.path.type}]")
-                logger.log_warning(f"validated_model_config_path_type: [{validated_model_config.path.type}]")
+                logger.log_warning(
+                    f"latest_model_config_path_type: [{latest_model_config.path.type}] and "
+                    f"validated_model_config_path_type: [{validated_model_config.path.type}] does not match."
+                )
                 error_count += 1
 
             if latest_model_path_uri != validated_model_path_uri:
-                logger.log_warning(f"latest_model_config_path_uri: [{latest_model_path_uri}]")
-                logger.log_warning(f"validated_model_config_path_uri: [{validated_model_path_uri}]")
+                logger.log_warning(
+                    f"latest_model_config_path_uri: [{latest_model_path_uri}] and "
+                    f"validated_model_config_path_uri: [{validated_model_path_uri}] does not match."
+                )
                 error_count += 1
 
             if latest_model_config.description != validated_model_config.description:
                 logger.log_warning("Description does not match, for latest and validated asset")
                 error_count += 1
-
-            return 1
 
         # check if spec has changes
         latest_model = load_model(latest_asset_config.spec_with_path)
@@ -608,7 +610,7 @@ def validate_model_scenario(
     min_sku_prop_name: str,
     recommended_skus_prop_name: str,
     compute_allowlist_tags_name: str,
-) -> bool:
+) -> int:
     """Validate model properties, tags for different scenarios.
 
     Args:
