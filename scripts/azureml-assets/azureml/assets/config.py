@@ -127,7 +127,7 @@ class PublishVisibility(Enum):
 
 
 class SystemRegisty:
-    """Prod System registries where assets lie."""
+    """Prod system registries."""
 
     AZUREML = "azureml"
     AZUREML_META = "azureml-meta"
