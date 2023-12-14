@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.21 (2023-12-12)
+### 🐛 Bugs Fixed
+ - [#1928](https://github.com/Azure/azureml-assets/pull/1928) Allow python version customization
+
 ## 1.16.20 (2023-12-5)
 ### 🐛 Bugs Fixed
 - [#1871](https://github.com/Azure/azureml-assets/pull/1871) Update model validations criteria
