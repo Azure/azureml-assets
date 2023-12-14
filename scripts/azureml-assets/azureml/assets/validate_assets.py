@@ -693,7 +693,8 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     )
 
     # check valid computes for inference
-    with open(SUPPORTED_INFERNCE_SKU_FILE_PATH) as f:
+    with open(SUPPORTED_INFERENCE_SKU_FILE_PATH) as f:
+
         supported_inference_skus = set(json.load(f))
         unsupported_skus_in_spec = [
             sku
