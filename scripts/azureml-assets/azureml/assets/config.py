@@ -132,7 +132,8 @@ class SystemRegisty:
     AZUREML = "azureml"
     AZUREML_META = "azureml-meta"
     AZUREML_MSR = "azureml-msr"
-    NVIDIA_AI = "nvida-ai"
+    NVIDIA_AI = "nvidia-ai"
+
 
 
 DEFAULT_ASSET_FILENAME = "asset.yaml"
