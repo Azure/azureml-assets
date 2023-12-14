@@ -18,10 +18,10 @@ from azureml.core import Workspace
 
 from utils.utils import get_diff_files
 from utils.logging_utils import log_debug, log_error, log_warning, debug_output
-from azure.storage.blob import ContainerClient
+from azure.storage.blob import BlobServiceClient
 from utils.mt_client import get_mt_client
 from promptflow.azure import PFClient
-from azure.identity import DefaultAzureCredential
+from azure.identity import AzureCliCredential, DefaultAzureCredential
 from utils import flow_utils
 from promptflow.azure._load_functions import load_flow
 from promptflow._sdk._utils import is_remote_uri
@@ -52,8 +52,9 @@ def download_blob_to_file(container_name, container_path, storage_name, target_d
     log_debug(f"\nCurrent storage_name: {storage_name}")
     log_debug(f"Current container_name: {container_name}")
     # Create the BlobServiceClient object
-    # Because container has been enabled anonymous access, the ContainerClient should not contain credential.
-    container_client = ContainerClient(account_url, container_name)
+    cli_auth = AzureCliCredential()
+    blob_service_client = BlobServiceClient(account_url, credential=cli_auth)
+    container_client = blob_service_client.get_container_client(container_name)
 
     log_debug(f"Downloading blobs under path {container_path} to {target_dir}")
     blob_list = container_client.list_blobs(container_path)
