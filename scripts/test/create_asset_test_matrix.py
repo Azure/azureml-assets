@@ -38,7 +38,7 @@ def create_test_matrix(input_dirs: List[Path],
             continue
 
         # Ensure test directory hasn't already been added
-        test_dir = asset_config.pytest_tests_dir_with_path.absolute()
+        test_dir = asset_config.pytest_tests_dir_with_path.resolve()
         if test_dir in asset_test_dirs:
             logger.print(f"Skipping {asset_config} because {test_dir} has already been added")
             continue
