@@ -1,0 +1,78 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: mistralai-Mixtral-8x7B-v01
+path: ./
+properties:
+  inference-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  languages: EN
+tags:
+  Featured: ''
+  Preview: ''
+  SharedComputeCapacityEnabled: ''
+  disable-batch: 'true'
+  inference_compute_allow_list:
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_ND40rs_v2
+  - Standard_NC24ads_A100_v4
+  - Standard_NC48ads_A100_v4
+  - Standard_NC96ads_A100_v4
+  - Standard_ND96amsr_A100_v4
+  - Standard_ND96asr_v4
+  inference_supported_envs:
+  - vllm
+  license: apache-2.0
+  task: text-generation
+  author: mistralai
+version: 1
+description: |
+  # **Model Details**
+
+  The Mixtral-8x7B-v0.1 Large Language Model (LLM) is a pretrained generative text model with 7 billion parameters. 
+  Mixtral-8x7B-v0.1 outperforms Llama 2 70B on most benchmarks with 6x faster inference.
+
+  For full details of this model please read [release blog post](https://mistral.ai/news/mixtral-of-experts/).
+
+  ## Model Architecture
+
+  Mixtral-8x7B-v0.1 is a decoder-only model with 8 distinct groups or the "experts". At every layer, for every token, a router network chooses two of these experts to process the token and combine their output additively. Mixtral has 46.7B total parameters but only uses 12.9B parameters per token using this technique. This enables the model to perform with same speed and cost as 12.9B model.
+
+  # **Inference samples**
+
+  Inference type|Python sample (Notebook)|CLI with YAML
+  |--|--|--|
+  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
+  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
+
+
+  # **Sample inputs and outputs**
+
+  ### **Sample input**
+  ```json
+  {
+      "input_data": {
+          "input_string": [
+              "What is your favourite condiment?",
+              "Do you have mayonnaise recipes?"
+          ],
+          "parameters": {
+              "max_new_tokens": 100,
+              "do_sample": true,
+              "return_full_text": false
+          }
+      }
+  }
+  ```
+
+  ### **Sample output**
+  ```json
+  [
+    {
+      "0": "\n\nMayonnaise - can't be beat.\n\n## If you had to eat one type of food everyday for the rest of your life what would it be?\n\nMango. I'm an avid fruit and vegetable eater.\n\n## What is your favourite fruit and/or vegetable?\n\nMango! I eat an acre of these a year, which is almost two pounds a day.\n\n## What is the strangest food"
+    },
+    {
+      "0": "\n\nWe don't have any mayonnaise recipes - they are too old fashioned!\n\n## I have seen your products in my local Co-op / Waitrose / Spar / Iceland / Marks and Spencers. Where can I buy more?\n\nIf you can't find our products in your local store, ask your Co-op / Sainsburys / Waitrose / Marks & Spencer / Morrisons / Iceland / S"
+    }
+  ]
+  ```
