@@ -13,12 +13,6 @@ environment: azureml://registries/azureml/environments/model-management/versions
 
 code: ../../src/
 command: >
-  set -e
-  IFS=',' read -ra pip_pkgs <<< "$[[inputs.hf_use_experimental_features]]"
-  pip_pkg_str="${pip_pkgs[*]}"
-  if [[ -n "$pip_pkg_str" ]]; then echo "Installing $pip_pkg_str"; pip install $pip_pkg_str
-  echo "pip installation completed. For any installation error please check above logs"
-  fi 
   python run_model_preprocess.py
   $[[--model-id ${{inputs.model_id}}]]
   $[[--task-name ${{inputs.task_name}}]]
