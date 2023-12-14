@@ -12,7 +12,6 @@ on:
   push:
     branches:
       - yuhaliu/add_ci_for_promptflow
-      - yuhaliu/add
 
 env:
   PROMPTFLOW_DIR: "assets/promptflow/models"
