@@ -12,3 +12,4 @@ azureml-automl-core=={{latest-pypi-version}}
 azureml-telemetry=={{latest-pypi-version}}
 azureml-automl-dnn-vision=={{latest-pypi-version}}
 pyarrow=={{latest-pypi-version}}
+cryptography=={{latest-pypi-version}}
