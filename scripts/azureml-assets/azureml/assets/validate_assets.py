@@ -613,12 +613,13 @@ def validate_model_scenario(
     Args:
         asset_file_name_with_path (Path): file path to model asset
         model (Model): model loaded from spec
-        min_sku_prop_name str: min sku property name for the scenario
-        recommended_skus_prop_name str: recommended sku property name for the scenario
-        compute_allowlist_tags_name str: compute allowlist tag name for the scenario
+        min_sku_prop_name (str): min sku property name for the scenario
+        recommended_skus_prop_name (str): recommended sku property name for the scenario
+        compute_allowlist_tags_name (str): compute allowlist tag name for the scenario
 
     Returns:
-        int: error count
+        int: Number of errors.
+
     """
     min_sku = model.properties.get(min_sku_prop_name, None)
     recommended_skus = model.properties.get(recommended_skus_prop_name, None)
