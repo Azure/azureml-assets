@@ -46,6 +46,7 @@ def create_test_matrix(input_dirs: List[Path],
         # Store asset and create matrix
         logger.print(f"Adding {asset_config.file_path} with tests at {test_dir} to testing matrix")
         asset_config_files.append(str(asset_config.file_path))
+        asset_test_dirs.append(test_dir)
         counters[TEST_COUNT] += 1
 
     # Set variables
