@@ -664,15 +664,26 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     Returns:
         int: error count
     """
-    model = load_model(asset_config.spec_with_path)
-    model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+    error_count = 0
+    model = model_config = None
+
+    try:
+        model = load_model(asset_config.spec_with_path)
+    except Exception:
+        _log_error(asset_config.file_name_with_path, f"Invalid spec file")
+        return 1
+
+    try:
+        model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+    except Exception:
+        _log_error(asset_config.file_name_with_path, f"Invalid model config")
+        return 1
+
     if model_config.type != assets.config.ModelType.MLFLOW:
         logger.print(
             f"Bypass validation for {asset_config.name} as model type is: {model_config.type.value}"
         )
         return 0
-
-    error_count = 0
 
     # confirm must have tags
     if not model.tags.get(MLFlowModelTags.TASK):
