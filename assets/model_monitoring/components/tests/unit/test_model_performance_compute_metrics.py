@@ -19,8 +19,7 @@ test_data_classification = [{
         "id": [1, 2, 3],
         "label": [0, 0, 1]
     },
-    "result": {'accuracy': 0.3333333333333333, 'precision_score_macro': 0.25, 'recall_score_macro': 0.25,
-               'f1_score_macro': 0.25}
+    "result": {'accuracy': 0.3333333333333333, 'precision_score_macro': 0.25, 'recall_score_macro': 0.25}
 }]
 
 test_data_regression = [{

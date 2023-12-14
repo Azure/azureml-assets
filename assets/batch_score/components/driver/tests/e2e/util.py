@@ -7,7 +7,7 @@ import errno
 import os
 import shutil
 import tempfile
-from datetime import datetime
+
 import pytest
 import yaml
 from azure.ai.ml import MLClient, load_job
@@ -90,20 +90,25 @@ def _update_yaml(filename: str, yaml_override: dict):
     print(f"Final file: {yml}")
 
 
-def _get_current_datetime():
-    t = datetime.now()
-    return f'{t.year}-{t.month}-{t.day}-{t.hour}-{t.minute}-{t.second}-{t.microsecond}'
-
-
-def _set_and_get_component_name_ver(component_filepath: str) -> "tuple[str, str]":
+def _get_component_name(component_filepath: str) -> "tuple[str, str]":
     with open(component_filepath) as f:
         yml = yaml.safe_load(f)
 
     if 'name' in yml:
         yml['name'] = f"{yml['name']}_devops_test"
 
+    return yml['name']
+
+
+def _set_and_get_component_name_ver(component_filepath: str, component_version: str) -> "tuple[str, str]":
+    with open(component_filepath) as f:
+        yml = yaml.safe_load(f)
+
+    if 'name' in yml:
+        yml['name'] = _get_component_name(component_filepath)
+
     if 'version' in yml:
-        yml['version'] = _get_current_datetime()
+        yml['version'] = component_version
 
     with open(component_filepath, 'w') as f:
         yaml.safe_dump(yml, f, default_flow_style=False)

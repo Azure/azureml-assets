@@ -7,7 +7,7 @@ description: Output Formatter for batch inference output
 inputs:
   model_type:
     type: string
-    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss', 'claude')
     optional: True
   batch_inference_output:
     type: uri_folder

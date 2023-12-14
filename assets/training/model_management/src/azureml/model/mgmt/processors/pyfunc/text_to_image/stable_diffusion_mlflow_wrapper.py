@@ -13,7 +13,10 @@ import os
 import pandas as pd
 import torch
 
-from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants, DatatypeLiterals
+from config import (
+    MLflowSchemaLiterals, Tasks, MLflowLiterals,
+    BatchConstants, DatatypeLiterals,
+    SupportedTextToImageModelFamily)
 from vision_utils import image_to_base64
 
 
@@ -23,16 +26,20 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
     def __init__(
         self,
         task_type: str,
+        model_family: str
     ) -> None:
         """Initialize model parameters for converting Huggingface StableDifusion model to mlflow.
 
         :param task_type: Task type used in training.
         :type task_type: str
+        :param model_family: Model family of the stable diffusion task.
+        :type model_family: str
         """
         super().__init__()
         self._pipe = None
         self._task_type = task_type
         self.batch_output_folder = None
+        self._model_family = model_family
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """
@@ -49,7 +56,12 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             try:
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
                 model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
-                self._pipe = StableDiffusionPipeline.from_pretrained(model_dir)
+                if self._model_family == SupportedTextToImageModelFamily.DECI_DIFFUSION.value:
+                    self._pipe = StableDiffusionPipeline.from_pretrained(model_dir, custom_pipeline=model_dir)
+                    self._pipe.unet = self._pipe.unet.from_pretrained(model_dir, subfolder='flexible_unet')
+                else:
+                    self._pipe = StableDiffusionPipeline.from_pretrained(model_dir)
+
                 self._pipe.to(_map_location)
                 print("Model loaded successfully")
             except Exception as e:
