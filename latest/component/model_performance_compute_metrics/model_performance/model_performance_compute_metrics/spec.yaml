@@ -34,6 +34,21 @@ inputs:
     optional: true
     description: "Column name which contains predictions in provided input for production_data_target_column.\
       \ (Optional if we have one column name.)"
+  regression_rmse_threshold:
+    type: number
+    optional: true
+  regression_meanabserror_threshold:
+    type: number
+    optional: true
+  classification_precision_threshold:
+    type: number
+    optional: true
+  classification_accuracy_threshold:
+    type: number
+    optional: true
+  classification_recall_threshold:
+    type: number
+    optional: true
 
 outputs:
   signal_metrics:
@@ -67,4 +82,9 @@ args: >-
   $[[--baseline_data_target_column ${{inputs.baseline_data_target_column}}]]
   --production_data ${{inputs.production_data}}
   $[[--production_data_target_column ${{inputs.production_data_target_column}}]]
+  $[[--regression_rmse_threshold ${{inputs.regression_rmse_threshold}}]]
+  $[[--regression_meanabserror_threshold ${{inputs.regression_meanabserror_threshold}}]]
+  $[[--classification_precision_threshold ${{inputs.classification_precision_threshold}}]]
+  $[[--classification_accuracy_threshold ${{inputs.classification_accuracy_threshold}}]]
+  $[[--classification_recall_threshold ${{inputs.classification_recall_threshold}}]]
   --signal_metrics ${{outputs.signal_metrics}}

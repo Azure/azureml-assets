@@ -107,8 +107,16 @@ OUT_OF_BOUNDS_RATE_METRIC_NAME = "OutOfBoundsRate"
 
 NORMALIZED_DISCOUNTED_CUMULATIVE_GAIN_METRIC_NAME = "NormalizedDiscountedCumulativeGain"
 
+# gsq metric names
 AGGREGATED_COHERENCE_PASS_RATE_METRIC_NAME = "AggregatedCoherencePassRate"
 AGGREGATED_GROUNDEDNESS_PASS_RATE_METRIC_NAME = "AggregatedGroundednessPassRate"
 AGGREGATED_FLUENCY_PASS_RATE_METRIC_NAME = "AggregatedFluencyPassRate"
 AGGREGATED_SIMILARITY_PASS_RATE_METRIC_NAME = "AggregatedSimilarityPassRate"
 AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME = "AggregatedRelevancePassRate"
+
+# model performance metric names
+ACCURACY_METRIC_NAME = "Accuracy"
+PERCISION_METRIC_NAME = "Precision"
+RECALL_METRIC_NAME = "Recall"
+MEAN_ABSOLUTE_ERROR_METRIC_NAME = "MeanAbsoluteError"
+ROOT_MEAN_SQUARED_ERROR_METRIC_NAME = "RootMeanSquaredError"
