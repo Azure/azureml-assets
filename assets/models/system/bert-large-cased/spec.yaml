@@ -9,6 +9,7 @@ properties:
 tags:
   Preview: ""
   license: apache-2.0
+  SharedComputeCapacityEnabled: ''
   task: fill-mask
   huggingface_model_id: bert-large-cased
   inference_compute_allow_list:

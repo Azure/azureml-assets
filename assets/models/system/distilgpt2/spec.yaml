@@ -52,5 +52,6 @@ tags:
     apply_deepspeed: 'true'
     apply_lora: 'true'
     apply_ort: 'true'
+  SharedComputeCapacityEnabled: ''  
   task: text-generation
 version: 10
