@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: mistralai-Mixtral-8x7B-v0-1
+name: mistralai-Mixtral-8x7B-v01
 path: ./
 properties:
   inference-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3,
