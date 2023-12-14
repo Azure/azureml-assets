@@ -30,10 +30,17 @@ def create_test_matrix(input_dirs: List[Path],
     """
     counters = Counter()
     asset_config_files = []
+    asset_test_dirs = []
     for asset_config in util.find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
         # Skip assets without testing enabled
         if not asset_config.pytest_enabled:
             logger.log_debug(f"Testing is not enabled for {asset_config}")
+            continue
+
+        # Ensure test directory hasn't already been added
+        test_dir = asset_config.pytest_tests_dir_with_path
+        if test_dir in asset_test_dirs:
+            logger.log_debug(f"Skipping {asset_config} because {test_dir} has already been added")
             continue
 
         # Store asset and create matrix
