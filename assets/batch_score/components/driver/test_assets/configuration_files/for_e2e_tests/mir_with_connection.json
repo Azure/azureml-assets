@@ -1,0 +1,19 @@
+{
+    "api": {
+        "type": "completion",
+        "response_segment_size": 1000
+    },
+    "authentication": {
+        "type": "connection",
+        "name": "ClipModelConnection"
+    },
+    "inference_endpoint": {
+        "type": "azureml_online_endpoint",
+        "url": "https://mir-clip-endpoint.centralus.inference.ml.azure.com/score"
+    },
+    "request_settings":{
+        "headers":{
+            "azureml-model-deployment": "openai-clip-vit-base-patch32-5"
+        }
+    }
+}

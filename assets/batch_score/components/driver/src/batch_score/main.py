@@ -392,7 +392,10 @@ def setup_mir_scoring_client(
     so this will not add OAI specific headers.
     """
     if connection_name is not None:
-        header_handler = MIREndpointV2HeaderHandler(connection_name)
+        header_handler = MIREndpointV2HeaderHandler(
+            connection_name,
+            configuration.additional_headers
+        )
     else:
         header_handler = setup_header_handler(routing_client=routing_client, token_provider=token_provider)
 
