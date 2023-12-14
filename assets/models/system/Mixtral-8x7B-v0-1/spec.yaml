@@ -7,7 +7,9 @@ properties:
   languages: EN
 tags:
   Featured: ''
+  Preview: ''
   SharedComputeCapacityEnabled: ''
+  disable-batch: 'true'
   inference_compute_allow_list:
   - Standard_NC24s_v3
   - Standard_NC24rs_v3
@@ -17,8 +19,6 @@ tags:
   - Standard_NC96ads_A100_v4
   - Standard_ND96amsr_A100_v4
   - Standard_ND96asr_v4
-  model_specific_defaults:
-    precision: '16'
   inference_supported_envs:
   - vllm
   license: apache-2.0
