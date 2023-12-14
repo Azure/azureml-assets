@@ -4,8 +4,7 @@
 """This file contains the core logic for data drift evaluate metrics threshold component."""
 
 import pyspark.sql.functions as F
-from shared_utilities.event_utils import post_warning_event, post_email_event
-
+from shared_utilities.event_utils import post_warning_event, post_email_event, add_tags_to_run, _get_run_id
 
 def _generate_error_message(df, signal_name: str):
     """Generate the error message for the given thresholds."""
@@ -51,6 +50,10 @@ def evaluate_metrics_threshold(
         post_warning_event(error_message)
         if notification_emails is not None and notification_emails != "":
             post_email_event(signal_name, notification_emails, error_message)
+        add_tags_to_run(_get_run_id(),
+                        {
+                            f"azureml_modelmonitor_threshold_breached": error_message
+                        })
         return False
 
     return True
