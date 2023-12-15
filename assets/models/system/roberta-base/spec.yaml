@@ -8,6 +8,7 @@ properties:
   languages: en
 tags:
   Preview: ''
+  SharedComputeCapacityEnabled: ''
   task: fill-mask
   datasets: bookcorpus, wikipedia
   huggingface_model_id: roberta-base

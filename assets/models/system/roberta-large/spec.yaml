@@ -8,6 +8,7 @@ properties:
   languages: en
 tags:
   Preview: ""
+  SharedComputeCapacityEnabled: ''
   task: fill-mask
   license: mit
   datasets: bookcorpus, wikipedia
