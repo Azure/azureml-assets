@@ -1,0 +1,3 @@
+type: evaluationresult
+spec: spec.yaml
+categories: ["EvaluationResult"]

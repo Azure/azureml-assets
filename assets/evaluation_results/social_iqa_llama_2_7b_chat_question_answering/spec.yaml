@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_llama_2_7b_chat_question_answering
-version: 1.0.0
+version: 1.0.1
 display_name: social_iqa_llama_2_7b_chat_question_answering
 description: llama-2-7b-chat run for social_iqa dataset
 dataset_family: social_iqa
