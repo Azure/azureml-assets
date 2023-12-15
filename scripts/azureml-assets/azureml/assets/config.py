@@ -1145,7 +1145,6 @@ class AssetConfig(Config):
             if self.pytest_pip_requirements and not self.pytest_pip_requirements_with_path.exists():
                 raise ValidationException(f"pytest.pip_requirements file {self.pytest_pip_requirements} not found")
 
-
     @property
     def _type(self) -> str:
         """Raw 'type' value."""
