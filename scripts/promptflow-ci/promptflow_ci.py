@@ -88,7 +88,6 @@ def get_changed_models(diff_files):
     log_debug(
         f"Find {len(deleted_models_path)} deleted models: {deleted_models_path}.")
     log_debug(f"Find {len(changed_models)} changed models: {changed_models}.")
-
     return changed_models
 
 
@@ -241,7 +240,7 @@ def _resolve_data_to_asset_id(test_data):
             run_operations._operation_scope,
             run_operations._datastore_operations,
             test_data,
-            datastore_name=run_operations._workspace_default_datastore,
+            datastore_name=run_operations._workspace_default_datastore.name,
             show_progress=run_operations._show_progress,
         )
         if data_type == AssetTypes.URI_FOLDER and test_data and not test_data.endswith("/"):
@@ -306,7 +305,7 @@ if __name__ == "__main__":
                         default="https://eastus.api.azureml.ms/flow")
     parser.add_argument('--flow_submit_mode', type=str, default="sync")
     parser.add_argument('--run_time', type=str, default="default-mir")
-    parser.add_argument('--skipped_flows', type=str, default="bring_your_own_data_qna,playground_ayod_rag,qna_coherence_eval,qna_non_rag_metrics_eval")
+    parser.add_argument('--skipped_flows', type=str, default="bring_your_own_data_qna")
     # Skip bring_your_own_data_qna test, the flow has a bug.
     # Bug 2773738: Add retry when ClientAuthenticationError
     # https://msdata.visualstudio.com/Vienna/_workitems/edit/2773738
