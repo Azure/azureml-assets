@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive
 
 # Install Python 3.10 and pip
-RUN apt update && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
+RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install python3.10-dev python3.10-distutils -y
 RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python
 RUN apt install git -y
