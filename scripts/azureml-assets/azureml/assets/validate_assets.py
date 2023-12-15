@@ -359,6 +359,38 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
     return error_count
 
 
+def validate_tests(asset_config: assets.AssetConfig) -> int:
+    """Validate pytest information.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config.
+
+    Returns:
+        int: Number of errors.
+    """
+    error_count = 0
+
+    # Bail early if pytest is not enabled
+    if not asset_config.pytest_enabled:
+        return error_count
+
+    # Check file/dir references
+    if not asset_config.pytest_tests_dir_with_path.exists():
+        _log_error(asset_config.file_name_with_path,
+                   f"pytest.tests_dir directory '{asset_config.pytest_tests_dir}' not found")
+        error_count += 1
+    if asset_config.pytest_conda_environment and not asset_config.pytest_conda_environment_with_path.exists():
+        _log_error(asset_config.file_name_with_path,
+                   f"pytest.conda_environment file '{asset_config.pytest_conda_environment}' not found")
+        error_count += 1
+    if asset_config.pytest_pip_requirements and not asset_config.pytest_pip_requirements_with_path.exists():
+        _log_error(asset_config.file_name_with_path,
+                   f"pytest.pip_requirements file '{asset_config.pytest_pip_requirements}' not found")
+        error_count += 1
+
+    return error_count
+
+
 def validate_categories(asset_config: assets.AssetConfig) -> int:
     """Validate asset categories.
 
@@ -651,7 +683,7 @@ def validate_assets(input_dirs: List[Path],
         # Populate dictionary of asset names to asset config paths
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
-        # validated_model_map would be ampty for non-drop scenario
+        # validated_model_map would be empty for non-drop scenario
         if validated_model_map and asset_config.type == assets.AssetType.MODEL:
             error_count += validate_model_assets(asset_config, validated_model_map.get(asset_config.name, None))
 
@@ -681,6 +713,9 @@ def validate_assets(input_dirs: List[Path],
                     error_count += validate_name(asset_config)
                 else:
                     logger.log_debug(f"Skipping name validation for {asset_config.full_name}")
+
+            # Validate pytest information
+            error_count += validate_tests(asset_config)
 
             # Validate Dockerfile
             if asset_config.type == assets.AssetType.ENVIRONMENT:
