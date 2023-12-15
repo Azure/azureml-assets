@@ -258,7 +258,7 @@ class TestPromptCrafterScript:
             output_pattern=output_pattern,
             few_shot_data=few_shot_data,
             ground_truth_column=ground_truth_column,
-            additional_columns=additional_columns
+            additional_columns=additional_columns,
             few_shot_pattern=few_shot_pattern,
         )
 

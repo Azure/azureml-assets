@@ -55,7 +55,8 @@ class EndpointDataPreparer:
                     raise BenchmarkUserException._with_error(
                         AzureMLError.create(
                             BenchmarkUserError,
-                            error_details=f"Column {column} doesn't exist. Please check your data before submitting again.")
+                            error_details=f"Column {column} doesn't exist. \
+                                Please check your data before submitting again.")
                         )
 
         return result
