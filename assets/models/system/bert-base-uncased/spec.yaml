@@ -37,7 +37,6 @@ tags:
     apply_ort: 'true'
   SharedComputeCapacityEnabled: ''  
   task: fill-mask
-  license: apache-2.0 
   datasets: bookcorpus, wikipedia
   huggingface_model_id: bert-base-cased
   inference_compute_allow_list:

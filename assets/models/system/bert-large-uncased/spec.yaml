@@ -30,7 +30,6 @@ tags:
   - Standard_ND24rs
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
-  license: apache-2.0
   model_specific_defaults:
     apply_deepspeed: 'true'
     apply_lora: 'true'
