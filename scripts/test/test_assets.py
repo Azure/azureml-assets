@@ -41,7 +41,8 @@ def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str)
         p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
     else:
         logger.print(f"Creating isolated conda environment {env_name} from packages in {conda_environment}")
-        p = run(["conda", "env", "create", "-n", env_name, "--file", conda_environment, "-q"])
+        p = run(["conda", "env", "create", "-n", env_name, "--file", conda_environment, "-q"],
+                cwd=asset_config.file_path)
     if p.returncode != 0:
         return None
 
