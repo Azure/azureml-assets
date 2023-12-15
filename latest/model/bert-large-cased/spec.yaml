@@ -17,7 +17,6 @@ properties:
     Standard_ND40rs_v2
   languages: en
 tags:
-  Preview: ""
   license: apache-2.0
   SharedComputeCapacityEnabled: ''
   task: fill-mask

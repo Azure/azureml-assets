@@ -9,7 +9,6 @@ properties:
   languages: en
 tags:
   Featured: ''
-  Preview: ''
   author: Databricks
   license: apache-2.0
   SharedComputeCapacityEnabled: ''
