@@ -1,14 +1,14 @@
 {
     "properties": {
-        "description": "Benchmark__test-gpt35__remote_mmlu__text_generation",
+        "description": "Benchmark__gpt_35_turbo_0613__hf_openbookqa__text_generation",
         "properties": {
             "_azureml.evaluation_run": "Benchmark"
         },
         "tags": {
             "workflow": "llm_benchmark"
         },
-        "displayName": "mmlu-other-gpt35-turbo-full",
-        "experimentName": "mmlu",
+        "displayName": "placeholder_name",
+        "experimentName": "placeholder_exp",
         "isArchived": false,
         "jobType": "Pipeline",
         "inputs": {},
@@ -21,17 +21,17 @@
                 "name": "downloader",
                 "type": "command",
                 "inputs": {
+                    "dataset_name": {
+                        "job_input_type": "literal",
+                        "value": "openbookqa"
+                    },
                     "configuration": {
                         "job_input_type": "literal",
-                        "value": "business_ethics,clinical_knowledge,college_medicine,global_facts,human_aging,management,marketing,medical_genetics,miscellaneous,nutrition,professional_accounting,professional_medicine,virology"
+                        "value": "main"
                     },
                     "split": {
                         "job_input_type": "literal",
-                        "value": "test"
-                    },
-                    "script_path": {
-                        "uri": "https://raw.githubusercontent.com/Azure/azureml-assets/main/assets/aml-benchmark/scripts/data_loaders/mmlu.py",
-                        "job_input_type": "uri_file"
+                        "value": "validation"
                     }
                 },
                 "outputs": {
@@ -90,11 +90,11 @@
                     },
                     "template_input": {
                         "job_input_type": "literal",
-                        "value": "{\"question\":{{question}}, \"choices\":{{choices}}, \"answer\":{{answer|string}}}"
+                        "value": "{\"question\":{{question_stem}}, \"choices\":{{choices.text}}, \"answer\":{{answerKey}}}"
                     },
                     "encoder_config": {
                         "job_input_type": "literal",
-                        "value": "{\"column_name\": \"answer\", \"0\": \"A\", \"1\": \"B\", \"2\": \"C\", \"3\": \"D\"}"
+                        "value": "{\"column_name\": \"answer\", \"A\": 1, \"B\": 2, \"C\": 3, \"D\": 4}"
                     }
                 },
                 "outputs": {
@@ -114,17 +114,17 @@
                 "name": "fewshot_downloader",
                 "type": "command",
                 "inputs": {
+                    "dataset_name": {
+                        "job_input_type": "literal",
+                        "value": "openbookqa"
+                    },
                     "configuration": {
                         "job_input_type": "literal",
-                        "value": "business_ethics,clinical_knowledge,college_medicine,global_facts,human_aging,management,marketing,medical_genetics,miscellaneous,nutrition,professional_accounting,professional_medicine,virology"
+                        "value": "main"
                     },
                     "split": {
                         "job_input_type": "literal",
-                        "value": "dev"
-                    },
-                    "script_path": {
-                        "uri": "https://raw.githubusercontent.com/Azure/azureml-assets/main/assets/aml-benchmark/scripts/data_loaders/mmlu.py",
-                        "job_input_type": "uri_file"
+                        "value": "train"
                     }
                 },
                 "outputs": {
@@ -183,11 +183,11 @@
                     },
                     "template_input": {
                         "job_input_type": "literal",
-                        "value": "{\"question\":{{question}}, \"choices\":{{choices}}, \"answer\":{{answer|string}}}"
+                        "value": "{\"question\":{{question_stem}}, \"choices\":{{choices.text}}, \"answer\":{{answerKey}}}"
                     },
                     "encoder_config": {
                         "job_input_type": "literal",
-                        "value": "{\"column_name\": \"answer\", \"0\": \"A\", \"1\": \"B\", \"2\": \"C\", \"3\": \"D\"}"
+                        "value": "{\"column_name\": \"answer\", \"A\": 1, \"B\": 2, \"C\": 3, \"D\": 4}"
                     }
                 },
                 "outputs": {
@@ -221,11 +221,11 @@
                     },
                     "prompt_pattern": {
                         "job_input_type": "literal",
-                        "value": "### Question: {{question}}\nA. {{choices[0]}}\nB. {{choices[1]}}\nC. {{choices[2]}}\nD. {{choices[3]}}\n###Answer:"
+                        "value": "Question: {{question}}\nAnswer options:\n(1) {{choices[0]}}\n(2) {{choices[1]}}\n(3) {{choices[2]}}\n(4) {{choices[3]}}\nThe answer is:"
                     },
                     "n_shots": {
                         "job_input_type": "literal",
-                        "value": "5"
+                        "value": "10"
                     },
                     "output_pattern": {
                         "job_input_type": "literal",
@@ -299,7 +299,7 @@
                     },
                     "max_concurrency_per_instance": {
                         "job_input_type": "literal",
-                        "value": "3"
+                        "value": "1"
                     },
                     "debug_mode": {
                         "job_input_type": "literal",
@@ -351,9 +351,13 @@
                         "job_input_type": "literal",
                         "value": "\n\n"
                     },
-                    "find_first": {
+                    "extract_number": {
                         "job_input_type": "literal",
-                        "value": "A,B,C,D"
+                        "value": "first"
+                    },
+                    "strip_characters": {
+                        "job_input_type": "literal",
+                        "value": "."
                     }
                 },
                 "outputs": {
@@ -431,7 +435,7 @@
         },
         "outputs": {},
         "settings": {
-            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/cpu-cluster",
+            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/serverless",
             "continue_on_step_failure": true,
             "force_rerun": false,
             "_source": "YAML.JOB"

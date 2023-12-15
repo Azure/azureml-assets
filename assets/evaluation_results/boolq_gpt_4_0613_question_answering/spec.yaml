@@ -1,0 +1,32 @@
+type: evaluationresult
+name: boolq_gpt_4_0613_question_answering
+version: 1.0.1
+display_name: boolq_gpt_4_0613_question_answering
+description: gpt-4-0613 run for boolq dataset
+dataset_family: boolq
+dataset_name: boolq
+
+model_name: gpt-4-0613
+model_version: "0613"
+model_asset_id: azureml://registries/azure-openai-preview/models/gpt-4/versions/755055.9bd25ae5
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azure-openai-preview/models/gpt-4/versions/755055.9bd25ae5
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.912
+
+path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"

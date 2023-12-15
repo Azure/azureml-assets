@@ -1,13 +1,13 @@
 type: evaluationresult
 name: human_eval_gpt_35_turbo_0301_text_generation
-version: 1.0.0
+version: 1.0.1
 display_name: human_eval_gpt_35_turbo_0301_text_generation
 description: gpt-35-turbo-0301 run for human_eval dataset
 dataset_family: human_eval
 dataset_name: human_eval
 
 model_name: gpt-35-turbo-0301
-model_version: "301"
+model_version: "0301"
 model_asset_id: azureml://registries/azure-openai-v2/models/gpt-35-turbo/versions/703844
 
 relationships:
@@ -19,7 +19,7 @@ tags:
   accuracy_metric_name: pass@1
 
 metrics:
-  accuracy: 0.634
+  accuracy: 0.701
 
 path: ./job_files
 
