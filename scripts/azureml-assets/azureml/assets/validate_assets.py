@@ -715,15 +715,7 @@ def validate_assets(input_dirs: List[Path],
                     logger.log_debug(f"Skipping name validation for {asset_config.full_name}")
 
             # Validate pytest information
-            if asset_config.pytest_enabled:
-                if not asset_config.pytest_tests_dir_with_path.exists():
-                    raise ValidationException(f"pytest.tests_dir directory {asset_config.pytest_tests_dir} not found")
-                if asset_config.pytest_conda_environment and not asset_config.pytest_conda_environment_with_path.exists():
-                    raise ValidationException(
-                        f"pytest.conda_environment file {asset_config.pytest_conda_environment} not found")
-                if asset_config.pytest_pip_requirements and not asset_config.pytest_pip_requirements_with_path.exists():
-                    raise ValidationException(
-                        f"pytest.pip_requirements file {asset_config.pytest_pip_requirements} not found")
+            error_count += validate_tests(asset_config)
 
             # Validate Dockerfile
             if asset_config.type == assets.AssetType.ENVIRONMENT:
