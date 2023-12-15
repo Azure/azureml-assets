@@ -104,5 +104,5 @@ class ScoreSucceedLog(BaseLog):
 
     def log(self):
         """Log function."""
-        msg = "Score succeeded after {}s: internal_id={} x-ms-client-request-id=[{}]"
-        get_logger().info(msg.format(f"{self.duration:.3f}", self.internal_id, self.x_ms_client_request_id))
+        msg = "Score succeeded after {:.3f}s: internal_id={} x-ms-client-request-id=[{}]"
+        get_logger().info(msg.format(self.duration, self.internal_id, self.x_ms_client_request_id))
