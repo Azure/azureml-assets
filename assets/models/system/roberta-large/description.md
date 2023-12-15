@@ -1,50 +1,92 @@
-The RoBERTa Large model is a pretrained language model developed by the Hugging Face team, based on the transformer architecture. It was trained on a large corpus of English data in a self-supervised manner using the masked language modeling (MLM) objective. The model is case-sensitive and primarily intended for use in fine-tuning downstream tasks such as sequence classification, token classification, or question answering. It was trained on a combination of five datasets weighing 160GB of text, and uses a vocabulary size of 50,000 for tokenization. The model was trained for 500K steps on 1024 V100 GPUs with a batch size of 8K and a sequence length of 512. The optimizer used was Adam with a learning rate of 4e-4, β1=0.9, β2=0.98, and ϵ=1e-6, with a weight decay of 0.01 and learning rate warmup for 30,000 steps.
-<br>Please Note: This model accepts masks in `<mask>` format. See Sample input for reference. 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/roberta-large" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+RoBERTa is a transformers model pretrained on a large corpus of English data in a self-supervised fashion. This means
+it was pretrained on the raw texts only, with no humans labelling them in any way (which is why it can use lots of
+publicly available data) with an automatic process to generate inputs and labels from those texts. 
 
-### Inference samples
+More precisely, it was pretrained with the Masked language modeling (MLM) objective. Taking a sentence, the model
+randomly masks 15% of the words in the input then run the entire masked sentence through the model and has to predict
+the masked words. This is different from traditional recurrent neural networks (RNNs) that usually see the words one
+after the other, or from autoregressive models like GPT which internally mask the future tokens. It allows the model to
+learn a bidirectional representation of the sentence.
 
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a>| coming soon
+This way, the model learns an inner representation of the English language that can then be used to extract features
+useful for downstream tasks: if you have a dataset of labeled sentences for instance, you can train a standard
+classifier using the features produced by the BERT model as inputs.
 
+# Training Details
 
-### Finetuning samples
+## Training Data
 
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
-Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
+The RoBERTa model was pretrained on the reunion of five datasets:
+- [BookCorpus](https://yknzhu.wixsite.com/mbweb), a dataset consisting of 11,038 unpublished books;
+- [English Wikipedia](https://en.wikipedia.org/wiki/English_Wikipedia) (excluding lists, tables and headers) ;
+- [CC-News](https://commoncrawl.org/2016/10/news-dataset-available/), a dataset containing 63 millions English news
+  articles crawled between September 2016 and February 2019.
+- [OpenWebText](https://github.com/jcpeterson/openwebtext), an opensource recreation of the WebText dataset used to
+  train GPT-2,
+- [Stories](https://arxiv.org/abs/1806.02847) a dataset containing a subset of CommonCrawl data filtered to match the
+  story-like style of Winograd schemas.
 
+Together theses datasets weight 160GB of text.
 
-### Model Evaluation
+## Training Procedure
 
-Task| Use case| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|
-Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
+### Preprocessing
 
+The texts are tokenized using a byte version of Byte-Pair Encoding (BPE) and a vocabulary size of 50,000. The inputs of
+the model take pieces of 512 contiguous token that may span over documents. The beginning of a new document is marked
+with `<s>` and the end of one by `</s>`
 
-### Sample inputs and outputs (for real-time inference)
+The details of the masking procedure for each sentence are the following:
+- 15% of the tokens are masked.
+- In 80% of the cases, the masked tokens are replaced by `<mask>`.
 
-#### Sample input
+- In 10% of the cases, the masked tokens are replaced by a random token (different) from the one they replace.
+- In the 10% remaining cases, the masked tokens are left as is.
+
+Contrary to BERT, the masking is done dynamically during pretraining (e.g., it changes at each epoch and is not fixed).
+
+### Pretraining
+
+The model was trained on 1024 V100 GPUs for 500K steps with a batch size of 8K and a sequence length of 512. The
+optimizer used is Adam with a learning rate of 4e-4, \\(\beta_{1} = 0.9\\), \\(\beta_{2} = 0.98\\) and
+\\(\epsilon = 1e-6\\), a weight decay of 0.01, learning rate warmup for 30,000 steps and linear decay of the learning
+rate after.
+
+# Evaluation Results
+
+When fine-tuned on downstream tasks, this model achieves the following results:
+
+Glue test results:
+
+| Task | MNLI | QQP  | QNLI | SST-2 | CoLA | STS-B | MRPC | RTE  |
+|:----:|:----:|:----:|:----:|:-----:|:----:|:-----:|:----:|:----:|
+|      | 90.2 | 92.2 | 94.7 | 96.4  | 68.0 | 96.4  | 90.9 | 86.6 |
+
+# Limitations and Biases
+
+The training data used for this model contains a lot of unfiltered content from the internet, which is far from
+neutral. This bias will also affect all fine-tuned versions of this model.
+
+You can use the raw model for masked language modeling, but it's mostly intended to be fine-tuned on a downstream task.
+
+Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2.
+
+# Sample inputs and outputs
+
+### Sample input
 ```json
 {
-    "input_data": {
-        "input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
-    }
+    "input_data": [
+        "Paris is the <mask> of France.",
+        "Today is a <mask> day!"
+    ]
 }
 ```
 
-#### Sample output
+### Sample output
 ```json
 [
-    {
-        "0": "capital"
-    },
-    {
-        "0": "beautiful"
-    }
+  "capital",
+  "great"
 ]
 ```

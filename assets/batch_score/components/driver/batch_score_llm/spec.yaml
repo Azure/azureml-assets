@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/ParallelComponent.json
 type: parallel
 
 name: batch_score_llm
-version: 1.0.0
+version: 1.0.3
 display_name: Batch Score Large Language Models
 is_deterministic: False
 
@@ -49,9 +49,8 @@ retry_settings:
 
 input_data: ${{inputs.data_input_table}}
 
-code: ../src
-
 task:
+  code: ../src
   type: run_function
   entry_script: batch_score.main
   # Enable PRS safe append row configuration that is needed when dealing with large outputs with Unicode characters.
