@@ -7,9 +7,9 @@ dependencies:
 - pip=23.3.1
 - scikit-learn==0.24.2
 - pip:
-  - azureml-rag[cognitive_search,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore]==0.2.23.2
+  - azureml-rag[cognitive_search,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore]==0.2.23.3
   - azure-search-documents==11.4.0b8
-  - langchain==0.0.350
+  - langchain==0.0.348
   - tiktoken~=0.3.0
   - azure-ai-ml==1.12.1
   - azure-identity==1.12.0
