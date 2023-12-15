@@ -2,6 +2,8 @@
 
 This fine-tuned model can be used for zero-shot classification tasks, including zero-shot sentence-pair classification (see the [GitHub repo](https://github.com/facebookresearch/fairseq/tree/main/examples/roberta) for examples) and zero-shot sequence classification.
 
+# Training Details
+
 ## Training Data
 
 This model was fine-tuned on the [Multi-Genre Natural Language Inference (MNLI)](https://cims.nyu.edu/~sbowman/multinli/) corpus. Also see the [MNLI data card](https://huggingface.co/datasets/multi_nli) for more information. 
