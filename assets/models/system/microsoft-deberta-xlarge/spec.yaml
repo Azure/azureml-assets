@@ -9,6 +9,7 @@ properties:
 tags:
   Preview: ""
   license: mit
+  SharedComputeCapacityEnabled: ''
   task: fill-mask
   datasets: ""
   huggingface_model_id: microsoft/deberta-xlarge
