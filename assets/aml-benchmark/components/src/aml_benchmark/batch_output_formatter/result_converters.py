@@ -12,6 +12,9 @@ from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndp
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.batch_inference_preparer.endpoint_data_preparer import EndpointDataPreparer
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.error_definitions import BenchmarkUserError
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 
 logger = get_logger(__name__)
@@ -38,22 +41,31 @@ class ResultConverters:
         self._model = OnlineEndpointModel(model=None, model_version=None, model_type=model_type)
         self._metadata_key = metadata_key
         self._label_key = label_key
-        self._additional_columns = additional_columns.split(",") if additional_columns else None
+        if additional_columns:
+            elements = additional_columns.split(",")
+            self._additional_columns = [s.strip() for s in elements if s.strip()]
+        else:
+            self._additional_columns = None
         self._data_id_key = data_id_key
         self._lookup_dict = {}
         self._fallback_value = fallback_value
         self._is_performance_test = is_performance_test
         if ground_truth_df is not None:
-            print(ground_truth_df)
             logger.info("receive ground truth columns {}".format(ground_truth_df.columns))
             for _, row in ground_truth_df.iterrows():
                 self._lookup_dict[row[EndpointDataPreparer.PAYLOAD_HASH]] = \
                     {self.ground_truth_column_name: row[EndpointDataPreparer.PAYLOAD_GROUNDTRUTH]}
                 if self._additional_columns:
-                    print(self._additional_columns)
                     for column in self._additional_columns:
-                        self._lookup_dict[row[EndpointDataPreparer.PAYLOAD_HASH]][column] = \
-                            row[column]
+                        try:
+                            self._lookup_dict[row[EndpointDataPreparer.PAYLOAD_HASH]][column] = \
+                                row[column]
+                        except KeyError:
+                            raise BenchmarkUserException._with_error(
+                                AzureMLError.create(
+                                    BenchmarkUserError,
+                                    error_details=f"Column {column} doesn't exist. Please check your data before submitting again.")
+                                )
 
     def convert_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the input result to predictions."""
@@ -173,6 +185,12 @@ class ResultConverters:
             for k in self._additional_columns:
                 if k in data.keys():
                     additional_columns_data[k] = data[k]
+                else:
+                    raise BenchmarkUserException._with_error(
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details=f"Column {k} doesn't exist. Please check your data before submitting again.")
+                        )
         return additional_columns_data
 
     @property

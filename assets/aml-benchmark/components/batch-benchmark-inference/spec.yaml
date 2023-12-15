@@ -72,7 +72,7 @@ inputs:
   additional_columns:
     type: string
     optional: True
-    description: The name(s) for additional columns that could be helpful to calculate some metrics.
+    description: The name(s) for additional columns that could be helpful to calculate some metrics, separated by comma (",").
   n_samples:
     type: integer
     description: The number of top samples send to endpoint. When performance test is enabled, this will be the number of repeated samples send to the endpoint.

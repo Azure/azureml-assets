@@ -42,7 +42,7 @@ inputs:
   additional_columns:
     type: string
     optional: True
-    description: Name(s) of additional column(s) that could be useful to compute metrics.
+    description: Name(s) of additional column(s) that could be useful to compute metrics, separated by comma (",").
   is_performance_test:
     type: boolean
     default: False

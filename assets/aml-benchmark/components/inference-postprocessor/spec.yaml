@@ -32,7 +32,7 @@ inputs:
   additional_columns:
     type: string
     description: >-
-      Name(s) of additional columns that could be helpful for computing some metrics. Seperated by comma (",").
+      Name(s) of additional columns that could be helpful for computing some metrics, separated by comma (",").
     optional: True
   remove_prefixes:
     type: string

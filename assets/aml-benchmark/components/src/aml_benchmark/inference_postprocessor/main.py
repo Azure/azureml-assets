@@ -162,7 +162,7 @@ def main(
     :param ground_truth_dataset: Path to the jsonl file to load the ground truth dataset.
     :param ground_truth_column_name: Name of ground truth column/key.
     :param additional_columns: Name(s) of additional columns that could be helpful for compute
-        some metrics.
+        some metrics, separated by comma (",").
     :param separator: Few shot separator used in prompt crafter.
     :param find_first: A list of strings to search for in the inference results. The first occurrence \
         of each string will be extracted. Must provide a comma-separated list of strings.
@@ -199,6 +199,11 @@ def main(
         user_postprocessor=script_path,
         output_dataset=output_dataset,
     )
+    if additional_columns:
+        elements = additional_columns.split(",")
+        additional_columns_processed = [s.strip() for s in elements if s.strip()]
+    else:
+        additional_columns_processed = None
     processor.run()
     log_mlflow_params(
         prediction_dataset=prediction_dataset,
@@ -207,7 +212,7 @@ def main(
         ground_truth_column_name=ground_truth_column_name
         if ground_truth_column_name
         else None,
-        additional_columns=additional_columns.split(",") if additional_columns else None,
+        additional_columns=additional_columns_processed,
         separator=separator if separator else None,
         find_first=find_first if find_first else None,
         regex_expr=regex_expr if regex_expr else None,

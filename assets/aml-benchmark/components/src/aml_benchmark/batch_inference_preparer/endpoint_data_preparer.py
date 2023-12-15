@@ -9,6 +9,9 @@ import re
 
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.error_definitions import BenchmarkUserError
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 
 class EndpointDataPreparer:
@@ -25,7 +28,11 @@ class EndpointDataPreparer:
         self._model = OnlineEndpointModel(model_type=model_type, model=None, model_version=None)
         self._batch_input_pattern = batch_input_pattern
         self._label_key = label_key
-        self._additional_columns = additional_columns.split(",") if additional_columns else None
+        if additional_columns:
+            elements = additional_columns.split(",")
+            self._additional_columns = [s.strip() for s in elements if s.strip()]
+        else:
+            self._additional_columns = None
 
     def convert_input_dict(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Convert input dict to the corresponding payload."""
@@ -42,7 +49,15 @@ class EndpointDataPreparer:
         }
         if self._additional_columns:
             for column in self._additional_columns:
-                result[column] = origin_json_dict.get(column, "")
+                try:
+                    result[column] = origin_json_dict[column]
+                except KeyError:
+                    raise BenchmarkUserException._with_error(
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details=f"Column {column} doesn't exist. Please check your data before submitting again.")
+                        )
+
         return result
 
     def validate_output(self, output_payload_dict: Dict[str, Any]):

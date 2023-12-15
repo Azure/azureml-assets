@@ -16,6 +16,8 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 
 from aml_benchmark.utils.exceptions import BenchmarkValidationException
 from aml_benchmark.utils.error_definitions import BenchmarkValidationError
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from .prompt import (
     PromptType,
     Prompt,
@@ -201,11 +203,17 @@ class PromptFactory(ABC):
                     AzureMLError.create(BenchmarkValidationError, error_details=mssg))
 
         if self.additional_columns:
-            for k in self.additional_columns.split(","):
-                if k in row:
+            elements = self.additional_columns.split(",")
+            strips = [s.strip() for s in elements if s.strip()]
+            for k in strips:
+                try:
                     output_data[k] = row[k]
-                else:
-                    logger.warning(f"Column name {k} not found in data at row {index}")
+                except KeyError:
+                    raise BenchmarkUserException._with_error(
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details=f"Column {k} doesn't exist. Please check your data before submitting again.")
+                        )
 
         if self.metadata_keys is not None:
             def collect_metadata(metadata_keys, data, index):

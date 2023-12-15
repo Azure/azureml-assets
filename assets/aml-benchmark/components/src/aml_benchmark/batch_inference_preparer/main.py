@@ -75,6 +75,9 @@ def main(
     :param model_version: The model version.
     :param endpoint: The endpoint url.
     :param is_performance_test: Whether it is performance test.
+    :param label_key: Ground truth column name.
+    :param additional_columns: Name(s) of columns that could be helpful for
+        caculating certain metrics, separated by comma ",".
     :return: None
     """
     online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)

@@ -180,9 +180,18 @@ class InferencePostprocessor(object):
                     self.ground_truth_column_name
                 ]
             if self.additional_columns:
-                for column in self.additional_columns.split(","):
-                    if column in actual_df.columns:
+                elements = self.additional_columns.split(",")
+                strips = [s.strip() for s in elements if s.strip()]
+                for column in strips:
+                    try:
                         result_df[column] = actual_df[column]
+                    except KeyError:
+                        raise BenchmarkUserException._with_error(
+                            AzureMLError.create(
+                                BenchmarkUserError,
+                                error_details=f"Column {column} doesn't exist.\
+                                    Please check your data before submitting again.")
+                            )
             else:
                 result_df = actual_df
         return result_df
