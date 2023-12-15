@@ -2,16 +2,27 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: distilbert-base-uncased-finetuned-sst-2-english
 path: ./
 properties:
-  SHA: 3d65bad49c7ba6f71920504507a8927f4b9db6c0
+  SHA: 4643665f84c6760e3cbf6adaace6c398592270af
+  inference-min-sku-spec: 8|0|28|56
+  inference-recommended-sku: Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2,
+    Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4,
+    Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4,
+    Standard_F4s_v2, Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2,
+    Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds,
+    Standard_FX36mds, Standard_FX48mds, Standard_E2s_v3, Standard_E4s_v3, Standard_E8s_v3,
+    Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3,
+    Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3,
+    Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  languages: en
+tags:
+  Preview: ""
+  license: apache-2.0
+  task: text-classification
   datasets: sst2, glue
-  evaluation-min-sku-spec: 8|0|28|56
-  evaluation-recommended-sku: Standard_DS4_v2
-  finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC24rs_v3
-  finetuning-tasks: text-classification, token-classification, question-answering
-  inference-min-sku-spec: 2|0|7|14
-  inference-recommended-sku: Standard_DS2_v2, Standard_D2a_v4, Standard_D2as_v4, Standard_DS3_v2,
-    Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
+  SharedComputeCapacityEnabled: ""
+  huggingface_model_id: distilbert-base-uncased-finetuned-sst-2-english
+  inference_compute_allow_list: [Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
     Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4,
     Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4,
     Standard_D96as_v4, Standard_F4s_v2, Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds,
@@ -21,90 +32,64 @@ properties:
     Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
     Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
-    Standard_ND40rs_v2
-  languages: en
-tags:
-  Preview: ''
-  computes_allow_list:
-  - Standard_NV12s_v3
-  - Standard_NV24s_v3
-  - Standard_NV48s_v3
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
-  - Standard_NC6s_v2
-  - Standard_NC12s_v2
-  - Standard_NC24s_v2
-  - Standard_NC24rs_v2
-  - Standard_NC4as_T4_v3
-  - Standard_NC8as_T4_v3
-  - Standard_NC16as_T4_v3
-  - Standard_NC64as_T4_v3
-  - Standard_ND6s
-  - Standard_ND12s
-  - Standard_ND24s
-  - Standard_ND24rs
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  license: apache-2.0
-  model_specific_defaults:
-    apply_deepspeed: 'true'
-    apply_lora: 'true'
-    apply_ort: 'true'
-  SharedComputeCapacityEnabled: ''
-  task: text-classification
-version: 10
+    Standard_ND40rs_v2]
+
+version: 11
 description: |
-  This is a fine-tuned version of DistilBERT-base-uncased, trained on SST-2, which reached 91.3 % accuracy on the dev set. Developed by Hugging Face, it's mainly intended to be used for topic classification and can be fine-tuned on downstream tasks, but it's important to keep in mind that it has certain biases, such as biased predictions for certain underrepresented populations and that it should not be used to create hostile or alienating environments for people. Additionally, the authors used the Stanford Sentiment Treebank(sst2) corpora for training the model. 
-  It's recommended to evaluate the risks of this model by thoroughly probing the bias evaluation datasets like WinoBias, WinoGender, Stereoset
+  **DistilBERT base uncased finetuned SST-2** model is a fine-tune checkpoint of [DistilBERT-base-uncased](https://huggingface.co/distilbert-base-uncased), fine-tuned on SST-2.
+  This model reaches an accuracy of 91.3 on the dev set (for comparison, Bert bert-base-uncased version reaches an accuracy of 92.7).
+
+  This model can be used for  topic classification. You can use the raw model for either masked language modeling or next sentence prediction, but it's mostly intended to be fine-tuned on a downstream task. See the model hub to look for fine-tuned versions on a task that interests you.
+
+  # Training Details
+
+  ## Training Data
+
+  The authors use the following Stanford Sentiment Treebank([sst2](https://huggingface.co/datasets/sst2)) corpora for the model.
+
+  ## Training Procedure
+
+  ### Fine-tuning hyper-parameters
+
+  - learning_rate = 1e-5
+  - batch_size = 32
+  - warmup = 600
+  - max_seq_length = 128
+  - num_train_epochs = 3.0
+
+  # Limitations and Biases
+
+  Based on a few experimentations, we observed that this model could produce biased predictions that target underrepresented populations.
+
+  For instance, for sentences like `This film was filmed in COUNTRY`, this binary classification model will give radically different probabilities for the positive label depending on the country (0.89 if the country is France, but 0.08 if the country is Afghanistan) when nothing in the input indicates such a strong semantic shift. In this [colab](https://colab.research.google.com/gist/ageron/fb2f64fb145b4bc7c49efc97e5f114d3/biasmap.ipynb), [Aurélien Géron](https://twitter.com/aureliengeron) made an interesting map plotting these probabilities for each country.
+
+  <img src="https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/map.jpeg" alt="Map of positive probabilities per country." width="500"/>
+
+  We strongly advise users to thoroughly probe these aspects on their use-cases in order to evaluate the risks of this model. We recommend looking at the following bias evaluation datasets as a place to start: [WinoBias](https://huggingface.co/datasets/wino_bias), [WinoGender](https://huggingface.co/datasets/super_glue), [Stereoset](https://huggingface.co/datasets/stereoset).
 
 
-  > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+  # Sample inputs and outputs
 
-  ### Inference samples
-
-  Inference type|Python sample (Notebook)|CLI with YAML
-  |--|--|--|
-  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">text-classification-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
-  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a>| coming soon
-
-
-  ### Finetuning samples
-
-  Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-  |--|--|--|--|--|
-  Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-  Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
-  Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
-
-
-  ### Model Evaluation
-
-  Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-  |--|--|--|--|--|
-  Text Classification|Sentiment Classification|<a href="https://huggingface.co/datasets/glue/viewer/sst2/validation" target="_blank">SST2</a>|<a href="https://aka.ms/evaluate-model-sentiment-analysis" target="_blank">evaluate-model-sentiment-analysis.ipynb</a>|<a href="https://aka.ms/evaluate-model-sentiment-analysis-cli" target="_blank">evaluate-model-sentiment-analysis.yml</a>
-
-
-  ### Sample inputs and outputs (for real-time inference)
-
-  #### Sample input
+  ### Sample input
   ```json
   {
-      "input_data": {
-          "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
-      }
+      "input_data": [
+          "Today was an amazing day!",
+          "It was an unfortunate series of events."
+      ]
   }
   ```
 
-  #### Sample output
+  ### Sample output
   ```json
   [
-      {
-          "0": "POSITIVE"
-      },
-      {
-          "0": "NEGATIVE"
-      }
+    {
+      "label": "POSITIVE",
+      "score": 0.9998794794082642
+    },
+    {
+      "label": "NEGATIVE",
+      "score": 0.9995174407958984
+    }
   ]
   ```
