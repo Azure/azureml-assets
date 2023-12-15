@@ -88,6 +88,7 @@ def get_changed_models(diff_files):
     log_debug(
         f"Find {len(deleted_models_path)} deleted models: {deleted_models_path}.")
     log_debug(f"Find {len(changed_models)} changed models: {changed_models}.")
+
     return changed_models
 
 
