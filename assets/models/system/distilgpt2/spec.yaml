@@ -10,6 +10,7 @@ tags:
   Preview: ''
   datasets: openwebtext
   license: apache-2.0
+  SharedComputeCapacityEnabled: ''
   task: text-generation
   huggingface_model_id: distilgpt2
   inference_compute_allow_list:
