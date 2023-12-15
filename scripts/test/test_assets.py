@@ -39,20 +39,22 @@ def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str)
     if not conda_environment:
         logger.print(f"Creating isolated conda environment {env_name}")
         p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
+        if p.returncode != 0:
+            return None
+
+        pip_requirements = asset_config.pytest_pip_requirements
+        if pip_requirements:
+            logger.print(f"Installing packages from {pip_requirements}")
+            p = run(["conda", "run", "-n", env_name, "pip", "install", "-r", pip_requirements,
+                    "--progress-bar", "off"], cwd=asset_config.file_path)
     else:
         logger.print(f"Creating isolated conda environment {env_name} from packages in {conda_environment}")
         p = run(["conda", "env", "create", "-n", env_name, "--file", conda_environment, "-q"],
                 cwd=asset_config.file_path)
+
+    # Some common error checking
     if p.returncode != 0:
         return None
-
-    pip_requirements = asset_config.pytest_pip_requirements
-    if pip_requirements:
-        logger.print(f"Installing packages from {pip_requirements}")
-        p = run(["conda", "run", "-n", env_name, "pip", "install", "-r", pip_requirements,
-                "--progress-bar", "off"], cwd=asset_config.file_path)
-        if p.returncode != 0:
-            return None
 
     return env_name
 

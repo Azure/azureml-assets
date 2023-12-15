@@ -1133,6 +1133,19 @@ class AssetConfig(Config):
             if missing:
                 raise ValidationException(f"missing release_paths: {missing}")
 
+        if self.pytest_enabled:
+            if self.pytest_conda_environment and self.pytest_pip_requirements:
+                raise ValidationException("pytest.conda_environment and pytest.pip_requirements are mutually exclusive")
+            if not self.pytest_tests_dir:
+                raise ValidationException("pytest.tests_dir is required")
+            if self.pytest_tests_dir and not self.pytest_tests_dir_with_path.exists():
+                raise ValidationException(f"pytest.tests_dir directory {self.pytest_tests_dir} not found")
+            if self.pytest_conda_environment and not self.pytest_conda_environment_with_path.exists():
+                raise ValidationException(f"pytest.conda_environment file {self.pytest_conda_environment} not found")
+            if self.pytest_pip_requirements and not self.pytest_pip_requirements_with_path.exists():
+                raise ValidationException(f"pytest.pip_requirements file {self.pytest_pip_requirements} not found")
+
+
     @property
     def _type(self) -> str:
         """Raw 'type' value."""
