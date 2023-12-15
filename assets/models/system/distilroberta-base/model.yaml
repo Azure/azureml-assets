@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/distilroberta-base/1694425675/mlflow_model_folder
+  container_path: huggingface/distilroberta-base/1702553728/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

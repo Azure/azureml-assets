@@ -1,50 +1,50 @@
-DistilRoBERTa base is a distilled version of the RoBERTa-base model, with 6 layers, 768 dimension, and 12 heads, and 82M parameters, it is faster than RoBERTa-base. The model is primarily intended for fine-tuning on whole sentence-based tasks such as sequence classification, token classification, and question answering but should not be used to generate harmful or alienating content. There is a risk of bias in the generated predictions as it may include harmful stereotypes. It is developed by Victor Sanh, Lysandre Debut, Julien Chaumond and Thomas Wolf of Hugging Face and is licensed under Apache 2.0. Users are encouraged to check out the RoBERTa-base model card for more information. When getting started with the model, it is recommended to use fine-tuned versions on the task that interests you.
-<br>Please Note: This model accepts masks in `<mask>` format. See Sample input for reference. 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/distilroberta-base" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+**distilroberta-base** is a distilled version of the [RoBERTa-base model](https://huggingface.co/roberta-base). It follows the same training procedure as [DistilBERT](https://huggingface.co/distilbert-base-uncased).
+The code for the distillation process can be found [here](https://github.com/huggingface/transformers/tree/master/examples/distillation). This model is case-sensitive: it makes a difference between english and English.
 
-### Inference samples
+The model has 6 layers, 768 dimension and 12 heads, totalizing 82M parameters (compared to 125M parameters for RoBERTa-base).
+On average DistilRoBERTa is twice as fast as Roberta-base.
 
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a>| coming soon
+# Training Details
 
+DistilRoBERTa was pre-trained on [OpenWebTextCorpus](https://skylion007.github.io/OpenWebTextCorpus/), a reproduction of OpenAI's WebText dataset (it is ~4 times less training data than the teacher RoBERTa). See the [roberta-base model card](https://huggingface.co/roberta-base/blob/main/README.md) for further details on training.
 
-### Finetuning samples
+# Evaluation Results
 
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
-Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
+When fine-tuned on downstream tasks, this model achieves the following results (see [GitHub Repo](https://github.com/huggingface/transformers/blob/main/examples/research_projects/distillation/README.md)):
 
+Glue test results:
 
-### Model Evaluation
-
-Task| Use case| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|
-Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
+| Task | MNLI | QQP  | QNLI | SST-2 | CoLA | STS-B | MRPC | RTE  |
+|:----:|:----:|:----:|:----:|:-----:|:----:|:-----:|:----:|:----:|
+|      | 84.0 | 89.4 | 90.8 | 92.5  | 59.3 | 88.3  | 86.6 | 67.9 |
 
 
-### Sample inputs and outputs (for real-time inference)
+# Limitations and Biases
 
-#### Sample input
+Significant research has explored bias and fairness issues with language models (see, e.g., [Sheng et al. (2021)](https://aclanthology.org/2021.acl-long.330.pdf) and [Bender et al. (2021)](https://dl.acm.org/doi/pdf/10.1145/3442188.3445922)). Predictions generated by the model may include disturbing and harmful stereotypes across protected classes; identity characteristics; and sensitive, social, and occupational groups.
+
+You can use the raw model for masked language modeling, but it's mostly intended to be fine-tuned on a downstream task.
+
+Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2.
+
+The model should not be used to intentionally create hostile or alienating environments for people. The model was not trained to be factual or true representations of people or events, and therefore using the models to generate such content is out-of-scope for the abilities of this model
+
+# Sample inputs and outputs
+
+### Sample input
 ```json
 {
-    "input_data": {
-        "input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
-    }
+    "input_data": [
+        "Paris is the <mask> of France.",
+        "Today is a <mask> day!"
+    ]
 }
 ```
 
-#### Sample output
+### Sample output
 ```json
 [
-    {
-        "0": "capital"
-    },
-    {
-        "0": "beautiful"
-    }
+  "capital",
+  "busy"
 ]
 ```
