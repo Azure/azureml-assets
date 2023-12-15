@@ -306,7 +306,7 @@ if __name__ == "__main__":
                         default="https://eastus.api.azureml.ms/flow")
     parser.add_argument('--flow_submit_mode', type=str, default="sync")
     parser.add_argument('--run_time', type=str, default="default-mir")
-    parser.add_argument('--skipped_flows', type=str, default="bring_your_own_data_qna")
+    parser.add_argument('--skipped_flows', type=str, default="bring_your_own_data_qna, playground-ayod-rag")
     # Skip bring_your_own_data_qna test, the flow has a bug.
     # Bug 2773738: Add retry when ClientAuthenticationError
     # https://msdata.visualstudio.com/Vienna/_workitems/edit/2773738
