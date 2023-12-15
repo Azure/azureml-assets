@@ -3,106 +3,86 @@ name: deepset-minilm-uncased-squad2
 path: ./
 properties:
   SHA: 8a0111575f579698cae155af069d4b4db6fbe6a7
-  datasets: squad_v2
-  evaluation-min-sku-spec: 8|0|28|56
-  evaluation-recommended-sku: Standard_DS4_v2
-  finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC12s_v3
-  finetuning-tasks: text-classification, token-classification, question-answering
-  inference-min-sku-spec: 2|0|7|14
-  inference-recommended-sku: Standard_DS2_v2, Standard_D2a_v4, Standard_D2as_v4, Standard_DS3_v2,
-    Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
-    Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4,
-    Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4,
-    Standard_D96as_v4, Standard_F4s_v2, Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds,
-    Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2,
-    Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E2s_v3, Standard_E4s_v3,
-    Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3,
-    Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
-    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
-    Standard_ND40rs_v2
+  inference-min-sku-spec: 4|0|14|28
+  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
+    Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
+    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
+    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F4s_v2, Standard_FX4mds,
+    Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2,
+    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds,
+    Standard_E2s_v3, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3,
+    Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
+    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   languages: en
 tags:
-  Preview: ''
-  computes_allow_list:
-  - Standard_NV12s_v3
-  - Standard_NV24s_v3
-  - Standard_NV48s_v3
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
-  - Standard_NC6s_v2
-  - Standard_NC12s_v2
-  - Standard_NC24s_v2
-  - Standard_NC24rs_v2
-  - Standard_NC4as_T4_v3
-  - Standard_NC8as_T4_v3
-  - Standard_NC16as_T4_v3
-  - Standard_NC64as_T4_v3
-  - Standard_ND6s
-  - Standard_ND12s
-  - Standard_ND24s
-  - Standard_ND24rs
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
+  Preview: ""
+  datasets: squad_v2
   license: cc-by-4.0
-  model_specific_defaults:
-    apply_deepspeed: 'true'
-    apply_lora: 'true'
-    apply_ort: 'true'
   task: question-answering
-version: 9
+  huggingface_model_id: deepset/minilm-uncased-squad2
+  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
+    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4,
+    Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4,
+    Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F4s_v2,
+    Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2,
+    Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds,
+    Standard_FX48mds, Standard_E2s_v3, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3,
+    Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3,
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
+    Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+
+version: 10
 description: |
-  The MiniLM-L12-H384-uncased model is a microsoft language model for extractive question answering in English. It was trained on the SQuAD 2.0 dataset and has been evaluated on the SQuAD 2.0 dev set with the official eval script. The model's performance results were an exact match of 76.13 and F1 score of 79.50. The model can be used with Transformers, FARM, or haystack. The model was developed by Vaishali Pal, Branden Chan, Timo Möller, Malte Pietsch, and Tanay Soni, who are employees of deepset, a company focused on bringing NLP to the industry via open source.
+  # Training Details
 
-  > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/deepset/minilm-uncased-squad2" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+  ## Hyperparameters
 
-  ### Inference samples
+  ```
+  seed=42
+  batch_size = 12
+  n_epochs = 4
+  base_LM_model = "microsoft/MiniLM-L12-H384-uncased"
+  max_seq_len = 384
+  learning_rate = 4e-5
+  lr_schedule = LinearWarmup
+  warmup_proportion = 0.2
+  doc_stride=128
+  max_query_length=64
+  grad_acc_steps=4
+  ```
 
-  Inference type|Python sample (Notebook)|CLI with YAML
-  |--|--|--|
-  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-question-answering" target="_blank">question-answering-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-question-answering" target="_blank">question-answering-online-endpoint.sh</a>
-  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-question-answering" target="_blank">question-answering-batch-endpoint.ipynb</a>| coming soon
+  ## Evaluation Results
+  Evaluated on the SQuAD 2.0 dev set with the [official eval script](https://worksheets.codalab.org/rest/bundles/0x6b567e1cf2e041ec80d7098f031c5c9e/contents/blob/).
+  ```
+  "exact": 76.13071675229513,
+  "f1": 79.49786500219953,
+  "total": 11873,
+  "HasAns_exact": 78.35695006747639,
+  "HasAns_f1": 85.10090269418276,
+  "HasAns_total": 5928,
+  "NoAns_exact": 73.91084945332211,
+  "NoAns_f1": 73.91084945332211,
+  "NoAns_total": 5945
+  ```
 
+  # Sample inputs and outputs
 
-  ### Finetuning samples
-
-  Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-  |--|--|--|--|--|
-  Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-  Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
-  Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
-
-
-  ### Model Evaluation
-
-  Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-  |--|--|--|--|--|
-  Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a>|<a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
-
-
-  ### Sample inputs and outputs (for real-time inference)
-
-  #### Sample input
+  ### Sample input
   ```json
   {
       "input_data": {
-          "question": ["What is my name?", "Where do I live?"],
-          "context": ["My name is John and I live in Seattle.", "My name is Ravi and I live in Hyderabad."]
+          "question": "What's my name?",
+          "context": "My name is John and I live in Seattle"
       }
   }
   ```
 
-  #### Sample output
+  ### Sample output
   ```json
   [
-      {
-          "0": "John"
-      },
-      {
-          "0": "Hyderabad"
-      }
+    "John"
   ]
   ```

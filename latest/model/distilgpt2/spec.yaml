@@ -3,104 +3,101 @@ name: distilgpt2
 path: ./
 properties:
   SHA: 38cc92ec43315abd5136313225e95acc5986876c
-  datasets: openwebtext
-  evaluation-min-sku-spec: 8|0|28|56
-  evaluation-recommended-sku: Standard_DS4_v2
-  finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC12s_v3
-  finetuning-tasks: text-classification, token-classification
-  inference-min-sku-spec: 2|0|7|14
-  inference-recommended-sku: Standard_DS2_v2, Standard_D2a_v4, Standard_D2as_v4, Standard_DS3_v2,
-    Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
-    Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4,
-    Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4,
-    Standard_D96as_v4, Standard_F4s_v2, Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds,
-    Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2,
-    Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E2s_v3, Standard_E4s_v3,
-    Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3,
-    Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
-    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
-    Standard_ND40rs_v2
+  inference-min-sku-spec: 4|0|14|28
+  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
+    Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
+    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
+    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F4s_v2, Standard_FX4mds,
+    Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2,
+    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds,
+    Standard_E2s_v3, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3,
+    Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
+    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   languages: en
 tags:
   Preview: ''
-  computes_allow_list:
-  - Standard_NV12s_v3
-  - Standard_NV24s_v3
-  - Standard_NV48s_v3
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
-  - Standard_NC6s_v2
-  - Standard_NC12s_v2
-  - Standard_NC24s_v2
-  - Standard_NC24rs_v2
-  - Standard_NC4as_T4_v3
-  - Standard_NC8as_T4_v3
-  - Standard_NC16as_T4_v3
-  - Standard_NC64as_T4_v3
-  - Standard_ND6s
-  - Standard_ND12s
-  - Standard_ND24s
-  - Standard_ND24rs
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
+  datasets: openwebtext
   license: apache-2.0
-  model_specific_defaults:
-    apply_deepspeed: 'true'
-    apply_lora: 'true'
-    apply_ort: 'true'
   task: text-generation
-version: 10
+  huggingface_model_id: distilgpt2
+  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
+    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4,
+    Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4,
+    Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F4s_v2,
+    Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2,
+    Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds,
+    Standard_FX48mds, Standard_E2s_v3, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3,
+    Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3,
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
+    Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+
+version: 11
 description: |
-  DistilGPT2 is a distilled version of GPT-2, which is a transformer-based language model with 124 million parameters and an English language license. It is intended to be used for similar uses with the increased functionality of being smaller and easier to run than the base model. DistilGPT2 was trained with knowledge distillation, following a procedure similar to the training procedure for DistilBERT. It has been evaluated on the WikiText-103 benchmark and has a perplexity of 21.1. Carbon emissions for DistilGPT2 are 149.2 kg eq. CO2.  The developers do not support use-cases that require the generated text to be true and recommend not using the model if the project could interact with humans without reducing bias first. It is recommended to check the OpenWebTextCorpus, OpenAI’s WebText dataset and Radford's research for further information about the training data and procedure. The Write With Transformers web app was built using DistilGPT2 and allows users to generate text directly from their browser.
+  DistilGPT2 (short for Distilled-GPT2) is an English-language model pre-trained with the supervision of the 124 million parameter version of GPT-2. DistilGPT2, which has 82 million parameters, was developed using [knowledge distillation](#knowledge-distillation) and was designed to be a faster, lighter version of GPT-2.
+
+  Since DistilGPT2 is a distilled version of GPT-2, it is intended to be used for similar use cases with the increased functionality of being smaller and easier to run than the base model. 
+
+  The developers of GPT-2 state in their [model card](https://github.com/openai/gpt-2/blob/master/model_card.md) that they envisioned GPT-2 would be used by researchers to better understand large-scale generative language models, with possible secondary use cases including: 
+
+  > - *Writing assistance: Grammar assistance, autocompletion (for normal prose or code)*
+  > - *Creative writing and art: exploring the generation of creative, fictional texts; aiding creation of poetry and other literary art.*
+  > - *Entertainment: Creation of games, chat bots, and amusing generations.*
+
+  Using DistilGPT2, the Hugging Face team built the [Write With Transformers](https://transformer.huggingface.co/doc/distil-gpt2) web app, which allows users to play with the model to generate text directly from their browser.
+
+  # Training Details
+
+  ## Training Data
+
+  DistilGPT2 was trained using [OpenWebTextCorpus](https://skylion007.github.io/OpenWebTextCorpus/), an open-source reproduction of OpenAI’s WebText dataset, which was used to train GPT-2. See the [OpenWebTextCorpus Dataset Card](https://huggingface.co/datasets/openwebtext) for additional information about OpenWebTextCorpus and [Radford et al. (2019)](https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf) for additional information about WebText.
+
+  ## Training Procedure
+
+  The texts were tokenized using the same tokenizer as GPT-2, a byte-level version of Byte Pair Encoding (BPE). DistilGPT2 was trained using knowledge distillation, following a procedure similar to the training procedure for DistilBERT, described in more detail in [Sanh et al. (2019)](https://arxiv.org/abs/1910.01108). 
+
+  # Evaluation Results
+
+  The creators of DistilGPT2 [report](https://github.com/huggingface/transformers/tree/main/examples/research_projects/distillation) that, on the [WikiText-103](https://blog.einstein.ai/the-wikitext-long-term-dependency-language-modeling-dataset/) benchmark, GPT-2 reaches a perplexity on the test set of 16.3 compared to 21.1 for DistilGPT2 (after fine-tuning on the train set).
 
 
-  > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/distilgpt2" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+  # Limitations and Biases
 
-  ### Inference samples
+  **CONTENT WARNING: Readers should be aware this section contains content that is disturbing, offensive, and can propagate historical and current stereotypes.**
 
-  Inference type|Python sample (Notebook)|CLI with YAML
-  |--|--|--|
-  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
-  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
+  As the developers of GPT-2 (OpenAI) note in their [model card](https://github.com/openai/gpt-2/blob/master/model_card.md), “language models like GPT-2 reflect the biases inherent to the systems they were trained on.” Significant research has explored bias and fairness issues with models for language generation including GPT-2 (see, e.g., [Sheng et al. (2021)](https://aclanthology.org/2021.acl-long.330.pdf) and [Bender et al. (2021)](https://dl.acm.org/doi/pdf/10.1145/3442188.3445922)). 
 
+  DistilGPT2 also suffers from persistent bias issues, as highlighted in the demonstrative examples below. Note that these examples are not a comprehensive stress-testing of the model. Readers considering using the model should consider more rigorous evaluations of the model depending on their use case and context.
 
-  ### Finetuning samples
+  The impact of model compression techniques – such as knowledge distillation – on bias and fairness issues associated with language models is an active area of research. For example: 
 
-  Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-  |--|--|--|--|--|
-  Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-  Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+  - [Silva, Tambwekar and Gombolay (2021)](https://aclanthology.org/2021.naacl-main.189.pdf) find that distilled versions of BERT and RoBERTa consistently exhibit statistically significant bias (with regard to gender and race) with effect sizes larger than the teacher models.
+  - [Xu and Hu (2022)](https://arxiv.org/pdf/2201.08542.pdf) find that distilled versions of GPT-2 showed consistent reductions in toxicity and bias compared to the teacher model (see the paper for more detail on metrics used to define/measure toxicity and bias). 
+  - [Gupta et al. (2022)](https://arxiv.org/pdf/2203.12574.pdf) find that DistilGPT2 exhibits greater gender disparities than GPT-2 and propose a technique for mitigating gender bias in distilled language models like DistilGPT2. 
 
+  # Sample inputs and outputs
 
-  ### Model Evaluation
-
-  Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-  |--|--|--|--|--|
-  Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
-
-  ### Sample inputs and outputs (for real-time inference)
-
-  #### Sample input
+  ### Sample input
   ```json
   {
-      "input_data": {
-          "input_string": ["My name is John and I am", "Once upon a time,"]
+      "input_data": [
+          "I believe the meaning of life is"
+      ],
+      "params": {
+          "top_p": 0.9,
+          "temperature": 0.2,
+          "max_new_tokens": 100,
+          "do_sample": true,
+          "return_full_text": true
       }
   }
   ```
 
-  #### Sample output
+  ### Sample output
   ```json
   [
-      {
-          "0": "My name is John and I am the first person to ever make the same kind of a film. I've always been obsessed with the film, and"
-      },
-      {
-          "0": "Once upon a time, though, we were always a different people than any other society. Many of us now live in one-of-kind communities"
-      }
+    "I believe the meaning of life is not to be confused with the meaning of life.”"
   ]
   ```
