@@ -7,8 +7,8 @@ on:
       - main
     paths:
       - assets/promptflow/models/**
-      - .github/workflows/promptflow_ci.yml
-      - scripts/promptflow_ci/**
+      - .github/workflows/promptflow-ci.yml
+      - scripts/promptflow-ci/**
 
 env:
   PROMPTFLOW_DIR: "assets/promptflow/models"
