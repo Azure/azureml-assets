@@ -1138,7 +1138,7 @@ class AssetConfig(Config):
                 raise ValidationException("pytest.conda_environment and pytest.pip_requirements are mutually exclusive")
             if not self.pytest_tests_dir:
                 raise ValidationException("pytest.tests_dir is required")
-            if self.pytest_tests_dir and not self.pytest_tests_dir_with_path.exists():
+            if not self.pytest_tests_dir_with_path.exists():
                 raise ValidationException(f"pytest.tests_dir directory {self.pytest_tests_dir} not found")
             if self.pytest_conda_environment and not self.pytest_conda_environment_with_path.exists():
                 raise ValidationException(f"pytest.conda_environment file {self.pytest_conda_environment} not found")
