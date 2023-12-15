@@ -87,6 +87,14 @@ def parse_args() -> ArgumentParser:
         required=True,
         help="The jinja template representing the expected output to \
          be used for few shot prompts when n_shot > 0")
+    parser.add_argument(
+        "--few_shot_pattern",
+        type=str,
+        required=False,
+        default=None,
+        help="The jinja template used to generate few shot prompts. \
+            Few shot prompts use the pattern in the `prompt_pattern` input \
+            if `few_shot_pattern` is not provided.")
     return parser.parse_args()
 
 
@@ -104,6 +112,7 @@ def main(
         system_message: Optional[str] = None,
         few_shot_data: Optional[str] = None,
         random_seed: Optional[int] = 0,
+        few_shot_pattern: Optional[str] = None
 ) -> None:
     """Entry function for Prompt Crafter Component.
 
@@ -119,6 +128,7 @@ def main(
     :param system_message: System message to use for prompts.
     :param few_shot_data: Path to jsonl would be used to generate n-shot prompts.
     :param random_seed: Random seed to use for prompts.
+    :param few_shot_pattern: Pattern for generating few shot prompts.
     :return: None
     """
     prompt_crafter = PromptCrafter(
@@ -138,7 +148,7 @@ def main(
         label_map=None,
         additional_payload=None,
         system_message=system_message,
-        few_shot_pattern=None,
+        few_shot_pattern=few_shot_pattern,
     )
     prompt_crafter.run()
 
@@ -153,7 +163,9 @@ def main(
         test_dataset_checksum=resolve_io_path(test_data),
         few_shot_dataset_checksum=resolve_io_path(few_shot_data)
         if few_shot_data else None,
-        output_dataset_checksum=resolve_io_path(output_file))
+        output_dataset_checksum=resolve_io_path(output_file),
+        few_shot_pattern=few_shot_pattern
+    )
 
 
 if __name__ == "__main__":
@@ -172,4 +184,5 @@ if __name__ == "__main__":
         ground_truth_column_name=args.ground_truth_column_name,
         output_file=args.output_file,
         system_message=args.system_message,
+        few_shot_pattern=args.few_shot_pattern
     )
