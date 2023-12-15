@@ -10,6 +10,11 @@ tags:
   Preview: ''
   datasets: openwebtext
   license: apache-2.0
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'true'
+    apply_ort: 'true'
+  SharedComputeCapacityEnabled: ''  
   task: text-generation
   huggingface_model_id: distilgpt2
   inference_compute_allow_list:

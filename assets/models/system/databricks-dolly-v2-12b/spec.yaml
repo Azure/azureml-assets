@@ -11,6 +11,7 @@ tags:
   Preview: ''
   author: Databricks
   license: apache-2.0
+  SharedComputeCapacityEnabled: ''
   task: text-generation
   huggingface_model_id: databricks/dolly-v2-12b
   inference_compute_allow_list:

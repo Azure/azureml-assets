@@ -9,6 +9,7 @@ properties:
 tags:
   Preview: ""
   license: mit
+  SharedComputeCapacityEnabled: ''
   task: text-generation
   huggingface_model_id: gpt2
   inference-compute-allowlist:
