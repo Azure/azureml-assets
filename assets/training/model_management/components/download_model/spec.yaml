@@ -9,7 +9,7 @@ is_deterministic: True
 display_name: Download model
 description: Downloads a publicly available model
 
-environment: azureml://registries/azureml/environments/model-management/versions/17
+environment: azureml://registries/azureml/environments/model-management/versions/18
 
 code: ../../src/
 command: >
