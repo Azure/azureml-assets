@@ -18,6 +18,7 @@ properties:
 tags:
   Preview: ""
   license: apache-2.0
+  SharedComputeCapacityEnabled: ''
   task: text-translation
   huggingface_model_id: t5-base
   inference_compute_allow_list: [Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,

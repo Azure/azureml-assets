@@ -19,6 +19,7 @@ properties:
 tags:
   Preview: ""
   license: mit
+  SharedComputeCapacityEnabled: ''
   task: text-generation
   huggingface_model_id: gpt2
   inference-compute-allowlist: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,

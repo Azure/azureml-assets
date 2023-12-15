@@ -21,6 +21,7 @@ tags:
   Preview: ""
   datasets: squad_v2
   license: cc-by-4.0
+  SharedComputeCapacityEnabled: ''
   task: question-answering
   huggingface_model_id: deepset/roberta-base-squad2
   inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,

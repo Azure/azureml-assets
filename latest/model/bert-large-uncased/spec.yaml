@@ -17,6 +17,7 @@ properties:
   languages: en
 tags:
   Preview: ""
+  SharedComputeCapacityEnabled: ''
   task: fill-mask
   license: apache-2.0
   datasets: bookcorpus, wikipedia

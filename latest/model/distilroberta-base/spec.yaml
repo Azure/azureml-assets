@@ -19,6 +19,7 @@ properties:
   languages: en
 tags:
   Preview: ""
+  SharedComputeCapacityEnabled: ''
   task: fill-mask
   datasets: openwebtext
   license: apache-2.0

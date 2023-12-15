@@ -49,6 +49,7 @@ tags:
     apply_deepspeed: 'true'
     apply_lora: 'true'
     apply_ort: 'true'
+  SharedComputeCapacityEnabled: ''
   task: token-classification
 version: 12
 description: |

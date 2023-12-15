@@ -11,6 +11,7 @@ properties:
 tags:
   Preview: ""
   license: other
+  SharedComputeCapacityEnabled: ''
   task: text-generation
   author: Microsoft Research
   huggingface_model_id: microsoft/Orca-2-13b

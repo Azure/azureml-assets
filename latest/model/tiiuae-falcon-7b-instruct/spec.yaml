@@ -17,6 +17,7 @@ tags:
   Featured: ''
   Preview: ''
   license: apache-2.0
+  SharedComputeCapacityEnabled: ''
   task: text-generation
   author: tiiuae
   inference_compute_allow_list:
