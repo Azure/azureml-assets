@@ -6,7 +6,7 @@
 import argparse
 import sys
 from collections import Counter
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import run
 from timeit import default_timer as timer
@@ -20,10 +20,9 @@ SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 BASE_ENVIRONMENT = "base_env"
-ISOLATED_ENVIRONMENT = "isolated_env"
 
 
-def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str) -> bool:
+def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str) -> str:
     """Create isolated conda environment.
 
     Args:
@@ -31,17 +30,30 @@ def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str)
         env_name (str): conda environment name.
 
     Returns:
-        bool: True if successfully created, false otherwise.
+        str: Environment name if successful, None otherwise.
     """
-    logger.print("Creating isolated conda environment")
-    p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
-    if p.returncode != 0:
-        return False
+    millis_since_epoch = int(datetime.now().timestamp() * 1000)
+    env_name = f"isolated_{millis_since_epoch}"
 
-    logger.print("Using pip to install packages")
-    p = run(["conda", "run", "-n", env_name, "pip", "install", "-r", asset_config.pytest_pip_requirements,
-             "--progress-bar", "off"], cwd=asset_config.file_path)
-    return p.returncode == 0
+    conda_environment = asset_config.pytest_conda_environment
+    if not conda_environment:
+        logger.print(f"Creating isolated conda environment {env_name}")
+        p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
+    else:
+        logger.print(f"Creating isolated conda environment {env_name} from packages in {conda_environment}")
+        p = run(["conda", "env" "create", "-n", env_name, "--file", conda_environment, "-q"])
+    if p.returncode != 0:
+        return None
+
+    pip_requirements = asset_config.pytest_pip_requirements
+    if pip_requirements:
+        logger.print(f"Installing packages from {pip_requirements}")
+        p = run(["conda", "run", "-n", env_name, "pip", "install", "-r", pip_requirements,
+                "--progress-bar", "off"], cwd=asset_config.file_path)
+        if p.returncode != 0:
+            return None
+
+    return env_name
 
 
 def test_asset(asset_config: assets.AssetConfig, env_name: str, reports_dir: str = None) -> bool:
@@ -110,20 +122,18 @@ def test_assets(input_dirs: List[Path],
 
         # Create isolated environment if packages will be installed
         test_env = BASE_ENVIRONMENT
-        pytest_pip_requirements = asset_config.pytest_pip_requirements
-        if pytest_pip_requirements:
-            test_env = ISOLATED_ENVIRONMENT
-            created = create_isolated_environment(asset_config, test_env)
-            success = success and created
+        if asset_config.pytest_conda_environment or asset_config.pytest_pip_requirements:
+            test_env = create_isolated_environment(asset_config, test_env)
+            success = test_env is not None
 
-        if asset_config.type == assets.AssetType.ENVIRONMENT:
-            env_config = asset_config.extra_config_as_object()
-            assets.pin_env_files(env_config)
-
-        # Run pytest
         if success:
-            tested = test_asset(asset_config, test_env, reports_dir)
-            success = success and tested
+            # Update environment
+            if asset_config.type == assets.AssetType.ENVIRONMENT:
+                env_config = asset_config.extra_config_as_object()
+                assets.pin_env_files(env_config)
+
+            # Run pytest
+            success = test_asset(asset_config, test_env, reports_dir)
 
         counters[SUCCESS_COUNT if success else FAILED_COUNT] += 1
         logger.end_group()

@@ -1054,7 +1054,8 @@ class AssetConfig(Config):
         test:
           pytest:
             enabled: true
-            pip_requirements: tests/requirements.txt
+            conda_environment: tests/conda.yaml # Optional, must install pytest if specified
+            pip_requirements: tests/requirements.txt # Optional, additional packages required by tests
             tests_dir: tests
         categories: ["PyTorch", "Training"] # List of categories
     """
@@ -1367,6 +1368,17 @@ class AssetConfig(Config):
     def pytest_enabled(self) -> bool:
         """Whether pytests are enabled for the asset."""
         return self._test_pytest.get('enabled', False)
+
+    @property
+    def pytest_conda_environment(self) -> Path:
+        """Conda environment definition for pytest."""
+        return self._test_pytest.get('conda_environment')
+
+    @property
+    def pytest_conda_environment_with_path(self) -> Path:
+        """Conda environment definition for pytest, appended to parent directory of asset config."""
+        conda_environment = self.pytest_conda_environment
+        return self._append_to_file_path(conda_environment) if conda_environment else None
 
     @property
     def pytest_pip_requirements(self) -> Path:
