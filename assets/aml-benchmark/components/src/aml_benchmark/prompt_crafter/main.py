@@ -93,7 +93,7 @@ def parse_args() -> ArgumentParser:
         required=False,
         default=None,
         help="The jinja template used to generate few shot prompts. \
-            Shot prompts use the pattern in the `prompt_pattern` input \
+            Few shot prompts use the pattern in the `prompt_pattern` input \
             if `few_shot_pattern` is not provided.")
     return parser.parse_args()
 
