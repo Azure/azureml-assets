@@ -9,6 +9,7 @@ on:
       - 'assets/promptflow/models/**'
       - '.github/workflows/promptflow_ci.yml'
       - 'scripts/promptflow_ci/**'
+      - 'assets/promptflow/**"
 
 env:
   PROMPTFLOW_DIR: "assets/promptflow/models"
