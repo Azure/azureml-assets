@@ -1,12 +1,12 @@
 deepspeed==0.12.4
 deepspeed-mii==0.1.2
 deepspeed-kernels==0.0.1.dev1698255861
-diffusers==0.24.0
+diffusers==0.23.0
 pandas~=2.1.4
 transformers~=4.36.0
 vllm==0.2.4
 aiolimiter~=1.1.0
-azure-ai-contentsafety~=1.0.0b1
+azure-ai-contentsafety==1.0.0b1
 azure-ai-ml==1.12.1
 azure-identity==1.15.0
 azureml-ai-monitoring==0.1.0b4
