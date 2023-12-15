@@ -5,14 +5,14 @@ BERT is a transformers model pretrained on a large corpus of English data in a s
 
 This way, the model learns an inner representation of the English language that can then be used to extract features useful for downstream tasks: if you have a dataset of labeled sentences for instance, you can train a standard classifier using the features produced by the BERT model as inputs.
 
+It was introduced in [this paper](https://arxiv.org/abs/1810.04805) and first released in [this repository](https://github.com/google-research/bert). This model is cased: it makes a difference between english and English.
+
 This model has the following configuration:
 
 - 24-layer
 - 1024 hidden dimension
 - 16 attention heads
 - 336M parameters.
-
-It was introduced in [this paper](https://arxiv.org/abs/1810.04805) and first released in [this repository](https://github.com/google-research/bert). This model is cased: it makes a difference between english and English.
 
 # Training Details
 
@@ -57,7 +57,9 @@ BERT-Large, Cased (Original)             | 91.5/84.8       | 86.09
 
 # Limitations and Biases
 
-You can use the raw model for either masked language modeling or next sentence prediction, but it's mostly intended to be fine-tuned on a downstream task. See the [model hub](https://huggingface.co/models?filter=bert) to look for fine-tuned versions on a task that interests you.
+Even if the training data used for this model could be characterized as fairly neutral, this model can have biased predictions. This bias will also affect all fine-tuned versions of this model.
+
+You can use the raw model for either masked language modeling or next sentence prediction, but it's mostly intended to be fine-tuned on a downstream task.
 
 Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2.
 

@@ -53,8 +53,7 @@ Glue test results:
 Even if the training data used for this model could be characterized as fairly neutral, this model can have biased predictions. This bias will also affect all fine-tuned versions of this model.
 
 You can use the raw model for either masked language modeling or next sentence prediction, but it's mostly intended to
-be fine-tuned on a downstream task. See the [model hub](https://huggingface.co/models?filter=bert) to look for
-fine-tuned versions on a task that interests you.
+be fine-tuned on a downstream task.
 
 Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text
 generation you should look at model like GPT2.
