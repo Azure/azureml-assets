@@ -1,13 +1,13 @@
 type: evaluationresult
 name: mmlu_humanities_gpt_35_turbo_0301_question_answering
-version: 1.0.0
+version: 1.0.1
 display_name: mmlu_humanities_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for mmlu_humanities dataset
 dataset_family: mmlu
 dataset_name: mmlu_humanities
 
 model_name: gpt-35-turbo-0301
-model_version: "301"
+model_version: "0301"
 model_asset_id: azureml://registries/azure-openai-v2/models/gpt-35-turbo/versions/703844
 
 relationships:

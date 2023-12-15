@@ -1,0 +1,32 @@
+type: evaluationresult
+name: boolq_gpt_35_turbo_0613_question_answering
+version: 1.0.1
+display_name: boolq_gpt_35_turbo_0613_question_answering
+description: gpt-35-turbo-0613 run for boolq dataset
+dataset_family: boolq
+dataset_name: boolq
+
+model_name: gpt-35-turbo-0613
+model_version: "0613"
+model_asset_id: azureml://registries/azure-openai-v2/models/gpt-35-turbo/versions/690135
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azure-openai-v2/models/gpt-35-turbo/versions/690135
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.864
+
+path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"
