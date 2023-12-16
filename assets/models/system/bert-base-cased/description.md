@@ -58,6 +58,14 @@ be fine-tuned on a downstream task.
 Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text
 generation you should look at model like GPT2.
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endpoint-oss)
+Batch | todo
+
 # Sample inputs and outputs
 
 ### Sample input
