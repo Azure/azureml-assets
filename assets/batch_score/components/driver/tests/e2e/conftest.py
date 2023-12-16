@@ -92,8 +92,8 @@ def pytest_configure():
     )
 
     # Prepare to copy components in fixtures below to a temporary file to not muddle dev environments
-    pytest.source_dir = os.getcwd()
-    tmp_dir = os.path.join(pytest.source_dir, "driver", "batch_score_temp")
+    pytest.source_dir = os.path.join(os.getcwd(), "assets", "batch_score", "components", "driver")
+    tmp_dir = os.path.join(pytest.source_dir, "batch_score_temp")
     os.makedirs(tmp_dir, exist_ok=True)
     pytest.copied_batch_score_component_filepath = os.path.join(tmp_dir, f"spec_copy_{str(uuid.uuid4())}.yml")
 
@@ -127,10 +127,7 @@ def llm_batch_score_yml_component(asset_version):
 def register_component(component_name, asset_version):
     """Register component."""
     # Copy component to a temporary file to not muddle dev environments
-    batch_score_component_filepath = os.path.join(pytest.source_dir,
-                                                  "driver",
-                                                  component_name,
-                                                  "spec.yaml")
+    batch_score_component_filepath = _get_spec_filepath(component_name)
     create_copy(batch_score_component_filepath, pytest.copied_batch_score_component_filepath)
 
     # pins batch_component version
@@ -147,6 +144,9 @@ def register_component(component_name, asset_version):
 
 
 def _get_component_metadata(component_name, asset_version):
-    batch_score_component_filepath = os.path.join(
-        pytest.source_dir, "driver", component_name,  "spec.yaml")
+    batch_score_component_filepath = _get_spec_filepath(component_name)
     return _get_component_name(batch_score_component_filepath), asset_version
+
+
+def _get_spec_filepath(component_name):
+    return os.path.join(pytest.source_dir, component_name, "spec.yaml")
