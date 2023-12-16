@@ -435,7 +435,7 @@
         },
         "outputs": {},
         "settings": {
-            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/gpt4-32k-2",
+            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/serverless",
             "continue_on_step_failure": true,
             "force_rerun": false,
             "_source": "YAML.JOB"

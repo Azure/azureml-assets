@@ -16,7 +16,12 @@ TEST_REQUIREMENTS_FILE = SCRIPTS_DIR / "requirements.txt"
 
 @pytest.mark.parametrize(
     "test_subdir,expected",
-    [("good-assets-with-requirements", True), ("bad-assets", False), ("mixed-assets", False)]
+    [
+        ("good-assets-with-conda-environment", True),
+        ("good-assets-with-requirements", True),
+        ("bad-assets", False),
+        ("mixed-assets", False)
+    ]
 )
 def test_test_assets(test_subdir: str, expected: bool):
     """Test azureml.assets.test_assets() function."""
