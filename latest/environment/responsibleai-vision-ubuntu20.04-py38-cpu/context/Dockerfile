@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20231130.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20231215.v1
 # Install OpenCV native dependencies
 RUN apt-get update
 RUN apt-get install -y python3-opencv
