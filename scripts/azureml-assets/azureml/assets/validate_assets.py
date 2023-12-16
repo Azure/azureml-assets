@@ -656,11 +656,10 @@ def validate_model_scenario(
         int: Number of errors.
 
     """
-    min_sku = model.properties.get(min_sku_prop_name, None)
-    recommended_skus = model.properties.get(recommended_skus_prop_name, None)
-    compute_allowlists = model.tags.get(compute_allowlist_tags_name, None)
-
     error_count = 0
+    min_sku = model.properties.get(min_sku_prop_name, "").strip()
+    recommended_skus = model.properties.get(recommended_skus_prop_name, "").strip()
+    compute_allowlists = set(model.tags.get(compute_allowlist_tags_name, []))
 
     # TODO: add min_sku validation than just its existence
 
@@ -676,11 +675,15 @@ def validate_model_scenario(
         _log_error(asset_file_name_with_path, f"{compute_allowlist_tags_name} is missing in model tags")
         error_count += 1
 
-    if (recommended_skus.split(",")
-            != compute_allowlists):
+    recommended_skus = set([sku.strip() for sku in recommended_skus.split(",")])
+    if (recommended_skus != compute_allowlists):
+        a_minus_b = recommended_skus - compute_allowlists
+        b_minus_a = compute_allowlists - recommended_skus
         _log_error(
             asset_file_name_with_path,
-            f"{recommended_skus_prop_name} and {recommended_skus_prop_name} does not match for model"
+            f"{recommended_skus_prop_name} and {compute_allowlist_tags_name} does not match for model.\n"
+            f"skus in recommended sku and not in compute allowlists => {a_minus_b}\n"
+            f"skus in compute allowlists and not in recommended sku => {b_minus_a}\n"
         )
         error_count += 1
 
