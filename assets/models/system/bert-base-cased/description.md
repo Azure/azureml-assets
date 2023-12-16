@@ -62,9 +62,8 @@ generation you should look at model like GPT2.
 
 Inference type|Python sample (Notebook)
 |--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
 Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endpoint-oss)
-Batch | todo
 
 # Sample inputs and outputs
 
