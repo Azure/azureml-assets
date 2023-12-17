@@ -29,6 +29,13 @@ Note that this model is primarily aimed at being fine-tuned on tasks that use th
 
 The model should not be used to intentionally create hostile or alienating environments for people. The model was not trained to be factual or true representations of people or events, and therefore using the models to generate such content is out-of-scope for the abilities of this model
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endpoint-oss)
+
 # Sample inputs and outputs
 
 ### Sample input

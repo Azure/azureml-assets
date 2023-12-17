@@ -57,6 +57,12 @@ For full results for T5-Large, see the [research paper](https://jmlr.org/papers/
 
 The developers evaluated the model on 24 tasks, see the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) for full details.
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[text-translation-online-endpoint.ipynb](https://aka.ms/translation-online-endpoint-oss)
 
 # Sample inputs and outputs
 

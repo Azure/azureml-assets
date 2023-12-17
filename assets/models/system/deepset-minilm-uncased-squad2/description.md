@@ -30,6 +30,13 @@ Evaluated on the SQuAD 2.0 dev set with the [official eval script](https://works
 "NoAns_total": 5945
 ```
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[question-answering-online-endpoint.ipynb](https://aka.ms/question-answering-online-endpoint-oss)
+
 # Sample inputs and outputs
 
 ### Sample input
