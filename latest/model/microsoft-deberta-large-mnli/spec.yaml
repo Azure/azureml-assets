@@ -57,6 +57,13 @@ description: |
   | **[DeBERTa-V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1,2</sup>** | **96.1/91.4** | **92.2/89.7** | **91.7/91.9** | 97.2     | **96.0** | **72.0** | 93.5     | **93.1/94.9** | **92.7/90.3** | **93.2/93.1** |
   --------
 
+  # Inference samples
+
+  Inference type|Python sample (Notebook)
+  |--|--|
+  Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+  Real time|[text-classification-online-endpoint.ipynb](https://aka.ms/text-classification-online-endpoint-oss)
+
   # Sample inputs and outputs
 
   ### Sample input

@@ -11,6 +11,13 @@ Uses `POS`, `NEG`, `NEU` labels.
 1. [TASS Dataset license](http://tass.sepln.org/tass_data/download.php)
 2. [SEMEval 2017 Dataset license]()
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[text-classification-online-endpoint.ipynb](https://aka.ms/text-classification-online-endpoint-oss)
+
 # Sample inputs and outputs
 
 ### Sample input
