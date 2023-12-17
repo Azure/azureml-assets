@@ -10,16 +10,14 @@ T5-Small is the checkpoint with 60 million parameters.
 
 The model is pre-trained on the [Colossal Clean Crawled Corpus (C4)](https://www.tensorflow.org/datasets/catalog/c4), which was developed and released in the context of the same [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) as T5.
 
-The model was pre-trained on a on a **multi-task mixture of unsupervised (1.) and supervised tasks (2.)**.
-Thereby, the following datasets were being used for (1.) and (2.):
+The model was pre-trained on a on a **multi-task mixture of unsupervised and supervised tasks**.
+Thereby, the following datasets were being used for:
 
-1. **Datasets used for Unsupervised denoising objective**:
-
+#### **Datasets used for Unsupervised denoising objective**:
 - [C4](https://huggingface.co/datasets/c4)
 - [Wiki-DPR](https://huggingface.co/datasets/wiki_dpr)
 
-
-2. **Datasets used for Supervised text-to-text language modeling objective**
+#### **Datasets used for Supervised text-to-text language modeling objective**
 
 - Sentence acceptability judgment
   - CoLA [Warstadt et al., 2018](https://arxiv.org/abs/1805.12471)
@@ -58,6 +56,13 @@ For full results for T5-small, see the [research paper](https://jmlr.org/papers/
 ## Testing Data, Factors & Metrics
 
 The developers evaluated the model on 24 tasks, see the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) for full details.
+
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[text-translation-online-endpoint.ipynb](https://aka.ms/translation-online-endpoint-oss)
 
 # Sample inputs and outputs
 

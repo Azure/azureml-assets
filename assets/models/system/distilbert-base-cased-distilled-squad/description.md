@@ -36,6 +36,13 @@ Significant research has explored bias and fairness issues with language models 
 
 Users (both direct and downstream) should be made aware of the risks, biases and limitations of the model.
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[question-answering-online-endpoint.ipynb](https://aka.ms/question-answering-online-endpoint-oss)
+
 # Sample inputs and outputs
 
 ### Sample input

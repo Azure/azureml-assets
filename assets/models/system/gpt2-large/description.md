@@ -48,6 +48,13 @@ The training data used for this model has not been released as a dataset one can
 
 *Note: This bias will also affect all fine-tuned versions of this model. Users (both direct and downstream) should be made aware of the risks, biases and limitations of the model.*
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[text-generation-online-endpoint.ipynb](https://aka.ms/text-generation-online-endpoint-oss)
+
 # Sample inputs and outputs
 
 ### Sample input
