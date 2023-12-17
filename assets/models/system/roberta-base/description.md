@@ -73,6 +73,13 @@ Note that this model is primarily aimed at being fine-tuned on tasks that use th
 to make decisions, such as sequence classification, token classification or question answering. For tasks such as text
 generation you should look at a model like GPT2.
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endpoint-oss)
+
 # Sample inputs and outputs
 
 ### Sample input

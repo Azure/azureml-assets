@@ -34,6 +34,13 @@ Significant research has explored bias and fairness issues with language models 
 
 The model should not be used to intentionally create hostile or alienating environments for people. In addition, the model was not trained to be factual or true representations of people or events, and therefore using the model to generate such content is out-of-scope for the abilities of this model.
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[question-answering-online-endpoint.ipynb](https://aka.ms/question-answering-online-endpoint-oss)
+
 # Sample inputs and outputs
 
 ### Sample input
