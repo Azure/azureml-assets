@@ -224,8 +224,12 @@ if __name__ == "__main__":
     # region: Step2. submit flow runs using pfazure
     submitted_flow_run_ids = []
     submitted_flow_run_links = []
-    results, handled_failures = flow_utils.submit_flow_runs_using_pfazure(flows_dirs, args.subscription_id,
-                           args.resource_group, args.workspace_name)
+    results, handled_failures = flow_utils.submit_flow_runs_using_pfazure(
+        flows_dirs,
+        args.subscription_id,
+        args.resource_group,
+        args.workspace_name
+    )
     for key, val in results.items():
         submitted_flow_run_ids.append(key)
         submitted_flow_run_links.append(val)
