@@ -14,6 +14,8 @@ tags:
   license: creativeml-openrail++-m
   task: text-to-image
   huggingface_model_id: stabilityai/stable-diffusion-2-1
+  inference_supported_envs:
+  - ds-mii
   inference_compute_allow_list:
     [
       Standard_NC6s_v3,
