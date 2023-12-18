@@ -43,6 +43,7 @@ def _assign_flow_values(flow_dirs):
 
 
 def _create_run_yamls(flow_dirs):
+    """Create run.yml."""
     log_debug("\n=======Start creating run.yaml for flows=======")
     run_yaml = {
         "$schema": "https://azuremlschemas.azureedge.net/promptflow/latest/Run.schema.json",
@@ -59,6 +60,7 @@ def _create_run_yamls(flow_dirs):
 
 
 def submit_func(run_path, sub, rg, ws):
+    """Worker function to submit flow run."""
     command = f"pfazure run create --file  {run_path} --subscription {sub} -g {rg} -w {ws}"
     res = run_command(command)
     res = res.stdout.split('\n')
@@ -66,6 +68,7 @@ def submit_func(run_path, sub, rg, ws):
 
 
 def get_run_id_and_url(res):
+    """Resolve run_id an url from log."""
     run_id = ""
     portal_url = ""
     for line in res:
@@ -80,6 +83,7 @@ def get_run_id_and_url(res):
 
 
 def submit_flow_runs_using_pfazure(flow_dirs, sub, rg, ws):
+    """Multi thread submit flow run using pfazure."""
     results = {}
     handled_failures = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
