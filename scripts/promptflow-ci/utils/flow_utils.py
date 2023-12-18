@@ -83,8 +83,10 @@ def submit_flow_runs_using_pfazure(flow_dirs, sub, rg, ws):
     results = {}
     handled_failures = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-        futures = {executor.submit(submit_func, os.path.join(flow_dir, 'run.yml'), sub, rg, ws):
-            flow_dir for flow_dir in flow_dirs}
+        futures = {
+            executor.submit(submit_func, os.path.join(flow_dir, 'run.yml'), sub, rg, ws): flow_dir
+            for flow_dir in flow_dirs
+        }
         for future in concurrent.futures.as_completed(futures):
             try:
                 flow_dir = futures[future]
