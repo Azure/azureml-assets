@@ -5,7 +5,7 @@
 
 ## 1.16.22 (2023-12-18)
 ### 🚀 New Features
-- [#1964](https://github.com/Azure/azureml-assets/pull/1964) Add switch to skip validating pytest existence
+- [#1980](https://github.com/Azure/azureml-assets/pull/1980) Add switch to skip validating pytest existence
 
 ## 1.16.21 (2023-12-18)
 ### 🚀 New Features
