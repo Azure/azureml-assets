@@ -14,7 +14,10 @@ import openai
 import glob
 
 from constants import TASK, ForecastingConfigContract, ArgumentLiterals
-from workspace_utils import get_connection_by_id_v2, workspace_connection_to_credential
+from workspace_utils import (get_connection_by_id_v2,
+                             workspace_connection_to_credential,
+                             get_target_from_connection,
+                             get_metadata_from_connection)
 from logging_utilities import get_logger, log_traceback
 from mltable import load
 from task_factory.tabular.classification import TabularClassifier
@@ -259,7 +262,7 @@ def _log_metrics(metrics, artifacts):
 
 
 def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None,
-                         input_column_names=None, **kwargs):
+                         input_column_names=None, is_multiple_ground_truth=False, **kwargs):
     """Compute metrics mode method.
 
     Args:
@@ -275,7 +278,8 @@ def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config
     """
     evaluator = EvaluatorFactory().get_evaluator(task_type, metrics_config)
     res = evaluator.evaluate(y_test, y_pred, y_pred_proba=y_pred_proba, X_test=X_test,
-                             input_column_names=input_column_names, **kwargs)
+                             input_column_names=input_column_names,
+                             is_multiple_ground_truth=is_multiple_ground_truth, **kwargs)
     metrics = res[metrics_constants.Metric.Metrics]
     artifacts = res[metrics_constants.Metric.Artifacts]
     _log_metrics(metrics, artifacts)
@@ -803,12 +807,11 @@ def fetch_compute_metrics_args(data, task_type):
         task_type: _description_
     """
     metrics_args = ArgumentsSet(task_type=task_type)
-    metrics_config = {}
     for arg, func in metrics_args.args_set.items():
         val = data.get(arg, None)
         if val is not None:
             try:
-                metrics_config[arg] = eval(func)
+                data[arg] = eval(func)
             except TypeError as e:
                 message = "Invalid dtype passed for config param '" + arg + "'."
                 exception = get_azureml_exception(DataLoaderException, BadEvaluationConfigParam, e, error=repr(e))
@@ -818,7 +821,7 @@ def fetch_compute_metrics_args(data, task_type):
                 exception = get_azureml_exception(DataLoaderException, BadEvaluationConfigParam, e, error=repr(e))
                 log_traceback(exception, logger)
                 raise exception
-    return metrics_config
+    return data
 
 
 def read_config(conf_file):
@@ -923,9 +926,11 @@ def openai_init(llm_config, **openai_params):
         credential = workspace_connection_to_credential(connection)
         if hasattr(credential, 'key'):
             llm_config["key"] = credential.key
-            llm_config["base"] = connection['properties'].get('target', {})
-            openai_api_type = connection['properties'].get('metadata', {}).get('apiType', "azure")
-            openai_api_version = connection['properties'].get('metadata', {}).get('apiVersion', "2023-03-15-preview")
+            target = get_target_from_connection(connection)
+            llm_config["base"] = target
+            metadata = get_metadata_from_connection(connection)
+            openai_api_type = metadata.get('apiType', "azure")
+            openai_api_version = metadata.get('apiVersion', "2023-03-15-preview")
             logger.info("Using workspace connection key for OpenAI")
             fetch_from_connection = True
     if not fetch_from_connection:
@@ -956,8 +961,8 @@ def openai_init(llm_config, **openai_params):
 
     openai.api_version = openai_api_version
     openai.api_type = openai_api_type
-    openai.api_base = llm_config["base"]
-    openai.api_key = llm_config["key"]
+    openai.api_base = llm_config.get("base", None)
+    openai.api_key = llm_config.get("key", None)
 
     if not all([llm_config["base"], llm_config["key"], llm_config['deployment_name']]):
         logger.warn("No Connection String Provided and no credentials present in workspace's keyvault.")

@@ -7,7 +7,7 @@ import json
 from azureml.telemetry.activity import log_activity
 
 import constants
-from constants import ArgumentLiterals, ForecastingConfigContract
+from constants import ArgumentLiterals, ForecastingConfigContract, TASK, SubTask
 from exceptions import (
     DataLoaderException,
     DataSavingException,
@@ -20,6 +20,7 @@ from error_definitions import (
     InvalidGroundTruthColumnNameData,
     InvalidPredictionColumnNameData,
     BadInputData,
+    BadEvaluationConfig,
     SavingOutputError,
 )
 from logging_utilities import (
@@ -88,23 +89,34 @@ class ComputeMetricsRunner:
 
         self.config = config
         self._is_multilabel = self.config.get("multilabel", False)
-        self._has_multiple_output = self._is_multilabel or self.task == constants.TASK.NER
-        if self.task == constants.TASK.QnA:
+        self._has_multiple_output = self._is_multilabel or self.task == TASK.NER
+        self._is_multiple_ground_truth = False
+
+        if self.task in [TASK.QnA] or (self.task == TASK.CHAT_COMPLETION and
+                                       self.config.get(SubTask.SUB_TASK_KEY, "") == SubTask.RAG_EVALUATION):
             for k, v in constants.OpenAIConstants.DEFAULT_OPENAI_CONFIG.items():
                 if k not in llm_config:
                     logger.info(f"Required Key '{k}' not found in openai_config_params. \
                                 Setting it to default '{v}'")
                     llm_config[k] = v
             do_openai_init = True
-            self.qna_input_data_keys = {}
-            if not any(k in llm_config for k in constants.OpenAIConstants.REQUIRED_KEYS):
-                logger.warning(f"Any of Required Keys '[{', '.join(constants.OpenAIConstants.REQUIRED_KEYS)}]' missing"
-                               f" in openai_config_params.\nSkipping GPT Based Metrics calculation for this Run.")
-                do_openai_init = False
-            else:
-                for k in constants.OpenAIConstants.REQUIRED_KEYS:
-                    self.qna_input_data_keys[k] = llm_config.get(k, None)
+            keys = constants.OpenAIConstants.REQUIRED_KEYS
+            if self.task == TASK.QnA:
+                if not any(k in llm_config for k in keys):
+                    logger.warning(f"Any of Required Keys '[{', '.join(keys)}]' missing in openai_config_params.\n"
+                                   f"Skipping GPT Based Metrics calculation for this Run.")
+                    do_openai_init = False
+            elif self.task == TASK.CHAT_COMPLETION:
+                if not all(k in llm_config for k in keys):
+                    message = f"Required Keys '[{', '.join(keys)}]' missing in openai_config_params."
+                    exception = get_azureml_exception(DataValidationException, BadEvaluationConfig,
+                                                      None, error=message)
+                    log_traceback(exception, logger)
+                    raise exception
+            self.rag_input_data_keys = {}
             if do_openai_init:
+                for k in keys:
+                    self.rag_input_data_keys[k] = llm_config.get(k, None)
                 openai_init_params = {}
                 for k, v in constants.OpenAIConstants.DEFAULT_OPENAI_INIT_PARAMS.items():
                     openai_init_params[k] = llm_config.pop(k, v)
@@ -126,24 +138,37 @@ class ComputeMetricsRunner:
                 ground_truth = read_data(self.ground_truth)
             ground_truth = list(ground_truth)[0]
 
-            if self.config.get(constants.OpenAIConstants.METRICS_KEY):
-                questions_key = self.qna_input_data_keys[constants.OpenAIConstants.QUESTIONS_KEY]
-                contexts_key = self.qna_input_data_keys[constants.OpenAIConstants.CONTEXTS_KEY]
-                questions, contexts = fetch_questions_and_contexts(ground_truth, questions_key,
-                                                                   contexts_key, self.ground_truths_column_name)
-                if not len(questions) and not len(contexts):
+            if self.config.get(constants.OpenAIConstants.METRICS_KEY) and (
+                    self.task in [TASK.QnA] or (self.task == TASK.CHAT_COMPLETION and
+                                                self.config.get(SubTask.SUB_TASK_KEY, "") == SubTask.RAG_EVALUATION)
+            ):
+                questions_key = (constants.OpenAIConstants.QUESTIONS_KEY,
+                                 self.rag_input_data_keys[constants.OpenAIConstants.QUESTIONS_KEY])
+                contexts_key = (constants.OpenAIConstants.CONTEXTS_KEY,
+                                self.rag_input_data_keys[constants.OpenAIConstants.CONTEXTS_KEY])
+                keys = [questions_key, contexts_key]
+                key_data = {key[0]: fetch_key_column_from_data(ground_truth, key[1], self.ground_truths_column_name)
+                            for key in keys}
+
+                if self.task == TASK.QnA and not any(len(values) for values in key_data.values()):
                     logger.warning("Failed to Fetch Questions and Contexts from Ground Truth Data.\n\
                                    Skipping GPT Based Metrics Calculation")
                     self.config.pop(constants.OpenAIConstants.METRICS_KEY)
+                elif self.task == TASK.CHAT_COMPLETION and not all(len(values) for values in key_data.values()):
+                    message = "Failed to Fetch Questions and Contexts from Ground Truth Data."
+                    exception = get_azureml_exception(DataValidationException, message, None)
+                    log_traceback(exception, logger)
+                    raise exception
                 else:
-                    if len(questions):
-                        self.config[constants.OpenAIConstants.QUESTIONS_KEY] = questions
-                    if len(contexts):
-                        self.config[constants.OpenAIConstants.CONTEXTS_KEY] = contexts
+                    for key, values in key_data.items():
+                        if len(values):
+                            self.config[key] = values
 
             if len(ground_truth) > 0:
-                ground_truth = filter_ground_truths(ground_truth, self.task, self.ground_truths_column_name,
-                                                    self.extra_y_test_cols, self.config)
+                ground_truth, self._is_multiple_ground_truth = filter_ground_truths(ground_truth, self.task,
+                                                                                    self.ground_truths_column_name,
+                                                                                    self.extra_y_test_cols,
+                                                                                    self.config)
 
         if os.path.isdir(self.predictions) and not self.is_predictions_mltable:
             predictions = read_multiple_files(path=self.predictions)
@@ -168,7 +193,7 @@ class ComputeMetricsRunner:
         try:
             ground_true_regressors = None
             self.rename_columns = {}
-            if self.task == constants.TASK.FORECASTING:
+            if self.task == TASK.FORECASTING:
                 ground_truth = self.ground_truth.pop(self.ground_truths_column_name).values
                 ground_true_regressors = self.ground_truth
                 self.ground_truth = ground_truth
@@ -196,7 +221,8 @@ class ComputeMetricsRunner:
                 extra_args[constants.DataFrameParams.Ground_Truth_Column_Name] = self.ground_truths_column_name
 
             return evaluate_predictions(self.ground_truth, self.predictions, self.predictions_probabilities,
-                                        self.task, self.config, ground_true_regressors, **extra_args)
+                                        self.task, self.config, ground_true_regressors,
+                                        is_multiple_ground_truth=self._is_multiple_ground_truth, **extra_args)
         except Exception as e:
             exception = get_azureml_exception(ComputeMetricsException, ComputeMetricsInternalError, e,
                                               wrap_azureml_ex=False, error=repr(e))
@@ -211,7 +237,7 @@ class ComputeMetricsRunner:
             for metrics, value in scalar_metrics.items():
                 formatted = f"{metrics}: {value}"
                 logger.info(formatted)
-            if self.task == constants.TASK.FORECASTING and self.rename_columns \
+            if self.task == TASK.FORECASTING and self.rename_columns \
                     and 'forecast_time_series_id_distribution_table' in result.artifacts:
                 artifact_content = result.artifacts['forecast_time_series_id_distribution_table'].content
                 ts_id_table = pd.DataFrame(artifact_content['data'])
@@ -224,7 +250,7 @@ class ComputeMetricsRunner:
             result.save(os.path.join(self.output, constants.EVALUATION_RESULTS_PATH))
 
 
-def fetch_questions_and_contexts(data, questions_key, contexts_key, gt_column_name=None):
+def fetch_key_column_from_data(data, key, gt_column_name=None):
     """Fetch Questions and Contexts from QnA Dataset.
 
     Args:
@@ -232,30 +258,23 @@ def fetch_questions_and_contexts(data, questions_key, contexts_key, gt_column_na
         questions_key (_type_): _description_
         contexts_key (_type_): _description_
     """
-    questions, contexts = [], []
-    if not questions_key and not contexts_key:
-        return questions, contexts
-    if questions_key in data.columns or contexts_key in data.columns:
-        if questions_key and questions_key in data.columns:
-            questions = data[questions_key].tolist()
-        if contexts_key and contexts_key in data.columns:
-            contexts = data[contexts_key].tolist()
+    key_data = []
+    if not key:
+        return key_data
+    if key in data.columns:
+        key_data = data[key].tolist()
     elif len(data.columns) > 1:
         if gt_column_name is not None and gt_column_name in data.columns:
             if isinstance(data[gt_column_name][0], dict):
                 sample = data[gt_column_name][0]
-                if questions_key in sample:
-                    questions = data[gt_column_name].apply(lambda x: x[questions_key]).tolist()
-                if contexts_key in sample:
-                    contexts = data[gt_column_name].apply(lambda x: x[contexts_key]).tolist()
+                if key in sample:
+                    key_data = data[gt_column_name].apply(lambda x: x[key]).tolist()
     else:
         if isinstance(data.tolist()[0], dict):
             sample = data.tolist()[0]
-            if questions_key in sample:
-                questions = data[gt_column_name].apply(lambda x: x[questions_key]).tolist()
-            if contexts_key in sample:
-                contexts = data[gt_column_name].apply(lambda x: x[contexts_key]).tolist()
-    return questions, contexts
+            if key in sample:
+                key_data = data[gt_column_name].apply(lambda x: x[key]).tolist()
+    return key_data
 
 
 def filter_ground_truths(data, task_type, column_name=None, extra_y_test_cols=None, config=None):
@@ -268,32 +287,35 @@ def filter_ground_truths(data, task_type, column_name=None, extra_y_test_cols=No
     Returns:
         _type_: _description_
     """
-    if task_type in [constants.TASK.IMAGE_INSTANCE_SEGMENTATION, constants.TASK.IMAGE_OBJECT_DETECTION,
-                     constants.TASK.FORECASTING] or \
-            (task_type == constants.TASK.TEXT_GENERATION and
+    multiple_ground_truth = False
+
+    if task_type in [TASK.IMAGE_INSTANCE_SEGMENTATION, TASK.IMAGE_OBJECT_DETECTION,
+                     TASK.FORECASTING] or \
+            (task_type == TASK.TEXT_GENERATION and
              config.get(constants.TextGenerationColumns.SUBTASKKEY, "") == constants.SubTask.CODEGENERATION):
         # do not filter as these contains multiple required columns
-        return data
+        multiple_ground_truth = True
+        return data, multiple_ground_truth
     #  for Question-Answering checking for multiple columns in ground truth
-    if task_type == constants.TASK.QnA and column_name:
+    if task_type == TASK.QnA and column_name:
         if isinstance(data[data.columns[0]][0], dict) and len(data[data.columns[0]][0].keys()) > 1:
             try:
                 if isinstance(data, pd.DataFrame):
-                    logger.warning("Multiple ground truths are not supported for the \
-                                   Question and Answering currently.\
-                                   Considering only the first ground truth in case of multiple values.")
-                    data[data.columns[0]] = data[data.columns[0]].apply(
-                        lambda x: x[column_name][0] if len(x[column_name]) > 0 else ""
-                    )
+                    # logger.warning("Multiple ground truths are not supported for the \
+                    #                Question and Answering currently.\
+                    #                Considering only the first ground truth in case of multiple values.")
+                    # data[data.columns[0]] = data[data.columns[0]].apply(
+                    #     lambda x: x[column_name][0] if len(x[column_name]) > 0 else ""
+                    # )
+                    multiple_ground_truth = True
             except Exception as e:
                 exception = get_azureml_exception(DataValidationException, InvalidGroundTruthColumnNameData, e)
                 log_traceback(exception, logger)
                 raise exception
         if column_name in data.columns:
             if isinstance(data[column_name].iloc[0], list) or isinstance(data[column_name].iloc[0], np.ndarray):
-                logger.warning("Multiple ground truths are not supported for the Question and Answering currently.\
-                                Considering only the first ground truth in case of multiple values.")
-                data[column_name] = data[column_name].apply(lambda x: x[0])
+                multiple_ground_truth = True
+
     if len(data.columns) > 1:
         label_cols = []
         if column_name:
@@ -312,7 +334,7 @@ def filter_ground_truths(data, task_type, column_name=None, extra_y_test_cols=No
             # exception = get_azureml_exception(DataValidationException, InvalidGroundTruthColumnName, None)
             # log_traceback(exception, logger)
             # raise exception
-    return data
+    return data, multiple_ground_truth
 
 
 def filter_predictions(data, task_type, column_name):
@@ -325,11 +347,11 @@ def filter_predictions(data, task_type, column_name):
     Returns:
         _type_: _description_
     """
-    if task_type in [constants.TASK.CHAT_COMPLETION]:
+    if task_type in [TASK.CHAT_COMPLETION]:
         # do not filter as these contains multiple prediction columns
         return data
     #  for Question-Answering checking for multiple columns in ground truth
-    if task_type == constants.TASK.QnA:
+    if task_type == TASK.QnA:
         if not column_name:
             column_name = constants.PREDICTIONS_COLUMN_NAME
         if isinstance(data[data.columns[0]][0], dict) and len(data[data.columns[0]][0].keys()) > 1:
@@ -415,7 +437,7 @@ def run():
             args[ArgumentLiterals.PREDICTION_PROBABILITIES]
         )
 
-        if args[ArgumentLiterals.TASK] == constants.TASK.FORECASTING:
+        if args[ArgumentLiterals.TASK] == TASK.FORECASTING:
             if not ground_truths_column_name:
                 # If the ground true column name was not provided, we will try to take it from the config.
                 ground_truths_column_name = config.get(ForecastingConfigContract.FORECAST_GROUND_TRUTH, '')
