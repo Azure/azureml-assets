@@ -2,7 +2,7 @@ DeciLM-7B-instruct is a model for short-form instruction following, built by LoR
 
 
 
-## **Inference samples**
+# Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
@@ -10,16 +10,16 @@ Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" targ
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 
-## **Model Evaluation**
+# Model Evaluation
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
 Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
 
 
-### Sample inputs and outputs (for real-time inference)
+# Sample inputs and outputs (for real-time inference)
 
-#### Sample input
+### Sample input
 ```json
 {
   "input_data": {
@@ -34,7 +34,7 @@ Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn
 }
 ```
 
-#### Sample output
+### Sample output
 ```json
 [
   {
