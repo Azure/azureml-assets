@@ -22,13 +22,15 @@ Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn
 ```json
 {
   "input_data": {
-      "input_string": ["def print_hello_world():"],
-      "parameters":{   
-              "top_p": 0.95,
-              "temperature": 0.1,
-              "max_new_tokens": 10,
-              "do_sample": true
-      }
+    "input_string": [
+      "def print_hello_world():"
+    ],
+    "parameters": {
+      "top_p": 0.95,
+      "temperature": 0.1,
+      "max_new_tokens": 10,
+      "do_sample": true
+    }
   }
 }
 ```
