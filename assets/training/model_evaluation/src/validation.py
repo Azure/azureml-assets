@@ -245,7 +245,7 @@ def validate_and_get_columns(args):
                 log_traceback(exception, logger)
                 raise exception
 
-    extra_cols_tasks = [TASK.TEXT_GENERATION, TASK.QnA, TASK.CHAT_COMPLETION, TASK.TEXT_GENERATION_CODE]
+    extra_cols_tasks = [TASK.TEXT_GENERATION, TASK.QnA, TASK.CHAT_COMPLETION]
     if extra_y_test_cols is not None and task not in extra_cols_tasks:
         logger.info(f"extra_y_test_cols not supported for task type {task}. Setting to None.")
         extra_y_test_cols = None
