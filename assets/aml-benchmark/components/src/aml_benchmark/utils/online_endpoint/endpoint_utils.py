@@ -99,6 +99,8 @@ class EndpointUtilities:
                     prompt = str(payload["messages"])
             elif model.is_claude_model():
                 prompt = str(payload["prompt"])
+            elif model.is_vision_oss_model():
+                prompt = payload["input_data"]["data"][0][0]
             else:
                 # if model is unknown, use the full payload.
                 prompt = str(payload)
