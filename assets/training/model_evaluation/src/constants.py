@@ -70,7 +70,6 @@ class TASK:
     QnA = "question-answering"
     TRANSLATION = "text-translation"
     TEXT_GENERATION = "text-generation"
-    TEXT_GENERATION_CODE = "text-generation-code"
     FILL_MASK = "fill-mask"
     IMAGE_CLASSIFICATION = "image-classification"
     IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
@@ -97,7 +96,7 @@ ALL_TASKS = [
     TASK.IMAGE_CLASSIFICATION_MULTILABEL,
     TASK.CHAT_COMPLETION,
     TASK.IMAGE_OBJECT_DETECTION,
-    TASK.IMAGE_INSTANCE_SEGMENTATION
+    TASK.IMAGE_INSTANCE_SEGMENTATION,
 ]
 
 MULTILABEL_SET = [
@@ -158,7 +157,7 @@ TEXT_TOKEN_TASKS = [
     TASK.SUMMARIZATION,
     TASK.TEXT_GENERATION,
     TASK.FILL_MASK,
-    TASK.CHAT_COMPLETION
+    TASK.CHAT_COMPLETION,
 ]
 
 TEXT_OUTPUT_TOKEN_TASKS = [
@@ -167,7 +166,7 @@ TEXT_OUTPUT_TOKEN_TASKS = [
     TASK.SUMMARIZATION,
     TASK.TEXT_GENERATION,
     TASK.FILL_MASK,
-    TASK.CHAT_COMPLETION
+    TASK.CHAT_COMPLETION,
 ]
 
 
@@ -344,7 +343,10 @@ class TextGenerationColumns:
 class SubTask:
     """Constants for sub-tasks."""
 
+    SUB_TASK_KEY = "sub_task"
+
     CODEGENERATION = "code"
+    RAG_EVALUATION = "rag"
 
 
 class OpenAIConstants:
