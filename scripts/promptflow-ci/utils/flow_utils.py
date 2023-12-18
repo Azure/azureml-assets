@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 import yaml
 import concurrent.futures
+import json
 
 from utils.logging_utils import log_debug, log_error
 from utils.utils import run_command
@@ -38,6 +39,15 @@ def _assign_flow_values(flow_dirs):
                     flow_node["inputs"]["connection"] = "aoai_connection"
         with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
             yaml.dump(flow_dag, dag_file, allow_unicode=True)
+
+        if not os.path.exists(Path(flow_dir)/"samples.json"):
+            with open(flow_dir/"samples.json", 'w', encoding="utf-8") as sample_file:
+                samples = []
+                sample = {}
+                for key, val in flow_dag["inputs"].items():
+                    sample[key] = val.get("default")
+                samples.append(sample)
+                json.dump(sample, sample_file, indent=4)
     log_debug("=======Complete overriding values for flows=======\n")
     return flow_dirs
 
