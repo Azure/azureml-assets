@@ -4,76 +4,27 @@
 """Flow utils."""
 
 import os
-import random
 import re
-from datetime import datetime
 from pathlib import Path
-import shutil
-from unittest import mock
 import yaml
+import concurrent.futures
 
-from utils.logging_utils import log_error, log_debug
-
-
-def create_flow_run_identifier(flow_id, flow_run_id):
-    """Generate the global unique flow run identifier."""
-    return f"{flow_id}:{flow_run_id}"
+from utils.logging_utils import log_debug, log_error
+from utils.utils import run_command
 
 
-def resolve_flow_run_identifier(flow_run_identifier):
-    """Resolve the flow run identifier to flow id and flow run id."""
-    return flow_run_identifier.split(":")[0], flow_run_identifier.split(":")[1]
-
-
-def _validate_meta(meta, flow_dir):
-    """Validate meta type."""
-    if meta["type"] not in ["standard", "evaluate", "chat", "rag"]:
-        raise ValueError(f"Unknown type in meta.json. model dir: {flow_dir}.")
-    stage = meta["properties"]["promptflow.stage"]
-    if stage not in ["test", "prod", "disabled"]:
-        raise ValueError(f"Unknown stage in meta.json. flow dir: {flow_dir}.")
-
-
-def _general_copy(src, dst, make_dirs=True):
-    """Call _copy to copy."""
-    if make_dirs:
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-    if hasattr(os, "listxattr"):
-        with mock.patch("shutil._copyxattr", return_value=[]):
-            shutil.copy2(src, dst)
-    else:
-        shutil.copy2(src, dst)
-
-
-def _copy(src: Path, dst: Path) -> None:
-    """Copy files."""
-    if not src.exists():
-        raise ValueError(f"Path {src} does not exist.")
-    if src.is_file():
-        _general_copy(src, dst)
-    if src.is_dir():
-        for name in src.glob("*"):
-            _copy(name, dst / name.name)
-
-
-def _assign_flow_values(flow_dirs, tmp_folder_path):
+def _assign_flow_values(flow_dirs):
     """Assign the flow values and update flow.dag.yaml."""
     log_debug("\n=======Start overriding values for flows=======")
-    updated_bulk_test_main_flows_dirs = []
-    for flow_dir in flow_dirs:
-        dst_path = (tmp_folder_path / flow_dir.parents[0].name).resolve()
-        _copy(Path(flow_dir), dst_path)
-        log_debug(dst_path)
-        updated_bulk_test_main_flows_dirs.append(dst_path)
 
-    for flow_dir in updated_bulk_test_main_flows_dirs:
+    for flow_dir in flow_dirs:
         flow_dir_name = flow_dir.name
         flow_dir_name = flow_dir_name.replace("-", "_")
 
         with open(Path(flow_dir) / "flow.dag.yaml", "r") as dag_file:
             flow_dag = yaml.safe_load(dag_file)
         # Override connection/inputs in nodes
-        log_debug(f"Start overriding values for nodes for '{flow_dir.name}'.")
+        log_debug(f"Start overriding values for nodes for '{flow_dir}'.")
         for flow_node in flow_dag["nodes"]:
             if "connection" in flow_node:
                 flow_node["connection"] = "aoai_connection"
@@ -88,150 +39,59 @@ def _assign_flow_values(flow_dirs, tmp_folder_path):
         with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
             yaml.dump(flow_dag, dag_file, allow_unicode=True)
     log_debug("=======Complete overriding values for flows=======\n")
-    return updated_bulk_test_main_flows_dirs
+    return flow_dirs
 
 
-def construct_create_flow_payload_of_new_contract(flow, flow_meta, properties):
-    """Construct create flow payload."""
-    flow_type = flow_meta.get("type", None)
-    if flow_type:
-        mapping = {
-            "standard": "default",
-            "evaluate": "evaluation",
-            "chat": "chat",
-            "rag": "rag"
-        }
-        flow_type = mapping[flow_type]
-
-    return {
-        "flowName": flow_meta.get("display_name", None),
-        "description": flow_meta.get("description", None),
-        "tags": flow_meta.get("tags", None),
-        "flowType": flow_type,
-        "details": properties.get("promptflow.details.source", None) if properties else None,
-        "flowRunSettings": {
-            "batch_inputs": properties.get("update_promptflow.batch_inputs", None) if properties else None,
-        },
-        "flowDefinitionFilePath": flow.path,
-        "isArchived": False,
+def _create_run_yamls(flow_dirs):
+    log_debug("\n=======Start creating run.yaml for flows=======")
+    run_yaml = {
+        "$schema": "https://azuremlschemas.azureedge.net/promptflow/latest/Run.schema.json",
+        "flow": '.',
+        "data": 'samples.json'
     }
+    for flow_dir in flow_dirs:
+        flow_dir_name = flow_dir.name
+        flow_dir_name = flow_dir_name.replace("-", "_")
+        with open(flow_dir / "run.yml", "w", encoding="utf-8") as dag_file:
+            yaml.dump(run_yaml, dag_file, allow_unicode=True)
+    log_debug("=======Complete creating run.yaml for flows=======\n")
+    return
 
 
-def construct_submit_flow_payload_of_new_contract(
-    flow_id,
-    batch_data_inputs,
-    runtime_name,
-    flow_dag,
-    flow_submit_mode
-):
-    """Construct submit flow payload."""
-    flow_run_id = f"run_{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(100000, 999999)}"
-    tuning_node_names = [node["name"]
-                         for node in flow_dag["nodes"] if "use_variants" in node]
-    submit_flow_payload = {
-        "flowId": flow_id,
-        "flowRunId": flow_run_id,
-        "flowSubmitRunSettings": {
-            "runtimeName": runtime_name,
-            "runMode": "BulkTest",
-            "batchDataInput": {"dataUri": batch_data_inputs},
-            # Need to populate this field for the LLM node with variants
-            "tuningNodeNames": tuning_node_names,
-        },
-        "asyncSubmission": True if flow_submit_mode == "async" else False,
-        "useWorkspaceConnection": True,
-        "useFlowSnapshotToSubmit": True,
-    }
-    return submit_flow_payload
+def submit_func(run_path, sub, rg, ws):
+    command = f"pfazure run create --file  {run_path} --subscription {sub} -g {rg} -w {ws}"
+    res = run_command(command)
+    res = res.stdout.split('\n')
+    return res
 
 
-def construct_flow_link(aml_resource_uri, subscription, resource_group, workspace, experiment_id, flow_id, ux_flight):
-    """Construct flow link."""
-    flow_link_format = (
-        "{aml_resource_uri}/prompts/flow/{experiment_id}/{flow_id}/details?wsid=/subscriptions/"
-        "{subscription}/resourceGroups/{resource_group}/providers/Microsoft.MachineLearningServices/"
-        "workspaces/{workspace}&flight={ux_flight}"
-    )
-    return flow_link_format.format(
-        aml_resource_uri=aml_resource_uri,
-        subscription=subscription,
-        resource_group=resource_group,
-        workspace=workspace,
-        experiment_id=experiment_id,
-        flow_id=flow_id,
-        ux_flight=ux_flight,
-    )
+def get_run_id_and_url(res):
+    run_id = ""
+    portal_url = ""
+    for line in res:
+        log_debug(line)
+        if ('"portal_url":' in line):
+            match = re.search(r'/run/(.*?)/details', line)
+            if match:
+                portal_url = line.strip()
+                run_id = match.group(1)
+                log_debug(f"runId: {run_id}")
+    return run_id, portal_url
 
 
-def get_flow_link(create_flow_response_json, aml_resource_uri, subscription, resource_group, workspace, experiment_id,
-                  ux_flight):
-    """Get flow link."""
-    flow_id = create_flow_response_json["flowId"]
-    return construct_flow_link(aml_resource_uri, subscription, resource_group, workspace, experiment_id, flow_id,
-                               ux_flight)
-
-
-def get_flow_run_ids(bulk_test_response_json):
-    """Get flow run ids from response."""
-    bulk_test_id = bulk_test_response_json["bulkTestId"]
-    flow_run_logs = bulk_test_response_json["flowRunLogs"]
-    flow_run_ids = [run_id for run_id in list(
-        flow_run_logs.keys()) if run_id != bulk_test_id]
-    log_debug(f"flow_run_ids in utils: {flow_run_ids}")
-    return flow_run_ids
-
-
-def construct_flow_run_link(
-    aml_resource_uri, subscription, resource_group, workspace, experiment_id, flow_id, flow_run_id
-):
-    """Construct flow run link."""
-    bulk_test_run_link_format = (
-        "{aml_resource_uri}/prompts/flow/{experiment_id}/{flow_id}/run/{flow_run_id}/details?wsid=/"
-        "subscriptions/{subscription}/resourceGroups/{resource_group}/providers/"
-        "Microsoft.MachineLearningServices/workspaces/{workspace}&flight=promptflow"
-    )
-    return bulk_test_run_link_format.format(
-        aml_resource_uri=aml_resource_uri,
-        subscription=subscription,
-        resource_group=resource_group,
-        workspace=workspace,
-        experiment_id=experiment_id,
-        flow_id=flow_id,
-        flow_run_id=flow_run_id,
-    )
-
-
-def get_flow_run_link(
-    bulk_test_response_json, aml_resource_uri, subscription, resource_group, workspace, experiment_id, flow_run_id
-):
-    """Get flow run link."""
-    flow_run_resource_id = bulk_test_response_json["flowRunResourceId"]
-    flow_id, _ = _resolve_flow_run_resource_id(flow_run_resource_id)
-    link = construct_flow_run_link(
-        aml_resource_uri=aml_resource_uri,
-        subscription=subscription,
-        resource_group=resource_group,
-        workspace=workspace,
-        experiment_id=experiment_id,
-        flow_id=flow_id,
-        flow_run_id=flow_run_id,
-    )
-    return link
-
-
-def _resolve_flow_run_resource_id(flow_run_resource_id):
-    """Get flow id and flow run id from flow run resource id."""
-    if flow_run_resource_id.startswith("azureml://"):
-        flow_run_resource_id = flow_run_resource_id[len("azureml://"):]
-    elif flow_run_resource_id.startswith("azureml:/"):
-        flow_run_resource_id = flow_run_resource_id[len("azureml:/"):]
-
-    pairs = re.findall(r"([^\/]+)\/([^\/]+)", flow_run_resource_id)
-    flows = [pair for pair in pairs if pair[0] == "flows"]
-    flow_runs = [pair for pair in pairs if pair[0] == "flowRuns"]
-    if len(flows) == 0 or len(flow_runs) == 0:
-        log_error(
-            f"Resolve flow run resource id [{flow_run_resource_id}] failed")
-        return None, None
-    else:
-        return flows[0][1], flow_runs[0][1]
+def submit_flow_runs_using_pfazure(flow_dirs, sub, rg, ws):
+    results = {}
+    handled_failures = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(submit_func, os.path.join(flow_dir, 'run.yml'), sub, rg, ws): flow_dir for flow_dir in flow_dirs}
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                flow_dir = futures[future]
+                res = future.result()
+                run_id, portal_url = get_run_id_and_url(res)
+                results[run_id] = portal_url
+            except Exception as exc:
+                failure_message = f"Submit test run failed. Flow dir: {flow_dir}.  Error: {exc}."
+                log_error(failure_message)
+                handled_failures.append(failure_message)
+    return results, handled_failures
