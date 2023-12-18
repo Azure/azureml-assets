@@ -23,13 +23,15 @@ Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn
 ```json
 {
   "input_data": {
-      "input_string": ["In a shocking finding, scientists discovered a herd of unicorns living in"],
-      "parameters":{   
-              "top_p": 0.95,
-              "temperature": 0.6,
-              "max_new_tokens": 100,
-              "do_sample": true
-      }
+    "input_string": [
+      "In a shocking finding, scientists discovered a herd of unicorns living in"
+    ],
+    "parameters": {
+      "top_p": 0.95,
+      "temperature": 0.6,
+      "max_new_tokens": 100,
+      "do_sample": true
+    }
   }
 }
 ```

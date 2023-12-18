@@ -23,13 +23,15 @@ Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn
 ```json
 {
   "input_data": {
-      "input_string": ["How do I make the most delicious pancakes the world has ever tasted?"],
-      "parameters":{   
-              "top_p": 0.95,
-              "temperature": 0.6,
-              "max_new_tokens": 100,
-              "do_sample": true
-      }
+    "input_string": [
+      "How do I make the most delicious pancakes the world has ever tasted?"
+    ],
+    "parameters": {
+      "top_p": 0.95,
+      "temperature": 0.6,
+      "max_new_tokens": 100,
+      "do_sample": true
+    }
   }
 }
 ```
