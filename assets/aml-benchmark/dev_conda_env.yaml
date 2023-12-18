@@ -1,7 +1,7 @@
 channels:
   - conda-forge
 dependencies:
-  - python=3.8.0
+  - python=3.11.0
   - pip
   - pip:
     ## src requirements
@@ -14,6 +14,7 @@ dependencies:
     - azureml-dataprep[pandas]>=4.12.0
     - mltable>=1.5.0
     - datasets
+    - ddt
     ## Test requirements
     - pytest
     - pytest-xdist

@@ -4,5 +4,5 @@ categories: ["Benchmarking"]
 test:
   pytest:
     enabled: false
-    pip_requirements: ../../requirements.txt
+    conda_environment: ../../dev_conda_env.yaml
     tests_dir: ../../tests
