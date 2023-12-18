@@ -1,4 +1,4 @@
-azureml-metrics[image]==0.0.37
+azureml-metrics[image]~=0.0.37
 azureml-evaluate-mlflow==0.0.38
 azureml-acft-accelerator==0.0.38
 azureml-acft-common-components[image]~=0.0.37
