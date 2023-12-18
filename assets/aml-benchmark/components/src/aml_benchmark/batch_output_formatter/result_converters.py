@@ -118,7 +118,10 @@ class ResultConverters:
         elif self._model.is_aoai_model():
             prediction = ResultConverters._get_aoai_response_result(result)
         elif self._model.is_vision_oss_model():
-            prediction = ResultConverters._get_vision_oss_response_results(result)
+            response = ResultConverters._get_vision_oss_response_results(result)[0]
+            probs = response['probs']
+            labels = response['labels']
+            prediction = labels[probs.index(max(probs))]
         elif self._model.is_claude_model():
             prediction = ResultConverters._get_claude_response_result(result)
         return {ResultConverters.PREDICTION_COL_NAME: prediction}
