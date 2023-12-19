@@ -76,4 +76,4 @@ tags:
     apply_ort: "true"
   SharedComputeCapacityEnabled: ""
   task: text-classification
-version: 12
+version: 11

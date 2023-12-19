@@ -77,4 +77,4 @@ tags:
     apply_ort: "true"
   SharedComputeCapacityEnabled: ""
   task: fill-mask
-version: 12
+version: 11
