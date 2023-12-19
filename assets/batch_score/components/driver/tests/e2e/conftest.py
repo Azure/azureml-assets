@@ -92,12 +92,10 @@ def pytest_configure():
     )
 
     # Prepare to copy components in fixtures below to a temporary file to not muddle dev environments
-    pytest.source_dir = os.getcwd()
-    pytest.copied_batch_score_component_filepath = os.path.join(pytest.source_dir,
-                                                                "yamls",
-                                                                "components",
-                                                                "v2",
-                                                                f"{str(uuid.uuid4())}_batch_score_devops_copy.yml")
+    pytest.source_dir = os.path.join(os.getcwd(), "assets", "batch_score", "components", "driver")
+    tmp_dir = os.path.join(pytest.source_dir, "batch_score_temp")
+    os.makedirs(tmp_dir, exist_ok=True)
+    pytest.copied_batch_score_component_filepath = os.path.join(tmp_dir, f"spec_copy_{str(uuid.uuid4())}.yml")
 
 
 def pytest_unconfigure():
@@ -117,40 +115,19 @@ def register_components(main_worker_lock, asset_version):
     if not _is_main_worker(main_worker_lock):
         return
 
-    register_component("batch_score.yml", asset_version)
-    register_component("batch_score_embeddings.yml", asset_version)
-    register_component("../llm/batch_score_llm.yml", asset_version)
-    register_component("batch_score_vesta_chat_completion.yml", asset_version)
-
-
-@pytest.fixture(scope="session")
-def batch_score_yml_component(asset_version):
-    """Get batch score component."""
-    return _get_component_metadata("batch_score.yml", asset_version)
-
-
-@pytest.fixture(scope="session")
-def batch_score_embeddings_yml_component(asset_version):
-    """Get batch score embeddings component."""
-    return _get_component_metadata("batch_score_embeddings.yml", asset_version)
+    register_component("batch_score_llm", asset_version)
 
 
 @pytest.fixture(scope="session")
 def llm_batch_score_yml_component(asset_version):
     """Get batch score llm component."""
-    return _get_component_metadata("../llm/batch_score_llm.yml", asset_version)
+    return _get_component_metadata("batch_score_llm", asset_version)
 
 
-@pytest.fixture(scope="session")
-def batch_score_vesta_chat_completion_yml_component(asset_version):
-    """Get batch score vesta chat completion component."""
-    return _get_component_metadata("batch_score_vesta_chat_completion.yml", asset_version)
-
-
-def register_component(component_yml_name, asset_version):
+def register_component(component_name, asset_version):
     """Register component."""
     # Copy component to a temporary file to not muddle dev environments
-    batch_score_component_filepath = os.path.join(pytest.source_dir, "yamls", "components", "v2", component_yml_name)
+    batch_score_component_filepath = _get_spec_filepath(component_name)
     create_copy(batch_score_component_filepath, pytest.copied_batch_score_component_filepath)
 
     # pins batch_component version
@@ -166,8 +143,10 @@ def register_component(component_yml_name, asset_version):
     return component_name, component_version
 
 
-def _get_component_metadata(component_yml_name, asset_version):
-    batch_score_component_filepath = os.path.join(
-        pytest.source_dir, "yamls", "components", "v2", component_yml_name
-    )
+def _get_component_metadata(component_name, asset_version):
+    batch_score_component_filepath = _get_spec_filepath(component_name)
     return _get_component_name(batch_score_component_filepath), asset_version
+
+
+def _get_spec_filepath(component_name):
+    return os.path.join(pytest.source_dir, component_name, "spec.yaml")
