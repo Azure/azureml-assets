@@ -8,8 +8,8 @@ inputs:
   title:
     type: string
   task_type:
-    type: string # [classification, regression]
-    enum: ['classification', 'regression']
+    type: string # [classification, regression, forecasting]
+    enum: ['classification', 'regression', 'forecasting']
   model_info_path:
     type: path # model_info.json
     optional: true
