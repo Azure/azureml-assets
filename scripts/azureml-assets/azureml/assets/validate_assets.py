@@ -813,7 +813,8 @@ def validate_assets(input_dirs: List[Path],
                     check_names_skip_pattern: re.Pattern = None,
                     check_images: bool = False,
                     check_categories: bool = False,
-                    check_build_context: bool = False) -> bool:
+                    check_build_context: bool = False,
+                    check_tests: bool = False) -> bool:
     """Validate assets.
 
     Args:
@@ -826,6 +827,7 @@ def validate_assets(input_dirs: List[Path],
         check_images (bool, optional): Whether to check image names. Defaults to False.
         check_categories (bool, optional): Whether to check asset categories. Defaults to False.
         check_build_context (bool, optional): Whether to check environment build context. Defaults to False.
+        check_tests (bool, optional): Whether to check test references. Defaults to False.
 
     Raises:
         ValidationException: If validation fails.
@@ -899,7 +901,8 @@ def validate_assets(input_dirs: List[Path],
                     logger.log_debug(f"Skipping name validation for {asset_config.full_name}")
 
             # Validate pytest information
-            error_count += validate_tests(asset_config)
+            if check_tests:
+                error_count += validate_tests(asset_config)
 
             # Validate Dockerfile
             if asset_config.type == assets.AssetType.ENVIRONMENT:
@@ -975,6 +978,8 @@ if __name__ == '__main__':
                         help="Regex pattern to skip name validation, in the format <type>/<name>/<version>")
     parser.add_argument("-b", "--check-build-context", action="store_true",
                         help="Check environment build context")
+    parser.add_argument("-t", "--check-tests", action="store_true",
+                        help="Check test references")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -998,6 +1003,7 @@ if __name__ == '__main__':
                               check_images=args.check_images,
                               check_categories=args.check_categories,
                               check_build_context=args.check_build_context,
-                              model_validation_results_dir=args.model_validation_results_dir)
+                              model_validation_results_dir=args.model_validation_results_dir,
+                              check_tests=args.check_tests)
     if not success:
         sys.exit(1)

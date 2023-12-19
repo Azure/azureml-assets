@@ -24,6 +24,7 @@ from constants import (
     ForecastColumns,
     TextGenerationColumns,
     DataFrameParams,
+    OpenAIConstants,
     SubTask,
     ChatCompletionConstants
 )
@@ -55,6 +56,7 @@ class EvaluatorFactory:
             TASK.TRANSLATION: TranslationEvaluator,
             TASK.SUMMARIZATION: SummarizationEvaluator,
             TASK.QnA: QnAEvaluator,
+            # TASK.QnA_MULTIPLE_GROUND_TRUTH: QnAMultipleGroundTruthEvaluator,
             TASK.FILL_MASK: FillMaskEvaluator,
             TASK.TEXT_GENERATION: TextGenerationEvaluator,
             TASK.CHAT_COMPLETION: ChatCompletionEvaluator,
@@ -62,22 +64,24 @@ class EvaluatorFactory:
             TASK.IMAGE_CLASSIFICATION: ClassifierEvaluator,
             TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
             TASK.IMAGE_OBJECT_DETECTION: ImageObjectDetectionInstanceSegmentationEvaluator,
-            TASK.IMAGE_INSTANCE_SEGMENTATION: ImageObjectDetectionInstanceSegmentationEvaluator
+            TASK.IMAGE_INSTANCE_SEGMENTATION: ImageObjectDetectionInstanceSegmentationEvaluator,
         }
 
-    def get_evaluator(self, task_type, metrics_config=None):
+    def get_evaluator(self, task_type, config=None):
         """Get evaluator.
 
         Args:
             task_type (_type_): _description_
-            metrics_config (_type_, optional): _description_. Defaults to None.
+            config (_type_, optional): _description_. Defaults to None.
 
         Returns:
             _type_: _description_
         """
-        if metrics_config.get(TextGenerationColumns.SUBTASKKEY, "") == SubTask.CODEGENERATION:
-            return CodeGenerationEvaluator(task_type, metrics_config)
-        return self._evaluators[task_type](task_type, metrics_config)
+        if config.get(TextGenerationColumns.SUBTASKKEY, "") == SubTask.CODEGENERATION:
+            return CodeGenerationEvaluator(task_type, config)
+        if task_type == TASK.CHAT_COMPLETION and config.get(SubTask.SUB_TASK_KEY, "") == SubTask.RAG_EVALUATION:
+            return RagEvaluator(task_type, config)
+        return self._evaluators[task_type](task_type, config)
 
     def register(self, name, obj):
         """Register evaluator.
@@ -383,7 +387,7 @@ class QnAEvaluator(Evaluator):
         """
         super().__init__(task_type, metrics_config)
 
-    def evaluate(self, y_test, y_pred, **kwargs):
+    def evaluate(self, y_test, y_pred, is_multiple_ground_truth, **kwargs):
         """Evaluate QnA.
 
         Args:
@@ -396,17 +400,14 @@ class QnAEvaluator(Evaluator):
         y_pred = self._convert_predictions(y_pred).tolist()
         y_test = self._convert_predictions(y_test).tolist()
 
-        # y_pred = []
-        # for pred in y_pred:
-        #     if (isinstance(pred, list) or isinstance(pred, np.ndarray)):
-        #         if len(pred) >= 1:
-        #             y_pred.append(pred[0])
-        #     else:
-        #         y_pred.append(pred)
-        # logger.warning("Multiple ground truths are not supported for question-answering task currently.\
-        #                 Considering only the first ground truth in case of multiple values.")
-        metrics = compute_metrics(task_type=constants.Tasks.QUESTION_ANSWERING, y_test=y_test,
-                                  y_pred=y_pred, **self.metrics_config)
+        if is_multiple_ground_truth:
+            logger.info("Computing metrics for QnA task with multiple ground truth.")
+            metrics = compute_metrics(task_type=constants.Tasks.QUESTION_ANSWERING_MULTIPLE_GROUND_TRUTH,
+                                      y_test=y_test, y_pred=y_pred, **self.metrics_config)
+        else:
+            logger.info("Computing metrics for QnA task.")
+            metrics = compute_metrics(task_type=constants.Tasks.QUESTION_ANSWERING, y_test=y_test,
+                                      y_pred=y_pred, **self.metrics_config)
         return metrics
 
 
@@ -608,13 +609,13 @@ class ChatCompletionEvaluator(Evaluator):
         Returns:
             _type_: _description_
         """
-        #  dataframe with 2 columns predictions and preditions appended to the conversation
+        #  dataframe with 2 columns predictions and predictions appended to the conversation
         if len(y_pred.columns) > 1:
             y_pred_formatted = [
                 item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0]["0"]
                 for idx, item in y_pred.iterrows()
             ]
-        # dataframe wih just predictions appeneded to conversations
+        # dataframe wih just predictions appended to conversations
         else:
             y_pred_formatted = y_pred.values.tolist()[0]
         #  if ground truth is passed
@@ -625,6 +626,40 @@ class ChatCompletionEvaluator(Evaluator):
         else:
             metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted,
                                       **self.metrics_config)
+        return metrics
+
+
+class RagEvaluator(Evaluator):
+    """RAG Evaluator.
+
+    Args:
+        Evaluator (_type_): _description_
+    """
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate Chat Completion.
+
+        Args:
+            y_test (_type_): _description_
+            y_pred (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        self.metrics_config.pop(SubTask.SUB_TASK_KEY)
+
+        y_pred = self._convert_predictions(y_pred).tolist()
+        questions = self.metrics_config.pop(OpenAIConstants.QUESTIONS_KEY)
+        contexts = self.metrics_config.pop(OpenAIConstants.CONTEXTS_KEY)
+        y_pred_formatted = []
+        for question, answer, context in zip(questions, y_pred, contexts):
+            pred = [
+                {"role": "user", "content": question},
+                {"role": "assistant", "content": answer, "context": {"citations": context}}
+            ]
+            y_pred_formatted += [pred]
+        metrics = compute_metrics(task_type=constants.Tasks.RAG_EVALUATION,
+                                  y_pred=y_pred_formatted, **self.metrics_config)
         return metrics
 
 

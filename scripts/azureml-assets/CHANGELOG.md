@@ -3,13 +3,21 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.16.21 (2023-12-9)
+## 1.16.23 (2023-12-9)
 ### 🚀 New Features
 - [#1909](https://github.com/Azure/azureml-assets/pull/1909) Model spec validation
 
-## 1.16.20 (2023-12-5)
+## 1.16.22 (2023-12-18)
+### 🚀 New Features
+- [#1980](https://github.com/Azure/azureml-assets/pull/1980) Add switch to skip validating pytest existence
+
+## 1.16.21 (2023-12-18)
+### 🚀 New Features
+- [#1964](https://github.com/Azure/azureml-assets/pull/1964) Support conda environment YAML for pytest
+
+## 1.16.20 (2023-12-05)
 ### 🐛 Bugs Fixed
-- [#1871](https://github.com/Azure/azureml-assets/pull/1871) Update model validations criteria
+- [#1871](https://github.com/Azure/azureml-assets/pull/1871) Update model validation criteria
 
 ## 1.16.19 (2023-12-04)
 ### 🐛 Bugs Fixed
