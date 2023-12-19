@@ -5,45 +5,36 @@ properties:
   SHA: f7796529e36b2d49094450fb038cc7c4c86afa44
   datasets: tiiuae/falcon-refinedweb
   languages: en
+  inference-min-sku-spec: 6|1|112|736
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
     Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-min-sku-spec: 24|4|448|2948
   evaluation-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4,
     Standard_ND96amsr_A100_v4
+  finetune-min-sku-spec: 24|4|448|2948
   finetune-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4,
     Standard_ND96amsr_A100_v4
   finetuning-tasks: text-classification
-
 tags:
-  Featured: ''
-  Preview: ''
+  Featured: ""
+  Preview: ""
   license: apache-2.0
-  SharedComputeCapacityEnabled: ''
+  SharedComputeCapacityEnabled: ""
   task: text-generation
   author: tiiuae
-  inference_compute_allow_list:
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
-  finetune_compute_allow_list:
-  - Standard_NC24s_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
-  evaluation_compute_allow_list:
-  - Standard_NC24s_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
+  huggingface_model_id: tiiuae/falcon-7b
+  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
+  finetune_compute_allow_list: [Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4,
+    Standard_ND96amsr_A100_v4]
+  evaluation_compute_allow_list: [Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4,
+    Standard_ND96amsr_A100_v4]
   model_specific_defaults:
-    apply_lora: 'true'
-    precision: '4'
+    apply_lora: "true"
+    precision: "4"
   inference_supported_envs:
   - vllm
-version: 5
+version: 6
 description: |
   # Description
   Falcon-7B is a large language model with 7 billion parameters. It is a causal decoder-only model developed by TII and trained on 1,500 billion tokens of RefinedWeb dataset, which was enhanced with curated corpora. The model is available under the Apache 2.0 license. It outperforms comparable open-source models and features an architecture optimized for inference. However, it is a raw, pretrained model that should be further finetuned for most use cases.
