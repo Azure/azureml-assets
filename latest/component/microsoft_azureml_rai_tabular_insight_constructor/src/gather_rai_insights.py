@@ -9,10 +9,10 @@ import tempfile
 from pathlib import Path
 from typing import Dict
 
-from _telemetry._loggerfactory import _LoggerFactory, track
 import numpy as np
 from azureml.core import Run
-from constants import (MLFLOW_MODEL_SERVER_PORT, DashboardInfo,
+from azureml.rai.utils.telemetry import LoggerFactory, track
+from constants import (COMPONENT_NAME, MLFLOW_MODEL_SERVER_PORT, DashboardInfo,
                        RAIToolType)
 from rai_component_utilities import (add_properties_to_gather_run,
                                      copy_insight_to_raiinsights,
@@ -37,7 +37,11 @@ _ai_logger = None
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
-        _ai_logger = _LoggerFactory.get_logger(__file__)
+        run = Run.get_context()
+        module_name = run.properties["azureml.moduleName"]
+        module_version = run.properties["azureml.moduleid"]
+        _ai_logger = LoggerFactory.get_logger(
+            __file__, module_name, module_version, COMPONENT_NAME)
     return _ai_logger
 
 
@@ -88,6 +92,7 @@ def main(args):
                 setattr(rai_temp, field_name, np.array(rai_temp._forecast_output))
 
         rai_temp.save(incoming_temp_dir)
+
         print("Saved rai_temp")
         print_dir_tree(incoming_temp_dir)
         print("=======")
