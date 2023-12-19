@@ -12,14 +12,12 @@ from .util import _submit_job_and_monitor_till_completion, set_component
 
 # Common configuration
 cpu_compute_target = "cpu-cluster"
-source_dir = os.getcwd()
 gated_llm_pipeline_filepath = os.path.join(
-    source_dir, "driver", "tests", "e2e", "prs_pipeline_templates", "base_llm.yml")
+    pytest.source_dir, "tests", "e2e", "prs_pipeline_templates", "base_llm.yml")
 
 RUN_NAME = "batch_score_aoai_endpoint_test"
 JOB_NAME = "gated_batch_score_llm"  # Should be equivalent to base_llm.yml's job name
 YAML_COMPONENT = {"jobs": {JOB_NAME: {"component": None}}}  # Placeholder for component name set below.
-
 YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
     "inputs": {
         # TODO: add tally_failed_requests to the file config
