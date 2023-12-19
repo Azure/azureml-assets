@@ -33,4 +33,4 @@ tags:
     ]    
   inference_supported_envs:
     - vllm
-version: 2
+version: 3

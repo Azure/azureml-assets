@@ -44,4 +44,4 @@ tags:
     precision: '4'
   inference_supported_envs:
   - vllm
-version: 4
+version: 5

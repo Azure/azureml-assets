@@ -78,4 +78,4 @@ tags:
     apply_ort: "true"
   SharedComputeCapacityEnabled: ""
   task: text-summarization
-version: 9
+version: 10

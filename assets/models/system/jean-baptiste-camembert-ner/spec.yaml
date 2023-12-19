@@ -66,4 +66,4 @@ tags:
     apply_ort: "true"
   SharedComputeCapacityEnabled: ""
   task: token-classification
-version: 12
+version: 13
