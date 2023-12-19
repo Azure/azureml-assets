@@ -8,7 +8,6 @@ properties:
   evaluation-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   evaluation-min-sku-spec: 12|2|224|1474
   languages: EN
-  azureml.copyRegistryFilesToWorkspace: true
 tags:
   Featured: ''
   Preview: ''
@@ -30,4 +29,4 @@ tags:
   author: deci-ai
   huggingface_model_id: Deci/DeciLM-7B-instruct
   datasets: Open-Orca/SlimOrca
-version: 1
+version: 2
