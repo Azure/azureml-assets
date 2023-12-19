@@ -5,7 +5,7 @@ name: feature_attribution_drift_signal_monitor
 display_name: Feature Attribution Drift - Signal Monitor
 description: Computes the feature attribution between a baseline and production data
   assets.
-version: 0.3.12
+version: 0.3.13
 is_deterministic: true
 
 inputs:
@@ -109,7 +109,7 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.6
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.7
     inputs:
       signal_metrics:
         type: mltable

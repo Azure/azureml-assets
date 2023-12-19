@@ -3,6 +3,7 @@
 
 """This file contains the core logic for data drift evaluate metrics threshold component."""
 
+from shared_utilities.event_utils import post_warning_event, post_email_event, add_tags_to_run, _get_run_id
 from shared_utilities.constants import (
     AGGREGATED_COHERENCE_PASS_RATE_METRIC_NAME,
     AGGREGATED_GROUNDEDNESS_PASS_RATE_METRIC_NAME,
@@ -19,7 +20,6 @@ from shared_utilities.constants import (
     PERCISION_METRIC_NAME,
     RECALL_METRIC_NAME,
 )
-from shared_utilities.event_utils import post_warning_event, post_email_event
 import pyspark
 import pyspark.sql.functions as F
 
@@ -100,5 +100,9 @@ def send_email_for_breached(metrics_threshold_breached_df: pyspark.sql.DataFrame
         post_warning_event(error_message)
         if notification_emails is not None and notification_emails != "":
             post_email_event(signal_name, notification_emails, error_message)
+        add_tags_to_run(_get_run_id(),
+                        {
+                            "azureml_modelmonitor_threshold_breached": error_message
+                        })
         return False
     return True
