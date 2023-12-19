@@ -3,7 +3,7 @@ name: validation_trigger_model_evaluation
 display_name: Validation Trigger Model Evaluation
 description: Component for enabling validation of model evaluation pipeline.
 
-version: 0.0.19
+version: 0.0.20
 type: command
 tags:
   type: evaluation
