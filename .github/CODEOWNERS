@@ -5,8 +5,9 @@
 /assets/training/ @azure/aml-training
 /assets/sample/ @Azure/aml-assets
 /assets/data/ @Azure/azureml-data
-/assets/models/ @azure/aml-training @azure/azureml-inference-idc
+/assets/models/ @azure/aml-training
 /assets/common/ @azure/aml-training
 /assets/model_monitoring/ @Azure/aml-model-monitoring
 /assets/large_language_models/ @azure/aml-training @azure/aml-llm
 /assets/evaluation_results/ @azure/aml-benchmarking @azure/aml-llm
+/assets/batch_score/ @Azure/aml-batch-inferencing

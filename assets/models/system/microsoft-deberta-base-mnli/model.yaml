@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/microsoft-deberta-base-mnli/1699016307/mlflow_model_folder
+  container_path: huggingface/microsoft-deberta-base-mnli/1702647628/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

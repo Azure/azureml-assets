@@ -43,9 +43,9 @@ class ResultConverters:
         self._is_performance_test = is_performance_test
         if ground_truth_df is not None:
             logger.info("receive ground truth columns {}".format(ground_truth_df.columns))
-            for index, row in ground_truth_df.iterrows():
+            for _, row in ground_truth_df.iterrows():
                 self._lookup_dict[row[EndpointDataPreparer.PAYLOAD_HASH]] = \
-                        row[EndpointDataPreparer.PAYLOAD_GROUNDTRUTH]
+                    row[EndpointDataPreparer.PAYLOAD_GROUNDTRUTH]
 
     def convert_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the input result to predictions."""
@@ -101,7 +101,7 @@ class ResultConverters:
                 ground_truth = result[self.METADATA_KEY_IN_RESULT][self._label_key]
             else:
                 use_ground_truth_input = True
-        elif self._model.is_aoai_model():
+        elif self._model.is_aoai_model() or self._model.is_claude_model():
             use_ground_truth_input = True
         elif self._model.is_vision_oss_model():
             use_ground_truth_input = False
@@ -119,6 +119,8 @@ class ResultConverters:
             prediction = ResultConverters._get_aoai_response_result(result)
         elif self._model.is_vision_oss_model():
             prediction = ResultConverters._get_vision_oss_response_results(result)
+        elif self._model.is_claude_model():
+            prediction = ResultConverters._get_claude_response_result(result)
         return {ResultConverters.PREDICTION_COL_NAME: prediction}
 
     def _get_fallback_output(self, is_perf: bool = False) -> Dict[str, Any]:
@@ -130,7 +132,10 @@ class ResultConverters:
 
     def is_result_success(self, result: Dict[str, Any]) -> bool:
         """Check if the result contains a successful response."""
-        if result['status'].lower() != "success":
+        if 'status' in result and result['status'].lower() != "success":
+            return False
+        if self._get_response(result) is None:
+            logger.warning('Response is None which indicates the failure of the request.')
             return False
         # handle the scenario the 200 with failure in response.
         try:
@@ -164,7 +169,7 @@ class ResultConverters:
 
     @staticmethod
     def _get_response(result: Dict[str, Any]) -> Any:
-        return result['response']
+        return result.get('response', None)
 
     def _get_request_content(self, result: Dict[str, Any]) -> Any:
         if self._model.is_aoai_model():
@@ -189,6 +194,11 @@ class ResultConverters:
         if '0' in response:
             return response['0']
         return response['output']
+
+    @staticmethod
+    def _get_claude_response_result(result: Dict[str, Any]) -> Any:
+        response = ResultConverters._get_response(result)
+        return response["completion"]
 
     @staticmethod
     def _get_vision_oss_response_results(result: Dict[str, Any]) -> Any:

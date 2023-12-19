@@ -41,6 +41,8 @@ from .utils.common.json_encoder_extensions import setup_encoder
 from .header_handlers.header_handler import HeaderHandler
 from .header_handlers.oss.oss_header_handler import OSSHeaderHandler
 from .header_handlers.oai.oai_header_handler import OAIHeaderHandler
+from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.claude.claude_header_handler import (
+    ClaudeHeaderHandler)
 
 
 par: parallel.Parallel = None
@@ -59,7 +61,7 @@ def init():
     parser = ArgumentParser()
 
     setup_arguments(parser)
-    args, unknown_args = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
     setup_logger("DEBUG" if args.debug_mode else "INFO", args.app_insights_connection_string)
     logger = get_logger()
 
@@ -139,11 +141,15 @@ def run(input_data: pd.DataFrame, mini_batch_context):
             lu.get_logger().info("save_mini_batch_results is disabled")
 
     except Exception as e:
+        if sys.version_info < (3, 10):
+            stacktrace = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+        else:
+            stacktrace = traceback.format_exception(e)
         get_events_client().emit_mini_batch_completed(
             input_row_count=len(data_list),
             output_row_count=len(ret),
             exception=type(e).__name__,
-            stacktrace=traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+            stacktrace=stacktrace
         )
         raise e
     else:
@@ -338,8 +344,7 @@ def setup_scoring_client() -> ScoringClient:
 
     header_handler = setup_header_handler(
         token_provider=token_provider, model_type=args.model_type, input_metadata=input_metadata,
-        input_headers=json.dumps(headers), scoring_url=online_endpoint_url,
-        connections_name=args.connections_name
+        input_headers=json.dumps(headers), scoring_url=online_endpoint_url
     )
 
     scoring_client = ScoringClient(
@@ -355,7 +360,7 @@ def setup_scoring_client() -> ScoringClient:
 
 def setup_header_handler(
         token_provider: TokenProvider, model_type: str, input_metadata: dict, input_headers: str,
-        scoring_url: str, connections_name: str
+        scoring_url: str
 ) -> HeaderHandler:
     """Add header handler."""
     endpoint_workspace = input_metadata.get("workspace_name", args.endpoint_workspace)
@@ -363,11 +368,25 @@ def setup_header_handler(
     endpoint_subscription_id = input_metadata.get("subscription_id", args.endpoint_subscription_id)
     endpoint_name = input_metadata.get("endpoint_name", scoring_url.split('/')[2].split('.')[0])
     deployment_name = input_metadata.get("deployment_name", args.deployment_name)
+    connections_name = input_metadata.get("connection_name", args.connections_name)
 
     model = OnlineEndpointModel(
         model=None, model_version=None, model_type=model_type, endpoint_url=scoring_url)
     if model.is_aoai_model():
         return OAIHeaderHandler(
+            token_provider=token_provider, user_agent_segment=args.user_agent_segment,
+            batch_pool=args.batch_pool,
+            quota_audience=args.quota_audience,
+            additional_headers=input_headers,
+            endpoint_name=endpoint_name,
+            endpoint_subscription=endpoint_subscription_id,
+            endpoint_resource_group=endpoint_resource_group,
+            deployment_name=deployment_name,
+            connections_name=connections_name,
+            online_endpoint_model=model
+        )
+    if model.is_claude_model():
+        return ClaudeHeaderHandler(
             token_provider=token_provider, user_agent_segment=args.user_agent_segment,
             batch_pool=args.batch_pool,
             quota_audience=args.quota_audience,

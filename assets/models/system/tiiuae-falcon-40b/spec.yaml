@@ -13,6 +13,7 @@ tags:
   Featured: ''
   Preview: ''
   license: apache-2.0
+  SharedComputeCapacityEnabled: ''
   task: text-generation
   author: tiiuae
   evaluation_compute_allow_list:
@@ -33,4 +34,4 @@ tags:
     precision: '4'
   inference_supported_envs:
   - vllm
-version: 3
+version: 4

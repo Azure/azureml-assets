@@ -2,6 +2,8 @@ ___runwayml/stable-diffusion-v1-5___ is a powerful text-to-image latent diffusio
 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/runwayml/stable-diffusion-v1-5" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
+> Note: The inferencing script of this model is optimized for high-throughput, low latency using <a href="https://github.com/microsoft/DeepSpeed-MII" target="_blank">Deepspedd-mii</a> library. Please use `version 4` of this model for inferencing using default (FP32) diffusion pipeline implementation.
+
 ### Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML

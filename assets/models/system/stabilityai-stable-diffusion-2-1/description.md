@@ -2,6 +2,8 @@ __stabilityai/stable-diffusion-2-1__ model is a fine-tuned version of the Stable
 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/stabilityai/stable-diffusion-2-1" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
+> Note: The inferencing script of this model is optimized for high-throughput, low latency using <a href="https://github.com/microsoft/DeepSpeed-MII" target="_blank">Deepspedd-mii</a> library. Please use `version 4` of this model for inferencing using default (FP32) diffusion pipeline implementation.
+
 ### Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
