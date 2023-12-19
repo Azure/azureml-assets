@@ -177,4 +177,6 @@ class OnlineEndpointModel:
             return root_run_id
         except Exception as e:
             logger.warning(f"The input step is not a pipeline component, using its id now. {e}")
+            if finetuned_run.properties.get('azureml.isreused', "").lower() == 'true':
+                 return s.properties.get('azureml.reusedrunid', finetuned_run.id)
             return finetuned_run.id
