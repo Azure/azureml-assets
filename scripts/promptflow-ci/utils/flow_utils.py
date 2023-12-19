@@ -71,7 +71,7 @@ def _create_run_yamls(flow_dirs):
 
 def submit_func(run_path, sub, rg, ws):
     """Worker function to submit flow run."""
-    command = f"pfazure run create --file  {run_path} --subscription {sub} -g {rg} -w {ws}"
+    command = f"pfazure run create --file {run_path} --subscription {sub} -g {rg} -w {ws}"
     res = run_command(command)
     res = res.stdout.split('\n')
     return res
