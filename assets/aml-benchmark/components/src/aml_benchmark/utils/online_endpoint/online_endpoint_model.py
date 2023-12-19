@@ -167,10 +167,14 @@ class OnlineEndpointModel:
     @staticmethod
     def _get_model_registered_run_id(finetuned_run: Run) -> str:
         """Get the run id of the step that registered the model."""
-        step_runs = list(finetuned_run.get_children())[0].get_children()
-        root_run_id = finetuned_run.properties.get('azureml.rootpipelinerunid',  get_root_run().id)
-        for s in step_runs:
-            if get_run_name(s) == 'openai_completions_finetune':
-                if s.properties.get('azureml.isreused', "").lower() == 'true':
-                    return s.properties.get('azureml.rootpipelinerunid', root_run_id)
-        return root_run_id
+        try:
+            step_runs = list(finetuned_run.get_children())[0].get_children()
+            root_run_id = finetuned_run.properties.get('azureml.rootpipelinerunid',  get_root_run().id)
+            for s in step_runs:
+                if get_run_name(s) == 'openai_completions_finetune':
+                    if s.properties.get('azureml.isreused', "").lower() == 'true':
+                        return s.properties.get('azureml.rootpipelinerunid', root_run_id)
+            return root_run_id
+        except Exception as e:
+            logger.warning(f"The input step is not a pipeline component, using its id now. {e}")
+            return finetuned_run.id
