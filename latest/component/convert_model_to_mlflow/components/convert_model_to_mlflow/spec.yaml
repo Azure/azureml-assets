@@ -10,7 +10,7 @@ display_name: Convert models to MLflow
 description: Component converts models from supported frameworks to MLflow model packaging
   format
 
-environment: azureml://registries/azureml/environments/model-management/versions/17
+environment: azureml://registries/azureml/environments/model-management/versions/20
 
 code: ../../src/
 command: >
