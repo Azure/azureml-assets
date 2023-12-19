@@ -37,6 +37,8 @@ def _assign_flow_values(flow_dirs):
                         flow_node["inputs"]["deployment_name"] = "gpt-35-turbo"
                 if "connection" in flow_node["inputs"]:
                     flow_node["inputs"]["connection"] = "aoai_connection"
+                if "searchConnection" in flow_node["inputs"]: 
+                    flow_node["inputs"]["searchConnection"] = "AzureAISearch"
         with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
             yaml.dump(flow_dag, dag_file, allow_unicode=True)
 
