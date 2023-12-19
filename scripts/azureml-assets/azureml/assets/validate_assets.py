@@ -69,6 +69,8 @@ class MLFlowModelTags:
     TASK = "task"
     LICENSE = "license"
     AUTHOR = "author"
+    
+    SHARED_COMPUTE_CAPACITY = "SharedComputeCapacityEnabled"
 
 
 class ModelValidationState:
@@ -727,6 +729,10 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
 
     if not model.tags.get(MLFlowModelTags.LICENSE):
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
+        error_count += 1
+
+    if not model.tags.get(MLFlowModelTags.SHARED_COMPUTE_CAPACITY):
+        _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.SHARED_COMPUTE_CAPACITY} missing")
         error_count += 1
 
     supports_eval = model.tags.get(MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST) is not None
