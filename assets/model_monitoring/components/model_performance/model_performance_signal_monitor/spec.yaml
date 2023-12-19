@@ -4,7 +4,7 @@ type: pipeline
 name: model_performance_signal_monitor
 display_name: Model Performance - Signal Monitor
 description: Computes the model performance
-version: 0.0.1
+version: 0.0.2
 is_deterministic: true
 inputs:
   task:
@@ -98,7 +98,7 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.5
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.7
     inputs:
       signal_metrics:
         type: mltable
