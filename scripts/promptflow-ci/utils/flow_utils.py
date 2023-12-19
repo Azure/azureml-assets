@@ -37,7 +37,7 @@ def _assign_flow_values(flow_dirs):
                         flow_node["inputs"]["deployment_name"] = "gpt-35-turbo"
                 if "connection" in flow_node["inputs"]:
                     flow_node["inputs"]["connection"] = "aoai_connection"
-                if "searchConnection" in flow_node["inputs"]: 
+                if "searchConnection" in flow_node["inputs"]:
                     flow_node["inputs"]["searchConnection"] = "AzureAISearch"
         with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
             yaml.dump(flow_dag, dag_file, allow_unicode=True)
@@ -47,7 +47,14 @@ def _assign_flow_values(flow_dirs):
                 samples = []
                 sample = {}
                 for key, val in flow_dag["inputs"].items():
-                    sample[key] = val.get("default")
+                    value = val.get("default")
+                    if isinstance(value, list):
+                        if not value:
+                            value.append("default")
+                    elif isinstance(value, str):
+                        if value == "":
+                            value = "default"
+                    sample[key] = value
                 samples.append(sample)
                 json.dump(sample, sample_file, indent=4)
     log_debug("=======Complete overriding values for flows=======\n")
