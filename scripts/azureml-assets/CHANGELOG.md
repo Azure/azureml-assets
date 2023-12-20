@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.23 (2023-12-9)
+### 🚀 New Features
+- [#1909](https://github.com/Azure/azureml-assets/pull/1909) Model spec validation
+
 ## 1.16.22 (2023-12-18)
 ### 🚀 New Features
 - [#1980](https://github.com/Azure/azureml-assets/pull/1980) Add switch to skip validating pytest existence
