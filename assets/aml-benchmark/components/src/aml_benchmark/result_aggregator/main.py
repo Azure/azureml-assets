@@ -213,6 +213,9 @@ def _log_params_and_metrics(parameters: Dict[str, Any], metrics: Dict[str, Any])
         elif isinstance(metrics[key], (int, float)):
             filtered_metrics[key] = metrics[key]
     # Log to current run
+    logger.info(
+        f"Attempting to log {len(parameters)} parameters and {len(filtered_metrics)} metrics."
+    )
     try:
         log_mlflow_params(**parameters)
     except Exception as ex:
