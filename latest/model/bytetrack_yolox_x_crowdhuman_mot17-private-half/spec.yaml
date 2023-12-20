@@ -10,9 +10,9 @@ properties:
   finetuning-tasks: video-multi-object-tracking
   inference-min-sku-spec: 4|1|28|176
   inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3,
-    Standard_NC24s_v3, Standard_NC24rs_v3, Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+    Standard_NC24s_v3, Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+    Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4, Standard_ND40rs_v2,
+    Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
   Preview: ''
   license: apache-2.0
@@ -27,9 +27,9 @@ tags:
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
   inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3,
-    Standard_NC24s_v3, Standard_NC24rs_v3, Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
+    Standard_NC24s_v3, Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+    Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4, Standard_ND40rs_v2,
+    Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
 version: 4
 description: |-
   `bytetrack_yolox_x_crowdhuman_mot17-private-half` model is from <a href="https://github.com/open-mmlab/mmtracking/tree/v0.14.0" target="_blank">OpenMMLab's MMTracking library</a>. This model is <a href="https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/bytetrack/metafile.yml#L24" target="_blank">reported</a> to obtain MOTA: 78.6, IDF1: 79.2 for video-multi-object-tracking task on <a href="https://motchallenge.net/data/MOT17/" target="_blank">MOT17-half-eval dataset</a>.
