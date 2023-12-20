@@ -22,6 +22,7 @@ properties:
     Standard_ND40rs_v2
   languages: en
 tags:
+  SharedComputeCapacityEnabled: ''
   license: apache-2.0
   task: text-classification
   finetune_compute_allow_list:
