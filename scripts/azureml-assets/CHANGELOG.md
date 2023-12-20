@@ -5,7 +5,8 @@
 
 ## 1.16.24 (2023-12-20)
 ### 🐛 Bugs Fixed
-- [#2006](https://github.com/Azure/azureml-assets/pull/2006) extend sas expiration to 3days
+- [#2006](https://github.com/Azure/azureml-assets/pull/2006) Make SAS expiration configurable
+
 
 ## 1.16.23 (2023-12-9)
 ### 🚀 New Features
