@@ -283,10 +283,11 @@ if __name__ == "__main__":
         for flow_run_id, evaluation_run_link in failed_evaluation_runs.items():
             log_error(
                 f"Bulk test evaluation run link to Azure Machine Learning Portal: {evaluation_run_link}")
-        log_error(f"The links are scrubbed due to compliance, for how to debug the flow, please refer "
-                  f"to https://msdata.visualstudio.com/Vienna/_git/PromptFlow?path=/docs/sharing-your-flows-in-prompt-flow-gallery.md"
-                  f"&_a=preview&anchor=2.-how-to-debug-a-failed-run-in--%60validate-prompt-flows%60-step-of-%5Bpromptflow-ci"
-                  f"%5D(https%3A//github.com/azure/azureml-assets/actions/workflows/promptflow-ci.yml)")
+        log_error("The links are scrubbed due to compliance, for how to debug the flow, please refer "
+                  "to https://msdata.visualstudio.com/Vienna/_git/PromptFlow?path=/docs/"
+                  "sharing-your-flows-in-prompt-flow-gallery.md&_a=preview&anchor=2.-how-to-debug-a-failed"
+                  "-run-in--%60validate-prompt-flows%60-step-of-%5Bpromptflow-ci"
+                  "%5D(https%3A//github.com/azure/azureml-assets/actions/workflows/promptflow-ci.yml)")
     elif len(submitted_flow_run_ids) == 0:
         log_debug(
             f"\nRun status checking completed. {flow_runs_count} flow runs completed.")
