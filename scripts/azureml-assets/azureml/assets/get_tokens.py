@@ -17,7 +17,8 @@ from datetime import timedelta
 import json
 
 
-DEFAULT_SAS_EXPIRATION_TIMEOUT = timedelta(days=3)
+DEFAULT_SAS_EXPIRATION_IN_DAYS = 3
+MAX_SAS_EXPIRATION_IN_DAYS = 7
 
 
 def get_tokens(input_dirs: List[Path],
@@ -53,12 +54,13 @@ def get_tokens(input_dirs: List[Path],
         json.dump(json_info, json_token_file)
 
 
-def add_token_info(path: AzureBlobstoreAssetPath, json_info: defaultdict(dict)):
+def add_token_info(path: AzureBlobstoreAssetPath, json_info: defaultdict(dict), sas_expiration_days: int):
     """Generate a SAS token and add it to the json info token dictionary.
 
     Args:
         storage_path (AzureBlobstoreAssetPath): Blob storage path to update.
         json_info (defaultdict(dict)): Dictionary used to generate the JSON token file.
+        sas_expiration_days (int): Storage SAS expiration in days
     """
     account_name = path.storage_name
     container_name = path.container_name
@@ -66,7 +68,7 @@ def add_token_info(path: AzureBlobstoreAssetPath, json_info: defaultdict(dict)):
     if container_name in json_info[account_name]:
         return
 
-    _ = path.get_uri(token_expiration=DEFAULT_SAS_EXPIRATION_TIMEOUT)
+    _ = path.get_uri(token_expiration=timedelta(sas_expiration_days))
     token = path.token
 
     if token is not None and len(token) == 0:
@@ -84,6 +86,9 @@ if __name__ == '__main__':
                         help="Asset config file name to search for")
     parser.add_argument("-j", "--json-output-path", required=True,
                         help="Path of JSON file to output to")
+    parser.add_argument("-s", "--sas-expiration-days", type=int, required=False,
+                        default=DEFAULT_SAS_EXPIRATION_IN_DAYS,
+                        help="SAS expiration in days. Default is 3days.")
     parser.add_argument("-t", "--pattern", type=re.compile,
                         help="Regex pattern to select assets to copy, in the format <type>/<name>/<version>")
     args = parser.parse_args()
@@ -91,8 +96,21 @@ if __name__ == '__main__':
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
 
+    sas_expiration_days = args.sas_expiration_days
+    # make sure token expiration is well bound under limits
+    sas_expiration_days = (
+        MAX_SAS_EXPIRATION_IN_DAYS
+        if sas_expiration_days > MAX_SAS_EXPIRATION_IN_DAYS
+        else (
+            DEFAULT_SAS_EXPIRATION_IN_DAYS
+            if sas_expiration_days <= 0
+            else sas_expiration_days
+        )
+    )
+
     # Get SAS tokens
     get_tokens(input_dirs=input_dirs,
                asset_config_filename=args.asset_config_filename,
                json_output_path=args.json_output_path,
+               sas_expiration_days=sas_expiration_days,
                pattern=args.pattern)
