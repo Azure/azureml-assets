@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.10
+version: 0.0.11
 name: mmdetection_image_objectdetection_instancesegmentation_pipeline
 display_name: Image Object Detection and Instance Segmentation MMDetection Pipeline
 description: Pipeline component for image object detection and instance segmentation using MMDetection models.
@@ -454,9 +454,30 @@ jobs:
     outputs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
+
+  # Model Evaluation Components
+#  validation_trigger_model_evaluation:
+#    type: command
+#    component: azureml:validation_trigger_model_evaluation:0.0.21
+#    compute: '${{parent.inputs.compute_model_evaluation}}'
+#    inputs:
+#      compute_name: '${{parent.inputs.compute_model_evaluation}}'
+#      task: '${{parent.inputs.task_name}}'
+#      test_data: '${{parent.inputs.test_data}}'
+#      mlflow_model_path: '${{parent.jobs.image_od_is_model_import.outputs.output_dir}}'
+#      label_column_name: '${{parent.inputs.label_column_name}}'
+#      input_column_names: '${{parent.inputs.input_column_names}}'
+#      device: auto
+#      batch_size: '${{parent.inputs.test_batch_size}}'
+#      evaluation_config: '${{parent.inputs.evaluation_config}}'
+#      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+#  validation_succeeded:
+#    type: if_else
+#    condition: ${{parent.jobs.validation_trigger_model_evaluation.outputs.output}}
+#    true_block: ${{parent.jobs.model_prediction}}
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.17
+    component: azureml:model_prediction:0.0.21
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
@@ -470,7 +491,7 @@ jobs:
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.17
+    component: azureml:compute_metrics:0.0.21
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
