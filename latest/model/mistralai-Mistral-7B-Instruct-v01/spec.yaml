@@ -4,8 +4,8 @@ path: ./
 properties:
   SHA: 3dc28cf29d2edd31a0a7b8f0b21637059815b4d5
   inference-min-sku-spec: 12|2|224|1474
-  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3,
-    Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
   languages: EN
 tags:
@@ -13,8 +13,8 @@ tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
   disable-batch: "true"
-  inference_compute_allow_list: [Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3,
-    Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+  inference_compute_allow_list: [Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
   inference_supported_envs:
   - vllm
