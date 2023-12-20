@@ -4,11 +4,11 @@
 import argparse
 import logging
 
-from _telemetry._loggerfactory import _LoggerFactory, track
 from arg_helpers import (boolean_parser, json_empty_is_none_parser,
                          str_or_int_parser, str_or_list_parser)
 from azureml.core import Run
-from constants import RAIToolType
+from azureml.rai.utils.telemetry import LoggerFactory, track
+from constants import COMPONENT_NAME, RAIToolType
 from rai_component_utilities import (copy_dashboard_info_file,
                                      create_rai_insights_from_port_path,
                                      save_to_output_port)
@@ -22,7 +22,11 @@ _ai_logger = None
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
-        _ai_logger = _LoggerFactory.get_logger(__file__)
+        run = Run.get_context()
+        module_name = run.properties["azureml.moduleName"]
+        module_version = run.properties["azureml.moduleid"]
+        _ai_logger = LoggerFactory.get_logger(
+            __file__, module_name, module_version, COMPONENT_NAME)
     return _ai_logger
 
 
