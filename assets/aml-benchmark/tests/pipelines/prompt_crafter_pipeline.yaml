@@ -19,7 +19,7 @@ inputs:
   prompt_type: "completions"
   system_message: "Answer truthfully. "
   ground_truth_column_name: "answerKey"  
-
+  few_shot_pattern: ""
 outputs:
   output_file:
     type: uri_file

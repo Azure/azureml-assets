@@ -120,6 +120,7 @@ class TestPromptCrafterComponent:
             prompt_pattern,
             output_pattern,
             self.test_prompt_crafter_component.__name__,
+            few_shot_pattern,
         )
 
         # submit the pipeline job
