@@ -68,7 +68,7 @@ def add_token_info(path: AzureBlobstoreAssetPath, json_info: defaultdict(dict), 
     if container_name in json_info[account_name]:
         return
 
-    _ = path.get_uri(token_expiration=timedelta(sas_expiration_days))
+    _ = path.get_uri(token_expiration=timedelta(days=sas_expiration_days))
     token = path.token
 
     if token is not None and len(token) == 0:
