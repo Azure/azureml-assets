@@ -7,10 +7,9 @@ properties:
   finetuning-tasks: video-multi-object-tracking
   inference-min-sku-spec: 2|1|14|28
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24rs_v3, Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+    Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4,
     Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
-  model_id: ocsort_yolox_x_crowdhuman_mot17-private-half
 tags:
   Preview: ''
   license: apache-2.0
@@ -18,4 +17,22 @@ tags:
     apply_deepspeed: 'false'
     apply_ort: 'false'
   task: multi-object-tracking
-version: 3
+  openmmlab_model_id: ocsort_yolox_x_crowdhuman_mot17-private-half
+  SharedComputeCapacityEnabled: ''
+  inference_compute_allow_list:
+    [
+      Standard_NC6s_v3,
+      Standard_NC12s_v3,
+      Standard_NC24s_v3,
+      Standard_NC16as_T4_v3,
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC4as_T4_v3,
+      Standard_NC64as_T4_v3,
+      Standard_NC8as_T4_v3,
+      Standard_NC96ads_A100_v4,
+      Standard_ND40rs_v2,
+      Standard_ND96amsr_A100_v4,
+      Standard_ND96asr_v4
+    ]
+version: 4
