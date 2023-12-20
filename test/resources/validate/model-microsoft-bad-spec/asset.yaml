@@ -1,4 +1,4 @@
-name: microsoft-good-model
+name: microsoft-bad-spec
 version: 1
 type: model
 spec: spec.yaml
