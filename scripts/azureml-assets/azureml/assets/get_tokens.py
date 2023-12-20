@@ -88,7 +88,7 @@ if __name__ == '__main__':
                         help="Path of JSON file to output to")
     parser.add_argument("-s", "--sas-expiration-days", type=int, required=False,
                         default=DEFAULT_SAS_EXPIRATION_IN_DAYS,
-                        help="SAS expiration in days. Default is 3days.")
+                        help=f"SAS expiration in days. Default is {DEFAULT_SAS_EXPIRATION_IN_DAYS} days.")
     parser.add_argument("-t", "--pattern", type=re.compile,
                         help="Regex pattern to select assets to copy, in the format <type>/<name>/<version>")
     args = parser.parse_args()
