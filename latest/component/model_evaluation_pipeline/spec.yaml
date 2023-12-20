@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: model_evaluation_pipeline
-version: 0.0.20
+version: 0.0.21
 type: pipeline
 display_name: Model Evaluation Pipeline
 description: Pipeline component for model evaluation for supported tasks. \ Generates
@@ -10,7 +10,6 @@ description: Pipeline component for model evaluation for supported tasks. \ Gene
 tags:
   type: evaluation
   sub_type: subgraph
-  Preview: ""
 
 inputs:
   compute_name:
@@ -79,7 +78,7 @@ outputs:
 jobs:
   validation_trigger_model_evaluation:
     type: command
-    component: azureml:validation_trigger_model_evaluation:0.0.20
+    component: azureml:validation_trigger_model_evaluation:0.0.21
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -103,7 +102,7 @@ jobs:
 
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.20
+    component: azureml:model_prediction:0.0.21
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -119,7 +118,7 @@ jobs:
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.20
+    component: azureml:compute_metrics:0.0.21
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

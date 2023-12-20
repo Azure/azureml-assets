@@ -1,7 +1,7 @@
 azure-core==1.29.6
 azure-ai-ml==1.12.1
 azure-identity==1.15.0
-azureml-evaluate-mlflow==0.0.38
+azureml-evaluate-mlflow==0.0.40
 ffmpeg-python==0.2.0
 langcodes==3.3.0
 sentencepiece==0.1.99

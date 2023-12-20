@@ -3,12 +3,11 @@ name: model_prediction
 display_name: Model Prediction
 description: Generate predictions on a given mlflow model for supported tasks.
 
-version: 0.0.20
+version: 0.0.21
 type: command
 tags:
   type: evaluation
   sub_type: inference
-  Preview: ""
 
 inputs:
   task:

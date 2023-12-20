@@ -10,6 +10,7 @@ from logging_utilities import get_logger
 import azureml.evaluate.mlflow as aml_mlflow
 import numpy as np
 import pandas as pd
+import os
 import constants
 
 from utils_load import load_model
@@ -26,13 +27,12 @@ class BasePredictor(ABC):
         Args:
             mlflow_model (_type_): _description_
         """
-        self.model = load_model(model_uri=model_uri, device=device, task=task_type)
+        self.model, self.model_flavor = load_model(model_uri=model_uri, device=device, task=task_type)
+
         is_torch, is_hf = False, False
         if self.model.metadata.flavors.get(aml_mlflow.pytorch.FLAVOR_NAME):
             is_torch = True
-        if self.model.metadata.flavors.get(aml_mlflow.hftransformers.FLAVOR_NAME):
-            is_hf = True
-        if self.model.metadata.flavors.get(aml_mlflow.hftransformers.FLAVOR_NAME_MLMODEL_LOGGING):
+        if self.model_flavor in constants.ALL_MODEL_FLAVORS:
             is_hf = True
 
         if is_torch:
@@ -46,6 +46,7 @@ class BasePredictor(ABC):
         super().__init__()
 
     def _ensure_base_model_input_schema(self, X_test):
+        # todo: get input_schema for transformers
         input_schema = self.model.metadata.get_input_schema()
         if self.is_hf and input_schema is not None:
             if input_schema.has_input_names():
@@ -103,6 +104,10 @@ class BasePredictor(ABC):
 
     def handle_device_failure(self, X_test, **kwargs):
         """Handle device failure."""
+        if self.task_type == constants.TASK.SUMMARIZATION or \
+                self.task_type == constants.TRANSFORMERS_TASK.SUMMARIZATION:
+            logger.info("Reloading the model in a single device for summarization task.")
+            os.environ["MLFLOW_HUGGINGFACE_USE_DEVICE_MAP"] = "False"
         predict_fn = kwargs.get('predict_fn', self.model.predict)
         if self.device == constants.DEVICE.AUTO and torch.cuda.is_available():
             try:
@@ -111,7 +116,7 @@ class BasePredictor(ABC):
                 if self.current_device != cuda_current_device:
                     logger.info(
                         f"Current Device: {self.current_device} does not match expected device {cuda_current_device}")
-                    self.model = load_model(self.model_uri, cuda_current_device, self.task_type)
+                    self.model, _ = load_model(self.model_uri, cuda_current_device, self.task_type)
                     self.current_device = cuda_current_device
                     predict_fn = kwargs.get('predict_fn', self.model.predict)
                 kwargs["device"] = self.current_device
@@ -124,7 +129,7 @@ class BasePredictor(ABC):
                 logger.warning("Failed on GPU with error: " + repr(e))
         if self.device != -1:
             logger.warning("Running predictions on CPU.")
-            self.model = load_model(self.model_uri, -1, self.task_type)
+            self.model, _ = load_model(self.model_uri, -1, self.task_type)
             predict_fn = kwargs.get('predict_fn', self.model.predict)
             try:
                 logger.info("Loading model and prediction with cuda current device. Trying CPU.")
