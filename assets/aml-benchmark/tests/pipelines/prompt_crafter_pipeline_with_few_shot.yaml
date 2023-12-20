@@ -19,6 +19,7 @@ inputs:
   prompt_type: "completions"
   system_message: "Answer truthfully. "
   ground_truth_column_name: "answerKey"  
+  few_shot_pattern: ""
 
 outputs:
   output_file:
@@ -36,6 +37,7 @@ jobs:
       few_shot_data: ${{parent.inputs.few_shot_data}}
       n_shots: ${{parent.inputs.n_shots}}
       prompt_pattern: ${{parent.inputs.prompt_pattern}}
+      few_shot_pattern: ${{parent.inputs.few_shot_pattern}}
       output_pattern: ${{parent.inputs.output_pattern}}
       prompt_type: ${{parent.inputs.prompt_type}}
       system_message: ${{parent.inputs.system_message}}

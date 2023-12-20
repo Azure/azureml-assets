@@ -161,8 +161,10 @@ class TestPromptCrafterComponent:
 
         :return: The pipeline job.
         """
-        pipeline_job = load_yaml_pipeline("prompt_crafter_pipeline.yaml")
-
+        if few_shot_pattern:
+            pipeline_job = load_yaml_pipeline("prompt_crafter_pipeline_with_few_shot.yaml")
+        else:
+            pipeline_job = load_yaml_pipeline("prompt_crafter_pipeline.yaml")
         # set the pipeline inputs
         pipeline_job.inputs.test_data = Input(type=AssetTypes.URI_FILE, path=test_data)
         pipeline_job.inputs.prompt_type = prompt_type
