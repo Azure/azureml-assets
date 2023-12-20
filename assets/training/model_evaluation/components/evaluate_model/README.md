@@ -6,7 +6,7 @@ evaluate_model
 
 ### Version 
 
-0.0.20
+0.0.19
 
 ### Type 
 
