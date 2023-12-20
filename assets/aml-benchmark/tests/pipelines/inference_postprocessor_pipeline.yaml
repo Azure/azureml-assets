@@ -4,7 +4,7 @@ type: pipeline
 display_name: Test Inference Postprocessor
 description: Pipeline to test Inference Postprocessor component
 settings:
-  default_compute: azureml:serverless
+  default_compute: azureml:NC24rsV3-dd         #serverless
 
 inputs:
   prediction_dataset:
