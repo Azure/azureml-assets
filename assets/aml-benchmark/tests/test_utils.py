@@ -281,11 +281,11 @@ def assert_logged_params(job_name: str, exp_name: str, **expected_params: Any) -
     for key, value in expected_params.items():
         if isinstance(value, str) and os.path.isfile(value):
             # calculate checksum of input dataset
-            checksum = hashlib.md5(open(value, "rb").read()).hexdigest()
+            checksum = hashlib.sha256(open(value, "rb").read()).hexdigest()
             params[key] = checksum
         elif isinstance(value, list) and all(isinstance(item, str) and os.path.isfile(item) for item in value):
             # calculate checksum of input dataset
-            checksum = hashlib.md5(b"".join(open(item, "rb").read() for item in value)).hexdigest()
+            checksum = hashlib.sha256(b"".join(open(item, "rb").read() for item in value)).hexdigest()
             params[key] = checksum
         else:
             params[key] = value
