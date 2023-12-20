@@ -155,10 +155,8 @@ def _get_pipeline_params() -> Tuple[
         run_v1 = Run(experiment=current_run.experiment, run_id=run_id)
         step_name = get_step_name(run)
         run_details = cast(Dict[str, Any], run_v1.get_details())
-        logger.info(f"Run details for {run_id}: {run_details}")
         run_definition = run_details.get('runDefinition', {})
         run_v1_properties = run_details.get('properties', {})
-        logger.info(f"Run definition for {run_id}: {run_definition}")
 
         # Get run parameters, input assets and compute_information.
         run_params = _get_run_params(run_definition)
@@ -181,7 +179,6 @@ def _get_pipeline_params() -> Tuple[
             **_get_run_reused_properties(run_v1_properties),
             **_get_run_environment_properties(run_definition),
         }
-        logger.info(f"Pipeline params for {step_name}: {pipeline_params[step_name]}")
 
         # Update loggable parameters.
         loggable_params[f"{step_name}.node_count"] = run_definition.get('nodeCount', None)
