@@ -60,16 +60,17 @@ class MLFlowModelProperties:
 class MLFlowModelTags:
     """Commonly defined model tags."""
 
+    TASK = "task"
+    LICENSE = "license"
+    AUTHOR = "author"
+
     EVALUATION_COMPUTE_ALLOWLIST = "evaluation_compute_allow_list"
     FINETUNE_COMPUTE_ALLOWLIST = "finetune_compute_allow_list"
     FINETUNING_DEFAULTS = "model_specific_defaults"
     INFERENCE_COMPUTE_ALLOWLIST = "inference_compute_allow_list"
     INFERENCE_SUPPORTED_ENVS = "inference_supported_envs"
 
-    TASK = "task"
-    LICENSE = "license"
-    AUTHOR = "author"
-    
+    # This enables model to use shared quota for deployment
     SHARED_COMPUTE_CAPACITY = "SharedComputeCapacityEnabled"
 
 
