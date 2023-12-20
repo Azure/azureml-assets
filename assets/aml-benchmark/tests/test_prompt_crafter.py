@@ -163,13 +163,13 @@ class TestPromptCrafterComponent:
         """
         if few_shot_pattern:
             pipeline_job = load_yaml_pipeline("prompt_crafter_pipeline_with_few_shot.yaml")
+            pipeline_job.inputs.few_shot_pattern = few_shot_pattern
         else:
             pipeline_job = load_yaml_pipeline("prompt_crafter_pipeline.yaml")
         # set the pipeline inputs
         pipeline_job.inputs.test_data = Input(type=AssetTypes.URI_FILE, path=test_data)
         pipeline_job.inputs.prompt_type = prompt_type
         pipeline_job.inputs.prompt_pattern = prompt_pattern
-        pipeline_job.inputs.few_shot_pattern = few_shot_pattern
         pipeline_job.inputs.few_shot_data = Input(type=AssetTypes.URI_FILE, path=few_shot_data)
         pipeline_job.inputs.n_shots = n_shots
         pipeline_job.inputs.output_pattern = output_pattern
