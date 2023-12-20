@@ -14,7 +14,7 @@ tags:
   Preview: ''
   license: mit
   task: multimodal-classification
-  open_mmlab_model_id: mmeft
+  openmmlab_model_id: mmeft
   SharedComputeCapacityEnabled: ''
   finetune_compute_allow_list:
     [

@@ -29,7 +29,7 @@ properties:
 tags:
   Preview: ''
   SharedComputeCapacityEnabled: ''
-  open_mmlab_model_id: mmd-3x-mask-rcnn_swin-t-p4-w7_fpn_1x_coco
+  openmmlab_model_id: mmd-3x-mask-rcnn_swin-t-p4-w7_fpn_1x_coco
   training_dataset: COCO
   license: apache-2.0
   model_specific_defaults:

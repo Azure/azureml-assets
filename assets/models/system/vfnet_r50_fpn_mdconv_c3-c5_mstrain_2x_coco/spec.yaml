@@ -29,7 +29,7 @@ properties:
 tags:
   Preview: ''
   SharedComputeCapacityEnabled: ''
-  open_mmlab_model_id: vfnet_r50_fpn_mdconv_c3-c5_mstrain_2x_coco
+  openmmlab_model_id: vfnet_r50_fpn_mdconv_c3-c5_mstrain_2x_coco
   training_dataset: COCO
   license: apache-2.0
   model_specific_defaults:
