@@ -3,18 +3,22 @@ name: stabilityai-stable-diffusion-2-inpainting
 path: ./
 properties:
   SHA: 81a84f49b15956b60b4272a405ad3daef3da4590
-  datasets: LAION-5B
-  inference-min-sku-spec: 4|1|28|176
+  inference-min-sku-spec: 6|1|112|336
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24rs_v3, Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
-    Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
-  model_id: stabilityai/stable-diffusion-2-inpainting
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,Standard_NC96ads_A100_v4, Standard_ND40rs_v2,
+    Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
-  Preview: ''
+  Preview: ""
+  SharedComputeCapacityEnabled: ""
   license: creativeml-openrail++-m
   task: text-to-image
-version: 4
+  huggingface_model_id: stabilityai/stable-diffusion-2-inpainting
+  training_dataset: LAION-5B
+  author: stabilityai
+  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
+version: 5
 description: |
   ___stabilityai/stable-diffusion-2-inpainting___ model is a continuation of the stable-diffusion-2-base model, with an additional 200,000 steps of training. It utilizes a mask-generation strategy introduced in LAMA and combines this with latent Variational Autoencoder (VAE) representations of the masked image to provide additional conditioning during the training process. LAION-5B and subsets are used as training data, which is further filtered using LAION's NSFW detector, with a "p_unsafe" score of 0.1 (conservative). The model should not be used to create harmful, offensive, or discriminatory content. Additionally, the model has limitations, such as difficulties with photorealism, rendering legible text, and generating complex compositions. The model's training data, LAION-5B, primarily contains English descriptions, which can lead to biases and limitations in generating non-English content. To enhance safety, a Safety Checker is recommended for use with this model.
 
