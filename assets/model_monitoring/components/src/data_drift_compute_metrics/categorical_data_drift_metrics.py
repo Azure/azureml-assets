@@ -9,6 +9,10 @@ import pyspark.sql.functions as F
 from scipy.spatial import distance
 from scipy.stats import chisquare
 from io_utils import get_output_spark_df
+from shared_utilities.constants import (
+    JENSEN_SHANNON_DISTANCE_METRIC_NAME,
+    PEARSONS_CHI_SQUARED_TEST_METRIC_NAME,
+)
 
 
 def get_column_value_frequency(
@@ -78,7 +82,7 @@ def _jensen_shannon_categorical(
             production_frequencies,
             base=2)
 
-        row = [column, float(js_distance), "Categorical", "JensenShannonDistance", column, ""]
+        row = [column, float(js_distance), "Categorical", JENSEN_SHANNON_DISTANCE_METRIC_NAME, column, ""]
         rows.append(row)
 
     output_df = get_output_spark_df(rows)
@@ -195,7 +199,7 @@ def _chisquaretest(
             column,
             float(chisqtest_val),
             "Categorical",
-            "PearsonsChiSquaredTest",
+            PEARSONS_CHI_SQUARED_TEST_METRIC_NAME,
             column,
             ""
         ]
@@ -215,7 +219,7 @@ def compute_categorical_data_drift_measures_tests(
     categorical_threshold: float,
 ):
     """Compute Data drift metrics and tests for numerical columns."""
-    if categorical_metric == "JensenShannonDistance":
+    if categorical_metric == JENSEN_SHANNON_DISTANCE_METRIC_NAME:
         output_df = _jensen_shannon_categorical(
             baseline_df, production_df, baseline_count, production_count, categorical_columns
         )
@@ -227,7 +231,7 @@ def compute_categorical_data_drift_measures_tests(
             production_count,
             categorical_columns,
         )
-    elif categorical_metric == "PearsonsChiSquaredTest":
+    elif categorical_metric == PEARSONS_CHI_SQUARED_TEST_METRIC_NAME:
         output_df = _chisquaretest(
             baseline_df,
             production_df,
