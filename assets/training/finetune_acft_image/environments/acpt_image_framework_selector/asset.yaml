@@ -1,5 +1,5 @@
 name: acpt-automl-image-framework-selector-gpu
-version: "11"
+version: "12"
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml

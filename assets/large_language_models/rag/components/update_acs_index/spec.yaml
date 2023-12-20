@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.43
+version: 0.0.46
 name: llm_rag_update_acs_index
 display_name: LLM - Update ACS Index
 is_deterministic: true
@@ -14,11 +14,11 @@ description: |
 
   The Index will have the following fields populated:
   - "id", String, key=True
-  - "content", String,
-  - "content_vector_(open_ai|hugging_face)", Collection(Single)
+  - "content", String
+  - "contentVector", Collection(Single)
   - "category", String
-  - "sourcepage", String
-  - "sourcefile", String
+  - "url", String
+  - "filepath", String
   - "content_hash", String
   - "meta_json_string", String
 
