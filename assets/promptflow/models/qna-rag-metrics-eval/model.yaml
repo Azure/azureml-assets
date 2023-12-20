@@ -1,7 +1,7 @@
 path:
-  container_name: models
-  container_path: samples/qna_rag_metrics_eval/v2/model_folder
-  storage_name: promptflowsamples
+  container_name: prompts
+  container_path: qna_rag_metrics_eval/v3
+  storage_name: amlregistryassets
   type: azureblob
 publish:
   description: description.md
