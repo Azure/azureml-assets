@@ -17,6 +17,9 @@ from datetime import timedelta
 import json
 
 
+DEFAULT_SAS_EXPIRATION_TIMEOUT = timedelta(days=3)
+
+
 def get_tokens(input_dirs: List[Path],
                asset_config_filename: str,
                json_output_path: str,
@@ -63,7 +66,7 @@ def add_token_info(path: AzureBlobstoreAssetPath, json_info: defaultdict(dict)):
     if container_name in json_info[account_name]:
         return
 
-    _ = path.get_uri(token_expiration=timedelta(days=1))
+    _ = path.get_uri(token_expiration=DEFAULT_SAS_EXPIRATION_TIMEOUT)
     token = path.token
 
     if token is not None and len(token) == 0:
