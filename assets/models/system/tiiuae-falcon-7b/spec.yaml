@@ -48,4 +48,4 @@ tags:
     precision: "4"
   inference_supported_envs:
     - vllm
-version: 6
+version: 7
