@@ -4,10 +4,12 @@
 """Classification predictor."""
 
 import numpy as np
+import pandas as pd
 
 from task_factory.base import PredictProbaWrapper, PredictWrapper
 from functools import partial
 from logging_utilities import get_logger
+from constants import MODEL_FLAVOR
 
 logger = get_logger(name=__name__)
 
@@ -20,6 +22,20 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
         PredictProbaWrapper (_type_): _description_
     """
 
+    def _handle_multiple_columns(self, X_test, **kwargs):
+        if not isinstance(X_test, pd.DataFrame):
+            return X_test, kwargs
+        if len(X_test.columns) == 1:
+            return X_test[X_test.columns[0]].values.tolist(), kwargs
+        if len(X_test.columns) == 2:
+            # ToDo: Should this be added for data with 1 columns. Might be needed for some models
+            kwargs["truncation"] = True
+            kwargs["padding"] = True
+            if "text_pair" not in X_test.columns or "text" not in X_test.columns:
+                X_test.columns = ["text", "text_pair"]
+            return X_test.to_dict(orient="records"), kwargs
+        return X_test, kwargs
+
     def _alternate_predict(self, X_test, **kwargs):
         """Model predict.
 
@@ -29,8 +45,9 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
         Returns:
             _type_: _description_
         """
-        device = kwargs.get("device", -1)
+        # Todo: Check why device is removed from .predict
         multilabel = kwargs.get("multilabel", False)
+        device = kwargs.get("device", -1)
         if self.is_torch or self.is_hf:
             preds = self.model.predict(X_test, device)
         else:
@@ -71,8 +88,12 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
                 pass
 
         if predict_proba_fn is None:
-            predict_fn = self._alternate_predict
+            # raw_model.predict = hfTRansformers wrapper predict which supports kwargs
+            # Catch: Transformers model predict changes model.config and is static
+            # self.model.predict -> pyfunc predict with no kwargs
             predict_proba_fn = raw_model.predict
+            predict_fn = raw_model.predict \
+                if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS else self._alternate_predict
 
         return predict_fn, predict_proba_fn
 
@@ -88,14 +109,24 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
         y_transformer = kwargs.get("y_transformer", None)
 
         predict_fn, _ = self._extract_predict_fn()
+
+        if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
+            params = kwargs.get("params", {})
+            params["return_all_scores"] = False
+            # Todo: Handle for multiple columns
+            X_test, params = self._handle_multiple_columns(X_test, **params)
+            kwargs = {"params": params}
         try:
             y_pred = predict_fn(X_test, **kwargs)
         except TypeError:
             y_pred = predict_fn(X_test)
         except RuntimeError:
-            y_pred = self.handle_device_failure(X_test, **kwargs)
+            y_pred, kwargs = self.handle_device_failure(X_test, **kwargs)
         if y_transformer is not None:
             y_pred = y_transformer.transform(y_pred).toarray()
+
+        if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
+            return y_pred['label']  # Current transformers return dataframse with labels and scores
 
         return y_pred
 
@@ -109,11 +140,31 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
             _type_: _description_
         """
         _, pred_proba_fn = self._extract_predict_fn()
-        if self.is_torch or self.is_hf:
+
+        if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
+            params = kwargs.get("params", {})
+            params["return_all_scores"] = True
+            # Todo: Handle multiple columns
+            X_test, kwargs = self._handle_multiple_columns(X_test, **kwargs)
+            y_transformer = kwargs.pop("y_transformer", None)
+            kwargs = {"params": params}
             try:
-                y_pred_proba = pred_proba_fn(X_test, **kwargs)
+                y_pred = pred_proba_fn(X_test, **kwargs)
+            except TypeError:
+                y_pred = pred_proba_fn(X_test)
             except RuntimeError:
-                y_pred_proba = self.handle_device_failure(X_test, **kwargs)
+                y_pred = self.handle_device_failure(X_test, **kwargs)
+            if y_transformer is not None:
+                y_pred = y_transformer.transform(y_pred).toarray()
+            y_pred_proba = y_pred.applymap(lambda x: x['score'] if 'score' in x else None)
+            y_pred_proba.columns = y_pred.iloc[0].apply(lambda x: x['label'] if 'label' in x else None).to_list()
+
         else:
-            y_pred_proba = pred_proba_fn(X_test)
+            if self.is_torch or self.is_hf:
+                try:
+                    y_pred_proba = pred_proba_fn(X_test, **kwargs)
+                except RuntimeError:
+                    y_pred_proba = self.handle_device_failure(X_test, **kwargs)
+            else:
+                y_pred_proba = pred_proba_fn(X_test)
         return y_pred_proba
