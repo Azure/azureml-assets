@@ -731,7 +731,7 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
         error_count += 1
 
-    if not model.tags.get(MLFlowModelTags.SHARED_COMPUTE_CAPACITY):
+    if MLFlowModelTags.SHARED_COMPUTE_CAPACITY not in MLFlowModelTags:
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.SHARED_COMPUTE_CAPACITY} missing")
         error_count += 1
 
