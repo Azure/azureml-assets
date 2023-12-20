@@ -98,15 +98,10 @@ if __name__ == '__main__':
 
     sas_expiration_days = args.sas_expiration_days
     # make sure token expiration is well bound under limits
-    sas_expiration_days = (
-        MAX_SAS_EXPIRATION_IN_DAYS
-        if sas_expiration_days > MAX_SAS_EXPIRATION_IN_DAYS
-        else (
-            DEFAULT_SAS_EXPIRATION_IN_DAYS
-            if sas_expiration_days <= 0
-            else sas_expiration_days
-        )
-    )
+    if sas_expiration_days > sas_expiration_days:
+        sas_expiration_days = MAX_SAS_EXPIRATION_IN_DAYS
+    elif sas_expiration_days <= 0:
+        sas_expiration_days = DEFAULT_SAS_EXPIRATION_IN_DAYS
 
     # Get SAS tokens
     get_tokens(input_dirs=input_dirs,
