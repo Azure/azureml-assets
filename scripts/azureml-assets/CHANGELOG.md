@@ -3,6 +3,11 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.24 (2023-12-20)
+### 🐛 Bugs Fixed
+- [#2006](https://github.com/Azure/azureml-assets/pull/2006) Make SAS expiration configurable
+
+
 ## 1.16.23 (2023-12-9)
 ### 🚀 New Features
 - [#1909](https://github.com/Azure/azureml-assets/pull/1909) Model spec validation
