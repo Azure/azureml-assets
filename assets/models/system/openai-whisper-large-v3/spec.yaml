@@ -47,5 +47,6 @@ tags:
   Featured: ""
   Preview: ""
   license: mit
+  SharedComputeCapacityEnabled: ""
   task: automatic-speech-recognition
 version: 1
