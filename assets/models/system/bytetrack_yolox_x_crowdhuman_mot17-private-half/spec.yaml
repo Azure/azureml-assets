@@ -20,7 +20,7 @@ tags:
     apply_deepspeed: 'false'
     apply_ort: 'false'
   task: multi-object-tracking
-  openmmlab_model_id: ocsort_yolox_x_crowdhuman_mot17-private-half
+  openmmlab_model_id: bytetrack_yolox_x_crowdhuman_mot17-private-half
   SharedComputeCapacityEnabled: ''
   finetune_compute_allow_list:
     [
@@ -55,4 +55,4 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4
     ]
-version: 3
+version: 4
