@@ -732,7 +732,7 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
         error_count += 1
 
-    if MLFlowModelTags.SHARED_COMPUTE_CAPACITY not in MLFlowModelTags:
+    if MLFlowModelTags.SHARED_COMPUTE_CAPACITY not in model.tags:
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.SHARED_COMPUTE_CAPACITY} missing")
         error_count += 1
 
@@ -751,7 +751,6 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
 
     # check valid computes for inference
     with open(SUPPORTED_INFERENCE_SKU_FILE_PATH) as f:
-
         supported_inference_skus = set(json.load(f))
         unsupported_skus_in_spec = [
             sku

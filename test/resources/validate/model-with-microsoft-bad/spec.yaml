@@ -1,6 +1,6 @@
 # This isn't a proper model YAML, but we're not testing this here
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: microsoft-thing
+name: microsoft-bad-model
 version: 1
 path: ./
 tags:
