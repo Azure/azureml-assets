@@ -242,7 +242,7 @@ def validate_environment_version(asset_config: assets.AssetConfig) -> int:
     """
     if not asset_config.auto_version:
         _log_error(asset_config.file_name_with_path,
-            f"Environment version must be auto but is {asset_config.version}")
+                   f"Environment version must be auto but is {asset_config.version}")
         return 1
 
     return 0
