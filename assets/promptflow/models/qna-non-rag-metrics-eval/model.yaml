@@ -1,7 +1,7 @@
 path:
-  container_name: prompts
-  container_path: qna_non_rag_metrics_eval/v2
-  storage_name: amlregistryassets
+  container_name: rai-eval-flows
+  container_path: models/qna_non_rag_metrics_eval/v2
+  storage_name: amlraipfmodels
   type: azureblob
 publish:
   description: description.md
