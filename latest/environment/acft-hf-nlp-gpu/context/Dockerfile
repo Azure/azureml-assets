@@ -19,6 +19,6 @@ RUN pip install "azureml-evaluate-mlflow==0.0.40"
 # This can be removed once azureml-evaluate-mlflow updates the dependency.
 RUN pip install -r requirements.txt --no-cache-dir
 RUN python -m nltk.downloader punkt
-# RUN MAX_JOBS=4 pip install flash-attn==2.3.3 --no-build-isolation
+RUN MAX_JOBS=4 pip install flash-attn==2.3.3 --no-build-isolation
 
 # dummy number to change when needing to force rebuild without changing the definition: 1
