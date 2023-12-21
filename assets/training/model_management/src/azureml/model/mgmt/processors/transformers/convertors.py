@@ -23,7 +23,6 @@ from azureml.model.mgmt.utils.common_utils import (
     move_files,
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
-    run_command,
     fetch_mlflow_acft_metadata
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
