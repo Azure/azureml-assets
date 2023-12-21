@@ -1010,7 +1010,7 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--check-tests", action="store_true",
                         help="Check test references")
     parser.add_argument("-e", "--check-environment-version", action="store_true",
-                        help="Check if environment version")
+                        help="Check environment version")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
