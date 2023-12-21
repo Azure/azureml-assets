@@ -1,6 +1,37 @@
-The `CLIP` model was developed by OpenAI researchers to learn about what contributes to robustness in computer vision tasks and to test the ability of models to generalize to arbitrary image classification tasks in a zero-shot manner. The model uses a ViT-L/14 Transformer architecture trained at 336x336 pixel resolution as an image encoder and uses a masked self-attention Transformer as a text encoder. The model was trained on publicly available image-caption data, which was gathered in a mostly non-interventionist manner. The model is intended as a research output for research communities, and the primary intended users of these models are AI researchers. The model has been evaluated on a wide range of benchmarks across a variety of computer vision datasets, but it currently struggles with respect to certain tasks such as fine-grained classification and counting objects. The model also poses issues with regards to fairness and bias, and the specific biases it exhibits can depend significantly on class design and the choices one makes for categories to include and exclude.
+The `CLIP` model was developed by researchers at OpenAI to learn about what contributes to robustness in computer vision tasks. The model was also developed to test the ability of models to generalize to arbitrary image classification tasks in a zero-shot manner. It was not developed for general model deployment - to deploy models like `CLIP, researchers will first need to carefully study their capabilities in relation to the specific context they’re being deployed within.
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/openai/clip-vit-large-patch14-336" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+This model uses a ViT-L/14 Transformer architecture trained at 336x336 pixel resolution as an image encoder and uses a masked self-attention Transformer as a text encoder. These encoders are trained to maximize the similarity of (image, text) pairs via a contrastive loss.
+
+The primary intended users of these models are AI researchers for tasks requiring image and/or text embeddings such as text and image retrieval.
+
+# Training Details
+
+## Training Data
+The model was trained on publicly available image-caption data. This was done through a combination of crawling a handful of websites and using commonly-used pre-existing image datasets such as YFCC100M. A large portion of the training data comes from the authors' crawling of the internet. This means that the data is more representative of people and societies most connected to the internet which tend to skew towards more developed nations, and younger, male users.
+
+# Evaluation Results
+This model was evaluated for text retrieval and image retrieval tasks on the Flickr30k and MSCOCO datasets. The results from Table 13 in the [original CLIP paper](https://arxiv.org/pdf/2103.00020.pdf) are summarized below
+
+Text Retrieval
+|Dataset| R@1 | R@5 |
+|-------|-----|-----|
+| Flickr30k| 88.0 | 98.7 |
+| MSCOCO | 58.4 | 81.5 |
+
+Image Retrieval
+|Dataset| R@1 | R@5 |
+|-------|-----|-----|
+| Flickr30k| 68.7 | 90.6 |
+| MSCOCO | 37.8 | 62.4 |
+
+# Limitations and Biases
+
+## Bias
+The authors of the [original CLIP paper](https://arxiv.org/pdf/2103.00020.pdf) found that the performance of the model and its biases can depend significantly on class design and the choices one makes for categories to include and exclude. They tested the risk of certain kinds of denigration with CLIP by classifying images of people from Fairface into crime-related and non-human animal categories. They found significant disparities with respect to race and gender, which could shift based on how the classes were constructed. The authors also tested the performance of CLIP on gender, race, and age classification using the Fairface dataset. They found that the accuracy for gender classification was greater than 96% across all races, with 'Middle Eastern' having the highest accuracy (98.4%) and 'White' having the lowest (96.5%). Additionally, CLIP averaged ~93% for racial classification and ~63% for age classification.
+
+# License
+The MIT License is a permissive free software license originating at the Massachusetts Institute of Technology (MIT). The license allows users to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, subject to the conditions that the copyright notice and permission notice appear in all copies or substantial portions of the software.
+
 
 ### Inference samples
 
