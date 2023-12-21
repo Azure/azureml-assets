@@ -852,7 +852,7 @@ def validate_assets(input_dirs: List[Path],
         check_categories (bool, optional): Whether to check asset categories. Defaults to False.
         check_build_context (bool, optional): Whether to check environment build context. Defaults to False.
         check_tests (bool, optional): Whether to check test references. Defaults to False.
-        check_environment_version (bool, optional): Whether to check if environment version. Defaults to False.
+        check_environment_version (bool, optional): Whether to check environment version. Defaults to False.
 
     Raises:
         ValidationException: If validation fails.
