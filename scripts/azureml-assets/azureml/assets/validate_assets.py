@@ -231,6 +231,23 @@ def validate_environment_name(asset_config: assets.AssetConfig) -> int:
     return error_count
 
 
+def validate_environment_version(asset_config: assets.AssetConfig) -> int:
+    """Validate environment version.
+
+    Args:
+        asset_config (AssetConfig): Asset config.
+
+    Returns:
+        int: Number of errors.
+    """
+    if not asset_config.auto_version:
+        _log_error(asset_config.file_name_with_path,
+            f"Environment version must be auto but is {asset_config.version}")
+        return 1
+
+    return 0
+
+
 def validate_dockerfile(environment_config: assets.EnvironmentConfig) -> int:
     """Validate Dockerfile.
 
@@ -820,7 +837,8 @@ def validate_assets(input_dirs: List[Path],
                     check_images: bool = False,
                     check_categories: bool = False,
                     check_build_context: bool = False,
-                    check_tests: bool = False) -> bool:
+                    check_tests: bool = False,
+                    check_environment_version: bool = False) -> bool:
     """Validate assets.
 
     Args:
@@ -834,6 +852,7 @@ def validate_assets(input_dirs: List[Path],
         check_categories (bool, optional): Whether to check asset categories. Defaults to False.
         check_build_context (bool, optional): Whether to check environment build context. Defaults to False.
         check_tests (bool, optional): Whether to check test references. Defaults to False.
+        check_environment_version (bool, optional): Whether to check if environment version. Defaults to False.
 
     Raises:
         ValidationException: If validation fails.
@@ -910,11 +929,15 @@ def validate_assets(input_dirs: List[Path],
             if check_tests:
                 error_count += validate_tests(asset_config)
 
-            # Validate Dockerfile
             if asset_config.type == assets.AssetType.ENVIRONMENT:
+                # Validate Dockerfile
                 error_count += validate_dockerfile(asset_config.extra_config_as_object())
                 if check_build_context:
                     error_count += validate_build_context(asset_config.extra_config_as_object())
+
+                # Validate environment version
+                if check_environment_version:
+                    error_count += validate_environment_version(asset_config)
 
             if asset_config.type == assets.AssetType.PROMPT or asset_config.type == assets.AssetType.EVALUATIONRESULT:
                 error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
@@ -986,6 +1009,8 @@ if __name__ == '__main__':
                         help="Check environment build context")
     parser.add_argument("-t", "--check-tests", action="store_true",
                         help="Check test references")
+    parser.add_argument("-e", "--check-environment-version", action="store_true",
+                        help="Check if environment version")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -1010,6 +1035,7 @@ if __name__ == '__main__':
                               check_categories=args.check_categories,
                               check_build_context=args.check_build_context,
                               model_validation_results_dir=args.model_validation_results_dir,
-                              check_tests=args.check_tests)
+                              check_tests=args.check_tests,
+                              check_environment_version=args.check_environment_version)
     if not success:
         sys.exit(1)
