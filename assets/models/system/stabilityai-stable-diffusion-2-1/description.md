@@ -1,7 +1,5 @@
 This `stable-diffusion-2-1` model is fine-tuned from [stable-diffusion-2](https://huggingface.co/stabilityai/stable-diffusion-2) (`768-v-ema.ckpt`) with an additional 55k steps on the same dataset (with `punsafe=0.1`), and then fine-tuned for another 155k extra steps with `punsafe=0.98`.
 
-## Direct Use
-
 The model is intended for research purposes only. Possible research areas and tasks include
 
 - Safe deployment of models which have the potential to generate harmful content.
@@ -78,8 +76,6 @@ Using the model to generate content that is cruel to individuals is a misuse of 
 
 CreativeML Open RAIL++-M License
 
-> Note: The inferencing script of this model is optimized for high-throughput, low latency using <a href="https://github.com/microsoft/DeepSpeed-MII" target="_blank">Deepspedd-mii</a> library. Please use `version 4` of this model for inferencing using default (FP32) diffusion pipeline implementation.
-
 # Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
@@ -96,7 +92,9 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 
 # Sample inputs and outputs (for real-time inference)
 
-## Sample input
+> Note: The inferencing script of this model is optimized for high-throughput, low latency using <a href="https://github.com/microsoft/DeepSpeed-MII" target="_blank">Deepspedd-mii</a> library. Please use `version 4` of this model for inferencing using default (FP32) diffusion pipeline implementation.
+
+### Sample input
 
 ```json
 {
@@ -108,7 +106,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 }
 ```
 
-## Sample output
+### Sample output
 
 ```json
 [
@@ -125,6 +123,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 > - "image" string is in base64 format.
 > - The `stabilityai-stable-diffusion-2-1` model doesn't check for the NSFW content in generated image. We highly recommend to use the model with <a href="https://learn.microsoft.com/en-us/azure/ai-services/content-safety/studio-quickstart" target="_blank">Azure AI Content Safety (AACS)</a>. Please refer sample <a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image" target="_blank">online</a>  and <a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" target="_blank">batch</a> notebooks for AACS integrated deployments.
 
-## Model inference: visualization for the prompt - "a photograph of an astronaut riding a horse"
+#### Visualization for the prompt - "a photograph of an astronaut riding a horse"
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_stabilityai_stable_diffusion_2_1.png" alt="stabilityai_stable_diffusion_2_1 visualization">

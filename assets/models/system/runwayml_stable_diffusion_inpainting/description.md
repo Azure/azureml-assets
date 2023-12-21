@@ -2,8 +2,6 @@ Stable Diffusion Inpainting is a latent text-to-image diffusion model capable of
 
 The **Stable-Diffusion-Inpainting** was initialized with the weights of the Stable-Diffusion-v-1-2. First 595k steps regular training, then 440k steps of inpainting training at resolution 512x512 on “laion-aesthetics v2 5+” and 10% dropping of the text-conditioning to improve classifier-free [classifier-free guidance sampling](https://arxiv.org/abs/2207.12598). For inpainting, the UNet has 5 additional input channels (4 for the encoded masked-image and 1 for the mask itself) whose weights were zero-initialized after restoring the non-inpainting checkpoint. During training, we generate synthetic masks and in 25% mask everything.
 
-## Direct Use
-
 The model is intended for research purposes only. Possible research areas and tasks include
 
 - Safe deployment of models which have the potential to generate harmful content.
@@ -107,7 +105,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 
 # Sample inputs and outputs (for real-time inference)
 
-## Sample input
+### Sample input
 
 ```json
 {
@@ -135,19 +133,19 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 > - "image1" and "image2" strings are base64 format.
 > - "mask1" and "mask2" strings are base64 format.
 
-## Sample output
+### Sample output
 
 ```json
 [
     {
         "prompt": "Face of a yellow cat, high resolution, sitting on a park bench",
         "generated_image": "inpainted_image1",
-        "nsfw_content_detected": False
+        "nsfw_content_detected": false
     },
     {
         "prompt": "Face of a green cat, high resolution, sitting on a park bench",
         "generated_image": "inpainted_image2",
-        "nsfw_content_detected": False
+        "nsfw_content_detected": false
     }
 ]
 ```
@@ -157,6 +155,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 > - "inpainted_image1" and "inpainted_image2" strings are base64 format.
 > - If "nsfw_content_detected" is True then generated image will be totally black.
 
-## Model inference: visualization for the prompt - "a small flower vase featuring a blend of yellow and orange"
+#### Visualization for the prompt - "a small flower vase featuring a blend of yellow and orange"
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_gridviz_runwayml_stable_diffusion_inpainting.png" alt="runwayml_stable_diffusion_inpainting input image mask image and output visualization">

@@ -1,7 +1,5 @@
 This `stable-diffusion-2-inpainting` model is resumed from [stable-diffusion-2-base](https://huggingface.co/stabilityai/stable-diffusion-2-base) (`512-base-ema.ckpt`) and trained for another 200k steps. Follows the mask-generation strategy presented in [LAMA](https://github.com/saic-mdal/lama) which, in combination with the latent VAE representations of the masked image, are used as an additional conditioning.
 
-## Direct Use
-
 The model is intended for research purposes only. Possible research areas and tasks include
 
 - Safe deployment of models which have the potential to generate harmful content.
@@ -93,7 +91,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 
 # Sample inputs and outputs (for real-time inference)
 
-## Sample input
+### Sample input
 
 ```json
 {
@@ -121,7 +119,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 > - "image1" and "image2" strings are base64 format.
 > - "mask1" and "mask2" strings are base64 format.
 
-## Sample output
+### Sample output
 
 ```json
 [
@@ -143,6 +141,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 > - "inpainted_image1" and "inpainted_image2" strings are base64 format.
 > - The `stabilityai-stable-diffusion-2-inpainting` model doesn't check for the NSFW content in generated image. We highly recommend to use the model with <a href="https://learn.microsoft.com/en-us/azure/ai-services/content-safety/studio-quickstart" target="_blank">Azure AI Content Safety (AACS)</a>. Please refer sample <a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image-inpainting" target="_blank">online</a> and <a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpainting" target="_blank">batch</a> notebooks for AACS integrated deployments.
 
-## Model inference: visualization for the prompt - "a small flower vase featuring a blend of yellow and orange"
+#### Visualization for the prompt - "a small flower vase featuring a blend of yellow and orange"
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_gridviz_stabilityai_stable_diffusion_2_inpainting.png" alt="stabilityai_stable_diffusion_2_inpainting input image mask image and output visualization">

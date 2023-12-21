@@ -1,6 +1,5 @@
 Stable Diffusion is a latent text-to-image diffusion model capable of generating photo-realistic images given any text input. The **Stable-Diffusion-v1-5** checkpoint was initialized with the weights of the Stable-Diffusion-v1-2 checkpoint and subsequently fine-tuned on 595k steps at resolution 512x512 on "laion-aesthetics v2 5+" and 10% dropping of the text-conditioning to improve [classifier-free guidance sampling](https://arxiv.org/abs/2207.12598).
 
-## Direct Use 
 The model is intended for research purposes only. Possible research areas and
 tasks include
 
@@ -96,8 +95,6 @@ Using the model to generate content that is cruel to individuals is a misuse of 
 
 The CreativeML OpenRAIL M license is an [Open RAIL M license](https://www.licenses.ai/blog/2022/8/18/naming-convention-of-responsible-ai-licenses), adapted from the work that [BigScience](https://bigscience.huggingface.co/) and [the RAIL Initiative](https://www.licenses.ai/) are jointly carrying in the area of responsible AI licensing. See also [the article about the BLOOM Open RAIL license](https://bigscience.huggingface.co/blog/the-bigscience-rail-license) on which our license is based.
 
-> Note: The inferencing script of this model is optimized for high-throughput, low latency using <a href="https://github.com/microsoft/DeepSpeed-MII" target="_blank">Deepspedd-mii</a> library. Please use `version 4` of this model for inferencing using default (FP32) diffusion pipeline implementation.
-
 # Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
@@ -114,7 +111,9 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 
 # Sample inputs and outputs (for real-time inference)
 
-## Sample input
+> Note: The inferencing script of this model is optimized for high-throughput, low latency using <a href="https://github.com/microsoft/DeepSpeed-MII" target="_blank">Deepspedd-mii</a> library. Please use `version 4` of this model for inferencing using default (FP32) diffusion pipeline implementation.
+
+### Sample input
 
 ```json
 {
@@ -126,7 +125,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 }
 ```
 
-## Sample output
+### Sample output
 
 ```json
 [
@@ -148,6 +147,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 > - "image1" and "image2" strings are base64 format.
 > - If "nsfw_content_detected" is True then generated image will be totally black.
 
-## Model inference: visualization for the prompt - "a photograph of an astronaut riding a horse"
+#### Visualization for the prompt - "a photograph of an astronaut riding a horse"
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_runwayml_stable_diffusion_v1_5.jpg" alt="runwayml_stable_diffusion_v1_5 visualization">
