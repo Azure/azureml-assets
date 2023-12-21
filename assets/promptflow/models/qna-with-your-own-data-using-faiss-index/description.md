@@ -14,7 +14,7 @@ Batch | N/A | N/A
 ```json
 {
     "inputs": {
-        "question": "What's AML SDK V2? Should I use V1 or V2? some typos fdsfadasf toadfase adfqfdasfzcvafwe qerfda"
+        "question": "What's AML SDK V2? Should I use V1 or V2?"
     }
 }
 ```
