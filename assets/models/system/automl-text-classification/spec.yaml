@@ -41,9 +41,8 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND40rs_v2
     ]
-  inference-recommended-sku:
+  inference_compute_allow_list:
     [
-        Standard_DS3_v2,
         Standard_D4a_v4,
         Standard_D4as_v4,
         Standard_DS4_v2,
@@ -60,6 +59,7 @@ tags:
         Standard_D64as_v4,
         Standard_D96a_v4,
         Standard_D96as_v4,
+        Standard_F4s_v2,
         Standard_FX4mds,
         Standard_F8s_v2,
         Standard_FX12mds,
