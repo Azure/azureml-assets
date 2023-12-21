@@ -457,25 +457,6 @@ jobs:
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
 
   # Model Evaluation Components
-#  validation_trigger_model_evaluation:
-#    type: command
-#    component: azureml:validation_trigger_model_evaluation:0.0.21
-#    compute: '${{parent.inputs.compute_model_evaluation}}'
-#    inputs:
-#      compute_name: '${{parent.inputs.compute_model_evaluation}}'
-#      task: '${{parent.inputs.task_name}}'
-#      test_data: '${{parent.inputs.test_data}}'
-#      mlflow_model_path: '${{parent.jobs.image_classification_model_import.outputs.output_dir}}'
-#      label_column_name: '${{parent.inputs.label_column_name}}'
-#      input_column_names: '${{parent.inputs.input_column_names}}'
-#      device: auto
-#      batch_size: '${{parent.inputs.test_batch_size}}'
-#      evaluation_config: '${{parent.inputs.evaluation_config}}'
-#      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-#  validation_succeeded:
-#    type: if_else
-#    condition: ${{parent.jobs.validation_trigger_model_evaluation.outputs.output}}
-#    true_block: ${{parent.jobs.model_prediction}}
   model_prediction:
     type: command
     component: azureml:model_prediction:0.0.21
