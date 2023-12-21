@@ -249,8 +249,6 @@ jobs:
     outputs:
       mlflow_model_folder:
         type: mlflow_model
-      model_import_job_path:
-        type: uri_file
 
   mlflow_model_local_validation:
     component: azureml:mlflow_model_local_validation:0.0.5
@@ -280,7 +278,6 @@ jobs:
       model_type: mlflow_model
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
-      model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
     outputs:
       registration_details_folder: ${{parent.outputs.model_registration_details}}
 

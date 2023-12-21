@@ -5,10 +5,12 @@
 
 import re
 import os
+import sys
+import json
+import time
+import mlflow
 import psutil
 import shutil
-import sys
-import time
 from argparse import Namespace
 from azure.ai.ml import MLClient
 from azureml._common._error_definition import AzureMLError
@@ -133,36 +135,55 @@ def copy_files(
     include_pattern_str: str = r"^.*$",
     exclude_pattern_str: Optional[str] = None
 ) -> None:
-    """Copy files to destination directory [Non-recursively] based on regex pattern provided."""
-    if not Path(src_dir).is_dir():
+    """Copy files to destination directory based on regex pattern provided for file name."""
+    src_dir = Path(src_dir)
+    destn_dir = Path(destn_dir)
+    if not src_dir.is_dir():
         raise Exception("src path provided should be a dir")
 
     os.makedirs(destn_dir, exist_ok=True)
-
     include_pattern = re.compile(include_pattern_str)
     exclude_pattern = None if not exclude_pattern_str else re.compile(exclude_pattern_str)
-    for file_name in os.listdir(src_dir):
-        if exclude_pattern and exclude_pattern.match(file_name):
-            continue
-        if include_pattern.match(file_name):
-            shutil.copy(os.path.join(src_dir, file_name), destn_dir)
+    for fname in os.listdir(src_dir):
+        src_abs_path = (src_dir / fname).absolute()
+        if src_abs_path.is_dir():
+            # recursively copy files
+            copy_files(
+                src_abs_path,
+                (destn_dir / fname).absolute(),
+                include_pattern_str,
+                exclude_pattern_str
+            )
+        elif include_pattern.match(fname) and not (exclude_pattern and exclude_pattern.match(fname)):
+            shutil.copy(os.path.join(src_dir, fname), destn_dir)
 
 
 @log_execution_time
 def move_files(src_dir: Path, destn_dir: Path, include_pattern_str: str = r"^.*$", ignore_case: bool = False) -> None:
-    """Move files to destination directory [Non-recursively] based on regex pattern provided."""
-    if not Path(src_dir).is_dir():
+    """Move files to destination directory based on regex pattern provided for file name."""
+    src_dir = Path(src_dir)
+    destn_dir = Path(destn_dir)
+    if not src_dir.is_dir():
         raise Exception("src path provided should be a dir")
 
     os.makedirs(destn_dir, exist_ok=True)
-
     include_pattern = re.compile(include_pattern_str)
     if ignore_case:
         include_pattern = re.compile(include_pattern_str, re.IGNORECASE)
 
-    for file_name in os.listdir(src_dir):
-        if include_pattern.match(file_name):
-            shutil.move(os.path.join(src_dir, file_name), destn_dir)
+    dstn_abs_path = os.path.abspath(destn_dir)
+    for fname in os.listdir(src_dir):
+        src_abs_path = os.path.abspath(os.path.join(src_dir, fname))
+        # cause AttributeError: 'PosixPath' object has no attribute 'rstrip' with Path object in src dir
+        if os.path.isdir(src_abs_path):
+            # recursively move files
+            move_files(
+                Path(src_abs_path),
+                Path(dstn_abs_path) / fname,
+                include_pattern_str
+            )
+        elif include_pattern.match(fname):
+            shutil.move(src_abs_path, dstn_abs_path)
 
 
 def create_namespace_from_dict(var: Any):
@@ -329,6 +350,23 @@ def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
         return int(stdout)
     except Exception as e:
         raise AzureMLException._with_error(AzureMLError.create(GenericRunCMDError, error=e))
+
+
+def update_run_for_conditional_output(conditional_params):
+    """Update run for conditional params. Conditional nodel make use of parent run property to read boolean value.
+
+    :param conditional_params: dict mapping conditional_output_path to value
+        eg: {output/path/is_mlflow_model: True}
+    :type conditional_params: Dict
+    """
+    run = Run.get_context()
+    logger.info(conditional_params)
+    params_to_log = {str(file_path).split("/")[-1]: value for file_path, value in conditional_params.items()}
+    logger.info(params_to_log)
+    mlflow.log_params({"azureml.pipeline.control": json.dumps(params_to_log)})
+    run.add_properties({"azureml.pipeline.control": json.dumps(params_to_log)})
+    for output_path, output_value in conditional_params.items():
+        output_path.write_text(str(output_value))
 
 
 class MlflowMetaConstants:

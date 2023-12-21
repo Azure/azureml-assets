@@ -79,12 +79,6 @@ def _get_parser():
         required=True,
         help="Output MLflow model",
     )
-    parser.add_argument(
-        "--model-import-job-path",
-        type=Path,
-        required=True,
-        help="JSON file containing model job path for model lineage",
-    )
     return parser
 
 
@@ -111,7 +105,6 @@ def run():
     model_download_metadata_path = args.model_download_metadata
     model_path = args.model_path
     mlflow_model_output_dir = args.mlflow_model_output_dir
-    model_import_job_path = args.model_import_job_path
     license_file_path = args.license_file_path
 
     if not ModelFramework.has_value(model_framework):
@@ -170,15 +163,6 @@ def run():
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
     logger.info(f"listing output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
-
-    # Add job path
-    this_job = os.environ["MLFLOW_RUN_ID"]
-    path = f"azureml://jobs/{this_job}/outputs/mlflow_model_folder"
-    model_path_dict = {"path": path}
-    json_object = json.dumps(model_path_dict, indent=4)
-    with open(model_import_job_path, "w") as outfile:
-        outfile.write(json_object)
-    logger.info("Finished writing job path")
 
 
 if __name__ == "__main__":
