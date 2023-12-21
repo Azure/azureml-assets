@@ -5,7 +5,7 @@
 
 ## 1.16.26 (2023-12-21)
 ### 🐛 Bugs Fixed
-- [#](https://github.com/Azure/azureml-assets/pull/) Require auto version for environments
+- [#2021](https://github.com/Azure/azureml-assets/pull/2021) Require auto version for environments
 
 ## 1.16.25 (2023-12-21)
 ### 🐛 Bugs Fixed
