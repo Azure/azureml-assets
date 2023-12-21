@@ -45,13 +45,15 @@ class FillMask(PredictWrapper):
             X_test = X_test[X_test.columns[0]].to_list()
         # Any other type of input is not supported?
         for i in range(len(X_test)):
+            if isinstance(y_pred[i], str) and "," in y_pred[i]:
+                y_pred[i] = y_pred[i].split(",")
             if isinstance(y_pred[i], list):
                 final_str = X_test[i]
                 for elem in y_pred[i]:
-                    final_str = final_str.replace(tokenizer_mask, elem, 1)
+                    final_str = final_str.replace(tokenizer_mask, elem.strip(), 1)
                 y_pred[i] = final_str
             else:
-                y_pred[i] = X_test[i].replace(tokenizer_mask, y_pred[i])
+                y_pred[i] = X_test[i].replace(tokenizer_mask, y_pred[i].strip())
         y_pred = pd.DataFrame(y_pred)
         if indexes is not None:
             y_pred.index = indexes
