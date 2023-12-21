@@ -24,12 +24,14 @@ MAX_SAS_EXPIRATION_IN_DAYS = 7
 def get_tokens(input_dirs: List[Path],
                asset_config_filename: str,
                json_output_path: str,
+               sas_expiration_days: int,
                pattern: re.Pattern = None):
     """Generate SAS tokens for models and generic assets to JSON output file.
 
     Args:
         input_dirs (List[Path]): List of directories to search for assets.
         asset_config_filename (str): Asset config filename to search for.
+        sas_expiration_days (int): Storage SAS expiration in days
         json_output_path (str): Path of JSON file to write output to.
         pattern (re.Pattern, optional): Regex pattern for assets to copy. Defaults to None.
     """
@@ -43,12 +45,12 @@ def get_tokens(input_dirs: List[Path],
         if asset_config.type == AssetType.MODEL:
             model_config: assets.ModelConfig = asset_config.extra_config_as_object()
             if isinstance(model_config.path, AzureBlobstoreAssetPath):
-                add_token_info(model_config.path, json_info)
+                add_token_info(model_config.path, json_info, sas_expiration_days)
 
         elif asset_config.type in GENERIC_ASSET_TYPES:
             generic_config: assets.GenericAssetConfig = asset_config.extra_config_as_object()
             if generic_config and isinstance(generic_config.path, AzureBlobstoreAssetPath):
-                add_token_info(generic_config.path, json_info)
+                add_token_info(generic_config.path, json_info, sas_expiration_days)
 
     with open(json_output_path, 'w') as json_token_file:
         json.dump(json_info, json_token_file)
