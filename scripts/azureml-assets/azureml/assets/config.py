@@ -1115,8 +1115,6 @@ class AssetConfig(Config):
         Config._validate_exists('name', self.name)
         if not self.auto_version:
             Config._validate_exists('version', self.version)
-            if self.type == AssetType.ENVIRONMENT:
-                raise ValidationException(f"environment version must be auto but is {self.version}")
         if self.type == AssetType.ENVIRONMENT:
             Config._validate_exists('extra_config', self.extra_config)
 
