@@ -1,6 +1,6 @@
 path:
   container_name: finetuning-image-models
-  container_path: TODO
+  container_path: HuggingFace-mlflow/OpenAI-CLIP-Image-Text-Embeddings-ViT-Large-Patch14-336/1703118658/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
