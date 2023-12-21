@@ -13,7 +13,7 @@ environment: azureml://registries/azureml/environments/model-management/versions
 
 code: ../../src/
 command: >
-  python run_model_preprocess.py
+  python -u run_model_preprocess.py
   $[[--model-id ${{inputs.model_id}}]]
   $[[--task-name ${{inputs.task_name}}]]
   $[[--model-download-metadata ${{inputs.model_download_metadata}}]]
@@ -31,7 +31,6 @@ command: >
   --model-framework ${{inputs.model_framework}}
   --model-path ${{inputs.model_path}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
-  --model-import-job-path ${{outputs.model_import_job_path}}
 
 inputs:
   model_id:
@@ -163,10 +162,6 @@ outputs:
     type: mlflow_model
     description: Output path for the converted MLflow model.
     mode: rw_mount
-
-  model_import_job_path:
-    type: uri_file
-    description: JSON file containing model job path for model lineage
 
 tags:
     Preview: ""

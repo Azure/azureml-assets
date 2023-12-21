@@ -13,7 +13,7 @@ environment: azureml://registries/azureml/environments/python-sdk-v2/versions/9
 
 code: ../../src/
 command: >-
-  python run_mlflow_model_local_validation.py
+  python -u run_mlflow_model_local_validation.py
   --model-path ${{inputs.model_path}}
   $[[--test-data-path ${{inputs.test_data_path}}]]
   $[[--column-rename-map "${{inputs.column_rename_map}}"]]

@@ -16,7 +16,7 @@ from azure.ai.ml.entities import Model
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 
-from utils.common_utils import get_mlclient
+from utils.common_utils import get_mlclient, get_job_asset_uri
 from utils.config import AppName, ComponentVariables
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
@@ -88,12 +88,6 @@ def parse_args():
         help="Model version in workspace/registry. If model with same version exists,version will be auto incremented",
         default=None,
     )
-    parser.add_argument(
-        "--model_import_job_path",
-        type=str,
-        help="JSON file that contains the job path of model to have lineage.",
-        default=None,
-    )
     args = parser.parse_args()
     logger.info(f"Args received {args}")
     return args
@@ -157,11 +151,11 @@ def main():
         logger.info(f"Updated model_name = {model_name}")
 
     # check if we can have lineage and update the model path for ws import
-    if not registry_name and args.model_import_job_path:
+    job_asset_id = get_job_asset_uri("model_path")
+    logger.info(f"job_asset_id {job_asset_id}")
+    if not registry_name and job_asset_id:
         logger.info("Using model output of previous job as run lineage to register the model")
-        with open(args.model_import_job_path) as f:
-            model_import_job_path = json.load(f)
-        model_path = model_import_job_path.get("path", model_path)
+        model_path = job_asset_id
     elif model_type == AssetTypes.MLFLOW_MODEL:
         if not os.path.exists(os.path.join(model_path, MLFLOW_MODEL_FOLDER)):
             logger.info(f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`")
