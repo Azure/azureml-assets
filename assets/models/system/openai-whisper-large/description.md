@@ -15,7 +15,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-asr" target="_blank">asr-
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "audio": ["https://datasets-server.huggingface.co/assets/librispeech_asr/--/all/train.clean.100/84/audio/audio.mp3"],
         "language": ["en"]
     }
