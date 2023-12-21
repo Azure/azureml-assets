@@ -132,12 +132,12 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
     {
         "prompt": "a photograph of an astronaut riding a horse",
         "generated_image": "image1",
-        "nsfw_content_detected": False
+        "nsfw_content_detected": false
     },
     {
         "prompt": "lion holding hunted deer in grass fields",
         "generated_image": "image2",
-        "nsfw_content_detected": True
+        "nsfw_content_detected": true
     }
 ]
 ```
