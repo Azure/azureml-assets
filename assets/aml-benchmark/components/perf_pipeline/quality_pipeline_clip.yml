@@ -10,7 +10,7 @@ jobs:
     inputs:
       input_dataset:
         type: uri_file
-        path: ./output_jsonls/CastingDefects_processed.jsonl
+        path: ./output_jsonls/Flowers-101_processed.jsonl
       label_column_name: label
       batch_input_pattern: '{
         "input_data": {
