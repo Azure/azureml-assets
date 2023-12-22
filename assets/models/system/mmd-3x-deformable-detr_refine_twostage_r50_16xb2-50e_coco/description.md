@@ -4,15 +4,17 @@
 
 ## Training Data
 
-The model developers used the following dataset for training the model:
-COCO
+The model developers used COCO dataset for training the model.
 
 ## Training Procedure
 
 Training Techniques:
+
 - AdamW
 - Multi Scale Train
 - Gradient Clip
+
+Epochs: 50
 
 Training Resources: 8 x V100 GPUs
 
@@ -98,6 +100,6 @@ Note: "image1" and "image2" string should be in base64 format or publicly access
 
 Note: Please refer to object detection output <a href="https://learn.microsoft.com/en-us/azure/machine-learning/reference-automl-images-schema?view=azureml-api-2#object-detection-1" target="_blank">data schema</a> for more detail.
 
-#### Model inference - visualization for a sample image
+#### Visualization for a sample image
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_deformable_detr_twostage_refine_r50_16x2_50e_coco_OD.png" alt="od visualization">
