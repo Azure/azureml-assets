@@ -20,6 +20,10 @@ You can initiate [individual trials](https://learn.microsoft.com/azure/machine-l
 
 For more information, see [how to configure experiments](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#configure-experiments).
 
+# License
+
+Apache License, Version 2.0. For more details refer <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">apache-2.0</a>
+
 # Finetuning samples
 
 Task|Dataset|Python sample (Notebook)|CLI with YAML
