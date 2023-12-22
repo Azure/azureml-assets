@@ -774,7 +774,7 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     supports_ft = (
         MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST in model.tags
         or MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU in model.properties
-        or MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC in  model.properties
+        or MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC in model.properties
         or MLFlowModelProperties.FINETUNING_TASKS in model.properties
     )
 
