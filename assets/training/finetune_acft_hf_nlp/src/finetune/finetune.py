@@ -30,7 +30,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
-from azureml.acft.accelerator.utils.run_utils import add_run_properties
+from azureml.acft.accelerator.utils.run_utils import add_run_properties, is_main_process
 from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError, ACFTSystemError
@@ -52,14 +52,11 @@ UNWANTED_PACKAGES = [
     "apex>",
     "apex<",
     "apex=",
-    "mlflow>",
-    "mlflow<",
-    "mlflow=",
     "transformers=",
     "transformers>",
     "transformers<",
 ]
-PINNED_PACAKGES = ["transformers==4.34.0", "mlflow==2.8.0"]
+PINNED_PACAKGES = ["transformers==4.34.1"]
 
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
@@ -197,11 +194,13 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTE
 FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
+    MISTRAL,
 ]
 
 FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
+    MISTRAL,
 ]
 
 
@@ -656,6 +655,11 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
             invalid_settings=dict(auto_find_batch_size=True),
             fail_run=False,
             valid_settings=dict(auto_find_batch_size=False)
+        ),
+        dict(  # Phi models, disable deepspeed stage 3
+            invalid_settings=dict(model_type=MIXFORMER_SEQUENTIAL),
+            fail_run=True,
+            valid_settings=None
         )
     ]
     for setting in invalid_ds_zero3_settings:
@@ -1122,39 +1126,41 @@ def finetune(args: Namespace):
 
 
 def _update_packages(model_save_path: str):
-    req_file_path = os.path.join(model_save_path, "requirements.txt")
-    conda_file_path = os.path.join(model_save_path, "conda.yaml")
-    requirements = None
-    if os.path.exists(req_file_path):
-        with open(req_file_path, "r") as f:
-            requirements = f.readlines()
-        if requirements:
-            for package in UNWANTED_PACKAGES:
-                requirements = [item for item in requirements if not item.startswith(package)]
-            pinned_packages = [pin_pack + '\n' for pin_pack in PINNED_PACAKGES]
-            requirements[-1:-1] = pinned_packages
-            with open(req_file_path, "w") as f:
-                f.writelines(requirements)
-            logger.info("Updated requirements.txt file")
+    # Update to conda/requirements file only with single process
+    if is_main_process():
+        req_file_path = os.path.join(model_save_path, "requirements.txt")
+        conda_file_path = os.path.join(model_save_path, "conda.yaml")
+        requirements = None
+        if os.path.exists(req_file_path):
+            with open(req_file_path, "r") as f:
+                requirements = f.readlines()
+            if requirements:
+                for package in UNWANTED_PACKAGES:
+                    requirements = [item for item in requirements if not item.startswith(package)]
+                pinned_packages = [pin_pack + '\n' for pin_pack in PINNED_PACAKGES]
+                requirements[-1:-1] = pinned_packages
+                with open(req_file_path, "w") as f:
+                    f.writelines(requirements)
+                logger.info("Updated requirements.txt file")
 
-    conda_dict = None
-    if os.path.exists(conda_file_path):
-        with open(conda_file_path, "r") as f:
-            conda_dict = yaml.safe_load(f)
-        if conda_dict is not None and "dependencies" in conda_dict:
-            for i in range(len(conda_dict["dependencies"])):
-                if "pip" in conda_dict["dependencies"][i] and isinstance(conda_dict["dependencies"][i], dict):
-                    pip_list = conda_dict["dependencies"][i]["pip"]
-                    if len(pip_list) > 0:
-                        for package in UNWANTED_PACKAGES:
-                            pip_list = [item for item in pip_list if not item.startswith(package)]
-                        pip_list.extend(PINNED_PACAKGES)
-                        conda_dict["dependencies"][i]["pip"] = pip_list
-                        break
+        conda_dict = None
+        if os.path.exists(conda_file_path):
+            with open(conda_file_path, "r") as f:
+                conda_dict = yaml.safe_load(f)
+            if conda_dict is not None and "dependencies" in conda_dict:
+                for i in range(len(conda_dict["dependencies"])):
+                    if "pip" in conda_dict["dependencies"][i] and isinstance(conda_dict["dependencies"][i], dict):
+                        pip_list = conda_dict["dependencies"][i]["pip"]
+                        if len(pip_list) > 0:
+                            for package in UNWANTED_PACKAGES:
+                                pip_list = [item for item in pip_list if not item.startswith(package)]
+                            pip_list.extend(PINNED_PACAKGES)
+                            conda_dict["dependencies"][i]["pip"] = pip_list
+                            break
 
-            with open(conda_file_path, "w") as f:
-                yaml.safe_dump(conda_dict, f)
-            logger.info("Updated conda.yaml file")
+                with open(conda_file_path, "w") as f:
+                    yaml.safe_dump(conda_dict, f)
+                logger.info("Updated conda.yaml file")
 
 
 def can_apply_ort(args: Namespace, logger):
