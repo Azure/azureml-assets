@@ -12,7 +12,7 @@ See [How to train image models](https://learn.microsoft.com/azure/machine-learni
 
 # Training Details
 
-## Training Procedure
+## Prepare Data
 
 To create computer vision models, it is necessary to provide labeled image data as input for model training. This data needs to be in the form of an MLTable, which can be created from training data in JSONL format. Please see [documentation](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#jsonl-schema-samples) for JSONL Schema and consuming the same in MLTable.
 
@@ -20,7 +20,7 @@ You can initiate [individual trials](https://learn.microsoft.com/azure/machine-l
 
 For more information, see [how to configure experiments](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#configure-experiments)
 
-# Code samples
+# Finetuning samples
 
 Task|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|
@@ -30,7 +30,7 @@ Image Multi-label classification|[multilabel fridgeObjects](https://cvbp-seconda
 
 # Sample input and output
 
-## Sample input
+### Sample input
 
 ```json
 {
@@ -49,7 +49,7 @@ Image Multi-label classification|[multilabel fridgeObjects](https://cvbp-seconda
 Note:
 - "image1" and "image2" should be strings in `base64` format.
 
-## Sample output
+### Sample output
 
 ```json
 [
@@ -64,7 +64,7 @@ Note:
 ]
 ```
 
-# Visualization for a sample image
+#### Visualization for a sample image
 
 For a sample image below, the top 3 labels are 'African elephant, Loxodonta africana', 'tusker', 'Indian elephant, Elephas maximus'.
 

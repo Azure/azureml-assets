@@ -47,7 +47,7 @@ Image Multi-label classification|Image Multi-label classification|[multilabel fr
 
 # Sample input and output
 
-## Sample input
+### Sample input
 
 ```json
 {
@@ -64,7 +64,7 @@ Image Multi-label classification|Image Multi-label classification|[multilabel fr
 Note: "image1" and "image2" string should be in base64 format or publicly accessible urls.
 
 
-## Sample output
+### Sample output
 
 ```json
 [
@@ -79,6 +79,6 @@ Note: "image1" and "image2" string should be in base64 format or publicly access
 ]
 ```
 
-# Visualization for a sample image
+#### Visualization for a sample image
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_microsoft-beit-base-patch16-224-pt22k-ft22k_MC.png" alt="mc visualization">
