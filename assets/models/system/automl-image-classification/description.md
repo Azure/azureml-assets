@@ -18,7 +18,7 @@ To create computer vision models, it is necessary to provide labeled image data 
 
 You can initiate [individual trials](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#individual-trials), [manual sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#manually-sweeping-model-hyperparameters), or [automatic sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#automatically-sweeping-model-hyperparameters-automode). It is suggested to begin with an automatic sweep to establish a baseline model. Afterward, you can experiment with individual trials using specific models and hyperparameter configurations. Lastly, manual sweeps can be used to explore multiple hyperparameter values near the more promising models and hyperparameter configurations. This three-step process (automatic sweep, individual trials, manual sweeps) helps avoid searching the entirety of the hyperparameter space, which grows exponentially with the number of hyperparameters.
 
-For more information, see [how to configure experiments](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#configure-experiments)
+For more information, see [how to configure experiments](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#configure-experiments).
 
 # Finetuning samples
 
