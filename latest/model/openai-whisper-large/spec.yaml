@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-large
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: e80f01dc6f24d14fdb05a0a3cfdb7f0ab2ec17fe
   inference-min-sku-spec: 16|0|56|112
   inference-recommended-sku: Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
@@ -33,7 +34,7 @@ tags:
   license: mit
   SharedComputeCapacityEnabled: ""
   task: automatic-speech-recognition
-version: 14
+version: 15
 description: |
   Whisper is an OpenAI pre-trained speech recognition model with potential applications for ASR solutions for developers. However, due to weak supervision and large-scale noisy data, it should be used with caution in high-risk domains. The model has been trained on 680k hours of audio data representing 98 different languages, leading to improved robustness and accuracy compared to existing ASR systems. However, there are disparities in performance across languages and the model is prone to generating repetitive texts, which may increase in low-resource languages. There are dual-use concerns and real economic implications with such performance disparities, and the model may also have the capacity to recognize specific individuals. The affordable cost of automatic transcription and translation of large volumes of audio communication is a potential benefit, but the cost of transcription may limit the expansion of surveillance projects.
 

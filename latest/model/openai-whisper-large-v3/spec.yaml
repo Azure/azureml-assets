@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-large-v3
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: ""
   inference-min-sku-spec: 16|0|56|112
   inference-recommended-sku: Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
@@ -33,7 +34,7 @@ tags:
   license: mit
   SharedComputeCapacityEnabled: ""
   task: automatic-speech-recognition
-version: 1
+version: 2
 description: |
   Whisper is a model that can recognize and translate speech using deep learning. It was trained on a large amount of data from different sources and languages. Whisper models can handle various tasks and domains without needing to adjust the model.
 

@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: gpt2-large
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 97935fc1a406f447320c3db70fe9e9875dca2595
   inference-min-sku-spec: 16|0|56|112
   inference-recommended-sku: Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
@@ -28,7 +29,7 @@ tags:
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 12
+version: 13
 description: |
   GPT-2 Large is the 774M parameter version of GPT-2, a transformer-based language model created and released by OpenAI. The model is a pretrained model on English language using a causal language modeling (CLM)
 

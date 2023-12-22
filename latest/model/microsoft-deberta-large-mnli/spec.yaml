@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: microsoft-deberta-large-mnli
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 7296194b9009373def4f7c5dad292651e4b5cf4e
   inference-min-sku-spec: 4|0|14|28
   inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
@@ -33,7 +34,7 @@ tags:
     Standard_NC64as_T4_v3, Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
 
-version: 12
+version: 13
 description: |
   [DeBERTa](https://arxiv.org/abs/2006.03654) (Decoding-enhanced BERT with Disentangled Attention) improves the BERT and RoBERTa models using disentangled attention and enhanced mask decoder. It outperforms BERT and RoBERTa on  majority of NLU tasks with 80GB training data. 
 

@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: mistralai-Mistral-7B-Instruct-v01
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 3dc28cf29d2edd31a0a7b8f0b21637059815b4d5
   inference-min-sku-spec: 12|2|224|1474
   inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2,

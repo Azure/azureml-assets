@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: sshleifer-distilbart-cnn-12-6
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: a4f8f3ea906ed274767e9906dbaede7531d660ff
   datasets: cnn_dailymail, xsum
   evaluation-min-sku-spec: 8|0|28|56
@@ -46,7 +47,7 @@ tags:
     apply_ort: "true"
   SharedComputeCapacityEnabled: ""
   task: text-summarization
-version: 9
+version: 10
 description: |
   The RoBERTa Large model is a large transformer-based language model that was developed by the Hugging Face team. It is pre-trained on masked language modeling and can be used for tasks such as sequence classification, token classification, or question answering. Its primary usage is as a fine-tuning tool and is case-sensitive. Additionally, there are metrics provided for DistilBART models, including the number of parameters, inference time, speedup, Rouge 2, and Rouge-L. The distilbart-xsum-12-6 model is recommended with 306 million parameters, 137 milliseconds inference time, 1.68 speedup, 22.12 Rouge 2, and 36.99 Rouge-L.
 

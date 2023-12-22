@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: facebook-bart-large-cnn
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 3d224934c6541b2b9147e023c2f6f6fe49bd27e1
   datasets: cnn_dailymail
   evaluation-min-sku-spec: 8|0|28|56
@@ -41,7 +42,7 @@ tags:
     apply_ort: "true"
   SharedComputeCapacityEnabled: ""
   task: text-summarization
-version: 10
+version: 11
 description: |
   The BART model is a transformer encoder-encoder model trained on English language data, and fine-tuned on CNN Daily Mail. It is used for text summarization and has been trained to reconstruct text that has been corrupted using an arbitrary noising function. The model is effective for text generation tasks such as summarization, and works well for comprehension tasks such as text classification and question answering. It can be used with the pipeline API in Python, as detailed in the code snippet provided. Lastly, it was introduced in the paper "BART: Denoising Sequence-to-Sequence Pre-training for Natural Language Generation, Translation, and Comprehension" by Lewis et al.
 

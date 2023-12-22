@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: distilgpt2
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 38cc92ec43315abd5136313225e95acc5986876c
   inference-min-sku-spec: 4|0|14|28
   inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
@@ -34,7 +35,7 @@ tags:
     Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
 
-version: 11
+version: 12
 description: |
   DistilGPT2 (short for Distilled-GPT2) is an English-language model pre-trained with the supervision of the 124 million parameter version of GPT-2. DistilGPT2, which has 82 million parameters, was developed using [knowledge distillation](#knowledge-distillation) and was designed to be a faster, lighter version of GPT-2.
 

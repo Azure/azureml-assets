@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: distilbert-base-cased
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 0dacbb01d604f8adeeb5b87c9339e485ac40d5c0
   datasets: bookcorpus, wikipedia
   evaluation-min-sku-spec: 8|0|28|56
@@ -45,7 +46,7 @@ tags:
     apply_ort: "true"
   SharedComputeCapacityEnabled: ""
   task: fill-mask
-version: 11
+version: 12
 description: |
   The DistilBERT model is a smaller, faster version of the BERT model for Transformer-based language modeling with 40% fewer parameters and 60% faster run time while retaining 95% of BERT's performance on the GLUE language understanding benchmark. This English language question answering model has a F1 score of 87.1 on SQuAD v1.1 and was developed by Hugging Face under the Apache 2.0 license. Training the model requires significant computational power, such as 8 16GB V100 GPUs and 90 hours. Intended uses include fine-tuning on downstream tasks, but it should not be used to create hostile or alienating environments and limitations and biases should be taken into account.
   <br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 

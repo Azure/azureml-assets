@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: roberta-large-mnli
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: df0f743a40fd2c7a260dfae33c1991f72ca9d472
   inference-min-sku-spec: 8|0|28|56
   inference-recommended-sku: Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2,
@@ -33,7 +34,7 @@ tags:
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
     Standard_ND40rs_v2]
 
-version: 11
+version: 12
 description: |
   **roberta-large-mnli** is the [RoBERTa large model](https://huggingface.co/roberta-large) fine-tuned on the [Multi-Genre Natural Language Inference (MNLI)](https://huggingface.co/datasets/multi_nli) corpus. The model is a pretrained model on English language text using a masked language modeling (MLM) objective.
 

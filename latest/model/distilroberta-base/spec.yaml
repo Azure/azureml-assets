@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: distilroberta-base
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: d5411c3ee9e1793fd9ef58390b40a80a4c10df32
   datasets: openwebtext
   inference-min-sku-spec: 4|0|14|28
@@ -34,7 +35,7 @@ tags:
     Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
     Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 11
+version: 12
 description: |
   **distilroberta-base** is a distilled version of the [RoBERTa-base model](https://huggingface.co/roberta-base). It follows the same training procedure as [DistilBERT](https://huggingface.co/distilbert-base-uncased).
   The code for the distillation process can be found [here](https://github.com/huggingface/transformers/tree/master/examples/distillation). This model is case-sensitive: it makes a difference between english and English.
