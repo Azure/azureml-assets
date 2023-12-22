@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 from typing import Optional, Dict, Any
 
+from azureml.acft.accelerator.constants import LoraAlgo
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import HfModelTypes
 
@@ -184,7 +185,11 @@ ACFT_CONFIG = {
         },
     },
     HfModelTypes.LLAMA: {
-        "load_tokenizer_kwargs": {"add_eos_token": True, "padding_side": "right"},
+        "load_tokenizer_kwargs": {
+            "add_eos_token": True,
+            "padding_side": "right",
+        },
+        "lora_algo": LoraAlgo.PEFT,
         "mlflow_ft_conf": {
             "mlflow_hftransformers_misc_conf": {
                 "tokenizer_hf_load_kwargs": {
