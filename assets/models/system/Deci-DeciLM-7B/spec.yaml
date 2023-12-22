@@ -29,4 +29,4 @@ tags:
   license: apache-2.0
   author: deci-ai
   huggingface_model_id: Deci/DeciLM-7B
-version: 2
+version: 3

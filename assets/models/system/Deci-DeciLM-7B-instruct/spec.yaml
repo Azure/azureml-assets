@@ -30,4 +30,4 @@ tags:
   author: deci-ai
   huggingface_model_id: Deci/DeciLM-7B-instruct
   datasets: Open-Orca/SlimOrca
-version: 2
+version: 3
