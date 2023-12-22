@@ -64,7 +64,7 @@ Note:
 ]
 ```
 
-#### Visualization for a sample image
+###  Visualization of inference result for a sample image
 
 For a sample image below, the top 3 labels are 'African elephant, Loxodonta africana', 'tusker', 'Indian elephant, Elephas maximus'.
 
