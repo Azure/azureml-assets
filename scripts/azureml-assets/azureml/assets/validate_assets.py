@@ -55,6 +55,7 @@ class MLFlowModelProperties:
     INFERENCE_MIN_SKU_SPEC = "inference-min-sku-spec"
 
     FINETUNING_TASKS = "finetuning-tasks"
+    SHARED_COMPUTE_CAPACITY = "SharedComputeCapacityEnabled"
 
 
 class MLFlowModelTags:
@@ -740,7 +741,7 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
         )
         return 0
 
-    # confirm must have tags
+    # confirm must have
     if not model.tags.get(MLFlowModelTags.TASK):
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.TASK} missing")
         error_count += 1
@@ -749,14 +750,34 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
         error_count += 1
 
+    # shared compute check
     if MLFlowModelTags.SHARED_COMPUTE_CAPACITY not in model.tags:
-        _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.SHARED_COMPUTE_CAPACITY} missing")
+        _log_error(asset_config.file_name_with_path, f"Tags {MLFlowModelTags.SHARED_COMPUTE_CAPACITY} missing")
         error_count += 1
 
-    supports_eval = model.tags.get(MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST) is not None
-    supports_ft = model.tags.get(MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST) is not None
+    if not model.properties.get(MLFlowModelProperties.SHARED_COMPUTE_CAPACITY, False):
+        _log_error(
+            asset_config.file_name_with_path, f"Property {MLFlowModelProperties.SHARED_COMPUTE_CAPACITY} is not set"
+        )
+        error_count += 1
 
-    # check properties
+    # if any of the relevant tags or properies is present
+    # assume support as true and then fail in valdn
+    supports_eval = (
+        model.tags.get(MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST) is not None
+        or model.properties.get(MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU) is not None
+        or model.properties.get(MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC) is not None
+    )
+
+    # If any of the relevant tags or properies is present
+    # assume support as true and then fail in valdn
+    supports_ft = (
+        model.tags.get(MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST) is not None
+        or model.properties.get(MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU) is not None
+        or model.properties.get(MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC) is not None
+        or model.properties.get(MLFlowModelProperties.FINETUNING_TASKS) is not None
+    )
+
     # validate inference compute req.
     error_count += validate_model_scenario(
         asset_config.file_name_with_path,
