@@ -7,10 +7,10 @@ dependencies:
 - pip=23.3.1
 - pip:
     # RAG package
-  - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone]==0.2.23.1
+  - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone]==0.2.22
     # Azure AI
   - azure-ai-formrecognizer==3.3.1
-  - azure-ai-ml=={{latest-pypi-version}}
+  - azure-ai-ml==1.12.1
     # Azure
   - azure-core<2.0.0,>=1.8.0,!=1.22.0
   - azure-identity==1.12.0
@@ -20,11 +20,11 @@ dependencies:
   - azure-search-documents==11.4.0b8
     # Azure ML
   - azureml-contrib-services
-  - azureml-core=={{latest-pypi-version}}
+  - azureml-core==1.54.0
   - azureml-dataprep>=4.12.7 # Change back to latest version once azureml-fsspec is compatible
   - azureml-inference-server-http==0.7.6
-  - azureml-mlflow=={{latest-pypi-version}}
-  - azureml-telemetry=={{latest-pypi-version}}
+  - azureml-mlflow==1.54.0
+  - azureml-telemetry==1.54.0
     # Other public packages
   - beautifulsoup4~=4.11.2
   - datasets~=2.10.1
@@ -39,7 +39,7 @@ dependencies:
   - msal~=1.22.0
   - msrest>=0.6.18
   - nltk==3.8.1
-  - openai>=0.27.4
+  - openai~=0.27.4
   - pandas~=1.1.5
   - polling2~=0.5.0
   - psutil~=5.8.0

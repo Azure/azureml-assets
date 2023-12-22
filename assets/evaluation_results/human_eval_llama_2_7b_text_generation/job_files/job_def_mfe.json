@@ -86,7 +86,7 @@
                     },
                     "template_input": {
                         "job_input_type": "literal",
-                        "value": "{\"task_id\":{{task_id}}, \n\"prompt\": {{prompt}}, \n\"canonical_solution\":{{canonical_solution}}, \n\"test\":{% set res = test+\"\\ncheck(\"+entry_point+\")\" %} {{res}}}"
+                        "value": "{\"task_id\":{{task_id}}, \n\"prompt\": {{prompt}}}"
                     }
                 },
                 "outputs": {
@@ -124,7 +124,7 @@
                     },
                     "output_pattern": {
                         "job_input_type": "literal",
-                        "value": "{{test}}"
+                        "value": "{{task_id}}"
                     },
                     "random_seed": {
                         "job_input_type": "literal",
@@ -166,7 +166,7 @@
                     },
                     "evaluation_config_params": {
                         "job_input_type": "literal",
-                        "value": "{\"token_count_per_sample\": true, \"generator_config\": {\"return_full_text\": true, \"max_new_tokens\": 500, \"do_sample\": false, \"temperature\": 0.0, \"top_p\": 1.0}}"
+                        "value": "{\"token_count_per_sample\": false, \"generator_config\": {\"return_full_text\": true, \"max_new_tokens\": 500, \"do_sample\": false, \"temperature\": 0.0, \"top_p\": 1.0}}"
                     },
                     "device": {
                         "job_input_type": "literal",
@@ -218,9 +218,9 @@
                         "job_input_type": "literal",
                         "value": "prediction"
                     },
-                    "regex_expr": {
-                        "job_input_type": "literal",
-                        "value": "((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:\n\\S|$))"
+                    "script_path": {
+                        "uri": "https://raw.githubusercontent.com/Azure/azureml-assets/main/assets/aml-benchmark/scripts/custom_inference_postprocessors/humaneval.py",
+                        "job_input_type": "uri_file"
                     }
                 },
                 "outputs": {
@@ -258,7 +258,7 @@
                     },
                     "ground_truth_column_name": {
                         "job_input_type": "literal",
-                        "value": ",completion"
+                        "value": ",ground_truth"
                     },
                     "prediction_column_name": {
                         "job_input_type": "literal",
@@ -277,56 +277,6 @@
                 "_source": "REMOTE.REGISTRY",
                 "componentId": "azureml://registries/azureml/components/compute_metrics/labels/latest"
             },
-            "performance": {
-                "limits": {
-                    "job_limits_type": "Command",
-                    "timeout": "PT15M"
-                },
-                "name": "performance",
-                "type": "command",
-                "inputs": {
-                    "performance_data": {
-                        "job_input_type": "literal",
-                        "value": "${{parent.jobs.prediction.outputs.performance_metadata}}"
-                    },
-                    "percentiles": {
-                        "job_input_type": "literal",
-                        "value": "50,90,99"
-                    },
-                    "batch_size_column_name": {
-                        "job_input_type": "literal",
-                        "value": "batch_size"
-                    },
-                    "start_time_column_name": {
-                        "job_input_type": "literal",
-                        "value": "start_time_iso"
-                    },
-                    "end_time_column_name": {
-                        "job_input_type": "literal",
-                        "value": "end_time_iso"
-                    },
-                    "input_token_count_column_name": {
-                        "job_input_type": "literal",
-                        "value": "input_token_count"
-                    },
-                    "output_token_count_column_name": {
-                        "job_input_type": "literal",
-                        "value": "output_token_count"
-                    },
-                    "is_batch_inference_result": {
-                        "job_input_type": "literal",
-                        "value": "False"
-                    }
-                },
-                "outputs": {
-                    "performance_result": {
-                        "uri": "azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json",
-                        "job_output_type": "uri_file"
-                    }
-                },
-                "_source": "REMOTE.REGISTRY",
-                "componentId": "azureml://registries/azureml/components/compute_performance_metrics/labels/latest"
-            },
             "aggregator": {
                 "limits": {
                     "job_limits_type": "Command",
@@ -338,10 +288,6 @@
                     "quality_metrics": {
                         "job_input_type": "literal",
                         "value": "${{parent.jobs.quality.outputs.evaluation_result}}"
-                    },
-                    "performance_metrics": {
-                        "job_input_type": "literal",
-                        "value": "${{parent.jobs.performance.outputs.performance_result}}"
                     }
                 },
                 "outputs": {
@@ -356,7 +302,7 @@
         },
         "outputs": {},
         "settings": {
-            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/a100-lp",
+            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/serverless",
             "continue_on_step_failure": true,
             "force_rerun": false,
             "_source": "YAML.JOB"

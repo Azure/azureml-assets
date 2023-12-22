@@ -8,7 +8,7 @@
             "workflow": "llm_benchmark"
         },
         "displayName": "gsm8k_chain_of_thought-gpt4-32k-full",
-        "experimentName": "gsm8k_chain_of_thought",
+        "experimentName": "gsm8k_chain_of_thought-long",
         "isArchived": false,
         "jobType": "Pipeline",
         "inputs": {},
@@ -223,6 +223,10 @@
                         "job_input_type": "literal",
                         "value": "{{solution}} The answer is {{answer}}."
                     },
+                    "system_message": {
+                        "job_input_type": "literal",
+                        "value": "When answering the question, please ensure that the last number you write in the response is the correct, numerical answer to the question."
+                    },
                     "random_seed": {
                         "job_input_type": "literal",
                         "value": "0"
@@ -251,7 +255,7 @@
                     },
                     "batch_input_pattern": {
                         "job_input_type": "literal",
-                        "value": "{\"messages\": ###<prompt>, \"temperature\": 0.0, \"max_tokens\": 256, \"top_p\": 1.0, \"frequency_penalty\": 0.0, \"presence_penalty\": 0.0, \"stop\": null}"
+                        "value": "{\"messages\": ###<prompt>, \"temperature\": 0.0, \"max_tokens\": 300, \"top_p\": 1.0, \"frequency_penalty\": 0.0, \"presence_penalty\": 0.0, \"stop\": null}"
                     },
                     "endpoint_url": {
                         "job_input_type": "literal",
@@ -387,7 +391,7 @@
                     },
                     "evaluation_config_params": {
                         "job_input_type": "literal",
-                        "value": "{\"regexes_to_ignore\": [\"\\\\.0+$\"]}"
+                        "value": "{\"regexes_to_ignore\": [\"\\\\.0+$\", \",\"]}"
                     }
                 },
                 "outputs": {
@@ -423,7 +427,7 @@
         },
         "outputs": {},
         "settings": {
-            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/cpu-cluster",
+            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/serverless",
             "continue_on_step_failure": true,
             "force_rerun": false,
             "_source": "YAML.JOB"

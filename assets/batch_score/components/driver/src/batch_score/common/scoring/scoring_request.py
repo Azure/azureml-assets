@@ -37,14 +37,6 @@ class ScoringRequest:
         self.__cleaned_payload_obj = json.loads(original_payload)
         self.__loggable_payload_obj = json.loads(original_payload)
 
-        # Pop _batch_request_metadata property from payload, if present
-        # Override with request_metadata, if present
-        # In case both exist, we call pop twice to make sure these properties
-        # are removed from the cleaned payload object
-        # These properties do not need to be sent to the model & will be added to the output file directly
-        self.__request_metadata = self.__cleaned_payload_obj.pop(self.__BATCH_REQUEST_METADATA, None)
-        self.__request_metadata = self.__cleaned_payload_obj.pop(self.__REQUEST_METADATA, self.__request_metadata)
-
         # Apply any modifiers to the original payload
         if self.__input_to_request_transformer:
             self.__cleaned_payload_obj = self.__input_to_request_transformer.apply_modifications(
@@ -53,6 +45,14 @@ class ScoringRequest:
         if self.__input_to_log_transformer:
             self.__loggable_payload_obj = self.__input_to_log_transformer.apply_modifications(
                 self.__loggable_payload_obj)
+
+        # Pop _batch_request_metadata property from payload, if present
+        # Override with request_metadata, if present
+        # In case both exist, we call pop twice to make sure these properties
+        # are removed from the cleaned payload object
+        # These properties do not need to be sent to the model & will be added to the output file directly
+        self.__request_metadata = self.__cleaned_payload_obj.pop(self.__BATCH_REQUEST_METADATA, None)
+        self.__request_metadata = self.__cleaned_payload_obj.pop(self.__REQUEST_METADATA, self.__request_metadata)
 
         self.__cleaned_payload = json.dumps(self.__cleaned_payload_obj, cls=BatchComponentJSONEncoder)
         self.__loggable_payload = json.dumps(self.__loggable_payload_obj, cls=BatchComponentJSONEncoder)

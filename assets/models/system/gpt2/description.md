@@ -1,50 +1,74 @@
-GPT-2 is a transformer-based language model intended for AI researchers and practitioners. It was trained on unfiltered content from Reddit and may have biases. It is best used for text generation, but the training data has not been publicly released. It has several limitations and should be used with caution in situations that require truth and in systems that interact with humans. There are different versions of the model, including GPT-Large, GPT-Medium, and GPT-Xl, available for different use cases. The information provided by the OpenAI team is to complete and give specific examples of bias in their model.
+GPT-2 is a transformers model pretrained on a very large corpus of English data in a self-supervised fashion. This means it was pretrained on the raw texts only, with no humans labelling them in any way (which is why it can use lots of publicly available data) with an automatic process to generate inputs and labels from those texts. More precisely, it was trained to guess the next word in sentences.
 
+This is the smallest version of GPT-2, with 124M parameters.
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/gpt2" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+# Training Details
 
-### Inference samples
+See the [associated paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) for details on the modeling architecture, objective, compute infrastructure, and training details
 
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
+## Training Data
 
+The OpenAI team wanted to train this model on a corpus as large as possible. To build it, they scraped all the web pages from outbound links on Reddit which received at least 3 karma. Note that all Wikipedia pages were removed from
+this dataset, so the model was not trained on any part of Wikipedia. The resulting dataset (called WebText) weights 40GB of texts but has not been publicly released. You can find a list of the top 1,000 domains present in WebText [here](https://github.com/openai/gpt-2/blob/master/domains.txt).
 
-### Finetuning samples
+## Preprocessing
 
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+The texts are tokenized using a byte-level version of Byte Pair Encoding (BPE) (for unicode characters) and a vocabulary size of 50,257. The inputs are sequences of 1024 consecutive tokens.
 
+The larger model was trained on 256 cloud TPU v3 cores. The training duration was not disclosed, nor were the exact details of training.
 
-### Model Evaluation
+# Evaluation Results
 
-Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|--|
-Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+The model achieves the following results without any fine-tuning (zero-shot):
 
+| Dataset  | LAMBADA | LAMBADA | CBT-CN | CBT-NE | WikiText2 | PTB    | enwiki8 | text8  | WikiText103 | 1BW   |
+|:--------:|:-------:|:-------:|:------:|:------:|:---------:|:------:|:-------:|:------:|:-----------:|:-----:|
+| (metric) | (PPL)   | (ACC)   | (ACC)  | (ACC)  | (PPL)     | (PPL)  | (BPB)   | (BPC)  | (PPL)       | (PPL) |
+|          | 35.13   | 45.99   | 87.65  | 83.4   | 29.41     | 65.85  | 1.16    | 1,17   | 37.50       | 75.20 |
 
-### Sample inputs and outputs (for real-time inference)
+# Limitations and Biases
 
-#### Sample input
+The training data used for this model has not been released as a dataset one can browse. We know it contains a lot of unfiltered content from the internet, which is far from neutral. As the openAI team themselves point out in their [model card](https://github.com/openai/gpt-2/blob/master/model_card.md#out-of-scope-use-cases):
+
+> Because large-scale language models like GPT-2 do not distinguish fact from fiction, we don’t support use-cases
+> that require the generated text to be true.
+>
+> Additionally, language models like GPT-2 reflect the biases inherent to the systems they were trained on, so we do
+> not recommend that they be deployed into systems that interact with humans > unless the deployers first carry out a
+> study of biases relevant to the intended use-case. We found no statistically significant difference in gender, race,
+> and religious bias probes between 774M and 1.5B, implying all versions of GPT-2 should be approached with similar
+> levels of caution around use cases that are sensitive to biases around human attributes.
+
+*Note: This bias will also affect all fine-tuned versions of this model.*
+
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[text-generation-online-endpoint.ipynb](https://aka.ms/text-generation-online-endpoint-oss)
+
+# Sample inputs and outputs
+
+### Sample input
 ```json
 {
-    "input_data": {
-        "input_string": ["My name is John and I am", "Once upon a time,"]
+    "input_data": [
+        "I believe the meaning of life is"
+    ],
+    "params": {
+        "top_p": 1.0,
+        "temperature": 0.8,
+        "max_new_tokens": 100,
+        "do_sample": true,
+        "return_full_text": true
     }
 }
 ```
 
-#### Sample output
+### Sample output
 ```json
 [
-    {
-        "0": "My name is John and I am a student at UC Berkeley. It is my main interest to do research in the humanities. I am going to share"
-    },
-    {
-        "0": "Once upon a time, they were just another small family, only three. She says one day that her father was getting a new license"
-    }
+  "I believe the meaning of life is to give way to you in the present moment to the things you love the most. We don't need to worry about your feelings of guilt, anger, or pain; we need to find ways to make things easier for you and help you get back to normal.\n\nAs a mother, I've always considered that the meaning of the world came from the love we gave each other. I believe that love is a life-sustaining energy that can help us reach our goal of one day"
 ]
 ```

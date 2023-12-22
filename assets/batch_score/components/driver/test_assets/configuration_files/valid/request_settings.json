@@ -1,0 +1,23 @@
+{
+    "api": {
+        "type": "completion"
+    },
+    "authentication": {
+        "type": "managed_identity"
+    },
+    "inference_endpoint": {
+        "type": "azure_openai",
+        "url": "https://sunjoli-aoai.openai.azure.com/openai/deployments/turbo/completions?api-version=2023-03-15-preview"
+    },
+    "request_settings": {
+        "headers": {
+            "custom_header": "header_value"
+        },
+        "properties": {
+            "custom_property": "property_value",
+            "custom_property_2": "property_value_2"
+        },
+        "timeout": 300,
+        "user_agent_identifier": "some identifier"
+    }
+}

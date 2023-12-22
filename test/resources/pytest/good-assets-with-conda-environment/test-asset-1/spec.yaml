@@ -1,0 +1,56 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+description: >-
+  Creates random (noisy) images in class subfolders. To be used for testing with an image classifier.
+
+name: test-asset-1
+display_name: Generate Random Image Classes
+version: 1
+
+inputs:
+  classes:
+    type: integer
+    default: 4
+    description: "Number of classes (subfolders)"
+  train_samples:
+    type: integer
+    default: 500
+    description: "Number of training images"
+  valid_samples:
+    type: integer
+    default: 300
+    description: "Number of validation images"
+  width:
+    type: integer
+    default: 300
+    description: "Width of images"
+  height:
+    type: integer
+    default: 300
+    description: "Height of images"
+
+outputs:
+  output_train: 
+    type: path
+    description: "Path to the training images"
+  output_valid: 
+    type: path
+    description: "Path to the validation images"
+
+code: .
+
+environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu:11
+
+command: >-
+  python run.py 
+
+  --classes ${{inputs.classes}}
+  --train_samples ${{inputs.train_samples}}
+  --valid_samples ${{inputs.valid_samples}}
+
+  --width ${{inputs.width}}
+  --height ${{inputs.height}}
+
+  --output_train ${{outputs.output_train}}
+  --output_valid ${{outputs.output_valid}}
