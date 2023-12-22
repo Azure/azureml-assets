@@ -752,7 +752,7 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
 
     # shared compute check
     if MLFlowModelTags.SHARED_COMPUTE_CAPACITY not in model.tags:
-        _log_error(asset_config.file_name_with_path, f"Tags {MLFlowModelTags.SHARED_COMPUTE_CAPACITY} missing")
+        _log_error(asset_config.file_name_with_path, f"Tag {MLFlowModelTags.SHARED_COMPUTE_CAPACITY} missing")
         error_count += 1
 
     if not model.properties.get(MLFlowModelProperties.SHARED_COMPUTE_CAPACITY, False):
@@ -764,18 +764,18 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     # if any of the relevant tags or properies is present
     # assume support as true and then fail in valdn
     supports_eval = (
-        model.tags.get(MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST) is not None
-        or model.properties.get(MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU) is not None
-        or model.properties.get(MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC) is not None
+        MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST in model.tags
+        or MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU in model.properties
+        or MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC in model.properties
     )
 
     # If any of the relevant tags or properies is present
     # assume support as true and then fail in valdn
     supports_ft = (
-        model.tags.get(MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST) is not None
-        or model.properties.get(MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU) is not None
-        or model.properties.get(MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC) is not None
-        or model.properties.get(MLFlowModelProperties.FINETUNING_TASKS) is not None
+        MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST in model.tags
+        or MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU in model.properties
+        or MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC in  model.properties
+        or MLFlowModelProperties.FINETUNING_TASKS in model.properties
     )
 
     # validate inference compute req.
