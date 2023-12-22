@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: runwayml-stable-diffusion-v1-5
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 1d0c4ebf6ff58a5caecab40fa1406526bca4b5b9
   inference-min-sku-spec: 6|1|112|336
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
@@ -29,4 +30,4 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4
     ]
-version: 5
+version: 6
