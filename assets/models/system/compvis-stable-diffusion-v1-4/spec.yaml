@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: compvis-stable-diffusion-v1-4
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 133a221b8aa7292a167afc5127cb63fb5005638b
   inference-min-sku-spec: 6|1|112|336
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
@@ -29,4 +30,4 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4
     ]
-version: 5
+version: 6
