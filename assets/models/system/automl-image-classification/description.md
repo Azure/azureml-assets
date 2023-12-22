@@ -12,7 +12,7 @@ See [How to train image models](https://learn.microsoft.com/azure/machine-learni
 
 # Training Details
 
-## Prepare Data
+## Training Data
 
 To create computer vision models, it is necessary to provide labeled image data as input for model training. This data needs to be in the form of an MLTable, which can be created from training data in JSONL format. Please see [documentation](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#jsonl-schema-samples) for JSONL Schema and consuming the same in MLTable.
 
