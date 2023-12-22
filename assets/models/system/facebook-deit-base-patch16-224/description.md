@@ -83,6 +83,6 @@ Note: "image1" and "image2" string should be in base64 format or publicly access
 ]
 ```
 
-### Visualization of inference result for a sample image
+#### Visualization of inference result for a sample image
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_facebook-deit-base-patch16-224_laptop_MC.png" alt="mc visualization">
