@@ -26,6 +26,9 @@ Image Retrieval
 
 # Limitations and Biases
 
+## Limitations
+CLIP currently struggles with respect to certain tasks such as fine grained classification and counting objects. CLIP also poses issues with regards to fairness and bias which the authors discuss in the paper and is described briefly in the next section. Additionally, the authors' approach to testing CLIP also has an important limitation- in many cases they have used linear probes to evaluate the performance of CLIP and there is evidence suggesting that linear probes can underestimate model performance.
+
 ## Bias
 The authors of the [original CLIP paper](https://arxiv.org/pdf/2103.00020.pdf) found that the performance of the model and its biases can depend significantly on class design and the choices one makes for categories to include and exclude. They tested the risk of certain kinds of denigration with CLIP by classifying images of people from Fairface into crime-related and non-human animal categories. They found significant disparities with respect to race and gender, which could shift based on how the classes were constructed. The authors also tested the performance of CLIP on gender, race, and age classification using the Fairface dataset. They found that the accuracy for gender classification was greater than 96% across all races, with 'Middle Eastern' having the highest accuracy (98.4%) and 'White' having the lowest (96.5%). Additionally, CLIP averaged ~93% for racial classification and ~63% for age classification.
 
@@ -33,16 +36,16 @@ The authors of the [original CLIP paper](https://arxiv.org/pdf/2103.00020.pdf) f
 The MIT License is a permissive free software license originating at the Massachusetts Institute of Technology (MIT). The license allows users to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, subject to the conditions that the copyright notice and permission notice appear in all copies or substantial portions of the software.
 
 
-### Inference samples
+# Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|<a href="https://aka.ms/azureml-infer-sdk-image-text-embeddings" target="_blank">image-text-embeddings-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-image-text-embeddings" target="_blank">image-text-embeddings-online-endpoint.sh</a>
 Batch|<a href="https://aka.ms/azureml-infer-batch-sdk-image-text-embeddings" target="_blank">image-text-embeddings-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-image-text-embeddings" target="_blank">image-text-embeddings-batch-endpoint.sh</a>
 
-### Sample inputs and outputs (for real-time inference)
+# Sample input and output (for real-time inference)
 
-#### Sample input for image embeddings
+### Sample input for image embeddings
 
 ```json
 {
@@ -60,7 +63,7 @@ Batch|<a href="https://aka.ms/azureml-infer-batch-sdk-image-text-embeddings" tar
 ```
 Note: "image1" and "image2" should be publicly accessible urls or strings in `base64` format
 
-#### Sample output
+### Sample output for image embeddings
 
 ```json
 [
@@ -74,7 +77,7 @@ Note: "image1" and "image2" should be publicly accessible urls or strings in `ba
 ```
 Note: returned embeddings have dimension 768 and are not normalized
 
-#### Sample input for text embeddings
+### Sample input for text embeddings
 
 ```json
 {
@@ -91,7 +94,7 @@ Note: returned embeddings have dimension 768 and are not normalized
 }
 ```
 
-#### Sample output
+### Sample output for text embeddings
 
 ```json
 [
@@ -105,7 +108,7 @@ Note: returned embeddings have dimension 768 and are not normalized
 ```
 Note: returned embeddings have dimension 768 and are not normalized
 
-#### Sample input for image and text embeddings
+### Sample input for image and text embeddings
 
 ```json
 {
@@ -123,7 +126,7 @@ Note: returned embeddings have dimension 768 and are not normalized
 ```
 Note: "image1" and "image2" should be publicly accessible urls or strings in `base64` format
 
-#### Sample output
+### Sample output for image and text embeddings
 
 ```json
 [
