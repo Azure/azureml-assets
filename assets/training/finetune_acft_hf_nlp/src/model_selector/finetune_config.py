@@ -247,7 +247,7 @@ class FinetuneConfig:
     def _read_ft_config_json_file(
         self, json_file_path: Optional[str]
     ) -> Dict[str, Any]:
-        """Utility to read the finetune config json file.
+        """Read finetune config json file.
 
         :param json_file_path - Path to the finetune config json file
         :type Optional[str]

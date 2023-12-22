@@ -797,7 +797,7 @@ def enable_ds3_model_specific_args(args: Namespace):
 
 
 def set_flash_attention(args: Namespace):
-    """Set Flash Attention related parameters"""
+    """Set Flash Attention related parameters."""
     flash_attention_load_model_kwargs = {}
     if (
         hasattr(args, "model_type")
@@ -845,7 +845,7 @@ def set_flash_attention(args: Namespace):
 
 
 def set_gradient_checkpointing(args: Namespace):
-    """Set Gradient checkpointing related parameters"""
+    """Set Gradient checkpointing related parameters."""
     if (
         hasattr(args, "model_type")
         and args.model_type in FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES
