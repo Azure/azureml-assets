@@ -49,7 +49,7 @@ Inference type|Python sample (Notebook)
 Real time|<a href="https://aka.ms/azureml-infer-sdk-safe-image-text-to-image-generation" target="_blank">safe-image-text-to-image-online-endpoint.ipynb</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-image-text-to-image-generation" target="_blank">safe-image-text-to-image-batch-endpoint.ipynb</a>
 
-# Sample inputs and outputs (for real-time inference)
+# Sample input and output
 
 ### Sample input
 

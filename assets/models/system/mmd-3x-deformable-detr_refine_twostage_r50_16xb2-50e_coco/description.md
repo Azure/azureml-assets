@@ -1,31 +1,51 @@
-`deformable-detr_refine_twostage_r50_16xb2-50e_coco` model is from <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0" target="_blank">OpenMMLab's MMDetection library</a>. This model is reported to obtain <a href="https://github.com/open-mmlab/mmdetection/blob/3.x/configs/deformable_detr/metafile.yml#L46" target="_blank">box AP of 46.8 for object-detection task on COCO dataset</a>. To understand the naming style used, please refer to <a href="https://mmdetection.readthedocs.io/en/v3.1.0/user_guides/config.html#config-name-style" target="_blank">MMDetection's Config Name Style</a>.
+`deformable-detr_refine_twostage_r50_16xb2-50e_coco` model is from <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0" target="_blank">OpenMMLab's MMDetection library</a>. DETR has been recently proposed to eliminate the need for many hand-designed components in object detection while demonstrating good performance. However, it suffers from slow convergence and limited feature spatial resolution, due to the limitation of Transformer attention modules in processing image feature maps. To mitigate these issues, we proposed Deformable DETR, whose attention modules only attend to a small set of key sampling points around a reference. Deformable DETR can achieve better performance than DETR (especially on small objects) with 10 times less training epochs. Extensive experiments on the COCO benchmark demonstrate the effectiveness of our approach.
 
-DETR has been recently proposed to eliminate the need for many hand-designed components in object detection while demonstrating good performance. However, it suffers from slow convergence and limited feature spatial resolution, due to the limitation of Transformer attention modules in processing image feature maps. To mitigate these issues, we proposed Deformable DETR, whose attention modules only attend to a small set of key sampling points around a reference. Deformable DETR can achieve better performance than DETR (especially on small objects) with 10 times less training epochs. Extensive experiments on the COCO benchmark demonstrate the effectiveness of our approach.
+# Training Details
 
-> The above abstract is from MMDetection website. Review the <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0/configs/deformable_detr" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+## Training Data
 
-### Inference samples
+The model developers used the following dataset for training the model:
+COCO
+
+## Training Procedure
+
+Training Techniques:
+- AdamW
+- Multi Scale Train
+- Gradient Clip
+
+Training Resources: 8 x V100 GPUs
+
+# Evaluation Results
+
+box AP: 47.0
+
+# License
+
+apache-2.0
+
+# Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|<a href="https://aka.ms/azureml-infer-sdk-image-object-detection" target="_blank">image-object-detection-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-image-object-detection" target="_blank">image-object-detection-online-endpoint.sh</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-image-object-detection" target="_blank">image-object-detection-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-image-object-detection" target="_blank">image-object-detection-batch-endpoint.sh</a>
 
-### Finetuning samples
+# Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|--|
 Image object detection|Image object detection|[fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjects.zip)|<a href="https://aka.ms/azureml-ft-sdk-image-object-detection" target="_blank">fridgeobjects-object-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-image-object-detection" target="_blank">fridgeobjects-object-detection.sh</a>
 
-### Model Evaluation
+# Model Evaluation
 
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 Image object detection|Image object detection|[fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjects.zip)|<a href="https://aka.ms/azureml-evaluation-sdk-image-object-detection" target="_blank">image-object-detection.ipynb</a>|
 
-### Sample inputs and outputs (for real-time inference)
+# Sample input and output
 
-#### Sample input
+### Sample input
 
 ```json
 {
@@ -41,7 +61,7 @@ Image object detection|Image object detection|[fridgeObjects](https://cvbp-secon
 
 Note: "image1" and "image2" string should be in base64 format or publicly accessible urls.
 
-#### Sample output
+### Sample output
 
 ```json
 [
