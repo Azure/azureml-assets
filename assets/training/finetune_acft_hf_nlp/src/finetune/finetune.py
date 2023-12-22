@@ -18,7 +18,7 @@ import re
 import torch
 
 # set up transformers cache
-from azureml.acft.common_components.utils import transformer_utils  # noqa: F401
+from azureml.acft.common_components.utils import transformer_utils
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -63,8 +63,10 @@ UNWANTED_PACKAGES = [
 ]
 PINNED_PACAKGES = ["transformers==4.34.0", "mlflow==2.8.0"]
 
+
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
+
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
@@ -81,6 +83,7 @@ RUN_PROPERTIES = {
 
 add_run_properties(ROOT_RUN_PROPERTIES, add_to_root=True)
 add_run_properties(RUN_PROPERTIES)
+
 
 # mlflow model task based signature for inference
 MLFLOW_MODEL_SIGNATURES = {
@@ -194,6 +197,11 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTE
 
 
 FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
+    HfModelTypes.LLAMA,
+    HfModelTypes.FALCON,
+]
+
+FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
 ]
@@ -787,6 +795,59 @@ def enable_ds3_model_specific_args(args: Namespace):
 
     Invoke the function only when deepspeed stage3 is enabled.
     """
+    pass
+
+
+def set_flash_attention(args: Namespace):
+    """Set Flash Attention related parameters"""
+    flash_attention_load_model_kwargs = {}
+    if (
+        hasattr(args, "model_type")
+        and args.model_type in FORCE_FLASH_ATTENTION_2_MODEL_TYPES
+    ):
+        # only Ampere or higher architecture supports Flash attention 2
+        # Flash attention 2 is supported with 16-bit, 8-bit anf 4-bit
+        if torch.cuda.is_available() and torch.cuda.is_bf16_supported() and args.precision in [16, 8, 4]:
+            flash_attention_load_model_kwargs.update({"use_flash_attention_2": True})
+            setattr(args, "apply_flash_attention", True)
+            setattr(args, "flash_attention_version", 2)
+        # elif args.precision == 16:
+        #     # Flash attention is supported with only 16-bit
+        #     setattr(args, "apply_flash_attention", True)
+        #     setattr(args, "flash_attention_version", 1)
+        # else:
+        #     # unable to use Flash attention as precision is not supported
+        #     logger.warning(f"{args.precision}-bit precision is not supported for Flash attention.")
+        #     logger.warning("Disabling Flash attention.")
+        #     setattr(args, "apply_flash_attention", False)
+        #     setattr(args, "flash_attention_version", -1)
+        else:
+            logger.warning("Flash Attention is not supported on current compute.")
+            setattr(args, "apply_flash_attention", False)
+            setattr(args, "flash_attention_version", -1)
+        if args.flash_attention_version != -1:
+            # Flash attention is supported only when model is loaded in respective supported precision
+            if args.bf16:
+                flash_attention_load_model_kwargs.update({"torch_dtype": torch.bfloat16})
+            elif args.fp16:
+                flash_attention_load_model_kwargs.update({"torch_dtype": torch.float16})
+            # update finetune_config to load model with flash_attention_2/torch_dtype
+            args.finetune_config = deep_update(
+                args.finetune_config,
+                {
+                    "load_model_kwargs": flash_attention_load_model_kwargs,
+                }
+            )
+    else:
+        setattr(args, "apply_flash_attention", False)
+        setattr(args, "flash_attention_version", -1)
+    logger.info(f"enable Flash attention: {getattr(args, 'apply_flash_attention', None)}")
+    logger.info(f"Using Flash Attention version: {getattr(args, 'flash_attention_version', None)}")
+    logger.info(f"Flash Attention model load kwargs: {flash_attention_load_model_kwargs}")
+
+
+def set_gradient_checkpointing(args: Namespace):
+    """Set Gradient checkpointing related parameters"""
     if (
         hasattr(args, "model_type")
         and args.model_type in FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES
@@ -795,6 +856,8 @@ def enable_ds3_model_specific_args(args: Namespace):
             f"Identified model type: {args.model_type}. Forcing `gradient_checkpointing` to True."
         )
         setattr(args, "gradient_checkpointing", True)
+
+    logger.info(f"enable Gradient checkpointing: {getattr(args, 'gradient_checkpointing', None)}")
 
 
 def setup_automl_nlp(args: Namespace) -> None:
@@ -863,7 +926,8 @@ def finetune(args: Namespace):
         setattr(args, "ignore_mismatched_sizes", False)
 
     # set eval_accumulation_steps to None if passed a non-positive value
-    if getattr(args, "eval_accumulation_steps", -1) <= 0:
+    eval_accumulation_steps = getattr(args, "eval_accumulation_steps", -1)
+    if eval_accumulation_steps and eval_accumulation_steps <= 0:
         setattr(args, "eval_accumulation_steps", None)
 
     logger.info(f"eval_accumulation_steps: {getattr(args, 'eval_accumulation_steps', None)}")
@@ -1000,6 +1064,12 @@ def finetune(args: Namespace):
             logger.info("Setting float16 to True.")
     args.finetune_in_8bit = bool(args.precision == 8)  # 8 bit finetune
     args.finetune_in_4bit = bool(args.precision == 4)  # 4 bit finetune
+
+    # set flash-attention
+    set_flash_attention(args)
+
+    # set gradient-checkpointing
+    set_gradient_checkpointing(args)
 
     if args.finetune_in_8bit or args.finetune_in_4bit:
         if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:

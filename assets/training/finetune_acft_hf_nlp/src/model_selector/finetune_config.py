@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 from typing import Optional, Dict, Any
 
+from azureml.acft.accelerator.constants import LoraAlgo
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import HfModelTypes
 
@@ -184,7 +185,11 @@ ACFT_CONFIG = {
         },
     },
     HfModelTypes.LLAMA: {
-        "load_tokenizer_kwargs": {"add_eos_token": True, "padding_side": "right"},
+        "load_tokenizer_kwargs": {
+            "add_eos_token": True,
+            "padding_side": "right",
+        },
+        "lora_algo": LoraAlgo.PEFT,
         "mlflow_ft_conf": {
             "mlflow_hftransformers_misc_conf": {
                 "tokenizer_hf_load_kwargs": {
@@ -242,7 +247,7 @@ class FinetuneConfig:
     def _read_ft_config_json_file(
         self, json_file_path: Optional[str]
     ) -> Dict[str, Any]:
-        """Read finetune config json file.
+        """Utility to read the finetune config json file.
 
         :param json_file_path - Path to the finetune config json file
         :type Optional[str]
@@ -285,9 +290,8 @@ class FinetuneConfig:
         return finetune_config
 
     def _read_legacy_finetune_config(self) -> Dict[str, Any]:
-        """Read the finetune config from the legacy ACFT_CONFIG a.k.a FINETUNE_CONFIG_V0.
-
-        If both model_name and model_type are present, precedence is given to model_name over model_type.
+        """Read the finetune config from the legacy ACFT_CONFIG a.k.a FINETUNE_CONFIG_V0. If both model_name and
+        model_type are present, precedence is given to model_name over model_type.
         """
         finetune_config_v0 = {}
         if self.model_name is not None and self.model_name in FINETUNE_CONFIG_V0:
