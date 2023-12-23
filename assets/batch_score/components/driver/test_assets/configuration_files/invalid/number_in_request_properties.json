@@ -1,0 +1,18 @@
+{
+    "api": {
+        "type": "completion"
+    },
+    "authentication": {
+        "type": "managed_identity"
+    },
+    "request_settings": {
+        "properties": {
+            "custom_property": "property_value",
+            "custom_property_2": 42
+        }
+    },
+    "inference_endpoint": {
+        "type": "azure_openai",
+        "url": "https://sunjoli-aoai.openai.azure.com/openai/deployments/turbo/completions?api-version=2023-03-15-preview"
+    }
+}

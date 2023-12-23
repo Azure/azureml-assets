@@ -258,3 +258,28 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
         'type': str,
     },
 }
+COMMAND_LINE_ARGUMENT_SPECIFICATION_FOR_FILE_CONFIGURATION = {
+    '--amlbi_async_mode': {
+        'dest': 'async_mode',
+        'default': False,
+        'help': 'If enabled, the component processes multiple mini-batches within each process on the compute.'
+                ' If disabled, the component processes a single mini-batch at a time.',
+        'required': False,
+        'type': str2bool,
+    },
+    '--configuration_file': {
+        'const': None,
+        'default': None,
+        'help': 'JSON file containing configuration values for the batch score component. ',
+        'nargs': '?',
+        'required': False,
+        'type': str,
+    },
+    '--partitioned_scoring_results': {
+        'default': None,
+        'help': 'The name of the directory where the partitioned scoring results will be stored.'
+                ' Required when `save_partitioned_scoring_results` is true.',
+        'required': False,
+        'type': str,
+    },
+}

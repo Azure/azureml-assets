@@ -1,50 +1,64 @@
-The DistilBERT model is a distilled, smaller, faster, and cheaper version of the BERT model for Transformer-based language model. It is specifically trained for question answering in English and has been fine-tuned using knowledge distillation on SQuAD v1.1. It has 40% less parameters than bert-base-uncased and runs 60% faster while preserving over 95% of BERT's performances as measured on the GLUE language understanding benchmark. However, it is important to note that this model has some limitations and biases and should be used with caution. It should not be used to intentionally create hostile or alienating environments for people and it was not trained to be factual or true representations of people or events. The model has a F1 score of 87.1 on the SQuAD v1.1 dev set, but has unknown environmental impact as the carbon emissions and cloud provider are unknown.  The model was developed by Hugging Face and is licensed under Apache 2.0. The authors of the Model Card are the Hugging Face team.
-The DistilBERT model requires significant computational power to train, as it was trained using 8 16GB V100 GPUs and for 90 hours. So it is important to keep that in mind when developing applications that utilize this model.
+The DistilBERT model was proposed in the blog post [Smaller, faster, cheaper, lighter: Introducing DistilBERT, adistilled version of BERT](https://medium.com/huggingface/distilbert-8cf3380435b5), and the paper [DistilBERT, adistilled version of BERT: smaller, faster, cheaper and lighter](https://arxiv.org/abs/1910.01108). DistilBERT is a small, fast, cheap and light Transformer model trained by distilling BERT base. It has 40% less parameters than *bert-base-uncased*, runs 60% faster while preserving over 95% of BERT's performances as measured on the GLUE language understanding benchmark.
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/distilbert-base-cased-distilled-squad" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+This model is a fine-tune checkpoint of [DistilBERT-base-cased](https://huggingface.co/distilbert-base-cased), fine-tuned using (a second step of) knowledge distillation on [SQuAD v1.1](https://huggingface.co/datasets/squad). 
 
-### Inference samples
+# Training Details
 
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-question-answering" target="_blank">question-answering-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-question-answering" target="_blank">question-answering-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-question-answering" target="_blank">question-answering-batch-endpoint.ipynb</a>| coming soon
+## Training Data
 
+The [distilbert-base-cased model](https://huggingface.co/distilbert-base-cased) was trained using the same data as the [distilbert-base-uncased model](https://huggingface.co/distilbert-base-uncased). The [distilbert-base-uncased model](https://huggingface.co/distilbert-base-uncased) model describes it's training data as: 
 
-### Finetuning samples
+> DistilBERT pretrained on the same data as BERT, which is [BookCorpus](https://yknzhu.wixsite.com/mbweb), a dataset consisting of 11,038 unpublished books and [English Wikipedia](https://en.wikipedia.org/wiki/English_Wikipedia) (excluding lists, tables and headers).
 
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
-Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
+To learn more about the SQuAD v1.1 dataset, see the [SQuAD v1.1 data card](https://huggingface.co/datasets/squad).
 
+## Training Procedure
 
-### Model Evaluation
+### Preprocessing
 
-Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|--|
-Question Answering | Extractive Q&A | <a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a> | <a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
+See the [distilbert-base-cased model card](https://huggingface.co/distilbert-base-cased) for further details.
 
+### Pretraining
 
-#### Sample input
+See the [distilbert-base-cased model card](https://huggingface.co/distilbert-base-cased) for further details. 
+
+# Evaluation Results
+
+As discussed in the [model repository](https://github.com/huggingface/transformers/blob/main/examples/research_projects/distillation/README.md)
+
+> This model reaches a F1 score of 87.1 on the [SQuAD v1.1] dev set (for comparison, BERT bert-base-cased version reaches a F1 score of 88.7).	
+
+# Limitations and Biases
+
+**CONTENT WARNING: Readers should be aware that language generated by this model can be disturbing or offensive to some and can propagate historical and current stereotypes.**
+
+Significant research has explored bias and fairness issues with language models (see, e.g., [Sheng et al. (2021)](https://aclanthology.org/2021.acl-long.330.pdf) and [Bender et al. (2021)](https://dl.acm.org/doi/pdf/10.1145/3442188.3445922)). Predictions generated by the model can include disturbing and harmful stereotypes across protected classes; identity characteristics; and sensitive, social, and occupational groups
+
+Users (both direct and downstream) should be made aware of the risks, biases and limitations of the model.
+
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[question-answering-online-endpoint.ipynb](https://aka.ms/question-answering-online-endpoint-oss)
+
+# Sample inputs and outputs
+
+### Sample input
+
 ```json
 {
     "input_data": {
-        "question": ["What is my name?", "Where do I live?"],
-        "context": ["My name is John and I live in Seattle.", "My name is Ravi and I live in Hyderabad."]
+        "question": "What's my name?",
+        "context": "My name is John and I live in Seattle"
     }
 }
 ```
 
-#### Sample output
+### Sample output
 ```json
 [
-    {
-        "0": "John"
-    },
-    {
-        "0": "Hyderabad"
-    }
+  "John"
 ]
 ```

@@ -54,6 +54,7 @@ def _verify_and_get_output_records(
 
 # test patterns
 _prompt_pattern_test = "Question:{{question}} \nChoices:(1) {{choices.text[0]}}\n(2) {{choices.text[1]}}\n(3) {{choices.text[2]}}\n(4) {{choices.text[3]}}\nThe answer is: "  # noqa: E501
+_few_shot_pattern_test = "Question:{{question}} \nChoices:(1) {{choices.text[0]}}\n(2) {{choices.text[1]}}\n(3) {{choices.text[2]}}\n(4) {{choices.text[3]}}\nThe answer is: {{answerKey}}"  # noqa: E501
 _output_pattern_test = "{{answerKey}}"
 _ground_truth_column = "answerKey"
 
@@ -65,19 +66,35 @@ class TestPromptCrafterComponent:
 
     @pytest.mark.parametrize(
         "test_data, prompt_type, n_shots, \
-        few_shot_data, prompt_pattern, output_pattern",
+        few_shot_data, prompt_pattern, output_pattern, few_shot_pattern",
         [
             (
                 Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 1,
                 Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE,
                 _prompt_pattern_test,
                 _output_pattern_test,
+                None,
+            ),
+            (
+                Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 1,
+                Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE,
+                _prompt_pattern_test,
+                _output_pattern_test,
+                _few_shot_pattern_test,
             ),
             (
                 Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 1,
                 Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE,
                 _prompt_pattern_test,
                 _output_pattern_test,
+                None,
+            ),
+            (
+                Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 1,
+                Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE,
+                _prompt_pattern_test,
+                _output_pattern_test,
+                _few_shot_pattern_test,
             ),
         ]
     )
@@ -90,6 +107,7 @@ class TestPromptCrafterComponent:
         few_shot_data: str,
         prompt_pattern: str,
         output_pattern: str,
+        few_shot_pattern: Optional[str],
     ) -> None:
         """Prompt Crafter component test."""
         ml_client = get_mlclient()
@@ -102,6 +120,7 @@ class TestPromptCrafterComponent:
             prompt_pattern,
             output_pattern,
             self.test_prompt_crafter_component.__name__,
+            few_shot_pattern,
         )
 
         # submit the pipeline job
@@ -123,7 +142,8 @@ class TestPromptCrafterComponent:
             prompt_type=prompt_type,
             n_shots=n_shots,
             prompt_pattern=prompt_pattern,
-            output_pattern=output_pattern
+            output_pattern=output_pattern,
+            few_shot_pattern=few_shot_pattern
         )
 
     def _get_pipeline_job(
@@ -135,13 +155,17 @@ class TestPromptCrafterComponent:
         prompt_pattern: str,
         output_pattern: str,
         display_name: str,
+        few_shot_pattern: Optional[str],
     ) -> Job:
         """Get the pipeline job.
 
         :return: The pipeline job.
         """
-        pipeline_job = load_yaml_pipeline("prompt_crafter_pipeline.yaml")
-
+        if few_shot_pattern:
+            pipeline_job = load_yaml_pipeline("prompt_crafter_pipeline_with_few_shot.yaml")
+            pipeline_job.inputs.few_shot_pattern = few_shot_pattern
+        else:
+            pipeline_job = load_yaml_pipeline("prompt_crafter_pipeline.yaml")
         # set the pipeline inputs
         pipeline_job.inputs.test_data = Input(type=AssetTypes.URI_FILE, path=test_data)
         pipeline_job.inputs.prompt_type = prompt_type
@@ -191,24 +215,24 @@ class TestPromptCrafterScript:
 
     @pytest.mark.parametrize(
         "test_data, prompt_type, n_shots, \
-        few_shot_data, prompt_pattern, output_pattern, ground_truth_column",
+        few_shot_data, prompt_pattern, few_shot_pattern, output_pattern, ground_truth_column",
         [
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 1,
-             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
+             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test, _few_shot_pattern_test,
                 _output_pattern_test, _ground_truth_column),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 1,
-             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
+             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test, _few_shot_pattern_test,
                 _output_pattern_test, _ground_truth_column),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 0,
-             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
+             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test, None,
                 _output_pattern_test, _ground_truth_column),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 0,
-             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
+             Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test, None,
                 _output_pattern_test, _ground_truth_column),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 0,
-                None, _prompt_pattern_test, _output_pattern_test, _ground_truth_column),
+                None, _prompt_pattern_test, None, _output_pattern_test, _ground_truth_column),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 0,
-                None, _prompt_pattern_test, _output_pattern_test, _ground_truth_column),
+                None, _prompt_pattern_test, None, _output_pattern_test, _ground_truth_column),
         ]
     )
     def test_valid_prompt_crafter(
@@ -218,6 +242,7 @@ class TestPromptCrafterScript:
         n_shots: int,
         few_shot_data: str,
         prompt_pattern: str,
+        few_shot_pattern: Optional[str],
         output_pattern: str,
         ground_truth_column: str,
         output_file: str = os.path.join(
@@ -234,6 +259,7 @@ class TestPromptCrafterScript:
             output_pattern=output_pattern,
             few_shot_data=few_shot_data,
             ground_truth_column=ground_truth_column,
+            few_shot_pattern=few_shot_pattern,
         )
 
         # Verify the output file(s)
@@ -302,6 +328,7 @@ class TestPromptCrafterScript:
         few_shot_data: Optional[str] = None,
         random_seed: Optional[int] = 0,
         output_pattern: str = "{{target}}",
+        few_shot_pattern: Optional[str] = None,
     ) -> None:
         """
         Run the prompt crafter script.
@@ -317,6 +344,7 @@ class TestPromptCrafterScript:
         param: system_message: System message to use for prompts.
         param: few_shot_data: Path to jsonl to generate n-shot prompts.
         param: random_seed: Random seed to use for prompts.
+        param: few_shot_pattern: Pattern to use for few shot prompts
         """
         src_dir = get_src_dir()
         args = [
@@ -341,6 +369,8 @@ class TestPromptCrafterScript:
             args.extend(["--n_shots", f"{n_shots}"])
         if prompt_pattern is not None:
             args.extend(["--prompt_pattern", f'"{prompt_pattern}"'])
+        if few_shot_pattern is not None:
+            args.extend(["--few_shot_pattern", f'"{few_shot_pattern}"'])
         if output_pattern is not None:
             args.extend(["--output_pattern", f'"{output_pattern}"'])
         if few_shot_data is not None:
