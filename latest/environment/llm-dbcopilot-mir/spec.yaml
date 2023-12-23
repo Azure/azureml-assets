@@ -4,7 +4,7 @@ description: >-
   An environment for Large Language Model MIR endpoint components.
 
 name: "llm-dbcopilot-mir"
-version: "7"
+version: "8"
 build:
   path: "context"
   dockerfile_path: "Dockerfile"
