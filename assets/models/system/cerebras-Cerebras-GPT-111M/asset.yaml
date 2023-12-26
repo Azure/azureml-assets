@@ -1,0 +1,4 @@
+type: model
+extra_config: model.yaml
+spec: spec.yaml
+categories: [Models]
