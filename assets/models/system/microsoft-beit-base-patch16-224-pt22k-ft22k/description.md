@@ -16,13 +16,13 @@ In the preprocessing step, images are resized to the same resolution 224x224. Im
 
 For more details on self-supervised pre-training (ImageNet-22k) followed by supervised fine-tuning (ImageNet-1k) refer to the section 2 and 3 of the original paper.
 
-# Evaluation results
+# Evaluation Results
 
 For BEiT image classification benchmark results, Refer to the table 1 of the <a href="https://arxiv.org/abs/2106.08254" target="_blank">original-paper</a>.
 
 # License
 
-Apache License, Version 2.0. For more details refer <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">apache-2.0</a>
+apache-2.0
 
 # Inference Samples
 

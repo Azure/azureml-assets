@@ -16,13 +16,13 @@ The model was trained on TPUv3 hardware (8 cores). All models are trained using 
 
 For more details on self-supervised pre-training (ImageNet-21k) followed by supervised fine-tuning (ImageNet-1k) refer to the section 3 and 4 of the <a href="https://arxiv.org/abs/2010.11929" target="_blank">original-paper</a>.
 
-# Evaluation results
+# Evaluation Results
 
 For ViT image classification benchmark results, Refer to table 2 and table 5 of the <a href="https://arxiv.org/abs/2010.11929" target="_blank">original-paper</a>.
 
 # License
 
-Apache License, Version 2.0. For more details refer <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">apache-2.0</a>
+apache-2.0
 
 # Inference Samples
 

@@ -18,7 +18,7 @@ The model was trained on a single 8-GPU node for 3 days. Training resolution is 
 
 For more details on pre-training (ImageNet-1k) followed by supervised fine-tuning (ImageNet-1k) refer to the section 2 to 5 of the <a href="https://arxiv.org/abs/2012.12877" target="_blank">original-paper</a>.
 
-# Evaluation results
+# Evaluation Results
 
 DeiT base model achieved top-1 accuracy of 81.8% and top-5 accuracy of 95.6% on ImageNet with 86M parameters with image size 224x224. For DeiT image classification benchmark results, refer to the table 5 of the <a href="https://arxiv.org/abs/2012.12877" target="_blank">original-paper</a>.
 
@@ -26,7 +26,7 @@ It's important to note that during the fine-tuning process, superior performance
 
 # License
 
-Apache License, Version 2.0. For more details refer <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">apache-2.0</a>
+apache-2.0
 
 # Inference Samples
 

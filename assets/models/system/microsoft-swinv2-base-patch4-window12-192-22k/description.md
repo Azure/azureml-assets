@@ -7,7 +7,7 @@ Swin Transformer V2 introduces three improvements:
 
 # License
 
-Apache License, Version 2.0. For more details refer <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">apache-2.0</a>
+apache-2.0
 
 # Inference Samples
 
