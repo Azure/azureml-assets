@@ -35,7 +35,7 @@ While the capabilities of image generation models are impressive, they can also 
 
 The model was not trained to be factual or true representations of people or events, and therefore using the model to generate such content is out-of-scope for the abilities of this model.
 
-# Inference samples
+# Inference Samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|

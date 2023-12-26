@@ -75,7 +75,7 @@ Using the model to generate content that is cruel to individuals is a misuse of 
 
 CreativeML Open RAIL++-M License
 
-# Inference samples
+# Inference Samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
