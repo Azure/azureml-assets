@@ -15,26 +15,183 @@ from model_data_collector_preprocessor.store_url import StoreUrl
 from test_store_url import assert_credentials_are_equal
 
 
+class MyDateTime:
+    """helper class for test_get_file_list()."""
+
+    def __init__(self, year, month=None, day=None, hour=None):
+        self.year = year
+        self.month = month
+        self.day = day
+        self.hour = hour
+
+    def abfs_path(self):
+        month = f"{self.month:02d}" if self.month else "*"
+        day = f"{self.day:02d}" if self.day else "*"
+        hour = f"{self.hour:02d}" if self.hour is not None else "*"
+        return f"abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/{self.year}/{month}/{day}/{hour}/*.jsonl"  # noqa
+
+
 @pytest.mark.unit
 class TestMDCPreprocessorHelper:
     """Test class for MDC preprocessor helper."""
 
+    NONE_EMPTY_DATETIMES = [
+        datetime(2020, 5, 6), datetime(2020, 9, 18),
+        datetime(2022, 9, 17), datetime(2022, 11, 15),
+        datetime(2023, 10, 12, 2), datetime(2023, 10, 12, 15),
+        datetime(2023, 10, 20, 11), datetime(2023, 10, 20, 20),
+        datetime(2023, 11, 19, 5), datetime(2023, 11, 19, 16), datetime(2023, 11, 19, 22),
+        datetime(2023, 11, 20, 6), datetime(2023, 11, 20, 7), datetime(2023, 11, 20, 8), datetime(2023, 11, 20, 13),
+        datetime(2023, 11, 20, 17), datetime(2023, 11, 20, 19), datetime(2023, 11, 20, 20), datetime(2023, 11, 20, 21),
+        datetime(2023, 11, 21, 3), datetime(2023, 11, 21, 9), datetime(2023, 11, 21, 14), datetime(2023, 11, 21, 23),
+        datetime(2023, 11, 23), datetime(2023, 11, 23, 9),
+        datetime(2023, 12, 1), datetime(2023, 12, 1, 10),
+        datetime(2023, 12, 10, 11), datetime(2023, 12, 10, 22),
+        datetime(2024, 1, 1), datetime(2024, 1, 1, 10),
+        datetime(2024, 1, 12, 16), datetime(2024, 1, 12, 21),
+        datetime(2024, 2, 3, 3), datetime(2024, 2, 3, 9),
+    ]
+
     @pytest.mark.parametrize(
-        "start_hour, end_hour, expected_hours",
+        "start, end, expected_datetimes",
         [
-            (7, 21, [7, 8, 13, 17, 19, 20]),
-            (4, 8, [6, 7]),
-            (20, 23, [20, 21]),
-            (13, 19, [13, 17]),
-            (3, 6, []),
-            (22, 23, []),
-            (9, 13, []),
+            # same day
+            (
+                datetime(2023, 11, 20, 7), datetime(2023, 11, 20, 21),
+                [
+                    MyDateTime(2023, 11, 20, 7), MyDateTime(2023, 11, 20, 8), MyDateTime(2023, 11, 20, 13),
+                    MyDateTime(2023, 11, 20, 17), MyDateTime(2023, 11, 20, 19), MyDateTime(2023, 11, 20, 20)
+                ]
+            ),
+            (
+                datetime(2023, 11, 20, 4), datetime(2023, 11, 20, 8),
+                [MyDateTime(2023, 11, 20, 6), MyDateTime(2023, 11, 20, 7)]
+            ),
+            (
+                datetime(2023, 11, 20, 20), datetime(2023, 11, 20, 23),
+                [MyDateTime(2023, 11, 20, 20), MyDateTime(2023, 11, 20, 21)]
+            ),
+            (
+                datetime(2023, 11, 20, 13), datetime(2023, 11, 20, 19),
+                [MyDateTime(2023, 11, 20, 13), MyDateTime(2023, 11, 20, 17)]
+            ),
+            (datetime(2023, 11, 20, 7), datetime(2023, 11, 20, 8), [MyDateTime(2023, 11, 20, 7)]),
+            (datetime(2023, 11, 20), datetime(2023, 11, 21), [MyDateTime(2023, 11, 20)]),  # whole day
+            (datetime(2023, 11, 20, 3), datetime(2023, 11, 20, 6), []),
+            (datetime(2023, 11, 20, 22), datetime(2023, 11, 20, 23), []),
+            (datetime(2023, 11, 20, 9), datetime(2023, 11, 20, 13), []),
+            # cross day
+            (
+                datetime(2023, 11, 20, 20), datetime(2023, 11, 21, 10),
+                [
+                    MyDateTime(2023, 11, 20, 20), MyDateTime(2023, 11, 20, 21),
+                    MyDateTime(2023, 11, 21, 3), MyDateTime(2023, 11, 21, 9)
+                ]
+            ),
+            (
+                datetime(2023, 11, 19, 10), datetime(2023, 11, 21, 14),
+                [
+                    MyDateTime(2023, 11, 19, 16), MyDateTime(2023, 11, 19, 22),
+                    MyDateTime(2023, 11, 20),
+                    MyDateTime(2023, 11, 21, 3), MyDateTime(2023, 11, 21, 9)
+                ]
+            ),
+            (
+                datetime(2023, 11, 19, 16), datetime(2023, 11, 22, 13),
+                [
+                    MyDateTime(2023, 11, 19, 16), MyDateTime(2023, 11, 19, 22),
+                    MyDateTime(2023, 11, 20), MyDateTime(2023, 11, 21)
+                ]
+            ),
+            (
+                datetime(2023, 11, 19, 17), datetime(2023, 11, 23, 8),
+                [
+                    MyDateTime(2023, 11, 19, 22),
+                    MyDateTime(2023, 11, 20), MyDateTime(2023, 11, 21),
+                    MyDateTime(2023, 11, 23, 0)
+                ]
+            ),
+            (
+                datetime(2023, 11, 19, 17), datetime(2023, 11, 26, 8),
+                [
+                    MyDateTime(2023, 11, 19, 22),
+                    MyDateTime(2023, 11, 20), MyDateTime(2023, 11, 21), MyDateTime(2023, 11, 23)
+                ]
+            ),
+            (datetime(2023, 11, 20), datetime(2023, 11, 23), [MyDateTime(2023, 11, 20), MyDateTime(2023, 11, 21)]),
+            (datetime(2023, 11, 1), datetime(2023, 12, 1), [MyDateTime(2023, 11)]),  # whole month
+            (datetime(2023, 11, 24, 9), datetime(2023, 11, 30, 12), []),
+            # cross month
+            (
+                datetime(2023, 11, 21, 14), datetime(2023, 12, 10, 12),
+                [
+                    MyDateTime(2023, 11, 21, 14), MyDateTime(2023, 11, 21, 23),
+                    MyDateTime(2023, 11, 23), MyDateTime(2023, 12, 1),
+                    MyDateTime(2023, 12, 10, 11)
+                ]
+            ),
+            (
+                datetime(2023, 10, 12, 3), datetime(2023, 12, 10, 23, 50),
+                [
+                    MyDateTime(2023, 10, 12, 15), MyDateTime(2023, 10, 20),
+                    MyDateTime(2023, 11),
+                    MyDateTime(2023, 12, 1), MyDateTime(2023, 12, 10)
+                ]
+            ),
+            (
+                datetime(2023, 10, 12, 3), datetime(2023, 12, 10, 23),
+                [
+                    MyDateTime(2023, 10, 12, 15), MyDateTime(2023, 10, 20),
+                    MyDateTime(2023, 11),
+                    MyDateTime(2023, 12, 1), MyDateTime(2023, 12, 10, 11), MyDateTime(2023, 12, 10, 22)
+                ]
+            ),
+            (datetime(2023, 8, 1), datetime(2023, 12, 1), [MyDateTime(2023, 10), MyDateTime(2023, 11)]),
+            (datetime(2023, 1, 1), datetime(2024, 1, 1), [MyDateTime(2023)]),  # whole year
+            (
+                datetime(2023, 10, 1), datetime(2023, 12, 5),
+                [MyDateTime(2023, 10), MyDateTime(2023, 11), MyDateTime(2023, 12, 1)]
+            ),
+            (
+                datetime(2023, 10, 12), datetime(2024, 1, 1),
+                [MyDateTime(2023, 10, 12), MyDateTime(2023, 10, 20), MyDateTime(2023, 11), MyDateTime(2023, 12)]
+            ),
+            # cross year
+            (
+                datetime(2023, 10, 12, 3), datetime(2024, 2, 10, 23),
+                [
+                    MyDateTime(2023, 10, 12, 15), MyDateTime(2023, 10, 20), MyDateTime(2023, 11), MyDateTime(2023, 12),
+                    MyDateTime(2024, 1), MyDateTime(2024, 2, 3)
+                ]
+            ),
+            (
+                datetime(2022, 10, 12), datetime(2024, 2, 10),
+                [
+                    MyDateTime(2022, 11),
+                    MyDateTime(2023),
+                    MyDateTime(2024, 1), MyDateTime(2024, 2, 3)
+                ]
+            ),
+            (datetime(2022, 1, 1), datetime(2024, 2, 1), [MyDateTime(2022), MyDateTime(2023), MyDateTime(2024, 1)]),
+            (
+                datetime(2022, 5, 1), datetime(2025, 1, 1),
+                [MyDateTime(2022, 9), MyDateTime(2022, 11), MyDateTime(2023), MyDateTime(2024)]
+            ),
+            (
+                datetime(2019, 5, 1), datetime(2025, 8, 1),
+                [MyDateTime(2020), MyDateTime(2022), MyDateTime(2023), MyDateTime(2024)]
+            ),
+            (datetime(2020, 1, 1), datetime(2024, 1, 1), [MyDateTime(2020), MyDateTime(2022), MyDateTime(2023)]),
         ]
     )
-    def test_get_file_list(self, start_hour, end_hour, expected_hours):
+    def test_get_file_list(self, start, end, expected_datetimes):
         """Test get_file_list()."""
-        non_empty_hours = [6, 7, 8, 13, 17, 19, 20, 21]
-        non_empty_folders = [f"2023/11/20/{h:02d}" for h in non_empty_hours]
+        non_empty_folders = {
+            f for d in TestMDCPreprocessorHelper.NONE_EMPTY_DATETIMES
+            # hour, day, month, year folders
+            for f in (d.strftime("%Y/%m/%d/%H"), d.strftime("%Y/%m/%d"), d.strftime("%Y/%m"), d.strftime("%Y"))
+        }
+        expected_result = [d.abfs_path() for d in expected_datetimes]
 
         mock_store_url = Mock(spec=StoreUrl)
         mock_store_url.is_local_path.return_value = False
@@ -42,14 +199,9 @@ class TestMDCPreprocessorHelper:
         mock_store_url.get_abfs_url.side_effect = \
             lambda rpath: f"abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/{rpath}"
 
-        start = datetime(2023, 11, 20, start_hour)
-        end = datetime(2023, 11, 20, end_hour)
         file_list = get_file_list(start, end, mock_store_url)
 
-        assert file_list == [
-            f"abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/2023/11/20/{h:02d}/*.jsonl"
-            for h in expected_hours
-        ]
+        assert file_list == expected_result
 
     @pytest.mark.parametrize(
         "is_local, store_type, credential, expected_spark_conf",

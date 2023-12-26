@@ -55,12 +55,18 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
     def same_year(start, end) -> List[str]:
         if is_same_month(start, end):
             return same_month(start, end)
+        if is_start_of_year(start) and is_end_of_year(end):
+            return [store_url.get_abfs_url(f"{start.strftime('%Y')}/*/*/*/*.jsonl")] \
+                if store_url.is_folder_exists(f"{start.strftime('%Y')}") else []
         return cross_month(start, end)
 
     def same_month(start, end) -> List[str]:
         if is_same_day(start, end):
             return same_day(start, end)
-        return cross_day()
+        if is_start_of_month(start) and is_end_of_month(end):
+            return [store_url.get_abfs_url(f"{start.strftime('%Y/%m')}/*/*/*.jsonl")] \
+                if store_url.is_folder_exists(f"{start.strftime('%Y/%m')}") else []
+        return cross_day(start, end)
 
     def same_day(start, end) -> List[str]:
         if is_start_of_day(start) and is_end_of_day(end):
@@ -107,8 +113,8 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
 
     def cross_year(start, end) -> List[str]:
         middle_years = [
-            store_url.get_abfs_url(f"{y.strftime('%Y')}/*/*/*/*.jsonl") for y in range(start.year+1, end.year)
-            if store_url.is_folder_exists(f"{y.strftime('%Y')}")
+            store_url.get_abfs_url(f"{y}/*/*/*/*.jsonl") for y in range(start.year+1, end.year)
+            if store_url.is_folder_exists(f"{y}")
         ]
         return end_of_year(start) + middle_years + start_of_year(end)
 
@@ -134,7 +140,7 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
 
     def cross_hour(start, end) -> List[str]:
         _start = start.replace(minute=0)
-        _end = end.replace(minutes=59)
+        _end = end.replace(minute=59)
         return [
             store_url.get_abfs_url(f"{h.strftime('%Y/%m/%d/%H')}/*.jsonl")
             for h in date_range(_start, _end, timedelta(hours=1))
