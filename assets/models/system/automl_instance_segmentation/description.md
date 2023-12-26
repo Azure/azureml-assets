@@ -22,7 +22,7 @@ You can initiate [individual trials](https://learn.microsoft.com/azure/machine-l
 
 For more information, see [how to configure experiments](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#configure-experiments)
 
-# Finetuning samples
+# Finetuning Samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|--|
@@ -106,6 +106,6 @@ Note:
 
 Note: Please refer to instance segmentation output <a href="https://learn.microsoft.com/azure/machine-learning/reference-automl-images-schema?view=azureml-api-2#instance-segmentation-1" target="_blank">data schema</a> for more detail.
 
-#### Visualization for a sample image
+#### Visualization of inference result for a sample image
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/markrcnn_resnet50_fpn_tao_vis.png" alt="is visualization">
