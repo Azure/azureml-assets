@@ -40,11 +40,11 @@ Summarization | Summarization | <a href="https://huggingface.co/datasets/cnn_dai
 #### Sample output
 ```json
 [
-    {
-        "0": " The tower is 324 metres (1,063 ft) tall, about the same height as an 81-storey building . It was the first structure to reach a height of 300 metres . Excluding transmitters, the Eiffel Tower is the second tallest free-standing structure in France after the Millau Viaduct ."
-    },
-    {
-        "0": " Paris is the capital and most populous city of France, with an estimated population of 2,175,601 residents as of 2018 . City of Paris is centre and seat of government of the region and province of Île-de-France, or Paris Region, which has an estimated 12,174,880, or about 18 percent"
-    }
+  {
+    "0": " The tower is 324 metres (1,063 ft) tall, about the same height as an 81-storey building . It was the first structure to reach a height of 300 metres . It is now taller than the Chrysler Building in New York City by 5.2 metres (17 ft) Excluding transmitters, the Eiffel Tower is the second tallest free-standing structure in France ."
+  },
+  {
+    "0": " Paris is the capital and most populous city of France, with an estimated population of 2,175,601 residents as of 2018 . The city is the centre and seat of government of the region and province of Île-de-France, or Paris Region . Paris Region has an estimated 18 percent of the population of France as of 2017 ."
+  }
 ]
 ```
