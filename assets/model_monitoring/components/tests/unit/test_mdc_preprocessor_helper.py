@@ -19,12 +19,14 @@ class MyDateTime:
     """helper class for test_get_file_list()."""
 
     def __init__(self, year, month=None, day=None, hour=None):
+        """Constructor of MyDateTime, month, day and hour are all optional."""
         self.year = year
         self.month = month
         self.day = day
         self.hour = hour
 
     def abfs_path(self):
+        """Return the abfs path of this MyDateTime."""
         month = f"{self.month:02d}" if self.month else "*"
         day = f"{self.day:02d}" if self.day else "*"
         hour = f"{self.hour:02d}" if self.hour is not None else "*"
