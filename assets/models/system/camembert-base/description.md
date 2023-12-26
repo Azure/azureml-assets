@@ -31,7 +31,7 @@ Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
     }
 }
@@ -40,11 +40,11 @@ Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-
 #### Sample output
 ```json
 [
-    {
-        "0": "capital"
-    },
-    {
-        "0": "beautiful"
-    }
+  {
+    "0": "city"
+  },
+  {
+    "0": "great"
+  }
 ]
 ```

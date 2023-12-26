@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: camembert-base
 path: ./
 properties:
-  SHA: 3f452b6e5a89b0e6c828c9bba2642bc577086eae
+  SHA: 9275231ccf73a00b1b170ad0e8a86de8d3b63074
   datasets: oscar
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
@@ -53,4 +53,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: fill-mask
-version: 10
+version: 11
