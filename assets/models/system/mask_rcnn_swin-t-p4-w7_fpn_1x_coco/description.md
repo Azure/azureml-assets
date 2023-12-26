@@ -2,7 +2,7 @@ This paper presents a new vision Transformer, called Swin Transformer, that capa
 
 > The above abstract is from mmdetection website. Review the <a href="https://github.com/open-mmlab/mmdetection/tree/v2.28.2/configs/swin" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
-> <b>Deprecation Warning</b>: This model is only compatible with mmdet <= 2.28 and is deprecated, will be deleted from Model Catalog by End of January 2024. We recommend using `mmd-3x-mask-rcnn_swin-t-p4-w7_fpn_1x_coco`, the corresponding mmdet >= 3.1.0 model instead, from <a href="https://ml.azure.com/model/catalog" target="_blank">the AzureML model catalog</a>. In our model catalog, the models prefixed with mmdet-3x are compatible with mmdet >= 3.1.0.
+> <b>Deprecation Warning</b>: This model is only compatible with mmdet <= 2.28 and is deprecated, will be deleted from Model Catalog by the End of January 2024. We recommend using `mmd-3x-mask-rcnn_swin-t-p4-w7_fpn_1x_coco`, the corresponding mmdet >= 3.1.0 model instead, from <a href="https://ml.azure.com/model/catalog" target="_blank">the AzureML model catalog</a>. In our model catalog, the models prefixed with mmdet-3x are compatible with mmdet >= 3.1.0.
 
 ### Inference samples
 

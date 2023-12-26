@@ -26,20 +26,20 @@ mask AP: 39.3
 
 apache-2.0
 
-# Inference samples
+# Inference Samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|<a href="https://aka.ms/azureml-infer-sdk-image-instance-segmentation" target="_blank">image-instance-segmentation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-image-instance-segmentation" target="_blank">image-instance-segmentation-online-endpoint.sh</a>
 Batch|<a href="https://aka.ms/azureml-infer-batch-sdk-image-instance-segmentation" target="_blank">image-instance-segmentation-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-image-instance-segmentation" target="_blank">image-instance-segmentation-batch-endpoint.sh</a>
 
-# Finetuning samples
+# Finetuning Samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|--|
 Image instance segmentation|Image instance segmentation|[fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjectsMask.zip)|<a href="https://aka.ms/azureml-ft-sdk-image-instance-segmentation" target="_blank">fridgeobjects-instance-segmentation.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-image-instance-segmentation" target="_blank">fridgeobjects-instance-segmentation.sh</a>
 
-# Model Evaluation
+# Evaluation Samples
 
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
@@ -106,6 +106,6 @@ Note: "image1" and "image2" string should be in base64 format or publicly access
 
 Note: Please refer to instance segmentation output <a href="https://learn.microsoft.com/en-us/azure/machine-learning/reference-automl-images-schema?view=azureml-api-2#instance-segmentation-1" target="_blank">data schema</a> for more detail.
 
-#### Visualization for a sample image
+#### Visualization of inference result for a sample image
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_mask_rcnn_swin-t-p4-w7_fpn_1x_coco_IS.png" alt="is visualization">
