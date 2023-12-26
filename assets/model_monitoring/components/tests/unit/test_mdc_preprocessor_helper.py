@@ -19,7 +19,7 @@ class MyDateTime:
     """helper class for test_get_file_list()."""
 
     def __init__(self, year, month=None, day=None, hour=None):
-        """Constructor of MyDateTime, month, day and hour are all optional."""
+        """Initialize MyDateTime, month, day and hour are all optional."""
         self.year = year
         self.month = month
         self.day = day
