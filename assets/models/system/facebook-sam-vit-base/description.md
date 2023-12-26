@@ -17,7 +17,7 @@ See [here](https://ai.facebook.com/datasets/segment-anything/) for an overview o
 
 apache-2.0
 
-# Inference samples
+# Inference Samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
