@@ -59,34 +59,41 @@ tags:
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
 version: 14
 description: |-
-  The Swin Transformer is a type of Vision Transformer used in both image classification and dense recognition tasks. It builds hierarchical feature maps by merging image patches in deeper layers and has linear computation complexity to input image size due to computation of self-attention only within each local window. Previous vision Transformers produce feature maps of a single low resolution and have quadratic computation complexity to input image size due to the computation of self-attention globally. Swin Transformer v2 has three main improvements which are a residual-post-norm method, a log-spaced continuous position bias method, and a self-supervised pre-training method called SimMIM. These improvements combined with cosine attention help improve training stability and reduce the need for vast labeled images.
+  The Swin Transformer V2 model is a type of Vision Transformer, pre-trained on ImageNet-21k with a resolution of 192x192, is introduced in the <a href="https://arxiv.org/abs/2111.09883" target="_blank">research-paper</a> titled "Swin Transformer V2: Scaling Up Capacity and Resolution" authored by Liu et al. This model tries to resolve training instability, resolution gaps between pre-training and fine-tuning, and large labelled data issues in training and application of large vision models. This model generates hierarchical feature maps by merging image patches and computes self attention within a local window resulting in a linear computational complexity relative to input image size which is a significant improvement over vision transformers that take quadratic computational complexity.
 
-  > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/microsoft/swinv2-base-patch4-window12-192-22k" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+  Swin Transformer V2 introduces three improvements:
+  - a residual-post-norm method with cosine attention to improve training stability
+  - a log-spaced continuous position bias method, aiding the transfer of pre-trained models from low-resolution images to tasks with high-resolution inputs
+  - the application of a self-supervised pre-training method called SimMIM, designed to reduce the need for extensive labeled images
 
-  ### Inference samples
+  # License
+
+  apache-2.0
+
+  # Inference Samples
 
   Inference type|Python sample (Notebook)|CLI with YAML
   |--|--|--|
   Real time|<a href="https://aka.ms/azureml-infer-sdk-image-classification" target="_blank">image-classification-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-image-classification" target="_blank">image-classification-online-endpoint.sh</a>
   Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-image-classification" target="_blank">image-classification-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-image-classification" target="_blank">image-classification-batch-endpoint.sh</a>
 
-  ### Finetuning samples
+  # Finetuning Samples
 
   Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
   |---|--|--|--|--|
   Image Multi-class classification|Image Multi-class classification|[fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/fridgeObjects.zip)|<a href="https://aka.ms/azureml-ft-sdk-image-mc-classification" target="_blank">fridgeobjects-multiclass-classification.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-image-mc-classification" target="_blank">fridgeobjects-multiclass-classification.sh</a>
   Image Multi-label classification|Image Multi-label classification|[multilabel fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/multilabelFridgeObjects.zip)|<a href="https://aka.ms/azureml-ft-sdk-image-ml-classification" target="_blank">fridgeobjects-multilabel-classification.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-image-ml-classification" target="_blank">fridgeobjects-multilabel-classification.sh</a>
 
-  ### Model Evaluation
+  # Evaluation Samples
 
   |Task|Use case|Dataset|Python sample (Notebook)|
   |---|--|--|--|
   |Image Multi-class classification|Image Multi-class classification|[fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/fridgeObjects.zip)|<a href="https://aka.ms/azureml-evaluation-sdk-image-mc-classification" target="_blank">image-multiclass-classification.ipynb</a>|
   |Image Multi-label classification|Image Multi-label classification|[multilabel fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/multilabelFridgeObjects.zip)|<a href="https://aka.ms/azureml-evaluation-sdk-image-ml-classification" target="_blank">image-multilabel-classification.ipynb</a>|
 
-  ### Sample inputs and outputs (for real-time inference)
+  # Sample input and output
 
-  #### Sample input
+  ### Sample input
 
   ```json
   {
@@ -103,7 +110,7 @@ description: |-
   Note: "image1" and "image2" string should be in base64 format or publicly accessible urls.
 
 
-  #### Sample output
+  ### Sample output
 
   ```json
   [
@@ -118,7 +125,7 @@ description: |-
   ]
   ```
 
-  #### Model inference - visualization for a sample image
+  #### Visualization of inference result for a sample image
 
   <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_microsoft-swinv2-base-patch4-window12-192-22k_MC_new.png" alt="mc visualization">
 
