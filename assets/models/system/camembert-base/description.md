@@ -47,17 +47,19 @@ Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endp
 ### Sample input
 ```json
 {
-    "input_data": [
-        "Paris est la <mask> de la France.",
-        "Aujourd’hui, c’est un <mask> jour day!"
-    ]
+  "input_data": {"input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
+    }
 }
 ```
 
 ### Sample output
 ```json
 [
-  "capitale",
-  "nouveau"
+  {
+    "0": "city"
+  },
+  {
+    "0": "great"
+  }
 ]
 ```
