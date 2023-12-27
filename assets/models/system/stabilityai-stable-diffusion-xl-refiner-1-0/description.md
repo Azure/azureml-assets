@@ -35,7 +35,7 @@ While the capabilities of image generation models are impressive, they can also 
 
 The model was not trained to be factual or true representations of people or events, and therefore using the model to generate such content is out-of-scope for the abilities of this model.
 
-# Inference samples
+# Inference Samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
@@ -49,7 +49,7 @@ Inference type|Python sample (Notebook)
 Real time|<a href="https://aka.ms/azureml-infer-sdk-safe-image-text-to-image-generation" target="_blank">safe-image-text-to-image-online-endpoint.ipynb</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-image-text-to-image-generation" target="_blank">safe-image-text-to-image-batch-endpoint.ipynb</a>
 
-# Sample inputs and outputs (for real-time inference)
+# Sample input and output
 
 ### Sample input
 
