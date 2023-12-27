@@ -78,38 +78,38 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
         if is_end_of_year(y):
             return [store_url.get_abfs_url(f"{y.strftime('%Y')}/*/*/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{y.strftime('%Y')}") else []
-        return same_year(datetime(y.year, 1, 1, 0, 0, 0), y)
+        return same_year(y.replace(month=1, day=1, hour=0, minute=0, second=0), y)
 
     def end_of_year(y) -> List[str]:
         if is_start_of_year(y):
             return [store_url.get_abfs_url(f"{y.strftime('%Y')}/*/*/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{y.strftime('%Y')}") else []
-        return same_year(y, datetime(y.year, 12, 31, 23, 59, 59))
+        return same_year(y, y.replace(month=12, day=31, hour=23, minute=59, second=59))
 
     def start_of_month(m) -> List[str]:
         if is_end_of_month(m):
             return [store_url.get_abfs_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{m.strftime('%Y/%m')}") else []
-        return same_month(datetime(m.year, m.month, 1, 0, 0, 0), m)
+        return same_month(m.replace(day=1, hour=0, minute=0, second=0), m)
 
     def end_of_month(m) -> List[str]:
         if is_start_of_month(m):
             return [store_url.get_abfs_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{m.strftime('%Y/%m')}") else []
         _, month_days = calendar.monthrange(m.year, m.month)
-        return same_month(m, datetime(m.year, m.month, month_days, 23, 59, 59))
+        return same_month(m, m.replace(day=month_days, hour=23, minute=59, second=59))
 
     def start_of_day(d) -> List[str]:
         if is_end_of_day(d):
             return [store_url.get_abfs_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{d.strftime('%Y/%m/%d')}") else []
-        return same_day(datetime(d.year, d.month, d.day, 0, 0, 0), d)
+        return same_day(d.replace(hour=0, minute=0, second=0), d)
 
     def end_of_day(d) -> List[str]:
         if is_start_of_day(d):
             return [store_url.get_abfs_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{d.strftime('%Y/%m/%d')}") else []
-        return same_day(d, datetime(d.year, d.month, d.day, 23, 59, 59))
+        return same_day(d, d.replace(hour=23, minute=59, second=59))
 
     def cross_year(start, end) -> List[str]:
         middle_years = [
@@ -146,6 +146,12 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
             for h in date_range(_start, _end, timedelta(hours=1))
             if store_url.is_folder_exists(f"{h.strftime('%Y/%m/%d/%H')}")
         ]
+
+    # ensure start_datetime and end_datetime both or neither have tzinfo
+    if start_datetime.tzinfo is None:
+        start_datetime = start_datetime.replace(tzinfo=end_datetime.tzinfo)
+    if end_datetime.tzinfo is None:
+        end_datetime = end_datetime.replace(tzinfo=start_datetime.tzinfo)
 
     store_url = store_url or StoreUrl(input_data)
     if store_url.is_local_path():

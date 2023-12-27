@@ -5,7 +5,7 @@
 
 from unittest.mock import Mock
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.core.credentials import AzureSasCredential
 from model_data_collector_preprocessor.mdc_preprocessor_helper import (
@@ -201,9 +201,14 @@ class TestMDCPreprocessorHelper:
         mock_store_url.get_abfs_url.side_effect = \
             lambda rpath: f"abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/{rpath}"
 
-        file_list = get_file_list(start, end, mock_store_url)
+        for i in range(4):
+            # test with and without timezone
+            _start = start.replace(tzinfo=timezone.utc) if i % 2 else start
+            _end = end.replace(tzinfo=timezone.utc) if (i >> 1) % 2 else end
 
-        assert file_list == expected_result
+            file_list = get_file_list(_start, _end, mock_store_url)
+
+            assert file_list == expected_result
 
     @pytest.mark.parametrize(
         "is_local, store_type, credential, expected_spark_conf",
