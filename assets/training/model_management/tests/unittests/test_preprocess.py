@@ -18,7 +18,7 @@ from azureml.model.mgmt.processors.factory import (
     TextToImageMLflowConvertorFactory,
 )
 from azureml.model.mgmt.processors.preprocess import run_preprocess
-from azureml.model.mgmt.processors.pyfunc.config import SupportedTextToImageModelFamily
+from azureml.model.mgmt.processors.pyfunc.text_to_image.config import SupportedTextToImageModelFamily
 from azureml.model.mgmt.processors.transformers.convertors import HFMLFLowConvertor, NLPMLflowConvertor
 from azureml.model.mgmt.processors.pyfunc.convertors import MMLabDetectionMLflowConvertor
 from mock import MagicMock
@@ -500,9 +500,9 @@ class TestTextToImageMLflowConvertorFactory(unittest.TestCase):
         """Test unsupported model family case."""
         with self.assertRaises(Exception) as context:
             TextToImageMLflowConvertorFactory.create_mlflow_convertor("model_dir", "output_dir", "temp_dir",
-                                                                      {"misc": "unsupported_model_family",
+                                                                      {"misc": ["unsupported_model_family"],
                                                                        "task": "some_task"})
-        self.assertTrue('Unsupported model family for text to image model' in str(context.exception))
+        self.assertTrue('Unsupported task for stable diffusion model family' in str(context.exception))
 
     def test_create_mlflow_converter_for_text_to_image_task(self):
         """Test text to image model mlflow convertor."""

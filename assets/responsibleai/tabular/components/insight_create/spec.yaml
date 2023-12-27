@@ -2,14 +2,14 @@ $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: microsoft_azureml_rai_tabular_insight_constructor
 display_name: RAI Insights Dashboard Constructor
 description: RAI Insights Dashboard Constructor [Learn More](https://aka.ms/RAIComponents)
-version: 0.10.0
+version: 0.11.0
 type: command
 inputs:
   title:
     type: string
   task_type:
-    type: string # [classification, regression]
-    enum: ['classification', 'regression']
+    type: string # [classification, regression, forecasting]
+    enum: ['classification', 'regression', 'forecasting']
   model_info_path:
     type: path # model_info.json
     optional: true

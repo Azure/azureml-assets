@@ -4,7 +4,7 @@ type: command
 name: batch_inference_preparer
 display_name: Batch Inference Preparer
 description: Prepare the jsonl file and endpoint for batch inference component.
-version: 0.0.3
+version: 0.0.4
 
 inputs:
   input_dataset: 
@@ -13,7 +13,7 @@ inputs:
     optional: True
   model_type:
     type: string
-    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss', 'claude')
     optional: True
   batch_input_pattern:
     type: string
