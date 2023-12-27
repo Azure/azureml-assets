@@ -1,8 +1,10 @@
-__Deci/DeciDiffusion-v1-0__ DeciDiffusion 1.0 is a diffusion-based text-to-image generation model. While it maintains foundational architecture elements from Stable Diffusion, such as the Variational Autoencoder (VAE) and CLIP's pre-trained Text Encoder, DeciDiffusion introduces significant enhancements. The primary innovation is the substitution of U-Net with the more efficient U-Net-NAS, a design pioneered by Deci. This novel component streamlines the model by reducing the number of parameters, leading to superior computational efficiency.
+`DeciDiffusion` 1.0 is an 820 million parameter latent diffusion model designed for text-to-image conversion. Trained initially on the LAION-v2 dataset and fine-tuned on the LAION-ART dataset, the model's training involved advanced techniques to improve speed, training performance, and achieve superior inference quality.
 
+For more details, review the <a href='https://deci.ai/blog/decidiffusion-1-0-3x-faster-than-stable-diffusion-same-quality/' target='_blank'>blog</a>.
 
+# License
 
-> Review the <a href="https://huggingface.co/Deci/DeciDiffusion-v1-0" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+creativeml-openrail++-m
 
 # Inference Samples
 
