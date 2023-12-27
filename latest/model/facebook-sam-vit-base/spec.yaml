@@ -35,20 +35,35 @@ tags:
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
 version: 12
 description: |
-  The Segment Anything Model (SAM) is an innovative image segmentation tool capable of creating high-quality object masks from simple input prompts. Trained on a massive dataset comprising 11 million images and 1.1 billion masks, SAM demonstrates strong zero-shot capabilities, effectively adapting to new image segmentation tasks without prior specific training. The model's impressive performance matches or exceeds prior models that operated under full supervision.
+  The **Segment Anything Model (SAM)** produces high quality object masks from input prompts such as points or boxes, and it can be used to generate masks for all objects in an image. It has been trained on a [dataset](https://segment-anything.com/dataset/index.html) of 11 million images and 1.1 billion masks, and has strong zero-shot performance on a variety of segmentation tasks.
 
-  > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/facebook/sam-vit-base" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+  The SAM model is made up of 3 modules:
 
-  ### Inference samples
+  - The `VisionEncoder`: a VIT based image encoder. It computes the image embeddings using attention on patches of the image. Relative Positional Embedding is used.
+  - The `PromptEncoder`: generates embeddings for points and bounding boxes
+  - The `MaskDecoder`: a two-ways transformer which performs cross attention between the image embedding and the point embeddings (->) and between the point embeddings and the image embeddings. The outputs are fed
+  - The `Neck`: predicts the output masks based on the contextualized masks produced by the `MaskDecoder`.
+
+  # Training Details
+
+  ## Training Data
+
+  See [here](https://ai.facebook.com/datasets/segment-anything/) for an overview of the datastet.
+
+  # License
+
+  apache-2.0
+
+  # Inference Samples
 
   Inference type|Python sample (Notebook)|CLI with YAML
   |--|--|--|
   Real time|<a href="https://aka.ms/azureml-infer-sdk-mask-generation" target="_blank">mask-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-mask-generation" target="_blank">mask-generation-online-endpoint.sh</a>
   Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-mask-generation" target="_blank">mask-generation-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-mask-generation" target="_blank">mask-generation-batch-endpoint.sh</a>
 
-  ### Sample inputs and outputs (for real-time inference)
+  # Sample input and output
 
-  #### Sample input
+  ### Sample input
 
   ```json
   {
@@ -69,8 +84,7 @@ description: |
 
   Note: "image1" string should be in base64 format or publicly accessible urls.
 
-
-  #### Sample output
+  ### Sample output
 
   ```json
   [
@@ -91,7 +105,6 @@ description: |
 
   Note: "encoded_binary_mask1" string is in base64 format.
 
-
-  #### Model inference - visualization for a sample image
+  #### Visualization of inference result for a sample image
 
   <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_facebook-sam-vit-base.png" alt="mask generation visualization">
