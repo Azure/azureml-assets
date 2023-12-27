@@ -20,8 +20,6 @@ This model was trained in 4 phases.
 
 In phase 1, 8 X 8 X A100 GPUs, AdamW optimizer had been used with batch size 8192 and learning rate 1e-4. In phases 2-4, 8 X 8 X H100 GPUs, LAMB optimizer had been used with batch size 6144 and learning rate 5e-3.
 
-# Evaluation Results
-
 # Limitations and Biases
 
 ## Limitations
