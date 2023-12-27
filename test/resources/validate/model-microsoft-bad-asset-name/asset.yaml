@@ -1,4 +1,4 @@
-name: microsoft-thing
+name: microsoft-wrong-asset-name
 version: 1
 type: model
 spec: spec.yaml
