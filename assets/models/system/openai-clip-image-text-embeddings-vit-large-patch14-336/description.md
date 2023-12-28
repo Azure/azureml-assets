@@ -33,19 +33,19 @@ CLIP currently struggles with respect to certain tasks such as fine grained clas
 The authors of the [original CLIP paper](https://arxiv.org/pdf/2103.00020.pdf) found that the performance of the model and its biases can depend significantly on class design and the choices one makes for categories to include and exclude. They tested the risk of certain kinds of denigration with CLIP by classifying images of people from Fairface into crime-related and non-human animal categories. They found significant disparities with respect to race and gender, which could shift based on how the classes were constructed. The authors also tested the performance of CLIP on gender, race, and age classification using the Fairface dataset. They found that the accuracy for gender classification was greater than 96% across all races, with 'Middle Eastern' having the highest accuracy (98.4%) and 'White' having the lowest (96.5%). Additionally, CLIP averaged ~93% for racial classification and ~63% for age classification.
 
 # License
-The MIT License is a permissive free software license originating at the Massachusetts Institute of Technology (MIT). The license allows users to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, subject to the conditions that the copyright notice and permission notice appear in all copies or substantial portions of the software.
 
+MIT License
 
-# Inference samples
+# Inference Samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|<a href="https://aka.ms/azureml-infer-sdk-image-text-embeddings" target="_blank">image-text-embeddings-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-image-text-embeddings" target="_blank">image-text-embeddings-online-endpoint.sh</a>
 Batch|<a href="https://aka.ms/azureml-infer-batch-sdk-image-text-embeddings" target="_blank">image-text-embeddings-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-image-text-embeddings" target="_blank">image-text-embeddings-batch-endpoint.sh</a>
 
-# Sample input and output (for real-time inference)
+# Sample input and output for image embeddings
 
-### Sample input for image embeddings
+### Sample input
 
 ```json
 {
@@ -63,7 +63,7 @@ Batch|<a href="https://aka.ms/azureml-infer-batch-sdk-image-text-embeddings" tar
 ```
 Note: "image1" and "image2" should be publicly accessible urls or strings in `base64` format
 
-### Sample output for image embeddings
+### Sample output
 
 ```json
 [
@@ -77,7 +77,9 @@ Note: "image1" and "image2" should be publicly accessible urls or strings in `ba
 ```
 Note: returned embeddings have dimension 768 and are not normalized
 
-### Sample input for text embeddings
+# Sample input and output for text embeddings
+
+### Sample input
 
 ```json
 {
@@ -94,7 +96,7 @@ Note: returned embeddings have dimension 768 and are not normalized
 }
 ```
 
-### Sample output for text embeddings
+### Sample output
 
 ```json
 [
@@ -108,7 +110,9 @@ Note: returned embeddings have dimension 768 and are not normalized
 ```
 Note: returned embeddings have dimension 768 and are not normalized
 
-### Sample input for image and text embeddings
+# Sample input and output for image and text embeddings
+
+### Sample input
 
 ```json
 {
@@ -126,7 +130,7 @@ Note: returned embeddings have dimension 768 and are not normalized
 ```
 Note: "image1" and "image2" should be publicly accessible urls or strings in `base64` format
 
-### Sample output for image and text embeddings
+### Sample output
 
 ```json
 [
