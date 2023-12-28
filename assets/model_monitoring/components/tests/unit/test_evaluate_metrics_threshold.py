@@ -6,7 +6,8 @@
 
 from pyspark.sql import SparkSession
 from src.model_monitor_evaluate_metrics_threshold.evaluate_metrics_threshold import (
-    calculate_metrics_breach)
+    calculate_metrics_breach,
+    _generate_error_message)
 from src.shared_utilities.constants import (
     AGGREGATED_COHERENCE_PASS_RATE_METRIC_NAME,
     AGGREGATED_GROUNDEDNESS_PASS_RATE_METRIC_NAME,
@@ -79,3 +80,23 @@ class TestEvaluateMetricsThreshold:
         actual_breached_metrics_df = calculate_metrics_breach(metrics_df)
         assert breached_metrics_df.count() == actual_breached_metrics_df.count()
         assert sorted(breached_metrics_df.collect()) == sorted(actual_breached_metrics_df.collect())
+
+    @pytest.mark.parametrize("data, schema, expected_message",
+                             [([("1", "metics", 4.6, 5.6)],
+                               ["group", SIGNAL_METRICS_METRIC_NAME, SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_THRESHOLD_VALUE],
+                               'The signal \'name\' has failed due to one or more features violating metric thresholds.\n' +
+                               'The feature names and their corresponding computed metric values violating the threshold are ' +
+                                '\n[\'{"metric_value":4.6,"metric_name":"metics","threshold_value":5.6,"group":"1"}\']\n'),
+                              ([("metics", 4.6, 5.6)],
+                               [SIGNAL_METRICS_METRIC_NAME, SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_THRESHOLD_VALUE],
+                                'The signal \'name\' has failed due to one or more features violating metric thresholds.\n' +
+                               'The feature names and their corresponding computed metric values violating the threshold are ' +
+                                '\n[\'{"metric_value":4.6,"metric_name":"metics","threshold_value":5.6}\']\n')])
+    def test_generate_error_message(
+        self,
+        data,
+        schema,
+        expected_message):
+        df = create_pyspark_dataframe(data, schema)
+        message = _generate_error_message(df, "name")
+        assert expected_message == message
