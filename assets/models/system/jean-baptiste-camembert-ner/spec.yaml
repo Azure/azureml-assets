@@ -111,4 +111,4 @@ tags:
     apply_ort: "true"
   SharedComputeCapacityEnabled: ""
   task: token-classification
-version: 14
+version: 13
