@@ -72,7 +72,6 @@ class AzureBlobstoreDownloader:
                 download_dir += "/"
             # Remove trailing slash from the model URI
             model_uri = self._model_uri.rstrip('/')
-            
             # Extract the model name from the URI
             model_name = model_uri.split("/")[-1]
             logger.info(f"model_name: {model_name}")
@@ -92,7 +91,6 @@ class AzureBlobstoreDownloader:
             # Log the contents of the downloaded directory
             downloaded_files = list(Path(target_download_dir).rglob("*"))
             logger.info(f"Contents of the downloaded directory: {downloaded_files}")
-            
             return {
                 "download_time_utc": get_system_time_utc(),
                 "size": round_size(get_file_or_folder_size(self._download_dir)),
