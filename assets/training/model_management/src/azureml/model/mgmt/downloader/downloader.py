@@ -70,9 +70,11 @@ class AzureBlobstoreDownloader:
             download_dir = str(self._download_dir)
             if not download_dir.endswith("/"):
                 download_dir += "/"
+            # Remove trailing slash from the model URI
+            model_uri = self._model_uri.rstrip('/')
             
             # Extract the model name from the URI
-            model_name = self._model_uri.split("/")[-1]
+            model_name = model_uri.split("/")[-1]
             logger.info(f"model_name: {model_name}")
 
             # Construct the target download directory with the model name
