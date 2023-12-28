@@ -64,7 +64,22 @@ class AzureBlobstoreDownloader:
     @log_execution_time
     def _download(self):
         try:
-            download_cmd = f"azcopy cp --recursive=true '{self._model_uri}' {self._download_dir}"
+            logger.info(f"self._model_uri: {self._model_uri}")
+            logger.info(f"self._download_dir: {self._download_dir}")
+            # Ensure trailing slash in the download directory
+            download_dir = str(self._download_dir)
+            if not download_dir.endswith("/"):
+                download_dir += "/"
+            
+            # Extract the model name from the URI
+            model_name = self._model_uri.split("/")[-1]
+            logger.info(f"model_name: {model_name}")
+
+            # Construct the target download directory with the model name
+            target_download_dir = os.path.join(download_dir, model_name)
+            logger.info(f"target_download_dir: {target_download_dir}")
+
+            download_cmd = f"azcopy cp --recursive=true '{self._model_uri}' {target_download_dir}"
             # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
             # https://github.com/Azure/azureml-assets/issues/283
             exit_code, stdout = run_command(download_cmd)
@@ -72,7 +87,10 @@ class AzureBlobstoreDownloader:
                 raise AzureMLException._with_error(
                     AzureMLError.create(BlobStorageDownloadError, uri=self._model_uri, error=stdout)
                 )
-
+            # Log the contents of the downloaded directory
+            downloaded_files = list(Path(target_download_dir).rglob("*"))
+            logger.info(f"Contents of the downloaded directory: {downloaded_files}")
+            
             return {
                 "download_time_utc": get_system_time_utc(),
                 "size": round_size(get_file_or_folder_size(self._download_dir)),
