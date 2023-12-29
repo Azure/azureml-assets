@@ -40,10 +40,10 @@ inputs:
     type: string
     default: ""
     optional: true
-  override_numerical_feature:
+  override_numerical_features:
     type: string
     optional: true
-  override_categorical_feature:
+  override_categorical_features:
     type: string
     optional: true
 outputs:
@@ -88,8 +88,8 @@ jobs:
       categorical_metric: ${{parent.inputs.categorical_metric}}
       numerical_threshold: ${{parent.inputs.numerical_threshold}}
       categorical_threshold: ${{parent.inputs.categorical_threshold}}
-      override_numerical_feature: ${{parent.inputs.override_numerical_feature}}
-      override_categorical_feature: ${{parent.inputs.override_categorical_feature}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable

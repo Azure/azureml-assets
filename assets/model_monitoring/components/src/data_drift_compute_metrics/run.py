@@ -23,8 +23,8 @@ def run():
     parser.add_argument("--numerical_metric", type=str)
     parser.add_argument("--categorical_threshold", type=str)
     parser.add_argument("--numerical_threshold", type=str)
-    parser.add_argument("--override_numerical_feature", type=str)
-    parser.add_argument("--override_categorical_feature", type=str)
+    parser.add_argument("--override_numerical_features", type=str)
+    parser.add_argument("--override_categorical_features", type=str)
     parser.add_argument("--feature_names", type=str, default=None)
     args = parser.parse_args()
 

@@ -18,10 +18,10 @@ inputs:
   histogram_buckets:
     mode: direct
     type: mltable
-  override_numerical_feature:
+  override_numerical_features:
     type: string
     optional: true
-  override_categorical_feature:
+  override_categorical_features:
     type: string
     optional: true
 outputs:
@@ -54,6 +54,6 @@ conf:
 args: >-
   --input_data ${{inputs.input_data}}
   --histogram_buckets ${{inputs.histogram_buckets}}
-  --override_numerical_feature ${{inputs.override_numerical_feature}}
-  --override_categorical_feature ${{inputs.override_categorical_feature}}
+  --override_numerical_features ${{inputs.override_numerical_features}}
+  --override_categorical_features ${{inputs.override_categorical_features}}
   --histogram ${{outputs.histogram}}

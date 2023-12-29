@@ -46,10 +46,10 @@ inputs:
     type: string
     default: ""
     optional: true
-  override_numerical_feature:
+  override_numerical_features:
     type: string
     optional: true
-  override_categorical_feature:
+  override_categorical_features:
     type: string
     optional: true
 outputs:
@@ -66,8 +66,8 @@ jobs:
         path: ${{parent.inputs.baseline_data}}
       task_type: ${{parent.inputs.task_type}}
       target_column: ${{parent.inputs.target_column}}
-      override_numerical_feature: ${{parent.inputs.override_numerical_feature}}
-      override_categorical_feature: ${{parent.inputs.override_categorical_feature}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
@@ -104,8 +104,8 @@ jobs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
-      override_numerical_feature: ${{parent.inputs.override_numerical_feature}}
-      override_categorical_feature: ${{parent.inputs.override_categorical_feature}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       data_statistics:
         type: mltable
@@ -129,8 +129,8 @@ jobs:
         path: ${{parent.jobs.feature_selection.outputs.feature_names}}
       numerical_metrics: ${{parent.inputs.numerical_metrics}}
       categorical_metrics: ${{parent.inputs.categorical_metrics}}
-      override_numerical_feature: ${{parent.inputs.override_numerical_feature}}
-      override_categorical_feature: ${{parent.inputs.override_categorical_feature}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
@@ -152,8 +152,8 @@ jobs:
       feature_names: ${{parent.jobs.feature_selection.outputs.feature_names}}
       numerical_metrics: ${{parent.inputs.numerical_metrics}}
       categorical_metrics: ${{parent.inputs.categorical_metrics}}
-      override_numerical_feature: ${{parent.inputs.override_numerical_feature}}
-      override_categorical_feature: ${{parent.inputs.override_categorical_feature}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable

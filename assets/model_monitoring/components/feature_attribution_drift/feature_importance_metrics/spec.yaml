@@ -21,10 +21,10 @@ inputs:
   task_type:
     type: string
     optional: true
-  override_numerical_feature:
+  override_numerical_features:
     type: string
     optional: true
-  override_categorical_feature:
+  override_categorical_features:
     type: string
     optional: true
 outputs:
@@ -58,6 +58,6 @@ args: >-
   --baseline_data ${{inputs.baseline_data}}
   $[[--target_column ${{inputs.target_column}}]]
   $[[--task_type ${{inputs.task_type}}]]
-  --override_numerical_feature ${{inputs.override_numerical_feature}}
-  --override_categorical_feature ${{inputs.override_categorical_feature}}
+  --override_numerical_features ${{inputs.override_numerical_features}}
+  --override_categorical_features ${{inputs.override_categorical_features}}
   --signal_metrics ${{outputs.signal_metrics}}
