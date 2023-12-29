@@ -82,7 +82,7 @@ def evaluate_metrics_threshold(
     metrics_threshold_breached_df = calculate_metrics_breach(is_not_nan_metrics_threshold_df)
     metrics_threshold_breached_df.show()
 
-    return send_email_for_breached(metrics_threshold_breached_df, notification_emails, signal_name)
+    return send_email_for_breached(metrics_threshold_breached_df, signal_name, notification_emails)
 
 
 def calculate_metrics_breach(metrics_threshold_df: pyspark.sql.DataFrame):
