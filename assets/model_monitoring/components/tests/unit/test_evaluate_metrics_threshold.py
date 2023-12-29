@@ -85,17 +85,17 @@ class TestEvaluateMetricsThreshold:
                              [([("1", "metics", 4.6, 5.6)],
                                ["group", SIGNAL_METRICS_METRIC_NAME,
                                 SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_THRESHOLD_VALUE],
-                                'The signal \'name\' has failed due to one or more features violating ' +
-                                'metric thresholds.\nThe feature names and their corresponding computed ' +
-                                'metric values violating the threshold are \n[\'{"metric_value":4.6,' +
-                                '"metric_name":"metics","threshold_value":5.6,"group":"1"}\']\n'),
+                               'The signal \'name\' has failed due to one or more features violating ' +
+                               'metric thresholds.\nThe feature names and their corresponding computed ' +
+                               'metric values violating the threshold are \n[\'{"metric_value":4.6,' +
+                               '"metric_name":"metics","threshold_value":5.6,"group":"1"}\']\n'),
                               ([("metics", 4.6, 5.6)],
                                [SIGNAL_METRICS_METRIC_NAME,
                                 SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_THRESHOLD_VALUE],
-                                'The signal \'name\' has failed due to one or more features violating ' +
-                                'metric thresholds.\nThe feature names and their corresponding computed ' +
-                                'metric values violating the threshold are ' +
-                                '\n[\'{"metric_value":4.6,"metric_name":"metics","threshold_value":5.6}\']\n')])
+                               'The signal \'name\' has failed due to one or more features violating ' +
+                               'metric thresholds.\nThe feature names and their corresponding computed ' +
+                               'metric values violating the threshold are ' +
+                               '\n[\'{"metric_value":4.6,"metric_name":"metics","threshold_value":5.6}\']\n')])
     def test_generate_error_message(
         self,
         data,
