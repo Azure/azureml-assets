@@ -102,6 +102,7 @@ class TestEvaluateMetricsThreshold:
         schema,
         expected_message
     ):
+        """Test generate error message."""
         df = create_pyspark_dataframe(data, schema)
         message = _generate_error_message(df, "name")
         assert expected_message == message
