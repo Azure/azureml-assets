@@ -4,7 +4,7 @@ type: pipeline
 name: prediction_drift_signal_monitor
 display_name: Prediction Drift - Signal Monitor
 description: Computes the prediction drift between a baseline and a target data assets.
-version: 0.3.14
+version: 0.3.15
 is_deterministic: true
 
 inputs:
@@ -40,6 +40,12 @@ inputs:
     type: string
     default: ""
     optional: true
+  override_numerical_feature:
+    type: string
+    optional: true
+  override_categorical_feature:
+    type: string
+    optional: true
 outputs:
   signal_output:
     type: uri_folder
@@ -67,7 +73,7 @@ jobs:
       type: aml_token
   compute_drift_metrics:
     type: spark
-    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.9
+    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.10
     inputs:
       production_dataset:
         type: mltable
@@ -82,6 +88,8 @@ jobs:
       categorical_metric: ${{parent.inputs.categorical_metric}}
       numerical_threshold: ${{parent.inputs.numerical_threshold}}
       categorical_threshold: ${{parent.inputs.categorical_threshold}}
+      override_numerical_feature: ${{parent.inputs.override_numerical_feature}}
+      override_categorical_feature: ${{parent.inputs.override_categorical_feature}}
     outputs:
       signal_metrics:
         type: mltable

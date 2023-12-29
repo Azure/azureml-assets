@@ -4,7 +4,7 @@ type: pipeline
 name: feature_attribution_drift_signal_monitor
 display_name: Feature Attribution Drift - Signal Monitor
 description: Computes the feature attribution between a baseline and production data assets.
-version: 0.3.13
+version: 0.3.14
 is_deterministic: true
 
 inputs:
@@ -27,6 +27,12 @@ inputs:
     type: string
     default: ""
     optional: true
+  override_numerical_feature:
+    type: string
+    optional: true
+  override_categorical_feature:
+    type: string
+    optional: true
 outputs:
   signal_output:
     type: mltable
@@ -34,13 +40,15 @@ outputs:
 jobs:
   compute_baseline_explanations:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.7
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.8
     inputs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
       task_type: ${{parent.inputs.task_type}}
       target_column: ${{parent.inputs.target_column}}
+      override_numerical_feature: ${{parent.inputs.override_numerical_feature}}
+      override_categorical_feature: ${{parent.inputs.override_categorical_feature}}
     outputs:
       signal_metrics:
         type: mltable
@@ -51,13 +59,15 @@ jobs:
       type: aml_token
   compute_production_explanations:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.7
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.8
     inputs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.target_data}}
       task_type: ${{parent.inputs.task_type}}
       target_column: ${{parent.inputs.target_column}}
+      override_numerical_feature: ${{parent.inputs.override_numerical_feature}}
+      override_categorical_feature: ${{parent.inputs.override_categorical_feature}}
     outputs:
       signal_metrics:
         type: mltable

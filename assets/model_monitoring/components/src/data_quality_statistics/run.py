@@ -16,6 +16,8 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline_data", type=str)
     parser.add_argument("--data_statistics", type=str)
+    parser.add_argument("--override_numerical_feature", type=str)
+    parser.add_argument("--override_categorical_feature", type=str)
     args = parser.parse_args()
 
     df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")

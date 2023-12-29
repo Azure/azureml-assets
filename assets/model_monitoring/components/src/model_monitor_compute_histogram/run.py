@@ -38,6 +38,8 @@ def run():
     parser.add_argument("--input_data", type=str)
     parser.add_argument("--histogram_buckets", type=str)
     parser.add_argument("--histogram", type=str)
+    parser.add_argument("--override_numerical_feature", type=str)
+    parser.add_argument("--override_categorical_feature", type=str)
     args = parser.parse_args()
 
     df = try_read_mltable_in_spark_with_error(args.input_data, "input_data")

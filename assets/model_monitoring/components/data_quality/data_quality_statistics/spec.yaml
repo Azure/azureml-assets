@@ -4,13 +4,19 @@ type: spark
 name: data_quality_data_statistics
 display_name: Data Quality - Data Statistics
 description: Compute data statistics leveraged by the data quality monitor.
-version: 0.3.3
+version: 0.3.4
 is_deterministic: true
 
 inputs:
   baseline_data: 
     type: mltable
     mode: direct
+  override_numerical_feature:
+    type: string
+    optional: true
+  override_categorical_feature:
+    type: string
+    optional: true
 outputs:
   data_statistics:
     type: mltable
@@ -44,4 +50,6 @@ conf:
     name: momo-base-spark
 args: >-
   --baseline_data ${{inputs.baseline_data}}
+  --override_numerical_feature ${{inputs.override_numerical_feature}}
+  --override_categorical_feature ${{inputs.override_categorical_feature}}
   --data_statistics ${{outputs.data_statistics}}

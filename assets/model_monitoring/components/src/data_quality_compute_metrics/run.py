@@ -30,6 +30,8 @@ def run():
     parser.add_argument("--signal_metrics", type=str)
     parser.add_argument("--categorical_metrics", type=str)
     parser.add_argument("--numerical_metrics", type=str)
+    parser.add_argument("--override_numerical_feature", type=str)
+    parser.add_argument("--override_categorical_feature", type=str)
     args = parser.parse_args()
 
     # READ INPUT TABLES
