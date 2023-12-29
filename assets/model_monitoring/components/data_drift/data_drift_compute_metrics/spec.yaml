@@ -78,6 +78,6 @@ args: >-
   --numerical_threshold ${{inputs.numerical_threshold}}
   --categorical_threshold ${{inputs.categorical_threshold}}
   --feature_names ${{inputs.feature_names}}
-  --override_numerical_features ${{inputs.override_numerical_features}}
-  --override_categorical_features ${{inputs.override_categorical_features}}
+  $[[--override_numerical_features ${{inputs.override_numerical_features}}]]
+  $[[--override_categorical_features ${{inputs.override_categorical_features}}]]
   --signal_metrics ${{outputs.signal_metrics}}

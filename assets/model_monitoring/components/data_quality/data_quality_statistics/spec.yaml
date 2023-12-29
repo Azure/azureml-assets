@@ -50,6 +50,6 @@ conf:
     name: momo-base-spark
 args: >-
   --baseline_data ${{inputs.baseline_data}}
-  --override_numerical_features ${{inputs.override_numerical_features}}
-  --override_categorical_features ${{inputs.override_categorical_features}}
+  $[[--override_numerical_features ${{inputs.override_numerical_features}}]]
+  $[[--override_categorical_features ${{inputs.override_categorical_features}}]]
   --data_statistics ${{outputs.data_statistics}}

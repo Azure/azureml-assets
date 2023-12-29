@@ -33,10 +33,10 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline_data", type=str)
     parser.add_argument("--target_column", type=str, required=False)
-    parser.add_argument("--task_type", type=str)
+    parser.add_argument("--task_type", type=str, required=False)
     parser.add_argument("--signal_metrics", type=str)
-    parser.add_argument("--override_numerical_features", type=str)
-    parser.add_argument("--override_categorical_features", type=str)
+    parser.add_argument("--override_numerical_features", type=str, required=False)
+    parser.add_argument("--override_categorical_features", type=str, required=False)
 
     args = parser.parse_args()
 

@@ -54,6 +54,6 @@ conf:
 args: >-
   --input_data ${{inputs.input_data}}
   --histogram_buckets ${{inputs.histogram_buckets}}
-  --override_numerical_features ${{inputs.override_numerical_features}}
-  --override_categorical_features ${{inputs.override_categorical_features}}
+  $[[--override_numerical_features ${{inputs.override_numerical_features}}]]
+  $[[--override_categorical_features ${{inputs.override_categorical_features}}]]
   --histogram ${{outputs.histogram}}
