@@ -42,7 +42,6 @@ Metric_Value_Should_Greater_Than_Threshold = [TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST
                                               ]
 
 
-
 def _generate_error_message(df, signal_name: str):
     """Generate the error message for the given thresholds."""
     columns = df.schema.names
