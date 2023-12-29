@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/facebook-bart-large-cnn/1703165534/mlflow_model_folder
+  container_path: huggingface/facebook-bart-large-cnn/1703838186/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
