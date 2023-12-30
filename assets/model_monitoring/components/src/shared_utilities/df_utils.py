@@ -6,7 +6,8 @@ import pyspark.sql as pyspark_sql
 
 data_type_double_group = ["float", "double"]
 data_type_long_group = ["long", "int", "bigint", "short"]
-
+data_type_numerical_group = ["float", "double", "decimal"]
+data_type_categorical_group = ["string", "boolean", "timestamp", "date"]
 
 def get_numerical_columns(column_dtype_map: dict) -> list:
     """Get numerical columns from all columns."""
@@ -32,6 +33,76 @@ def get_categorical_columns(column_dtype_map: dict) -> list:
         if column_dtype_map[column] in ["string", "bool"]
     ]
     return categorical_columns
+
+
+def is_numerical_new(column, column_dtype_map: dict, feature_type_override_map: dict, df):
+    """Check if int column should be numerical."""
+    if feature_type_override_map.get(column, None) == "numerical":
+        return True
+    if feature_type_override_map.get(column, None) == "categorical":
+        return False
+    if column_dtype_map[column] in data_type_numerical_group:
+        return True
+    if column_dtype_map[column] in data_type_categorical_group:
+        return False
+    if column_dtype_map[column] in data_type_long_group:
+        distinct_value_ratio = get_distinct_ratio(df.select(column).rdd.flatMap(lambda x: x).collect())
+        return distinct_value_ratio >= 0.05
+    
+    print(f"Unknown column type: {column_dtype_map[column]}, column name: {column}")
+    return False
+
+
+def is_categorical_new(column, column_dtype_map: dict, feature_type_override_map: dict, df):
+    """Check if int column should be categorical."""
+    if feature_type_override_map.get(column, None) == "categorical":
+        return True
+    if feature_type_override_map.get(column, None) == "numerical":
+        return False
+    if column_dtype_map[column] in data_type_categorical_group:
+        return True
+    if column_dtype_map[column] in data_type_numerical_group:
+        return False
+    if column_dtype_map[column] in data_type_long_group:
+        distinct_value_ratio = get_distinct_ratio(df.select(column).rdd.flatMap(lambda x: x).collect())
+        return distinct_value_ratio < 0.05
+    
+    print(f"Unknown column type: {column_dtype_map[column]}, column name: {column}")
+    return False
+
+
+def get_numerical_cols_with_df_with_override(feature_type_override_map: dict, df, column_dtype_map = None) -> list:
+    """Get numerical columns from all columns with dataframe."""
+    column_dtype_map = dict(df.dtypes) if column_dtype_map is None else column_dtype_map
+    numerical_columns = [
+        column
+        for column in column_dtype_map
+        if is_numerical_new(column, column_dtype_map, feature_type_override_map, df)
+    ]
+    return numerical_columns
+
+
+def get_categorical_cols_with_df_with_override(feature_type_override_map: dict, df, column_dtype_map = None) -> list:
+    """Get categorical columns from all columns with dataframe."""
+    column_dtype_map = dict(df.dtypes) if column_dtype_map is None else column_dtype_map
+    categorical_columns = [
+        column
+        for column in column_dtype_map
+        if is_categorical_new(column, column_dtype_map, feature_type_override_map, df)
+    ]
+    return categorical_columns
+
+
+def get_feature_type_override_map(override_numerical_features: str, override_categorical_features: str) -> dict:
+    """ Generate feature type override map with key of feature name and value of "numerical"/"categorical".""" 
+    feature_type_override_map = {}
+    if override_categorical_features is not None:
+        for cat_feature in override_categorical_features.split(','):
+            feature_type_override_map[cat_feature] = "categorical"
+    if override_numerical_features is not None:
+        for num_feature in override_numerical_features.split(','):
+            feature_type_override_map[num_feature] = "numerical"
+    return feature_type_override_map
 
 
 def get_numerical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
