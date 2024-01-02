@@ -1,7 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
-name: clip_base_perf_pipeline
-experiment_name: pipeline_generator
+experiment_name: pipeline_generator_base
 description: benchmark_clip
 jobs:
   endpoint:
@@ -9,8 +8,8 @@ jobs:
     component: azureml:batch_benchmark_inference:0.0.5.vision_oss
     inputs:
       input_dataset:
-        type: uri_folder
-        path: azureml:10_samples_huge:1
+        type: uri_file
+        path: azureml:10_samples_large_b64:1
       model_type: vision_oss
       batch_input_pattern: '{
         "input_data": {
@@ -25,10 +24,10 @@ jobs:
         },
         "params": {}
       }'
-      endpoint_url: https://clip-base-gpu.eastus.inference.ml.azure.com/score
+      endpoint_url: https://fm-inference-test-clip-base.eastus.inference.ml.azure.com/score
       is_performance_test: False
-      deployment_name: openai-clip-vit-base-patch32-5
-      connections_name: clip-base-gpu
+      deployment_name: openai-clip-vit-base-patch32-2
+      connections_name: clip-base-dsmii
       handle_response_failure: use_fallback
       ensure_ascii: false
       initial_worker_count: 1
