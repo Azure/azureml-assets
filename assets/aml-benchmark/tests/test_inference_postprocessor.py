@@ -341,6 +341,12 @@ class TestInferencePostprocessorScript:
                 Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, "\n\n",
                 None, None, ".", "last", None, None, None, None,
             ),
+            (
+                "mnli_hf", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "target_num", "\n\n",
+                None, None, None, "first", None, None,
+                '{"0":"NEUTRAL", "1":"CONTRADICTION", "2":"ENTAILMENT"}', None,
+            ),
         ],
     )
     def test_inference_postprocessor_as_script(

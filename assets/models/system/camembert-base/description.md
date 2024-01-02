@@ -35,6 +35,13 @@ This model was pretrained on a subcorpus of OSCAR multilingual corpus. Some of t
 
 > Constructed from Common Crawl, Personal and sensitive information might be present.
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endpoint-oss)
+
 # Sample inputs and outputs
 
 ### Sample input

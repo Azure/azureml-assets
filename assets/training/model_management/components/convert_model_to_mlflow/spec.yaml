@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: convert_model_to_mlflow
-version: 0.0.17
+version: 0.0.18
 type: command
 
 is_deterministic: True
@@ -9,29 +9,18 @@ is_deterministic: True
 display_name: Convert models to MLflow
 description: Component converts models from supported frameworks to MLflow model packaging format
 
-environment: azureml://registries/azureml/environments/model-management/versions/17
+environment: azureml://registries/azureml/environments/model-management/versions/20
 
 code: ../../src/
-command: >
-  python run_model_preprocess.py
-  $[[--model-id ${{inputs.model_id}}]]
-  $[[--task-name ${{inputs.task_name}}]]
-  $[[--model-download-metadata ${{inputs.model_download_metadata}}]]
-  $[[--license-file-path ${{inputs.license_file_path}}]]
-  $[[--hf-config-args "${{inputs.hf_config_args}}"]]
-  $[[--hf-tokenizer-args "${{inputs.hf_tokenizer_args}}"]]
-  $[[--hf-model-args "${{inputs.hf_model_args}}"]]
-  $[[--hf-pipeline-args "${{inputs.hf_pipeline_args}}"]]
-  $[[--hf-config-class ${{inputs.hf_config_class}}]]
-  $[[--hf-model-class ${{inputs.hf_model_class}}]]
-  $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]]
-  $[[--hf-use-experimental-features ${{inputs.hf_use_experimental_features}}]]
-  $[[--extra-pip-requirements "${{inputs.extra_pip_requirements}}"]]
-  $[[--inference-base-image "${{inputs.inference_base_image}}"]]
-  --model-framework ${{inputs.model_framework}}
-  --model-path ${{inputs.model_path}}
-  --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
-  --model-import-job-path ${{outputs.model_import_job_path}}
+command: |
+  # TODO: This has one disadvantage as shell logs wont be pushed to appinsights
+  set -ex
+  IFS=',' read -ra pip_pkgs <<< "$[[${{inputs.extra_pip_requirements}}]]"
+  pip_pkg_str="${pip_pkgs[*]}"
+  if [[ -n "$pip_pkg_str" ]]; then echo "Installing $pip_pkg_str"; pip install $pip_pkg_str; echo "pip installation completed. For any installation error please check above logs"; fi;
+  echo "Running model conversion ... "
+  python -u run_model_preprocess.py $[[--model-id ${{inputs.model_id}}]] $[[--task-name ${{inputs.task_name}}]] $[[--model-download-metadata ${{inputs.model_download_metadata}}]] $[[--license-file-path ${{inputs.license_file_path}}]] $[[--hf-config-args "${{inputs.hf_config_args}}"]] $[[--hf-tokenizer-args "${{inputs.hf_tokenizer_args}}"]] $[[--hf-model-args "${{inputs.hf_model_args}}"]] $[[--hf-pipeline-args "${{inputs.hf_pipeline_args}}"]] $[[--hf-config-class ${{inputs.hf_config_class}}]] $[[--hf-model-class ${{inputs.hf_model_class}}]] $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]] $[[--hf-use-experimental-features ${{inputs.hf_use_experimental_features}}]] $[[--extra-pip-requirements "${{inputs.extra_pip_requirements}}"]] $[[--inference-base-image "${{inputs.inference_base_image}}"]] --model-framework ${{inputs.model_framework}} --model-path ${{inputs.model_path}} --mlflow-model-output-dir ${{outputs.mlflow_model_folder}} --model-import-job-path ${{outputs.model_import_job_path}}
+  echo "Completed model conversion ... "
 
 inputs:
   model_id:

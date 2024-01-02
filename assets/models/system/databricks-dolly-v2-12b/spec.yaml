@@ -2,15 +2,16 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: databricks-dolly-v2-12b
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 19308160448536e378e3db21a73a751579ee7fdd
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
   languages: en
 tags:
   Featured: ''
-  Preview: ''
   author: Databricks
   license: apache-2.0
+  SharedComputeCapacityEnabled: ''
   task: text-generation
   huggingface_model_id: databricks/dolly-v2-12b
   inference_compute_allow_list:
@@ -18,4 +19,4 @@ tags:
   - Standard_NC48ads_A100_v4
   - Standard_NC96ads_A100_v4
   - Standard_ND96amsr_A100_v4
-version: 15
+version: 16

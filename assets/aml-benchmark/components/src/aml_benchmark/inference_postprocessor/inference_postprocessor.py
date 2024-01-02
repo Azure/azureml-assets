@@ -6,10 +6,10 @@
 """Inference Postprocessor class and runner methods for 3P."""
 
 import json
-import os
 import re
 import jinja2
 import codecs
+import subprocess
 import numpy as np
 import pandas as pd
 from typing import Union, List
@@ -298,7 +298,8 @@ class InferencePostprocessor(object):
         :param data: A json serialized dictionary.
         """
         if self.label_map:
-            self.label_map = json.loads(self.label_map)
+            if not isinstance(self.label_map, dict):
+                self.label_map = json.loads(self.label_map)
             col_to_encode = self.label_map.get("column_name", None)
             if col_to_encode is None:
                 col_to_encode = self.prediction_column_name
@@ -477,10 +478,14 @@ class InferencePostprocessor(object):
             if self.ground_truth_dataset:
                 argss.extend(["--ground_truth_dataset", self.ground_truth_dataset])
             argss = " ".join(argss)
-            os.system(
-                f"python {self.user_postprocessor} {argss}"
+            _ = subprocess.check_output(
+                f"python {self.user_postprocessor} {argss}",
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                shell=True,
             )
-        except Exception as e:
+        except subprocess.CalledProcessError as e:
+            error_message = e.output.strip()
             raise BenchmarkUserException._with_error(
-                AzureMLError.create(BenchmarkUserError, error_details=e)
+                AzureMLError.create(BenchmarkUserError, error_details=error_message)
             )
