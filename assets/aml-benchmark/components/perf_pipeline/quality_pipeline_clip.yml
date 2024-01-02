@@ -25,10 +25,10 @@ jobs:
         "params": {}
       }'
       model_type: vision_oss
-      endpoint_url: https://clip-base-gpu.eastus.inference.ml.azure.com/score
+      endpoint_url: https://fm-inference-test-clip-base.eastus.inference.ml.azure.com/score
       is_performance_test: false
-      deployment_name: openai-clip-vit-base-patch32-5
-      connections_name: clip-base-gpu-2
+      deployment_name: openai-clip-vit-base-patch32-2
+      connections_name: clip-base-dsmii
       handle_response_failure: use_fallback
       ensure_ascii: false
       initial_worker_count: 1
