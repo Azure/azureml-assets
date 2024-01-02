@@ -30,7 +30,8 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-telemetry=={{latest-pypi-version}}'
+                'azureml-telemetry=={{latest-pypi-version}}' \
+                'azureml-rai-utils==0.0.6'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict

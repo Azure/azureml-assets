@@ -2,13 +2,13 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Deci-DeciLM-7B-instruct
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: d4aa148911823924d7b91e36535260decb190179
   inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
-  inference-min-sku-spec: 12|2|224|1474
+  inference-min-sku-spec: 12|2|224|672
   evaluation-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
-  evaluation-min-sku-spec: 12|2|224|1474
+  evaluation-min-sku-spec: 12|2|224|672
   languages: EN
-  azureml.copyRegistryFilesToWorkspace: true
 tags:
   Featured: ''
   Preview: ''
@@ -30,4 +30,4 @@ tags:
   author: deci-ai
   huggingface_model_id: Deci/DeciLM-7B-instruct
   datasets: Open-Orca/SlimOrca
-version: 1
+version: 3

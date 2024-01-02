@@ -139,7 +139,12 @@
       "uionly",
       "llmops",
       "Abhishek",
-      "restx"
+      "restx",
+      "ayod",
+      "AYOD",
+      "Featur",
+      "showno",
+      "amlraipfmodels"
     ],
     "flagWords": [
       "Prompt Flow"
@@ -148,7 +153,10 @@
       "**.py",
       "**.jinja2",
       "**.txt",
-      "**.json"
+      "**.json",
+      "**/asset.yaml",
+      "**/description.md",
+      "**/model.yaml"
     ],
     "allowCompoundWords": true
   }

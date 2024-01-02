@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
    name="azureml-assets",
-   version="1.16.22",
+   version="1.16.26",
    description="Utilities for publishing assets to Azure Machine Learning system registries.",
    author="Microsoft Corp",
    packages=find_packages(),
