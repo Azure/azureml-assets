@@ -4,7 +4,7 @@ type: pipeline
 name: model_performance_signal_monitor
 display_name: Model Performance - Signal Monitor
 description: Computes the model performance
-version: 0.0.1
+version: 0.0.2
 is_deterministic: true
 inputs:
   task:
@@ -48,6 +48,10 @@ inputs:
     type: string
     default: ""
     optional: true
+  instance_type:
+    type: string
+    default: "standard_e4s_v3"
+    optional: True
 outputs:
   signal_output:
     type: uri_folder
@@ -71,7 +75,7 @@ jobs:
       signal_metrics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -92,7 +96,7 @@ jobs:
         path: ${{parent.outputs.signal_output}}
         mode: direct
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -106,7 +110,7 @@ jobs:
       notification_emails: ${{parent.inputs.notification_emails}}
       signal_name: ${{parent.inputs.signal_name}}
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
