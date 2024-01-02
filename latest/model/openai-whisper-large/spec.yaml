@@ -2,8 +2,8 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-large
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
-  SHA: e80f01dc6f24d14fdb05a0a3cfdb7f0ab2ec17fe
+  SharedComputeCapacityEnabled: ""
+  SHA: ""
   inference-min-sku-spec: 16|0|56|112
   inference-recommended-sku: Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
     Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
@@ -53,7 +53,7 @@ description: |
   #### Sample input
   ```json
   {
-      "inputs": {
+      "input_data": {
           "audio": ["https://datasets-server.huggingface.co/assets/librispeech_asr/--/all/train.clean.100/84/audio/audio.mp3"],
           "language": ["en"]
       }
