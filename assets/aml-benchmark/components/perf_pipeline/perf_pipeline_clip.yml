@@ -1,16 +1,16 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
-name: clip_large_pipeline
-experiment_name: pipeline_generator_large
+# name: clip_base_perf_pipeline_10
+experiment_name: pipeline_generator
 description: benchmark_clip
 jobs:
   endpoint:
     type: pipeline
-    component: azureml:batch_benchmark_inference:0.0.5.vision_oss
+    component: ../batch-benchmark-inference/spec.yaml
     inputs:
       input_dataset:
-        type: uri_file
-        path: azureml:10_samples_large:1
+        type: uri_folder
+        path: ./output_jsonls/CastingDefecs_processed.jsonl
       model_type: vision_oss
       batch_input_pattern: '{
         "input_data": {
@@ -25,10 +25,10 @@ jobs:
         },
         "params": {}
       }'
-      endpoint_url: https://clip-large-no-temp.eastus.inference.ml.azure.com/score
+      endpoint_url: https://clip-base-gpu.eastus.inference.ml.azure.com/score
       is_performance_test: False
-      deployment_name: clip-large-no-temp-1
-      connections_name: clip-large-no-temp
+      # deployment_name: openai-clip-vit-base-patch32-5
+      connections_name: clip-base-gpu-conn
       handle_response_failure: use_fallback
       ensure_ascii: false
       initial_worker_count: 1
@@ -36,6 +36,7 @@ jobs:
       instance_count: 1
       max_concurrency_per_instance: 1
       debug_mode: true
+      # additional_headers: "{'azureml-model-deployment': 'openai-clip-vit-base-patch32-5'}"
     outputs:
       predictions:
         type: uri_file
@@ -47,8 +48,8 @@ jobs:
         type: uri_file
         path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
   performance:
-    type: command
     compute: azureml:serverless
+    type: command
     component: azureml://registries/azureml/components/compute_performance_metrics/labels/latest
     limits:
       timeout: 900
@@ -66,8 +67,8 @@ jobs:
         type: uri_file
         path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
   aggregator:
-    type: command
     compute: azureml:serverless
+    type: command
     component: azureml://registries/azureml/components/benchmark_result_aggregator/labels/latest
     limits:
       timeout: 900

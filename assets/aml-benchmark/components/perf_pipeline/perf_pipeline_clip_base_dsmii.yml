@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
-name: clip_large_pipeline
-experiment_name: pipeline_generator_large
+name: clip_base_pipeline_dsmii
+experiment_name: pipeline_generator_base_dsmii
 description: benchmark_clip
 jobs:
   endpoint:
@@ -10,7 +10,7 @@ jobs:
     inputs:
       input_dataset:
         type: uri_file
-        path: azureml:10_samples_large:1
+        path: azureml:10_samples_large_b64:1
       model_type: vision_oss
       batch_input_pattern: '{
         "input_data": {
@@ -25,10 +25,10 @@ jobs:
         },
         "params": {}
       }'
-      endpoint_url: https://clip-large-no-temp.eastus.inference.ml.azure.com/score
+      endpoint_url: https://fm-inference-test-clip-base.eastus.inference.ml.azure.com/score
       is_performance_test: False
-      deployment_name: clip-large-no-temp-1
-      connections_name: clip-large-no-temp
+      deployment_name: openai-clip-vit-base-patch32-2
+      connections_name: clip-base-dsmii
       handle_response_failure: use_fallback
       ensure_ascii: false
       initial_worker_count: 1
@@ -47,8 +47,8 @@ jobs:
         type: uri_file
         path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
   performance:
-    type: command
     compute: azureml:serverless
+    type: command
     component: azureml://registries/azureml/components/compute_performance_metrics/labels/latest
     limits:
       timeout: 900
@@ -66,8 +66,8 @@ jobs:
         type: uri_file
         path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
   aggregator:
-    type: command
     compute: azureml:serverless
+    type: command
     component: azureml://registries/azureml/components/benchmark_result_aggregator/labels/latest
     limits:
       timeout: 900
