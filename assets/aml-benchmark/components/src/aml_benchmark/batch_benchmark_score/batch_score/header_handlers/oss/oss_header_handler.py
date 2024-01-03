@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """The class for OSS header handler."""
+from typing import Any, Dict, Optional
 
 import uuid
 
@@ -34,7 +35,7 @@ class OSSHeaderHandler(HeaderHandler):
         self._connections_name = connections_name
         self._model = online_endpoint_model
 
-    def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
+    def get_headers(self, additional_headers: Dict[str, Any] = None, payload: Optional[Any] = None) -> Dict[str, Any]:
         """Get handers."""
         online_endpoint = OSSOnlineEndpoint(
             workspace_name=self._endpoint_workspace, resource_group=self._endpoint_resource_group,

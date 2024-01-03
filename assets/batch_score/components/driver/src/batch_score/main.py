@@ -17,7 +17,7 @@ from .batch_pool.scoring.scoring_client import ScoringClient
 from .common import constants
 from .common.auth.token_provider import TokenProvider
 from .common.configuration.configuration import Configuration
-from .common.configuration.configuration_parser import ConfigurationParser
+from .common.configuration.configuration_parser_factory import ConfigurationParserFactory
 from .common.parallel import parallel_driver as parallel
 from .common.post_processing.callback_factory import CallbackFactory
 from .common.post_processing.mini_batch_context import MiniBatchContext
@@ -89,7 +89,8 @@ def init():
 
     print("Entered init")
 
-    configuration = ConfigurationParser().parse_configuration()
+    parser = ConfigurationParserFactory().get_parser()
+    configuration = parser.parse_configuration()
 
     setup_logger("DEBUG" if configuration.debug_mode else "INFO", configuration.app_insights_connection_string)
     configuration.log()
@@ -391,7 +392,10 @@ def setup_mir_scoring_client(
     so this will not add OAI specific headers.
     """
     if connection_name is not None:
-        header_handler = MIREndpointV2HeaderHandler(connection_name)
+        header_handler = MIREndpointV2HeaderHandler(
+            connection_name,
+            configuration.additional_headers
+        )
     else:
         header_handler = setup_header_handler(routing_client=routing_client, token_provider=token_provider)
 
