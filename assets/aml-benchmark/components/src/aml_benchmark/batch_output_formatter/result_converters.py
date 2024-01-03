@@ -131,7 +131,7 @@ class ResultConverters:
         if use_ground_truth_input:
             request_payload = self._get_request(result)
             payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
-            ground_truth = self._lookup_dict.get(payload_hash, '')
+            ground_truth = self._lookup_dict.get(payload_hash, {self.ground_truth_column_name: ''})
             return ground_truth
         else:
             results = {self.ground_truth_column_name: ground_truth}

@@ -94,6 +94,7 @@ class TestResultConverters:
                     data_id_key=None,
                     metadata_key=None,
                     label_key=None,
+                    additional_columns=None,
                     ground_truth_input=ground_truth_input,
                     prediction_data=prediction_data,
                     perf_data=os.path.join(d, 'perf.json'),
