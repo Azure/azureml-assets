@@ -202,7 +202,7 @@ class TestDFUtils:
         # Test with only numerical override features
         override_numerical_features = "UserId,TransactionId"
         override_categorical_features = None
-        assert get_feature_type_override_map(override_numerical_features, 
+        assert get_feature_type_override_map(override_numerical_features,
                                              override_categorical_features) == {"UserId": "numerical",
                                                                                 "TransactionId": "numerical"}
 
@@ -259,13 +259,12 @@ class TestDFUtils:
         assert is_numerical_new('col1', column_dtype_map, {}, baseline_df) is True
 
         # Test with integer column with low distinct value ratio
-        baseline_df = pd.DataFrame({'col1':
-                                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, None, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]})
+        baseline_df = pd.DataFrame({'col1': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                             1, 1, 1, 1, 1, None, 1, 1, 1, 1, 1, 1,
+                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]})
         baseline_df = spark.createDataFrame(baseline_df)
         assert is_numerical_new('col1', column_dtype_map, {}, baseline_df) is False
 
@@ -311,14 +310,13 @@ class TestDFUtils:
         assert is_categorical_new('col1', column_dtype_map, {}, baseline_df) is False
 
         # Test with integer column with low distinct value ratio
-        baseline_df = pd.DataFrame({'col1':
-                                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, None, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]})
-        baseline_df = spark.createDataFrame(baseline_df)                      
+        baseline_df = pd.DataFrame({'col1': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                             1, 1, 1, 1, 1, None, 1, 1, 1, 1, 1, 1,
+                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]})
+        baseline_df = spark.createDataFrame(baseline_df)
         assert is_categorical_new('col1', column_dtype_map, {}, baseline_df) is True
 
         # Test with unknown data type
