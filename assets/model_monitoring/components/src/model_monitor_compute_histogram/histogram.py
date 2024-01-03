@@ -134,13 +134,14 @@ def _to_bin_edges(histogram_buckets: pyspark_sql.DataFrame):
 
 
 def compute_histograms(
-    df: pyspark_sql.DataFrame, 
+    df: pyspark_sql.DataFrame,
     histogram_buckets: pyspark_sql.DataFrame,
-    override_numerical_features,
-    override_categorical_features) -> tuple:
+    override_numerical_features: override_numerical_features,
+    override_categorical_features: override_categorical_features) -> tuple:
     """Compute data drift measures and perform tests."""
     # Generate histograms only for columns in both baseline and target dataset
-    feature_type_override_map = get_feature_type_override_map(override_numerical_features, override_categorical_features)
+    feature_type_override_map = get_feature_type_override_map(override_numerical_features,
+                                                              override_categorical_features)
     numerical_columns = get_numerical_cols_with_df_with_override(feature_type_override_map, df)
     categorical_columns = get_categorical_cols_with_df_with_override(feature_type_override_map, df)
 

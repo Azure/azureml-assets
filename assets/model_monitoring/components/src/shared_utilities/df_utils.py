@@ -51,7 +51,7 @@ def is_numerical_new(column, column_dtype_map: dict, feature_type_override_map: 
     if column_dtype_map[column] in data_type_long_group:
         distinct_value_ratio = get_distinct_ratio(df.select(column).rdd.flatMap(lambda x: x).collect())
         return distinct_value_ratio >= 0.05
-    
+
     print(f"Unknown column type: {column_dtype_map[column]}, column name: {column}")
     return False
 
@@ -69,12 +69,12 @@ def is_categorical_new(column, column_dtype_map: dict, feature_type_override_map
     if column_dtype_map[column] in data_type_long_group:
         distinct_value_ratio = get_distinct_ratio(df.select(column).rdd.flatMap(lambda x: x).collect())
         return distinct_value_ratio < 0.05
-    
+
     print(f"Unknown column type: {column_dtype_map[column]}, column name: {column}")
     return False
 
 
-def get_numerical_cols_with_df_with_override(feature_type_override_map: dict, df, column_dtype_map = None) -> list:
+def get_numerical_cols_with_df_with_override(feature_type_override_map: dict, df, column_dtype_map=None) -> list:
     """Get numerical columns from all columns with dataframe."""
     column_dtype_map = dict(df.dtypes) if column_dtype_map is None else column_dtype_map
     numerical_columns = [
@@ -85,7 +85,7 @@ def get_numerical_cols_with_df_with_override(feature_type_override_map: dict, df
     return numerical_columns
 
 
-def get_categorical_cols_with_df_with_override(feature_type_override_map: dict, df, column_dtype_map = None) -> list:
+def get_categorical_cols_with_df_with_override(feature_type_override_map: dict, df, column_dtype_map=None) -> list:
     """Get categorical columns from all columns with dataframe."""
     column_dtype_map = dict(df.dtypes) if column_dtype_map is None else column_dtype_map
     categorical_columns = [
@@ -97,7 +97,7 @@ def get_categorical_cols_with_df_with_override(feature_type_override_map: dict, 
 
 
 def get_feature_type_override_map(override_numerical_features: str, override_categorical_features: str) -> dict:
-    """ Generate feature type override map with key of feature name and value of "numerical"/"categorical".""" 
+    """ Generate feature type override map with key of feature name and value of "numerical"/"categorical"."""
     feature_type_override_map = {}
     if override_categorical_features is not None:
         for cat_feature in override_categorical_features.split(','):

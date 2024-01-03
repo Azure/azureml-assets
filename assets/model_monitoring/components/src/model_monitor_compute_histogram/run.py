@@ -50,7 +50,10 @@ def run():
     if not histogram_buckets:
         histogram_buckets = _create_empty_histogram_buckets_df()
 
-    histogram_df = compute_histograms(df, histogram_buckets, args.override_numerical_features, args.override_categorical_features)
+    histogram_df = compute_histograms(df,
+                                      histogram_buckets,
+                                      args.override_numerical_features,
+                                      args.override_categorical_features)
 
     save_spark_df_as_mltable(histogram_df, args.histogram)
 

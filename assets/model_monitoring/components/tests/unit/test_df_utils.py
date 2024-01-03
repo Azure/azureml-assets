@@ -202,21 +202,24 @@ class TestDFUtils:
         # Test with only numerical override features
         override_numerical_features = "UserId,TransactionId"
         override_categorical_features = None
-        assert get_feature_type_override_map(override_numerical_features, override_categorical_features) == {"UserId": "numerical",
-                                                                                                            "TransactionId": "numerical"}
+        assert get_feature_type_override_map(override_numerical_features, 
+                                             override_categorical_features) == {"UserId": "numerical",
+                                                                                "TransactionId": "numerical"}
 
         # Test with only categorical override features
         override_numerical_features = None
         override_categorical_features = "Email"
-        assert get_feature_type_override_map(override_numerical_features, override_categorical_features) == {"Email": "categorical"}
+        assert get_feature_type_override_map(override_numerical_features,
+                                             override_categorical_features) == {"Email": "categorical"}
 
         # Test with both numerical and categorical override features
         override_numerical_features = "Age,Id"
         override_categorical_features = "Name,Gender"
-        assert get_feature_type_override_map(override_numerical_features, override_categorical_features) == {"Age": "numerical",
-                                                                                                             "Id": "numerical",
-                                                                                                             "Name": "categorical",
-                                                                                                             "Gender": "categorical"}
+        assert get_feature_type_override_map(override_numerical_features,
+                                             override_categorical_features) == {"Age": "numerical",
+                                                                                "Id": "numerical",
+                                                                                "Name": "categorical",
+                                                                                "Gender": "categorical"}
 
     def test_is_numerical_new(self):
         spark = self.init_spark()
@@ -237,38 +240,38 @@ class TestDFUtils:
 
         # Test feature type override take priority
         feature_type_override_map = {'col2': 'categorical'}
-        assert is_numerical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) == False
+        assert is_numerical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) is False
         feature_type_override_map = {'col2': 'numerical'}
-        assert is_numerical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) == True
+        assert is_numerical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) is True
 
         # Test dtype_map take priority
-        assert is_numerical_new('col2', column_dtype_map, {}, baseline_df) == True
-        assert is_numerical_new('col3', column_dtype_map, {}, baseline_df) == True
-        assert is_numerical_new('col4', column_dtype_map, {}, baseline_df) == True
-        assert is_numerical_new('col5', column_dtype_map, {}, baseline_df) == False
-        assert is_numerical_new('col6', column_dtype_map, {}, baseline_df) == False
-        assert is_numerical_new('col7', column_dtype_map, {}, baseline_df) == False
-        assert is_numerical_new('col8', column_dtype_map, {}, baseline_df) == False
+        assert is_numerical_new('col2', column_dtype_map, {}, baseline_df) is True
+        assert is_numerical_new('col3', column_dtype_map, {}, baseline_df) is True
+        assert is_numerical_new('col4', column_dtype_map, {}, baseline_df) is True
+        assert is_numerical_new('col5', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical_new('col6', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical_new('col7', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical_new('col8', column_dtype_map, {}, baseline_df) is False
 
         # Test with integer column with high distinct ratio
         baseline_df = pd.DataFrame({'col1': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
         baseline_df = spark.createDataFrame(baseline_df)
-        assert is_numerical_new('col1', column_dtype_map, {}, baseline_df) == True
+        assert is_numerical_new('col1', column_dtype_map, {}, baseline_df) is True
 
         # Test with integer column with low distinct value ratio
-        baseline_df = pd.DataFrame({'col1': 
+        baseline_df = pd.DataFrame({'col1':
                                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                         1, 1, 1, 1, 1, None, 1, 1, 1, 1, 1, 1,
                                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]})
-        baseline_df = spark.createDataFrame(baseline_df)                      
-        assert is_numerical_new('col1', column_dtype_map, {}, baseline_df) == False
+        baseline_df = spark.createDataFrame(baseline_df)
+        assert is_numerical_new('col1', column_dtype_map, {}, baseline_df) is False
 
         # Test with unknown data type
-        assert is_numerical_new('col9', column_dtype_map, {}, baseline_df) == False
-        assert is_numerical_new('col10', column_dtype_map, {}, baseline_df) == False
+        assert is_numerical_new('col9', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical_new('col10', column_dtype_map, {}, baseline_df) is False
 
     def test_is_categorical_new(self):
         spark = self.init_spark()
@@ -289,26 +292,26 @@ class TestDFUtils:
 
         # Test feature type override take priority
         feature_type_override_map = {'col2': 'categorical'}
-        assert is_categorical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) == True
+        assert is_categorical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) is True
         feature_type_override_map = {'col2': 'numerical'}
-        assert is_categorical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) == False
+        assert is_categorical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) is False
 
         # Test dtype_map take priority
-        assert is_categorical_new('col2', column_dtype_map, {}, baseline_df) == False
-        assert is_categorical_new('col3', column_dtype_map, {}, baseline_df) == False
-        assert is_categorical_new('col4', column_dtype_map, {}, baseline_df) == False
-        assert is_categorical_new('col5', column_dtype_map, {}, baseline_df) == True
-        assert is_categorical_new('col6', column_dtype_map, {}, baseline_df) == True
-        assert is_categorical_new('col7', column_dtype_map, {}, baseline_df) == True
-        assert is_categorical_new('col8', column_dtype_map, {}, baseline_df) == True
+        assert is_categorical_new('col2', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical_new('col3', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical_new('col4', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical_new('col5', column_dtype_map, {}, baseline_df) is True
+        assert is_categorical_new('col6', column_dtype_map, {}, baseline_df) is True
+        assert is_categorical_new('col7', column_dtype_map, {}, baseline_df) is True
+        assert is_categorical_new('col8', column_dtype_map, {}, baseline_df) is True
 
         # Test with integer column with high distinct ratio
         baseline_df = pd.DataFrame({'col1': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
         baseline_df = spark.createDataFrame(baseline_df)
-        assert is_categorical_new('col1', column_dtype_map, {}, baseline_df) == False
+        assert is_categorical_new('col1', column_dtype_map, {}, baseline_df) is False
 
         # Test with integer column with low distinct value ratio
-        baseline_df = pd.DataFrame({'col1': 
+        baseline_df = pd.DataFrame({'col1':
                                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -316,11 +319,11 @@ class TestDFUtils:
                                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]})
         baseline_df = spark.createDataFrame(baseline_df)                      
-        assert is_categorical_new('col1', column_dtype_map, {}, baseline_df) == True
+        assert is_categorical_new('col1', column_dtype_map, {}, baseline_df) is True
 
         # Test with unknown data type
-        assert is_categorical_new('col9', column_dtype_map, {}, baseline_df) == False
-        assert is_categorical_new('col10', column_dtype_map, {}, baseline_df) == False
+        assert is_categorical_new('col9', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical_new('col10', column_dtype_map, {}, baseline_df) is False
 
     def test_get_numerical_cols_with_df_with_override(self):
         spark = self.init_spark()
@@ -332,15 +335,15 @@ class TestDFUtils:
                             'col5': ['1', '2', '3', '4', '5'],
                             'col6': [True, True, False, False, True],
                             'col7': [bytes(55), bytes(33), bytes(22), bytes(55), bytes(33)],
-                            'col8': [pd.Timestamp('2018-04-24 01:00:00'), 
+                            'col8': [pd.Timestamp('2018-04-24 01:00:00'),
                                      pd.Timestamp('2019-04-24 02:00:00'),
                                      pd.Timestamp('2020-04-24 03:00:00'),
                                      pd.Timestamp('2021-04-24 04:00:00'),
                                      pd.Timestamp('2022-04-24 05:00:00')],
-                            'col9': [datetime.date(2020, 5, 17), 
-                                     datetime.date(2021, 5, 17), 
-                                     datetime.date(2022, 5, 17), 
-                                     datetime.date(2023, 5, 17), 
+                            'col9': [datetime.date(2020, 5, 17),
+                                     datetime.date(2021, 5, 17),
+                                     datetime.date(2022, 5, 17),
+                                     datetime.date(2023, 5, 17),
                                      datetime.date(2024, 5, 17)]})
         baseline_df = spark.createDataFrame(baseline_df)
 
@@ -359,7 +362,8 @@ class TestDFUtils:
                     'col8': 'timestamp',
                     'col9': 'date'
                     }
-        assert get_numerical_cols_with_df_with_override({}, baseline_df, column_dtype_map) == ['col1', 'col2', 'col3', 'col4', 'col5']
+        assert get_numerical_cols_with_df_with_override({}, baseline_df, column_dtype_map) == ['col1', 'col2', 'col3',
+                                                                                               'col4', 'col5']
 
         # Test with feature type override
         feature_type_override_map = {
@@ -369,8 +373,11 @@ class TestDFUtils:
                                     'col8': 'numerical',
                                     'col9': 'numerical'
                                     }
-        assert get_numerical_cols_with_df_with_override(feature_type_override_map, baseline_df, column_dtype_map) == ['col1', 'col2', 'col3', 'col4', 'col5', 
-                                                                                                                      'col6', 'col7', 'col8', 'col9']
+        assert get_numerical_cols_with_df_with_override(feature_type_override_map,
+                                                        baseline_df,
+                                                        column_dtype_map) == ['col1', 'col2', 'col3',
+                                                                              'col4', 'col5', 'col6',
+                                                                              'col7', 'col8', 'col9']
 
     def test_get_categorical_cols_with_df_with_override(self):
         spark = self.init_spark()
@@ -382,15 +389,15 @@ class TestDFUtils:
                             'col5': ['1', '2', '3', '4', '5'],
                             'col6': [True, True, False, False, True],
                             'col7': [bytes(55), bytes(33), bytes(22), bytes(55), bytes(33)],
-                            'col8': [pd.Timestamp('2018-04-24 01:00:00'), 
+                            'col8': [pd.Timestamp('2018-04-24 01:00:00'),
                                      pd.Timestamp('2019-04-24 02:00:00'),
                                      pd.Timestamp('2020-04-24 03:00:00'),
                                      pd.Timestamp('2021-04-24 04:00:00'),
                                      pd.Timestamp('2022-04-24 05:00:00')],
-                            'col9': [datetime.date(2020, 5, 17), 
-                                     datetime.date(2021, 5, 17), 
-                                     datetime.date(2022, 5, 17), 
-                                     datetime.date(2023, 5, 17), 
+                            'col9': [datetime.date(2020, 5, 17),
+                                     datetime.date(2021, 5, 17),
+                                     datetime.date(2022, 5, 17),
+                                     datetime.date(2023, 5, 17),
                                      datetime.date(2024, 5, 17)]})
         baseline_df = spark.createDataFrame(baseline_df)
 
@@ -409,7 +416,8 @@ class TestDFUtils:
                     'col8': 'timestamp',
                     'col9': 'date'
                     }
-        assert get_categorical_cols_with_df_with_override({}, baseline_df, column_dtype_map) == ['col6', 'col7', 'col8', 'col9']
+        assert get_categorical_cols_with_df_with_override({}, baseline_df, column_dtype_map) == ['col6', 'col7',
+                                                                                                 'col8', 'col9']
 
         # Test with feature type override
         feature_type_override_map = {
@@ -419,8 +427,11 @@ class TestDFUtils:
                                     'col4': 'categorical',
                                     'col5': 'categorical'
                                     }
-        assert get_categorical_cols_with_df_with_override(feature_type_override_map, baseline_df, column_dtype_map) == ['col1', 'col2', 'col3', 'col4', 'col5', 
-                                                                                                                        'col6', 'col7', 'col8', 'col9']
+        assert get_categorical_cols_with_df_with_override(feature_type_override_map,
+                                                          baseline_df,
+                                                          column_dtype_map) == ['col1', 'col2', 'col3',
+                                                                                'col4', 'col5', 'col6',
+                                                                                'col7', 'col8', 'col9']
 
     def init_spark(self):
         """Get or create spark session."""
