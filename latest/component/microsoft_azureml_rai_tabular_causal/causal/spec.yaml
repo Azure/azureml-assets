@@ -60,10 +60,6 @@ code: ../src/
 
 environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/39
 
-# For debugging
-environment_variables:
-  AZUREML_COMPUTE_USE_COMMON_RUNTIME: true
-
 command: >-
   python create_causal.py
   --rai_insights_dashboard ${{inputs.rai_insights_dashboard}}
