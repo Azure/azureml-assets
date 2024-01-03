@@ -23,6 +23,7 @@ from shared_utilities.df_utils import (
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 import pandas as pd
 import pytest
+import datetime
 
 
 @pytest.mark.unit
@@ -330,16 +331,17 @@ class TestDFUtils:
                             'col4': [1.111, 2.222, 3.333, 4.444, 5.555],
                             'col5': ['1', '2', '3', '4', '5'],
                             'col6': [True, True, False, False, True],
-                            'col7': [pd.Timestamp('2018-04-24 01:00:00'), 
+                            'col7': [bytes(55), bytes(33), bytes(22), bytes(55), bytes(33)],
+                            'col8': [pd.Timestamp('2018-04-24 01:00:00'), 
                                      pd.Timestamp('2019-04-24 02:00:00'),
                                      pd.Timestamp('2020-04-24 03:00:00'),
                                      pd.Timestamp('2021-04-24 04:00:00'),
                                      pd.Timestamp('2022-04-24 05:00:00')],
-                            'col8': pd.DatetimeIndex(['2019-01-02', 
-                                                      '2020-01-03', 
-                                                      '2021-01-04', 
-                                                      '2022-01-05', 
-                                                      '2023-01-06'], dtype='datetime64[ns]', freq=None)})
+                            'col9': [datetime.date(2020, 5, 17), 
+                                     datetime.date(2021, 5, 17), 
+                                     datetime.date(2022, 5, 17), 
+                                     datetime.date(2023, 5, 17), 
+                                     datetime.date(2024, 5, 17)]})
         baseline_df = spark.createDataFrame(baseline_df)
 
         # Test without dtype map without feature type override
@@ -353,8 +355,9 @@ class TestDFUtils:
                     'col4': 'decimal',
                     'col5': 'decimal',
                     'col6': 'boolean',
-                    'col7': 'timestamp',
-                    'col8': 'date'
+                    'col7': 'binary',
+                    'col8': 'timestamp',
+                    'col9': 'date'
                     }
         assert get_numerical_cols_with_df_with_override({}, baseline_df, column_dtype_map) == ['col1', 'col2', 'col3', 'col4', 'col5']
 
@@ -363,10 +366,11 @@ class TestDFUtils:
                                     'col5': 'numerical',
                                     'col6': 'numerical',
                                     'col7': 'numerical',
-                                    'col8': 'numerical'
+                                    'col8': 'numerical',
+                                    'col9': 'numerical'
                                     }
-        assert get_numerical_cols_with_df_with_override(feature_type_override_map, baseline_df, column_dtype_map) == ['col1', 'col2', 'col3', 'col4', 
-                                                                                                                      'col5', 'col6', 'col7', 'col8']
+        assert get_numerical_cols_with_df_with_override(feature_type_override_map, baseline_df, column_dtype_map) == ['col1', 'col2', 'col3', 'col4', 'col5', 
+                                                                                                                      'col6', 'col7', 'col8', 'col9']
 
     def test_get_categorical_cols_with_df_with_override(self):
         spark = self.init_spark()
@@ -377,20 +381,21 @@ class TestDFUtils:
                             'col4': [1.111, 2.222, 3.333, 4.444, 5.555],
                             'col5': ['1', '2', '3', '4', '5'],
                             'col6': [True, True, False, False, True],
-                            'col7': [pd.Timestamp('2018-04-24 01:00:00'), 
+                            'col7': [bytes(55), bytes(33), bytes(22), bytes(55), bytes(33)],
+                            'col8': [pd.Timestamp('2018-04-24 01:00:00'), 
                                      pd.Timestamp('2019-04-24 02:00:00'),
                                      pd.Timestamp('2020-04-24 03:00:00'),
                                      pd.Timestamp('2021-04-24 04:00:00'),
                                      pd.Timestamp('2022-04-24 05:00:00')],
-                            'col8': pd.DatetimeIndex(['2019-01-02', 
-                                                      '2020-01-03', 
-                                                      '2021-01-04', 
-                                                      '2022-01-05', 
-                                                      '2023-01-06'], dtype='datetime64[ns]', freq=None)})
+                            'col9': [datetime.date(2020, 5, 17), 
+                                     datetime.date(2021, 5, 17), 
+                                     datetime.date(2022, 5, 17), 
+                                     datetime.date(2023, 5, 17), 
+                                     datetime.date(2024, 5, 17)]})
         baseline_df = spark.createDataFrame(baseline_df)
 
         # Test without dtype map without feature type override
-        assert get_categorical_cols_with_df_with_override({}, baseline_df) == ['col5', 'col6', 'col7', 'col8']
+        assert get_categorical_cols_with_df_with_override({}, baseline_df) == ['col5', 'col6', 'col7', 'col8', 'col9']
 
         # Test with dtype map without feature type override
         column_dtype_map = {
@@ -400,10 +405,11 @@ class TestDFUtils:
                     'col4': 'decimal',
                     'col5': 'decimal',
                     'col6': 'boolean',
-                    'col7': 'timestamp',
-                    'col8': 'date'
+                    'col7': 'binary',
+                    'col8': 'timestamp',
+                    'col9': 'date'
                     }
-        assert get_categorical_cols_with_df_with_override({}, baseline_df, column_dtype_map) == ['col6', 'col7', 'col8']
+        assert get_categorical_cols_with_df_with_override({}, baseline_df, column_dtype_map) == ['col6', 'col7', 'col8', 'col9']
 
         # Test with feature type override
         feature_type_override_map = {
@@ -413,8 +419,8 @@ class TestDFUtils:
                                     'col4': 'categorical',
                                     'col5': 'categorical'
                                     }
-        assert get_categorical_cols_with_df_with_override(feature_type_override_map, baseline_df, column_dtype_map) == ['col1', 'col2', 'col3', 'col4', 
-                                                                                                                        'col5', 'col6', 'col7', 'col8']
+        assert get_categorical_cols_with_df_with_override(feature_type_override_map, baseline_df, column_dtype_map) == ['col1', 'col2', 'col3', 'col4', 'col5', 
+                                                                                                                        'col6', 'col7', 'col8', 'col9']
 
     def init_spark(self):
         """Get or create spark session."""

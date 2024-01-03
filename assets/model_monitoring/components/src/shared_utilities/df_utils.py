@@ -7,8 +7,10 @@ import pyspark.sql as pyspark_sql
 data_type_double_group = ["float", "double"]
 data_type_long_group = ["long", "int", "bigint", "short"]
 data_type_numerical_group = ["float", "double", "decimal"]
-data_type_categorical_group = ["string", "boolean", "timestamp", "date"]
+data_type_categorical_group = ["string", "boolean", "timestamp", "date", "binary"]
 
+
+# Todo: Remove
 def get_numerical_columns(column_dtype_map: dict) -> list:
     """Get numerical columns from all columns."""
     # NOTE: byte, short, long are not included in the list because they
@@ -22,6 +24,7 @@ def get_numerical_columns(column_dtype_map: dict) -> list:
     return numerical_columns
 
 
+# Todo: Remove
 def get_categorical_columns(column_dtype_map: dict) -> list:
     """Get categorical columns from all columns."""
     # NOTE: byte, short, long are not included in the list because they
@@ -105,6 +108,7 @@ def get_feature_type_override_map(override_numerical_features: str, override_cat
     return feature_type_override_map
 
 
+# Todo: Remove
 def get_numerical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
     """Get numerical columns from all columns with dataframe."""
     # NOTE: byte, short, long are not included in the list because they
@@ -121,6 +125,7 @@ def get_numerical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
     return numerical_columns
 
 
+# Todo: Remove
 def get_categorical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
     """Get categorical columns from all columns with dataframe."""
     # NOTE: byte, short, long are not included in the list because they
@@ -144,12 +149,14 @@ def get_distinct_ratio(column):
     return distinct_values / total_values
 
 
+# Todo: Remove
 def is_numerical(column):
     """Check if int column should be numerical."""
     distinct_value_ratio = get_distinct_ratio(column)
     return distinct_value_ratio >= 0.05
 
 
+# Todo: Remove
 def is_categorical(column):
     """Check if int column should be categorical."""
     distinct_value_ratio = get_distinct_ratio(column)

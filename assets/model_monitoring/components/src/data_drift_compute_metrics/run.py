@@ -52,6 +52,8 @@ def run():
         args.categorical_metric,
         args.numerical_threshold,
         args.categorical_threshold,
+        args.override_numerical_features,
+        args.override_categorical_features
     )
     # Save metrics in default blob store
     output_computed_measures_tests(metrics_df, args.signal_metrics)
