@@ -100,7 +100,7 @@ class Configuration(Namespace):
         """Check if the target endpoint is for embeddings models."""
         return self.request_path == ScoringClient.DV_EMBEDDINGS_API_PATH or\
             (self.online_endpoint_url and self.online_endpoint_url.endswith(ScoringClient.DV_EMBEDDINGS_API_PATH)) or\
-            (self.scoring_url and self.api_type == constants.EMBEDDINGS_API_TYPE)
+            (self.scoring_url and self.api_type in [constants.EMBEDDINGS_API_TYPE, "embedding"])
 
     def is_chat_completion(self) -> bool:
         """Check if the target endpoint is for chat completion models."""

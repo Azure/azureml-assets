@@ -1,0 +1,97 @@
+name: batch-score-ci
+
+on:
+  pull_request:
+    branches:
+      - main 
+    paths:
+      - assets/batch_score/**
+      - .github/workflows/batch-score-ci.yml
+      
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  testsRootPath: assets/batch_score/components/driver/tests
+  pytest_report_folder: results
+  pytest_report_file: junit3.xml
+  scripts_setup_dir: scripts/setup
+permissions:
+  # Required to clone repo
+  contents: read
+  # Required for OIDC login to Azure
+  id-token: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check-execution-context:
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+  run-batch-score-tests:
+    name: Run Batch Score Component Tests
+    runs-on: ubuntu-latest
+    needs: check-execution-context
+    environment: Testing
+    steps:
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        with:
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+      - name: Use Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - name: Log in to Azure and create resources
+        uses: ./.github/actions/create-azure-resources
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
+
+      - name: Install dependencies
+        run: pip install -r ${{ env.testsRootPath }}/requirements.txt
+
+      - name: Test asset
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.testsRootPath }} --strict-markers -v -s -m "unit or smoke" -o log_level=DEBUG -n 8
+        env:
+          SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          RESOURCE_GROUP: ${{ env.resource_group }}
+          WORKSPACE_NAME: ${{ env.workspace }}
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ${{ env.pytest_report_folder }}
+          path: ${{ env.pytest_report_folder }}
+  report:
+      name: Publish test results
+      if: always()
+      runs-on: ubuntu-latest
+      needs: run-batch-score-tests
+
+      permissions:
+        # Required for EnricoMi/publish-unit-test-result-action
+        checks: write
+        issues: read
+        pull-requests: write
+
+      steps:
+        - name: Download test results
+          id: download-artifact
+          uses: actions/download-artifact@v3
+          with:
+            name: ${{ env.pytest_report_folder }}
+            path: ${{ env.pytest_report_folder }}
+          continue-on-error: true
+
+        - name: Publish test results
+          if: steps.download-artifact.outputs.download-path != ''
+          uses: EnricoMi/publish-unit-test-result-action@v2
+          with:
+            check_name: Test Results for ${{ github.workflow }}
+            junit_files: ${{ env.pytest_report_folder }}/**/*.xml

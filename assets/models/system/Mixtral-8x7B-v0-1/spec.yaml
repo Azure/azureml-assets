@@ -1,0 +1,28 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: mistralai-Mixtral-8x7B-v01
+path: ./
+properties:
+  SharedComputeCapacityEnabled: true
+  inference-min-sku-spec: 40|8|672|2948
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  languages: EN
+tags:
+  Featured: ''
+  Preview: ''
+  SharedComputeCapacityEnabled: ''
+  disable-batch: 'true'
+  huggingface_model_id: mistralai/Mixtral-8x7B-v0.1
+  inference_compute_allow_list:
+    [
+      Standard_ND40rs_v2,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96amsr_A100_v4,
+      Standard_ND96asr_v4,
+    ]
+  inference_supported_envs:
+  - vllm
+  license: apache-2.0
+  task: text-generation
+  author: mistralai
+version: 3
