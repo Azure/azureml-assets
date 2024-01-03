@@ -83,5 +83,5 @@ Note: "image1" and "image2" string should be in base64 format or publicly access
 Note: Please refer to instance segmentation output <a href="https://learn.microsoft.com/en-us/azure/machine-learning/reference-automl-images-schema?view=azureml-api-2#instance-segmentation-1" target="_blank">data schema</a> for more detail.
 
 #### Model inference - visualization for a sample image
-
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_mask_rcnn_swin-t-p4-w7_fpn_1x_coco_IS.png" alt="is visualization">
+<!-- 
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_mask_rcnn_swin-t-p4-w7_fpn_1x_coco_IS.png" alt="is visualization"> -->
