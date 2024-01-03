@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.27 (2023-12-22)
+### 🐛 Bugs Fixed
+- [#2031](https://github.com/Azure/azureml-assets/pull/2031) Update model valdn for shared quota usage
+
 ## 1.16.26 (2023-12-21)
 ### 🐛 Bugs Fixed
 - [#2021](https://github.com/Azure/azureml-assets/pull/2021) Require auto version for environments
