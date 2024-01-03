@@ -42,9 +42,9 @@ class TestResultConverters:
 
     @pytest.mark.parametrize(
         'model_type,additional_columns', [('oai', 'a, b2'),
-                                 ('oss', 'a'),
-                                 ('vision_oss', None),
-                                 ('claude', None)]
+                                          ('oss', 'a'),
+                                          ('vision_oss', None),
+                                          ('claude', None)]
     )
     def test_additional_columns(self, model_type, additional_columns):
         """Test label column name."""
