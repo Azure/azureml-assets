@@ -57,7 +57,7 @@ _prompt_pattern_test = "Question:{{question}} \nChoices:(1) {{choices.text[0]}}\
 _few_shot_pattern_test = "Question:{{question}} \nChoices:(1) {{choices.text[0]}}\n(2) {{choices.text[1]}}\n(3) {{choices.text[2]}}\n(4) {{choices.text[3]}}\nThe answer is: {{answerKey}}"  # noqa: E501
 _output_pattern_test = "{{answerKey}}"
 _ground_truth_column = "answerKey"
-_additional_columns = "question"
+_additional_columns = "question,answerKey"
 
 
 class TestPromptCrafterComponent:
@@ -278,7 +278,7 @@ class TestPromptCrafterScript:
     @pytest.mark.parametrize(
         "test_data, prompt_type, n_shots, \
         few_shot_data, prompt_pattern, output_pattern, \
-        ground_truth_column, additional_columns, sexpected_error_message",
+        ground_truth_column, additional_columns, expected_error_message",
         [
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 10,
              Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
@@ -286,7 +286,7 @@ class TestPromptCrafterScript:
              _error_mssg_few_shot_data_shortage),
             (Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 1,
              Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE, _prompt_pattern_test,
-             _output_pattern_test, "invalid_column", _error_mssg_ground_truth_column_not_found),
+             _output_pattern_test, "invalid_column", None, _error_mssg_ground_truth_column_not_found),
         ]
     )
     def test_invalid_prompt_crafter(

@@ -203,7 +203,7 @@ class TestInferencePostprocessorComponent:
             if ground_truth_dataset
             else None,
             ground_truth_column_name=ground_truth_column_name,
-            additional_columns=[additional_columns],
+            additional_columns=[additional_columns] if additional_columns else None,
             separator=separator,
             regex_expr=regex_expr,
             remove_prefixes=remove_prefixes,
@@ -343,7 +343,7 @@ class TestInferencePostprocessorScript:
             ),
             (
                 "mnli_hf", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "target_num", "\n\n",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "target_num", None, "\n\n",
                 None, None, None, "first", None, None,
                 '{"0":"NEUTRAL", "1":"CONTRADICTION", "2":"ENTAILMENT"}', None,
             ),
