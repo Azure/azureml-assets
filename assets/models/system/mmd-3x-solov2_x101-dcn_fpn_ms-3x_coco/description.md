@@ -1,6 +1,34 @@
+`solov2_x101-dcn_fpn_ms-3x_coco` model is from <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0" target="_blank">OpenMMLab's MMDetection library</a>.
 In this work, we aim at building a simple, direct, and fast instance segmentation framework with strong performance. We follow the principle of the SOLO method of Wang et al. "SOLO: segmenting objects by locations". Importantly, we take one step further by dynamically learning the mask head of the object segmenter such that the mask head is conditioned on the location. Specifically, the mask branch is decoupled into a mask kernel branch and mask feature branch, which are responsible for learning the convolution kernel and the convolved features respectively. Moreover, we propose Matrix NMS (non maximum suppression) to significantly reduce the inference time overhead due to NMS of masks. Our Matrix NMS performs NMS with parallel matrix operations in one shot, and yields better results. We demonstrate a simple direct instance segmentation system, outperforming a few state-of-the-art methods in both speed and accuracy. A light-weight version of SOLOv2 executes at 31.3 FPS and yields 37.1% AP. Moreover, our state-of-the-art results in object detection (from our mask byproduct) and panoptic segmentation show the potential to serve as a new strong baseline for many instance-level recognition tasks besides instance segmentation.
 
 > The above abstract is from mmdetection website. Review the <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0/configs/solov2" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
+# Training Details
+
+## Training Data
+
+The model developers used COCO dataset for training the model.
+
+## Training Procedure
+
+Training Techniques:
+
+- SGD with Momentum
+- Weight Decay
+
+Training Memory (GB): 11.3
+
+Epochs: 36
+
+Training Resources: 8x A100 GPUs
+
+# Evaluation Results
+
+mask AP: 42.4
+
+# License
+
+apache-2.0
 
 ### Inference samples
 

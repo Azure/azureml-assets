@@ -1,6 +1,34 @@
+`rtmdet-ins_x_8xb16-300e_coco` model is from <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0" target="_blank">OpenMMLab's MMDetection library</a>.
 In this paper, we aim to design an efficient real-time object detector that exceeds the YOLO series and is easily extensible for many object recognition tasks such as instance segmentation and rotated object detection. To obtain a more efficient model architecture, we explore an architecture that has compatible capacities in the backbone and neck, constructed by a basic building block that consists of large-kernel depth-wise convolutions. We further introduce soft labels when calculating matching costs in the dynamic label assignment to improve accuracy. Together with better training techniques, the resulting object detector, named RTMDet, achieves 52.8% AP on COCO with 300+ FPS on an NVIDIA 3090 GPU, outperforming the current mainstream industrial detectors. RTMDet achieves the best parameter-accuracy trade-off with tiny/small/medium/large/extra-large model sizes for various application scenarios, and obtains new state-of-the-art performance on real-time instance segmentation and rotated object detection. We hope the experimental results can provide new insights into designing versatile real-time object detectors for many object recognition tasks.
 
 > The above abstract is from mmdetection website. Review the <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0/configs/rtmdet" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
+# Training Details
+
+## Training Data
+
+The model developers used COCO dataset for training the model.
+
+## Training Procedure
+
+Training Techniques:
+
+- AdamW
+- Flat Cosine Annealing
+
+Training Memory (GB): 33.7
+
+Epochs: 300
+
+Training Resources: 8x A100 GPUs
+
+# Evaluation Results
+
+mask AP: 44.6
+
+# License
+
+apache-2.0
 
 ### Inference samples
 
