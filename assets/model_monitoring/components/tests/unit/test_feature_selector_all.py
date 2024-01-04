@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""This file contains unit tests for the histogram builder class."""
+"""This file contains unit tests for the FeatureSelectorAll class."""
 
 import pytest
 from pyspark.sql.types import StructType, StructField, DoubleType, FloatType
