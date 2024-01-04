@@ -9,6 +9,9 @@ import re
 
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.error_definitions import BenchmarkUserError
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 
 class EndpointDataPreparer:
@@ -17,11 +20,19 @@ class EndpointDataPreparer:
     PAYLOAD_HASH = "payload_id"
     PAYLOAD_GROUNDTRUTH = "label"
 
-    def __init__(self, model_type: str, batch_input_pattern: str, label_key: str = None):
+    def __init__(self, model_type: str,
+                 batch_input_pattern: str,
+                 label_key: str = None,
+                 additional_columns: str = None):
         """Init for endpoint data preparer."""
         self._model = OnlineEndpointModel(model_type=model_type, model=None, model_version=None)
         self._batch_input_pattern = batch_input_pattern
         self._label_key = label_key
+        if additional_columns:
+            elements = additional_columns.split(",")
+            self._additional_columns = [s.strip() for s in elements if s.strip()]
+        else:
+            self._additional_columns = None
 
     def convert_input_dict(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Convert input dict to the corresponding payload."""
@@ -32,10 +43,23 @@ class EndpointDataPreparer:
     ) -> Dict[str, Any]:
         """Convert the ground truth to the corresponding payload with id."""
         row_id = EndpointUtilities.hash_payload_prompt(payload, self._model)
-        return {
+        result = {
             EndpointDataPreparer.PAYLOAD_HASH: row_id,
             EndpointDataPreparer.PAYLOAD_GROUNDTRUTH: origin_json_dict.get(self._label_key, ""),
         }
+        if self._additional_columns:
+            for column in self._additional_columns:
+                try:
+                    result[column] = origin_json_dict[column]
+                except KeyError:
+                    raise BenchmarkUserException._with_error(
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details=f"Column {column} doesn't exist. \
+                                Please check your data before submitting again.")
+                        )
+
+        return result
 
     def validate_output(self, output_payload_dict: Dict[str, Any]):
         """Validate the output payload."""

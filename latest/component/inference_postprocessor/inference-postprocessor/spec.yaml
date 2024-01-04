@@ -4,7 +4,7 @@ type: command
 name: inference_postprocessor
 display_name: Inference Postprocessor
 description: Inference Postprocessor
-version: 0.0.1
+version: 0.0.2
 is_deterministic: true
 
 inputs:
@@ -29,6 +29,12 @@ inputs:
       Key in ground truth dataset that contains ground truth. If ground_truth_dataset
       is given, then,
       this is required input.
+    optional: true
+  additional_columns:
+    type: string
+    description: >-
+      Name(s) of additional columns that could be helpful for computing some metrics,
+      separated by comma (",").
     optional: true
   remove_prefixes:
     type: string
@@ -141,6 +147,7 @@ command: >-
   --prediction_column_name ${{inputs.prediction_column_name}}
   $[[--ground_truth_dataset ${{inputs.ground_truth_dataset}}]]
   $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
+  $[[--additional_columns ${{inputs.additional_columns}}]]
   $[[--separator '${{inputs.separator}}']]
   $[[--find_first '${{inputs.find_first}}']]
   $[[--regex_expr '${{inputs.regex_expr}}']]
