@@ -17,6 +17,10 @@ inputs:
     type: string
     optional: True
     description: The label column name.
+  additional_columns:
+    type: string
+    optional: True
+    description: Name(s) of additional column(s) that could be useful to compute metrics, separated by comma (",").
   endpoint_url:
     type: string
     optional: True
@@ -63,6 +67,7 @@ command: >-
   --predict_ground_truth_data ${{outputs.ground_truth}}
   $[[--endpoint_url ${{inputs.endpoint_url}}]]
   $[[--label_key ${{inputs.label_column_name}}]]
+  $[[--additional_columns ${{inputs.additional_columns}}]]
   --handle_response_failure ${{inputs.handle_response_failure}}
   --is_performance_test ${{inputs.is_performance_test}}
   $[[--fallback_value ${{inputs.fallback_value}}]]
