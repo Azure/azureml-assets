@@ -22,17 +22,16 @@ inputs:
     description: "Task type"
   baseline_data:
     type: mltable
+    optional: true
     mode: direct
   baseline_data_target_column:
     type: string
-    optional: true
     description: "Column name which contains ground truths in provided input for baseline_data. (Optional if we have one column name.)"
   production_data:
     type: mltable
     mode: direct
   production_data_target_column:
     type: string
-    optional: true
     description: "Column name which contains predictions in provided input for production_data_target_column. (Optional if we have one column name.)"
   regression_rmse_threshold:
     type: number
@@ -79,10 +78,10 @@ conf:
     name: momo-base-spark
 args: >-
   --task ${{inputs.task}}
-  --baseline_data ${{inputs.baseline_data}}
-  $[[--baseline_data_target_column ${{inputs.baseline_data_target_column}}]]
+  $[[--baseline_data ${{inputs.baseline_data}}]]
+  --baseline_data_target_column ${{inputs.baseline_data_target_column}}
   --production_data ${{inputs.production_data}}
-  $[[--production_data_target_column ${{inputs.production_data_target_column}}]]
+  --production_data_target_column ${{inputs.production_data_target_column}}
   $[[--regression_rmse_threshold ${{inputs.regression_rmse_threshold}}]]
   $[[--regression_meanabserror_threshold ${{inputs.regression_meanabserror_threshold}}]]
   $[[--classification_precision_threshold ${{inputs.classification_precision_threshold}}]]
