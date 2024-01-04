@@ -40,6 +40,9 @@ class FeatureSelectorAll(FeatureSelector):
             if feature in df2_cols:
                 rows.append(Row(feature))
 
+        if len(rows) == 0:
+            raise Exception("Could not generate features set correctly. Found no common columns between input datasets.")
+
         spark = init_spark()
         features = spark.createDataFrame(data=rows, schema=schema)
         features.show()
