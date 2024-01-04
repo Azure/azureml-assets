@@ -62,7 +62,7 @@ class CopyUpdater:
                 logger.log_warning(f"{file_path} not found")
         return updated
 
-    @classmethod
+    @staticmethod
     def create_replace_function(*pairs: ReplacePair) -> Callable[[Path], bool]:
         """Create a function to replace text in a file.
 
