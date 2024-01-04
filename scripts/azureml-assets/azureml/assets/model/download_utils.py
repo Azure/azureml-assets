@@ -8,6 +8,7 @@ import shutil
 import stat
 import sys
 import tempfile
+from collections import namedtuple
 from pathlib import Path
 from typing import Callable, Dict, List
 from azureml.assets.util import logger
@@ -16,6 +17,8 @@ from azure.ai.ml._azure_environments import (
     _get_default_cloud_name,
     _get_storage_endpoint_from_metadata
 )
+
+ReplacePair = namedtuple('ReplacePair', ['Original', 'Replacement'])
 
 
 class CopyUpdater:
@@ -58,6 +61,28 @@ class CopyUpdater:
             else:
                 logger.log_warning(f"{file_path} not found")
         return updated
+
+    @classmethod
+    def create_replace_function(*pairs: ReplacePair) -> Callable[[Path], bool]:
+        """Create a function to replace text in a file.
+
+        Args:
+            pairs (ReplacePair): Pairs of strings to replace.
+
+        Returns:
+            Callable[[Path], bool]: Function that will receive a file and returns whether it was updated.
+        """
+        def replace_text(file_path: Path) -> bool:
+            """Replace text in a file."""
+            updated_text = original_text = file_path.read_text()
+            for pair in pairs:
+                updated_text = updated_text.replace(pair.Original, pair.Replacement)
+            if original_text != updated_text:
+                file_path.write_text(updated_text)
+                return True
+            return False
+
+        return replace_text
 
 
 def _onerror(func, path, exc_info):
