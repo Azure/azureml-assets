@@ -3,9 +3,13 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.28 (2023-01-05)
+### 🚀 New Features
+- [#2071](https://github.com/Azure/azureml-assets/pull/2071) Allow updating files during azcopy
+
 ## 1.16.27 (2023-12-22)
 ### 🐛 Bugs Fixed
-- [#2031](https://github.com/Azure/azureml-assets/pull/2031) Update model valdn for shared quota usage
+- [#2031](https://github.com/Azure/azureml-assets/pull/2031) Update model validation for shared quota usage
 
 ## 1.16.26 (2023-12-21)
 ### 🐛 Bugs Fixed
