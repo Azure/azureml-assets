@@ -40,7 +40,6 @@ class FeatureSelectorAll(FeatureSelector):
             if feature in df2_cols:
                 rows.append(Row(feature))
 
-
         spark = init_spark()
         features = spark.createDataFrame(data=rows, schema=schema)
         features.show()
