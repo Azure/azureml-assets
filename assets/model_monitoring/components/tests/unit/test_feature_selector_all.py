@@ -4,7 +4,6 @@
 """This file contains unit tests for the histogram builder class."""
 
 import pytest
-from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, DoubleType, FloatType
 from src.model_monitor_feature_selector.selectors.feature_selector_all import FeatureSelectorAll
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
@@ -33,13 +32,13 @@ class TestFeatureSelectorAll:
     def test_feature_selector_all_select_no_common_columns_expect_failure(self):
         """Test feature selector scenarios."""
         feature_selector = FeatureSelectorAll()
-        
+
         # Test with two dataframes that have no common columns
         baseline_df = create_pyspark_dataframe([(1, "a"), (2, "b")],
                                                ["id", "name"])
         production_df = create_pyspark_dataframe([(3, "c"), (4, "d")],
                                                  ["age", "gender"])
         try:
-            features = feature_selector.select(baseline_df, production_df)
+            feature_selector.select(baseline_df, production_df)
         except Exception as e:
             assert "Found no common columns between input datasets." in e.args[0]
