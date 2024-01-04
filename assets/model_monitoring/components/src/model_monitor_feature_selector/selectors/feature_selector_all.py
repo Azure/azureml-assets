@@ -45,4 +45,5 @@ class FeatureSelectorAll(FeatureSelector):
         features.show()
         if features.isEmpty():
             raise Exception("Could not generate features set correctly. Found no common columns between input datasets.")
+
         return features
