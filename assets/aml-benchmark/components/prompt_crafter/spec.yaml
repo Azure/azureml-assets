@@ -121,6 +121,13 @@ inputs:
     description: |
       This will be used as the ground truth column if present in the input.
       If not present, the output_pattern will be used as the ground truth.
+  additional_columns:
+    type: string
+    optional: true
+    default: ''
+    description: |
+      Any additional columns that would be helpful for computing metrics, if present in the input.
+      If there're multiple such columns, they should be separated by comma (",").
 outputs:
   output_file:
     type: uri_file
@@ -140,6 +147,7 @@ command: >-
   $[[--few_shot_pattern '${{inputs.few_shot_pattern}}']]
   $[[--system_message '${{inputs.system_message}}']]
   $[[--ground_truth_column_name '${{inputs.ground_truth_column_name}}']]
+  $[[--additional_columns '${{inputs.additional_columns}}']]
   $[[--prefix '${{inputs.prefix}}']]
   $[[--few_shot_separator '${{inputs.few_shot_separator}}']]
   --output_file ${{outputs.output_file}}
