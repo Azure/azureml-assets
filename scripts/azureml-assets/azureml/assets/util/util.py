@@ -455,7 +455,9 @@ def retry(times):
                     )
                     logger.log_warning(ex_msg)
                     if attempt == times:
-                        logger.log_warning("Retried {} times when calling {}, now giving up!".format(times, func.__name__))
+                        logger.log_warning(
+                            "Retried {} times when calling {}, now giving up!".format(times, func.__name__)
+                        )
                         raise
 
         return newfn
