@@ -52,22 +52,15 @@ jobs:
         with:
           python-version: '>=3.8'
 
-      - name: print
-        run: echo $client_id $tenant_id $subscription_id
-        env: 
-          client_id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant_id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  
+      - name: Install dependencies
+        run: pip install -e $scripts_azureml_assets_dir
+
       - name: Log in to Azure
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  
-      - name: Install dependencies
-        run: pip install -e $scripts_azureml_assets_dir
 
       - name: Validate assets
         run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}" -n -I -C -b -t -e
