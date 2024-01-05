@@ -27,6 +27,12 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  # Required to clone repo
+  contents: read
+  # Required for OIDC login to Azure
+  id-token: write
+
 jobs:
   validate:
     name: Validate
