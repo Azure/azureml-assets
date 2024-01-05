@@ -1,9 +1,6 @@
-The Mixtral-8x7B-v0.1 Large Language Model (LLM) is a pretrained generative text model with 7 billion parameters. 
-Mixtral-8x7B-v0.1 outperforms Llama 2 70B on most benchmarks with 6x faster inference.
+The Mixtral-8x7B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts. The Mixtral-8x7B outperforms Llama 2 70B on most benchmarks with 6x faster inference.
 
 Mixtral-8x7B-v0.1 is a decoder-only model with 8 distinct groups or the "experts". At every layer, for every token, a router network chooses two of these experts to process the token and combine their output additively. Mixtral has 46.7B total parameters but only uses 12.9B parameters per token using this technique. This enables the model to perform with same speed and cost as 12.9B model.
-
-The Mixtral-8x7B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts. The Mixtral-8x7B outperforms Llama 2 70B on most benchmarks we tested.
 
 For full details of this model please read [release blog post](https://mistral.ai/news/mixtral-of-experts/).
 
@@ -14,39 +11,38 @@ The Mixtral-8x7B Instruct model is a quick demonstration that the base model can
 It does not have any moderation mechanisms. We're looking forward to engaging with the community on ways to
 make the model finely respect guardrails, allowing for deployment in environments requiring moderated outputs.
 
-# Inference samples
-
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
-
 # Sample inputs and outputs
 
 ### Sample input
 ```json
 {
-    "input_data": {
-        "input_string": [
-            "What is your favourite condiment?",
-            "Do you have mayonnaise recipes?"
-        ],
-        "parameters": {
-            "max_new_tokens": 100,
-            "do_sample": true,
-            "return_full_text": false
-        }
-    }
+  "input_data": {
+    "input_string": [
+      {
+        "role": "user",
+        "content": "I am going to Paris, what should I see?"
+      },
+      {
+        "role": "assistant",
+        "content": "Paris, the capital of France, is known for its stunning architecture, art museums, historical landmarks, and romantic atmosphere. Here are some of the top attractions to see in Paris:\n\n1. The Eiffel Tower: The iconic Eiffel Tower is one of the most recognizable landmarks in the world and offers breathtaking views of the city.\n2. The Louvre Museum: The Louvre is one of the world's largest and most famous museums, housing an impressive collection of art and artifacts, including the Mona Lisa.\n3. Notre-Dame Cathedral: This beautiful cathedral is one of the most famous landmarks in Paris and is known for its Gothic architecture and stunning stained glass windows.\n\nThese are just a few of the many attractions that Paris has to offer. With so much to see and do, it's no wonder that Paris is one of the most popular tourist destinations in the world."
+      },
+      {
+        "role": "user",
+        "content": "What is so great about #1?"
+      }
+    ]
+  },
+  "parameters": {
+    "temperature": 0.6,
+    "top_p": 0.9,
+    "do_sample": true,
+    "max_new_tokens": 200,
+    "return_full_text": true
+  }
 }
 ```
 
 ### Sample output
 ```json
-[
-  {
-    "0": "\n\nMayonnaise - can't be beat.\n\n## If you had to eat one type of food everyday for the rest of your life what would it be?\n\nMango. I'm an avid fruit and vegetable eater.\n\n## What is your favourite fruit and/or vegetable?\n\nMango! I eat an acre of these a year, which is almost two pounds a day.\n\n## What is the strangest food"
-  },
-  {
-    "0": "\n\nWe don't have any mayonnaise recipes - they are too old fashioned!\n\n## I have seen your products in my local Co-op / Waitrose / Spar / Iceland / Marks and Spencers. Where can I buy more?\n\nIf you can't find our products in your local store, ask your Co-op / Sainsburys / Waitrose / Marks & Spencer / Morrisons / Iceland / S"
-  }
-]
+<TODO: Replace this with proper response>
 ```
