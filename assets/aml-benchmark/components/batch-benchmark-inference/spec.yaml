@@ -14,7 +14,11 @@ inputs:
   model_type:
     type: string
     description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
-    optional: True
+    optional: False
+    enum:
+        - oai
+        - oss
+        - vision_oss
   batch_input_pattern:
     type: string
     description: >- 
@@ -38,9 +42,7 @@ inputs:
 
       For AOAI model, the following pattern can be used,
       {
-          "messages":
-          [
-            {"role": "user", "content": "###<prompt>" } ],
+          "messages": ###<prompt>,
             "temperature": 0.7,
             "top_p": 0.95,
             "frequency_penalty": 0,
@@ -52,7 +54,7 @@ inputs:
   endpoint_url:
     type: string
     optional: False
-    description: The endpointurl.
+    description: The URL of the endpoint.
   is_performance_test:
     type: boolean
     default: False
@@ -134,6 +136,14 @@ inputs:
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
+  authentication_type:
+    type: string
+    optional: False
+    description: Authentication type for endpoint.
+    default: azureml_workspace_connection
+    enum:
+      - azureml_workspace_connection
+      - managed_identity
 outputs:
   predictions:
     type: uri_file
@@ -164,45 +174,53 @@ jobs:
         type: mltable
       ground_truth_metadata:
         type: uri_folder
-  # Inference
-  endpoint_batch_score:
-    type: parallel
-    component: azureml:batch_benchmark_score:0.0.3
+  # Config generation
+  config_generation:
+    type: command
+    component: ../batch-benchmark-config-generator/spec.yaml
     inputs:
-      model_type: ${{parent.inputs.model_type}}
-      online_endpoint_url: ${{parent.inputs.endpoint_url}}
-      deployment_name: ${{parent.inputs.deployment_name}}
-      connections_name: ${{parent.inputs.connections_name}}
+      scoring_url: ${{parent.inputs.endpoint_url}}
+      connection_name: ${{parent.inputs.connections_name}}
+      authentication_type: ${{parent.inputs.authentication_type}}
       debug_mode: ${{parent.inputs.debug_mode}}
       additional_headers: ${{parent.inputs.additional_headers}}
       ensure_ascii: ${{parent.inputs.ensure_ascii}}
       max_retry_time_interval: ${{parent.inputs.max_retry_time_interval}}
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
-      data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
-      mini_batch_size: ${{parent.inputs.mini_batch_size}}
-      deployment_metadata: ${{parent.inputs.endpoint_config_file}}
+      configuration_file: ${{parent.inputs.endpoint_config_file}}
+      response_segment_size: ${{parent.inputs.response_segment_size}}
+      model_type: ${{parent.inputs.model_type}}
     outputs:
-      job_out_path:
+      batch_score_config:
         type: uri_file
-      mini_batch_results_out_directory:
-        type: uri_folder
-      metrics_out_directory:
+  # Inference
+  endpoint_batch_score:
+    type: parallel
+    component: azureml://registries/azureml/components/batch_score_llm/labels/latest
+    inputs:
+      async_mode: False
+      data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
+      configuration_file: ${{parent.jobs.config_generation.outputs.batch_score_config}}
+    outputs:
+      job_output_path:
+        type: uri_file
+      mini_batch_results_output_directory:
         type: uri_folder
     resources:
       instance_count: ${{parent.inputs.instance_count}}
     max_concurrency_per_instance:  ${{parent.inputs.max_concurrency_per_instance}}
-    mini_batch_size: "100KB"
+    mini_batch_size: ${{parent.inputs.mini_batch_size}}
     retry_settings:
       timeout: 6000
       max_retries: 10
   # Reformat
   batch_output_formatter: 
     type: command
-    component: azureml:batch_output_formatter:0.0.4
+    component: ../batch-benchmark-config-generator/spec.yaml
     inputs:
       model_type: ${{parent.inputs.model_type}}
-      batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
+      batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_output_directory}}
       label_column_name: ${{parent.inputs.label_column_name}}
       additional_columns: ${{parent.inputs.additional_columns}}
       ground_truth_input: ${{parent.jobs.batch_inference_preparer.outputs.ground_truth_metadata}}
@@ -220,4 +238,3 @@ jobs:
       ground_truth:
         type: uri_file
         path: ${{parent.outputs.ground_truth}}
-
