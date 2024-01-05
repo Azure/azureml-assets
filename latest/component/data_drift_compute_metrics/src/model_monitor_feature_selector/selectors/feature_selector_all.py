@@ -43,5 +43,9 @@ class FeatureSelectorAll(FeatureSelector):
         spark = init_spark()
         features = spark.createDataFrame(data=rows, schema=schema)
         features.show()
+        if features.isEmpty():
+            raise Exception(
+                "Could not generate features set correctly. Found no common columns between input datasets."
+            )
 
         return features
