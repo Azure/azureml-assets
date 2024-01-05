@@ -40,4 +40,4 @@ class TestFeatureSelectorAll:
                                                  ["age", "gender"])
 
         features = feature_selector.select(baseline_df, production_df)
-        assert features.isEmpty() == True
+        assert features.isEmpty() is True
