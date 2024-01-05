@@ -433,3 +433,31 @@ def dump_yaml(yaml_dict: dict, file_path: str):
     """
     with open(file_path, "w") as f:
         yaml_dict = YAML().dump(yaml_dict, f)
+
+
+def retry(times):
+    """Retry Decorator.
+
+    :param times: The number of times to repeat the wrapped function/method
+    :type times: int
+    """
+
+    def decorator(func):
+        def newfn(*args, **kwargs):
+            attempt = 1
+            while attempt <= times:
+                try:
+                    return func(*args, **kwargs)
+                except Exception:
+                    attempt += 1
+                    ex_msg = "Exception thrown when attempting to run {}, attempt {} of {}".format(
+                        func.__name__, attempt, times
+                    )
+                    logger.log_warning(ex_msg)
+                    if attempt == times:
+                        logger.log_warning("Retried {} times when calling {}, now giving up!".format(times, func.__name__))
+                        raise
+
+        return newfn
+
+    return decorator
