@@ -3,7 +3,7 @@
 
 """This file contains the data reader for model performance compute metrics."""
 
-from shared_utilities.io_utils import read_mltable_in_spark
+from shared_utilities.io_utils import try_read_mltable_in_spark, NoDataApproach
 from shared_utilities.momo_exceptions import DataNotFoundError
 
 
@@ -67,10 +67,7 @@ class BaseTaskReader:
         Returns: MetricsDTO
 
         """
-        df = read_mltable_in_spark(file_name)
-
-        if df.isEmpty():
-            raise DataNotFoundError("The production data and ground truth data are required.")
+        df = try_read_mltable_in_spark(file_name, "production_data", NoDataApproach.ERROR)
 
         ground_truth = df.select(ground_truths_column_name).toPandas()
 
