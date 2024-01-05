@@ -4,9 +4,9 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.8
-name: test_llm_rag_validate_deployments
-display_name: LLM - Validate Deployments - Test
+version: 0.0.53
+name: llm_rag_validate_deployments
+display_name: LLM - Validate Deployments
 is_deterministic: false
 
 description: |
