@@ -12,7 +12,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from typing import List
 
-from azure.ai.ml import MLClient, load_model
+from azure.ai.ml import load_model
 from azure.ai.ml.entities import Model
 from azure.ai.ml.operations._run_history_constants import JobStatus
 from azure.identity import AzureCliCredential
@@ -51,7 +51,7 @@ credential = None
 try:
     credential = AzureCliCredential()
 except Exception as e:
-    logger.log_warning("exception in creating credential. {e}")
+    logger.log_warning(f"exception in creating credential. {e}")
 
 
 class MLFlowModelProperties:
@@ -716,7 +716,6 @@ def validate_model_scenario(
         )
         error_count += 1
 
-
     # confirm min_sku_spec with list of supported computes
     error_count += confirm_sku_spec(compute_allowlists, min_sku)
 
@@ -726,7 +725,7 @@ def validate_model_scenario(
 def confirm_sku_spec(asset_file_name_with_path: Path, supported_skus: set, min_sku_spec: str):
     """Validate min sku is correctly populated.
 
-    Min SKU is represented by #cpus|#gpus|#cpu-memory|#disk-space. 
+    Min SKU is represented by #cpus|#gpus|#cpu-memory|#disk-space.
     All data is represented as GBs.
 
     Min SKU should be the min of all skus grouped by category above.
@@ -761,12 +760,12 @@ def confirm_sku_spec(asset_file_name_with_path: Path, supported_skus: set, min_s
             min_ngpus = min(num_gpus, min_ngpus) if min_ngpus > 0 else num_gpus
             min_cpu_mem = min(cpu_mem, min_cpu_mem) if min_cpu_mem > 0 else cpu_mem
             min_disk = min(disk_space, min_disk) if min_disk > 0 else disk_space
-        
+
         ncpus, ngpus, mem, disk = min_sku_spec.spit("|")
         if ncpus != min_ncpus or ngpus != min_ngpus or mem != min_cpu_mem or disk != min_disk:
             _log_error(
                 asset_file_name_with_path,
-                f"{ncpus}|{ngpus}|{mem}|{disk} != {min_ncpus}|{min_gpus}|{min_cpu_mem}|{min_disk}"
+                f"{ncpus}|{ngpus}|{mem}|{disk} != {min_ncpus}|{min_ngpus}|{min_cpu_mem}|{min_disk}"
             )
     except Exception as e:
         _log_error(asset_file_name_with_path, f"Exception in fetching SKU details => {e}")

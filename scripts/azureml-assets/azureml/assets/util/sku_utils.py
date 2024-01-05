@@ -10,6 +10,11 @@ from azureml.assets.util.util import retry
 
 
 all_sku_details = None
+SKU_DETAILS_URI = (
+    "https://management.azure.com/subscriptions/{subscription_id}/"
+    "providers/Microsoft.MachineLearningServices/locations/{location}"
+    "/vmSizes?api-version=2021-01-01&expandChildren=true"
+)
 
 
 @retry(3)
@@ -33,8 +38,8 @@ def get_all_sku_details(credential, subscription_id: str, location: str = "eastu
     }
     """
     global all_sku_details
-    if all_sku_details == None:
-        vmSizes = f"https://management.azure.com/subscriptions/{subscription_id}/providers/Microsoft.MachineLearningServices/locations/{location}/vmSizes?api-version=2021-01-01&expandChildren=true"
+    if all_sku_details is None:
+        vmSizes = SKU_DETAILS_URI.format(subscription_id, location)
         token = credential.get_token("https://management.azure.com/.default")
         headers = {"Authorization": f"Bearer {token.token}"}
         response = requests.get(vmSizes, headers=headers)
@@ -51,7 +56,7 @@ def get_all_sku_details(credential, subscription_id: str, location: str = "eastu
 def get_sku_details(credential, SKU: str, subscription_id: str, location: str = "eastus"):
     """Get sku details."""
     global all_sku_details
-    if all_sku_details == None:
+    if all_sku_details is None:
         logger.print(f"Fetching all sku details for subscription: {subscription_id} and location: {location}")
         all_sku_details = get_all_sku_details(
             credential,
