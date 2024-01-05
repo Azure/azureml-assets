@@ -717,7 +717,7 @@ def validate_model_scenario(
         error_count += 1
 
     # confirm min_sku_spec with list of supported computes
-    error_count += confirm_sku_spec(compute_allowlists, min_sku)
+    error_count += confirm_sku_spec(asset_file_name_with_path, compute_allowlists, min_sku)
 
     return error_count
 
