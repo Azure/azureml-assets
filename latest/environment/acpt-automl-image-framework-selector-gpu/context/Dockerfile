@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py38-torch212:biweekly.202312.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py38-torch212:biweekly.202401.1
 
 RUN apt-get -y update
 
