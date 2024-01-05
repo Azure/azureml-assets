@@ -4,7 +4,7 @@ type: spark
 name: model_performance_compute_metrics
 display_name: Model Performance - Compute Metrics
 description: Compute model performance metrics leveraged by the model performance monitor.
-version: 0.0.3
+version: 0.0.4
 is_deterministic: true
 
 code: ../../src
@@ -20,10 +20,6 @@ inputs:
       tabular-regression
     ]
     description: "Task type"
-  baseline_data:
-    type: mltable
-    optional: true
-    mode: direct
   baseline_data_target_column:
     type: string
     description: "Column name which contains ground truths in provided input for baseline_data. (Optional if we have one column name.)"
@@ -78,7 +74,6 @@ conf:
     name: momo-base-spark
 args: >-
   --task ${{inputs.task}}
-  $[[--baseline_data ${{inputs.baseline_data}}]]
   --baseline_data_target_column ${{inputs.baseline_data_target_column}}
   --production_data ${{inputs.production_data}}
   --production_data_target_column ${{inputs.production_data_target_column}}

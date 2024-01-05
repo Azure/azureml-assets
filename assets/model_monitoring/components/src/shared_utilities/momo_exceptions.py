@@ -3,12 +3,13 @@
 
 """This file define exceptions used in Model Monitoring pipeline."""
 
+
 class UserError(Exception):
     """Exception raised when it is user error."""
 
     def __init__(self, message):
         """Initialize a DataNotFoundError."""
-        super().__init__(f'UserError: {message}')   
+        super().__init__(f'UserError: {message}')
 
 
 class DataNotFoundError(UserError):
