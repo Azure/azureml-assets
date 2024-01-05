@@ -5,12 +5,12 @@ azureml-acft-contrib-hf-nlp==0.0.41
 azureml-acft-multimodal-components==0.0.41
 # needed by multimodal
 mltable==1.5.0
-transformers==4.34.0
+transformers==4.36.2
 peft==0.4.0
 deepspeed==0.9.5
-optimum==1.11.0
-accelerate==0.23.0
-diffusers==0.18.0
+optimum==1.16.1
+accelerate==0.25.0
+diffusers==0.24.0
 onnxruntime-training==1.15.1
 scipy==1.10.0
 mpi4py==3.1.4
