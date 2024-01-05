@@ -4,7 +4,6 @@
 """This file contains the data reader for model performance compute metrics."""
 
 from shared_utilities.io_utils import try_read_mltable_in_spark, NoDataApproach
-from shared_utilities.momo_exceptions import DataNotFoundError
 
 
 class DataReaderFactory:
