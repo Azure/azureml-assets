@@ -35,6 +35,7 @@ class TestBatchOutputFormatterComponent:
             self.test_batch_output_formatter.__name__,
             'label',
             'http://test-endpoint.com',
+            'question',
             temp_dir,
             model_type,
         )
@@ -43,7 +44,6 @@ class TestBatchOutputFormatterComponent:
             pipeline_job, experiment_name=self.EXP_NAME
         )
         ml_client.jobs.stream(pipeline_job.name)
-        print(pipeline_job)
 
         out_dir = os.path.join(temp_dir, "output")
         os.makedirs(out_dir, exist_ok=True)
@@ -56,6 +56,7 @@ class TestBatchOutputFormatterComponent:
             display_name: str,
             label_key: str,
             endpoint_url: str,
+            additional_columns: Optional[str] = None,
             temp_dir: Optional[str] = None,
             model_type: Optional[str] = None,
     ) -> Job:
@@ -112,7 +113,7 @@ class TestBatchOutputFormatterComponent:
             os.path.join(output_dir, "predictions"), "predictions.jsonl", ["prediction"])
         self._check_output_data(
             os.path.join(output_dir, "performance_metadata"),
-            "performance_metadata.jsonl", ["start_time_iso", "end_time_iso"]
+            "performance_metadata.jsonl", ["start_time_iso", "end_time_iso", "time_taken_ms"]
         )
         self._check_output_data(
             os.path.join(

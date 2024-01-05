@@ -26,7 +26,6 @@ from azureml.model.mgmt.utils.common_utils import (
     move_files,
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
-    run_command,
     fetch_mlflow_acft_metadata
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
@@ -163,19 +162,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         pip_requirements=None,
         segregate=False,
     ):
-        config = tokenizer = None
         model = str(self._model_dir)
-
-        # try installing extra pip requirements
-        if self._extra_pip_requirements or pip_requirements:
-            pkgs = " ".join(self._extra_pip_requirements) if not pip_requirements else " ".join(pip_requirements)
-            cmd = f"pip install {pkgs}"
-
-            exit_code, stdout = run_command(cmd)
-            if exit_code != 0:
-                logger.warning(f"{pkgs} failed to install. Error:\n{stdout}\n")
-            else:
-                logger.info(f"Successully installed {pkgs}. pip logs =>\n{stdout}\n")
 
         # Set experimental flag
         if self._experimental:
@@ -209,16 +196,9 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                     and model_args.get('trust_remote_code', False)):
                 trust_remote_code_val = True
 
-            # handle OSS model loading with device map
-            # try:
-            #     model_pipeline = transformers.pipeline(task=self._task, model=model, device_map="auto",
-            #                                            trust_remote_code=trust_remote_code_val)
-            #     logger.info("OSS model loaded with device_map auto")
-            # except Exception as e:
-            #     logger.error("OSS Model load failed with exception: {}, reloading without device_map auto".format(e))
             model_pipeline = transformers.pipeline(task=self._task, model=model, trust_remote_code=trust_remote_code_val)
 
-                # pass in signature for a text-classification model
+            # pass in signature for a text-classification model
             if self._task == SupportedNLPTasks.TEXT_CLASSIFICATION.value:
                 inputs = Schema([ColSpec(DataType.string)])
                 outputs = None

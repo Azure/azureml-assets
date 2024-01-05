@@ -25,8 +25,8 @@ jobs:
     inputs:
       training_data: ${{parent.inputs.my_training_data}}
       target_column_name: ${{parent.inputs.target_column_name}}
-      categorical_features: '[]'
-      continuous_features: '["CRIM", "ZN", "INDUS", "CHAS", "NOX", "RM", "AGE","DIS", "RAD", "TAX", "PTRATIO", "B", "LSTAT"]'
+      categorical_features: '["CHAS", "RAD"]'
+      continuous_features: '["CRIM", "ZN", "INDUS", "NOX", "RM", "AGE", "DIS", "TAX", "PTRATIO", "B", "LSTAT"]'
       model_name: 'boston_model'
     outputs:
       model_output: ${{parent.outputs.boston_model}}
@@ -35,7 +35,7 @@ jobs:
     type: command
     component: file:../components/insight_create/spec.yaml
     limits:
-      timeout: 120
+      timeout: 3600
     inputs:
       title: Boston Housing Analysis
       task_type: regression
@@ -43,13 +43,13 @@ jobs:
       train_dataset: ${{parent.inputs.my_training_data}}
       test_dataset: ${{parent.inputs.my_test_data}}
       target_column_name: ${{parent.inputs.target_column_name}}
-      categorical_column_names: '[]'
+      categorical_column_names: '["CHAS", "RAD"]'
 
   explain_01:
     type: command
     component: file:../components/explanation/spec.yaml
     limits:
-      timeout: 120
+      timeout: 3600
     inputs:
       comment: Some random string
       rai_insights_dashboard: ${{parent.jobs.create_rai_job.outputs.rai_insights_dashboard}}
@@ -58,7 +58,7 @@ jobs:
     type: command
     component: file:../components/causal/spec.yaml
     limits:
-      timeout: 120
+      timeout: 3600
     inputs:
       rai_insights_dashboard: ${{parent.jobs.create_rai_job.outputs.rai_insights_dashboard}}
       treatment_features: '["ZN", "NOX"]'
@@ -70,7 +70,7 @@ jobs:
     type: command
     component: file:../components/counterfactual/spec.yaml
     limits:
-      timeout: 600
+      timeout: 7200
     inputs:
       rai_insights_dashboard: ${{parent.jobs.create_rai_job.outputs.rai_insights_dashboard}}
       total_CFs: 10
@@ -79,7 +79,7 @@ jobs:
 
   error_analysis_01:
     limits:
-      timeout: 120
+      timeout: 3600
     type: command
     component: file:../components/error_analysis/spec.yaml
     inputs:
@@ -91,7 +91,7 @@ jobs:
     type: command
     component: file:../components/insight_gather/spec.yaml
     limits:
-      timeout: 120
+      timeout: 3600
     inputs:
       constructor: ${{parent.jobs.create_rai_job.outputs.rai_insights_dashboard}}
       insight_1: ${{parent.jobs.causal_01.outputs.causal}}

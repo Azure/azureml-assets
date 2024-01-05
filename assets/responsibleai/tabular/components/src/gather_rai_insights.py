@@ -9,9 +9,11 @@ import tempfile
 from pathlib import Path
 from typing import Dict
 
-from _telemetry._loggerfactory import _LoggerFactory, track
+import numpy as np
 from azureml.core import Run
-from constants import DashboardInfo, RAIToolType
+from azureml.rai.utils.telemetry import LoggerFactory, track
+from constants import (COMPONENT_NAME, MLFLOW_MODEL_SERVER_PORT, DashboardInfo,
+                       RAIToolType)
 from rai_component_utilities import (add_properties_to_gather_run,
                                      copy_insight_to_raiinsights,
                                      create_rai_insights_from_port_path,
@@ -35,7 +37,11 @@ _ai_logger = None
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
-        _ai_logger = _LoggerFactory.get_logger(__file__)
+        run = Run.get_context()
+        module_name = run.properties["azureml.moduleName"]
+        module_version = run.properties["azureml.moduleid"]
+        _ai_logger = LoggerFactory.get_logger(
+            __file__, module_name, module_version, COMPONENT_NAME)
     return _ai_logger
 
 
@@ -71,6 +77,20 @@ def main(args):
 
         my_run = Run.get_context()
         rai_temp = create_rai_insights_from_port_path(my_run, args.constructor)
+
+        # We need to fix the following issue in RAIInsights.
+        # When using the served model wrapper, predictions (currently
+        # forecasts only) are stored as lists instead of numpy.ndarray.
+        # This causes the following error when saving the RAIInsights object:
+        # AttributeError: 'list' object has no attribute 'tolist'
+        # To remedy this, the code below converts the lists to numpy.ndarray.
+        # Once it is fixed in RAIInsights, this code can be removed.
+        for method_name in ['forecast', 'forecast_quantiles']:
+            field_name = f"_{method_name}_output"
+            if field_name in rai_temp.__dict__ and \
+                    isinstance(rai_temp._forecast_output, list):
+                setattr(rai_temp, field_name, np.array(rai_temp._forecast_output))
+
         rai_temp.save(incoming_temp_dir)
 
         print("Saved rai_temp")
@@ -120,6 +140,15 @@ def main(args):
                 _logger.info("Insight {0} is None".format(i + 1))
 
         _logger.info("Tool summary: {0}".format(included_tools))
+
+        if rai_temp.task_type == "forecasting":
+            # Set model serving port to arbitrary value to avoid loading the
+            # model.
+            # Forecasting uses the ServedModelWrapper which cannot be
+            # (de-)serialized like other models.
+            # Note that the port number is selected arbitrarily.
+            # The model is not actually being served.
+            os.environ["RAI_MODEL_SERVING_PORT"] = str(MLFLOW_MODEL_SERVER_PORT)
 
         rai_i = RAIInsights.load(incoming_dir)
         _logger.info("Object loaded")

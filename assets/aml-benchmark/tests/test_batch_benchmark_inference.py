@@ -4,6 +4,8 @@
 """Tests for Batch inference preparer Component."""
 
 from typing import Optional
+
+import copy
 import json
 import os
 import uuid
@@ -53,8 +55,48 @@ class TestBatchBenchmarkInferenceComponent:
                       '"params": {}'
                       '}')
 
+    PARAM_MAPPING_DICT = {
+        "input_dataset:": ['  input_dataset:\n', '    type: uri_folder\n', '    path: ../data/\n'],
+        "batch_input_pattern:": ["  batch_input_pattern: wrong_pattern\n"],
+        "endpoint_url:": ["  endpoint_url: a_bad_url\n"],
+        "handle_response_failure:": ["  handle_response_failure: true\n"],
+        "connections_name:": ["  connections_name: a_bad_connection\n"],
+        "fallback_value:": ["  fallback_value: a_value\n"],
+        "deployment_name:": ["  deployment_name: a_bad_deployment\n"],
+        "debug_mode:": ["  debug_mode: false\n"],
+        "additional_headers:": ["  additional_headers: '{}'\n"],
+        "ensure_ascii:": ["  ensure_ascii: false\n"],
+        "is_performance_test:": ["  is_performance_test: false\n"],
+        "max_retry_time_interval:": ["  max_retry_time_interval: 600\n"],
+        "initial_worker_count:": ["  initial_worker_count: 1\n"],
+        "max_worker_count:": ["  max_worker_count: 10\n"],
+        "data_id_key:": ["  data_id_key: data_id\n"],
+        "instance_count:": ["  instance_count: 1\n"],
+        "max_concurrency_per_instance:": ["  max_concurrency_per_instance: 1\n"],
+        "ground_truth_input:": ['  ground_truth_input:\n', '    type: uri_folder\n', '    path: ../data/\n'],
+        "metadata_key:": ["  metadata_key: _batch_request_metadata\n"],
+        "label_column_name:": ["  label_column_name: label\n"],
+        "n_samples:": ["  n_samples: 10\n"],
+        "predictions:": [
+            '  predictions:\n', '    type: uri_file\n',
+            '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/predictions.jsonl\n'],
+        "performance_metadata:": [
+            '  performance_metadata:\n', '    type: uri_file\n',
+            '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/performance_metadata.jsonl\n'],
+        "ground_truth:": [
+            '  ground_truth:\n', '    type: uri_file\n',
+            '    path: azureml://datastores/${{default_datastore}}'
+            '/paths/${{name}}/ground_truth.jsonl\n']
+    }
+
+    def _get_updated_params(self):
+        param_dict = copy.deepcopy(TestBatchBenchmarkInferenceComponent.PARAM_MAPPING_DICT)
+        if self._model_type:
+            param_dict['model_type:'] = [f"  model_type: {self._model_type}\n"]
+        return param_dict
+
     @pytest.mark.parametrize(
-            'model_type', [("vision_oss")]
+        'model_type', [("vision_oss")]
     )
     def test_batch_benchmark_inference(self, model_type: str, temp_dir: str):
         """Test batch inference preparer."""
@@ -133,10 +175,12 @@ class TestBatchBenchmarkInferenceComponent:
             "pipelines", "batch-benchmark-inference.yaml")
         new_lines = []
         current_section = "main"
+        param_dict = self._get_updated_params()
         with open(original_yml_path) as f1:
             for line1 in f1.readlines():
                 current_section = self._update_currect_section(current_section, line1)
-                if not self._should_keep_line(current_section, line1):
+                if line1.strip() != f'{current_section}:' and not self._should_keep_line(
+                        current_section, line1, param_dict):
                     continue
                 new_lines.extend(self._get_updated_lines(current_section, line1))
         # add compute
@@ -147,45 +191,11 @@ class TestBatchBenchmarkInferenceComponent:
         return new_yaml_path
 
     def _get_updated_lines(self, current_section, line):
-        param_mapping_dict = {
-            "input_dataset:": ['  input_dataset:\n', '    type: uri_folder\n', '    path: ../data/\n'],
-            "batch_input_pattern:": ["  batch_input_pattern: wrong_pattern\n"],
-            "endpoint_url:": ["  endpoint_url: a_bad_url\n"],
-            "handle_response_failure:": ["  handle_response_failure: true\n"],
-            "connections_name:": ["  connections_name: a_bad_connection\n"],
-            "fallback_value:": ["  fallback_value: a_value\n"],
-            "deployment_name:": ["  deployment_name: a_bad_deployment\n"],
-            "debug_mode:": ["  debug_mode: false\n"],
-            "additional_headers:": ["  additional_headers: '{}'\n"],
-            "ensure_ascii:": ["  ensure_ascii: false\n"],
-            "is_performance_test:": ["  is_performance_test: false\n"],
-            "max_retry_time_interval:": ["  max_retry_time_interval: 600\n"],
-            "initial_worker_count:": ["  initial_worker_count: 1\n"],
-            "max_worker_count:": ["  max_worker_count: 10\n"],
-            "data_id_key:": ["  data_id_key: data_id\n"],
-            "instance_count:": ["  instance_count: 1\n"],
-            "max_concurrency_per_instance:": ["  max_concurrency_per_instance: 1\n"],
-            "ground_truth_input:": ['  ground_truth_input:\n', '    type: uri_folder\n', '    path: ../data/\n'],
-            "metadata_key:": ["  metadata_key: _batch_request_metadata\n"],
-            "label_column_name:": ["  label_column_name: label\n"],
-            "n_samples:": ["  n_samples: 10\n"],
-            "predictions:": [
-                '  predictions:\n', '    type: uri_file\n',
-                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/predictions.jsonl\n'],
-            "performance_metadata:": [
-                '  performance_metadata:\n', '    type: uri_file\n',
-                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/performance_metadata.jsonl\n'],
-            "ground_truth:": [
-                '  ground_truth:\n', '    type: uri_file\n',
-                '    path: azureml://datastores/${{default_datastore}}'
-                '/paths/${{name}}/ground_truth.jsonl\n']
-        }
-        if self._model_type:
-            param_mapping_dict['model_type:'] = [f"  model_type: {self._model_type}\n"]
+        param_dict = self._get_updated_params()
         if current_section == "inputs" or current_section == "outputs":
             line_key = self._get_yml_key(line)
-            if line_key in param_mapping_dict:
-                return param_mapping_dict[line_key]
+            if line_key in param_dict:
+                return param_dict[line_key]
         if current_section == "jobs":
             for component in ["batch_inference_preparer", "batch_benchmark_score", "batch_output_formatter"]:
                 if f"azureml:{component}" in line:
@@ -206,7 +216,7 @@ class TestBatchBenchmarkInferenceComponent:
             return "jobs"
         return current_section
 
-    def _should_keep_line(self, current_section, line):
+    def _should_keep_line(self, current_section, line, param_dict):
         if current_section == "main":
             return self._get_yml_key(line) not in {"version:", "name:"}
         if current_section == "inputs" or current_section == "outputs":
@@ -214,8 +224,13 @@ class TestBatchBenchmarkInferenceComponent:
                 return False
             if "model_type" in line and not self._model_type:
                 return False
-            return self._get_yml_key(line) not in {
-                'optional:', 'type:', 'default:', 'description:', 'enum:'}
+
+            if self._get_yml_key(line) in {
+                    'optional:', 'type:', 'default:', 'description:', 'enum:'}:
+                return False
+            # If we cannot set value, do not leave the line.
+            if line.strip() not in param_dict:
+                return False
         return True
 
     def _read_data(self, file_path):
@@ -247,8 +262,8 @@ class TestBatchBenchmarkInferenceComponent:
         self._check_output_data(
             os.path.join(output_dir, "predictions"), "predictions.jsonl", ["prediction"])
         self._check_output_data(
-            os.path.join(output_dir, "performance_metadata.jsonl"),
-            "performance_metadata", ["start", "end", "latency"])
+            os.path.join(output_dir, "performance_metadata"),
+            "performance_metadata.jsonl", ["start_time_iso", "end_time_iso", "time_taken_ms"])
         self._check_output_data(
             os.path.join(
                 output_dir, "ground_truth"), "ground_truth.jsonl", ["label"])

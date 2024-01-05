@@ -77,29 +77,29 @@ class TestInferencePostprocessorComponent:
 
     @pytest.mark.parametrize(
         "dataset_name, prediction_dataset, prediction_column_name, ground_truth_dataset, ground_truth_column_name, \
-        separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
-        label_map, find_first",
+        additional_columns, separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, \
+        script_path, label_map, find_first",
         [
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None,
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question", None,
                 None, None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
                 None, None, None,
             ),
             (
                 "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
-                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
+                None, None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
                 None, None, None, None,
             ),
             (
                 "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None,
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question", None, None,
                 None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
                 None, None, None,
             ),
             (
                 "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
-                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
+                None, None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None,
             ),
         ],
@@ -111,6 +111,7 @@ class TestInferencePostprocessorComponent:
         prediction_column_name: str,
         ground_truth_dataset: str,
         ground_truth_column_name: str,
+        additional_columns: str,
         separator: str,
         regex_expr: str,
         remove_prefixes: str,
@@ -168,6 +169,7 @@ class TestInferencePostprocessorComponent:
             prediction_column_name,
             ground_truth_dataset,
             ground_truth_column_name,
+            additional_columns,
             separator,
             regex_expr,
             remove_prefixes,
@@ -201,6 +203,7 @@ class TestInferencePostprocessorComponent:
             if ground_truth_dataset
             else None,
             ground_truth_column_name=ground_truth_column_name,
+            additional_columns=[additional_columns] if additional_columns else None,
             separator=separator,
             regex_expr=regex_expr,
             remove_prefixes=remove_prefixes,
@@ -218,6 +221,7 @@ class TestInferencePostprocessorComponent:
         prediction_column_name: str,
         ground_truth_dataset: str,
         ground_truth_column_name: str,
+        additional_columns: str,
         separator: str,
         regex_expr: str,
         remove_prefixes: str,
@@ -244,6 +248,7 @@ class TestInferencePostprocessorComponent:
         else:
             pipeline_job.inputs.ground_truth_dataset = None
         pipeline_job.inputs.ground_truth_column_name = ground_truth_column_name if ground_truth_column_name else None
+        pipeline_job.inputs.additional_columns = additional_columns if additional_columns else None
         pipeline_job.inputs.separator = separator if separator else None
         pipeline_job.inputs.regex_expr = regex_expr if regex_expr else None
         pipeline_job.inputs.remove_prefixes = remove_prefixes if remove_prefixes else None
@@ -306,35 +311,41 @@ class TestInferencePostprocessorScript:
 
     @pytest.mark.parametrize(
         "dataset_name, prediction_dataset, prediction_column_name, ground_truth_dataset, ground_truth_column_name, \
-        separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
-        label_map, find_first",
+        additional_columns, separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, \
+        script_path, label_map, find_first",
         [
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None,
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question", None,
                 None, None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
                 None, None, None,
             ),
             (
                 "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
-                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
+                None, None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
                 None, None, None, None,
             ),
             (
                 "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None,
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question", None, None,
                 None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
                 None, None, None,
             ),
             (
                 "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
-                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
+                None, None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None,
             ),
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "\n\n",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, "\n\n",
                 None, None, ".", "last", None, None, None, None,
+            ),
+            (
+                "mnli_hf", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "target_num", None, "\n\n",
+                None, None, None, "first", None, None,
+                '{"0":"NEUTRAL", "1":"CONTRADICTION", "2":"ENTAILMENT"}', None,
             ),
         ],
     )
@@ -345,6 +356,7 @@ class TestInferencePostprocessorScript:
         prediction_column_name: str,
         ground_truth_dataset: str,
         ground_truth_column_name: str,
+        additional_columns: str,
         separator: str,
         regex_expr: str,
         remove_prefixes: str,
@@ -408,6 +420,8 @@ class TestInferencePostprocessorScript:
             argss.extend(["--ground_truth_dataset", ground_truth_dataset])
         if ground_truth_column_name is not None:
             argss.extend(["--ground_truth_column_name", ground_truth_column_name])
+        if additional_columns is not None:
+            argss.extend(["--additional_columns", additional_columns])
         if template is not None:
             argss.extend(["--template", f"'{template}'"])
         if script_path is not None:

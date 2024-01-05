@@ -9,6 +9,7 @@ import json
 from argparse import Namespace
 import copy
 import yaml
+import logging
 from typing import Optional, Dict, Any
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
@@ -269,6 +270,7 @@ def main():
             LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+        log_level=logging.INFO,
     )
 
     # Adding flavor map to args

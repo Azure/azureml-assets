@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.20.oss.v1
+version: 0.0.21
 
 # Pipeline inputs
 inputs:
@@ -210,7 +210,7 @@ jobs:
         type: uri_file
 
   download_model:
-    component: azureml://registries/azureml-preview-test1/components/download_model/versions/0.0.16.oss.v1 # azureml://registries/azureml-preview-test1/components/download_model/versions/0.0.16.oss
+    component: azureml:download_model:0.0.18
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -228,7 +228,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml://registries/azureml-preview-test1/components/convert_model_to_mlflow/versions/0.0.19.oss.v1 # azureml://registries/azureml-preview-test1/components/convert_model_to_mlflow/versions/0.0.19.oss
+    component: azureml:convert_model_to_mlflow:0.0.18
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

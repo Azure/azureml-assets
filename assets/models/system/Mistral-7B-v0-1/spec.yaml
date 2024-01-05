@@ -2,51 +2,59 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: mistralai-Mistral-7B-v01
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: f966a600a1f2c35a067dcb16b24bbf9ac3b85799
-  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3,
-    Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4    
-  evaluation-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3,
-    Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  inference-min-sku-spec: 12|2|224|672
+  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  evaluation-min-sku-spec: 6|1|112|336
+  evaluation-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  finetune-min-sku-spec: 40|8|672|2948
   finetune-recommended-sku: Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
   finetuning-tasks: text-generation
   languages: EN
 tags:
-  Featured: ''
-  SharedComputeCapacityEnabled: ''
+  Featured: ""
+  SharedComputeCapacityEnabled: ""
+  huggingface_model_id: mistralai/Mistral-7B-v0.1
   evaluation_compute_allow_list:
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
-  - Standard_ND40rs_v2
-  - Standard_NC24ads_A100_v4
-  - Standard_NC48ads_A100_v4
-  - Standard_NC96ads_A100_v4
-  - Standard_ND96amsr_A100_v4
-  - Standard_ND96asr_v4
+    [
+      Standard_NC6s_v3,
+      Standard_NC12s_v3,
+      Standard_NC24s_v3,
+      Standard_NC24rs_v3,
+      Standard_ND40rs_v2,
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96amsr_A100_v4,
+      Standard_ND96asr_v4,
+    ]    
   inference_compute_allow_list:
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
-  - Standard_ND40rs_v2
-  - Standard_NC24ads_A100_v4
-  - Standard_NC48ads_A100_v4
-  - Standard_NC96ads_A100_v4
-  - Standard_ND96amsr_A100_v4
-  - Standard_ND96asr_v4
+    [
+      Standard_NC12s_v3,
+      Standard_NC24s_v3,
+      Standard_ND40rs_v2,
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96amsr_A100_v4,
+      Standard_ND96asr_v4,
+    ]    
   finetune_compute_allow_list:
-  - Standard_ND40rs_v2
-  - Standard_ND96amsr_A100_v4
-  - Standard_ND96asr_v4
+    [
+      Standard_ND40rs_v2,
+      Standard_ND96amsr_A100_v4,
+      Standard_ND96asr_v4,
+    ]    
   model_specific_defaults:
-    precision: '16'
-    deepspeed_stage: '3'
-    apply_deepspeed: 'true'
-    apply_ort: 'true'
+    precision: "16"
+    deepspeed_stage: "3"
+    apply_deepspeed: "true"
+    apply_ort: "true"
   inference_supported_envs:
-  - vllm
-  - ds_mii
+    - vllm
+    - ds_mii
   license: apache-2.0
   task: text-generation
   author: mistralai
-version: 3
+version: 7

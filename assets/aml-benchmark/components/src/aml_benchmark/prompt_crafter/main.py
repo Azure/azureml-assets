@@ -77,6 +77,11 @@ def parse_args() -> ArgumentParser:
         required=False,
         help="The ground truth key in the input data.")
     parser.add_argument(
+        "--additional_columns",
+        type=str,
+        required=False,
+        help="The additional columns in the input data, seperated by comma.")
+    parser.add_argument(
         "--system_message",
         type=str,
         required=False,
@@ -87,6 +92,14 @@ def parse_args() -> ArgumentParser:
         required=True,
         help="The jinja template representing the expected output to \
          be used for few shot prompts when n_shot > 0")
+    parser.add_argument(
+        "--few_shot_pattern",
+        type=str,
+        required=False,
+        default=None,
+        help="The jinja template used to generate few shot prompts. \
+            Few shot prompts use the pattern in the `prompt_pattern` input \
+            if `few_shot_pattern` is not provided.")
     return parser.parse_args()
 
 
@@ -99,11 +112,13 @@ def main(
         prompt_pattern: str,
         output_file: str,
         ground_truth_column_name: Optional[str] = None,
+        additional_columns: Optional[str] = None,
         few_shot_separator: Optional[str] = None,
         prefix: Optional[str] = None,
         system_message: Optional[str] = None,
         few_shot_data: Optional[str] = None,
         random_seed: Optional[int] = 0,
+        few_shot_pattern: Optional[str] = None
 ) -> None:
     """Entry function for Prompt Crafter Component.
 
@@ -114,11 +129,13 @@ def main(
     :param prompt_pattern: Pattern to use for prompts.
     :param output_file: Path to jsonl with generated prompts.
     :param ground_truth_column_name: Ground truth column name.
+    :param additional_columns: additional columns (e.g. context, question), separated by comma.
     :param few_shot_separator: Separator to use for few-shot prompts.
     :param prefix: Prefix to use for prompts.
     :param system_message: System message to use for prompts.
     :param few_shot_data: Path to jsonl would be used to generate n-shot prompts.
     :param random_seed: Random seed to use for prompts.
+    :param few_shot_pattern: Pattern for generating few shot prompts.
     :return: None
     """
     prompt_crafter = PromptCrafter(
@@ -133,12 +150,13 @@ def main(
         prefix=prefix,
         output_file=output_file,
         ground_truth_column_name=ground_truth_column_name,
+        additional_columns=additional_columns,
         output_mltable=None,
         metadata_keys=None,
         label_map=None,
         additional_payload=None,
         system_message=system_message,
-        few_shot_pattern=None,
+        few_shot_pattern=few_shot_pattern,
     )
     prompt_crafter.run()
 
@@ -150,10 +168,13 @@ def main(
         system_message=system_message,
         random_seed=random_seed,
         ground_truth_column_name=ground_truth_column_name if ground_truth_column_name else None,
+        additional_columns=additional_columns if additional_columns else None,
         test_dataset_checksum=resolve_io_path(test_data),
         few_shot_dataset_checksum=resolve_io_path(few_shot_data)
         if few_shot_data else None,
-        output_dataset_checksum=resolve_io_path(output_file))
+        output_dataset_checksum=resolve_io_path(output_file),
+        few_shot_pattern=few_shot_pattern
+    )
 
 
 if __name__ == "__main__":
@@ -170,6 +191,8 @@ if __name__ == "__main__":
         few_shot_separator=args.few_shot_separator,
         prefix=args.prefix,
         ground_truth_column_name=args.ground_truth_column_name,
+        additional_columns=args.additional_columns,
         output_file=args.output_file,
         system_message=args.system_message,
+        few_shot_pattern=args.few_shot_pattern
     )

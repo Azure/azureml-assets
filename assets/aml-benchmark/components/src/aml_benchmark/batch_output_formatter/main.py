@@ -31,10 +31,11 @@ def parse_args() -> argparse.Namespace:
         help="The ground truth data mapping 1-1 to the prediction data.")
 
     parser.add_argument("--perf_data", type=str, help="path to output location")
-    parser.add_argument("--endpoint_url", type=str, help="endpoint_url")
+    parser.add_argument("--endpoint_url", type=str, help="endpoint_url", default=None)
     parser.add_argument("--metadata_key", type=str, help="metadata key", default=None)
     parser.add_argument("--data_id_key", type=str, help="metadata key", default=None)
     parser.add_argument("--label_key", type=str, help="label key")
+    parser.add_argument("--additional_columns", type=str, help="additional columns")
     parser.add_argument("--handle_response_failure", type=str, help="how to handler failed response.")
     parser.add_argument("--fallback_value", type=str, help="The fallback value.", default='')
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
@@ -50,6 +51,7 @@ def main(
         data_id_key: str,
         metadata_key: str,
         label_key: str,
+        additional_columns: str,
         ground_truth_input: str,
         prediction_data: str,
         perf_data: str,
@@ -68,6 +70,8 @@ def main(
     :param metadata_key: The key that contains ground truth in the request payload. If this is
         empty, the `batch_metadata` will be used.
     :param label_key: The key contains ground truth either in the metadata or in the ground_truth_input.
+    :param additional columns: name(s) of the column(s) which could be useful for computing certain metrics,
+        separated by comma (",").
     :param ground_truth_input: The ground_truth_input which should contains data_id_key and label_key.
     :param prediction_data: The path to the prediction data.
     :param perf_data: The path to the perf data.
@@ -92,9 +96,11 @@ def main(
     else:
         ground_truth_df = None
     online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
+
     rc = ResultConverters(
         online_model._model_type, metadata_key, data_id_key,
-        label_key, ground_truth_df, fallback_value=fallback_value, is_performance_test=is_performance_test)
+        label_key, additional_columns, ground_truth_df,
+        fallback_value=fallback_value, is_performance_test=is_performance_test)
     logger.info("Convert the data now.")
     for f in data_files:
         logger.info(f"Processing file {f}")
@@ -109,6 +115,7 @@ def main(
             if not is_performance_test:
                 ground_truth.append(rc.convert_result_ground_truth(row))
             else:
+                logger.info("is performance test")
                 ground_truth.append({"ground_truth": ''})
     logger.info("Output data now.")
     new_df = pd.DataFrame(new_df)
@@ -127,6 +134,7 @@ if __name__ == "__main__":
         data_id_key=args.data_id_key,
         metadata_key=args.metadata_key,
         label_key=args.label_key,
+        additional_columns=args.additional_columns,
         ground_truth_input=args.ground_truth_input,
         prediction_data=args.prediction_data,
         perf_data=args.perf_data,

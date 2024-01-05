@@ -4,7 +4,7 @@ type: parallel
 tags:
     Preview: ""
 
-version: 0.0.43
+version: 0.0.49
 name: llm_rag_generate_embeddings_parallel
 display_name: LLM - Generate Embeddings Parallel
 is_deterministic: true
@@ -37,9 +37,9 @@ inputs:
     default: "hugging_face://model/sentence-transformers/all-mpnet-base-v2"
     description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2' or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
   deployment_validation:
-     type: uri_file
-     description: "Uri file containing information on if the Azure OpenAI deployments, if used, have been validated"
-     optional: True
+    type: uri_file
+    description: "Uri file containing information on if the Azure OpenAI deployments, if used, have been validated"
+    optional: True
 
 outputs:
   embeddings:
@@ -57,19 +57,19 @@ logging_level: "INFO"
 input_data: ${{inputs.chunks_source}}
 
 retry_settings:
- max_retries: 3
- timeout: 3600
+  max_retries: 3
+  timeout: 3600
 
 task:
- type: run_function
- code: '../src'
- entry_script: embeddings/tasks/embed_prs.py
- environment: azureml:llm-rag-embeddings@latest
- program_arguments: >-
-   --output_data ${{outputs.embeddings}}
-   $[[--embeddings_container ${{inputs.embeddings_container}}]]
-   --embeddings_model ${{inputs.embeddings_model}}
-   --task_overhead_timeout 1200
-   --progress_update_timeout 600
-   --first_task_creation_timeout 600
+  type: run_function
+  code: '../src'
+  entry_script: embeddings/tasks/embed_prs.py
+  environment: azureml:llm-rag-embeddings@latest
+  program_arguments: >-
+    --output_data ${{outputs.embeddings}}
+    $[[--embeddings_container ${{inputs.embeddings_container}}]]
+    --embeddings_model ${{inputs.embeddings_model}}
+    --task_overhead_timeout 1200
+    --progress_update_timeout 600
+    --first_task_creation_timeout 600
 append_row_to: ${{outputs.processed_file_names}}
