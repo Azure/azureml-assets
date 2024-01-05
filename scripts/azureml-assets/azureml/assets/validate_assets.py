@@ -12,9 +12,10 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from typing import List
 
-from azure.ai.ml import load_model
+from azure.ai.ml import MLClient, load_model
 from azure.ai.ml.entities import Model
 from azure.ai.ml.operations._run_history_constants import JobStatus
+from azure.identity import AzureCliCredential
 
 import azureml.assets as assets
 import azureml.assets.util as util
@@ -42,6 +43,15 @@ MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
 VALIDATION_SUMMARY = "results.json"
 SUPPORTED_INFERENCE_SKU_FILE_NAME = "config/supported_inference_skus.json"
 SUPPORTED_INFERENCE_SKU_FILE_PATH = Path(__file__).parent / SUPPORTED_INFERENCE_SKU_FILE_NAME
+
+# credential and mlcient initialization
+# credential might not always be present
+# check in try-except block
+credential = None
+try:
+    credential = AzureCliCredential()
+except Exception as e:
+    logger.log_warning("exception in creating credential. {e}")
 
 
 class MLFlowModelProperties:
@@ -682,8 +692,6 @@ def validate_model_scenario(
     recommended_skus = model.properties.get(recommended_skus_prop_name, "").strip()
     compute_allowlists = set(model.tags.get(compute_allowlist_tags_name, []))
 
-    # TODO: add min_sku validation than just its existence
-
     if not min_sku:
         _log_error(asset_file_name_with_path, f"{min_sku_prop_name} is missing in model properties")
         error_count += 1
@@ -708,7 +716,61 @@ def validate_model_scenario(
         )
         error_count += 1
 
+
+    # confirm min_sku_spec with list of supported computes
+    error_count += confirm_sku_spec(compute_allowlists, min_sku)
+
     return error_count
+
+
+def confirm_sku_spec(asset_file_name_with_path: Path, supported_skus: set, min_sku_spec: str):
+    """Validate min sku is correctly populated.
+
+    Min SKU is represented by #cpus|#gpus|#cpu-memory|#disk-space. 
+    All data is represented as GBs.
+
+    Min SKU should be the min of all skus grouped by category above.
+
+    :param supported_skus: supported SKUs as list
+    :type supported_skus: List[str]
+    :param min_sku_spec: Scenario min SKU spec
+    :type min_sku_spec: str
+    """
+    # run this if credential and subcription set in env
+    import os
+    from azureml.assets.util.sku_utils import get_all_sku_details
+
+    subscription_id = os.getenv("SUBSCRIPTION_ID", None)
+    if not (credential and subscription_id):
+        logger.log_warning("credential or subscription_id missing. Skipping min sku valdn")
+        return 0
+
+    try:
+        all_sku_details = get_all_sku_details(credential, subscription_id)
+        min_disk = min_cpu_mem = min_ngpus = min_ncpus = -1
+        for sku in supported_skus:
+            sku_details = all_sku_details.get(sku)
+            if not sku_details:
+                raise Exception(f"Either invalid sku {sku} or issue with fetching sku details")
+            num_cpus = sku_details["vCPUs"]
+            num_gpus = sku_details["gpus"]
+            cpu_mem = sku_details["memoryGB"]
+            disk_space = sku_details["maxResourceVolumeMB"] / 1024
+
+            min_ncpus = min(num_cpus, min_ncpus) if min_ncpus > 0 else num_cpus
+            min_ngpus = min(num_gpus, min_ngpus) if min_ngpus > 0 else num_gpus
+            min_cpu_mem = min(cpu_mem, min_cpu_mem) if min_cpu_mem > 0 else cpu_mem
+            min_disk = min(disk_space, min_disk) if min_disk > 0 else disk_space
+        
+        ncpus, ngpus, mem, disk = min_sku_spec.spit("|")
+        if ncpus != min_ncpus or ngpus != min_ngpus or mem != min_cpu_mem or disk != min_disk:
+            _log_error(
+                asset_file_name_with_path,
+                f"{ncpus}|{ngpus}|{mem}|{disk} != {min_ncpus}|{min_gpus}|{min_cpu_mem}|{min_disk}"
+            )
+    except Exception as e:
+        _log_error(asset_file_name_with_path, f"Exception in fetching SKU details => {e}")
+        return 1
 
 
 def validate_model_spec(asset_config: assets.AssetConfig) -> int:
