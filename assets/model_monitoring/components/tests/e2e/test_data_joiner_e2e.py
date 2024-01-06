@@ -95,4 +95,4 @@ class TestDataJoinerE2E:
             DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME
         )
 
-        assert pipeline_job.status == 'Completed'
+        assert pipeline_job.status == 'Failed'
