@@ -139,6 +139,7 @@ class TestStoreUrl:
         """Test StoreUrl constructor with azureml path."""
         mock_datastore = Mock(datastore_type=datastore_type, protocol=expected_protocol, endpoint="core.windows.net",
                               account_name="my_account", container_name="my_container")
+        mock_datastore.name = "my_datastore"
         if datastore_type == "AzureBlob":
             mock_container_client = Mock(
                 spec=ContainerClient, account_name="my_account", container_name="my_container",
