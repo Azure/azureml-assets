@@ -11,8 +11,8 @@ from azureml.assets.util.util import retry
 
 all_sku_details = None
 SKU_DETAILS_URI = (
-    "https://management.azure.com/subscriptions/{subscription_id}/"
-    "providers/Microsoft.MachineLearningServices/locations/{location}"
+    "https://management.azure.com/subscriptions/{}/"
+    "providers/Microsoft.MachineLearningServices/locations/{}"
     "/vmSizes?api-version=2021-01-01&expandChildren=true"
 )
 
