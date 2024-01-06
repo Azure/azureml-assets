@@ -3,6 +3,7 @@
 
 """Validate assets."""
 
+import os
 import argparse
 import json
 import re
@@ -22,6 +23,7 @@ import azureml.assets.util as util
 from azureml.assets import PublishLocation, PublishVisibility
 from azureml.assets.config import ValidationException
 from azureml.assets.util import logger
+from azureml.assets.util.sku_utils import get_all_sku_details
 
 ERROR_TEMPLATE = "Validation of {file} failed: {error}"
 WARNING_TEMPLATE = "Warning during validation of {file}: {warning}"
@@ -717,28 +719,28 @@ def validate_model_scenario(
         error_count += 1
 
     # confirm min_sku_spec with list of supported computes
-    error_count += confirm_sku_spec(compute_allowlists, min_sku)
+    error_count += confirm_min_sku_spec(asset_file_name_with_path, min_sku_prop_name, compute_allowlists, min_sku)
 
     return error_count
 
 
-def confirm_sku_spec(asset_file_name_with_path: Path, supported_skus: set, min_sku_spec: str):
-    """Validate min sku is correctly populated.
+def confirm_min_sku_spec(
+    asset_file_name_with_path: Path,
+    min_sku_prop_name: str,
+    supported_skus: set,
+    min_sku_spec: str
+):
+    """Validate model properties, tags for different scenarios.
 
-    Min SKU is represented by #cpus|#gpus|#cpu-memory|#disk-space.
-    All data is represented as GBs.
+    Args:
+        asset_file_name_with_path (Path): file path to model asset
+        min_sku_prop_name (str): min sku property name for the scenario
+        supported_skus (List): supported SKUs for the scenario
+        min_sku_spec (str): Scenario min SKU spec
 
-    Min SKU should be the min of all skus grouped by category above.
-
-    :param supported_skus: supported SKUs as list
-    :type supported_skus: List[str]
-    :param min_sku_spec: Scenario min SKU spec
-    :type min_sku_spec: str
+    Returns:
+        int: Number of errors.
     """
-    # run this if credential and subcription set in env
-    import os
-    from azureml.assets.util.sku_utils import get_all_sku_details
-
     subscription_id = os.getenv("SUBSCRIPTION_ID", None)
     if not (credential and subscription_id):
         logger.log_warning("credential or subscription_id missing. Skipping min sku valdn")
@@ -750,26 +752,33 @@ def confirm_sku_spec(asset_file_name_with_path: Path, supported_skus: set, min_s
         for sku in supported_skus:
             sku_details = all_sku_details.get(sku)
             if not sku_details:
-                raise Exception(f"Either invalid sku {sku} or issue with fetching sku details")
+                raise Exception(
+                    f"Caught exception while checking {min_sku_prop_name}."
+                    f" Either invalid sku {sku} or issue with fetching sku details"
+                )
+
             num_cpus = sku_details["vCPUs"]
             num_gpus = sku_details["gpus"]
-            cpu_mem = sku_details["memoryGB"]
-            disk_space = sku_details["maxResourceVolumeMB"] / 1024
+            cpu_mem = int(sku_details["memoryGB"])
+            disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
 
             min_ncpus = min(num_cpus, min_ncpus) if min_ncpus > 0 else num_cpus
-            min_ngpus = min(num_gpus, min_ngpus) if min_ngpus > 0 else num_gpus
+            min_ngpus = min(num_gpus, min_ngpus) if min_ngpus >= 0 else num_gpus
             min_cpu_mem = min(cpu_mem, min_cpu_mem) if min_cpu_mem > 0 else cpu_mem
             min_disk = min(disk_space, min_disk) if min_disk > 0 else disk_space
 
-        ncpus, ngpus, mem, disk = min_sku_spec.spit("|")
+        ncpus, ngpus, mem, disk = min_sku_spec.split("|")
         if ncpus != min_ncpus or ngpus != min_ngpus or mem != min_cpu_mem or disk != min_disk:
             _log_error(
                 asset_file_name_with_path,
+                f"for {min_sku_prop_name} => "
                 f"{ncpus}|{ngpus}|{mem}|{disk} != {min_ncpus}|{min_ngpus}|{min_cpu_mem}|{min_disk}"
             )
+            return 1
     except Exception as e:
         _log_error(asset_file_name_with_path, f"Exception in fetching SKU details => {e}")
         return 1
+    return 0
 
 
 def validate_model_spec(asset_config: assets.AssetConfig) -> int:

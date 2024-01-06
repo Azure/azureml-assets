@@ -7,18 +7,19 @@ import json
 import requests
 from azureml.assets.util import logger
 from azureml.assets.util.util import retry
+from azure.identity import AzureCliCredential
 
 
 all_sku_details = None
 SKU_DETAILS_URI = (
-    "https://management.azure.com/subscriptions/{subscription_id}/"
-    "providers/Microsoft.MachineLearningServices/locations/{location}"
+    "https://management.azure.com/subscriptions/{}/"
+    "providers/Microsoft.MachineLearningServices/locations/{}"
     "/vmSizes?api-version=2021-01-01&expandChildren=true"
 )
 
 
 @retry(3)
-def get_all_sku_details(credential, subscription_id: str, location: str = "eastus"):
+def get_all_sku_details(credential: AzureCliCredential, subscription_id: str, location: str = "eastus"):
     """Return all sku details.
 
     return response =>
@@ -36,6 +37,11 @@ def get_all_sku_details(credential, subscription_id: str, location: str = "eastu
         ....
         ....
     }
+
+    Args:
+        credential (AzureCliCredential): Credential to generate token for the request
+        subscription_id (str): Subscription ID to check details in
+        location (str): location to query SKU details for. Default is set to eastus
     """
     global all_sku_details
     if all_sku_details is None:
@@ -53,8 +59,15 @@ def get_all_sku_details(credential, subscription_id: str, location: str = "eastu
     return all_sku_details
 
 
-def get_sku_details(credential, SKU: str, subscription_id: str, location: str = "eastus"):
-    """Get sku details."""
+def get_sku_details(credential: AzureCliCredential, SKU: str, subscription_id: str, location: str = "eastus"):
+    """Get sku details.
+
+    Args:
+        credential (AzureCliCredential): Credential to generate token for the request
+        SKU (str): SKU to fetch detail of
+        subscription_id (str): Subscription ID to check details in
+        location (str): location to query SKU details for. Default is set to eastus
+    """
     global all_sku_details
     if all_sku_details is None:
         logger.print(f"Fetching all sku details for subscription: {subscription_id} and location: {location}")
