@@ -722,7 +722,7 @@ def validate_model_scenario(
     return error_count
 
 
-def confirm_sku_spec(asset_file_name_with_path: Path, supported_skus: set, min_sku_spec: str):
+def confirm_sku_spec(asset_file_name_with_path: Path, min_sku_prop_name: str, supported_skus: set, min_sku_spec: str):
     """Validate min sku is correctly populated.
 
     Min SKU is represented by #cpus|#gpus|#cpu-memory|#disk-space.
@@ -750,25 +750,26 @@ def confirm_sku_spec(asset_file_name_with_path: Path, supported_skus: set, min_s
         for sku in supported_skus:
             sku_details = all_sku_details.get(sku)
             if not sku_details:
-                raise Exception(f"Either invalid sku {sku} or issue with fetching sku details")
+                raise Exception(
+                    f"Caught exception while checking {min_sku_prop_name}."
+                    f" Either invalid sku {sku} or issue with fetching sku details"
+                )
+
             num_cpus = sku_details["vCPUs"]
             num_gpus = sku_details["gpus"]
             cpu_mem = int(sku_details["memoryGB"])
             disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
 
             min_ncpus = min(num_cpus, min_ncpus) if min_ncpus > 0 else num_cpus
-            min_ngpus = min(num_gpus, min_ngpus) if min_ngpus > 0 else num_gpus
+            min_ngpus = min(num_gpus, min_ngpus) if min_ngpus >= 0 else num_gpus
             min_cpu_mem = min(cpu_mem, min_cpu_mem) if min_cpu_mem > 0 else cpu_mem
             min_disk = min(disk_space, min_disk) if min_disk > 0 else disk_space
 
         ncpus, ngpus, mem, disk = min_sku_spec.split("|")
-        _log_warning(
-            asset_file_name_with_path,
-            f"{ncpus}|{ngpus}|{mem}|{disk} != {min_ncpus}|{min_ngpus}|{min_cpu_mem}|{min_disk}"
-        )
         if ncpus != min_ncpus or ngpus != min_ngpus or mem != min_cpu_mem or disk != min_disk:
             _log_error(
                 asset_file_name_with_path,
+                f"for {min_sku_prop_name} => "
                 f"{ncpus}|{ngpus}|{mem}|{disk} != {min_ncpus}|{min_ngpus}|{min_cpu_mem}|{min_disk}"
             )
             return 1
