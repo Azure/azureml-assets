@@ -55,8 +55,9 @@ def join_data(
 
     # Throw exception if the result is empty
     if joined_data_df.count() == 0:
-        raise InvalidInputError(f"The data joiner resulted in an empty data asset. Please check the input data to see if this is expected.")
-    
+        raise InvalidInputError("The data joiner resulted in an empty data asset. "\
+                                "Please check the input data to see if this is expected.")
+
     return joined_data_df
 
 
@@ -81,7 +82,6 @@ def run():
         right_input_data_df,
         args.right_join_column
     )
-
 
     # Write the joined data.
     save_spark_df_as_mltable(joined_data_df, args.joined_data)
