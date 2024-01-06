@@ -767,7 +767,7 @@ def confirm_min_sku_spec(
             min_cpu_mem = min(cpu_mem, min_cpu_mem) if min_cpu_mem > 0 else cpu_mem
             min_disk = min(disk_space, min_disk) if min_disk > 0 else disk_space
 
-        ncpus, ngpus, mem, disk = min_sku_spec.split("|")
+        ncpus, ngpus, mem, disk = [int(item) for item in min_sku_spec.split("|")]
         if ncpus != min_ncpus or ngpus != min_ngpus or mem != min_cpu_mem or disk != min_disk:
             _log_error(
                 asset_file_name_with_path,
