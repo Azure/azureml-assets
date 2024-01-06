@@ -762,12 +762,14 @@ def confirm_min_sku_spec(
             cpu_mem = int(sku_details["memoryGB"])
             disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
 
+            logger.print(f"{sku} => {num_cpus}|{num_gpus}|{cpu_mem}|{disk_space}")
+
             min_ncpus = min(num_cpus, min_ncpus) if min_ncpus > 0 else num_cpus
             min_ngpus = min(num_gpus, min_ngpus) if min_ngpus >= 0 else num_gpus
             min_cpu_mem = min(cpu_mem, min_cpu_mem) if min_cpu_mem > 0 else cpu_mem
             min_disk = min(disk_space, min_disk) if min_disk > 0 else disk_space
 
-        ncpus, ngpus, mem, disk = min_sku_spec.split("|")
+        ncpus, ngpus, mem, disk = [int(item) for item in min_sku_spec.split("|")]
         if ncpus != min_ncpus or ngpus != min_ngpus or mem != min_cpu_mem or disk != min_disk:
             _log_error(
                 asset_file_name_with_path,
