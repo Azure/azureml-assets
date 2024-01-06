@@ -56,7 +56,7 @@ def join_data(
     # Throw exception if the result is empty
     if joined_data_df.count() == 0:
         raise InvalidInputError("""The data joiner resulted in an empty data asset.
-                                "Please check the input data to see if this is expected.""")
+                                Please check the input data to see if this is expected.""")
 
     return joined_data_df
 

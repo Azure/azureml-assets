@@ -6,6 +6,7 @@
 import pytest
 from azure.ai.ml import Input, MLClient, Output
 from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_JOINER,
@@ -57,7 +58,12 @@ def _submit_data_joiner_job(
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
+
     return ml_client.jobs.get(pipeline_job.name)
 
 
@@ -81,7 +87,7 @@ class TestDataJoinerE2E:
 
         assert pipeline_job.status == 'Completed'
 
-    def test_data_joiner_empty_result_successful(
+    def test_data_joiner_empty_result_failed(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test data joiner that produces empty result."""
