@@ -438,8 +438,8 @@ def dump_yaml(yaml_dict: dict, file_path: str):
 def retry(times):
     """Retry Decorator.
 
-    :param times: The number of times to repeat the wrapped function/method
-    :type times: int
+    Args:
+        times (int): The number of times to repeat the wrapped function/method
     """
 
     def decorator(func):
