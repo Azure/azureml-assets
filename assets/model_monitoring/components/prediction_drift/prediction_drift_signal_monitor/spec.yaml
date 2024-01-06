@@ -4,7 +4,7 @@ type: pipeline
 name: prediction_drift_signal_monitor
 display_name: Prediction Drift - Signal Monitor
 description: Computes the prediction drift between a baseline and a target data assets.
-version: 0.3.15
+version: 0.3.16
 is_deterministic: true
 
 inputs:
