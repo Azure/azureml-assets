@@ -35,6 +35,7 @@ jobs:
   validate:
     name: Validate
     runs-on: ubuntu-latest
+    environment: Testing
 
     steps:
       - name: Clone branch
@@ -51,13 +52,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '>=3.8'
-
-      - name: print
-        run: echo $client_id $tenant_id $subscription_id
-        env: 
-          client_id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant_id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   
       - name: Log in to Azure
         uses: azure/login@v1
