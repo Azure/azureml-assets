@@ -753,8 +753,8 @@ def confirm_sku_spec(asset_file_name_with_path: Path, supported_skus: set, min_s
                 raise Exception(f"Either invalid sku {sku} or issue with fetching sku details")
             num_cpus = sku_details["vCPUs"]
             num_gpus = sku_details["gpus"]
-            cpu_mem = sku_details["memoryGB"]
-            disk_space = sku_details["maxResourceVolumeMB"] / 1024
+            cpu_mem = int(sku_details["memoryGB"])
+            disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
 
             min_ncpus = min(num_cpus, min_ncpus) if min_ncpus > 0 else num_cpus
             min_ngpus = min(num_gpus, min_ngpus) if min_ngpus > 0 else num_gpus
@@ -771,9 +771,11 @@ def confirm_sku_spec(asset_file_name_with_path: Path, supported_skus: set, min_s
                 asset_file_name_with_path,
                 f"{ncpus}|{ngpus}|{mem}|{disk} != {min_ncpus}|{min_ngpus}|{min_cpu_mem}|{min_disk}"
             )
+            return 1
     except Exception as e:
         _log_error(asset_file_name_with_path, f"Exception in fetching SKU details => {e}")
         return 1
+    return 0
 
 
 def validate_model_spec(asset_config: assets.AssetConfig) -> int:
