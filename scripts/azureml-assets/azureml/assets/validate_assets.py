@@ -3,6 +3,7 @@
 
 """Validate assets."""
 
+import os
 import argparse
 import json
 import re
@@ -22,6 +23,7 @@ import azureml.assets.util as util
 from azureml.assets import PublishLocation, PublishVisibility
 from azureml.assets.config import ValidationException
 from azureml.assets.util import logger
+from azureml.assets.util.sku_utils import get_all_sku_details
 
 ERROR_TEMPLATE = "Validation of {file} failed: {error}"
 WARNING_TEMPLATE = "Warning during validation of {file}: {warning}"
@@ -717,28 +719,28 @@ def validate_model_scenario(
         error_count += 1
 
     # confirm min_sku_spec with list of supported computes
-    error_count += confirm_sku_spec(asset_file_name_with_path, compute_allowlists, min_sku)
+    error_count += confirm_min_sku_spec(asset_file_name_with_path, min_sku_prop_name, compute_allowlists, min_sku)
 
     return error_count
 
 
-def confirm_sku_spec(asset_file_name_with_path: Path, min_sku_prop_name: str, supported_skus: set, min_sku_spec: str):
-    """Validate min sku is correctly populated.
+def confirm_min_sku_spec(
+    asset_file_name_with_path: Path,
+    min_sku_prop_name: str,
+    supported_skus: set,
+    min_sku_spec: str
+):
+    """Validate model properties, tags for different scenarios.
 
-    Min SKU is represented by #cpus|#gpus|#cpu-memory|#disk-space.
-    All data is represented as GBs.
+    Args:
+        asset_file_name_with_path (Path): file path to model asset
+        min_sku_prop_name (str): min sku property name for the scenario
+        supported_skus (List): supported SKUs for the scenario
+        min_sku_spec (str): Scenario min SKU spec
 
-    Min SKU should be the min of all skus grouped by category above.
-
-    :param supported_skus: supported SKUs as list
-    :type supported_skus: List[str]
-    :param min_sku_spec: Scenario min SKU spec
-    :type min_sku_spec: str
+    Returns:
+        int: Number of errors.
     """
-    # run this if credential and subcription set in env
-    import os
-    from azureml.assets.util.sku_utils import get_all_sku_details
-
     subscription_id = os.getenv("SUBSCRIPTION_ID", None)
     if not (credential and subscription_id):
         logger.log_warning("credential or subscription_id missing. Skipping min sku valdn")
