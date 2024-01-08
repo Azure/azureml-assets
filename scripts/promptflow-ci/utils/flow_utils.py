@@ -114,6 +114,7 @@ def submit_flow_runs_using_pfazure(flow_dirs, sub, rg, ws):
             try:
                 flow_dir = futures[future]
                 res = future.result()
+                log_debug(res)
                 run_id, portal_url = get_run_id_and_url(res)
                 results[run_id] = portal_url
             except Exception as exc:
