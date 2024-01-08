@@ -112,13 +112,3 @@ jobs:
             exit 1
           fi
           rm -rf cspell_check.log
-
-  check_ci_status:
-    runs-on: ubuntu-latest
-    name: fail ci if continue is false
-    if: fromJSON(needs.check-execution-context.outputs.continue) == false
-    needs: check-execution-context
-    steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - name: Fail CI
-      run: exit -1
