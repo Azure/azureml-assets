@@ -17,11 +17,7 @@ from shared_utilities.constants import (
     CATEGORICAL_FEATURE_CATEGORY,
     NUMERICAL_FEATURE_CATEGORY,
 )
-from shared_utilities.df_utils import (
-    get_feature_type_override_map,
-    get_numerical_cols_with_df_with_override,
-    get_categorical_cols_with_df_with_override
-)
+from shared_utilities.df_utils import get_numerical_and_categorical_cols
 from shared_utilities.histogram_utils import get_histograms
 from shared_utilities.io_utils import init_spark
 
@@ -140,10 +136,11 @@ def compute_histograms(
         override_categorical_features: str)-> tuple:
     """Compute data drift measures and perform tests."""
     # Generate histograms only for columns in both baseline and target dataset
-    feature_type_override_map = get_feature_type_override_map(override_numerical_features,
-                                                              override_categorical_features)
-    numerical_columns = get_numerical_cols_with_df_with_override(feature_type_override_map, df)
-    categorical_columns = get_categorical_cols_with_df_with_override(feature_type_override_map, df)
+    numerical_columns_names, categorical_columns_names = get_numerical_and_categorical_cols(
+                                                            baseline_df,
+                                                            common_columns_dict,
+                                                            override_numerical_features,
+                                                            override_categorical_features)
 
     # Numerical column histogram generation
 

@@ -11,9 +11,7 @@ from categorical_data_drift_metrics import compute_categorical_data_drift_measur
 from io_utils import get_output_spark_df
 from shared_utilities.df_utils import (
     get_common_columns,
-    get_feature_type_override_map,
-    get_numerical_cols_with_df_with_override,
-    get_categorical_cols_with_df_with_override
+    get_numerical_and_categorical_cols
 )
 
 
@@ -29,16 +27,13 @@ def compute_data_drift_measures_tests(
 ):
     """Compute Data drift metrics and tests."""
     common_columns_dict = get_common_columns(baseline_df, production_df)
-    feature_type_override_map = get_feature_type_override_map(override_numerical_features,
-                                                              override_categorical_features)
-    print("Getting feature type override map: ", feature_type_override_map)
 
-    numerical_columns_names = get_numerical_cols_with_df_with_override(feature_type_override_map,
-                                                                       baseline_df,
-                                                                       common_columns_dict)
-    categorical_columns_names = get_categorical_cols_with_df_with_override(feature_type_override_map,
-                                                                           baseline_df,
-                                                                           common_columns_dict)
+    numerical_columns_names, categorical_columns_names = get_numerical_and_categorical_cols(
+                                                            baseline_df,
+                                                            common_columns_dict,
+                                                            override_numerical_features,
+                                                            override_categorical_features)
+
     baseline_df = baseline_df.dropna()
     production_df = production_df.dropna()
 

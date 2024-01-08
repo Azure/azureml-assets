@@ -11,6 +11,7 @@ from pyspark.sql.types import (
     StringType,
     FloatType
 )
+from shared_utilities.df_utils import get_categorical_cols_with_df_with_override
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable, init_spark
 from shared_utilities import constants
 from sklearn.model_selection import train_test_split
@@ -270,10 +271,14 @@ def run(args):
         log_time_and_message("Reading data in spark and converting to pandas")
         baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
 
+        raw_categorical_features = get_categorical_cols_with_df_with_override(baseline_df,
+                                                   override_numerical_features=args.override_numerical_features,
+                                                   override_categorical_features=args.override_categorical_features)
         baseline_df = baseline_df.toPandas()
         task_type = determine_task_type(args.task_type, args.target_column, baseline_df)
         log_time_and_message(f"Computed task type is {task_type}")
 
+        # Todo: get this from raw_categorical_features (removing target column, validate feature types)
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
 
         for column in baseline_df.columns:

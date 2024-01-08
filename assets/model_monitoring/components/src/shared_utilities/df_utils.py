@@ -74,9 +74,15 @@ def is_categorical_new(column, column_dtype_map: dict, feature_type_override_map
     return False
 
 
-def get_numerical_cols_with_df_with_override(feature_type_override_map: dict, df, column_dtype_map=None) -> list:
+def get_numerical_cols_with_df_with_override(
+        df,
+        override_numerical_features,
+        override_categorical_features,
+        column_dtype_map=None,) -> list:
     """Get numerical columns from all columns with dataframe."""
     column_dtype_map = dict(df.dtypes) if column_dtype_map is None else column_dtype_map
+    feature_type_override_map = get_feature_type_override_map(override_numerical_features,
+                                                              override_categorical_features)
     numerical_columns = [
         column
         for column in column_dtype_map
@@ -85,15 +91,30 @@ def get_numerical_cols_with_df_with_override(feature_type_override_map: dict, df
     return numerical_columns
 
 
-def get_categorical_cols_with_df_with_override(feature_type_override_map: dict, df, column_dtype_map=None) -> list:
+def get_categorical_cols_with_df_with_override(
+        df,
+        override_numerical_features,
+        override_categorical_features,
+        column_dtype_map=None,) -> list:
     """Get categorical columns from all columns with dataframe."""
     column_dtype_map = dict(df.dtypes) if column_dtype_map is None else column_dtype_map
+    feature_type_override_map = get_feature_type_override_map(override_numerical_features,
+                                                              override_categorical_features)
     categorical_columns = [
         column
         for column in column_dtype_map
         if is_categorical_new(column, column_dtype_map, feature_type_override_map, df)
     ]
     return categorical_columns
+
+
+def get_numerical_and_categorical_cols(
+        df,
+        override_numerical_features,
+        override_categorical_features,
+        column_dtype_map=None,):
+    return (get_numerical_cols_with_df_with_override(df, column_dtype_map, override_numerical_features, override_categorical_features),
+            get_categorical_cols_with_df_with_override(df, column_dtype_map, override_numerical_features, override_categorical_features))
 
 
 def get_feature_type_override_map(override_numerical_features: str, override_categorical_features: str) -> dict:
