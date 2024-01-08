@@ -38,7 +38,6 @@ class TestFeatureSelectorAll:
                                                ["id", "name"])
         production_df = create_pyspark_dataframe([(3, "c"), (4, "d")],
                                                  ["age", "gender"])
-        try:
-            feature_selector.select(baseline_df, production_df)
-        except Exception as e:
-            assert "Found no common columns between input datasets." in e.args[0]
+
+        features = feature_selector.select(baseline_df, production_df)
+        assert features.isEmpty() is True
