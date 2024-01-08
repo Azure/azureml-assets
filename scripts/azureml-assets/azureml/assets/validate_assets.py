@@ -787,7 +787,8 @@ def confirm_min_sku_spec(
                 disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
 
                 if num_cpus < ncpus or num_gpus < ngpus or cpu_mem < mem or disk_space < disk:
-                    skus_failing_valdn.append({sku: "|".join([num_cpus, num_gpus, cpu_mem, disk_space])})
+                    sku_spec = "|".join([str(num_cpus), str(num_gpus), str(cpu_mem), str(disk_space)])
+                    skus_failing_valdn.append(f"{sku}: {sku_spec}")
 
             _log_error(
                 asset_file_name_with_path,
