@@ -13,7 +13,7 @@ from model_monitor_feature_selector.selectors.feature_selector_type import (
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark, try_read_mltable_in_spark_with_error, save_spark_df_as_mltable
 )
-from shared_utilities.momo_exceptions import DataNotFoundError
+from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 
 
 def run():
@@ -60,6 +60,16 @@ def run():
         input_df1=input_df1,
         input_df2=input_df2,
     )
+    if features_df.isEmpty():
+        # TODO: For now we raise InvalidInputError since it is categorized as UserError for momo SLA.
+        # In future when we create a base UserError exception we can replace this to a more
+        # appropriately named exception.
+        raise InvalidInputError(
+            "Could not generate features set correctly. Found no common columns between input datasets." +
+            " Try checking the input datasets are not both empty (atleast one of the inputs needs data)." +
+            " Also, double-check column names in dataset since they are case-sensitive."
+            f" input_data_1 path: {args.input_data_1}. input_data_2 path: {args.input_data_2}."
+        )
 
     save_spark_df_as_mltable(features_df, args.feature_names)
 
