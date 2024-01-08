@@ -776,6 +776,25 @@ def confirm_min_sku_spec(
                 f"for {min_sku_prop_name} => "
                 f"{ncpus}|{ngpus}|{mem}|{disk} != {min_ncpus}|{min_ngpus}|{min_cpu_mem}|{min_disk}"
             )
+
+            # list of skus larger than current specific min-sku
+            skus_failing_valdn = []
+            for sku in supported_skus:
+                sku_details = all_sku_details.get(sku)
+                num_cpus = sku_details["vCPUs"]
+                num_gpus = sku_details["gpus"]
+                cpu_mem = int(sku_details["memoryGB"])
+                disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
+
+                if num_cpus < ncpus or num_gpus < ngpus or cpu_mem < mem or disk_space < disk:
+                    skus_failing_valdn.append({sku: "|".join(f"{num_cpus}|{num_gpus}|{cpu_mem}|{disk_space}")})
+
+            _log_error(
+                asset_file_name_with_path,
+                f"for {min_sku_prop_name} => "
+                f"SKUs having smaller spec: {skus_failing_valdn}"
+            )
+
             return 1
     except Exception as e:
         _log_error(asset_file_name_with_path, f"Exception in fetching SKU details => {e}")
