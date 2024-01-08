@@ -28,6 +28,8 @@ env:
 permissions:
   # Required for OIDC login to Azure
   id-token: write
+  # Required to clone repo
+  contents: read
 
 jobs:
   check-execution-context:
