@@ -3,7 +3,7 @@
 
 """This file contains the data reader for model performance compute metrics."""
 
-from shared_utilities.io_utils import read_mltable_in_spark
+from shared_utilities.io_utils import try_read_mltable_in_spark, NoDataApproach
 
 
 class DataReaderFactory:
@@ -54,39 +54,22 @@ class BaseTaskReader:
         """
         self.task = task
 
-    def _read_mltable_to_pd_dataframe(self, file_name, columns):
-        """
-        Read mltable to pandas dataframe.
-
-        Args:
-            file_name: str
-            columns: list
-
-        Returns: pd.DataFrame
-
-        """
-        df = read_mltable_in_spark(file_name)
-        if columns is not None:
-            df = df.select(columns)  # We might need to accept multiple columns in code-gen
-        return df.toPandas()
-
-    def read_data(self, ground_truths, ground_truths_column_name, predictions, predictions_column_name):
+    def read_data(self, ground_truths_column_name, file_name, predictions_column_name):
         """
         Read data for the task.
 
         Args:
-            ground_truths: str
             ground_truths_column_name: str
-            predictions: str
+            file_name: str
             predictions_column_name: str
 
         Returns: MetricsDTO
 
         """
-        ground_truth = self._read_mltable_to_pd_dataframe(ground_truths,
-                                                          [ground_truths_column_name]
-                                                          if ground_truths_column_name is not None else None)
-        predictions = self._read_mltable_to_pd_dataframe(predictions,
-                                                         [predictions_column_name]
-                                                         if predictions_column_name is not None else None)
+        df = try_read_mltable_in_spark(file_name, "production_data", NoDataApproach.ERROR)
+
+        ground_truth = df.select(ground_truths_column_name).toPandas()
+
+        predictions = df.select(predictions_column_name).toPandas()
+
         return MetricsDTO(ground_truth, predictions)

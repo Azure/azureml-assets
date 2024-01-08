@@ -4,7 +4,7 @@ type: pipeline
 name: model_performance_signal_monitor
 display_name: Model Performance - Signal Monitor
 description: Computes the model performance
-version: 0.0.3
+version: 0.0.4
 is_deterministic: true
 inputs:
   task:
@@ -12,8 +12,6 @@ inputs:
     default: tabular-classification
     enum: [tabular-classification, tabular-regression]
     description: "Task type"
-  baseline_data:
-    type: mltable
   baseline_data_target_column:
     type: string
   production_data:
@@ -52,10 +50,9 @@ outputs:
 jobs:
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_performance_compute_metrics/versions/0.0.3
+    component: azureml://registries/azureml/components/model_performance_compute_metrics/versions/0.0.4
     inputs:
       task: ${{parent.inputs.task}}
-      baseline_data: ${{parent.inputs.baseline_data}}
       baseline_data_target_column: ${{parent.inputs.baseline_data_target_column}}
       production_data: ${{parent.inputs.production_data}}
       production_data_target_column: ${{parent.inputs.production_data_target_column}}

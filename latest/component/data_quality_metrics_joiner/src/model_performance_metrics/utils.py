@@ -50,7 +50,6 @@ def convert_pandas_to_spark(pandas_data):
 def construct_signal_metrics(
         metrics_artifacts,
         output_data_file_name,
-        predictions_column_name,
         regression_rmse_threshold=None,
         regression_meanabserror_threshold=None,
         classification_precision_threshold=None,
