@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.29 (2023-01-06)
+### 🚀 New Features
+- [#2078](https://github.com/Azure/azureml-assets/pull/2078) Model spec min sku valdn
+
 ## 1.16.28 (2023-01-05)
 ### 🚀 New Features
 - [#2071](https://github.com/Azure/azureml-assets/pull/2071) Allow updating files during azcopy
