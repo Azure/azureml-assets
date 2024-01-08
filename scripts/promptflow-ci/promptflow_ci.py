@@ -160,6 +160,7 @@ if __name__ == "__main__":
     # Bug 2773738: Add retry when ClientAuthenticationError
     # https://msdata.visualstudio.com/Vienna/_workitems/edit/2773738
     # Skip template_chat_flow because not able to extract samples.json for test.
+    # Skip template_eval_flow because current default input fails.
     args = parser.parse_args()
 
     # Get changed models folder or all models folder

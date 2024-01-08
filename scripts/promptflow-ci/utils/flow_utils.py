@@ -86,17 +86,17 @@ def submit_func(run_path, sub, rg, ws):
     return res
 
 
-def get_run_id_and_url(res):
+def get_run_id_and_url(res, sub, rg, ws):
     """Resolve run_id an url from log."""
     run_id = ""
     portal_url = ""
     for line in res:
         log_debug(line)
-        if ('"portal_url":' in line):
-            match = re.search(r'/run/(.*?)/details', line)
+        if ('"name":' in line):
+            match = re.search(r'"name": "(.*?)",', line)
             if match:
-                portal_url = line.strip()
                 run_id = match.group(1)
+                portal_url = f"https://ml.azure.com/prompts/flow/bulkrun/run/{run_id}/details?wsid=/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.MachineLearningServices/workspaces/{ws}"
                 log_debug(f"runId: {run_id}")
     return run_id, portal_url
 
@@ -114,8 +114,7 @@ def submit_flow_runs_using_pfazure(flow_dirs, sub, rg, ws):
             try:
                 flow_dir = futures[future]
                 res = future.result()
-                log_debug(res)
-                run_id, portal_url = get_run_id_and_url(res)
+                run_id, portal_url = get_run_id_and_url(res, sub, rg, ws)
                 results[run_id] = portal_url
             except Exception as exc:
                 failure_message = f"Submit test run failed. Flow dir: {flow_dir}.  Error: {exc}."
