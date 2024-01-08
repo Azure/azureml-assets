@@ -9,8 +9,8 @@ name: llm_rag_image_embed_index
 display_name: LLM - Embedding images with Florence 
 is_deterministic: true
 
-outputs:
 description: "Embeds input images and stores it in Azure Cognitive Search index with metadata using Florence embedding resource. MLIndex is stored to `output_path`."
+outputs:
   output_path:
     type: uri_folder
     description: Where to store the output MLIndex.
