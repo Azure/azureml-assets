@@ -250,7 +250,7 @@ if __name__ == "__main__":
         subscription_id=args.subscription_id,
         resource_group=args.resource_group,
     )
-
+    log_debug(f"\nrun ids to check: {submitted_flow_run_ids}")
     log_debug(f"\n{flow_runs_count} bulk test runs need to check status.")
     check_flow_run_status(flow_runs_to_check, submitted_flow_run_links, submitted_flow_run_ids,
                           check_run_status_interval, check_run_status_max_attempts)
