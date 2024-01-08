@@ -37,6 +37,7 @@ jobs:
 
   check_spec_yaml:
     runs-on: ubuntu-latest
+    if: fromJSON(needs.check-execution-context.outputs.continue)
     needs: check-execution-context
     name: Check spec.yaml fields
     timeout-minutes: 45
@@ -56,6 +57,7 @@ jobs:
 
   run_promptflow_ci_job:
     runs-on: ubuntu-latest
+    if: fromJSON(needs.check-execution-context.outputs.continue)
     needs: check-execution-context
     name: Flow tests
     environment: Testing
