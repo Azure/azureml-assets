@@ -42,9 +42,12 @@ jobs:
     name: Check spec.yaml fields
     timeout-minutes: 45
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-    
+    - name: Clone branch
+      uses: Azure/azureml-assets/.github/actions/clone-repo@main
+      with:
+        forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+        fetch-depth: 2
+
     - name: Set up Python 3.9 environment
       uses: actions/setup-python@v4
       with:
@@ -65,8 +68,11 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        with:
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+          fetch-depth: 2
 
       - name: Use Node.js 18.x  
         uses: actions/setup-node@v3
