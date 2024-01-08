@@ -46,6 +46,9 @@ inputs:
   task_type:
     type: string
     optional: true
+  instance_type:
+    type: string
+    optional: true
 outputs:
   signal_output:
     type: uri_folder
@@ -106,6 +109,7 @@ jobs:
       categorical_metric: ${{parent.inputs.categorical_metric}}
       numerical_threshold: ${{parent.inputs.numerical_threshold}}
       categorical_threshold: ${{parent.inputs.categorical_threshold}}
+      instance_type: ${{parent.inputs.instance_type}}
     outputs:
       signal_metrics:
         type: mltable

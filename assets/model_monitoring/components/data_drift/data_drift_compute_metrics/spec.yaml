@@ -29,15 +29,18 @@ inputs:
     type: number
   numerical_threshold:
     type: number
+  instance_type:
+    type: string
 outputs:
   signal_metrics:
     mode: direct
     type: mltable
 conf:
+  spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 1
-  spark.driver.memory: 2g
+  spark.driver.memory: '2g'
   spark.executor.cores: 2
-  spark.executor.memory: 2g
+  spark.executor.memory: '4g'
   spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1

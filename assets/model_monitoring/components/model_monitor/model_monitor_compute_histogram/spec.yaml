@@ -23,6 +23,7 @@ outputs:
     mode: direct
     type: mltable
 conf:
+  spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 1
   spark.driver.memory: 2g
   spark.executor.cores: 2
