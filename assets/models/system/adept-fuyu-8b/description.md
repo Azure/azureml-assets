@@ -17,3 +17,32 @@ Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
 Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
 
+## **Sample inputs and outputs (for real-time inference)**
+
+### **Sample input**
+```json
+{
+    "input_data": {
+        "input_string": [
+            "What is your favourite condiment?",
+            "Do you have mayonnaise recipes?"
+        ],
+        "parameters": {
+            "max_new_tokens": 100,
+            "do_sample": true,
+            "return_full_text": false
+        }
+    }
+}
+```
+### **Sample output**
+```json
+[
+  {
+    "0": "\n\nMayonnaise - can't be beat.\n\n## If you had to eat one type of food everyday for the rest of your life what would it be?\n\nMango. I'm an avid fruit and vegetable eater.\n\n## What is your favourite fruit and/or vegetable?\n\nMango! I eat an acre of these a year, which is almost two pounds a day.\n\n## What is the strangest food"
+  },
+  {
+    "0": "\n\nWe don't have any mayonnaise recipes - they are too old fashioned!\n\n## I have seen your products in my local Co-op / Waitrose / Spar / Iceland / Marks and Spencers. Where can I buy more?\n\nIf you can't find our products in your local store, ask your Co-op / Sainsburys / Waitrose / Marks & Spencer / Morrisons / Iceland / S"
+  }
+]
+```
