@@ -33,4 +33,4 @@ tags:
     ]  
   license: other
   task: text-generation
-version: 6
+version: 7
