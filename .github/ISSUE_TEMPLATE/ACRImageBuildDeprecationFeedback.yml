@@ -1,6 +1,6 @@
 name: ACR Image Build Deprecation Feedback
 description: File a feedback report detailing your experience with the deprecation process.
-labels: ["environmentLogs"]
+labels: ["ACRImageBuildDeprecation"]
 body:
   - type: markdown
     attributes:
