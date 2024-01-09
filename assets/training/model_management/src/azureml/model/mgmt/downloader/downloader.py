@@ -21,7 +21,13 @@ from azureml.model.mgmt.utils.common_utils import (
     get_filesystem_available_space_in_kb,
     get_git_lfs_blob_size_in_kb,
 )
-from azureml.model.mgmt.utils.exceptions import BlobStorageDownloadError, GITCloneError, VMNotSufficientForOperation, HFAuthenticationError
+from azureml.model.mgmt.utils.exceptions import (
+    BlobStorageDownloadError, 
+    GITCloneError, 
+    VMNotSufficientForOperation, 
+    HFAuthenticationError, 
+    GITConfigError
+)
 from huggingface_hub.hf_api import ModelInfo
 from huggingface_hub import login
 from pathlib import Path
@@ -264,7 +270,7 @@ class HuggingfaceDownloader(GITDownloader):
                 "misc": model_props.get("misc"),
             }
         else:
-            raise AzureMLException._with_error(
+            raise AzureMLException._with_error(run_command
                 AzureMLError.create(InvalidHuggingfaceModelIDError, model_id=self._model_id)
             )
 
@@ -274,6 +280,12 @@ def download_model(model_source: str, model_id: str, download_dir: Path, auth_to
     if model_source == ModelSource.HUGGING_FACE.value:
         if auth_token:
             try:
+                cmd = "git config --global credential.helper store"
+                exit_code, stdout = run_command(cmd)
+                if exit_code != 0:
+                    raise AzureMLException._with_error(
+                        AzureMLError.create(GITConfigError, error=stdout)
+                    )
                 login(token=auth_token, add_to_git_credential = True)
             except Exception as ex:
                 raise AzureMLException._with_error(

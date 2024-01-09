@@ -24,6 +24,7 @@ class ModelImportErrorStrings:
     ERROR_FETCHING_HUGGING_FACE_MODEL_INFO = "Error in fetching model info for {model_id}. Error [{error}]"
     BLOBSTORAGE_DOWNLOAD_ERROR = "Failed to download artifacts from {uri}. Error: [{error}]"
     GIT_CLONE_ERROR = "Failed to clone {uri}. Error: [{error}]"
+    GIT_CONFIG_ERROR = "Failed to set up GitHub config. Error: [{error}]"
     VM_NOT_SUFFICIENT_FOR_OPERATION = "VM not sufficient for {operation} operation. Details: [{details}]"
     CMD_EXECUTION_ERROR = "Error in executing command. Error: [{error}]"
     MODEL_ALREADY_EXISTS = "Model with name {model_id} already exists in registry {registry} at {url}"
@@ -44,7 +45,7 @@ class ModelImportErrorStrings:
         " cli - https://aka.ms/obo-cli-sample"
     )
     HF_AUTHENTICATION_ERROR = (
-        "Failed to authenticate with the HF Token provided: {error}"
+        "Failed to authenticate with the HF Token provided: [{error}]"
     )
 
 
@@ -82,6 +83,15 @@ class GITCloneError(ClientError):
         """Message format."""
         return ModelImportErrorStrings.GIT_CLONE_ERROR
 
+
+class GITConfigError(ClientError):
+    """GIT configuration error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.GIT_CONFIG_ERROR
+    
 
 class BlobStorageDownloadError(ClientError):
     """Azcopy blobstorage download error."""
