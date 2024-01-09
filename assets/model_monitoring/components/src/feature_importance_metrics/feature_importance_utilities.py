@@ -39,8 +39,8 @@ def is_lightGBM_supported_categorical_column(baseline_data, column_name):
     :rtype: boolean
     """
     baseline_column = pd.Series(baseline_data[column_name])
-    baseline_column_type = baseline_column.dtype.name
-    # LightGBM cannot accept anything but bool, int and float, only datatime64 can be converted to int
+    # LightGBM cannot accept anything but bool, int and float, everything else must be treated as a categorical column
+    # if it cannot be converted to an integer (this is what lightgbm does internally)
     return pd.api.types.is_datetime64_ns_dtype(baseline_column) or pd.api.types.is_timedelta64_ns_dtype(baseline_column)
 
 

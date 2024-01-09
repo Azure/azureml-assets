@@ -273,14 +273,16 @@ def run(args):
         log_time_and_message("Reading data in spark and converting to pandas")
         baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
 
-        raw_categorical_features = get_categorical_cols_with_df_with_override(baseline_df,
+        categorical_features = get_categorical_cols_with_df_with_override(baseline_df,
                                                                               args.override_numerical_features,
                                                                               args.override_categorical_features)
         baseline_df = baseline_df.toPandas()
-        # lightgbm does not support categorical features
-        categorical_features = compute_lightgbm_unsupported_categorical_features(baseline_df,
+        # lightgbm does not support features that can't be converted to non-bool, int, float features
+        # if these features can't be converted to an int. Therefore we have to more these as "category"
+        # types
+        categorical_features_lgbm = compute_lightgbm_unsupported_categorical_features(baseline_df,
                                                                                  args.target_column,
-                                                                                 raw_categorical_features)
+                                                                                 categorical_features)
 
         task_type = determine_task_type(args.task_type, args.target_column, baseline_df, categorical_features)
         log_time_and_message(f"Computed task type is {task_type}")
@@ -289,7 +291,7 @@ def run(args):
             col = pd.Series(baseline_df[column])
             if (pd.api.types.is_datetime64_dtype(col) or pd.api.types.is_timedelta64_dtype(col)):
                 baseline_df[column] = baseline_df[column].astype("int")
-            elif column in categorical_features and column != args.target_column:
+            elif column in categorical_features_lgbm and column != args.target_column:
                 baseline_df[column] = baseline_df[column].astype('category')
 
         feature_importances = compute_feature_importance(
