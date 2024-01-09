@@ -1,0 +1,31 @@
+name: ACR Image Build Deprecation Feedback
+description: File a feedback report detailing your experience with the deprecation process.
+labels: ["environmentLogs"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for providing feedback on the ACR image build deprecation.
+  - type: markdown
+    attributes:
+      value: |
+        # Describe your experience
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: What feedback do you have about the deprecation process? Was the documentation clear and accessible?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestions
+    attributes:
+      label: Suggestions
+      description: What part of the process do you wish was different?
+    validations:
+      required: true
+  - type: textarea
+    id: more-info
+    attributes:
+      label: Addition information
+      description: If there is any additional information you'd like to share, please include it below.
