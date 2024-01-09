@@ -146,9 +146,7 @@ class TestDataDriftModelMonitor:
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):
-        """Test the scenario where the production data has a column with only one distinct value
-         and the compute histogram step should not crash.
-        """
+        """Test the scenario where the production data has a column with only one distinct value."""
         pipeline_job = _submit_data_drift_model_monitor_job(
             ml_client,
             get_component,
