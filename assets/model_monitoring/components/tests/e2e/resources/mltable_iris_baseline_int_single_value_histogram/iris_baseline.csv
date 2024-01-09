@@ -11,4 +11,4 @@ sepal_length,sepal_width,petal_length,petal_width,target,pickup_month
 4,3,1,5,virginica,1
 5,3,1,6,versicolor,1
 4,3,1,5,virginica,1
-5,3,1,6,versicolor,1.0
+5,3,1.0,6,versicolor,1.0
