@@ -6,7 +6,7 @@ display_name: Prompt Crafter
 description: This component is used to create prompts from a given dataset. From a
   given jinja prompt template, it will generate prompts. It can also create few-shot
   prompts given a few-shot dataset and the number of shots.
-version: 0.0.3
+version: 0.0.4
 is_deterministic: true
 
 inputs:
