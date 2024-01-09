@@ -270,7 +270,7 @@ class HuggingfaceDownloader(GITDownloader):
                 "misc": model_props.get("misc"),
             }
         else:
-            raise AzureMLException._with_error(run_command
+            raise AzureMLException._with_error(
                 AzureMLError.create(InvalidHuggingfaceModelIDError, model_id=self._model_id)
             )
 
