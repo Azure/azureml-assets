@@ -1,0 +1,43 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+tags:
+    Preview: ""
+
+version: 0.0.1
+name: llm_rag_image_embed_index
+display_name: LLM - Embedding images with Florence 
+is_deterministic: true
+
+description: "Embeds input images and stores it in Azure Cognitive Search index with metadata using Florence embedding resource. MLIndex is stored to `output_path`."
+outputs:
+  output_path:
+    type: uri_folder
+    description: Where to store the output MLIndex.
+inputs:
+  input_path:
+    type: string
+    optional: False
+    description: input dataset of images and json metadata.
+  florence_connection_id:
+    type: string
+    optional: False
+    description: The input connection id to the Azure cognitive vision resource for florence embedding.
+  acs_connection_id:
+    type: string
+    optional: False
+    description: The input connection id to the Azure Cognitive Search resource.
+  search_index_name:
+    type: string
+    description: The index name for storing the images embeddings and metadata.
+
+environment: azureml:llm-rag-embeddings@latest
+code: '../src/'
+
+command: >-
+  python -m azureml.rag.tasks.image_embed_index
+  --input_path ${{inputs.input_path}}
+  --output_path ${{outputs.index}}        
+  --florence_connection_id ${{inputs.florence_connection_id}}
+  --acs_connection_id ${{inputs.acs_connection_id}}
+  --search_index_name ${{inputs.search_index_name}}  
