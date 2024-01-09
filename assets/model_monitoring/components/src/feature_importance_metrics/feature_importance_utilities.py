@@ -28,8 +28,8 @@ def convert_pandas_to_spark(pandas_data):
     return spark.createDataFrame(pandas_data)
 
 
-def is_categorical_column(baseline_data, column_name):
-    """Determine whether the column is categorical.
+def is_lightGBM_supported_categorical_column(baseline_data, column_name):
+    """Determine whether the categorical column is supported by lightGBM.
 
     :param column_name: the column to determine
     :type column_name: string
@@ -40,44 +40,27 @@ def is_categorical_column(baseline_data, column_name):
     """
     baseline_column = pd.Series(baseline_data[column_name])
     baseline_column_type = baseline_column.dtype.name
-    if (pd.api.types.is_float_dtype(baseline_column) or
-            pd.api.types.is_datetime64_ns_dtype(baseline_column) or
-            pd.api.types.is_timedelta64_ns_dtype(baseline_column)):
-        return False
-    # treat all datetime types as categorical since LightGBM cannot accept anything but bool, int and float
-    if (pd.api.types.is_object_dtype(baseline_column) or pd.api.types.is_string_dtype(baseline_column)
-            or baseline_column_type == "bool" or pd.api.types.is_datetime64_dtype(baseline_column) or
-            pd.api.types.is_timedelta64_dtype(baseline_column)):
-        return True
-    if pd.api.types.is_integer_dtype(baseline_column):
-        # if there are more unique values, not likely to be categorical
-        distinct_column_values = len(baseline_column.unique())
-        total_column_values = len(baseline_column)
-        distinct_value_ratio = distinct_column_values / total_column_values
-        if distinct_value_ratio < 0.05:
-            return True
-        else:
-            return False
-    # Log the datatype detected and default to true
-    log_time_and_message(f"Unknown column type: {baseline_column_type}")
-    return True
+    # LightGBM cannot accept anything but bool, int and float, only datatime64 can be converted to int
+    return pd.api.types.is_datetime64_ns_dtype(baseline_column) or pd.api.types.is_timedelta64_ns_dtype(baseline_column)
 
 
-def compute_categorical_features(baseline_data, target_column):
-    """Compute which features are categorical based on data type of the columns.
+def compute_lightgbm_unsupported_categorical_features(baseline_data, target_column, categorical_features):
+    """Compute which categorical features are not supported by LightGBM model.
 
     :param baseline_data: The baseline data meaning the data used to create the
     model monitor
     :type baseline_data: pandas.DataFrame
     :param target_column: the column to predict
     :type target_column: string
-    :return: categorical features
+    :param categorical_features: The list of categorical features 
+    :type categorical_features: list[string]
+    :return: lightgbm unsupported categorical features
     :rtype: list[string]
     """
-    categorical_features = []
-    for column in baseline_data.columns:
-        if column != target_column:
-            if is_categorical_column(baseline_data, column):
-                categorical_features.append(column)
-    print("Successfully categorized columns")
-    return categorical_features
+    # LightGBM cannot take categorical features. For data types, it can only take types of bool, int, and float
+    lightgbm_unsupported_categorical_features = []
+    for column in categorical_features:
+        if column != target_column and not is_lightGBM_supported_categorical_column(baseline_data, column):
+            lightgbm_unsupported_categorical_features.append(column)
+    print("Successfully got feature importance categorical columns")
+    return lightgbm_unsupported_categorical_features

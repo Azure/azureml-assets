@@ -26,7 +26,7 @@ except ImportError:
     pass
 
 from feature_importance_metrics.feature_importance_utilities import (
-    compute_categorical_features, convert_pandas_to_spark, is_categorical_column, log_time_and_message)
+    compute_lightgbm_unsupported_categorical_features, convert_pandas_to_spark, log_time_and_message)
 
 
 def parse_args():
@@ -44,7 +44,7 @@ def parse_args():
     return args
 
 
-def determine_task_type(task_type, target_column, baseline_data):
+def determine_task_type(task_type, target_column, baseline_data, categorical_features):
     """Determine the task type based on the type of the target column.
 
     :param task_type: the task type (regression or classification) of the resulting model
@@ -54,6 +54,8 @@ def determine_task_type(task_type, target_column, baseline_data):
     :param baseline_data: The baseline data meaning the data used to create the
     model monitor
     :type baseline_data: pandas.DataFrame
+    :param categorical_features: The list of categorical features
+    :type: list[string]
     :return: task type, either regression or classification
     :rtype: string
     """
@@ -65,7 +67,7 @@ def determine_task_type(task_type, target_column, baseline_data):
         else:
             return task_type_lower
 
-    if is_categorical_column(baseline_data, target_column):
+    if target_column in categorical_features:
         return constants.CLASSIFICATION
     return constants.REGRESSION
 
@@ -272,14 +274,16 @@ def run(args):
         baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
 
         raw_categorical_features = get_categorical_cols_with_df_with_override(baseline_df,
-                                                   override_numerical_features=args.override_numerical_features,
-                                                   override_categorical_features=args.override_categorical_features)
+                                                                              args.override_numerical_features,
+                                                                              args.override_categorical_features)
         baseline_df = baseline_df.toPandas()
-        task_type = determine_task_type(args.task_type, args.target_column, baseline_df)
-        log_time_and_message(f"Computed task type is {task_type}")
+        # lightgbm does not support categorical features
+        categorical_features = compute_lightgbm_unsupported_categorical_features(baseline_df,
+                                                                                 args.target_column,
+                                                                                 raw_categorical_features)
 
-        # Todo: get this from raw_categorical_features (removing target column, validate feature types)
-        categorical_features = compute_categorical_features(baseline_df, args.target_column)
+        task_type = determine_task_type(args.task_type, args.target_column, baseline_df, categorical_features)
+        log_time_and_message(f"Computed task type is {task_type}")
 
         for column in baseline_df.columns:
             col = pd.Series(baseline_df[column])

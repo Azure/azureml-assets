@@ -4,7 +4,6 @@
 """This file contains additional utilities that are applicable to dataframe."""
 import pyspark.sql as pyspark_sql
 
-data_type_double_group = ["float", "double"]
 data_type_long_group = ["long", "int", "bigint", "short"]
 data_type_numerical_group = ["float", "double", "decimal"]
 data_type_categorical_group = ["string", "boolean", "timestamp", "date", "binary"]
@@ -120,10 +119,10 @@ def get_numerical_and_categorical_cols(
 def get_feature_type_override_map(override_numerical_features: str, override_categorical_features: str) -> dict:
     """ Generate feature type override map with key of feature name and value of "numerical"/"categorical"."""
     feature_type_override_map = {}
-    if override_categorical_features is not None:
+    if override_categorical_features:
         for cat_feature in override_categorical_features.split(','):
             feature_type_override_map[cat_feature] = "categorical"
-    if override_numerical_features is not None:
+    if override_numerical_features:
         for num_feature in override_numerical_features.split(','):
             feature_type_override_map[num_feature] = "numerical"
     return feature_type_override_map
@@ -198,8 +197,8 @@ def get_common_columns(
             # if baseline and target are of different type
             # and both of them are in [double, float],
             # We consider them to be double
-            if production_df_dtypes.get(column_name) in data_type_double_group \
-                    and baseline_df_dtypes.get(column_name) in data_type_double_group:
+            if production_df_dtypes.get(column_name) in data_type_numerical_group \
+                    and baseline_df_dtypes.get(column_name) in data_type_numerical_group:
                 common_columns[column_name] = 'double'
             # if baseline and target are of different type
             # and both of them are in [int, long, short]

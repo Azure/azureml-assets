@@ -137,8 +137,7 @@ def compute_histograms(
     """Compute data drift measures and perform tests."""
     # Generate histograms only for columns in both baseline and target dataset
     numerical_columns_names, categorical_columns_names = get_numerical_and_categorical_cols(
-                                                            baseline_df,
-                                                            common_columns_dict,
+                                                            df,
                                                             override_numerical_features,
                                                             override_categorical_features)
 
