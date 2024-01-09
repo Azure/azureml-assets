@@ -42,7 +42,7 @@ def get_dual_histogram_bin_edges(
         max_value = max(baseline_col_max, production_col_max)
 
         bin_width = (max_value - min_value) / num_bins
-        
+
         # If histogram has only one value then we only need a single bucket and
         # should skip the for-loop below.
         if min_value == max_value:

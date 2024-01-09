@@ -142,11 +142,12 @@ class TestDataDriftModelMonitor:
         # empty production and target data should fail the job
         assert pipeline_job.status == "Failed"
 
-    def test_monitoring_run_int_single_value_histogram(
+    def test_monitoring_run_int_single_distinct_value_histogram(
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):
-        """Test the scenario where the production data has no common features with baseline."""
+        """Test the scenario where the production data has a column with only one distinct value
+            and the compute histogram step should not crash."""
         pipeline_job = _submit_data_drift_model_monitor_job(
             ml_client,
             get_component,
@@ -155,5 +156,4 @@ class TestDataDriftModelMonitor:
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM,
         )
 
-        # No common columns should fail the job in the feature selector step.
         assert pipeline_job.status == "Completed"
