@@ -43,6 +43,9 @@ class ModelImportErrorStrings:
         " sdk - https://aka.ms/azureml-import-model \n"
         " cli - https://aka.ms/obo-cli-sample"
     )
+    HF_AUTHENTICATION_ERROR = (
+        "Failed to authenticate with the HF Token provided: {error}"
+    )
 
 
 class ModelImportException(AzureMLException):
@@ -160,6 +163,15 @@ class UnsupportedTaskType(ClientError):
         """Message format."""
         return ModelImportErrorStrings.UNSUPPORTED_TASK_TYPE
 
+
+class HFAuthenticationError(ClientError):
+    """Error when failed to authenticate user with token provided."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.HF_AUTHENTICATION_ERROR
+    
 
 def swallow_all_exceptions(logger: logging.Logger):
     """Swallow all exceptions.

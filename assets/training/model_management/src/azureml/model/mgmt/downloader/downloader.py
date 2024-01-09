@@ -21,8 +21,9 @@ from azureml.model.mgmt.utils.common_utils import (
     get_filesystem_available_space_in_kb,
     get_git_lfs_blob_size_in_kb,
 )
-from azureml.model.mgmt.utils.exceptions import BlobStorageDownloadError, GITCloneError, VMNotSufficientForOperation
+from azureml.model.mgmt.utils.exceptions import BlobStorageDownloadError, GITCloneError, VMNotSufficientForOperation, HFAuthenticationError
 from huggingface_hub.hf_api import ModelInfo
+from huggingface_hub import login
 from pathlib import Path
 from azureml.model.mgmt.utils.common_utils import retry, fetch_huggingface_model_info
 from azureml.model.mgmt.utils.exceptions import InvalidHuggingfaceModelIDError
@@ -268,9 +269,16 @@ class HuggingfaceDownloader(GITDownloader):
             )
 
 
-def download_model(model_source: str, model_id: str, download_dir: Path):
+def download_model(model_source: str, model_id: str, download_dir: Path, auth_token: str):
     """Download model and return model information."""
     if model_source == ModelSource.HUGGING_FACE.value:
+        if auth_token:
+            try:
+                login(token=auth_token, add_to_git_credential = True)
+            except Exception as ex:
+                raise AzureMLException._with_error(
+                    AzureMLError.create(HFAuthenticationError, error=ex)
+                )      
         downloader = HuggingfaceDownloader(model_id=model_id, download_dir=download_dir)
     elif model_source == ModelSource.GIT.value:
         downloader = GITDownloader(model_uri=model_id, download_dir=download_dir)
