@@ -14,7 +14,9 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_EMPTY,
     DATA_ASSET_IRIS_BASELINE_INT_DATA_TYPE,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT_INT_DATA,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS,
+    DATA_ASSET_IRIS_BASELINE_INT_SINGLE_VALUE_HISTOGRAM,
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM
 )
 
 
@@ -139,3 +141,19 @@ class TestDataDriftModelMonitor:
 
         # empty production and target data should fail the job
         assert pipeline_job.status == "Failed"
+
+    def test_monitoring_run_int_single_value_histogram(
+        self, ml_client: MLClient, get_component, download_job_output,
+        test_suite_name
+    ):
+        """Test the scenario where the production data has no common features with baseline."""
+        pipeline_job = _submit_data_drift_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_BASELINE_INT_SINGLE_VALUE_HISTOGRAM,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM,
+        )
+
+        # No common columns should fail the job in the feature selector step.
+        assert pipeline_job.status == "Completed"
