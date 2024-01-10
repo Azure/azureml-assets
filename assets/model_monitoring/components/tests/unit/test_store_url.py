@@ -179,6 +179,19 @@ class TestStoreUrl:
                 store_url.get_container_client()
 
     @pytest.mark.parametrize(
+        "azureml_path",
+        [
+            "azureml://data/my_data/versions/1",
+            "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/data/my_data/versions/1",
+            "azureml://locations/my_loc/workspaces/my_ws/data/my_data/versions/1"
+        ]
+    )
+    def test_store_url_with_azureml_data_url(self, azureml_path: str):
+        """Test StoreUrl constructor with azureml data url."""
+        with pytest.raises(InvalidInputError):
+            _ = StoreUrl(azureml_path)
+
+    @pytest.mark.parametrize(
         "base_url, relative_path, expected_root_path, expected_abfs_url",
         [
             ("https://my_account.blob.core.windows.net/my_container/path/to/base", "path/to/folder", "path/to/base",

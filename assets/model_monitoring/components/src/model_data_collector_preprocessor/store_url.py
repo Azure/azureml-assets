@@ -190,10 +190,15 @@ class StoreUrl:
             self.path = matches.group("path").strip("/")
             self._datastore = None
         elif url.scheme == "azureml":
-            if ':' in url.path:  # azureml asset path
+            if ':' in url.path:  # azureml:<data_name>:<version> asset path
                 # asset path should be translated to azureml or hdfs path in service, should not reach here
                 raise InvalidInputError("AzureML asset path is not supported as uri_folder.")
-            else:  # azureml long or short form
+            elif '/data/' in self._base_url:  # azureml:// data asset url
+                raise InvalidInputError(
+                    "AzureML data asset url is not supported as uri_folder, please use "
+                    "'azureml://subscriptions/<sub_id>/resourcegroups/<rg>/workspaces/<ws>/datastores/<datasotre_name>"
+                    "/paths/path/to/folder instead.")
+            else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
                 self._datastore = ws.datastores.get(datastore_name)
