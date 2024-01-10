@@ -261,6 +261,7 @@ class HuggingfaceDownloader(GITDownloader):
             download_details = self._download()
             model_props = self._get_model_properties()
             model_props.update(download_details)
+            logout()
             tags = {k: model_props[k] for k in TAGS if k in model_props}
             props = {k: model_props[k] for k in PROPERTIES if k in model_props}
             return {
@@ -293,7 +294,6 @@ def download_model(model_source: str, model_id: str, download_dir: Path, token: 
                     AzureMLError.create(HFAuthenticationError, error=ex)
                 )
         downloader = HuggingfaceDownloader(model_id=model_id, download_dir=download_dir)
-        logout()
     elif model_source == ModelSource.GIT.value:
         downloader = GITDownloader(model_uri=model_id, download_dir=download_dir)
     elif model_source == ModelSource.AZUREBLOB.value:
