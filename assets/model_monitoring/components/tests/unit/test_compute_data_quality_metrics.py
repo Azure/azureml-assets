@@ -186,7 +186,7 @@ class TestModelMonitorDataQuality:
             StructField("feature_long", LongType(), True),
             StructField("feature_float", FloatType(), True),
         ])
-        df_for_max_min_value = create_pyspark_dataframe(df_for_null_value, schema)   
+        df_for_max_min_value = create_pyspark_dataframe(df_for_null_value, schema)
         expected_max_and_min_value_data = [("feature_int", 1),
                                            ("feature_double", 1),
                                            ("feature_byte", 1),

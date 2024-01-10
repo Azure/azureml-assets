@@ -8,7 +8,6 @@ from pyspark.sql.functions import col
 from pyspark.sql.session import SparkSession
 from pyspark.sql.types import DoubleType, LongType, StructType, StructField, StringType
 import pyspark
-import pyspark.pandas as ps
 
 
 # Init spark session
@@ -134,7 +133,7 @@ def compute_max_and_min_df(df: pyspark.sql.DataFrame, dtype_df: pyspark.sql.Data
     struct_fields = [StructField("featureName", StringType(), True)]
     is_double_type = True
     if bool(dtype_df.filter(dtype_df.dataType.contains("DoubleType")).collect())\
-    or bool(dtype_df.filter(dtype_df.dataType.contains("FloatType")).collect()):
+       or bool(dtype_df.filter(dtype_df.dataType.contains("FloatType")).collect()):
         struct_fields.append(StructField("min_value", DoubleType(), True))
         struct_fields.append(StructField("max_value", DoubleType(), True))
     else:
