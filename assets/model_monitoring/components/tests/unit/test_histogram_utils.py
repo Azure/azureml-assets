@@ -2,18 +2,11 @@
 # Licensed under the MIT License.
 """This file contains unit tests for the df utilities."""
 
-from pyspark.sql.types import (
-    DoubleType,
-    FloatType,
-    StructField,
-    StructType)
 from pyspark.sql import SparkSession, DataFrame
 from src.shared_utilities.df_utils import get_numerical_cols_with_df
 from src.shared_utilities.histogram_utils import (
-        get_histograms,
         get_dual_histogram_bin_edges
     )
-from tests.e2e.utils.io_utils import create_pyspark_dataframe
 import math
 import pandas as pd
 import pytest
@@ -52,7 +45,7 @@ class TestDFUtils:
         baseline_df = self.init_spark().createDataFrame(baseline_df)
         production_df = self.init_spark().createDataFrame(production_df)
         numerical_columns = get_numerical_cols_with_df(column_dtype_map, baseline_df)
-        
+
         all_edges = get_dual_histogram_bin_edges(
             baseline_df, production_df, baseline_df.count(), production_df.count(), numerical_columns
         )
@@ -61,7 +54,7 @@ class TestDFUtils:
         for col in numerical_columns:
             assert all_edges.get(col, None) is not None
             assert len(all_edges[col]) == self._num_bins_by_struges_algorithm(baseline_df) + 1
-            
+
             calculate_distinct_values_df = pd.DataFrame({col: all_edges[col]})
             distinct_df = self.init_spark().createDataFrame(calculate_distinct_values_df)
             assert distinct_df.distinct().count() == len(all_edges[col])
@@ -91,7 +84,7 @@ class TestDFUtils:
         production_df = self.init_spark().createDataFrame(production_df)
         numerical_columns = get_numerical_cols_with_df(column_dtype_map,
                                                        baseline_df)
-        
+
         all_edges = get_dual_histogram_bin_edges(
             baseline_df, production_df, baseline_df.count(), production_df.count(), numerical_columns
         )
@@ -99,12 +92,12 @@ class TestDFUtils:
         assert all_edges is not None
         for col in numerical_columns:
             assert all_edges.get(col, None) is not None
-            
+
             if col == 'col1':
                 assert len(all_edges[col]) == 2
             else:
                 assert len(all_edges[col]) == self._num_bins_by_struges_algorithm(baseline_df) + 1
-            
+
             calculate_distinct_values_df = pd.DataFrame({col: all_edges[col]})
             distinct_df = self.init_spark().createDataFrame(calculate_distinct_values_df)
             assert distinct_df.distinct().count() == len(all_edges[col])
