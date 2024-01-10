@@ -29,7 +29,7 @@ from azureml.model.mgmt.utils.exceptions import (
     GITConfigError
 )
 from huggingface_hub.hf_api import ModelInfo
-from huggingface_hub import login
+from huggingface_hub import login, logout
 from pathlib import Path
 from azureml.model.mgmt.utils.common_utils import retry, fetch_huggingface_model_info
 from azureml.model.mgmt.utils.exceptions import InvalidHuggingfaceModelIDError
@@ -275,23 +275,25 @@ class HuggingfaceDownloader(GITDownloader):
             )
 
 
-def download_model(model_source: str, model_id: str, download_dir: Path, auth_token: str):
+def download_model(model_source: str, model_id: str, download_dir: Path, token: str):
     """Download model and return model information."""
     if model_source == ModelSource.HUGGING_FACE.value:
-        if auth_token:
+        if token:
             try:
+                # Command to set the 'store' credential helper as default, as no helper is defined by default.
                 cmd = "git config --global credential.helper store"
                 exit_code, stdout = run_command(cmd)
                 if exit_code != 0:
                     raise AzureMLException._with_error(
                         AzureMLError.create(GITConfigError, error=stdout)
                     )
-                login(token=auth_token, add_to_git_credential = True)
+                login(token=token, add_to_git_credential=True)
             except Exception as ex:
                 raise AzureMLException._with_error(
                     AzureMLError.create(HFAuthenticationError, error=ex)
                 )      
         downloader = HuggingfaceDownloader(model_id=model_id, download_dir=download_dir)
+        logout()
     elif model_source == ModelSource.GIT.value:
         downloader = GITDownloader(model_uri=model_id, download_dir=download_dir)
     elif model_source == ModelSource.AZUREBLOB.value:

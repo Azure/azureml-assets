@@ -28,7 +28,7 @@ def _get_parser():
     parser.add_argument("--model-output-dir", required=True, help="Model download directory")
     parser.add_argument("--update-existing-model", required=False, default='false', help="Update existing model")
     parser.add_argument("--validation-info", required=False, help="Validation info")
-    parser.add_argument("--hf-authentication-token", required=False, help="HF token to access private models.")
+    parser.add_argument("--token", required=False, help="Token to access the private models or authenticate the user.")
     return parser
 
 
@@ -91,7 +91,7 @@ def run():
     model_download_metadata_path = args.model_download_metadata
     model_output_dir = args.model_output_dir
     update_existing_model = args.update_existing_model.lower()
-    hf_authentication_token = args.hf_authentication_token
+    token = args.token
 
     if not ModelSource.has_value(model_source):
         raise Exception(f"Unsupported model source {model_source}")
@@ -105,7 +105,7 @@ def run():
 
     logger.info("Downloading model")
     model_download_details = download_model(
-        model_source=model_source, model_id=model_id, download_dir=model_output_dir,auth_token= hf_authentication_token
+        model_source=model_source, model_id=model_id, download_dir=model_output_dir, token=token
     )
 
     with open(model_download_metadata_path, "w") as f:

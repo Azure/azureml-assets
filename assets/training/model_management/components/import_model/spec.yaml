@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.22
+version: 0.0.21
 
 # Pipeline inputs
 inputs:
@@ -37,11 +37,6 @@ inputs:
   model_id:
     type: string
     description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
-
-  hf_authentication_token:
-    type: string
-    description: If set use it to access the private models.
-    optional: true
 
   ## Inputs for the MlFLow conversion
   license_file_path:
@@ -215,7 +210,7 @@ jobs:
         type: uri_file
 
   download_model:
-    component: azureml:download_model:0.0.19
+    component: azureml:download_model:0.0.18
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -226,7 +221,6 @@ jobs:
       model_id: ${{parent.inputs.model_id}}
       validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
-      hf_authentication_token: ${{parent.inputs.hf_authentication_token}}
     outputs:
       model_download_metadata:
         type: uri_file
