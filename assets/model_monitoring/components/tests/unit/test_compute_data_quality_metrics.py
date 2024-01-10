@@ -172,6 +172,7 @@ class TestModelMonitorDataQuality:
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
 
     def test_get_null_count(self):
+        """Test null count metrics."""       
         df_for_null_value = [
                 (2, 4.67, 4, 100, 3.549999952316284),
                 (3, 90.1, 5, 200, 3.55),
