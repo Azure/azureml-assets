@@ -281,9 +281,7 @@ class HuggingfaceDownloader(GITDownloader):
             try:
                 logout()
             except Exception as ex:
-                raise AzureMLException._with_error(
-                    AzureMLError.create(HFLogOutError, error=ex)
-                )
+                logger.warning(f"Failed to logout from Hugging Face account- {ex}")
             tags = {k: model_props[k] for k in TAGS if k in model_props}
             props = {k: model_props[k] for k in PROPERTIES if k in model_props}
             return {
