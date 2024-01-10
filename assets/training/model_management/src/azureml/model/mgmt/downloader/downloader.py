@@ -280,14 +280,14 @@ def download_model(model_source: str, model_id: str, download_dir: Path, token: 
     """Download model and return model information."""
     if model_source == ModelSource.HUGGING_FACE.value:
         if token:
+            # Command to set the 'store' credential helper as default, as no helper is defined by default.
+            cmd = "git config --global credential.helper store"
+            exit_code, stdout = run_command(cmd)
+            if exit_code != 0:
+                raise AzureMLException._with_error(
+                    AzureMLError.create(GITConfigError, error=stdout)
+                )
             try:
-                # Command to set the 'store' credential helper as default, as no helper is defined by default.
-                cmd = "git config --global credential.helper store"
-                exit_code, stdout = run_command(cmd)
-                if exit_code != 0:
-                    raise AzureMLException._with_error(
-                        AzureMLError.create(GITConfigError, error=stdout)
-                    )
                 login(token=token, add_to_git_credential=True)
             except Exception as ex:
                 raise AzureMLException._with_error(
