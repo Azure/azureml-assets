@@ -46,7 +46,8 @@ def get_dual_histogram_bin_edges(
         # If histogram has only one value then we only need a single bucket and
         # should skip the for-loop below.
         if min_value == max_value:
-            all_bin_edges[col] = [min_value, min_value * 1.01]
+            delta = 0.005 if min_value == 0 else min_value * 0.005
+            all_bin_edges[col] = [min_value - delta, min_value + delta]
             continue
 
         edges = []
