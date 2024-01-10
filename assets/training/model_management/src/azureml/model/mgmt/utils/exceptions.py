@@ -91,7 +91,7 @@ class GITConfigError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.GIT_CONFIG_ERROR
-    
+
 
 class BlobStorageDownloadError(ClientError):
     """Azcopy blobstorage download error."""
@@ -181,7 +181,7 @@ class HFAuthenticationError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.HF_AUTHENTICATION_ERROR
-    
+
 
 def swallow_all_exceptions(logger: logging.Logger):
     """Swallow all exceptions.

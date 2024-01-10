@@ -22,10 +22,10 @@ from azureml.model.mgmt.utils.common_utils import (
     get_git_lfs_blob_size_in_kb,
 )
 from azureml.model.mgmt.utils.exceptions import (
-    BlobStorageDownloadError, 
-    GITCloneError, 
-    VMNotSufficientForOperation, 
-    HFAuthenticationError, 
+    BlobStorageDownloadError,
+    GITCloneError,
+    VMNotSufficientForOperation,
+    HFAuthenticationError,
     GITConfigError
 )
 from huggingface_hub.hf_api import ModelInfo
@@ -291,7 +291,7 @@ def download_model(model_source: str, model_id: str, download_dir: Path, token: 
             except Exception as ex:
                 raise AzureMLException._with_error(
                     AzureMLError.create(HFAuthenticationError, error=ex)
-                )      
+                )
         downloader = HuggingfaceDownloader(model_id=model_id, download_dir=download_dir)
         logout()
     elif model_source == ModelSource.GIT.value:
