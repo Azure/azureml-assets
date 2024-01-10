@@ -26,7 +26,8 @@ from azureml.model.mgmt.utils.exceptions import (
     GITCloneError,
     VMNotSufficientForOperation,
     HFAuthenticationError,
-    GITConfigError
+    GITConfigError,
+    HFLogOutError
 )
 from huggingface_hub.hf_api import ModelInfo
 from huggingface_hub import login, logout
@@ -277,7 +278,12 @@ class HuggingfaceDownloader(GITDownloader):
             download_details = self._download()
             model_props = self._get_model_properties()
             model_props.update(download_details)
-            logout()
+            try:
+                logout()
+            except Exception as ex:
+                raise AzureMLException._with_error(
+                    AzureMLError.create(HFLogOutError, error=ex)
+                )
             tags = {k: model_props[k] for k in TAGS if k in model_props}
             props = {k: model_props[k] for k in PROPERTIES if k in model_props}
             return {

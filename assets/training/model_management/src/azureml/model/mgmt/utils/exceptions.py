@@ -47,6 +47,9 @@ class ModelImportErrorStrings:
     HF_AUTHENTICATION_ERROR = (
         "Failed to authenticate with the HF Token provided: [{error}]"
     )
+    HF_LOGOUT_ERROR = (
+        "Failed to Logout from HuggingFace account: [{error}]"
+    )
 
 
 class ModelImportException(AzureMLException):
@@ -181,6 +184,15 @@ class HFAuthenticationError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.HF_AUTHENTICATION_ERROR
+
+
+class HFLogOutError(ClientError):
+    """Error when failed to authenticate user with token provided."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.HF_LOGOUT_ERROR
 
 
 def swallow_all_exceptions(logger: logging.Logger):
