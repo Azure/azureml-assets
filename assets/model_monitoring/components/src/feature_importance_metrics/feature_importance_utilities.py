@@ -60,6 +60,10 @@ def compute_categorical_features_lgbm(baseline_data, target_column, categorical_
     :return: lightgbm categorical features
     :rtype: list[string]
     """
+    # Lightgbm can only support features that can be converted to bool, int, float.
+    # If these features can't be converted, we have to mark them as "category" types so lightgbm will ignore them.
+    # In our design, we mark all known categorical features (including bool) as "category", 
+    # only filter out datetime and timedelta becasue they can be converted to int
     categorical_features_lgbm = []
     for column in categorical_features:
         if column != target_column and not is_lgbm_supported_categorical_column(baseline_data, column):

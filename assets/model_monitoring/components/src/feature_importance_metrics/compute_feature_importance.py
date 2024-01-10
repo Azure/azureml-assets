@@ -277,8 +277,7 @@ def run(args):
                                                                           args.override_numerical_features,
                                                                           args.override_categorical_features)
         baseline_df = baseline_df.toPandas()
-        # lightgbm does not support features that can't be converted to bool, int, float features.
-        # If these features can't be converted, we have to mark them as "category" types
+
         categorical_features_lgbm = compute_categorical_features_lgbm(baseline_df,
                                                                       args.target_column,
                                                                       categorical_features)
