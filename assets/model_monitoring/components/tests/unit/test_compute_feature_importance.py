@@ -5,7 +5,7 @@
 
 from feature_importance_metrics.compute_feature_importance import determine_task_type, get_train_test_data
 from feature_importance_metrics.feature_importance_utilities import (
-    compute_lightgbm_unsupported_categorical_features, is_lightGBM_supported_categorical_column)
+    compute_categorical_features_lgbm, is_lgbm_supported_categorical_column)
 from feature_importance_metrics.compute_feature_attribution_drift import (
     drop_metadata_columns, calculate_attribution_drift)
 import pytest
@@ -24,10 +24,6 @@ def get_fraud_data():
         "ACCOUNTID": ["A1176337474875483", "A1343835256155075",
                       "A1343835256155076", "A1706480214256418"],
         "TRANSACTIONAMOUNT": [146161.99, 57487.200000000004,  227728.76, 59340.0],
-        "TRANSACTIONTIME": [pd.Timedelta('1 days 06:05:01.000030'),
-                            pd.Timedelta('1 days 06:05:01.000030'),
-                            pd.Timedelta('1 days 06:05:01.000030'),
-                            pd.Timedelta('1 days 06:05:01.000030')],
         "TIMESTAMP": ["2023-01-30T16:25:17.000Z",
                       "2023-01-30T16:58:44.000Z",
                       "2023-01-30T22:46:37.000Z",
@@ -46,7 +42,7 @@ def get_complex_dtype_data():
     return pd.DataFrame({
         "Date": [datetime.date(2020, 5, 17)],
         "Date_String": "2021/02/03",
-        "DeltaTime": [pd.Timedelta('1 days 06:05:01.000030')],
+        "DeltaTime_NS": [pd.Timedelta('1 days 06:05:01.000030')],
         "DateTime_NS": pd.DatetimeIndex(['2018-04-24 00:00:00'], dtype='datetime64[ns]', freq=None)
     })
 
@@ -79,22 +75,22 @@ class TestComputeFeatureImportanceMetrics:
         assert len(train_data.index) == 5003
         assert len(test_data.index) == 5000
 
-    def test_is_lightGBM_supported_categorical_column(self, get_complex_dtype_data):
-        """Test whether a column is categorical."""
-        result = is_lightGBM_supported_categorical_column(get_complex_dtype_data, "Date")
+    def test_is_lgbm_supported_categorical_column(self, get_complex_dtype_data):
+        """Test whether a column is lgbm supported categorical feature."""
+        result = is_lgbm_supported_categorical_column(get_complex_dtype_data, "Date")
         assert not result
-        result = is_lightGBM_supported_categorical_column(get_complex_dtype_data, "Date_String")
+        result = is_lgbm_supported_categorical_column(get_complex_dtype_data, "Date_String")
         assert not result
-        result = is_lightGBM_supported_categorical_column(get_complex_dtype_data, "DeltaTime")
-        assert result
-        result = is_lightGBM_supported_categorical_column(get_complex_dtype_data, "DateTime_NS")
-        assert result
+        result = is_lgbm_supported_categorical_column(get_complex_dtype_data, "DeltaTime_NS")
+        assert not result
+        result = is_lgbm_supported_categorical_column(get_complex_dtype_data, "DateTime_NS")
+        assert not result
 
-    def test_compute_lightgbm_unsupported_categorical_features(self, get_fraud_data):
+    def test_compute_categorical_features_lgbm(self, get_fraud_data):
         """Test determine categorical features."""
         raw_categorical_features = ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP",
-                                    "IS_FRAUD", "ISPROXYIP", "TRANSACTIONTIME"]
-        categorical_features = compute_lightgbm_unsupported_categorical_features(get_fraud_data, "IS_FRAUD", raw_categorical_features)
+                                    "IS_FRAUD", "ISPROXYIP"]
+        categorical_features = compute_categorical_features_lgbm(get_fraud_data, "IS_FRAUD", raw_categorical_features)
         assert categorical_features == ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP", "ISPROXYIP"]
 
     def test_determine_task_type_classification(self, get_fraud_data, get_zipcode_data):

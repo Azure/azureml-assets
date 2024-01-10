@@ -28,7 +28,7 @@ def convert_pandas_to_spark(pandas_data):
     return spark.createDataFrame(pandas_data)
 
 
-def is_lightGBM_supported_categorical_column(baseline_data, column_name):
+def is_lgbm_supported_categorical_column(baseline_data, column_name):
     """Determine whether the categorical column is supported by lightGBM.
 
     :param column_name: the column to determine
@@ -39,13 +39,16 @@ def is_lightGBM_supported_categorical_column(baseline_data, column_name):
     :rtype: boolean
     """
     baseline_column = pd.Series(baseline_data[column_name])
-    # LightGBM cannot accept anything but bool, int and float, everything else must be treated as a categorical column
-    # if it cannot be converted to an integer (this is what lightgbm does internally)
-    return pd.api.types.is_datetime64_ns_dtype(baseline_column) or pd.api.types.is_timedelta64_ns_dtype(baseline_column)
+    # datetime and timedelta (except datetime_ns and timedelta_ns) can be converted to an integer (this is what lightgbm does internally) 
+    if pd.api.types.is_datetime64_ns_dtype(baseline_column) or pd.api.types.is_timedelta64_ns_dtype(baseline_column):
+        return False
+    if pd.api.types.is_datetime64_dtype(baseline_column) or pd.api.types.is_timedelta64_dtype(baseline_column):
+        return True
+    return False
 
 
-def compute_lightgbm_unsupported_categorical_features(baseline_data, target_column, categorical_features):
-    """Compute which categorical features are not supported by LightGBM model.
+def compute_categorical_features_lgbm(baseline_data, target_column, categorical_features):
+    """Modify the common categorical features to get a final categorical list for LightGBM model to ignore
 
     :param baseline_data: The baseline data meaning the data used to create the
     model monitor
@@ -54,13 +57,12 @@ def compute_lightgbm_unsupported_categorical_features(baseline_data, target_colu
     :type target_column: string
     :param categorical_features: The list of categorical features 
     :type categorical_features: list[string]
-    :return: lightgbm unsupported categorical features
+    :return: lightgbm categorical features
     :rtype: list[string]
     """
-    # LightGBM cannot take categorical features. For data types, it can only take types of bool, int, and float
-    lightgbm_unsupported_categorical_features = []
+    categorical_features_lgbm = []
     for column in categorical_features:
-        if column != target_column and not is_lightGBM_supported_categorical_column(baseline_data, column):
-            lightgbm_unsupported_categorical_features.append(column)
+        if column != target_column and not is_lgbm_supported_categorical_column(baseline_data, column):
+            categorical_features_lgbm.append(column)
     print("Successfully got feature importance categorical columns")
-    return lightgbm_unsupported_categorical_features
+    return categorical_features_lgbm
