@@ -60,7 +60,7 @@ class TestDFUtils:
             assert distinct_df.distinct().count() == len(all_edges[col])
 
     def test_get_dual_histogram_bin_edges_single_distinct_value_bucket(self):
-        """Test scenario where we have a single bucket"""
+        """Test scenario where we have a single bucket."""
         column_dtype_map = {
             'col1': 'int',
             'col2': 'float',
