@@ -7,14 +7,18 @@ from pyspark.sql.functions import (
     current_timestamp,
     lit)
 from pyspark.sql.types import (
+    ByteType,
     DoubleType,
     IntegerType,
+    FloatType,
+    LongType,
     StringType,
     StructField,
     StructType)
 from src.data_quality_compute_metrics.compute_data_quality_metrics import (
     compute_data_quality_metrics,
     compute_dtype_violation_count_modify_dataset,
+    get_null_count,
     modify_dataType)
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp, data_stats_table
@@ -164,5 +168,37 @@ class TestModelMonitorDataQuality:
 
         expected_metrics_df = expected_metrics_df.unionByName(row)
         metrics_df = compute_data_quality_metrics(df_with_timestamp, data_stats_table)
+        assert expected_metrics_df.count() == metrics_df.count()
+        assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
+    
+    def test_get_null_count(self):
+        df_for_null_value = [
+                (2, 4.67, 4, 100, 3.549999952316284),
+                (3, 90.1, 5, 200, 3.55),
+                (4, 2.8987, -1, 300, 45.6),
+                (5, 3.454, -2, 400, 56.70000076293945),
+                (None, None, None, None, None)
+        ]
+        schema = StructType([
+            StructField("feature_int", IntegerType(), True),
+            StructField("feature_double", DoubleType(), True),
+            StructField("feature_byte", ByteType(), True),
+            StructField("feature_long", LongType(), True),
+            StructField("feature_float", FloatType(), True),
+        ])
+        df_for_max_min_value = create_pyspark_dataframe(df_for_null_value, schema)       
+        expected_max_and_min_value_data = [("feature_int", 1),
+                                           ("feature_double", 1),
+                                           ("feature_byte", 1),
+                                           ("feature_long", 1),
+                                           ("feature_float", 1)]
+        data_schema = StructType(
+            [
+                StructField("featureName", StringType(), True),
+                StructField("violationCount", IntegerType(), True),
+            ]
+        )
+        expected_metrics_df = create_pyspark_dataframe(expected_max_and_min_value_data, data_schema)
+        metrics_df = get_null_count(df_for_max_min_value)
         assert expected_metrics_df.count() == metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())

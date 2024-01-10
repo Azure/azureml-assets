@@ -22,9 +22,7 @@ def run():
 
     metric_unique_df = compute_data_quality_statistics(df)
 
-    sp_metric_unique_df = (
-        metric_unique_df.to_spark()
-    )  # Convert back to Spark dataframe to output as MLTable
+    sp_metric_unique_df = metric_unique_df
 
     # CONVERT TO STRING
     sp_metric_unique_df = sp_metric_unique_df.withColumn(

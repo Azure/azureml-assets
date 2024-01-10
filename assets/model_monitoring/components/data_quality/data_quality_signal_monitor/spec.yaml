@@ -91,7 +91,7 @@ jobs:
       type: aml_token
   compute_baseline_data_statistics:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.3
+    component: azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.4
     inputs:
       baseline_data:
         type: mltable
@@ -106,7 +106,7 @@ jobs:
       type: aml_token
   compute_baseline_data_quality:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.7
+    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.8
     inputs:
       input_data:
         type: mltable

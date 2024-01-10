@@ -22,6 +22,7 @@ from pyspark.sql.types import (
 from pyspark_test import assert_pyspark_df_equal
 from src.data_quality_statistics.compute_data_quality_statistics import (
     compute_data_quality_statistics,
+    compute_max_and_min_df,
     get_features_for_max_min_calculation)
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 import pytest
@@ -115,3 +116,45 @@ class TestModelMonitorDataQualityStatistic:
         """Test exclude the boolean columns from dataframe."""
         actual_df_for_max_min_value = get_features_for_max_min_calculation(df_with_timestamp)
         assert_pyspark_df_equal(df_for_max_min_value, actual_df_for_max_min_value)
+
+    def test_compute_max_and_min_df(
+            self):
+        """Test compute max and min value."""
+        #case 1: We have both [double, float] and [int, short, long] datatype
+        schema = ["featureName", "dataType"]
+        df = [("feature_int", "IntegerType"),
+              ("feature_double", "DoubleType"),
+              ("feature_long", "LongType"),
+              ("feature_float", "FloatType")
+        ]
+        dtype_df = create_pyspark_dataframe(df, schema)
+        expected_max_and_min_value_data = [("feature_int", 2.0, 5.0),
+                                           ("feature_double", 2.8987, 90.1),
+                                           ("feature_long", 100.0, 400.0),
+                                           ("feature_float", 3.549999952316284, 56.70000076293945)]
+        schema = schema = StructType([
+            StructField("featureName", StringType(), True),
+            StructField("min_value", DoubleType(), True),
+            StructField("max_value", DoubleType(), True),
+        ])
+        expected_max_and_min_value_df = create_pyspark_dataframe(expected_max_and_min_value_data, schema)
+        actual_max_and_min_value_df = compute_max_and_min_df(df_for_max_min_value, dtype_df)
+        assert_pyspark_df_equal(expected_max_and_min_value_df, actual_max_and_min_value_df)
+
+        #case2: We only have int,long, short datatype
+        schema = ["featureName", "dataType"]
+        df = [("feature_int", "IntegerType"),
+              ("feature_long", "LongType"),
+        ]
+        dtype_df = create_pyspark_dataframe(df, schema)
+        df_for_max_min_value_int = df_for_max_min_value.select("feature_int", "feature_long")
+        expected_max_and_min_value_data = [("feature_int", 2, 5),
+                                           ("feature_long", 100, 400)]
+        schema = schema = StructType([
+            StructField("featureName", StringType(), True),
+            StructField("min_value", LongType(), True),
+            StructField("max_value", LongType(), True),
+        ])
+        expected_max_and_min_value_df = create_pyspark_dataframe(expected_max_and_min_value_data, schema)
+        actual_max_and_min_value_df = compute_max_and_min_df(df_for_max_min_value_int, dtype_df)
+        assert_pyspark_df_equal(expected_max_and_min_value_df, actual_max_and_min_value_df)
