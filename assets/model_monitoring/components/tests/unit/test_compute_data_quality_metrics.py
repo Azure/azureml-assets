@@ -170,7 +170,7 @@ class TestModelMonitorDataQuality:
         metrics_df = compute_data_quality_metrics(df_with_timestamp, data_stats_table)
         assert expected_metrics_df.count() == metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
-    
+
     def test_get_null_count(self):
         df_for_null_value = [
                 (2, 4.67, 4, 100, 3.549999952316284),
@@ -186,7 +186,7 @@ class TestModelMonitorDataQuality:
             StructField("feature_long", LongType(), True),
             StructField("feature_float", FloatType(), True),
         ])
-        df_for_max_min_value = create_pyspark_dataframe(df_for_null_value, schema)       
+        df_for_max_min_value = create_pyspark_dataframe(df_for_null_value, schema)   
         expected_max_and_min_value_data = [("feature_int", 1),
                                            ("feature_double", 1),
                                            ("feature_byte", 1),

@@ -6,7 +6,7 @@
 from pyspark.context import SparkContext
 from pyspark.sql.functions import col
 from pyspark.sql.session import SparkSession
-from pyspark.sql.types import DoubleType, FloatType, IntegerType, LongType, StructType, StructField, StringType
+from pyspark.sql.types import DoubleType, LongType, StructType, StructField, StringType
 import pyspark
 import pyspark.pandas as ps
 
@@ -15,7 +15,8 @@ import pyspark.pandas as ps
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
 
-supported_datatype_for_max_min_value = ["IntegerType()", "DoubleType()", "ByteType()", "LongType()", "FloatType()", "ShortType()"]
+supported_datatype_for_max_min_value = ["IntegerType()", "DoubleType()", "ByteType()",
+                                        "LongType()", "FloatType()", "ShortType()"]
 
 
 def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
@@ -77,7 +78,7 @@ def get_features_for_max_min_calculation(df: pyspark.sql.DataFrame) -> pyspark.s
     return df_for_max_min_value
 
 
-def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
+def get_unique_value_list(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     """
     Get the unique values for each categorical column in a DataFrame.
 
@@ -85,7 +86,7 @@ def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
         df (pyspark.sql.DataFrame): Input DataFrame.
 
     Returns:
-        pyspark.sql.DataFrame:  A Pypsark Pandas DataFrame containing the unique values for each categorical column.
+        pyspark.sql.DataFrame:  A Pypsark DataFrame containing the unique values for each categorical column.
         The DataFrame has two columns:
         featureName: The name of the categorical column.
         set: A list of unique values for the categorical column.
@@ -112,24 +113,6 @@ def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
     )
 
     return unique_vals_df
-
-
-def compute_min_df(df: ps.DataFrame) -> ps.DataFrame:
-    """
-    Compute the minimum value for each feature in the input DataFrame.
-
-    Args:
-        df: A pandas-on-Spark DataFrame.
-
-    Returns:
-        A pandas-on-Spark DataFrame containing two columns: "featureName" and "min_value".
-        The "featureName" column lists the name of each feature in the input DataFrame, and
-        the "min_value" column lists the minimum value for each feature.
-    """
-    min_vals = ps.DataFrame(data=df.min(axis=0)).reset_index()
-    min_vals.columns = ["featureName", "min_value"]
-
-    return min_vals
 
 
 def compute_max_and_min_df(df: pyspark.sql.DataFrame, dtype_df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
@@ -159,25 +142,23 @@ def compute_max_and_min_df(df: pyspark.sql.DataFrame, dtype_df: pyspark.sql.Data
         struct_fields.append(StructField("max_value", LongType(), True))
         is_double_type = False
 
-    data_schema = StructType(
-            struct_fields
-    )
+    data_schema = StructType(struct_fields)
 
     max_and_min_value_rows = []
     for row in dtype_df.collect():
         if row["featureName"] in df.columns:
             if is_double_type:
                 max_and_min_value_rows.append(
-                ( row["featureName"],
-                  float(df.agg({row["featureName"]: "min"}).collect()[0][0]),
-                  float(df.agg({row["featureName"]: "max"}).collect()[0][0]))
-                )
+                    (row["featureName"],
+                     float(df.agg({row["featureName"]: "min"}).collect()[0][0]),
+                     float(df.agg({row["featureName"]: "max"}).collect()[0][0]))
+                    )
             else:
                 max_and_min_value_rows.append(
-                ( row["featureName"],
-                  df.agg({row["featureName"]: "min"}).collect()[0][0],
-                  df.agg({row["featureName"]: "max"}).collect()[0][0])
-                )
+                    (row["featureName"],
+                     df.agg({row["featureName"]: "min"}).collect()[0][0],
+                     df.agg({row["featureName"]: "max"}).collect()[0][0])
+                    )
 
     max_and_min_vals_df = spark.createDataFrame(
         max_and_min_value_rows,

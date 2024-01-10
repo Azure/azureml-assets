@@ -120,13 +120,13 @@ class TestModelMonitorDataQualityStatistic:
     def test_compute_max_and_min_df(
             self):
         """Test compute max and min value."""
-        #case 1: We have both [double, float] and [int, short, long] datatype
+        # case 1: We have both [double, float] and [int, short, long] datatype
         schema = ["featureName", "dataType"]
         df = [("feature_int", "IntegerType"),
               ("feature_double", "DoubleType"),
               ("feature_long", "LongType"),
               ("feature_float", "FloatType")
-        ]
+             ]
         dtype_df = create_pyspark_dataframe(df, schema)
         expected_max_and_min_value_data = [("feature_int", 2.0, 5.0),
                                            ("feature_double", 2.8987, 90.1),
@@ -141,11 +141,11 @@ class TestModelMonitorDataQualityStatistic:
         actual_max_and_min_value_df = compute_max_and_min_df(df_for_max_min_value, dtype_df)
         assert_pyspark_df_equal(expected_max_and_min_value_df, actual_max_and_min_value_df)
 
-        #case2: We only have int,long, short datatype
+        # case2: We only have int,long, short datatype
         schema = ["featureName", "dataType"]
         df = [("feature_int", "IntegerType"),
               ("feature_long", "LongType"),
-        ]
+             ]
         dtype_df = create_pyspark_dataframe(df, schema)
         df_for_max_min_value_int = df_for_max_min_value.select("feature_int", "feature_long")
         expected_max_and_min_value_data = [("feature_int", 2, 5),

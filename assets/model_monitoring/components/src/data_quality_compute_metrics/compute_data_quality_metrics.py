@@ -31,7 +31,6 @@ from pyspark.sql.functions import (
 from pyspark.ml.feature import Imputer
 from typing import Tuple
 import pyspark
-import pyspark.pandas as ps
 import warnings
 
 
@@ -92,7 +91,7 @@ def get_null_count(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     for each column of the input PySpark DataFrame.
     """
 
-    na_metric_df = df.select([count(when(isnan(c)|col(c).isNull(), c)).alias(c) for c in df.columns])
+    na_metric_df = df.select([count(when(isnan(c) | col(c).isNull(), c)).alias(c) for c in df.columns])
     na_metric_df.show()
     na_metric_df_data = [(col_, na_metric_df.first()[col_]) for col_ in na_metric_df.columns]
     data_schema = StructType(
