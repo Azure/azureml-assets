@@ -26,8 +26,7 @@ from azureml.model.mgmt.utils.exceptions import (
     GITCloneError,
     VMNotSufficientForOperation,
     HFAuthenticationError,
-    GITConfigError,
-    HFLogOutError
+    GITConfigError
 )
 from huggingface_hub.hf_api import ModelInfo
 from huggingface_hub import login, logout
