@@ -24,6 +24,7 @@ class TestDownloaders(unittest.TestCase):
         """Test huggingface downloader."""
         model_id = "username/model_name"
         download_dir = Path("path/to/download/dir")
+        token = None
 
         with patch("huggingface_hub.hf_api.HfApi") as MockHfApi, patch(
             "azureml.model.mgmt.downloader.downloader.HuggingfaceDownloader._download"
@@ -41,7 +42,7 @@ class TestDownloaders(unittest.TestCase):
             ]
 
             common_utils.hf_api = mock_api
-            downloader = HuggingfaceDownloader(model_id, download_dir)
+            downloader = HuggingfaceDownloader(model_id, download_dir, token)
             downloader.download_model()
 
             self.assertEqual(downloader.model_info.modelId, model_id)
