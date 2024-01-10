@@ -153,7 +153,7 @@ def run():
     preprocess_args[HF_CONF.HF_TOKENIZER_CLASS.value] = hf_tokenizer_class
     preprocess_args[HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value] = hf_use_experimental_features
     preprocess_args["inference_base_image"] = inference_base_image
-
+    TRUST_CODE_KEY = "trust_remote_code=True"
     # update custom dimensions with input parameters
     custom_dimensions.update_custom_dimensions(preprocess_args)
 
@@ -162,9 +162,28 @@ def run():
     with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, TemporaryDirectory(
         dir=mlflow_model_output_dir
     ) as temp_dir:
-        run_preprocess(model_framework, model_path, working_dir, temp_dir, **preprocess_args)
-        shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
-
+        try:
+            logger.info(f"trying to check run_preprocess")
+            run_preprocess(model_framework, model_path, working_dir, temp_dir, **preprocess_args)
+            shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
+        except ValueError as ve:
+            logger.error(f"Error during preprocessing: {ve}")
+            # Check if the error is due to TRUSTCODEERROR
+            if "trust_remote_code=True" in str(ve):
+                logger.info("Preprocessing failed due to EOFError with trust_remote_code=True.")
+                logger.info("Retrying with trust_remote_code=True.")
+                preprocess_args[HF_CONF.HF_CONFIG_ARGS.value] = TRUST_CODE_KEY
+                preprocess_args[HF_CONF.HF_MODEL_ARGS.value] = TRUST_CODE_KEY
+                preprocess_args[HF_CONF.HF_TOKENIZER_ARGS.value] = TRUST_CODE_KEY
+                logger.info(f"Preprocess args after exception: {preprocess_args}")
+                try:
+                    logger.info("next loop Preprocessing failed due to EOFError with trust_remote_code=True.")
+                    run_preprocess(model_framework, model_path, working_dir, temp_dir, **preprocess_args)
+                    shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
+                except Exception as retry_error:
+                    logger.error(f"Error during retry preprocessing: {retry_error}")
+            else:
+                logger.error(f"Error during preprocessing: {e}")
     # Copy license file to output model path
     if license_file_path:
         shutil.copy(license_file_path, mlflow_model_output_dir)
