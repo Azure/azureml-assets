@@ -11,7 +11,7 @@ from pyspark.sql.types import (
     StringType,
     FloatType
 )
-from shared_utilities.df_utils import get_categorical_cols_with_df_with_override
+from shared_utilities.df_utils import get_numerical_and_categorical_cols
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable, init_spark
 from shared_utilities import constants
 from sklearn.model_selection import train_test_split
@@ -26,7 +26,7 @@ except ImportError:
     pass
 
 from feature_importance_metrics.feature_importance_utilities import (
-    compute_categorical_features_lgbm, convert_pandas_to_spark, log_time_and_message)
+    mark_categorical_column, convert_pandas_to_spark, log_time_and_message)
 
 
 def parse_args():
@@ -111,7 +111,7 @@ def get_model_wrapper(task_type, target_column, train_data):
     """
     y_train = train_data[target_column]
     x_train = train_data.drop([target_column], axis=1)
-    model = create_lightgbm_model(x_train, y_train, task_type,)
+    model = create_lightgbm_model(x_train, y_train, task_type)
     model_predict = model.predict(x_train)
     log_time_and_message("Called predict on model")
 
@@ -273,29 +273,26 @@ def run(args):
         log_time_and_message("Reading data in spark and converting to pandas")
         baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
 
-        categorical_features = get_categorical_cols_with_df_with_override(baseline_df,
-                                                                          args.override_numerical_features,
-                                                                          args.override_categorical_features)
+        numerical_features, categorical_features = get_numerical_and_categorical_cols(
+                                                            baseline_df,
+                                                            args.override_numerical_features,
+                                                            args.override_categorical_features)
         baseline_df = baseline_df.toPandas()
 
-        categorical_features_lgbm = compute_categorical_features_lgbm(baseline_df,
-                                                                      args.target_column,
-                                                                      categorical_features)
+        # Lightgbm can only support features that can be converted to bool, int, float.
+        # If these features can't be converted, we have to mark them as "category" types so lightgbm will ignore them.
+        # In our design, we mark all known categorical features (including bool) as "category"
+        categorical_features_lgbm = [feature for feature in categorical_features if feature != args.target_column]
 
         task_type = determine_task_type(args.task_type, args.target_column, baseline_df, categorical_features_lgbm)
         log_time_and_message(f"Computed task type is {task_type}")
 
-        for column in baseline_df.columns:
-            col = pd.Series(baseline_df[column])
-            if column in categorical_features_lgbm and column != args.target_column:
-                baseline_df[column] = baseline_df[column].astype('category')
-            elif (pd.api.types.is_datetime64_dtype(col) or pd.api.types.is_timedelta64_dtype(col)):
-                baseline_df[column] = baseline_df[column].astype("int")
+        mark_categorical_column(baseline_df, args.target_column, categorical_features_lgbm, numerical_features)
 
         feature_importances = compute_feature_importance(
-            task_type, args.target_column, baseline_df, categorical_features)
+            task_type, args.target_column, baseline_df, categorical_features_lgbm)
         feature_columns = baseline_df.drop([args.target_column], axis=1)
-        write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features)
+        write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features_lgbm)
         log_time_and_message("Successfully executed the feature importance component.")
     except Exception as e:
         log_time_and_message(f"Error encountered when executing feature importance component: {e}")
