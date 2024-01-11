@@ -123,9 +123,10 @@ def compute_max_and_min_df(df: pyspark.sql.DataFrame, dtype_df: pyspark.sql.Data
         dtype_df: A spark data frame for datatype for each featureName
 
     Returns:
-        A Spark DataFrame containing two columns: "featureName" and "max_value".
+        A Spark DataFrame containing two columns: "featureName" and "max_value" amd "min_value"
         The "featureName" column lists the name of each feature in the input DataFrame, and
-        the "max_value" column lists the maximum value for each feature.
+        The "max_value" column lists the maximum value for each feature.
+        The "min_value" column lists the minimum value for each feature.
     """
     # check if the data type contains double or float
     # we use the higher precision for the max and min value
@@ -179,9 +180,9 @@ def compute_data_quality_statistics(df) -> pyspark.sql.DataFrame:
     # Join tables to get all metrics into one table
     min_max_df = compute_max_and_min_df(df_for_max_min_value, dtype_df)
     metric_df = min_max_df.join(
-        dtype_df, min_max_df.featureName == dtype_df.featureName, "right"
+        dtype_df, ["featureName"], "right"
     )
     metric_unique_df = metric_df.join(
-        unique_vals_df, metric_df.featureName == unique_vals_df.featureName, "left"
+        unique_vals_df, ["featureName"], "left"
     )
     return metric_unique_df

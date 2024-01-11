@@ -84,14 +84,14 @@ def get_null_count(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     Compute a PySpark DataFrame containing the number of null values for each column of the input PySpark DataFrame.
 
     Args:
-        df: Input PySpark  DataFrame.
+        df: Input PySpark DataFrame.
 
     Returns:
         na_metric_df: A Pypsark DataFrame containing the number of null values
     for each column of the input PySpark DataFrame.
     """
     na_metric_df = df.select([count(when(isnan(c) | col(c).isNull(), c)).alias(c) for c in df.columns])
-    na_metric_df.show()
+
     na_metric_df_data = [(col_, na_metric_df.first()[col_]) for col_ in na_metric_df.columns]
     data_schema = StructType(
         [
@@ -430,7 +430,7 @@ def compute_data_quality_metrics(df, data_stats_table):
     # COMPUTE VIOLATIONS
     #########################
     # 1. NULL TYPE
-    null_count_dtype = get_null_count(df.to_pandas_on_spark())
+    null_count_dtype = get_null_count(df)
     null_count_dtype["metricName"] = "NullValue"
     null_count_dtype_sp = null_count_dtype.to_spark()
     # HIERARCHY 1: IMPUTE MISSING VALUES AFTER COUNTING THEM

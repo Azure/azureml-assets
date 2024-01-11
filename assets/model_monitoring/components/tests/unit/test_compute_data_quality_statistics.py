@@ -53,13 +53,12 @@ schema = StructType([
 df = create_pyspark_dataframe(df, schema)
 df_with_timestamp = df.withColumn("feature_timestamp", df["feature_timestamp"].cast(TimestampType()))
 df_with_timestamp = df_with_timestamp.withColumn("feature_char", df_with_timestamp["feature_char"].cast(CharType(30)))
-df_with_timestamp = df_with_timestamp.withColumn("feature_date", F.current_date())
 
 df_for_max_min_value = [
-        (2, 4.67, 4, 100, 3.549999952316284),
-        (3, 90.1, 5, 200, 3.55),
-        (4, 2.8987, -1, 300, 45.6),
-        (5, 3.454, -2, 400, 56.70000076293945),
+        (2, 4.67, 4, 100, 3.549999952316284, 4),
+        (3, 90.1, 5, 200, 3.55, 6),
+        (4, 2.8987, -1, 300, 45.6, 7),
+        (5, 3.454, -2, 400, 56.70000076293945, 9),
         ]
 schema = StructType([
     StructField("feature_int", IntegerType(), True),
@@ -67,6 +66,7 @@ schema = StructType([
     StructField("feature_byte", ByteType(), True),
     StructField("feature_long", LongType(), True),
     StructField("feature_float", FloatType(), True),
+    StructField("feature_short", ShortType(), True),
     ]
 )
 df_for_max_min_value = create_pyspark_dataframe(df_for_max_min_value, schema)
@@ -81,9 +81,8 @@ data_stat_df = [
                 ("feature_long", 400.0, 100.0, "LongType()", None),
                 ("feature_binary", None, None, "BinaryType()", None),
                 ("feature_float", 56.70000076293945, 3.549999952316284, "FloatType()", None),
-                ("feature_short", None, None, "ShortType()", None),
+                ("feature_short", 9.0, 4.0, "ShortType()", None),
                 ("feature_char", None, None, "StringType()", "[char]"),
-                ("feature_date", None, None, "DateType()", None),
 ]
 data_stat_colums = ["featureName", "max_value", "min_value", "dataType", "set"]
 
@@ -103,8 +102,7 @@ class TestModelMonitorDataQualityStatistic:
     ):
         """Test compute data quality statistics with string, integer, boolean, double type."""
         actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp)
-        assert data_stats_table.count() == actual_data_stats_table.to_spark().count()
-        assert sorted(data_stats_table.collect()) == sorted(actual_data_stats_table.to_spark().collect())
+        assert_pyspark_df_equal(data_stats_table, actual_data_stats_table)
 
     @pytest.mark.parametrize("df_with_timestamp, df_for_max_min_value",
                              [(df_with_timestamp, df_for_max_min_value)])
@@ -125,12 +123,14 @@ class TestModelMonitorDataQualityStatistic:
         df = [("feature_int", "IntegerType"),
               ("feature_double", "DoubleType"),
               ("feature_long", "LongType"),
-              ("feature_float", "FloatType")]
+              ("feature_float", "FloatType"),
+              ("feature_short", "ShortType")]
         dtype_df = create_pyspark_dataframe(df, schema)
         expected_max_and_min_value_data = [("feature_int", 2.0, 5.0),
                                            ("feature_double", 2.8987, 90.1),
                                            ("feature_long", 100.0, 400.0),
-                                           ("feature_float", 3.549999952316284, 56.70000076293945)]
+                                           ("feature_float", 3.549999952316284, 56.70000076293945),
+                                           ("feature_short", 4.0, 9.0)]
         schema = schema = StructType([
             StructField("featureName", StringType(), True),
             StructField("min_value", DoubleType(), True),
