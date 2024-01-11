@@ -4,7 +4,7 @@ type: pipeline
 name: data_drift_signal_monitor
 display_name: Data Drift - Signal Monitor
 description: Computes the data drift between a baseline and production data assets.
-version: 0.3.21
+version: 0.3.22
 is_deterministic: true
 
 inputs:
@@ -70,7 +70,7 @@ jobs:
       type: aml_token
   feature_selection:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.2
+    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.3
     inputs:
       input_data_1:
         type: mltable
