@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.1
+version: 0.0.2
 name: llm_rag_image_embed_index
 display_name: LLM - Embedding images with Florence 
 is_deterministic: true
@@ -19,7 +19,7 @@ inputs:
     type: string
     optional: False
     description: input dataset of images and json metadata.
-  florence_connection_id:
+  embedding_connection_id:
     type: string
     optional: False
     description: The input connection id to the Azure cognitive vision resource for florence embedding.
@@ -37,7 +37,7 @@ code: '../src/'
 command: >-
   python -m azureml.rag.tasks.image_embed_index
   --input_path ${{inputs.input_path}}
-  --output_path ${{outputs.index}}        
-  --florence_connection_id ${{inputs.florence_connection_id}}
+  --output_path ${{outputs.output_path}}        
+  --embedding_connection_id ${{inputs.embedding_connection_id}}
   --acs_connection_id ${{inputs.acs_connection_id}}
   --search_index_name ${{inputs.search_index_name}}  
