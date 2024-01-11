@@ -22,13 +22,9 @@ def run():
 
     metric_unique_df = compute_data_quality_statistics(df)
 
-    sp_metric_unique_df = (
-        metric_unique_df.to_spark()
-    )  # Convert back to Spark dataframe to output as MLTable
-
     # CONVERT TO STRING
-    sp_metric_unique_df = sp_metric_unique_df.withColumn(
-        "set", sp_metric_unique_df["set"].cast(StringType())
+    sp_metric_unique_df = metric_unique_df.withColumn(
+        "set", metric_unique_df["set"].cast(StringType())
     )
     # remove brackets as they will get added again with array type conversion
     sp_metric_unique_df = sp_metric_unique_df.withColumn(
