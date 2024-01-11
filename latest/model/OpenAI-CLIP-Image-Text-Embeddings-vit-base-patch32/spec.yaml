@@ -1,9 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: OpenAI-CLIP-ViT-Base-Patch32
+name: OpenAI-CLIP-Image-Text-Embeddings-vit-base-patch32
 path: ./
 properties:
   SharedComputeCapacityEnabled: true
-  SHA: e6a30b603a447e251fdaca1c3056b2a16cdfebeb
   inference-min-sku-spec: 2|0|7|14
   inference-recommended-sku: Standard_DS2_v2, Standard_D2a_v4, Standard_D2as_v4, Standard_DS3_v2,
     Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
@@ -19,11 +18,11 @@ properties:
     Standard_ND40rs_v2
 tags:
   Preview: ''
-  license: mit
-  task: zero-shot-image-classification
   huggingface_model_id: openai/clip-vit-base-patch32
   SharedComputeCapacityEnabled: ''
   author: openai
+  license: mit
+  task: embeddings
   inference_compute_allow_list: [Standard_DS2_v2, Standard_D2a_v4, Standard_D2as_v4,
     Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4,
     Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4,
@@ -36,8 +35,8 @@ tags:
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 8
-description: |
+version: 9
+description: |-
   OpenAI's CLIP (Contrastive Language–Image Pre-training) model was designed to investigate the factors that contribute to the robustness of computer vision tasks. It can seamlessly adapt to a range of image classification tasks without requiring specific training for each, demonstrating efficiency, flexibility, and generality.
 
   In terms of architecture, CLIP utilizes a ViT-B/32 Transformer for image encoding and a masked self-attention Transformer for text encoding. These encoders undergo training to improve the similarity of (image, text) pairs using a contrastive loss.
@@ -76,14 +75,14 @@ description: |
 
   MIT License
 
-  ### Inference Samples
+  # Inference Samples
 
   Inference type|Python sample (Notebook)|CLI with YAML
   |--|--|--|
-  Real time|<a href="https://aka.ms/azureml-infer-sdk-zero-shot-image-classification" target="_blank">zero-shot-image-classification-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-zero-shot-image-classification" target="_blank">zero-shot-image-classification-online-endpoint.sh</a>
-  Batch|<a href="https://aka.ms/azureml-infer-batch-sdk-zero-shot-image-classification" target="_blank">zero-shot-image-classification-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-zero-shot-image-classification" target="_blank">zero-shot-image-classification-batch-endpoint.sh</a>
+  Real time|<a href="https://aka.ms/azureml-infer-sdk-image-text-embeddings" target="_blank">image-text-embeddings-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-image-text-embeddings" target="_blank">image-text-embeddings-online-endpoint.sh</a>
+  Batch|<a href="https://aka.ms/azureml-infer-batch-sdk-image-text-embeddings" target="_blank">image-text-embeddings-batch-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-batch-cli-image-text-embeddings" target="_blank">image-text-embeddings-batch-endpoint.sh</a>
 
-  # Sample input and output
+  # Sample input and output for image embeddings
 
   ### Sample input
 
@@ -95,33 +94,92 @@ description: |
         ],
         "index":[0, 1],
         "data":[
-           ["image1", "label1, label2, label3"],
-           ["image2"]
+           ["image1", ""],
+           ["image2", ""]
         ]
      }
   }
   ```
-  Note:
-  - "image1" and "image2" should be publicly accessible urls or strings in `base64` format.
-  - The text column in the first row determines the labels for image classification. The text column in the other rows is not used and can be blank.
+  Note: "image1" and "image2" should be publicly accessible urls or strings in `base64` format
 
   ### Sample output
 
   ```json
   [
       {
-          "probs": [0.95, 0.03, 0.02],
-          "labels": ["label1", "label2", "label3"]
+          "image_features": [-0.92, -0.13, 0.02, ... , 0.13],
       },
       {
-          "probs": [0.04, 0.93, 0.03],
-          "labels": ["label1", "label2", "label3"]
+          "image_features": [0.54, -0.83, 0.13, ... , 0.26],
       }
   ]
   ```
+  Note: returned embeddings have dimension 512 and are not normalized
 
-  #### Visualization of inference result for a sample image
+  # Sample input and output for text embeddings
 
-  For a sample image and label text "credit card payment, contactless payment, cash payment, mobile order".
+  ### Sample input
 
-  <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_openai-clip-vit-base-patch32_cafe_ZSIC.jpg" alt="zero shot image classification visualization">
+  ```json
+  {
+     "input_data":{
+        "columns":[
+           "image", "text"
+        ],
+        "index":[0, 1],
+        "data":[
+           ["", "sample text 1"],
+           ["", "sample text 2"]
+        ]
+     }
+  }
+  ```
+
+  ### Sample output
+
+  ```json
+  [
+      {
+          "text_features": [0.42, -0.13, -0.92, ... , 0.63],
+      },
+      {
+          "text_features": [-0.14, 0.93, -0.15, ... , 0.66],
+      }
+  ]
+  ```
+  Note: returned embeddings have dimension 512 and are not normalized
+  # Sample input and output for image and text embeddings
+
+  ### Sample input
+
+  ```json
+  {
+     "input_data":{
+        "columns":[
+           "image", "text"
+        ],
+        "index":[0, 1],
+        "data":[
+           ["image1", "sample text 1"],
+           ["image2", "sample text 2"]
+        ]
+     }
+  }
+  ```
+  Note: "image1" and "image2" should be publicly accessible urls or strings in `base64` format
+
+  ### Sample output
+
+  ```json
+  [
+      {
+          "image_features": [0.92, -0.13, 0.02, ... , -0.13],
+          "text_features": [0.42, 0.13, -0.92, ... , -0.63]
+      },
+      {
+          "image_features": [-0.54, -0.83, 0.13, ... , -0.26],
+          "text_features": [-0.14, -0.93, 0.15, ... , 0.66]
+      }
+  ]
+  ```
+  Note: returned embeddings have dimension 512 and are not normalized
