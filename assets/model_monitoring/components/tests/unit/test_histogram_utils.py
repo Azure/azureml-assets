@@ -3,6 +3,7 @@
 """This file contains unit tests for the df utilities."""
 
 from pyspark.sql import SparkSession, DataFrame
+import pyspark.sql.functions as pyspark_f
 from src.shared_utilities.df_utils import get_numerical_cols_with_df
 from src.shared_utilities.histogram_utils import (
         get_dual_histogram_bin_edges
@@ -95,6 +96,104 @@ class TestDFUtils:
 
             if col == 'col1':
                 assert len(all_edges[col]) == 2
+                min_value = baseline_df.agg(pyspark_f.min(col))
+                expected_delta = min_value * 0.005
+                assert all_edges[0] == (min_value - expected_delta)
+                assert all_edges[1] == (min_value + expected_delta)
+            else:
+                assert len(all_edges[col]) == self._num_bins_by_struges_algorithm(baseline_df) + 1
+
+            calculate_distinct_values_df = pd.DataFrame({col: all_edges[col]})
+            distinct_df = self.init_spark().createDataFrame(calculate_distinct_values_df)
+            assert distinct_df.distinct().count() == len(all_edges[col])
+
+    def test_get_dual_histogram_bin_edges_single_distinct_value_bucket_negative(self):
+        """Test scenario where we have a single bucket with a negative value."""
+        column_dtype_map = {
+            'col1': 'int',
+            'col2': 'float',
+            'col3': 'double',
+            'col4': 'decimal',
+            'col5': 'string'
+        }
+        baseline_df = pd.DataFrame({
+            'col1': [-31, -31, -31, -31, -31],
+            'col2': [1.1, 2.2, 3.3, 4.4, 5.5],
+            'col3': [1.11, 2.22, 3.33, 4.44, 5.55],
+            'col4': [1.111, 2.222, 3.333, 4.444, 5.555]
+        })
+        production_df = pd.DataFrame({
+            'col1': [-31, -31, -31, -31, -31],
+            'col2': [1.1, 2.2, 3.3, 4.4, 5.5],
+            'col3': [1.11, 2.22, 3.33, 4.44, 5.55],
+            'col4': [1.111, 2.222, 3.333, 4.444, 5.555]
+        })
+        baseline_df = self.init_spark().createDataFrame(baseline_df)
+        production_df = self.init_spark().createDataFrame(production_df)
+        numerical_columns = get_numerical_cols_with_df(column_dtype_map,
+                                                       baseline_df)
+
+        all_edges = get_dual_histogram_bin_edges(
+            baseline_df, production_df, baseline_df.count(), production_df.count(), numerical_columns
+        )
+
+        assert all_edges is not None
+        for col in numerical_columns:
+            assert all_edges.get(col, None) is not None
+
+            if col == 'col1':
+                assert len(all_edges[col]) == 2
+                min_value = baseline_df.agg(pyspark_f.min(col))
+                expected_delta = abs(min_value * 0.005)
+                assert all_edges[0] == (min_value - expected_delta)
+                assert all_edges[1] == (min_value + expected_delta)
+            else:
+                assert len(all_edges[col]) == self._num_bins_by_struges_algorithm(baseline_df) + 1
+
+            calculate_distinct_values_df = pd.DataFrame({col: all_edges[col]})
+            distinct_df = self.init_spark().createDataFrame(calculate_distinct_values_df)
+            assert distinct_df.distinct().count() == len(all_edges[col])
+
+    def test_get_dual_histogram_bin_edges_single_distinct_value_bucket_zero(self):
+        """Test scenario where we have a single bucket with the value as zero."""
+        column_dtype_map = {
+            'col1': 'int',
+            'col2': 'float',
+            'col3': 'double',
+            'col4': 'decimal',
+            'col5': 'string'
+        }
+        baseline_df = pd.DataFrame({
+            'col1': [0, 0, 0, 0, 0],
+            'col2': [1.1, 2.2, 3.3, 4.4, 5.5],
+            'col3': [1.11, 2.22, 3.33, 4.44, 5.55],
+            'col4': [1.111, 2.222, 3.333, 4.444, 5.555]
+        })
+        production_df = pd.DataFrame({
+            'col1': [0, 0, 0, 0, 0],
+            'col2': [1.1, 2.2, 3.3, 4.4, 5.5],
+            'col3': [1.11, 2.22, 3.33, 4.44, 5.55],
+            'col4': [1.111, 2.222, 3.333, 4.444, 5.555]
+        })
+        baseline_df = self.init_spark().createDataFrame(baseline_df)
+        production_df = self.init_spark().createDataFrame(production_df)
+        numerical_columns = get_numerical_cols_with_df(column_dtype_map,
+                                                       baseline_df)
+
+        all_edges = get_dual_histogram_bin_edges(
+            baseline_df, production_df, baseline_df.count(), production_df.count(), numerical_columns
+        )
+
+        assert all_edges is not None
+        for col in numerical_columns:
+            assert all_edges.get(col, None) is not None
+
+            if col == 'col1':
+                assert len(all_edges[col]) == 2
+                min_value = baseline_df.agg(pyspark_f.min(col))
+                expected_delta = 0.005
+                assert all_edges[0] == (min_value - expected_delta)
+                assert all_edges[1] == (min_value + expected_delta)
             else:
                 assert len(all_edges[col]) == self._num_bins_by_struges_algorithm(baseline_df) + 1
 
