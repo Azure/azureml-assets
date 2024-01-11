@@ -71,7 +71,6 @@ conf:
         - mlflow~=2.8.0
         - azureml-fsspec
         - fsspec~=2023.4.0
-        - azureml-metrics[prompt-flow]
     name: momo-base-spark
 args: >-
   --task ${{inputs.task}}
