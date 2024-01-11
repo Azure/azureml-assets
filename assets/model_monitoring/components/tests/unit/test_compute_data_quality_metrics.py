@@ -8,6 +8,7 @@ from pyspark.sql.functions import (
     lit)
 from pyspark.sql.types import (
     ByteType,
+    DateType,
     DoubleType,
     IntegerType,
     FloatType,
@@ -139,12 +140,10 @@ class TestModelMonitorDataQuality:
                 ("feature_char",      "DataTypeErrorRate",  "Categorical",   0,   0.0),
                 ("feature_float",     "DataTypeErrorRate",  "Numerical",     0,   0.0),
                 ("feature_short",     "NullValueRate",      "Numerical",     0,   0.0),
-                ("feature_date",      "NullValueRate",      "Categorical",   0,   0.0),
                 ("feature_long",      "OutOfBoundsRate",    "Numerical",     0,   0.0),
-                ("feature_date",      "DataTypeErrorRate",  "Categorical",   0,   0.0),
-                ("feature_byte",      "OutOfBoundsRate",    "Categorical",   0,   0.0),
-                ("feature_byte",      "NullValueRate",      "Categorical",   0,   0.0),
-                ("feature_byte",      "DataTypeErrorRate",  "Categorical",   0,   0.0),
+                ("feature_byte",      "OutOfBoundsRate",    "Numerical",     0,   0.0),
+                ("feature_byte",      "NullValueRate",      "Numerical",     0,   0.0),
+                ("feature_byte",      "DataTypeErrorRate",  "Numerical",     0,   0.0),
                 ("feature_char",      "OutOfBoundsRate",    "Categorical",   0,   0.0),
                 ("feature_long",      "NullValueRate",      "Numerical",     0,   0.0),
                 ("feature_float",     "OutOfBoundsRate",    "Numerical",     0,   0.0),
@@ -153,6 +152,7 @@ class TestModelMonitorDataQuality:
                 ("feature_int",       "OutOfBoundsRate",    "Numerical",     0,   0.0),
                 ("feature_double",    "OutOfBoundsRate",    "Numerical",     0,   0.0),
                 ("feature_int",       "NullValueRate",      "Numerical",     0,   0.0),
+                ("feature_short",     "OutOfBoundsRate",    "Numerical",     0,   0.0),
         ]
         expected_metrics_data_columns = ["featureName", "metricName", "dataType", "violationCount", "metricValue"]
         expected_metrics_df = create_pyspark_dataframe(expected_metrics_data, expected_metrics_data_columns)
@@ -174,11 +174,11 @@ class TestModelMonitorDataQuality:
     def test_get_null_count(self):
         """Test null count metrics."""
         df_for_null_value = [
-                (2, 4.67, 4, 100, 3.549999952316284),
-                (3, 90.1, 5, 200, 3.55),
-                (4, 2.8987, -1, 300, 45.6),
-                (5, 3.454, -2, 400, 56.70000076293945),
-                (None, None, None, None, None)
+                (2, 4.67, 4, 100, 3.549999952316284, "string"),
+                (3, 90.1, 5, 200, 3.55, "string"),
+                (4, 2.8987, -1, 300, 45.6, "string"),
+                (5, 3.454, -2, 400, 56.70000076293945, "string"),
+                (None, None, None, None, None, None)
         ]
         schema = StructType([
             StructField("feature_int", IntegerType(), True),
@@ -186,17 +186,20 @@ class TestModelMonitorDataQuality:
             StructField("feature_byte", ByteType(), True),
             StructField("feature_long", LongType(), True),
             StructField("feature_float", FloatType(), True),
+            StructField("feature_string", StringType(), True),
         ])
         df_for_max_min_value = create_pyspark_dataframe(df_for_null_value, schema)
-        expected_max_and_min_value_data = [("feature_int", 1),
-                                           ("feature_double", 1),
-                                           ("feature_byte", 1),
-                                           ("feature_long", 1),
-                                           ("feature_float", 1)]
+        expected_max_and_min_value_data = [("feature_int", 1, "NullValue"),
+                                           ("feature_double", 1, "NullValue"),
+                                           ("feature_byte", 1, "NullValue"),
+                                           ("feature_long", 1, "NullValue"),
+                                           ("feature_float", 1, "NullValue"),
+                                           ("feature_string", 1, "NullValue")]
         data_schema = StructType(
             [
                 StructField("featureName", StringType(), True),
                 StructField("violationCount", IntegerType(), True),
+                StructField("metricName", StringType(), True),
             ]
         )
         expected_metrics_df = create_pyspark_dataframe(expected_max_and_min_value_data, data_schema)
