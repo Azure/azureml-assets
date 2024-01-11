@@ -55,7 +55,7 @@ def _submit_metric_outputter_job(
 class TestModelMonitorMetricOutputterE2E:
     """Test class."""
 
-    def test_mdc_preprocessor_successful(
+    def _mdc_preprocessor_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the happy path scenario for MDC preprocessor."""

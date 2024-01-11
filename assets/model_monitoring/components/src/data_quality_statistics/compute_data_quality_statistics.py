@@ -135,11 +135,11 @@ def compute_max_and_min_df(df: pyspark.sql.DataFrame, dtype_df: pyspark.sql.Data
     is_double_type = True
     if bool(dtype_df.filter(dtype_df.dataType.contains("DoubleType")).collect())\
        or bool(dtype_df.filter(dtype_df.dataType.contains("FloatType")).collect()):
-        struct_fields.append(StructField("min_value", DoubleType(), True))
         struct_fields.append(StructField("max_value", DoubleType(), True))
+        struct_fields.append(StructField("min_value", DoubleType(), True))
     else:
-        struct_fields.append(StructField("min_value", LongType(), True))
         struct_fields.append(StructField("max_value", LongType(), True))
+        struct_fields.append(StructField("min_value", LongType(), True))
         is_double_type = False
 
     data_schema = StructType(struct_fields)
@@ -150,14 +150,14 @@ def compute_max_and_min_df(df: pyspark.sql.DataFrame, dtype_df: pyspark.sql.Data
             if is_double_type:
                 max_and_min_value_rows.append(
                     (row["featureName"],
-                     float(df.agg({row["featureName"]: "min"}).collect()[0][0]),
-                     float(df.agg({row["featureName"]: "max"}).collect()[0][0]))
+                     float(df.agg({row["featureName"]: "max"}).collect()[0][0]),
+                     float(df.agg({row["featureName"]: "min"}).collect()[0][0]))
                     )
             else:
                 max_and_min_value_rows.append(
                     (row["featureName"],
-                     df.agg({row["featureName"]: "min"}).collect()[0][0],
-                     df.agg({row["featureName"]: "max"}).collect()[0][0])
+                     df.agg({row["featureName"]: "max"}).collect()[0][0],
+                     df.agg({row["featureName"]: "min"}).collect()[0][0])
                     )
 
     max_and_min_vals_df = spark.createDataFrame(

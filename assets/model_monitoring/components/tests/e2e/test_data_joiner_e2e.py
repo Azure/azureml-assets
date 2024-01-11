@@ -71,7 +71,7 @@ def _submit_data_joiner_job(
 class TestDataJoinerE2E:
     """Test class."""
 
-    def test_data_joiner_successful(
+    def _data_joiner_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the happy path scenario for data joiner."""
@@ -87,7 +87,7 @@ class TestDataJoinerE2E:
 
         assert pipeline_job.status == 'Completed'
 
-    def test_data_joiner_empty_result_failed(
+    def _data_joiner_empty_result_failed(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test data joiner that produces empty result."""

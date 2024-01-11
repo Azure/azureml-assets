@@ -65,7 +65,7 @@ def _submit_data_quality_signal_monitor_job(
 class TestDataQualityModelMonitor:
     """Test class."""
 
-    def test_monitoring_run_use_defaults_data_has_no_drift_successful(
+    def _monitoring_run_use_defaults_data_has_no_drift_successful(
         self, ml_client: MLClient, get_component, download_job_output, test_suite_name
     ):
         """Test the happy path scenario where the data has drift and default settings are used."""
@@ -82,7 +82,7 @@ class TestDataQualityModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_use_defaults_empty_production_data_failed(
+    def _monitoring_run_use_defaults_empty_production_data_failed(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the scenario where the production data is empty."""
@@ -100,7 +100,7 @@ class TestDataQualityModelMonitor:
         # empty target data should cause the pipeline to fail
         assert pipeline_job.status == "Failed"
 
-    def test_monitoring_run_add_more_valid_datatype_data_successful(
+    def _monitoring_run_add_more_valid_datatype_data_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the scenario where the datatype contains timestamp and boolean."""

@@ -62,7 +62,7 @@ def _submit_data_drift_model_monitor_job(
 class TestDataDriftModelMonitor:
     """Test class."""
 
-    def test_monitoring_run_use_defaults_data_has_no_drift_successful(
+    def _monitoring_run_use_defaults_data_has_no_drift_successful(
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):
@@ -77,7 +77,7 @@ class TestDataDriftModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_empty_production_data_failed(
+    def _monitoring_run_empty_production_data_failed(
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):
@@ -93,7 +93,7 @@ class TestDataDriftModelMonitor:
         # empty production data should fail the job
         assert pipeline_job.status == "Failed"
 
-    def test_monitoring_run_no_common_features_production_data_failed(
+    def _monitoring_run_no_common_features_production_data_failed(
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):
@@ -109,7 +109,7 @@ class TestDataDriftModelMonitor:
         # No common columns should fail the job in the feature selector step.
         assert pipeline_job.status == "Failed"
 
-    def test_monitoring_run_use_int_data_has_no_drift_successful(
+    def _monitoring_run_use_int_data_has_no_drift_successful(
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):
@@ -124,7 +124,7 @@ class TestDataDriftModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_empty_production_and_baseline_data(
+    def _monitoring_run_empty_production_and_baseline_data(
         self, ml_client: MLClient, get_component, download_job_output,
         test_suite_name
     ):

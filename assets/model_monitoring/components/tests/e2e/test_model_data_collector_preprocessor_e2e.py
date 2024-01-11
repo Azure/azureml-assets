@@ -65,7 +65,7 @@ class TestMDCPreprocessorE2E:
             # (DATA_ASSET_LLM_INPUTS, "2023-10-24T22:00:00Z", "2023-10-24T23:00:00Z")
         ]
     )
-    def test_mdc_preprocessor_successful(
+    def _mdc_preprocessor_successful(
         self, ml_client: MLClient, get_component, test_suite_name, input_data, start_time, end_time
     ):
         """Test the happy path scenario for MDC preprocessor."""

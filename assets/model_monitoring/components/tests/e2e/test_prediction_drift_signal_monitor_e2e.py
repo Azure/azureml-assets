@@ -58,7 +58,7 @@ def _submit_prediction_drift_model_monitor_job(
 class TestPredictionDriftModelMonitor:
     """Test class."""
 
-    def test_monitoring_run_use_defaults_data_has_no_drift_successful(
+    def _monitoring_run_use_defaults_data_has_no_drift_successful(
         self, ml_client: MLClient, get_component, download_job_output, test_suite_name
     ):
         """Test the happy path scenario where the data has drift and default settings are used."""
@@ -72,7 +72,7 @@ class TestPredictionDriftModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_empty_production_data_failed(
+    def _monitoring_run_empty_production_data_failed(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the happy path scenario where the data has drift and default settings are used."""

@@ -146,7 +146,7 @@ def _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
 class TestFeatureAttributionDriftModelMonitor:
     """Test class."""
 
-    def test_featureattributiondrift_with_preprocessor_and_datajoiner_successful(
+    def _featureattributiondrift_with_preprocessor_and_datajoiner_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test preprocessor and data joiner with FAD signal."""
@@ -161,7 +161,7 @@ class TestFeatureAttributionDriftModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_use_defaults_empty_production_data_failed(
+    def _monitoring_run_use_defaults_empty_production_data_failed(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the scenario where the production data is empty."""

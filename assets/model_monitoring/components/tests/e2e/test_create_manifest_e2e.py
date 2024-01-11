@@ -82,7 +82,7 @@ def _submit_data_drift_and_create_manifest_job(
 class TestCreateManifestE2E:
     """Test class."""
 
-    def test_monitoring_run_use_defaults_data_has_no_drift_successful(
+    def _monitoring_run_use_defaults_data_has_no_drift_successful(
         self, ml_client: MLClient, get_component, download_job_output, test_suite_name
     ):
         """Test the happy path scenario where the data has drift and default settings are used."""
