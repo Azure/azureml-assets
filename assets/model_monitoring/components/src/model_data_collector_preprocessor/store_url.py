@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import os
 import re
 from typing import Union
-from azure.identity import ClientSecretCredential, DefaultAzureCredential
+from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
 from azure.storage.filedatalake import FileSystemClient
@@ -196,10 +196,12 @@ class StoreUrl:
             if ':' in url.path:  # azureml:<data_name>:<version> asset path
                 # asset path should be translated to azureml or hdfs path in service, should not reach here
                 raise InvalidInputError("AzureML asset path is not supported as uri_folder.")
-            elif '/data/' in self._base_url:  # azureml:// data asset url
-                raise InvalidInputError(
-                    "AzureML data asset url is not supported as the input of Model Monitoring job, please use "
-                    "credential datastore + path instead.")
+
+            data_pattern0 = r"azureml://(subscriptions/([^/]+)/resourceGroups/([^/]+)/workspaces/([^/]+)/)?data/([^/]+)/versions/(.+)"  # noqa: E501
+            data_pattern1 = r"azureml://locations/([^/]+)/workspaces/([^/]+)/data/([^/]+)/versions/(.+)"
+            if re.match(data_pattern0, self._base_url) or re.match(data_pattern1, self._base_url):
+                raise InvalidInputError("AzureML data asset url is NOT supported as input of Model Monitoring job, "
+                                        "please use credential datastore + path instead.")
             else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
@@ -221,9 +223,11 @@ class StoreUrl:
 
     def _get_datastore_and_path_from_azureml_path(self) -> (str, str):
         """Get datastore name and path from azureml path."""
-        start_idx = self._base_url.find('/datastores/')
-        end_idx = self._base_url.find('/paths/')
-        return self._base_url[start_idx+12:end_idx], self._base_url[end_idx+7:].rstrip('/')
+        pattern = r"azureml://(subscriptions/([^/]+)/resourceGroups/([^/]+)/workspaces/([^/]+)/)?datastores/(?P<datastore_name>[^/]+)/paths/(?P<path>.+)"  # noqa: E501
+        matches = re.match(pattern, self._base_url)
+        if not matches:
+            raise InvalidInputError(f"Unsupported azureml uri: {self._base_url}")
+        return matches.group("datastore_name"), matches.group("path").rstrip('/')
 
     def _is_secure(self):
         """Check if the store url is secure."""
