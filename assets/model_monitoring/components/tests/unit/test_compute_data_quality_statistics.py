@@ -100,7 +100,9 @@ class TestModelMonitorDataQualityStatistic:
             data_stats_table
     ):
         """Test compute data quality statistics with string, integer, boolean, double type."""
+        data_stats_table.show()
         actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp)
+        actual_data_stats_table.show()
         assert_pyspark_df_equal(data_stats_table, actual_data_stats_table)
 
     @pytest.mark.parametrize("df_with_timestamp, df_for_max_min_value",

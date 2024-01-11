@@ -90,7 +90,9 @@ def get_null_count(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
         na_metric_df: A Pypsark DataFrame containing the number of null values
     for each column of the input PySpark DataFrame.
     """
-    na_metric_df = df.select([count(when(isnan(c) | col(c).isNull(), c)).alias(c) for c in df.columns])
+    na_metric_df = df.select([count(when((isnan(c) | col(c).isNull()), c)) if t in ("double", "float")
+                                         else count(when(col(c).isNull(), c)).alias(c)
+                                         for c, t in df.dtypes if c in df.columns])
 
     na_metric_df_data = [(col_, na_metric_df.first()[col_]) for col_ in na_metric_df.columns]
     data_schema = StructType(
