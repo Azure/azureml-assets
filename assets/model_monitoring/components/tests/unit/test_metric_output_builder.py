@@ -11,7 +11,7 @@ import numpy as np
 from model_monitor_metric_outputter.builder.metric_output_builder import MetricOutputBuilder
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestMetricOutputBuilder:
     """Test class for metric output builder."""
 

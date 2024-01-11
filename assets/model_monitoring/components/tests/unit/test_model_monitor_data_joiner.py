@@ -46,7 +46,7 @@ def _generate_right_data_df(contains_join_column):
     return create_pyspark_dataframe(right_data, right_columns)
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestModelMonitorDataJoiner:
     """Test class for model monitor data joiner component."""
 

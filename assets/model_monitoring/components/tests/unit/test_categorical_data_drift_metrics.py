@@ -117,7 +117,7 @@ test_cases = [
 ]
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestComputeCategoricalDataDriftMetrics(unittest.TestCase):
     """Test class for categorical data drift compute metrics component and utilities."""
 

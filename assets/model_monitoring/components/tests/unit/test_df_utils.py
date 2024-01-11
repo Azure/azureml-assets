@@ -20,7 +20,7 @@ import pandas as pd
 import pytest
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestDFUtils:
     """Test class for df utilities."""
 

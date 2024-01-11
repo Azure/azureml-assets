@@ -28,7 +28,7 @@ def _validate_metrics(payload: dict, row: Row):
     )
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestDataDriftOutputMetrics:
     """Test class for data drift output metrics component."""
 

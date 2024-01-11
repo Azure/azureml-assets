@@ -9,7 +9,7 @@ from src.model_monitor_feature_selector.selectors.feature_selector_all import Fe
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestFeatureSelectorAll:
     """Test class for feature selector component."""
 

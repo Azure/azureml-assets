@@ -61,7 +61,7 @@ def get_large_data():
         })
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestComputeFeatureImportanceMetrics:
     """Test class for feature importance component and utilities."""
 

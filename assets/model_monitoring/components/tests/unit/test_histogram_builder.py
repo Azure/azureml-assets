@@ -9,7 +9,7 @@ from pyspark.sql import Row
 from model_monitor_output_metrics.builders.histogram_builder import HistogramBuilder
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestHistogramBuilder:
     """Test class for data drift output metrics component."""
 

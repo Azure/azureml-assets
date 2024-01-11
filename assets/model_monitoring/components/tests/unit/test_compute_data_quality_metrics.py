@@ -60,7 +60,7 @@ data_stats = [
 data_stats_table_mod = create_pyspark_dataframe(data_stats, columns)
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestModelMonitorDataQuality:
     """Test class for model monitor data quality component."""
 

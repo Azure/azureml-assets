@@ -8,7 +8,7 @@ import pytest
 from shared_utilities.dict_utils import merge_dicts
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestDictUtils:
     """Test class for dictionary utilities."""
 

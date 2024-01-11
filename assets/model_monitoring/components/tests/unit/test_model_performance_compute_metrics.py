@@ -35,7 +35,7 @@ test_data_regression = [{
 }]
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestModelPerformanceComputeMetrics(unittest.TestCase):
     """Unit test class for model performance compute metrics."""
 

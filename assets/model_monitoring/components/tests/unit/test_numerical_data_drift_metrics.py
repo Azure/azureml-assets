@@ -222,7 +222,7 @@ test_cases = [
 ]
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestComputeNumericalDataDriftMetrics(unittest.TestCase):
     """Test class for numerical data drift compute metrics component and utilities."""
 

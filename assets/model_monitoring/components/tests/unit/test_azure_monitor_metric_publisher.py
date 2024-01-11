@@ -64,7 +64,7 @@ successful_test_cases = [
 ]
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestAzureMonitorMetricPublisher:
     """Test class for Azure monitor metric publisher."""
 

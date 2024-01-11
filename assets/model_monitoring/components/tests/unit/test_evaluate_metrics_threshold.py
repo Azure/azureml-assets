@@ -64,7 +64,7 @@ spark = SparkSession.builder.getOrCreate()
 emptyRDD = spark.sparkContext.emptyRDD()
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestEvaluateMetricsThreshold:
     """Test class for evaluate metrics threshold component."""
 

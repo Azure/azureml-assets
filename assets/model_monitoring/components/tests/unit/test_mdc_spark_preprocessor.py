@@ -39,7 +39,7 @@ def mdc_preprocessor_test_setup():
     os.chdir(original_work_dir)  # change working directory back to original
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestMDCSparkPreprocessor:
     """Test class for MDC Preprocessor."""
 

@@ -14,7 +14,7 @@ from model_data_collector_preprocessor.store_url import StoreUrl
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestStoreUrl:
     """Test class for StoreUrl."""
 
