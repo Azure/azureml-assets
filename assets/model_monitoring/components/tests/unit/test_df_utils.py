@@ -9,14 +9,10 @@ from pyspark.sql.types import (
     StructType)
 from pyspark.sql import SparkSession
 from shared_utilities.df_utils import (
-        get_numerical_cols_with_df,
-        get_categorical_cols_with_df,
-        is_categorical,
-        is_numerical,
         get_common_columns,
         get_feature_type_override_map,
-        is_numerical_new,
-        is_categorical_new,
+        is_numerical,
+        is_categorical,
         get_numerical_cols_with_df_with_override,
         get_categorical_cols_with_df_with_override,
         get_numerical_and_categorical_cols
@@ -30,117 +26,6 @@ import datetime
 @pytest.mark.unit
 class TestDFUtils:
     """Test class for df utilities."""
-
-    def test_get_numerical_cols_with_df(self):
-        """Test numerical columns."""
-        # Test with mixed columns
-        column_dtype_map = {'col1': 'int',
-                            'col2': 'float',
-                            'col3': 'double',
-                            'col4': 'decimal',
-                            'col5': 'string'
-                            }
-        baseline_df = pd.DataFrame({
-                                    'col1': [1, 2, 2, 4, 4],
-                                    'col2': [1.1, 2.2, 3.3, 4.4, 5.5],
-                                    'col3': [1.11, 2.22, 3.33, 4.44, 5.55],
-                                    'col4': [1.111, 2.222, 3.333, 4.444, 5.555]
-                                    })
-        baseline_df = self.init_spark().createDataFrame(baseline_df)
-        numerical_columns = get_numerical_cols_with_df(column_dtype_map,
-                                                       baseline_df)
-        assert numerical_columns == ['col1', 'col2', 'col3', 'col4']
-
-    def test_get_categorical_columns(self):
-        """Test categorical columns."""
-        # Test with all numerical columns
-        spark = self.init_spark()
-        column_dtype_map = {
-                            'col1': 'int',
-                            'col2': 'float',
-                            'col3': 'double',
-                            'col4': 'decimal'
-                            }
-        baseline_df = pd.DataFrame({
-                                    'col1': [1, 2, 2, 4, 4],
-                                    'col2': [1.1, 2.2, 3.3, 4.4, 5.5],
-                                    'col3': [1.11, 2.22, 3.33, 4.44, 5.55],
-                                    'col4': [1.111, 2.222, 3.333, 4.444, 5.555]
-                                    })
-        baseline_df = spark.createDataFrame(baseline_df)
-        categorical_columns = get_categorical_cols_with_df(column_dtype_map,
-                                                           baseline_df)
-        assert categorical_columns == []
-
-        # Test with int being same value
-        column_dtype_map = {'col1': 'int'}
-        baseline_df = pd.DataFrame({
-                                    'col1': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                             1]
-                                    })
-        baseline_df = spark.createDataFrame(baseline_df)
-        categorical_columns = get_categorical_cols_with_df(column_dtype_map,
-                                                           baseline_df)
-        assert categorical_columns == ['col1']
-
-        # Test with all categorical columns
-        column_dtype_map = {
-            'col1': 'string',
-            'col2': 'bool'
-        }
-        baseline_df = pd.DataFrame({
-            'col1': ['a', 'b', 'c', 'd', 'e'],
-            'col2': [True, False, True, False, True]
-        })
-        baseline_df = spark.createDataFrame(baseline_df)
-        categorical_columns = get_categorical_cols_with_df(column_dtype_map,
-                                                           baseline_df)
-        assert categorical_columns == ['col1', 'col2']
-
-    def test_is_categorical(self):
-        """Test int is categorical."""
-        # Test with integer column
-        result = False
-        baseline_column = pd.DataFrame([1, 2, 3, 4, 5])
-        assert is_categorical(baseline_column) == result
-
-        # Test with integer column with low distinct value ratio
-        result = True
-        baseline_column = pd.DataFrame([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-        assert is_categorical(baseline_column) == result
-
-        # Test with integer column with high distinct value ratio
-        result = False
-        baseline_column = pd.DataFrame([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        assert is_categorical(baseline_column) == result
-
-    def test_is_numerical(self):
-        """Test int is numerical."""
-        # Test with integer column with high distinct value ratio
-        baseline_column = pd.DataFrame([1, 2, 3, 4, 5])
-        result = True
-        assert is_numerical(baseline_column) == result
-
-        # Test with integer column with low distinct value ratio
-        result = False
-        baseline_column = pd.DataFrame([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, None, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-        assert is_numerical(baseline_column) == result
-
-        # Test with integer column with high distinct value ratio
-        result = True
-        baseline_column = pd.DataFrame([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        assert is_numerical(baseline_column) == result
 
     def test_get_common_columns(self):
         """Test get common columns."""
@@ -222,7 +107,7 @@ class TestDFUtils:
                                                                                 "Name": "categorical",
                                                                                 "Gender": "categorical"}
 
-    def test_is_numerical_new(self):
+    def test_is_numerical(self):
         spark = self.init_spark()
         column_dtype_map = {
                             'col1': 'int',
@@ -241,23 +126,23 @@ class TestDFUtils:
 
         # Test feature type override take priority
         feature_type_override_map = {'col2': 'categorical'}
-        assert is_numerical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) is False
+        assert is_numerical('col2', column_dtype_map, feature_type_override_map, baseline_df) is False
         feature_type_override_map = {'col2': 'numerical'}
-        assert is_numerical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) is True
+        assert is_numerical('col2', column_dtype_map, feature_type_override_map, baseline_df) is True
 
         # Test dtype_map take priority
-        assert is_numerical_new('col2', column_dtype_map, {}, baseline_df) is True
-        assert is_numerical_new('col3', column_dtype_map, {}, baseline_df) is True
-        assert is_numerical_new('col4', column_dtype_map, {}, baseline_df) is True
-        assert is_numerical_new('col5', column_dtype_map, {}, baseline_df) is False
-        assert is_numerical_new('col6', column_dtype_map, {}, baseline_df) is False
-        assert is_numerical_new('col7', column_dtype_map, {}, baseline_df) is False
-        assert is_numerical_new('col8', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical('col2', column_dtype_map, {}, baseline_df) is True
+        assert is_numerical('col3', column_dtype_map, {}, baseline_df) is True
+        assert is_numerical('col4', column_dtype_map, {}, baseline_df) is True
+        assert is_numerical('col5', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical('col6', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical('col7', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical('col8', column_dtype_map, {}, baseline_df) is False
 
         # Test with integer column with high distinct ratio
         baseline_df = pd.DataFrame({'col1': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
         baseline_df = spark.createDataFrame(baseline_df)
-        assert is_numerical_new('col1', column_dtype_map, {}, baseline_df) is True
+        assert is_numerical('col1', column_dtype_map, {}, baseline_df) is True
 
         # Test with integer column with low distinct value ratio
         baseline_df = pd.DataFrame({'col1': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -267,13 +152,13 @@ class TestDFUtils:
                                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]})
         baseline_df = spark.createDataFrame(baseline_df)
-        assert is_numerical_new('col1', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical('col1', column_dtype_map, {}, baseline_df) is False
 
         # Test with unknown data type
-        assert is_numerical_new('col9', column_dtype_map, {}, baseline_df) is False
-        assert is_numerical_new('col10', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical('col9', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical('col10', column_dtype_map, {}, baseline_df) is False
 
-    def test_is_categorical_new(self):
+    def test_is_categorical(self):
         spark = self.init_spark()
         column_dtype_map = {
                             'col1': 'int',
@@ -292,23 +177,23 @@ class TestDFUtils:
 
         # Test feature type override take priority
         feature_type_override_map = {'col2': 'categorical'}
-        assert is_categorical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) is True
+        assert is_categorical('col2', column_dtype_map, feature_type_override_map, baseline_df) is True
         feature_type_override_map = {'col2': 'numerical'}
-        assert is_categorical_new('col2', column_dtype_map, feature_type_override_map, baseline_df) is False
+        assert is_categorical('col2', column_dtype_map, feature_type_override_map, baseline_df) is False
 
         # Test dtype_map take priority
-        assert is_categorical_new('col2', column_dtype_map, {}, baseline_df) is False
-        assert is_categorical_new('col3', column_dtype_map, {}, baseline_df) is False
-        assert is_categorical_new('col4', column_dtype_map, {}, baseline_df) is False
-        assert is_categorical_new('col5', column_dtype_map, {}, baseline_df) is True
-        assert is_categorical_new('col6', column_dtype_map, {}, baseline_df) is True
-        assert is_categorical_new('col7', column_dtype_map, {}, baseline_df) is True
-        assert is_categorical_new('col8', column_dtype_map, {}, baseline_df) is True
+        assert is_categorical('col2', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical('col3', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical('col4', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical('col5', column_dtype_map, {}, baseline_df) is True
+        assert is_categorical('col6', column_dtype_map, {}, baseline_df) is True
+        assert is_categorical('col7', column_dtype_map, {}, baseline_df) is True
+        assert is_categorical('col8', column_dtype_map, {}, baseline_df) is True
 
         # Test with integer column with high distinct ratio
         baseline_df = pd.DataFrame({'col1': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
         baseline_df = spark.createDataFrame(baseline_df)
-        assert is_categorical_new('col1', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical('col1', column_dtype_map, {}, baseline_df) is False
 
         # Test with integer column with low distinct value ratio
         baseline_df = pd.DataFrame({'col1': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -318,11 +203,11 @@ class TestDFUtils:
                                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]})
         baseline_df = spark.createDataFrame(baseline_df)
-        assert is_categorical_new('col1', column_dtype_map, {}, baseline_df) is True
+        assert is_categorical('col1', column_dtype_map, {}, baseline_df) is True
 
         # Test with unknown data type
-        assert is_categorical_new('col9', column_dtype_map, {}, baseline_df) is False
-        assert is_categorical_new('col10', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical('col9', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical('col10', column_dtype_map, {}, baseline_df) is False
 
     def test_get_numerical_cols_with_df_with_override(self):
         spark = self.init_spark()

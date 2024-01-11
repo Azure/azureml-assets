@@ -18,6 +18,8 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_data_1", type=str)
     parser.add_argument("--input_data_2", type=str, required=False, nargs="?")
+    parser.add_argument("--override_numerical_features", type=str, required=False)
+    parser.add_argument("--override_categorical_features", type=str, required=False)
     parser.add_argument("--histogram_buckets", type=str)
     args = parser.parse_args()
 
@@ -39,7 +41,10 @@ def run():
     elif df1 is None:
         df1 = df2
 
-    histogram_buckets = compute_histogram_buckets(df1, df2)
+    histogram_buckets = compute_histogram_buckets(df1,
+                                                  df2,
+                                                  args.override_numerical_features,
+                                                  args.override_categorical_features)
     save_spark_df_as_mltable(histogram_buckets, args.histogram_buckets)
 
 

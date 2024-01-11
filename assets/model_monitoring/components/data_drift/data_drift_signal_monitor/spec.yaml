@@ -134,6 +134,8 @@ jobs:
       input_data_2:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       histogram_buckets:
         type: mltable

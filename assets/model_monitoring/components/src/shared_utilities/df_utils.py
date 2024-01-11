@@ -9,35 +9,7 @@ data_type_numerical_group = ["float", "double", "decimal"]
 data_type_categorical_group = ["string", "boolean", "timestamp", "date", "binary"]
 
 
-# Todo: Remove
-def get_numerical_columns(column_dtype_map: dict) -> list:
-    """Get numerical columns from all columns."""
-    # NOTE: byte, short, long are not included in the list because they
-    # are ambiguous with categorical columns. They should be added to the list
-    # based on some heuristics or user preference.
-    numerical_columns = [
-        column
-        for column in column_dtype_map
-        if column_dtype_map[column] in ["float", "double", "decimal"]
-    ]
-    return numerical_columns
-
-
-# Todo: Remove
-def get_categorical_columns(column_dtype_map: dict) -> list:
-    """Get categorical columns from all columns."""
-    # NOTE: byte, short, long are not included in the list because they
-    # are ambiguous with numerical columns. They should be added to the
-    # list based on some heuristics or user preference.
-    categorical_columns = [
-        column
-        for column in column_dtype_map
-        if column_dtype_map[column] in ["string", "bool"]
-    ]
-    return categorical_columns
-
-
-def is_numerical_new(column, column_dtype_map: dict, feature_type_override_map: dict, df):
+def is_numerical(column, column_dtype_map: dict, feature_type_override_map: dict, df):
     """Check if int column should be numerical."""
     if feature_type_override_map.get(column, None) == "numerical":
         return True
@@ -55,7 +27,7 @@ def is_numerical_new(column, column_dtype_map: dict, feature_type_override_map: 
     return False
 
 
-def is_categorical_new(column, column_dtype_map: dict, feature_type_override_map: dict, df):
+def is_categorical(column, column_dtype_map: dict, feature_type_override_map: dict, df):
     """Check if int column should be categorical."""
     if feature_type_override_map.get(column, None) == "categorical":
         return True
@@ -85,7 +57,7 @@ def get_numerical_cols_with_df_with_override(
     numerical_columns = [
         column
         for column in column_dtype_map
-        if is_numerical_new(column, column_dtype_map, feature_type_override_map, df)
+        if is_numerical(column, column_dtype_map, feature_type_override_map, df)
     ]
     return numerical_columns
 
@@ -102,7 +74,7 @@ def get_categorical_cols_with_df_with_override(
     categorical_columns = [
         column
         for column in column_dtype_map
-        if is_categorical_new(column, column_dtype_map, feature_type_override_map, df)
+        if is_categorical(column, column_dtype_map, feature_type_override_map, df)
     ]
     return categorical_columns
 
@@ -128,59 +100,11 @@ def get_feature_type_override_map(override_numerical_features: str, override_cat
     return feature_type_override_map
 
 
-# Todo: Remove
-def get_numerical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
-    """Get numerical columns from all columns with dataframe."""
-    # NOTE: byte, short, long are not included in the list because they
-    # are ambiguous with categorical columns. They should be added to the list
-    # based on some heuristics or user preference.
-    numerical_columns = [
-        column
-        for column in column_dtype_map
-        if column_dtype_map[column] in ["float", "double", "decimal"]
-        or (column_dtype_map[column] in ["int", "bigint", "short", "long"]
-            and is_numerical(baseline_df.select(column)
-                             .rdd.flatMap(lambda x: x).collect()))
-    ]
-    return numerical_columns
-
-
-# Todo: Remove
-def get_categorical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
-    """Get categorical columns from all columns with dataframe."""
-    # NOTE: byte, short, long are not included in the list because they
-    # are ambiguous with numerical columns. They should be added to the
-    # list based on some heuristics or user preference.
-    categorical_columns = [
-        column
-        for column in column_dtype_map
-        if column_dtype_map[column] in ["string", "bool"]
-        or (column_dtype_map[column] in ["int", "bigint", "short", "long"]
-            and is_categorical(baseline_df.select(column)
-                               .rdd.flatMap(lambda x: x).collect()))
-    ]
-    return categorical_columns
-
-
 def get_distinct_ratio(column):
     """Get distict ratio for values in a column."""
     distinct_values = len(set(column))
     total_values = len(column)
     return distinct_values / total_values
-
-
-# Todo: Remove
-def is_numerical(column):
-    """Check if int column should be numerical."""
-    distinct_value_ratio = get_distinct_ratio(column)
-    return distinct_value_ratio >= 0.05
-
-
-# Todo: Remove
-def is_categorical(column):
-    """Check if int column should be categorical."""
-    distinct_value_ratio = get_distinct_ratio(column)
-    return distinct_value_ratio < 0.05
 
 
 def get_common_columns(
