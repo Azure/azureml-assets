@@ -9,13 +9,7 @@ from pyspark.sql.types import (
     StructType,
     StructField,
     StringType,
-    ByteType,
-    ShortType,
-    IntegerType,
-    LongType,
-    FloatType,
-    DoubleType,
-    DecimalType,
+    IntegerType
 )
 from pyspark.sql.functions import (
     col,

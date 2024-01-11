@@ -155,8 +155,8 @@ class TestDFUtils:
         assert is_numerical('col1', column_dtype_map, {}, baseline_df) is False
 
         # Test with unknown data type
-        assert is_numerical('col9', column_dtype_map, {}, baseline_df) is False
-        assert is_numerical('col10', column_dtype_map, {}, baseline_df) is False
+        assert is_numerical('col9', column_dtype_map, {}, baseline_df) is None
+        assert is_numerical('col10', column_dtype_map, {}, baseline_df) is None
 
     def test_is_categorical(self):
         spark = self.init_spark()
@@ -206,8 +206,8 @@ class TestDFUtils:
         assert is_categorical('col1', column_dtype_map, {}, baseline_df) is True
 
         # Test with unknown data type
-        assert is_categorical('col9', column_dtype_map, {}, baseline_df) is False
-        assert is_categorical('col10', column_dtype_map, {}, baseline_df) is False
+        assert is_categorical('col9', column_dtype_map, {}, baseline_df) is None
+        assert is_categorical('col10', column_dtype_map, {}, baseline_df) is None
 
     def test_get_numerical_cols_with_df_with_override(self):
         spark = self.init_spark()
@@ -228,7 +228,8 @@ class TestDFUtils:
                                      datetime.date(2021, 5, 17),
                                      datetime.date(2022, 5, 17),
                                      datetime.date(2023, 5, 17),
-                                     datetime.date(2024, 5, 17)]})
+                                     datetime.date(2024, 5, 17)],
+                            'col10': ['unknown', 'unknown', 'unknown', 'unknown', 'unknown']})
         baseline_df = spark.createDataFrame(baseline_df)
 
         # Test without dtype map without feature type override
@@ -244,10 +245,14 @@ class TestDFUtils:
                     'col6': 'boolean',
                     'col7': 'binary',
                     'col8': 'timestamp',
-                    'col9': 'date'
+                    'col9': 'date',
+                    'col10': 'unknown'
                     }
-        assert get_numerical_cols_with_df_with_override(baseline_df, None, None, column_dtype_map) == ['col1', 'col2', 'col3',
-                                                                                                       'col4', 'col5']
+        assert get_numerical_cols_with_df_with_override(baseline_df, 
+                                                        None,
+                                                        None,
+                                                        column_dtype_map) == ['col1', 'col2', 'col3',
+                                                                              'col4', 'col5']
 
         # Test with feature type override
         numerical_features = 'col5,col6,col7,col8,col9'
@@ -277,11 +282,13 @@ class TestDFUtils:
                                      datetime.date(2021, 5, 17),
                                      datetime.date(2022, 5, 17),
                                      datetime.date(2023, 5, 17),
-                                     datetime.date(2024, 5, 17)]})
+                                     datetime.date(2024, 5, 17)],
+                            'col10': ['unknown', 'unknown', 'unknown', 'unknown', 'unknown']})
         baseline_df = spark.createDataFrame(baseline_df)
 
         # Test without dtype map without feature type override
-        assert get_categorical_cols_with_df_with_override(baseline_df, None, None) == ['col5', 'col6', 'col7', 'col8', 'col9']
+        assert get_categorical_cols_with_df_with_override(baseline_df, None, None) == ['col5', 'col6', 'col7',
+                                                                                       'col8', 'col9', 'col10']
 
         # Test with dtype map without feature type override
         column_dtype_map = {
@@ -293,19 +300,25 @@ class TestDFUtils:
                     'col6': 'boolean',
                     'col7': 'binary',
                     'col8': 'timestamp',
-                    'col9': 'date'
+                    'col9': 'date',
+                    'col10': 'unknown'
                     }
-        assert get_categorical_cols_with_df_with_override(baseline_df, None, None, column_dtype_map) == ['col6', 'col7',
-                                                                                                         'col8', 'col9']
+        assert get_categorical_cols_with_df_with_override(baseline_df,
+                                                          None,
+                                                          None,
+                                                          column_dtype_map) == ['col6', 'col7',
+                                                                                'col8', 'col9']
 
         # Test with feature type override
         categorical_features = 'col1,col2,col3,col4,col5'
         assert get_categorical_cols_with_df_with_override(baseline_df,
                                                           override_numerical_features=None,
                                                           override_categorical_features=categorical_features,
-                                                          column_dtype_map= column_dtype_map) == ['col1', 'col2', 'col3',
-                                                                                                  'col4', 'col5', 'col6',
-                                                                                                  'col7', 'col8', 'col9']
+                                                          column_dtype_map= column_dtype_map) == ['col1', 'col2',
+                                                                                                  'col3', 'col4',
+                                                                                                  'col5', 'col6',
+                                                                                                  'col7', 'col8',
+                                                                                                  'col9']
 
     def test_get_numerical_and_categorical_cols(self):
         spark = self.init_spark()

@@ -133,7 +133,7 @@ def compute_histograms(
         df: pyspark_sql.DataFrame,
         histogram_buckets: pyspark_sql.DataFrame,
         override_numerical_features: str,
-        override_categorical_features: str)-> tuple:
+        override_categorical_features: str) -> tuple:
     """Compute data drift measures and perform tests."""
     # Generate histograms only for columns in both baseline and target dataset
     numerical_columns, categorical_columns = get_numerical_and_categorical_cols(df,

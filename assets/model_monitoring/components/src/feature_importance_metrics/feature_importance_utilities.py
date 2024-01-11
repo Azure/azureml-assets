@@ -38,10 +38,8 @@ def mark_categorical_column(baseline_df, target_column, categorical_features_lgb
     :type target_column: string
     """
     for column in baseline_df.columns:
-        col = pd.Series(baseline_df[column])
         if column in categorical_features_lgbm:
             baseline_df[column] = baseline_df[column].astype('category')
         if column not in categorical_features_lgbm and column not in numerical_features and column != target_column:
             log_time_and_message(f"Unknown column: {column}, defult to category.")
             baseline_df[column] = baseline_df[column].astype('category')
-

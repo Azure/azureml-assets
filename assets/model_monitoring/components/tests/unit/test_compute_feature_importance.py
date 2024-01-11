@@ -9,7 +9,6 @@ from feature_importance_metrics.compute_feature_attribution_drift import (
     drop_metadata_columns, calculate_attribution_drift)
 import pytest
 import pandas as pd
-import datetime
 
 
 @pytest.fixture
