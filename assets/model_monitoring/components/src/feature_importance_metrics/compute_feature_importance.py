@@ -65,6 +65,7 @@ def determine_task_type(task_type, target_column, baseline_data, categorical_fea
             log_time_and_message(f"Supported task types are classification and regression, received {task_type}."
                                  " Attempting to determine task type based on target column.")
         else:
+            log_time_and_message(f"Successfully got task type {task_type} from user input")
             return task_type_lower
 
     if target_column in categorical_features:
