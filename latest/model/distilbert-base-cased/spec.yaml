@@ -5,8 +5,8 @@ properties:
   SharedComputeCapacityEnabled: true
   SHA: 0dacbb01d604f8adeeb5b87c9339e485ac40d5c0
   evaluation-min-sku-spec: 4|0|28|56
-  inference-min-sku-spec: 4|0|14|28
-  finetune-min-sku-spec: 24|4|448|2948
+  inference-min-sku-spec: 2|0|8|28
+  finetune-min-sku-spec: 24|4|448|1344
   evaluation-recommended-sku: Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
     Standard_DS5_v2, Standard_DS12_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4,
     Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4,
