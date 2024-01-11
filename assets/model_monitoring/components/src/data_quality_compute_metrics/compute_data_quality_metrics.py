@@ -19,12 +19,11 @@ from pyspark.sql.functions import (
     desc,
     regexp_replace,
     round,
-    concat,
+    concat
 )
 from pyspark.ml.feature import Imputer
 from typing import Tuple
 import pyspark
-import pyspark.pandas as ps
 import warnings
 from shared_utilities.df_utils import get_numerical_and_categorical_cols
 
@@ -74,20 +73,30 @@ def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     return metadata_df
 
 
-def get_null_count(df: ps.DataFrame) -> ps.DataFrame:
+def get_null_count(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     """
-    Compute a Pandas DataFrame containing the number of null values for each column of the input PySpark DataFrame.
+    Compute a PySpark DataFrame containing the number of null values for each column of the input PySpark DataFrame.
 
     Args:
-        df: Input PySpark Pandas DataFrame.
+        df: Input PySpark DataFrame.
 
     Returns:
-        na_metric_df: A Pypsark Pandas DataFrame containing the number of null values
+        na_metric_with_metric_name: A Pypsark DataFrame containing the number of null values and metricsName column
     for each column of the input PySpark DataFrame.
     """
-    na_metric_df = ps.DataFrame(df.isna().sum()).reset_index()
-    na_metric_df.columns = ["featureName", "violationCount"]
-    return na_metric_df
+    na_metric_df = df.select([count(when((col(c).isNull()), c)).alias(c) for c in df.columns])
+
+    na_metric_df_data = [(col_, na_metric_df.first()[col_]) for col_ in na_metric_df.columns]
+    data_schema = StructType(
+        [
+            StructField("featureName", StringType(), True),
+            StructField("violationCount", IntegerType(), True),
+        ]
+    )
+    # Create a new DataFrame with the metric data
+    na_metric_df = spark.createDataFrame(na_metric_df_data, data_schema)
+    na_metric_with_metric_name = na_metric_df.withColumn("metricName", lit("NullValue"))
+    return na_metric_with_metric_name
 
 
 def compute_max_violation(
@@ -422,9 +431,8 @@ def compute_data_quality_metrics(df, data_stats_table, override_numerical_featur
     # COMPUTE VIOLATIONS
     #########################
     # 1. NULL TYPE
-    null_count_dtype = get_null_count(df.to_pandas_on_spark())
-    null_count_dtype["metricName"] = "NullValue"
-    null_count_dtype_sp = null_count_dtype.to_spark()
+    null_count_dtype = get_null_count(df)
+
     # HIERARCHY 1: IMPUTE MISSING VALUES AFTER COUNTING THEM
     df = impute_numericals_with_median(df, numerical_columns)
     df = impute_categorical_with_mode(df, categorical_columns)
@@ -452,7 +460,7 @@ def compute_data_quality_metrics(df, data_stats_table, override_numerical_featur
     min_violation_df.unpersist()  # release pre-join data frames from memory
     max_violation_df.unpersist()
 
-    temp_select = null_count_dtype_sp.select(
+    temp_select = null_count_dtype.select(
         ["featureName", "violationCount", "metricName"]
     )
     violation_df = temp_select.unionByName(violation_df)
@@ -543,7 +551,7 @@ def compute_data_quality_metrics(df, data_stats_table, override_numerical_featur
         .when(col("dataType") == "DateType()", "Categorical")
         .when(col("dataType") == "FloatType()", "Numerical")
         .when(col("dataType") == "ShortType()", "Numerical")
-        .when(col("dataType") == "ByteType()", "Categorical")
+        .when(col("dataType") == "ByteType()", "Numerical")
         .otherwise(col("dataType")),
     )
 
