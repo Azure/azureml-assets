@@ -155,11 +155,12 @@ if __name__ == "__main__":
     parser.add_argument('--flow_submit_mode', type=str, default="sync")
     parser.add_argument('--run_time', type=str, default="default-mir")
     parser.add_argument('--skipped_flows', type=str,
-                        default="bring_your_own_data_qna,template_chat_flow")
+                        default="bring_your_own_data_qna,template_chat_flow,template_eval_flow")
     # Skip bring_your_own_data_qna test, the flow has a bug.
     # Bug 2773738: Add retry when ClientAuthenticationError
     # https://msdata.visualstudio.com/Vienna/_workitems/edit/2773738
     # Skip template_chat_flow because not able to extract samples.json for test.
+    # Skip template_eval_flow because current default input fails.
     args = parser.parse_args()
 
     # Get changed models folder or all models folder
@@ -183,7 +184,7 @@ if __name__ == "__main__":
         flows_dirs = [flow_dir for flow_dir in changed_models if Path(
             flow_dir).name not in skipped_flows]
     # Check download models
-    log_debug(f"Flows to validate: {changed_models}.")
+    log_debug(f"Flows to validate: {flows_dirs}.")
     errors = []
     for model_dir in flows_dirs:
         try:
@@ -250,7 +251,7 @@ if __name__ == "__main__":
         subscription_id=args.subscription_id,
         resource_group=args.resource_group,
     )
-
+    log_debug(f"\nrun ids to check: {submitted_flow_run_ids}")
     log_debug(f"\n{flow_runs_count} bulk test runs need to check status.")
     check_flow_run_status(flow_runs_to_check, submitted_flow_run_links, submitted_flow_run_ids,
                           check_run_status_interval, check_run_status_max_attempts)

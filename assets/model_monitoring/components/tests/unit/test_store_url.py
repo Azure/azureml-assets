@@ -11,6 +11,7 @@ from azure.storage.blob import ContainerClient, BlobServiceClient
 from azure.storage.blob._shared.authentication import SharedKeyCredentialPolicy
 from azure.storage.filedatalake import FileSystemClient
 from model_data_collector_preprocessor.store_url import StoreUrl
+from shared_utilities.momo_exceptions import InvalidInputError
 
 
 @pytest.mark.unit
@@ -138,6 +139,7 @@ class TestStoreUrl:
         """Test StoreUrl constructor with azureml path."""
         mock_datastore = Mock(datastore_type=datastore_type, protocol=expected_protocol, endpoint="core.windows.net",
                               account_name="my_account", container_name="my_container")
+        mock_datastore.name = "my_datastore"
         if datastore_type == "AzureBlob":
             mock_container_client = Mock(
                 spec=ContainerClient, account_name="my_account", container_name="my_container",
@@ -166,8 +168,15 @@ class TestStoreUrl:
 
         assert store_url.get_hdfs_url() == expected_hdfs_path
         assert store_url.get_abfs_url() == expected_abfs_path
-        assert_credentials_are_equal(store_url.get_credential(), expected_credential)
-        assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
+        if expected_credential:
+            assert_credentials_are_equal(store_url.get_credential(), expected_credential)
+            assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
+        else:
+            # should raise InvalidInputError for credential less data
+            with pytest.raises(InvalidInputError):
+                store_url.get_credential()
+            with pytest.raises(InvalidInputError):
+                store_url.get_container_client()
 
     @pytest.mark.parametrize(
         "base_url, relative_path, expected_root_path, expected_abfs_url",

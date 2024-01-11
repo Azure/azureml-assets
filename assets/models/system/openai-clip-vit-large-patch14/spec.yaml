@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: OpenAI-CLIP-ViT-Large-Patch14
+name: openai-clip-vit-large-patch14
 path: ./
 properties:
     SharedComputeCapacityEnabled: true
@@ -78,4 +78,4 @@ tags:
             Standard_ND96amsr_A100_v4,
             Standard_ND40rs_v2
         ]
-version: 5
+version: 7
