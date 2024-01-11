@@ -293,9 +293,9 @@ def run(args):
                 baseline_df[column] = baseline_df[column].astype("int")
 
         feature_importances = compute_feature_importance(
-            task_type, args.target_column, baseline_df, categorical_features_lgbm)
+            task_type, args.target_column, baseline_df, categorical_features)
         feature_columns = baseline_df.drop([args.target_column], axis=1)
-        write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features_lgbm)
+        write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features)
         log_time_and_message("Successfully executed the feature importance component.")
     except Exception as e:
         log_time_and_message(f"Error encountered when executing feature importance component: {e}")

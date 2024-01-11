@@ -22,7 +22,7 @@ def run():
 
     df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
 
-    metric_unique_df = compute_data_quality_statistics(df)
+    metric_unique_df = compute_data_quality_statistics(df, args.override_numerical_features, args.override_categorical_features)
 
     sp_metric_unique_df = (
         metric_unique_df.to_spark()

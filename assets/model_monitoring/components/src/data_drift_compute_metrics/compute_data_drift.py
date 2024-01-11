@@ -30,9 +30,9 @@ def compute_data_drift_measures_tests(
 
     numerical_columns_names, categorical_columns_names = get_numerical_and_categorical_cols(
                                                             baseline_df,
-                                                            common_columns_dict,
                                                             override_numerical_features,
-                                                            override_categorical_features)
+                                                            override_categorical_features,
+                                                            common_columns_dict)
 
     baseline_df = baseline_df.dropna()
     production_df = production_df.dropna()

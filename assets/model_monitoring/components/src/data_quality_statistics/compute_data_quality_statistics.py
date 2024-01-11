@@ -9,13 +9,11 @@ from pyspark.sql.session import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
 import pyspark
 import pyspark.pandas as ps
-
+from shared_utilities.df_utils import get_numerical_and_categorical_cols
 
 # Init spark session
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
-
-supported_datatype_for_max_min_value = ["IntegerType()", "DoubleType()", "ByteType()", "LongType()", "FloatType()"]
 
 
 def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
@@ -56,33 +54,29 @@ def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     return metadata_df
 
 
-def get_features_for_max_min_calculation(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+def get_features_for_max_min_calculation(df: pyspark.sql.DataFrame, numerical_columns: list) -> pyspark.sql.DataFrame:
     """
     Compute a Spark DataFrame with features which get max and min value.
 
     Args:
         df: Input Spark DataFrame.
+        numerical_columns: list of numerical columns
 
     Returns:
         df_for_max_min_value: A Spark DataFrame with features which get max and min value
     """
-    schema = df.schema
-    supported_columns = []
-    for col_ in schema:
-        if str(col_.dataType) in supported_datatype_for_max_min_value:
-            supported_columns.append(col_.name)
-
-    df_for_max_min_value = df.select(*supported_columns)
+    df_for_max_min_value = df.select(*numerical_columns)
 
     return df_for_max_min_value
 
 
-def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
+def get_unique_value_list(df: pyspark.sql.DataFrame, categorical_columns: list) -> ps.DataFrame:
     """
     Get the unique values for each categorical column in a DataFrame.
 
     Args:
         df (pyspark.sql.DataFrame): Input DataFrame.
+        categorical_columns: list of categorical columns
 
     Returns:
         pyspark.sql.DataFrame:  A Pypsark Pandas DataFrame containing the unique values for each categorical column.
@@ -90,13 +84,17 @@ def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
         featureName: The name of the categorical column.
         set: A list of unique values for the categorical column.
     """
-    # Define a list of categorical column names to process
-    cat_col_names = [c[0] for c in df.dtypes if c[1] == "string"]
+    # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
+    modified_categorical_columns = []
+    dtype_map = dict(df.dtypes)
+    for column in categorical_columns:
+        if dtype_map[column] not in ["boolean", "timestamp", "date"]:
+            modified_categorical_columns.append(column)
 
     # Compute the set of unique values for each categorical column
     unique_vals = [
         df.select(col(c)).distinct().rdd.map(lambda x: x[0]).collect()
-        for c in cat_col_names
+        for c in modified_categorical_columns
     ]
     metadata_schema = StructType(
         [
@@ -107,12 +105,11 @@ def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
 
     # Create a new DataFrame with the results
     unique_vals_df = spark.createDataFrame(
-        [(cat_col_names[i], unique_vals[i]) for i in range(len(cat_col_names))],
+        [(modified_categorical_columns[i], unique_vals[i]) for i in range(len(modified_categorical_columns))],
         schema=metadata_schema,
     )
 
     unique_vals_df = unique_vals_df.to_pandas_on_spark()
-
     return unique_vals_df
 
 
@@ -152,13 +149,17 @@ def compute_max_df(df: ps.DataFrame) -> ps.DataFrame:
     return max_vals
 
 
-def compute_data_quality_statistics(df) -> ps.DataFrame:
+def compute_data_quality_statistics(df, override_numerical_features, override_categorical_features) -> ps.DataFrame:
     """Compute data quality statistics."""
     dtype_df = get_df_schema(df=df).to_pandas_on_spark()
-    unique_vals_df = get_unique_value_list(df=df)
-    # Note: excluding boolean type column as the boolean type do not need to be calculated
+    numerical_columns, categorical_columns = get_numerical_and_categorical_cols(
+                                                            df,
+                                                            override_numerical_features,
+                                                            override_categorical_features)
+
+    unique_vals_df = get_unique_value_list(df=df, categorical_columns=categorical_columns)
     # for max_vals and min_vals.
-    df_for_max_min_value = get_features_for_max_min_calculation(df=df)
+    df_for_max_min_value = get_features_for_max_min_calculation(df=df, numerical_columns=numerical_columns)
     # The compute_max_df and compute_min_df works for all numerical, except ShortType()
     # They will get null for non-numerical data
     max_vals = compute_max_df(df=df_for_max_min_value.to_pandas_on_spark())

@@ -4,7 +4,7 @@
 """This file contains additional utilities that are applicable to dataframe."""
 import pyspark.sql as pyspark_sql
 
-data_type_long_group = ["long", "int", "bigint", "short"]
+data_type_long_group = ["long", "int", "bigint", "short", "tinyint", "smallint"]
 data_type_numerical_group = ["float", "double", "decimal"]
 data_type_categorical_group = ["string", "boolean", "timestamp", "date", "binary"]
 

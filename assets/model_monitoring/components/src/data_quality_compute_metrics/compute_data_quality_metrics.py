@@ -32,6 +32,7 @@ from typing import Tuple
 import pyspark
 import pyspark.pandas as ps
 import warnings
+from shared_utilities.df_utils import get_numerical_and_categorical_cols
 
 
 # Init spark session
@@ -333,20 +334,19 @@ def compute_dtype_violation_count_modify_dataset(
     return df, df_conversion_errors
 
 
-def impute_numericals_with_median(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+def impute_numericals_with_median(df: pyspark.sql.DataFrame, numerical_columns: list) -> pyspark.sql.DataFrame:
     """
     Impute missing values in numerical columns with the median value of that column.
 
     Args:
     df (pyspark.sql.DataFrame): The input DataFrame
+    numerical_columns: List of numerical columns
 
     Returns:
     df (pyspark.sql.DataFrame): The input DataFrame with missing values in numerical columns imputed with median
     """
-    dbl_cols = [f.name for f in df.schema.fields if isinstance(f.dataType, (ByteType, ShortType, IntegerType, LongType, FloatType, DoubleType, DecimalType))] # noqa
-
-    if len(dbl_cols) > 0:
-        imputer = Imputer(inputCols=dbl_cols, outputCols=[c for c in dbl_cols]).setStrategy(
+    if len(numerical_columns) > 0:
+        imputer = Imputer(inputCols=numerical_columns, outputCols=[c for c in numerical_columns]).setStrategy(
             "median"
         )
         # Fit imputer on Data Frame and Transform it
@@ -354,22 +354,26 @@ def impute_numericals_with_median(df: pyspark.sql.DataFrame) -> pyspark.sql.Data
     return df
 
 
-def impute_categorical_with_mode(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+def impute_categorical_with_mode(df: pyspark.sql.DataFrame, categorical_columns: list) -> pyspark.sql.DataFrame:
     """
     Impute missing values in numerical columns with the mode/most frequent value of that column.
 
     Args:
     df (pyspark.sql.DataFrame): The input DataFrame
+    categorical_columns: List of categorical columns
 
     Returns:
     df (pyspark.sql.DataFrame): The input DataFrame with missing values
     in numerical columns imputed with mode/most frequent
     """
-    categorical_col = [
-        f.name for f in df.schema.fields if isinstance(f.dataType, StringType)
-    ]
+    # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
+    modified_categorical_columns = []
+    dtype_map = dict(df.dtypes)
+    for column in categorical_columns:
+        if dtype_map[column] not in ["boolean", "timestamp", "date"]:
+            modified_categorical_columns.append(column)
 
-    for i in categorical_col:
+    for i in modified_categorical_columns:
         # Find the most frequent value in the column
         # Get the most frequent value in the categorical column
         most_frequent = (
@@ -406,7 +410,7 @@ def modify_dataType(data_stats_table) -> pyspark.sql.DataFrame:
     return data_stats_table_mod
 
 
-def compute_data_quality_metrics(df, data_stats_table):
+def compute_data_quality_metrics(df, data_stats_table, override_numerical_features, override_categorical_features):
     """Compute data quality metrics."""
     #########################
     # PREPARE THE DATA
@@ -416,6 +420,9 @@ def compute_data_quality_metrics(df, data_stats_table):
     data_stats_table.cache()
 
     data_stats_table_mod = modify_dataType(data_stats_table)
+    numerical_columns, categorical_columns = get_numerical_and_categorical_cols(df,
+                                                                                override_numerical_features,
+                                                                                override_categorical_features)
 
     #########################
     # COMPUTE VIOLATIONS
@@ -425,8 +432,8 @@ def compute_data_quality_metrics(df, data_stats_table):
     null_count_dtype["metricName"] = "NullValue"
     null_count_dtype_sp = null_count_dtype.to_spark()
     # HIERARCHY 1: IMPUTE MISSING VALUES AFTER COUNTING THEM
-    df = impute_numericals_with_median(df)
-    df = impute_categorical_with_mode(df)
+    df = impute_numericals_with_median(df, numerical_columns)
+    df = impute_categorical_with_mode(df, categorical_columns)
 
     # 2. DATA TYPE VIOLATION
     df, dtype_violation_df = compute_dtype_violation_count_modify_dataset(
