@@ -96,7 +96,7 @@ class TestDFUtils:
 
             if col == 'col1':
                 assert len(all_edges[col]) == 2
-                min_value = baseline_df.agg(pyspark_f.min(col)).collect()[0]
+                min_value = min(baseline_df.agg(pyspark_f.min(col)).collect()[0])
                 expected_delta = min_value * 0.005
                 assert all_edges[0] == (min_value - expected_delta)
                 assert all_edges[1] == (min_value + expected_delta)
@@ -143,7 +143,7 @@ class TestDFUtils:
 
             if col == 'col1':
                 assert len(all_edges[col]) == 2
-                min_value = baseline_df.agg(pyspark_f.min(col)).collect()[0]
+                min_value = min(baseline_df.agg(pyspark_f.min(col)).collect()[0])
                 expected_delta = abs(min_value * 0.005)
                 assert all_edges[0] == (min_value - expected_delta)
                 assert all_edges[1] == (min_value + expected_delta)
@@ -190,7 +190,7 @@ class TestDFUtils:
 
             if col == 'col1':
                 assert len(all_edges[col]) == 2
-                min_value = baseline_df.agg(pyspark_f.min(col)).collect()[0]
+                min_value = min(baseline_df.agg(pyspark_f.min(col)).collect()[0])
                 expected_delta = 0.005
                 assert all_edges[0] == (min_value - expected_delta)
                 assert all_edges[1] == (min_value + expected_delta)
