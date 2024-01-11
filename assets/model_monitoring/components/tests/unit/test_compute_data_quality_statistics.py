@@ -3,7 +3,6 @@
 
 """This file contains unit tests for the Model Monitor Data Quality Compute Metric component."""
 
-from pyspark.sql import functions as F
 from pyspark.sql.types import (
     BinaryType,
     BooleanType,
