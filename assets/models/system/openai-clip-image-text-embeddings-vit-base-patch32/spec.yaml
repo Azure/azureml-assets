@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: OpenAI-CLIP-Image-Text-Embeddings-ViT-Base-Patch32
+name: OpenAI-CLIP-Image-Text-Embeddings-vit-base-patch32
 path: ./
 properties:
     SharedComputeCapacityEnabled: true
@@ -78,4 +78,4 @@ tags:
             Standard_ND96amsr_A100_v4,
             Standard_ND40rs_v2
         ]
-version: 6
+version: 9

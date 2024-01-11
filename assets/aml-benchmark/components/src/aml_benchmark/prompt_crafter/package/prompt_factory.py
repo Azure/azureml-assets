@@ -16,6 +16,8 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 
 from aml_benchmark.utils.exceptions import BenchmarkValidationException
 from aml_benchmark.utils.error_definitions import BenchmarkValidationError
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from .prompt import (
     PromptType,
     Prompt,
@@ -45,6 +47,7 @@ class PromptFactory(ABC):
     few_shot_separator: Optional[str] = None
     prefix: Optional[str] = None
     ground_truth_column_name: Optional[str] = None
+    additional_columns: Optional[str] = None
     label_map_str: Optional[str] = None
     output_pattern: Optional[str] = None
     system_message: Optional[str] = None
@@ -198,6 +201,19 @@ class PromptFactory(ABC):
                 mssg = "Ground truth column is not present in the data"
                 raise BenchmarkValidationException._with_error(
                     AzureMLError.create(BenchmarkValidationError, error_details=mssg))
+
+        if self.additional_columns:
+            elements = self.additional_columns.split(",")
+            strips = [s.strip() for s in elements if s.strip()]
+            for k in strips:
+                try:
+                    output_data[k] = row[k]
+                except KeyError:
+                    raise BenchmarkUserException._with_error(
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details=f"Column {k} doesn't exist. Please check your data before submitting again.")
+                        )
 
         if self.metadata_keys is not None:
             def collect_metadata(metadata_keys, data, index):

@@ -37,6 +37,7 @@ def parse_args() -> argparse.Namespace:
         "--batch_input_pattern", nargs='?', const=None, type=str,
         help="The input patterns for the batch endpoint.", default="{}")
     parser.add_argument("--label_key", type=str, help="label key", default=None)
+    parser.add_argument("--additional_columns", type=str, help="additional_columns", default=None)
     parser.add_argument(
         "--n_samples", type=int, help="Top samples sending to the endpoint.", default=-1)
     parser.add_argument("--formatted_data", type=str, help="path to output location")
@@ -59,7 +60,8 @@ def main(
     endpoint_url: str,
     is_performance_test: bool,
     output_metadata: str,
-    label_key: str
+    label_key: str,
+    additional_columns: str
 ) -> None:
     """
     Entry function of the script.
@@ -73,12 +75,18 @@ def main(
     :param model_version: The model version.
     :param endpoint: The endpoint url.
     :param is_performance_test: Whether it is performance test.
+    :param label_key: Ground truth column name.
+    :param additional_columns: Name(s) of columns that could be helpful for
+        caculating certain metrics, separated by comma ",".
     :return: None
     """
     online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
 
     endpoint_data_preparer = EndpointDataPreparer(
-        online_model._model_type, batch_input_pattern, label_key=label_key)
+        online_model._model_type,
+        batch_input_pattern,
+        label_key=label_key,
+        additional_columns=additional_columns)
 
     # Read the data file into a pandas dataframe
     logger.info("Read data now.")
@@ -141,5 +149,6 @@ if __name__ == "__main__":
         endpoint_url=args.endpoint_url,
         is_performance_test=args.is_performance_test,
         output_metadata=args.output_metadata,
-        label_key=args.label_key
+        label_key=args.label_key,
+        additional_columns=args.additional_columns
     )
