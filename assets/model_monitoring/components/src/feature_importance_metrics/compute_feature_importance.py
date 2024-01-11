@@ -180,7 +180,7 @@ def compute_explanations(model_wrapper, train_data, test_data, categorical_featu
     return explanationData.precomputedExplanations.globalFeatureImportance['scores']
 
 
-def compute_feature_importance(task_type, target_column, baseline_data, categorical_features):
+def compute_feature_importance(task_type, target_column, baseline_data, lgbm_df, categorical_features):
     """Compute feature importance of baseline data.
 
     :param task_type: The task type (regression or classification) of the resulting model
@@ -190,12 +190,14 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
     :param baseline_data: The baseline data meaning the data used to create the
     model monitor
     :type baseline_data: pandas.DataFrame
+    :param lgbm_df: The baseline data with the lgbm unsupported column types marked as category type
+    :type lgbm_df: pandas.DataFrame
     :param categorical_features: The column names which are categorical in type
     :type categorical_features: list[string]
     :return: list of feature importances in the order of the columns in the baseline data
     :rtype: list[float]
     """
-    model_wrapper = get_model_wrapper(task_type, target_column, baseline_data)
+    model_wrapper = get_model_wrapper(task_type, target_column, lgbm_df)
     train_data, test_data = get_train_test_data(baseline_data)
     baseline_explanations = compute_explanations(
         model_wrapper, train_data, test_data, categorical_features, target_column, task_type)
@@ -288,10 +290,12 @@ def run(args):
         # In our design, we mark all known categorical features (including bool) as "category"
         categorical_features_lgbm = [feature for feature in categorical_features if feature != args.target_column]
 
-        mark_categorical_column(baseline_df, args.target_column, categorical_features_lgbm, numerical_features)
+        # copy the baseline df and change unsupported lgbm columns to categorical to prevent unsupported type error
+        baseline_df_lgbm = baseline_df.copy()
+        mark_categorical_column(baseline_df_lgbm, args.target_column, categorical_features_lgbm, numerical_features)
 
         feature_importances = compute_feature_importance(
-            task_type, args.target_column, baseline_df, categorical_features_lgbm)
+            task_type, args.target_column, baseline_df, baseline_df_lgbm, categorical_features_lgbm)
         feature_columns = baseline_df.drop([args.target_column], axis=1)
         write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features_lgbm)
         log_time_and_message("Successfully executed the feature importance component.")
