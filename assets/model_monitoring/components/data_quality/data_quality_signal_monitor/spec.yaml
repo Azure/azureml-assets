@@ -78,7 +78,7 @@ jobs:
       type: aml_token
   feature_selection:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.1
+    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.3
     inputs:
       input_data_1:
         type: mltable
@@ -205,7 +205,7 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.7
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.8
     inputs:
       signal_metrics:
         type: mltable

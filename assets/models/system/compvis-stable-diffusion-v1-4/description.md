@@ -111,6 +111,13 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 
 # Sample input and output
 
+### Supported Parameters
+
+- num_inference_steps: The number of de-noising steps. More de-noising steps usually lead to a higher quality image at the expense of slower inference, defaults to 50.
+- guidance_scale: A higher guidance scale value encourages the model to generate images closely linked to the text `prompt` at the expense of lower image quality. Guidance scale is enabled when `guidance_scale > 1`, defaults to 7.5.
+
+> These `parameters` are optional inputs. If you need support for new parameters, please file a support ticket.
+
 ### Sample input
 
 ```json
@@ -118,7 +125,11 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
    "input_data": {
         "columns": ["prompt"],
         "data": ["a photograph of an astronaut riding a horse", "lion holding hunted deer in grass fields"],
-        "index": [0, 1]
+        "index": [0, 1],
+        "parameters": {
+            "num_inference_steps": 50,
+            "guidance_scale": 7.5
+        }
     }
 }
 ```

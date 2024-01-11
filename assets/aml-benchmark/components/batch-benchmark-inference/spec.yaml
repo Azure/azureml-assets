@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.3
+version: 0.0.4
 
 inputs:
   input_dataset:
@@ -69,6 +69,10 @@ inputs:
     type: string
     optional: True
     description: The label column name.
+  additional_columns:
+    type: string
+    optional: True
+    description: The name(s) for additional columns that could be helpful to calculate some metrics, separated by comma (",").
   n_samples:
     type: integer
     description: The number of top samples send to endpoint. When performance test is enabled, this will be the number of repeated samples send to the endpoint.
@@ -145,7 +149,7 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: azureml:batch_inference_preparer:0.0.3
+    component: azureml:batch_inference_preparer:0.0.5
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       model_type: ${{parent.inputs.model_type}}
@@ -154,6 +158,7 @@ jobs:
       n_samples: ${{parent.inputs.n_samples}}
       endpoint_url: ${{parent.inputs.endpoint_url}}
       label_column_name: ${{parent.inputs.label_column_name}}
+      additional_columns: ${{parent.inputs.additional_columns}}
     outputs:
       formatted_data:
         type: mltable
@@ -162,7 +167,7 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml:batch_benchmark_score:0.0.3
+    component: azureml:batch_benchmark_score:0.0.4
     inputs:
       model_type: ${{parent.inputs.model_type}}
       online_endpoint_url: ${{parent.inputs.endpoint_url}}
@@ -194,11 +199,12 @@ jobs:
   # Reformat
   batch_output_formatter: 
     type: command
-    component: azureml:batch_output_formatter:0.0.3
+    component: azureml:batch_output_formatter:0.0.5
     inputs:
       model_type: ${{parent.inputs.model_type}}
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
       label_column_name: ${{parent.inputs.label_column_name}}
+      additional_columns: ${{parent.inputs.additional_columns}}
       ground_truth_input: ${{parent.jobs.batch_inference_preparer.outputs.ground_truth_metadata}}
       fallback_value: ${{parent.inputs.fallback_value}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
