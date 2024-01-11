@@ -3,8 +3,8 @@ name: mistralai-Mixtral-8x7B-v01
 path: ./
 properties:
   SharedComputeCapacityEnabled: true
-  inference-min-sku-spec: 40|2|440|128
-  inference-recommended-sku: Standard_ND40rs_v2, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  inference-min-sku-spec: 40|4|672|256
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
   languages: EN
 tags:
   Featured: ''
@@ -15,7 +15,6 @@ tags:
   inference_compute_allow_list:
     [
       Standard_ND40rs_v2,
-      Standard_NC48ads_A100_v4,
       Standard_NC96ads_A100_v4,
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4,
