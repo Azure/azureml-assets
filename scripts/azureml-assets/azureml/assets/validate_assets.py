@@ -762,7 +762,7 @@ def confirm_min_sku_spec(
             cpu_mem = int(sku_details["memoryGB"])
             disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
 
-            logger.print(f"{sku} => {num_cpus}|{num_gpus}|{cpu_mem}|{disk_space}")
+            # logger.print(f"{sku} => {num_cpus}|{num_gpus}|{cpu_mem}|{disk_space}")
 
             min_ncpus = min(num_cpus, min_ncpus) if min_ncpus > 0 else num_cpus
             min_ngpus = min(num_gpus, min_ngpus) if min_ngpus >= 0 else num_gpus
