@@ -279,13 +279,13 @@ def run(args):
                                                             args.override_categorical_features)
         baseline_df = baseline_df.toPandas()
 
+        task_type = determine_task_type(args.task_type, args.target_column, baseline_df, categorical_features)
+        log_time_and_message(f"Computed task type is {task_type}")
+
         # Lightgbm can only support features that can be converted to bool, int, float.
         # If these features can't be converted, we have to mark them as "category" types so lightgbm will ignore them.
         # In our design, we mark all known categorical features (including bool) as "category"
         categorical_features_lgbm = [feature for feature in categorical_features if feature != args.target_column]
-
-        task_type = determine_task_type(args.task_type, args.target_column, baseline_df, categorical_features_lgbm)
-        log_time_and_message(f"Computed task type is {task_type}")
 
         mark_categorical_column(baseline_df, args.target_column, categorical_features_lgbm, numerical_features)
 
