@@ -68,7 +68,12 @@ class TestStoreUrl:
 
         assert store_url.get_hdfs_url() == expected_hdfs_path
         assert store_url.get_abfs_url() == expected_abfs_path
-        assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
+        if expected_container_client and isinstance(expected_container_client.credential, DefaultAzureCredential):
+            # before we support credential-less data, should raise InvalidInputError
+            with pytest.raises(InvalidInputError):
+                store_url.get_container_client()
+        else:
+            assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
 
     @pytest.mark.parametrize(
         "azureml_path, datastore_type, credential_type, expected_protocol, expected_hdfs_path, expected_abfs_path, "

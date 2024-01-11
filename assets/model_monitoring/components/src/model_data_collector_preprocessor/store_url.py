@@ -57,11 +57,14 @@ class StoreUrl:
 
     def get_credential(self) -> Union[str, ClientSecretCredential, AzureSasCredential, None]:
         """Get credential for this store url."""
-        def get_default_credential():
-            return DefaultAzureCredential() if self._is_secure() else None
-
         if not self._datastore:
-            return get_default_credential()
+            if self._is_secure():
+                raise InvalidInputError(
+                    "abfss, wasbs and https URLs are credential less and thus NOT supported for Model Monitoring job, "
+                    "please use credential data instead.")
+            else:
+                # abfs, wasb and http URLs are public accessible, can be accessed without credential
+                return None
         elif self._datastore.datastore_type == "AzureBlob":
             if self._datastore.credential_type == "AccountKey":
                 return self._datastore.account_key
@@ -195,9 +198,8 @@ class StoreUrl:
                 raise InvalidInputError("AzureML asset path is not supported as uri_folder.")
             elif '/data/' in self._base_url:  # azureml:// data asset url
                 raise InvalidInputError(
-                    "AzureML data asset url is not supported as uri_folder, please use "
-                    "'azureml://subscriptions/<sub_id>/resourcegroups/<rg>/workspaces/<ws>/datastores/<datasotre_name>"
-                    "/paths/path/to/folder instead.")
+                    "AzureML data asset url is not supported as the input of Model Monitoring job, please use "
+                    "credential datastore + path instead.")
             else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
