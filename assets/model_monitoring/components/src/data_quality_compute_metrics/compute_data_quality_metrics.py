@@ -25,8 +25,7 @@ from pyspark.sql.functions import (
     desc,
     regexp_replace,
     round,
-    concat,
-    isnan
+    concat
 )
 from pyspark.ml.feature import Imputer
 from typing import Tuple
