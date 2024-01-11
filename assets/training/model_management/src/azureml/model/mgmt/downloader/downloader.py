@@ -21,8 +21,15 @@ from azureml.model.mgmt.utils.common_utils import (
     get_filesystem_available_space_in_kb,
     get_git_lfs_blob_size_in_kb,
 )
-from azureml.model.mgmt.utils.exceptions import BlobStorageDownloadError, GITCloneError, VMNotSufficientForOperation
+from azureml.model.mgmt.utils.exceptions import (
+    BlobStorageDownloadError,
+    GITCloneError,
+    VMNotSufficientForOperation,
+    HFAuthenticationError,
+    GITConfigError
+)
 from huggingface_hub.hf_api import ModelInfo
+from huggingface_hub import login, logout
 from pathlib import Path
 from azureml.model.mgmt.utils.common_utils import retry, fetch_huggingface_model_info
 from azureml.model.mgmt.utils.exceptions import InvalidHuggingfaceModelIDError
@@ -197,7 +204,7 @@ class HuggingfaceDownloader(GITDownloader):
     # jax is also a language code used to represent the language spoken by the Jaintia people.
     LANGUAGE_CODE_EXCEPTIONS = ["jax", "vit"]
 
-    def __init__(self, model_id: str, download_dir: Path):
+    def __init__(self, model_id: str, download_dir: Path, token: str):
         """Huggingface downloader init.
 
         param model_id: https://huggingface.co/<model_id>
@@ -209,6 +216,7 @@ class HuggingfaceDownloader(GITDownloader):
         self._model_uri = self.HF_ENDPOINT + f"/{model_id}"
         self._download_dir = download_dir
         self._model_info = None
+        self._token = token
         super().__init__(self._model_uri, download_dir)
 
     @property
@@ -250,10 +258,29 @@ class HuggingfaceDownloader(GITDownloader):
 
     def download_model(self):
         """Download a Hugging face model and return details."""
+        if self._token:
+            # Command to set the 'store' credential helper as default, as no helper is defined by default.
+            cmd = "git config --global credential.helper store"
+            exit_code, stdout = run_command(cmd)
+            if exit_code != 0:
+                raise AzureMLException._with_error(
+                    AzureMLError.create(GITConfigError, error=stdout)
+                )
+            try:
+                login(token=self._token, add_to_git_credential=True)
+            except Exception as ex:
+                raise AzureMLException._with_error(
+                    AzureMLError.create(HFAuthenticationError, error=ex)
+                )
+
         if self.model_info:
             download_details = self._download()
             model_props = self._get_model_properties()
             model_props.update(download_details)
+            try:
+                logout()
+            except Exception as ex:
+                logger.warning(f"Failed to logout from Hugging Face account- {ex}")
             tags = {k: model_props[k] for k in TAGS if k in model_props}
             props = {k: model_props[k] for k in PROPERTIES if k in model_props}
             return {
@@ -268,10 +295,10 @@ class HuggingfaceDownloader(GITDownloader):
             )
 
 
-def download_model(model_source: str, model_id: str, download_dir: Path):
+def download_model(model_source: str, model_id: str, download_dir: Path, token: str):
     """Download model and return model information."""
     if model_source == ModelSource.HUGGING_FACE.value:
-        downloader = HuggingfaceDownloader(model_id=model_id, download_dir=download_dir)
+        downloader = HuggingfaceDownloader(model_id=model_id, download_dir=download_dir, token=token)
     elif model_source == ModelSource.GIT.value:
         downloader = GITDownloader(model_uri=model_id, download_dir=download_dir)
     elif model_source == ModelSource.AZUREBLOB.value:
