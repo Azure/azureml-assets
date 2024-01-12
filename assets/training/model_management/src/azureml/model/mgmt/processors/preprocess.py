@@ -38,6 +38,10 @@ def run_preprocess(model_framework: str, model_path: Path, output_dir: Path, tem
 
 
 def check_for_py_files(model_path):
+    """check for .py files.
+    
+    :param model_path: input model path
+    """
     # Check if the path exists and is a directory
     if not os.path.exists(model_path) or not os.path.isdir(model_path):
         logger.info(f"The specified path '{model_path}' is not a valid directory.")
