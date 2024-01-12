@@ -144,11 +144,11 @@ def run():
     files = check_for_py_files(model_path)
     logger.info(f"check if model folder contains .py files or not: {files}")
     if files:
-        if hf_model_args is None:
+        if hf_model_args is None or TRUST_CODE_KEY not in hf_model_args:
             hf_model_args = TRUST_CODE_KEY
-        if hf_tokenizer_args is None:
+        if hf_tokenizer_args is None or TRUST_CODE_KEY not in hf_tokenizer_args:
             hf_tokenizer_args = TRUST_CODE_KEY
-        if hf_config_args is None:
+        if hf_config_args is None or TRUST_CODE_KEY not in hf_config_args:
             hf_config_args = TRUST_CODE_KEY
             logger.warning("trust_remote_code=True is not provided."f"Using {TRUST_CODE_KEY} by default.")
     preprocess_args["task"] = task_name.lower()

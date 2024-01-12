@@ -45,11 +45,7 @@ def check_for_py_files(model_path):
     # Check if the path exists and is a directory
     if not os.path.exists(model_path) or not os.path.isdir(model_path):
         logger.info(f"The specified path '{model_path}' is not a valid directory.")
-        return None
+        return False
     files = os.listdir(model_path)
     py_files = [file for file in files if file.endswith(".py")]
-    files_data = []
-    if py_files:
-        for py_file in py_files:
-            files_data.append(py_file)
-    return files_data
+    return len(py_files) > 1
