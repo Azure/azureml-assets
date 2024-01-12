@@ -22,6 +22,33 @@ def _assign_flow_values(flow_dirs):
     """Assign the flow values and update flow.dag.yaml."""
     log_debug("\n=======Start overriding values for flows=======")
     for flow_dir in flow_dirs:
+        with open(Path(flow_dir) / "flow.dag.yaml", "r") as dag_file:
+            flow_dag = yaml.safe_load(dag_file)
+        flow_name = flow_dir.parents[0].name
+        config_dir = Path(os.path.join(CONFIG_ROOT, flow_name))
+        config_file = Path(os.path.join(config_dir, CONFIG_FILE))
+        if not (config_dir.exists() and config_file.exists()):
+            log_warning(
+                f"No available flow values found for '{flow_name}'. Skip flow values assignment.")
+        else:
+            with open(config_file, "r") as fin:
+                values = json.load(fin)
+            # Override connection/inputs in nodes
+            log_debug(f"Start overriding values for nodes for '{flow_dir}'.")
+            if "nodes" in values:
+                for override_node in values["nodes"]:
+                    for flow_node in flow_dag["nodes"]:
+                        if flow_node["name"] == override_node["name"]:
+                            if "connection" in override_node:
+                                # Override connection
+                                flow_node["connection"] = override_node["connection"]
+                            if "inputs" in override_node:
+                                for input_name, input_value in override_node["inputs"].items():
+                                    # Override input
+                                    flow_node["inputs"][input_name] = input_value
+
+            with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
+                yaml.dump(flow_dag, dag_file, allow_unicode=True)
         if not os.path.exists(Path(flow_dir)/"samples.json"):
             with open(flow_dir/"samples.json", 'w', encoding="utf-8") as sample_file:
                 samples = []
@@ -37,36 +64,6 @@ def _assign_flow_values(flow_dirs):
                     sample[key] = value
                 samples.append(sample)
                 json.dump(sample, sample_file, indent=4)
-
-        with open(Path(flow_dir) / "flow.dag.yaml", "r") as dag_file:
-            flow_dag = yaml.safe_load(dag_file)
-        flow_name = flow_dir.parents[0].name
-        config_dir = Path(os.path.join(CONFIG_ROOT, flow_name))
-        config_file = Path(os.path.join(config_dir, CONFIG_FILE))
-        if not (config_dir.exists() and config_file.exists()):
-            log_warning(
-                f"No available flow values found for '{flow_name}'. Skip flow values assignment.")
-            continue
-
-        with open(config_file, "r") as fin:
-            values = json.load(fin)
-
-        # Override connection/inputs in nodes
-        log_debug(f"Start overriding values for nodes for '{flow_dir}'.")
-        if "nodes" in values:
-            for override_node in values["nodes"]:
-                for flow_node in flow_dag["nodes"]:
-                    if flow_node["name"] == override_node["name"]:
-                        if "connection" in override_node:
-                            # Override connection
-                            flow_node["connection"] = override_node["connection"]
-                        if "inputs" in override_node:
-                            for input_name, input_value in override_node["inputs"].items():
-                                # Override input
-                                flow_node["inputs"][input_name] = input_value
-
-        with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
-            yaml.dump(flow_dag, dag_file, allow_unicode=True)
     log_debug("=======Complete overriding values for flows=======\n")
     return flow_dirs
 
