@@ -10,35 +10,45 @@ import yaml
 import concurrent.futures
 import json
 
-from utils.logging_utils import log_debug, log_error
+from utils.logging_utils import log_debug, log_error, log_warning
 from utils.utils import run_command
 
+
+CONFIG_ROOT= 'scripts/promptflow-ci/test-configs'
+CONFIG_FILE = 'test_config.json'
 
 def _assign_flow_values(flow_dirs):
     """Assign the flow values and update flow.dag.yaml."""
     log_debug("\n=======Start overriding values for flows=======")
 
     for flow_dir in flow_dirs:
-        flow_dir_name = flow_dir.name
-        flow_dir_name = flow_dir_name.replace("-", "_")
-
         with open(Path(flow_dir) / "flow.dag.yaml", "r") as dag_file:
             flow_dag = yaml.safe_load(dag_file)
+        flow_name = flow_dir.parents[0].name
+        config_dir = Path(os.path.join(CONFIG_ROOT, flow_name))
+        config_file = Path(os.path.join(config_dir, CONFIG_FILE))
+        if not (config_dir.exists() and config_file.exists()):
+            log_warning(
+                f"No available flow values found for '{flow_name}'. Skip flow values assignment.")
+            continue
+
+        with open(config_file, "r") as fin:
+            values = json.load(fin)
+
         # Override connection/inputs in nodes
         log_debug(f"Start overriding values for nodes for '{flow_dir}'.")
-        for flow_node in flow_dag["nodes"]:
-            if "connection" in flow_node:
-                flow_node["connection"] = "aoai_connection"
-            if "inputs" in flow_node:
-                if "deployment_name" in flow_node["inputs"]:
-                    if flow_node["source"].get("tool") == "promptflow.tools.embedding.embedding":
-                        flow_node["inputs"]["deployment_name"] = "text-embedding-ada-002"
-                    else:
-                        flow_node["inputs"]["deployment_name"] = "gpt-35-turbo"
-                if "connection" in flow_node["inputs"]:
-                    flow_node["inputs"]["connection"] = "aoai_connection"
-                if "searchConnection" in flow_node["inputs"]:
-                    flow_node["inputs"]["searchConnection"] = "AzureAISearch"
+        if "nodes" in values:
+            for override_node in values["nodes"]:
+                for flow_node in flow_dag["nodes"]:
+                    if flow_node["name"] == override_node["name"]:
+                        if "connection" in override_node:
+                            # Override connection
+                            flow_node["connection"] = override_node["connection"]
+                        if "inputs" in override_node:
+                            for input_name, input_value in override_node["inputs"].items():
+                                # Override input
+                                flow_node["inputs"][input_name] = input_value
+
         with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
             yaml.dump(flow_dag, dag_file, allow_unicode=True)
 
@@ -70,8 +80,6 @@ def _create_run_yamls(flow_dirs):
         "data": 'samples.json'
     }
     for flow_dir in flow_dirs:
-        flow_dir_name = flow_dir.name
-        flow_dir_name = flow_dir_name.replace("-", "_")
         with open(flow_dir / "run.yml", "w", encoding="utf-8") as dag_file:
             yaml.dump(run_yaml, dag_file, allow_unicode=True)
     log_debug("=======Complete creating run.yaml for flows=======\n")
