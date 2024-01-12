@@ -25,14 +25,18 @@ from pyspark.ml.feature import Imputer
 from typing import Tuple
 import pyspark
 import warnings
-from shared_utilities.df_utils import get_numerical_and_categorical_cols
+from shared_utilities.df_utils import (
+    get_numerical_and_categorical_cols,
+    data_type_long_group,
+    data_type_numerical_group,
+    data_type_categorical_group
+)
 
 
 # Init spark session
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
-supported_datatypes = ['timestamp', 'boolean', 'double', 'binary', 'date', 'float', 'integer',
-                       'long', 'short', 'string', 'byte']
+supported_datatypes = data_type_long_group + data_type_numerical_group + data_type_categorical_group
 
 
 def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
@@ -370,10 +374,11 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame, categorical_columns:
     in numerical columns imputed with mode/most frequent
     """
     # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
+    # Todo: binary will throw type not supported error for mode 
     modified_categorical_columns = []
     dtype_map = dict(df.dtypes)
     for column in categorical_columns:
-        if dtype_map[column] not in ["boolean", "timestamp", "date"]:
+        if dtype_map[column] not in ["boolean", "timestamp", "binary", "date"]:
             modified_categorical_columns.append(column)
 
     for i in modified_categorical_columns:

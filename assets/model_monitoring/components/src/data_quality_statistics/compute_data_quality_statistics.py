@@ -14,6 +14,7 @@ from shared_utilities.df_utils import get_numerical_and_categorical_cols
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
 
+
 def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     """
     Compute a Spark DataFrame containing the data type information and column names of the input Spark DataFrame.
@@ -83,10 +84,11 @@ def get_unique_value_list(df: pyspark.sql.DataFrame, categorical_columns: list) 
         set: A list of unique values for the categorical column.
     """
     # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
+    # Todo: binary will have value mismatch when converting to string set
     modified_categorical_columns = []
     dtype_map = dict(df.dtypes)
     for column in categorical_columns:
-        if dtype_map[column] not in ["boolean", "timestamp", "date"]:
+        if dtype_map[column] not in ["boolean", "timestamp", "binary", "date"]:
             modified_categorical_columns.append(column)
 
     # Compute the set of unique values for each categorical column
@@ -164,13 +166,19 @@ def compute_max_and_min_df(df: pyspark.sql.DataFrame, dtype_df: pyspark.sql.Data
     return max_and_min_vals_df
 
 
-def compute_data_quality_statistics(df, override_numerical_features, override_categorical_features) -> pyspark.sql.DataFrame:
+def compute_data_quality_statistics(df,
+                                    override_numerical_features, 
+                                    override_categorical_features) -> pyspark.sql.DataFrame:
     """Compute data quality statistics."""
     dtype_df = get_df_schema(df=df)
+    numerical_columns, categorical_columns = get_numerical_and_categorical_cols(df,
+                                                                                override_numerical_features,
+                                                                                override_categorical_features)
     unique_vals_df = get_unique_value_list(df=df, categorical_columns=categorical_columns)
     # Note: excluding boolean type column as the boolean type do not need to be calculated
     # for max_vals and min_vals.
     # They will get null for non-numerical data
+
     df_for_max_min_value = get_features_for_max_min_calculation(df=df, numerical_columns=numerical_columns)
 
     # Join tables to get all metrics into one table

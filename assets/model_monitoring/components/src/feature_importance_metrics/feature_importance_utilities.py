@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """This file contains the core logic for feature attribution drift component."""
-import pandas as pd
 from datetime import datetime
 from shared_utilities.io_utils import init_spark
 

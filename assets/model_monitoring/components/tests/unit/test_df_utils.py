@@ -248,7 +248,7 @@ class TestDFUtils:
                     'col9': 'date',
                     'col10': 'unknown'
                     }
-        assert get_numerical_cols_with_df_with_override(baseline_df, 
+        assert get_numerical_cols_with_df_with_override(baseline_df,
                                                         None,
                                                         None,
                                                         column_dtype_map) == ['col1', 'col2', 'col3',
@@ -314,11 +314,11 @@ class TestDFUtils:
         assert get_categorical_cols_with_df_with_override(baseline_df,
                                                           override_numerical_features=None,
                                                           override_categorical_features=categorical_features,
-                                                          column_dtype_map= column_dtype_map) == ['col1', 'col2',
-                                                                                                  'col3', 'col4',
-                                                                                                  'col5', 'col6',
-                                                                                                  'col7', 'col8',
-                                                                                                  'col9']
+                                                          column_dtype_map=column_dtype_map) == ['col1', 'col2',
+                                                                                                 'col3', 'col4',
+                                                                                                 'col5', 'col6',
+                                                                                                 'col7', 'col8',
+                                                                                                 'col9']
 
     def test_get_numerical_and_categorical_cols(self):
         spark = self.init_spark()

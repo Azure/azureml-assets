@@ -19,7 +19,9 @@ from src.data_quality_compute_metrics.compute_data_quality_metrics import (
     compute_data_quality_metrics,
     compute_dtype_violation_count_modify_dataset,
     get_null_count,
-    modify_dataType)
+    modify_dataType,
+    impute_numericals_with_median,
+    impute_categorical_with_mode)
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp, data_stats_table
 import pytest
@@ -166,7 +168,7 @@ class TestModelMonitorDataQuality:
             ).withColumn("featureName", lit("")).withColumn("dataType", lit(""))
 
         expected_metrics_df = expected_metrics_df.unionByName(row)
-        metrics_df = compute_data_quality_metrics(df_with_timestamp, data_stats_table)
+        metrics_df = compute_data_quality_metrics(df_with_timestamp, data_stats_table, None, None)
         assert expected_metrics_df.count() == metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
 
@@ -205,3 +207,40 @@ class TestModelMonitorDataQuality:
         metrics_df = get_null_count(df_for_max_min_value)
         assert expected_metrics_df.count() == metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
+
+    def test_impute_missing_values(self):
+        """Test impute_numericals_with_median """
+        df_with_missing_value = [
+            (40.1,   "s1",   1),
+            (40.2,   "s1",   2),
+            (None,   "s2",   3),
+            (None,   "s1",   None),
+            (40.3,   None,   None)
+            ]
+        df_with_inputed_value = [
+            (40.1,   "s1",   1),
+            (40.2,   "s1",   2),
+            (40.2,   "s2",   3),
+            (40.2,   "s1",   2),
+            (40.3,   "s1",   2)
+            ]
+        schema = StructType([
+            StructField("feature_double", DoubleType(), True),
+            StructField("feature_string", StringType(), True),
+            StructField("feature_integer", IntegerType(), True),
+        ])
+
+        df_with_missing_value = create_pyspark_dataframe(df_with_missing_value, schema)
+        df_with_inputed_value = create_pyspark_dataframe(df_with_inputed_value, schema)
+
+        numerical_columns = ["feature_double", "feature_integer"]
+        categorical_columns = ["feature_string"]
+        df_inputed_numerical = impute_numericals_with_median(df_with_missing_value, numerical_columns)
+        df_inputed_categorical = impute_categorical_with_mode(df_inputed_numerical, categorical_columns)
+
+        df_inputed_categorical.show()
+        print("final")
+        df_with_inputed_value.show()
+        assert sorted(df_with_inputed_value.collect()) == sorted(df_inputed_categorical.collect())
+
+
