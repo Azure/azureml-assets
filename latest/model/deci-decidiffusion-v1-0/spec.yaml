@@ -22,7 +22,7 @@ tags:
     Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4, Standard_ND40rs_v2,
     Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
 
-version: 3
+version: 4
 description: |-
   `DeciDiffusion` 1.0 is an 820 million parameter latent diffusion model designed for text-to-image conversion. Trained initially on the LAION-v2 dataset and fine-tuned on the LAION-ART dataset, the model's training involved advanced techniques to improve speed, training performance, and achieve superior inference quality.
 
