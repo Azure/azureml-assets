@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: foundation-bring-your-own-data-qna
+path: ./
+properties:
+  is-promptflow: true
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: standard
+  azureml.promptflow.name: Foundation Model Q&A on Your Data
+  azureml.promptflow.description: Use Open Model deployments and data from your own indexed files to ground question and answering capabilities.
+  inference-min-sku-spec: 2|0|14|28
+  inference-recommended-sku: Standard_DS3_v2
+version: 1
