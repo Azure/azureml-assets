@@ -104,7 +104,9 @@ def get_null_count(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
 
 
 def compute_max_violation(
-    df: pyspark.sql.DataFrame, data_stats_table: pyspark.sql.DataFrame
+    df: pyspark.sql.DataFrame,
+    data_stats_table: pyspark.sql.DataFrame,
+    numerical_columns: list
 ) -> pyspark.sql.DataFrame:
     """
     Compute the maximum threshold violation count for numerical columns in the input PySpark DataFrame.
@@ -112,6 +114,7 @@ def compute_max_violation(
     Args:
         df: Input PySpark DataFrame. (baseline or, target dataset)
         data_stats_table: Input data statistics table. PySpark DataFrame.
+        numerical_columns: List of numerical columns.
 
     Returns:
         max_violation_df: A PySpark DataFrame with columns for violation count, feature name and metric name.
@@ -119,15 +122,13 @@ def compute_max_violation(
     max_threshold_violation_count = []
     feature_name_list = []
 
-    numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint", "long"]
-
     for row in data_stats_table.filter(col("min_value").isNotNull()).select("featureName").distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
             continue
 
-        if df.select(feature_name).dtypes[0][1] in numerical_types:
+        if feature_name in numerical_columns:
             feature_name_list.append(feature_name)
             data_stats_table_subset = data_stats_table.filter(
                 col("featureName") == feature_name
@@ -161,7 +162,9 @@ def compute_max_violation(
 
 
 def compute_min_violation(
-    df: pyspark.sql.DataFrame, data_stats_table: pyspark.sql.DataFrame
+    df: pyspark.sql.DataFrame,
+    data_stats_table: pyspark.sql.DataFrame,
+    numerical_columns: list
 ) -> pyspark.sql.DataFrame:
     """
     Compute the minimum threshold violation count for numerical columns in the input PySpark DataFrame.
@@ -169,6 +172,7 @@ def compute_min_violation(
     Args:
         df: Input PySpark DataFrame.
         data_stats_table: Input data statistics table (also a PySpark DataFrame).
+        numerical_columns: List of numerical columns.
 
     Returns:
         min_violation_df: A PySpark DataFrame with columns for violation count, feature name and metric name.
@@ -176,15 +180,13 @@ def compute_min_violation(
     min_threshold_violation_count = []
     feature_name_list = []
 
-    numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint", "long"]
-
     for row in data_stats_table.filter(col("max_value").isNotNull()).select("featureName").distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
             continue
 
-        if df.select(feature_name).dtypes[0][1] in numerical_types:
+        if feature_name in numerical_columns:
             feature_name_list.append(feature_name)
             data_stats_table_subset = data_stats_table.filter(
                 col("featureName") == feature_name
@@ -218,7 +220,9 @@ def compute_min_violation(
 
 
 def compute_set_violation(
-    df: pyspark.sql.DataFrame, data_stats_table: pyspark.sql.DataFrame
+    df: pyspark.sql.DataFrame,
+    data_stats_table: pyspark.sql.DataFrame,
+    categorical_columns: list
 ) -> pyspark.sql.DataFrame:
     """
     Compute the count of values in a column that are not in the allowed set of values specified.
@@ -226,7 +230,8 @@ def compute_set_violation(
     Args:
         df: A PySpark Pandas DataFrame containing the data to check.
         data_stats_table: A PySpark DataFrame containing metadata about the data,
-        including the allowed set of values for each column
+            including the allowed set of values for each column.
+        categorical_columns: List of categorical columns.
 
     Returns:
         threshold_violation_df: A PySpark DataFrame with the count of values in each column
@@ -246,8 +251,9 @@ def compute_set_violation(
         if c not in df.columns:
             continue
 
-        df_subset = data_stats_table.filter(col("featureName") == c)
-        if df_subset.filter(col("dataType") == "StringType").count() >= 1:
+        # only calculate the set violation for categorical feature
+        if c in categorical_columns:
+            df_subset = data_stats_table.filter(col("featureName") == c)
             set_subset = df_subset.select("set").rdd.flatMap(lambda x: x).first()
             set_threshold_violation_count.append(
                 df.filter(~col(c).isin(set_subset)).count()
@@ -373,15 +379,7 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame, categorical_columns:
     df (pyspark.sql.DataFrame): The input DataFrame with missing values
     in numerical columns imputed with mode/most frequent
     """
-    # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
-    # Todo: binary will throw type not supported error for mode 
-    modified_categorical_columns = []
-    dtype_map = dict(df.dtypes)
-    for column in categorical_columns:
-        if dtype_map[column] not in ["boolean", "timestamp", "binary", "date"]:
-            modified_categorical_columns.append(column)
-
-    for i in modified_categorical_columns:
+    for i in categorical_columns:
         # Find the most frequent value in the column
         # Get the most frequent value in the categorical column
         most_frequent = (
@@ -396,6 +394,27 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame, categorical_columns:
 
     return df
 
+def modify_categorical_columns(df: pyspark.sql.DataFrame, categorical_columns: list) -> list:
+    """
+    Modify categorical columns, filtering out unsupported or non-meaningful columns
+
+    Args:
+    df (pyspark.sql.DataFrame): The input DataFrame
+    categorical_columns: List of categorical columns
+
+    Returns:
+    modified_categorical_columns: Modified categorical column
+    """
+
+    # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
+    # Ignore binary because it will throw type not supported error for mode
+    modified_categorical_columns = []
+    dtype_map = dict(df.dtypes)
+    for column in categorical_columns:
+        if dtype_map[column] not in ["boolean", "timestamp", "binary", "date"]:
+            modified_categorical_columns.append(column)
+    return modified_categorical_columns
+
 
 def modify_dataType(data_stats_table) -> pyspark.sql.DataFrame:
     """Cast DataType() to DataType."""
@@ -404,15 +423,15 @@ def modify_dataType(data_stats_table) -> pyspark.sql.DataFrame:
         "dataType",
         when(col("dataType") == "DoubleType()", "double")
         .when(col("dataType") == "StringType()", "string")
-        .when(col("dataType") == "IntegerType()", "integer")
-        .when(col("dataType") == "LongType()", "long")
+        .when(col("dataType") == "IntegerType()", "int")
+        .when(col("dataType") == "LongType()", "bigint")
         .when(col("dataType") == "TimestampType()", "timestamp")
         .when(col("dataType") == "BooleanType()", "boolean")
         .when(col("dataType") == "BinaryType()", "binary")
         .when(col("dataType") == "DateType()", "date")
         .when(col("dataType") == "FloatType()", "float")
-        .when(col("dataType") == "ShortType()", "short")
-        .when(col("dataType") == "ByteType()", "byte")
+        .when(col("dataType") == "ShortType()", "smallint")
+        .when(col("dataType") == "ByteType()", "tinyint")
         .otherwise(col("dataType")),
     )
     return data_stats_table_mod
@@ -432,6 +451,7 @@ def compute_data_quality_metrics(df, data_stats_table, override_numerical_featur
                                                                                 override_numerical_features,
                                                                                 override_categorical_features)
 
+    modified_categorical_columns = modify_categorical_columns(df, categorical_columns)
     #########################
     # COMPUTE VIOLATIONS
     #########################
@@ -440,7 +460,7 @@ def compute_data_quality_metrics(df, data_stats_table, override_numerical_featur
 
     # HIERARCHY 1: IMPUTE MISSING VALUES AFTER COUNTING THEM
     df = impute_numericals_with_median(df, numerical_columns)
-    df = impute_categorical_with_mode(df, categorical_columns)
+    df = impute_categorical_with_mode(df, modified_categorical_columns)
 
     # 2. DATA TYPE VIOLATION
     df, dtype_violation_df = compute_dtype_violation_count_modify_dataset(
@@ -450,14 +470,17 @@ def compute_data_quality_metrics(df, data_stats_table, override_numerical_featur
     # THIS HAPPENS IN THE `compute_dtype_violation_count_modify_dataset` FUNCTION with df being overwritten
 
     # 3. OUT OF BOUNDS
-    max_violation_df = compute_max_violation(df=df, data_stats_table=data_stats_table)
-    min_violation_df = compute_min_violation(df=df, data_stats_table=data_stats_table)
+    max_violation_df = compute_max_violation(df=df,
+                                             data_stats_table=data_stats_table,
+                                             numerical_columns=numerical_columns)
+    min_violation_df = compute_min_violation(df=df,
+                                             data_stats_table=data_stats_table,
+                                             numerical_columns=numerical_columns)
     threshold_violation_df = compute_set_violation(
-        df=df, data_stats_table=data_stats_table
+        df=df, data_stats_table=data_stats_table, categorical_columns=modified_categorical_columns
     )
     data_stats_table.unpersist()
     data_stats_table_mod.unpersist()
-
     #########################
     # JOIN ALL TABLES
     #########################

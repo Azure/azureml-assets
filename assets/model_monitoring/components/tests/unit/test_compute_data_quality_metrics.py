@@ -21,7 +21,8 @@ from src.data_quality_compute_metrics.compute_data_quality_metrics import (
     get_null_count,
     modify_dataType,
     impute_numericals_with_median,
-    impute_categorical_with_mode)
+    impute_categorical_with_mode,
+    modify_categorical_columns)
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp, data_stats_table
 import pytest
@@ -111,11 +112,12 @@ class TestModelMonitorDataQuality:
                 ("BooleanType()", "featureName1"), ("DoubleType()", "featureName1"),
                 ("StringType()", "featureName1"),  ("DateType()", "featureName1"),
                 ("LongType()", "featureName1"), ("ByteType()", "featureName1"),
-                ("IntegerType()", "featureName1")]
+                ("IntegerType()", "featureName1"), ("ShortType()", "featureName1")]
         columns = ["dataType", "featureName"]
         expected = ["binary",      "timestamp", "boolean",
                     "double",      "string",    "date",
-                    "long",        "byte",      "integer"]
+                    "bigint",      "tinyint",   "int",
+                    "smallint"]
         df = create_pyspark_dataframe(data, columns)
         df_mod = modify_dataType(df)
         dataType_array = [str(row.dataType) for row in df_mod.collect()]
@@ -209,7 +211,7 @@ class TestModelMonitorDataQuality:
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
 
     def test_impute_missing_values(self):
-        """Test impute_numericals_with_median """
+        """Test impute_numericals_with_median and impute_categorical_with_mode"""
         df_with_missing_value = [
             (40.1,   "s1",   1),
             (40.2,   "s1",   2),
@@ -243,4 +245,11 @@ class TestModelMonitorDataQuality:
         df_with_inputed_value.show()
         assert sorted(df_with_inputed_value.collect()) == sorted(df_inputed_categorical.collect())
 
+    def test_modify_categorical_columns(self):
+        """Test modify_categorical_columns """
+        categorical_columns = ["feature_boolean", "feature_binary", "feature_timestamp",
+                               "feature_string", "feature_int"]
+        expected_categorical_columns = ["feature_string", "feature_int"]
 
+        modified_categorical_columns = modify_categorical_columns(df_with_timestamp, categorical_columns)
+        assert expected_categorical_columns == modified_categorical_columns

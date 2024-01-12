@@ -129,7 +129,6 @@ class TestModelMonitorDataQualityStatistic:
     ):
         """Test compute data quality statistics with string, integer, boolean, double type."""
         actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp, None, None)
-        assert data_stats_table.count() == actual_data_stats_table.count()
         assert sorted(data_stats_table.collect()) == sorted(actual_data_stats_table.collect())
 
     @pytest.mark.parametrize("df_with_timestamp, data_stats_table_override",
@@ -142,10 +141,9 @@ class TestModelMonitorDataQualityStatistic:
         """Test compute data quality statistics with string, integer, boolean, double type with datatype override"""
         override_numerical_features = "feature_boolean"
         override_categorical_features = "feature_int,feature_short"
-        actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp, override_numerical_features, override_categorical_features)
-        actual_data_stats_table.show()
-        print("real")
-        data_stats_table_override.show()
+        actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp,
+                                                                  override_numerical_features,
+                                                                  override_categorical_features)
         assert data_stats_table_override.count() == actual_data_stats_table.count()
         assert sorted(data_stats_table_override.collect()) == sorted(actual_data_stats_table.collect())
 
@@ -157,7 +155,8 @@ class TestModelMonitorDataQualityStatistic:
             df_for_max_min_value
     ):
         """Test exclude the boolean columns from dataframe."""
-        numerical_columns = ["feature_int", "feature_double", "feature_byte", "feature_long", "feature_float", "feature_short"]
+        numerical_columns = ["feature_int", "feature_double", "feature_byte", "feature_long",
+                             "feature_float", "feature_short"]
         actual_df_for_max_min_value = get_features_for_max_min_calculation(df_with_timestamp, numerical_columns)
         assert_pyspark_df_equal(df_for_max_min_value, actual_df_for_max_min_value)
 
@@ -211,6 +210,7 @@ class TestModelMonitorDataQualityStatistic:
             df_for_unique_value_list
     ):
         """Test exclude the boolean columns from dataframe."""
-        categorical_columns = ['feature_string', 'feature_boolean', 'feature_binary', 'feature_timestamp', 'feature_char']
+        categorical_columns = ['feature_string', 'feature_boolean', 'feature_binary',
+                               'feature_timestamp', 'feature_char']
         actual_df_for_unique_value_list = get_unique_value_list(df_with_timestamp, categorical_columns)
         assert_pyspark_df_equal(df_for_unique_value_list, actual_df_for_unique_value_list)

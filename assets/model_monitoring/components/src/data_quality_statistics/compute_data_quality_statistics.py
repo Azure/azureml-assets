@@ -9,6 +9,7 @@ from pyspark.sql.session import SparkSession
 from pyspark.sql.types import DoubleType, LongType, StructType, StructField, StringType
 import pyspark
 from shared_utilities.df_utils import get_numerical_and_categorical_cols
+from data_quality_compute_metrics.compute_data_quality_metrics import modify_categorical_columns
 
 # Init spark session
 sc = SparkContext.getOrCreate()
@@ -83,18 +84,11 @@ def get_unique_value_list(df: pyspark.sql.DataFrame, categorical_columns: list) 
         featureName: The name of the categorical column.
         set: A list of unique values for the categorical column.
     """
-    # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
-    # Todo: binary will have value mismatch when converting to string set
-    modified_categorical_columns = []
-    dtype_map = dict(df.dtypes)
-    for column in categorical_columns:
-        if dtype_map[column] not in ["boolean", "timestamp", "binary", "date"]:
-            modified_categorical_columns.append(column)
 
     # Compute the set of unique values for each categorical column
     unique_vals = [
         df.select(col(c)).distinct().rdd.map(lambda x: x[0]).collect()
-        for c in modified_categorical_columns
+        for c in categorical_columns
     ]
     metadata_schema = StructType(
         [
@@ -105,7 +99,7 @@ def get_unique_value_list(df: pyspark.sql.DataFrame, categorical_columns: list) 
 
     # Create a new DataFrame with the results
     unique_vals_df = spark.createDataFrame(
-        [(modified_categorical_columns[i], unique_vals[i]) for i in range(len(modified_categorical_columns))],
+        [(categorical_columns[i], unique_vals[i]) for i in range(len(categorical_columns))],
         schema=metadata_schema,
     )
 
@@ -167,14 +161,15 @@ def compute_max_and_min_df(df: pyspark.sql.DataFrame, dtype_df: pyspark.sql.Data
 
 
 def compute_data_quality_statistics(df,
-                                    override_numerical_features, 
+                                    override_numerical_features,
                                     override_categorical_features) -> pyspark.sql.DataFrame:
     """Compute data quality statistics."""
     dtype_df = get_df_schema(df=df)
     numerical_columns, categorical_columns = get_numerical_and_categorical_cols(df,
                                                                                 override_numerical_features,
                                                                                 override_categorical_features)
-    unique_vals_df = get_unique_value_list(df=df, categorical_columns=categorical_columns)
+    modified_categorical_columns = modify_categorical_columns(df, categorical_columns)
+    unique_vals_df = get_unique_value_list(df=df, categorical_columns=modified_categorical_columns)
     # Note: excluding boolean type column as the boolean type do not need to be calculated
     # for max_vals and min_vals.
     # They will get null for non-numerical data
