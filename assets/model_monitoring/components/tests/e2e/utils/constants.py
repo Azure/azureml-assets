@@ -90,6 +90,10 @@ DATA_ASSET_IRIS_BASELINE_INT_SINGLE_VALUE_HISTOGRAM = (
     "azureml:mltable_iris_baseline_int_single_value_histogram:1"
 )
 
+DATA_ASSET_NO_NUMERICAL_COLUMNS_BASELINE = (
+    "azureml:mltable_no_numerical_columns_baseline:1"
+)
+
 # MDC-generated target dataset of an iris model which contains both the input features as well as the inferred results.
 # The data contains no drift. Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
 DATA_ASSET_IRIS_MODEL_INPUTS_OUTPUTS_WITH_NO_DRIFT = (

@@ -16,7 +16,8 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT_INT_DATA,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS,
     DATA_ASSET_IRIS_BASELINE_INT_SINGLE_VALUE_HISTOGRAM,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM,
+    DATA_ASSET_NO_NUMERICAL_COLUMNS_BASELINE
 )
 
 
@@ -108,7 +109,7 @@ class TestDataDriftModelMonitor:
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS,
         )
 
-        # No common columns should fail the job in the feature selector step.
+        # No common columns should fail the job in the feature selector step and compute histogram step.
         assert pipeline_job.status == "Failed"
 
     def test_monitoring_run_use_int_data_has_no_drift_successful(
@@ -156,3 +157,19 @@ class TestDataDriftModelMonitor:
         )
 
         assert pipeline_job.status == "Completed"
+
+    def test_monitoring_run_no_numerical_columns_failed(
+        self, ml_client: MLClient, get_component, download_job_output,
+        test_suite_name
+    ):
+        """Test the scenario where the baseline data has no numerical columns."""
+        pipeline_job = _submit_data_drift_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_NO_NUMERICAL_COLUMNS_BASELINE,
+            DATA_ASSET_EMPTY,
+        )
+
+        # No numerical columns should fail the job in the compute histogram buckets step.
+        assert pipeline_job.status == "Failed"

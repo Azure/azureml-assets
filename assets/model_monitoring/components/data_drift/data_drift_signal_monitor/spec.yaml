@@ -116,7 +116,7 @@ jobs:
       type: aml_token
   compute_histogram_buckets:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.4
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.5
     inputs:
       input_data_1:
         type: mltable

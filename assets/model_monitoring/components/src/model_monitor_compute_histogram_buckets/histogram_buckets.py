@@ -24,6 +24,8 @@ def compute_numerical_bins(
     # Generate histograms only for columns in both baseline and target dataset
     common_columns_dict = get_common_columns(df1, df2)
     numerical_columns = get_numerical_cols_with_df(common_columns_dict, df1)
+    print(f"numerical columns: {numerical_columns}")
+
     # Numerical column histogram generation
     baseline_count = df1.count()
     production_count = df2.count()
@@ -50,7 +52,7 @@ def compute_histogram_buckets(
     )
     bin_edges = compute_numerical_bins(df1, df2)
 
-    print(bin_edges)
+    print(f"bin edges: {bin_edges}")
     data = []
     for feature in bin_edges:
         print(bin_edges[feature])
