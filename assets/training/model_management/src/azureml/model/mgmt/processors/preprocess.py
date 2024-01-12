@@ -48,4 +48,4 @@ def check_for_py_files(model_path):
         return False
     files = os.listdir(model_path)
     py_files = [file for file in files if file.endswith(".py")]
-    return len(py_files) > 1
+    return len(py_files) >= 1
