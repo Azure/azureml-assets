@@ -21,8 +21,23 @@ CONFIG_FILE = 'test_config.json'
 def _assign_flow_values(flow_dirs):
     """Assign the flow values and update flow.dag.yaml."""
     log_debug("\n=======Start overriding values for flows=======")
-
     for flow_dir in flow_dirs:
+        if not os.path.exists(Path(flow_dir)/"samples.json"):
+            with open(flow_dir/"samples.json", 'w', encoding="utf-8") as sample_file:
+                samples = []
+                sample = {}
+                for key, val in flow_dag["inputs"].items():
+                    value = val.get("default")
+                    if isinstance(value, list):
+                        if not value:
+                            value.append("default")
+                    elif isinstance(value, str):
+                        if value == "":
+                            value = "default"
+                    sample[key] = value
+                samples.append(sample)
+                json.dump(sample, sample_file, indent=4)
+
         with open(Path(flow_dir) / "flow.dag.yaml", "r") as dag_file:
             flow_dag = yaml.safe_load(dag_file)
         flow_name = flow_dir.parents[0].name
@@ -52,22 +67,6 @@ def _assign_flow_values(flow_dirs):
 
         with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
             yaml.dump(flow_dag, dag_file, allow_unicode=True)
-
-        if not os.path.exists(Path(flow_dir)/"samples.json"):
-            with open(flow_dir/"samples.json", 'w', encoding="utf-8") as sample_file:
-                samples = []
-                sample = {}
-                for key, val in flow_dag["inputs"].items():
-                    value = val.get("default")
-                    if isinstance(value, list):
-                        if not value:
-                            value.append("default")
-                    elif isinstance(value, str):
-                        if value == "":
-                            value = "default"
-                    sample[key] = value
-                samples.append(sample)
-                json.dump(sample, sample_file, indent=4)
     log_debug("=======Complete overriding values for flows=======\n")
     return flow_dirs
 
