@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: sarvamai-OpenHathi-7B-Hi-v0-1-Base
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 2cb5807b852028defa07c56c96a7ff5c11f8df0e
   languages: hi
   inference-min-sku-spec: 16|0|56|112
