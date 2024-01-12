@@ -113,6 +113,7 @@ def run():
     mlflow_model_output_dir = args.mlflow_model_output_dir
     model_import_job_path = args.model_import_job_path
     license_file_path = args.license_file_path
+    TRUST_CODE_KEY = "trust_remote_code=True"
 
     if not ModelFramework.has_value(model_framework):
         raise Exception(f"Unsupported model framework {model_framework}")
@@ -140,6 +141,14 @@ def run():
                 AzureMLError.create(UnsupportedTaskType, task_type=args.task_name,
                                     supported_tasks=list(supported_tasks))
             )
+    if hf_model_args is None:
+        hf_model_args = TRUST_CODE_KEY
+    if hf_tokenizer_args is None:
+        hf_tokenizer_args = TRUST_CODE_KEY
+    if hf_config_args is None:
+        hf_config_args = TRUST_CODE_KEY
+        logger.warning("trust_remote_code=True is not provided."
+                       f"Using {TRUST_CODE_KEY} by default for hf_config_args and hf_tokenizer_args & hf_model_args.")
 
     preprocess_args["task"] = task_name.lower()
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
