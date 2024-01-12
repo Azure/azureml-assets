@@ -14,8 +14,9 @@ from utils.logging_utils import log_debug, log_error, log_warning
 from utils.utils import run_command
 
 
-CONFIG_ROOT= 'scripts/promptflow-ci/test-configs'
+CONFIG_ROOT = 'scripts/promptflow-ci/test-configs'
 CONFIG_FILE = 'test_config.json'
+
 
 def _assign_flow_values(flow_dirs):
     """Assign the flow values and update flow.dag.yaml."""
