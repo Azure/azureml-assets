@@ -152,6 +152,7 @@ def run():
             hf_config_args = TRUST_CODE_KEY
             logger.warning("trust_remote_code=True is not provided."
                         f"Using {TRUST_CODE_KEY} by default for hf_config_args and hf_tokenizer_args & hf_model_args.")
+    
     preprocess_args["task"] = task_name.lower()
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
     preprocess_args[HF_CONF.EXTRA_PIP_REQUIREMENTS.value] = extra_pip_requirements
