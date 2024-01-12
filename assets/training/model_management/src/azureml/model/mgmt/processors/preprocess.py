@@ -38,7 +38,7 @@ def run_preprocess(model_framework: str, model_path: Path, output_dir: Path, tem
 
 
 def check_for_py_files(model_path):
-    """check for .py files.
+    """Check for .py files.
 
     :param model_path: input model path
     """
