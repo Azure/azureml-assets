@@ -9,7 +9,7 @@ import json
 import shutil
 from azureml.model.mgmt.config import AppName, ModelFramework
 from azureml.model.mgmt.processors.transformers.config import HF_CONF
-from azureml.model.mgmt.processors.preprocess import run_preprocess
+from azureml.model.mgmt.processors.preprocess import run_preprocess, check_for_py_files
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks as TransformersSupportedTasks
 from azureml.model.mgmt.processors.pyfunc.config import SupportedTasks as PyFuncSupportedTasks
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, UnsupportedTaskType
@@ -141,14 +141,17 @@ def run():
                 AzureMLError.create(UnsupportedTaskType, task_type=args.task_name,
                                     supported_tasks=list(supported_tasks))
             )
-    if hf_model_args is None:
-        hf_model_args = TRUST_CODE_KEY
-    if hf_tokenizer_args is None:
-        hf_tokenizer_args = TRUST_CODE_KEY
-    if hf_config_args is None:
-        hf_config_args = TRUST_CODE_KEY
-        logger.warning("trust_remote_code=True is not provided."
-                       f"Using {TRUST_CODE_KEY} by default for hf_config_args and hf_tokenizer_args & hf_model_args.")
+    files = check_for_py_files(model_path)
+    logger.info(f"check if model folder contains .py files or not: {files}")
+    if files:
+        if hf_model_args is None:
+            hf_model_args = TRUST_CODE_KEY
+        if hf_tokenizer_args is None:
+            hf_tokenizer_args = TRUST_CODE_KEY
+        if hf_config_args is None:
+            hf_config_args = TRUST_CODE_KEY
+            logger.warning("trust_remote_code=True is not provided."
+                        f"Using {TRUST_CODE_KEY} by default for hf_config_args and hf_tokenizer_args & hf_model_args.")
 
     preprocess_args["task"] = task_name.lower()
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
