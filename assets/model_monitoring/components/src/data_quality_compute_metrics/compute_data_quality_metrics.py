@@ -394,6 +394,7 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame, categorical_columns:
 
     return df
 
+
 def modify_categorical_columns(df: pyspark.sql.DataFrame, categorical_columns: list) -> list:
     """
     Modify categorical columns, filtering out unsupported or non-meaningful columns
