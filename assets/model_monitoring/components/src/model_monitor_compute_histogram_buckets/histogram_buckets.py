@@ -26,7 +26,7 @@ def compute_numerical_bins(
     common_columns_dict = get_common_columns(df1, df2)
     if not common_columns_dict:
         raise InvalidInputError(
-            "Found no common columns between innput datasets. Try double-checking" +
+            "Found no common columns between input datasets. Try double-checking" +
             " if there are common columns between the input datasets." +
             " Common columns must have the same names (case-sensitive) and similar data types."
         )
