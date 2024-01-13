@@ -257,15 +257,16 @@ class TestModelMonitorDataQuality:
         modified_categorical_columns = modify_categorical_columns(df_with_timestamp, categorical_columns)
         assert expected_categorical_columns == modified_categorical_columns
 
-
     def test_compute_set_violation(self):
         """Test compute_set_violation."""
         df = [
-        ("string1", "char", 2, True,  4.67, "2023-10-01 00:00:01"),
-        ("string2", "char", 3, False, 90.1, "2023-10-01 00:00:02"),
-        ("string3", "char", 4, True,  2.8987,"2023-10-01 00:00:03"),
-        ("string4", "char", 5, False, 3.454, "2023-10-01 00:00:04")]
-        schema = StructType([
+                ("string1", "char", 2, True,  4.67, "2023-10-01 00:00:01"),
+                ("string2", "char", 3, False, 90.1, "2023-10-01 00:00:02"),
+                ("string3", "char", 4, True,  2.8987, "2023-10-01 00:00:03"),
+                ("string4", "char", 5, False, 3.454, "2023-10-01 00:00:04")
+        ]
+        schema = StructType(
+            [
                 StructField("feature_string", StringType(), True),
                 StructField("feature_char", StringType(), True),
                 StructField("feature_int", IntegerType(), True),
@@ -292,4 +293,3 @@ class TestModelMonitorDataQuality:
         set_violation_table.show()
 
         assert sorted(expected_set_violation_table.collect()) == sorted(set_violation_table.collect())
-        

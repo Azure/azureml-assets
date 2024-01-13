@@ -141,7 +141,7 @@ class TestModelMonitorDataQualityStatistic:
     ):
         """Test compute data quality statistics with string, integer, boolean, double type with datatype override."""
         override_numerical_features = "feature_boolean"
-         # will not work because only string type is used for categorical features in data quality
+        # will not work because only string type is used for categorical features in data quality
         override_categorical_features = "feature_int,feature_short"
         actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp,
                                                                   override_numerical_features,
