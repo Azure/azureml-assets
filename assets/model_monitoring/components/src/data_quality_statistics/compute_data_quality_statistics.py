@@ -84,7 +84,6 @@ def get_unique_value_list(df: pyspark.sql.DataFrame, categorical_columns: list) 
         featureName: The name of the categorical column.
         set: A list of unique values for the categorical column.
     """
-
     # Compute the set of unique values for each categorical column
     unique_vals = [
         df.select(col(c)).distinct().rdd.map(lambda x: x[0]).collect()

@@ -72,6 +72,7 @@ def get_numerical_and_categorical_cols(
         override_numerical_features,
         override_categorical_features,
         column_dtype_map=None):
+    """Get numerical and categorical columns from all columns with dataframe."""
     return (get_numerical_cols_with_df_with_override(df,
                                                      override_numerical_features,
                                                      override_categorical_features,
@@ -83,7 +84,7 @@ def get_numerical_and_categorical_cols(
 
 
 def get_feature_type_override_map(override_numerical_features: str, override_categorical_features: str) -> dict:
-    """ Generate feature type override map with key of feature name and value of "numerical"/"categorical"."""
+    """Generate feature type override map with key of feature name and value of "numerical"/"categorical"."""
     feature_type_override_map = {}
     if override_categorical_features:
         for cat_feature in override_categorical_features.split(','):

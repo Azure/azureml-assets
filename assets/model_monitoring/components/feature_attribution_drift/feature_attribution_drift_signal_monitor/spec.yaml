@@ -4,7 +4,7 @@ type: pipeline
 name: feature_attribution_drift_signal_monitor
 display_name: Feature Attribution Drift - Signal Monitor
 description: Computes the feature attribution between a baseline and production data assets.
-version: 0.3.14
+version: 0.3.15
 is_deterministic: true
 
 inputs:

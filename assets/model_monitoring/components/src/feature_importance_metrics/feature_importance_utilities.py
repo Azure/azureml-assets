@@ -28,7 +28,7 @@ def convert_pandas_to_spark(pandas_data):
 
 
 def mark_categorical_column(baseline_df, target_column, categorical_features_lgbm, numerical_features):
-    """Mark the categorical column (except target column) type as "category" so lightgbm will ignore them
+    """Mark the categorical column (except target column) type as "category" so lightgbm will ignore them.
 
     :param baseline_df: The baseline data meaning the data used to create the
     model monitor

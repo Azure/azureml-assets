@@ -7,6 +7,7 @@ from pyspark.sql.functions import (
     current_timestamp,
     lit)
 from pyspark.sql.types import (
+    BooleanType,
     ByteType,
     DoubleType,
     IntegerType,
@@ -14,12 +15,14 @@ from pyspark.sql.types import (
     LongType,
     StringType,
     StructField,
-    StructType)
+    StructType,
+    TimestampType)
 from src.data_quality_compute_metrics.compute_data_quality_metrics import (
     compute_data_quality_metrics,
     compute_dtype_violation_count_modify_dataset,
     get_null_count,
     modify_dataType,
+    compute_set_violation,
     impute_numericals_with_median,
     impute_categorical_with_mode,
     modify_categorical_columns)
@@ -211,7 +214,7 @@ class TestModelMonitorDataQuality:
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
 
     def test_impute_missing_values(self):
-        """Test impute_numericals_with_median and impute_categorical_with_mode"""
+        """Test impute_numericals_with_median and impute_categorical_with_mode."""
         df_with_missing_value = [
             (40.1,   "s1",   1),
             (40.2,   "s1",   2),
@@ -246,10 +249,47 @@ class TestModelMonitorDataQuality:
         assert sorted(df_with_inputed_value.collect()) == sorted(df_inputed_categorical.collect())
 
     def test_modify_categorical_columns(self):
-        """Test modify_categorical_columns """
+        """Test modify_categorical_columns."""
         categorical_columns = ["feature_boolean", "feature_binary", "feature_timestamp",
                                "feature_string", "feature_int"]
-        expected_categorical_columns = ["feature_string", "feature_int"]
+        expected_categorical_columns = ["feature_string"]
 
         modified_categorical_columns = modify_categorical_columns(df_with_timestamp, categorical_columns)
         assert expected_categorical_columns == modified_categorical_columns
+
+
+    def test_compute_set_violation(self):
+        """Test compute_set_violation."""
+        df = [
+        ("string1", "char", 2, True,  4.67, "2023-10-01 00:00:01"),
+        ("string2", "char", 3, False, 90.1, "2023-10-01 00:00:02"),
+        ("string3", "char", 4, True,  2.8987,"2023-10-01 00:00:03"),
+        ("string4", "char", 5, False, 3.454, "2023-10-01 00:00:04")]
+        schema = StructType([
+                StructField("feature_string", StringType(), True),
+                StructField("feature_char", StringType(), True),
+                StructField("feature_int", IntegerType(), True),
+                StructField("feature_boolean", BooleanType(), True),
+                StructField("feature_double", DoubleType(), True),
+                StructField("feature_timestamp", StringType(), True),
+            ]
+        )
+        df = create_pyspark_dataframe(df, schema)
+        df_input = df.withColumn("feature_timestamp", df["feature_timestamp"].cast(TimestampType()))
+
+        expected_set_violation_value = [("feature_string", 1, "setValueOutOfRange"),
+                                        ("feature_char", 0, "setValueOutOfRange")]
+        data_schema = StructType(
+            [
+                StructField("featureName", StringType(), True),
+                StructField("violationCount", IntegerType(), True),
+                StructField("metricName", StringType(), True),
+            ]
+        )
+        expected_set_violation_table = create_pyspark_dataframe(expected_set_violation_value, data_schema)
+
+        set_violation_table = compute_set_violation(df_input, data_stats_table, ["feature_string", "feature_char"])
+        set_violation_table.show()
+
+        assert sorted(expected_set_violation_table.collect()) == sorted(set_violation_table.collect())
+        

@@ -102,7 +102,7 @@ data_stats_table = create_pyspark_dataframe(data_stat_df, data_stat_colums)
 
 data_stat_df_override = [
                 ("feature_string", None, None, "StringType()", "[string1, string2, string3]"),
-                ("feature_int", None,  None, "IntegerType()", "[2, 3, 4, 5]"),
+                ("feature_int", None,  None, "IntegerType()", None),
                 ("feature_boolean", 1.0, 0.0, "BooleanType()", None),
                 ("feature_double", 90.1, 2.8987, "DoubleType()", None),
                 ("feature_byte", 5.0, -2.0, "ByteType()", None),
@@ -110,7 +110,7 @@ data_stat_df_override = [
                 ("feature_long", 400.0, 100.0, "LongType()", None),
                 ("feature_binary", None, None, "BinaryType()", None),
                 ("feature_float", 56.70000076293945, 3.549999952316284, "FloatType()", None),
-                ("feature_short", None, None, "ShortType()", "[4, 6, 7, 9]"),
+                ("feature_short", None, None, "ShortType()", None),
                 ("feature_char", None, None, "StringType()", "[char]"),
 ]
 data_stats_table_override = create_pyspark_dataframe(data_stat_df_override, data_stat_colums)
@@ -129,6 +129,7 @@ class TestModelMonitorDataQualityStatistic:
     ):
         """Test compute data quality statistics with string, integer, boolean, double type."""
         actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp, None, None)
+        assert data_stats_table.count() == actual_data_stats_table.count()
         assert sorted(data_stats_table.collect()) == sorted(actual_data_stats_table.collect())
 
     @pytest.mark.parametrize("df_with_timestamp, data_stats_table_override",
@@ -138,8 +139,9 @@ class TestModelMonitorDataQualityStatistic:
             df_with_timestamp,
             data_stats_table_override
     ):
-        """Test compute data quality statistics with string, integer, boolean, double type with datatype override"""
+        """Test compute data quality statistics with string, integer, boolean, double type with datatype override."""
         override_numerical_features = "feature_boolean"
+         # will not work because only string type is used for categorical features in data quality
         override_categorical_features = "feature_int,feature_short"
         actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp,
                                                                   override_numerical_features,
@@ -209,8 +211,7 @@ class TestModelMonitorDataQualityStatistic:
             df_with_timestamp,
             df_for_unique_value_list
     ):
-        """Test exclude the boolean columns from dataframe."""
-        categorical_columns = ['feature_string', 'feature_boolean', 'feature_binary',
-                               'feature_timestamp', 'feature_char']
+        """Test get unique value list from dataframe."""
+        categorical_columns = ['feature_string', 'feature_char']
         actual_df_for_unique_value_list = get_unique_value_list(df_with_timestamp, categorical_columns)
         assert_pyspark_df_equal(df_for_unique_value_list, actual_df_for_unique_value_list)

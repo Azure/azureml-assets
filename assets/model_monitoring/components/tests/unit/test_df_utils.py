@@ -80,6 +80,7 @@ class TestDFUtils:
         assert get_common_columns(baseline_df, production_df) == {"name": "string", "age": "bigint"}
 
     def test_get_feature_type_override_map(self):
+        """Test get feature type override map."""
         # Test with no type override features
         override_numerical_features = None
         override_categorical_features = None
@@ -108,6 +109,7 @@ class TestDFUtils:
                                                                                 "Gender": "categorical"}
 
     def test_is_numerical(self):
+        """Test is numerical."""
         spark = self.init_spark()
         column_dtype_map = {
                             'col1': 'int',
@@ -159,6 +161,7 @@ class TestDFUtils:
         assert is_numerical('col10', column_dtype_map, {}, baseline_df) is None
 
     def test_is_categorical(self):
+        """Test is categorical."""
         spark = self.init_spark()
         column_dtype_map = {
                             'col1': 'int',
@@ -210,6 +213,7 @@ class TestDFUtils:
         assert is_categorical('col10', column_dtype_map, {}, baseline_df) is None
 
     def test_get_numerical_cols_with_df_with_override(self):
+        """Test get numerical columns with data type override."""
         spark = self.init_spark()
         baseline_df = pd.DataFrame({
                             'col1': [1, 2, 2, 4, 4],
@@ -264,6 +268,7 @@ class TestDFUtils:
                                                                                                'col7', 'col8', 'col9']
 
     def test_get_categorical_cols_with_df_with_override(self):
+        """Test get categorical columns with data type override."""
         spark = self.init_spark()
         baseline_df = pd.DataFrame({
                             'col1': [1, 2, 2, 4, 4],
@@ -321,6 +326,7 @@ class TestDFUtils:
                                                                                                  'col9']
 
     def test_get_numerical_and_categorical_cols(self):
+        """Test get numerical and categorical columns with data type override."""
         spark = self.init_spark()
         baseline_df = pd.DataFrame({
                             'col1': [1, 2, 2, 4, 4],

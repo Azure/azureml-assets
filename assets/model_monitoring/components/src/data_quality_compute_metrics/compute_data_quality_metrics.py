@@ -122,7 +122,7 @@ def compute_max_violation(
     max_threshold_violation_count = []
     feature_name_list = []
 
-    for row in data_stats_table.filter(col("min_value").isNotNull()).select("featureName").distinct().collect():
+    for row in data_stats_table.filter(col("max_value").isNotNull()).select("featureName").distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
@@ -180,7 +180,7 @@ def compute_min_violation(
     min_threshold_violation_count = []
     feature_name_list = []
 
-    for row in data_stats_table.filter(col("max_value").isNotNull()).select("featureName").distinct().collect():
+    for row in data_stats_table.filter(col("min_value").isNotNull()).select("featureName").distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
@@ -255,8 +255,10 @@ def compute_set_violation(
         if c in categorical_columns:
             df_subset = data_stats_table.filter(col("featureName") == c)
             set_subset = df_subset.select("set").rdd.flatMap(lambda x: x).first()
+            # convert back to list of string. Todo: support other types of categorical features
+            set_list = set_subset.lstrip('[').rstrip(']').split(", ")
             set_threshold_violation_count.append(
-                df.filter(~col(c).isin(set_subset)).count()
+                df.filter(~col(c).isin(set_list)).count()
             )
             feature_name_list.append(c)
         else:
@@ -397,7 +399,7 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame, categorical_columns:
 
 def modify_categorical_columns(df: pyspark.sql.DataFrame, categorical_columns: list) -> list:
     """
-    Modify categorical columns, filtering out unsupported or non-meaningful columns
+    Modify categorical columns, filtering out unsupported or non-meaningful columns.
 
     Args:
     df (pyspark.sql.DataFrame): The input DataFrame
@@ -406,13 +408,13 @@ def modify_categorical_columns(df: pyspark.sql.DataFrame, categorical_columns: l
     Returns:
     modified_categorical_columns: Modified categorical column
     """
-
+    # Only do the data quality check for string type. Ignore all the other types
     # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
     # Ignore binary because it will throw type not supported error for mode
     modified_categorical_columns = []
     dtype_map = dict(df.dtypes)
     for column in categorical_columns:
-        if dtype_map[column] not in ["boolean", "timestamp", "binary", "date"]:
+        if dtype_map[column] == "string":
             modified_categorical_columns.append(column)
     return modified_categorical_columns
 
