@@ -32,7 +32,7 @@ RUN pip install -r extra_requirements.txt
 ## Install dbcopilot
 RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.12-py3-none-any.whl
 
-RUN pip install cryptography==41.0.6 langchain==0.0.317 pyarrow==14.0.1 pymongo==4.6.1
+RUN pip install cryptography==41.0.6 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1
 
 # RUN pip install plotly~=5.13.1 azure-kusto-data==4.2.0 recognizers-text-suite~=1.0.2a2
 
