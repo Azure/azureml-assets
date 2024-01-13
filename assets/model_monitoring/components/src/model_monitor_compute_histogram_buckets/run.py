@@ -40,7 +40,6 @@ def run():
         df1 = df2
 
     histogram_buckets = compute_histogram_buckets(df1, df2)
-
     save_spark_df_as_mltable(histogram_buckets, args.histogram_buckets)
 
 
