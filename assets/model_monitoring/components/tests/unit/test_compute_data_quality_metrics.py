@@ -4,8 +4,10 @@
 """This file contains unit tests for the Model Monitor Data Quality Compute Metric component."""
 
 from pyspark.sql.functions import (
+    col,
     current_timestamp,
-    lit)
+    lit,
+    when)
 from pyspark.sql.types import (
     BooleanType,
     ByteType,
@@ -24,7 +26,8 @@ from src.data_quality_compute_metrics.compute_data_quality_metrics import (
     modify_dataType,
     compute_set_violation,
     impute_numericals_with_median,
-    impute_categorical_with_mode)
+    impute_categorical_with_mode,
+    convert_set_string_to_array)
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp, data_stats_table
 import pytest
@@ -172,7 +175,8 @@ class TestModelMonitorDataQuality:
             ).withColumn("featureName", lit("")).withColumn("dataType", lit(""))
 
         expected_metrics_df = expected_metrics_df.unionByName(row)
-        metrics_df = compute_data_quality_metrics(df_with_timestamp, data_stats_table, None, None)
+        modified_data_stats_table = convert_set_string_to_array(data_stats_table)
+        metrics_df = compute_data_quality_metrics(df_with_timestamp, modified_data_stats_table, None, None)
         assert expected_metrics_df.count() == metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
 
@@ -274,6 +278,32 @@ class TestModelMonitorDataQuality:
             ]
         )
         expected_set_violation_table = create_pyspark_dataframe(expected_set_violation_value, data_schema)
-
-        set_violation_table = compute_set_violation(df_input, data_stats_table, ["feature_string", "feature_char"])
+        modified_data_stats_table = convert_set_string_to_array(data_stats_table)
+        set_violation_table = compute_set_violation(df_input,
+                                                    modified_data_stats_table,
+                                                    ["feature_string", "feature_char"])
         assert sorted(expected_set_violation_table.collect()) == sorted(set_violation_table.collect())
+
+    @pytest.mark.parametrize(
+        "string_set_value, expected_list",
+        [
+            (None, None),
+            ("", ['']),
+            ("[string1, string2]", ["string1", "string2"]),
+            ("[string1, string2", ["string1", "string2"]),
+            ("string1, string2]", ["string1", "string2"]),
+            ("string1, string2", ["string1", "string2"]),
+            ("[string1]", ["string1"]),
+            ("string1", ["string1"]),
+        ],
+    )
+    def test_convert_set_string_to_array(self, string_set_value, expected_list):
+        """Test convert_set_string_to_array."""
+        df = data_stats_table.withColumn("set", when(data_stats_table.featureName == "feature_string",
+                                                     string_set_value).otherwise(data_stats_table["set"]))
+        modified_data_stats_table = convert_set_string_to_array(df)
+        dtype_map = dict(modified_data_stats_table.dtypes)
+        assert "array<string>" == dtype_map["set"]
+
+        df_feature = modified_data_stats_table.filter(col("featureName") == "feature_string")
+        assert expected_list == df_feature.select("set").rdd.flatMap(lambda x: x).first()

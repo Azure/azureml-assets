@@ -19,8 +19,11 @@ from pyspark.sql.functions import (
     desc,
     regexp_replace,
     round,
-    concat
+    concat,
+    split,
+    trim
 )
+import pyspark.sql.functions as F
 from pyspark.ml.feature import Imputer
 from typing import Tuple
 import pyspark
@@ -256,10 +259,8 @@ def compute_set_violation(
         if c in categorical_columns:
             df_subset = data_stats_table.filter(col("featureName") == c)
             set_subset = df_subset.select("set").rdd.flatMap(lambda x: x).first()
-            # convert back to list of string. Todo: support other types of categorical features
-            set_list = set_subset.lstrip('[').rstrip(']').split(", ")
             set_threshold_violation_count.append(
-                df.filter(~col(c).isin(set_list)).count()
+                df.filter(~col(c).isin(set_subset)).count()
             )
             feature_name_list.append(c)
         else:
@@ -417,6 +418,20 @@ def modify_dataType(data_stats_table) -> pyspark.sql.DataFrame:
         .otherwise(col("dataType")),
     )
     return data_stats_table_mod
+
+
+def convert_set_string_to_array(data_stats_table) -> pyspark.sql.DataFrame:
+    """
+    Cast set column back to array of string.
+    Before: "[string1, string2, string3]".
+    After: ["string1", "string2", "string3"].
+    """
+    data_stats_table = data_stats_table.withColumn("set", F.regexp_replace(data_stats_table["set"], r"^\[+", ""))
+    data_stats_table = data_stats_table.withColumn("set", F.regexp_replace(data_stats_table["set"], r"\]+$", ""))
+    data_stats_table = data_stats_table.withColumn(
+        "set", split(trim("set"), "( +)?, ?")
+    )
+    return data_stats_table
 
 
 def compute_data_quality_metrics(df, data_stats_table, override_numerical_features, override_categorical_features):
