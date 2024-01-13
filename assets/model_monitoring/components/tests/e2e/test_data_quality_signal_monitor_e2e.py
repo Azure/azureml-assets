@@ -91,7 +91,7 @@ class TestDataQualityModelMonitor:
     def test_monitoring_run_use_defaults_data_has_no_drift_successful_datatype_override(
         self, ml_client: MLClient, get_component, download_job_output, test_suite_name
     ):
-        """Test the happy path scenario with datatype override"""
+        """Test the happy path scenario with datatype override."""
         pipeline_job = _submit_data_quality_signal_monitor_job(
             ml_client,
             get_component,
