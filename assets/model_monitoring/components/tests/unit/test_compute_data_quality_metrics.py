@@ -24,8 +24,7 @@ from src.data_quality_compute_metrics.compute_data_quality_metrics import (
     modify_dataType,
     compute_set_violation,
     impute_numericals_with_median,
-    impute_categorical_with_mode,
-    modify_categorical_columns)
+    impute_categorical_with_mode)
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp, data_stats_table
 import pytest
