@@ -24,7 +24,9 @@ def _submit_data_quality_signal_monitor_job(
     target_data,
     target_column=None,
     filter_type=None,
-    filter_value=None
+    filter_value=None,
+    override_numerical_features=None,
+    override_categorical_features=None
 ):
     dd_signal_monitor = get_component(COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR)
 
@@ -41,6 +43,8 @@ def _submit_data_quality_signal_monitor_job(
             filter_value=filter_value,
             numerical_threshold=0.5,
             categorical_threshold=0.5,
+            override_numerical_features=override_numerical_features,
+            override_categorical_features=override_categorical_features
         )
         return {"signal_output": dd_signal_monitor_output.outputs.signal_output}
 
@@ -78,6 +82,25 @@ class TestDataQualityModelMonitor:
             "target",
             "TopNByAttribution",
             "3"
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    def test_monitoring_run_use_defaults_data_has_no_drift_successful_datatype_override(
+        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+    ):
+        """Test the happy path scenario where the data has drift and default settings are used."""
+        pipeline_job = _submit_data_quality_signal_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_BASELINE_DATA,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
+            "target",
+            "TopNByAttribution",
+            "3",
+            "sepal_width,petal_length,petal_width",
+            "target"
         )
 
         assert pipeline_job.status == "Completed"
