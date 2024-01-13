@@ -242,10 +242,6 @@ class TestModelMonitorDataQuality:
         categorical_columns = ["feature_string"]
         df_inputed_numerical = impute_numericals_with_median(df_with_missing_value, numerical_columns)
         df_inputed_categorical = impute_categorical_with_mode(df_inputed_numerical, categorical_columns)
-
-        df_inputed_categorical.show()
-        print("final")
-        df_with_inputed_value.show()
         assert sorted(df_with_inputed_value.collect()) == sorted(df_inputed_categorical.collect())
 
     def test_modify_categorical_columns(self):
@@ -290,6 +286,4 @@ class TestModelMonitorDataQuality:
         expected_set_violation_table = create_pyspark_dataframe(expected_set_violation_value, data_schema)
 
         set_violation_table = compute_set_violation(df_input, data_stats_table, ["feature_string", "feature_char"])
-        set_violation_table.show()
-
         assert sorted(expected_set_violation_table.collect()) == sorted(set_violation_table.collect())
