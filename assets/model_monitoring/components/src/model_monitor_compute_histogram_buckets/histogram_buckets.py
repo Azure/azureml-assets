@@ -5,6 +5,7 @@
 
 
 import pyspark.sql as pyspark_sql
+from assets.model_monitoring.components.src.shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities.df_utils import get_numerical_cols_with_df
 from shared_utilities.histogram_utils import get_dual_histogram_bin_edges
 from shared_utilities.df_utils import get_common_columns
@@ -23,6 +24,12 @@ def compute_numerical_bins(
     """Compute numerical bins given two data frames."""
     # Generate histograms only for columns in both baseline and target dataset
     common_columns_dict = get_common_columns(df1, df2)
+    if not common_columns_dict:
+        raise InvalidInputError(
+            "Found no common columns between innput datasets. Try double-checking" +
+            " if there are common columns between the input datasets." +
+            " Common columns must have the same names (case-sensitive) and similar data types."
+        )
     numerical_columns = get_numerical_cols_with_df(common_columns_dict, df1)
     print(f"numerical columns: {numerical_columns}")
 

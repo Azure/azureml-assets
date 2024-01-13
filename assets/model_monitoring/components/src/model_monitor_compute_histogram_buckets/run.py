@@ -10,7 +10,6 @@ from shared_utilities.io_utils import (
     save_spark_df_as_mltable,
 )
 from shared_utilities.event_utils import post_warning_event
-from shared_utilities.momo_exceptions import InvalidInputError
 
 
 def run():
@@ -41,15 +40,6 @@ def run():
         df1 = df2
 
     histogram_buckets = compute_histogram_buckets(df1, df2)
-    if histogram_buckets.isEmpty():
-        raise InvalidInputError(
-            "Failed to generate histogram buckets for inputted datasets." +
-            " Try double-checking if there are common columns between the input datasets." +
-            " Column names are case-sensitive and datatype-sensitive. Then,"
-            " double-check if there are numerical columns in the dataset and" +
-            " see if they were recognized as numerical through the logs." +
-            f" input_data_1 path: {args.input_data_1}. input_data_2 path: {args.input_data_2}"
-        )
 
     save_spark_df_as_mltable(histogram_buckets, args.histogram_buckets)
 
