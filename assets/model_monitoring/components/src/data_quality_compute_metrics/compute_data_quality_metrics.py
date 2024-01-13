@@ -423,8 +423,9 @@ def modify_dataType(data_stats_table) -> pyspark.sql.DataFrame:
 def convert_set_string_to_array(data_stats_table) -> pyspark.sql.DataFrame:
     """
     Cast set column back to array of string.
-    Before: "[string1, string2, string3]".
-    After: ["string1", "string2", "string3"].
+
+    Before: "[string1, string2, string3]"
+    After: ["string1", "string2", "string3"]
     """
     data_stats_table = data_stats_table.withColumn("set", F.regexp_replace(data_stats_table["set"], r"^\[+", ""))
     data_stats_table = data_stats_table.withColumn("set", F.regexp_replace(data_stats_table["set"], r"\]+$", ""))
