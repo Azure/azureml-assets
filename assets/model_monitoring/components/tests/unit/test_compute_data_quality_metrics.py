@@ -244,15 +244,6 @@ class TestModelMonitorDataQuality:
         df_inputed_categorical = impute_categorical_with_mode(df_inputed_numerical, categorical_columns)
         assert sorted(df_with_inputed_value.collect()) == sorted(df_inputed_categorical.collect())
 
-    def test_modify_categorical_columns(self):
-        """Test modify_categorical_columns."""
-        categorical_columns = ["feature_boolean", "feature_binary", "feature_timestamp",
-                               "feature_string", "feature_int"]
-        expected_categorical_columns = ["feature_string"]
-
-        modified_categorical_columns = modify_categorical_columns(df_with_timestamp, categorical_columns)
-        assert expected_categorical_columns == modified_categorical_columns
-
     def test_compute_set_violation(self):
         """Test compute_set_violation."""
         df = [

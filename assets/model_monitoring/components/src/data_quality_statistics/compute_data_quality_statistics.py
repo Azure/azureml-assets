@@ -8,8 +8,7 @@ from pyspark.sql.functions import col
 from pyspark.sql.session import SparkSession
 from pyspark.sql.types import DoubleType, LongType, StructType, StructField, StringType
 import pyspark
-from shared_utilities.df_utils import get_numerical_and_categorical_cols
-from data_quality_compute_metrics.compute_data_quality_metrics import modify_categorical_columns
+from shared_utilities.df_utils import get_numerical_and_categorical_cols, modify_categorical_columns
 
 # Init spark session
 sc = SparkContext.getOrCreate()

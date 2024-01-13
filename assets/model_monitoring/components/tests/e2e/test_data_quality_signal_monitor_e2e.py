@@ -12,7 +12,9 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_EMPTY,
     DATA_ASSET_IRIS_BASELINE_DATA,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
-    DATA_ASSET_VALID_DATATYPE
+    DATA_ASSET_VALID_DATATYPE,
+    DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE,
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE
 )
 
 
@@ -89,18 +91,18 @@ class TestDataQualityModelMonitor:
     def test_monitoring_run_use_defaults_data_has_no_drift_successful_datatype_override(
         self, ml_client: MLClient, get_component, download_job_output, test_suite_name
     ):
-        """Test the happy path scenario where the data has drift and default settings are used."""
+        """Test the happy path scenario with datatype override"""
         pipeline_job = _submit_data_quality_signal_monitor_job(
             ml_client,
             get_component,
             test_suite_name,
-            DATA_ASSET_IRIS_BASELINE_DATA,
-            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
+            DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE,
             "target",
             "TopNByAttribution",
             "3",
-            "sepal_width,petal_length,petal_width",
-            "target"
+            "sepal_width",
+            "petal_length"
         )
 
         assert pipeline_job.status == "Completed"

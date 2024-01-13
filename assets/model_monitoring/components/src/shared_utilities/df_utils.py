@@ -129,6 +129,28 @@ def get_common_columns(
     return common_columns
 
 
+def modify_categorical_columns(df: pyspark_sql.DataFrame, categorical_columns: list) -> list:
+    """
+    Modify categorical columns, filtering out unsupported or non-meaningful columns.
+
+    Args:
+    df (pyspark.sql.DataFrame): The input DataFrame
+    categorical_columns: List of categorical columns
+
+    Returns:
+    modified_categorical_columns: Modified categorical column
+    """
+    # Only do the data quality check for string type. Ignore all the other types
+    # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
+    # Ignore binary because it will throw type not supported error for mode
+    modified_categorical_columns = []
+    dtype_map = dict(df.dtypes)
+    for column in categorical_columns:
+        if dtype_map[column] == "string":
+            modified_categorical_columns.append(column)
+    return modified_categorical_columns
+
+
 def select_columns_from_spark_df(df: pyspark_sql.DataFrame, column_list: list):
     """Select comlumns from given spark dataFrame."""
     column_list = list(map(str.strip, column_list))

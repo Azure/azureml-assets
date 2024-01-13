@@ -29,7 +29,8 @@ from shared_utilities.df_utils import (
     get_numerical_and_categorical_cols,
     data_type_long_group,
     data_type_numerical_group,
-    data_type_categorical_group
+    data_type_categorical_group,
+    modify_categorical_columns
 )
 
 
@@ -395,28 +396,6 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame, categorical_columns:
         df = df.fillna({i: most_frequent})
 
     return df
-
-
-def modify_categorical_columns(df: pyspark.sql.DataFrame, categorical_columns: list) -> list:
-    """
-    Modify categorical columns, filtering out unsupported or non-meaningful columns.
-
-    Args:
-    df (pyspark.sql.DataFrame): The input DataFrame
-    categorical_columns: List of categorical columns
-
-    Returns:
-    modified_categorical_columns: Modified categorical column
-    """
-    # Only do the data quality check for string type. Ignore all the other types
-    # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
-    # Ignore binary because it will throw type not supported error for mode
-    modified_categorical_columns = []
-    dtype_map = dict(df.dtypes)
-    for column in categorical_columns:
-        if dtype_map[column] == "string":
-            modified_categorical_columns.append(column)
-    return modified_categorical_columns
 
 
 def modify_dataType(data_stats_table) -> pyspark.sql.DataFrame:

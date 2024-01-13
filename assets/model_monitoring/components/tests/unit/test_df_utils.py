@@ -15,9 +15,11 @@ from shared_utilities.df_utils import (
         is_categorical,
         get_numerical_cols_with_df_with_override,
         get_categorical_cols_with_df_with_override,
-        get_numerical_and_categorical_cols
+        get_numerical_and_categorical_cols,
+        modify_categorical_columns
     )
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
+from tests.unit.test_compute_data_quality_statistics import df_with_timestamp
 import pandas as pd
 import pytest
 import datetime
@@ -350,6 +352,15 @@ class TestDFUtils:
         numerical_columns, categorical_columns = get_numerical_and_categorical_cols(baseline_df, None, None)
         assert numerical_columns == ['col1', 'col2', 'col3', 'col4']
         assert categorical_columns == ['col5', 'col6', 'col7', 'col8', 'col9']
+
+    def test_modify_categorical_columns(self):
+        """Test modify_categorical_columns."""
+        categorical_columns = ["feature_boolean", "feature_binary", "feature_timestamp",
+                               "feature_string", "feature_int"]
+        expected_categorical_columns = ["feature_string"]
+
+        modified_categorical_columns = modify_categorical_columns(df_with_timestamp, categorical_columns)
+        assert expected_categorical_columns == modified_categorical_columns
 
     def init_spark(self):
         """Get or create spark session."""
