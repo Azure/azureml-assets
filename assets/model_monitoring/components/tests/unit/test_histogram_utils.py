@@ -4,7 +4,7 @@
 
 from pyspark.sql import SparkSession, DataFrame
 import pyspark.sql.functions as pyspark_f
-from src.shared_utilities.df_utils import get_numerical_cols_with_df
+from src.shared_utilities.df_utils import get_numerical_cols_with_df_with_override
 from src.shared_utilities.histogram_utils import (
         get_dual_histogram_bin_edges
     )
@@ -45,7 +45,7 @@ class TestDFUtils:
         })
         baseline_df = self.init_spark().createDataFrame(baseline_df)
         production_df = self.init_spark().createDataFrame(production_df)
-        numerical_columns = get_numerical_cols_with_df(column_dtype_map, baseline_df)
+        numerical_columns = get_numerical_cols_with_df_with_override(baseline_df, None, None, column_dtype_map)
 
         all_edges = get_dual_histogram_bin_edges(
             baseline_df, production_df, baseline_df.count(), production_df.count(), numerical_columns
@@ -83,8 +83,7 @@ class TestDFUtils:
         })
         baseline_df = self.init_spark().createDataFrame(baseline_df)
         production_df = self.init_spark().createDataFrame(production_df)
-        numerical_columns = get_numerical_cols_with_df(column_dtype_map,
-                                                       baseline_df)
+        numerical_columns = get_numerical_cols_with_df_with_override(baseline_df, None, None, column_dtype_map)
 
         all_edges = get_dual_histogram_bin_edges(
             baseline_df, production_df, baseline_df.count(), production_df.count(), numerical_columns
@@ -130,8 +129,7 @@ class TestDFUtils:
         })
         baseline_df = self.init_spark().createDataFrame(baseline_df)
         production_df = self.init_spark().createDataFrame(production_df)
-        numerical_columns = get_numerical_cols_with_df(column_dtype_map,
-                                                       baseline_df)
+        numerical_columns = get_numerical_cols_with_df_with_override(baseline_df, None, None, column_dtype_map)
 
         all_edges = get_dual_histogram_bin_edges(
             baseline_df, production_df, baseline_df.count(), production_df.count(), numerical_columns
@@ -177,8 +175,7 @@ class TestDFUtils:
         })
         baseline_df = self.init_spark().createDataFrame(baseline_df)
         production_df = self.init_spark().createDataFrame(production_df)
-        numerical_columns = get_numerical_cols_with_df(column_dtype_map,
-                                                       baseline_df)
+        numerical_columns = get_numerical_cols_with_df_with_override(baseline_df, None, None, column_dtype_map)
 
         all_edges = get_dual_histogram_bin_edges(
             baseline_df, production_df, baseline_df.count(), production_df.count(), numerical_columns
