@@ -88,7 +88,7 @@ class TestDataQualityModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_use_defaults_data_has_no_drift_successful_datatype_override(
+    def test_monitoring_run_successful_with_datatype_override(
         self, ml_client: MLClient, get_component, download_job_output, test_suite_name
     ):
         """Test the happy path scenario with datatype override."""

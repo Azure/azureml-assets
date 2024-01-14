@@ -564,21 +564,11 @@ def compute_data_quality_metrics(df, data_stats_table, override_numerical_featur
     )
 
     # REMAP THE DATA TYPES
-    # TODO: Expand datatype list below. Also NOTE this list does not match list in data drift.
     violation_df_remapped = violation_df_remapped.withColumn(
         "dataType",
-        when(col("dataType") == "DoubleType()", "Numerical")
-        .when(col("dataType") == "LongType()", "Numerical")
-        .when(col("dataType") == "StringType()", "Categorical")
-        .when(col("dataType") == "IntegerType()", "Numerical")
-        .when(col("dataType") == "TimestampType()", "Categorical")
-        .when(col("dataType") == "BooleanType()", "Categorical")
-        .when(col("dataType") == "BinaryType()", "Categorical")
-        .when(col("dataType") == "DateType()", "Categorical")
-        .when(col("dataType") == "FloatType()", "Numerical")
-        .when(col("dataType") == "ShortType()", "Numerical")
-        .when(col("dataType") == "ByteType()", "Numerical")
-        .otherwise(col("dataType")),
+        when(col("featureName").isin(categorical_columns), "Categorical")
+        .when(col("featureName").isin(numerical_columns), "Numerical")
+        .otherwise(col("dataType"))
     )
 
     #########################
