@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_compute_histogram_buckets
 display_name: Model Monitor - Compute Histogram Buckets
 description: Compute histogram buckets given up to two datasets.
-version: 0.3.4
+version: 0.3.5
 is_deterministic: true
 
 code: ../../src
@@ -18,6 +18,12 @@ inputs:
   input_data_2:
     mode: direct
     type: mltable
+    optional: true
+  override_numerical_features:
+    type: string
+    optional: true
+  override_categorical_features:
+    type: string
     optional: true
 outputs:
   histogram_buckets:
@@ -47,5 +53,7 @@ conf:
         - fsspec~=2023.4.0
     name: momo-base-spark
 args: >-
-  --input_data_1 ${{inputs.input_data_1}} $[[--input_data_2 ${{inputs.input_data_2}}]]
+  --input_data_1 ${{inputs.input_data_1}}  $[[--input_data_2 ${{inputs.input_data_2}}]]
+  $[[--override_numerical_features ${{inputs.override_numerical_features}}]]
+  $[[--override_categorical_features ${{inputs.override_categorical_features}}]]
   --histogram_buckets ${{outputs.histogram_buckets}}
