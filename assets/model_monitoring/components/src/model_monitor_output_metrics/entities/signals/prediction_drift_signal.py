@@ -140,4 +140,8 @@ class PredictionDriftSignal(Signal):
 
             output[feature_name].metrics.append(feature_metric)
 
+            output[
+                feature_name
+            ].histogram = f"signals/{self.signal_name}/{feature_name}.histogram.json"
+
         return list(output.values())
