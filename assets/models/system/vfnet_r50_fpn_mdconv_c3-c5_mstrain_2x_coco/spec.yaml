@@ -4,17 +4,15 @@ path: ./
 properties:
   SharedComputeCapacityEnabled: true
   SHA: abb9a8751a5273780160a7cb8121e6146e2fc7ee
-  evaluation-min-sku-spec: 4|1|28|176
-  evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
-    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  finetuning-tasks: image-object-detection
   finetune-min-sku-spec: 4|1|28|176
   finetune-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
-    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
-  finetuning-tasks: image-object-detection
+  evaluation-min-sku-spec: 4|1|28|176
+  evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
+    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   inference-min-sku-spec: 4|0|14|28
   inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
     Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
@@ -95,10 +93,7 @@ tags:
       Standard_NC12s_v3,
       Standard_NC16as_T4_v3,
       Standard_NC24s_v3,
-      Standard_NC4as_T4_v3,
       Standard_NC64as_T4_v3,
-      Standard_NC24ads_A100_v4,
-      Standard_NC48ads_A100_v4,
       Standard_NC96ads_A100_v4,
       Standard_ND96asr_v4,
       Standard_ND96amsr_A100_v4,
@@ -113,11 +108,9 @@ tags:
       Standard_NC16as_T4_v3,
       Standard_NC24s_v3,
       Standard_NC64as_T4_v3,
-      Standard_NC24ads_A100_v4,
-      Standard_NC48ads_A100_v4,
       Standard_NC96ads_A100_v4,
       Standard_ND96asr_v4,
       Standard_ND96amsr_A100_v4,
       Standard_ND40rs_v2
     ]
-version: 10
+version: 11
