@@ -3,6 +3,8 @@
 
 """Builder class which creates a Prediction Drift signal output."""
 
+import json
+import os
 from typing import List
 from pyspark.sql import Row
 from model_monitor_output_metrics.entities.feature_metrics import FeatureMetrics
@@ -10,6 +12,7 @@ from model_monitor_output_metrics.entities.row_count_metrics import RowCountMetr
 from model_monitor_output_metrics.entities.signal_type import SignalType
 from model_monitor_output_metrics.entities.signals.signal import Signal
 from model_monitor_output_metrics.builders.histogram_builder import HistogramBuilder
+from shared_utilities.io_utils import np_encoder
 from shared_utilities.run_metrics_utils import get_or_create_run_id
 from shared_utilities.df_utils import row_has_value, add_value_if_present
 
@@ -57,6 +60,22 @@ class PredictionDriftSignal(Signal):
     def to_file(self, local_output_directory: str):
         """Save the signal to a local directory."""
         super().to_file(local_output_directory)
+
+        # Output histograms to file
+        histogram_directory = os.path.join(local_output_directory, self.signal_name)
+        os.makedirs(histogram_directory, exist_ok=True)
+        for feature in self.histogram_builder.get_features():
+            histogram_file = os.path.join(
+                histogram_directory, f"{feature}.histogram.json"
+            )
+            with open(histogram_file, "w") as f:
+                f.write(
+                    json.dumps(
+                        self.histogram_builder.build(feature),
+                        indent=4,
+                        default=np_encoder,
+                    )
+                )
 
     def publish_metrics(self, step: int):
         """Publish metrics to AML Run Metrics."""
