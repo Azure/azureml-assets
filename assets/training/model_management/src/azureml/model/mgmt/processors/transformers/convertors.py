@@ -87,6 +87,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         self._temp_dir = temp_dir
         self._model_id = translate_params.get("model_id", None)
         self._task = translate_params["task"]
+        self._model_flavor = translate_params["model_flavor"]
         self._experimental = translate_params.get(HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value, False)
         self._misc = translate_params.get("misc", [])
         self._signatures = translate_params.get("signature", None)
@@ -173,99 +174,112 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
                                               is_finetuned_model=False,
                                               base_model_task=self._task)
+        if self._model_flavor == "OSS":
+            try:
+                # create a conda environment for OSS transformers Flavor
+                python_version = platform.python_version()
+                pip_pkgs = self._get_curated_environment_pip_package_list()
+                conda_deps = CondaDependencies.create(conda_packages=None,
+                                                      python_version=python_version,
+                                                      pip_packages=pip_pkgs,
+                                                      pin_sdk_version=False)
 
-        try:
-            # create a conda environment for OSS transformers Flavor
-            python_version = platform.python_version()
-            pip_pkgs = self._get_curated_environment_pip_package_list()
-            conda_deps = CondaDependencies.create(conda_packages=None,
-                                                  python_version=python_version,
-                                                  pip_packages=pip_pkgs,
-                                                  pin_sdk_version=False)
+                curated_conda_env = conda_deps.as_dict()
 
-            curated_conda_env = conda_deps.as_dict()
+                # handle OSS trust_remote_code value
+                trust_remote_code_val = False
+                config_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
+                tokenizer_args = self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
+                model_args = self._hf_conf.get(HF_CONF.HF_MODEL_ARGS.value, {})
 
-            # handle OSS trust_remote_code value
-            trust_remote_code_val = False
-            config_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
-            tokenizer_args = self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
-            model_args = self._hf_conf.get(HF_CONF.HF_MODEL_ARGS.value, {})
+                if (config_args.get('trust_remote_code', False)
+                        and tokenizer_args.get('trust_remote_code', False)
+                        and model_args.get('trust_remote_code', False)):
+                    trust_remote_code_val = True
 
-            if (config_args.get('trust_remote_code', False)
-                    and tokenizer_args.get('trust_remote_code', False)
-                    and model_args.get('trust_remote_code', False)):
-                trust_remote_code_val = True
+                model_pipeline = transformers.pipeline(task=self._task, model=model, trust_remote_code=trust_remote_code_val)
 
-            model_pipeline = transformers.pipeline(task=self._task, model=model, trust_remote_code=trust_remote_code_val)
+                # pass in signature for a text-classification model
+                if self._task == SupportedNLPTasks.TEXT_CLASSIFICATION.value:
+                    inputs = Schema([ColSpec(DataType.string)])
+                    outputs = None
+                    params = ParamSchema([ParamSpec("return_all_scores", "boolean", default=True)])
+                    self._signatures = ModelSignature(inputs=inputs, outputs=outputs, params=params)
 
-            # pass in signature for a text-classification model
-            if self._task == SupportedNLPTasks.TEXT_CLASSIFICATION.value:
-                inputs = Schema([ColSpec(DataType.string)])
-                outputs = None
-                params = ParamSchema([ParamSpec("return_all_scores", "boolean", default=True)])
-                self._signatures = ModelSignature(inputs=inputs, outputs=outputs, params=params)
+                mlflow.transformers.save_model(
+                    transformers_model=model_pipeline,
+                    conda_env=curated_conda_env,
+                    code_paths=code_paths,
+                    signature=self._signatures,
+                    input_example=input_example,
+                    pip_requirements=pip_requirements,
+                    extra_pip_requirements=self._extra_pip_requirements,
+                    metadata=metadata,
+                    path=self._output_dir,
+                )
 
-            mlflow.transformers.save_model(
-                transformers_model=model_pipeline,
-                conda_env=curated_conda_env,
-                code_paths=code_paths,
-                signature=self._signatures,
-                input_example=input_example,
-                pip_requirements=pip_requirements,
-                extra_pip_requirements=self._extra_pip_requirements,
-                metadata=metadata,
-                path=self._output_dir,
-            )
+                logger.info("Model saved with mlflow OSS flow for task: {}".format(self._task))
+            except Exception as e:
+                logger.error("Model save failed with mlflow OSS flow for task: {} "
+                             "with exception: {}".format(self._task, e))
 
-            logger.info("Model saved with mlflow OSS flow for task: {}".format(self._task))
-        except Exception as e:
-            logger.error("Model save failed with mlflow OSS flow for task: {} "
-                         "with exception: {}".format(self._task, e))
+                self._save_in_hftransformersv2(metadata, conda_env,
+                                      code_paths, input_example,
+                                      requirements_file, pip_requirements)
 
-            logger.info("Segregate input model dir and present into separate folders for model, config and tokenizer")
-            logger.info("Preparing model files")
-            tmp_model_dir = Path(self._temp_dir) / HF_CONF.HF_MODEL_PATH.value
-            copy_files(self._model_dir, tmp_model_dir)
-            model = str(tmp_model_dir)
-            logger.info("Loading config")
-            config = self._hf_config_cls.from_pretrained(
-                self._model_dir, **self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
-            )
-            logger.info("Loading tokenizer")
-            tokenizer = self._hf_tokenizer_cls.from_pretrained(
-                self._model_dir, **self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
-            )
-
-            mlflow_model = Model(metadata=metadata)
-            hf_mlflow.hftransformers.save_model(
-                config=config,
-                tokenizer=tokenizer,
-                hf_model=model,
-                hf_conf=self._hf_conf,
-                mlflow_model=mlflow_model,
-                conda_env=conda_env,
-                code_paths=code_paths,
-                signature=self._signatures,
-                input_example=input_example,
-                requirements_file=requirements_file,
-                pip_requirements=pip_requirements,
-                extra_pip_requirements=self._extra_pip_requirements,
-                path=self._output_dir,
-            )
-
-            logger.info("Model saved with transformers evaluate flow for task: {}".format(self._task))
-
-            # move metadata files to parent folder
-            logger.info("Moving meta files such as license, use_policy, readme to parent")
-            move_files(
-                Path(self._output_dir) / "data/model",
-                self._output_dir,
-                include_pattern_str=META_FILE_PATTERN,
-                ignore_case=True
-            )
+        else:
+            self._save_in_hftransformersv2(metadata, conda_env,
+                                           code_paths, input_example,
+                                           requirements_file, pip_requirements)
 
         # pin pycocotools==2.0.4
         self._update_conda_dependencies({"pycocotools": "2.0.4"})
+
+    def _save_in_hftransformersv2(self, metadata, conda_env,
+                                  code_paths, input_example,
+                                  requirements_file, pip_requirements):
+
+        logger.info("Segregate input model dir and present into separate folders for model, config and tokenizer")
+        logger.info("Preparing model files")
+        tmp_model_dir = Path(self._temp_dir) / HF_CONF.HF_MODEL_PATH.value
+        copy_files(self._model_dir, tmp_model_dir)
+        model = str(tmp_model_dir)
+        logger.info("Loading config")
+        config = self._hf_config_cls.from_pretrained(
+            self._model_dir, **self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
+        )
+        logger.info("Loading tokenizer")
+        tokenizer = self._hf_tokenizer_cls.from_pretrained(
+            self._model_dir, **self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
+        )
+
+        mlflow_model = Model(metadata=metadata)
+        hf_mlflow.hftransformers.save_model(
+            config=config,
+            tokenizer=tokenizer,
+            hf_model=model,
+            hf_conf=self._hf_conf,
+            mlflow_model=mlflow_model,
+            conda_env=conda_env,
+            code_paths=code_paths,
+            signature=self._signatures,
+            input_example=input_example,
+            requirements_file=requirements_file,
+            pip_requirements=pip_requirements,
+            extra_pip_requirements=self._extra_pip_requirements,
+            path=self._output_dir,
+        )
+
+        logger.info("Model saved with transformers evaluate flow for task: {}".format(self._task))
+
+        # move metadata files to parent folder
+        logger.info("Moving meta files such as license, use_policy, readme to parent")
+        move_files(
+            Path(self._output_dir) / "data/model",
+            self._output_dir,
+            include_pattern_str=META_FILE_PATTERN,
+            ignore_case=True
+        )
 
     def _update_conda_dependencies(self, package_details):
         """Update conda dependencies.

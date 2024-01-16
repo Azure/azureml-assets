@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.22
+version: 0.0.23
 
 # Pipeline inputs
 inputs:
@@ -37,6 +37,15 @@ inputs:
   model_id:
     type: string
     description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
+
+  model_flavor:
+    type: string
+    enum:
+      - HFTransformersV2
+      - OSS
+    default: HFTransformersV2
+    optional: false
+    description: Flavor of MLFlow to which model the model is converted to.
 
   token:
     type: string
@@ -182,7 +191,7 @@ outputs:
 
 jobs:
   validation_trigger_import:
-    component: azureml://registries/azureml/components/validation_trigger_import/versions/0.0.3
+    component: azureml:validation_trigger_import:0.0.4
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -194,6 +203,7 @@ jobs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
       model_version: ${{parent.inputs.model_version}}
+      model_flavor: ${{parent.inputs.model_flavor}}
       model_description: ${{parent.inputs.model_description}}
       model_metadata: ${{parent.inputs.model_metadata}}
       registry_name: ${{parent.inputs.registry_name}}
@@ -234,12 +244,13 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.18
+    component: azureml:convert_model_to_mlflow:0.0.19
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
     inputs:
       task_name: ${{parent.inputs.task_name}}
+      model_flavor: ${{parent.inputs.model_flavor}}
       license_file_path: ${{parent.inputs.license_file_path}}
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}
@@ -259,7 +270,7 @@ jobs:
         type: uri_file
 
   mlflow_model_local_validation:
-    component: azureml://registries/azureml-preview-test1/components/mlflow_model_local_validation/versions/0.0.6.oss
+    component: azureml:mlflow_model_local_validation:0.0.6
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -272,7 +283,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml://registries/azureml/components/register_model/versions/0.0.10
+    component: azureml:register_model:0.0.10
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

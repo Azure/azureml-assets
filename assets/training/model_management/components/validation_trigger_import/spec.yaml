@@ -4,7 +4,7 @@ type: command
 name: validation_trigger_import
 display_name: Validation Trigger Import model
 description: Component for enabling validation of import pipeline.
-version: 0.0.3
+version: 0.0.4
 
 # Pipeline inputs
 inputs:
@@ -37,6 +37,15 @@ inputs:
   model_id:
     type: string
     description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
+
+  model_flavor:
+    type: string
+    enum:
+      - HFTransformersV2
+      - OSS
+    default: HFTransformersV2
+    optional: false
+    description: Flavor of MLFlow to which model the model is converted to.
 
   ## Inputs for the MlFLow conversion
   license_file_path:

@@ -28,6 +28,7 @@ def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
     parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
+    parser.add_argument("--model-flavor", type=str, required=False, help="Model flavor HFtransformersV2 / OSS")
     parser.add_argument("--hf-config-args", type=str, required=False, help="Hugging Face config init args")
     parser.add_argument("--hf-tokenizer-args", type=str, required=False, help="Hugging Face tokenizer init args")
     parser.add_argument("--hf-model-args", type=str, required=False, help="Hugging Face model init args")
@@ -96,6 +97,7 @@ def run():
 
     model_id = args.model_id
     task_name = args.task_name
+    model_flavor = args.model_flavor
     model_framework = args.model_framework
     hf_config_args = args.hf_config_args
     hf_tokenizer_args = args.hf_tokenizer_args
@@ -143,6 +145,7 @@ def run():
 
     preprocess_args["task"] = task_name.lower()
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
+    preprocess_args["model_flavor"] = model_flavor if model_flavor else "HFtransformersV2"
     preprocess_args[HF_CONF.EXTRA_PIP_REQUIREMENTS.value] = extra_pip_requirements
     preprocess_args[HF_CONF.HF_CONFIG_ARGS.value] = hf_config_args
     preprocess_args[HF_CONF.HF_TOKENIZER_ARGS.value] = hf_tokenizer_args
