@@ -4,7 +4,7 @@ type: command
 name: batch_inference_preparer
 display_name: Batch Inference Preparer
 description: Prepare the jsonl file and endpoint for batch inference component.
-version: 0.0.4
+version: 0.0.5
 
 inputs:
   input_dataset: 
@@ -39,6 +39,10 @@ inputs:
     type: string
     optional: True
     description: The label column name.
+  additional_columns:
+    type: string
+    optional: True
+    description: Name(s) of additional column(s) that could be useful to compute metrics, separated by comma (",").
   is_performance_test:
     type: boolean
     default: False
@@ -72,3 +76,4 @@ command: >-
   $[[--n_samples ${{inputs.n_samples}}]]
   $[[--endpoint_url ${{inputs.endpoint_url}}]]
   $[[--label_key ${{inputs.label_column_name}}]]
+  $[[--additional_columns ${{inputs.additional_columns}}]]

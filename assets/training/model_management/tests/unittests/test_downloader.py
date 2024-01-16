@@ -24,6 +24,7 @@ class TestDownloaders(unittest.TestCase):
         """Test huggingface downloader."""
         model_id = "username/model_name"
         download_dir = Path("path/to/download/dir")
+        token = None
 
         with patch("huggingface_hub.hf_api.HfApi") as MockHfApi, patch(
             "azureml.model.mgmt.downloader.downloader.HuggingfaceDownloader._download"
@@ -41,7 +42,7 @@ class TestDownloaders(unittest.TestCase):
             ]
 
             common_utils.hf_api = mock_api
-            downloader = HuggingfaceDownloader(model_id, download_dir)
+            downloader = HuggingfaceDownloader(model_id, download_dir, token)
             downloader.download_model()
 
             self.assertEqual(downloader.model_info.modelId, model_id)
@@ -84,6 +85,7 @@ class TestDownloadModel(unittest.TestCase):
         model_source = "Huggingface"
         model_id = "test_model_id"
         download_dir = Path("path/to/download/dir")
+        token = None
 
         with patch("azureml.model.mgmt.downloader.downloader.HuggingfaceDownloader") as MockDownloader:
             mock_downloader = MockDownloader.return_value
@@ -93,7 +95,7 @@ class TestDownloadModel(unittest.TestCase):
                 "properties": {"prop1": "value1"},
             }
 
-            result = download_model(model_source, model_id, download_dir)
+            result = download_model(model_source, model_id, download_dir, token)
 
             self.assertEqual(
                 result,
@@ -110,6 +112,7 @@ class TestDownloadModel(unittest.TestCase):
         model_source = "GIT"
         model_id = "https://github.com/some_model"
         download_dir = Path("path/to/download/dir")
+        token = None
 
         with patch("azureml.model.mgmt.downloader.downloader.GITDownloader") as MockDownloader:
             mock_downloader = MockDownloader.return_value
@@ -119,7 +122,7 @@ class TestDownloadModel(unittest.TestCase):
                 "properties": {"prop2": "value2"},
             }
 
-            result = download_model(model_source, model_id, download_dir)
+            result = download_model(model_source, model_id, download_dir, token)
 
             self.assertEqual(
                 result,
@@ -136,6 +139,7 @@ class TestDownloadModel(unittest.TestCase):
         model_source = "AzureBlob"
         model_id = "https://blobstorageaccount.blob.core.windows.net/models/model_folder"
         download_dir = Path("path/to/download/dir")
+        token = None
 
         with patch("azureml.model.mgmt.downloader.downloader.AzureBlobstoreDownloader") as MockDownloader:
             mock_downloader = MockDownloader.return_value
@@ -145,7 +149,7 @@ class TestDownloadModel(unittest.TestCase):
                 "properties": {"prop3": "value3"},
             }
 
-            result = download_model(model_source, model_id, download_dir)
+            result = download_model(model_source, model_id, download_dir, token)
 
             self.assertEqual(
                 result,

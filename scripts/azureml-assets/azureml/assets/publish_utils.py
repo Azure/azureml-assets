@@ -15,7 +15,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict, List, Tuple, Union
 from azureml.assets.config import AssetConfig, AssetType, ComponentType, ModelConfig
 from azureml.assets.deployment_config import AssetVersionUpdate
-from azureml.assets.model.model_utils import prepare_model, update_model_metadata
+from azureml.assets.model.model_utils import CopyUpdater, prepare_model, update_model_metadata
 from azureml.assets.util import logger
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import Component, Environment, Model
@@ -69,6 +69,7 @@ def prepare_model_for_registration(
     spec_file_path: Path,
     temp_dir: Path,
     ml_client: MLClient,
+    copy_updater: CopyUpdater = None,
 ) -> bool:
     """Prepare model.
 
@@ -80,11 +81,14 @@ def prepare_model_for_registration(
     :type temp_dir: Path
     :param ml_client: MLClient object
     :type ml_client: MLClient
+    :param copy_updater: CopyUpdater object to update files during azcopy
+    :type copy_updater: CopyUpdater
     :return: Model successfully prepared for creation in registry.
     :rtype: bool
     """
     model, success = prepare_model(
-        spec_path=spec_file_path, model_config=model_config, temp_dir=temp_dir, ml_client=ml_client
+        spec_path=spec_file_path, model_config=model_config, temp_dir=temp_dir, ml_client=ml_client,
+        copy_updater=copy_updater
     )
     if success:
         success = update_spec(model, spec_file_path)
@@ -470,7 +474,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
 
 
 def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, version_template: str = None,
-                 debug: bool = None) -> bool:
+                 debug: bool = None, copy_updater: CopyUpdater = None) -> bool:
     """Create asset or update model metadata if it already exists.
 
     Args:
@@ -479,6 +483,7 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
         ml_client (MLClient): MLClient object.
         version_template (str, optional): Version template. Defaults to None.
         debug (bool, optional): Enable debug logging. Defaults to None.
+        copy_updater (CopyUpdater, optional): CopyUpdater object to update files during azcopy. Defaults to None.
 
     Returns:
         bool: True of successfully create/updated, otherwise False.
@@ -512,7 +517,8 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
         elif asset.type == AssetType.MODEL:
             version = asset.version
             model_config = asset.extra_config_as_object()
-            if not prepare_model_for_registration(model_config, asset.spec_with_path, Path(temp_dir), ml_client):
+            if not prepare_model_for_registration(model_config, asset.spec_with_path, Path(temp_dir), ml_client,
+                                                  copy_updater):
                 logger.log_error("Failed to prepare model")
                 return False
 

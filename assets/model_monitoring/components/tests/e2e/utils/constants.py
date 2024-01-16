@@ -78,6 +78,25 @@ DATA_ASSET_EMPTY = (
     "azureml:mltable_empty:1"
 )
 
+DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS = (
+    "azureml:mltable_iris_preprocessed_model_inputs_no_common_columns:1"
+)
+
+DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE = (
+    "azureml:mltable_iris_preprocessed_model_inputs_type_override:1"
+)
+DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE = (
+    "azureml:mltable_iris_baseline_data_type_override:1"
+)
+
+# used for checking against histogram regressions where a numerical data-column has a single distinct value
+DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM = (
+    "azureml:mltable_iris_preprocessed_model_inputs_int_single_value_histogram:1"
+)
+DATA_ASSET_IRIS_BASELINE_INT_SINGLE_VALUE_HISTOGRAM = (
+    "azureml:mltable_iris_baseline_int_single_value_histogram:1"
+)
+
 # MDC-generated target dataset of an iris model which contains both the input features as well as the inferred results.
 # The data contains no drift. Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
 DATA_ASSET_IRIS_MODEL_INPUTS_OUTPUTS_WITH_NO_DRIFT = (
@@ -91,3 +110,5 @@ DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = 'azureml:groundedness_preproc
 
 # For Data Quality with timestamp and boolean type in the MLTable
 DATA_ASSET_VALID_DATATYPE = 'azureml:mltable_validate_datatype_for_data_quality:1'
+
+DATA_ASSET_MODEL_PERFORMANCE_PRODUCTION_DATA = 'azureml:mltable_model_performance_production_data:1'

@@ -15,6 +15,7 @@ inputs:
     type: uri_file
     path: ../data/sample_ground_truths.jsonl
   ground_truth_column_name: final_answer
+  additional_columns: question
   separator: '\n\n'
   regex_expr: '(\d)'
   remove_prefixes: '###,>>>'
@@ -43,6 +44,7 @@ jobs:
       prediction_column_name: ${{parent.inputs.prediction_column_name}}
       ground_truth_dataset: ${{parent.inputs.ground_truth_dataset}}
       ground_truth_column_name: ${{parent.inputs.ground_truth_column_name}}
+      additional_columns: ${{parent.inputs.additional_columns}}
       separator: ${{parent.inputs.separator}}
       regex_expr: ${{parent.inputs.regex_expr}}
       remove_prefixes: ${{parent.inputs.remove_prefixes}}
