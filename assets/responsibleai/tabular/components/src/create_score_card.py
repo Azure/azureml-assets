@@ -12,10 +12,9 @@ import _score_card.classification_components as ClassificationComponents
 import _score_card.regression_components as RegressionComponents
 from _score_card._rai_insight_data import PdfDataGen, RaiInsightData
 from _score_card.common_components import get_full_html, to_pdf
+from _telemetry._loggerfactory import _LoggerFactory, track
 from azureml.core import Run
-from azureml.rai.utils.telemetry import LoggerFactory, track
-from constants import (COMPONENT_NAME, DashboardInfo, PropertyKeyValues,
-                       RAIToolType)
+from constants import DashboardInfo, PropertyKeyValues, RAIToolType
 from rai_component_utilities import load_dashboard_info_file
 
 from responsibleai import __version__ as responsibleai_version
@@ -30,11 +29,7 @@ _ai_logger = None
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
-        run = Run.get_context()
-        module_name = run.properties["azureml.moduleName"]
-        module_version = run.properties["azureml.moduleid"]
-        _ai_logger = LoggerFactory.get_logger(
-            __file__, module_name, module_version, COMPONENT_NAME)
+        _ai_logger = _LoggerFactory.get_logger(__file__)
     return _ai_logger
 
 
@@ -130,19 +125,6 @@ def add_properties_to_gather_run(dashboard_info, rai_info):
 
 def validate_and_correct_config(config, insight_data):
     i_data = insight_data.get_raiinsight()
-    try:
-        top_n = config["FeatureImportance"]["top_n"]
-        if top_n > 10:
-            _logger.warning(
-                "Feature importance is limited to "
-                "top 10 most important feature"
-                f", but top_n={top_n} was specificed."
-                "Setting top_n to 10 automatically."
-            )
-        config["FeatureImportance"]["top_n"] = 10
-    except KeyError:
-        pass
-
     if "Fairness" in config.keys():
         fc = config["Fairness"]
         cat_features = [

@@ -97,8 +97,6 @@ class EndpointUtilities:
                 else:
                     # unkwon format, try to stringify all of them.
                     prompt = str(payload["messages"])
-            elif model.is_claude_model():
-                prompt = str(payload["prompt"])
             else:
                 # if model is unknown, use the full payload.
                 prompt = str(payload)

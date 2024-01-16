@@ -1,13 +1,13 @@
 type: evaluationresult
 name: human_eval_gpt_4_32k_0314_text_generation
-version: 1.0.1
+version: 1.0.0
 display_name: human_eval_gpt_4_32k_0314_text_generation
 description: gpt-4-32k-0314 run for human_eval dataset
 dataset_family: human_eval
 dataset_name: human_eval
 
 model_name: gpt-4-32k-0314
-model_version: "0314"
+model_version: "314"
 model_asset_id: azureml://registries/azure-openai-preview/models/gpt-4-32k/versions/629592.2a481b56
 
 relationships:
@@ -19,7 +19,7 @@ tags:
   accuracy_metric_name: pass@1
 
 metrics:
-  accuracy: 0.793
+  accuracy: 0.726
 
 path: ./job_files
 

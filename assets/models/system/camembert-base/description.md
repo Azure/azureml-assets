@@ -1,63 +1,50 @@
-CamemBERT is a state-of-the-art language model for French based on the RoBERTa model.
+CamemBERT is a state-of-the-art language model for French developed by a team of researchers. It is based on the RoBERTa model and is available in 6 different versions on Hugging Face. It can be used for fill-in-the-blank tasks. However, it has been pretrained on a subcorpus of OSCAR which may contain lower quality data and personal and sensitive information. Also, there may be biases and historical stereotypes present in the model. The model is licensed under the MIT license, and more information can be found in the research paper and on the Camembert website. It was trained on the OSCAR dataset, which is a multilingual corpus obtained by language classification and filtering of the Common Crawl corpus using the Ungoliant architecture.
+<br>Please Note: This model accepts masks in `<mask>` format. See Sample input for reference. 
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/camembert-base" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
-It is now available on Hugging Face in 6 different versions with varying number of parameters, amount of pretraining data and pretraining data source domains.
+### Inference samples
 
-# Training Details
-
-## Training Data
-OSCAR or Open Super-large Crawled Aggregated coRpus is a multilingual corpus obtained by language classification and filtering of the Common Crawl corpus using the Ungoliant architecture.
-
-## Training Procedure
-
-| Model                                    | #params | Arch. | Training data                     |
-| ---------------------------------------- | ------- | ----- | --------------------------------- |
-| `camembert-base`                         | 110M    | Base  | OSCAR (138 GB of text)            |
-| `camembert/camembert-large`              | 335M    | Large | CCNet (135 GB of text)            |
-| `camembert/camembert-base-ccnet`         | 110M    | Base  | CCNet (135 GB of text)            |
-| `camembert/camembert-base-wikipedia-4gb` | 110M    | Base  | Wikipedia (4 GB of text)          |
-| `camembert/camembert-base-oscar-4gb`     | 110M    | Base  | Subsample of OSCAR (4 GB of text) |
-| `camembert/camembert-base-ccnet-4gb`     | 110M    | Base  | Subsample of CCNet (4 GB of text) |
-
-# Evaluation Results
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a>| coming soon
 
 
-The model developers evaluated CamemBERT using four different downstream tasks for French: part-of-speech (POS) tagging, dependency parsing, named entity recognition (NER) and natural language inference (NLI).
+### Finetuning samples
+
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
 
 
-# Limitations and Biases
-**CONTENT WARNING: Readers should be aware this section contains content that is disturbing, offensive, and can propagate historical and current stereotypes.**
+### Model Evaluation
 
-Significant research has explored bias and fairness issues with language models (see, e.g., [Sheng et al. (2021)](https://aclanthology.org/2021.acl-long.330.pdf) and [Bender et al. (2021)](https://dl.acm.org/doi/pdf/10.1145/3442188.3445922)).
+Task|Use case|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|
+Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a>|<a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
-This model was pretrained on a subcorpus of OSCAR multilingual corpus. Some of the limitations and risks associated with the OSCAR dataset, which are further detailed in the [OSCAR dataset card](https://huggingface.co/datasets/oscar), include the following: 
 
-> The quality of some OSCAR sub-corpora might be lower than expected, specifically for the lowest-resource languages.
+### Sample inputs and outputs (for real-time inference)
 
-> Constructed from Common Crawl, Personal and sensitive information might be present.
-
-# Inference samples
-
-Inference type|Python sample (Notebook)
-|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
-Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endpoint-oss)
-
-# Sample inputs and outputs
-
-### Sample input
+#### Sample input
 ```json
 {
-    "input_data": [
-        "Paris est la <mask> de la France.",
-        "Aujourd’hui, c’est un <mask> jour day!"
-    ]
+    "inputs": {
+        "input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
+    }
 }
 ```
 
-### Sample output
+#### Sample output
 ```json
 [
-  "capitale",
-  "nouveau"
+    {
+        "0": "capital"
+    },
+    {
+        "0": "beautiful"
+    }
 ]
 ```

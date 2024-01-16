@@ -1,61 +1,49 @@
-DistilBERT model was proposed in the blog post [Smaller, faster, cheaper, lighter: Introducing DistilBERT, adistilled version of BERT](https://medium.com/huggingface/distilbert-8cf3380435b5), and the paper [DistilBERT, adistilled version of BERT: smaller, faster, cheaper and lighter](https://arxiv.org/abs/1910.01108). DistilBERT is a small, fast, cheap and light Transformer model trained by distilling BERT base. It has 40% less parameters than *bert-base-uncased*, runs 60% faster while preserving over 95% of BERT's performances as measured on the GLUE language understanding benchmark.
+The DistilBERT model is a distilled version of the BERT language model with 40% fewer parameters, 60% faster run time, but with 95% of BERT's performance. It is trained for question answering and has a F1 score of 87.1 on SQuAD V1.1. The model is licensed under the Apache 2.0 license and is developed by Hugging Face. The model is based on the Transformer architecture and trained in English. However, it's output should not be used to create hostile or alienating environments or produce false/biased content. Training the model requires 8 16GB V100 GPUs and 90 hours. The model card authors are from the Hugging Face team.
 
-This model is a fine-tune checkpoint of [DistilBERT-base-uncased](https://huggingface.co/distilbert-base-uncased), fine-tuned using (a second step of) knowledge distillation on [SQuAD v1.1](https://huggingface.co/datasets/squad). 
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/distilbert-base-uncased-distilled-squad" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
-# Training Details
+### Inference samples
 
-## Training Data
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-question-answering" target="_blank">question-answering-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-question-answering" target="_blank">question-answering-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-question-answering" target="_blank">question-answering-batch-endpoint.ipynb</a>| coming soon
 
-The [distilbert-base-uncased model](https://huggingface.co/distilbert-base-uncased) model describes it's training data as: 
 
-> DistilBERT pretrained on the same data as BERT, which is [BookCorpus](https://yknzhu.wixsite.com/mbweb), a dataset consisting of 11,038 unpublished books and [English Wikipedia](https://en.wikipedia.org/wiki/English_Wikipedia) (excluding lists, tables and headers).
+### Finetuning samples
 
-To learn more about the SQuAD v1.1 dataset, see the [SQuAD v1.1 data card](https://huggingface.co/datasets/squad).
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
 
-## Training Procedure
 
-### Preprocessing
+### Model Evaluation
 
-See the [distilbert-base-uncased model card](https://huggingface.co/distilbert-base-uncased) for further details.
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Question Answering | Extractive Q&A | <a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a> | <a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
 
-### Pretraining
 
-See the [distilbert-base-uncased model card](https://huggingface.co/distilbert-base-uncased) for further details. 
-
-# Evaluation Results
-
-As discussed in the [model repository](https://github.com/huggingface/transformers/blob/main/examples/research_projects/distillation/README.md)
-
-> This model reaches a F1 score of 86.9 on the [SQuAD v1.1] dev set (for comparison, Bert bert-base-uncased version reaches a F1 score of 88.5).
-
-# Limitations and Biases
-
-Significant research has explored bias and fairness issues with language models (see, e.g., [Sheng et al. (2021)](https://aclanthology.org/2021.acl-long.330.pdf) and [Bender et al. (2021)](https://dl.acm.org/doi/pdf/10.1145/3442188.3445922)). Predictions generated by the model can include disturbing and harmful stereotypes across protected classes; identity characteristics; and sensitive, social, and occupational groups.
-
-The model should not be used to intentionally create hostile or alienating environments for people. In addition, the model was not trained to be factual or true representations of people or events, and therefore using the model to generate such content is out-of-scope for the abilities of this model.
-
-# Inference samples
-
-Inference type|Python sample (Notebook)
-|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
-Real time|[question-answering-online-endpoint.ipynb](https://aka.ms/question-answering-online-endpoint-oss)
-
-# Sample inputs and outputs
-
-### Sample input
+#### Sample input
 ```json
 {
     "input_data": {
-        "question": "What's my name?",
-        "context": "My name is John and I live in Seattle"
+        "question": ["What is my name?", "Where do I live?"],
+        "context": ["My name is John and I live in Seattle.", "My name is Ravi and I live in Hyderabad."]
     }
 }
 ```
 
-### Sample output
+#### Sample output
 ```json
 [
-  "John"
+    {
+        "0": "John"
+    },
+    {
+        "0": "Hyderabad"
+    }
 ]
 ```

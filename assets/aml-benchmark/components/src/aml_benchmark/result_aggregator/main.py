@@ -155,8 +155,10 @@ def _get_pipeline_params() -> Tuple[
         run_v1 = Run(experiment=current_run.experiment, run_id=run_id)
         step_name = get_step_name(run)
         run_details = cast(Dict[str, Any], run_v1.get_details())
+        logger.info(f"Run details for {run_id}: {run_details}")
         run_definition = run_details.get('runDefinition', {})
         run_v1_properties = run_details.get('properties', {})
+        logger.info(f"Run definition for {run_id}: {run_definition}")
 
         # Get run parameters, input assets and compute_information.
         run_params = _get_run_params(run_definition)
@@ -179,6 +181,7 @@ def _get_pipeline_params() -> Tuple[
             **_get_run_reused_properties(run_v1_properties),
             **_get_run_environment_properties(run_definition),
         }
+        logger.info(f"Pipeline params for {step_name}: {pipeline_params[step_name]}")
 
         # Update loggable parameters.
         loggable_params[f"{step_name}.node_count"] = run_definition.get('nodeCount', None)
@@ -213,18 +216,8 @@ def _log_params_and_metrics(parameters: Dict[str, Any], metrics: Dict[str, Any])
         elif isinstance(metrics[key], (int, float)):
             filtered_metrics[key] = metrics[key]
     # Log to current run
-    logger.info(
-        f"Attempting to log {len(parameters)} parameters and {len(filtered_metrics)} metrics."
-    )
-    try:
-        log_mlflow_params(**parameters)
-    except Exception as ex:
-        logger.error(f"Failed to log parameters to current run due to {ex}")
-    try:
-        mlflow.log_metrics(filtered_metrics)
-    except Exception as ex:
-        logger.error(f"Failed to log parameters to current run due to {ex}")
-
+    log_mlflow_params(**parameters)
+    mlflow.log_metrics(filtered_metrics)
     # Log to parent run
     parent_run_id = get_parent_run_id()
     ml_client = mlflow.tracking.MlflowClient()
@@ -232,15 +225,9 @@ def _log_params_and_metrics(parameters: Dict[str, Any], metrics: Dict[str, Any])
         param_value_to_log = param_value
         if isinstance(param_value, str) and len(param_value) > 500:
             param_value_to_log = param_value[: 497] + '...'
-        try:
-            ml_client.log_param(parent_run_id, param_name, param_value_to_log)
-        except Exception as ex:
-            logger.error(f"Failed to log parameter {param_name} to root run due to {ex}.")
+        ml_client.log_param(parent_run_id, param_name, param_value_to_log)
     for metric_name, metric_value in filtered_metrics.items():
-        try:
-            ml_client.log_metric(parent_run_id, metric_name, metric_value)
-        except Exception as ex:
-            logger.error(f"Failed to log metric {metric_name} to root run due to {ex}.")
+        ml_client.log_metric(parent_run_id, metric_name, metric_value)
 
 
 @swallow_all_exceptions(logger)

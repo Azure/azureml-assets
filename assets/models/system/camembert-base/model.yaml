@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/camembert-base/1702553751/mlflow_model_folder
+  container_path: huggingface/camembert-base/3f452b6/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

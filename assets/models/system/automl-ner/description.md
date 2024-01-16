@@ -11,10 +11,9 @@ With this functionality, you can:
 
 See [How to train nlp models](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli) for more information.
 
-# Training Details
+### Documentation
 
-## Training Data
-
+#### Prepare Data
 To create NLP models, it is necessary to provide labeled text data as input for model training. Named entity recognition requires CoNLL format. The file must contain exactly two columns and in each row, the token and the label is separated by a single space. Example as below:
 
 ```txt
@@ -39,30 +38,29 @@ rings O
 
 Please see [documentation](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#named-entity-recognition-ner) for data requirements.
 
-### Language Setting
+#### Language Setting
 
 Currently, language selection defaults to English. But Automated ML supports 104 languages leveraging language specific and multilingual pre-trained text DNN models. Please see [Language setting](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#language-settings) for documentation.
 
-## Training Procedure
+#### Train a Model
 
 You can initiate [individual trials](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli#data-validation), or perform a [manual sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#model-sweeping-and-hyperparameter-tuning-preview), which explores multiple hyperparameter values near the more promising models and hyperparameter configurations. 
 
 For more information, see [Model sweeping and hyperparameter tuning](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#model-sweeping-and-hyperparameter-tuning-preview).
 
-# License
+### Code samples
 
-apache-2.0
-
-# Finetuning Samples
 
 Task|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|
 Named Entity Recognition|[CoNLL-2003](https://www.kaggle.com/datasets/alaakhaled/conll003-englishversion?select=valid.txt)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-nlp-text-named-entity-recognition-task-distributed-sweeping/automl-nlp-text-ner-task-distributed-with-sweeping.ipynb" target="_blank">automl-nlp-text-ner-task-distributed-with-sweeping.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-text-ner-conll-distributed-sweeping/cli-automl-text-ner-conll2003-distributed-sweeping.yml" target="_blank">cli-automl-text-ner-conll2003-distributed-sweeping.yml
 </a>
 
-# Sample input and output
 
-### Sample input
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
 
 ```json
 {
@@ -72,7 +70,7 @@ Named Entity Recognition|[CoNLL-2003](https://www.kaggle.com/datasets/alaakhaled
 }
 ```
 
-### Sample output
+#### Sample output
 
 ```json
 ["Stephen B-PER Curry I-PER is O a O super O star! O"]

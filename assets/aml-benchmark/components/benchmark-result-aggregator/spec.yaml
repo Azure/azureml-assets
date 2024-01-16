@@ -4,7 +4,7 @@ type: command
 name: benchmark_result_aggregator
 display_name: Benchmark result aggregator
 description: Aggregate quality metrics, performance metrics and all of the metadata from the pipeline. Also add them to the root run.
-version: 0.0.3
+version: 0.0.2
 is_deterministic: false
 
 inputs:

@@ -457,7 +457,7 @@ jobs:
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.19
+    component: azureml:model_prediction:0.0.17
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
@@ -471,7 +471,7 @@ jobs:
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.19
+    component: azureml:compute_metrics:0.0.17
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'

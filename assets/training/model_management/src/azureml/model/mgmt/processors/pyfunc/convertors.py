@@ -394,7 +394,6 @@ class TextToImageMLflowConvertor(PyFuncMLFLowConvertor):
 
     def __init__(self, **kwargs):
         """Initialize MLflow convertor for text to image models."""
-        self._model_family = kwargs.pop("model_family", None)
         super().__init__(**kwargs)
 
     def get_model_signature(self):
@@ -438,7 +437,7 @@ class StableDiffusionMlflowConvertor(TextToImageMLflowConvertor):
         sys.path.append(self.MODEL_DIR)
         from stable_diffusion_mlflow_wrapper import StableDiffusionMLflowWrapper
 
-        mlflow_model_wrapper = StableDiffusionMLflowWrapper(task_type=self._task, model_family=self._model_family)
+        mlflow_model_wrapper = StableDiffusionMLflowWrapper(task_type=self._task)
         artifacts_dict = self._prepare_artifacts_dict()
         conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
         code_path = [

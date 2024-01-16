@@ -1,6 +1,0 @@
-$schema: http://azureml/sdk-2-0/MLTable.json
-type: mltable
-paths:
-  - pattern: ./*.parquet
-transformations:
-  - read_parquet

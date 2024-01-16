@@ -8,7 +8,6 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from domonic.html import (a, div, h1, h3, img, li, p, span, table, tbody, td,
                           thead, tr, ul)
-from raiutils.exceptions import UserConfigValidationException
 
 
 def get_full_html(htmlbody):
@@ -531,12 +530,7 @@ def get_box_plot(data):
 def get_model_overview(data):
     model_left_items = []
 
-    if "ModelSummary" not in data:
-        raise UserConfigValidationException(
-            "Invalid model config data, expecting key ModelSummary to exist in the model config data."
-        )
-    else:
-        model_left_items.append(div(h3("Purpose"), p(data["ModelSummary"])))
+    model_left_items.append(div(h3("Purpose"), p(data["ModelSummary"])))
 
     if data["ModelType"] == "binary_classification":
         model_left_items.append(

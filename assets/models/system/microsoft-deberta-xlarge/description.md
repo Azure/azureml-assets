@@ -1,48 +1,50 @@
-[DeBERTa](https://arxiv.org/abs/2006.03654) (Decoding-enhanced BERT with Disentangled Attention) improves the BERT and RoBERTa models using disentangled attention and enhanced mask decoder. With those two improvements, DeBERTa out perform RoBERTa on a majority of NLU tasks with 80GB training data. 
+DeBERTa is a model that improves on the BERT and RoBERTa models by using disentangled attention and an enhanced mask decoder. It performance better on several NLU tasks than RoBERTa with 80GB training data. The DeBERTa XLarge model has 48 layers and a hidden size of 1024 with 750 million parameters. It demonstrates good results when fine-tuned on several NLU tasks like SQuAD and GLUE benchmark. If you use DeBERTa in your work, the authors request that you cite their papers.
+<br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/microsoft/deberta-xlarge" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
-Please check the [official repository](https://github.com/microsoft/DeBERTa) for more details and updates.
+### Inference samples
 
-This the DeBERTa XLarge model with 48 layers, 1024 hidden size. Total parameters 750M.
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a>| coming soon
 
-# Evaluation Results
 
-We present the dev results on SQuAD 1.1/2.0 and several GLUE benchmark tasks.
+### Finetuning samples
 
-| Model                                                                                       | SQuAD 1.1     | SQuAD 2.0     | MNLI-m/mm     | SST-2    | QNLI     | CoLA     | RTE      | MRPC          | QQP           | STS-B         |
-| ------------------------------------------------------------------------------------------- | ------------- | ------------- | ------------- | -------- | -------- | -------- | -------- | ------------- | ------------- | ------------- |
-|                                                                                             | F1/EM         | F1/EM         | Acc           | Acc      | Acc      | MCC      | Acc      | Acc/F1        | Acc/F1        | P/S           |
-| BERT-Large                                                                                  | 90.9/84.1     | 81.8/79.0     | 86.6/-        | 93.2     | 92.3     | 60.6     | 70.4     | 88.0/-        | 91.3/-        | 90.0/-        |
-| RoBERTa-Large                                                                               | 94.6/88.9     | 89.4/86.5     | 90.2/-        | 96.4     | 93.9     | 68.0     | 86.6     | 90.9/-        | 92.2/-        | 92.4/-        |
-| XLNet-Large                                                                                 | 95.1/89.7     | 90.6/87.9     | 90.8/-        | 97.0     | 94.9     | 69.0     | 85.9     | 90.8/-        | 92.3/-        | 92.5/-        |
-| [DeBERTa-Large](https://huggingface.co/microsoft/deberta-large)<sup>1</sup>                 | 95.5/90.1     | 90.7/88.0     | 91.3/91.1     | 96.5     | 95.3     | 69.5     | 91.0     | 92.6/94.6     | 92.3/-        | 92.8/92.5     |
-| [DeBERTa-XLarge](https://huggingface.co/microsoft/deberta-xlarge)<sup>1</sup>               | -/-           | -/-           | 91.5/91.2     | 97.0     | -        | -        | 93.1     | 92.1/94.3     | -             | 92.9/92.7     |
-| [DeBERTa-V2-XLarge](https://huggingface.co/microsoft/deberta-v2-xlarge)<sup>1</sup>         | 95.8/90.8     | 91.4/88.9     | 91.7/91.6     | **97.5** | 95.8     | 71.1     | **93.9** | 92.0/94.2     | 92.3/89.8     | 92.9/92.9     |
-| **[DeBERTa-V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1,2</sup>** | **96.1/91.4** | **92.2/89.7** | **91.7/91.9** | 97.2     | **96.0** | **72.0** | 93.5     | **93.1/94.9** | **92.7/90.3** | **93.2/93.1** |
---------
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
 
-# Inference samples
 
-Inference type|Python sample (Notebook)
-|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
-Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endpoint-oss)
+### Model Evaluation
 
-# Sample inputs and outputs
+Task| Use case| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|
+Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
-### Sample input
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
 ```json
 {
-    "input_data": [
-        "Paris is the [MASK] of France.",
-        "Today is a [MASK] day!"
-    ]
+    "inputs": {
+        "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
+    }
 }
 ```
 
-### Sample output
+#### Sample output
 ```json
 [
-  "plex",
-  "pron"
+  {
+    "0": "ews"
+  },
+  {
+    "0": "rew"
+  }
 ]
 ```

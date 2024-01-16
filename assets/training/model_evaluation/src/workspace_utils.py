@@ -6,7 +6,6 @@ import json
 import os
 import re
 from typing import Optional, Union
-from distutils.version import LooseVersion
 from contextlib import suppress
 
 import pkg_resources
@@ -27,15 +26,13 @@ except Exception:
 Connection = None
 logger = get_logger(name="connections")
 
-pkg_versions = {
+packages_versions_for_compatibility = {
     "azure-ai-ml": ""
 }
 
-AZURE_AI_ML_MIN_VERSION = LooseVersion("1.10.0")
-
-for package in pkg_versions:
+for package in packages_versions_for_compatibility:
     with suppress(Exception):
-        pkg_versions[package] = LooseVersion(pkg_resources.get_distribution(package).version)
+        packages_versions_for_compatibility[package] = pkg_resources.get_distribution(package).version
 
 
 def create_session_with_retry(retry=3):
@@ -256,27 +253,16 @@ def get_connection_by_id_v2(
     If azure.ai.ml is installed, use that, otherwise use azure.ai.generative.
     """
     uri_match = re.match(
-        r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices" +
-        r"/workspaces/(.*)/connections/(.*)",
+        r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices\
+        /workspaces/(.*)/connections/(.*)",
         connection_id, flags=re.IGNORECASE
     )
 
     if uri_match is None:
-        logger.warning(f"Invalid connection_id {connection_id}, expecting Azure Machine Learning resource ID.\
-                       Trying with current workspace.")
-        from run_utils import TestRun
-        run = TestRun()
-        subscriptio_id = run.subscription
-        ws_name = run.workspace.name
-        resource_group = run.workspace.resource_group
-        connection_string = connection_id
+        logger.error(f"Invalid connection_id {connection_id}, expecting Azure Machine Learning resource ID")
+        raise ValueError(f"Invalid connection id {connection_id}")
 
-    else:
-        subscriptio_id = uri_match.group(1)
-        resource_group = uri_match.group(2)
-        ws_name = uri_match.group(3)
-        connection_string = uri_match.group(4)
-    logger.info(f"Getting workspace connection: {connection_string}")
+    logger.info(f"Getting workspace connection: {uri_match.group(4)}")
 
     from azureml.dataprep.api._aml_auth._azureml_token_authentication import AzureMLTokenAuthentication
 
@@ -290,13 +276,13 @@ def get_connection_by_id_v2(
 
     logger.info(f"Using auth: {type(credential)}")
 
-    if client == "sdk" and MLClient is not None and pkg_versions["azure-ai-ml"] >= AZURE_AI_ML_MIN_VERSION:
+    if client == "sdk" and MLClient is not None and packages_versions_for_compatibility["azure-ai-ml"] >= "1.10.0":
         logger.info("Getting workspace connection via MLClient")
         ml_client = MLClient(
             credential=credential,
-            subscription_id=subscriptio_id,
-            resource_group_name=resource_group,
-            workspace_name=ws_name
+            subscription_id=uri_match.group(1),
+            resource_group_name=uri_match.group(2),
+            workspace_name=uri_match.group(3)
         )
 
         if os.environ.get("AZUREML_RUN_ID", None) is not None:
@@ -308,7 +294,7 @@ def get_connection_by_id_v2(
         logger.info(f"Using ml_client base_url: {ml_client.connections._operation._client._base_url}")
 
         list_secrets_response = ml_client.connections._operation.list_secrets(
-            connection_name=connection_string,
+            connection_name=uri_match.group(4),
             resource_group_name=ml_client.resource_group_name,
             workspace_name=ml_client.workspace_name,
         )
@@ -387,38 +373,30 @@ def get_connection_by_name_v2(workspace, name: str) -> dict:
 
 def get_connection_by_id_v1(connection_id: str, credential: Optional[TokenCredential] = None) -> dict:
     """Get a connection from a workspace."""
-    uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/" +
-                         r"providers/Microsoft.MachineLearningServices/" +
-                         r"workspaces/(.*)/connections/(.*)", connection_id)
+    uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/\
+                         providers/Microsoft.MachineLearningServices/\
+                         workspaces/(.*)/connections/(.*)", connection_id)
 
     if uri_match is None:
-        logger.warning(f"Invalid connection_id {connection_id}, expecting Azure Machine Learning resource ID")
-        logger.warning("Trying with current Workspace credentials.")
-        from run_utils import TestRun
-        run = TestRun()
-        subscriptio_id = run.subscription
-        ws_name = run.workspace.name
-        resource_group = run.workspace.resource_group
-        connection_string = connection_id
+        logger.error(f"Invalid connection_id {connection_id}, expecting Azure Machine Learning resource ID")
+        raise ValueError(f"Invalid connection id {connection_id}")
 
+    from azureml.core import Run, Workspace
+    run = Run.get_context()
+    if hasattr(run, "experiment"):
+        ws = run.experiment.workspace
     else:
-        subscriptio_id = uri_match.group(1)
-        resource_group = uri_match.group(2)
-        ws_name = uri_match.group(3)
-        connection_string = uri_match.group(4)
+        try:
+            ws = Workspace(
+                subscription_id=uri_match.group(1),
+                resource_group=uri_match.group(2),
+                workspace_name=uri_match.group(3)
+            )
+        except Exception as e:
+            logger.warning(f"Could not get workspace '{uri_match.group(3)}': {e}")
+            raise ValueError(f"Could not get workspace '{uri_match.group(3)}'") from e
 
-    from azureml.core import Workspace
-    try:
-        ws = Workspace(
-            subscription_id=subscriptio_id,
-            resource_group=resource_group,
-            workspace_name=ws_name
-        )
-    except Exception as e:
-        logger.warning(f"Could not get workspace '{ws_name}': {e}")
-        raise ValueError(f"Could not get workspace '{ws_name}'") from e
-
-    return get_connection_by_name_v2(ws, connection_string)
+    return get_connection_by_name_v2(ws, uri_match.group(4))
 
 
 def send_put_request(url, headers, payload):

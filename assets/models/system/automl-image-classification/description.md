@@ -10,23 +10,18 @@ With this functionality, you can:
 
 See [How to train image models](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=cli) for more information.
 
-# Training Details
+### Documentation
 
-## Training Data
-
+#### Prepare Data
 To create computer vision models, it is necessary to provide labeled image data as input for model training. This data needs to be in the form of an MLTable, which can be created from training data in JSONL format. Please see [documentation](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#jsonl-schema-samples) for JSONL Schema and consuming the same in MLTable.
 
-## Training Procedure
+#### Train a Model
 
 You can initiate [individual trials](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#individual-trials), [manual sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#manually-sweeping-model-hyperparameters), or [automatic sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#automatically-sweeping-model-hyperparameters-automode). It is suggested to begin with an automatic sweep to establish a baseline model. Afterward, you can experiment with individual trials using specific models and hyperparameter configurations. Lastly, manual sweeps can be used to explore multiple hyperparameter values near the more promising models and hyperparameter configurations. This three-step process (automatic sweep, individual trials, manual sweeps) helps avoid searching the entirety of the hyperparameter space, which grows exponentially with the number of hyperparameters.
 
-For more information, see [how to configure experiments](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#configure-experiments).
+For more information, see [how to configure experiments](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-image-models?view=azureml-api-2&tabs=python#configure-experiments)
 
-# License
-
-apache-2.0
-
-# Finetuning samples
+### Code samples
 
 Task|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|
@@ -34,9 +29,9 @@ Image Multi-class classification|[fridgeObjects](https://cvbp-secondary.z19.web.
 Image Multi-label classification|[multilabel fridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/multilabelFridgeObjects.zip)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-image-classification-multilabel-task-fridge-items/automl-image-classification-multilabel-task-fridge-items.ipynb" target="_blank">image-classification-multilabel.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-image-classification-multilabel-task-fridge-items/cli-automl-image-classification-multilabel-task-fridge-items.yml" target="_blank">image-classification-multilabel.yml</a>
 
 
-# Sample input and output
+### Sample inputs and outputs (for real-time inference)
 
-### Sample input
+#### Sample input
 
 ```json
 {
@@ -55,7 +50,7 @@ Image Multi-label classification|[multilabel fridgeObjects](https://cvbp-seconda
 Note:
 - "image1" and "image2" should be strings in `base64` format.
 
-### Sample output
+#### Sample output
 
 ```json
 [
@@ -70,8 +65,7 @@ Note:
 ]
 ```
 
-####  Visualization of inference result for a sample image
-
+#### Model inference - visualization
 For a sample image below, the top 3 labels are 'African elephant, Loxodonta africana', 'tusker', 'Indian elephant, Elephas maximus'.
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_automl_image_classification.png" alt="image classification visualization">

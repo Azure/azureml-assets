@@ -178,7 +178,7 @@ class ModelPredictionRunner:
             y_transformer = None
 
             pred_probas_batch = None
-            pipeline_params = filter_pipeline_params(self.config, self.predictor.model_flavor)
+            pipeline_params = filter_pipeline_params(self.config)
             torch_error_message = "Model prediction Failed.\nPossible Reason:\n" \
                                   "1. Your input text exceeds max length of model.\n" \
                                   "\t\tYou can either keep truncation=True in tokenizer while logging model.\n" \
@@ -187,22 +187,14 @@ class ModelPredictionRunner:
                                   "\t\tTo fix this check your model/tokenizer config.\n" \
                                   "3. If it is Cuda Assertion Error, check your test data." \
                                   "Whether that input can be passed directly to model or not."
-
-            def add_to_predict_params_if_applicable(dict_to_add, predict_params):
-                if self.predictor.model_flavor != constants.MODEL_FLAVOR.TRANSFORMERS:
-                    predict_params = {**predict_params, **dict_to_add}
-                return predict_params
-
-            predict_params = add_to_predict_params_if_applicable(
-                {"y_transformer": y_transformer, "multilabel": self.multilabel}, {})
             try:
                 if self.task == constants.TASK.TRANSLATION:
                     source_lang = self.config.get("source_lang", None)
                     target_lang = self.config.get("target_lang", None)
                     start_ms = time.time() * 1000
-                    predict_params = add_to_predict_params_if_applicable(
-                        {"source_lang": source_lang, "target_lang": target_lang}, predict_params)
-                    predictions_batch = self.predictor.predict(X_test, **predict_params)
+                    predictions_batch = self.predictor.predict(X_test, y_transformer=y_transformer,
+                                                               multilabel=self.multilabel,
+                                                               source_lang=source_lang, target_lang=target_lang)
                     end_ms = time.time() * 1000
                     latency_ms = end_ms - start_ms
                 elif self.task == constants.TASK.CHAT_COMPLETION:
@@ -221,14 +213,16 @@ class ModelPredictionRunner:
                         if self.batch_size:
                             pipeline_params.update({ArgumentLiterals.BATCH_SIZE: self.batch_size})
                     start_ms = time.time() * 1000
-                    predict_params = add_to_predict_params_if_applicable(
-                        {"masks_required": self.masks_required}, predict_params)
-
-                    predictions_batch = self.predictor.predict(X_test, **{**predict_params, **pipeline_params})
+                    predictions_batch = self.predictor.predict(X_test, y_transformer=y_transformer,
+                                                               multilabel=self.multilabel,
+                                                               masks_required=self.masks_required,
+                                                               **pipeline_params)
                     end_ms = time.time() * 1000
                     latency_ms = end_ms - start_ms
                 if self.task in constants.CLASSIFICATION_SET:
-                    pred_probas_batch = self.predictor.predict_proba(X_test, **{**predict_params, **pipeline_params})
+                    pred_probas_batch = self.predictor.predict_proba(X_test, y_transformer=y_transformer,
+                                                                     multilabel=self.multilabel,
+                                                                     **pipeline_params)
 
                 if not isinstance(predictions_batch, pd.DataFrame):
                     if self.task == constants.TASK.CHAT_COMPLETION:

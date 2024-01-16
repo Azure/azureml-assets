@@ -37,12 +37,9 @@ MODEL_VALIDATION_RESULTS = Path("resources/model_validation_results")
         ("dockerfile-from-ce-image", False, False, None, False),
         ("dockerfile-from-ce-image-comment", False, False, None, False),
         ("dockerfile-from-ce-image-windows", False, False, None, False),
+        ("model-with-microsoft", False, True, None, True),
+        ("model-with-azure", False, True, None, False),
         ("bad-build-context", False, True, None, False),
-        ("model-with-azure", False, True, None, False),
-        ("model-with-azure", False, True, None, False),
-        ("model-microsoft-good", False, True, None, True),
-        ("model-microsoft-bad-asset-name", False, True, None, False),
-        ("model-microsoft-bad-spec", False, True, None, False),
     ]
 )
 def test_validate_assets(test_subdir: str, check_images: bool, check_names: bool,

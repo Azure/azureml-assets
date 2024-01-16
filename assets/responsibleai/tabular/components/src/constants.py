@@ -2,9 +2,6 @@
 # Licensed under the MIT License.
 
 
-COMPONENT_NAME = "azureml.rai.tabular"
-
-
 class DashboardInfo:
     MODEL_ID_KEY = "id"  # To match Model schema
     MODEL_INFO_FILENAME = "model_info.json"

@@ -1,57 +1,51 @@
-# Training Details
+The MiniLM-L12-H384-uncased model is a microsoft language model for extractive question answering in English. It was trained on the SQuAD 2.0 dataset and has been evaluated on the SQuAD 2.0 dev set with the official eval script. The model's performance results were an exact match of 76.13 and F1 score of 79.50. The model can be used with Transformers, FARM, or haystack. The model was developed by Vaishali Pal, Branden Chan, Timo Möller, Malte Pietsch, and Tanay Soni, who are employees of deepset, a company focused on bringing NLP to the industry via open source.
 
-## Hyperparameters
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/deepset/minilm-uncased-squad2" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
-```
-seed=42
-batch_size = 12
-n_epochs = 4
-base_LM_model = "microsoft/MiniLM-L12-H384-uncased"
-max_seq_len = 384
-learning_rate = 4e-5
-lr_schedule = LinearWarmup
-warmup_proportion = 0.2
-doc_stride=128
-max_query_length=64
-grad_acc_steps=4
-```
+### Inference samples
 
-## Evaluation Results
-Evaluated on the SQuAD 2.0 dev set with the [official eval script](https://worksheets.codalab.org/rest/bundles/0x6b567e1cf2e041ec80d7098f031c5c9e/contents/blob/).
-```
-"exact": 76.13071675229513,
-"f1": 79.49786500219953,
-"total": 11873,
-"HasAns_exact": 78.35695006747639,
-"HasAns_f1": 85.10090269418276,
-"HasAns_total": 5928,
-"NoAns_exact": 73.91084945332211,
-"NoAns_f1": 73.91084945332211,
-"NoAns_total": 5945
-```
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-question-answering" target="_blank">question-answering-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-question-answering" target="_blank">question-answering-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-question-answering" target="_blank">question-answering-batch-endpoint.ipynb</a>| coming soon
 
-# Inference samples
 
-Inference type|Python sample (Notebook)
-|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
-Real time|[question-answering-online-endpoint.ipynb](https://aka.ms/question-answering-online-endpoint-oss)
+### Finetuning samples
 
-# Sample inputs and outputs
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
 
-### Sample input
+
+### Model Evaluation
+
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a>|<a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
 ```json
 {
     "input_data": {
-        "question": "What's my name?",
-        "context": "My name is John and I live in Seattle"
+        "question": ["What is my name?", "Where do I live?"],
+        "context": ["My name is John and I live in Seattle.", "My name is Ravi and I live in Hyderabad."]
     }
 }
 ```
 
-### Sample output
+#### Sample output
 ```json
 [
-  "John"
+    {
+        "0": "John"
+    },
+    {
+        "0": "Hyderabad"
+    }
 ]
 ```

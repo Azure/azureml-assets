@@ -23,6 +23,7 @@ from azureml.model.mgmt.utils.common_utils import (
     move_files,
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
+    run_command,
     fetch_mlflow_acft_metadata
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
@@ -162,6 +163,17 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
     ):
         config = tokenizer = None
         model = str(self._model_dir)
+
+        # try installing extra pip requirements
+        if self._extra_pip_requirements or pip_requirements:
+            pkgs = " ".join(self._extra_pip_requirements) if not pip_requirements else " ".join(pip_requirements)
+            cmd = f"pip install {pkgs}"
+
+            exit_code, stdout = run_command(cmd)
+            if exit_code != 0:
+                logger.warning(f"{pkgs} failed to install. Error:\n{stdout}\n")
+            else:
+                logger.info(f"Successully installed {pkgs}. pip logs =>\n{stdout}\n")
 
         if segregate:
             logger.info("Segregate input model dir and present into separate folders for model, config and tokenizer")

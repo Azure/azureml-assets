@@ -1,13 +1,13 @@
 type: evaluationresult
 name: mmlu_humanities_gpt_4_32k_0314_question_answering
-version: 1.0.1
+version: 1.0.0
 display_name: mmlu_humanities_gpt_4_32k_0314_question_answering
 description: gpt-4-32k-0314 run for mmlu_humanities dataset
 dataset_family: mmlu
 dataset_name: mmlu_humanities
 
 model_name: gpt-4-32k-0314
-model_version: "0314"
+model_version: "314"
 model_asset_id: azureml://registries/azure-openai-preview/models/gpt-4-32k/versions/629592.2a481b56
 
 relationships:

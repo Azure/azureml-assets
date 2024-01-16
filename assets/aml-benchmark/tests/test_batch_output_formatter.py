@@ -112,7 +112,7 @@ class TestBatchOutputFormatterComponent:
             os.path.join(output_dir, "predictions"), "predictions.jsonl", ["prediction"])
         self._check_output_data(
             os.path.join(output_dir, "performance_metadata"),
-            "performance_metadata.jsonl", ["start_time_iso", "end_time_iso", "time_taken_ms"]
+            "performance_metadata.jsonl", ["start_time_iso", "end_time_iso"]
         )
         self._check_output_data(
             os.path.join(

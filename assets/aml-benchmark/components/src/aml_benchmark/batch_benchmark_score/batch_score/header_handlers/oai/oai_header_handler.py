@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """The class for OSS header handler."""
-from typing import Any, Optional, Dict
 
 import uuid
 
@@ -33,7 +32,7 @@ class OAIHeaderHandler(HeaderHandler):
         self._connections_name = connections_name
         self._model = online_endpoint_model
 
-    def get_headers(self, additional_headers: Dict[str, Any] = None, payload: Optional[Any] = None) -> Dict[str, Any]:
+    def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
         """Get handers."""
         online_endpoint = AOAIOnlineEndpoint(
             workspace_name=None, resource_group=self._endpoint_resource_group,

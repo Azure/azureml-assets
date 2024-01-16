@@ -24,7 +24,6 @@ class DummyWorkspace:
         self.name = "local-ws"
         self.subscription_id = ""
         self.location = "local"
-        self.resource_group = ""
 
     def get_mlflow_tracking_uri(self):
         """Mlflow Tracking URI.

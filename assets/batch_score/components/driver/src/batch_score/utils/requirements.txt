@@ -1,6 +1,0 @@
-azure.identity>=1.10.0
-aiofiles>=22.1.0
-pandas>=1.5.1
-opencensus-ext-azure>=1.1.7
-azureml-core>=1.48.0
-mltable>=1.2.0

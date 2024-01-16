@@ -14,10 +14,7 @@ import openai
 import glob
 
 from constants import TASK, ForecastingConfigContract, ArgumentLiterals
-from workspace_utils import (get_connection_by_id_v2,
-                             workspace_connection_to_credential,
-                             get_target_from_connection,
-                             get_metadata_from_connection)
+from workspace_utils import get_connection_by_id_v2, workspace_connection_to_credential
 from logging_utilities import get_logger, log_traceback
 from mltable import load
 from task_factory.tabular.classification import TabularClassifier
@@ -94,41 +91,16 @@ def assert_and_raise(condition, exception_cls, error_cls, **message_kwargs):
         raise exception
 
 
-def get_task_from_model(model_uri):
-    """Get task type from model config.
-
-    Args:
-        model_uri (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    mlflow_model = aml_mlflow.models.Model.load(model_uri)
-    task_type = ""
-    if "hftransformers" in mlflow_model.flavors:
-        if "task_type" in mlflow_model.flavors["hftransformers"]:
-            task_type = mlflow_model.flavors["hftransformers"]["task_type"]
-            if task_type.startswith("translation"):
-                task_type = constants.TASK.TRANSLATION
-    return task_type
-
-
-def filter_pipeline_params(evaluation_config, model_flavor=""):
+def filter_pipeline_params(evaluation_config):
     """Filter Pipeline params in evaluation_config.
 
     Args:
         evaluation_config (_type_): _description_
-        model_flavor (_type_): _description_
 
     Returns:
         _type_: _description_
     """
-    if model_flavor == constants.MODEL_FLAVOR.TRANSFORMERS:
-        filtered_params = {i: j for i, j in evaluation_config.items() if
-                           i in constants.ALLOWED_PIPELINE_MLFLOW_TRANSFORMER_PARAMS}
-        filtered_params = {"params": filtered_params}  # Transformers curently accepts dict and not **kwargs
-    else:
-        filtered_params = {i: j for i, j in evaluation_config.items() if i in constants.ALLOWED_PIPELINE_HF_PARAMS}
+    filtered_params = {i: j for i, j in evaluation_config.items() if i in constants.ALLOWED_PIPELINE_PARAMS}
     return filtered_params
 
 
@@ -287,7 +259,7 @@ def _log_metrics(metrics, artifacts):
 
 
 def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None,
-                         input_column_names=None, is_multiple_ground_truth=False, **kwargs):
+                         input_column_names=None, **kwargs):
     """Compute metrics mode method.
 
     Args:
@@ -303,8 +275,7 @@ def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config
     """
     evaluator = EvaluatorFactory().get_evaluator(task_type, metrics_config)
     res = evaluator.evaluate(y_test, y_pred, y_pred_proba=y_pred_proba, X_test=X_test,
-                             input_column_names=input_column_names,
-                             is_multiple_ground_truth=is_multiple_ground_truth, **kwargs)
+                             input_column_names=input_column_names, **kwargs)
     metrics = res[metrics_constants.Metric.Metrics]
     artifacts = res[metrics_constants.Metric.Artifacts]
     _log_metrics(metrics, artifacts)
@@ -832,11 +803,12 @@ def fetch_compute_metrics_args(data, task_type):
         task_type: _description_
     """
     metrics_args = ArgumentsSet(task_type=task_type)
+    metrics_config = {}
     for arg, func in metrics_args.args_set.items():
         val = data.get(arg, None)
         if val is not None:
             try:
-                data[arg] = eval(func)
+                metrics_config[arg] = eval(func)
             except TypeError as e:
                 message = "Invalid dtype passed for config param '" + arg + "'."
                 exception = get_azureml_exception(DataLoaderException, BadEvaluationConfigParam, e, error=repr(e))
@@ -846,7 +818,7 @@ def fetch_compute_metrics_args(data, task_type):
                 exception = get_azureml_exception(DataLoaderException, BadEvaluationConfigParam, e, error=repr(e))
                 log_traceback(exception, logger)
                 raise exception
-    return data
+    return metrics_config
 
 
 def read_config(conf_file):
@@ -951,11 +923,9 @@ def openai_init(llm_config, **openai_params):
         credential = workspace_connection_to_credential(connection)
         if hasattr(credential, 'key'):
             llm_config["key"] = credential.key
-            target = get_target_from_connection(connection)
-            llm_config["base"] = target
-            metadata = get_metadata_from_connection(connection)
-            openai_api_type = metadata.get('apiType', "azure")
-            openai_api_version = metadata.get('apiVersion', "2023-03-15-preview")
+            llm_config["base"] = connection['properties'].get('target', {})
+            openai_api_type = connection['properties'].get('metadata', {}).get('apiType', "azure")
+            openai_api_version = connection['properties'].get('metadata', {}).get('apiVersion', "2023-03-15-preview")
             logger.info("Using workspace connection key for OpenAI")
             fetch_from_connection = True
     if not fetch_from_connection:
@@ -986,8 +956,8 @@ def openai_init(llm_config, **openai_params):
 
     openai.api_version = openai_api_version
     openai.api_type = openai_api_type
-    openai.api_base = llm_config.get("base", None)
-    openai.api_key = llm_config.get("key", None)
+    openai.api_base = llm_config["base"]
+    openai.api_key = llm_config["key"]
 
     if not all([llm_config["base"], llm_config["key"], llm_config['deployment_name']]):
         logger.warn("No Connection String Provided and no credentials present in workspace's keyvault.")

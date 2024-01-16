@@ -1,54 +1,50 @@
-[DeBERTa](https://arxiv.org/abs/2006.03654) (Decoding-enhanced BERT with Disentangled Attention) improves the BERT and RoBERTa models using disentangled attention and enhanced mask decoder. It outperforms BERT and RoBERTa on  majority of NLU tasks with 80GB training data. 
+DeBERTa is an improvement of BERT and RoBERTa using disentangled attention and enhanced mask decoder. With 80GB training data, it outperforms BERT and RoBERTa on the majority of NLU tasks. The fine-tuned DeBERTa with MNLI task results in the best performance on SQuAD 1.1/2.0 and GLUE benchmark tasks. Further information is available in the official repository and the related paper.
 
-Please check the [official repository](https://github.com/microsoft/DeBERTa) for more details and updates.
 
-This is the DeBERTa large model fine-tuned with MNLI task.
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/microsoft/deberta-large-mnli" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
-# Evaluation Results
+### Inference samples
 
-We present the dev results on SQuAD 1.1/2.0 and several GLUE benchmark tasks.
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">text-classification-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a>| coming soon
 
-| Model                                                                                       | SQuAD 1.1     | SQuAD 2.0     | MNLI-m/mm     | SST-2    | QNLI     | CoLA     | RTE      | MRPC          | QQP           | STS-B         |
-| ------------------------------------------------------------------------------------------- | ------------- | ------------- | ------------- | -------- | -------- | -------- | -------- | ------------- | ------------- | ------------- |
-|                                                                                             | F1/EM         | F1/EM         | Acc           | Acc      | Acc      | MCC      | Acc      | Acc/F1        | Acc/F1        | P/S           |
-| BERT-Large                                                                                  | 90.9/84.1     | 81.8/79.0     | 86.6/-        | 93.2     | 92.3     | 60.6     | 70.4     | 88.0/-        | 91.3/-        | 90.0/-        |
-| RoBERTa-Large                                                                               | 94.6/88.9     | 89.4/86.5     | 90.2/-        | 96.4     | 93.9     | 68.0     | 86.6     | 90.9/-        | 92.2/-        | 92.4/-        |
-| XLNet-Large                                                                                 | 95.1/89.7     | 90.6/87.9     | 90.8/-        | 97.0     | 94.9     | 69.0     | 85.9     | 90.8/-        | 92.3/-        | 92.5/-        |
-| [DeBERTa-Large](https://huggingface.co/microsoft/deberta-large)<sup>1</sup>                 | 95.5/90.1     | 90.7/88.0     | 91.3/91.1     | 96.5     | 95.3     | 69.5     | 91.0     | 92.6/94.6     | 92.3/-        | 92.8/92.5     |
-| [DeBERTa-XLarge](https://huggingface.co/microsoft/deberta-xlarge)<sup>1</sup>               | -/-           | -/-           | 91.5/91.2     | 97.0     | -        | -        | 93.1     | 92.1/94.3     | -             | 92.9/92.7     |
-| [DeBERTa-V2-XLarge](https://huggingface.co/microsoft/deberta-v2-xlarge)<sup>1</sup>         | 95.8/90.8     | 91.4/88.9     | 91.7/91.6     | **97.5** | 95.8     | 71.1     | **93.9** | 92.0/94.2     | 92.3/89.8     | 92.9/92.9     |
-| **[DeBERTa-V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1,2</sup>** | **96.1/91.4** | **92.2/89.7** | **91.7/91.9** | 97.2     | **96.0** | **72.0** | 93.5     | **93.1/94.9** | **92.7/90.3** | **93.2/93.1** |
---------
 
-# Inference samples
+### Finetuning samples
 
-Inference type|Python sample (Notebook)
-|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
-Real time|[text-classification-online-endpoint.ipynb](https://aka.ms/text-classification-online-endpoint-oss)
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
 
-# Sample inputs and outputs
 
-### Sample input
+### Model Evaluation
+
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Text Classification|Textual Entailment|<a href="https://huggingface.co/datasets/glue/viewer/mnli/validation_matched" target="_blank">MNLI</a>|<a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
 ```json
 {
-    "input_data": [
-        "Today was an amazing day!",
-        "It was an unfortunate series of events."
-    ]
+    "input_data": {
+        "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
+    }
 }
 ```
 
-### Sample output
+#### Sample output
 ```json
 [
-  {
-    "label": "NEUTRAL",
-    "score": 0.9605958461761475
-  },
-  {
-    "label": "NEUTRAL",
-    "score": 0.98270583152771
-  }
+    {
+        "0": "NEUTRAL"
+    },
+    {
+        "0": "NEUTRAL"
+    }
 ]
 ```

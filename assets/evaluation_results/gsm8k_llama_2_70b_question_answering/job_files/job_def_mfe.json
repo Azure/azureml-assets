@@ -8,7 +8,7 @@
             "workflow": "llm_benchmark"
         },
         "displayName": "gsm8k_chain_of_thought-llama-2-70b-full",
-        "experimentName": "gsm8k_chain_of_thought-long",
+        "experimentName": "gsm8k_chain_of_thought-new-prompt",
         "isArchived": false,
         "jobType": "Pipeline",
         "inputs": {},
@@ -227,10 +227,6 @@
                         "job_input_type": "literal",
                         "value": "\n\n"
                     },
-                    "system_message": {
-                        "job_input_type": "literal",
-                        "value": "When answering the question, please ensure that the last number you write in the response is the correct, numerical answer to the question."
-                    },
                     "random_seed": {
                         "job_input_type": "literal",
                         "value": "0"
@@ -275,7 +271,7 @@
                     },
                     "evaluation_config_params": {
                         "job_input_type": "literal",
-                        "value": "{\"token_count_per_sample\": false, \"generator_config\": {\"return_full_text\": false, \"max_new_tokens\": 300, \"do_sample\": false, \"temperature\": 0.0, \"top_p\": 1.0}}"
+                        "value": "{\"token_count_per_sample\": true, \"generator_config\": {\"return_full_text\": false, \"max_new_tokens\": 256, \"do_sample\": false, \"temperature\": 0.0, \"top_p\": 1.0}}"
                     },
                     "device": {
                         "job_input_type": "literal",
@@ -329,7 +325,7 @@
                     },
                     "separator": {
                         "job_input_type": "literal",
-                        "value": "Q:"
+                        "value": "\n\n"
                     },
                     "extract_number": {
                         "job_input_type": "literal",
@@ -383,7 +379,7 @@
                     },
                     "evaluation_config_params": {
                         "job_input_type": "literal",
-                        "value": "{\"regexes_to_ignore\": [\"\\\\.0+$\", \",\"]}"
+                        "value": "{\"regexes_to_ignore\": [\"\\\\.0+$\"]}"
                     }
                 },
                 "outputs": {
@@ -393,6 +389,56 @@
                 },
                 "_source": "REMOTE.REGISTRY",
                 "componentId": "azureml://registries/azureml/components/compute_metrics/labels/latest"
+            },
+            "performance": {
+                "limits": {
+                    "job_limits_type": "Command",
+                    "timeout": "PT15M"
+                },
+                "name": "performance",
+                "type": "command",
+                "inputs": {
+                    "performance_data": {
+                        "job_input_type": "literal",
+                        "value": "${{parent.jobs.prediction.outputs.performance_metadata}}"
+                    },
+                    "percentiles": {
+                        "job_input_type": "literal",
+                        "value": "50,90,99"
+                    },
+                    "batch_size_column_name": {
+                        "job_input_type": "literal",
+                        "value": "batch_size"
+                    },
+                    "start_time_column_name": {
+                        "job_input_type": "literal",
+                        "value": "start_time_iso"
+                    },
+                    "end_time_column_name": {
+                        "job_input_type": "literal",
+                        "value": "end_time_iso"
+                    },
+                    "input_token_count_column_name": {
+                        "job_input_type": "literal",
+                        "value": "input_token_count"
+                    },
+                    "output_token_count_column_name": {
+                        "job_input_type": "literal",
+                        "value": "output_token_count"
+                    },
+                    "is_batch_inference_result": {
+                        "job_input_type": "literal",
+                        "value": "False"
+                    }
+                },
+                "outputs": {
+                    "performance_result": {
+                        "uri": "azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json",
+                        "job_output_type": "uri_file"
+                    }
+                },
+                "_source": "REMOTE.REGISTRY",
+                "componentId": "azureml://registries/azureml/components/compute_performance_metrics/labels/latest"
             },
             "aggregator": {
                 "limits": {
@@ -405,6 +451,10 @@
                     "quality_metrics": {
                         "job_input_type": "literal",
                         "value": "${{parent.jobs.quality.outputs.evaluation_result}}"
+                    },
+                    "performance_metrics": {
+                        "job_input_type": "literal",
+                        "value": "${{parent.jobs.performance.outputs.performance_result}}"
                     }
                 },
                 "outputs": {
@@ -419,7 +469,7 @@
         },
         "outputs": {},
         "settings": {
-            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/serverless",
+            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/a100-lp",
             "continue_on_step_failure": true,
             "force_rerun": false,
             "_source": "YAML.JOB"

@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/deepset-roberta-base-squad2/1702553806/mlflow_model_folder
+  container_path: huggingface/deepset-roberta-base-squad2/1693372520/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

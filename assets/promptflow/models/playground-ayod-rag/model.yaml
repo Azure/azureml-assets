@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: samples/playground_ayod_rag/v1/models
-  storage_name: wedpromptflowragsamples
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model

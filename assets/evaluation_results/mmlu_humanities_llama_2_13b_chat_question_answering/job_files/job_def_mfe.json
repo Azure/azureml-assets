@@ -8,7 +8,7 @@
             "workflow": "llm_benchmark"
         },
         "displayName": "mmlu-humanities-llama-2-13b-chat-full",
-        "experimentName": "mmlu",
+        "experimentName": "mmlu-humanities",
         "isArchived": false,
         "jobType": "Pipeline",
         "inputs": {},
@@ -415,7 +415,7 @@
         },
         "outputs": {},
         "settings": {
-            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/serverless",
+            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/a100-lp-eastus",
             "continue_on_step_failure": true,
             "force_rerun": false,
             "_source": "YAML.JOB"

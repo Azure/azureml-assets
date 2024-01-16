@@ -11,38 +11,36 @@ With this functionality, you can:
 
 See [How to train nlp models](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli) for more information.
 
-# Training Details
+### Documentation
 
-## Training Data
-
+#### Prepare Data
 To create NLP models, it is necessary to provide labeled text data as input for model training. For text classification, the dataset can contain several text columns and exactly one label column. 
 
 Please see [documentation](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#preparing-data) for data preparation requirements.
 
-### Language Setting
+#### Language Setting
 
 Currently, language selection defaults to English. But Automated ML supports 104 languages leveraging language specific and multilingual pre-trained text DNN models. Please see [Language setting](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#language-settings) for documentation.
 
-## Training Procedure
+#### Train a Model
 
 You can initiate [individual trials](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=cli#data-validation), or perform a [manual sweeps](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#model-sweeping-and-hyperparameter-tuning-preview), which explores multiple hyperparameter values near the more promising models and hyperparameter configurations. 
 
 For more information, see [Model sweeping and hyperparameter tuning](https://learn.microsoft.com/azure/machine-learning/how-to-auto-train-nlp-models?view=azureml-api-2&tabs=python#model-sweeping-and-hyperparameter-tuning-preview).
 
-# License
+### Code samples
 
-apache-2.0
-
-# Finetuning Samples
 
 Task|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|
 Multiclass Text Classification|[Yelp review](https://huggingface.co/datasets/yelp_review_full)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-nlp-text-classification-multiclass-task-sentiment-analysis/automl-nlp-multiclass-sentiment-mlflow.ipynb" target="_blank">automl-nlp-multiclass-sentiment-mlflow.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-text-classification-newsgroup/cli-automl-text-classification-newsgroup.yml" target="_blank">cli-automl-text-classification-newsgroup.yml</a>
 Multilabel Text Classification|[arXiv paper abstract](https://www.kaggle.com/datasets/spsayakpaul/arxiv-paper-abstracts)|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/jobs/automl-standalone-jobs/automl-nlp-text-classification-multilabel-task-paper-categorization/automl-nlp-multilabel-paper-cat.ipynb" target="_blank">automl-nlp-multilabel-paper-cat.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-text-classification-multilabel-paper-cat/cli-automl-text-classification-multilabel-paper-cat.yml" target="_blank">cli-automl-text-classification-multilabel-paper-cat.yml</a>
 
-# Sample input and output
 
-### Sample input
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
 
 ```json
 {
@@ -52,7 +50,7 @@ Multilabel Text Classification|[arXiv paper abstract](https://www.kaggle.com/dat
 }
 ```
 
-### Sample output
+#### Sample output
 
 ```json
 [

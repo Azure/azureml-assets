@@ -8,7 +8,7 @@ import constants
 
 from compute_metrics import EvaluatorFactory
 from data_reader import DataReaderFactory
-from utils import construct_signal_metrics
+from utils import write_to_mltable
 
 
 def run():
@@ -22,16 +22,6 @@ def run():
     parser.add_argument("--production_data", type=str, dest="predictions", required=True)
     parser.add_argument("--production_data_target_column", type=str,
                         dest="predictions_column_name", required=False, default=None)
-    parser.add_argument("--regression_rmse_threshold", type=str,
-                        dest="regression_rmse_threshold", required=False, default=None)
-    parser.add_argument("--regression_meanabserror_threshold", type=str,
-                        dest="regression_meanabserror_threshold", required=False, default=None)
-    parser.add_argument("--classification_precision_threshold", type=str,
-                        dest="classification_precision_threshold", required=False, default=None)
-    parser.add_argument("--classification_accuracy_threshold", type=str,
-                        dest="classification_accuracy_threshold", required=False, default=None)
-    parser.add_argument("--classification_recall_threshold", type=str,
-                        dest="classification_recall_threshold", required=False, default=None)
     parser.add_argument("--signal_metrics", type=str)
     args = parser.parse_args()
 
@@ -40,15 +30,7 @@ def run():
                                                                        args.predictions,
                                                                        args.predictions_column_name)
     metrics = EvaluatorFactory().get_evaluator(task_type=args.task, metrics_config={}).evaluate(metrics_data)
-    construct_signal_metrics(metrics,
-                             args.signal_metrics,
-                             args.predictions_column_name,
-                             args.regression_rmse_threshold,
-                             args.regression_meanabserror_threshold,
-                             args.classification_precision_threshold,
-                             args.classification_accuracy_threshold,
-                             args.classification_recall_threshold
-                             )
+    write_to_mltable(metrics, args.signal_metrics)
 
 
 if __name__ == "__main__":

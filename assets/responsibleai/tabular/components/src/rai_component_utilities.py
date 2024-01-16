@@ -4,14 +4,12 @@
 import json
 import logging
 import os
-import pathlib
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
-import traceback
 import uuid
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -22,16 +20,13 @@ import pandas as pd
 import requests
 from arg_helpers import get_from_args
 from azureml.core import Model, Run, Workspace
-# TODO: seems this method needs to be made public
-from azureml.rai.utils.telemetry.loggerfactory import _extract_and_filter_stack
 from constants import (MLFLOW_MODEL_SERVER_PORT, DashboardInfo,
                        PropertyKeyValues, RAIToolType)
 from raiutils.exceptions import UserConfigValidationException
-from responsibleai._internal._served_model_wrapper import ServedModelWrapper
-from responsibleai.feature_metadata import FeatureMetadata
-
 from responsibleai import RAIInsights
 from responsibleai import __version__ as responsibleai_version
+from responsibleai._internal._served_model_wrapper import ServedModelWrapper
+from responsibleai.feature_metadata import FeatureMetadata
 
 assetid_re = re.compile(
     r"azureml://locations/(?P<location>.*)/workspaces/(?P<workspaceid>.*)/(?P<assettype>.*)/(?P<assetname>.*)/versions/(?P<assetversion>.*)"  # noqa: E501
@@ -52,11 +47,7 @@ _tool_directory_mapping: Dict[str, str] = {
 
 
 class UserConfigError(Exception):
-    def __init__(self, message, cause=None):
-        if cause:
-            self.tb = _extract_and_filter_stack(cause, traceback.extract_tb(sys.exc_info()[2]))
-            self.cause = cause
-        super().__init__(message)
+    pass
 
 
 def print_dir_tree(base_dir):
@@ -77,14 +68,8 @@ def print_dir_tree(base_dir):
 
 def fetch_model_id(model_info_path: str):
     model_info_path = os.path.join(model_info_path, DashboardInfo.MODEL_INFO_FILENAME)
-    try:
-        json_file = open(model_info_path, "r")
-    except Exception:
-        raise UserConfigValidationException(
-            f"Failed to open {model_info_path}. Please ensure the model path is correct."
-        )
-    model_info = json.load(json_file)
-    json_file.close()
+    with open(model_info_path, "r") as json_file:
+        model_info = json.load(json_file)
     if DashboardInfo.MODEL_ID_KEY not in model_info:
         raise UserConfigValidationException(
             f"Invalid input, expecting key {DashboardInfo.MODEL_ID_KEY} to exist in the input json"
@@ -107,10 +92,10 @@ def load_mlflow_model(
         try:
             model = Model._get(workspace, id=model_id)
         except Exception as e:
-            raise UserConfigError(
+            raise UserConfigValidationException(
                 "Unable to retrieve model by model id {} in workspace {}, error:\n{}".format(
                     model_id, workspace.name, e
-                ), e
+                )
             )
         model_uri = "models:/{}/{}".format(model.name, model.version)
 
@@ -159,6 +144,7 @@ def load_mlflow_model(
         _logger.info("Successfully installed model dependencies")
 
     try:
+        model = mlflow.pyfunc.load_model(model_uri)._model_impl
         if not use_separate_conda_env:
             model = mlflow.pyfunc.load_model(model_uri)._model_impl
             return model
@@ -241,20 +227,12 @@ def load_mlflow_model(
 
 
 def _classify_and_log_pip_install_error(elog):
-    ret_message = []
-    if elog is None:
-        return ret_message
+    if elog is not None:
+        if b"Could not find a version that satisfies the requirement" in elog:
+            _logger.warning("Detected unsatisfiable version requirement.")
 
-    if b"Could not find a version that satisfies the requirement" in elog:
-        ret_message.append("Detected unsatisfiable version requirment.")
-
-    if b"package versions have conflicting dependencies" in elog:
-        ret_message.append("Detected dependency conflict error.")
-
-    for m in ret_message:
-        _logger.warning(m)
-
-    return ret_message
+        if b"package versions have conflicting dependencies" in elog:
+            _logger.warning("Detected dependency conflict error.")
 
 
 def load_mltable(mltable_path: str) -> pd.DataFrame:
@@ -292,10 +270,9 @@ def load_dataset(dataset_path: str) -> pd.DataFrame:
         df = load_mltable(dataset_path)
         isLoadSuccessful = True
     except Exception as e:
-        new_e = UserConfigError(
+        new_e = UserConfigValidationException(
             f"Input dataset {dataset_path} cannot be read as mltable."
-            f"You may disregard this error if dataset input is intended to be parquet dataset. Exception: {e}",
-            e
+            f"You may disregard this error if dataset input is intended to be parquet dataset. Exception: {e}"
         )
         exceptions.append(new_e)
 
@@ -304,15 +281,14 @@ def load_dataset(dataset_path: str) -> pd.DataFrame:
             df = load_parquet(dataset_path)
             isLoadSuccessful = True
         except Exception as e:
-            new_e = UserConfigError(
+            new_e = UserConfigValidationException(
                 f"Input dataset {dataset_path} cannot be read as parquet."
-                f"You may disregard this error if dataset input is intended to be mltable. Exception: {e}",
-                e
+                f"You may disregard this error if dataset input is intended to be mltable. Exception: {e}"
             )
             exceptions.append(new_e)
 
     if not isLoadSuccessful:
-        raise UserConfigError(
+        raise UserConfigValidationException(
             f"Input dataset {dataset_path} cannot be read as MLTable or Parquet dataset."
             f"Please check that input dataset is valid. Exceptions encountered during reading: {exceptions}"
         )
@@ -334,13 +310,13 @@ def load_dashboard_info_file(input_port_path: str) -> Dict[str, str]:
 
 
 def copy_dashboard_info_file(src_port_path: str, dst_port_path: str):
-    src = pathlib.Path(src_port_path) / DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
-    dst = pathlib.Path(dst_port_path) / DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
+    src = Path(src_port_path) / DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
+    dst = Path(dst_port_path) / DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
 
     shutil.copyfile(src, dst)
 
 
-def create_rai_tool_directories(rai_insights_dir: pathlib.Path) -> None:
+def create_rai_tool_directories(rai_insights_dir: Path) -> None:
     # Have to create empty subdirectories for the managers
     # THe RAI Insights object expect these to be present, but
     # since directories don't actually exist in Azure Blob store
@@ -353,7 +329,7 @@ def create_rai_tool_directories(rai_insights_dir: pathlib.Path) -> None:
 
 def load_rai_insights_from_input_port(input_port_path: str) -> RAIInsights:
     with tempfile.TemporaryDirectory() as incoming_temp_dir:
-        incoming_dir = pathlib.Path(incoming_temp_dir)
+        incoming_dir = Path(incoming_temp_dir)
         shutil.copytree(input_port_path, incoming_dir, dirs_exist_ok=True)
         _logger.info("Copied RAI Insights input to temporary directory")
 
@@ -365,7 +341,7 @@ def load_rai_insights_from_input_port(input_port_path: str) -> RAIInsights:
 
 
 def copy_insight_to_raiinsights(
-    rai_insights_dir: pathlib.Path, insight_dir: pathlib.Path
+    rai_insights_dir: Path, insight_dir: Path
 ) -> str:
     print("Starting copy")
 
@@ -421,18 +397,18 @@ def save_to_output_port(rai_i: RAIInsights, output_port_path: str, tool_type: st
         _logger.info(f"Saved to {tmpdirname}")
 
         tool_dir_name = _tool_directory_mapping[tool_type]
-        insight_dirs = os.listdir(pathlib.Path(tmpdirname) / tool_dir_name)
+        insight_dirs = os.listdir(Path(tmpdirname) / tool_dir_name)
         assert len(insight_dirs) == 1, "Checking for exactly one tool output"
         _logger.info("Checking dirname is GUID")
         uuid.UUID(insight_dirs[0])
 
-        target_path = pathlib.Path(output_port_path) / tool_dir_name
+        target_path = Path(output_port_path) / tool_dir_name
         target_path.mkdir()
         _logger.info("Created output directory")
 
         _logger.info("Starting copy")
         shutil.copytree(
-            pathlib.Path(tmpdirname) / tool_dir_name,
+            Path(tmpdirname) / tool_dir_name,
             target_path,
             dirs_exist_ok=True,
         )

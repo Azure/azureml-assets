@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/distilbert-base-uncased-distilled-squad/1702644848/mlflow_model_folder
+  container_path: huggingface/distilbert-base-uncased-distilled-squad/1693293175/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

@@ -7,10 +7,10 @@ import logging
 import os
 import shutil
 
+from _telemetry._loggerfactory import _LoggerFactory, track
 from arg_helpers import boolean_parser, json_empty_is_none_parser
 from azureml.core import Run
-from azureml.rai.utils.telemetry import LoggerFactory, track
-from constants import COMPONENT_NAME, DashboardInfo, PropertyKeyValues
+from constants import DashboardInfo, PropertyKeyValues
 from rai_component_utilities import (default_json_handler, fetch_model_id,
                                      get_arg, get_test_dataset_id,
                                      get_train_dataset_id, load_dataset,
@@ -27,11 +27,7 @@ _ai_logger = None
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
-        run = Run.get_context()
-        module_name = run.properties["azureml.moduleName"]
-        module_version = run.properties["azureml.moduleid"]
-        _ai_logger = LoggerFactory.get_logger(
-            __file__, module_name, module_version, COMPONENT_NAME)
+        _ai_logger = _LoggerFactory.get_logger(__file__)
     return _ai_logger
 
 

@@ -9,7 +9,6 @@ from pathlib import Path
 from argparse import Namespace
 from typing import Any
 from functools import partial
-import logging
 
 from transformers.trainer_utils import get_last_checkpoint
 
@@ -319,7 +318,6 @@ def main():
             LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
-        log_level=logging.INFO,
     )
 
     pre_process(parsed_args, unparsed_args)

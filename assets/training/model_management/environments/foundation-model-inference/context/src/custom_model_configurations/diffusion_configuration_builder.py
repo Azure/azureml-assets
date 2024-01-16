@@ -16,7 +16,7 @@ except ImportError:
 
 from custom_model_configurations.base_configuration_builder import ModelConfigurationBuilder
 from constants import EngineName, TaskType
-from custom_model_configurations.schema_output import (
+from custom_model_configurations.output_schema import (
     ImageTaskInferenceResult,
     TextToImageSchema,
 )

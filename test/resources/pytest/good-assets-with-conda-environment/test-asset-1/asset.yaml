@@ -1,8 +1,0 @@
-name: test-asset-1
-version: 1
-type: component
-spec: spec.yaml
-test:
-  pytest:
-    enabled: true
-    conda_environment: tests/conda.yaml

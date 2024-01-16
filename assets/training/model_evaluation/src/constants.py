@@ -4,6 +4,7 @@
 """File containing constants for model evaluation script."""
 from azureml.evaluate.mlflow.constants import ForecastFlavors
 
+
 PREDICTIONS_COLUMN_NAME = "predictions"
 TRANSFORMER_KEY = "y_transformer"
 EVALUATION_RESULTS_PATH = "evaluationResult"
@@ -56,21 +57,6 @@ class DEVICE:
 ALL_DEVICES = [DEVICE.AUTO, DEVICE.CPU, DEVICE.GPU]
 
 
-class MODEL_FLAVOR:
-    """Model Flavors."""
-
-    HFTRANSFORMERS = "hftransformers"
-    HFTRANSFORMERSV2 = "hftransformersv2"
-    TRANSFORMERS = "transformers"
-
-
-ALL_MODEL_FLAVORS = [
-    MODEL_FLAVOR.TRANSFORMERS,
-    MODEL_FLAVOR.HFTRANSFORMERS,
-    MODEL_FLAVOR.HFTRANSFORMERSV2
-]
-
-
 class TASK:
     """TASK list."""
 
@@ -84,6 +70,7 @@ class TASK:
     QnA = "question-answering"
     TRANSLATION = "text-translation"
     TEXT_GENERATION = "text-generation"
+    TEXT_GENERATION_CODE = "text-generation-code"
     FILL_MASK = "fill-mask"
     IMAGE_CLASSIFICATION = "image-classification"
     IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
@@ -91,12 +78,6 @@ class TASK:
     IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
     FORECASTING = "tabular-forecasting"
     CHAT_COMPLETION = "chat-completion"
-
-
-class TRANSFORMERS_TASK:
-    """Transformers Task list."""
-
-    SUMMARIZATION = "summarization"
 
 
 ALL_TASKS = [
@@ -116,7 +97,7 @@ ALL_TASKS = [
     TASK.IMAGE_CLASSIFICATION_MULTILABEL,
     TASK.CHAT_COMPLETION,
     TASK.IMAGE_OBJECT_DETECTION,
-    TASK.IMAGE_INSTANCE_SEGMENTATION,
+    TASK.IMAGE_INSTANCE_SEGMENTATION
 ]
 
 MULTILABEL_SET = [
@@ -177,7 +158,7 @@ TEXT_TOKEN_TASKS = [
     TASK.SUMMARIZATION,
     TASK.TEXT_GENERATION,
     TASK.FILL_MASK,
-    TASK.CHAT_COMPLETION,
+    TASK.CHAT_COMPLETION
 ]
 
 TEXT_OUTPUT_TOKEN_TASKS = [
@@ -186,7 +167,7 @@ TEXT_OUTPUT_TOKEN_TASKS = [
     TASK.SUMMARIZATION,
     TASK.TEXT_GENERATION,
     TASK.FILL_MASK,
-    TASK.CHAT_COMPLETION,
+    TASK.CHAT_COMPLETION
 ]
 
 
@@ -201,7 +182,7 @@ class TelemetryConstants:
     """Telemetry Constants."""
 
     COMPONENT_NAME = "model_evaluation"
-    COMPONENT_DEFAULT_VERSION = "0.0.21"
+    COMPONENT_DEFAULT_VERSION = "0.0.18"
 
     INITIALISING_RUNNER = "initialising_runner"
     VALIDATION_NAME = "argument_validation"
@@ -334,7 +315,7 @@ class PerformanceColumns:
     OUTPUT_TOKENS_COLUMN_NAME = 'output_token_count'
 
 
-ALLOWED_PIPELINE_HF_PARAMS = {
+ALLOWED_PIPELINE_PARAMS = {
     "tokenizer_config",
     "generator_config",
     "model_kwargs",
@@ -342,10 +323,6 @@ ALLOWED_PIPELINE_HF_PARAMS = {
     "trust_remote_code",
     "source_lang",
     "target_lang"
-}
-
-ALLOWED_PIPELINE_MLFLOW_TRANSFORMER_PARAMS = {
-    "params"
 }
 
 
@@ -367,10 +344,7 @@ class TextGenerationColumns:
 class SubTask:
     """Constants for sub-tasks."""
 
-    SUB_TASK_KEY = "sub_task"
-
     CODEGENERATION = "code"
-    RAG_EVALUATION = "rag"
 
 
 class OpenAIConstants:
@@ -380,8 +354,8 @@ class OpenAIConstants:
     METRICS_KEY = "openai_params"
     DEFAULT_OPENAI_CONFIG = {
         "type": "azure_open_ai",
-        "model_name": "gpt-35-turbo-16k",
-        "deployment_name": "gpt-35-turbo-16k"
+        "model_name": "gpt-35-turbo",
+        "deployment_name": "gpt-35-turbo"
     }
     DEFAULT_OPENAI_INIT_PARAMS = {
         "openai_api_type": "azure",

@@ -7,8 +7,8 @@
         "tags": {
             "workflow": "llm_benchmark"
         },
-        "displayName": "gsm8k_chain_of_thought-llama-2-7b-full-test",
-        "experimentName": "gsm8k_chain_of_thought-long",
+        "displayName": "gsm8k_chain_of_thought-llama-2-7b-full-test3",
+        "experimentName": "gsm8k_chain_of_thought-new-prompt",
         "isArchived": false,
         "jobType": "Pipeline",
         "inputs": {},
@@ -227,10 +227,6 @@
                         "job_input_type": "literal",
                         "value": "\n\n"
                     },
-                    "system_message": {
-                        "job_input_type": "literal",
-                        "value": "When answering the question, please ensure that the last number you write in the response is the correct, numerical answer to the question."
-                    },
                     "random_seed": {
                         "job_input_type": "literal",
                         "value": "0"
@@ -258,7 +254,7 @@
                         "value": "${{parent.jobs.promptcrafter.outputs.output_file}}"
                     },
                     "mlflow_model": {
-                        "uri": "azureml://registries/azureml-meta/models/Llama-2-7b/versions/12",
+                        "uri": "azureml://registries/azureml-meta/models/Llama-2-7b/versions/9",
                         "job_input_type": "mlflow_model"
                     },
                     "task": {
@@ -275,7 +271,7 @@
                     },
                     "evaluation_config_params": {
                         "job_input_type": "literal",
-                        "value": "{\"token_count_per_sample\": false, \"generator_config\": {\"return_full_text\": false, \"max_new_tokens\": 300, \"do_sample\": false, \"temperature\": 0.0, \"top_p\": 1.0}}"
+                        "value": "{\"token_count_per_sample\": false, \"generator_config\": {\"return_full_text\": false, \"max_new_tokens\": 256, \"do_sample\": false, \"temperature\": 0.0, \"top_p\": 1.0}}"
                     },
                     "device": {
                         "job_input_type": "literal",
@@ -329,7 +325,7 @@
                     },
                     "separator": {
                         "job_input_type": "literal",
-                        "value": "Q:"
+                        "value": "\n\n"
                     },
                     "extract_number": {
                         "job_input_type": "literal",
@@ -383,7 +379,7 @@
                     },
                     "evaluation_config_params": {
                         "job_input_type": "literal",
-                        "value": "{\"regexes_to_ignore\": [\"\\\\.0+$\", \",\"]}"
+                        "value": "{\"regexes_to_ignore\": [\"\\\\.0+$\"]}"
                     }
                 },
                 "outputs": {
@@ -419,7 +415,7 @@
         },
         "outputs": {},
         "settings": {
-            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/serverless",
+            "default_compute": "/subscriptions/***/resourceGroups/***/providers/Microsoft.MachineLearningServices/workspaces/***/computes/a100-lp",
             "continue_on_step_failure": true,
             "force_rerun": false,
             "_source": "YAML.JOB"
