@@ -9,6 +9,7 @@ from model_monitor_output_metrics.entities.feature_metrics import FeatureMetrics
 from model_monitor_output_metrics.entities.row_count_metrics import RowCountMetrics
 from model_monitor_output_metrics.entities.signal_type import SignalType
 from model_monitor_output_metrics.entities.signals.signal import Signal
+from model_monitor_output_metrics.builders.histogram_builder import HistogramBuilder
 from shared_utilities.run_metrics_utils import get_or_create_run_id
 from shared_utilities.df_utils import row_has_value, add_value_if_present
 
@@ -21,6 +22,8 @@ class PredictionDriftSignal(Signal):
         monitor_name: str,
         signal_name: str,
         metrics: List[Row],
+        baseline_histogram: List[Row],
+        target_histogram: List[Row],
     ):
         """Build Prediction Drift signal."""
         super().__init__(
@@ -30,6 +33,7 @@ class PredictionDriftSignal(Signal):
         self.feature_metrics: List[FeatureMetrics] = self._build_feature_metrics(
             monitor_name, signal_name, metrics
         )
+        self.histogram_builder = HistogramBuilder(baseline_histogram, target_histogram)
 
     def to_dict(self) -> dict:
         """Convert to a dictionary object."""
