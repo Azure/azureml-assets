@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""Message structures for openai api responses."""
 import time
 from vllm.entrypoints.openai.protocol import ChatMessage, UsageInfo
 
