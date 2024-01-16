@@ -98,6 +98,66 @@ jobs:
       runtime_version: "3.3"
     identity:
       type: aml_token
+  compute_histogram_buckets:
+    type: spark
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.5
+    inputs:
+      input_data_1:
+        type: mltable
+        path: ${{parent.inputs.target_data}}
+      input_data_2:
+        type: mltable
+        path: ${{parent.inputs.baseline_data}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
+    outputs:
+      histogram_buckets:
+        type: mltable
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  compute_baseline_histogram:
+    type: spark
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.5
+    inputs:
+      input_data:
+        type: mltable
+        path: ${{parent.inputs.baseline_data}}
+      histogram_buckets:
+        type: mltable
+        path: ${{parent.jobs.compute_histogram_buckets.outputs.histogram_buckets}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
+    outputs:
+      histogram:
+        type: mltable
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  compute_target_histogram:
+    type: spark
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.5
+    inputs:
+      input_data:
+        type: mltable
+        path: ${{parent.inputs.target_data}}
+      histogram_buckets:
+        type: mltable
+        path: ${{parent.jobs.compute_histogram_buckets.outputs.histogram_buckets}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
+    outputs:
+      histogram:
+        type: mltable
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
   output_signal_metrics: 
     type: spark
     component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.5
@@ -109,6 +169,12 @@ jobs:
       signal_name: ${{parent.inputs.signal_name}}
       monitor_name: ${{parent.inputs.monitor_name}}
       metric_timestamp: ${{parent.inputs.monitor_current_time}}
+      target_histogram:
+        type: mltable
+        path: ${{parent.jobs.compute_target_histogram.outputs.histogram}}
+      baseline_histogram:
+        type: mltable
+        path: ${{parent.jobs.compute_baseline_histogram.outputs.histogram}}
     outputs:
       signal_output:
         type: uri_folder
