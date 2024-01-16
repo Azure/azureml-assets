@@ -14,12 +14,22 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_EMPTY,
     DATA_ASSET_IRIS_BASELINE_INT_DATA_TYPE,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT_INT_DATA,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS,
+    DATA_ASSET_IRIS_BASELINE_INT_SINGLE_VALUE_HISTOGRAM,
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM,
+    DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE,
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE
 )
 
 
 def _submit_data_drift_model_monitor_job(
-    ml_client, get_component, experiment_name, baseline_data, target_data
+    ml_client,
+    get_component,
+    experiment_name,
+    baseline_data,
+    target_data,
+    override_numerical_features=None,
+    override_categorical_features=None
 ):
     dd_model_monitor = get_component(COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR)
 
@@ -36,6 +46,8 @@ def _submit_data_drift_model_monitor_job(
             filter_value="3",
             numerical_threshold=0.5,
             categorical_threshold=0.5,
+            override_numerical_features=override_numerical_features,
+            override_categorical_features=override_categorical_features
         )
         return {"signal_output": dd_signal_monitor_output.outputs
                 .signal_output}
@@ -139,3 +151,34 @@ class TestDataDriftModelMonitor:
 
         # empty production and target data should fail the job
         assert pipeline_job.status == "Failed"
+
+    def test_monitoring_run_int_single_distinct_value_histogram(
+        self, ml_client: MLClient, get_component, download_job_output,
+        test_suite_name
+    ):
+        """Test the scenario where the production data has a column with only one distinct value."""
+        pipeline_job = _submit_data_drift_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_BASELINE_INT_SINGLE_VALUE_HISTOGRAM,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM,
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    def test_monitoring_run_successful_with_datatype_override(
+        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+    ):
+        """Test the happy path scenario with datatype override."""
+        pipeline_job = _submit_data_drift_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE,
+            "sepal_width",
+            "petal_length"
+        )
+
+        assert pipeline_job.status == "Completed"
