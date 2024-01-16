@@ -92,6 +92,7 @@ class ModelValidationOverallSummary:
     BATCH_DEPLOYMENT = "BatchDeployment"
     ONLINE_DEPLOYMENT = "OnlineDeployment"
     VALIDATION_RUN = "ValidationRun"
+    BUILD_URI = "BuildUri"
 
     @staticmethod
     def get_default_summary():
@@ -604,15 +605,18 @@ def confirm_model_validation_results(
                 "Either last validation run for model had failed or its still running."
             )
             error_count += 1
+        else:
+            overall_summary = {}
+            with open(validation_job_details_path) as f:
+                overall_summary = json.load(f)
 
-        with open(validation_job_details_path) as f:
-            overall_summary = json.load(f)
             validation_run_status = overall_summary.get(
                 ModelValidationOverallSummary.VALIDATION_RUN, ModelValidationState.NOT_STARTED)
             batch_deployment_status = overall_summary.get(
                 ModelValidationOverallSummary.BATCH_DEPLOYMENT, ModelValidationState.NOT_STARTED)
             online_deployment_status = overall_summary.get(
                 ModelValidationOverallSummary.ONLINE_DEPLOYMENT, ModelValidationState.NOT_STARTED)
+            buildUri = overall_summary.get(ModelValidationOverallSummary.BUILD_URI, None)
 
             if validation_run_status != ModelValidationState.COMPLETED:
                 logger.log_error(
@@ -648,6 +652,9 @@ def confirm_model_validation_results(
                     "Please ensure that that online inference is validated for the model."
                 )
                 error_count += 1
+
+            if error_count > 0 and buildUri:
+                logger.print(f"Check model: {latest_model.name} validation logs here: {buildUri}")
 
         return error_count
     except Exception as e:
