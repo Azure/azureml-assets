@@ -146,11 +146,13 @@ def run():
     if files:
         if hf_model_args is None or TRUST_CODE_KEY not in hf_model_args:
             hf_model_args = TRUST_CODE_KEY
+            logger.warning("{TRUST_CODE_KEY} is not provided for hf_model_args. Using {TRUST_CODE_KEY}.")
         if hf_tokenizer_args is None or TRUST_CODE_KEY not in hf_tokenizer_args:
             hf_tokenizer_args = TRUST_CODE_KEY
+            logger.warning("{TRUST_CODE_KEY} is not provided for hf_tokenizer_args. Using {TRUST_CODE_KEY}.")
         if hf_config_args is None or TRUST_CODE_KEY not in hf_config_args:
             hf_config_args = TRUST_CODE_KEY
-            logger.warning("trust_remote_code=True is not provided."f"Using {TRUST_CODE_KEY} by default.")
+            logger.warning("{TRUST_CODE_KEY} is not provided for hf_config_args. Using {TRUST_CODE_KEY}.")
     preprocess_args["task"] = task_name.lower()
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
     preprocess_args[HF_CONF.EXTRA_PIP_REQUIREMENTS.value] = extra_pip_requirements
