@@ -7,11 +7,11 @@ pandas~=2.1.4
 transformers~=4.36.0
 aiolimiter~=1.1.0
 azure-ai-contentsafety==1.0.0b1
-azure-ai-ml==1.12.1
-azure-identity==1.15.0
+azure-ai-ml=={{latest-pypi-version}}
+azure-identity=={{latest-pypi-version}}
 azureml-ai-monitoring==0.1.0b4
-azureml-inference-server-http
-azureml-mlflow
+azureml-inference-server-http=={{latest-pypi-version}}
+azureml-mlflow=={{latest-pypi-version}}
 cryptography~=41.0.7
 certifi==2023.11.17
 requests~=2.31.0
