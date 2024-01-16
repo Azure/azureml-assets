@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 import time
 from vllm.entrypoints.openai.protocol import ChatMessage, UsageInfo
 
