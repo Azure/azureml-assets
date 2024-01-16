@@ -19,6 +19,12 @@ inputs:
     mode: direct
     type: mltable
     optional: true
+  override_numerical_features:
+    type: string
+    optional: true
+  override_categorical_features:
+    type: string
+    optional: true
 outputs:
   histogram_buckets:
     mode: direct
@@ -47,4 +53,8 @@ conf:
         - fsspec~=2023.4.0
     name: momo-base-spark
 args: >-
-  --input_data_1 ${{inputs.input_data_1}} $[[--input_data_2 ${{inputs.input_data_2}}]] --histogram_buckets ${{outputs.histogram_buckets}}
+  --input_data_1 ${{inputs.input_data_1}} 
+  $[[--input_data_2 ${{inputs.input_data_2}}]]
+  $[[--override_numerical_features ${{inputs.override_numerical_features}}]]
+  $[[--override_categorical_features ${{inputs.override_categorical_features}}]]
+  --histogram_buckets ${{outputs.histogram_buckets}}

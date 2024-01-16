@@ -46,6 +46,12 @@ inputs:
   task_type:
     type: string
     optional: true
+  override_numerical_features:
+    type: string
+    optional: true
+  override_categorical_features:
+    type: string
+    optional: true
 outputs:
   signal_output:
     type: uri_folder
@@ -53,13 +59,15 @@ outputs:
 jobs:
   compute_feature_importances:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.7
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.8
     inputs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
       task_type: ${{parent.inputs.task_type}}
       target_column: ${{parent.inputs.target_column}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
@@ -91,7 +99,7 @@ jobs:
       type: aml_token
   compute_drift_metrics:
     type: spark
-    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.9
+    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.10
     inputs:
       production_dataset:
         type: mltable
@@ -106,6 +114,8 @@ jobs:
       categorical_metric: ${{parent.inputs.categorical_metric}}
       numerical_threshold: ${{parent.inputs.numerical_threshold}}
       categorical_threshold: ${{parent.inputs.categorical_threshold}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
@@ -124,6 +134,8 @@ jobs:
       input_data_2:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       histogram_buckets:
         type: mltable
@@ -134,7 +146,7 @@ jobs:
       type: aml_token
   compute_baseline_histogram:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.4
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.5
     inputs:
       input_data:
         type: mltable
@@ -142,6 +154,8 @@ jobs:
       histogram_buckets:
         type: mltable
         path: ${{parent.jobs.compute_histogram_buckets.outputs.histogram_buckets}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       histogram:
         type: mltable
@@ -152,7 +166,7 @@ jobs:
       type: aml_token
   compute_target_histogram:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.4
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.5
     inputs:
       input_data:
         type: mltable
@@ -160,6 +174,8 @@ jobs:
       histogram_buckets:
         type: mltable
         path: ${{parent.jobs.compute_histogram_buckets.outputs.histogram_buckets}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       histogram:
         type: mltable
