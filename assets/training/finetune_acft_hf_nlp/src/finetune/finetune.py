@@ -1084,9 +1084,15 @@ def finetune(args: Namespace):
         if args.apply_deepspeed:
             logger.info(
                 "Deepspeed is enabled which is not compatible with QLoRA. "
-                "Resetting Deepspeed to false"
+                "Resetting Deepspeed to false."
             )
             setattr(args, "apply_deepspeed", False)
+        if args.gradient_checkpointing:
+            logger.info(
+                "Gradient checkpointing is enabled which is not compatible with QLoRA. "
+                "Resetting Gradient checkpointing to false."
+            )
+            setattr(args, "gradient_checkpointing", False)
 
     setattr(args, "apply_ort", can_apply_ort(args, logger))
 

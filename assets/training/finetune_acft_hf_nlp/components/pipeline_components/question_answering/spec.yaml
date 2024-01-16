@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: question_answering_pipeline
-version: 0.0.30
+version: 0.0.31
 type: pipeline
 display_name: Question Answering Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for extractive question answering task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/question_answering_pipeline) to learn more.
@@ -541,7 +541,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.28
+    component: azureml:ft_nlp_common_validation:0.0.29
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -573,7 +573,7 @@ jobs:
 
   question_answering_model_import:
     type: command
-    component: azureml:question_answering_model_import:0.0.28
+    component: azureml:question_answering_model_import:0.0.29
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -584,7 +584,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   question_answering_datapreprocess:
     type: command
-    component: azureml:question_answering_datapreprocess:0.0.28
+    component: azureml:question_answering_datapreprocess:0.0.29
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -609,7 +609,7 @@ jobs:
       model_selector_output: '${{parent.jobs.question_answering_model_import.outputs.output_dir}}'
   question_answering_finetune:
     type: command
-    component: azureml:question_answering_finetune:0.0.28
+    component: azureml:question_answering_finetune:0.0.29
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -667,7 +667,7 @@ jobs:
       # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.28
+    component: azureml:ft_nlp_model_converter:0.0.29
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'

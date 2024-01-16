@@ -863,7 +863,7 @@ class _PromptBuilder:
 
     def generate_prompts(
         self,
-        input_data_df: DataFrame,
+        input_data_df: pd.DataFrame,
         max_inputs: int,
     ) -> Generator[_PromptData, None, None]:
         """Generate prompts from input_pool.
