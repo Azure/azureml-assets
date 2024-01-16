@@ -36,9 +36,26 @@ class TestResultConverters:
     def test_label_column_name(self, model_type, label_col):
         """Test label column name."""
         rc = ResultConverters(
-            model_type, "metadata_key", "data_id_key", label_col, None, "fallback_value")
+            model_type, "metadata_key", "data_id_key", label_col, None, None, "fallback_value")
         expect_label = label_col if label_col else "ground_truth"
         assert rc.ground_truth_column_name == expect_label
+
+    @pytest.mark.parametrize(
+        'model_type,additional_columns', [('oai', 'a, b2'),
+                                          ('oss', 'a'),
+                                          ('vision_oss', None),
+                                          ('claude', None)]
+    )
+    def test_additional_columns(self, model_type, additional_columns):
+        """Test label column name."""
+        rc = ResultConverters(
+            model_type, "metadata_key", "data_id_key", None, additional_columns, None, "fallback_value")
+        if additional_columns:
+            elements = additional_columns.split(",")
+            expect_additional_columns = [s.strip() for s in elements if s.strip()]
+        else:
+            expect_additional_columns = None
+        assert rc.additional_columns == expect_additional_columns
 
     @pytest.mark.parametrize('has_ground_truth', [True, False])
     def test_e2e_claude(self, has_ground_truth):
@@ -77,6 +94,7 @@ class TestResultConverters:
                     data_id_key=None,
                     metadata_key=None,
                     label_key=None,
+                    additional_columns=None,
                     ground_truth_input=ground_truth_input,
                     prediction_data=prediction_data,
                     perf_data=os.path.join(d, 'perf.json'),
