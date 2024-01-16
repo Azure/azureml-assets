@@ -17,6 +17,7 @@ from pyspark.sql.types import (
 from shared_utilities.io_utils import init_spark
 from shared_utilities.momo_exceptions import InvalidInputError
 
+
 def compute_numerical_bins(
     df1: pyspark_sql.DataFrame,
     df2: pyspark_sql.DataFrame,
