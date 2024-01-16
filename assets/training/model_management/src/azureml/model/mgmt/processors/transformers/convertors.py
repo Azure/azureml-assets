@@ -197,7 +197,8 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                         and model_args.get('trust_remote_code', False)):
                     trust_remote_code_val = True
 
-                model_pipeline = transformers.pipeline(task=self._task, model=model, trust_remote_code=trust_remote_code_val)
+                model_pipeline = transformers.pipeline(task=self._task, model=model,
+                                                       trust_remote_code=trust_remote_code_val)
 
                 # pass in signature for a text-classification model
                 if self._task == SupportedNLPTasks.TEXT_CLASSIFICATION.value:
@@ -224,8 +225,8 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                              "with exception: {}".format(self._task, e))
 
                 self._save_in_hftransformersv2(metadata, conda_env,
-                                      code_paths, input_example,
-                                      requirements_file, pip_requirements)
+                                               code_paths, input_example,
+                                               requirements_file, pip_requirements)
 
         else:
             self._save_in_hftransformersv2(metadata, conda_env,
