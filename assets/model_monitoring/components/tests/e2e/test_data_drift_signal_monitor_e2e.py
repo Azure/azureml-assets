@@ -35,7 +35,7 @@ def _submit_data_drift_model_monitor_job(
 
     @pipeline()
     def _data_drift_signal_monitor_e2e():
-        dd_signal_monitor_output = dd_model_monitor(
+        data_drift_signal_monitor_output = dd_model_monitor(
             target_data=target_data,
             baseline_data=baseline_data,
             signal_name="my_test_create_manifest_signal",
@@ -47,17 +47,18 @@ def _submit_data_drift_model_monitor_job(
             numerical_threshold=0.5,
             categorical_threshold=0.5,
             override_numerical_features=override_numerical_features,
-            override_categorical_features=override_categorical_features
+            override_categorical_features=override_categorical_features,
+            instance_type="standard_e8s_v3"
         )
-        return {"signal_output": dd_signal_monitor_output.outputs
-                .signal_output}
+        return {
+            "signal_output": data_drift_signal_monitor_output.outputs.signal_output
+            }
 
     pipeline_job = _data_drift_signal_monitor_e2e()
-    pipeline_job.outputs.signal_output = Output(type="uri_folder",
-                                                mode="direct")
-
+    print(pipeline_job)
+    pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
     pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+       pipeline_job, experiment_name=experiment_name, skip_validation=True
     )
 
     # Wait until the job completes
@@ -182,3 +183,5 @@ class TestDataDriftModelMonitor:
         )
 
         assert pipeline_job.status == "Completed"
+        # empty production and target data should fail the job
+        assert pipeline_job.status == "Failed"

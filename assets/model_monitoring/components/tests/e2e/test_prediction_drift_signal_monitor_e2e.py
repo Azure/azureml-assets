@@ -32,6 +32,7 @@ def _submit_prediction_drift_model_monitor_job(
             monitor_current_time="2023-02-02T00:00:00Z",
             numerical_threshold=0.5,
             categorical_threshold=0.5,
+            instance_type="standard_e8s_v3"
         )
         return {
             "signal_output": prediction_drift_signal_monitor_output.outputs.signal_output
@@ -41,7 +42,7 @@ def _submit_prediction_drift_model_monitor_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+        pipeline_job, experiment_name=experiment_name, skip_validation=True
     )
 
     # Wait until the job completes
