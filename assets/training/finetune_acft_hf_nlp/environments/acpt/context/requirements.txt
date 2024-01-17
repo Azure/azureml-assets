@@ -1,6 +1,6 @@
-azureml-acft-accelerator=={{latest-pypi-version}}
-azureml_acft_common_components=={{latest-pypi-version}}
-azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
+azureml-acft-accelerator==0.0.41
+azureml_acft_common_components==0.0.41
+azureml-acft-contrib-hf-nlp==0.0.41
 mltable==1.5.0
 datasets==2.14.6
 mpi4py==3.1.4
