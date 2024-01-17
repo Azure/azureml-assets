@@ -22,6 +22,7 @@ from pyspark_test import assert_pyspark_df_equal
 from src.data_quality_statistics.compute_data_quality_statistics import (
     compute_data_quality_statistics,
     compute_max_and_min_df,
+    get_unique_value_list,
     get_features_for_max_min_calculation)
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 import pytest
@@ -30,9 +31,9 @@ import pytest
 df = [
         ("string1", 2, True,  4.67, 4, "2023-10-01 00:00:01", 100, bytearray([10, 50]), 3.549999952316284,
          4, "char"),
-        ("string1", 3, False, 90.1, 5, "2023-10-01 00:00:02", 200, bytearray([10, 50]), 3.55, 6, "char"),
+        ("string2", 3, False, 90.1, 5, "2023-10-01 00:00:02", 200, bytearray([10, 50]), 3.55, 6, "char"),
         ("string1", 4, True,  2.8987, -1, "2023-10-01 00:00:03", 300, bytearray([10, 50]), 45.6, 7, "char"),
-        ("string1", 5, False, 3.454, -2, "2023-10-01 00:00:04", 400, bytearray([10, 50]),  56.70000076293945,
+        ("string3", 5, False, 3.454, -2, "2023-10-01 00:00:04", 400, bytearray([10, 50]),  56.70000076293945,
          9, "char"),
         ]
 schema = StructType([
@@ -70,8 +71,20 @@ schema = StructType([
 )
 df_for_max_min_value = create_pyspark_dataframe(df_for_max_min_value, schema)
 
+df_for_unique_value_list = [
+        ("feature_string", ["string1", "string2", "string3"]),
+        ("feature_char", ["char"])
+        ]
+schema = StructType(
+    [
+        StructField("featureName", StringType(), True),
+        StructField("set", StringType(), True),
+    ]
+)
+df_for_unique_value_list = create_pyspark_dataframe(df_for_unique_value_list, schema)
+
 data_stat_df = [
-                ("feature_string", None, None, "StringType()", "[string1]"),
+                ("feature_string", None, None, "StringType()", "[string1, string2, string3]"),
                 ("feature_int", 5.0,  2.0, "IntegerType()", None),
                 ("feature_boolean", None, None, "BooleanType()", None),
                 ("feature_double", 90.1, 2.8987, "DoubleType()", None),
@@ -87,6 +100,21 @@ data_stat_colums = ["featureName", "max_value", "min_value", "dataType", "set"]
 
 data_stats_table = create_pyspark_dataframe(data_stat_df, data_stat_colums)
 
+data_stat_df_override = [
+                ("feature_string", None, None, "StringType()", "[string1, string2, string3]"),
+                ("feature_int", None,  None, "IntegerType()", None),
+                ("feature_boolean", 1.0, 0.0, "BooleanType()", None),
+                ("feature_double", 90.1, 2.8987, "DoubleType()", None),
+                ("feature_byte", 5.0, -2.0, "ByteType()", None),
+                ("feature_timestamp", None, None, "TimestampType()", None),
+                ("feature_long", 400.0, 100.0, "LongType()", None),
+                ("feature_binary", None, None, "BinaryType()", None),
+                ("feature_float", 56.70000076293945, 3.549999952316284, "FloatType()", None),
+                ("feature_short", None, None, "ShortType()", None),
+                ("feature_char", None, None, "StringType()", "[char]"),
+]
+data_stats_table_override = create_pyspark_dataframe(data_stat_df_override, data_stat_colums)
+
 
 @pytest.mark.unit
 class TestModelMonitorDataQualityStatistic:
@@ -100,9 +128,26 @@ class TestModelMonitorDataQualityStatistic:
             data_stats_table
     ):
         """Test compute data quality statistics with string, integer, boolean, double type."""
-        actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp)
+        actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp, None, None)
         assert data_stats_table.count() == actual_data_stats_table.count()
         assert sorted(data_stats_table.collect()) == sorted(actual_data_stats_table.collect())
+
+    @pytest.mark.parametrize("df_with_timestamp, data_stats_table_override",
+                             [(df_with_timestamp, data_stats_table_override)])
+    def test_compute_data_quality_statistics_with_datatype_override(
+            self,
+            df_with_timestamp,
+            data_stats_table_override
+    ):
+        """Test compute data quality statistics with string, integer, boolean, double type with datatype override."""
+        override_numerical_features = "feature_boolean"
+        # will not work because only string type is used for categorical features in data quality
+        override_categorical_features = "feature_int,feature_short"
+        actual_data_stats_table = compute_data_quality_statistics(df_with_timestamp,
+                                                                  override_numerical_features,
+                                                                  override_categorical_features)
+        assert data_stats_table_override.count() == actual_data_stats_table.count()
+        assert sorted(data_stats_table_override.collect()) == sorted(actual_data_stats_table.collect())
 
     @pytest.mark.parametrize("df_with_timestamp, df_for_max_min_value",
                              [(df_with_timestamp, df_for_max_min_value)])
@@ -112,7 +157,9 @@ class TestModelMonitorDataQualityStatistic:
             df_for_max_min_value
     ):
         """Test exclude the boolean columns from dataframe."""
-        actual_df_for_max_min_value = get_features_for_max_min_calculation(df_with_timestamp)
+        numerical_columns = ["feature_int", "feature_double", "feature_byte", "feature_long",
+                             "feature_float", "feature_short"]
+        actual_df_for_max_min_value = get_features_for_max_min_calculation(df_with_timestamp, numerical_columns)
         assert_pyspark_df_equal(df_for_max_min_value, actual_df_for_max_min_value)
 
     def test_compute_max_and_min_df(
@@ -156,3 +203,15 @@ class TestModelMonitorDataQualityStatistic:
         expected_max_and_min_value_df = create_pyspark_dataframe(expected_max_and_min_value_data, schema)
         actual_max_and_min_value_df = compute_max_and_min_df(df_for_max_min_value_int, dtype_df)
         assert_pyspark_df_equal(expected_max_and_min_value_df, actual_max_and_min_value_df)
+
+    @pytest.mark.parametrize("df_with_timestamp, df_for_unique_value_list",
+                             [(df_with_timestamp, df_for_unique_value_list)])
+    def test_get_unique_value_list(
+            self,
+            df_with_timestamp,
+            df_for_unique_value_list
+    ):
+        """Test get unique value list from dataframe."""
+        categorical_columns = ['feature_string', 'feature_char']
+        actual_df_for_unique_value_list = get_unique_value_list(df_with_timestamp, categorical_columns)
+        assert_pyspark_df_equal(df_for_unique_value_list, actual_df_for_unique_value_list)

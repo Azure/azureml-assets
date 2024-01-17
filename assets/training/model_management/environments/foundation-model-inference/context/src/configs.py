@@ -52,6 +52,7 @@ class EngineConfig(SerializableDataClass):
 
     engine_name: str
     model_id: str
+    tokenizer: str
     host: str = DEFAULT_HOST
     port: int = DEFAULT_PORT
     tensor_parallel: Optional[int] = None
