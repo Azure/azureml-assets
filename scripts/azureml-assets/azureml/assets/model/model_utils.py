@@ -209,4 +209,4 @@ def update_model_metadata(
         elif update.stage == "Active":
             ml_client.models.restore(name=model_name, version=model_version)
     except Exception as e:
-        logger.log_error(f"Failed to archive or restore model : {model_name} : {e}")
+        logger.log_error(f"Failed to archive or restore model {model_name} version {model_version}: {e}")
