@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    {
+      "name": "DetermineIntent",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    },
+    {
+      "name": "DetermineReply",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "name": "gpt_coherence",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    },
+    {
+      "name": "gpt_fluency",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    },
+    {
+      "name": "gpt_groundedness",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    },
+    {
+      "name": "gpt_relevance",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    },
+    {
+      "name": "gpt_similarity",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    },
+    {
+      "name": "embeded_ground_truth",
+      "inputs": {
+        "connection": "aoai_connection",
+        "deployment_name": "text-embedding-ada-002"
+      }
+    },
+    {
+      "name": "embeded_answer",
+      "inputs": {
+        "connection": "aoai_connection",
+        "deployment_name": "text-embedding-ada-002"
+      }
+    }
+  ]
+}
