@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.29 (2024-01-17)
+### 🚀 New Features
+- [#](https://github.com/Azure/azureml-assets/pull/) Support archiving models
+
 ## 1.16.28 (2023-01-05)
 ### 🚀 New Features
 - [#2071](https://github.com/Azure/azureml-assets/pull/2071) Allow updating files during azcopy
