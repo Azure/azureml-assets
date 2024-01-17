@@ -101,10 +101,12 @@ class VLLMEngine(BaseEngine):
             )
         if "model" not in self._vllm_args:
             self._vllm_args["model"] = self.engine_config.model_id
+        if "tokenizer" not in self._vllm_args:
+            self._vllm_args["tokenizer"] = self.engine_config.tokenizer
 
         model_type = self._model_config.get("model_type", "")
 
-        # TODO: Remove "RefinedWebModel" and "RefinedWeb" once falcon's model_type param gets updated
+        # TODO: Remove "RefinedWebModel" and "RefinedWeb" once falcon models are updated to latest huggingface commit
         if model_type == "falcon" or model_type == "RefinedWebModel" or model_type == "RefinedWeb":
             self._vllm_args["gpu-memory-utilization"] = 0.95
             self._vllm_additional_args.append("trust-remote-code")
@@ -137,8 +139,8 @@ class VLLMEngine(BaseEngine):
         model_type = self._model_config.get("model_type", "")
         num_attention_heads = self._model_config.get("num_attention_heads", 1)
 
-        # TODO: Remove "RefinedWebModel" and "RefinedWeb" once falcon's model_type param gets updated
-        if model_type == "falcon" or model_type == "RefinedWebModel" or model_type == "RefinedWeb":
+        # TODO: Remove if statement once falcon models are updated to latest huggingface commit
+        if model_type == "RefinedWebModel" or model_type == "RefinedWeb":
             num_attention_heads = self._model_config.get("n_head", 1)
 
         tensor_parallel_size = self._vllm_args["tensor-parallel-size"]
@@ -252,3 +254,8 @@ class VLLMEngine(BaseEngine):
             res = InferenceResult(None, None, None, None, None, error=response.content)
 
         return res
+    
+    async def shutdown_async(self):
+        """Terminate DS-MII Server."""
+        # empty function as we do not need to terminate the ds-mii server when the vllm engine is used
+        return
