@@ -20,7 +20,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     HfModelTypes,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
 )
-from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite
+from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite, clean_column_name
 from azureml.acft.contrib.hf.nlp.nlp_auto.config import AzuremlAutoConfig
 from azureml.acft.contrib.hf.nlp.tasks.translation.preprocess.preprocess_for_finetune import T5_CODE2LANG_MAP
 
@@ -38,7 +38,7 @@ from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 
-logger = get_logger_app(__name__)
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.preprocess.preprocess")
 
 COMPONENT_NAME = "ACFT-Preprocess"
 
@@ -211,9 +211,9 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
         model_type, src_lang, tgt_lang = None, None, None
         try:
             src_lang_idx = unparsed_args.index("--source_lang")
-            src_lang = unparsed_args[src_lang_idx + 1]
+            src_lang = clean_column_name(unparsed_args[src_lang_idx + 1])
             tgt_lang_idx = unparsed_args.index("--target_lang")
-            tgt_lang = unparsed_args[tgt_lang_idx + 1]
+            tgt_lang = clean_column_name(unparsed_args[tgt_lang_idx + 1])
             # fetching model_name as path is already updated above to model_name
             model_type = AzuremlAutoConfig.get_model_type(hf_model_name_or_path=parsed_args.model_name)
         except Exception as e:

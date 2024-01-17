@@ -45,7 +45,7 @@ from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_
 from azureml.acft.common_components.utils.error_handling.error_definitions import SKUNotSupported
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.finetune.finetune")
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
 UNWANTED_PACKAGES = [
@@ -774,6 +774,18 @@ def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
         logger.info("Deepspeed is not enabled. Nothing to setup!")
         return
 
+    # Validate auto_find_batch_size
+    if args.auto_find_batch_size == True:
+        raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            "Invalid settings found. Deep Speed cannot be coupled with auto_find_batch_size.\n"
+                            "1. If you want to use auto_find_batch_size functionality set apply_deepspeed to false\n"
+                            "2. Otherwise, set auto_find_batch_size to false and use per_device_train_batch_size of 1"
+                        )
+                    )
+                )
     # load deepspeed config
     ds_config_json = get_deepspeed_config_json(args)
 
