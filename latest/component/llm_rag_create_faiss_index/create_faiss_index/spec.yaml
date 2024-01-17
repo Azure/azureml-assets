@@ -30,5 +30,5 @@ code: '../src/'
 
 command: >-
   python -m azureml.rag.tasks.build_faiss
-  --embeddings ${{inputs.embeddings}}
-  --output ${{outputs.index}}
+  --embeddings '${{inputs.embeddings}}'
+  --output '${{outputs.index}}'

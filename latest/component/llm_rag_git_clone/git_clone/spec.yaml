@@ -47,4 +47,4 @@ command: >-
   $[[--branch-name ${{inputs.branch_name}}]]
   $[[--authentication-key-prefix ${{inputs.authentication_key_prefix}}]]
   $[[--git-connection-id ${{inputs.git_connection_id}}]]
-  --output-data ${{outputs.output_data}}
+  --output-data '${{outputs.output_data}}'

@@ -65,9 +65,9 @@ code: '../src'
 
 command: >-
   python -m azureml.rag.tasks.embed
-  --chunks_source ${{inputs.chunks_source}}
+  --chunks_source '${{inputs.chunks_source}}'
   --embeddings_model ${{inputs.embeddings_model}}
-  $[[--embeddings_container ${{inputs.embeddings_container}}]]
-  --output ${{outputs.embeddings}}
+  $[[--embeddings_container '${{inputs.embeddings_container}}']]
+  --output '${{outputs.embeddings}}'
   --batch_size ${{inputs.batch_size}}
   --num_workers ${{inputs.num_workers}}

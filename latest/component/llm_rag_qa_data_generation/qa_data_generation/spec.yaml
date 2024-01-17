@@ -70,7 +70,7 @@ code: '../src'  # nothing used from here
 
 command: >-
   python -m azureml.rag.tasks.generate_qa
-  --input-data ${{inputs.input_data}}
+  --input-data '${{inputs.input_data}}'
   --output-data ${{outputs.output_data}}
   --dataset_size ${{inputs.dataset_size}}
   --chunk_batch_size ${{inputs.chunk_batch_size}}
