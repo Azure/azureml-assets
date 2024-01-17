@@ -15,7 +15,7 @@ RUN apt install git -y
 
 # Install pip for Python 3.10
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends wget && \
+    apt-get install -y --no-install-recommends wget runit && \
     wget -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py' && \
     python3.10 get-pip.py && \
     rm get-pip.py
@@ -36,24 +36,14 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 RUN pip3 install --no-cache-dir -e .
 RUN pip3 list    # show installed packages
 
-# Copy scoring file
-COPY src/score.py /var/mlflow_resources/mlflow_score_script.py
-ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
-ENV AML_APP_ROOT="/var/mlflow_resources"
-
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 
-#Inference requirements
-COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
-RUN /var/requirements/install_system_requirements.sh && \
-    cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
-    cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
-    ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
-    rm -f /etc/nginx/sites-enabled/default
+ADD runit_folder/api_server /var/runit/api_server
+RUN sed -i 's/\r$//g' /var/runit/api_server/run
+RUN chmod +x /var/runit/api_server/run
 
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=3600
-EXPOSE 5001 8883 8888
+EXPOSE 5001
 CMD [ "runsvdir", "/var/runit" ]
-# dummy number to change when needing to force rebuild without changing the definition: 1
