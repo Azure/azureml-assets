@@ -118,7 +118,7 @@ class TestDataDriftModelMonitor:
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS,
         )
 
-        # No common columns should fail the job in the feature selector step.
+        # No common columns should fail the job in the feature selector step and compute histogram step.
         assert pipeline_job.status == "Failed"
 
     def test_monitoring_run_use_int_data_has_no_drift_successful(
