@@ -24,10 +24,9 @@ from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite, cle
 from azureml.acft.contrib.hf.nlp.nlp_auto.config import AzuremlAutoConfig
 from azureml.acft.contrib.hf.nlp.tasks.translation.preprocess.preprocess_for_finetune import T5_CODE2LANG_MAP
 
-from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException, ACFTSystemException
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import (
     PathNotFound,
-    ACFTSystemError,
     ACFTUserError,
 )
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
@@ -241,9 +240,9 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
 
     # raise errors and warnings
     if not parsed_args.train_data_path:
-        raise ACFTSystemException._with_error(
-            AzureMLError.create(ACFTSystemError, pii_safe_message=(
-                "train_file_path or train_mltable_path need to be passed"
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(ACFTUserError, pii_safe_message=(
+                "train_file_path or train_mltable_path need to be passed."
             ))
         )
     if parsed_args.train_file_path and parsed_args.train_mltable_path:
