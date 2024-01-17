@@ -100,7 +100,7 @@ def tokenizer():
 @pytest.fixture
 def translate_params():
     """Test translate params used in hf MLflow conversion."""
-    return {"task": "fill-mask", "model_id": "bert-base-cased"}
+    return {"task": "fill-mask", "model_id": "bert-base-cased", "model_flavor": "HFTransformersV2"}
 
 
 @pytest.fixture
@@ -454,7 +454,7 @@ class TestHFMLFLowConvertor:
             )
         assert "unsupported_task" in str(ex)
 
-        # Succesful case
+        # Successful case
         translate_params = {"task": SupportedNLPTasks.FILL_MASK.value, "model_id": "bert-base-cased",
                             "model_flavor": "HFTransformersV2"}
         NLPMLflowConvertor(
@@ -487,7 +487,7 @@ class TestPyFunMLFLowConvertor:
             )
         assert "unsupported_task" in str(ex)
 
-        # Succesful case
+        # Successful case
         translate_params = {"task": MMLabDetectionTasks.MM_OBJECT_DETECTION.value}
         MMLabDetectionMLflowConvertor(
             model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
