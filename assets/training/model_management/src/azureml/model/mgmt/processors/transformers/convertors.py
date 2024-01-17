@@ -30,7 +30,7 @@ from azureml.model.mgmt.utils.common_utils import (
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from mlflow.models import ModelSignature, Model
-from mlflow.types.schema import ColSpec, DataType, Schema, ParamSpec, ParamSchema
+from mlflow.types.schema import ColSpec, DataType, Schema
 from mlflow.utils.requirements_utils import _get_pinned_requirement
 from pathlib import Path
 from transformers import (
@@ -199,13 +199,6 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
                 model_pipeline = transformers.pipeline(task=self._task, model=model,
                                                        trust_remote_code=trust_remote_code_val)
-
-                # pass in signature for a text-classification model
-                if self._task == SupportedNLPTasks.TEXT_CLASSIFICATION.value:
-                    inputs = Schema([ColSpec(DataType.string)])
-                    outputs = None
-                    params = ParamSchema([ParamSpec("return_all_scores", "boolean", default=True)])
-                    self._signatures = ModelSignature(inputs=inputs, outputs=outputs, params=params)
 
                 mlflow.transformers.save_model(
                     transformers_model=model_pipeline,
