@@ -197,11 +197,14 @@ class StoreUrl:
                 # asset path should be translated to azureml or hdfs path in service, should not reach here
                 raise InvalidInputError("AzureML asset path is not supported as uri_folder.")
 
-            data_pattern0 = r"azureml://(subscriptions/([^/]+)/resourceGroups/([^/]+)/workspaces/([^/]+)/)?data/([^/]+)/versions/(.+)"  # noqa: E501
-            data_pattern1 = r"azureml://locations/([^/]+)/workspaces/([^/]+)/data/([^/]+)/versions/(.+)"
-            if re.match(data_pattern0, self._base_url) or re.match(data_pattern1, self._base_url):
-                raise InvalidInputError("AzureML data asset url is NOT supported as input of Model Monitoring job, "
-                                        "please use credential datastore + path instead.")
+            data_pattern0 = r"azureml://(subscriptions/([^/]+)/resourceGroups/([^/]+)/workspaces/([^/]+)/)?data/(?P<data>[^/]+)/versions/(?P<version>.+)"  # noqa: E501
+            data_pattern1 = r"azureml://locations/([^/]+)/workspaces/([^/]+)/data/(?P<data>[^/]+)/versions/(?P<version>.+)"  # noqa: E501
+            matches = re.match(data_pattern0, self._base_url) or re.match(data_pattern1, self._base_url)
+            if matches:
+                raise InvalidInputError(
+                    f"You are using AzureML data url {self._base_url}, but this format of url is NOT supported as "
+                    "input of Model Monitoring job, please use "
+                    f"azureml:{matches.group('data')}:{matches.group('version')} instead.")
             else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
