@@ -31,6 +31,6 @@ environment: azureml:llm-rag-embeddings@latest
 code: '../src'
 command: >-
   python -m azureml.rag.tasks.register_mlindex
-  --storage-uri ${{inputs.storage_uri}}
-  $[[--asset-name ${{inputs.asset_name}}]]
+  --storage-uri '${{inputs.storage_uri}}'
+  $[[--asset-name '${{inputs.asset_name}}']]
   --output-asset-id ${{outputs.asset_id}}
