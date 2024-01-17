@@ -455,7 +455,8 @@ class TestHFMLFLowConvertor:
         assert "unsupported_task" in str(ex)
 
         # Succesful case
-        translate_params = {"task": SupportedNLPTasks.FILL_MASK.value, "model_id": "bert-base-cased"}
+        translate_params = {"task": SupportedNLPTasks.FILL_MASK.value, "model_id": "bert-base-cased",
+                            "model_flavor": "HFTransformersV2"}
         NLPMLflowConvertor(
             model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
         )
