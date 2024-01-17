@@ -176,62 +176,67 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                                               base_model_task=self._task)
         if self._model_flavor == "OSS":
             try:
-                # create a conda environment for OSS transformers Flavor
-                python_version = platform.python_version()
-                pip_pkgs = self._get_curated_environment_pip_package_list()
-                conda_deps = CondaDependencies.create(conda_packages=None,
-                                                      python_version=python_version,
-                                                      pip_packages=pip_pkgs,
-                                                      pin_sdk_version=False)
-
-                curated_conda_env = conda_deps.as_dict()
-
-                # handle OSS trust_remote_code value
-                trust_remote_code_val = False
-                config_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
-                tokenizer_args = self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
-                model_args = self._hf_conf.get(HF_CONF.HF_MODEL_ARGS.value, {})
-
-                if (config_args.get('trust_remote_code', False)
-                        and tokenizer_args.get('trust_remote_code', False)
-                        and model_args.get('trust_remote_code', False)):
-                    trust_remote_code_val = True
-
-                model_pipeline = transformers.pipeline(task=self._task, model=model,
-                                                       trust_remote_code=trust_remote_code_val)
-
-                mlflow.transformers.save_model(
-                    transformers_model=model_pipeline,
-                    conda_env=curated_conda_env,
-                    code_paths=code_paths,
-                    signature=self._signatures,
-                    input_example=input_example,
-                    pip_requirements=pip_requirements,
-                    extra_pip_requirements=self._extra_pip_requirements,
-                    metadata=metadata,
-                    path=self._output_dir,
-                )
-
-                logger.info("Model saved with mlflow OSS flow for task: {}".format(self._task))
+                self._save_in_oss_flavor(model, code_paths, input_example, pip_requirements, metadata)
             except Exception as e:
                 logger.error("Model save failed with mlflow OSS flow for task: {} "
                              "with exception: {}".format(self._task, e))
 
-                self._save_in_hftransformersv2(metadata, conda_env,
-                                               code_paths, input_example,
-                                               requirements_file, pip_requirements)
-
+                self._save_in_hftransformersv2_flavor(metadata, conda_env,
+                                                      code_paths, input_example,
+                                                      requirements_file, pip_requirements)
         else:
-            self._save_in_hftransformersv2(metadata, conda_env,
-                                           code_paths, input_example,
-                                           requirements_file, pip_requirements)
+            self._save_in_hftransformersv2_flavor(metadata, conda_env,
+                                                  code_paths, input_example,
+                                                  requirements_file, pip_requirements)
 
         # pin pycocotools==2.0.4
         self._update_conda_dependencies({"pycocotools": "2.0.4"})
 
-    def _save_in_hftransformersv2(self, metadata, conda_env,
-                                  code_paths, input_example,
-                                  requirements_file, pip_requirements):
+        if self._task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
+            self._update_conda_dependencies({"ffmpeg": "4.2.2"})
+
+    def _save_in_oss_flavor(self, model, code_paths, input_example, pip_requirements, metadata):
+        # create a conda environment for OSS transformers Flavor
+        python_version = platform.python_version()
+        pip_pkgs = self._get_curated_environment_pip_package_list()
+        conda_deps = CondaDependencies.create(conda_packages=None,
+                                              python_version=python_version,
+                                              pip_packages=pip_pkgs,
+                                              pin_sdk_version=False)
+
+        curated_conda_env = conda_deps.as_dict()
+
+        # handle OSS trust_remote_code value
+        trust_remote_code_val = False
+        config_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
+        tokenizer_args = self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
+        model_args = self._hf_conf.get(HF_CONF.HF_MODEL_ARGS.value, {})
+
+        if (config_args.get('trust_remote_code', False)
+                and tokenizer_args.get('trust_remote_code', False)
+                and model_args.get('trust_remote_code', False)):
+            trust_remote_code_val = True
+
+        model_pipeline = transformers.pipeline(task=self._task, model=model,
+                                               trust_remote_code=trust_remote_code_val)
+
+        mlflow.transformers.save_model(
+            transformers_model=model_pipeline,
+            conda_env=curated_conda_env,
+            code_paths=code_paths,
+            signature=self._signatures,
+            input_example=input_example,
+            pip_requirements=pip_requirements,
+            extra_pip_requirements=self._extra_pip_requirements,
+            metadata=metadata,
+            path=self._output_dir.as_posix(),
+        )
+
+        logger.info("Model saved with mlflow OSS flow for task: {}".format(self._task))
+
+    def _save_in_hftransformersv2_flavor(self, metadata, conda_env,
+                                         code_paths, input_example,
+                                         requirements_file, pip_requirements):
 
         logger.info("Segregate input model dir and present into separate folders for model, config and tokenizer")
         logger.info("Preparing model files")
@@ -321,6 +326,13 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                     'packaging', 'pillow', 'protobuf', 'pyyaml', 'requests', 'scikit-learn',
                     'scipy', 'sentencepiece', 'torch', 'mlflow']
         ADD_PACKAGE_LIST = ['torchvision==0.14.1', 'transformers==4.34.1']
+
+        if self._task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
+            ADD_PACKAGE_LIST.append(['soundfile==0.12.1', 'librosa==0.10.1', 'diffusers==0.21.4',
+                                     'wget', 'torchaudio', 'ffmpeg-python==0.2.0', 'cloudpickle==2.2.1',
+                                     'jsonpickle==3.0.1', 'more-itertools==9.1.0', 'cryptography==41.0.1'])
+
+
 
         conda_list_cmd = ["conda", "list", "--json"]
         try:
