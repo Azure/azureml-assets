@@ -27,6 +27,7 @@ properties:
     Standard_ND40rs_v2
 tags:
   Preview: ''
+  Deprecated: ''
   SharedComputeCapacityEnabled: ''
   openmmlab_model_id: yolof_r50_c5_8x8_1x_coco
   training_dataset: COCO
