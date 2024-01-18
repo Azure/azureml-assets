@@ -3,7 +3,7 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.16.30 (2024-01-17)
+## 1.16.30 (2024-01-18)
 ### 🚀 New Features
 - [#2141](https://github.com/Azure/azureml-assets/pull/2141) Support archiving models
 
