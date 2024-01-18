@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Text Generation Model Import
 description: Import PyTorch / MLFlow model
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/38
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/39
 
 code: ../../../src/model_selector
 
