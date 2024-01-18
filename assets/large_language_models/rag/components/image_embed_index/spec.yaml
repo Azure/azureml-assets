@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.3
+version: 0.0.2
 name: llm_rag_image_embed_index
 display_name: LLM - Embedding images with Florence 
 is_deterministic: true
@@ -16,10 +16,9 @@ outputs:
     description: Where to store the output MLIndex.
 inputs:
   input_path:
-    type: uri_folder
-    mode: rw_mount
+    type: string
     optional: False
-    description: The input uri_folder containing a set of images and json metadata.
+    description: input dataset of images and json metadata.
   embedding_connection_id:
     type: string
     optional: False
