@@ -110,7 +110,7 @@ class BaseEngine(ABC):
     def get_tokens(self, response: str):
         """Load tokenizer and get tokens from a prompt."""
         if not hasattr(self, "tokenizer"):
-            self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.model_id)
+            self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.tokenizer)
         tokens = self.tokenizer.encode(response)
         return tokens
 
@@ -124,7 +124,7 @@ class HfEngine(BaseEngine):
 
     def load_model(self, env=None):
         """Load the model from the pretrained model specified in the engine configuration."""
-        self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.model_id)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.tokenizer)
         self.model = AutoModelForCausalLM.from_pretrained(self.engine_config.model_id)
         # move to the model to the GPU if testing on GPU
         if torch.cuda.is_available():

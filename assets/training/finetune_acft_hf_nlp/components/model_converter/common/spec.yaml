@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: ft_nlp_model_converter
-version: 0.0.27
+version: 0.0.30
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Common Model Converter
 description: Component to convert the finetune job output to pytorch and mlflow model
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/33
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/39
 
 code: ../../../src/model_converter
 

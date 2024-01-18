@@ -8,7 +8,6 @@ type: command
 tags:
   type: evaluation
   sub_type: evaluate_model
-  Preview: ""
 
 inputs:
   task:

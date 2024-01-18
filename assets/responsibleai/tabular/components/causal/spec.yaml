@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: microsoft_azureml_rai_tabular_causal
 display_name: Add Causal to RAI Insights Dashboard
 description: Add Causal to RAI Insights Dashboard [Learn More](https://aka.ms/RAIComponents)
-version: 0.10.0
+version: 0.12.0
 type: command
 
 inputs:
@@ -58,11 +58,7 @@ outputs:
 
 code: ../src/
 
-environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/37
-
-# For debugging
-environment_variables:
-   AZUREML_COMPUTE_USE_COMMON_RUNTIME: true
+environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/39
 
 command: >-
   python create_causal.py

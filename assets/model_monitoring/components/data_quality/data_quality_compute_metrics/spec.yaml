@@ -4,7 +4,7 @@ type: spark
 name: data_quality_compute_metrics
 display_name:  Data Quality - Compute Metrics
 description: Compute data quality metrics leveraged by the data quality monitor.
-version: 0.3.7
+version: 0.3.9
 is_deterministic: true
 
 inputs:
@@ -23,6 +23,12 @@ inputs:
   numerical_metrics:
     type: string
     default: "DataTypeErrorRate,NullValueRate,OutOfBoundsRate"
+  override_numerical_features:
+    type: string
+    optional: true
+  override_categorical_features:
+    type: string
+    optional: true
 outputs:
   signal_metrics:
     type: mltable
@@ -60,4 +66,6 @@ args: >-
   --data_statistics ${{inputs.data_statistics}}
   --categorical_metrics ${{inputs.categorical_metrics}}
   --numerical_metrics ${{inputs.numerical_metrics}}
+  $[[--override_numerical_features ${{inputs.override_numerical_features}}]]
+  $[[--override_categorical_features ${{inputs.override_categorical_features}}]]
   --signal_metrics ${{outputs.signal_metrics}}

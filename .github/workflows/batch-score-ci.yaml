@@ -56,7 +56,7 @@ jobs:
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 
       - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.testsRootPath }} --strict-markers -v -s -m "unit" -o log_level=DEBUG -n 8
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.testsRootPath }} --strict-markers -v -s -m "unit or smoke" -o log_level=DEBUG -n 8
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}

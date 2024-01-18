@@ -3,6 +3,38 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.30 (2024-01-18)
+### 🚀 New Features
+- [#2141](https://github.com/Azure/azureml-assets/pull/2141) Support archiving models
+
+## 1.16.29 (2023-01-17)
+### 🚀 New Features
+- [#2132](https://github.com/Azure/azureml-assets/pull/2132) Improve logging for model validation and link validation results and build running it
+
+## 1.16.28 (2023-01-05)
+### 🚀 New Features
+- [#2071](https://github.com/Azure/azureml-assets/pull/2071) Allow updating files during azcopy
+
+## 1.16.27 (2023-12-22)
+### 🐛 Bugs Fixed
+- [#2031](https://github.com/Azure/azureml-assets/pull/2031) Update model validation for shared quota usage
+
+## 1.16.26 (2023-12-21)
+### 🐛 Bugs Fixed
+- [#2021](https://github.com/Azure/azureml-assets/pull/2021) Require auto version for environments
+
+## 1.16.25 (2023-12-21)
+### 🐛 Bugs Fixed
+- [#2009](https://github.com/Azure/azureml-assets/pull/2009) Fix call to get tokens
+
+## 1.16.24 (2023-12-20)
+### 🐛 Bugs Fixed
+- [#2006](https://github.com/Azure/azureml-assets/pull/2006) Make SAS expiration configurable
+
+## 1.16.23 (2023-12-19)
+### 🚀 New Features
+- [#1909](https://github.com/Azure/azureml-assets/pull/1909) Model spec validation
+
 ## 1.16.22 (2023-12-18)
 ### 🚀 New Features
 - [#1980](https://github.com/Azure/azureml-assets/pull/1980) Add switch to skip validating pytest existence
