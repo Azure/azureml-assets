@@ -46,7 +46,7 @@ code: '../src/'
 
 command: >-
   python -m azureml.rag.tasks.update_acs
-  --embeddings ${{inputs.embeddings}}
+  --embeddings '${{inputs.embeddings}}'
   --acs_config '${{inputs.acs_config}}'
-  --output ${{outputs.index}}
+  --output '${{outputs.index}}'
   $[[--connection_id '${{inputs.index_connection_id}}']]

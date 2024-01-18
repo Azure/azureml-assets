@@ -9,7 +9,7 @@ import json
 import shutil
 from azureml.model.mgmt.config import AppName, ModelFramework
 from azureml.model.mgmt.processors.transformers.config import HF_CONF
-from azureml.model.mgmt.processors.preprocess import run_preprocess
+from azureml.model.mgmt.processors.preprocess import run_preprocess, check_for_py_files
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks as TransformersSupportedTasks
 from azureml.model.mgmt.processors.pyfunc.config import SupportedTasks as PyFuncSupportedTasks
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, UnsupportedTaskType
@@ -113,6 +113,7 @@ def run():
     mlflow_model_output_dir = args.mlflow_model_output_dir
     model_import_job_path = args.model_import_job_path
     license_file_path = args.license_file_path
+    TRUST_CODE_KEY = "trust_remote_code=True"
 
     if not ModelFramework.has_value(model_framework):
         raise Exception(f"Unsupported model framework {model_framework}")
@@ -140,7 +141,18 @@ def run():
                 AzureMLError.create(UnsupportedTaskType, task_type=args.task_name,
                                     supported_tasks=list(supported_tasks))
             )
-
+    files = check_for_py_files(model_path)
+    logger.info(f"check if model folder contains .py files or not: {files}")
+    if files:
+        if hf_model_args is None or TRUST_CODE_KEY not in hf_model_args:
+            hf_model_args = TRUST_CODE_KEY
+            logger.warning(f"{TRUST_CODE_KEY} is not provided for hf_model_args. Using {TRUST_CODE_KEY}.")
+        if hf_tokenizer_args is None or TRUST_CODE_KEY not in hf_tokenizer_args:
+            hf_tokenizer_args = TRUST_CODE_KEY
+            logger.warning(f"{TRUST_CODE_KEY} is not provided for hf_tokenizer_args. Using {TRUST_CODE_KEY}.")
+        if hf_config_args is None or TRUST_CODE_KEY not in hf_config_args:
+            hf_config_args = TRUST_CODE_KEY
+            logger.warning(f"{TRUST_CODE_KEY} is not provided for hf_config_args. Using {TRUST_CODE_KEY}.")
     preprocess_args["task"] = task_name.lower()
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
     preprocess_args[HF_CONF.EXTRA_PIP_REQUIREMENTS.value] = extra_pip_requirements

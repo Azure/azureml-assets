@@ -4,9 +4,12 @@
 """This file contains unit tests for the Model Monitor Data Quality Compute Metric component."""
 
 from pyspark.sql.functions import (
+    col,
     current_timestamp,
-    lit)
+    lit,
+    when)
 from pyspark.sql.types import (
+    BooleanType,
     ByteType,
     DoubleType,
     IntegerType,
@@ -14,12 +17,17 @@ from pyspark.sql.types import (
     LongType,
     StringType,
     StructField,
-    StructType)
+    StructType,
+    TimestampType)
 from src.data_quality_compute_metrics.compute_data_quality_metrics import (
     compute_data_quality_metrics,
     compute_dtype_violation_count_modify_dataset,
     get_null_count,
-    modify_dataType)
+    modify_dataType,
+    compute_set_violation,
+    impute_numericals_with_median,
+    impute_categorical_with_mode,
+    convert_set_string_to_array)
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp, data_stats_table
 import pytest
@@ -109,11 +117,12 @@ class TestModelMonitorDataQuality:
                 ("BooleanType()", "featureName1"), ("DoubleType()", "featureName1"),
                 ("StringType()", "featureName1"),  ("DateType()", "featureName1"),
                 ("LongType()", "featureName1"), ("ByteType()", "featureName1"),
-                ("IntegerType()", "featureName1")]
+                ("IntegerType()", "featureName1"), ("ShortType()", "featureName1")]
         columns = ["dataType", "featureName"]
         expected = ["binary",      "timestamp", "boolean",
                     "double",      "string",    "date",
-                    "long",        "byte",      "integer"]
+                    "bigint",      "tinyint",   "int",
+                    "smallint"]
         df = create_pyspark_dataframe(data, columns)
         df_mod = modify_dataType(df)
         dataType_array = [str(row.dataType) for row in df_mod.collect()]
@@ -166,7 +175,8 @@ class TestModelMonitorDataQuality:
             ).withColumn("featureName", lit("")).withColumn("dataType", lit(""))
 
         expected_metrics_df = expected_metrics_df.unionByName(row)
-        metrics_df = compute_data_quality_metrics(df_with_timestamp, data_stats_table)
+        modified_data_stats_table = convert_set_string_to_array(data_stats_table)
+        metrics_df = compute_data_quality_metrics(df_with_timestamp, modified_data_stats_table, None, None)
         assert expected_metrics_df.count() == metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
 
@@ -205,3 +215,95 @@ class TestModelMonitorDataQuality:
         metrics_df = get_null_count(df_for_max_min_value)
         assert expected_metrics_df.count() == metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(metrics_df.collect())
+
+    def test_impute_missing_values(self):
+        """Test impute_numericals_with_median and impute_categorical_with_mode."""
+        df_with_missing_value = [
+            (40.1,   "s1",   1),
+            (40.2,   "s1",   2),
+            (None,   "s2",   3),
+            (None,   "s1",   None),
+            (40.3,   None,   None)
+            ]
+        df_with_inputed_value = [
+            (40.1,   "s1",   1),
+            (40.2,   "s1",   2),
+            (40.2,   "s2",   3),
+            (40.2,   "s1",   2),
+            (40.3,   "s1",   2)
+            ]
+        schema = StructType([
+            StructField("feature_double", DoubleType(), True),
+            StructField("feature_string", StringType(), True),
+            StructField("feature_integer", IntegerType(), True),
+        ])
+
+        df_with_missing_value = create_pyspark_dataframe(df_with_missing_value, schema)
+        df_with_inputed_value = create_pyspark_dataframe(df_with_inputed_value, schema)
+
+        numerical_columns = ["feature_double", "feature_integer"]
+        categorical_columns = ["feature_string"]
+        df_inputed_numerical = impute_numericals_with_median(df_with_missing_value, numerical_columns)
+        df_inputed_categorical = impute_categorical_with_mode(df_inputed_numerical, categorical_columns)
+        assert sorted(df_with_inputed_value.collect()) == sorted(df_inputed_categorical.collect())
+
+    def test_compute_set_violation(self):
+        """Test compute_set_violation."""
+        df = [
+                ("string1", "char", 2, True,  4.67, "2023-10-01 00:00:01"),
+                ("string2", "char", 3, False, 90.1, "2023-10-01 00:00:02"),
+                ("string3", "char", 4, True,  2.8987, "2023-10-01 00:00:03"),
+                ("string4", "char", 5, False, 3.454, "2023-10-01 00:00:04")
+        ]
+        schema = StructType(
+            [
+                StructField("feature_string", StringType(), True),
+                StructField("feature_char", StringType(), True),
+                StructField("feature_int", IntegerType(), True),
+                StructField("feature_boolean", BooleanType(), True),
+                StructField("feature_double", DoubleType(), True),
+                StructField("feature_timestamp", StringType(), True),
+            ]
+        )
+        df = create_pyspark_dataframe(df, schema)
+        df_input = df.withColumn("feature_timestamp", df["feature_timestamp"].cast(TimestampType()))
+
+        expected_set_violation_value = [("feature_string", 1, "setValueOutOfRange"),
+                                        ("feature_char", 0, "setValueOutOfRange")]
+        data_schema = StructType(
+            [
+                StructField("featureName", StringType(), True),
+                StructField("violationCount", IntegerType(), True),
+                StructField("metricName", StringType(), True),
+            ]
+        )
+        expected_set_violation_table = create_pyspark_dataframe(expected_set_violation_value, data_schema)
+        modified_data_stats_table = convert_set_string_to_array(data_stats_table)
+        set_violation_table = compute_set_violation(df_input,
+                                                    modified_data_stats_table,
+                                                    ["feature_string", "feature_char"])
+        assert sorted(expected_set_violation_table.collect()) == sorted(set_violation_table.collect())
+
+    @pytest.mark.parametrize(
+        "string_set_value, expected_list",
+        [
+            (None, None),
+            ("", ['']),
+            ("[string1, string2]", ["string1", "string2"]),
+            ("[string1, string2", ["string1", "string2"]),
+            ("string1, string2]", ["string1", "string2"]),
+            ("string1, string2", ["string1", "string2"]),
+            ("[string1]", ["string1"]),
+            ("string1", ["string1"]),
+        ],
+    )
+    def test_convert_set_string_to_array(self, string_set_value, expected_list):
+        """Test convert_set_string_to_array."""
+        df = data_stats_table.withColumn("set", when(data_stats_table.featureName == "feature_string",
+                                                     string_set_value).otherwise(data_stats_table["set"]))
+        modified_data_stats_table = convert_set_string_to_array(df)
+        dtype_map = dict(modified_data_stats_table.dtypes)
+        assert "array<string>" == dtype_map["set"]
+
+        df_feature = modified_data_stats_table.filter(col("featureName") == "feature_string")
+        assert expected_list == df_feature.select("set").rdd.flatMap(lambda x: x).first()
