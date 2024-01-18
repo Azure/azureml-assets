@@ -54,8 +54,7 @@ UNWANTED_PACKAGES = [
     "apex=",
     "transformers=",
     "transformers>",
-    "transformers<",
-    "mlflow-skinny="
+    "transformers<"
 ]
 PINNED_PACAKGES = ["transformers==4.34.1"]
 
