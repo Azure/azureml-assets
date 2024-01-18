@@ -9,6 +9,10 @@
 
 ## 1.16.28 (2023-01-05)
 ### 🚀 New Features
+- [#2132](https://github.com/Azure/azureml-assets/pull/2132) Improve logging for model validation and link validation results and build running it
+
+## 1.16.28 (2023-01-05)
+### 🚀 New Features
 - [#2071](https://github.com/Azure/azureml-assets/pull/2071) Allow updating files during azcopy
 
 ## 1.16.27 (2023-12-22)
