@@ -7,7 +7,7 @@
 ### 🚀 New Features
 - [#2141](https://github.com/Azure/azureml-assets/pull/2141) Support archiving models
 
-## 1.16.29 (2023-01-05)
+## 1.16.29 (2023-01-17)
 ### 🚀 New Features
 - [#2132](https://github.com/Azure/azureml-assets/pull/2132) Improve logging for model validation and link validation results and build running it
 
