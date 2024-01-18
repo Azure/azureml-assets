@@ -20,14 +20,13 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     HfModelTypes,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
 )
-from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite
+from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite, clean_column_name
 from azureml.acft.contrib.hf.nlp.nlp_auto.config import AzuremlAutoConfig
 from azureml.acft.contrib.hf.nlp.tasks.translation.preprocess.preprocess_for_finetune import T5_CODE2LANG_MAP
 
-from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException, ACFTSystemException
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import (
     PathNotFound,
-    ACFTSystemError,
     ACFTUserError,
 )
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
@@ -38,7 +37,7 @@ from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 
-logger = get_logger_app(__name__)
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.preprocess.preprocess")
 
 COMPONENT_NAME = "ACFT-Preprocess"
 
@@ -211,9 +210,9 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
         model_type, src_lang, tgt_lang = None, None, None
         try:
             src_lang_idx = unparsed_args.index("--source_lang")
-            src_lang = unparsed_args[src_lang_idx + 1]
+            src_lang = clean_column_name(unparsed_args[src_lang_idx + 1])
             tgt_lang_idx = unparsed_args.index("--target_lang")
-            tgt_lang = unparsed_args[tgt_lang_idx + 1]
+            tgt_lang = clean_column_name(unparsed_args[tgt_lang_idx + 1])
             # fetching model_name as path is already updated above to model_name
             model_type = AzuremlAutoConfig.get_model_type(hf_model_name_or_path=parsed_args.model_name)
         except Exception as e:
@@ -241,9 +240,9 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
 
     # raise errors and warnings
     if not parsed_args.train_data_path:
-        raise ACFTSystemException._with_error(
-            AzureMLError.create(ACFTSystemError, pii_safe_message=(
-                "train_file_path or train_mltable_path need to be passed"
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(ACFTUserError, pii_safe_message=(
+                "train_file_path or train_mltable_path need to be passed."
             ))
         )
     if parsed_args.train_file_path and parsed_args.train_mltable_path:
