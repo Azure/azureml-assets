@@ -11,8 +11,8 @@ def _get_smaller_df(baseline_df, production_df, baseline_count, production_count
     return baseline_df if baseline_count < production_count else production_df
 
 
-def _get_bin_width(baseline_df, production_df, baseline_count, production_count):
-    """Calculate bin width using struges alogorithm."""
+def _get_optimal_number_of_bins(baseline_df, production_df, baseline_count, production_count):
+    """Calculate number of bins for histogram using struges alogorithm."""
     # TODO: Unnecessary calculation, use count from summary and remove _get_smaller_df()
     smaller_df = _get_smaller_df(
         baseline_df, production_df, baseline_count, production_count
@@ -25,7 +25,7 @@ def get_dual_histogram_bin_edges(
     baseline_df, production_df, baseline_count, production_count, numerical_columns
 ):
     """Get histogram edges using fixed bin width."""
-    num_bins = _get_bin_width(
+    num_bins = _get_optimal_number_of_bins(
         baseline_df, production_df, baseline_count, production_count
     )
     all_bin_edges = {}
@@ -42,6 +42,13 @@ def get_dual_histogram_bin_edges(
         max_value = max(baseline_col_max, production_col_max)
 
         bin_width = (max_value - min_value) / num_bins
+
+        # If histogram has only one value then we only need a single bucket and
+        # should skip the for-loop below.
+        if min_value == max_value:
+            delta = 0.005 if min_value == 0 else abs(min_value * 0.005)
+            all_bin_edges[col] = [min_value - delta, min_value + delta]
+            continue
 
         edges = []
         for bin in range(num_bins):

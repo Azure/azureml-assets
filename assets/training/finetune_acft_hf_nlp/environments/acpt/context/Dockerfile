@@ -14,9 +14,6 @@ COPY finetune_run.py /azureml/finetune/run.py
 RUN pip install "azureml-evaluate-mlflow=={{latest-pypi-version}}"
 # pyarrow-hotfix is installed to fix the vulnerability CVE-2023-47248
 # This can be removed once datasets is upgraded to >= 2.14.7
-# mlflow==2.9.2 and mlflow-skinny==2.9.2 are installed to fix the vulnerabilities
-# GHSA-cxfr-5q3r-2rc2, GHSA-v945-r3rc-6fjm, GHSA-vwhf-3v6x-wff8 and GHSA-wqxf-447m-6f5f
-# This can be removed once azureml-evaluate-mlflow updates the dependency.
 RUN pip install -r requirements.txt --no-cache-dir
 RUN python -m nltk.downloader punkt
 RUN MAX_JOBS=4 pip install flash-attn==2.3.3 --no-build-isolation

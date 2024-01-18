@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.40
+version: 0.0.42
 name: llm_rag_register_qa_data_asset
 display_name: LLM - Register QA Generation Data Asset
 is_deterministic: true
@@ -40,5 +40,5 @@ command: >-
   python register_qa_data.py
   --register_output ${{inputs.register_output}}
   --output_format '${{inputs.output_format}}'
-  --storage-uri ${{inputs.storage_uri}}
+  --storage-uri '${{inputs.storage_uri}}'
   $[[--asset-name ${{inputs.asset_name}}]]
