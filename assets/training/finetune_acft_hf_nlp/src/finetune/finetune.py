@@ -775,7 +775,7 @@ def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
         return
 
     # Validate auto_find_batch_size
-    if args.auto_find_batch_size == True:
+    if args.auto_find_batch_size:
         raise ACFTValidationException._with_error(
                     AzureMLError.create(
                         ACFTUserError,
