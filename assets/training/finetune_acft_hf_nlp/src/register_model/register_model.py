@@ -289,7 +289,7 @@ def register_model(args: Namespace):
 
 @swallow_all_exceptions(time_delay=60)
 def main():
-    """Main run function."""
+    """Execute main run function."""
     args = parse_args()
 
     set_logging_parameters(
