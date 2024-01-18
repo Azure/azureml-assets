@@ -348,6 +348,15 @@ def publish_prediction_drift_model_monitor_component(
         component["jobs"]["output_signal_metrics"][
             "component"
         ] = f"azureml:model_monitor_output_metrics:{asset_version}"
+        component["jobs"]["compute_histogram_buckets"][
+            "component"
+        ] = f"azureml:model_monitor_compute_histogram_buckets:{asset_version}"
+        component["jobs"]["compute_baseline_histogram"][
+            "component"
+        ] = f"azureml:model_monitor_compute_histogram:{asset_version}"
+        component["jobs"]["compute_target_histogram"][
+            "component"
+        ] = f"azureml:model_monitor_compute_histogram:{asset_version}"
         component["jobs"]["evaluate_metric_thresholds"][
             "component"
         ] = f"azureml:model_monitor_evaluate_metrics_threshold:{asset_version}"

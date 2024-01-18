@@ -49,7 +49,8 @@ def download_blob_to_file(container_name, container_path, storage_name, target_d
     blob_service_client = BlobServiceClient(account_url, credential=cli_auth)
     container_client = blob_service_client.get_container_client(container_name)
 
-    log_debug(f"Downloading blobs under path {container_path} to {target_dir}.")
+    log_debug(
+        f"Downloading blobs under path {container_path} to {target_dir}.")
     blob_list = container_client.list_blobs(container_path)
     for blob in blob_list:
         relative_path = os.path.relpath(blob.name, container_path)
@@ -168,7 +169,8 @@ if __name__ == "__main__":
     diff_files_list = {path.split('/')[-1] for path in diff_files}
     log_debug(f"Git diff files include:{diff_files}.")
 
-    if "promptflow_ci.py" in diff_files_list or "promptflow-ci.yml" in diff_files_list:
+    if ("promptflow_ci.py" in diff_files_list or "promptflow-ci.yml" in diff_files_list
+            or "flow_utils.py" in diff_files_list):
         log_debug("promptflow_ci.py or promptflow_ci.yml changed, test all models.")
         changed_models = get_all_models()
     else:

@@ -45,7 +45,7 @@ code: '../src/'
 
 command: >-
   python -m azureml.rag.tasks.update_milvus
-  --embeddings ${{inputs.embeddings}}
+  --embeddings '${{inputs.embeddings}}''
   --milvus_config '${{inputs.milvus_config}}'
   --output ${{outputs.index}}
   $[[--connection_id '${{inputs.connection_id}}']]
