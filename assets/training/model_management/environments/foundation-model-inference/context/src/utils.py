@@ -86,8 +86,6 @@ def map_env_vars_to_vllm_server_args() -> dict:
         if env_var in os.environ:
             cli_args[cli_arg] = os.environ[env_var]
 
-    box_logger(f"vLLM server arguments: {cli_args}")
-
     return cli_args
 
 

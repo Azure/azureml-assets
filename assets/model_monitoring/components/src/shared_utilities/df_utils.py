@@ -4,66 +4,95 @@
 """This file contains additional utilities that are applicable to dataframe."""
 import pyspark.sql as pyspark_sql
 
-data_type_double_group = ["float", "double"]
-data_type_long_group = ["long", "int", "bigint", "short"]
+data_type_long_group = ["long", "int", "bigint", "short", "tinyint", "smallint"]
+data_type_numerical_group = ["float", "double", "decimal"]
+data_type_categorical_group = ["string", "boolean", "timestamp", "date", "binary"]
 
 
-def get_numerical_columns(column_dtype_map: dict) -> list:
-    """Get numerical columns from all columns."""
-    # NOTE: byte, short, long are not included in the list because they
-    # are ambiguous with categorical columns. They should be added to the list
-    # based on some heuristics or user preference.
-    numerical_columns = [
-        column
-        for column in column_dtype_map
-        if column_dtype_map[column] in ["float", "double", "decimal"]
-    ]
-    return numerical_columns
+def is_numerical(column, column_dtype_map: dict, feature_type_override_map: dict, df):
+    """Check if int column should be numerical."""
+    is_categorical_col = is_categorical(column, column_dtype_map, feature_type_override_map, df)
+    return None if is_categorical_col is None else not is_categorical_col
 
 
-def get_categorical_columns(column_dtype_map: dict) -> list:
-    """Get categorical columns from all columns."""
-    # NOTE: byte, short, long are not included in the list because they
-    # are ambiguous with numerical columns. They should be added to the
-    # list based on some heuristics or user preference.
-    categorical_columns = [
-        column
-        for column in column_dtype_map
-        if column_dtype_map[column] in ["string", "bool"]
-    ]
-    return categorical_columns
+def is_categorical(column, column_dtype_map: dict, feature_type_override_map: dict, df):
+    """Check if int column should be categorical."""
+    if feature_type_override_map.get(column, None) == "categorical":
+        return True
+    if feature_type_override_map.get(column, None) == "numerical":
+        return False
+    if column_dtype_map[column] in data_type_categorical_group:
+        return True
+    if column_dtype_map[column] in data_type_numerical_group:
+        return False
+    if column_dtype_map[column] in data_type_long_group:
+        distinct_value_ratio = get_distinct_ratio(df.select(column).rdd.flatMap(lambda x: x).collect())
+        return distinct_value_ratio < 0.05
+
+    print(f"Unknown column type: {column_dtype_map[column]}, column name: {column}")
+    return None
 
 
-def get_numerical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
+def get_numerical_cols_with_df_with_override(
+        df,
+        override_numerical_features,
+        override_categorical_features,
+        column_dtype_map=None) -> list:
     """Get numerical columns from all columns with dataframe."""
-    # NOTE: byte, short, long are not included in the list because they
-    # are ambiguous with categorical columns. They should be added to the list
-    # based on some heuristics or user preference.
+    column_dtype_map = dict(df.dtypes) if column_dtype_map is None else column_dtype_map
+    feature_type_override_map = get_feature_type_override_map(override_numerical_features,
+                                                              override_categorical_features)
     numerical_columns = [
         column
         for column in column_dtype_map
-        if column_dtype_map[column] in ["float", "double", "decimal"]
-        or (column_dtype_map[column] in ["int", "bigint", "short", "long"]
-            and is_numerical(baseline_df.select(column)
-                             .rdd.flatMap(lambda x: x).collect()))
+        if is_numerical(column, column_dtype_map, feature_type_override_map, df)
     ]
     return numerical_columns
 
 
-def get_categorical_cols_with_df(column_dtype_map: dict, baseline_df) -> list:
+def get_categorical_cols_with_df_with_override(
+        df,
+        override_numerical_features,
+        override_categorical_features,
+        column_dtype_map=None) -> list:
     """Get categorical columns from all columns with dataframe."""
-    # NOTE: byte, short, long are not included in the list because they
-    # are ambiguous with numerical columns. They should be added to the
-    # list based on some heuristics or user preference.
+    column_dtype_map = dict(df.dtypes) if column_dtype_map is None else column_dtype_map
+    feature_type_override_map = get_feature_type_override_map(override_numerical_features,
+                                                              override_categorical_features)
     categorical_columns = [
         column
         for column in column_dtype_map
-        if column_dtype_map[column] in ["string", "bool"]
-        or (column_dtype_map[column] in ["int", "bigint", "short", "long"]
-            and is_categorical(baseline_df.select(column)
-                               .rdd.flatMap(lambda x: x).collect()))
+        if is_categorical(column, column_dtype_map, feature_type_override_map, df)
     ]
     return categorical_columns
+
+
+def get_numerical_and_categorical_cols(
+        df,
+        override_numerical_features,
+        override_categorical_features,
+        column_dtype_map=None):
+    """Get numerical and categorical columns from all columns with dataframe."""
+    return (get_numerical_cols_with_df_with_override(df,
+                                                     override_numerical_features,
+                                                     override_categorical_features,
+                                                     column_dtype_map),
+            get_categorical_cols_with_df_with_override(df,
+                                                       override_numerical_features,
+                                                       override_categorical_features,
+                                                       column_dtype_map))
+
+
+def get_feature_type_override_map(override_numerical_features: str, override_categorical_features: str) -> dict:
+    """Generate feature type override map with key of feature name and value of "numerical"/"categorical"."""
+    feature_type_override_map = {}
+    if override_categorical_features:
+        for cat_feature in override_categorical_features.split(','):
+            feature_type_override_map[cat_feature] = "categorical"
+    if override_numerical_features:
+        for num_feature in override_numerical_features.split(','):
+            feature_type_override_map[num_feature] = "numerical"
+    return feature_type_override_map
 
 
 def get_distinct_ratio(column):
@@ -71,18 +100,6 @@ def get_distinct_ratio(column):
     distinct_values = len(set(column))
     total_values = len(column)
     return distinct_values / total_values
-
-
-def is_numerical(column):
-    """Check if int column should be numerical."""
-    distinct_value_ratio = get_distinct_ratio(column)
-    return distinct_value_ratio >= 0.05
-
-
-def is_categorical(column):
-    """Check if int column should be categorical."""
-    distinct_value_ratio = get_distinct_ratio(column)
-    return distinct_value_ratio < 0.05
 
 
 def get_common_columns(
@@ -99,8 +116,8 @@ def get_common_columns(
             # if baseline and target are of different type
             # and both of them are in [double, float],
             # We consider them to be double
-            if production_df_dtypes.get(column_name) in data_type_double_group \
-                    and baseline_df_dtypes.get(column_name) in data_type_double_group:
+            if production_df_dtypes.get(column_name) in data_type_numerical_group \
+                    and baseline_df_dtypes.get(column_name) in data_type_numerical_group:
                 common_columns[column_name] = 'double'
             # if baseline and target are of different type
             # and both of them are in [int, long, short]
@@ -110,6 +127,28 @@ def get_common_columns(
                 common_columns[column_name] = 'long'
 
     return common_columns
+
+
+def modify_categorical_columns(df: pyspark_sql.DataFrame, categorical_columns: list) -> list:
+    """
+    Modify categorical columns, filtering out unsupported or non-meaningful columns.
+
+    Args:
+    df (pyspark.sql.DataFrame): The input DataFrame
+    categorical_columns: List of categorical columns
+
+    Returns:
+    modified_categorical_columns: Modified categorical column
+    """
+    # Only do the data quality check for string type. Ignore all the other types
+    # Ignore bool, time, date categorical columns because they are meaningless for data quality calculation
+    # Ignore binary because it will throw type not supported error for mode
+    modified_categorical_columns = []
+    dtype_map = dict(df.dtypes)
+    for column in categorical_columns:
+        if dtype_map[column] == "string":
+            modified_categorical_columns.append(column)
+    return modified_categorical_columns
 
 
 def select_columns_from_spark_df(df: pyspark_sql.DataFrame, column_list: list):
