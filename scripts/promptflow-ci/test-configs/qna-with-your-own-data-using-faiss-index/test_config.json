@@ -1,0 +1,24 @@
+{
+  "nodes": [
+    {
+      "name": "lookup",
+      "inputs": {
+        "path": "https://github.com/Azure/azureml-assets/tree/main/assets/promptflow/data/faiss-index-lookup/faiss_index_sample"
+      }
+    },
+    {
+      "name": "generate_embedding",
+      "inputs": {
+        "deployment_name": "text-embedding-ada-002",
+        "connection": "aoai_connection"
+      }
+    },
+    {
+      "name": "answer_the_question_with_context",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    }
+  ]
+}
