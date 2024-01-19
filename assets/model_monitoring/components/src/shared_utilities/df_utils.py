@@ -5,7 +5,7 @@
 import pyspark.sql as pyspark_sql
 
 data_type_long_group = ["long", "int", "bigint", "short", "tinyint", "smallint"]
-data_type_numerical_group = ["float", "double", "decimal"]
+data_type_numerical_group = ["float", "double", "decimal"] + data_type_long_group
 data_type_categorical_group = ["string", "boolean", "timestamp", "date", "binary"]
 
 
@@ -118,7 +118,7 @@ def get_common_columns(
             # We consider them to be double
             if production_df_dtypes.get(column_name) in data_type_numerical_group \
                     and baseline_df_dtypes.get(column_name) in data_type_numerical_group:
-                common_columns[column_name] = 'double'
+                common_columns[column_name] = production_df_dtypes.get(column_name)
             # if baseline and target are of different type
             # and both of them are in [int, long, short]
             # We consider them to be long
