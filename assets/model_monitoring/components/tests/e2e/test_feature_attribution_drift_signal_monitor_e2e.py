@@ -16,6 +16,7 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_IRIS_BASELINE_DATA,
     DATA_ASSET_IRIS_MODEL_INPUTS_NO_DRIFT,
     DATA_ASSET_IRIS_MODEL_OUTPUTS_NO_DRIFT,
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT
 )
 
 
@@ -185,7 +186,7 @@ class TestFeatureAttributionDriftModelMonitor:
             get_component,
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
-            DATA_ASSET_IRIS_MODEL_INPUTS_NO_DRIFT
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT
         )
 
         # Model inputs does not have the target column

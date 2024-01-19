@@ -11,6 +11,7 @@ from pyspark.sql.types import (
     StringType,
     FloatType
 )
+from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities.df_utils import get_numerical_and_categorical_cols
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable, init_spark
 from shared_utilities import constants
@@ -275,6 +276,12 @@ def run(args):
             return
         log_time_and_message("Reading data in spark and converting to pandas")
         baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
+        if args.target_column not in baseline_df.columns:
+            raise InvalidInputError(
+                f"Target column = '{args.target_column}' is not in the dataset provided to this component." +
+                " Please try using either a complete dataset that already has the target column or try joining" +
+                " with a dataset that results in the target column being included."
+            )
 
         numerical_features, categorical_features = get_numerical_and_categorical_cols(
                                                             baseline_df,
