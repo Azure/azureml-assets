@@ -208,8 +208,10 @@ def update_model_metadata(
     # Archive or restore model based on stage
     try:
         if update.stage == "Archived":
+            logger.print(f"Archiving model {model_name} version {model_version}")
             ml_client.models.archive(name=model_name, version=model_version)
         elif update.stage == "Active":
+            logger.print(f"Restoring model {model_name} version {model_version}")
             ml_client.models.restore(name=model_name, version=model_version)
     except Exception as e:
         logger.log_error(f"Failed to archive or restore model {model_name} version {model_version}: {e}")
