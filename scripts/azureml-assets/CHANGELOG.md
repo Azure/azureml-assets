@@ -3,9 +3,13 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.16.31 (2023-01-06)
+## 1.16.32 (2023-01-19)
+### 🐛 Bugs Fixed
+- [#2078](https://github.com/Azure/azureml-assets/pull/2078) Fix no-op model metadata update
+
+## 1.16.31 (2023-01-19)
 ### 🚀 New Features
-- [#2078](https://github.com/Azure/azureml-assets/pull/2078) Model spec min sku valdn
+- [#2078](https://github.com/Azure/azureml-assets/pull/2078) Model spec minimum SKU validation
 
 ## 1.16.30 (2024-01-18)
 ### 🚀 New Features
