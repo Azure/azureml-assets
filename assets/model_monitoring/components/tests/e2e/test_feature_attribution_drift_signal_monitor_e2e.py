@@ -175,3 +175,18 @@ class TestFeatureAttributionDriftModelMonitor:
 
         # empty target data should cause the pipeline to fail
         assert pipeline_job.status == "Failed"
+
+    def test_monitoring_run_no_target_column_reference_data_successful(
+        self, ml_client: MLClient, get_component, test_suite_name
+    ):
+        """Test the scenario where the production data does not contain the target column."""
+        pipeline_job = _submit_feature_attribution_drift_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_BASELINE_DATA,
+            DATA_ASSET_IRIS_MODEL_INPUTS_NO_DRIFT
+        )
+
+        # Model inputs does not have the target column
+        assert pipeline_job.status == "Completed"
