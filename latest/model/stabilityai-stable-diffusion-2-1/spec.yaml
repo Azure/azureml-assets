@@ -6,8 +6,7 @@ properties:
   SHA: 5cae40e6a2745ae2b01ad92ae5043f95f23644d6
   inference-min-sku-spec: 6|1|112|336
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,Standard_NC96ads_A100_v4, Standard_ND40rs_v2,
-    Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
@@ -19,9 +18,8 @@ tags:
   inference_supported_envs:
   - ds-mii
   inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
-version: 6
+version: 7
 description: |
   This `stable-diffusion-2-1` model is fine-tuned from [stable-diffusion-2](https://huggingface.co/stabilityai/stable-diffusion-2) (`768-v-ema.ckpt`) with an additional 55k steps on the same dataset (with `punsafe=0.1`), and then fine-tuned for another 155k extra steps with `punsafe=0.98`.
 

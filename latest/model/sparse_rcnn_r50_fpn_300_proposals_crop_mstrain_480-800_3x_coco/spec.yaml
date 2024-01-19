@@ -4,17 +4,15 @@ path: ./
 properties:
   SharedComputeCapacityEnabled: true
   SHA: d1edc7838d099d9b42e94945d0d46c2542bd854a
-  evaluation-min-sku-spec: 4|1|28|176
-  evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  finetuning-tasks: image-object-detection
   finetune-min-sku-spec: 4|1|28|176
   finetune-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
-  finetuning-tasks: image-object-detection
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  evaluation-min-sku-spec: 4|1|28|176
+  evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
+    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   inference-min-sku-spec: 4|0|14|28
   inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
     Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
@@ -29,6 +27,7 @@ properties:
     Standard_ND40rs_v2
 tags:
   Preview: ''
+  Deprecated: ''
   SharedComputeCapacityEnabled: ''
   openmmlab_model_id: sparse_rcnn_r50_fpn_300_proposals_crop_mstrain_480-800_3x_coco
   training_dataset: COCO
@@ -49,14 +48,12 @@ tags:
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
   evaluation_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC4as_T4_v3,
-    Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
   finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 10
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+version: 11
 description: |
   `sparse_rcnn_r50_fpn_300_proposals_crop_mstrain_480-800_3x_coco` model is from <a href="https://github.com/open-mmlab/mmdetection/tree/v2.28.2" target="_blank">OpenMMLab's MMDetection library</a>. This model is reported to obtain <a href="https://github.com/open-mmlab/mmdetection/blob/e9cae2d0787cd5c2fc6165a6061f92fa09e48fb1/configs/sparse_rcnn/metafile.yml#L55" target="_blank">box AP of 45.0 for object-detection task on COCO dataset</a>. To understand the naming style used, please refer to <a href="https://mmdetection.readthedocs.io/en/v2.28.2/tutorials/config.html#config-name-style" target="_blank">MMDetection's Config Name Style</a>.
 
@@ -64,7 +61,7 @@ description: |
 
   > The above abstract is from MMDetection website. Review the <a href="https://github.com/open-mmlab/mmdetection/tree/v2.28.2/configs/sparse_rcnn" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
-  > <b>Deprecation Warning</b>: This model is only compatible with mmdet <= 2.28 and is deprecated, will be deleted from Model Catalog by the End of January 2024. We recommend using `mmd-3x-sparse-rcnn_r50_fpn_300-proposals_crop-ms-480-800-3x_coco`, the corresponding mmdet >= 3.1.0 model instead, from <a href="https://ml.azure.com/model/catalog" target="_blank">the AzureML model catalog</a>. In our model catalog, the models prefixed with mmdet-3x are compatible with mmdet >= 3.1.0.
+  > <b>Deprecation Warning</b>: This model is only compatible with mmdet <= 2.28 and is deprecated, will be deleted from Model Catalog by the End of January 2024. We recommend using `mmd-3x-sparse-rcnn_r50_fpn_300-proposals_crop-ms-480-800-3x_coco` from <a href="https://ml.azure.com/model/catalog" target="_blank">the AzureML model catalog</a>. In our model catalog, the models prefixed with mmdet-3x are compatible with mmdet >= 3.1.0.
 
   ### Inference samples
 

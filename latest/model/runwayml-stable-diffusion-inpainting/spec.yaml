@@ -6,8 +6,7 @@ properties:
   SHA: 51388a731f57604945fddd703ecb5c50e8e7b49d
   inference-min-sku-spec: 6|1|112|336
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,Standard_NC96ads_A100_v4, Standard_ND40rs_v2,
-    Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
@@ -17,9 +16,8 @@ tags:
   author: Runway
   huggingface_model_id: runwayml/stable-diffusion-inpainting
   inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
-version: 5
+version: 6
 description: |
   Stable Diffusion Inpainting is a latent text-to-image diffusion model capable of generating photo-realistic images given any text input, with the extra capability of inpainting the pictures by using a mask.
 
