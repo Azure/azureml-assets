@@ -25,7 +25,8 @@ class FeatureSelectorTopNByAttribution(FeatureSelector):
         """Select the top N contributing features."""
         # Collect All feature and importance value from input
         feature_importance_names_importance = (
-            self.feature_importance.select(self.feature_importance.feature, self.feature_importance.metric_value).collect()
+            self.feature_importance.select(self.feature_importance.feature, self.feature_importance.metric_value)
+            .collect()
         )
         # Create dictionary with feature as key and importance as value using row list
         featureimportance_dictionary = {}

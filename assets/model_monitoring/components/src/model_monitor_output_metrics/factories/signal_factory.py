@@ -50,7 +50,10 @@ class SignalFactory:
             )
         elif signal_type == SignalType.DATA_QUALITY.name:
             return DataQualitySignal(
-                monitor_name=monitor_name, signal_name=signal_name, metrics=metrics, feature_importance=feature_importance
+                monitor_name=monitor_name,
+                signal_name=signal_name,
+                metrics=metrics,
+                feature_importance=feature_importance
             )
         elif signal_type == SignalType.FEATURE_ATTRIBUTION_DRIFT.name:
             return FeatureAttributionDriftSignal(
