@@ -266,7 +266,7 @@ def write_empty_signal_metrics_dataframe():
 
 
 def check_df_has_target_column_with_error(baseline_df, target_column: str):
-    """Function to check if a DataFrame has a specified column in its columns. Raises an InvalidInputError if not."""
+    """Checks if a DataFrame has a specified column in its columns. Raises an InvalidInputError if not."""
     if target_column not in baseline_df.columns:
         raise InvalidInputError(
                 f"Target column = '{target_column}' is not in the dataset provided to this component." +
