@@ -89,6 +89,13 @@ DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE = (
     "azureml:mltable_iris_baseline_data_type_override:1"
 )
 
+DATA_ASSET_WITH_TIMESTAMP_BASELINE_DATA = (
+    "azureml:mltable_test_with_timestamp_baseline_data:1"
+)
+DATA_ASSET_WITH_TIMESTAMP_PRODUCTION_DATA = (
+    "azureml:mltable_test_with_timestamp_production_data:1"
+)
+
 # used for checking against histogram regressions where a numerical data-column has a single distinct value
 DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM = (
     "azureml:mltable_iris_preprocessed_model_inputs_int_single_value_histogram:1"
