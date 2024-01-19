@@ -112,7 +112,7 @@ class TestDataQualityModelMonitor:
     def test_monitoring_run_successful_with_timestamp_data(
         self, ml_client: MLClient, get_component, download_job_output, test_suite_name
     ):
-        """Test the happy path scenario with datatype override."""
+        """Test the happy path scenario with timestamp data."""
         pipeline_job = _submit_data_quality_signal_monitor_job(
             ml_client,
             get_component,
