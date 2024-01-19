@@ -62,10 +62,11 @@ def run():
     if args.feature_importance_all:
         feature_importance_all_df = try_read_mltable_in_spark(
             args.feature_importance_all, "feature_importance_all"
-        )        
-        if type(feature_importance_all_df) != type(None):
+        )
+        if feature_importance_all_df is not None:
             feature_importance_names_importance = (
-                feature_importance_all_df.select(feature_importance_all_df.feature, feature_importance_all_df.metric_value).collect()
+                feature_importance_all_df
+                .select(feature_importance_all_df.feature, feature_importance_all_df.metric_value).collect()
             )
     signal: Signal = SignalFactory().produce(
         signal_type=args.signal_type,

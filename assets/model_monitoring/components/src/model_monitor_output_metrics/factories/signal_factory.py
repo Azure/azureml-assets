@@ -54,7 +54,9 @@ class SignalFactory:
             )
         elif signal_type == SignalType.FEATURE_ATTRIBUTION_DRIFT.name:
             return FeatureAttributionDriftSignal(
-                monitor_name=monitor_name, signal_name=signal_name, metrics=metrics
+                monitor_name=monitor_name,
+                signal_name=signal_name,
+                metrics=metrics
             )
         else:
             raise Exception(

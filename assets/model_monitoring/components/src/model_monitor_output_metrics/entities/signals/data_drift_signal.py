@@ -91,7 +91,7 @@ class DataDriftSignal(Signal):
         List[FeatureMetrics]: The feature-level metrics.
         """
         featureimportance_dictionary = {}
-        if type(feature_importance) != type(None):
+        if feature_importance is not None:
             for row in feature_importance:
                 featureimportance_dictionary[row[0]] = row[1]
 
