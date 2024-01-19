@@ -5,8 +5,10 @@
 This module contains the MiiEngine class which is responsible for initializing the MII server and client,
 generating responses for given prompts, and managing the allocation of processes and load balancing.
 """
+import json
 import math
 import os
+import shutil
 import time
 from typing import Dict, List
 
@@ -24,7 +26,6 @@ logger = configure_logger(__name__)
 # TODO: Move them to mii config
 MAX_TOKENS = int(os.environ.get("MAX_TOTAL_TOKENS", 4096))
 MODEL_DIR = os.getenv("AZUREML_MODEL_DIR", "")
-MODEL_PATH = "mlflow_model_folder/data/model"
 DEVICE_COUNT = torch.cuda.device_count()
 
 
@@ -40,6 +41,7 @@ class MiiEngine(BaseEngine):
         self.custom_model_config_builder = config.custom_model_config_builder
         if self.custom_model_config_builder:
             self.custom_model_config_builder.update_mii_model_config(self.mii_config.model_config)
+        self._file_restructure(self.engine_config.tokenizer, self.engine_config.model_id)
 
     def load_model(self, env=None):
         """Initialize MII server and MII client."""
@@ -60,14 +62,18 @@ class MiiEngine(BaseEngine):
             )
 
     @log_execution_time
-    def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
+    async def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
         """Generate responses for given prompts."""
         if self.model is None:
             logger.warning("MII client not initialized. Initializing now.")
             self.init_client()
         queries = {"query": prompts}
         start_time = time.time()
-        responses = self.model.query(queries, **params)
+        try:
+            responses = await self.model._request_async_response(queries, **params)
+        except Exception as e:
+            raise Exception(
+                json.dumps({"error": "Error in processing request", "exception": str(e)}))
         inference_time_ms = (time.time() - start_time) * 1000
 
         if self.custom_model_config_builder is not None:
@@ -128,7 +134,7 @@ class MiiEngine(BaseEngine):
                 "max_tokens": MAX_TOKENS,
                 "meta_tensor": False,
                 "model": MODEL_DIR,
-                "model_path": MODEL_PATH,
+                "model_path": self.engine_config.model_id,
                 "profile_model_time": False,
                 "replace_with_kernel_inject": replace_with_kernel_inject,
                 "replica_configs": [],
@@ -198,3 +204,22 @@ class MiiEngine(BaseEngine):
                 total_size += file_size
         # Return the total size
         return math.ceil(total_size / (1024**3))
+
+    def _file_restructure(self, src: str, dst: str) -> None:
+        """Copy all files in one directory to another.
+
+        MII-V1 does not allow to specify both a model and a tokenizer path.
+        It expects all tokenizer files to be in the same directory that the model files are in.
+        """
+        files_to_duplicate = os.listdir(src)
+        for file in files_to_duplicate:
+            if not os.path.exists(os.path.join(dst, file)):
+                shutil.copy(os.path.join(src, file), dst)
+
+    async def shutdown_async(self):
+        """Terminate DS-MII Server."""
+        try:
+            await self.model.terminate_async()
+        except Exception as e:
+            raise Exception(
+                json.dumps({"error": "Error in processing request", "exception": str(e)}))

@@ -201,3 +201,12 @@ def update_model_metadata(
             logger.print(f"No update found for model {model_name}. Skipping")
     except Exception as e:
         logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")
+
+    # Archive or restore model based on stage
+    try:
+        if update.stage == "Archived":
+            ml_client.models.archive(name=model_name, version=model_version)
+        elif update.stage == "Active":
+            ml_client.models.restore(name=model_name, version=model_version)
+    except Exception as e:
+        logger.log_error(f"Failed to archive or restore model {model_name} version {model_version}: {e}")

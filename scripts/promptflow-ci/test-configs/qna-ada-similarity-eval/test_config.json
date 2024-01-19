@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    {
+      "name": "embedd_ground_truth",
+      "inputs": {
+        "connection": "aoai_connection",
+        "deployment_name": "text-embedding-ada-002"
+      }
+    },
+    {
+      "name": "embedd_answer",
+      "inputs": {
+        "connection": "aoai_connection",
+        "deployment_name": "text-embedding-ada-002"
+      }
+    }
+  ]
+}

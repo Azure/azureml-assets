@@ -134,7 +134,7 @@ class DiffusionConfigurationBuilder(ModelConfigurationBuilder):
         # Triton kernel supported on only 7.0+ GPUs. V100 is 7.0
         model_config.load_with_sys_mem = False  # Not supported for diffusers
         model_config.task = self._task
-        model_config.model_path = self.model_path
+        model_config.model_path = self.MLFLOW_MODEL_PATH
         if get_gpu_device_capability() <= 7.0:
             model_config.replace_with_kernel_inject = False
             model_config.meta_tensor = True
