@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.31 (2023-01-06)
+### 🚀 New Features
+- [#2078](https://github.com/Azure/azureml-assets/pull/2078) Model spec min sku valdn
+
 ## 1.16.30 (2024-01-18)
 ### 🚀 New Features
 - [#2141](https://github.com/Azure/azureml-assets/pull/2141) Support archiving models
