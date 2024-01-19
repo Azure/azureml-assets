@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    {
+      "name": "embed_the_question",
+      "inputs": {
+        "connection": "aoai_connection",
+        "deployment_name": "text-embedding-ada-002"
+      }
+    },
+    {
+      "name": "answer_the_question_with_context",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    }
+  ]
+}

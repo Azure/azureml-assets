@@ -15,6 +15,7 @@ from pyspark.sql.types import (
     DoubleType,
 )
 from shared_utilities.io_utils import init_spark
+from shared_utilities.momo_exceptions import InvalidInputError
 
 
 def compute_numerical_bins(
@@ -26,10 +27,20 @@ def compute_numerical_bins(
     """Compute numerical bins given two data frames."""
     # Generate histograms only for columns in both baseline and target dataset
     common_columns_dict = get_common_columns(df1, df2)
+    if not common_columns_dict:
+        raise InvalidInputError(
+            "Found no common columns between input datasets. Try double-checking" +
+            " if there are common columns between the input datasets." +
+            " Common columns must have the same names (case-sensitive) and similar data types."
+        )
+
     numerical_columns = get_numerical_cols_with_df_with_override(df1,
                                                                  override_numerical_features,
                                                                  override_categorical_features,
                                                                  common_columns_dict)
+
+    print(f"numerical columns: {numerical_columns}")
+
     # Numerical column histogram generation
     baseline_count = df1.count()
     production_count = df2.count()
@@ -59,7 +70,7 @@ def compute_histogram_buckets(
     )
     bin_edges = compute_numerical_bins(df1, df2, override_numerical_features, override_categorical_features)
 
-    print(bin_edges)
+    print(f"bin edges: {bin_edges}")
     data = []
     for feature in bin_edges:
         print(bin_edges[feature])

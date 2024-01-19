@@ -69,11 +69,13 @@ class TestComputeFeatureImportanceMetrics:
 
     def test_mark_categorical_column(self, get_fraud_data):
         """Test deteremine task type for classification scenario."""
+
         categorical_features_lgbm = ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMPSTR", "TIMESTAMP", "ISPROXYIP"]
         numerical_features = ["TRANSACTIONAMOUNT", "TRANSACTIONAMOUNTUSD", "DIGITALITEMCOUNT"]
         target_column = "IS_FRAUD"
 
         mark_categorical_column(get_fraud_data, target_column, categorical_features_lgbm, numerical_features)
+
         # timestamp/date should be mark as int
         assert get_fraud_data.dtypes['TIMESTAMP'] == "int64"
         # categorical columns should mark as category

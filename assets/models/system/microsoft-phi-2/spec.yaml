@@ -50,4 +50,4 @@ tags:
     apply_ort: 'false'
     precision: 16
   task: text-generation
-version: 7
+version: 6

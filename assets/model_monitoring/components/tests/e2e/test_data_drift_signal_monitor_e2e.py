@@ -121,7 +121,7 @@ class TestDataDriftModelMonitor:
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS,
         )
 
-        # No common columns should fail the job in the feature selector step.
+        # No common columns should fail the job in the feature selector step and compute histogram step.
         assert pipeline_job.status == "Failed"
 
     def test_monitoring_run_use_int_data_has_no_drift_successful(
@@ -187,10 +187,11 @@ class TestDataDriftModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    def test_monitoring_run_successful_with_datatype_override(
+
+    def test_monitoring_run_successful_with_timestamp_data(
         self, ml_client: MLClient, get_component, download_job_output, test_suite_name
     ):
-        """Test the happy path scenario with datatype override."""
+        """Test the happy path scenario with timestamp data."""
         pipeline_job = _submit_data_drift_model_monitor_job(
             ml_client,
             get_component,
