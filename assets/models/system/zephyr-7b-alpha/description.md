@@ -63,22 +63,26 @@ Token Classification | Token Classification | <a href="https://huggingface.co/da
 ### Sample input
 ```json
 {
-    "input_data": [
-        "I believe the meaning of life is"
+  "input_data": {
+    "input_string": [
+      "the meaning of life is"
     ],
     "params": {
-        "top_p": 1.0,
-        "temperature": 0.8,
-        "max_new_tokens": 100,
-        "do_sample": true,
-        "return_full_text": true
+      "top_p": 0.9,
+      "temperature": 0.2,
+      "max_new_tokens": 100,
+      "do_sample": true,
+      "return_full_text": true
     }
+  }
 }
 ```
 
 ### Sample output
 ```json
 [
-  "I believe the meaning of life is to give way to you in the present moment to the things you love the most. We don't need to worry about your feelings of guilt, anger, or pain; we need to find ways to make things easier for you and help you get back to normal.\n\nAs a mother, I've always considered that the meaning of the world came from the love we gave each other. I believe that love is a life-sustaining energy that can help us reach our goal of one day"
+  {
+    "0": "the meaning of life is to find happiness and fulfill"
+  }
 ]
 ```
