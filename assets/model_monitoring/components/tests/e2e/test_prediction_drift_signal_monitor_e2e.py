@@ -12,7 +12,9 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_IRIS_BASELINE_DATA,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_NO_DRIFT,
     DATA_ASSET_EMPTY,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS,
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_MISMATCHED_COLUMN_DATATYPES,
+    DATA_ASSET_IRIS_BASELINE_INT_DATA_TYPE
 )
 
 
@@ -119,3 +121,18 @@ class TestPredictionDriftModelMonitor:
 
         # empty production and target data should fail the job
         assert pipeline_job.status == "Failed"
+
+    def test_monitoring_run_mismatched_data_types(self, ml_client: MLClient, get_component, download_job_output,
+        test_suite_name
+    ):
+        """Test the scenario where the data types of the columns in input data are not the same (int vs double for column sepat_length for example)."""
+        pipeline_job = _submit_prediction_drift_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_BASELINE_INT_DATA_TYPE,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_MISMATCHED_COLUMN_DATATYPES,
+        )
+
+        # mismatched data types on columns should fail with no common columns
+        assert pipeline_job.status == "Completed"
