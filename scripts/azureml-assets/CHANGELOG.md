@@ -3,6 +3,18 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.31 (2023-01-06)
+### 🚀 New Features
+- [#2078](https://github.com/Azure/azureml-assets/pull/2078) Model spec min sku valdn
+
+## 1.16.30 (2024-01-18)
+### 🚀 New Features
+- [#2141](https://github.com/Azure/azureml-assets/pull/2141) Support archiving models
+
+## 1.16.29 (2023-01-17)
+### 🚀 New Features
+- [#2132](https://github.com/Azure/azureml-assets/pull/2132) Improve logging for model validation and link validation results and build running it
+
 ## 1.16.28 (2023-01-05)
 ### 🚀 New Features
 - [#2071](https://github.com/Azure/azureml-assets/pull/2071) Allow updating files during azcopy
