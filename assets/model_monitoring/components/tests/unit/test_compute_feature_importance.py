@@ -3,11 +3,14 @@
 
 """This file contains unit tests for the Data Drift Output Metrics component."""
 
-from feature_importance_metrics.compute_feature_importance import determine_task_type, get_train_test_data, check_df_has_target_column_with_error
+from feature_importance_metrics.compute_feature_importance import (
+    determine_task_type,
+    get_train_test_data,
+    check_df_has_target_column_with_error
+)
 from feature_importance_metrics.feature_importance_utilities import mark_categorical_column
 from feature_importance_metrics.compute_feature_attribution_drift import (
     drop_metadata_columns, calculate_attribution_drift)
-from src.shared_utilities.momo_exceptions import InvalidInputError
 import pytest
 import pandas as pd
 
@@ -169,7 +172,4 @@ class TestComputeFeatureImportanceMetrics:
 
     def test_check_df_has_target_column_with_error_successful(self, get_fraud_data):
         """Test that has target column present in the reference data."""
-        try:
-            check_df_has_target_column_with_error(get_fraud_data, "IS_FRAUD")
-        except:
-            pytest.fail("Should not throw an exception.")
+        check_df_has_target_column_with_error(get_fraud_data, "IS_FRAUD")
