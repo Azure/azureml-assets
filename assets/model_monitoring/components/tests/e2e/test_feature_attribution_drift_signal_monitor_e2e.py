@@ -190,4 +190,4 @@ class TestFeatureAttributionDriftModelMonitor:
         )
 
         # Model inputs does not have the target column
-        assert pipeline_job.status == "Completed"
+        assert pipeline_job.status == "Failed"
