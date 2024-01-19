@@ -6,7 +6,6 @@ properties:
   SHA: 51388a731f57604945fddd703ecb5c50e8e7b49d
   inference-min-sku-spec: 6|1|112|336
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,Standard_NC96ads_A100_v4,
     Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
   Preview: ""
@@ -21,11 +20,8 @@ tags:
       Standard_NC6s_v3,
       Standard_NC12s_v3,
       Standard_NC24s_v3,
-      Standard_NC24ads_A100_v4,
-      Standard_NC48ads_A100_v4,
-      Standard_NC96ads_A100_v4,
       Standard_ND40rs_v2,
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4
     ]
-version: 5
+version: 6
