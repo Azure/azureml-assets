@@ -37,8 +37,6 @@ def compute_numerical_bins(
                                                                  override_numerical_features,
                                                                  override_categorical_features,
                                                                  common_columns_dict)
-    print(f"numerical columns: {numerical_columns}")
-
     # Numerical column histogram generation
     baseline_count = df1.count()
     production_count = df2.count()

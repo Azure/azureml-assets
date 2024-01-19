@@ -4,6 +4,7 @@
 """This file contains the core logic for feature attribution drift component."""
 from datetime import datetime
 from shared_utilities.io_utils import init_spark
+import pandas as pd
 
 
 def log_time_and_message(message):
@@ -37,8 +38,12 @@ def mark_categorical_column(baseline_df, target_column, categorical_features_lgb
     :type target_column: string
     """
     for column in baseline_df.columns:
-        if column in categorical_features_lgbm:
+        col = pd.Series(baseline_df[column])
+        # lightgbm requires data/datetime to be converted to int
+        if (pd.api.types.is_datetime64_dtype(col) or pd.api.types.is_timedelta64_dtype(col)):
+            baseline_df[column] = baseline_df[column].astype('int64')
+        elif column in categorical_features_lgbm:
             baseline_df[column] = baseline_df[column].astype('category')
-        if column not in categorical_features_lgbm and column not in numerical_features and column != target_column:
+        elif column not in categorical_features_lgbm and column not in numerical_features and column != target_column:
             log_time_and_message(f"Unknown column: {column}, defult to category.")
             baseline_df[column] = baseline_df[column].astype('category')
