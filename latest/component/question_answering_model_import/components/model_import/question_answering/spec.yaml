@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: question_answering_model_import
-version: 0.0.30
+version: 0.0.31
 type: command
 
 is_deterministic: true
