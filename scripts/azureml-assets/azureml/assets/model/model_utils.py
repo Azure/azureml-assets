@@ -155,12 +155,12 @@ def update_model_metadata(
     """Update the mutable metadata of already registered Model."""
     try:
         model = ml_client.models.get(name=model_name, version=model_version)
-
         need_update = False
-        updated_tags = copy.deepcopy(model.tags)
-        updated_properties = copy.deepcopy(model.properties)
+
+        # Update tags
         if update.tags:
-            # Replace tags
+            updated_tags = copy.deepcopy(model.tags)
+
             if update.tags.replace is not None:
                 updated_tags = update.tags.replace
             else:
@@ -171,12 +171,14 @@ def update_model_metadata(
                     for k in update.tags.delete:
                         updated_tags.pop(k, None)
 
-        if updated_tags != model.tags:
-            logger.print("tags has been updated.")
-            model.tags = updated_tags
-            need_update = True
+            if updated_tags != model.tags:
+                logger.print("tags has been updated.")
+                model.tags = updated_tags
+                need_update = True
 
+        # Update properties
         if update.properties:
+            updated_properties = copy.deepcopy(model.properties)
             if update.properties.add is not None:
                 for k, v in update.properties.add.items():
                     if k in model.properties and model.properties[k] != v:
@@ -184,12 +186,13 @@ def update_model_metadata(
                                         f"be replaced to {v} without increasing the version.")
                     updated_properties[k] = v
 
-        if updated_properties != model.properties:
-            logger.print("properties has been updated.")
-            model.properties = updated_properties
-            need_update = True
+            if updated_properties != model.properties:
+                logger.print("properties has been updated.")
+                model.properties = updated_properties
+                need_update = True
 
-        if model.description != update.description:
+        # Update description
+        if update.description is not None and model.description != update.description:
             logger.print("description has been updated")
             model.description = update.description
             need_update = True
@@ -205,8 +208,10 @@ def update_model_metadata(
     # Archive or restore model based on stage
     try:
         if update.stage == "Archived":
+            logger.print(f"Archiving model {model_name} version {model_version}")
             ml_client.models.archive(name=model_name, version=model_version)
         elif update.stage == "Active":
+            logger.print(f"Restoring model {model_name} version {model_version}")
             ml_client.models.restore(name=model_name, version=model_version)
     except Exception as e:
         logger.log_error(f"Failed to archive or restore model {model_name} version {model_version}: {e}")
