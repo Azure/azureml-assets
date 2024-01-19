@@ -7,7 +7,8 @@ on:
     paths:
       - assets/batch_score/**
       - .github/workflows/batch-score-ci.yml
-      
+  workflow_dispatch:
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
