@@ -5,7 +5,7 @@
 
 ## 1.16.32 (2023-01-19)
 ### 🐛 Bugs Fixed
-- [#2078](https://github.com/Azure/azureml-assets/pull/2078) Fix no-op model metadata update
+- [#2155](https://github.com/Azure/azureml-assets/pull/2155) Fix no-op model metadata update
 
 ## 1.16.31 (2023-01-19)
 ### 🚀 New Features
