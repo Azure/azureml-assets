@@ -175,6 +175,7 @@ jobs:
       signal_metrics:
         type: mltable
         path: ${{parent.jobs.join_data_quality_metrics.outputs.signal_metrics}}
+      feature_importance_all: ${{parent.jobs.compute_feature_importances.outputs.signal_metrics}}
       signal_type: "DataQuality"
       signal_name: ${{parent.inputs.signal_name}}
       monitor_name: ${{parent.inputs.monitor_name}}

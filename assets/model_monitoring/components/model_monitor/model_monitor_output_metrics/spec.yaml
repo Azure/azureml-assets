@@ -31,6 +31,10 @@ inputs:
     type: mltable
     mode: direct
     optional: true
+  feature_importance_all:
+    type: mltable
+    mode: direct
+    optional: true
 outputs:
   signal_output:
     type: uri_folder
@@ -59,4 +63,12 @@ conf:
         - fsspec~=2023.4.0
     name: momo-base-spark
 args: >-
-  --signal_name ${{inputs.signal_name}} --monitor_name ${{inputs.monitor_name}} --signal_type ${{inputs.signal_type}} --signal_metrics ${{inputs.signal_metrics}} --metric_timestamp ${{inputs.metric_timestamp}} --signal_output ${{outputs.signal_output}} $[[--target_histogram ${{inputs.target_histogram}}]] $[[--baseline_histogram ${{inputs.baseline_histogram}}]]
+  --signal_name ${{inputs.signal_name}} 
+  --monitor_name ${{inputs.monitor_name}} 
+  --signal_type ${{inputs.signal_type}} 
+  --signal_metrics ${{inputs.signal_metrics}} 
+  --metric_timestamp ${{inputs.metric_timestamp}} 
+  --signal_output ${{outputs.signal_output}} 
+  $[[--target_histogram ${{inputs.target_histogram}}]] 
+  $[[--baseline_histogram ${{inputs.baseline_histogram}}]]
+  $[[--feature_importance_all ${{inputs.feature_importance_all}}]]

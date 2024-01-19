@@ -60,3 +60,4 @@ args: >-
   --categorical_metrics ${{inputs.categorical_metrics}}
   --numerical_metrics ${{inputs.numerical_metrics}}
   --signal_metrics ${{outputs.signal_metrics}}
+  --feature_names ${{inputs.feature_names}}
