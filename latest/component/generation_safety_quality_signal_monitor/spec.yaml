@@ -4,7 +4,7 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.4.15
+version: 0.4.16
 is_deterministic: true
 inputs:
   monitor_name:
@@ -91,6 +91,10 @@ inputs:
     type: string
     default: ""
     optional: true
+  instance_type:
+    type: string
+    default: "standard_e4s_v3"
+    optional: true
 outputs:
   signal_output:
     type: uri_folder
@@ -132,7 +136,7 @@ jobs:
       similarity_violations:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -153,7 +157,7 @@ jobs:
       signal_metrics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -175,7 +179,7 @@ jobs:
         path: ${{parent.outputs.signal_output}}
         mode: direct
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -189,7 +193,7 @@ jobs:
       notification_emails: ${{parent.inputs.notification_emails}}
       signal_name: ${{parent.inputs.signal_name}}
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
