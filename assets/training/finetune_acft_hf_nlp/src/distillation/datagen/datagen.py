@@ -37,9 +37,9 @@ from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.preprocess.preprocess")
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.distillation.datagen")
 
-COMPONENT_NAME = "ACFT-Preprocess"
+COMPONENT_NAME = "datagen-distillation"
 
 
 def str2bool(arg):
@@ -114,15 +114,17 @@ def distillation_datagen(parsed_args: Namespace, unparsed_args: list):
     message_text = [{"role":"system","content":"You are an AI assistant that helps people find information."},{"role":"user","content":"what is 2+2?"},{"role":"assistant","content":"2 + 2 equals 4."}]
 
     completion = openai.ChatCompletion.create(
-    engine="gpt4",
-    messages = message_text,
-    temperature=0.7,
-    max_tokens=800,
-    top_p=0.95,
-    frequency_penalty=0,
-    presence_penalty=0,
-    stop=None
+        engine="gpt4",
+        messages = message_text,
+        temperature=0.7,
+        max_tokens=800,
+        top_p=0.95,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None
     )
+
+    # write response along with request to output file
 
 
 @swallow_all_exceptions(time_delay=60)
