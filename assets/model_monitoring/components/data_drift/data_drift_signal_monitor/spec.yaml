@@ -5,7 +5,6 @@ name: data_drift_signal_monitor
 display_name: Data Drift - Signal Monitor
 description: Computes the data drift between a baseline and production data assets.
 version: 0.3.25
-
 is_deterministic: true
 
 inputs:
@@ -64,7 +63,7 @@ outputs:
 jobs:
   compute_feature_importances:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.8
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.9
     inputs:
       baseline_data:
         type: mltable
