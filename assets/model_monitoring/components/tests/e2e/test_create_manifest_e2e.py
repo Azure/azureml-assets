@@ -44,8 +44,7 @@ def _submit_data_drift_and_create_manifest_job(
         )
 
         create_manifest_output: Spark = create_manifest(
-            signal_outputs_1=dd_model_monitor_metrics_output.outputs.signal_output,
-            skip_validation=True
+            signal_outputs_1=dd_model_monitor_metrics_output.outputs.signal_output
         )
 
         mdc_preprocessor_output.identity = AmlTokenConfiguration()
