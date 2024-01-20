@@ -1,0 +1,55 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: question_answering_distillation
+version: 0.0.31
+type: command
+
+is_deterministic: True
+
+display_name: Question Answering Distillation from teacher model like GPT 4
+description: Component to preprocess data for question answering task. See [docs](https://aka.ms/azureml/components/question_answering_datapreprocess) to learn more.
+
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/39
+
+code: ../../../src/distillation/datagen
+
+inputs:
+  # Task arguments
+  # Sample example
+  # {`question_column`: "In what year did Paul VI formally appoint Mary as mother of the Catholic church?", `context_column`: "Paul VI opened the third period on 14 September 1964, telling the Council Fathers that he viewed the text about the Church as the most important document to come out from the Council. As the Council discussed the role of bishops in the papacy, Paul VI issued an explanatory note confirming the primacy of the papacy, a step which was viewed by some as meddling in the affairs of the Council American bishops pushed for a speedy resolution on religious freedom, but Paul VI insisted this to be approved together with related texts such as ecumenism. The Pope concluded the session on 21 November 1964, with the formal pronouncement of Mary as Mother of the Church.", `answers_column`: {`answer_start_column`: [595], `text_column`: ['1964']}}
+  # If the dataset follows above pattern, `question_key`: "question_column"; `context_key`: "context_column"; `answers_key`: answers_column; `answer_start_key`: answer_start_column; `answer_text_key`: text_column
+  # Data inputs
+  # Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split from train data happens if they are not passed.
+  # If both validation and test files are missing, 10% of train data will be assigned to each of them and the remaining 80% will be used for training
+  # If anyone of the file is missing, 20% of the train data will be assigned to it and the remaining 80% will be used for training
+  source_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
+
+  source_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered training data asset in `mltable` format.
+
+  openai_api_type:
+    type: string
+    optional: false
+  
+  openai_api_base:
+    type: string
+  
+  openai_api_version:
+    type: string
+    
+  openai_api_key:
+    type: string
+    
+outputs:
+  output_file:
+    type: uri_file
+    description: the file containing qa generated data from teacher model
+    mode: rw_mount
+
+command: >-
+  python datagen.py --openai_api_type '${{inputs.openai_api_type}}' --openai_api_base '${{inputs.openai_api_base}}' --openai_api_version '${{inputs.openai_api_version}}' --openai_api_key '${{inputs.openai_api_key}}' $[[--source_file_path '${{inputs.source_file_path}}']] $[[--source_mltable_path '${{inputs.source_mltable_path}}']] --output_file '${{outputs.output_file}}'
