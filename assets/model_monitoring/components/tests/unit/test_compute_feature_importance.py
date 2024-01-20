@@ -3,12 +3,19 @@
 
 """This file contains unit tests for the Data Drift Output Metrics component."""
 
-from feature_importance_metrics.compute_feature_importance import determine_task_type, get_train_test_data
+from feature_importance_metrics.compute_feature_importance import (
+    compute_feature_importance, determine_task_type,
+    get_train_test_data, CONTINUOUS_ERR)
 from feature_importance_metrics.feature_importance_utilities import mark_categorical_column
 from feature_importance_metrics.compute_feature_attribution_drift import (
     drop_metadata_columns, calculate_attribution_drift)
 import pytest
 import pandas as pd
+from shared_utilities import constants
+from shared_utilities.momo_exceptions import InvalidInputError
+
+
+CLASSIFICATION = constants.CLASSIFICATION
 
 
 @pytest.fixture
@@ -161,3 +168,18 @@ class TestComputeFeatureImportanceMetrics:
         production_dataframe = pd.DataFrame(production_data)
         drift = calculate_attribution_drift(baseline_dataframe, production_dataframe)
         assert drift == 0.5135443210660507
+
+    def test_raise_user_error_invalid_task(self, get_fraud_data):
+        """Test classification task with continuous numeric label."""
+        categorical_features_lgbm = ["TRANSACTIONID", "ACCOUNTID",
+                                     "TIMESTAMPSTR", "TIMESTAMP",
+                                     "ISPROXYIP"]
+        get_fraud_data_copy = get_fraud_data.copy()
+        get_fraud_data_copy["IS_FRAUD_LIKELIHOOD"] = [
+            0.12, 0.23, 0.331, 0.125
+        ]
+        del get_fraud_data_copy["IS_FRAUD"]
+        with pytest.raises(InvalidInputError, match=CONTINUOUS_ERR):
+            compute_feature_importance(CLASSIFICATION, "IS_FRAUD_LIKELIHOOD",
+                                       get_fraud_data_copy,
+                                       categorical_features_lgbm)
