@@ -13,6 +13,7 @@ from pyspark.sql.types import (
 )
 from shared_utilities.df_utils import get_numerical_and_categorical_cols
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable, init_spark
+from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities import constants
 from sklearn.model_selection import train_test_split
 from responsibleai import RAIInsights, FeatureMetadata
@@ -27,6 +28,10 @@ except ImportError:
 
 from feature_importance_metrics.feature_importance_utilities import (
     mark_categorical_column, convert_pandas_to_spark, log_time_and_message)
+
+
+CONTINUOUS_ERR = ('The target column is continuous. ' +
+                  'Please specify the task type as regression.')
 
 
 def parse_args():
@@ -92,7 +97,12 @@ def create_lightgbm_model(X, y, task_type):
         lgbm = LGBMRegressor(boosting_type='gbdt', learning_rate=0.1,
                              max_depth=5, n_estimators=200, n_jobs=1, random_state=777,)
 
-    model = lgbm.fit(X, y)
+    try:
+        model = lgbm.fit(X, y)
+    except ValueError as e:
+        if "Unknown label type: 'continuous'" in str(e):
+            raise InvalidInputError(CONTINUOUS_ERR)
+        raise e
     log_time_and_message(f"Created lightgbm model using task_type: {task_type}")
     return model
 
