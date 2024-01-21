@@ -116,7 +116,6 @@ class ReplicaManager:
             )
             # wait for all replicas to finish loading the model
             while os.path.exists(flag_file_path):
-                logger.info(f"Waiting for model to finish loading. Current worker pid: {os.getpid()}")
                 time.sleep(5)
             for engine in self.engine_replicas:
                 engine.init_client()
@@ -124,9 +123,12 @@ class ReplicaManager:
             try:
                 with open(flag_file_path, "x"):
                     logger.info(
-                        f"Lock acquired by worker with pid: {os.getpid()}. Loading model.",
+                        f"Lock acquired by worker with pid: {os.getpid()}. Loading model. \
+Using tensor parallel of {self._tensor_parallel} GPUs per replica.",
                     )
                     process_is_loading_model = True
+                    logger.handlers[0].flush()
+                    os.environ["LOGGING_WORKER_ID"] = str(os.getpid())
                     # Start replicas in parallel using ProcessPoolExecutor
                     with ProcessPoolExecutor() as executor:
                         executor.map(
@@ -147,9 +149,9 @@ class ReplicaManager:
 
             if os.path.exists(flag_file_path):
                 os.remove(flag_file_path)
-
-        print(f"Initialized {self._replica_config.num_replicas} replicas.")
-        print(f"Server URIs: {[engine.server_url for engine in self.engine_replicas]}")
+        if os.environ.get("LOGGING_WORKER_ID", "") == str(os.getpid()):
+            print(f"Initialized {self._replica_config.num_replicas} replicas.")
+            print(f"Server URIs: {[engine.server_url for engine in self.engine_replicas]}")
 
     def _launch_single_replica(self, replica_idx):
         """Launch a single replica."""
@@ -198,7 +200,6 @@ class ReplicaManager:
         """Get the tensor parallel configuration for each replica."""
         # evenly divide the available GPUs among the replicas
         res = max(torch.cuda.device_count() // self._replica_config.num_replicas, 1)
-        logger.info(f"Using tensor parallel of {res} GPUs per replica.")
         return res
 
     def _set_defaults(self):

@@ -45,7 +45,7 @@ def _submit_mdc_preprocessor_job(
     )
 
     pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+        pipeline_job, experiment_name=experiment_name, skip_validation=True
     )
 
     # Wait until the job completes
