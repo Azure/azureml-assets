@@ -197,7 +197,7 @@ class StoreUrl:
                 # asset path should be translated to azureml or hdfs path in service, should not reach here
                 raise InvalidInputError("AzureML asset path is not supported as uri_folder.")
 
-            data_pattern0 = r"azureml://(subscriptions/([^/]+)/resourceGroups/([^/]+)/workspaces/([^/]+)/)?data/(?P<data>[^/]+)/versions/(?P<version>.+)"  # noqa: E501
+            data_pattern0 = r"azureml://(subscriptions/([^/]+)/resource[gG]roups/([^/]+)/workspaces/([^/]+)/)?data/(?P<data>[^/]+)/versions/(?P<version>.+)"  # noqa: E501
             data_pattern1 = r"azureml://locations/([^/]+)/workspaces/([^/]+)/data/(?P<data>[^/]+)/versions/(?P<version>.+)"  # noqa: E501
             matches = re.match(data_pattern0, self._base_url) or re.match(data_pattern1, self._base_url)
             if matches:
@@ -226,7 +226,7 @@ class StoreUrl:
 
     def _get_datastore_and_path_from_azureml_path(self) -> (str, str):
         """Get datastore name and path from azureml path."""
-        pattern = r"azureml://(subscriptions/([^/]+)/resourceGroups/([^/]+)/workspaces/([^/]+)/)?datastores/(?P<datastore_name>[^/]+)/paths/(?P<path>.+)"  # noqa: E501
+        pattern = r"azureml://(subscriptions/([^/]+)/resource[gG]roups/([^/]+)/workspaces/([^/]+)/)?datastores/(?P<datastore_name>[^/]+)/paths/(?P<path>.+)"  # noqa: E501
         matches = re.match(pattern, self._base_url)
         if not matches:
             raise InvalidInputError(f"Unsupported azureml uri: {self._base_url}")

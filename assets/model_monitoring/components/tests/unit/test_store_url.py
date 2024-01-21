@@ -99,7 +99,7 @@ class TestStoreUrl:
                                  ClientSecretCredential("00000", "my_client_id", "my_client_secret"))
             ),
             (
-                "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore"
+                "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
                 "AzureBlob", "Sas", "https",
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
@@ -127,7 +127,7 @@ class TestStoreUrl:
                 FileSystemClient("https://my_account.dfs.core.windows.net", "my_container")
             ),
             (
-                "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore"
+                "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
                 "AzureBlob", None, "http",
                 "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
@@ -188,6 +188,7 @@ class TestStoreUrl:
         [
             "azureml://data/my_data/versions/1",
             "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/data/my_data/versions/1",
+            "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/data/my_data/versions/2"
             "azureml://locations/my_loc/workspaces/my_ws/data/my_data/versions/1"
         ]
     )
