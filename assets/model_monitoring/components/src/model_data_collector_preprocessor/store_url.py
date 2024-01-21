@@ -60,8 +60,9 @@ class StoreUrl:
         if not self._datastore:
             if self._is_secure():
                 raise InvalidInputError(
-                    "abfss, wasbs and https URLs are credential less and thus NOT supported for Model Monitoring job, "
-                    "please use credential data instead.")
+                    "abfss, wasbs and https URLs are credential less and are NOT supported by Model Monitoring job, "
+                    "please use azureml file system path with credential data store, e.g. "
+                    "azureml://datastores/<credential_datastore_name>/paths/<path_to_data>")
             else:
                 # abfs, wasb and http URLs are public accessible, can be accessed without credential
                 return None
