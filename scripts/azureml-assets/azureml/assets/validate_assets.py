@@ -3,6 +3,7 @@
 
 """Validate assets."""
 
+import os
 import argparse
 import json
 import re
@@ -15,12 +16,14 @@ from typing import List
 from azure.ai.ml import load_model
 from azure.ai.ml.entities import Model
 from azure.ai.ml.operations._run_history_constants import JobStatus
+from azure.identity import AzureCliCredential
 
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets import PublishLocation, PublishVisibility
 from azureml.assets.config import ValidationException
 from azureml.assets.util import logger
+from azureml.assets.util.sku_utils import get_all_sku_details
 
 ERROR_TEMPLATE = "Validation of {file} failed: {error}"
 WARNING_TEMPLATE = "Warning during validation of {file}: {warning}"
@@ -42,6 +45,15 @@ MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
 VALIDATION_SUMMARY = "results.json"
 SUPPORTED_INFERENCE_SKU_FILE_NAME = "config/supported_inference_skus.json"
 SUPPORTED_INFERENCE_SKU_FILE_PATH = Path(__file__).parent / SUPPORTED_INFERENCE_SKU_FILE_NAME
+
+# credential and mlcient initialization
+# credential might not always be present
+# check in try-except block
+credential = None
+try:
+    credential = AzureCliCredential()
+except Exception as e:
+    logger.log_warning(f"exception in creating credential. {e}")
 
 
 class MLFlowModelProperties:
@@ -92,6 +104,7 @@ class ModelValidationOverallSummary:
     BATCH_DEPLOYMENT = "BatchDeployment"
     ONLINE_DEPLOYMENT = "OnlineDeployment"
     VALIDATION_RUN = "ValidationRun"
+    BUILD_URI = "BuildUri"
 
     @staticmethod
     def get_default_summary():
@@ -604,15 +617,18 @@ def confirm_model_validation_results(
                 "Either last validation run for model had failed or its still running."
             )
             error_count += 1
+        else:
+            overall_summary = {}
+            with open(validation_job_details_path) as f:
+                overall_summary = json.load(f)
 
-        with open(validation_job_details_path) as f:
-            overall_summary = json.load(f)
             validation_run_status = overall_summary.get(
                 ModelValidationOverallSummary.VALIDATION_RUN, ModelValidationState.NOT_STARTED)
             batch_deployment_status = overall_summary.get(
                 ModelValidationOverallSummary.BATCH_DEPLOYMENT, ModelValidationState.NOT_STARTED)
             online_deployment_status = overall_summary.get(
                 ModelValidationOverallSummary.ONLINE_DEPLOYMENT, ModelValidationState.NOT_STARTED)
+            buildUri = overall_summary.get(ModelValidationOverallSummary.BUILD_URI, None)
 
             if validation_run_status != ModelValidationState.COMPLETED:
                 logger.log_error(
@@ -649,6 +665,9 @@ def confirm_model_validation_results(
                 )
                 error_count += 1
 
+            if error_count > 0 and buildUri:
+                logger.print(f"Check model: {latest_model.name} validation logs here: {buildUri}")
+
         return error_count
     except Exception as e:
         logger.log_error(
@@ -682,8 +701,6 @@ def validate_model_scenario(
     recommended_skus = model.properties.get(recommended_skus_prop_name, "").strip()
     compute_allowlists = set(model.tags.get(compute_allowlist_tags_name, []))
 
-    # TODO: add min_sku validation than just its existence
-
     if not min_sku:
         _log_error(asset_file_name_with_path, f"{min_sku_prop_name} is missing in model properties")
         error_count += 1
@@ -708,7 +725,87 @@ def validate_model_scenario(
         )
         error_count += 1
 
+    # confirm min_sku_spec with list of supported computes
+    error_count += confirm_min_sku_spec(asset_file_name_with_path, min_sku_prop_name, compute_allowlists, min_sku)
+
     return error_count
+
+
+def confirm_min_sku_spec(
+    asset_file_name_with_path: Path,
+    min_sku_prop_name: str,
+    supported_skus: set,
+    min_sku_spec: str
+):
+    """Validate model properties, tags for different scenarios.
+
+    Args:
+        asset_file_name_with_path (Path): file path to model asset
+        min_sku_prop_name (str): min sku property name for the scenario
+        supported_skus (List): supported SKUs for the scenario
+        min_sku_spec (str): Scenario min SKU spec
+
+    Returns:
+        int: Number of errors.
+    """
+    subscription_id = os.getenv("SUBSCRIPTION_ID", None)
+    if not (credential and subscription_id):
+        logger.log_warning("credential or subscription_id missing. Skipping min sku valdn")
+        return 0
+
+    try:
+        all_sku_details = get_all_sku_details(credential, subscription_id)
+        min_disk = min_cpu_mem = min_ngpus = min_ncpus = -1
+        for sku in supported_skus:
+            sku_details = all_sku_details.get(sku)
+            if not sku_details:
+                raise Exception(
+                    f"Caught exception while checking {min_sku_prop_name}."
+                    f" Either invalid sku {sku} or issue with fetching sku details"
+                )
+
+            num_cpus = sku_details["vCPUs"]
+            num_gpus = sku_details["gpus"]
+            cpu_mem = int(sku_details["memoryGB"])
+            disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
+
+            min_ncpus = min(num_cpus, min_ncpus) if min_ncpus > 0 else num_cpus
+            min_ngpus = min(num_gpus, min_ngpus) if min_ngpus >= 0 else num_gpus
+            min_cpu_mem = min(cpu_mem, min_cpu_mem) if min_cpu_mem > 0 else cpu_mem
+            min_disk = min(disk_space, min_disk) if min_disk > 0 else disk_space
+
+        ncpus, ngpus, mem, disk = [int(item) for item in min_sku_spec.split("|")]
+        if ncpus != min_ncpus or ngpus != min_ngpus or mem != min_cpu_mem or disk != min_disk:
+            _log_error(
+                asset_file_name_with_path,
+                f"for {min_sku_prop_name} => "
+                f"{ncpus}|{ngpus}|{mem}|{disk} != {min_ncpus}|{min_ngpus}|{min_cpu_mem}|{min_disk}"
+            )
+
+            # list of skus larger than current specific min-sku
+            skus_failing_valdn = []
+            for sku in supported_skus:
+                sku_details = all_sku_details.get(sku)
+                num_cpus = sku_details["vCPUs"]
+                num_gpus = sku_details["gpus"]
+                cpu_mem = int(sku_details["memoryGB"])
+                disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
+
+                if num_cpus < ncpus or num_gpus < ngpus or cpu_mem < mem or disk_space < disk:
+                    sku_spec = "|".join([str(num_cpus), str(num_gpus), str(cpu_mem), str(disk_space)])
+                    skus_failing_valdn.append(f"{sku}: {sku_spec}")
+
+            _log_error(
+                asset_file_name_with_path,
+                f"for {min_sku_prop_name} => "
+                f"SKUs having smaller spec: {skus_failing_valdn}"
+            )
+
+            return 1
+    except Exception as e:
+        _log_error(asset_file_name_with_path, f"Exception in fetching SKU details => {e}")
+        return 1
+    return 0
 
 
 def validate_model_spec(asset_config: assets.AssetConfig) -> int:

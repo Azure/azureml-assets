@@ -1,5 +1,5 @@
 name: llm_rag_crack_chunk_embed_index_and_register
-version: 0.0.10
+version: 0.0.11
 tags:
     Preview: ""
 
@@ -123,13 +123,13 @@ command: >-
   $[[--doc_intel_connection_id ${{inputs.doc_intel_connection_id}}]]
   --embeddings_model ${{inputs.embeddings_model}}
   --embeddings_connection_id ${{inputs.embeddings_connection_id}}
-  $[[--embeddings_container ${{inputs.embeddings_container}}]]
+  $[[--embeddings_container '${{inputs.embeddings_container}}']]
   --batch_size ${{inputs.batch_size}}
   --num_workers ${{inputs.num_workers}}
   --asset_name ${{inputs.asset_name}}
   --index_config '${{inputs.acs_config}}'
   $[[--index_connection_id ${{inputs.index_connection_id}}]]
-  --asset_uri ${{inputs.asset_uri}}
+  --asset_uri '${{inputs.asset_uri}}'
   $[[--validate_deployments ${{inputs.validate_deployments}}]]
   $[[--llm_config ${{inputs.llm_config}}]]
   $[[--llm_connection_id ${{inputs.llm_connection_id}}]]

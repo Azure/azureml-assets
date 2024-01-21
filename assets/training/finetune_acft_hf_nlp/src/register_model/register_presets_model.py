@@ -21,7 +21,7 @@ from azureml.acft.common_components.utils.error_handling.error_definitions impor
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.register_model.register_presets_model")
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.register_model.register_presets_model")
 
 
 def get_model_path_in_HOBO_storage(run_details) -> str:

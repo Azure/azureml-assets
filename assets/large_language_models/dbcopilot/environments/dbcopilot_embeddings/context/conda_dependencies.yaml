@@ -6,7 +6,7 @@ dependencies:
 - python=3.8
 - pip=21.3.1
 - pip:
-  - azureml-rag>=0.2.8
+  - azureml-rag==0.2.23.3
   - azureml-contrib-services
   - azure-identity==1.14.0
   - azureml-core~=1.53.0

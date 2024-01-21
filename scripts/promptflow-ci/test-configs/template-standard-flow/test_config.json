@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    {
+      "name": "joke",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    }
+  ]
+}
