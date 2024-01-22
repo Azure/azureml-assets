@@ -12,12 +12,15 @@ with patch('importlib.import_module', side_effect=mock_import):
 from src.batch_score.common.telemetry.events import event_utils
 from src.batch_score.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
 
+
 def test_handle_batch_score_event(mock_run_context):
     # Arrange
     init_started_event = BatchScoreInitStartedEvent()
 
     # Act
-    with patch.object(geneva_event_listener, '_geneva_event_client', new_callable=MagicMock) as mock_geneva_event_client:
+    with patch.object(geneva_event_listener,
+                      '_geneva_event_client',
+                      new_callable=MagicMock) as mock_geneva_event_client:
         geneva_event_listener.setup_geneva_event_handlers()
         event_utils.emit_event(batch_score_event=init_started_event)
 

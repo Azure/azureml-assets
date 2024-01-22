@@ -6,11 +6,15 @@
 import datetime
 
 from src.batch_score.common.telemetry.minibatch_aggregator import MinibatchAggregator
-from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import BatchScoreMinibatchCompletedEvent
+from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import (
+    BatchScoreMinibatchCompletedEvent
+)
 from src.batch_score.common.telemetry.events.batch_score_minibatch_started_event import BatchScoreMinibatchStartedEvent
 from src.batch_score.common.telemetry.events.batch_score_request_completed_event import BatchScoreRequestCompletedEvent
-from src.batch_score.common.telemetry.events.batch_score_input_row_completed_event import BatchScoreInputRowCompletedEvent
-from src.batch_score.common.telemetry.events.event_utils import Signal
+from src.batch_score.common.telemetry.events.batch_score_input_row_completed_event import (
+    BatchScoreInputRowCompletedEvent
+)
+
 
 def test_minibatch_aggregator(mock_run_context):
     # Arrange
@@ -153,9 +157,9 @@ def test_minibatch_aggregator(mock_run_context):
     assert isinstance(summary2, BatchScoreMinibatchCompletedEvent)
 
     assert summary2.minibatch_id == 'minibatch_id'
-    assert summary2.scoring_url == None
-    assert summary2.batch_pool == None
-    assert summary2.quota_audience == None
+    assert summary2.scoring_url is None
+    assert summary2.batch_pool is None
+    assert summary2.quota_audience is None
 
     assert summary2.total_prompt_tokens == 0
     assert summary2.total_completion_tokens == 0

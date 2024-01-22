@@ -13,6 +13,7 @@ from tests.fixtures.telemetry_events import (
     update_common_fields,
 )
 
+
 def test_init(mock_run_context, make_configuration, make_metadata):
     # Arrange
     configuration: Configuration = make_configuration
@@ -20,11 +21,11 @@ def test_init(mock_run_context, make_configuration, make_metadata):
 
     # Act
     result = BatchScoreRequestStartedEvent(
-        minibatch_id = 'test_minibatch',
-        input_row_id =  'test_input_row',
-        worker_id = '5',
-        segmented_request_id = '2',
-        scoring_url = configuration.scoring_url
+        minibatch_id='test_minibatch',
+        input_row_id='test_input_row',
+        worker_id='5',
+        segmented_request_id='2',
+        scoring_url=configuration.scoring_url
     )
     update_common_fields(result)
 

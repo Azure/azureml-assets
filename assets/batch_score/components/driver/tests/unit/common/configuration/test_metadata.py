@@ -9,6 +9,7 @@ from src.batch_score.common.configuration.metadata import Metadata
 
 from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
 
+
 def test_get_metadata_success_component_name_without_file_extension():
     # Act
     metadata_payload = {
@@ -20,6 +21,7 @@ def test_get_metadata_success_component_name_without_file_extension():
     # Assert
     assert result.component_name == TEST_COMPONENT_NAME
     assert result.component_version == TEST_COMPONENT_VERSION
+
 
 @pytest.mark.parametrize(
     'component_name',

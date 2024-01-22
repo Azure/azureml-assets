@@ -19,7 +19,6 @@ from src.batch_score.common.scoring.scoring_result import (
 )
 from src.batch_score.utils import common
 
-
 MLTable_yaml = """
 type: mltable
 
@@ -32,13 +31,16 @@ transformations:
       include_path_column: false
 """
 
-VALID_DATAFRAMES= [
+VALID_DATAFRAMES = [
     [[{"arrayCol": [1, 2]}, {"arrayCol": [3, 4]}], ['{"arrayCol": [1, 2]}', '{"arrayCol": [3, 4]}']],
     [[{"max_tokens": 1}, {"max_tokens": None}, {"max_tokens": 2}], ['{"max_tokens": 1}', '{}', '{"max_tokens": 2}']],
     [[{"stop": ["<|im_end|>", "\n", "\\n", "```"]}], ['{"stop": ["<|im_end|>", "\\n", "\\\\n", "```"]}']],
 ]
+
+
 @pytest.mark.parametrize("obj_list, expected_result", VALID_DATAFRAMES)
 def test_convert_to_list_happy_path(obj_list: "list[any]", expected_result: "list[str]"):
+    """Test convert to list happy path."""
     with tempfile.TemporaryDirectory() as tmp_dir:
         with open(file=os.path.join(tmp_dir, "data.txt"), mode="w+") as text_file:
             for obj in obj_list:
@@ -54,11 +56,13 @@ def test_convert_to_list_happy_path(obj_list: "list[any]", expected_result: "lis
         result = common.convert_to_list(df_data)
         assert result == expected_result
 
+
 @pytest.mark.parametrize("additional_properties", [
     (None),
     ({"max_tokens": 11})
 ])
 def test_convert_to_list_batch_size_20(additional_properties):
+    """Test convert to list batch size 20 case."""
     batch_size_per_request = 20
     num_batches = 4
     full_batches = num_batches - 1
@@ -94,15 +98,20 @@ def test_convert_to_list_batch_size_20(additional_properties):
         assert result[0] == expected_first_batch
         assert result[-1] == expected_last_batch
 
+
 @pytest.mark.parametrize("tiktoken_failed",
                          [True, False])
 def test_convert_result_list_batch_size_one(tiktoken_failed):
+    """Test convert result list batch size one case."""
     # Arrange
     batch_size_per_request = 1
     result_list = []
     inputstring = __get_input_batch(batch_size_per_request)[0]
     outputlist = __get_output_data(batch_size_per_request)
-    result = __get_scoring_result_for_batch(batch_size_per_request, inputstring, outputlist, tiktoken_failed=tiktoken_failed)
+    result = __get_scoring_result_for_batch(batch_size_per_request,
+                                            inputstring,
+                                            outputlist,
+                                            tiktoken_failed=tiktoken_failed)
     result_list.append(result)
 
     # Act
@@ -122,6 +131,7 @@ def test_convert_result_list_batch_size_one(tiktoken_failed):
 @pytest.mark.parametrize("tiktoken_failed",
                          [True, False])
 def test_convert_result_list_failed_result(tiktoken_failed):
+    """Test convert result list failed result case."""
     # Arrange
     batch_size_per_request = 1
     result_list = []
@@ -142,9 +152,11 @@ def test_convert_result_list_failed_result(tiktoken_failed):
     assert actual_obj["response"]["error"]["type"] == "invalid_request_error"
     assert "maximum context length is 8190 tokens" in actual_obj["response"]["error"]["message"]
 
+
 @pytest.mark.parametrize("tiktoken_failed",
                          [True, False])
 def test_convert_result_list_failed_result_batch(tiktoken_failed):
+    """Test convert result list failed result batch case."""
     # Arrange
     batch_size_per_request = 2
 
@@ -179,6 +191,7 @@ def test_convert_result_list_batch_20(
         reorder_results,
         online_endpoint_url,
         tiktoken_fails):
+    """Test convert result list batch size 20 case."""
     # Arrange
     batch_size_per_request = 20
     num_batches = 4
@@ -249,8 +262,8 @@ def test_convert_result_list_batch_20(
             assert output_obj["response"]["usage"]["prompt_tokens"] == valid_batch_idx + 10
 
 
-
 def test_incorrect_data_length_raises():
+    """Test incorrect data length raises."""
     # Arrange
     batch_size_per_request = 2
     result_list = []
@@ -268,6 +281,7 @@ def test_incorrect_data_length_raises():
 
 
 def test_endpoint_response_is_not_json(mock_get_logger):
+    """Test endpoint response is not json."""
     # Arrange failed response payload as a string
     batch_size_per_request = 10
     inputs = __get_input_batch(batch_size_per_request)
@@ -282,14 +296,15 @@ def test_endpoint_response_is_not_json(mock_get_logger):
         token_counts=(1,) * batch_size_per_request,
         request_obj={"input": inputs},
         response_body=json.dumps({"object": "list",
-                       "error": {
-                           "message": "This model's maximum context length is 8190 tokens, however you requested 10001 " +
-                                      "tokens (10001 in your prompt; 0 for the completion). Please reduce your prompt; " +
-                                      "or completion length.",
-                           "type": "invalid_request_error",
-                           "param": None,
-                           "code": None
-                       }}))
+                                  "error": {
+                                      "message": "This model's maximum context length is 8190 tokens, "
+                                                 "however you requested 10001 tokens "
+                                                 "(10001 in your prompt; 0 for the completion). "
+                                                 "Please reduce your prompt; or completion length.",
+                                      "type": "invalid_request_error",
+                                      "param": None,
+                                      "code": None
+                                    }}))
     # Act
     actual = common.convert_result_list([result], batch_size_per_request)
 
@@ -298,11 +313,11 @@ def test_endpoint_response_is_not_json(mock_get_logger):
     for idx, result in enumerate(actual):
         unit = json.loads(result)
         assert unit['request']['input'] == inputs[idx]
-        assert type(unit['response']) == str
+        assert type(unit['response']) is str
         assert 'maximum context length' in unit['response']
 
 
-def __get_scoring_result_for_batch(batch_size, inputlist, outputlist, reorder_results = False, tiktoken_failed = False):
+def __get_scoring_result_for_batch(batch_size, inputlist, outputlist, reorder_results=False, tiktoken_failed=False):
     token_counts = __get_token_counts(tiktoken_failed, inputlist)
     result = ScoringResult(
         status=ScoringResultStatus.SUCCESS,
@@ -314,17 +329,18 @@ def __get_scoring_result_for_batch(batch_size, inputlist, outputlist, reorder_re
         token_counts=token_counts,
         request_obj={"input": inputlist},
         response_body={"object": "list",
-                    "data": outputlist,
-                    "model": "text-embedding-ada-002",
-                    "usage": {
-                                "prompt_tokens": batch_size,
-                                "total_tokens": batch_size
-                    }})
+                       "data": outputlist,
+                       "model": "text-embedding-ada-002",
+                       "usage": {
+                                   "prompt_tokens": batch_size,
+                                   "total_tokens": batch_size
+                       }})
     if reorder_results:
         random.shuffle(result.response_body["data"])
     return result
 
-def __get_failed_scoring_result_for_batch(inputlist, tiktoken_failed = False):
+
+def __get_failed_scoring_result_for_batch(inputlist, tiktoken_failed=False):
     token_counts = __get_token_counts(tiktoken_failed, inputlist)
     result = ScoringResult(
         status=ScoringResultStatus.FAILURE,
@@ -337,9 +353,10 @@ def __get_failed_scoring_result_for_batch(inputlist, tiktoken_failed = False):
         request_obj={"input": inputlist},
         response_body={"object": "list",
                        "error": {
-                           "message": "This model's maximum context length is 8190 tokens, however you requested 10001 " +
-                                      "tokens (10001 in your prompt; 0 for the completion). Please reduce your prompt; " +
-                                      "or completion length.",
+                           "message": "This model's maximum context length is 8190 tokens, "
+                                      "however you requested 10001 tokens "
+                                      "(10001 in your prompt; 0 for the completion). "
+                                      "Please reduce your prompt; or completion length.",
                            "type": "invalid_request_error",
                            "param": None,
                            "code": None
@@ -361,7 +378,7 @@ def __get_token_counts(tiktoken_failed, inputlist):
     else:
         if isinstance(inputlist, str):
             inputlist = [inputlist]
-        return [i + 10 for i,j in enumerate(inputlist)]
+        return [i + 10 for i, j in enumerate(inputlist)]
 
 
 def __embedding_output_info(idx):
@@ -371,14 +388,17 @@ def __embedding_output_info(idx):
         "index": idx
     }
 
+
 def __random_string(length: int = 10):
     letters = string.ascii_letters
     return ''.join(random.choice(letters) for i in range(length))
+
 
 def __mock_tiktoken_permanent_failure(monkeypatch):
     def mock_tiktoken_failure(*args):
         return 1
     monkeypatch.setattr(common.embeddings.EmbeddingsEstimator, "estimate_request_cost", mock_tiktoken_failure)
+
 
 def __mock_tiktoken_estimate(monkeypatch):
     def mock_tiktoken_override(estimator, request_obj):

@@ -175,11 +175,11 @@ def test_build_scoring_result(
                      "usage": {"prompt_tokens": 2, "completion_tokens": 4, "total_tokens": 6}}
 
     response_body2 = {"id": "123",
-                     "object": "text_completion",
-                     "created": 456,
-                     "model": "dv3",
-                     "choices": [{"text": "One day", "index": 0, "logprobs": None, "finish_reason": "stop"}],
-                     "usage": {"prompt_tokens": 5, "completion_tokens": 15, "total_tokens": 20}}
+                      "object": "text_completion",
+                      "created": 456,
+                      "model": "dv3",
+                      "choices": [{"text": "One day", "index": 0, "logprobs": None, "finish_reason": "stop"}],
+                      "usage": {"prompt_tokens": 5, "completion_tokens": 15, "total_tokens": 20}}
 
     segmented_context = SegmentedScoreContext(request, max_segment_size)
 

@@ -15,6 +15,7 @@ from src.batch_score.common.configuration.configuration_parser import (
 
 scoring_url_base = 'https://somebase.microsoft.com'
 
+
 @pytest.mark.parametrize('api_type, request_path, scoring_url, expected_result', [
     (ApiType.Completion, constants.DV_EMBEDDINGS_API_PATH, None, True),
     (ApiType.Completion, None, scoring_url_base + constants.DV_EMBEDDINGS_API_PATH, True),
@@ -76,6 +77,7 @@ def test_is_completion(api_type, request_path, scoring_url, expected_result):
 
     # Act & assert
     assert configuration.is_completion() == expected_result
+
 
 @pytest.mark.parametrize('target_batch_pool, expected_result', [
     ('SaHarA-glObal', True),

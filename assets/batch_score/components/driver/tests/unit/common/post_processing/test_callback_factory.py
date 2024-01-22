@@ -15,9 +15,12 @@ from tests.fixtures.scoring_result import get_test_request_obj
 from tests.fixtures.test_mini_batch_context import TestMiniBatchContext
 
 
-def test_generate_callback_success(mock_get_logger, mock_get_events_client, make_input_transformer, make_scoring_result):
+def test_generate_callback_success(mock_get_logger,
+                                   mock_get_events_client,
+                                   make_input_transformer,
+                                   make_scoring_result):
     # Arrange
-    mock_input_to_output_transformer = make_input_transformer(modifiers = [FakeInputOutputModifier()])
+    mock_input_to_output_transformer = make_input_transformer(modifiers=[FakeInputOutputModifier()])
 
     mini_batch_context = MiniBatchContext(
         raw_mini_batch_context=TestMiniBatchContext(minibatch_index=1),
@@ -44,9 +47,13 @@ def test_generate_callback_success(mock_get_logger, mock_get_events_client, make
         output_row_count=2,
     )
 
-def test_generate_callback_exception_with_mini_batch_id(mock_get_logger, mock_get_events_client, make_input_transformer, make_scoring_result):
+
+def test_generate_callback_exception_with_mini_batch_id(mock_get_logger,
+                                                        mock_get_events_client,
+                                                        make_input_transformer,
+                                                        make_scoring_result):
     # Arrange
-    mock_input_to_output_transformer = make_input_transformer(modifiers = [FakeInputOutputModifier()])
+    mock_input_to_output_transformer = make_input_transformer(modifiers=[FakeInputOutputModifier()])
 
     mini_batch_context = MiniBatchContext(
         raw_mini_batch_context=TestMiniBatchContext(minibatch_index=1),
@@ -54,7 +61,7 @@ def test_generate_callback_exception_with_mini_batch_id(mock_get_logger, mock_ge
 
     mini_batch_context.exception = __get_exception_with_traceback()
 
-    gathered_result: list[ScoringResult] = [ make_scoring_result(request_obj=get_test_request_obj()) ]
+    gathered_result: list[ScoringResult] = [make_scoring_result(request_obj=get_test_request_obj())]
 
     callback_factory = CallbackFactory(
         configuration=_get_test_configuration(),
@@ -77,11 +84,13 @@ def test_generate_callback_exception_with_mini_batch_id(mock_get_logger, mock_ge
         output_row_count=1,
     )
 
+
 def __get_exception_with_traceback():
     try:
         1/0
     except Exception as e:
         return e
+
 
 def _get_test_configuration() -> Configuration:
     return Configuration(
