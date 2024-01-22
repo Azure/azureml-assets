@@ -103,7 +103,8 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
         start: float,
         end: float,
     ) -> ScoringResult:
-        """ Handles the exception by raising retriable exception or creating scoring result for non-retriable exception."""
+        """ Handles the exception by raising retriable exception or creating scoring
+        result for non-retriable exception."""
         try:
             raise http_response.exception
         except (
@@ -143,8 +144,12 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
                 usage: dict[str, int] = response_body["usage"]
                 return usage.get("completion_tokens", None)
 
+        def get_mini_batch_id(mini_batch_context: any):
+            if mini_batch_context:
+                return mini_batch_context.mini_batch_id
+
         request_completed_event = BatchScoreRequestCompletedEvent(
-            minibatch_id=scoring_request.mini_batch_context.mini_batch_id if scoring_request.mini_batch_context is not None else None,
+            minibatch_id=get_mini_batch_id(scoring_request.mini_batch_context),
             input_row_id=scoring_request.internal_id,
             x_ms_client_request_id=x_ms_client_request_id,
             worker_id=worker_id,
