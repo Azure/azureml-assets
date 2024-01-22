@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: samples/foundation_bring_your_own_data_qna/v1/model_folder
+  storage_name: gewoods4766322075
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
