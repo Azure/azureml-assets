@@ -6,12 +6,15 @@ from src.batch_score.common.scoring.scoring_result import ScoringResult
 
 
 @pytest.fixture()
-def make_scoring_client(make_completion_header_handler, make_quota_client, make_routing_client, make_tally_failed_request_handler):
-    def make(header_handler = make_completion_header_handler(),
-             quota_client = make_quota_client(),
-             routing_client = make_routing_client(),
+def make_scoring_client(make_completion_header_handler,
+                        make_quota_client,
+                        make_routing_client,
+                        make_tally_failed_request_handler):
+    def make(header_handler=make_completion_header_handler(),
+             quota_client=make_quota_client(),
+             routing_client=make_routing_client(),
              scoring_url: str = None,
-             tally_handler = make_tally_failed_request_handler()):
+             tally_handler=make_tally_failed_request_handler()):
         client = ScoringClient(
             header_handler=header_handler,
             quota_client=quota_client,
@@ -21,6 +24,7 @@ def make_scoring_client(make_completion_header_handler, make_quota_client, make_
         )
         return client
     return make
+
 
 @pytest.fixture()
 def mock__score_once(monkeypatch, make_scoring_result):
@@ -34,12 +38,12 @@ def mock__score_once(monkeypatch, make_scoring_result):
             import time
             time.sleep(0.1)
             raise state["raise_exception"]
-        
-        given_scoring_result: ScoringResult = state["scoring_result"] 
+
+        given_scoring_result: ScoringResult = state["scoring_result"]
         given_scoring_result.request_obj = scoring_request.original_payload_obj
         given_scoring_result.request_metadata = scoring_request.request_metadata
-    
+
         return given_scoring_result
-    
+
     monkeypatch.setattr("src.batch_score.batch_pool.scoring.scoring_client.ScoringClient._score_once", __score_once)
     return state

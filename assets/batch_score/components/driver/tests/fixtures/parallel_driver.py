@@ -25,5 +25,5 @@ def make_parallel_driver(make_conductor, make_input_transformer):
             input_to_log_transformer=input_to_log_transformer,
             input_to_output_transformer=input_to_output_transformer,
         )
-    
+
     return make
