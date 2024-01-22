@@ -31,6 +31,7 @@ def worker_id(request):
         # Default value for local runs where xdist is not used
         return 'master'
 
+
 def _is_main_worker(worker_id):
     return worker_id == "gw0" or worker_id == "master"
 
@@ -105,6 +106,7 @@ def pytest_configure():
     pytest.copied_batch_score_component_metadata_json_filepath = os.path.join(
         pytest.source_dir, "driver", "src", "batch_score", METADATA_JSON_FILENAME
     )
+
 
 def pytest_unconfigure():
     print("Pytest unconfigure started.")
