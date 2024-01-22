@@ -44,16 +44,13 @@ class Configuration(Namespace):
     token_file_path: str = field(init=True, default=None)
     user_agent_segment: str = field(init=True, default=None)
 
-
     def __post_init__(self) -> None:
         self._validate()
-
 
     def _validate(self):
         self._validate_batch_size_per_request()
         self._validate_online_endpoint_url_and_request_path()
         self._validate_segment_large_requests()
-
 
     def _validate_batch_size_per_request(self):
         if self.batch_size_per_request < 1:
@@ -68,21 +65,18 @@ class Configuration(Namespace):
             raise ValueError("The optional parameter 'batch_size_per_request' is only allowed to be greater than 1 for the Embeddings API."
                              " Valid range is 1-2000.")
 
-
     def _validate_online_endpoint_url_and_request_path(self):
         if (self.online_endpoint_url
             and self.request_path is not None
-            and self.request_path not in constants.DEFAULT_REQUEST_PATHS
-        ):
-            raise ValueError("The optional parameter 'online_endpoint_url' is not allowed in combination with 'request_path'. "
-                            "Please put the entire scoring url in the `online_endpoint_url` parameter and remove 'request_path'.")
-
+            and self.request_path not in constants.DEFAULT_REQUEST_PATHS):
+            raise ValueError("The optional parameter 'online_endpoint_url' is not allowed in combination"
+                             " with 'request_path'. Please put the entire scoring url in the"
+                             "`online_endpoint_url` parameter and remove 'request_path'.")
 
     def _validate_segment_large_requests(self):
         if self.segment_large_requests == 'enabled' and not self.is_completion():
             raise ValueError("The optional parameter 'segment_large_requests' is supported only with the Completion API."
                              "Please set 'segment_large_requests' to 'disabled' or remove it from the configuration.")
-
 
     def log(self):
         """Log the configuration as alpha-sorted key-value pairs.
@@ -93,7 +87,6 @@ class Configuration(Namespace):
                 value = "[redacted]"
 
             logger.debug(f"{arg}: {value}")
-
 
     def is_embeddings(self) -> bool:
         return (
@@ -106,7 +99,6 @@ class Configuration(Namespace):
                 )
             )
         )
-
 
     def is_chat_completion(self) -> bool:
         return (
@@ -132,10 +124,8 @@ class Configuration(Namespace):
             )
         )
 
-
     def is_sahara(self, routing_client: RoutingClient) -> bool:
-        return (routing_client and routing_client.target_batch_pool and routing_client.target_batch_pool.lower() == "sahara-global")
-
+        return routing_client and routing_client.target_batch_pool and routing_client.target_batch_pool.lower() == "sahara-global"
 
     def is_vesta(self) -> bool:
         return (
@@ -149,7 +139,6 @@ class Configuration(Namespace):
             )
         )
 
-
     def is_vesta_chat_completion(self) -> bool:
         return (
             self.request_path == constants.VESTA_CHAT_COMPLETIONS_API_PATH
@@ -162,14 +151,11 @@ class Configuration(Namespace):
             )
         )
 
-
     def is_aoai_endpoint(self) -> bool:
         return self.scoring_url and any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
 
-
     def is_serverless_endpoint(self) -> bool:
         return self.scoring_url and constants.SERVERLESS_ENDPOINT_DOMAIN_SUFFIX in self.scoring_url
-
 
     def get_endpoint_type(self) -> EndpointType:
         if self.is_aoai_endpoint():
@@ -180,7 +166,6 @@ class Configuration(Namespace):
             return EndpointType.BatchPool
         else:
             return EndpointType.MIR
-
 
     def get_api_type(self) -> ApiType:
         if self.is_completion():
@@ -196,13 +181,14 @@ class Configuration(Namespace):
         else:
             return ApiType.Unknown
 
-
     def get_authentication_type(self) -> AuthenticationType:
         if self.authentication_type == AuthenticationType.ApiKey:
             return AuthenticationType.ApiKey
         elif self.authentication_type == AuthenticationType.ManagedIdentity:
             return AuthenticationType.ManagedIdentity
-        elif self.authentication_type == constants.CONNECTION_AUTH_TYPE or self.authentication_type == AuthenticationType.WorkspaceConnection:
+        # elif self.authentication_type == constants.CONNECTION_AUTH_TYPE or
+        # self.authentication_type == AuthenticationType.WorkspaceConnection:
+        elif self.authentication_type in [constants.CONNECTION_AUTH_TYPE, AuthenticationType.WorkspaceConnection]:
             return AuthenticationType.WorkspaceConnection
         else:
             return AuthenticationType.Unknown

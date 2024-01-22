@@ -29,7 +29,7 @@ class Conductor:
         scoring_client: ScoringClient,
         routing_client: RoutingClient,
         trace_configs: "list[TraceConfig]" = None,
-        finished_callback = None,
+        finished_callback=None,
     ):
         self._configuration = configuration
         self.__loop: asyncio.AbstractEventLoop = loop
@@ -38,7 +38,9 @@ class Conductor:
         self.__trace_configs = trace_configs
 
         if self._configuration.max_worker_count is not None:
-            self.__target_worker_count = min(self._configuration.initial_worker_count, self._configuration.max_worker_count)
+            self.__target_worker_count = min(
+                self._configuration.initial_worker_count,
+                self._configuration.max_worker_count)
         else:
             self.__target_worker_count = self._configuration.initial_worker_count
 
@@ -67,7 +69,11 @@ class Conductor:
     async def run(self, requests: "list[ScoringRequest]") -> "list[ScoringResult]":
         self.__add_requests(requests)
 
-        lu.get_logger().info("Conductor: Starting with {} running workers and {} target worker count. There are {} workers in the worker pool.".format(len(list(filter(lambda worker: worker.is_running, self.__workers))), self.__target_worker_count, len(self.__workers)))
+        lu.get_logger().info("Conductor: Starting with {} running workers and {} target worker count."
+                             " There are {} workers in the worker pool."
+                             .format(
+                                 len(list(filter(lambda worker: worker.is_running, self.__workers))),
+                                 self.__target_worker_count, len(self.__workers)))
 
         target_result_len = len(self.__scoring_request_queue)
 
