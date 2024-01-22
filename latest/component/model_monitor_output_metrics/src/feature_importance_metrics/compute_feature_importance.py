@@ -271,6 +271,16 @@ def write_empty_signal_metrics_dataframe():
     save_spark_df_as_mltable(df, args.signal_metrics)
 
 
+def check_df_has_target_column_with_error(baseline_df, target_column: str):
+    """Check if a DataFrame has a specified column in its columns. Raises an InvalidInputError if not."""
+    if target_column not in baseline_df.columns:
+        raise InvalidInputError(
+                f"Target column = '{target_column}' is not in the dataset provided to this component." +
+                " Please try using either a complete dataset that already has the target column or try joining" +
+                " with a dataset that results in the target column being included."
+            )
+
+
 def run(args):
     """Calculate feature importance."""
     try:
@@ -282,6 +292,7 @@ def run(args):
             return
         log_time_and_message("Reading data in spark and converting to pandas")
         baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
+        check_df_has_target_column_with_error(baseline_df, args.target_column)
 
         numerical_features, categorical_features = get_numerical_and_categorical_cols(
                                                             baseline_df,
