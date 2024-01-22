@@ -52,8 +52,9 @@ SUPPORTED_INFERENCE_SKU_FILE_PATH = Path(__file__).parent / SUPPORTED_INFERENCE_
 credential = None
 try:
     credential = AzureCliCredential()
+    token = credential.get_token("https://management.azure.com/.default")
 except Exception as e:
-    logger.log_warning(f"exception in creating credential. {e}")
+    logger.log_warning(f"Exception in creating credential. {e}")
 
 
 class MLFlowModelProperties:
@@ -638,8 +639,8 @@ def confirm_model_validation_results(
                 error_count += 1
 
             # check is batch supported?
-            supports_batch_str = latest_model.tags.get("disable-batch", "true")
-            supports_batch = True if supports_batch_str.lower() == "true" else False
+            disable_batch_str = latest_model.tags.get("disable-batch", "false")
+            supports_batch = True if disable_batch_str.lower() == "false" else False
 
             if supports_batch and batch_deployment_status != ModelValidationState.COMPLETED:
                 logger.log_error(
