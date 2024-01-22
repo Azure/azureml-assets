@@ -11,11 +11,12 @@ class ScoringRequest:
     __BATCH_REQUEST_METADATA = "_batch_request_metadata"
     __REQUEST_METADATA = "request_metadata"
 
-    def __init__(self,
-                 original_payload: str,
-                 input_to_request_transformer: InputTransformer = None,
-                 input_to_log_transformer: InputTransformer = None,
-                 mini_batch_context: MiniBatchContext = None):
+    def __init__(
+            self,
+            original_payload: str,
+            input_to_request_transformer: InputTransformer = None,
+            input_to_log_transformer: InputTransformer = None,
+            mini_batch_context: MiniBatchContext = None):
         self.__internal_id: str = str(uuid.uuid4())
         self.__original_payload = original_payload
         self.__original_payload_obj = json.loads(original_payload)
@@ -53,7 +54,7 @@ class ScoringRequest:
         self.__scoring_url: str = None
 
         self.mini_batch_context: MiniBatchContext = mini_batch_context
-        self.request_history: list[ScoringAttempt] = [] # Stack
+        self.request_history: list[ScoringAttempt] = []  # Stack
         self.retry_count: int = 0
         self.total_wait_time: int = 0
 
@@ -102,7 +103,7 @@ class ScoringRequest:
     def scoring_url(self) -> str:
         return self.__scoring_url
 
-     # read-only
+    # read-only
     @property
     def segment_id(self) -> int:
         return self.__segment_id

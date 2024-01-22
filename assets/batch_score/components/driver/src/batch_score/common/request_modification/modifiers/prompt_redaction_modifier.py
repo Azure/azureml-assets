@@ -6,10 +6,10 @@ class PromptRedactionModifier(RequestModifier):
     def modify(self, request_obj: any) -> any:
         # See https://platform.openai.com/docs/api-reference
         fields_to_redact = [
-            'input', # /embeddings
-            'messages', # /chat-completions
-            'prompt', # /completions
-            'transcript', # /rainbow (Vesta)
+            'input',  # /embeddings
+            'messages',  # /chat-completions
+            'prompt',  # /completions
+            'transcript',  # /rainbow (Vesta)
         ]
         for field in fields_to_redact:
             if field in request_obj:

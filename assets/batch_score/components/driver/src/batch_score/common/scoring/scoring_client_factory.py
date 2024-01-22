@@ -50,9 +50,9 @@ class ScoringClientFactory:
                 connection_name=configuration.connection_name
             )
 
+
 def setup_aoai_scoring_client(
-    configuration: Configuration
-) -> AoaiScoringClient:
+        configuration: Configuration) -> AoaiScoringClient:
     tally_handler = TallyFailedRequestHandler(
         enabled=configuration.tally_failed_requests,
         tally_exclusions=configuration.tally_exclusions
@@ -73,12 +73,11 @@ def setup_aoai_scoring_client(
 
 
 def setup_mir_scoring_client(
-    configuration: Configuration,
-    metadata: Metadata,
-    token_provider: TokenProvider,
-    routing_client: RoutingClient,
-    connection_name: str
-) -> ScoringClient:
+        configuration: Configuration,
+        metadata: Metadata,
+        token_provider: TokenProvider,
+        routing_client: RoutingClient,
+        connection_name: str) -> ScoringClient:
     """Creates an instance of an MIR scoring client."""
     quota_client: QuotaClient = None
     if configuration.batch_pool and configuration.quota_audience and configuration.service_namespace:

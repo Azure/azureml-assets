@@ -8,10 +8,10 @@ import json
 import time
 import traceback
 import uuid
-from datetime import datetime, timedelta, timezone
 
 import aiohttp
 
+from datetime import timedelta
 from .header_provider import HeaderProvider
 from .http_response_handler import HttpResponseHandler
 from .http_scoring_request import HttpScoringRequest
@@ -40,7 +40,6 @@ class GenericScoringClient:
         self._http_response_handler = http_response_handler
         self._scoring_url = scoring_url
 
-
     async def score(
         self,
         session: aiohttp.ClientSession,
@@ -63,7 +62,7 @@ class GenericScoringClient:
         http_response: HttpScoringResponse = await self._send_http_request(
             session=session,
             http_scoring_request=http_request,
-            internal_id = scoring_request.internal_id,
+            internal_id=scoring_request.internal_id,
             timeout=timeout,
         )
 
@@ -80,7 +79,7 @@ class GenericScoringClient:
         scoring_result: ScoringResult = self._http_response_handler.handle_response(
             scoring_request=scoring_request,
             http_response=http_response,
-            x_ms_client_request_id = http_request.headers['x-ms-client-request-id'],
+            x_ms_client_request_id=http_request.headers['x-ms-client-request-id'],
             start=start,
             end=end,
             worker_id=worker_id
@@ -88,11 +87,9 @@ class GenericScoringClient:
 
         return scoring_result
 
-
     def validate_auth(self):
         """Validates the auth by sending dummy request to the scoring url."""
         asyncio.run(self._validate_auth())
-
 
     async def _validate_auth(self):
         http_request = HttpScoringRequest(
@@ -115,7 +112,6 @@ class GenericScoringClient:
         if http_response.status in [401, 403]:
             raise Exception(f"Scoring Client auth check failed. Error: {json.dumps(http_response.payload)}")
 
-
     def _create_http_request(
         self,
         scoring_request: ScoringRequest,
@@ -126,7 +122,6 @@ class GenericScoringClient:
             payload=scoring_request.cleaned_payload,
             url=self._scoring_url,
         )
-
 
     async def _send_http_request(
         self,
@@ -143,10 +138,15 @@ class GenericScoringClient:
                 data=http_scoring_request.payload,
                 timeout=timeout,
             ) as response:
-                return await self._log_failure_and_create_http_scoring_response(response, internal_id, http_scoring_request.headers['x-ms-client-request-id'])
+                return await self._log_failure_and_create_http_scoring_response(
+                    response,
+                    internal_id,
+                    http_scoring_request.headers['x-ms-client-request-id'])
         except Exception as ex:
-            return self._log_and_create_http_scoring_response_from_exception(ex, internal_id, http_scoring_request.headers['x-ms-client-request-id'])
-
+            return self._log_and_create_http_scoring_response_from_exception(
+                ex,
+                internal_id,
+                http_scoring_request.headers['x-ms-client-request-id'])
 
     async def _log_failure_and_create_http_scoring_response(
         self,
@@ -177,11 +177,10 @@ class GenericScoringClient:
 
         try:
             http_response.payload = json.loads(error_response)
-        except:
+        except Exception:
             http_response.payload = error_response
 
         return http_response
-
 
     def _log_and_create_http_scoring_response_from_exception(
         self,

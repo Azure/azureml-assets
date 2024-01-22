@@ -69,13 +69,16 @@ class ImageEncoder():
 
         return encoded_string
 
+
 class UnsuccessfulUrlResponse(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(f"{ImageEncoder.IMAGE_URL} used in data, but url did not respond succesfully.")
 
+
 class FolderNotMounted(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(f"{ImageEncoder.IMAGE_FILE} used in data, but no folder is mounted.")
+
 
 class VestaImageModificationException(RequestModificationException):
     def __init__(self) -> None:

@@ -41,13 +41,12 @@ class SegmentedScoreContext:
         return len(self.__segmented_results)
 
     async def score_next_once(
-        self,
-        scoring_client: ScoringClient,
-        session: aiohttp.ClientSession,
-        timeout: aiohttp.ClientTimeout = None,
-        worker_id: str = "1"
-    ) -> ScoringResult:
-        if self.__next_scoring_request == None:
+            self,
+            scoring_client: ScoringClient,
+            session: aiohttp.ClientSession,
+            timeout: aiohttp.ClientTimeout = None,
+            worker_id: str = "1") -> ScoringResult:
+        if self.__next_scoring_request is None:
             self.__next_scoring_request = self.__create_next_scoring_request()
 
         next_scoring_request = self.__next_scoring_request
@@ -68,7 +67,7 @@ class SegmentedScoreContext:
 
     def has_more(self) -> bool:
         if len(self.__segmented_results) > 0:
-            if self.__original_max_tokens == None:
+            if self.__original_max_tokens is not None:
                 # No provided max_tokens scenario
                 return self.__last_stop_reason is None or self.__last_stop_reason != "stop"
             elif self.__supports_segmentation:
@@ -81,7 +80,7 @@ class SegmentedScoreContext:
 
                 return (self.__last_stop_reason is None or self.__last_stop_reason != "stop") and \
                     self.__total_tokens_generated < self.__original_max_tokens
-            else: # not self.__supports_segmentation
+            else:  # not self.__supports_segmentation
                 return False
 
         return True
@@ -112,7 +111,7 @@ class SegmentedScoreContext:
         if "logprobs" in final_result.response_body["choices"][0]:
             final_logprobs = final_result.response_body["choices"][0]["logprobs"]
 
-            if final_logprobs != None:
+            if final_logprobs is not None:
                 for logprobs_property in logprobs_properties:
                     final_logprobs[logprobs_property] = []
 
@@ -141,13 +140,12 @@ class SegmentedScoreContext:
         if "usage" in final_result.response_body:
             final_usage = final_result.response_body["usage"]
 
-            if final_usage != None:
+            if final_usage is not None:
                 prompt_tokens = self.__get_usage(self.__segmented_results[0], "prompt_tokens")
                 total_tokens = final_usage["total_tokens"]
                 completion_tokens = total_tokens - prompt_tokens
                 final_usage["prompt_tokens"] = prompt_tokens
                 final_usage["completion_tokens"] = completion_tokens
-
 
     def __add_successful_result(self, result: ScoringResult):
         self.__segmented_results.append(result)
@@ -161,7 +159,9 @@ class SegmentedScoreContext:
 
         # Total generated tokens may be slightly different from the final result's "completion_tokens" value due to
         # small variations in prompt token count as the input grows across segments.
-        lu.get_logger().debug("Completed segmented request with stop reason {}, generated {} tokens, has more: {}".format(self.__last_stop_reason, self.__total_tokens_generated, self.has_more()))
+        lu.get_logger().debug("Completed segmented request with stop reason {}, "
+                              "generated {} tokens, has more: {}"
+                              .format(self.__last_stop_reason, self.__total_tokens_generated, self.has_more()))
 
     def __create_next_scoring_request(self) -> ScoringRequest:
         if not self.__supports_segmentation:
@@ -179,7 +179,8 @@ class SegmentedScoreContext:
         payload_object["max_tokens"] = max_tokens
         self.__segment_id += 1
 
-        scoring_request = self.__original_scoring_request.copy_with_new_payload(json.dumps(payload_object, cls=BatchComponentJSONEncoder))
+        scoring_request = self.__original_scoring_request.copy_with_new_payload(
+            json.dumps(payload_object, cls=BatchComponentJSONEncoder))
         scoring_request.segment_id = self.__segment_id
 
         return scoring_request

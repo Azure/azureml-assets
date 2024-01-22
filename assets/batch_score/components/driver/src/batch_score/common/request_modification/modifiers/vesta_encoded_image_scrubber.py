@@ -11,7 +11,7 @@ class VestaEncodedImageScrubber(RequestModifier):
                     transcript_dict["data"] = self._scrub_image_encoding(transcript_dict["data"])
             return request_obj
         else:
-            lu.get_logger().error(f"Input data does not match Vesta schema")
+            lu.get_logger().error("Input data does not match Vesta schema")
             raise Exception("Input data does not match Vesta schema")
 
     def _scrub_image_encoding(self, image_data: str):

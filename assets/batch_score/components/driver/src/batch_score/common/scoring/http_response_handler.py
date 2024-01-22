@@ -17,26 +17,24 @@ from .scoring_result import (
 class HttpResponseHandler:
     @abstractmethod
     def handle_response(
-        self,
-        scoring_request: ScoringRequest,
-        http_response: HttpScoringResponse,
-        x_ms_client_request_id: str,
-        start: float,
-        end: float,
-        worker_id: str
-    ) -> ScoringResult:
+            self,
+            scoring_request: ScoringRequest,
+            http_response: HttpScoringResponse,
+            x_ms_client_request_id: str,
+            start: float,
+            end: float,
+            worker_id: str) -> ScoringResult:
         pass
 
     def _create_scoring_result(
-        self,
-        status: ScoringResultStatus,
-        scoring_request: ScoringRequest,
-        start: float,
-        end: float,
-        http_post_response: HttpScoringResponse,
-        token_counts: "tuple[int]" = (),
-        mini_batch_context: MiniBatchContext = None
-    ) -> ScoringResult:
+            self,
+            status: ScoringResultStatus,
+            scoring_request: ScoringRequest,
+            start: float,
+            end: float,
+            http_post_response: HttpScoringResponse,
+            token_counts: "tuple[int]" = (),
+            mini_batch_context: MiniBatchContext = None) -> ScoringResult:
         """ Creates an instance of scoring result."""
         return ScoringResult(
             status=status,
