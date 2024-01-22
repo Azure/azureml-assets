@@ -5,7 +5,7 @@ The "Use Functions with Chat Models" is a chat model illustrates how to employ t
 
 Inference type|CLI|VS Code Extension
 |--|--|--|
-Real time|<a href="https://microsoft.github.io/promptflow/how-to-guides/deploy-a-flow/index.html" target="_blank">deploy-promptflow-model-cli-example</a>|<a href="https://microsoft.github.io/promptflow/how-to-guides/deploy-a-flow/index.html" target="_blank">deploy-promptflow-model-python-example</a>
+Real time|<a href="https://microsoft.github.io/promptflow/how-to-guides/deploy-a-flow/index.html" target="_blank">deploy-promptflow-model-cli-example</a>|<a href="https://microsoft.github.io/promptflow/how-to-guides/deploy-a-flow/index.html" target="_blank">deploy-promptflow-model-vscode-extension-example</a>
 Batch | N/A | N/A
 
 ### Sample inputs and outputs (for real-time inference)
