@@ -17,10 +17,13 @@ from tests.fixtures.test_mini_batch_context import TestMiniBatchContext
 def __get_callback(ret, mini_batch_context):
     return ret
 
+
 def __get_callback_throwing_exception():
     raise Exception("test")
 
+
 def test_add_empty_result(mock_get_logger):
+    """Test add empty result."""
     mini_batch_id = 1
     mini_batch_context = MiniBatchContext(
         raw_mini_batch_context=TestMiniBatchContext(minibatch_index=mini_batch_id),
@@ -34,19 +37,25 @@ def test_add_empty_result(mock_get_logger):
     assert gatherer.get_returned_minibatch_count() == 0
     assert len(gatherer.get_finished_minibatch_result()) == 1
 
+
 # Since the gather runs forever, we need to stop the gatherer manually.
 async def wait_and_stop(gatherer):
+    """Wait 1 second and stop."""
     await asyncio.sleep(1)
     gatherer._Gatherer__working = False
 
+
 async def run_once(gatherer):
+    """Run once."""
     await asyncio.gather(
         wait_and_stop(gatherer),
         asyncio.create_task(gatherer.run()))
 
+
 @pytest.mark.timeout(5)
 @pytest.mark.asyncio
 async def test_run_success(mock_get_logger, make_scoring_result):
+    """Test run success."""
     mini_batch_id = 1
     mini_batch_context = MiniBatchContext(
         raw_mini_batch_context=TestMiniBatchContext(minibatch_index=mini_batch_id),
@@ -58,7 +67,9 @@ async def test_run_success(mock_get_logger, make_scoring_result):
     scoring_result_queue = deque()
     scoring_result_queue.append(scoring_result)
 
-    gatherer = Gatherer(scoring_result_queue=scoring_result_queue, failed_scoring_result_queue=deque(), callback=__get_callback)
+    gatherer = Gatherer(scoring_result_queue=scoring_result_queue,
+                        failed_scoring_result_queue=deque(),
+                        callback=__get_callback)
     await run_once(gatherer)
 
     assert gatherer.get_returned_minibatch_count() == 0
@@ -73,9 +84,11 @@ async def test_run_success(mock_get_logger, make_scoring_result):
     assert len(finished_minibatch_result) == 0
     assert gatherer.get_returned_minibatch_count() == 1
 
+
 @pytest.mark.timeout(5)
 @pytest.mark.asyncio
 async def test_run_failed_results(mock_get_logger, make_scoring_result):
+    """Test run failed results."""
     mini_batch_id = 1
     mini_batch_context = MiniBatchContext(
         raw_mini_batch_context=TestMiniBatchContext(minibatch_index=mini_batch_id),
@@ -87,7 +100,8 @@ async def test_run_failed_results(mock_get_logger, make_scoring_result):
     scoring_result_queue = deque()
     scoring_result_queue.append(scoring_result)
 
-    failed_scoring_result = make_scoring_result(status=ScoringResultStatus.FAILURE, request_obj=get_test_request_obj())
+    failed_scoring_result = make_scoring_result(status=ScoringResultStatus.FAILURE,
+                                                request_obj=get_test_request_obj())
     failed_scoring_result.mini_batch_context = mini_batch_context
 
     failed_scoring_result_queue = deque()
@@ -104,9 +118,11 @@ async def test_run_failed_results(mock_get_logger, make_scoring_result):
 
     assert gatherer.get_returned_minibatch_count() == 1
 
+
 @pytest.mark.timeout(5)
 @pytest.mark.asyncio
 async def test_run_exception(mock_get_logger, make_scoring_result):
+    """Test run exception case."""
     mini_batch_id = 1
     mini_batch_context = MiniBatchContext(
         raw_mini_batch_context=TestMiniBatchContext(minibatch_index=mini_batch_id),
@@ -118,7 +134,9 @@ async def test_run_exception(mock_get_logger, make_scoring_result):
     scoring_result_queue = deque()
     scoring_result_queue.append(scoring_result)
 
-    gatherer = Gatherer(scoring_result_queue=scoring_result_queue, failed_scoring_result_queue=deque(), callback=__get_callback_throwing_exception)
+    gatherer = Gatherer(scoring_result_queue=scoring_result_queue,
+                        failed_scoring_result_queue=deque(),
+                        callback=__get_callback_throwing_exception)
     await run_once(gatherer)
 
     assert gatherer.get_returned_minibatch_count() == 0

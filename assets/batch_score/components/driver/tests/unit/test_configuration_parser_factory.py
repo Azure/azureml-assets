@@ -15,7 +15,8 @@ from src.batch_score.common.configuration.file_configuration_parser import (
     "args, expected_parser_type",
     [
         (["--configuration_file", "path/to/configuration/file"], FileConfigurationParser),
-        (["--configuration-file", "path/to/configuration/file"], ConfigurationParser), # typo in argument name, hyphen instead of underscore
+        # typo in argument name, hyphen instead of underscore
+        (["--configuration-file", "path/to/configuration/file"], ConfigurationParser),
         (["--other_param", "some value"], ConfigurationParser),
     ],
 )

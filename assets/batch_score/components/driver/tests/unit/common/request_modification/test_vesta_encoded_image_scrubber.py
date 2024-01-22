@@ -11,20 +11,25 @@ from src.batch_score.common.request_modification.modifiers.vesta_encoded_image_s
 
 
 def test_image_scrubber_invalid_request_raises_exception(make_vesta_encoded_image_scrubber):
+    """Test image scrubber."""
     scrubber: VestaEncodedImageScrubber = make_vesta_encoded_image_scrubber()
 
     request_obj = {"non-vesta-obj": "val"}
     with pytest.raises(Exception):
         scrubber.modify(request_obj=request_obj)
 
+
 def test_image_scrubber_image_data_scrubbed(make_vesta_encoded_image_scrubber):
+    """Test image scrubber when data should be scrubbed."""
     scrubber: VestaEncodedImageScrubber = make_vesta_encoded_image_scrubber()
 
     request_obj = {"transcript": [{"type": "image", "data": "some-encoded-image"}]}
     modified_obj = scrubber.modify(request_obj=request_obj)
     assert modified_obj["transcript"][0]["data"] == "<Encoded image data has been scrubbed>"
 
+
 def test_image_scrubber_image_data_unchanged(make_vesta_encoded_image_scrubber):
+    """Test image scrubber when data should be unchanged."""
     scrubber: VestaEncodedImageScrubber = make_vesta_encoded_image_scrubber()
 
     image_url_data = "ImageUrl!some-url"

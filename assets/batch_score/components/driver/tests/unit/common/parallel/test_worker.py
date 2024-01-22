@@ -16,13 +16,12 @@ from src.batch_score.common.parallel.request_metrics import RequestMetrics
 from src.batch_score.common.parallel.worker import QueueItem, Worker
 from src.batch_score.common.scoring.scoring_request import ScoringRequest
 from src.batch_score.common.scoring.scoring_result import (
-    ScoringResult,
     RetriableException,
     ScoringResultStatus,
 )
-from src.batch_score.common.telemetry.events import event_utils
-from src.batch_score.common.telemetry.events.batch_score_event import BatchScoreEvent
-from src.batch_score.common.telemetry.events.batch_score_input_row_completed_event import BatchScoreInputRowCompletedEvent
+from src.batch_score.common.telemetry.events.batch_score_input_row_completed_event import (
+    BatchScoreInputRowCompletedEvent
+)
 
 TEST_COMPLETION_TOKENS = 12
 TEST_PROMPT_TOKENS = 9
@@ -31,28 +30,33 @@ TEST_SCORING_URL = "test_scoring_url"
 TEST_SEGMENT_COUNT = 50
 TEST_WORKER_ID = 5
 
+
 @pytest.mark.asyncio
 async def test_successful_scoring_appends_result_no_segmentation(
-    monkeypatch,
-    make_worker,
-    make_scoring_result,
-    mock_run_context):
-
+        monkeypatch,
+        make_worker,
+        make_scoring_result,
+        mock_run_context):
     scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
     scoring_request.scoring_url = TEST_SCORING_URL
 
     scoring_result = make_scoring_result(
         request_obj={"prompt": "payload"},
-        response_body={"usage": {"prompt_tokens": TEST_PROMPT_TOKENS, "completion_tokens": TEST_COMPLETION_TOKENS, "total_tokens": TEST_PROMPT_TOKENS + TEST_COMPLETION_TOKENS}},
+        response_body={"usage": {
+            "prompt_tokens": TEST_PROMPT_TOKENS,
+            "completion_tokens": TEST_COMPLETION_TOKENS,
+            "total_tokens": TEST_PROMPT_TOKENS + TEST_COMPLETION_TOKENS}},
         response_headers=CIMultiDictProxy(CIMultiDict([('ms-azureml-model-error-statuscode', '429')])),
-        num_retries = TEST_RETRY_COUNT
+        num_retries=TEST_RETRY_COUNT
     )
+
     async def mock_score(*args, **kwargs):
         return scoring_result
 
     monkeypatch.setattr("src.batch_score.batch_pool.scoring.scoring_client.ScoringClient.score_once", mock_score)
-    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:        
-        with patch("src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext.processed_segments_count", new_callable=PropertyMock) as mock_processed_segments_count:
+    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+        with patch("src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext"
+                   ".processed_segments_count", new_callable=PropertyMock) as mock_processed_segments_count:
             mock_processed_segments_count.return_value = 0
             metrics = await _run_worker(make_worker, scoring_request=scoring_request)
 
@@ -63,7 +67,8 @@ async def test_successful_scoring_appends_result_no_segmentation(
         worker_id=TEST_WORKER_ID,
         scoring_url=TEST_SCORING_URL,
         is_successful=True if scoring_result.status == ScoringResultStatus.SUCCESS else False,
-        response_code=-1 if not scoring_result.response_headers else scoring_result.response_headers.get("ms-azureml-model-error-statuscode", ""),
+        response_code=(-1 if not scoring_result.response_headers
+                       else scoring_result.response_headers.get("ms-azureml-model-error-statuscode", "")),
         prompt_tokens=scoring_result.prompt_tokens,
         completion_tokens=scoring_result.completion_tokens,
         retry_count=scoring_result.num_retries,
@@ -72,39 +77,45 @@ async def test_successful_scoring_appends_result_no_segmentation(
     )
 
     # Validate that input row event was emitted.
-    mock_emit_event.assert_called_with(batch_score_event = input_row_event)
+    mock_emit_event.assert_called_with(batch_score_event=input_row_event)
 
     assert not metrics.empty
     assert metrics.iloc[0]['response_code'] == ScoringResultStatus.SUCCESS
 
+
 @pytest.mark.timeout(5)
 @pytest.mark.asyncio
 async def test_successful_scoring_appends_result_with_segmentation(
-    monkeypatch,
-    make_worker,
-    make_scoring_result,
-    mock_run_context):
-
+        monkeypatch,
+        make_worker,
+        make_scoring_result,
+        mock_run_context):
     scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
     scoring_request.scoring_url = TEST_SCORING_URL
 
     scoring_result = make_scoring_result(
         request_obj={"prompt": "payload"},
-        response_body={"usage": {"prompt_tokens": TEST_PROMPT_TOKENS, "completion_tokens": TEST_COMPLETION_TOKENS, "total_tokens": TEST_PROMPT_TOKENS + TEST_COMPLETION_TOKENS}},
+        response_body={"usage": {"prompt_tokens": TEST_PROMPT_TOKENS,
+                                 "completion_tokens": TEST_COMPLETION_TOKENS,
+                                 "total_tokens": TEST_PROMPT_TOKENS + TEST_COMPLETION_TOKENS}},
         response_headers=CIMultiDictProxy(CIMultiDict([('ms-azureml-model-error-statuscode', '429')])),
-        num_retries = TEST_RETRY_COUNT
+        num_retries=TEST_RETRY_COUNT
     )
 
     async def mock_score(*args, **kwargs):
         return scoring_result
 
-    monkeypatch.setattr("src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext.score_next_once", mock_score)
-    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:        
-        with patch("src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext.processed_segments_count", new_callable=PropertyMock) as mock_processed_segments_count:       
+    monkeypatch.setattr("src.batch_score.common.scoring.segmented_score_context"
+                        ".SegmentedScoreContext.score_next_once", mock_score)
+    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+        with patch("src.batch_score.common.scoring.segmented_score_context"
+                   ".SegmentedScoreContext.processed_segments_count",
+                   new_callable=PropertyMock) as mock_processed_segments_count:
             with patch('src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext.has_more',
-                side_effect=[True, True, True, False]) as has_more:
+                       side_effect=[True, True, True, False]):
                 mock_processed_segments_count.return_value = TEST_SEGMENT_COUNT
-                metrics = await _run_worker(make_worker, segment_large_requests='enabled', scoring_request=scoring_request)
+                metrics = await _run_worker(make_worker, segment_large_requests='enabled',
+                                            scoring_request=scoring_request)
 
     input_row_event = BatchScoreInputRowCompletedEvent(
         event_time=ANY,
@@ -113,7 +124,8 @@ async def test_successful_scoring_appends_result_with_segmentation(
         worker_id=TEST_WORKER_ID,
         scoring_url=TEST_SCORING_URL,
         is_successful=True if scoring_result.status == ScoringResultStatus.SUCCESS else False,
-        response_code=-1 if not scoring_result.response_headers else scoring_result.response_headers.get("ms-azureml-model-error-statuscode", ""),
+        response_code=(-1 if not scoring_result.response_headers
+                       else scoring_result.response_headers.get("ms-azureml-model-error-statuscode", "")),
         prompt_tokens=scoring_result.prompt_tokens,
         completion_tokens=scoring_result.completion_tokens,
         retry_count=scoring_result.num_retries,
@@ -122,21 +134,21 @@ async def test_successful_scoring_appends_result_with_segmentation(
     )
 
     # Validate that input row event was emitted.
-    mock_emit_event.assert_called_with(batch_score_event = input_row_event)
+    mock_emit_event.assert_called_with(batch_score_event=input_row_event)
 
     assert not metrics.empty
     assert metrics.iloc[0]['response_code'] == ScoringResultStatus.SUCCESS
 
+
 @pytest.mark.asyncio
 async def test_request_exceeds_max_retry_time_interval_and_fails(
-    mock_get_events_client, 
-    make_worker, 
-    mock_get_logger,
-    mock_run_context):
-
+        mock_get_events_client,
+        make_worker,
+        mock_get_logger,
+        mock_run_context):
     # 1 second maximum
     max_retry_time_interval = 1
-    scoring_request=ScoringRequest(original_payload='{"fake": "payload"}')
+    scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
     scoring_request.scoring_url = TEST_SCORING_URL
 
     queue_item = QueueItem(
@@ -153,21 +165,24 @@ async def test_request_exceeds_max_retry_time_interval_and_fails(
         scoring_request_queue=queue,
         max_retry_time_interval=max_retry_time_interval)
 
-    ret = await worker.start()
+    await worker.start()
 
     assert mock_get_logger.error.called
     assert mock_get_events_client.emit_row_completed.called
 
-    assert (worker._Worker__request_metrics._RequestMetrics__df["response_code"].head(1) == ScoringResultStatus.FAILURE).all()
+    assert (worker._Worker__request_metrics._RequestMetrics__df["response_code"].head(1)
+            == ScoringResultStatus.FAILURE).all()
+
 
 @pytest.mark.asyncio
 async def test_model_429_does_not_contribute_to_request_total_wait_time(
-    make_worker,
-    mock__score_once,
-    mock_get_client_setting,
-    mock_run_context):
-
-    mock__score_once['raise_exception'] = RetriableException(status_code=424, model_response_code='429', retry_after=0.01)
+        make_worker,
+        mock__score_once,
+        mock_get_client_setting,
+        mock_run_context):
+    mock__score_once['raise_exception'] = RetriableException(status_code=424,
+                                                             model_response_code='429',
+                                                             retry_after=0.01)
     mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
 
     metrics = await _run_worker(make_worker)
@@ -175,15 +190,15 @@ async def test_model_429_does_not_contribute_to_request_total_wait_time(
     assert not metrics.empty
     assert metrics.iloc[0]['request_total_wait_time'] == 0
 
+
 @pytest.mark.asyncio
 async def test_quota_429_contributes_to_request_total_wait_time(
-    mock_get_events_client,
-    make_worker,
-    mock_get_logger,
-    mock__score_once,
-    mock_get_client_setting,
-    mock_run_context):
-
+        mock_get_events_client,
+        make_worker,
+        mock_get_logger,
+        mock__score_once,
+        mock_get_client_setting,
+        mock_run_context):
     mock__score_once['raise_exception'] = QuotaUnavailableException(retry_after=0.01)
     mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
 
@@ -204,8 +219,8 @@ no_deployments_test_cases = [
     # Both env vars absent. Defaults to no wait.
     (
         *fixture_names,
-        {}, # env vars
-        0,  # expected wait time
+        {},  # env vars
+        0,   # expected wait time
     ),
     # Poll env var absent. Back off env var present. Defaults to no wait.
     (
@@ -233,37 +248,47 @@ no_deployments_test_cases = [
         2,
     ),
 ]
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "mock_get_events_client, make_worker, mock_get_logger, mock__score_once, mock_get_client_setting, monkeypatch, env_vars, expected_wait_time",
+    "mock_get_events_client, make_worker, mock_get_logger, mock__score_once, "
+    "mock_get_client_setting, monkeypatch, env_vars, expected_wait_time",
     no_deployments_test_cases,
-    indirect=['mock_get_events_client', 'make_worker', 'mock_get_logger', 'mock__score_once', 'mock_get_client_setting', 'monkeypatch'],
+    indirect=['mock_get_events_client',
+              'make_worker',
+              'mock_get_logger',
+              'mock__score_once',
+              'mock_get_client_setting',
+              'monkeypatch'],
 )
 async def test_no_deployments_in_traffic_group(
-    mock_get_events_client,
-    make_worker,
-    mock_get_logger,
-    mock__score_once,
-    mock_get_client_setting,
-    monkeypatch,
-    env_vars,
-    expected_wait_time,
-    mock_run_context):
-
+        mock_get_events_client,
+        make_worker,
+        mock_get_logger,
+        mock__score_once,
+        mock_get_client_setting,
+        monkeypatch,
+        env_vars,
+        expected_wait_time,
+        mock_run_context):
     for var, value in env_vars.items():
         monkeypatch.setenv(var, value)
 
     if 'BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF' not in env_vars:
         monkeypatch.setattr(Worker, 'NO_DEPLOYMENTS_BACK_OFF', expected_wait_time)
 
-    mock__score_once['raise_exception'] = RetriableException(status_code=404, response_payload='Specified traffic group could not be found')
+    mock__score_once['raise_exception'] = RetriableException(
+        status_code=404,
+        response_payload='Specified traffic group could not be found')
 
     metrics = await _run_worker(make_worker)
 
     assert not metrics.empty
     assert metrics.iloc[0]['request_total_wait_time'] == expected_wait_time
 
-async def _run_worker(make_worker, segment_large_requests='disabled', scoring_request: ScoringRequest=None):
+
+async def _run_worker(make_worker, segment_large_requests='disabled', scoring_request: ScoringRequest = None):
     if scoring_request is None:
         scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
         scoring_request.scoring_url = TEST_SCORING_URL
@@ -278,7 +303,7 @@ async def _run_worker(make_worker, segment_large_requests='disabled', scoring_re
     worker = make_worker(
         scoring_request_queue=queue,
         segment_large_requests=segment_large_requests,
-        max_retry_time_interval=0.001, # A small timeout keeps the test fast.
+        max_retry_time_interval=0.001,  # A small timeout keeps the test fast.
         request_metrics=request_metrics,
         id=TEST_WORKER_ID)
 

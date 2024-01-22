@@ -12,6 +12,7 @@ from tests.fixtures.telemetry_events import (
     TEST_COMPONENT_VERSION,
 )
 
+
 def test_init(mock_run_context, make_batch_score_init_started_event):
     # Arrange & Act
     result: BatchScoreInitStartedEvent = make_batch_score_init_started_event
@@ -19,6 +20,7 @@ def test_init(mock_run_context, make_batch_score_init_started_event):
     # Assert
     assert_common_fields(result)
     assert_run_context_fields(result)
+
 
 def test_str(mock_run_context, make_batch_score_init_started_event):
     # Arrange

@@ -12,16 +12,17 @@ from tests.fixtures.telemetry_events import (
     update_common_fields,
 )
 
+
 def test_init(mock_run_context, make_configuration, make_metadata):
     # Arrange
     event_utils.setup_context_vars(make_configuration, make_metadata)
 
     # Act
     result = BatchScoreWorkerDecreasedEvent(
-        active_minibatch_count = 10,
-        previous_active_worker_count = 3,
-        current_active_worker_count = 4,
-        p90_wait_time_ms = 2.5)
+        active_minibatch_count=10,
+        previous_active_worker_count=3,
+        current_active_worker_count=4,
+        p90_wait_time_ms=2.5)
     update_common_fields(result)
 
     # Assert

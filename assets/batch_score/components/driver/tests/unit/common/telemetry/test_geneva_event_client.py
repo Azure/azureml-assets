@@ -8,10 +8,13 @@ from src.batch_score.common.telemetry.required_fields import RequiredFields
 from src.batch_score.common.telemetry.standard_fields import StandardFields
 from src.batch_score.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
 from src.batch_score.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
-from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import BatchScoreMinibatchCompletedEvent
+from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import (
+    BatchScoreMinibatchCompletedEvent
+)
 from src.batch_score.common.telemetry.events.batch_score_minibatch_started_event import BatchScoreMinibatchStartedEvent
 
-from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
+from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION, TEST_SCORING_URI
+
 
 def test_generate_required_fields(mock_import_module, make_batch_score_init_completed_event):
     # Arrange
@@ -24,6 +27,7 @@ def test_generate_required_fields(mock_import_module, make_batch_score_init_comp
     assert result.SubscriptionId == "00000000-0000-0000-0000-000000000000"
     assert result.WorkspaceId == "11111111-1111-1111-111111111111"
     assert result.EventName == "BatchScore.Init.Completed"
+
 
 def test_generate_standard_fields(mock_import_module, make_batch_score_init_completed_event):
     # Arrange
@@ -38,6 +42,7 @@ def test_generate_standard_fields(mock_import_module, make_batch_score_init_comp
     assert result.RunId == "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     assert result.ParentRunId == "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
     assert result.ExperimentId == "22222222-2222-2222-2222-222222222222"
+
 
 def test_generate_extension_fields_init_completed(mock_import_module, make_batch_score_init_completed_event):
     # Arrange
@@ -64,6 +69,7 @@ def test_generate_extension_fields_init_completed(mock_import_module, make_batch
         'init_duration_ms': 5,
     }
 
+
 def test_generate_extension_fields_init_started(mock_import_module, make_batch_score_init_started_event):
     # Arrange
     test_event: BatchScoreInitStartedEvent = make_batch_score_init_started_event
@@ -85,6 +91,7 @@ def test_generate_extension_fields_init_started(mock_import_module, make_batch_s
         'resource_group': 'testrg',
         'workspace_name': 'testws',
     }
+
 
 def test_generate_extension_fields_minibatch_completed(mock_import_module, make_batch_score_minibatch_completed_event):
     # Arrange
@@ -109,7 +116,7 @@ def test_generate_extension_fields_minibatch_completed(mock_import_module, make_
 
         # Event specific fields
         'minibatch_id': '2',
-        'scoring_url': 'https://sunjoli-aoai.openai.azure.com/openai/deployments/turbo/chat/completions?api-version=2023-03-15-preview',
+        'scoring_url': TEST_SCORING_URI,
         'batch_pool': 'test_pool',
         'quota_audience': 'test_audience',
 
@@ -140,6 +147,7 @@ def test_generate_extension_fields_minibatch_completed(mock_import_module, make_
         'progress_duration_p100_ms': 130,
     }
 
+
 def test_generate_extension_fields_minibatch_started(mock_import_module, make_batch_score_minibatch_started_event):
     # Arrange
     test_event: BatchScoreMinibatchStartedEvent = make_batch_score_minibatch_started_event
@@ -163,7 +171,7 @@ def test_generate_extension_fields_minibatch_started(mock_import_module, make_ba
 
         # Event specific fields
         'minibatch_id': '2',
-        'scoring_url': 'https://sunjoli-aoai.openai.azure.com/openai/deployments/turbo/chat/completions?api-version=2023-03-15-preview',
+        'scoring_url': TEST_SCORING_URI,
         'batch_pool': 'test_pool',
         'quota_audience': 'test_audience',
         'input_row_count': 10,

@@ -13,6 +13,7 @@ from tests.fixtures.telemetry_events import (
     update_common_fields,
 )
 
+
 def test_init(mock_run_context, make_configuration, make_metadata):
     # Arrange
     configuration: Configuration = make_configuration
@@ -20,19 +21,19 @@ def test_init(mock_run_context, make_configuration, make_metadata):
 
     # Act
     result = BatchScoreRequestCompletedEvent(
-        minibatch_id = 'test_minibatch',
-        input_row_id =  'test_input_row',
-        x_ms_client_request_id = 'test_client_id',
-        worker_id = '5',
-        segmented_request_id = '2',
-        scoring_url = configuration.scoring_url,
-        is_successful = True,
-        is_retriable = False,
-        response_code = 200,
-        model_response_code = None,
-        prompt_tokens = 100,
-        completion_tokens = 1000,
-        duration_ms = 8
+        minibatch_id='test_minibatch',
+        input_row_id='test_input_row',
+        x_ms_client_request_id='test_client_id',
+        worker_id='5',
+        segmented_request_id='2',
+        scoring_url=configuration.scoring_url,
+        is_successful=True,
+        is_retriable=False,
+        response_code=200,
+        model_response_code=None,
+        prompt_tokens=100,
+        completion_tokens=1000,
+        duration_ms=8
     )
     update_common_fields(result)
 
@@ -46,10 +47,10 @@ def test_init(mock_run_context, make_configuration, make_metadata):
     assert result.worker_id == '5'
     assert result.segmented_request_id == '2'
     assert result.scoring_url == configuration.scoring_url
-    assert result.is_successful == True
-    assert result.is_retriable == False
+    assert result.is_successful
+    assert result.is_retriable is False
     assert result.response_code == 200
-    assert result.model_response_code == None
+    assert result.model_response_code is None
     assert result.prompt_tokens == 100
     assert result.completion_tokens == 1000
     assert result.duration_ms == 8
