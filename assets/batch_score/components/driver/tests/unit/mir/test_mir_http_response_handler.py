@@ -20,16 +20,21 @@ from tests.unit.utils.scoring_result_utils import assert_scoring_result
 
 end_time = 20.1
 start_time = 14
-scoring_url='https://mirendpoint@inference.com'
+scoring_url = 'https://mirendpoint@inference.com'
+
 
 def test_handle_response_returns_success_result():
     # Arrange
-    http_response = HttpScoringResponse(status=200, payload=['hello'], headers={'x-ms-client-request-id':'123'})
+    http_response = HttpScoringResponse(status=200, payload=['hello'], headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
     response_handler = MirHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
 
     # Act
-    scoring_result = response_handler.handle_response(http_response, scoring_request, start_time, end_time, scoring_url)
+    scoring_result = response_handler.handle_response(http_response,
+                                                      scoring_request,
+                                                      start_time,
+                                                      end_time,
+                                                      scoring_url)
 
     # Assert
     assert_scoring_result(
@@ -44,7 +49,7 @@ def test_handle_response_returns_success_result():
 
 def test_handle_response_retriable_failure_throws_exception():
     # Arrange
-    http_response = HttpScoringResponse(status=403, payload=['hello'], headers={'x-ms-client-request-id':'123'})
+    http_response = HttpScoringResponse(status=403, payload=['hello'], headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
     response_handler = MirHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
 
@@ -57,12 +62,16 @@ def test_handle_response_retriable_failure_throws_exception():
 @pytest.mark.parametrize('enable_tally_handler', [True, False])
 def test_handle_response_non_retriable_failure(enable_tally_handler):
     # Arrange
-    http_response = HttpScoringResponse(status=500, payload=['hello'], headers={'x-ms-client-request-id':'123'})
+    http_response = HttpScoringResponse(status=500, payload=['hello'], headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
     response_handler = MirHttpResponseHandler(TallyFailedRequestHandler(enabled=enable_tally_handler))
 
     # Act
-    scoring_result = response_handler.handle_response(http_response, scoring_request, start_time, end_time, scoring_url)
+    scoring_result = response_handler.handle_response(http_response,
+                                                      scoring_request,
+                                                      start_time,
+                                                      end_time,
+                                                      scoring_url)
 
     # Assert
     assert_scoring_result(
@@ -85,7 +94,7 @@ def test_handle_response_non_retriable_failure(enable_tally_handler):
 ])
 def test_handler_retriable_exception_throws_exception(exception_to_throw):
     # Arrange
-    http_response = HttpScoringResponse(exception=exception_to_throw, headers={'x-ms-client-request-id':'123'})
+    http_response = HttpScoringResponse(exception=exception_to_throw, headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
     response_handler = MirHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
 
@@ -98,12 +107,16 @@ def test_handler_retriable_exception_throws_exception(exception_to_throw):
 @pytest.mark.parametrize('enable_tally_handler', [True, False])
 def test_handler_non_retriable_exception_returns_failure(enable_tally_handler):
     # Arrange
-    http_response = HttpScoringResponse(exception=Exception, headers={'x-ms-client-request-id':'123'})
+    http_response = HttpScoringResponse(exception=Exception, headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
     response_handler = MirHttpResponseHandler(TallyFailedRequestHandler(enabled=enable_tally_handler))
 
     # Act
-    scoring_result = response_handler.handle_response(http_response, scoring_request, start_time, end_time, scoring_url)
+    scoring_result = response_handler.handle_response(http_response,
+                                                      scoring_request,
+                                                      start_time,
+                                                      end_time,
+                                                      scoring_url)
 
     # Assert
     assert_scoring_result(

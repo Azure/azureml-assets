@@ -7,7 +7,9 @@ import pytest
 
 from src.batch_score.common.auth.auth_provider import IdentityAuthProvider, WorkspaceConnectionAuthProvider
 from src.batch_score.mir.scoring.mir_header_provider import MirHeaderProvider
-from src.batch_score.header_handlers.mir_and_batch_pool_header_handler_factory import MirAndBatchPoolHeaderHandlerFactory
+from src.batch_score.header_handlers.mir_and_batch_pool_header_handler_factory import (
+    MirAndBatchPoolHeaderHandlerFactory
+)
 from src.batch_score.header_handlers.open_ai import OpenAIHeaderHandler
 
 
@@ -17,7 +19,8 @@ def test_get_headers_for_connection_auth_provider(has_additional_headers, mocker
     auth_provider = WorkspaceConnectionAuthProvider(connection_name='test', endpoint_type='MIR')
     expected_header_from_auth_provider = {'my_auth': '123'}
     additional_headers = '{"additional_header": "true"}'
-    mocker.patch.object(WorkspaceConnectionAuthProvider, 'get_auth_headers', return_value=expected_header_from_auth_provider)
+    mocker.patch.object(WorkspaceConnectionAuthProvider, 'get_auth_headers',
+                        return_value=expected_header_from_auth_provider)
 
     if has_additional_headers:
         header_provider = MirHeaderProvider(auth_provider, None, None, None, additional_headers=additional_headers)
@@ -34,7 +37,7 @@ def test_get_headers_for_connection_auth_provider(has_additional_headers, mocker
     assert expected_header_from_auth_provider.items() <= actual_headers.items()
 
     if has_additional_headers:
-        assert actual_headers['additional_header']=='true'
+        assert actual_headers['additional_header'] == 'true'
 
 
 def test_get_headers_uses_mir_header_handler(mocker):
