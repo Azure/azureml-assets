@@ -7,6 +7,7 @@ from opencensus.ext.azure.log_exporter import AzureEventHandler
 
 COMPONENT_NAME = "BatchScoreLlm"
 
+
 class EventsClient:
 
     def emit_request_completed(

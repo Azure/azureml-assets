@@ -35,11 +35,10 @@ class MinibatchAggregator:
         del self._start_event_per_minibatch[minibatch_id]
 
     def summarize(
-        self,
-        minibatch_id: str,
-        end_time: datetime,
-        output_row_count: int,
-    ) -> BatchScoreMinibatchCompletedEvent:
+            self,
+            minibatch_id: str,
+            end_time: datetime,
+            output_row_count: int) -> BatchScoreMinibatchCompletedEvent:
         http_request_completed_events = self._http_request_completed_events_per_minibatch[minibatch_id]
         http_request_durations_ms = [e.duration_ms for e in http_request_completed_events] or [0]
 
@@ -49,7 +48,8 @@ class MinibatchAggregator:
         else:
             minibatch_start_time = minibatch_end_time
         rows_completed_events = self._rows_completed_events_per_minibatch[minibatch_id]
-        row_completed_timestamps = sorted(e.event_time.timestamp() for e in rows_completed_events) or [minibatch_start_time]
+        row_completed_timestamps = sorted(
+            e.event_time.timestamp() for e in rows_completed_events) or [minibatch_start_time]
 
         return BatchScoreMinibatchCompletedEvent(
             minibatch_id=minibatch_id,
@@ -66,9 +66,12 @@ class MinibatchAggregator:
             output_row_count=output_row_count,
 
             http_request_count=len(http_request_completed_events),
-            http_request_succeeded_count=len([e for e in http_request_completed_events if 200 <= e.response_code < 300]),
-            http_request_user_error_count=len([e for e in http_request_completed_events if 400 <= e.response_code < 500]),
-            http_request_system_error_count=len([e for e in http_request_completed_events if 500 <= e.response_code < 600]),
+            http_request_succeeded_count=len(
+                [e for e in http_request_completed_events if 200 <= e.response_code < 300]),
+            http_request_user_error_count=len(
+                [e for e in http_request_completed_events if 400 <= e.response_code < 500]),
+            http_request_system_error_count=len(
+                [e for e in http_request_completed_events if 500 <= e.response_code < 600]),
             http_request_retry_count=sum(e.retry_count for e in rows_completed_events),
 
             http_request_duration_p0_ms=np.min(http_request_durations_ms),

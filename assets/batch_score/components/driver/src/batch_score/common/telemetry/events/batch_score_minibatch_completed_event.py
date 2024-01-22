@@ -4,6 +4,7 @@
 from dataclasses import dataclass, field
 from .batch_score_event import BatchScoreEvent
 
+
 # TODO: Add comments to describe each field
 @dataclass
 class BatchScoreMinibatchCompletedEvent(BatchScoreEvent):
@@ -98,7 +99,8 @@ class BatchScoreMinibatchCompletedEvent(BatchScoreEvent):
     progress_duration_p100_ms: float = field(init=True, default=None)
 
     """ How long after the start of the minibatch does the minibatch complete?
-        There may be a post-processing delay between the completion of the final row in the minibatch and the completion of the minibatch.
+        There may be a post-processing delay between the completion of the final row in the minibatch
+        and the completion of the minibatch.
         In this case, total_duration_ms will be greater than progress_duration_p100_ms.
     """
     total_duration_ms: float = field(init=True, default=None)

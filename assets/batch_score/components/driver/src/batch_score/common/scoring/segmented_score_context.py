@@ -61,7 +61,7 @@ class SegmentedScoreContext:
         self.__next_scoring_request = None
 
         if next_result.status == ScoringResultStatus.SUCCESS:
-            self.__add_successful_result(next_result)            
+            self.__add_successful_result(next_result)
 
         return next_result
 

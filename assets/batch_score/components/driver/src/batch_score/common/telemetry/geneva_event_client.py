@@ -13,6 +13,7 @@ from .standard_fields import AzureMLTelemetryComputeType, AzureMLTelemetryOS, St
 
 COMPONENT_NAME = "BatchScoreLlm"
 
+
 class GenevaEventClient():
     def __init__(self):
         self._logger = logging.getLogger("GenevaEventClientLogger")
@@ -29,12 +30,13 @@ class GenevaEventClient():
 
     def emit_event(self, event: BatchScoreEvent):
         try:
-            self._event_logger(level="Information",
-                                log_locally=False,
-                                required_fields=self.generate_required_fields(event),
-                                standard_fields=self.generate_standard_fields(event),
-                                extension_fields=self.generate_extension_fields(event),
-                                run_id=event.run_id)
+            self._event_logger(
+                level="Information",
+                log_locally=False,
+                required_fields=self.generate_required_fields(event),
+                standard_fields=self.generate_standard_fields(event),
+                extension_fields=self.generate_extension_fields(event),
+                run_id=event.run_id)
         except Exception as e:
             self._logger.error(f"Failed to emit events using log_message_internal_v2, exception: {e}.")
 
@@ -65,7 +67,8 @@ class GenevaEventClient():
         return standard_fields
 
     def generate_extension_fields(self, event: BatchScoreEvent):
-        """Generate extension fields (Part C) as a dictionary for any batch score events. Fields exist in Part A or B are removed."""
+        """Generate extension fields (Part C) as a dictionary for any batch score events.
+        Fields exist in Part A or B are removed."""
         extension_fields = {k: v for k, v in event.to_dictionary(include_empty_keys=False).items() if k not in [
             'subscription_id',
             'workspace_id',

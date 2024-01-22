@@ -9,25 +9,29 @@ from ..events.event_utils import (
 from ..events.batch_score_event import BatchScoreEvent
 from ..minibatch_aggregator import MinibatchAggregator
 
+
 def setup_minibatch_aggregator_event_handlers():
     add_handler(_handle_batch_score_event)
     add_handler(_handle_generate_minibatch_summary, signal=Signal.GenerateMinibatchSummary)
+
 
 def teardown_minibatch_aggregator_event_handlers():
     remove_handler(_handle_batch_score_event)
     remove_handler(_handle_generate_minibatch_summary, signal=Signal.GenerateMinibatchSummary)
 
+
 _minibatch_aggregator = MinibatchAggregator()
+
 
 def _handle_batch_score_event(batch_score_event: BatchScoreEvent = None):
     _minibatch_aggregator.add(batch_score_event)
 
+
 def _handle_generate_minibatch_summary(
-    signal: Signal = None,
-    minibatch_id: str = None,
-    timestamp: datetime = None,
-    output_row_count: int = None,
-):
+        signal: Signal = None,
+        minibatch_id: str = None,
+        timestamp: datetime = None,
+        output_row_count: int = None):
     summary_event = _minibatch_aggregator.summarize(
         minibatch_id=minibatch_id,
         timestamp=timestamp,
