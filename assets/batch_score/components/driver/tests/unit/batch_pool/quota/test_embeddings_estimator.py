@@ -36,6 +36,6 @@ def test_estimate_response_cost(input_prompt, expected_count):
     estimator = EmbeddingsEstimator()
     actual_count = estimator.estimate_response_cost(
         {"input": input_prompt},
-        {"usage":{"total_tokens": 2}}
+        {"usage": {"total_tokens": 2}}
         )
     assert actual_count == expected_count
