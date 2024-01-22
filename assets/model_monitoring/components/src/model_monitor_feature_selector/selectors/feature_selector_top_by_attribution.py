@@ -28,13 +28,11 @@ class FeatureSelectorTopNByAttribution(FeatureSelector):
             self.feature_importance.select(self.feature_importance.feature, self.feature_importance.metric_value)
             .collect()
         )
-        # Create dictionary with feature as key and importance as value using row list
-        featureimportance_dictionary = {}
-        for row in feature_importance_names_importance:
-            featureimportance_dictionary[row[0]] = row[1]
+        
         # Sort and find Top N features with higher importance
-        top_N_feature_importance_names_importance = sorted(
-            featureimportance_dictionary.items(), key=lambda x: x[1], reverse=True)[: self.N_value]
+        top_N_feature_importance_names_importance = sorted(feature_importance_names_importance, key=lambda x: x[1], reverse=True)[: self.N_value]
+        print(top_N_feature_importance_names_importance)
+
         # Get top N feature names and find common features in both input dataset
         top_features = [x[0] for x in top_N_feature_importance_names_importance]
         # Select top N common feature in both inputs
