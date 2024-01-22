@@ -5,7 +5,6 @@ from .configuration import Configuration
 from .command_line_argument_specification import (
     COMMAND_LINE_ARGUMENT_SPECIFICATION_FOR_FILE_CONFIGURATION,
 )
-from .configuration import Configuration
 from .file_configuration_validator import FileConfigurationValidator
 
 
@@ -22,7 +21,7 @@ class FileConfigurationParser:
         additional_headers = config.get('request_settings', {}).get('headers')
         if isinstance(additional_headers, dict):
             additional_headers = json.dumps(additional_headers)
-        
+
         additional_properties = config.get('request_settings', {}).get('properties')
         if isinstance(additional_properties, dict):
             additional_properties = json.dumps(additional_properties)
@@ -33,7 +32,7 @@ class FileConfigurationParser:
         else:
             output_behavior = 'append_row'
             save_mini_batch_results = "disabled"
-        
+
         configuration = Configuration(
             additional_headers=additional_headers,
             additional_properties=additional_properties,
@@ -71,7 +70,6 @@ class FileConfigurationParser:
         )
 
         return configuration
-
 
     def _setup_parser(self) -> ArgumentParser:
         parser = ArgumentParser()

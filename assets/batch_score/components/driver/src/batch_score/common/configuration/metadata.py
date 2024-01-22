@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .. import constants
 
+
 @dataclass()
 class Metadata(Namespace):
     component_name: str = field(init=True, default=None)

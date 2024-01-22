@@ -9,6 +9,7 @@ from referencing import Registry, Resource
 class InvalidConfigurationError(Exception):
     pass
 
+
 _current_file_path = Path(os.path.abspath(__file__))
 SCHEMAS_ROOT = _current_file_path.parent / "schemas"
 
@@ -58,10 +59,10 @@ class FileConfigurationValidator:
     def _apply_defaults(self, instance):
         # api - completion
         instance["api"].setdefault("response_segment_size", 0)
-        
+
         # api - embedding
         instance["api"].setdefault("batch_size_per_request", 1)
-        
+
         # authentication: no defaults
 
         # concurrency_settings
