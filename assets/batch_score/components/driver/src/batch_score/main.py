@@ -66,6 +66,7 @@ from .utils.json_encoder_extensions import setup_encoder
 par: parallel.Parallel = None
 configuration: Configuration = None
 
+
 def init():
     global par
     global configuration
@@ -84,7 +85,7 @@ def init():
 
     # Emit init started event
     init_started_event = BatchScoreInitStartedEvent()
-    event_utils.emit_event(batch_score_event = init_started_event)    
+    event_utils.emit_event(batch_score_event=init_started_event)    
 
     configuration.log()
 
@@ -92,10 +93,11 @@ def init():
 
     token_provider = TokenProvider(token_file_path=configuration.token_file_path)
     routing_client = setup_routing_client(token_provider=token_provider)
-    scoring_client = ScoringClientFactory().setup_scoring_client(configuration=configuration,
-                                                                 metadata=metadata,
-                                                                 token_provider=token_provider,
-                                                                 routing_client=routing_client)
+    scoring_client = ScoringClientFactory().setup_scoring_client(
+        configuration=configuration,
+        metadata=metadata,
+        token_provider=token_provider,
+        routing_client=routing_client)
     trace_configs = setup_trace_configs()
     input_to_request_transformer = setup_input_to_request_transformer()
     input_to_log_transformer = setup_input_to_log_transformer()
@@ -130,10 +132,11 @@ def init():
     end = time.time()
 
     # Emit init completed event
-    init_completed_event = BatchScoreInitCompletedEvent(init_duration_ms = (end - start) * 1000)
-    event_utils.emit_event(batch_score_event = init_completed_event)
+    init_completed_event = BatchScoreInitCompletedEvent(init_duration_ms=(end - start) * 1000)
+    event_utils.emit_event(batch_score_event=init_completed_event)
 
     get_events_client().emit_batch_driver_init(job_params=vars(configuration))
+
 
 def run(input_data: pd.DataFrame, mini_batch_context):
     global par
@@ -191,6 +194,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
 
     return get_return_value(ret, configuration.output_behavior)
 
+
 def enqueue(input_data: pd.DataFrame, mini_batch_context):
     global par
     global configuration
@@ -236,12 +240,14 @@ def enqueue(input_data: pd.DataFrame, mini_batch_context):
         lu.get_logger().info("Completed enqueueing mini-batch {}.".format(mini_batch_id))
         set_mini_batch_id(None)
 
+
 def check_all_tasks_processed() -> bool:
     global par
     global configuration
 
     lu.get_logger().debug("check_all_tasks_processed")
     return par.check_all_tasks_processed()
+
 
 def get_finished_batch_result() -> "dict[str, dict[str, any]]":
     global par
@@ -250,12 +256,14 @@ def get_finished_batch_result() -> "dict[str, dict[str, any]]":
     lu.get_logger().debug("get_finished_batch_result")
     return par.get_finished_batch_result()
 
+
 def get_processing_batch_number() -> int:
     global par
     global configuration
 
     lu.get_logger().debug("get_processing_batch_number")
     return par.get_processing_batch_number()
+
 
 def shutdown():
     global par
@@ -266,17 +274,26 @@ def shutdown():
 
     par.shutdown()
 
+
 def setup_trace_configs():
     is_enabled = os.environ.get(constants.BATCH_SCORE_TRACE_LOGGING, None)
     trace_configs = None
 
     if is_enabled and is_enabled.lower() == "true":
         lu.get_logger().info("Trace logging enabled, populating trace_configs.")
-        trace_configs = [ExceptionTrace(), ResponseChunkReceivedTrace(), RequestEndTrace(), RequestRedirectTrace(), ConnectionCreateStartTrace(), ConnectionCreateEndTrace(), ConnectionReuseconnTrace()]
+        trace_configs = [
+            ExceptionTrace(),
+            ResponseChunkReceivedTrace(),
+            RequestEndTrace(),
+            RequestRedirectTrace(),
+            ConnectionCreateStartTrace(),
+            ConnectionCreateEndTrace(),
+            ConnectionReuseconnTrace()]
     else:
         lu.get_logger().info("Trace logging disabled")
 
     return trace_configs
+
 
 def setup_loop() -> asyncio.AbstractEventLoop:
     if sys.platform == 'win32':
@@ -285,15 +302,20 @@ def setup_loop() -> asyncio.AbstractEventLoop:
 
     return asyncio.new_event_loop()
 
+
 def setup_input_to_request_transformer() -> InputTransformer:
     """This tranformer is used to modify each row of the input data before it is sent to MIR for scoring."""
     modifiers: "list[RequestModifier]" = []
     if configuration.is_vesta():
-        modifiers.append(VestaImageModifier(image_encoder=ImageEncoder(image_input_folder_str=configuration.image_input_folder)))
+        modifiers.append(
+            VestaImageModifier(image_encoder=ImageEncoder(image_input_folder_str=configuration.image_input_folder)))
     elif configuration.is_vesta_chat_completion():
-        modifiers.append(VestaChatCompletionImageModifier(image_encoder=ImageEncoder(image_input_folder_str=configuration.image_input_folder)))
+        modifiers.append(
+            VestaChatCompletionImageModifier(
+                image_encoder=ImageEncoder(image_input_folder_str=configuration.image_input_folder)))
 
     return InputTransformer(modifiers=modifiers)
+
 
 def setup_input_to_log_transformer() -> InputTransformer:
     """This tranformer is used to modify each row of the input data before it is logged."""
@@ -308,6 +330,7 @@ def setup_input_to_log_transformer() -> InputTransformer:
 
     return InputTransformer(modifiers=modifiers)
 
+
 def setup_input_to_output_transformer() -> InputTransformer:
     """This tranformer is used to modify each row of the input data before it written to output."""
     modifiers: "list[RequestModifier]" = []
@@ -317,6 +340,7 @@ def setup_input_to_output_transformer() -> InputTransformer:
         modifiers.append(VestaChatCompletionEncodedImageScrubber())
 
     return InputTransformer(modifiers=modifiers)
+
 
 def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
     routing_client: RoutingClient = None
@@ -336,6 +360,7 @@ def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
 
     return routing_client
 
+
 def _should_emit_prompts_to_job_log() -> bool:
     emit_prompts_to_job_log_env_var = os.environ.get(constants.BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG)
     if emit_prompts_to_job_log_env_var is None:
@@ -347,4 +372,5 @@ def _should_emit_prompts_to_job_log() -> bool:
             emit_prompts_to_job_log_env_var = "True"
 
     should_emit_prompts_to_job_log = str2bool(emit_prompts_to_job_log_env_var)
-    lu.get_logger().info("Emitting prompts to job log is {}.".format("enabled" if should_emit_prompts_to_job_log else "disabled"))
+    status = "enabled" if should_emit_prompts_to_job_log else "disabled"
+    lu.get_logger().info(f"Emitting prompts to job log is {status}.")

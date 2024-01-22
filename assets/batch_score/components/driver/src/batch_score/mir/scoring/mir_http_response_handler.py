@@ -30,15 +30,13 @@ class MirHttpResponseHandler(HttpResponseHandler):
     def __init__(self, tally_handler: TallyFailedRequestHandler):
         self.__tally_handler = tally_handler
 
-
     def handle_response(
-        self,
-        http_response: HttpScoringResponse,
-        scoring_request: ScoringRequest,
-        start: float,
-        end: float,
-        scoring_url: str
-    ) -> ScoringResult:
+            self,
+            http_response: HttpScoringResponse,
+            scoring_request: ScoringRequest,
+            start: float,
+            end: float,
+            scoring_url: str) -> ScoringResult:
         """Handles the response from the model for the provided scoring request."""
 
         result: ScoringResult = None
@@ -79,7 +77,7 @@ class MirHttpResponseHandler(HttpResponseHandler):
             is_retriable=is_retriable
         )
 
-        if response_status == 200: 
+        if response_status == 200:
             result = self._create_scoring_result(
                 status=ScoringResultStatus.SUCCESS,
                 scoring_request=scoring_request,
@@ -91,8 +89,12 @@ class MirHttpResponseHandler(HttpResponseHandler):
             )
             get_events_client().emit_tokens_generated(result.completion_tokens, result.prompt_tokens, scoring_url)
         elif is_retriable:
-            raise RetriableException(status_code=response_status, response_payload=response_payload, model_response_code=model_response_code, model_response_reason=model_response_reason)
-        else: # Score failed
+            raise RetriableException(
+                status_code=response_status,
+                response_payload=response_payload,
+                model_response_code=model_response_code,
+                model_response_reason=model_response_reason)
+        else:  # Score failed
             result = self._create_scoring_result(
                 status=ScoringResultStatus.FAILURE,
                 scoring_request=scoring_request,
@@ -110,14 +112,12 @@ class MirHttpResponseHandler(HttpResponseHandler):
 
         return result
 
-
     def _update_http_response_for_exception(
-        self,
-        http_response: HttpScoringResponse
-    ):
+            self,
+            http_response: HttpScoringResponse):
         if http_response.exception is None:
-            # No-op
-            return http_response
+            return http_response  # No-op
+        
         try:
             raise http_response.exception
         except (
@@ -126,7 +126,7 @@ class MirHttpResponseHandler(HttpResponseHandler):
             aiohttp.ClientConnectionError,
             aiohttp.ClientPayloadError
         ):
-            http_response.status = -408 # Manually attribute -408 as a tell to retry on this exception
+            http_response.status = -408  # Manually attribute -408 as a tell to retry on this exception
         except Exception:
-            http_response.status = -500 # Manually attribute -500 as a tell to not retry unhandled exceptions
+            http_response.status = -500  # Manually attribute -500 as a tell to not retry unhandled exceptions
         return http_response

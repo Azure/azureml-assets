@@ -35,7 +35,6 @@ class MirHeaderProvider(HeaderProvider):
         else:
             self._additional_headers = {}
 
-
     def get_headers(self) -> dict:
         """Gets the headers from the auth provider and additional headers."""
 
@@ -51,8 +50,8 @@ class MirHeaderProvider(HeaderProvider):
             headers.update(self._additional_headers)
         else:
             header_handler = MirAndBatchPoolHeaderHandlerFactory().get_header_handler(
-                configuration = self._configuration,
-                routing_client = self._routing_client,
+                configuration=self._configuration,
+                routing_client=self._routing_client,
                 token_provider=self._token_provider
             )
             headers = header_handler.get_headers(self._additional_headers)

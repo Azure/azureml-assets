@@ -42,7 +42,6 @@ class MirScoringClient:
             scoring_url=configuration.scoring_url,
         )
 
-
     async def score_once(
         self,
         session: aiohttp.ClientSession,
@@ -57,9 +56,11 @@ class MirScoringClient:
             timeout = session.timeout
 
         # Adding this to not break any existing logging.
-        lu.get_logger().debug("Worker_id: {}, internal_id: {}, Timeout: {}s".format(worker_id, scoring_request.internal_id, timeout.total))
+        lu.get_logger().debug(
+            f"Worker_id: {worker_id}, internal_id: {scoring_request.internal_id}, Timeout: {timeout.total}s")
 
-        # Todo: Validate if the error logging in generic client has all the properties that previous scoring client logs.
+        # TODO: Validate if the error logging in generic client has all the properties that
+        # previous scoring client logs.
         return await self._generic_scoring_client.score(
             session=session,
             scoring_request=scoring_request,
