@@ -20,20 +20,22 @@ from urllib3 import Retry
 
 from ..telemetry.logging_utils import get_logger
 
+
 class AuthProvider:
 
     @abstractmethod
     def get_auth_headers(self) -> dict:
         pass
 
+
 class IdentityAuthProvider(AuthProvider):
 
     SCOPE_COGNITIVE = "https://cognitiveservices.azure.com/.default"
 
     def __init__(
-        self,
-        use_user_identity: bool,
-        managed_identity_client_id: str = None):
+            self,
+            use_user_identity: bool,
+            managed_identity_client_id: str = None):
 
         # The identity used to score an AOAI deployment must have
         # the role "Cognitive Services User" on the AOAI resource.
@@ -49,7 +51,7 @@ class IdentityAuthProvider(AuthProvider):
                 get_logger().info(f"Using managed identity credential with default client id {client_id}")
                 self.__credential = ManagedIdentityCredential(client_id=client_id)
             else:
-                get_logger().info(f"Using default azure credential.")
+                get_logger().info("Using default azure credential.")
                 self.__credential = DefaultAzureCredential()
 
         self.__access_token: AccessToken = None
@@ -60,29 +62,32 @@ class IdentityAuthProvider(AuthProvider):
         }
 
     def __get_access_token(self) -> AccessToken:
-        # If there's a token that isn't expired, return that 
+        # If there's a token that isn't expired, return that
         if not self.__is_token_expired():
             return self.__access_token.token
 
         try:
             get_logger().info("Attempting to get token from MSI")
             self.__access_token = self.__credential.get_token(IdentityAuthProvider.SCOPE_COGNITIVE)
-        except CredentialUnavailableError as e:
+        except CredentialUnavailableError:
             get_logger().info("Failed to get token from MSI")
 
         return self.__access_token.token
 
     def __is_token_expired(self) -> bool:
-        return not self.__access_token or self.__access_token.expires_on <= datetime.now(timezone.utc).timestamp() + (5 * 60)
+        return not self.__access_token or \
+            self.__access_token.expires_on <= datetime.now(timezone.utc).timestamp() + (5 * 60)
+
 
 class MissingApiKeyNameException(Exception):
     def __init__(self):
         pass
 
     def __str__(self):
-        return ("'api_key_name' cannot be empty when using the authentication_type 'api_key'."
-            "Please set 'api_key_name' to the name of the key vault secret that contains the API key of the scoring_url."
-            "The secret must be placed in the key vault that is linked to the AzureML workspace in which the batch scoring job runs.")
+        return ("'api_key_name' cannot be empty when using the authentication_type 'api_key'. "
+                "Please set 'api_key_name' to the name of the key vault secret that contains the API key "
+                "of the scoring_url. The secret must be placed in the key vault that is linked to the "
+                "AzureML workspace in which the batch scoring job runs.")
 
 
 class ApiKeyAuthProvider(AuthProvider):
@@ -127,12 +132,11 @@ class WorkspaceConnectionAuthProvider(AuthProvider):
     def get_auth_headers(self) -> dict:
         """Get the auth headers."""
         resp = self._get_workspace_connection_by_name()
-        return{
+        return {
             EndpointType.AOAI: {'api-key': resp['properties']['credentials']['key']},
             EndpointType.MIR: {'Authorization': f"Bearer {resp['properties']['credentials']['key']}"},
             EndpointType.Serverless: {'Authorization': resp['properties']['credentials']['key']},
-        } [self._endpoint_type]
-
+        }[self._endpoint_type]
 
     def _get_workspace_connection_by_name(self) -> dict:
         """Get a workspace connection from the workspace."""

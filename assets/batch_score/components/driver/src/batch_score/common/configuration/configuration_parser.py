@@ -8,7 +8,7 @@ from .command_line_argument_specification import COMMAND_LINE_ARGUMENT_SPECIFICA
 class ConfigurationParser:
     def parse_configuration(self, args: "list[str]" = None) -> Configuration:
         ''' Parses the command line arguments and returns a Configuration object.
-            If args are provided, they are parsed. Otherwise, sys.argv is parsed. 
+            If args are provided, they are parsed. Otherwise, sys.argv is parsed.
         '''
 
         parsed_args, _ = self._setup_parser().parse_known_args(args=args)
@@ -38,8 +38,8 @@ class ConfigurationParser:
     @staticmethod
     def _set_defaults(args: dict) -> dict:
         '''
-        The v1.5, v2 and v2_singularity components expose `online_endpoint_url` whereas LLM component exposes `scoring_url`.
-        With the assignment below, all of the internal logic will use `scoring_url`.
+        The v1.5, v2 and v2_singularity components expose `online_endpoint_url` whereas LLM component
+        exposes `scoring_url`. With the assignment below, all of the internal logic will use `scoring_url`.
         '''
         if args.get('online_endpoint_url'):
             args['scoring_url'] = args['online_endpoint_url']

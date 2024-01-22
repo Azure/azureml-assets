@@ -62,8 +62,8 @@ class Configuration(Namespace):
                              " Valid range is 1-2000.")
 
         if self.batch_size_per_request > 1 and not self.is_embeddings():
-            raise ValueError("The optional parameter 'batch_size_per_request' is only allowed to be greater than 1 for the Embeddings API."
-                             " Valid range is 1-2000.")
+            raise ValueError("The optional parameter 'batch_size_per_request' is only allowed to be"
+                             "greater than 1 for the Embeddings API. Valid range is 1-2000.")
 
     def _validate_online_endpoint_url_and_request_path(self):
         if (self.online_endpoint_url
@@ -75,8 +75,9 @@ class Configuration(Namespace):
 
     def _validate_segment_large_requests(self):
         if self.segment_large_requests == 'enabled' and not self.is_completion():
-            raise ValueError("The optional parameter 'segment_large_requests' is supported only with the Completion API."
-                             "Please set 'segment_large_requests' to 'disabled' or remove it from the configuration.")
+            raise ValueError("The optional parameter 'segment_large_requests' is supported only with"
+                             "the Completion API. Please set 'segment_large_requests' to 'disabled' or"
+                             "remove it from the configuration.")
 
     def log(self):
         """Log the configuration as alpha-sorted key-value pairs.
@@ -125,7 +126,8 @@ class Configuration(Namespace):
         )
 
     def is_sahara(self, routing_client: RoutingClient) -> bool:
-        return routing_client and routing_client.target_batch_pool and routing_client.target_batch_pool.lower() == "sahara-global"
+        return routing_client and routing_client.target_batch_pool and \
+            routing_client.target_batch_pool.lower() == "sahara-global"
 
     def is_vesta(self) -> bool:
         return (
@@ -152,7 +154,8 @@ class Configuration(Namespace):
         )
 
     def is_aoai_endpoint(self) -> bool:
-        return self.scoring_url and any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
+        return self.scoring_url and \
+            any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
 
     def is_serverless_endpoint(self) -> bool:
         return self.scoring_url and constants.SERVERLESS_ENDPOINT_DOMAIN_SUFFIX in self.scoring_url

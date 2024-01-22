@@ -117,7 +117,7 @@ class MirHttpResponseHandler(HttpResponseHandler):
             http_response: HttpScoringResponse):
         if http_response.exception is None:
             return http_response  # No-op
-        
+
         try:
             raise http_response.exception
         except (

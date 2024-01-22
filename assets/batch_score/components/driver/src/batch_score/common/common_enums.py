@@ -22,4 +22,3 @@ class ApiType(StrEnum):
     Vesta = 'vesta'
     VestaChatCompletion = 'vesta_chat_completion'
     Embedding = 'embedding'
-
