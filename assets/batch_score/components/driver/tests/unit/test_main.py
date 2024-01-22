@@ -23,9 +23,6 @@ from src.batch_score.common.telemetry.trace_configs import (
     RequestRedirectTrace,
     ResponseChunkReceivedTrace,
 )
-from src.batch_score.common.telemetry.events.batch_score_minibatch_started_event import (
-    BatchScoreMinibatchStartedEvent,
-)
 
 DISABLED_TRACE_CONFIG_TESTS = [
     {"BATCH_SCORE_TRACE_LOGGING": "fAlSe"},  # Environment variable set to case-insensitive false bool
@@ -42,7 +39,7 @@ def test_setup_trace_configs_disabled_scenario(mock_os_environ_get: MagicMock, m
 
     trace_configs = main.setup_trace_configs()
 
-    assert trace_configs == None
+    assert trace_configs is None
     assert mock_get_logger.info.called
 
 

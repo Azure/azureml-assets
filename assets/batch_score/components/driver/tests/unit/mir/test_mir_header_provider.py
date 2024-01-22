@@ -33,7 +33,7 @@ def test_get_headers_for_connection_auth_provider(has_additional_headers, mocker
     # Assert
     assert len(actual_headers) == (4 if has_additional_headers else 3)
     assert actual_headers['Content-Type'] == 'application/json'
-    assert 'x-ms-client-request-id' in actual_headers.keys() 
+    assert 'x-ms-client-request-id' in actual_headers.keys()
     assert expected_header_from_auth_provider.items() <= actual_headers.items()
 
     if has_additional_headers:

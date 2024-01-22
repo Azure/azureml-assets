@@ -20,9 +20,11 @@ configuration_files_dir = (
 valid_dir = configuration_files_dir / "valid"
 invalid_dir = configuration_files_dir / "invalid"
 
+
 @pytest.mark.parametrize("instance", list_files_recursively(valid_dir))
 def test_valid_configurations_pass(instance):
     FileConfigurationValidator().validate(instance)
+
 
 @pytest.mark.parametrize("instance", list_files_recursively(invalid_dir))
 @pytest.mark.xfail(strict=True, raises=InvalidConfigurationError)

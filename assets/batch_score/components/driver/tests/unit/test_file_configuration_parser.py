@@ -19,6 +19,9 @@ configs_root = (
     / "for_e2e_tests"
 )
 
+TEST_AOAI_DEPLOYMENT_URI = 'https://sunjoli-aoai.openai.azure.com/openai/deployments'
+
+
 @pytest.mark.parametrize(
     "file_name, override_expected_config",
     [
@@ -27,7 +30,7 @@ configs_root = (
             {
                 'api_type': 'completion',
                 'connection_name': 'batchscore-connection',
-                'scoring_url': 'https://sunjoli-aoai.openai.azure.com/openai/deployments/turbo/completions?api-version=2023-03-15-preview',
+                'scoring_url': f'{TEST_AOAI_DEPLOYMENT_URI}/turbo/completions?api-version=2023-03-15-preview',
                 'segment_large_requests': True,
                 'segment_max_token_size': 1000,
             },
@@ -37,7 +40,7 @@ configs_root = (
             {
                 'api_type': 'chat_completion',
                 'connection_name': 'batchscore-connection',
-                'scoring_url': 'https://sunjoli-aoai.openai.azure.com/openai/deployments/turbo/chat/completions?api-version=2023-03-15-preview',
+                'scoring_url': f'{TEST_AOAI_DEPLOYMENT_URI}/turbo/chat/completions?api-version=2023-03-15-preview',
             },
         ),
         (
@@ -46,7 +49,7 @@ configs_root = (
                 'api_type': 'embedding',
                 'batch_size_per_request': 2,
                 'connection_name': 'batchscore-connection',
-                'scoring_url': 'https://sunjoli-aoai.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2022-12-01',
+                'scoring_url': f'{TEST_AOAI_DEPLOYMENT_URI}/text-embedding-ada-002/embeddings?api-version=2022-12-01',
             },
         ),
         (
@@ -76,6 +79,7 @@ def test_aoai_completion(file_name, override_expected_config):
 
     assert vars(configuration) == expected_configuration
 
+
 def get_base_configuration():
     return {
         "additional_headers": "{}",
@@ -104,7 +108,7 @@ def get_base_configuration():
         "quota_estimator": None,
         "request_path": None,
         "save_mini_batch_results": "enabled",
-        "scoring_url": "https://sunjoli-aoai.openai.azure.com/openai/deployments/turbo/completions?api-version=2023-03-15-preview",
+        "scoring_url": f'{TEST_AOAI_DEPLOYMENT_URI}/turbo/completions?api-version=2023-03-15-preview',
         "segment_large_requests": False,
         "segment_max_token_size": 0,
         "service_namespace": None,
