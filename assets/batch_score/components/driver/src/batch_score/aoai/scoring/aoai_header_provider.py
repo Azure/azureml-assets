@@ -25,7 +25,6 @@ class AoaiHeaderProvider(HeaderProvider):
         else:
             self._additional_headers = {}
 
-
     def get_headers(self) -> dict:
         """Gets the headers from the auth provider and additional headers."""
         headers = {

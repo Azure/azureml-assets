@@ -35,7 +35,6 @@ class AoaiScoringClient:
             scoring_url=scoring_url,
         )
 
-
     async def score_once(
         self,
         session: aiohttp.ClientSession,
@@ -48,9 +47,8 @@ class AoaiScoringClient:
             session=session,
             scoring_request=scoring_request,
             timeout=timeout,
-            worker_id = worker_id
+            worker_id=worker_id
         )
-
 
     def validate_auth(self):
         """Validates the auth by sending dummy request to the scoring url."""

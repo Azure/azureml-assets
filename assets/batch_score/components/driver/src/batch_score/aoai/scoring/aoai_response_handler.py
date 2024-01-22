@@ -30,7 +30,6 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
     def __init__(self, tally_handler: TallyFailedRequestHandler):
         self.__tally_handler = tally_handler
 
-
     def handle_response(
         self,
         http_response: HttpScoringResponse,
@@ -59,7 +58,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
                 start=start,
                 end=end,
             )
-        
+
         response_status = http_response.status
         if response_status == 200:
             return self._create_scoring_result(
@@ -69,7 +68,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
                 end=end,
                 http_post_response=http_response,
             )
-        
+
         if self.is_retriable(response_status):
             raise RetriableException(
                 status_code=http_response.status,
@@ -93,7 +92,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             result.omit = True
 
         return result
-    
+
     def is_retriable(self, http_status: int) -> bool:
         return http_status in self.RETRIABLE_STATUS_CODES
 
@@ -124,7 +123,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
                 end=end,
                 http_post_response=http_response,
             )
-    
+
     def _emit_request_completed_event(
         self,
         http_response: HttpScoringResponse,
@@ -138,25 +137,25 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             if response_body and not isinstance(response_body, list):
                 usage: dict[str, int] = response_body["usage"]
                 return usage.get("prompt_tokens", None)
-        
+
         def get_completion_tokens(response_body: any):
             if response_body and not isinstance(response_body, list):
                 usage: dict[str, int] = response_body["usage"]
                 return usage.get("completion_tokens", None)
-            
+
         request_completed_event = BatchScoreRequestCompletedEvent(
-            minibatch_id = scoring_request.mini_batch_context.mini_batch_id if scoring_request.mini_batch_context is not None else None,
-            input_row_id = scoring_request.internal_id,
-            x_ms_client_request_id = x_ms_client_request_id,
-            worker_id = worker_id,
-            scoring_url = scoring_request.scoring_url,
-            is_successful = http_response.status == 200,
-            is_retriable = self.is_retriable(http_response.status),
-            response_code = http_response.status,
-            model_response_code = http_response.get_model_response_code(),
-            prompt_tokens = get_prompt_tokens(http_response.payload),
-            completion_tokens = get_completion_tokens(http_response.payload),
-            duration_ms = (end - start) * 1000,
-            segmented_request_id = scoring_request.segment_id
+            minibatch_id=scoring_request.mini_batch_context.mini_batch_id if scoring_request.mini_batch_context is not None else None,
+            input_row_id=scoring_request.internal_id,
+            x_ms_client_request_id=x_ms_client_request_id,
+            worker_id=worker_id,
+            scoring_url=scoring_request.scoring_url,
+            is_successful=http_response.status == 200,
+            is_retriable=self.is_retriable(http_response.status),
+            response_code=http_response.status,
+            model_response_code=http_response.get_model_response_code(),
+            prompt_tokens=get_prompt_tokens(http_response.payload),
+            completion_tokens=get_completion_tokens(http_response.payload),
+            duration_ms=(end - start) * 1000,
+            segmented_request_id=scoring_request.segment_id
         )
-        event_utils.emit_event(batch_score_event = request_completed_event)
+        event_utils.emit_event(batch_score_event=request_completed_event)
