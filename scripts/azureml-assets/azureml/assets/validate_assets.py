@@ -54,6 +54,7 @@ try:
     credential = AzureCliCredential()
     token = credential.get_token("https://management.azure.com/.default")
 except Exception as e:
+    credential = None
     logger.log_warning(f"Exception in creating credential. {e}")
 
 
