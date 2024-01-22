@@ -59,7 +59,7 @@ The model developers report that the model was evaluated on the following tasks 
   - **Tasks:** NLI. [Wang et al. (2019)](https://arxiv.org/pdf/1804.07461.pdf) describe the inference task for MNLI as: 
   > The Multi-Genre Natural Language Inference Corpus [(Williams et al., 2018)](https://arxiv.org/abs/1704.05426) is a crowd-sourced collection of sentence pairs with textual entailment annotations. Given a premise sentence and a hypothesis sentence, the task is to predict whether the premise entails the hypothesis (entailment), contradicts the hypothesis (contradiction), or neither (neutral). The premise sentences are gathered from ten different sources, including transcribed speech, fiction, and government reports. We use the standard test set, for which we obtained private labels from the authors, and evaluate on both the matched (in-domain) and mismatched (cross-domain) sections. We also use and recommend the SNLI corpus [(Bowman et al., 2015)](https://arxiv.org/abs/1508.05326) as 550k examples of auxiliary training data.
   - **Metrics:** Accuracy  
-  
+
 - **Dataset:** [XNLI (Conneau et al., 2018)](https://arxiv.org/pdf/1809.05053.pdf), the extension of the [Multi-Genre Natural Language Inference (MNLI)](https://cims.nyu.edu/~sbowman/multinli/) corpus to 15 languages: English, French, Spanish, German, Greek, Bulgarian, Russian, Turkish, Arabic, Vietnamese, Thai, Chinese, Hindi, Swahili and Urdu. See the [XNLI data card](https://huggingface.co/datasets/xnli) or [Conneau et al. (2018)](https://arxiv.org/pdf/1809.05053.pdf) for further information.
   - **Tasks:** Translate-test (e.g., the model is used to translate input sentences in other languages to the training language)
   - **Metrics:** Accuracy

@@ -66,7 +66,7 @@ class TestRoutingClient:
         routing_client._RoutingClient__client_settings = client_settings_from_endpoint_discovery_service
 
         assert expected_value == routing_client.get_client_setting(key)
-    
+
     # If the exception handling fails, this test will hang indefinitely.
     # So we expect the test to pass in 5 seconds if the code is correct.
     @pytest.mark.timeout(5)

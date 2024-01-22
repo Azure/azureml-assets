@@ -43,7 +43,7 @@ class RoutingClient(ClientSettingsProvider):
         self.__last_refresh: float = None
         self.__pool_routes_future: asyncio.Future = None
         self.__client_settings: dict[str, str] = {}
-        
+
         self.__LIST_ROUTES_URL = (f"{self.__BASE_URL}/v1.0"
                                   f"/serviceNamespaces/{self.__service_namespace}"
                                   f"/endpointPools/{self.target_batch_pool}"
@@ -98,9 +98,9 @@ class RoutingClient(ClientSettingsProvider):
                         response_status = 0  # Manually attribute no pool routes to 0 as a tell to stop retry
                 else:
                     response_status = -500
-            
+
             response_classification = classify_response(response_status=response_status)
-            
+
             if response_classification == RoutingResponseType.RETRY:
                 retry_count = retry_count + 1
                 retry_wait = self.__RETRY_INTERVAL * retry_count
@@ -115,7 +115,7 @@ class RoutingClient(ClientSettingsProvider):
                 raise InvalidPoolRoutes("RoutingClient: Valid Pool Routes could not be obtained")
             elif response_classification == RoutingResponseType.SUCCESS:
                 return
-        
+
         lu.get_logger().info("RoutingClient: Exhausted all {} retries, using existing routing pool.".format(self.__MAX_RETRY))
         self.__last_refresh = datetime.now(timezone.utc)
 
@@ -159,7 +159,7 @@ class RoutingClient(ClientSettingsProvider):
 
         use_distribution = self.__target_distribution_percentages
         effective_distribution = self.__calc_effective_dist(self.__current_distribution_counts)
-        
+
         # If there are no active requests, use __target_distribution_percentages to distribute
         # otherwise:
         if not all(value == 0 for value in self.__current_distribution_counts.values()):
@@ -223,7 +223,7 @@ class RoutingClient(ClientSettingsProvider):
                 self.__pool_routes_future = loop.create_future()
 
                 loop.create_task(self.__refresh_pool_routes(future=self.__pool_routes_future, session=session))
-            
+
             await self.__pool_routes_future
             self.__pool_routes_future.result()  # Raises exception if one is encountered
 
@@ -255,13 +255,13 @@ class RoutingClient(ClientSettingsProvider):
             # Endpoint discovery API will be changed to return base url only for a target endpoint.
             # Here we are converting it to base url always so it will work with both behaviors.
             endpoint_base_url = get_base_url(endpoint)
-            
+
             if total_traffic_weight == 0:
                 raise InvalidPoolRoutes(message="Total traffic weight is 0")
             else: 
                 normalized_weight = traffic_weight / total_traffic_weight
 
             target_distribution_percentages[endpoint_base_url] = normalized_weight
-        
+
         # Update arrays
         self.__target_distribution_percentages = target_distribution_percentages

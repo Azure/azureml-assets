@@ -14,7 +14,7 @@ from .json_encoder_extensions import BatchComponentJSONEncoder, NumpyArrayEncode
 def get_base_url(url: str) -> str:
     if not url:
         return url
-    
+
     parse_result = urlparse(url)
     return f"{parse_result.scheme}://{parse_result.netloc}"
 
@@ -59,7 +59,7 @@ def convert_to_list(data: pd.DataFrame, additional_properties:str = None, batch_
     columns = data.keys()
     payloads = []
     additional_properties_list = None
-    
+
     # Per https://platform.openai.com/docs/api-reference/
     int_forceable_properties = ["max_tokens", "n", "logprobs", "best_of", "n_epochs", "batch_size", "classification_n_classes"]
 

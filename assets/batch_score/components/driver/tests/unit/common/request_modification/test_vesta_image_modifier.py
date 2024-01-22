@@ -60,9 +60,9 @@ def test_modify(mock_get_logger, make_vesta_image_modifier, mock__b64_from_url):
         "data": "End of the test"
     }]}
     vesta_image_modifier: VestaImageModifier = make_vesta_image_modifier()
-    
+
     modified_request_obj = vesta_image_modifier.modify(request_obj=vesta_request_obj)
-    
+
     # Assert the two URLs were called
     assert any("https://fake.url" in url for url in mock__b64_from_url)
     assert any("https://another.fake.url" in url for url in mock__b64_from_url)
@@ -80,7 +80,7 @@ def test_modify_invalid_image(mock_get_logger, make_vesta_image_modifier, mock_e
     mock_encode_b64["exception"] = FolderNotMounted()
     with pytest.raises(VestaImageModificationException):
         vesta_image_modifier.modify(vesta_request_obj)
-        
+
     mock_encode_b64["exception"] = Exception()
     with pytest.raises(VestaImageModificationException):
         vesta_image_modifier.modify(vesta_request_obj)
@@ -92,7 +92,7 @@ def test_encode_b64_file(mock_get_logger, make_image_encoder, mock__b64_from_fil
     image_target = "target.png"
     image_data = f"ImageFile!{image_target}"
     encoding = image_encoder.encode_b64(image_data=image_data)
-    
+
     assert encoding == MOCKED_BINARY_FROM_FILE
     assert mock__b64_from_file[-1] == os.path.join(str(Path(path_prefix)), str(Path(image_target)))
     assert mock_get_logger.debug.called or mock_get_logger.info.called
@@ -107,7 +107,7 @@ def test_encode_b64_url(mock_get_logger, make_image_encoder, mock__b64_from_url)
     image_target = "https://fake.url"
     image_data = f"ImageUrl!{image_target}"
     encoding = image_encoder.encode_b64(image_data=image_data)
-    
+
     assert encoding == MOCKED_BINARY_FROM_URL
     assert mock__b64_from_url[-1] == image_target
     assert mock_get_logger.debug.called or mock_get_logger.info.called

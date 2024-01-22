@@ -11,7 +11,7 @@ def handle_batch_score_event(batch_score_event: BatchScoreEvent = None):
     # Depending on the event type/other logic, choose info/debug/error/ignore as needed
     if batch_score_event is None:
         return
-    
+
     event_time = str(datetime.now(timezone.utc))
     lu.get_logger().info(f"{str(batch_score_event.event_time)}: {type(batch_score_event).__name__}: {batch_score_event.__str__()}")
 

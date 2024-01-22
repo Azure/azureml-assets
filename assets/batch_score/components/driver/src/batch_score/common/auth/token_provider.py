@@ -35,9 +35,9 @@ class TokenProvider:
     def get_token(self, scope: str) -> str:
         if self.__credential is not None:
             return self.__get_msi_access_token(scope).token
-        
+
         return self.__get_token_from_file()
-    
+
     def __is_msi_access_token_expired(self, scope: str) -> bool:
         return not self.__msi_access_tokens.get(scope) or self.__msi_access_tokens[scope].expires_on <= datetime.now(timezone.utc).timestamp() + (5 * 60)
 
@@ -61,13 +61,13 @@ class TokenProvider:
 
         try:
             lu.get_logger().debug("Attempting to get token from file")
-            
+
             # if file doesnt exist or value is none, read from env var
             if self.__token_file_path is None or not os.path.exists(self.__token_file_path):
                 lu.get_logger().debug("Getting token from env var")
                 self.__file_token = os.environ.get('TOKEN')
                 return self.__file_token
-            
+
             with open(self.__token_file_path, 'r') as file:
                 self.__file_token = file.read().replace('\n', '')
         except:

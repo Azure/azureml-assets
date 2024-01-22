@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
 
 template: | 
   Write a catchy and creative listicle style blog on the topic of emerging trends in e-commerce that are shaping the future of retail. The blog should have a memorable headline and a clear call to action in the end encouraging the reader to engage further."
-  
+
 # optional, only add this section when the prompts have been evaluated and get best result with the setting here
 execution_settings:
   default:
@@ -20,5 +20,5 @@ execution_settings:
     presencePenalty: 0
     temperature: 1
     topP: 1
-    
+
 template_format: handlebars

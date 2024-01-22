@@ -28,7 +28,7 @@ class CustomerLogsFilter(logging.Filter):
 
     def __init__(self, log_level: str):
         self.log_level = logging.getLevelName(log_level)
-        
+
     def filter(self, record):
         """
         Customers can see:
@@ -160,7 +160,7 @@ def __calculate_custom_dimensions():
         arg_value = getattr(args, prs_internal_arg_name)
         if arg_value != None:
             agent_args = json.loads(arg_value)
-            
+
             custom_dimensions["PRSAgentName"] = agent_args["agent_name"]
     except:
         print("Failed to get PRS agent name")

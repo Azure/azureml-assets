@@ -86,4 +86,3 @@ command: >-
   $[[--forecast-step ${{inputs.forecast_step}}]]
   $[[--enable-event-logger ${{inputs.enable_event_logger}}]]
   $[[--optional-train-metadata ${{inputs.optional_train_metadata}}]]
-  

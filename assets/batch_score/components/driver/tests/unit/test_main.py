@@ -98,7 +98,7 @@ def test_run_emit_minibatch_started_event(mock_run_context):
     # Act
     with patch.object(event_utils, 'emit_event') as mock_emit_event:
         main.run(input_data=input_data, mini_batch_context=mini_batch_context)
-    
+
     # Assert
     assert mock_emit_event.call_count == 1
     assert 'batch_score_event' in mock_emit_event.call_args_list[0].kwargs
@@ -117,7 +117,7 @@ def test_run_generate_minibatch_summary(mock_run_context):
     # Act
     with patch.object(event_utils, 'generate_minibatch_summary') as mock_generate_minibatch_summary:
         main.run(input_data=input_data, mini_batch_context=mini_batch_context)
-    
+
     # Assert
     mock_generate_minibatch_summary.assert_called_once_with(
         minibatch_id=1,
@@ -132,7 +132,7 @@ def test_enqueue_emit_minibatch_started_event(mock_run_context):
     # Act
     with patch.object(event_utils, 'emit_event') as mock_emit_event:
         main.enqueue(input_data=input_data, mini_batch_context=mini_batch_context)
-    
+
     # Assert
     assert mock_emit_event.call_count == 1
     assert 'batch_score_event' in mock_emit_event.call_args_list[0].kwargs
@@ -151,7 +151,7 @@ def test_enqueue_no_exception_does_not_generate_minibatch_summary(mock_run_conte
     # Act
     with patch.object(event_utils, 'generate_minibatch_summary') as mock_generate_minibatch_summary:
         main.enqueue(input_data=input_data, mini_batch_context=mini_batch_context)
-    
+
     # Assert
     mock_generate_minibatch_summary.assert_not_called()
 
@@ -164,7 +164,7 @@ def test_enqueue_exception_generate_minibatch_summary(mock_run_context):
     with patch.object(event_utils, 'generate_minibatch_summary') as mock_generate_minibatch_summary:
         with pytest.raises(Exception):
             main.enqueue(input_data=input_data, mini_batch_context=mini_batch_context)
-    
+
     # Assert
     mock_generate_minibatch_summary.assert_called_once_with(
         minibatch_id=1,

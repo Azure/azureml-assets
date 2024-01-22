@@ -37,7 +37,7 @@ class BatchScoreEvent(ABC):
     authentication_type: AuthenticationType = field(init=False, default=None)
     api_type: ApiType = field(init=False, default=None)
     async_mode: bool = field(init=False, default=None)
-    
+
     def __post_init__(self) -> None:
         run = Run.get_context()
         self.run_id = run._run_id
@@ -60,10 +60,10 @@ class BatchScoreEvent(ABC):
         self.endpoint_type = event_utils.get_endpoint_type()
 
         # TODO: How to get values for 'execution_mode', 'process_id' and 'node_id'?
-    
+
     def __str__(self) -> str:
         return ', '.join(f'{key}: {str(value)}' for key, value in self.to_dictionary().items())
-    
+
     def to_dictionary(self, include_empty_keys=True) -> dict:
         if include_empty_keys:
             return asdict(self)

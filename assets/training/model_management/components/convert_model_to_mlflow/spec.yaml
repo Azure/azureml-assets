@@ -123,7 +123,7 @@ inputs:
       Pip dependencies expressed as below. Do not use quotes for passing.
       eg: pkg1==1.0, pkg2, pkg3==1.0
     optional: true
-  
+
   inference_base_image:
     type: string
     description: |

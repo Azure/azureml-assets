@@ -75,7 +75,7 @@ inputs:
       - NamedEntityRecognition
     default: NamedEntityRecognition
     description: NamedEntityRecognition task type
-  
+
   token_key:
     type: string
     optional: false

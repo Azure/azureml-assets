@@ -41,5 +41,5 @@ execution_settings:
     stopSequences: []
     temperature: 0.3
     topP: 1
-    
+
 template_format: handlebars

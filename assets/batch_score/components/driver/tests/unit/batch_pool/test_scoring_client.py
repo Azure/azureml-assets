@@ -31,11 +31,11 @@ async def test_score_once_endpoint_scenario(mock_get_logger, make_scoring_client
     # Neither quota_client nor routing_client is provided
     scoring_client: ScoringClient = make_scoring_client(quota_client = None, routing_client = None)
     scoring_result = await scoring_client.score_once(session=mock_client_session, scoring_request=mock_scoring_request, timeout=mock_timeout)
-    
+
     # quota_client is not provided
     scoring_client: ScoringClient = make_scoring_client(quota_client = None)
     scoring_result = await scoring_client.score_once(session=mock_client_session, scoring_request=mock_scoring_request, timeout=mock_timeout)
-    
+
     # routing_client is not provided
     scoring_client: ScoringClient = make_scoring_client(routing_client = None)
     scoring_result = await scoring_client.score_once(session=mock_client_session, scoring_request=mock_scoring_request, timeout=mock_timeout)

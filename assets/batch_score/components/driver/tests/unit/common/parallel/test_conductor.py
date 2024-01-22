@@ -90,7 +90,7 @@ def test_enqueue_empty_minibatch_generate_minibatch_summary(
             failed_results=[],
             mini_batch_context=mini_batch_context,
         )
-    
+
     # Assert
     mock_generate_minibatch_summary.assert_called_once_with(
         minibatch_id=1,

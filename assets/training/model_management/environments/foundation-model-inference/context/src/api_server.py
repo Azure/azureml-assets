@@ -365,7 +365,7 @@ def _init_cuda_visible_devices():
         # if no GPU is available, don't set anything
         return
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(gpu_ids)
-    
+
 
 @app.get("/")
 async def health():
@@ -428,7 +428,7 @@ async def create_chat_completion(request: Request) -> Response:
 async def chat_inference(data: Dict) -> ChatCompletionResponse:
     """Format data to send to a chat model."""
     global g_served_model
-    
+
     new_data = {}
     parameters = {}
     for d in data:
@@ -451,7 +451,7 @@ async def chat_inference(data: Dict) -> ChatCompletionResponse:
                                ' "role": "user", \n'
                                ' "content": "Hello!" \n'
                             ' }]\n'
-                        
+
                     )
                 }
             )
@@ -462,7 +462,7 @@ async def chat_inference(data: Dict) -> ChatCompletionResponse:
     new_data.update(messages)
     request_id = f"cmpl-{random_uuid()}"
     created_time = int(time.monotonic())
-    
+
     tokenizer = AutoTokenizer.from_pretrained(g_engine_config["model_id"])
     num_prompt_tokens = len(tokenizer.apply_chat_template(raw_prompt, tokenize=True))
 
@@ -494,7 +494,7 @@ async def chat_inference(data: Dict) -> ChatCompletionResponse:
             message=ChatMessage(role="assistant", content=result.response)
         )
         choices.append(choice_data)  
-        
+
     num_generated_tokens = sum(
         len(output.generated_tokens) for output in inference_results)
     usage = UsageInfo(
@@ -514,7 +514,7 @@ async def chat_inference(data: Dict) -> ChatCompletionResponse:
 async def text_gen_inference(data: Dict) -> CompletionResponse:
     """Format data to send to a text generation model."""
     global g_served_model
-    
+
     new_data = {}
     parameters = {}
     for d in data:
@@ -532,7 +532,7 @@ async def text_gen_inference(data: Dict) -> CompletionResponse:
                         "Expected input format as string or list of strings: \n"
                         ' "prompt": "My favorite color is"\n'
                         ' or "prompt": "[My favorite color is, "The meaning of life is"]"\n'
-                        
+
                     )
                 }
             )
@@ -545,7 +545,7 @@ async def text_gen_inference(data: Dict) -> CompletionResponse:
     new_data.update(messages)
     request_id = f"cmpl-{random_uuid()}"
     created_time = int(time.monotonic())
-    
+
     num_prompt_tokens = 0
     tokenizer = AutoTokenizer.from_pretrained(g_engine_config["model_id"])  
     for prompt in raw_prompt:
@@ -580,7 +580,7 @@ async def text_gen_inference(data: Dict) -> CompletionResponse:
             text=result.response,
         )
         choices.append(choice_data)
-    
+
     num_generated_tokens = sum(
         len(output.generated_tokens) for output in inference_results)
     usage = UsageInfo(
@@ -632,7 +632,7 @@ async def send_request(data: Dict) -> (List[InferenceResult], Dict):
                     json.dumps({"error": "Error in processing request", "exception": str(e)}))
         else:
             inference_results = g_fmscorer.run(payload)
-        
+
         if task_type == SupportedTask.CHAT_COMPLETION:
             outputs = {str(i): res.response for i, res in enumerate(inference_results)}
             results = {
@@ -653,8 +653,8 @@ async def send_request(data: Dict) -> (List[InferenceResult], Dict):
                 results = pd.DataFrame([outputs])
             else:
                 results = [res.response for res in inference_results]
-                
-        
+
+
         return inference_results, results
 
     except Exception as e:
@@ -669,7 +669,7 @@ async def lifespan(app: FastAPI) -> Generator:
     """Initialize and shutdown events for each worker that is spawned in the main function."""
     global g_engine_config  
     global g_served_model
-    
+
     model_path = os.path.join(
         os.getenv("AZUREML_MODEL_DIR"), DEFAULT_MLFLOW_MODEL_PATH
         )
@@ -678,7 +678,7 @@ async def lifespan(app: FastAPI) -> Generator:
 
     # setup aacs
     AACS_error = aacs_setup()
-  
+
     init_error = init_server(model_path, AACS_error)
     if init_error:
         logger.exception(init_error)
@@ -688,19 +688,19 @@ async def lifespan(app: FastAPI) -> Generator:
         box_logger(f"PID[{str(os.getpid())}] Inference server successfully started with model {g_served_model}")
 
     yield  # Add any necessary shutdown events after yield statement
-    
+
     if g_engine_config["engine_name"] == EngineName.MII or g_engine_config["engine_name"] == EngineName.MII_V1:
             try:
                 await g_fmscorer.shutdown_async()
             except Exception as e:
                 raise Exception(
                     json.dumps({"error": "Error in processing request", "exception": str(e)}))
-  
-  
+
+
 # Assign the lifespan event handler to the FastAPI instance  
 app.router.lifespan_context = lifespan 
 
- 
+
 def init_server(model_path: str, AACS_error: Union[None, Exception]):
     """Initialize text-generation-inference server and client."""
     global task_type
@@ -723,7 +723,7 @@ def init_server(model_path: str, AACS_error: Union[None, Exception]):
             tokenizer_path = model_path
 
         config_path = os.path.join(model_path, "config.json")
-        
+
         default_engine = EngineName.VLLM
         tensor_parallel = os.getenv("TENSOR_PARALLEL", None)
         if tensor_parallel:
@@ -795,7 +795,7 @@ def init_server(model_path: str, AACS_error: Union[None, Exception]):
                     raise Exception(f"Unsupported task_type {task_type}")
 
                 model_type = mlmodel["metadata"].get("model_type", "")
-                
+
                 model_config_builder = ModelConfigFactory.get_config_builder(task=task_type, model_type=model_type)
                 g_engine_config.update(
                                         {
@@ -863,11 +863,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     set_start_method('spawn')
-    
+
     workers = int(os.getenv("WORKER_COUNT", ServerSetupParams.DEFAULT_WORKER_COUNT))
     log_level = str(os.getenv("AZUREML_LOG_LEVEL", "warning"))
     log_level = log_level.lower()
-    
+
     print("starting server with host", args.host)
     print("starting server with port", args.port)
 

@@ -71,7 +71,7 @@ class ScoringRequest:
     @property
     def original_payload_obj(self):
         return self.__original_payload_obj
-    
+
     # read-only
     @property
     def cleaned_payload_obj(self):
@@ -96,12 +96,12 @@ class ScoringRequest:
     @property
     def estimated_cost(self) -> int:
         return self.__estimated_cost or sum(self.__estimated_tokens_per_item_in_batch)
-    
+
     # read-only
     @property
     def scoring_url(self) -> str:
         return self.__scoring_url
-    
+
      # read-only
     @property
     def segment_id(self) -> int:

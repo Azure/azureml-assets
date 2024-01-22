@@ -7,7 +7,7 @@ from .logging_utils import get_logger
 
 
 class BaseLog:
-    
+
     def __init__(self, internal_id, x_ms_client_request_id, scoring_url) -> None:
         self.internal_id = internal_id
         self.x_ms_client_request_id = x_ms_client_request_id
@@ -18,7 +18,7 @@ class BaseLog:
         pass
 
 class ScoreStartLog(BaseLog):
-    
+
     def __init__(self,
                  internal_id,
                  x_ms_client_request_id,
@@ -30,7 +30,7 @@ class ScoreStartLog(BaseLog):
         get_logger().info(f"Score start: url={self.scoring_url} internal_id={self.internal_id} x-ms-client-request-id=[{self.x_ms_client_request_id}]")
 
 class ScoreFailedLog(BaseLog):
-    
+
     def __init__(self,
                  internal_id,
                  x_ms_client_request_id,
@@ -69,7 +69,7 @@ class ScoreFailedWithExceptionLog(BaseLog):
 
 
 class ScoreSucceedLog(BaseLog):
-    
+
     def __init__(self, internal_id, x_ms_client_request_id, scoring_url, duration) -> None:
         super().__init__(internal_id, x_ms_client_request_id, scoring_url)
         self.duration = duration

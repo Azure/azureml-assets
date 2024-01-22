@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
 
 _type: chat
- 
+
 messages: 
 - role: system
   content: Generate a list of descriptive tags for the following image. Analyze the image carefully and produce tags that accurately represent the image. Ensure the tags are relevant.

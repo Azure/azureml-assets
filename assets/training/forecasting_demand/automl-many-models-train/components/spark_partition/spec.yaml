@@ -36,4 +36,3 @@ args: >-
   --partitioned_data ${{outputs.partitioned_data}}
   --partition_column_names ${{inputs.partition_column_names}}
   --input_type ${{inputs.input_type}}
-  

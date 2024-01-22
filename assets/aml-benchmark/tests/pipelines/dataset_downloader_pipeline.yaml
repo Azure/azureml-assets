@@ -31,4 +31,3 @@ jobs:
       script_path: ${{parent.inputs.script_path}}
     outputs:
       output_dataset: ${{parent.outputs.output_dataset}}
-    

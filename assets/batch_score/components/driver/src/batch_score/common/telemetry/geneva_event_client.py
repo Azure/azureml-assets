@@ -63,7 +63,7 @@ class GenevaEventClient():
             ExperimentId=event.experiment_id,
         )
         return standard_fields
-    
+
     def generate_extension_fields(self, event: BatchScoreEvent):
         """Generate extension fields (Part C) as a dictionary for any batch score events. Fields exist in Part A or B are removed."""
         extension_fields = {k: v for k, v in event.to_dictionary(include_empty_keys=False).items() if k not in [

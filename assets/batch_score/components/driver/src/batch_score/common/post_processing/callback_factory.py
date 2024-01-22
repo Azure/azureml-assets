@@ -20,6 +20,7 @@ def add_callback(callback, cur):
         return cur(scoring_results, mini_batch_context)
     return wrapper
 
+
 class CallbackFactory:
     def __init__(self,
                  configuration: Configuration,
@@ -32,15 +33,19 @@ class CallbackFactory:
         callback = add_callback(self._convert_result_list, callback)
         callback = add_callback(self._apply_input_transformer, callback)
         return callback
-    
+
     def _convert_result_list(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
-        return convert_result_list(results=scoring_results,
-                                    batch_size_per_request=self._configuration.batch_size_per_request)
-    
+        return convert_result_list(
+            results=scoring_results,
+            batch_size_per_request=self._configuration.batch_size_per_request)
+
     def _apply_input_transformer(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
         return apply_input_transformer(self.__input_to_output_transformer, scoring_results)
-    
-    def _save_mini_batch_result_and_emit(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
+
+    def _save_mini_batch_result_and_emit(
+            self,
+            scoring_results: "list[ScoringResult]",
+            mini_batch_context: MiniBatchContext):
         mini_batch_id = mini_batch_context.mini_batch_id
         set_mini_batch_id(mini_batch_context.mini_batch_id)
         lu.get_logger().info("Start saving result of data subset {}.".format(mini_batch_id))
@@ -54,7 +59,7 @@ class CallbackFactory:
                         mini_batch_context.raw_mini_batch_context)
                 else:
                     lu.get_logger().info("save_mini_batch_results is disabled")
-                
+
                 lu.get_events_client().emit_mini_batch_completed(
                     input_row_count=mini_batch_context.target_result_len,
                     output_row_count=len(scoring_results))
@@ -76,7 +81,7 @@ class CallbackFactory:
                 minibatch_id=mini_batch_id,
                 output_row_count=len(scoring_results),
             )
-        
+
         lu.get_logger().info("Completed data subset {}.".format(mini_batch_id))
         set_mini_batch_id(None)
 

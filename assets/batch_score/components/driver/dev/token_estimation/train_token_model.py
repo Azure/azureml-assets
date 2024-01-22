@@ -19,7 +19,7 @@ def main(argv):
 
     parser.add_argument('--test')
     parser.add_argument('--train', nargs='+', required=True)
-    
+
     parser.add_argument('--split-fraction', type=float, default=0.2,
                         help='If no test data is provided, use this random fraction of the training data instead.')
 

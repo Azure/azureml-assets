@@ -10,4 +10,3 @@ image:
   publish:
     location: mcr
     visibility: public
-    

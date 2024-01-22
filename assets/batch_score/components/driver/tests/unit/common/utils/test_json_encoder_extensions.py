@@ -47,7 +47,7 @@ def test_derived_numpy_array_encoder(mock_get_logger):
 
     serialized_obj = json.dumps("こんにちは世界!", cls=json_encoder_extensions.NumpyArrayEncoder)
     assert serialized_obj == '"こんにちは世界!"'
-    
+
     arr = numpy.array([0, 1, 2])
     serialized_obj = json.dumps(arr, cls=json_encoder_extensions.NumpyArrayEncoder)
     assert serialized_obj == "[0, 1, 2]"

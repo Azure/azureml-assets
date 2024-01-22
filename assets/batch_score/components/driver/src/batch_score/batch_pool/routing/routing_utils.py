@@ -19,6 +19,6 @@ def classify_response(response_status: int) -> RoutingResponseType:
         classification = RoutingResponseType.USE_EXISTING
     else:
         classification = RoutingResponseType.FAILURE
-    
+
     lu.get_logger().debug(f"Response status of {response_status} was classified to {classification}.")
     return classification

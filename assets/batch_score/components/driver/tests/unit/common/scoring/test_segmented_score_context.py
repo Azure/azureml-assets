@@ -125,7 +125,7 @@ async def test_score_next(
 
     assert segmented_context.processed_segments_count == 0
     result1 = await segmented_context.score_next_once(make_scoring_client(), None)
-    
+
     assert segmented_context.processed_segments_count == 1
     assert len(segmented_context._SegmentedScoreContext__segmented_results) == 1
     assert result1 == segmented_context._SegmentedScoreContext__segmented_results[0]

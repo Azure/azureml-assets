@@ -15,7 +15,7 @@ def test_handle_batch_score_event(mock_run_context):
     # Arrange
     setup_job_log_event_handlers()
     init_started_event = BatchScoreInitStartedEvent()
-    
+
     # Act
     with patch.object(init_started_event, '__str__') as mock_str:
         with patch.object(logging.LoggerAdapter, 'info') as mock_info_logger:

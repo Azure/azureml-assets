@@ -10,7 +10,7 @@ class VestaChatCompletionEncodedImageScrubber(RequestModifier):
     def modify(self, request_obj: any) -> any:
         if "Column1" in request_obj:
             request_obj = json.loads(request_obj["Column1"])
- 
+
         if VestaChatCompletionImageModifier.is_vesta_chat_completion_payload(request_obj=request_obj):
             for message in request_obj["messages"]:
                 for content in message["content"]:
@@ -25,9 +25,9 @@ class VestaChatCompletionEncodedImageScrubber(RequestModifier):
         else:
             lu.get_logger().error(f"Input data does not match Vesta chat completion schema")
             raise Exception("Input data does not match Vesta chat completion schema")
-        
+
     def _scrub_image_encoding(self, image_data: str):
         if not image_data.startswith(ImageEncoder.IMAGE_URL) and not image_data.startswith(ImageEncoder.IMAGE_FILE):
             return "<Encoded image data has been scrubbed>"
-        
+
         return image_data

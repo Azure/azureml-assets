@@ -43,7 +43,7 @@ class MirHttpResponseHandler(HttpResponseHandler):
 
         result: ScoringResult = None
         updated_http_response = self._update_http_response_for_exception(http_response)
-        
+
         # Get values from http response
         response_status = updated_http_response.status
         response_payload = updated_http_response.payload

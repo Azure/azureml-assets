@@ -7,7 +7,7 @@ class MIREndpointV2HeaderHandler(HeaderHandler):
     def __init__(self, connection_name: str, additional_headers: str = None) -> None:
         super().__init__(token_provider = None, additional_headers= additional_headers)
         self.__connection_name = connection_name
-    
+
     def get_headers(self, additional_headers: "dict[str, any]" = None)-> "dict[str, any]":
         headers = {
             'Content-Type': 'application/json',

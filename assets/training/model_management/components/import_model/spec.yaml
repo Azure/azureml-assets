@@ -42,7 +42,7 @@ inputs:
     type: string
     description: If set use it to access the private models or authenticate the user. For example, user can get the token for HF private model by creating account in Huggingface, accept the condition for models that needs to be downloaded and create access token from browser. For more details please visit - https://huggingface.co/docs/hub/security-tokens
     optional: true
-    
+
   ## Inputs for the MlFLow conversion
   license_file_path:
     type: uri_file

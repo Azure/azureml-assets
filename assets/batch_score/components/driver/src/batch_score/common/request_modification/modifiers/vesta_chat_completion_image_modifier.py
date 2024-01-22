@@ -31,7 +31,7 @@ class VestaChatCompletionImageModifier(RequestModifier):
         else:
             lu.get_logger().error(f"Input data does not match Vesta chat completion schema")
             raise Exception("Input data does not match Vesta chat completion schema")
-        
+
     def _modify_image(self, image_data: str):
         try:
             return self.__image_encoder.encode_b64(image_data)

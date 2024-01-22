@@ -65,12 +65,12 @@ class ScoringResult:
     @property
     def estimated_token_counts(self) -> "tuple[int]":
         return self.__token_counts
-    
+
     def __analyze(self):
         try:
             if self.status == ScoringResultStatus.FAILURE:
                 return
-            
+
             if not isinstance(self.response_body, list):
                 usage: dict[str, int] = self.response_body["usage"]
 

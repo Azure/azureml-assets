@@ -335,7 +335,7 @@ def init():
             tokenizer_path = model_path
 
         config_path = os.path.join(model_path, "config.json")
-        
+
         default_engine = EngineName.VLLM
         tensor_parallel = os.getenv("TENSOR_PARALLEL", None)
         if tensor_parallel:
@@ -403,7 +403,7 @@ def init():
                     raise Exception(f"Unsupported task_type {task_type}")
 
                 model_type = mlmodel["metadata"].get("model_type", "")
-                
+
                 model_config_builder = ModelConfigFactory.get_config_builder(task=task_type, model_type=model_type)
                 engine_config.update(
                                         {

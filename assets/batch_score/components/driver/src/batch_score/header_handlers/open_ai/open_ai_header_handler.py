@@ -39,7 +39,7 @@ class OpenAIHeaderHandler(HeaderHandler):
 
         if not self.__is_case_insensitive_key_in_additional_header(azureml_collect_request_key):
             self._additional_headers[azureml_collect_request_key] = 'false'
-        
+
         if not self.__is_case_insensitive_key_in_additional_header(azureml_inferencing_offer_name_key):
             self._additional_headers[azureml_inferencing_offer_name_key] = 'azureml_vanilla'        
 

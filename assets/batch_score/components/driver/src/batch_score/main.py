@@ -81,7 +81,7 @@ def init():
     setup_logger(configuration.stdout_log_level,
                  configuration.app_insights_log_level,
                  configuration.app_insights_connection_string)
-    
+
     # Emit init started event
     init_started_event = BatchScoreInitStartedEvent()
     event_utils.emit_event(batch_score_event = init_started_event)    
@@ -168,7 +168,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
             save_mini_batch_results(ret, configuration.mini_batch_results_out_directory, mini_batch_context)
         else:
             lu.get_logger().info("save_mini_batch_results is disabled")
-        
+
     except Exception as e:
         get_events_client().emit_mini_batch_completed(
             input_row_count=len(data_list),
@@ -282,7 +282,7 @@ def setup_loop() -> asyncio.AbstractEventLoop:
     if sys.platform == 'win32':
         # For windows environment
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-    
+
     return asyncio.new_event_loop()
 
 def setup_input_to_request_transformer() -> InputTransformer:
@@ -302,7 +302,7 @@ def setup_input_to_log_transformer() -> InputTransformer:
         modifiers.append(VestaEncodedImageScrubber())
     elif configuration.is_vesta_chat_completion():
         modifiers.append(VestaChatCompletionEncodedImageScrubber())
-    
+
     if not _should_emit_prompts_to_job_log():
         modifiers.append(PromptRedactionModifier())
 
@@ -315,7 +315,7 @@ def setup_input_to_output_transformer() -> InputTransformer:
         modifiers.append(VestaEncodedImageScrubber())
     elif configuration.is_vesta_chat_completion():
         modifiers.append(VestaChatCompletionEncodedImageScrubber())
-    
+
     return InputTransformer(modifiers=modifiers)
 
 def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
@@ -345,6 +345,6 @@ def _should_emit_prompts_to_job_log() -> bool:
             emit_prompts_to_job_log_env_var = "False"
         else:
             emit_prompts_to_job_log_env_var = "True"
-    
+
     should_emit_prompts_to_job_log = str2bool(emit_prompts_to_job_log_env_var)
     lu.get_logger().info("Emitting prompts to job log is {}.".format("enabled" if should_emit_prompts_to_job_log else "disabled"))

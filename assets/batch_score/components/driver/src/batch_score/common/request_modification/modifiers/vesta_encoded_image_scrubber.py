@@ -13,9 +13,9 @@ class VestaEncodedImageScrubber(RequestModifier):
         else:
             lu.get_logger().error(f"Input data does not match Vesta schema")
             raise Exception("Input data does not match Vesta schema")
-        
+
     def _scrub_image_encoding(self, image_data: str):
         if not image_data.startswith(ImageEncoder.IMAGE_URL) and not image_data.startswith(ImageEncoder.IMAGE_FILE):
             return "<Encoded image data has been scrubbed>"
-        
+
         return image_data

@@ -69,7 +69,7 @@ CATEGORIZE_TESTS = [
 @pytest.mark.parametrize("expected_category, response_status, model_response_status", CATEGORIZE_TESTS)
 def test_categorize(mock_get_logger, expected_category: str, response_status: int, model_response_status: int):
     assert tally_failed_request_handler.TallyFailedRequestHandler._categorize(response_status=response_status, model_response_status=model_response_status) == expected_category
-    
+
     assert mock_get_logger.debug.called or mock_get_logger.info.called
 
     if expected_category and mock_get_logger.debug.called:

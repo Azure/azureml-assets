@@ -62,7 +62,7 @@ def test_minibatch_aggregator(mock_run_context):
             retry_count=1,
             duration_ms=1,
         ))
-    
+
     # Some requests fail.
     for i in range(1 + minibatch_row_count - failed_row_count, 1 + minibatch_row_count):
         # First request is throttled.
@@ -95,13 +95,13 @@ def test_minibatch_aggregator(mock_run_context):
             retry_count=1,
             duration_ms=1,
         ))
-    
+
     summary = minibatch_aggregator.summarize(
         minibatch_id='minibatch_id',
         end_time=minibatch_started_datetime + datetime.timedelta(milliseconds=1234),
         output_row_count=minibatch_row_count - failed_row_count,
     )
-    
+
     # Assert
     assert isinstance(summary, BatchScoreMinibatchCompletedEvent)
 
@@ -109,7 +109,7 @@ def test_minibatch_aggregator(mock_run_context):
     assert summary.scoring_url == 'scoring_url'
     assert summary.batch_pool == 'batch_pool'
     assert summary.quota_audience == 'quota_audience'
-    
+
     assert summary.total_prompt_tokens == 100 * 1000
     assert summary.total_completion_tokens == 95 * 500
 

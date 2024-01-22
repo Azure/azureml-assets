@@ -61,7 +61,7 @@ inputs:
     optional: true
     default: 1
     description: Number of GPUs to use for finetuning
-  
+
   train_file_path:
     type: uri_file
     optional: true
@@ -105,7 +105,7 @@ inputs:
     type: string
     optional: true
     description: Validation parameters propagated from pipeline.
-  
+
   num_train_epochs:
     type: integer
     optional: true

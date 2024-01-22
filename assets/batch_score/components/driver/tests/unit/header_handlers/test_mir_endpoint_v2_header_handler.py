@@ -18,7 +18,7 @@ def test_get_headers_no_additional_headers(mocker):
     # Assert
     assert len(headers) == 3
     _assert_default_headers(headers)
-    
+
 def test_get_headers_with_additional_headers(mocker):
     # Arrange
     additional_headers = '{"hello": "world"}'

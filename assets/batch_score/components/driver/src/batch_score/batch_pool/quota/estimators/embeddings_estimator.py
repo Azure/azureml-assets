@@ -10,7 +10,7 @@ class EmbeddingsEstimator(DV3Estimator):
         Embeddings are always estimated like a batch. Even if the prompt is a string, it is put into a batch of one.
         """
         prompt = request_obj.get("input", None)
-        
+
         if not prompt:
             raise Exception("Unsupported model input payload: cannot determine input for request cost estimation.")
 
@@ -18,7 +18,7 @@ class EmbeddingsEstimator(DV3Estimator):
             return [prompt]
         else:
             return prompt
-        
+
     def estimate_request_cost(self, request_obj: any) -> "int | tuple[int]":
         prompt = self._get_prompt(request_obj)
         try:

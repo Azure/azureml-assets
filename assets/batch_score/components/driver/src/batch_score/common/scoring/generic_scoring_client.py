@@ -163,7 +163,7 @@ class GenericScoringClient:
         if http_response.status == 200:
             http_response.payload = await response.json()
             return http_response
-        
+
         error_response = await response.text()
         ScoreFailedLog(
             internal_id=internal_id,
@@ -179,7 +179,7 @@ class GenericScoringClient:
             http_response.payload = json.loads(error_response)
         except:
             http_response.payload = error_response
-        
+
         return http_response
 
 

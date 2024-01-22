@@ -48,7 +48,7 @@ class ImageEncoder():
         if resp.status_code != 200:
             lu.get_logger().info(f"URL '{url}' responded with an unsuccessful response: {resp.status_code}, {resp.reason}.")
             raise UnsuccessfulUrlResponse()
-        
+
         img = resp.content
         end = time.time()
         lu.get_logger().debug(f"URL request latency: {end - start}")
@@ -66,7 +66,7 @@ class ImageEncoder():
             lu.get_logger().debug(f"File request latency: {end - start}")
 
             encoded_string = base64.b64encode(image).decode()
-        
+
         return encoded_string
 
 class UnsuccessfulUrlResponse(Exception):

@@ -60,9 +60,9 @@ def test_modify(mock_get_logger, make_vesta_chat_completion_image_modifier, mock
         ]
     }]}
     vesta_image_modifier: VestaChatCompletionImageModifier = make_vesta_chat_completion_image_modifier()
-    
+
     modified_request_obj = vesta_image_modifier.modify(request_obj=vesta_request_obj)
-    
+
     # Assert the two URLs were called
     assert any("https://fake.url" in url for url in mock__b64_from_url)
 
@@ -79,7 +79,7 @@ def test_modify_invalid_image(mock_get_logger, make_vesta_chat_completion_image_
     mock_encode_b64["exception"] = FolderNotMounted()
     with pytest.raises(VestaImageModificationException):
         vesta_chat_completion_image_modifier.modify(vesta_request_obj)
-        
+
     mock_encode_b64["exception"] = Exception()
     with pytest.raises(VestaImageModificationException):
         vesta_chat_completion_image_modifier.modify(vesta_request_obj)

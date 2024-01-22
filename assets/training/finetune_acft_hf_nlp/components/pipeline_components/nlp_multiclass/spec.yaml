@@ -109,7 +109,7 @@ inputs:
     - constant
     - constant_with_warmup
     description: The scheduler type to use
-  
+
   # AutoML NLP parameters
   enable_long_range_text:
     type: boolean

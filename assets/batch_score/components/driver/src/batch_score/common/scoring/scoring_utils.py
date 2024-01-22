@@ -23,10 +23,10 @@ def is_zero_traffic_group_error(response_status: int, response_payload: any = No
 def get_retriable_type(response_status: int, response_payload: any = None, model_response_code: str = None, model_response_reason: str = None):
     if response_status in [408, -408]:
         return RetriableType.RETRY_ON_SAME_ENDPOINT
-    
+
     if response_status in [429, 503]:
         return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT
-    
+
     if is_zero_traffic_group_error(response_status, response_payload):
         return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT
 
@@ -45,5 +45,5 @@ def get_retriable_type(response_status: int, response_payload: any = None, model
 
         if model_response_code == "" and model_response_reason in ["model_not_ready", "too_few_model_instance"]:
             return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT
-    
+
     return RetriableType.NOT_RETRIABLE

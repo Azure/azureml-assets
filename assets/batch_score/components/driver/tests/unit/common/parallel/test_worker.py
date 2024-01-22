@@ -37,10 +37,10 @@ async def test_successful_scoring_appends_result_no_segmentation(
     make_worker,
     make_scoring_result,
     mock_run_context):
-    
+
     scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
     scoring_request.scoring_url = TEST_SCORING_URL
-    
+
     scoring_result = make_scoring_result(
         request_obj={"prompt": "payload"},
         response_body={"usage": {"prompt_tokens": TEST_PROMPT_TOKENS, "completion_tokens": TEST_COMPLETION_TOKENS, "total_tokens": TEST_PROMPT_TOKENS + TEST_COMPLETION_TOKENS}},
@@ -49,7 +49,7 @@ async def test_successful_scoring_appends_result_no_segmentation(
     )
     async def mock_score(*args, **kwargs):
         return scoring_result
-    
+
     monkeypatch.setattr("src.batch_score.batch_pool.scoring.scoring_client.ScoringClient.score_once", mock_score)
     with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:        
         with patch("src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext.processed_segments_count", new_callable=PropertyMock) as mock_processed_segments_count:
@@ -84,7 +84,7 @@ async def test_successful_scoring_appends_result_with_segmentation(
     make_worker,
     make_scoring_result,
     mock_run_context):
-    
+
     scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
     scoring_request.scoring_url = TEST_SCORING_URL
 
@@ -105,7 +105,7 @@ async def test_successful_scoring_appends_result_with_segmentation(
                 side_effect=[True, True, True, False]) as has_more:
                 mock_processed_segments_count.return_value = TEST_SEGMENT_COUNT
                 metrics = await _run_worker(make_worker, segment_large_requests='enabled', scoring_request=scoring_request)
-    
+
     input_row_event = BatchScoreInputRowCompletedEvent(
         event_time=ANY,
         minibatch_id=ANY,
@@ -148,7 +148,7 @@ async def test_request_exceeds_max_retry_time_interval_and_fails(
 
     queue = deque()
     queue.append(queue_item)
-    
+
     worker = make_worker(
         scoring_request_queue=queue,
         max_retry_time_interval=max_retry_time_interval)
@@ -252,7 +252,7 @@ async def test_no_deployments_in_traffic_group(
 
     for var, value in env_vars.items():
         monkeypatch.setenv(var, value)
-    
+
     if 'BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF' not in env_vars:
         monkeypatch.setattr(Worker, 'NO_DEPLOYMENTS_BACK_OFF', expected_wait_time)
 
@@ -281,7 +281,7 @@ async def _run_worker(make_worker, segment_large_requests='disabled', scoring_re
         max_retry_time_interval=0.001, # A small timeout keeps the test fast.
         request_metrics=request_metrics,
         id=TEST_WORKER_ID)
-    
+
     worker._Worker__count_only_quota_429s_toward_total_request_time = True
 
     # Disable quota client so we don't make quota requests during the unit test.

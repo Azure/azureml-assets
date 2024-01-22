@@ -22,7 +22,7 @@ messages:
   content: |
     Location: {{User_Location}}
     Intensity: {{Hike_Intensity}}
-      
+
 input_variables:
   - name: User_Location
     description: Location that the user is looking to hike
@@ -39,6 +39,6 @@ execution_settings:
     model_id: gpt-4
     temperature: 0
     evaluation: xxx (for future use to add evaluation results)
-    
+
 template_format: handlebars
 

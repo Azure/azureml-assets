@@ -18,14 +18,14 @@ class MinibatchAggregator:
         self._http_request_completed_events_per_minibatch = defaultdict(list)
         self._rows_completed_events_per_minibatch = defaultdict(list)
         self._start_event_per_minibatch = defaultdict(BatchScoreMinibatchStartedEvent)
-    
+
     def add(self, event: BatchScoreEvent = None, **kwargs) -> None:
         if isinstance(event, BatchScoreRequestCompletedEvent):
             self._http_request_completed_events_per_minibatch[event.minibatch_id].append(event)
 
         if isinstance(event, BatchScoreInputRowCompletedEvent):
             self._rows_completed_events_per_minibatch[event.minibatch_id].append(event)
-    
+
         if isinstance(event, BatchScoreMinibatchStartedEvent):
             self._start_event_per_minibatch[event.minibatch_id] = event
 

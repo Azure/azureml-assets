@@ -76,13 +76,13 @@ class AIMD(ConcurrencyAdjustmentStrategy):
 
     def _get_client_setting(self, key: ClientSettingsKey):
         return self.__client_settings_provider.get_client_setting(key)
-    
+
     def _refresh_concurrency_settings(self):
         self.__adjustment_interval = int(float(
             os.environ.get("BATCH_SCORE_CONCURRENCY_ADJUSTMENT_INTERVAL")
             or self._get_client_setting(ClientSettingsKey.CONCURRENCY_ADJUSTMENT_INTERVAL)
             or self.DEFAULT_ADJUSTMENT_INTERVAL))
-        
+
         self.__additive_increase = int(float(
             os.environ.get("BATCH_SCORE_CONCURRENCY_INCREASE_AMOUNT")
             or self._get_client_setting(ClientSettingsKey.CONCURRENCY_ADDITIVE_INCREASE)

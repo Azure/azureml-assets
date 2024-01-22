@@ -19,7 +19,7 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from ..telemetry.logging_utils import get_logger
-    
+
 class AuthProvider:
 
     @abstractmethod
@@ -38,7 +38,7 @@ class IdentityAuthProvider(AuthProvider):
         # The identity used to score an AOAI deployment must have
         # the role "Cognitive Services User" on the AOAI resource.
         # The role "Contributor" is not sufficient.
-    
+
         if managed_identity_client_id and managed_identity_client_id != "DEFAULT_IDENTITY_CLIENT_ID":
             get_logger().info(f"Using managed identity credential with client id {managed_identity_client_id}")
             self.__credential = ManagedIdentityCredential(client_id=managed_identity_client_id)
@@ -71,7 +71,7 @@ class IdentityAuthProvider(AuthProvider):
             get_logger().info("Failed to get token from MSI")
 
         return self.__access_token.token
-    
+
     def __is_token_expired(self) -> bool:
         return not self.__access_token or self.__access_token.expires_on <= datetime.now(timezone.utc).timestamp() + (5 * 60)
 
@@ -90,12 +90,12 @@ class ApiKeyAuthProvider(AuthProvider):
     def __init__(
             self,
             api_key_name) -> None:
-        
+
         if api_key_name is None:
             ex = MissingApiKeyNameException()
             get_logger().error(str(ex))
             raise ex
-        
+
         self.__api_key_name = api_key_name
         self.__api_key = self.__get_api_key()
 
@@ -123,7 +123,7 @@ class WorkspaceConnectionAuthProvider(AuthProvider):
         if self._current_workspace is None:
             self._current_workspace = Run.get_context().experiment.workspace
         return self._current_workspace
-    
+
     def get_auth_headers(self) -> dict:
         """Get the auth headers."""
         resp = self._get_workspace_connection_by_name()
@@ -133,7 +133,7 @@ class WorkspaceConnectionAuthProvider(AuthProvider):
             EndpointType.Serverless: {'Authorization': resp['properties']['credentials']['key']},
         } [self._endpoint_type]
 
-    
+
     def _get_workspace_connection_by_name(self) -> dict:
         """Get a workspace connection from the workspace."""
         if hasattr(self.current_workspace._auth, "get_token"):

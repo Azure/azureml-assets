@@ -90,7 +90,7 @@ class ScoringClient:
 
         target_endpoint_url = await self._get_target_endpoint_url(session, scoring_request, worker_id)
         scoring_request.scoring_url = target_endpoint_url
-        
+
         endpoint_base_url = get_base_url(target_endpoint_url)
         headers = self.__header_handler.get_headers()
         self._log_score_start(scoring_request, worker_id, target_endpoint_url, headers)
@@ -152,7 +152,7 @@ class ScoringClient:
                                                   response_payload=response_payload,
                                                   model_response_code=model_response_code,
                                                   model_response_reason=model_response_reason)
-        
+
         is_retriable = scoring_utils.is_retriable(retriable_type)
 
         # Record endpoint url and response_status
@@ -180,12 +180,12 @@ class ScoringClient:
             if response_body and not isinstance(response_body, list):
                 usage: dict[str, int] = response_body["usage"]
                 return usage.get("prompt_tokens", None)
-        
+
         def get_completion_tokens(response_body: any):
             if response_body and not isinstance(response_body, list):
                 usage: dict[str, int] = response_body["usage"]
                 return usage.get("completion_tokens", None)
-               
+
         request_completed_event = BatchScoreRequestCompletedEvent(
             minibatch_id = scoring_request.mini_batch_context.mini_batch_id if scoring_request.mini_batch_context is not None else None,
             input_row_id = scoring_request.internal_id,

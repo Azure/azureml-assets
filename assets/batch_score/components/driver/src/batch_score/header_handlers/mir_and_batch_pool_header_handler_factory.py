@@ -75,7 +75,7 @@ class MirAndBatchPoolHeaderHandlerFactory:
                 quota_audience=configuration.quota_audience,
                 additional_headers=configuration.additional_headers
             )
-        
+
         get_logger().info("No OpenAI model matched, defaulting to base OpenAI header handler.")
         return OpenAIHeaderHandler(
             token_provider=token_provider,

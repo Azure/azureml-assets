@@ -19,7 +19,7 @@ class RequestEndTrace(TraceConfig):
     def __init__(self):
         super().__init__()
         self.on_request_end.append(self.__on_request_end)
-    
+
     async def __on_request_end(self, session, trace_config_ctx, params: aiohttp.TraceRequestEndParams):
         prefix = ""
         if trace_config_ctx.trace_request_ctx and "worker_id" in trace_config_ctx.trace_request_ctx:

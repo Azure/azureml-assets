@@ -92,7 +92,7 @@ class TestWaitTimeCongestionDetector:
         actual_congestion_state = congestion_detector.detect(RequestMetrics(), pd.Timestamp.utcnow())
 
         assert actual_congestion_state == CongestionState.UNKNOWN
-    
+
     @pytest.mark.parametrize(
         "make_routing_client, response_code, expected_congestion_state",
         # For context, see https://dev.azure.com/msdata/Vienna/_workitems/edit/2832428

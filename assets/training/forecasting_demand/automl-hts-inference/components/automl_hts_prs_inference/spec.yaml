@@ -27,7 +27,7 @@ inputs:
     optional: True
     description: 'Enable event logger.'
     default: true
-  
+
 outputs:
   output_metadata:
     mode: mount

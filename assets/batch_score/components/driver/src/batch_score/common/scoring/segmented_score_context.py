@@ -27,7 +27,7 @@ class SegmentedScoreContext:
             ("stream" in payload_object and str2bool(payload_object["stream"])) or \
             (self.__original_max_tokens is not None and self.__original_max_tokens <= segment_max_token_size):
             self.__supports_segmentation = False
-            
+
         self.__segment_max_token_size = segment_max_token_size
         self.__segmented_results: list[ScoringResult] = []
         self.__total_tokens_generated = 0
@@ -57,7 +57,7 @@ class SegmentedScoreContext:
             next_scoring_request,
             timeout,
             worker_id=worker_id)
-        
+
         # Scoring terminated with non-retriable response, reset self.__next_scoring_request
         self.__next_scoring_request = None
 
@@ -108,7 +108,7 @@ class SegmentedScoreContext:
 
     def __merge_logprobs(self, final_result: ScoringResult):
         logprobs_properties = [ "tokens", "token_logprobs", "top_logprobs", "text_offset"]
-        
+
         if "logprobs" in final_result.response_body["choices"][0]:
             final_logprobs = final_result.response_body["choices"][0]["logprobs"]
 

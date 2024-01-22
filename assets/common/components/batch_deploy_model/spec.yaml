@@ -70,13 +70,13 @@ inputs:
     optional: true
     default: default
     description: Name of the deployment
-    
+
   compute_name:
     type: string
     optional: true
     default: cpu-cluster
     description: Name of the compute cluster to execute the batch scoring jobs on. New compute will be created if the compute cluster is not present.
-  
+
   size:
     type: string
     optional: true
