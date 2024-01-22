@@ -3,9 +3,9 @@ The "QnA GPT Similarity Evaluation" is a model to evaluate the Q&A Retrieval Aug
 
 ### Inference samples
 
-Inference type|Python sample (Notebook)|CLI with YAML
+Inference type|CLI|VS Code Extension
 |--|--|--|
-Real time|<a href="https://github.com/microsoft/promptflow/blob/pm/3p-inside-materials/docs/media/deploy-to-aml-code/sdk/deploy.ipynb" target="_blank">deploy-promptflow-model-python-example</a>|<a href="https://github.com/microsoft/promptflow/blob/pm/3p-inside-materials/docs/go-to-production/deploy-to-aml-code.md" target="_blank">deploy-promptflow-model-cli-example</a>
+Real time|<a href="https://microsoft.github.io/promptflow/how-to-guides/deploy-a-flow/index.html" target="_blank">deploy-promptflow-model-cli-example</a>|<a href="https://microsoft.github.io/promptflow/how-to-guides/deploy-a-flow/index.html" target="_blank">deploy-promptflow-model-python-example</a>
 Batch | N/A | N/A
 
 ### Sample inputs and outputs (for real-time inference)
