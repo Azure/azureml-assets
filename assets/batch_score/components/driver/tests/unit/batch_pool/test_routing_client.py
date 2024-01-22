@@ -15,8 +15,6 @@ from src.batch_score.common.configuration.client_settings import ClientSettingsK
 
 @pytest.mark.asyncio
 class TestRoutingClient:
-    """Test routing client."""
-
     @pytest.mark.parametrize(
         "client_settings_from_endpoint_discovery_service, key, expected_value",
         [
@@ -24,21 +22,21 @@ class TestRoutingClient:
                 {},
                 ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME,
                 None,
-            ),
+            ), 
             (
                 {
                     'unrecognized key': 'unrevealed value',
                 },
                 ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME,
                 None,
-            ),
+            ), 
             (
                 {
                     ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME: 'true',
                 },
                 ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME,
                 'true',
-            ),
+            ), 
             (
                 {
                     ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME: 'true',
@@ -46,7 +44,7 @@ class TestRoutingClient:
                 },
                 ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME,
                 'true',
-            ),
+            ), 
             (
                 {
                     ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME: 'true',
@@ -58,7 +56,6 @@ class TestRoutingClient:
         ],
     )
     async def test_get_client_settings(self, client_settings_from_endpoint_discovery_service, key, expected_value):
-        """Test get client settings."""
         routing_client = RoutingClient(
             service_namespace="MOCK-NAMESPACE",
             target_batch_pool="MOCK-POOL",
@@ -69,13 +66,11 @@ class TestRoutingClient:
         routing_client._RoutingClient__client_settings = client_settings_from_endpoint_discovery_service
 
         assert expected_value == routing_client.get_client_setting(key)
-
+    
     # If the exception handling fails, this test will hang indefinitely.
     # So we expect the test to pass in 5 seconds if the code is correct.
     @pytest.mark.timeout(5)
-    async def test_exception_handling_for__check_and_refresh_pool_routes_no_exception_raised(
-            self, mock_refresh_pool_routes):
-        """Test check and refresh pool routes exception handling."""
+    async def test_exception_handling_for__check_and_refresh_pool_routes_no_exception_raised(self, mock_refresh_pool_routes):
         routing_client = RoutingClient(
             service_namespace="MOCK-NAMESPACE",
             target_batch_pool="MOCK-POOL",
@@ -87,12 +82,11 @@ class TestRoutingClient:
 
         await routing_client._RoutingClient__check_and_refresh_pool_routes(session=None)
 
+
     # If the exception handling fails, this test will hang indefinitely.
     # So we expect the test to pass in 5 seconds if the code is correct.
     @pytest.mark.timeout(5)
-    async def test_exception_handling_for__check_and_refresh_pool_routes_exception_is_raised(
-            self, mock_refresh_pool_routes):
-        """Test check and refresh pool routes exception raised."""
+    async def test_exception_handling_for__check_and_refresh_pool_routes_exception_is_raised(self, mock_refresh_pool_routes):
         routing_client = RoutingClient(
             service_namespace="MOCK-NAMESPACE",
             target_batch_pool="MOCK-POOL",
@@ -111,7 +105,6 @@ class TestRoutingClient:
             self,
             monkeypatch,
             make_completion_header_handler):
-        """Test get quota scope invalid pool routes raised."""
         routing_client = RoutingClient(
             service_namespace="MOCK-NAMESPACE",
             target_batch_pool="MOCK-POOL",

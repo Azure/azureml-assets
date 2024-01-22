@@ -1,8 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""Endpoint simulator."""
-
 import json
 import os
 import random
@@ -18,15 +13,11 @@ WORK_SECONDS = float(os.environ.get("ENDPOINT_SIMULATOR_WORK_SECONDS") or 10)
 
 
 class EndpointSimulator(ServiceSimulator):
-    """Endpoint simulator."""
-
     def __init__(self):
-        """Init function."""
         super().__init__(handler=self.RequestHandler)
 
     @classmethod
     def initialize(cls):
-        """Initialize function."""
         if not cls.arg_pattern_is_present(ARG_HOST_PATTERN):
             print("Not starting endpoint simulator")
             return
@@ -39,10 +30,7 @@ class EndpointSimulator(ServiceSimulator):
         cls.arg_pattern_replace(ARG_HOST_PATTERN, endpoint.host)
 
     class RequestHandler(ServiceSimulator.RequestHandler):
-        """Simulator request handler."""
-
         def do_POST(self):
-            """Simulate a POST request."""
             try:
                 path = self.path.split("?")[0]
 

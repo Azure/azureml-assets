@@ -1,13 +1,9 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""Command line argument specification."""
-
 from ...batch_pool.quota.quota_client import QuotaClient
 from ...utils.common import str2bool
-from .. import constants
+from ..common_enums import ApiType
 
-# TODO: Name this ARGUMENT_SPECIFICATION
+
+#TODO: Name this ARGUMENT_SPECIFICATION
 COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     # TODO: headers with booleans fail during session.post.
     #  Prevent users from providing additional_headers that json.loads with boolean values.
@@ -53,13 +49,13 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     },
     '--api_type': {
         'choices': [
-            constants.COMPLETION_API_TYPE,
-            constants.CHAT_COMPLETION_API_TYPE,
-            constants.EMBEDDINGS_API_TYPE,
-            constants.VESTA_API_TYPE,
-            constants.VESTA_CHAT_COMPLETION_API_TYPE,
+            ApiType.Completion,
+            ApiType.ChatCompletion,
+            ApiType.Embedding,
+            ApiType.Vesta,
+            ApiType.VestaChatCompletion,
         ],
-        'default': constants.COMPLETION_API_TYPE,
+        'default': ApiType.Completion,
         'help': 'The API used for scoring.',
         'required': False,
         'type': str,
@@ -69,6 +65,21 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
         'default': None,
         'help': 'The connection string for an Application Insights instance.'
                 ' If provided, debug logs are sent to this Application Insights instance.',
+        'nargs': '?',
+        'required': False,
+        'type': str,
+    },
+    '--app_insights_log_level': {
+        'choices': [
+            'debug',
+            'info',
+            'warning',
+            'error',
+            'critical',
+        ],
+        'const': None,
+        'default': 'debug',
+        'help': 'Minimum log level to emit to Application Insights.',
         'nargs': '?',
         'required': False,
         'type': str,
@@ -95,8 +106,8 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     '--batch_size_per_request': {
         'default': 1,
         'help': 'The number of rows to score against the model in a single HTTP request.'
-                ' Only supported for the Embeddings API.'
-                ' Must be between 1 and 2000.',
+               ' Only supported for the Embeddings API.'
+               ' Must be between 1 and 2000.',
         'required': False,
         'type': int,
     },
@@ -166,8 +177,7 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     '--output_behavior': {
         # TODO: add the choices 'append_row' and 'summary_only'.
         'default': None,
-        'help': 'If set to `append_row`, the output of each scoring request is appended to the single,'
-                ' potentially large output file.'
+        'help': 'If set to `append_row`, the output of each scoring request is appended to the single, potentially large output file.'
                 ' If set to `summary_only`, the output file contains only the summary of the scoring run.'
                 ' Use the `save_mini_batch_results` parameter to save the results of individual minibatches.',
         'required': False,
@@ -193,8 +203,7 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     },
     '--save_mini_batch_results': {
         'default': None,
-        'help': 'If enabled, the results of individual minibatches are stored in the directory specified'
-                ' by `mini_batch_results_out_directory`.',
+        'help': 'If enabled, the results of individual minibatches are stored in the directory specified by `mini_batch_results_out_directory`.',
         'required': False,
         'type': str,
     },
@@ -223,6 +232,21 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     '--service_namespace': {
         'default': None,
         'help': 'Service namespace.',
+        'required': False,
+        'type': str,
+    },
+    '--stdout_log_level': {
+        'choices': [
+            'debug',
+            'info',
+            'warning',
+            'error',
+            'critical',
+        ],
+        'const': None,
+        'default': 'debug',
+        'help': 'Minimum log level to emit to job stdout.',
+        'nargs': '?',
         'required': False,
         'type': str,
     },
@@ -258,6 +282,7 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
         'type': str,
     },
 }
+
 COMMAND_LINE_ARGUMENT_SPECIFICATION_FOR_FILE_CONFIGURATION = {
     '--amlbi_async_mode': {
         'dest': 'async_mode',

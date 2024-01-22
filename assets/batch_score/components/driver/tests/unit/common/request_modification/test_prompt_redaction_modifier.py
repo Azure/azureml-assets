@@ -77,15 +77,12 @@ test_cases = [
         },
     ],
 ]
-
-
 @pytest.mark.parametrize(
     "mock_get_logger, request_obj, redacted_request_obj",
     [['mock_get_logger', *test] for test in test_cases],
     indirect=['mock_get_logger'],
 )
 def test_modify(mock_get_logger, request_obj, redacted_request_obj):
-    """Test modify."""
     prompt_redaction_modifier: PromptRedactionModifier = PromptRedactionModifier()
     modified_request_obj = prompt_redaction_modifier.modify(request_obj=request_obj)
 

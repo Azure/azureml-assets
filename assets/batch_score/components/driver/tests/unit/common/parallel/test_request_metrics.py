@@ -11,10 +11,7 @@ from src.batch_score.common.parallel.adjustment import RequestMetrics
 
 
 class TestRequestMetrics:
-    """Request metrics unit tests."""
-
     def test_add_result_and_get_metrics(self):
-        """Test add result and get metrics."""
         request_metrics = RequestMetrics()
         start_time = pd.Timestamp.utcnow()
 
@@ -34,7 +31,6 @@ class TestRequestMetrics:
         assert metrics.iloc[0][RequestMetrics.COLUMN_REQUEST_TOTAL_WAIT_TIME] == 20
 
     def test_add_result_and_get_metrics_with_end_time(self):
-        """Test add result and get metrics with end time."""
         request_metrics = RequestMetrics()
         start_time = pd.Timestamp.utcnow()
 
@@ -66,7 +62,6 @@ class TestRequestMetrics:
         )
 
     def test_init_using_valid_dataframe(self):
-        """Test init using valid dataframe."""
         request_metrics = RequestMetrics()
         start_time = pd.Timestamp.utcnow()
 
@@ -89,7 +84,6 @@ class TestRequestMetrics:
         assert metrics.iloc[0][RequestMetrics.COLUMN_REQUEST_TOTAL_WAIT_TIME] == 20
 
     def test_init_using_dataframe_with_invalid_columns(self):
-        """Test init using dataframe with invalid columns."""
         request_metrics = RequestMetrics()
         start_time = pd.Timestamp.utcnow()
 
@@ -106,10 +100,9 @@ class TestRequestMetrics:
         except ValueError as e:
             assert 'Expected columns' in str(e)
         else:
-            assert False  # If a ValueError exception wasn't raised, the test failed.
+            assert False # If a ValueError exception wasn't raised, the test failed.
 
     def test_init_using_dataframe_with_invalid_index(self):
-        """Test init using dataframe with invalid index."""
         request_metrics = RequestMetrics()
         start_time = pd.Timestamp.utcnow()
 
@@ -127,4 +120,4 @@ class TestRequestMetrics:
         except ValueError as e:
             assert 'Expected index name' in str(e)
         else:
-            assert False  # If a ValueError exception wasn't raised, the test failed.
+            assert False # If a ValueError exception wasn't raised, the test failed.

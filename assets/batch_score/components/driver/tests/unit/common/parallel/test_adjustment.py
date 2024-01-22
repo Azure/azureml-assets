@@ -9,14 +9,15 @@ import pandas as pd
 import pytest
 
 from src.batch_score.common.configuration.client_settings import ClientSettingsKey
-from src.batch_score.common.parallel.request_metrics import RequestMetrics
-from src.batch_score.common.parallel.adjustment import AIMD
+from src.batch_score.common.parallel.adjustment import AIMD, RequestMetrics
 from src.batch_score.common.parallel.congestion import (
     CongestionDetector,
     CongestionState,
+    RequestMetrics,
 )
 
-adjustment_tests = [
+
+adjustment_tests= [
     # Test inputs format:
     # [
     #     initial_concurrency,
@@ -63,7 +64,7 @@ adjustment_tests = [
         15 * [CongestionState.CONGESTED],
         [75, 56, 42, 31, 23, 17, 12, 9, 6, 4, 3, 2, 1, 1, 1],
     ],
-    [1, 5 * [CongestionState.CONGESTED], 5 * [1]],
+    [ 1, 5 * [CongestionState.CONGESTED], 5 * [1]],
 
     # Component starts. Concurrency overshoots, then stabilizes.
     [
@@ -108,21 +109,13 @@ adjustment_tests = [
         + 5 * [23],
     ],
 ]
-
-
 adjustment_tests = [['make_routing_client', *test] for test in adjustment_tests]
-
-
 @pytest.mark.parametrize(
     "make_routing_client, initial_concurrency, congestion_states_to_return, expected_new_concurrency_values",
     adjustment_tests,
     indirect=['make_routing_client'],
 )
-def test_calculate_next_concurrency(make_routing_client,
-                                    initial_concurrency,
-                                    congestion_states_to_return,
-                                    expected_new_concurrency_values):
-    """Test calculate next concurrency."""
+def test_calculate_next_concurrency(make_routing_client, initial_concurrency, congestion_states_to_return, expected_new_concurrency_values):
     aimd = AIMD(request_metrics=RequestMetrics(), client_settings_provider=make_routing_client())
 
     # TODO: introduce DI to accept congestion detector in constructor
@@ -149,10 +142,8 @@ env_vars = {
     "BATCH_SCORE_CONCURRENCY_DECREASE_RATE": "0.25",
 }
 
-
 @pytest.mark.parametrize(
-    "make_routing_client, mock_get_client_setting, client_settings, expected_adjustment_interval,"
-    "expected_additive_increase, expected_multiplicative_decrease",
+    "make_routing_client, mock_get_client_setting, client_settings, expected_adjustment_interval, expected_additive_increase, expected_multiplicative_decrease",
     [
         (
             *fixture_names,
@@ -184,14 +175,7 @@ env_vars = {
     ],
     indirect=fixture_names,
 )
-def test_init_env_var_overrides_client_setting_overrides_class_default(
-        make_routing_client,
-        mock_get_client_setting,
-        client_settings,
-        expected_adjustment_interval,
-        expected_additive_increase,
-        expected_multiplicative_decrease):
-    """Test init env var overrides client setting overrides class default."""
+def test_init_env_var_overrides_client_setting_overrides_class_default(make_routing_client, mock_get_client_setting, client_settings, expected_adjustment_interval, expected_additive_increase, expected_multiplicative_decrease):
     # Class defaults are used when there are no client settings or environment variables.
     clear_env_vars()
 
@@ -220,24 +204,14 @@ def test_init_env_var_overrides_client_setting_overrides_class_default(
     assert 50 == aimd_env_var._AIMD__additive_increase
     assert 0.25 == aimd_env_var._AIMD__multiplicative_decrease
 
-
 def clear_env_vars():
-    """Clear env vars."""
     for key in env_vars.keys():
         if key in os.environ:
             del os.environ[key]
 
-
 class MockCongestionDetector(CongestionDetector):
-    """Mock congestion detector."""
-
     def __init__(self, congestion_states_to_return: 'list[CongestionState]') -> None:
-        """Init function."""
         self.congestion_states_to_return = congestion_states_to_return.copy()
 
-    def detect(self,
-               request_metrics: RequestMetrics,
-               start_time: pd.Timestamp,
-               end_time: pd.Timestamp = None) -> CongestionState:
-        """Mock detect function."""
+    def detect(self, request_metrics: RequestMetrics, start_time: pd.Timestamp, end_time: pd.Timestamp = None) -> CongestionState:
         return self.congestion_states_to_return.pop(0)

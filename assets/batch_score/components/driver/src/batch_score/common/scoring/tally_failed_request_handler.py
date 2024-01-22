@@ -1,16 +1,8 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""Tally failed request handler."""
-
 from ..telemetry import logging_utils as lu
 
 
 class TallyFailedRequestHandler(object):
-    """Tally failed request handler."""
-
     def __init__(self, enabled: bool, tally_exclusions: str = None):
-        """Init function."""
         self.__enabled = enabled
         self.__exclusions: list[str] = []
 
@@ -18,15 +10,13 @@ class TallyFailedRequestHandler(object):
             self.__exclusions = [exclusion.strip().lower() for exclusion in tally_exclusions.split('|')]
 
             if "none" in self.__exclusions and len(self.__exclusions) > 1:
-                raise Exception("Conflicting tally_exclusions: \"none\" specified alongside other exclusions.")
+                raise Exception(f"Conflicting tally_exclusions: \"none\" specified alongside other exclusions.")
 
     def should_tally(self, response_status: int, model_response_status: int) -> bool:
-        """Check whether the response should be tallied with failed requests."""
         if not self.__enabled:
             return False
 
-        failure_category = TallyFailedRequestHandler._categorize(response_status=response_status,
-                                                                 model_response_status=model_response_status)
+        failure_category = TallyFailedRequestHandler._categorize(response_status=response_status, model_response_status=model_response_status)        
         should_tally = failure_category not in self.__exclusions
 
         lu.get_logger().debug(f"should_tally: {should_tally}")

@@ -1,8 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""Common utilities."""
-
 import collections.abc
 import json
 from argparse import ArgumentParser
@@ -17,21 +12,16 @@ from .json_encoder_extensions import BatchComponentJSONEncoder, NumpyArrayEncode
 
 
 def get_base_url(url: str) -> str:
-    """Get base url."""
     if not url:
         return url
-
+    
     parse_result = urlparse(url)
     return f"{parse_result.scheme}://{parse_result.netloc}"
 
-
 def backoff(attempt: int, base_delay: float = 1, exponent: float = 2, max_delay: float = 20):
-    """Calculate backoff delay time."""
     return min(max_delay, base_delay * attempt**exponent)
 
-
 def str2bool(v):
-    """Convert string to boolean."""
     if isinstance(v, bool):
         return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -41,9 +31,7 @@ def str2bool(v):
     else:
         raise ArgumentParser.ArgumentTypeError('Boolean value expected.')
 
-
 def convert_result_list(results: "list[ScoringResult]", batch_size_per_request: int) -> "list[str]":
-    """Convert scoring results to the result list."""
     output_list: list[dict[str, str]] = []
     for scoringResult in results:
         output: dict[str, str] = {}
@@ -53,38 +41,27 @@ def convert_result_list(results: "list[ScoringResult]", batch_size_per_request: 
         output["request"] = scoringResult.request_obj
         output["response"] = scoringResult.response_body
 
-        if scoringResult.segmented_response_bodies is not None and len(scoringResult.segmented_response_bodies) > 0:
+        if scoringResult.segmented_response_bodies != None and len(scoringResult.segmented_response_bodies) > 0:
             output["segmented_responses"] = scoringResult.segmented_response_bodies
 
         if scoringResult.request_metadata is not None:
             output["request_metadata"] = scoringResult.request_metadata
 
         if batch_size_per_request > 1:
-            batch_output_list = embeddings._convert_to_list_of_output_items(output,
-                                                                            scoringResult.estimated_token_counts)
+            batch_output_list = embeddings._convert_to_list_of_output_items(output, scoringResult.estimated_token_counts)
             output_list.extend(batch_output_list)
         else:
             output_list.append(output)
 
     return list(map(__stringify_output, output_list))
 
-
-def convert_to_list(data: pd.DataFrame,
-                    additional_properties: str = None,
-                    batch_size_per_request: int = 1) -> "list[str]":
-    """Convert the input panda data frame to a list of payload strings."""
+def convert_to_list(data: pd.DataFrame, additional_properties:str = None, batch_size_per_request:int = 1) -> "list[str]":
     columns = data.keys()
     payloads = []
     additional_properties_list = None
-
+    
     # Per https://platform.openai.com/docs/api-reference/
-    int_forceable_properties = ["max_tokens",
-                                "n",
-                                "logprobs",
-                                "best_of",
-                                "n_epochs",
-                                "batch_size",
-                                "classification_n_classes"]
+    int_forceable_properties = ["max_tokens", "n", "logprobs", "best_of", "n_epochs", "batch_size", "classification_n_classes"]
 
     if additional_properties is not None:
         additional_properties_list = json.loads(additional_properties)
@@ -97,8 +74,8 @@ def convert_to_list(data: pd.DataFrame,
             payload_obj: dict[str, any] = {}
             for indx, col in enumerate(columns):
                 payload_val = row[indx]
-                if isinstance(payload_val, collections.abc.Sequence) or isinstance(payload_val, numpy.ndarray) or \
-                        not pd.isnull(payload_val):
+                if isinstance(payload_val, collections.abc.Sequence) or isinstance(payload_val, numpy.ndarray) or\
+                    not pd.isnull(payload_val):
                     if col in int_forceable_properties:
                         payload_val = int(payload_val)
                     payload_obj[col] = payload_val
@@ -111,17 +88,15 @@ def convert_to_list(data: pd.DataFrame,
 
     return payloads
 
-
 def __add_properties_to_payload_object(payload_obj: dict,
                                        additional_properties_list: dict):
     if additional_properties_list is not None:
         for key, value in additional_properties_list.items():
             payload_obj[key] = value
 
-
 def __stringify_output(payload_obj: dict) -> str:
     return json.dumps(payload_obj, cls=BatchComponentJSONEncoder)
 
-
 def __stringify_payload(payload_obj: dict) -> str:
     return json.dumps(payload_obj, cls=NumpyArrayEncoder)
+

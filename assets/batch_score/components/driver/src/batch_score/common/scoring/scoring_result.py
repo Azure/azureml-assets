@@ -1,8 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""Scoring result."""
-
 from copy import deepcopy
 from enum import Enum
 
@@ -14,43 +9,25 @@ from .scoring_request import ScoringRequest
 
 
 class PermanentException(Exception):
-    """Permanent exception."""
-
     def __init__(self, message: str, status_code: int = None, response_payload: any = None):
-        """Init function."""
         super().__init__(message)
 
         self.status_code = status_code
         self.response_payload = response_payload
 
-
 class RetriableException(Exception):
-    """Retriable exception."""
-
-    def __init__(self,
-                 status_code: int,
-                 response_payload: any = None,
-                 model_response_code: str = None,
-                 model_response_reason: str = None,
-                 retry_after: float = None):
-        """Init function."""
+    def __init__(self, status_code: int, response_payload: any = None, model_response_code: str = None, model_response_reason: str = None, retry_after: float = None):
         self.status_code = status_code
         self.response_payload = response_payload
         self.model_response_code = model_response_code
         self.model_response_reason = model_response_reason
         self.retry_after = retry_after
 
-
 class ScoringResultStatus(Enum):
-    """Scoring result status."""
-
     FAILURE = 1
     SUCCESS = 2
 
-
 class ScoringResult:
-    """Scoring result."""
-
     def __init__(self,
                  status: ScoringResultStatus,
                  start: float,
@@ -63,11 +40,10 @@ class ScoringResult:
                  omit: bool = False,
                  token_counts: "tuple[int]" = (),
                  mini_batch_context: MiniBatchContext = None):
-        """Init function."""
         self.status = status
         self.start = start
         self.end = end
-        self.request_obj = request_obj  # Normalize to json
+        self.request_obj = request_obj # Normalize to json
         self.request_metadata = request_metadata
         self.response_body = response_body
         self.response_headers = response_headers
@@ -88,25 +64,23 @@ class ScoringResult:
     # read-only
     @property
     def estimated_token_counts(self) -> "tuple[int]":
-        """Get the estimated token count."""
         return self.__token_counts
-
+    
     def __analyze(self):
         try:
             if self.status == ScoringResultStatus.FAILURE:
                 return
-
+            
             if not isinstance(self.response_body, list):
                 usage: dict[str, int] = self.response_body["usage"]
 
                 self.prompt_tokens = usage.get("prompt_tokens", None)
                 self.completion_tokens = usage.get("completion_tokens", None)
                 self.total_tokens = usage.get("total_tokens", None)
-        except ValueError:
+        except ValueError as e:
             lu.get_logger().error("response is not a json")
 
     def Failed(scoring_request: ScoringRequest = None) -> 'ScoringResult':
-        """Get a scoring result of failed status."""
         return ScoringResult(
             status=ScoringResultStatus.FAILURE,
             start=0,
@@ -121,8 +95,9 @@ class ScoringResult:
         )
 
     def copy(self) -> 'ScoringResult':
-        """Return a copy of this result with a deep copy of response body and unset token counts."""
         """
+        Return a copy of this result with a deep copy of response body and unset token counts.
+
         Deepcopy the response_body dictionary, as this will be edited in the final result of segmented responses.
         Set the three token attributes to None so others are not confused by the previous values.
         """

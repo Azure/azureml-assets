@@ -1,8 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""This file contains fixtures to mock scoring result."""
-
 import time
 
 import pytest
@@ -16,7 +11,7 @@ from src.batch_score.common.scoring.scoring_result import (
 
 @pytest.fixture
 def make_scoring_result():
-    """Mock scoring result."""
+
     def make(
             status: ScoringResultStatus = ScoringResultStatus.SUCCESS,
             start: float = time.time() - 10,
@@ -27,7 +22,6 @@ def make_scoring_result():
             response_headers: CIMultiDictProxy[str] = None,
             num_retries: int = 0,
             omit: bool = False):
-        """Make a mock scoring result."""
         return ScoringResult(
             status=status,
             start=start,
@@ -38,12 +32,10 @@ def make_scoring_result():
             response_headers=response_headers,
             num_retries=num_retries,
             omit=omit)
-
+    
     return make
 
-
 def get_test_request_obj():
-    """Get a test request obj."""
     return {
         "payload": "test request"
     }

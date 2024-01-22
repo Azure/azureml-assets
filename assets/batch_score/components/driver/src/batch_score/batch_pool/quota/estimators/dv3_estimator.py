@@ -1,8 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""Dv3 estimator."""
-
 import json
 import os
 from abc import abstractmethod
@@ -17,27 +12,21 @@ from .quota_estimator import QuotaEstimator
 
 
 class DV3Estimator(QuotaEstimator):
-    """Dv3 estimator."""
-
     DEFAULT_MAX_TOKENS = 10
 
     def __init__(self):
-        """Init function."""
         self.__coeffs = self.__load_coeffs()
         self.__tokenizer = self.__load_tokenizer()
 
     def calc_tokens_with_tiktoken(self, prompt) -> "int | tuple[int]":
-        """Calculate token with tiktoken library."""
         if isinstance(prompt, str):
             return self.__calc_tokens_for_one_prompt(prompt)
         else:
             lu.get_logger().debug(
-                f"Prompt is of type '{prompt.__class__.__qualname__}' and length '{len(prompt)}'. " +
-                "Calculating each input within.")
+                f"Prompt is of type '{prompt.__class__.__qualname__}' and length '{len(prompt)}'. Calculating each input within.")
             return self.__calc_tokens_for_batch(prompt)
 
     def estimate_request_cost(self, request_obj: any) -> int:
-        """Estimate request cost."""
         prompt = self._get_prompt(request_obj)
         max_tokens = request_obj.get("max_tokens", self.DEFAULT_MAX_TOKENS)
 
@@ -45,15 +34,13 @@ class DV3Estimator(QuotaEstimator):
             est_tokens = self.__calc_total_tokens_with_tiktoken(prompt)
         except BaseException as e:
             # This behavior can happen on some kinds of very long prompts:
-            # TikToken first splits the prompt into words via regex (mostly via whitespace and punctuation),
-            # then splits each word into tokens. The first part is fast, but the second part seems to take O(n)
-            # stack space and O(n^2) time, for n = word length. Experimentally, a word above ~30k characters will
-            # be very slow, and somewhere around ~1M characters it will hit a stack overflow. The problem
-            # only happens when there's a single huge word -- a prompt of 1M normal-sized words works fine
-            # (although DV3 itself will reject it).
-            # We're specifically catching BaseException here because the stack overflow error is thrown from the
-            # Rust runtime as a PanicException, which inherits from BaseException, not Exception,
-            # so normal `except` statements would catch it.
+            # TikToken first splits the prompt into words via regex (mostly via whitespace and punctuation), then splits each word into tokens.
+            # The first part is fast, but the second part seems to take O(n) stack space and O(n^2) time, for n = word length. Experimentally,
+            # a word above ~30k characters will be very slow, and somewhere around ~1M characters it will hit a stack overflow. The problem
+            # only happens when there's a single huge word -- a prompt of 1M normal-sized words works fine (although DV3 itself will reject it).
+            #
+            # We're specifically catching BaseException here because the stack overflow error is thrown from the Rust runtime as a PanicException,
+            # which inherits from BaseException, not Exception, so normal `except` statements would catch it.
             #
             # See: https://github.com/openai/tiktoken/issues/15
             lu.get_logger().error(f"TikToken library call failed, falling back to estimator: {e}")
@@ -63,7 +50,6 @@ class DV3Estimator(QuotaEstimator):
         return est_tokens + max_tokens
 
     def estimate_response_cost(self, request_obj: any, response_obj: any) -> int:
-        """Estimate response cost."""
         # Cost is total input + max output tokens.
         return response_obj["usage"]["prompt_tokens"] + request_obj.get("max_tokens", self.DEFAULT_MAX_TOKENS)
 
@@ -76,16 +62,14 @@ class DV3Estimator(QuotaEstimator):
     def __load_tokenizer(self):
         # Parameters taken from https://github.com/openai/tiktoken/blob/main/tiktoken_ext/openai_public.py
         # We're providing these manually so we can load the tokens from a local file, instead of from a URL.
-        # We split the token file because of the 1MB file size limit in azureml-assets repo.
-        bpe_ranks = {}
+        data_path = os.path.join(os.path.dirname(__file__), "data", "cl100k_base.tiktoken")
 
-        self.__load_tokens(bpe_ranks, "cl100k_base_1.tiktoken")
-        self.__load_tokens(bpe_ranks, "cl100k_base_2.tiktoken")
+        with open(data_path, "rb") as f:
+            bpe_ranks = {b64decode(token): int(rank) for token, rank in (line.split() for line in f)}
 
         return Encoding(
             name="cl100k_base",
-            pat_str=r"""(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| """
-                    + r"""?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+""",
+            pat_str=r"""(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+""",
             mergeable_ranks=bpe_ranks,
             special_tokens={
                 "<|endoftext|>": 100257,
@@ -95,12 +79,6 @@ class DV3Estimator(QuotaEstimator):
                 "<|endofprompt|>": 100276,
             },
         )
-
-    def __load_tokens(self, bpe_ranks, file_name):
-        data_path = os.path.join(os.path.dirname(__file__), "data", file_name)
-
-        with open(data_path, "rb") as f:
-            bpe_ranks.update({b64decode(token): int(rank) for token, rank in (line.split() for line in f)})
 
     @abstractmethod
     def _get_prompt(self, request_obj: any) -> str:

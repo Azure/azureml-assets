@@ -1,8 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""This file contains unit tests for configuration parser factory."""
-
 import pytest
 
 from src.batch_score.common.configuration.configuration_parser import (
@@ -20,12 +15,10 @@ from src.batch_score.common.configuration.file_configuration_parser import (
     "args, expected_parser_type",
     [
         (["--configuration_file", "path/to/configuration/file"], FileConfigurationParser),
-        # typo in argument name, hyphen instead of underscore
-        (["--configuration-file", "path/to/configuration/file"], ConfigurationParser),
+        (["--configuration-file", "path/to/configuration/file"], ConfigurationParser), # typo in argument name, hyphen instead of underscore
         (["--other_param", "some value"], ConfigurationParser),
     ],
 )
 def test_factory_returns_parser(args, expected_parser_type):
-    """Test configuration parser factory."""
     parser = ConfigurationParserFactory().get_parser(args=args)
     assert isinstance(parser, expected_parser_type)

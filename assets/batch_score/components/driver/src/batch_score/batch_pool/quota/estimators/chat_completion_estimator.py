@@ -1,19 +1,12 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""Chat completion estimator."""
-
 from .dv3_estimator import DV3Estimator
 
 
 # Estimator for the /chat/completions API
 class ChatCompletionEstimator(DV3Estimator):
-    """Chat completion estimator."""
-
     def _get_prompt(self, request_obj: any) -> str:
         messages = request_obj.get("messages", None)
         prompt: str = None
-
+        
         if messages:
             for message in messages:
                 content: str = message.get("content", None)

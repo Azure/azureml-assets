@@ -1,8 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""Routing simulator."""
-
 import os
 import re
 
@@ -16,15 +11,11 @@ ENV_ENDPOINT_URI = "ROUTING_SIMULATOR_ENDPOINT_URI"
 
 
 class RoutingSimulator(ServiceSimulator):
-    """Routing simulator."""
-
     def __init__(self):
-        """Init function."""
         super().__init__(handler=self.RequestHandler)
 
     @classmethod
     def initialize(cls):
-        """Initialize function."""
         if not cls.arg_pattern_is_present(ARG_HOST_PATTERN) or not os.environ.get(ENV_ENDPOINT_URI):
             print("Not starting routing simulator")
             return
@@ -37,17 +28,12 @@ class RoutingSimulator(ServiceSimulator):
         cls.arg_pattern_replace(ARG_HOST_PATTERN, quota.host)
 
     class RequestHandler(ServiceSimulator.RequestHandler):
-        """Simulator request handler."""
-
         def do_POST(self):
-            """Simulate a POST request."""
             try:
                 path = self.path.split("?")[0]
 
                 if path.endswith("/listEndpoints"):
-                    service_namespace, endpoint_pool = re.search(r"/serviceNamespaces/([^/]+)/endpointPools/([^/]+)",
-                                                                 path,
-                                                                 re.IGNORECASE).groups()
+                    service_namespace, endpoint_pool = re.search(r"/serviceNamespaces/([^/]+)/endpointPools/([^/]+)", path, re.IGNORECASE).groups()
 
                     self.send_json_response({
                         "serviceNamespace": service_namespace,

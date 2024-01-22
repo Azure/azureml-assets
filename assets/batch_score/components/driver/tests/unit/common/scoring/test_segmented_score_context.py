@@ -23,7 +23,6 @@ def test_has_more(
         mock__score_once,
         stop_reason,
         total_generated):
-    """Test has more success case."""
     max_segment_size = 2
     max_tokens = 100
     request = ScoringRequest(f'{{"prompt": "Generate something.", "max_tokens": {max_tokens}}}')
@@ -47,7 +46,6 @@ def test_has_more_no_max_tokens(
         mock_get_logger,
         mock__score_once,
         stop_reason):
-    """Test has more no max tokens case."""
     max_segment_size = 2
     request = ScoringRequest('{"prompt": "Generate something."}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
@@ -64,7 +62,6 @@ def test_has_more_no_max_tokens(
 
 def test_has_more_no_segmented_results(
         mock_get_logger):
-    """Test has more no segmented results case."""
     max_segment_size = 2
     request = ScoringRequest('{"prompt": "Generate something."}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
@@ -77,7 +74,6 @@ def test_has_more_supports_segmentation_false(
         mock_get_logger,
         mock__score_once,
         max_tokens):
-    """Test has more segmentation case."""
     max_segment_size = 2
     request = ScoringRequest(f'{{"prompt": "Generate something.", "max_tokens": {max_tokens}}}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
@@ -91,7 +87,6 @@ def test_has_more_supports_segmentation_false(
 def test_has_more_when_predicted_text_is_empty(
         mock_get_logger,
         mock__score_once):
-    """Test has more empty predicted text case."""
     max_segment_size = 2
     request = ScoringRequest('{"prompt": "Generate something.", "max_tokens": 3}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
@@ -109,7 +104,6 @@ async def test_score_next(
         mock_get_logger,
         mock__score_once,
         mock_get_quota_scope):
-    """Test score next."""
     response_body = {"id": "123",
                      "object": "text_completion",
                      "created": 456,
@@ -129,8 +123,10 @@ async def test_score_next(
     scoring_result.response_body = response_body
     scoring_result.request_obj = request_obj
 
+    assert segmented_context.processed_segments_count == 0
     result1 = await segmented_context.score_next_once(make_scoring_client(), None)
-
+    
+    assert segmented_context.processed_segments_count == 1
     assert len(segmented_context._SegmentedScoreContext__segmented_results) == 1
     assert result1 == segmented_context._SegmentedScoreContext__segmented_results[0]
     assert result1.response_body == response_body
@@ -142,6 +138,7 @@ async def test_score_next(
 
     result2 = await segmented_context.score_next_once(make_scoring_client(), None)
 
+    assert segmented_context.processed_segments_count == 2
     assert len(segmented_context._SegmentedScoreContext__segmented_results) == 2
     assert result2 == segmented_context._SegmentedScoreContext__segmented_results[1]
     assert segmented_context._SegmentedScoreContext__next_scoring_request is None
@@ -150,7 +147,6 @@ async def test_score_next(
 def test_build_scoring_result_one_segment(
         mock_get_logger,
         mock__score_once):
-    """Test build scoring result one segment."""
     max_segment_size = 2
     request_obj = {"prompt": "Generate something."}
     request = ScoringRequest(json.dumps(request_obj))
@@ -168,7 +164,6 @@ def test_build_scoring_result_one_segment(
 def test_build_scoring_result(
         mock_get_logger,
         mock__score_once):
-    """Test build scoring result."""
     max_segment_size = 2
     request_obj = {"prompt": "Generate something."}
     request = ScoringRequest(json.dumps(request_obj))
@@ -180,11 +175,11 @@ def test_build_scoring_result(
                      "usage": {"prompt_tokens": 2, "completion_tokens": 4, "total_tokens": 6}}
 
     response_body2 = {"id": "123",
-                      "object": "text_completion",
-                      "created": 456,
-                      "model": "dv3",
-                      "choices": [{"text": "One day", "index": 0, "logprobs": None, "finish_reason": "stop"}],
-                      "usage": {"prompt_tokens": 5, "completion_tokens": 15, "total_tokens": 20}}
+                     "object": "text_completion",
+                     "created": 456,
+                     "model": "dv3",
+                     "choices": [{"text": "One day", "index": 0, "logprobs": None, "finish_reason": "stop"}],
+                     "usage": {"prompt_tokens": 5, "completion_tokens": 15, "total_tokens": 20}}
 
     segmented_context = SegmentedScoreContext(request, max_segment_size)
 
