@@ -32,8 +32,9 @@ def make_scoring_result():
             response_headers=response_headers,
             num_retries=num_retries,
             omit=omit)
-    
+
     return make
+
 
 def get_test_request_obj():
     return {

@@ -7,7 +7,9 @@ from src.batch_score.common.telemetry.events.event_utils import setup_context_va
 from src.batch_score.common.telemetry.events.batch_score_event import BatchScoreEvent
 from src.batch_score.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
 from src.batch_score.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
-from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import BatchScoreMinibatchCompletedEvent
+from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import (
+    BatchScoreMinibatchCompletedEvent
+)
 from src.batch_score.common.telemetry.events.batch_score_minibatch_started_event import BatchScoreMinibatchStartedEvent
 
 from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
@@ -27,6 +29,7 @@ TEST_ENDPOINT_TYPE = EndpointType.AOAI
 TEST_EVENT_TIME = datetime(2024, 1, 1, 8, 30, 0, 123456, tzinfo=timezone.utc)
 TEST_EXECUTION_MODE = 'aml_pipeline'
 
+
 @pytest.fixture
 def mock_run_context(monkeypatch):
     class MockWorkspace():
@@ -41,11 +44,11 @@ def mock_run_context(monkeypatch):
         def __init__(self, workspace, id):
             self.workspace = workspace
             self.id = id
-    
+
     class MockRun():
         def __init__(self, id):
             self.id = id
-        
+
     class MockRunContext():
         def __init__(self, experiment, run_id, parent_run_id):
             self.experiment = experiment
@@ -65,11 +68,13 @@ def mock_run_context(monkeypatch):
 
     monkeypatch.setattr("azureml.core.Run.get_context", get_mock_run_context)
 
+
 @pytest.fixture
 def make_batch_score_init_completed_event(mock_run_context, make_configuration, make_metadata):
     setup_context_vars(make_configuration, make_metadata)
 
-    return update_common_fields(BatchScoreInitCompletedEvent(init_duration_ms = 5))
+    return update_common_fields(BatchScoreInitCompletedEvent(init_duration_ms=5))
+
 
 @pytest.fixture
 def make_batch_score_init_started_event(mock_run_context, make_configuration, make_metadata):
@@ -77,19 +82,20 @@ def make_batch_score_init_started_event(mock_run_context, make_configuration, ma
 
     return update_common_fields(BatchScoreInitStartedEvent())
 
+
 @pytest.fixture
 def make_batch_score_minibatch_completed_event(mock_run_context, make_configuration, make_metadata):
     configuration: Configuration = make_configuration
     setup_context_vars(configuration, make_metadata)
 
     event = BatchScoreMinibatchCompletedEvent(
-        minibatch_id = '2',
-        scoring_url = configuration.scoring_url,
-        batch_pool = 'test_pool',
-        quota_audience = 'test_audience',
+        minibatch_id='2',
+        scoring_url=configuration.scoring_url,
+        batch_pool='test_pool',
+        quota_audience='test_audience',
 
-        total_prompt_tokens = 50,
-        total_completion_tokens = 1000,
+        total_prompt_tokens=50,
+        total_completion_tokens=1000,
 
         input_row_count=10,
         output_row_count=8,
@@ -117,19 +123,21 @@ def make_batch_score_minibatch_completed_event(mock_run_context, make_configurat
 
     return update_common_fields(event)
 
+
 @pytest.fixture
 def make_batch_score_minibatch_started_event(mock_run_context, make_configuration, make_metadata):
     configuration: Configuration = make_configuration
     setup_context_vars(configuration, make_metadata)
 
     event = BatchScoreMinibatchStartedEvent(
-        minibatch_id = '2',
-        scoring_url = configuration.scoring_url,
-        batch_pool = 'test_pool',
-        quota_audience = 'test_audience',
-        input_row_count = 10)
+        minibatch_id='2',
+        scoring_url=configuration.scoring_url,
+        batch_pool='test_pool',
+        quota_audience='test_audience',
+        input_row_count=10)
 
     return update_common_fields(event)
+
 
 def assert_run_context_fields(event: BatchScoreEvent):
     assert event.experiment_id == TEST_EXPERIMENT_ID
@@ -141,6 +149,7 @@ def assert_run_context_fields(event: BatchScoreEvent):
     assert event.workspace_location == TEST_REGION
     assert event.workspace_name == TEST_WORKSPACE_NAME
 
+
 def assert_common_fields(event: BatchScoreEvent):
     assert event.api_type == TEST_API_TYPE
     assert event.authentication_type == TEST_AUTHENTICATION_TYPE
@@ -149,6 +158,7 @@ def assert_common_fields(event: BatchScoreEvent):
     assert event.endpoint_type == TEST_ENDPOINT_TYPE
     assert event.event_time == TEST_EVENT_TIME
     assert event.execution_mode == TEST_EXECUTION_MODE
+
 
 def update_common_fields(event: BatchScoreEvent):
     event.event_time = TEST_EVENT_TIME

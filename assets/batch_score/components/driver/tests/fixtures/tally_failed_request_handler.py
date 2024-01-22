@@ -12,5 +12,5 @@ def make_tally_failed_request_handler():
             enabled=enabled,
             tally_exclusions=tally_exclusions
         )
-    
+
     return make
