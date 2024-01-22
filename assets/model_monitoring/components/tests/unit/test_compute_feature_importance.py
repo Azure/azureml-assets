@@ -6,13 +6,19 @@
 from feature_importance_metrics.compute_feature_importance import (
     determine_task_type,
     get_train_test_data,
-    check_df_has_target_column_with_error
-)
+    check_df_has_target_column_with_error,
+    compute_feature_importance,
+    CONTINUOUS_ERR)
 from feature_importance_metrics.feature_importance_utilities import mark_categorical_column
 from feature_importance_metrics.compute_feature_attribution_drift import (
     drop_metadata_columns, calculate_attribution_drift)
 import pytest
 import pandas as pd
+from shared_utilities import constants
+from shared_utilities.momo_exceptions import InvalidInputError
+
+
+CLASSIFICATION = constants.CLASSIFICATION
 
 
 @pytest.fixture
@@ -26,10 +32,14 @@ def get_fraud_data():
         "ACCOUNTID": ["A1176337474875483", "A1343835256155075",
                       "A1343835256155076", "A1706480214256418"],
         "TRANSACTIONAMOUNT": [146161.99, 57487.200000000004,  227728.76, 59340.0],
-        "TIMESTAMP": ["2023-01-30T16:25:17.000Z",
-                      "2023-01-30T16:58:44.000Z",
-                      "2023-01-30T22:46:37.000Z",
-                      "2023-01-30T22:46:37.000Z"],
+        "TIMESTAMPSTR": ["2023-01-30T16:25:17.000Z",
+                         "2023-01-30T16:58:44.000Z",
+                         "2023-01-30T22:46:37.000Z",
+                         "2023-01-30T22:46:37.000Z"],
+        "TIMESTAMP": [pd.Timestamp('2023-12-04T17:59:32'),
+                      pd.Timestamp('2023-12-04T17:59:32'),
+                      pd.Timestamp('2023-12-04T17:59:32'),
+                      pd.Timestamp('2023-12-04T17:59:32')],
         "TRANSACTIONAMOUNTUSD": [169547.9084, 57487.200000000004, 266442.6492, 67647.6],
         "ISPROXYIP": [False, True, False, False],
         "DIGITALITEMCOUNT": [15, 15, 15, 15],
@@ -68,16 +78,17 @@ class TestComputeFeatureImportanceMetrics:
 
     def test_mark_categorical_column(self, get_fraud_data):
         """Test deteremine task type for classification scenario."""
-        categorical_features_lgbm = ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP", "ISPROXYIP"]
+        categorical_features_lgbm = ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMPSTR", "TIMESTAMP", "ISPROXYIP"]
         numerical_features = ["TRANSACTIONAMOUNT", "TRANSACTIONAMOUNTUSD", "DIGITALITEMCOUNT"]
         target_column = "IS_FRAUD"
 
         mark_categorical_column(get_fraud_data, target_column, categorical_features_lgbm, numerical_features)
-
+        # timestamp/date should be mark as int
+        assert get_fraud_data.dtypes['TIMESTAMP'] == "int64"
         # categorical columns should mark as category
+        assert get_fraud_data.dtypes['TIMESTAMPSTR'] == "category"
         assert get_fraud_data.dtypes['TRANSACTIONID'] == "category"
         assert get_fraud_data.dtypes['ACCOUNTID'] == "category"
-        assert get_fraud_data.dtypes['TIMESTAMP'] == "category"
         assert get_fraud_data.dtypes['ISPROXYIP'] == "category"
         # non-categorical columns should not mark as category
         assert get_fraud_data.dtypes['TRANSACTIONAMOUNT'] == "float64"
@@ -173,3 +184,18 @@ class TestComputeFeatureImportanceMetrics:
     def test_check_df_has_target_column_with_error_successful(self, get_fraud_data):
         """Test that has target column present in the reference data."""
         check_df_has_target_column_with_error(get_fraud_data, "IS_FRAUD")
+
+    def test_raise_user_error_invalid_task(self, get_fraud_data):
+        """Test classification task with continuous numeric label."""
+        categorical_features_lgbm = ["TRANSACTIONID", "ACCOUNTID",
+                                     "TIMESTAMPSTR", "TIMESTAMP",
+                                     "ISPROXYIP"]
+        get_fraud_data_copy = get_fraud_data.copy()
+        get_fraud_data_copy["IS_FRAUD_LIKELIHOOD"] = [
+            0.12, 0.23, 0.331, 0.125
+        ]
+        del get_fraud_data_copy["IS_FRAUD"]
+        with pytest.raises(InvalidInputError, match=CONTINUOUS_ERR):
+            compute_feature_importance(CLASSIFICATION, "IS_FRAUD_LIKELIHOOD",
+                                       get_fraud_data_copy,
+                                       categorical_features_lgbm)

@@ -6,11 +6,11 @@ Our model hasn't been fine-tuned through reinforcement learning from human feedb
 
 ### Intended Uses
 
-Phi-2 is intended for research purposes only. Given the nature of the training data, the phi-2 model is best suited for prompts using the QA format, the chat format, and the code format
+Given the nature of the training data, the phi-2 model is best suited for prompts using the QA format, the chat format, and the code format.
 
 **Out of scope**
-* The phi-2 model is intended for research purposes. The model-generated text/code should be treated as a starting point rather than a definitive solution for potential use cases. Users should be cautious when employing these models in their applications.
-* Direct adoption for production tasks is out of the scope of this research project.  As a result, the phi-2 model has not been tested to ensure that it performs adequately for any production-level application. Please refer to the limitation sections of this document for more details.
+* The phi-2 model is intended for QA, chat, and code purposes.. The model-generated text/code should be treated as a starting point rather than a definitive solution for potential use cases. Users should be cautious when employing these models in their applications.
+* Direct adoption for production tasks without evaluation is out of scope of this project. As a result, the phi-2 model has not been tested to ensure that it performs adequately for any production-level application. Please refer to the limitation sections of this document for more details.
 
 ### Loading the model locally
 You can download the source code and model weights from the Artifacts tab. Please refer to the **data/load_model.ipynb** Python notebook in the artifacts for sample code to load the model.
@@ -27,7 +27,7 @@ You can download the source code and model weights from the Artifacts tab. Pleas
 
 * Potential Societal Biases: phi-2 is not entirely free from societal biases despite efforts in assuring trainig data safety. There's a possibility it may generate content that mirrors these societal biases, particularly if prompted or instructed to do so. We urge users to be aware of this and to exercise caution and critical thinking when interpreting model outputs.
 
-* Toxicity: Despite being trained with carefully selected data, the model can still produce harmful content if explicitly prompted or instructed to do so. We chose to release the model for research purposes only -- We hope to help the open-source community develop the most effective ways to reduce the toxicity of a model directly after pretraining.
+* Toxicity: Despite being trained with carefully selected data, the model can still produce harmful content if explicitly prompted or instructed to do so. We chose to release the model to help the open-source community develop the most effective ways to reduce the toxicity of a model directly after pretraining.
 
 * Verbosity: Phi-2 being a base model often produces irrelevant or extra text and responses following its first answer to user prompts within a single turn. This is due to its training dataset being primarily textbooks, which results in textbook-like responses.
 
@@ -50,7 +50,7 @@ You can download the source code and model weights from the Artifacts tab. Pleas
 
 **License:**
 
-The model is licensed under the <a href="https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx" target="_blank">microsoft-research-license</a>.
+The model is licensed under the MIT license.
 
 **Trademarks** This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
 

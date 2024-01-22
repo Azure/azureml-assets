@@ -43,11 +43,11 @@ tags:
       Standard_ND40rs_v2,
       Standard_ND96asr_v4,
     ]  
-  license: other
+  license: mit
   model_specific_defaults:
     apply_deepspeed: 'true'
     apply_lora: 'false'
     apply_ort: 'false'
     precision: 16
   task: text-generation
-version: 6
+version: 7

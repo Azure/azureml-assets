@@ -3,6 +3,18 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.33 (2023-01-222)
+### 🐛 Bugs Fixed
+- [#2161](https://github.com/Azure/azureml-assets/pull/2161) Fix credential not found issue for asset validation 
+
+## 1.16.32 (2023-01-19)
+### 🐛 Bugs Fixed
+- [#2155](https://github.com/Azure/azureml-assets/pull/2155) Fix no-op model metadata update
+
+## 1.16.31 (2023-01-19)
+### 🚀 New Features
+- [#2078](https://github.com/Azure/azureml-assets/pull/2078) Model spec minimum SKU validation
+
 ## 1.16.30 (2024-01-18)
 ### 🚀 New Features
 - [#2141](https://github.com/Azure/azureml-assets/pull/2141) Support archiving models
