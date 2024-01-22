@@ -11,7 +11,6 @@ from pyspark.sql.types import (
     StringType,
     FloatType
 )
-from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities.df_utils import get_numerical_and_categorical_cols
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable, init_spark
 from shared_utilities.momo_exceptions import InvalidInputError
