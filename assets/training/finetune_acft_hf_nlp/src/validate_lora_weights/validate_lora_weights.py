@@ -21,7 +21,7 @@ import os
 COMPONENT_NAME = "ACFT-Validate_lora_weights"
 
 logger = get_logger_app(
-    "azureml.acft.contrib.hf.scripts.components.scripts.validate_lora_weights.validate_lora_weights"
+    "azureml.acft.contrib.hf.scripts.src.validate_lora_weights.validate_lora_weights"
 )
 
 GENERATION_CONFIG = {
