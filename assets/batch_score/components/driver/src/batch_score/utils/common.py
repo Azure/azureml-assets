@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import collections.abc
 import json
 from argparse import ArgumentParser
