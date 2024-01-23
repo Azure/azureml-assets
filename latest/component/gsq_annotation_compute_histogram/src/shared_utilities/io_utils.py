@@ -35,7 +35,7 @@ def init_spark():
 
 
 def _get_input_not_found_category(error: Exception):
-    if isinstance(error, IndexError) or ("Partition 0 is out of bounds." in error.args[0]):
+    if isinstance(error, IndexError) or (error.args and "Partition 0 is out of bounds." in error.args[0]):
         return InputNotFoundCategory.NO_INPUT_IN_WINDOW
     elif "The requested stream was not found" in error.args[0]:
         return InputNotFoundCategory.ROOT_FOLDER_NOT_FOUND
