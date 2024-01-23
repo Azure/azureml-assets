@@ -44,7 +44,7 @@ def convert_result_list(results: "list[ScoringResult]", batch_size_per_request: 
         output["request"] = scoringResult.request_obj
         output["response"] = scoringResult.response_body
 
-        if scoringResult.segmented_response_bodies != None and len(scoringResult.segmented_response_bodies) > 0:
+        if scoringResult.segmented_response_bodies is not None and len(scoringResult.segmented_response_bodies) > 0:
             output["segmented_responses"] = scoringResult.segmented_response_bodies
 
         if scoringResult.request_metadata is not None:

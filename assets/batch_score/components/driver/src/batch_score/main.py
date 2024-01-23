@@ -85,7 +85,7 @@ def init():
 
     # Emit init started event
     init_started_event = BatchScoreInitStartedEvent()
-    event_utils.emit_event(batch_score_event=init_started_event)    
+    event_utils.emit_event(batch_score_event=init_started_event)
 
     configuration.log()
 
@@ -364,7 +364,7 @@ def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
 def _should_emit_prompts_to_job_log() -> bool:
     emit_prompts_to_job_log_env_var = os.environ.get(constants.BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG)
     if emit_prompts_to_job_log_env_var is None:
-        # Disable emitting prompts to job log by default for LLM component, 
+        # Disable emitting prompts to job log by default for LLM component,
         # keep it enabled by default for all other components.
         if configuration.scoring_url is not None:
             emit_prompts_to_job_log_env_var = "False"
