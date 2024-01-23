@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/cognitivecomputations-WizardLM-13B-V1-0-Uncensored/1704991863/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
