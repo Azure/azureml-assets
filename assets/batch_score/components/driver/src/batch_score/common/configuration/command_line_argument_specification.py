@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Command line argument specification."""
+
 from ...batch_pool.quota.quota_client import QuotaClient
 from ...utils.common import str2bool
 from ..common_enums import ApiType
-
 
 # TODO: Name this ARGUMENT_SPECIFICATION
 COMMAND_LINE_ARGUMENT_SPECIFICATION = {

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Component metadata."""
+
 from argparse import Namespace
 import json
 import os
@@ -12,11 +14,14 @@ from .. import constants
 
 @dataclass()
 class Metadata(Namespace):
+    """Component metadata."""
+
     component_name: str = field(init=True, default=None)
     component_version: str = field(init=True, default=None)
 
     @staticmethod
     def extract_component_name_and_version():
+        """Extract component name and version from metadata.json file."""
         try:
             _current_file_path = Path(os.path.abspath(__file__))
             metadata_file_path = _current_file_path.parents[2] / constants.METADATA_JSON_FILENAME
@@ -34,6 +39,7 @@ class Metadata(Namespace):
 
     @staticmethod
     def get_metadata(metadata_payload: dict):
+        """Get metadata object."""
         component_name: str = metadata_payload.get(constants.COMPONENT_NAME_KEY, None)
         component_version: str = metadata_payload.get(constants.COMPONENT_VERSION_KEY, None)
 

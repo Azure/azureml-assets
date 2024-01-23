@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""File configuration parser."""
+
 import json
 from argparse import ArgumentParser
 
@@ -12,10 +14,14 @@ from .file_configuration_validator import FileConfigurationValidator
 
 
 class FileConfigurationParser:
+    """Parser for file-base configuration."""
+
     def __init__(self, validator: FileConfigurationValidator) -> None:
+        """Initialize FileConfigurationParser."""
         self._validator = validator
 
     def parse_configuration(self, args: "list[str]" = None) -> Configuration:
+        """Parse configuration."""
         parsed_args, _ = self._setup_parser().parse_known_args(args=args)
         config = self._validator.validate(parsed_args.configuration_file)
 
