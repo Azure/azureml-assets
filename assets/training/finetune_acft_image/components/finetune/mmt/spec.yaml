@@ -175,7 +175,7 @@ inputs:
     type: number
     optional: true
     description: IOU threshold used during inference in non-maximum suppression post processing.
-
+  
   box_score_threshold:
     type: number
     optional: true

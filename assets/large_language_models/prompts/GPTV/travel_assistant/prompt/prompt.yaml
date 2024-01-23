@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
 
 _type: chat
-
+ 
 messages: 
 - role: system
   content: You are an AI assistant that helps people find information.
@@ -17,5 +17,5 @@ starter_messages:
 execution_settings:
   gptv:
     enhance: true
-
+    
 template_format: handlebars

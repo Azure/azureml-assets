@@ -66,7 +66,7 @@ inputs:
     optional: true
     default: default
     description: Name of the deployment
-
+  
   instance_type:
     type: string
     optional: true
@@ -134,7 +134,7 @@ inputs:
     default: 60000
     optional: true
     description: Maximum queue wait time of a request in ms
-
+  
   failure_threshold_readiness_probe:
     type: integer
     default: 10
@@ -146,7 +146,7 @@ inputs:
     default: 1
     optional: true 
     description: The minimum consecutive successes for the readiness probe to be considered successful after having failed
-
+  
   timeout_readiness_probe:
     type: integer
     default: 10
@@ -170,7 +170,7 @@ inputs:
     default: 30
     optional: true 
     description: The number of times system will try after failing the liveness probe
-
+  
   timeout_liveness_probe:
     type: integer
     default: 10
@@ -188,7 +188,7 @@ inputs:
     default: 10
     optional: true
     description: The number of seconds after the container has started before the liveness probe is initiated
-
+  
   egress_public_network_access:
     type: string
     default: enabled

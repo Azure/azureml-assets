@@ -83,7 +83,7 @@ outputs:
   evaluation_result:
     type: uri_folder
     description: Output dir to save the evaluation result
-
+  
 jobs:
   validation_trigger_model_evaluation:
     type: command
@@ -125,7 +125,7 @@ jobs:
       batch_size: '${{parent.inputs.batch_size}}'
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-
+  
   compute_metrics:
     type: command
     component: azureml:compute_metrics:0.0.21

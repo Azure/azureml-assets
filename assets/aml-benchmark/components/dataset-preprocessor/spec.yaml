@@ -41,7 +41,7 @@ inputs:
       Example format:
       {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}
     optional: True
-
+  
 outputs:
   output_dataset:
     type: uri_file

@@ -7,11 +7,11 @@
         "hysteresis": 2,
         "min_loss_scale": 1
     },
-
+  
     "bf16": {
         "enabled": "auto"
     },
-
+  
     "optimizer": {
         "type": "AdamW",
         "params": {
@@ -21,7 +21,7 @@
             "weight_decay": "auto"
         }
     },
-
+  
     "scheduler": {
         "type": "WarmupLR",
         "params": {
@@ -30,7 +30,7 @@
             "warmup_num_steps": "auto"
         }
     },
-
+  
     "zero_optimization": {
         "stage": 3,
         "offload_optimizer": {
@@ -52,7 +52,7 @@
         "stage3_gather_16bit_weights_on_model_save": true,
         "memory_efficient_linear": false
     },
-
+  
     "gradient_accumulation_steps": "auto",
     "gradient_clipping": "auto",
     "steps_per_print": 2000,

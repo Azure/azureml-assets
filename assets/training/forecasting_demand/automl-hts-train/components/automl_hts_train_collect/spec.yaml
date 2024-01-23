@@ -31,3 +31,4 @@ command: >-
   --setup-metadata ${{inputs.setup_metadata}}
   --output-metadata ${{outputs.metadata}}
   $[[--enable-event-logger ${{inputs.enable_event_logger}}]]
+  

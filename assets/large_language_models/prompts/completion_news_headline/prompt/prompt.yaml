@@ -17,5 +17,5 @@ execution_settings:
     model_id: gpt-4
     temperature: 0
     evaluation: xxx (for future use to add evaluation results)
-
+    
 template_format: handlebars

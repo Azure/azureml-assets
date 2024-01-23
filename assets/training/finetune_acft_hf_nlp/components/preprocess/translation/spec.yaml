@@ -51,7 +51,7 @@ inputs:
     default: "false"
     optional: true
     description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
-
+  
   max_seq_length:
     type: integer
     optional: true

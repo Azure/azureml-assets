@@ -53,3 +53,4 @@ dependencies:
   - PyJWT<3.0.0
   - pytz
   - cryptography>=41.0.4
+  

@@ -11,13 +11,13 @@ description: |
 
   LLM models have token limits for the prompts passed to them, this is a limiting factor at embedding time and even more limiting at prompt completion time as only so much context can be passed along with instructions to the LLM and user queries.\n
   Chunking allows splitting source data of various formats into small but coherent snippets of information which can be 'packed' into LLM prompts when asking for answers to user querys related to the sorce documents.\n\n
-
+  
   Supported formats: md, txt, html/htm, pdf, ppt(x), doc(x), xls(x), py\n\n
-
+  
   Also generates embeddings vectors for data chunks if configured.\n\n
-
+  
   If `embeddings_container` is supplied, input chunks are compared to existing chunks in the Embeddings Container and only changed/new chunks are embedded, existing chunks being reused.\n\n
-
+  
   After indexing completes, a MLIndex yaml and supporting files are registered as an AzureML data asset.\n\n"
 
 inputs:

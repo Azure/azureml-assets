@@ -254,7 +254,7 @@ class VLLMEngine(BaseEngine):
             res = InferenceResult(None, None, None, None, None, error=response.content)
 
         return res
-
+    
     async def shutdown_async(self):
         """Terminate DS-MII Server."""
         # empty function as we do not need to terminate the ds-mii server when the vllm engine is used

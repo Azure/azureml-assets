@@ -100,3 +100,4 @@ command: >-
   $[[--config-file-name '${{inputs.evaluation_config}}']]
   $[[--batch-size '${{inputs.batch_size}}']]
   $[[--config_str '${{inputs.evaluation_config_params}}']]
+  

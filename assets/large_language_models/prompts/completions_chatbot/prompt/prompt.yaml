@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
 
 template: | 
   The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly. 
-
+  
   Human: Hello, who are you? 
   AI: Hello, I am an AI assistant. I am here to help you with anything you need.
   Human: I'd like to cancel my subscription. 
@@ -25,5 +25,5 @@ execution_settings:
     presencePenalty: 0,
     temperature: 0,
     topP: 1  
-
+    
 template_format: handlebars
