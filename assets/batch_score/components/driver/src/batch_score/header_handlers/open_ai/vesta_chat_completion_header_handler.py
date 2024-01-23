@@ -1,11 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Vesta chat completion header handler."""
+
 from ...common.auth.token_provider import TokenProvider
 from .open_ai_header_handler import OpenAIHeaderHandler
 
 
 class VestaChatCompletionHeaderHandler(OpenAIHeaderHandler):
+    """Vesta chat completion header handler."""
+
     def __init__(
             self,
             token_provider: TokenProvider,
@@ -14,6 +18,7 @@ class VestaChatCompletionHeaderHandler(OpenAIHeaderHandler):
             batch_pool: str = None,
             quota_audience: str = None,
             additional_headers: str = None) -> None:
+        """Initialize VestaChatCompletionHeaderHandler."""
         super().__init__(
             token_provider,
             component_version,
