@@ -82,7 +82,7 @@ jobs:
       type: aml_token
   feature_selection:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.3
+    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.4
     inputs:
       input_data_1:
         type: mltable
