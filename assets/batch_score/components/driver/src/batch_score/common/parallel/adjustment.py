@@ -80,10 +80,12 @@ class AIMD(ConcurrencyAdjustmentStrategy):
         else:
             self.__confidence = 0  # Reset confidence
 
-        lu.get_logger().info("AIMD: current_concurrency: {} -- new_concurrency: {} -- __confidence: {}".format(
-            current_concurrency,
-            new_concurrency,
-            self.__confidence))
+        lu.get_logger().info(
+            "AIMD: current_concurrency: {} -- new_concurrency: {} -- __confidence: {}"
+            .format(
+                current_concurrency,
+                new_concurrency,
+                self.__confidence))
 
         self._last_adjustment_time = now
 
@@ -108,9 +110,10 @@ class AIMD(ConcurrencyAdjustmentStrategy):
             or self._get_client_setting(ClientSettingsKey.CONCURRENCY_MULTIPLICATIVE_DECREASE)
             or self.DEFAULT_MULTIPLICATIVE_DECREASE)
 
-        lu.get_logger().info("AIMD: using configurations CongestionDetector: WaitTimeCongestionDetector,"
-                             " adjustment_interval: {}, additive_increase: {}, multiplicative_decrease: {}"
-                             .format(
-                                 self.__adjustment_interval,
-                                 self.__additive_increase,
-                                 self.__multiplicative_decrease))
+        lu.get_logger().info(
+            "AIMD: using configurations CongestionDetector: WaitTimeCongestionDetector,"
+            " adjustment_interval: {}, additive_increase: {}, multiplicative_decrease: {}"
+            .format(
+                self.__adjustment_interval,
+                self.__additive_increase,
+                self.__multiplicative_decrease))

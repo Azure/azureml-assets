@@ -80,11 +80,12 @@ class Conductor:
         """Run function."""
         self.__add_requests(requests)
 
-        lu.get_logger().info("Conductor: Starting with {} running workers and {} target worker count."
-                             " There are {} workers in the worker pool."
-                             .format(
-                                 len(list(filter(lambda worker: worker.is_running, self.__workers))),
-                                 self.__target_worker_count, len(self.__workers)))
+        lu.get_logger().info(
+            "Conductor: Starting with {} running workers and {} target worker count."
+            " There are {} workers in the worker pool."
+            .format(
+                len(list(filter(lambda worker: worker.is_running, self.__workers))),
+                self.__target_worker_count, len(self.__workers)))
 
         target_result_len = len(self.__scoring_request_queue)
 
@@ -112,9 +113,9 @@ class Conductor:
         """Enqueue function."""
         self.__minibatch_index_set.add(mini_batch_context.mini_batch_id)
         if len(requests) == 0:
-            lu.get_logger().info("Conductor: Encountered empty requests in minibatch id {}, adding empty results."
-                                 .format(
-                                     mini_batch_context.mini_batch_id))
+            lu.get_logger().info(
+                "Conductor: Encountered empty requests in minibatch id {}, adding empty results."
+                .format(mini_batch_context.mini_batch_id))
 
             self.__gatherer.add_empty_result(mini_batch_context)
             lu.get_events_client().emit_mini_batch_completed(
@@ -134,10 +135,11 @@ class Conductor:
     def check_all_tasks_processed(self):
         """Check all tasks processed function."""
         lu.get_logger().info("Conductor: Checking if all tasks are processed, ")
-        lu.get_logger().info("Conductor: len minibatch_index_set: {}, __gatherer.get_returned_minibatch_count(): {}"
-                             .format(
-                                 len(self.__minibatch_index_set),
-                                 self.__gatherer.get_returned_minibatch_count()))
+        lu.get_logger().info(
+            "Conductor: len minibatch_index_set: {}, __gatherer.get_returned_minibatch_count(): {}"
+            .format(
+                len(self.__minibatch_index_set),
+                self.__gatherer.get_returned_minibatch_count()))
 
         # no input items, no output items, and minibatch set count is equal to minibatch return count
         return len(self.__scoring_request_queue) == 0 and \
@@ -151,10 +153,12 @@ class Conductor:
     def get_processing_batch_number(self):
         """Get processing batch number function."""
         lu.get_logger().info("Conductor: Getting number of processing mini batches.")
-        lu.get_logger().info("Conductor: len minibatch_index_set: {}, __gatherer.get_returned_minibatch_count(): {}"
-                             .format(
-                                 len(self.__minibatch_index_set),
-                                 self.__gatherer.get_returned_minibatch_count()))
+        lu.get_logger().info(
+            "Conductor: len minibatch_index_set: {}, __gatherer.get_returned_minibatch_count(): {}"
+            .format(
+                len(self.__minibatch_index_set),
+                self.__gatherer.get_returned_minibatch_count()))
+
         return len(self.__minibatch_index_set) - self.__gatherer.get_returned_minibatch_count()
 
     def shutdown(self):
@@ -254,15 +258,17 @@ class Conductor:
                 (adjustments.new_concurrency > self.__target_worker_count and
                  adjustments.new_concurrency < len(self.__scoring_request_queue)):
 
-            lu.get_logger().info("Conductor: Taking adjustment of target worker count {} to {}"
-                                 .format(self.__target_worker_count, adjustments.new_concurrency))
+            lu.get_logger().info(
+                "Conductor: Taking adjustment of target worker count {} to {}"
+                .format(self.__target_worker_count, adjustments.new_concurrency))
 
             self.__target_worker_count = adjustments.new_concurrency
 
             if self._configuration.max_worker_count is not None:
                 if self._configuration.max_worker_count < self.__target_worker_count:
-                    lu.get_logger().debug("Conductor: Overriding with self._configuration.max_worker_count value of {}"
-                                          .format(self._configuration.max_worker_count))
+                    lu.get_logger().debug(
+                        "Conductor: Overriding with self._configuration.max_worker_count value of {}"
+                        .format(self._configuration.max_worker_count))
                     # Upper bound is self._configuration.max_worker_count, if present
                 self.__target_worker_count = min(self.__target_worker_count, self._configuration.max_worker_count)
 
@@ -275,11 +281,12 @@ class Conductor:
 
         # Start regular workers
         self._adjust_worker_concurrency()
-        lu.get_logger().info("Conductor: Starting with {} running workers and {} target worker count. "
-                             "There are {} workers in the worker pool."
-                             .format(
-                                 len(list(filter(lambda worker: worker.is_running, self.__workers))),
-                                 self.__target_worker_count, len(self.__workers)))
+        lu.get_logger().info(
+            "Conductor: Starting with {} running workers and {} target worker count. "
+            "There are {} workers in the worker pool."
+            .format(
+                len(list(filter(lambda worker: worker.is_running, self.__workers))),
+                self.__target_worker_count, len(self.__workers)))
 
         # Start specialized workers
         self._init_gatherer()

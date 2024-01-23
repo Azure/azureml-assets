@@ -96,8 +96,9 @@ class WaitTimeCongestionDetector(CongestionDetector):
             else:
                 result = CongestionState.SATURATED
 
-        lu.get_logger().info(f"WaitTimeCongestionDetector response_count: {response_count}"
-                             f" request_count: {request_count}, p90_wait_time: {p90_wait_time} result: {result}")
+        lu.get_logger().info(
+            f"WaitTimeCongestionDetector response_count: {response_count}"
+            f" request_count: {request_count}, p90_wait_time: {p90_wait_time} result: {result}")
 
         return result
 
@@ -112,5 +113,6 @@ class WaitTimeCongestionDetector(CongestionDetector):
             or self.__client_settings_provider.get_client_setting(ClientSettingsKey.SATURATION_THRESHOLD_P90_WAIT_TIME)
             or self.DEFAULT_SATURATION_P90_THRESHOLD)
 
-        lu.get_logger().info(f"WaitTimeCongestionDetector using congestion threshold: {self.__congestion_threshold},"
-                             f" saturation threshold: {self.__saturation_threshold}")
+        lu.get_logger().info(
+            f"WaitTimeCongestionDetector using congestion threshold: {self.__congestion_threshold},"
+            f" saturation threshold: {self.__saturation_threshold}")
