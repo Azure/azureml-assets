@@ -27,6 +27,7 @@ class DataDriftSignal(Signal):
         metrics: List[Row],
         baseline_histogram: List[Row],
         target_histogram: List[Row],
+        feature_importance: List[Row]
     ):
         """Build DataDrift signal."""
         super().__init__(
@@ -34,7 +35,7 @@ class DataDriftSignal(Signal):
         )
         self.row_count_metrics = RowCountMetrics(metrics)
         self.feature_metrics: List[FeatureMetrics] = self._build_feature_metrics(
-            monitor_name, signal_name, metrics
+            monitor_name, signal_name, metrics, feature_importance
         )
         self.histogram_builder = HistogramBuilder(baseline_histogram, target_histogram)
 
@@ -82,13 +83,18 @@ class DataDriftSignal(Signal):
                 )
 
     def _build_feature_metrics(
-        self, monitor_name: str, signal_name: str, metrics: List[dict]
+        self, monitor_name: str, signal_name: str, metrics: List[dict], feature_importance: List[Row]
     ) -> List[FeatureMetrics]:
         """Build feature-level metrics.
 
         Returns:
         List[FeatureMetrics]: The feature-level metrics.
         """
+        featureimportance_dictionary = {}
+        if feature_importance is not None:
+            for row in feature_importance:
+                featureimportance_dictionary[row[0]] = row[1]
+
         if not metrics or len(metrics) == 0:
             return []
 
@@ -140,6 +146,14 @@ class DataDriftSignal(Signal):
                 metric, "threshold_value", feature_metric, "threshold"
             )
             output[feature_name].metrics.append(feature_metric)
+
+            # Add the feature importance metrics
+            if len(featureimportance_dictionary) != 0:
+                feature_importance_metric = {
+                    "metricName": "BaselineFeatureImportance",
+                    "metricValue": featureimportance_dictionary[feature_name],
+                }
+                output[feature_name].metrics.append(feature_importance_metric)
 
             output[
                 feature_name
