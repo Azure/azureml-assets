@@ -179,7 +179,7 @@ def test_invalid_segment_large_requests_with_unsupported_api(request_path):
                                                        'enabled'])
 
     # Assert
-    assert "The optional parameter 'segment_large_requests' is supported only with the Completion API." \
+    assert "The optional parameter 'segment_large_requests' is supported only with the Completion API. " \
            "Please set 'segment_large_requests' to 'disabled' or remove it from the configuration." \
            in str(excinfo.value)
 

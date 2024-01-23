@@ -70,21 +70,21 @@ class Configuration(Namespace):
                              " Valid range is 1-2000.")
 
         if self.batch_size_per_request > 1 and not self.is_embeddings():
-            raise ValueError("The optional parameter 'batch_size_per_request' is only allowed to be"
+            raise ValueError("The optional parameter 'batch_size_per_request' is only allowed to be "
                              "greater than 1 for the Embeddings API. Valid range is 1-2000.")
 
     def _validate_online_endpoint_url_and_request_path(self):
         if (self.online_endpoint_url
                 and self.request_path is not None
                 and self.request_path not in constants.DEFAULT_REQUEST_PATHS):
-            raise ValueError("The optional parameter 'online_endpoint_url' is not allowed in combination"
-                             " with 'request_path'. Please put the entire scoring url in the"
+            raise ValueError("The optional parameter 'online_endpoint_url' is not allowed in combination "
+                             "with 'request_path'. Please put the entire scoring url in the "
                              "`online_endpoint_url` parameter and remove 'request_path'.")
 
     def _validate_segment_large_requests(self):
         if self.segment_large_requests == 'enabled' and not self.is_completion():
-            raise ValueError("The optional parameter 'segment_large_requests' is supported only with"
-                             "the Completion API. Please set 'segment_large_requests' to 'disabled' or"
+            raise ValueError("The optional parameter 'segment_large_requests' is supported only with "
+                             "the Completion API. Please set 'segment_large_requests' to 'disabled' or "
                              "remove it from the configuration.")
 
     def log(self):

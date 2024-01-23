@@ -149,14 +149,14 @@ class Worker:
                 queue_item.scoring_request.retry_count += 1
                 wait_time = 0
 
-                # To activate this, set BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS to True.
-                # And to override the default back-off time, set BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF
+                # To activate this, set BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS_ENV_VAR to True.
+                # And to override the default back-off time, set BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF_ENV_VAR
                 # to a value in seconds.
                 if is_zero_traffic_group_error(e.status_code, e.response_payload):
-                    if str2bool(os.environ.get(constants.BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS, "False")):
+                    if str2bool(os.environ.get(constants.BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS_ENV_VAR, "False")):
                         back_off = int(
-                            os.environ.get(constants.BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF)
-                            or self.get_client_setting(ClientSettingsKey.NO_DEPLOYMENTS_BACK_OFF)
+                            os.environ.get(constants.BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF_ENV_VAR)
+                            or self.get_client_settings(ClientSettingsKey.NO_DEPLOYMENTS_BACK_OFF)
                             or self.NO_DEPLOYMENTS_BACK_OFF)
 
                         wait_time = back_off
@@ -170,7 +170,7 @@ class Worker:
 
                     is_quota_429 = isinstance(e, QuotaUnavailableException)
 
-                    value = self.get_client_setting(
+                    value = self.get_client_settings(
                         ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME) or "False"
 
                     count_only_quota_429s_toward_total_request_time: bool = (value.lower() == "true")
@@ -354,26 +354,26 @@ class Worker:
 
         self.__emit_input_row_completed_event(scoring_request, scoring_result, processed_segments_count)
 
-        @event_utils.catch_and_log_all_exceptions
-        def __emit_input_row_completed_event(
-                self,
-                scoring_request: ScoringRequest,
-                scoring_result: ScoringResult,
-                processed_segments_count: int = 0) -> None:
-            # Emit input row completed event
-            input_row_completed_event = BatchScoreInputRowCompletedEvent(
-                minibatch_id=self._get_minibatch_id(scoring_request),
-                input_row_id=scoring_request.internal_id,
-                worker_id=self.id,
-                scoring_url=scoring_request.scoring_url,
-                is_successful=scoring_result.status == ScoringResultStatus.SUCCESS,
-                response_code=-1 if not scoring_result.response_headers else scoring_result.response_headers.get(
-                    "ms-azureml-model-error-statuscode", -1),
-                prompt_tokens=scoring_result.prompt_tokens,
-                completion_tokens=scoring_result.completion_tokens,
-                retry_count=scoring_result.num_retries,
-                duration_ms=scoring_result.duration * 1000,
-                segment_count=processed_segments_count
-            )
+    @event_utils.catch_and_log_all_exceptions
+    def __emit_input_row_completed_event(
+            self,
+            scoring_request: ScoringRequest,
+            scoring_result: ScoringResult,
+            processed_segments_count: int = 0) -> None:
+        # Emit input row completed event
+        input_row_completed_event = BatchScoreInputRowCompletedEvent(
+            minibatch_id=self._get_minibatch_id(scoring_request),
+            input_row_id=scoring_request.internal_id,
+            worker_id=self.id,
+            scoring_url=scoring_request.scoring_url,
+            is_successful=scoring_result.status == ScoringResultStatus.SUCCESS,
+            response_code=-1 if not scoring_result.response_headers else scoring_result.response_headers.get(
+                "ms-azureml-model-error-statuscode", -1),
+            prompt_tokens=scoring_result.prompt_tokens,
+            completion_tokens=scoring_result.completion_tokens,
+            retry_count=scoring_result.num_retries,
+            duration_ms=scoring_result.duration * 1000,
+            segment_count=processed_segments_count
+        )
 
-            event_utils.emit_event(batch_score_event=input_row_completed_event)
+        event_utils.emit_event(batch_score_event=input_row_completed_event)
