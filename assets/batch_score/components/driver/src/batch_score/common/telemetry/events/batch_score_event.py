@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains the definition for Batch Score Event."""
+
 from abc import ABC
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -12,9 +14,11 @@ from ...common_enums import AuthenticationType, ApiType, EndpointType
 # TODO: Add comments to describe each field
 @dataclass
 class BatchScoreEvent(ABC):
+    """Defines the batch score event."""
 
     @property
     def name(self):
+        """Get the name of the event."""
         return "BatchScore"
 
     # Allow event time to be set via constructor. Helps with unit testing.
@@ -38,6 +42,7 @@ class BatchScoreEvent(ABC):
     async_mode: bool = field(init=False, default=None)
 
     def __post_init__(self) -> None:
+        """Definition of post init for batch score event."""
         run = Run.get_context()
         self.run_id = run._run_id
         self.parent_run_id = run.parent.id if hasattr(run, "parent") and hasattr(run.parent, "id") else None
@@ -61,9 +66,11 @@ class BatchScoreEvent(ABC):
         # TODO: How to get values for 'execution_mode', 'process_id' and 'node_id'?
 
     def __str__(self) -> str:
+        """Return the string representation of the batch score event."""
         return ', '.join(f'{key}: {str(value)}' for key, value in self.to_dictionary().items())
 
     def to_dictionary(self, include_empty_keys=True) -> dict:
+        """Return the dictionary representation of the batch score event."""
         if include_empty_keys:
             return asdict(self)
         return asdict(self, dict_factory=lambda x: {k: v for (k, v) in x if v is not None})

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains the definition for event utils."""
+
 import os
 import functools
 
@@ -24,30 +26,37 @@ _ctx_endpoint_type = ContextVar("Endpoint type", default=None)
 
 
 def get_api_type():
+    """Get the API type."""
     return _ctx_api_type.get()
 
 
 def get_async_mode():
+    """Get if async mode is enabled or not."""
     return _ctx_async_mode.get()
 
 
 def get_authentication_type():
+    """Get the authentication type."""
     return _ctx_authentication_type.get()
 
 
 def get_component_name():
+    """Get the component name."""
     return _ctx_component_name.get()
 
 
 def get_component_version():
+    """Get the component version."""
     return _ctx_component_version.get()
 
 
 def get_endpoint_type():
+    """Get the endpoint type."""
     return _ctx_endpoint_type.get()
 
 
 def setup_context_vars(configuration: Configuration, metadata: Metadata):
+    """Set up the context variables."""
     _ctx_api_type.set(configuration.get_api_type())
     _ctx_async_mode.set(configuration.async_mode)
     _ctx_authentication_type.set(configuration.get_authentication_type())
@@ -57,6 +66,7 @@ def setup_context_vars(configuration: Configuration, metadata: Metadata):
 
 
 def emit_event(batch_score_event):
+    """Emit the event using the dispatcher."""
     try:
         dispatcher.send(batch_score_event=batch_score_event)
     except Exception as e:
@@ -65,14 +75,17 @@ def emit_event(batch_score_event):
 
 
 def add_handler(handler, sender=dispatcher.Any, signal=dispatcher.Any):
+    """Add the handler to the dispatcher."""
     dispatcher.connect(handler, sender=sender, signal=signal)
 
 
 def remove_handler(handler, sender=dispatcher.Any, signal=dispatcher.Any):
+    """Remove the handler from the dispatcher."""
     dispatcher.disconnect(handler, sender=sender, signal=signal)
 
 
 def catch_and_log_all_exceptions(f):
+    """Catch and log exceptions."""
     @functools.wraps(f)
     def inner(*args, **kwargs):
         try:
@@ -87,6 +100,8 @@ def catch_and_log_all_exceptions(f):
 
 
 class Signal(StrEnum):
+    """Defines the signal."""
+
     GenerateMinibatchSummary = 'GenerateMinibatchSummary'
 
 
@@ -94,6 +109,7 @@ def generate_minibatch_summary(
         minibatch_id: str,
         timestamp: datetime = None,
         output_row_count: int = None):
+    """Generate the minibatch summary."""
     try:
         dispatcher.send(
             signal=Signal.GenerateMinibatchSummary,

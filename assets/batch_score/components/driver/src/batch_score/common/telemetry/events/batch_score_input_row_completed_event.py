@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains the definition for the batch score input row completed event."""
+
 from dataclasses import dataclass, field
 from .batch_score_event import BatchScoreEvent
 
@@ -8,9 +10,11 @@ from .batch_score_event import BatchScoreEvent
 # TODO: Add comments to describe each field
 @dataclass
 class BatchScoreInputRowCompletedEvent(BatchScoreEvent):
+    """Defines the batch score input row completed event."""
 
     @property
     def name(self):
+        """Get the name of the event."""
         return "BatchScore.InputRow.Completed"
 
     minibatch_id: str = field(init=True, default=None)
