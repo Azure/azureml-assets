@@ -337,7 +337,7 @@ class Worker:
         def __emit_input_row_completed_event(
                 self,
                 scoring_request: ScoringRequest,
-                scoring_result: ScoringResult, 
+                scoring_result: ScoringResult,
                 processed_segments_count: int = 0) -> None:
             # Emit input row completed event
             input_row_completed_event = BatchScoreInputRowCompletedEvent(
