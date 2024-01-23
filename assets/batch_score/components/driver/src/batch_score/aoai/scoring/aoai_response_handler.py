@@ -102,9 +102,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             scoring_request: ScoringRequest,
             start: float,
             end: float) -> ScoringResult:
-        """
-        Handle the exception by raising retriable exception or creating scoring result for non-retriable exception.
-        """
+        """Handle exception by raising retriable exception or creating scoring result for non-retriable exception."""
         try:
             raise http_response.exception
         except (

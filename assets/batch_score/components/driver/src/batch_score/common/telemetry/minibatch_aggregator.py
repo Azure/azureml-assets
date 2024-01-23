@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Minibatch aggregator."""
+
 import numpy as np
 
 from collections import defaultdict
@@ -14,12 +16,16 @@ from .events.batch_score_input_row_completed_event import BatchScoreInputRowComp
 
 
 class MinibatchAggregator:
+    """Minibatch aggregator."""
+
     def __init__(self):
+        """Initialize MinibatchAggregator."""
         self._http_request_completed_events_per_minibatch = defaultdict(list)
         self._rows_completed_events_per_minibatch = defaultdict(list)
         self._start_event_per_minibatch = defaultdict(BatchScoreMinibatchStartedEvent)
 
     def add(self, event: BatchScoreEvent = None, **kwargs) -> None:
+        """Add a batch score event to its minibatch."""
         if isinstance(event, BatchScoreRequestCompletedEvent):
             self._http_request_completed_events_per_minibatch[event.minibatch_id].append(event)
 
@@ -30,6 +36,7 @@ class MinibatchAggregator:
             self._start_event_per_minibatch[event.minibatch_id] = event
 
     def clear(self, minibatch_id: str) -> None:
+        """Clear the minibatch maps after the aggregation is done."""
         del self._http_request_completed_events_per_minibatch[minibatch_id]
         del self._rows_completed_events_per_minibatch[minibatch_id]
         del self._start_event_per_minibatch[minibatch_id]
@@ -39,6 +46,7 @@ class MinibatchAggregator:
             minibatch_id: str,
             end_time: datetime,
             output_row_count: int) -> BatchScoreMinibatchCompletedEvent:
+        """Summarize the minibatch events into a BatchScoreMinibatchCompletedEvent."""
         http_request_completed_events = self._http_request_completed_events_per_minibatch[minibatch_id]
         http_request_durations_ms = [e.duration_ms for e in http_request_completed_events] or [0]
 

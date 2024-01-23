@@ -145,6 +145,7 @@ class AppInsightsEventsClient(EventsClient):
         client_exception: str = "",
         is_retriable: bool = False
     ):
+        """Emit an event for request completed."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -168,6 +169,7 @@ class AppInsightsEventsClient(EventsClient):
         context_tokens: int,
         endpoint_uri: str = "",
     ):
+        """Emit an event for tokens generated."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -186,6 +188,7 @@ class AppInsightsEventsClient(EventsClient):
         active_requests: int,
         quota_reserved: int
     ):
+        """Emit an event for request concurrency."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -202,6 +205,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         worker_concurrency: int
     ):
+        """Emit an event for worker concurrency."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -217,6 +221,7 @@ class AppInsightsEventsClient(EventsClient):
         row_count: int,
         result: str = "SUCCESS"
     ):
+        """Emit an event for row completed."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -235,6 +240,7 @@ class AppInsightsEventsClient(EventsClient):
                              lease_id: str,
                              amount: int,
                              scoring_request_internal_id: str):
+        """Emit an event for quota operation."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -254,6 +260,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         input_row_count: int
     ):
+        """Emit an event for mini batch started."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -272,6 +279,7 @@ class AppInsightsEventsClient(EventsClient):
         exception: str = None,
         stacktrace: str = None
     ):
+        """Emit an event for mini batch completed."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -290,6 +298,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         job_params: dict,
     ):
+        """Emit an event for batch driver init."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -306,6 +315,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         job_params: dict,
     ):
+        """Emit an event for batch driver shutdown."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
