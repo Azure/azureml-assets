@@ -73,10 +73,11 @@ class Parallel:
 
         for payload in payloads:
             try:
-                scoring_request = ScoringRequest(original_payload=payload,
-                                                 input_to_request_transformer=self.__input_to_request_transformer,
-                                                 input_to_log_transformer=self.__input_to_log_transformer,
-                                                 mini_batch_context=mini_batch_context)
+                scoring_request = ScoringRequest(
+                    original_payload=payload,
+                    input_to_request_transformer=self.__input_to_request_transformer,
+                    input_to_log_transformer=self.__input_to_log_transformer,
+                    mini_batch_context=mini_batch_context)
                 scoring_requests.append(scoring_request)
             except RequestModificationException as e:
                 lu.get_logger().error(f"ParallelDriver: RequestModificationException raised: {e}")

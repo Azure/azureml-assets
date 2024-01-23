@@ -108,8 +108,9 @@ class Worker:
             if self._configuration.async_mode:
                 mini_batch_id = queue_item.scoring_request.mini_batch_context.mini_batch_id
                 set_mini_batch_id(mini_batch_id)
-                lu.get_logger().debug("Worker {}: Picked an queue item from mini-batch {}"
-                                      .format(self.id, mini_batch_id))
+                lu.get_logger().debug(
+                    "Worker {}: Picked an queue item from mini-batch {}"
+                    .format(self.id, mini_batch_id))
 
             start, end = 0, 0
 
@@ -176,8 +177,9 @@ class Worker:
 
                     if count_only_quota_429s_toward_total_request_time and not is_quota_429:
                         # Non-quota 429 responses don't contribute to the total wait time.
-                        lu.get_logger().debug("Worker {}: Encountered non-quota 429 response."
-                                              " Not adding to total wait time.")
+                        lu.get_logger().debug(
+                            "Worker {}: Encountered non-quota 429 response."
+                            " Not adding to total wait time.")
                         pass
                     else:
                         queue_item.scoring_request.total_wait_time += wait_time
@@ -211,8 +213,9 @@ class Worker:
         self.__is_running = False
 
         if self._configuration.async_mode:
-            lu.get_logger().debug("Worker {}: Finished processing an queue item from mini-batch {}"
-                                  .format(self.id, mini_batch_id))
+            lu.get_logger().debug(
+                "Worker {}: Finished processing an queue item from mini-batch {}"
+                .format(self.id, mini_batch_id))
             set_mini_batch_id(None)
         else:
             lu.get_logger().debug("Worker {}: Finished".format(self.id))
@@ -230,26 +233,28 @@ class Worker:
     def _log_score_failed_with_max_retry_time_interval_exceeded(
             self,
             scoring_request: ScoringRequest):
-        lu.get_logger().error("Worker {}: Score failed: Payload scored for {} seconds, which exceeded the maximum"
-                              " time interval of {} seconds. internal_id: {}, total_wait_time: {}, retry_count: {}"
-                              .format(
-                                  self.id,
-                                  round(scoring_request.scoring_duration, 2),
-                                  self._configuration.max_retry_time_interval,
-                                  scoring_request.internal_id,
-                                  scoring_request.total_wait_time,
-                                  scoring_request.retry_count))
+        lu.get_logger().error(
+            "Worker {}: Score failed: Payload scored for {} seconds, which exceeded the maximum"
+            " time interval of {} seconds. internal_id: {}, total_wait_time: {}, retry_count: {}"
+            .format(
+                self.id,
+                round(scoring_request.scoring_duration, 2),
+                self._configuration.max_retry_time_interval,
+                scoring_request.internal_id,
+                scoring_request.total_wait_time,
+                scoring_request.retry_count))
 
     def _log_score_failed_with_permanent_exception(
             self, scoring_request: ScoringRequest,
             exception: PermanentException):
-        lu.get_logger().error("Worker {}: Score failed: {}. internal_id: {}, total_wait_time: {}, retry_count: {}"
-                              .format(
-                                  self.id,
-                                  str(exception),
-                                  scoring_request.internal_id,
-                                  scoring_request.total_wait_time,
-                                  scoring_request.retry_count))
+        lu.get_logger().error(
+            "Worker {}: Score failed: {}. internal_id: {}, total_wait_time: {}, retry_count: {}"
+            .format(
+                self.id,
+                str(exception),
+                scoring_request.internal_id,
+                scoring_request.total_wait_time,
+                scoring_request.retry_count))
 
     def _log_score_failed_with_retriable_exception(
             self,
@@ -257,16 +262,17 @@ class Worker:
             back_off: int,
             wait_time: int,
             exception: RetriableException):
-        lu.get_logger().debug("Worker {}: Encountered retriable exception: {}. internal_id: {},"
-                              " back_off: {}, wait_time: {}, total_wait_time: {}, retry_count: {}"
-                              .format(
-                                  self.id,
-                                  str(exception),
-                                  scoring_request.internal_id,
-                                  back_off,
-                                  wait_time,
-                                  scoring_request.total_wait_time,
-                                  scoring_request.retry_count))
+        lu.get_logger().debug(
+            "Worker {}: Encountered retriable exception: {}. internal_id: {},"
+            " back_off: {}, wait_time: {}, total_wait_time: {}, retry_count: {}"
+            .format(
+                self.id,
+                str(exception),
+                scoring_request.internal_id,
+                back_off,
+                wait_time,
+                scoring_request.total_wait_time,
+                scoring_request.retry_count))
 
     def _log_score_failed_with_unhandled_exception(self, scoring_request: ScoringRequest, trace: str):
         lu.get_logger().error("Worker {}: Encountered unhandled exception. internal_id: {}, error: {}".format(

@@ -78,12 +78,14 @@ class RequestMetrics:
         actual_columns = metrics.columns.tolist()
 
         if set(expected_columns) != set(actual_columns):
-            raise ValueError(f"The metrics dataframe used to initialize RequestMetrics is invalid. "
-                             f"Expected columns: {expected_columns}. "
-                             f"Actual columns: {metrics.columns.tolist()}.")
+            raise ValueError(
+                f"The metrics dataframe used to initialize RequestMetrics is invalid. "
+                f"Expected columns: {expected_columns}. "
+                f"Actual columns: {metrics.columns.tolist()}.")
 
     def __validate_index(self, metrics: pd.DataFrame):
         if metrics.index.name != RequestMetrics.COLUMN_TIMESTAMP:
-            raise ValueError(f"The metrics dataframe used to initialize RequestMetrics is invalid. "
-                             f"Expected index name: {RequestMetrics.COLUMN_TIMESTAMP}. "
-                             f"Actual index name: {metrics.index.name}.")
+            raise ValueError(
+                f"The metrics dataframe used to initialize RequestMetrics is invalid. "
+                f"Expected index name: {RequestMetrics.COLUMN_TIMESTAMP}. "
+                f"Actual index name: {metrics.index.name}.")
