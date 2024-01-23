@@ -7,6 +7,7 @@ from ..events.event_utils import (
     Signal,
 )
 from ..events.batch_score_event import BatchScoreEvent
+from ..events import event_utils
 from ..minibatch_aggregator import MinibatchAggregator
 
 
@@ -23,15 +24,19 @@ def teardown_minibatch_aggregator_event_handlers():
 _minibatch_aggregator = MinibatchAggregator()
 
 
-def _handle_batch_score_event(batch_score_event: BatchScoreEvent = None):
+@event_utils.catch_and_log_all_exceptions
+def _handle_batch_score_event(batch_score_event: BatchScoreEvent = None, sender=None, signal=None):
     _minibatch_aggregator.add(batch_score_event)
 
 
+@event_utils.catch_and_log_all_exceptions
 def _handle_generate_minibatch_summary(
-        signal: Signal = None,
-        minibatch_id: str = None,
-        timestamp: datetime = None,
-        output_row_count: int = None):
+    signal: Signal = None,
+    minibatch_id: str = None,
+    timestamp: datetime = None,
+    output_row_count: int = None,
+    sender=None
+):
     summary_event = _minibatch_aggregator.summarize(
         minibatch_id=minibatch_id,
         timestamp=timestamp,

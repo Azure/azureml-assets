@@ -1,13 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import os
+import functools
+
 from contextvars import ContextVar
 from datetime import datetime
 from pydispatch import dispatcher
 from strenum import StrEnum
 
+from ..logging_utils import get_logger
 from ...configuration.configuration import Configuration
 from ...configuration.metadata import Metadata
+from ...constants import BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR
 
 # TODO: Investigate if this can be common_context_vars that is not restricted for use in events.
 _ctx_api_type = ContextVar("Api type", default=None)
@@ -54,9 +59,9 @@ def setup_context_vars(configuration: Configuration, metadata: Metadata):
 def emit_event(batch_score_event):
     try:
         dispatcher.send(batch_score_event=batch_score_event)
-    except Exception:
-        # TBD: Handle exceptions without exposing to the user (write to Geneva for debugging?)
-        pass
+    except Exception as e:
+        # TO DO: Replace get_logger().info with an event to Geneva for debugging
+        get_logger().info(f"An exception occurred while emitting event {batch_score_event.name}: {e}")
 
 
 def add_handler(handler, sender=dispatcher.Any, signal=dispatcher.Any):
@@ -65,6 +70,20 @@ def add_handler(handler, sender=dispatcher.Any, signal=dispatcher.Any):
 
 def remove_handler(handler, sender=dispatcher.Any, signal=dispatcher.Any):
     dispatcher.disconnect(handler, sender=sender, signal=signal)
+
+
+def catch_and_log_all_exceptions(f):
+    @functools.wraps(f)
+    def inner(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            # TO DO: Replace get_logger().info with an event to Geneva for debugging
+            get_logger().info(f"An exception occurred in {f.__name__}: {e}")
+            if os.getenv(BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR) == 'True':
+                raise
+            return None
+    return inner
 
 
 class Signal(StrEnum):

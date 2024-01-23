@@ -31,14 +31,13 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
         self.__tally_handler = tally_handler
 
     def handle_response(
-        self,
-        http_response: HttpScoringResponse,
-        scoring_request: ScoringRequest,
-        x_ms_client_request_id: str,
-        start: float,
-        end: float,
-        worker_id: str
-    ) -> ScoringResult:
+            self,
+            http_response: HttpScoringResponse,
+            scoring_request: ScoringRequest,
+            x_ms_client_request_id: str,
+            start: float,
+            end: float,
+            worker_id: str) -> ScoringResult:
         """ Handles the response from the model for the provided scoring request."""
 
         # Emit request completed event
@@ -97,12 +96,11 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
         return http_status in self.RETRIABLE_STATUS_CODES
 
     def _handle_exception(
-        self,
-        http_response: HttpScoringResponse,
-        scoring_request: ScoringRequest,
-        start: float,
-        end: float,
-    ) -> ScoringResult:
+            self,
+            http_response: HttpScoringResponse,
+            scoring_request: ScoringRequest,
+            start: float,
+            end: float) -> ScoringResult:
         """ Handles the exception by raising retriable exception or creating scoring
         result for non-retriable exception."""
         try:
@@ -125,15 +123,16 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
                 http_post_response=http_response,
             )
 
+    @event_utils.catch_and_log_all_exceptions
     def _emit_request_completed_event(
-        self,
-        http_response: HttpScoringResponse,
-        scoring_request: ScoringRequest,
-        x_ms_client_request_id: str,
-        start: float,
-        end: float,
-        worker_id: str
-    ) -> None:
+            self,
+            http_response: HttpScoringResponse,
+            scoring_request: ScoringRequest,
+            x_ms_client_request_id: str,
+            start: float,
+            end: float,
+            worker_id: str) -> None:
+
         def get_prompt_tokens(response_body: any):
             if response_body and not isinstance(response_body, list):
                 usage: dict[str, int] = response_body["usage"]
