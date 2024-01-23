@@ -25,6 +25,7 @@ class MirHeaderProvider(HeaderProvider):
         token_provider: TokenProvider,
         additional_headers: str = None
     ):
+        """Initialize MirHeaderProvider."""
         self._auth_provider = auth_provider
         self._configuration = configuration
         self._routing_client = routing_client
@@ -36,8 +37,7 @@ class MirHeaderProvider(HeaderProvider):
             self._additional_headers = {}
 
     def get_headers(self) -> dict:
-        """Gets the headers from the auth provider and additional headers."""
-
+        """Get the headers from the auth provider and additional headers."""
         # This logic simply adheres to the current behavior.
         # It is likely that a MIR endpoint with API key auth is currently not working.
         # Todo: https://msdata.visualstudio.com/Vienna/_workitems/edit/2897786
