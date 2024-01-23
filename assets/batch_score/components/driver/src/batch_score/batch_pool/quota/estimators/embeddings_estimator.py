@@ -23,7 +23,7 @@ class EmbeddingsEstimator(DV3Estimator):
         prompt = self._get_prompt(request_obj)
         try:
             return self.calc_tokens_with_tiktoken(prompt)
-        except BaseException as e:
+        except BaseException:
             # Default to return 1 if tiktoken fails
             return 1
 
