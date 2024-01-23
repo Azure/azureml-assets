@@ -36,7 +36,7 @@ class ScoringClientFactory:
         token_provider: TokenProvider,
         routing_client: RoutingClient,
     ) -> "ScoringClient | AoaiScoringClient":
-        """Gets the scoring client for the given configuration."""
+        """Get the scoring client for the given configuration."""
         if (configuration.is_aoai_endpoint() or configuration.is_serverless_endpoint()):
             get_logger().info("Using LLM scoring client.")
             return setup_aoai_scoring_client(configuration=configuration)
@@ -53,11 +53,11 @@ class ScoringClientFactory:
 
 def setup_aoai_scoring_client(
         configuration: Configuration) -> AoaiScoringClient:
+    """Create an instance of an AOAI scoring client."""
     tally_handler = TallyFailedRequestHandler(
         enabled=configuration.tally_failed_requests,
         tally_exclusions=configuration.tally_exclusions
     )
-    """Creates an instance of an AOAI scoring client."""
     auth_provider = AuthProviderFactory().get_auth_provider(configuration)
 
     scoring_client = AoaiScoringClient(
@@ -78,7 +78,7 @@ def setup_mir_scoring_client(
         token_provider: TokenProvider,
         routing_client: RoutingClient,
         connection_name: str) -> ScoringClient:
-    """Creates an instance of an MIR scoring client."""
+    """Create an instance of an MIR scoring client."""
     quota_client: QuotaClient = None
     if configuration.batch_pool and configuration.quota_audience and configuration.service_namespace:
         set_batch_pool(configuration.batch_pool)
@@ -105,10 +105,10 @@ def setup_mir_scoring_client(
 
     header_handler = None
 
-    '''Get the auth token from workspace connection and add that to the header.
+    """Get the auth token from workspace connection and add that to the header.
     Additionally, add the 'Content-Type' header. The presence of workspace connection also
     signifies that this can be any MIR endpoint, so this will not add OAI specific headers.
-    '''
+    """
     if connection_name is not None:
         header_handler = MIREndpointV2HeaderHandler(connection_name, configuration.additional_headers)
     else:

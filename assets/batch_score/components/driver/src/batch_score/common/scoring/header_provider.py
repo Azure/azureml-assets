@@ -7,6 +7,9 @@ from abc import abstractmethod
 
 
 class HeaderProvider:
+    """Header provider."""
+
     @abstractmethod
     def get_headers(self) -> dict:
+        """Get the headers for requests."""
         pass

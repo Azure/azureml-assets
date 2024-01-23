@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Scoring result."""
+
 from copy import deepcopy
 from enum import Enum
 
@@ -12,7 +14,10 @@ from .scoring_request import ScoringRequest
 
 
 class PermanentException(Exception):
+    """Permanent exception."""
+
     def __init__(self, message: str, status_code: int = None, response_payload: any = None):
+        """Initialize PermanentException."""
         super().__init__(message)
 
         self.status_code = status_code
@@ -20,6 +25,8 @@ class PermanentException(Exception):
 
 
 class RetriableException(Exception):
+    """Retriable exception."""
+
     def __init__(
             self,
             status_code: int,
@@ -28,6 +35,7 @@ class RetriableException(Exception):
             model_response_code: str = None,
             model_response_reason: str = None,
             retry_after: float = None):
+        """Initialize RetriableException."""
         self.status_code = status_code
         self.response_payload = response_payload
         self.model_response_code = model_response_code
@@ -36,11 +44,15 @@ class RetriableException(Exception):
 
 
 class ScoringResultStatus(Enum):
+    """Scoring result status."""
+
     FAILURE = 1
     SUCCESS = 2
 
 
 class ScoringResult:
+    """Scoring result."""
+
     def __init__(
             self,
             status: ScoringResultStatus,
@@ -54,6 +66,7 @@ class ScoringResult:
             omit: bool = False,
             token_counts: "tuple[int]" = (),
             mini_batch_context: MiniBatchContext = None):
+        """Initialize ScoringResult."""
         self.status = status
         self.start = start
         self.end = end
@@ -78,6 +91,7 @@ class ScoringResult:
     # read-only
     @property
     def estimated_token_counts(self) -> "tuple[int]":
+        """Get the estimated token count."""
         return self.__token_counts
 
     def __analyze(self):
@@ -95,6 +109,7 @@ class ScoringResult:
             lu.get_logger().error("response is not a json")
 
     def Failed(scoring_request: ScoringRequest = None) -> 'ScoringResult':
+        """Get a scoring result of failed status."""
         return ScoringResult(
             status=ScoringResultStatus.FAILURE,
             start=0,
@@ -109,9 +124,8 @@ class ScoringResult:
         )
 
     def copy(self) -> 'ScoringResult':
+        """Return a copy of this result with a deep copy of response body and unset token counts."""
         """
-        Return a copy of this result with a deep copy of response body and unset token counts.
-
         Deepcopy the response_body dictionary, as this will be edited in the final result of segmented responses.
         Set the three token attributes to None so others are not confused by the previous values.
         """
