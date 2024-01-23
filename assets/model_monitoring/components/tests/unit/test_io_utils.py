@@ -13,7 +13,10 @@ class TestIOUtils:
         [
             {"file": "https://my_account.blob.core.windows.net/my_container/path/to/data.parquet"},
             {"folder": "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder"},
-            {"pattern": "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/*/*.jsonl"}
+            {"pattern": "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/*/*.jsonl"},
+            {"file": "http://my_account.blob.core.windows.net/my_container/path/to/data.parquet"},
+            {"folder": "wasb://my_container@my_account.blob.core.windows.net/path/to/folder"},
+            {"pattern": "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder/*/*.jsonl"}
         ]
     )
     def test_verify_mltable_paths_error(self, mltable_path):
@@ -26,26 +29,14 @@ class TestIOUtils:
             _verify_mltable_paths("foo_path", mltable_dict=mltable_dict)
 
     def test_verify_mltable_paths_pass(self):
-        """Test _verify_mltable_paths, positive cases."""
-        mltable_dict = {
-            "type": "mltable",
-            "paths": [
-                {"file": "./path/to/data.parquet"},
-                {"folder": "http://my_account.blob.core.windows.net/my_container/path/to/folder"},
-                {"pattern": "wasb://my_container@my_account.blob.core.windows.net/path/to/folder/*.csv"},
-                {"file": "abfs://my_container@my_account.dfs.core.windows.net/path/to/data.jsonl"},
-            ]
-        }
-        _verify_mltable_paths("foo_path", mltable_dict=mltable_dict)
-
-    def test_verify_mltable_paths_azureml_path_pass(self):
         """Test _verify_mltable_paths, for azureml paths, positive cases."""
         mltable_dict = {
             "type": "mltable",
             "paths": [
                 {"file": "azureml://datastores/my_datastore/paths/path/to/data.parquet"},
                 {"folder": "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore/paths/path/to/folder"},  # noqa: E501
-                {"pattern": "azureml://datastores/my_datastore/paths/path/to/folder/**/*.jsonl"}
+                {"pattern": "azureml://datastores/my_datastore/paths/path/to/folder/**/*.jsonl"},
+                {"pattern": "./path/to/folder/*.csv"}
             ]
         }
         mock_datastore = Mock(datastore_type="AzureBlob", protocol="https", endpoint="core.windows.net",
