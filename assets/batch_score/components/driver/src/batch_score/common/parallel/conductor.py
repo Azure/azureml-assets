@@ -265,7 +265,7 @@ class Conductor:
 
         # Start regular workers
         self._adjust_worker_concurrency()
-        lu.get_logger().info("Conductor: Starting with {} running workers and {} target worker count."
+        lu.get_logger().info("Conductor: Starting with {} running workers and {} target worker count. "
                              "There are {} workers in the worker pool."
                              .format(
                                  len(list(filter(lambda worker: worker.is_running, self.__workers))),
