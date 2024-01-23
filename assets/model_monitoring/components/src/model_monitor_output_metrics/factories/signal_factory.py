@@ -46,7 +46,11 @@ class SignalFactory:
             )
         elif signal_type == SignalType.PREDICTION_DRIFT.name:
             return PredictionDriftSignal(
-                monitor_name=monitor_name, signal_name=signal_name, metrics=metrics
+                monitor_name=monitor_name,
+                signal_name=signal_name,
+                metrics=metrics,
+                baseline_histogram=baseline_histogram,
+                target_histogram=target_histogram
             )
         elif signal_type == SignalType.DATA_QUALITY.name:
             return DataQualitySignal(

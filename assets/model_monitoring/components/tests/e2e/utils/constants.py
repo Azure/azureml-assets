@@ -20,7 +20,7 @@ COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR = "model_performance_signal_moni
 # Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
 DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT = "azureml:uri_folder_iris_model_inputs_with_drift:1"
 # TODO generate this data asset in the gated test workspace
-DATA_ASSET_LLM_INPUTS = "azureml:ChatHistoryModelInput:1"
+DATA_ASSET_LLM_INPUTS = "azureml:uri_folder_llm_model_inputs:1"
 
 
 # MDC-generated target dataset of an iris model. The data contains no drift.
@@ -80,6 +80,28 @@ DATA_ASSET_EMPTY = (
 
 DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS = (
     "azureml:mltable_iris_preprocessed_model_inputs_no_common_columns:1"
+)
+
+DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE = (
+    "azureml:mltable_iris_preprocessed_model_inputs_type_override:1"
+)
+DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE = (
+    "azureml:mltable_iris_baseline_data_type_override:1"
+)
+
+DATA_ASSET_WITH_TIMESTAMP_BASELINE_DATA = (
+    "azureml:mltable_test_with_timestamp_baseline_data:1"
+)
+DATA_ASSET_WITH_TIMESTAMP_PRODUCTION_DATA = (
+    "azureml:mltable_test_with_timestamp_production_data:1"
+)
+
+# used for checking against histogram regressions where a numerical data-column has a single distinct value
+DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM = (
+    "azureml:mltable_iris_preprocessed_model_inputs_int_single_value_histogram:1"
+)
+DATA_ASSET_IRIS_BASELINE_INT_SINGLE_VALUE_HISTOGRAM = (
+    "azureml:mltable_iris_baseline_int_single_value_histogram:1"
 )
 
 # MDC-generated target dataset of an iris model which contains both the input features as well as the inferred results.

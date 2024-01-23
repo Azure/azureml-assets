@@ -5,6 +5,7 @@
 This module contains the MiiEngineV2 class which is responsible for initializing the MII server and client,
 generating responses for given prompts, and managing the allocation of processes and load balancing.
 """
+import json
 import math
 import os
 import time
@@ -23,8 +24,6 @@ logger = configure_logger(__name__)
 
 # TODO: Move them to mii config
 MAX_TOKENS = int(os.environ.get("MAX_TOTAL_TOKENS", 4096))
-MODEL_DIR = os.getenv("AZUREML_MODEL_DIR", "")
-MODEL_PATH = "mlflow_model_folder/data/model"
 DEVICE_COUNT = torch.cuda.device_count()
 
 
@@ -53,17 +52,23 @@ class MiiEngineV2(BaseEngine):
             self.model = MIIClient(self.mii_config)
 
     @log_execution_time
-    def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
+    async def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
         """Generate responses for given prompts."""
         if self.model is None:
             logger.warning("MII client not initialized. Initializing now.")
             self.init_client()
         start_time = time.time()
-        responses = self.model.generate(prompts, **params)
+        if isinstance(prompts, str):
+            prompts = [prompts]
+        try:
+            responses = await self.model._request_async_response(prompts, **params)
+        except Exception as e:
+            raise Exception(
+                json.dumps({"error": "Error in processing request", "exception": str(e)}))
         inference_time_ms = (time.time() - start_time) * 1000
         inference_results = []  # type: List[InferenceResult]
-        for i, res in enumerate(responses.response):
-            generated_text = res
+        for i, res in enumerate(responses):
+            generated_text = res.generated_text
             response_tokens = self.get_tokens(generated_text)
             time_per_token_ms = inference_time_ms / len(response_tokens) if len(response_tokens) > 0 else 0
 
@@ -116,7 +121,7 @@ class MiiEngineV2(BaseEngine):
                 "sync_debug": False,
                 "task": "text-generation",
                 "tensor_parallel": self.engine_config.tensor_parallel,
-                "tokenizer": self.engine_config.model_id,
+                "tokenizer": self.engine_config.tokenizer,
             },
         }
         mii_config = mii.config.MIIConfig(**default_mii_config)
@@ -163,3 +168,11 @@ class MiiEngineV2(BaseEngine):
                 total_size += file_size
         # Return the total size
         return math.ceil(total_size / (1024**3))
+
+    async def shutdown_async(self):
+        """Terminate DS-MII Server."""
+        try:
+            await self.model.terminate_async()
+        except Exception as e:
+            raise Exception(
+                json.dumps({"error": "Error in processing request", "exception": str(e)}))

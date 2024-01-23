@@ -4,7 +4,7 @@ type: pipeline
 name: data_quality_signal_monitor
 display_name: Data Quality - Signal Monitor
 description: Computes the data quality of a target dataset with reference to a baseline.
-version: 0.3.21
+version: 0.3.23
 is_deterministic: true
 
 inputs:
@@ -46,6 +46,16 @@ inputs:
     type: string
     default: ""
     optional: true
+  instance_type:
+    type: string
+    default: "standard_e4s_v3"
+    optional: True
+  override_numerical_features:
+    type: string
+    optional: true
+  override_categorical_features:
+    type: string
+    optional: true
 outputs:
   signal_output:
     type: uri_folder
@@ -53,18 +63,20 @@ outputs:
 jobs:
   compute_feature_importances:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.7
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.9
     inputs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
       task_type: ${{parent.inputs.task_type}}
       target_column: ${{parent.inputs.target_column}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -85,28 +97,30 @@ jobs:
       feature_names:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
   compute_baseline_data_statistics:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.3
+    component: azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.5
     inputs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       data_statistics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
   compute_baseline_data_quality:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.7
+    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.9
     inputs:
       input_data:
         type: mltable
@@ -119,17 +133,19 @@ jobs:
         path: ${{parent.jobs.feature_selection.outputs.feature_names}}
       numerical_metrics: ${{parent.inputs.numerical_metrics}}
       categorical_metrics: ${{parent.inputs.categorical_metrics}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
   compute_target_data_quality:
     type: spark
-    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.7
+    component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.9
     inputs:
       input_data:
         type: mltable
@@ -140,11 +156,13 @@ jobs:
       feature_names: ${{parent.jobs.feature_selection.outputs.feature_names}}
       numerical_metrics: ${{parent.inputs.numerical_metrics}}
       categorical_metrics: ${{parent.inputs.categorical_metrics}}
+      override_numerical_features: ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -164,13 +182,13 @@ jobs:
       signal_metrics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
   output_signal_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.5
+    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.6
     inputs:
       signal_metrics:
         type: mltable
@@ -186,7 +204,7 @@ jobs:
         path: ${{parent.outputs.signal_output}}
         mode: direct
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -200,7 +218,7 @@ jobs:
       notification_emails: ${{parent.inputs.notification_emails}}
       signal_name: ${{parent.inputs.signal_name}}
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token

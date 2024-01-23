@@ -15,9 +15,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import HfModelTypes
 from azureml.acft.common_components import get_logger_app
 
 
-logger = get_logger_app(
-    "azureml.acft.contrib.hf.scripts.components.scripts.model_selector.finetune_config"
-)
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.model_selector.finetune_config")
 
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes

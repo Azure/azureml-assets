@@ -3,12 +3,22 @@
 
 """This file contains unit tests for the Data Drift Output Metrics component."""
 
-from feature_importance_metrics.compute_feature_importance import determine_task_type, get_train_test_data
-from feature_importance_metrics.feature_importance_utilities import compute_categorical_features, is_categorical_column
+from feature_importance_metrics.compute_feature_importance import (
+    determine_task_type,
+    get_train_test_data,
+    check_df_has_target_column_with_error,
+    compute_feature_importance,
+    CONTINUOUS_ERR)
+from feature_importance_metrics.feature_importance_utilities import mark_categorical_column
 from feature_importance_metrics.compute_feature_attribution_drift import (
     drop_metadata_columns, calculate_attribution_drift)
 import pytest
 import pandas as pd
+from shared_utilities import constants
+from shared_utilities.momo_exceptions import InvalidInputError
+
+
+CLASSIFICATION = constants.CLASSIFICATION
 
 
 @pytest.fixture
@@ -22,24 +32,19 @@ def get_fraud_data():
         "ACCOUNTID": ["A1176337474875483", "A1343835256155075",
                       "A1343835256155076", "A1706480214256418"],
         "TRANSACTIONAMOUNT": [146161.99, 57487.200000000004,  227728.76, 59340.0],
-        "TIMESTAMP": ["2023-01-30T16:25:17.000Z",
-                      "2023-01-30T16:58:44.000Z",
-                      "2023-01-30T22:46:37.000Z",
-                      "2023-01-30T22:46:37.000Z"],
+        "TIMESTAMPSTR": ["2023-01-30T16:25:17.000Z",
+                         "2023-01-30T16:58:44.000Z",
+                         "2023-01-30T22:46:37.000Z",
+                         "2023-01-30T22:46:37.000Z"],
+        "TIMESTAMP": [pd.Timestamp('2023-12-04T17:59:32'),
+                      pd.Timestamp('2023-12-04T17:59:32'),
+                      pd.Timestamp('2023-12-04T17:59:32'),
+                      pd.Timestamp('2023-12-04T17:59:32')],
         "TRANSACTIONAMOUNTUSD": [169547.9084, 57487.200000000004, 266442.6492, 67647.6],
         "ISPROXYIP": [False, True, False, False],
         "DIGITALITEMCOUNT": [15, 15, 15, 15],
-        "PHYSICALITEMCOUNT": [15, 7, 24, 4],
+        "PHYSICALITEMCOUNT": [0, 1, 1, 0],
         "IS_FRAUD": ["0", "0", "0", "0"]
-    })
-
-
-@pytest.fixture
-def get_complex_dtype_data():
-    """Return time data as pandas dataframe."""
-    return pd.DataFrame({
-        "Time": [pd.Timedelta('1 days 06:05:01.000030')],
-        "DateTime": pd.DatetimeIndex(['2018-04-24 00:00:00'], dtype='datetime64[ns]', freq=None)
     })
 
 
@@ -71,42 +76,49 @@ class TestComputeFeatureImportanceMetrics:
         assert len(train_data.index) == 5003
         assert len(test_data.index) == 5000
 
-    def test_is_categorical_column(self, get_complex_dtype_data):
-        """Test whether a column is categorical."""
-        result = is_categorical_column(get_complex_dtype_data, "Time")
-        assert not result
-        result = is_categorical_column(get_complex_dtype_data, "DateTime")
-        assert not result
+    def test_mark_categorical_column(self, get_fraud_data):
+        """Test deteremine task type for classification scenario."""
+        categorical_features_lgbm = ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMPSTR", "TIMESTAMP", "ISPROXYIP"]
+        numerical_features = ["TRANSACTIONAMOUNT", "TRANSACTIONAMOUNTUSD", "DIGITALITEMCOUNT"]
+        target_column = "IS_FRAUD"
 
-    def test_compute_categorical_features(self, get_fraud_data):
-        """Test determine categorical features."""
-        categorical_features = compute_categorical_features(get_fraud_data, "IS_FRAUD")
-        assert categorical_features == ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP",
-                                        "ISPROXYIP"]
-
-    def test_compute_categorical_features_integer(self, get_zipcode_data):
-        """Test determine categorical features with integers as categorical."""
-        categorical_features = compute_categorical_features(get_zipcode_data, "location")
-        assert categorical_features == ["zipcode"]
+        mark_categorical_column(get_fraud_data, target_column, categorical_features_lgbm, numerical_features)
+        # timestamp/date should be mark as int
+        assert get_fraud_data.dtypes['TIMESTAMP'] == "int64"
+        # categorical columns should mark as category
+        assert get_fraud_data.dtypes['TIMESTAMPSTR'] == "category"
+        assert get_fraud_data.dtypes['TRANSACTIONID'] == "category"
+        assert get_fraud_data.dtypes['ACCOUNTID'] == "category"
+        assert get_fraud_data.dtypes['ISPROXYIP'] == "category"
+        # non-categorical columns should not mark as category
+        assert get_fraud_data.dtypes['TRANSACTIONAMOUNT'] == "float64"
+        assert get_fraud_data.dtypes['TRANSACTIONAMOUNTUSD'] == "float64"
+        assert get_fraud_data.dtypes['DIGITALITEMCOUNT'] == "int64"
+        # target column should not mark as category
+        assert get_fraud_data.dtypes['IS_FRAUD'] == "object"
+        # Unknown type should mark as category
+        assert get_fraud_data.dtypes['PHYSICALITEMCOUNT'] == "category"
 
     def test_determine_task_type_classification(self, get_fraud_data, get_zipcode_data):
         """Test deteremine task type for classification scenario."""
-        task_type = determine_task_type(None, "ISPROXYIP", get_fraud_data)
+        categorical_features = ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP", "ISPROXYIP"]
+        task_type = determine_task_type(None, "ISPROXYIP", get_fraud_data, categorical_features)
         assert task_type == "classification"
-        task_type = determine_task_type("invalid", "zipcode", get_zipcode_data)
+        task_type = determine_task_type("invalid", "TRANSACTIONID", get_zipcode_data, categorical_features)
         assert task_type == "classification"
-        task_type = determine_task_type("Classification", "zipcode", get_zipcode_data)
+        task_type = determine_task_type("Classification", "zipcode", get_zipcode_data, categorical_features)
         assert task_type == "classification"
-        task_type = determine_task_type("Classification", "TIMESTAMP", get_fraud_data)
+        task_type = determine_task_type("Classification", "TIMESTAMP", get_fraud_data, categorical_features)
         assert task_type == "classification"
 
     def test_determine_task_type_regression(self, get_fraud_data):
         """Test deteremine task type for regression scenario."""
-        task_type = determine_task_type(None, "TRANSACTIONAMOUNTUSD", get_fraud_data)
+        categorical_features = ["TRANSACTIONID", "ACCOUNTID", "TIMESTAMP", "ISPROXYIP"]
+        task_type = determine_task_type(None, "TRANSACTIONAMOUNTUSD", get_fraud_data, categorical_features)
         assert task_type == "regression"
-        task_type = determine_task_type("invalid", "TRANSACTIONAMOUNTUSD", get_fraud_data)
+        task_type = determine_task_type("invalid", "TRANSACTIONAMOUNTUSD", get_fraud_data, categorical_features)
         assert task_type == "regression"
-        task_type = determine_task_type("Regression", "TRANSACTIONAMOUNTUSD", get_fraud_data)
+        task_type = determine_task_type("Regression", "TRANSACTIONAMOUNTUSD", get_fraud_data, categorical_features)
         assert task_type == "regression"
 
     def test_drop_metadata_columns(self):
@@ -159,3 +171,31 @@ class TestComputeFeatureImportanceMetrics:
         production_dataframe = pd.DataFrame(production_data)
         drift = calculate_attribution_drift(baseline_dataframe, production_dataframe)
         assert drift == 0.5135443210660507
+
+    @pytest.mark.parametrize("column_name", ["fake_column", "", None])
+    def test_check_df_has_target_column_with_error_throw_exception(self, get_fraud_data, column_name):
+        """Test that has target column not present in the reference data."""
+        try:
+            check_df_has_target_column_with_error(get_fraud_data, column_name)
+            pytest.fail("Should throw InvalidInputError Exception.")
+        except Exception as e:
+            assert f"Target column = '{column_name}'" in e.args[0]
+
+    def test_check_df_has_target_column_with_error_successful(self, get_fraud_data):
+        """Test that has target column present in the reference data."""
+        check_df_has_target_column_with_error(get_fraud_data, "IS_FRAUD")
+
+    def test_raise_user_error_invalid_task(self, get_fraud_data):
+        """Test classification task with continuous numeric label."""
+        categorical_features_lgbm = ["TRANSACTIONID", "ACCOUNTID",
+                                     "TIMESTAMPSTR", "TIMESTAMP",
+                                     "ISPROXYIP"]
+        get_fraud_data_copy = get_fraud_data.copy()
+        get_fraud_data_copy["IS_FRAUD_LIKELIHOOD"] = [
+            0.12, 0.23, 0.331, 0.125
+        ]
+        del get_fraud_data_copy["IS_FRAUD"]
+        with pytest.raises(InvalidInputError, match=CONTINUOUS_ERR):
+            compute_feature_importance(CLASSIFICATION, "IS_FRAUD_LIKELIHOOD",
+                                       get_fraud_data_copy,
+                                       categorical_features_lgbm)
