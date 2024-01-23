@@ -1,1 +1,3 @@
-from .quota_client import QuotaClient, QuotaUnavailableException
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+"""__init__."""

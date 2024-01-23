@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Dv3 estimator."""
+
 import json
 import os
 from abc import abstractmethod
@@ -74,7 +79,8 @@ class DV3Estimator(QuotaEstimator):
 
         return Encoding(
             name="cl100k_base",
-            pat_str=r"""(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+""",
+            pat_str=r"""(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| """
+                    + r"""?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+""",
             mergeable_ranks=bpe_ranks,
             special_tokens={
                 "<|endoftext|>": 100257,

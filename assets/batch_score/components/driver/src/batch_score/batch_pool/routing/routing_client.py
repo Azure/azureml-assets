@@ -68,10 +68,12 @@ class RoutingClient(ClientSettingsProvider):
         while retry_count < self.__MAX_RETRY or self.__target_distribution_percentages == {}:
             response_status = None
             try:
-                lu.get_logger().debug("RoutingClient: Getting updated Pool Routes from '{}'.".format(
-                    self.__LIST_ROUTES_URL))
+                lu.get_logger().debug("RoutingClient: Getting updated Pool Routes from '{}'."
+                                      .format(self.__LIST_ROUTES_URL))
                 request = {"trafficGroup": constants.TRAFFIC_GROUP}
-                async with session.post(url=self.__LIST_ROUTES_URL, headers=self.__header_handler.get_headers(), json=request) as response:
+                async with session.post(url=self.__LIST_ROUTES_URL,
+                                        headers=self.__header_handler.get_headers(),
+                                        json=request) as response:
                     response_status = response.status
                     if response_status == 200:
                         response_body = await response.json()
@@ -173,9 +175,10 @@ class RoutingClient(ClientSettingsProvider):
         # If there are no active requests, use __target_distribution_percentages to distribute
         # otherwise:
         if not all(value == 0 for value in self.__current_distribution_counts.values()):
-            distribution_delta = {
-                endpoint: self.__target_distribution_percentages[endpoint] - (0 if endpoint not in effective_distribution else effective_distribution[endpoint]) for endpoint in self.__target_distribution_percentages
-                }
+            distribution_delta = {endpoint: self.__target_distribution_percentages[endpoint]
+                                  - (0 if endpoint not in effective_distribution
+                                     else effective_distribution[endpoint])
+                                  for endpoint in self.__target_distribution_percentages}
 
             # If the __target_distribution_percentages and effective_distribution are equivalent,
             # use __target_distribution_percentages to distribute, otherwise:
@@ -184,7 +187,8 @@ class RoutingClient(ClientSettingsProvider):
                 max_value = None
                 for key, value in distribution_delta.items():
                     # Don't consider an excluded endpoint, unless it's the only option
-                    if not (len(distribution_delta.keys()) > 1 and exclude_endpoint == key) and (max_value is None or max_value < value):
+                    if not (len(distribution_delta.keys()) > 1 and exclude_endpoint == key) and \
+                            (max_value is None or max_value < value):
                         max_key = key
                         max_value = value
 

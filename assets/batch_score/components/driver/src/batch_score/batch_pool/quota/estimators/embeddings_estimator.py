@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Embeddings estimator."""
+
 from .dv3_estimator import DV3Estimator
 
 

@@ -67,8 +67,8 @@ class Configuration(Namespace):
 
     def _validate_online_endpoint_url_and_request_path(self):
         if (self.online_endpoint_url
-            and self.request_path is not None
-            and self.request_path not in constants.DEFAULT_REQUEST_PATHS):
+                and self.request_path is not None
+                and self.request_path not in constants.DEFAULT_REQUEST_PATHS):
             raise ValueError("The optional parameter 'online_endpoint_url' is not allowed in combination"
                              " with 'request_path'. Please put the entire scoring url in the"
                              "`online_endpoint_url` parameter and remove 'request_path'.")

@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Quota client."""
+
 import asyncio
 import os
 import re
@@ -26,7 +31,10 @@ from ...header_handlers.rate_limiter.rate_limiter_header_handler import (
     RateLimiterHeaderHandler,
 )
 from ...utils import common
-from .estimators import *
+from .estimators.chat_completion_estimator import ChatCompletionEstimator
+from .estimators.completion_estimator import CompletionEstimator
+from .estimators.embeddings_estimator import EmbeddingsEstimator
+from .estimators.vesta_estimator import VestaEstimator
 
 
 class QuotaClient:
@@ -215,7 +223,8 @@ class QuotaClient:
         return self.__header_handler.get_headers(additional_headers=additional_headers)
 
     def __get_url(self, scope: str, api_name: str) -> str:
-        return f"{self.__base_url}/v1.0/servicenamespaces/{self.__namespace}/scopes/{scope}/audiences/{self.__audience}/{api_name}"
+        return f"{self.__base_url}/v1.0/servicenamespaces/{self.__namespace}" \
+               + f"/scopes/{scope}/audiences/{self.__audience}/{api_name}"
 
     async def _api_release_lease(self, session: ClientSession, scope: str, lease_id: str, request_id: str):
         url = self.__get_url(scope, "releaseLease")

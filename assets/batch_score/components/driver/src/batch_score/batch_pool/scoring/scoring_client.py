@@ -125,7 +125,10 @@ class ScoringClient:
                             "NONE" if response is None else response.headers,
                             response_payload))
 
-        except (asyncio.TimeoutError, aiohttp.ServerConnectionError, aiohttp.ClientConnectionError, aiohttp.ClientPayloadError) as e:
+        except (asyncio.TimeoutError,
+                aiohttp.ServerConnectionError,
+                aiohttp.ClientConnectionError,
+                aiohttp.ClientPayloadError) as e:
             fully_qualified_exception_name = type(e).__module__ + "." + type(e).__name__
             response_status = -408  # Manually attribute -408 as a tell to retry on this exception
 
@@ -312,7 +315,9 @@ class ScoringClient:
         This is because the below condition can occur only in batch-pool mode and the component that supports
         batch-pool mode exposes `online_endpoint_url` and not `scoring_url`.
         '''
-        if self.__routing_client is not None and (self.__scoring_url is not None or "azureml-model-deployment" in self.__header_handler.get_headers()):
+        if self.__routing_client is not None and \
+            (self.__scoring_url is not None or
+             "azureml-model-deployment" in self.__header_handler.get_headers()):
             lu.get_logger().error(
                 "Invalid parameter combination. batch_pool AND (online_endpoint_url or "
                 "azureml-model-deployment header) are provided.")

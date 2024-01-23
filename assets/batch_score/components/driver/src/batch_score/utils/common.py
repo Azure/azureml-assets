@@ -90,7 +90,8 @@ def convert_to_list(
             payload_obj: dict[str, any] = {}
             for indx, col in enumerate(columns):
                 payload_val = row[indx]
-                if isinstance(payload_val, collections.abc.Sequence) or isinstance(payload_val, numpy.ndarray) or not pd.isnull(payload_val):
+                if isinstance(payload_val, collections.abc.Sequence) or isinstance(payload_val, numpy.ndarray) or \
+                        not pd.isnull(payload_val):
                     if col in int_forceable_properties:
                         payload_val = int(payload_val)
                     payload_obj[col] = payload_val
