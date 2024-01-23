@@ -16,7 +16,7 @@ class AuthProviderFactory:
     """Defines the auth provider factory."""
 
     def get_auth_provider(self, configuration: Configuration) -> AuthProvider:
-        """Gets an instance of auth provider based on the configuration."""
+        """Get an instance of auth provider based on the configuration."""
         if configuration.authentication_type == "api_key":
             return ApiKeyAuthProvider(configuration.api_key_name)
         elif configuration.authentication_type == "managed_identity":

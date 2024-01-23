@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""File configuration validator."""
+
 import json
 import os
 from pathlib import Path
@@ -10,6 +12,8 @@ from referencing import Registry, Resource
 
 
 class InvalidConfigurationError(Exception):
+    """Invalid configuration error."""
+
     pass
 
 
@@ -18,7 +22,10 @@ SCHEMAS_ROOT = _current_file_path.parent / "schemas"
 
 
 class FileConfigurationValidator:
+    """Validator for file-based configuration."""
+
     def __init__(self, schema_file=None):
+        """Initialize FileConfigurationValidator."""
         if schema_file is None:
             schema_file = SCHEMAS_ROOT / "configuration.json"
 
@@ -28,6 +35,7 @@ class FileConfigurationValidator:
         self._validator = Draft202012Validator(schema=schema, registry=registry)
 
     def validate(self, instance):
+        """Valiate the configuration instance."""
         instance = _load_file(instance)
         errors = list(self._validator.iter_errors(instance=instance))
         if errors:
@@ -95,6 +103,7 @@ class FileConfigurationValidator:
 
 
 def list_files_recursively(dir):
+    """List files recursively."""
     file_paths = []
     for path, subdirs, files in os.walk(dir):
         for name in files:

@@ -28,7 +28,7 @@ class MirAndBatchPoolHeaderHandlerFactory:
         routing_client: RoutingClient,
         token_provider: TokenProvider,
     ) -> OpenAIHeaderHandler:
-        """Gets the header provider for the given configuration."""
+        """Get the header provider for the given configuration."""
         if configuration.is_sahara(routing_client=routing_client):
             return SaharaHeaderHandler(
                 token_provider=token_provider,

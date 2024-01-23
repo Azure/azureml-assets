@@ -28,6 +28,7 @@ class MirHttpResponseHandler(HttpResponseHandler):
     """Defines the MIR HTTP response handler."""
 
     def __init__(self, tally_handler: TallyFailedRequestHandler):
+        """Initialize MirHttpResponseHandler."""
         self.__tally_handler = tally_handler
 
     def handle_response(
@@ -37,8 +38,7 @@ class MirHttpResponseHandler(HttpResponseHandler):
             start: float,
             end: float,
             scoring_url: str) -> ScoringResult:
-        """Handles the response from the model for the provided scoring request."""
-
+        """Handle the response from the model for the provided scoring request."""
         result: ScoringResult = None
         updated_http_response = self._update_http_response_for_exception(http_response)
 

@@ -28,6 +28,7 @@ class MirScoringClient:
         token_provider: TokenProvider,
         additional_headers: str = None
     ):
+        """Initialize MirScoringClient."""
         header_provider = MirHeaderProvider(
             auth_provider=auth_provider,
             configuration=configuration,
@@ -49,8 +50,7 @@ class MirScoringClient:
         timeout: aiohttp.ClientTimeout = None,
         worker_id: str = "1"
     ) -> ScoringResult:
-        """ Scores a single request until terminal status is reached."""
-
+        """Score a single request until terminal status is reached."""
         # Timeout can be None. See `ScoringClient.get_next_retry_timeout` for more info on why.
         if timeout is None:
             timeout = session.timeout

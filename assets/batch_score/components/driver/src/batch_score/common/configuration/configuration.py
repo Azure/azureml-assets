@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Component Configurations."""
+
 from argparse import Namespace
 from dataclasses import dataclass, field
 
@@ -12,6 +14,8 @@ from ..telemetry import logging_utils as lu
 
 @dataclass(frozen=True)
 class Configuration(Namespace):
+    """Component configurations."""
+
     additional_headers: str = field(init=True, default=None)
     additional_properties: str = field(init=True, default=None)
     api_key_name: str = field(init=True, default=None)
@@ -48,6 +52,7 @@ class Configuration(Namespace):
     user_agent_segment: str = field(init=True, default=None)
 
     def __post_init__(self) -> None:
+        """Post init function."""
         self._validate()
 
     def _validate(self):
@@ -83,8 +88,7 @@ class Configuration(Namespace):
                              "remove it from the configuration.")
 
     def log(self):
-        """Log the configuration as alpha-sorted key-value pairs.
-        """
+        """Log the configuration as alpha-sorted key-value pairs."""
         logger = lu.get_logger()
         for arg, value in sorted(vars(self).items()):
             if arg == "app_insights_connection_string" and value is not None:
@@ -93,6 +97,7 @@ class Configuration(Namespace):
             logger.debug(f"{arg}: {value}")
 
     def is_embeddings(self) -> bool:
+        """Check if the target endpoint is for embeddings models."""
         return (
             self.request_path == constants.DV_EMBEDDINGS_API_PATH
             or (
@@ -105,6 +110,7 @@ class Configuration(Namespace):
         )
 
     def is_chat_completion(self) -> bool:
+        """Check if the target endpoint is for chat completion models."""
         return (
             self.request_path == constants.DV_CHAT_COMPLETIONS_API_PATH
             or (
@@ -117,6 +123,7 @@ class Configuration(Namespace):
         )
 
     def is_completion(self) -> bool:
+        """Check if the target endpoint is for completion models."""
         return (
             self.request_path == constants.DV_COMPLETION_API_PATH
             or (
@@ -129,10 +136,12 @@ class Configuration(Namespace):
         )
 
     def is_sahara(self, routing_client: RoutingClient) -> bool:
+        """Check if the target endpoint is for sahara models."""
         return routing_client and routing_client.target_batch_pool and \
             routing_client.target_batch_pool.lower() == "sahara-global"
 
     def is_vesta(self) -> bool:
+        """Check if the target endpoint is for vesta models."""
         return (
             self.request_path == constants.VESTA_RAINBOW_API_PATH
             or (
@@ -145,6 +154,7 @@ class Configuration(Namespace):
         )
 
     def is_vesta_chat_completion(self) -> bool:
+        """Check if the target endpoint is for vesta chat completion models."""
         return (
             self.request_path == constants.VESTA_CHAT_COMPLETIONS_API_PATH
             or (
@@ -157,13 +167,16 @@ class Configuration(Namespace):
         )
 
     def is_aoai_endpoint(self) -> bool:
+        """Check if the target endpoint is for Azure OpenAI models."""
         return self.scoring_url and \
             any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
 
     def is_serverless_endpoint(self) -> bool:
+        """Check if the target endpoint is MIR serverless."""
         return self.scoring_url and constants.SERVERLESS_ENDPOINT_DOMAIN_SUFFIX in self.scoring_url
 
     def get_endpoint_type(self) -> EndpointType:
+        """Get endpoint type."""
         if self.is_aoai_endpoint():
             return EndpointType.AOAI
         elif self.is_serverless_endpoint():
@@ -174,6 +187,7 @@ class Configuration(Namespace):
             return EndpointType.MIR
 
     def get_api_type(self) -> ApiType:
+        """Get api type."""
         if self.is_completion():
             return ApiType.Completion
         elif self.is_chat_completion():
@@ -188,6 +202,7 @@ class Configuration(Namespace):
             return ApiType.Unknown
 
     def get_authentication_type(self) -> AuthenticationType:
+        """Get authentication type."""
         if self.authentication_type == AuthenticationType.ApiKey:
             return AuthenticationType.ApiKey
         elif self.authentication_type == AuthenticationType.ManagedIdentity:
