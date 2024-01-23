@@ -5,7 +5,6 @@ import json
 import logging
 
 from contextvars import ContextVar
-
 from opencensus.ext.azure.log_exporter import AzureEventHandler
 
 COMPONENT_NAME = "BatchScoreLlm"

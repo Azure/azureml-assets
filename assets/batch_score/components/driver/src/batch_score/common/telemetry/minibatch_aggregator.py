@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import numpy as np
+
 from collections import defaultdict
 from datetime import datetime
-
-import numpy as np
 
 from .events.batch_score_event import BatchScoreEvent
 from .events.batch_score_minibatch_completed_event import BatchScoreMinibatchCompletedEvent
