@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Parallel driver."""
+
 import asyncio
 
 from ...utils.common import convert_result_list
@@ -18,6 +20,8 @@ from .conductor import Conductor
 
 
 class Parallel:
+    """Parallel driver."""
+
     def __init__(
         self,
         configuration: Configuration,
@@ -27,6 +31,7 @@ class Parallel:
         input_to_log_transformer: InputTransformer = None,
         input_to_output_transformer: InputTransformer = None,
     ):
+        """Initialize parallel driver."""
         self._configuration = configuration
         self.__loop = loop
         self.__conductor: Conductor = conductor
@@ -35,6 +40,7 @@ class Parallel:
         self.__input_to_output_transformer: InputTransformer = input_to_output_transformer
 
     def run(self, payloads: "list[str]", mini_batch_context: MiniBatchContext = None):
+        """Run function. Used in sync mode only."""
         self.log_start(payloads)
         scoring_requests, scoring_results = self.generate_scoring_requests(payloads, mini_batch_context)
 
@@ -49,16 +55,19 @@ class Parallel:
         return results
 
     def enqueue(self, payloads: "list[str]", mini_batch_context: MiniBatchContext = None):
+        """Enqueue function. Used in async mode only."""
         self.log_start(payloads)
         scoring_requests, failed_scoring_results = self.generate_scoring_requests(payloads, mini_batch_context)
 
         self.__conductor.enqueue(scoring_requests, failed_scoring_results, mini_batch_context)
 
     def log_start(self, payloads):
+        """Log start message."""
         lu.get_logger().info("Scoring {} requests".format(len(payloads)))
         lu.get_logger().info("ParallelDriver: async mode is {}".format(self._configuration.async_mode))
 
     def generate_scoring_requests(self, payloads, mini_batch_context):
+        """Generate scoring requests."""
         scoring_requests: "list[ScoringRequest]" = []
         failed_scoring_results: "list[ScoringResult]" = []
 
@@ -77,13 +86,17 @@ class Parallel:
         return scoring_requests, failed_scoring_results
 
     def check_all_tasks_processed(self):
+        """Check all tasks processed. Used in async mode only."""
         return self.__conductor.check_all_tasks_processed()
 
     def get_finished_batch_result(self):
+        """Get finished batch result. Used in async mode only."""
         return self.__conductor.get_finished_batch_result()
 
     def get_processing_batch_number(self):
+        """Get processing batch number. Used in async mode only."""
         return self.__conductor.get_processing_batch_number()
 
     def shutdown(self):
+        """Shutdown function."""
         return self.__conductor.shutdown()

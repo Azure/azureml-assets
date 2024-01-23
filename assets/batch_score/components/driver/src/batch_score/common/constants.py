@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Constants."""
+
 COMPONENT_NAME_KEY = "component_name"
 COMPONENT_VERSION_KEY = "component_version"
 METADATA_JSON_FILENAME = "metadata.json"

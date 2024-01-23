@@ -1,10 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Configuration Enums."""
+
 from strenum import StrEnum
 
 
 class EndpointType(StrEnum):
+    """Endpoint Type."""
+
     AOAI = 'AOAI'
     BatchPool = 'BatchPool'
     Serverless = 'Serverless'
@@ -12,6 +16,8 @@ class EndpointType(StrEnum):
 
 
 class AuthenticationType(StrEnum):
+    """Authentication Type."""
+
     Unknown = 'unknown'
     ManagedIdentity = 'managed_identity'
     ApiKey = 'api_key'
@@ -19,6 +25,8 @@ class AuthenticationType(StrEnum):
 
 
 class ApiType(StrEnum):
+    """Api Type."""
+
     Unknown = 'unknown'
     Completion = 'completion'
     ChatCompletion = 'chat_completion'

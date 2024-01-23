@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Congestion detector."""
+
 import os
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -14,6 +16,8 @@ from .request_metrics import RequestMetrics
 
 
 class CongestionState(Enum):
+    """Congestion state."""
+
     CONGESTED = 1
     SATURATED = 2
     FREE = 3
@@ -21,6 +25,8 @@ class CongestionState(Enum):
 
 
 class CongestionDetector(ABC):
+    """Congestion detector."""
+
     @abstractmethod
     def detect(
         self,
@@ -28,14 +34,18 @@ class CongestionDetector(ABC):
         start_time: pd.Timestamp,
         end_time: pd.Timestamp = None
     ) -> CongestionState:
+        """Detect congestion."""
         pass
 
 
 class WaitTimeCongestionDetector(CongestionDetector):
+    """Wait time congestion detector."""
+
     DEFAULT_CONGESTION_P90_THRESHOLD = 10
     DEFAULT_SATURATION_P90_THRESHOLD = 5
 
     def __init__(self, client_settings_provider: ClientSettingsProvider):
+        """Initialize WaitTimeCongestionDetector."""
         self.__client_settings_provider = client_settings_provider
         self._refresh_thresholds()
 
@@ -45,6 +55,7 @@ class WaitTimeCongestionDetector(CongestionDetector):
         start_time: pd.Timestamp,
         end_time: pd.Timestamp = None
     ) -> CongestionState:
+        """Detect congestion from request total wait time metrics."""
         self._refresh_thresholds()
 
         metrics = request_metrics.get_metrics(start_time, end_time)
