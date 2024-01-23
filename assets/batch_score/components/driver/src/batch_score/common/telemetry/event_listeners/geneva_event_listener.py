@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Geneva event listener."""
+
 from ..events.batch_score_event import BatchScoreEvent
 from ..events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
 from ..events.batch_score_init_started_event import BatchScoreInitStartedEvent
@@ -11,6 +13,7 @@ from ..geneva_event_client import GenevaEventClient
 
 
 def setup_geneva_event_handlers():
+    """Set up Geneva event handlers."""
     add_handler(_handle_batch_score_event)
 
 

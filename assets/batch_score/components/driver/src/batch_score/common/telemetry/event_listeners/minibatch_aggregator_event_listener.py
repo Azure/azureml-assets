@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Minibatch aggregator event listener."""
+
 from datetime import datetime
 
 from ..events.event_utils import (
@@ -15,11 +17,13 @@ from ..minibatch_aggregator import MinibatchAggregator
 
 
 def setup_minibatch_aggregator_event_handlers():
+    """Set up minibatch aggregator event handlers."""
     add_handler(_handle_batch_score_event)
     add_handler(_handle_generate_minibatch_summary, signal=Signal.GenerateMinibatchSummary)
 
 
 def teardown_minibatch_aggregator_event_handlers():
+    """Tear down minibatch aggregator event handlers."""
     remove_handler(_handle_batch_score_event)
     remove_handler(_handle_generate_minibatch_summary, signal=Signal.GenerateMinibatchSummary)
 
