@@ -101,7 +101,10 @@ def load_prompts(paths: 'list[str]'):
     """Load prompts."""
     for path in tqdm(paths, desc='Input files'):
         with open(path, 'rb') as f:
-            with tqdm(desc='Input data', total=os.stat(f.fileno()).st_size, unit='B', unit_scale=True, leave=None) as progress:
+            with tqdm(desc='Input data', total=os.stat(f.fileno()).st_size,
+                      unit='B',
+                      unit_scale=True,
+                      leave=None) as progress:
                 for line in f:
                     try:
                         yield json.loads(line)['prompt']

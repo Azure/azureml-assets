@@ -22,6 +22,6 @@ df.to_json(f'{dataname}/{dataname}.jsonl', orient='records', lines=True)
 
 
 m = mltable.from_json_lines_files([
-     {'file':f'{dataname}/{dataname}.jsonl'}
+     {'file': f'{dataname}/{dataname}.jsonl'}
     ])
 m.save(dataname)
