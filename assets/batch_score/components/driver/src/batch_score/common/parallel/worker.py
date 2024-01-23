@@ -11,7 +11,7 @@ from collections import deque
 
 import aiohttp
 
-from ...batch_pool.quota import QuotaUnavailableException
+from ...batch_pool.quota.quota_client import QuotaUnavailableException
 from ...batch_pool.scoring.scoring_client import ScoringClient
 from ...utils.common import str2bool
 from .. import constants
