@@ -1,9 +1,13 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import json
 import os
 import sys
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
+
 
 class ServiceSimulator:
     def __init__(self, handler):
