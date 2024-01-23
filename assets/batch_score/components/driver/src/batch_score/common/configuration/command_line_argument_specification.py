@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from ...batch_pool.quota.quota_client import QuotaClient
 from ...utils.common import str2bool
 from ..common_enums import ApiType

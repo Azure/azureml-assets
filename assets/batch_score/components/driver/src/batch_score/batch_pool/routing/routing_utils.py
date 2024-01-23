@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from enum import Enum
 
 from ...common.telemetry import logging_utils as lu
