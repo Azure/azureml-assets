@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Question Answering Distillation from teacher model like GPT 4
 description: Component to preprocess data for question answering task. See [docs](https://aka.ms/azureml/components/question_answering_datapreprocess) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/39
+environment: azureml://registries/azureml/environments/distillation-env/versions/1
 
 code: ../../../src/distillation/datagen
 

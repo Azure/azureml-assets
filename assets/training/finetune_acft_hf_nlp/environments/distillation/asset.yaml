@@ -1,0 +1,6 @@
+name: distillation-env
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["Training"]
