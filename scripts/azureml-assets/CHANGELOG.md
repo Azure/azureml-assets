@@ -5,7 +5,7 @@
 
 ## 1.16.34 (2024-01-23)
 ### 🐛 Bugs Fixed
-- [#](https://github.com/Azure/azureml-assets/pull/) Fix archiving on no-op model metadata
+- [#2168](https://github.com/Azure/azureml-assets/pull/2168) Fix archiving on no-op model metadata
 
 ## 1.16.33 (2024-01-22)
 ### 🐛 Bugs Fixed
