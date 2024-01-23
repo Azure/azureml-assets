@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Test file for io_utils.py"""
+
 import pytest
 from shared_utilities.io_utils import _verify_mltable_paths
 from shared_utilities.momo_exceptions import InvalidInputError
