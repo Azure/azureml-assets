@@ -202,7 +202,7 @@ class StoreUrl:
                     "Seems you are using AzureML dataset v1 as input of Model Monitoring Job, but we only support "
                     "dataset v2. Please follow "
                     "https://learn.microsoft.com/en-us/azure/machine-learning/migrate-to-v2-assets-data?view=azureml-api-2"  # noqa: E501
-                    "to upgrade your dataset to v2.")                    
+                    "to upgrade your dataset to v2.")
             else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
