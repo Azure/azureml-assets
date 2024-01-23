@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains fixtures to mock telemetry events and run context."""
+
 import pytest
 from datetime import datetime, timezone
 
@@ -32,6 +37,8 @@ TEST_EXECUTION_MODE = 'aml_pipeline'
 
 @pytest.fixture
 def mock_run_context(monkeypatch):
+    """Make a mock run context."""
+
     class MockWorkspace():
         def __init__(self, subscription_id, resource_group, workspace_name, location, workspace_id):
             self.subscription_id = subscription_id
@@ -71,6 +78,7 @@ def mock_run_context(monkeypatch):
 
 @pytest.fixture
 def make_batch_score_init_completed_event(mock_run_context, make_configuration, make_metadata):
+    """Make a mock BatchScoreInitCompletedEvent."""
     setup_context_vars(make_configuration, make_metadata)
 
     return update_common_fields(BatchScoreInitCompletedEvent(init_duration_ms=5))
@@ -78,6 +86,7 @@ def make_batch_score_init_completed_event(mock_run_context, make_configuration, 
 
 @pytest.fixture
 def make_batch_score_init_started_event(mock_run_context, make_configuration, make_metadata):
+    """Make a mock BatchScoreInitStartedEvent."""
     setup_context_vars(make_configuration, make_metadata)
 
     return update_common_fields(BatchScoreInitStartedEvent())
@@ -85,6 +94,7 @@ def make_batch_score_init_started_event(mock_run_context, make_configuration, ma
 
 @pytest.fixture
 def make_batch_score_minibatch_completed_event(mock_run_context, make_configuration, make_metadata):
+    """Make a mock BatchScoreMinibatchCompletedEvent."""
     configuration: Configuration = make_configuration
     setup_context_vars(configuration, make_metadata)
 
@@ -126,6 +136,7 @@ def make_batch_score_minibatch_completed_event(mock_run_context, make_configurat
 
 @pytest.fixture
 def make_batch_score_minibatch_started_event(mock_run_context, make_configuration, make_metadata):
+    """Make a mock BatchScoreMinibatchStartedEvent."""
     configuration: Configuration = make_configuration
     setup_context_vars(configuration, make_metadata)
 
@@ -140,6 +151,7 @@ def make_batch_score_minibatch_started_event(mock_run_context, make_configuratio
 
 
 def assert_run_context_fields(event: BatchScoreEvent):
+    """Assert run context fields of a BatchScoreEvent object."""
     assert event.experiment_id == TEST_EXPERIMENT_ID
     assert event.parent_run_id == TEST_PARENT_RUN_ID
     assert event.resource_group == TEST_RESOURCE_GROUP
@@ -151,6 +163,7 @@ def assert_run_context_fields(event: BatchScoreEvent):
 
 
 def assert_common_fields(event: BatchScoreEvent):
+    """Assert common fields of a BatchScoreEvent object."""
     assert event.api_type == TEST_API_TYPE
     assert event.authentication_type == TEST_AUTHENTICATION_TYPE
     assert event.component_name == TEST_COMPONENT_NAME
@@ -161,6 +174,7 @@ def assert_common_fields(event: BatchScoreEvent):
 
 
 def update_common_fields(event: BatchScoreEvent):
+    """Set common fields of a BatchScoreEvent object."""
     event.event_time = TEST_EVENT_TIME
     event.execution_mode = TEST_EXECUTION_MODE
 

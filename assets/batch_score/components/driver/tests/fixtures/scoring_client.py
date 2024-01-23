@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains fixtures to mock scoring client."""
+
 import pytest
 
 from src.batch_score.batch_pool.scoring.scoring_client import ScoringClient
@@ -10,6 +15,7 @@ def make_scoring_client(make_completion_header_handler,
                         make_quota_client,
                         make_routing_client,
                         make_tally_failed_request_handler):
+    """Mock scoring client."""
     def make(header_handler=make_completion_header_handler(),
              quota_client=make_quota_client(),
              routing_client=make_routing_client(),
@@ -28,6 +34,7 @@ def make_scoring_client(make_completion_header_handler,
 
 @pytest.fixture()
 def mock__score_once(monkeypatch, make_scoring_result):
+    """Mock score once."""
     state = {"raise_exception": None, "scoring_result": make_scoring_result()}
 
     async def __score_once(self, session, scoring_request: ScoringRequest, timeout, worker_id):

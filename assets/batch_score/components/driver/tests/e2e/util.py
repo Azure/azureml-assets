@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""End-to-end test utilities."""
+
 import errno
 import json
 import os
@@ -36,11 +41,8 @@ def _submit_job_and_monitor_till_completion(
 def _submit_batch_score_job(ml_client: MLClient,
                             pipeline_filepath: str,
                             yaml_overrides: "list[dict]" = None) -> Job:
-    """
-    Registers the specified component from local yaml, and then creates
-    a pipeline job from local yaml.
-    Returns the AzureML Job when it reaches terminal state
-    """
+    """Register the specified component from local yaml, and then creates a pipeline job from local yaml."""
+    """Return the AzureML Job when it reaches terminal state."""
     tmpDir = tempfile.TemporaryDirectory()
 
     try:
@@ -79,11 +81,7 @@ def _wait_until_termination(ml_client: MLClient,
 
 
 def _update_yaml(filename: str, yaml_override: dict):
-    """
-    Helper function to update a value in a yaml
-    file.
-    """
-
+    """Update a value in a yaml file."""
     with open(filename) as f:
         yml: dict = yaml.safe_load(f)
 
@@ -130,10 +128,12 @@ def _set_and_get_component_name_ver(component_filepath: str, component_version: 
 
 # TODO: add function to check pipeline output files are correct
 def validate_successful_run():
+    """Validate successful run."""
     pass
 
 
 def create_copy(source: str, destination: str = None) -> "tuple[tempfile.TemporaryDirectory, str]":
+    """Copy the source folder to the destination."""
     try:
         # source is a folder
         shutil.copytree(source, destination, dirs_exist_ok=True)
@@ -146,14 +146,13 @@ def create_copy(source: str, destination: str = None) -> "tuple[tempfile.Tempora
 
 
 def set_component(component_name: str, component_version: str, component_config: dict, job_name: str) -> None:
-    """
-    Sets the azureml asset name and version for the component being tested.
-    This fills the placeholder defined at top of this file.
-    """
+    """Set the azureml asset name and version for the component being tested."""
+    """This fills the placeholder defined at top of this file."""
     component_config["jobs"][job_name]["component"] = f"azureml:{component_name}:{component_version}"
 
 
 def create_metadata_json_file(metadata_json_filepath, component_name, component_version):
+    """Create metadata json file for e2e tests."""
     metadata_json_data = {
         COMPONENT_NAME_KEY: component_name,
         COMPONENT_VERSION_KEY: component_version,

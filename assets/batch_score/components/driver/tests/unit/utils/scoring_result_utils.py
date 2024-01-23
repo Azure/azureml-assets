@@ -21,6 +21,7 @@ def assert_scoring_result(
     end_time: float,
     start_time: float
 ):
+    """Assert scoring result fields are expected given the inputs."""
     assert scoring_result.end == end_time
     assert scoring_result.num_retries == 0
     assert scoring_result.status == expected_status

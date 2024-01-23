@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains a helper script for creating test assets."""
+
 import os
 from pathlib import Path
 

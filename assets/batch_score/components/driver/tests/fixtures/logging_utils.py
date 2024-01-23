@@ -1,9 +1,15 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains fixtures to mock logging utilities."""
+
 import pytest
 from mock import MagicMock
 
 
 @pytest.fixture()
 def mock_get_logger(monkeypatch):
+    """Get mock logger."""
     mock_logger = MagicMock()
 
     def _get_logger():
@@ -15,6 +21,7 @@ def mock_get_logger(monkeypatch):
 
 @pytest.fixture()
 def mock_get_events_client(monkeypatch):
+    """Get mock events client."""
     ret = MagicMock()
 
     def _get_events_client():

@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains end-to-end tests for AOAI endpoints."""
+
 import os
 
 import pytest
@@ -70,6 +75,7 @@ YAML_AOAI_EMBEDDING_TEST_DATA_ASSET = {"inputs": {
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)
 def test_gated_aoai_batch_score_completion(llm_batch_score_yml_component):
+    """Test gate for AOAI batch score completion model."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
     yaml_update = deep_update(YAML_COMPONENT,
@@ -87,6 +93,7 @@ def test_gated_aoai_batch_score_completion(llm_batch_score_yml_component):
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)
 def test_gated_aoai_batch_score_chat_completion(llm_batch_score_yml_component):
+    """Test gate for AOAI batch score chat completion model."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
     yaml_update = deep_update(YAML_COMPONENT,
@@ -104,6 +111,7 @@ def test_gated_aoai_batch_score_chat_completion(llm_batch_score_yml_component):
 @pytest.mark.e2e
 @pytest.mark.timeout(15 * 60)
 def test_gated_aoai_batch_score_embedding(llm_batch_score_yml_component):
+    """Test gate for AOAI batch score embedding model."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
     display_name = {"display_name": f"{RUN_NAME}_smoke"}
     yaml_update = deep_update(YAML_COMPONENT,

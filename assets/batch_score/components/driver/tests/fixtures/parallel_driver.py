@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains fixtures to mock parallel driver."""
+
 import asyncio
 
 import pytest
@@ -8,8 +13,10 @@ from src.batch_score.common.parallel.parallel_driver import Parallel
 
 @pytest.fixture()
 def make_parallel_driver(make_conductor, make_input_transformer):
+    """Mock parallel driver."""
     loop = asyncio.get_event_loop()
 
+    """Make a mock parallel driver."""
     def make(
         loop=loop,
         conductor=make_conductor(loop=loop),
