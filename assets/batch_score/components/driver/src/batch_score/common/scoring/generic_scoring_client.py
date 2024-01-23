@@ -36,6 +36,7 @@ class GenericScoringClient:
         http_response_handler: HttpResponseHandler,
         scoring_url: str,
     ) -> None:
+        """Initialize GenericScoringClient."""
         self._header_provider = header_provider
         self._http_response_handler = http_response_handler
         self._scoring_url = scoring_url
@@ -47,7 +48,7 @@ class GenericScoringClient:
         timeout: aiohttp.ClientTimeout = None,
         worker_id: str = "1"
     ) -> ScoringResult:
-        """Scores the request against the scoring url."""
+        """Score the request against the scoring url."""
         scoring_request.scoring_url = self._scoring_url
         http_request: HttpScoringRequest = self._create_http_request(scoring_request)
 
@@ -88,7 +89,7 @@ class GenericScoringClient:
         return scoring_result
 
     def validate_auth(self):
-        """Validates the auth by sending dummy request to the scoring url."""
+        """Validate the auth by sending dummy request to the scoring url."""
         asyncio.run(self._validate_auth())
 
     async def _validate_auth(self):
@@ -97,7 +98,7 @@ class GenericScoringClient:
             payload='hello',
             url=self._scoring_url,
         )
-        """Validates the auth by sending dummy request to the scoring url."""
+        """Validate the auth by sending dummy request to the scoring url."""
         timeout_duration = timedelta(seconds=10).total_seconds()
         timeout = aiohttp.ClientTimeout(total=timeout_duration)
 
@@ -116,7 +117,7 @@ class GenericScoringClient:
         self,
         scoring_request: ScoringRequest,
     ) -> HttpScoringRequest:
-        """Creates an instance of HTTP scoring request."""
+        """Create an instance of HTTP scoring request."""
         return HttpScoringRequest(
             headers=self._header_provider.get_headers(),
             payload=scoring_request.cleaned_payload,
@@ -130,7 +131,7 @@ class GenericScoringClient:
         internal_id: str,
         timeout: aiohttp.ClientTimeout = None,
     ) -> HttpScoringResponse:
-        """Sends HTTP request to scoring url."""
+        """Send HTTP request to scoring url."""
         try:
             async with session.post(
                 url=http_scoring_request.url,
@@ -154,7 +155,7 @@ class GenericScoringClient:
         internal_id: str,
         x_ms_client_request_id: str
     ) -> HttpScoringResponse:
-        """Creates an instance of HTTP scoring response."""
+        """Create an instance of HTTP scoring response."""
         http_response = HttpScoringResponse(
             status=response.status,
             headers=response.headers,
@@ -188,7 +189,7 @@ class GenericScoringClient:
         internal_id: str,
         x_ms_client_request_id: str
     ) -> HttpScoringResponse:
-        """Logs failure and creates an instance of HTTP scoring response."""
+        """Log failure and creates an instance of HTTP scoring response."""
         error = traceback.format_exc()
         ScoreFailedWithExceptionLog(
             internal_id=internal_id,

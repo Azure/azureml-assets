@@ -15,6 +15,8 @@ from .scoring_result import (
 
 
 class HttpResponseHandler:
+    """Http response handler."""
+
     @abstractmethod
     def handle_response(
             self,
@@ -24,6 +26,7 @@ class HttpResponseHandler:
             start: float,
             end: float,
             worker_id: str) -> ScoringResult:
+        """Handle Http response."""
         pass
 
     def _create_scoring_result(
@@ -35,7 +38,7 @@ class HttpResponseHandler:
             http_post_response: HttpScoringResponse,
             token_counts: "tuple[int]" = (),
             mini_batch_context: MiniBatchContext = None) -> ScoringResult:
-        """ Creates an instance of scoring result."""
+        """Create an instance of scoring result."""
         return ScoringResult(
             status=status,
             start=start,
