@@ -130,7 +130,7 @@ class ScoringClient:
             response_status = -408  # Manually attribute -408 as a tell to retry on this exception
 
             lu.get_logger().error("Worker {}: Score failed: {} -- internal_id: {} x-ms-client-request-id: {}".format(
-                worker_id, 
+                worker_id,
                 fully_qualified_exception_name,
                 scoring_request.internal_id,
                 headers["x-ms-client-request-id"]))
