@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Test file for io_utils.py"""
+"""Test file for io_utils."""
 
 import pytest
 from shared_utilities.io_utils import _verify_mltable_paths

@@ -119,7 +119,7 @@ conf:
           - numpy~=1.21.0
           - pandas~=1.4.3
           - azureml-mlflow~=1.49.0
-          - azure-storage-file-datalake~=12.13.1
+          - azure-storage-file-datalake~=12.8.0
           - mltable~=1.3.0
 
 code: ../../src
