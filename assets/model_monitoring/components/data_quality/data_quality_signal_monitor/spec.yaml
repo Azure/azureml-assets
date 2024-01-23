@@ -4,7 +4,7 @@ type: pipeline
 name: data_quality_signal_monitor
 display_name: Data Quality - Signal Monitor
 description: Computes the data quality of a target dataset with reference to a baseline.
-version: 0.3.22
+version: 0.3.23
 is_deterministic: true
 
 inputs:
@@ -46,6 +46,10 @@ inputs:
     type: string
     default: ""
     optional: true
+  instance_type:
+    type: string
+    default: "standard_e4s_v3"
+    optional: True
   override_numerical_features:
     type: string
     optional: true
@@ -59,7 +63,7 @@ outputs:
 jobs:
   compute_feature_importances:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.8
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.9
     inputs:
       baseline_data:
         type: mltable
@@ -72,7 +76,7 @@ jobs:
       signal_metrics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -93,7 +97,7 @@ jobs:
       feature_names:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -110,7 +114,7 @@ jobs:
       data_statistics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -135,7 +139,7 @@ jobs:
       signal_metrics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -158,7 +162,7 @@ jobs:
       signal_metrics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -178,7 +182,7 @@ jobs:
       signal_metrics:
         type: mltable
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -199,7 +203,7 @@ jobs:
         path: ${{parent.outputs.signal_output}}
         mode: direct
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token
@@ -213,7 +217,7 @@ jobs:
       notification_emails: ${{parent.inputs.notification_emails}}
       signal_name: ${{parent.inputs.signal_name}}
     resources:
-      instance_type: standard_e4s_v3
+      instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
       type: aml_token

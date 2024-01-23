@@ -13,6 +13,7 @@ from pyspark.sql.types import (
 )
 from shared_utilities.df_utils import get_numerical_and_categorical_cols
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable, init_spark
+from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities import constants
 from sklearn.model_selection import train_test_split
 from responsibleai import RAIInsights, FeatureMetadata
@@ -27,6 +28,10 @@ except ImportError:
 
 from feature_importance_metrics.feature_importance_utilities import (
     mark_categorical_column, convert_pandas_to_spark, log_time_and_message)
+
+
+CONTINUOUS_ERR = ('The target column is continuous. ' +
+                  'Please specify the task type as regression.')
 
 
 def parse_args():
@@ -92,7 +97,12 @@ def create_lightgbm_model(X, y, task_type):
         lgbm = LGBMRegressor(boosting_type='gbdt', learning_rate=0.1,
                              max_depth=5, n_estimators=200, n_jobs=1, random_state=777,)
 
-    model = lgbm.fit(X, y)
+    try:
+        model = lgbm.fit(X, y)
+    except ValueError as e:
+        if "Unknown label type: 'continuous'" in str(e):
+            raise InvalidInputError(CONTINUOUS_ERR)
+        raise e
     log_time_and_message(f"Created lightgbm model using task_type: {task_type}")
     return model
 
@@ -180,16 +190,13 @@ def compute_explanations(model_wrapper, train_data, test_data, categorical_featu
     return explanationData.precomputedExplanations.globalFeatureImportance['scores']
 
 
-def compute_feature_importance(task_type, target_column, baseline_data, lgbm_df, categorical_features):
+def compute_feature_importance(task_type, target_column, lgbm_df, categorical_features):
     """Compute feature importance of baseline data.
 
     :param task_type: The task type (regression or classification) of the resulting model
     :type task_type: string
     :param target_column: the column to predict
     :type target_column: string
-    :param baseline_data: The baseline data meaning the data used to create the
-    model monitor
-    :type baseline_data: pandas.DataFrame
     :param lgbm_df: The baseline data with the lgbm unsupported column types marked as category type
     :type lgbm_df: pandas.DataFrame
     :param categorical_features: The column names which are categorical in type
@@ -198,7 +205,7 @@ def compute_feature_importance(task_type, target_column, baseline_data, lgbm_df,
     :rtype: list[float]
     """
     model_wrapper = get_model_wrapper(task_type, target_column, lgbm_df)
-    train_data, test_data = get_train_test_data(baseline_data)
+    train_data, test_data = get_train_test_data(lgbm_df)
     baseline_explanations = compute_explanations(
         model_wrapper, train_data, test_data, categorical_features, target_column, task_type)
     log_time_and_message("Successfully computed explanations for dataset")
@@ -264,6 +271,16 @@ def write_empty_signal_metrics_dataframe():
     save_spark_df_as_mltable(df, args.signal_metrics)
 
 
+def check_df_has_target_column_with_error(baseline_df, target_column: str):
+    """Check if a DataFrame has a specified column in its columns. Raises an InvalidInputError if not."""
+    if target_column not in baseline_df.columns:
+        raise InvalidInputError(
+                f"Target column = '{target_column}' is not in the dataset provided to this component." +
+                " Please try using either a complete dataset that already has the target column or try joining" +
+                " with a dataset that results in the target column being included."
+            )
+
+
 def run(args):
     """Calculate feature importance."""
     try:
@@ -275,6 +292,7 @@ def run(args):
             return
         log_time_and_message("Reading data in spark and converting to pandas")
         baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
+        check_df_has_target_column_with_error(baseline_df, args.target_column)
 
         numerical_features, categorical_features = get_numerical_and_categorical_cols(
                                                             baseline_df,
@@ -295,7 +313,7 @@ def run(args):
         mark_categorical_column(baseline_df_lgbm, args.target_column, categorical_features_lgbm, numerical_features)
 
         feature_importances = compute_feature_importance(
-            task_type, args.target_column, baseline_df, baseline_df_lgbm, categorical_features_lgbm)
+            task_type, args.target_column, baseline_df_lgbm, categorical_features_lgbm)
         feature_columns = baseline_df.drop([args.target_column], axis=1)
         write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features_lgbm)
         log_time_and_message("Successfully executed the feature importance component.")

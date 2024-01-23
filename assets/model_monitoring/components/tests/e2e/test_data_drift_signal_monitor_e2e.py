@@ -18,7 +18,9 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_IRIS_BASELINE_INT_SINGLE_VALUE_HISTOGRAM,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM,
     DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE,
+    DATA_ASSET_WITH_TIMESTAMP_BASELINE_DATA,
+    DATA_ASSET_WITH_TIMESTAMP_PRODUCTION_DATA
 )
 
 
@@ -28,6 +30,7 @@ def _submit_data_drift_model_monitor_job(
     experiment_name,
     baseline_data,
     target_data,
+    target_column="target",
     override_numerical_features=None,
     override_categorical_features=None
 ):
@@ -35,29 +38,30 @@ def _submit_data_drift_model_monitor_job(
 
     @pipeline()
     def _data_drift_signal_monitor_e2e():
-        dd_signal_monitor_output = dd_model_monitor(
+        data_drift_signal_monitor_output = dd_model_monitor(
             target_data=target_data,
             baseline_data=baseline_data,
             signal_name="my_test_create_manifest_signal",
             monitor_name="my_test_model_monitor",
             monitor_current_time="2023-02-02T00:00:00Z",
-            target_column="target",
+            target_column=target_column,
             filter_type="TopNByAttribution",
             filter_value="3",
             numerical_threshold=0.5,
             categorical_threshold=0.5,
             override_numerical_features=override_numerical_features,
-            override_categorical_features=override_categorical_features
+            override_categorical_features=override_categorical_features,
+            instance_type="standard_e8s_v3"
         )
-        return {"signal_output": dd_signal_monitor_output.outputs
-                .signal_output}
+        return {
+            "signal_output": data_drift_signal_monitor_output.outputs.signal_output
+            }
 
     pipeline_job = _data_drift_signal_monitor_e2e()
-    pipeline_job.outputs.signal_output = Output(type="uri_folder",
-                                                mode="direct")
-
+    print(pipeline_job)
+    pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
     pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+       pipeline_job, experiment_name=experiment_name, skip_validation=True
     )
 
     # Wait until the job completes
@@ -177,8 +181,24 @@ class TestDataDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE,
+            "target",
             "sepal_width",
             "petal_length"
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    def test_monitoring_run_successful_with_timestamp_data(
+        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+    ):
+        """Test the happy path scenario with timestamp data."""
+        pipeline_job = _submit_data_drift_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_WITH_TIMESTAMP_BASELINE_DATA,
+            DATA_ASSET_WITH_TIMESTAMP_PRODUCTION_DATA,
+            "DEFAULT_NEXT_MONTH"
         )
 
         assert pipeline_job.status == "Completed"
