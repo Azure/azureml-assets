@@ -1,11 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Completion estimator."""
+
 from .dv3_estimator import DV3Estimator
 
 
 # Estimator for the /completions API
 class CompletionEstimator(DV3Estimator):
+    """Completion estimator."""
+
     def _get_prompt(self, request_obj: any) -> str:
         prompt = request_obj.get("prompt", None)
 

@@ -18,6 +18,7 @@ class AoaiHeaderProvider(HeaderProvider):
         auth_provider: AuthProvider,
         additional_headers: str = None,
     ):
+        """Initialize AoaiHeaderProvider."""
         self._auth_provider = auth_provider
 
         if additional_headers is not None:
@@ -26,7 +27,7 @@ class AoaiHeaderProvider(HeaderProvider):
             self._additional_headers = {}
 
     def get_headers(self) -> dict:
-        """Gets the headers from the auth provider and additional headers."""
+        """Get the headers from the auth provider and additional headers."""
         headers = {
             'Content-Type': 'application/json',
             'x-ms-client-request-id': str(uuid.uuid4()),

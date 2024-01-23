@@ -28,6 +28,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
     RETRIABLE_STATUS_CODES = [408, 429, 500, 502, 503, 504]
 
     def __init__(self, tally_handler: TallyFailedRequestHandler):
+        """Initialize AoaiHttpResponseHandler."""
         self.__tally_handler = tally_handler
 
     def handle_response(
@@ -38,8 +39,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             start: float,
             end: float,
             worker_id: str) -> ScoringResult:
-        """ Handles the response from the model for the provided scoring request."""
-
+        """Handle the response from the model for the provided scoring request."""
         # Emit request completed event
         self._emit_request_completed_event(
             http_response=http_response,
@@ -93,6 +93,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
         return result
 
     def is_retriable(self, http_status: int) -> bool:
+        """Is the http status retriable."""
         return http_status in self.RETRIABLE_STATUS_CODES
 
     def _handle_exception(
@@ -101,8 +102,9 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             scoring_request: ScoringRequest,
             start: float,
             end: float) -> ScoringResult:
-        """ Handles the exception by raising retriable exception or creating scoring
-        result for non-retriable exception."""
+        """
+        Handle the exception by raising retriable exception or creating scoring result for non-retriable exception.
+        """
         try:
             raise http_response.exception
         except (
