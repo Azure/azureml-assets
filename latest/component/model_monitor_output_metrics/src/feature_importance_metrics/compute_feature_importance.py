@@ -16,10 +16,7 @@ from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save
 from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities import constants
 from sklearn.model_selection import train_test_split
-from responsibleai import RAIInsights, FeatureMetadata
-from ml_wrappers.model.predictions_wrapper import (
-    PredictionsModelWrapperClassification,
-    PredictionsModelWrapperRegression)
+from interpret_community.shap.tree_explainer import TreeExplainer
 
 try:
     from lightgbm import LGBMClassifier, LGBMRegressor
@@ -107,8 +104,8 @@ def create_lightgbm_model(X, y, task_type):
     return model
 
 
-def get_model_wrapper(task_type, target_column, train_data):
-    """Create model wrapper using ml-wrappers on which to calculate feature importances.
+def get_model(task_type, target_column, baseline_data):
+    """Create a lightgbm model on which to calculate feature importances.
 
     :param task_type: The task type (regression or classification) of the resulting model
     :type task_type: string
@@ -117,26 +114,12 @@ def get_model_wrapper(task_type, target_column, train_data):
     :param baseline_data: The baseline data meaning the data used to create the
     model monitor
     :type baseline_data: pandas.DataFrame
-    :return: an appropriate model wrapper
-    :rtype: PredictionsModelWrapperRegression or PredictionsModelWrapperClassification
+    :return: The trained lightgbm surrogate model
+    :rtype: LGBMClassifier or LGBMRegressor
     """
-    y_train = train_data[target_column]
-    x_train = train_data.drop([target_column], axis=1)
-    model = create_lightgbm_model(x_train, y_train, task_type)
-    model_predict = model.predict(x_train)
-    log_time_and_message("Called predict on model")
-
-    if task_type == constants.CLASSIFICATION:
-        model_predict_proba = model.predict_proba(x_train)
-        model_wrapper = PredictionsModelWrapperClassification(
-            x_train,
-            model_predict,
-            model_predict_proba)
-    else:
-        model_wrapper = PredictionsModelWrapperRegression(x_train, model_predict)
-
-    log_time_and_message("Created ml wrapper")
-    return model_wrapper
+    y_train = baseline_data[target_column]
+    x_train = baseline_data.drop([target_column], axis=1)
+    return create_lightgbm_model(x_train, y_train, task_type)
 
 
 def get_train_test_data(data):
@@ -159,11 +142,11 @@ def get_train_test_data(data):
     return train_data, test_data
 
 
-def compute_explanations(model_wrapper, train_data, test_data, categorical_features, target_column, task_type):
+def compute_explanations(model, train_data, test_data, categorical_features, target_column, task_type):
     """Compute explanations (feature importances) for a given dataset.
 
-    :param model_wrapper: wrapper around a model that can be used to calculate explanations
-    :type model_wrapper: PredictionsModelWrapperRegression or PredictionsModelWrapperClassification
+    :param model: surrogate model that can be used to calculate explanations
+    :type model: LGBMClassifier or LGBMRegressor
     :param  data: The data used to calculate the explanations
     :type data: pandas.Dataframe
     :param categorical_features: categorical features not including the target column
@@ -175,19 +158,11 @@ def compute_explanations(model_wrapper, train_data, test_data, categorical_featu
     :return: explanation scores for the input data
     :rtype: list[float]
     """
-    # Create the RAI Insights object, split baseline data into train and test data
-    feature_metadata = FeatureMetadata(categorical_features=categorical_features, dropped_features=[])
-
-    rai_i: RAIInsights = RAIInsights(
-        model_wrapper, train_data, test_data, target_column, task_type, feature_metadata=feature_metadata
-    )
-    log_time_and_message("Created RAIInsights")
-    # Add the global explanations using batching to allow for larger input data sizes
-    rai_i.explainer.add()
-    evaluation_data = train_data.drop([target_column], axis=1)
+    evaluation_data = test_data.drop([target_column], axis=1)
+    explainer = TreeExplainer(model)
     log_time_and_message("Requesting explanations")
-    explanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
-    return explanationData.precomputedExplanations.globalFeatureImportance['scores']
+    global_explanation = explainer.explain_global(evaluation_data, include_local=False)
+    return global_explanation.global_importance_values
 
 
 def compute_feature_importance(task_type, target_column, lgbm_df, categorical_features):
@@ -204,12 +179,11 @@ def compute_feature_importance(task_type, target_column, lgbm_df, categorical_fe
     :return: list of feature importances in the order of the columns in the baseline data
     :rtype: list[float]
     """
-    model_wrapper = get_model_wrapper(task_type, target_column, lgbm_df)
+    model = get_model(task_type, target_column, lgbm_df)
     train_data, test_data = get_train_test_data(lgbm_df)
     baseline_explanations = compute_explanations(
-        model_wrapper, train_data, test_data, categorical_features, target_column, task_type)
+        model, train_data, test_data, categorical_features, target_column, task_type)
     log_time_and_message("Successfully computed explanations for dataset")
-
     return baseline_explanations
 
 
@@ -295,9 +269,8 @@ def run(args):
         check_df_has_target_column_with_error(baseline_df, args.target_column)
 
         numerical_features, categorical_features = get_numerical_and_categorical_cols(
-                                                            baseline_df,
-                                                            args.override_numerical_features,
-                                                            args.override_categorical_features)
+            baseline_df, args.override_numerical_features,
+            args.override_categorical_features)
         baseline_df = baseline_df.toPandas()
 
         task_type = determine_task_type(args.task_type, args.target_column, baseline_df, categorical_features)
