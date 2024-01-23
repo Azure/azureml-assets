@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Entry script for batch score component."""
+
 import asyncio
 import os
 import sys
@@ -68,6 +73,7 @@ configuration: Configuration = None
 
 
 def init():
+    """Init function of the component."""
     global par
     global configuration
 
@@ -139,6 +145,7 @@ def init():
 
 
 def run(input_data: pd.DataFrame, mini_batch_context):
+    """Run function of the component. Used in sync mode only."""
     global par
     global configuration
 
@@ -188,6 +195,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
 
 
 def enqueue(input_data: pd.DataFrame, mini_batch_context):
+    """Enqueue function of the component. Used in async mode only."""
     global par
     global configuration
 
@@ -227,6 +235,7 @@ def enqueue(input_data: pd.DataFrame, mini_batch_context):
 
 
 def check_all_tasks_processed() -> bool:
+    """Check if all enqueued tasks are processed. Used in async mode only."""
     global par
     global configuration
 
@@ -235,6 +244,7 @@ def check_all_tasks_processed() -> bool:
 
 
 def get_finished_batch_result() -> "dict[str, dict[str, any]]":
+    """Get result of finished mini batches. Used in async mode only."""
     global par
     global configuration
 
@@ -243,6 +253,7 @@ def get_finished_batch_result() -> "dict[str, dict[str, any]]":
 
 
 def get_processing_batch_number() -> int:
+    """Get number of mini batches are being processed. Used in async mode only."""
     global par
     global configuration
 
@@ -251,6 +262,7 @@ def get_processing_batch_number() -> int:
 
 
 def shutdown():
+    """Shutdown function of the component."""
     global par
     global configuration
 
@@ -261,6 +273,7 @@ def shutdown():
 
 
 def setup_trace_configs():
+    """Set up trace log configurations."""
     is_enabled = os.environ.get(constants.BATCH_SCORE_TRACE_LOGGING_ENV_VAR, None)
     trace_configs = None
 
@@ -281,6 +294,7 @@ def setup_trace_configs():
 
 
 def setup_loop() -> asyncio.AbstractEventLoop:
+    """Set up event loop."""
     if sys.platform == 'win32':
         # For windows environment
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -317,7 +331,7 @@ def setup_input_to_log_transformer() -> InputTransformer:
 
 
 def setup_input_to_output_transformer() -> InputTransformer:
-    """This tranformer is used to modify each row of the input data before it written to output."""
+    """Set up the tranformer used to modify each row of the input data before it written to output."""
     modifiers: "list[RequestModifier]" = []
     if configuration.is_vesta():
         modifiers.append(VestaEncodedImageScrubber())
@@ -328,6 +342,7 @@ def setup_input_to_output_transformer() -> InputTransformer:
 
 
 def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
+    """Set up routing client."""
     routing_client: RoutingClient = None
     if configuration.batch_pool and configuration.service_namespace:
         meds_header_handler = MedsHeaderHandler(
