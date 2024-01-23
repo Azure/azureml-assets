@@ -24,7 +24,11 @@ def is_zero_traffic_group_error(response_status: int, response_payload: any = No
 # 404 case is to exclude an endpoint that encountered ZeroTrafficGroupError
 # 429, 503 case is to exclude an endpoint
 # 424 case is to exclude an endpoint that encountered ModelNotReadyError
-def get_retriable_type(response_status: int, response_payload: any = None, model_response_code: str = None, model_response_reason: str = None):
+def get_retriable_type(
+        response_status: int,
+        response_payload: any = None,
+        model_response_code: str = None,
+        model_response_reason: str = None):
     if response_status in [408, -408]:
         return RetriableType.RETRY_ON_SAME_ENDPOINT
 
@@ -36,7 +40,8 @@ def get_retriable_type(response_status: int, response_payload: any = None, model
 
     if response_status == 403:
         # TODO: Remove 403 from retriable statuses.
-        #  A bug in MIR returns 403 instead of 404 when allow-listed object ids exist on traffic groups with zero capacity.
+        # A bug in MIR returns 403 instead of 404 when allow-listed object ids exist
+        # on traffic groups with zero capacity.
         return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT
 
     if response_status == 424:

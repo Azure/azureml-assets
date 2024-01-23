@@ -17,7 +17,14 @@ class PermanentException(Exception):
 
 
 class RetriableException(Exception):
-    def __init__(self, status_code: int, response_payload: any = None, model_response_code: str = None, model_response_reason: str = None, retry_after: float = None):
+    def __init__(
+            self,
+            status_code: int,
+            response_payload:
+            any = None,
+            model_response_code: str = None,
+            model_response_reason: str = None,
+            retry_after: float = None):
         self.status_code = status_code
         self.response_payload = response_payload
         self.model_response_code = model_response_code

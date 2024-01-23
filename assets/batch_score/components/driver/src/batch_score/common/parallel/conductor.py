@@ -23,7 +23,7 @@ from .worker import QueueItem, Worker
 
 class Conductor:
     def __init__(
-        self, 
+        self,
         configuration: Configuration,
         loop: asyncio.AbstractEventLoop,
         scoring_client: ScoringClient,
@@ -153,7 +153,8 @@ class Conductor:
     def __add_requests(self, requests: "list[ScoringRequest]"):
         for request in requests:
             timeout_generator = ScoringClient.get_retry_timeout_generator(self.__client_session.timeout)
-            self.__scoring_request_queue.append(QueueItem(scoring_request=request, timeout_generator=timeout_generator))
+            self.__scoring_request_queue.append(
+                QueueItem(scoring_request=request, timeout_generator=timeout_generator))
 
     def __add_failed_scoring_results(self, failed_results: "list[ScoringResult]"):
         self.__failed_scoring_result_queue.extend(failed_results)

@@ -131,7 +131,7 @@ class GenericScoringClient:
         timeout: aiohttp.ClientTimeout = None,
     ) -> HttpScoringResponse:
         """Sends HTTP request to scoring url."""
-        try: 
+        try:
             async with session.post(
                 url=http_scoring_request.url,
                 headers=http_scoring_request.headers,

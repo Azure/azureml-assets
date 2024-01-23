@@ -39,14 +39,15 @@ class ImageEncoder():
 
         # Inlined image data
         else:
-            lu.get_logger().debug(f"Image is already encoded, no encoding necessary.")
+            lu.get_logger().debug("Image is already encoded, no encoding necessary.")
             return image_data
 
     def _b64_from_url(self, url: str) -> str:
         start = time.time()
         resp = requests.get(url)
         if resp.status_code != 200:
-            lu.get_logger().info(f"URL '{url}' responded with an unsuccessful response: {resp.status_code}, {resp.reason}.")
+            lu.get_logger().info(
+                f"URL '{url}' responded with an unsuccessful response: {resp.status_code}, {resp.reason}.")
             raise UnsuccessfulUrlResponse()
 
         img = resp.content

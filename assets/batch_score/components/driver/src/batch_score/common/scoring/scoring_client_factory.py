@@ -105,9 +105,10 @@ def setup_mir_scoring_client(
 
     header_handler = None
 
-    '''Get the auth token from workspace connection and add that to the header. Additionally, add the 'Content-Type' header.
-    The presence of workspace connection also signifies that this can be any MIR endpoint, so this will not add OAI specific headers.
-    '''    
+    '''Get the auth token from workspace connection and add that to the header.
+    Additionally, add the 'Content-Type' header. The presence of workspace connection also
+    signifies that this can be any MIR endpoint, so this will not add OAI specific headers.
+    '''
     if connection_name is not None:
         header_handler = MIREndpointV2HeaderHandler(connection_name, configuration.additional_headers)
     else:

@@ -127,7 +127,7 @@ class Worker:
                 end = time.time()
 
                 # Back-off 1 second before adding ScoringRequest back to the queue
-                # TODO: consider adjusting back-off. 
+                # TODO: consider adjusting back-off.
                 #   - None-429s: increase backoff for consecutive retries
                 #   - 429s: vary backoff based on request cost to prevent large request starvation
                 back_off = e.retry_after or 1
@@ -228,12 +228,13 @@ class Worker:
     def _log_score_failed_with_permanent_exception(
             self, scoring_request: ScoringRequest,
             exception: PermanentException):
-        lu.get_logger().error("Worker {}: Score failed: {}. internal_id: {}, total_wait_time: {}, retry_count: {}".format(
-            self.id,
-            str(exception),
-            scoring_request.internal_id,
-            scoring_request.total_wait_time,
-            scoring_request.retry_count))
+        lu.get_logger().error("Worker {}: Score failed: {}. internal_id: {}, total_wait_time: {}, retry_count: {}"
+                              .format(
+                                  self.id,
+                                  str(exception),
+                                  scoring_request.internal_id,
+                                  scoring_request.total_wait_time,
+                                  scoring_request.retry_count))
 
     def _log_score_failed_with_retriable_exception(
             self,
