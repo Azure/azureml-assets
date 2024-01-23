@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Routing simulator."""
+
 import os
 import re
 
@@ -14,11 +16,15 @@ ENV_ENDPOINT_URI = "ROUTING_SIMULATOR_ENDPOINT_URI"
 
 
 class RoutingSimulator(ServiceSimulator):
+    """Routing simulator."""
+
     def __init__(self):
+        """Initialize RoutingSimulator."""
         super().__init__(handler=self.RequestHandler)
 
     @classmethod
     def initialize(cls):
+        """Initialize function."""
         if not cls.arg_pattern_is_present(ARG_HOST_PATTERN) or not os.environ.get(ENV_ENDPOINT_URI):
             print("Not starting routing simulator")
             return
@@ -31,7 +37,10 @@ class RoutingSimulator(ServiceSimulator):
         cls.arg_pattern_replace(ARG_HOST_PATTERN, quota.host)
 
     class RequestHandler(ServiceSimulator.RequestHandler):
+        """Simulator request handler."""
+
         def do_POST(self):
+            """Simulate a POST request."""
             try:
                 path = self.path.split("?")[0]
 

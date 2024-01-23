@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Helper script to create a test dataset."""
+
 # https://huggingface.co/datasets/cnn_dailymail
 from datasets import load_dataset
 import pandas as pd

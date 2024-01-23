@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Train token model."""
+
 import json
 import numpy as np
 import os
@@ -18,6 +20,7 @@ from tiktoken_ext.openai_public import ENCODING_CONSTRUCTORS
 
 
 def main(argv):
+    """Run the entry point function."""
     parser = ArgumentParser()
 
     parser.add_argument('--test')
@@ -62,14 +65,16 @@ def main(argv):
 
 
 def load_tokenizer():
+    """Load tokenizer."""
     return Encoding(**ENCODING_CONSTRUCTORS['cl100k_base']())
 
 
 def load_data(paths: 'list[str]', tokenizer: Encoding, *, sample: bool = True):
+    """Load data."""
     encoded_x = {
-        'bytes': [], # Histogram
-        'chars': [], # Total count
-        'words': [], # Total count
+        'bytes': [],  # Histogram
+        'chars': [],  # Total count
+        'words': [],  # Total count
     }
 
     encoded_y = []
@@ -93,6 +98,7 @@ def load_data(paths: 'list[str]', tokenizer: Encoding, *, sample: bool = True):
 
 
 def load_prompts(paths: 'list[str]'):
+    """Load prompts."""
     for path in tqdm(paths, desc='Input files'):
         with open(path, 'rb') as f:
             with tqdm(desc='Input data', total=os.stat(f.fileno()).st_size, unit='B', unit_scale=True, leave=None) as progress:
@@ -111,6 +117,7 @@ def load_prompts(paths: 'list[str]'):
 # (e.g., all the prompts in a dataset having lengths in a range 2000-2100),
 # making the resulting model rely too much on the average.
 def sample_from_prompt(prompt: str):
+    """Get samples from prompt."""
     start = randrange(0, len(prompt)//2)
     end = randrange(len(prompt)//2, len(prompt) + 1)
 
@@ -118,6 +125,7 @@ def sample_from_prompt(prompt: str):
 
 
 def split_data(x, y, test_fraction: float):
+    """Split data."""
     indices = list(range(y.shape[0]))
     random.shuffle(indices)
     split = int(len(indices) * test_fraction)
@@ -132,6 +140,7 @@ def split_data(x, y, test_fraction: float):
 
 
 def train_regression_model(x, y):
+    """Train a regression model."""
     model = LinearRegression(fit_intercept=False, positive=True)
     model.fit(x, y)
 
@@ -139,36 +148,39 @@ def train_regression_model(x, y):
 
 
 def print_stats(model: LinearRegression, test_x, test_y, *, name=''):
+    """Print stats."""
     pred_y = model.predict(test_x)
 
     print()
-    print(f'=====')
+    print('=====')
     print(f'Model {name}')
-    print(f'=====')
+    print('=====')
     print()
-    print(f'Coefficients:', model.coef_, sep='\n')
-    print(f'---')
+    print('Coefficients:', model.coef_, sep='\n')
+    print('---')
     print(f'Min: {test_y.min()}')
     print(f'Avg: {int(test_y.mean())}')
     print(f'Max: {test_y.max()}')
-    print(f'---')
+    print('---')
     print(f'R^2:  {model.score(test_x, test_y)}')
     print(f'MSE:  {np.square(pred_y - test_y).mean()}')
     print(f'MAE%: {100*(np.abs(pred_y - test_y)/test_y).mean()}')
-    print(f'---')
+    print('---')
     print(f'Min AE: {np.abs(pred_y - test_y).min()}')
     print(f'Max AE: {np.abs(pred_y - test_y).max()}')
-    print(f'---')
+    print('---')
     print(f'Min AE%: {100*(np.abs(pred_y - test_y)/test_y).min()}')
     print(f'Max AE%: {100*(np.abs(pred_y - test_y)/test_y).max()}')
 
 
 def write_coeffs(model: LinearRegression, path: str):
+    """Write coefficients to the path."""
     with open(path, 'w') as f:
         json.dump(model.coef_.tolist(), f, indent=4)
 
 
 def write_eval(y, path: str):
+    """Write evaluation to the path."""
     if not path:
         return
 
@@ -179,4 +191,3 @@ def write_eval(y, path: str):
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
-
