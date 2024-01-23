@@ -331,20 +331,28 @@ class Worker:
         # TODO: Clean up this log line
         lu.get_events_client().emit_row_completed(1, str(scoring_result.status))
 
-        # Emit input row completed event
-        input_row_completed_event = BatchScoreInputRowCompletedEvent(
-            minibatch_id=self._get_minibatch_id(scoring_request),
-            input_row_id=scoring_request.internal_id,
-            worker_id=self.id,
-            scoring_url=scoring_request.scoring_url,
-            is_successful=scoring_result.status == ScoringResultStatus.SUCCESS,
-            response_code=-1 if not scoring_result.response_headers else scoring_result.response_headers.get(
-                "ms-azureml-model-error-statuscode", -1),
-            prompt_tokens=scoring_result.prompt_tokens,
-            completion_tokens=scoring_result.completion_tokens,
-            retry_count=scoring_result.num_retries,
-            duration_ms=scoring_result.duration * 1000,
-            segment_count=processed_segments_count
-        )
+        self.__emit_input_row_completed_event(scoring_request, scoring_result, processed_segments_count)
 
-        event_utils.emit_event(batch_score_event=input_row_completed_event)
+        @event_utils.catch_and_log_all_exceptions
+        def __emit_input_row_completed_event(
+                self,
+                scoring_request: ScoringRequest,
+                scoring_result: ScoringResult, 
+                processed_segments_count: int = 0) -> None:
+            # Emit input row completed event
+            input_row_completed_event = BatchScoreInputRowCompletedEvent(
+                minibatch_id=self._get_minibatch_id(scoring_request),
+                input_row_id=scoring_request.internal_id,
+                worker_id=self.id,
+                scoring_url=scoring_request.scoring_url,
+                is_successful=scoring_result.status == ScoringResultStatus.SUCCESS,
+                response_code=-1 if not scoring_result.response_headers else scoring_result.response_headers.get(
+                    "ms-azureml-model-error-statuscode", -1),
+                prompt_tokens=scoring_result.prompt_tokens,
+                completion_tokens=scoring_result.completion_tokens,
+                retry_count=scoring_result.num_retries,
+                duration_ms=scoring_result.duration * 1000,
+                segment_count=processed_segments_count
+            )
+
+            event_utils.emit_event(batch_score_event=input_row_completed_event)
