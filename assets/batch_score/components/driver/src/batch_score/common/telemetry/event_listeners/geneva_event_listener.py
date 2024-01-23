@@ -24,7 +24,7 @@ _geneva_event_types = (
 
 
 @catch_and_log_all_exceptions
-def _handle_batch_score_event(batch_score_event: BatchScoreEvent = None, sender = None, signal = None):
+def _handle_batch_score_event(batch_score_event: BatchScoreEvent = None, sender=None, signal=None):
     if batch_score_event is None:
         return
 
