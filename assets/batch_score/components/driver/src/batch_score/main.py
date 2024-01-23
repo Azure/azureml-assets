@@ -143,15 +143,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
     global configuration
 
     lu.get_logger().info(f"Scoring a new data subset, length {input_data.shape[0]}...")
-    event_utils.emit_event(
-        batch_score_event=BatchScoreMinibatchStartedEvent(
-            minibatch_id=mini_batch_context.minibatch_index,
-            scoring_url=configuration.scoring_url,
-            batch_pool=configuration.batch_pool,
-            quota_audience=configuration.quota_audience,
-            input_row_count=input_data.shape[0],
-        )
-    )
+    _emit_minibatch_started_event(mini_batch_context, configuration, input_data)
 
     set_mini_batch_id(mini_batch_context.minibatch_index)
 
@@ -201,21 +193,14 @@ def enqueue(input_data: pd.DataFrame, mini_batch_context):
 
     mini_batch_id = mini_batch_context.minibatch_index
     lu.get_logger().info("Enqueueing new mini-batch {}...".format(mini_batch_id))
-    event_utils.emit_event(
-        batch_score_event=BatchScoreMinibatchStartedEvent(
-            minibatch_id=mini_batch_context.minibatch_index,
-            scoring_url=configuration.scoring_url,
-            batch_pool=configuration.batch_pool,
-            quota_audience=configuration.quota_audience,
-            input_row_count=input_data.shape[0],
-        )
-    )
+    _emit_minibatch_started_event(mini_batch_context, configuration, input_data)
 
     set_mini_batch_id(mini_batch_id)
 
-    data_list = convert_to_list(input_data,
-                                additional_properties=configuration.additional_properties,
-                                batch_size_per_request=configuration.batch_size_per_request)
+    data_list = convert_to_list(
+        input_data,
+        additional_properties=configuration.additional_properties,
+        batch_size_per_request=configuration.batch_size_per_request)
 
     get_events_client().emit_mini_batch_started(input_row_count=len(data_list))
     lu.get_logger().info("Number of payloads in this mini-batch: {}".format(len(data_list)))
@@ -276,7 +261,7 @@ def shutdown():
 
 
 def setup_trace_configs():
-    is_enabled = os.environ.get(constants.BATCH_SCORE_TRACE_LOGGING, None)
+    is_enabled = os.environ.get(constants.BATCH_SCORE_TRACE_LOGGING_ENV_VAR, None)
     trace_configs = None
 
     if is_enabled and is_enabled.lower() == "true":
@@ -362,7 +347,7 @@ def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
 
 
 def _should_emit_prompts_to_job_log() -> bool:
-    emit_prompts_to_job_log_env_var = os.environ.get(constants.BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG)
+    emit_prompts_to_job_log_env_var = os.environ.get(constants.BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG_ENV_VAR)
     if emit_prompts_to_job_log_env_var is None:
         # Disable emitting prompts to job log by default for LLM component,
         # keep it enabled by default for all other components.
@@ -374,3 +359,16 @@ def _should_emit_prompts_to_job_log() -> bool:
     should_emit_prompts_to_job_log = str2bool(emit_prompts_to_job_log_env_var)
     status = "enabled" if should_emit_prompts_to_job_log else "disabled"
     lu.get_logger().info(f"Emitting prompts to job log is {status}.")
+
+
+@event_utils.catch_and_log_all_exceptions
+def _emit_minibatch_started_event(mini_batch_context, configuration, input_data):
+    event_utils.emit_event(
+        batch_score_event=BatchScoreMinibatchStartedEvent(
+            minibatch_id=mini_batch_context.minibatch_index,
+            scoring_url=configuration.scoring_url,
+            batch_pool=configuration.batch_pool,
+            quota_audience=configuration.quota_audience,
+            input_row_count=input_data.shape[0],
+        )
+    )
