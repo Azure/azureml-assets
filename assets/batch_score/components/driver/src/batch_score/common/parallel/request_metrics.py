@@ -1,10 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Request metrics."""
+
 import pandas as pd
 
 
 class RequestMetrics:
+    """Request metrics."""
+
     COLUMN_TIMESTAMP = "timestamp"
     COLUMN_REQUEST_ID = "request_id"
     COLUMN_RESPONSE_CODE = "response_code"
@@ -15,6 +19,7 @@ class RequestMetrics:
     COLUMN_REQUEST_TOTAL_WAIT_TIME = "request_total_wait_time"
 
     def __init__(self, metrics: pd.DataFrame = None) -> None:
+        """Initialize RequestMetrics."""
         if metrics is not None:
             self.__validate_columns(metrics)
             self.__validate_index(metrics)
@@ -41,6 +46,7 @@ class RequestMetrics:
         additional_wait_time: int,
         request_total_wait_time: int
     ):
+        """Add scoring result."""
         self.__df.loc[pd.Timestamp.utcnow()] = [
             request_id,
             response_code,
@@ -51,6 +57,7 @@ class RequestMetrics:
             request_total_wait_time]
 
     def get_metrics(self, start_time: pd.Timestamp, end_time: pd.Timestamp = None) -> pd.DataFrame:
+        """Get metrics."""
         if end_time is None:
             end_time = pd.Timestamp.utcnow()
 

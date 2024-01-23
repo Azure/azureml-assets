@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Worker."""
+
 import asyncio
 import os
 import time
@@ -32,18 +34,23 @@ from .request_metrics import RequestMetrics
 
 
 class QueueItem:
+    """Queue Item."""
+
     def __init__(
         self,
         scoring_request: ScoringRequest,
         segmented_score_context: SegmentedScoreContext = None,
         timeout_generator=None
     ):
+        """Initialize QueueItem."""
         self.scoring_request = scoring_request
         self.segmented_score_context = segmented_score_context
         self.timeout_generator = timeout_generator
 
 
 class Worker:
+    """Worker."""
+
     NO_DEPLOYMENTS_BACK_OFF = 120
 
     def __init__(
@@ -58,6 +65,7 @@ class Worker:
         empty_wait_interval: int = 1,
         scoring_result_queue: "deque[ScoringRequest]" = None,
     ):
+        """Initialize Worker."""
         self._configuration = configuration
         self.__scoring_client: ScoringClient = scoring_client
         self.__client_session = client_session
@@ -76,13 +84,16 @@ class Worker:
         lu.get_logger().debug("Worker {}: Created".format(self.id))
 
     def is_running(self) -> bool:
+        """Check whether the worker is running."""
         return self.__is_running
 
     def stop(self):
+        """Stop the worker."""
         lu.get_logger().debug("Worker {}: Stopped".format(self.id))
         self.__is_running = False
 
     async def start(self):
+        """Start the worker."""
         self.__is_running = True
         lu.set_worker_id(self.id)
         lu.get_logger().debug("Worker {}: Started".format(self.id))
@@ -207,6 +218,7 @@ class Worker:
             lu.get_logger().debug("Worker {}: Finished".format(self.id))
 
     def get_client_settings(self, client_settings_key: ClientSettingsKey):
+        """Get client settings."""
         return self.__client_settings_provider.get_client_setting(client_settings_key)
 
     def _request_exceeds_max_retry_time_interval(self, scoring_request: ScoringRequest) -> bool:
