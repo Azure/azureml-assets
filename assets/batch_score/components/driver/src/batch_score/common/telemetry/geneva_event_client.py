@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Geneva client to emit telemetry events."""
+
 import importlib
 import logging
 import platform
@@ -15,7 +17,10 @@ COMPONENT_NAME = "BatchScoreLlm"
 
 
 class GenevaEventClient():
+    """Geneva event client."""
+
     def __init__(self):
+        """Initialize GenevaEventClient."""
         self._logger = logging.getLogger("GenevaEventClientLogger")
         self._logger.setLevel(logging.DEBUG)
 
@@ -29,6 +34,7 @@ class GenevaEventClient():
             raise ImportError(msg)
 
     def emit_event(self, event: BatchScoreEvent):
+        """Emit batch score telemetry event."""
         try:
             self._event_logger(
                 level="Information",
@@ -67,8 +73,8 @@ class GenevaEventClient():
         return standard_fields
 
     def generate_extension_fields(self, event: BatchScoreEvent):
-        """Generate extension fields (Part C) as a dictionary for any batch score events.
-        Fields exist in Part A or B are removed."""
+        """Generate extension fields (Part C) as a dictionary for any batch score events."""
+        """Fields exist in Part A or B are removed."""
         extension_fields = {k: v for k, v in event.to_dictionary(include_empty_keys=False).items() if k not in [
             'subscription_id',
             'workspace_id',

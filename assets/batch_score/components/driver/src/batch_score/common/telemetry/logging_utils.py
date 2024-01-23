@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Logging utilities."""
+
 import argparse
 import json
 import logging
@@ -26,15 +28,20 @@ _ctx_batch_pool = ContextVar("Async batch pool", default=None)
 
 
 class UTCFormatter(logging.Formatter):
+    """UTC formatter."""
+
     converter = time.gmtime
 
 
 class CustomerLogsFilter(logging.Filter):
+    """Customer log filter."""
 
     def __init__(self, log_level: str):
+        """Initialize CustomerLogsFilter."""
         self.log_level = logging.getLevelName(log_level)
 
     def filter(self, record):
+        """Filter the record based on the given rule."""
         """
         Customers can see:
          - All logs higher than INFO level, even for internal classes,
@@ -58,10 +65,10 @@ class CustomerLogsFilter(logging.Filter):
 
 
 class AppInsightsLogsFilter(logging.Filter):
+    """Application insight log filter."""
+
     def filter(self, record):
-        """
-        Prevent logs from going to App Insights by prefacing them with 'AppInsRedact'.
-        """
+        """Prevent logs from going to App Insights by prefacing them with 'AppInsRedact'."""
         message = record.getMessage()
         return not message.startswith('AppInsRedact')
 
@@ -70,6 +77,7 @@ def setup_logger(
         stdout_log_level: str,
         app_insights_log_level: str = None,
         app_insights_connection_string: str = None):
+    """Set up logger."""
     global _custom_dimensions
     global _default_logger
     global _events_client
@@ -115,6 +123,7 @@ def setup_logger(
 
 
 def set_default_logger_format(default_format, root_handlers=None):
+    """Set default logger format."""
     # This overrides the basicConfig on the root logging handler that is writing logs to stdout
     # Root will always be in debug
     log_level = 'DEBUG'
@@ -132,6 +141,7 @@ def set_default_logger_format(default_format, root_handlers=None):
 
 
 def get_logger():
+    """Get logger."""
     custom_dimensions = _custom_dimensions.copy()
     custom_dimensions["WorkerId"] = _ctx_worker_id.get()
     custom_dimensions["MiniBatchId"] = _ctx_mini_batch_id.get()
@@ -146,22 +156,27 @@ def get_logger():
 
 
 def get_events_client():
+    """Get events client."""
     return _events_client
 
 
 def set_worker_id(worker_id: int):
+    """Set worker id."""
     _ctx_worker_id.set(worker_id)
 
 
 def set_mini_batch_id(mini_batch_id: int):
+    """Set mini batch id."""
     _ctx_mini_batch_id.set(mini_batch_id)
 
 
 def set_quota_audience(quota_audience: str):
+    """Set quota audience."""
     _ctx_quota_audience.set(quota_audience)
 
 
 def set_batch_pool(batch_pool: str):
+    """Set batch pool."""
     _ctx_batch_pool.set(batch_pool)
 
 
