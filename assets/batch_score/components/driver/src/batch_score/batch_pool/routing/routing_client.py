@@ -22,17 +22,20 @@ class InvalidPoolRoutes(Exception):
     def __init__(self, message: str):
         super().__init__(message)
 
+
 class RoutingClient(ClientSettingsProvider):
-    def __init__(self,
-                 service_namespace: str,
-                 target_batch_pool: str,
-                 header_handler: MedsHeaderHandler,
-                 request_path: str):
-        self.__BASE_URL = os.environ.get("BATCH_SCORE_ROUTING_BASE_URL",
-                                         "https://model-endpoint-discovery.api.azureml.ms/modelendpointdiscovery")
-        self.__REFRESH_INTERVAL: int = 5 * 60 # in seconds
-        self.__RETRY_INTERVAL: int = 10 # in seconds
-        self.__MAX_RETRY: int = 5 # maximum number of tries to get latest pool routes
+    def __init__(
+            self,
+            service_namespace: str,
+            target_batch_pool: str,
+            header_handler: MedsHeaderHandler,
+            request_path: str):
+        self.__BASE_URL = os.environ.get(
+            "BATCH_SCORE_ROUTING_BASE_URL",
+            "https://model-endpoint-discovery.api.azureml.ms/modelendpointdiscovery")
+        self.__REFRESH_INTERVAL: int = 5 * 60  # in seconds
+        self.__RETRY_INTERVAL: int = 10  # in seconds
+        self.__MAX_RETRY: int = 5  # maximum number of tries to get latest pool routes
 
         self.__service_namespace: str = service_namespace
         self.target_batch_pool: str = target_batch_pool
@@ -49,9 +52,14 @@ class RoutingClient(ClientSettingsProvider):
                                   f"/endpointPools/{self.target_batch_pool}"
                                   f"/listEndpoints")
 
-        self.__target_distribution_percentages: dict[str, float] = {} # Endpoint mapping to its target percentage
-        self.__current_distribution_counts: dict[str, int] = {} # Endpoint mapping to in-flight request count
-        self.__current_distribution_costs: dict[str, int] = {} # Endpoint mapping to in-flight request cost
+        # Endpoint mapping to its target percentage
+        self.__target_distribution_percentages: dict[str, float] = {}
+
+        # Endpoint mapping to in-flight request count
+        self.__current_distribution_counts: dict[str, int] = {}
+
+        # Endpoint mapping to in-flight request cost
+        self.__current_distribution_costs: dict[str, int] = {}
 
     async def refresh_pool_routes(self, session: aiohttp.ClientSession):
         retry_count = 0
@@ -60,9 +68,10 @@ class RoutingClient(ClientSettingsProvider):
         while retry_count < self.__MAX_RETRY or self.__target_distribution_percentages == {}:
             response_status = None
             try:
-                lu.get_logger().debug("RoutingClient: Getting updated Pool Routes from '{}'...".format(self.__LIST_ROUTES_URL))
+                lu.get_logger().debug("RoutingClient: Getting updated Pool Routes from '{}'.".format(
+                    self.__LIST_ROUTES_URL))
                 request = {"trafficGroup": constants.TRAFFIC_GROUP}
-                async with session.post(url = self.__LIST_ROUTES_URL, headers=self.__header_handler.get_headers(), json=request) as response:
+                async with session.post(url=self.__LIST_ROUTES_URL, headers=self.__header_handler.get_headers(), json=request) as response:
                     response_status = response.status
                     if response_status == 200:
                         response_body = await response.json()
@@ -72,27 +81,27 @@ class RoutingClient(ClientSettingsProvider):
                         self.__last_refresh = datetime.now(timezone.utc)
                         if "clientSettings" in response_body:
                             self.__client_settings = response_body["clientSettings"]
-                            lu.get_logger().debug("RoutingClient: Client settings returned by Model Endpoint Discovery Service: {}".format(self.__client_settings))
+                            lu.get_logger().debug(f"RoutingClient: Client settings returned by "
+                                                  f"Model Endpoint Discovery Service: {self.__client_settings}")
                         else:
                             lu.get_logger().warning("No client settings returned by Model Endpoint Discovery Service.")
 
                         lu.get_logger().debug("RoutingClient: Successfully updated routing pools")
                     else:
                         lu.get_logger().error("RoutingClient: Failed to update routing pools")
-            except asyncio.TimeoutError as e:
+            except asyncio.TimeoutError:
                 response_status = -408  # Manually attribute -408 as a tell to retry on asyncio exception
-
-                lu.get_logger().error(f"RoutingClient: asyncio.TimeoutError")
-            except aiohttp.ServerConnectionError as e:
+                lu.get_logger().error("RoutingClient: asyncio.TimeoutError")
+            except aiohttp.ServerConnectionError:
                 response_status = -408  # Manually attribute -408 as a tell to retry on this exception
-
-                lu.get_logger().error(f"RoutingClient: aiohttp.ServerConnectionError")
+                lu.get_logger().error("RoutingClient: aiohttp.ServerConnectionError")
             except InvalidPoolRoutes as e:
                 lu.get_logger().error(f"RoutingClient: InvalidPoolRoutes exception raised: {str(e)}")
 
-                if self.__last_refresh == None:
+                if self.__last_refresh is None:
                     if retry_count < self.__MAX_RETRY:
-                        lu.get_logger().debug(f"RoutingClient: No pre-existing routing pools are available - force retry")
+                        lu.get_logger().debug(
+                            "RoutingClient: No pre-existing routing pools are available - force retry")
                         response_status = -1
                     else:
                         response_status = 0  # Manually attribute no pool routes to 0 as a tell to stop retry
@@ -108,7 +117,7 @@ class RoutingClient(ClientSettingsProvider):
                 lu.get_logger().debug(f"RoutingClient: Retrying in {retry_wait} seconds...")
                 await asyncio.sleep(retry_wait)
             elif response_classification == RoutingResponseType.USE_EXISTING:
-                lu.get_logger().debug(f"RoutingClient: Using pre-exisiting routing pools")
+                lu.get_logger().debug("RoutingClient: Using pre-exisiting routing pools")
                 self.__last_refresh = datetime.now(timezone.utc)
                 return
             elif response_classification == RoutingResponseType.FAILURE:
@@ -116,12 +125,12 @@ class RoutingClient(ClientSettingsProvider):
             elif response_classification == RoutingResponseType.SUCCESS:
                 return
 
-        lu.get_logger().info("RoutingClient: Exhausted all {} retries, using existing routing pool.".format(self.__MAX_RETRY))
+        lu.get_logger().info(
+            "RoutingClient: Exhausted all {} retries, using existing routing pool.".format(self.__MAX_RETRY))
         self.__last_refresh = datetime.now(timezone.utc)
 
-
     def is_expired(self) -> bool:
-        return self.__last_refresh == None or \
+        return self.__last_refresh is None or \
             (self.__last_refresh + timedelta(seconds=self.__REFRESH_INTERVAL)) <= datetime.now(timezone.utc)
 
     def increment(self, endpoint: str, request: ScoringRequest):
@@ -154,7 +163,8 @@ class RoutingClient(ClientSettingsProvider):
         if len(self.__target_distribution_percentages) == 0:
             raise Exception("__target_distribution_percentages is empty.")
         else:
-            # lu.get_logger().debug(f"RoutingClient: Original target distribution percentages: {self.__target_distribution_percentages}")
+            # lu.get_logger().debug(
+            #    f"RoutingClient: Original target distribution percentages: {self.__target_distribution_percentages}")
             pass
 
         use_distribution = self.__target_distribution_percentages
@@ -163,28 +173,32 @@ class RoutingClient(ClientSettingsProvider):
         # If there are no active requests, use __target_distribution_percentages to distribute
         # otherwise:
         if not all(value == 0 for value in self.__current_distribution_counts.values()):
-            distribution_delta = {endpoint: self.__target_distribution_percentages[endpoint] - (0 if endpoint not in effective_distribution else effective_distribution[endpoint]) for endpoint in self.__target_distribution_percentages}
+            distribution_delta = {
+                endpoint: self.__target_distribution_percentages[endpoint] - (0 if endpoint not in effective_distribution else effective_distribution[endpoint]) for endpoint in self.__target_distribution_percentages
+                }
 
-            # If the __target_distribution_percentages and effective_distribution are equivalent, use __target_distribution_percentages to distribute
-            # otherwise:
+            # If the __target_distribution_percentages and effective_distribution are equivalent,
+            # use __target_distribution_percentages to distribute, otherwise:
             if not all(value == 0 for value in distribution_delta.values()):
                 max_key = None
                 max_value = None
                 for key, value in distribution_delta.items():
                     # Don't consider an excluded endpoint, unless it's the only option
-                    if not (len(distribution_delta.keys()) > 1 and exclude_endpoint == key) and \
-                        (max_value == None or max_value < value):
+                    if not (len(distribution_delta.keys()) > 1 and exclude_endpoint == key) and (max_value is None or max_value < value):
                         max_key = key
                         max_value = value
 
-                # lu.get_logger().debug(f"RoutingClient: Calculated largest distribution delta at max_key: {max_key}, max_value: {max_value}")
+                # lu.get_logger().debug(
+                #    "RoutingClient: Calculated largest distribution delta at "
+                #    f"max_key: {max_key}, max_value: {max_value}")
 
                 # Pick max_key to 100%
                 use_distribution = {max_key: 1}
         else:
             lu.get_logger().debug("RoutingClient: No active requests, using target distribution to pick endpoint")
 
-        # lu.get_logger().info("RoutingClient: Estimated cost distribution: {}".format(self.__current_distribution_costs))
+        # lu.get_logger().info(
+        #    "RoutingClient: Estimated cost distribution: {}".format(self.__current_distribution_costs))
         # lu.get_logger().info("RoutingClient: Effective distribution: {}".format(effective_distribution))
         # lu.get_logger().info("RoutingClient: Using distribution: {}".format(use_distribution))
 
@@ -227,17 +241,17 @@ class RoutingClient(ClientSettingsProvider):
             await self.__pool_routes_future
             self.__pool_routes_future.result()  # Raises exception if one is encountered
 
-
     async def __refresh_pool_routes(self, future: asyncio.Future, session: aiohttp.ClientSession):
         try:
             await self.refresh_pool_routes(session=session)
             lu.get_logger().debug("RoutingClient: pool has been refreshed")
             future.set_result(True)
         except InvalidPoolRoutes as e:
-            lu.get_logger().error("RoutingClient: Fatal exception encountered when refreshing Routing Client pool routes: {}".format(e))
+            lu.get_logger().error("RoutingClient: Fatal exception encountered when refreshing "
+                                  f"Routing Client pool routes: {e}")
             future.set_exception(e)
         except Exception as e:
-            lu.get_logger().error("RoutingClient: Failed to refresh Routing Client pool routes: {}".format(e))
+            lu.get_logger().error(f"RoutingClient: Failed to refresh Routing Client pool routes: {e}")
             future.set_result(False)
 
     def __set_routing_configs(self, pool_routes: "list[any]"):
@@ -258,7 +272,7 @@ class RoutingClient(ClientSettingsProvider):
 
             if total_traffic_weight == 0:
                 raise InvalidPoolRoutes(message="Total traffic weight is 0")
-            else: 
+            else:
                 normalized_weight = traffic_weight / total_traffic_weight
 
             target_distribution_percentages[endpoint_base_url] = normalized_weight
