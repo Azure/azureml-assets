@@ -64,7 +64,7 @@ class RoutingClient(ClientSettingsProvider):
     async def refresh_pool_routes(self, session: aiohttp.ClientSession):
         retry_count = 0
 
-        # Retry a certain number of times or while we have no __target_distribution_percentages 
+        # Retry a certain number of times or while we have no __target_distribution_percentages
         while retry_count < self.__MAX_RETRY or self.__target_distribution_percentages == {}:
             response_status = None
             try:
