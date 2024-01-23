@@ -37,6 +37,7 @@ async def test_successful_scoring_appends_result_no_segmentation(
         make_worker,
         make_scoring_result,
         mock_run_context):
+    """Test successful scoring appends result no segmentation."""
     scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
     scoring_request.scoring_url = TEST_SCORING_URL
 
@@ -90,6 +91,7 @@ async def test_successful_scoring_appends_result_with_segmentation(
         make_worker,
         make_scoring_result,
         mock_run_context):
+    """Test successful scoring appends result with segmentation."""
     scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
     scoring_request.scoring_url = TEST_SCORING_URL
 
@@ -146,6 +148,7 @@ async def test_request_exceeds_max_retry_time_interval_and_fails(
         make_worker,
         mock_get_logger,
         mock_run_context):
+    """Test request exceeds max retry time interval and fails."""
     # 1 second maximum
     max_retry_time_interval = 1
     scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
@@ -180,6 +183,7 @@ async def test_model_429_does_not_contribute_to_request_total_wait_time(
         mock__score_once,
         mock_get_client_setting,
         mock_run_context):
+    """Test model 429 does not contribute to request total wait time."""
     mock__score_once['raise_exception'] = RetriableException(status_code=424,
                                                              model_response_code='429',
                                                              retry_after=0.01)
@@ -199,6 +203,7 @@ async def test_quota_429_contributes_to_request_total_wait_time(
         mock__score_once,
         mock_get_client_setting,
         mock_run_context):
+    """Test quota 429 contributes to request total wait time."""
     mock__score_once['raise_exception'] = QuotaUnavailableException(retry_after=0.01)
     mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
 
@@ -272,6 +277,7 @@ async def test_no_deployments_in_traffic_group(
         env_vars,
         expected_wait_time,
         mock_run_context):
+    """Test no deployments in traffic group."""
     for var, value in env_vars.items():
         monkeypatch.setenv(var, value)
 

@@ -23,6 +23,7 @@ def test_has_more(
         mock__score_once,
         stop_reason,
         total_generated):
+    """Test has more."""
     max_segment_size = 2
     max_tokens = 100
     request = ScoringRequest(f'{{"prompt": "Generate something.", "max_tokens": {max_tokens}}}')
@@ -46,6 +47,7 @@ def test_has_more_no_max_tokens(
         mock_get_logger,
         mock__score_once,
         stop_reason):
+    """Test has more no max tokens."""
     max_segment_size = 2
     request = ScoringRequest('{"prompt": "Generate something."}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
@@ -62,6 +64,7 @@ def test_has_more_no_max_tokens(
 
 def test_has_more_no_segmented_results(
         mock_get_logger):
+    """Test has more no segmented results."""
     max_segment_size = 2
     request = ScoringRequest('{"prompt": "Generate something."}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
@@ -74,6 +77,7 @@ def test_has_more_supports_segmentation_false(
         mock_get_logger,
         mock__score_once,
         max_tokens):
+    """Test has more supports segmentation false."""
     max_segment_size = 2
     request = ScoringRequest(f'{{"prompt": "Generate something.", "max_tokens": {max_tokens}}}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
@@ -87,6 +91,7 @@ def test_has_more_supports_segmentation_false(
 def test_has_more_when_predicted_text_is_empty(
         mock_get_logger,
         mock__score_once):
+    """Test has more when predicted text is empty."""
     max_segment_size = 2
     request = ScoringRequest('{"prompt": "Generate something.", "max_tokens": 3}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
@@ -104,6 +109,7 @@ async def test_score_next(
         mock_get_logger,
         mock__score_once,
         mock_get_quota_scope):
+    """Test score next."""
     response_body = {"id": "123",
                      "object": "text_completion",
                      "created": 456,
@@ -147,6 +153,7 @@ async def test_score_next(
 def test_build_scoring_result_one_segment(
         mock_get_logger,
         mock__score_once):
+    """Test build scoring result one segment."""
     max_segment_size = 2
     request_obj = {"prompt": "Generate something."}
     request = ScoringRequest(json.dumps(request_obj))
@@ -164,6 +171,7 @@ def test_build_scoring_result_one_segment(
 def test_build_scoring_result(
         mock_get_logger,
         mock__score_once):
+    """Test build scoring result."""
     max_segment_size = 2
     request_obj = {"prompt": "Generate something."}
     request = ScoringRequest(json.dumps(request_obj))

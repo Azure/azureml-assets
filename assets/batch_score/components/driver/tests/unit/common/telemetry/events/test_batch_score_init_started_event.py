@@ -14,6 +14,7 @@ from tests.fixtures.telemetry_events import (
 
 
 def test_init(mock_run_context, make_batch_score_init_started_event):
+    """Test init function."""
     # Arrange & Act
     result: BatchScoreInitStartedEvent = make_batch_score_init_started_event
 
@@ -23,6 +24,7 @@ def test_init(mock_run_context, make_batch_score_init_started_event):
 
 
 def test_str(mock_run_context, make_batch_score_init_started_event):
+    """Test str function."""
     # Arrange
     event: BatchScoreInitStartedEvent = make_batch_score_init_started_event
 

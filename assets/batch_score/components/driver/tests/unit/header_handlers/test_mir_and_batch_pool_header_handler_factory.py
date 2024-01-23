@@ -32,6 +32,7 @@ from src.batch_score.header_handlers.open_ai.vesta_chat_completion_header_handle
     ('', OpenAIHeaderHandler)
 ])
 def test_get_header_handler(mocker, make_metadata, method_to_return_true, expected_header_handler_type):
+    """Test get header handler."""
     # Arrange
     mocker.patch.object(Configuration, 'is_sahara', return_value='is_sahara' == method_to_return_true)
     mocker.patch.object(Configuration, 'is_vesta', return_value='is_vesta' == method_to_return_true)

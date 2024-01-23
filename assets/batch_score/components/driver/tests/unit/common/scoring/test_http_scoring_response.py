@@ -7,6 +7,7 @@ from src.batch_score.common.scoring.http_scoring_response import HttpScoringResp
 
 
 def test_get_model_response_code():
+    """Test get model response code."""
     # Arrange
     expected_model_response_code = 200
     headers = {'ms-azureml-model-error-statuscode': expected_model_response_code}
@@ -21,6 +22,7 @@ def test_get_model_response_code():
 
 
 def test_get_model_response_reason():
+    """Test get model response reason."""
     # Arrange
     expected_model_response_reason = 'Failed model'
     headers = {'ms-azureml-model-error-reason': expected_model_response_reason}

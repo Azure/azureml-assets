@@ -24,6 +24,7 @@ scoring_url_base = 'https://somebase.microsoft.com'
     (ApiType.Embedding, constants.DV_CHAT_COMPLETIONS_API_PATH, None, False),
 ])
 def test_is_embeddings(api_type, request_path, scoring_url, expected_result):
+    """Test is embeddings."""
     # Arrange
     config_to_parse = ['--api_type', api_type]
     if scoring_url:
@@ -45,6 +46,7 @@ def test_is_embeddings(api_type, request_path, scoring_url, expected_result):
     (ApiType.ChatCompletion, constants.DV_EMBEDDINGS_API_PATH, None, False),
 ])
 def test_is_chat_completion(api_type, request_path, scoring_url, expected_result):
+    """Test is chat completion."""
     # Arrange
     config_to_parse = ['--api_type', api_type]
     if scoring_url:
@@ -66,6 +68,7 @@ def test_is_chat_completion(api_type, request_path, scoring_url, expected_result
     (ApiType.Completion, constants.DV_EMBEDDINGS_API_PATH, None, False),
 ])
 def test_is_completion(api_type, request_path, scoring_url, expected_result):
+    """Test is completion."""
     # Arrange
     config_to_parse = ['--api_type', api_type]
     if scoring_url:
@@ -87,6 +90,7 @@ def test_is_completion(api_type, request_path, scoring_url, expected_result):
 ])
 def test_is_sahara(target_batch_pool, expected_result):
     # Arrange
+    """Test is sahara."""
     routing_client = RoutingClient(
         service_namespace='test_service_namespace',
         target_batch_pool=target_batch_pool,
@@ -107,6 +111,7 @@ def test_is_sahara(target_batch_pool, expected_result):
     (ApiType.Completion, constants.DV_EMBEDDINGS_API_PATH, None, False),
 ])
 def test_is_vesta(api_type, request_path, scoring_url, expected_result):
+    """Test is vesta."""
     # Arrange
     config_to_parse = ['--api_type', api_type]
     if scoring_url:
@@ -128,6 +133,7 @@ def test_is_vesta(api_type, request_path, scoring_url, expected_result):
     (ApiType.Completion, constants.DV_EMBEDDINGS_API_PATH, None, False),
 ])
 def test_is_vesta_chat_completion(api_type, request_path, scoring_url, expected_result):
+    """Test is vesta chat completion."""
     # Arrange
     config_to_parse = ['--api_type', api_type]
     if scoring_url:

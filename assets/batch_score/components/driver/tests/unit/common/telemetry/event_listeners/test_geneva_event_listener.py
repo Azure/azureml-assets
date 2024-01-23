@@ -14,6 +14,7 @@ from src.batch_score.common.telemetry.events.batch_score_init_started_event impo
 
 
 def test_handle_batch_score_event(mock_run_context):
+    """Test handle batch score event."""
     # Arrange
     init_started_event = BatchScoreInitStartedEvent()
 

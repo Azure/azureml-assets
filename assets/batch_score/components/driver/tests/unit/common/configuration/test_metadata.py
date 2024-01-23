@@ -11,6 +11,7 @@ from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VER
 
 
 def test_get_metadata_success_component_name_without_file_extension():
+    """Test get metadata success component name without file extension."""
     # Act
     metadata_payload = {
         "component_name": TEST_COMPONENT_NAME,
@@ -31,6 +32,7 @@ def test_get_metadata_success_component_name_without_file_extension():
     ]
 )
 def test_get_metadata_success_component_name_with_file_extension(component_name):
+    """Test get metadata success component name with file extension."""
     # Act
     metadata_payload = {
         "component_name": component_name,

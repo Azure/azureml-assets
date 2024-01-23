@@ -18,6 +18,7 @@ from src.batch_score.common.scoring.scoring_request import ScoringRequest
 
 @pytest.mark.asyncio
 async def test_quota_client(make_quota_client, make_completion_header_handler):
+    """Test quota client."""
     batch_pool = "cool-pool"
 
     client_session = FakeClientSession()
@@ -60,6 +61,7 @@ async def test_quota_client(make_quota_client, make_completion_header_handler):
     ({"Retry-After": 123, "x-ms-retry-after-ms": 750}, 0.75),
 ])
 async def test_quota_client_throttle(make_quota_client, make_completion_header_handler, error_headers, retry_after):
+    """Test quota client throttle case."""
     batch_pool = "cool-pool"
 
     client_session = FakeClientSession(throttle_lease=True, error_headers=error_headers)
@@ -97,6 +99,7 @@ async def test_quota_client_throttle(make_quota_client, make_completion_header_h
      (8, 7, 1, 1, 1, 1, 1)),
 ])
 async def test_quota_client_embeddings(make_quota_client, make_completion_header_handler, input, expected_counts):
+    """Test quota client embeddings case."""
     batch_pool = "cool-pool"
 
     client_session = FakeClientSession(throttle_lease=True, error_headers={"Retry-After": 123})
@@ -129,7 +132,10 @@ async def test_quota_client_embeddings(make_quota_client, make_completion_header
 
 
 class FakeClientSession:
+    """Mock client session."""
+
     def __init__(self, *, throttle_lease=False, error_headers=None):
+        """Initialize FakeClientSession."""
         self._throttle_lease = throttle_lease
         self._error_headers = error_headers
 
@@ -137,6 +143,7 @@ class FakeClientSession:
 
     @asynccontextmanager
     async def post(self, url, *args, **kwargs):
+        """Mock a POST request."""
         self.calls.append(("POST", url))
         if "requestLease" in url:
             if self._throttle_lease:
@@ -149,19 +156,27 @@ class FakeClientSession:
 
 
 class FakeResponse:
+    """Mock responsse."""
+
     def __init__(self, status, json, *, error=None):
+        """Initialize FakeResponse."""
         self.status = status
         self._json = json
         self._error = error
 
     async def json(self):
+        """Get json."""
         return self._json
 
     def raise_for_status(self):
+        """Raise error."""
         if self._error is not None:
             raise self._error
 
 
 class FakeTokenProvider:
+    """Mock token provider."""
+
     def get_token(self, *args, **kwargs):
+        """Mock get token."""
         pass

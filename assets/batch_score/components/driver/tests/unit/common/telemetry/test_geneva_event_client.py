@@ -17,6 +17,7 @@ from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VER
 
 
 def test_generate_required_fields(mock_import_module, make_batch_score_init_completed_event):
+    """Test generate required fields."""
     # Arrange
     test_event: BatchScoreInitCompletedEvent = make_batch_score_init_completed_event
 
@@ -30,6 +31,7 @@ def test_generate_required_fields(mock_import_module, make_batch_score_init_comp
 
 
 def test_generate_standard_fields(mock_import_module, make_batch_score_init_completed_event):
+    """Test generate standard fields."""
     # Arrange
     test_event: BatchScoreInitCompletedEvent = make_batch_score_init_completed_event
 
@@ -45,6 +47,7 @@ def test_generate_standard_fields(mock_import_module, make_batch_score_init_comp
 
 
 def test_generate_extension_fields_init_completed(mock_import_module, make_batch_score_init_completed_event):
+    """Test generate extension fields init completed."""
     # Arrange
     test_event: BatchScoreInitCompletedEvent = make_batch_score_init_completed_event
 
@@ -71,6 +74,7 @@ def test_generate_extension_fields_init_completed(mock_import_module, make_batch
 
 
 def test_generate_extension_fields_init_started(mock_import_module, make_batch_score_init_started_event):
+    """Test generate extension fields init started."""
     # Arrange
     test_event: BatchScoreInitStartedEvent = make_batch_score_init_started_event
 
@@ -94,6 +98,7 @@ def test_generate_extension_fields_init_started(mock_import_module, make_batch_s
 
 
 def test_generate_extension_fields_minibatch_completed(mock_import_module, make_batch_score_minibatch_completed_event):
+    """Test generate extension fields minibatch completed."""
     # Arrange
     test_event: BatchScoreMinibatchCompletedEvent = make_batch_score_minibatch_completed_event
 
@@ -149,6 +154,7 @@ def test_generate_extension_fields_minibatch_completed(mock_import_module, make_
 
 
 def test_generate_extension_fields_minibatch_started(mock_import_module, make_batch_score_minibatch_started_event):
+    """Test generate extension fields minibatch started."""
     # Arrange
     test_event: BatchScoreMinibatchStartedEvent = make_batch_score_minibatch_started_event
 

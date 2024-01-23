@@ -13,6 +13,7 @@ from src.batch_score.common.scoring.scoring_result import RetriableException
 
 @pytest.mark.asyncio
 async def test_score_once_pool_scenario(mock_get_logger, make_scoring_client, mock_get_quota_scope, mock__score_once):
+    """Test score once pool scenario."""
     mock_client_session = MagicMock()
     mock_scoring_request = MagicMock()
 
@@ -27,6 +28,7 @@ async def test_score_once_pool_scenario(mock_get_logger, make_scoring_client, mo
 
 @pytest.mark.asyncio
 async def test_score_once_endpoint_scenario(mock_get_logger, make_scoring_client, mock__score_once):
+    """Test score once endpoint scenario."""
     mock_client_session = MagicMock()
     mock_scoring_request = MagicMock()
     mock_timeout = MagicMock()
@@ -72,7 +74,9 @@ async def test_score_once_raises_retriable_exception(caplog,
                                                      make_completion_header_handler,
                                                      exception_to_raise,
                                                      mock_run_context):
+    """Test score once raises retriable exception scenario."""
     def mock_post(**kwargs):
+        """Mock post function."""
         raise exception_to_raise
 
     scoring_client = ScoringClient(header_handler=make_completion_header_handler(),
@@ -91,6 +95,7 @@ async def test_score_once_raises_retriable_exception(caplog,
 @pytest.mark.parametrize("time, expected_iters",
                          [(5, 1), (10, 1), (100, 4), (30*60*60, 9)])
 def test_get_retry_timeout_generator(time, expected_iters):
+    """Test get retry timeout generator."""
     t = aiohttp.ClientTimeout(time)
     timeout_generator = ScoringClient.get_retry_timeout_generator(t)
     for i in range(expected_iters):
@@ -105,6 +110,7 @@ def test_get_retry_timeout_generator(time, expected_iters):
 @pytest.mark.parametrize("time, expected_iters",
                          [(5, 1), (10, 1), (100, 4), (30*60*60, 9)])
 def test_get_next_retry_timeout(time, expected_iters):
+    """Test get next retry timeout."""
     t = aiohttp.ClientTimeout(time)
     timeout_generator = ScoringClient.get_retry_timeout_generator(t)
     for i in range(expected_iters):

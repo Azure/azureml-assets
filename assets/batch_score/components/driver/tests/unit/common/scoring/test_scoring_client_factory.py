@@ -18,6 +18,7 @@ from src.batch_score.common.scoring.tally_failed_request_handler import TallyFai
     ('hello.centralus.inference.ml.azure.com', ScoringClient)
 ])
 def test_create_success(mocker, make_metadata, scoring_url, expected_scoring_client_type):
+    """Test create success."""
     # Arrange
     configuration = ConfigurationParser().parse_configuration([
         '--scoring_url', scoring_url

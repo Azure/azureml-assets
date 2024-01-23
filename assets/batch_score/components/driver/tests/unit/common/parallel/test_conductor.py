@@ -22,6 +22,7 @@ async def test_run_returns_same_number_of_results_as_requests(
     mock_get_events_client,
     monkeypatch,
 ):
+    """Test run returns same number of results as requests."""
     conductor: Conductor = make_conductor(
         loop=asyncio.get_event_loop(),
         routing_client=None,
@@ -77,6 +78,7 @@ def test_enqueue_empty_minibatch_generate_minibatch_summary(
     mock_get_events_client,
     monkeypatch,
 ):
+    """Test enqueue empty minibatch generate minibatch summary."""
     # Arrange
     conductor: Conductor = make_conductor(async_mode=True)
 
@@ -101,6 +103,7 @@ def test_enqueue_empty_minibatch_generate_minibatch_summary(
 @pytest.mark.parametrize("segment_large_requests, max_retry_time_interval",
                          [("disabled", None), ("disabled", 102), ("enabled", None), ("enabled", 102)])
 def test_get_session_timeout_env_var(monkeypatch, make_conductor, segment_large_requests, max_retry_time_interval):
+    """Test get session timeout env var case."""
     conductor: Conductor = make_conductor(
         segment_large_requests=segment_large_requests,
         segment_max_token_size=600,
@@ -116,6 +119,7 @@ def test_get_session_timeout_env_var(monkeypatch, make_conductor, segment_large_
 
 @pytest.mark.parametrize("segment_large_requests", ["disabled", "enabled"])
 def test_get_session_timeout_max_retry(make_conductor, segment_large_requests):
+    """Test get session timeout max retry case."""
     conductor: Conductor = make_conductor(
         segment_large_requests=segment_large_requests,
         segment_max_token_size=600,
@@ -129,6 +133,7 @@ def test_get_session_timeout_max_retry(make_conductor, segment_large_requests):
 
 @pytest.mark.parametrize("segment_large_requests, expected_default", [("disabled", 1800), ("enabled", 600)])
 def test_get_session_timeout_defaults(make_conductor, segment_large_requests, expected_default):
+    """Test get session timeout default case."""
     conductor: Conductor = make_conductor(
         segment_large_requests=segment_large_requests,
         segment_max_token_size=600,

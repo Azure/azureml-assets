@@ -20,6 +20,7 @@ from src.batch_score.common.configuration.configuration_parser import Configurat
     ('azureml_workspace_connection', WorkspaceConnectionAuthProvider)
 ])
 def test_get_auth_provider(mocker, authentication_type, expected_auth_type):
+    """Test get auth provider."""
     # Arrange
     configuration = ConfigurationParser().parse_configuration([
         '--authentication_type', authentication_type,

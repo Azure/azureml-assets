@@ -15,6 +15,7 @@ from src.batch_score.header_handlers.open_ai import OpenAIHeaderHandler
 
 @pytest.mark.parametrize('has_additional_headers', [True, False])
 def test_get_headers_for_connection_auth_provider(has_additional_headers, mocker):
+    """Test get headers for connection auth provider."""
     # Arrange
     auth_provider = WorkspaceConnectionAuthProvider(connection_name='test', endpoint_type='MIR')
     expected_header_from_auth_provider = {'my_auth': '123'}
@@ -41,6 +42,7 @@ def test_get_headers_for_connection_auth_provider(has_additional_headers, mocker
 
 
 def test_get_headers_uses_mir_header_handler(mocker):
+    """Test get headers uses mir header handler."""
     # Arrange
     auth_provider = IdentityAuthProvider(use_user_identity=False)
     mocker.patch.object(MirAndBatchPoolHeaderHandlerFactory, 'get_header_handler', return_value=OpenAIHeaderHandler)

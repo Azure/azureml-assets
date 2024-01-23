@@ -8,6 +8,7 @@ from src.batch_score.common.auth.auth_provider import EndpointType, WorkspaceCon
 
 
 def test_get_headers_no_additional_headers(mocker):
+    """Test get headers no additional headers."""
     # Arrange
     auth_provider = WorkspaceConnectionAuthProvider(connection_name='test_key', endpoint_type=EndpointType.AOAI)
     header_provider = AoaiHeaderProvider(auth_provider=auth_provider, additional_headers=None)
@@ -24,6 +25,7 @@ def test_get_headers_no_additional_headers(mocker):
 
 
 def test_get_header_with_additional_headers(mocker):
+    """Test get headers with additional headers."""
     # Arrange
     auth_provider = WorkspaceConnectionAuthProvider(connection_name='test_key', endpoint_type=EndpointType.AOAI)
     header_provider = AoaiHeaderProvider(auth_provider=auth_provider, additional_headers='{"hello": "world"}')

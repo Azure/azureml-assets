@@ -15,6 +15,7 @@ from src.batch_score.batch_pool.quota.estimators import ChatCompletionEstimator
      3 + 3 + 10),
 ])
 def test_estimate_request_cost(request_obj, expected_cost):
+    """Test estimate request cost."""
     estimator = ChatCompletionEstimator()
 
     assert estimator.estimate_request_cost(request_obj) == expected_cost
@@ -26,12 +27,14 @@ def test_estimate_request_cost(request_obj, expected_cost):
      123 + 10),
 ])
 def test_estimate_response_cost(request_obj, response_obj, expected_cost):
+    """Test estimate response cost."""
     estimator = ChatCompletionEstimator()
 
     assert estimator.estimate_response_cost(request_obj, response_obj) == expected_cost
 
 
 def test_valid__get_prompt():
+    """Test get prompt valid case."""
     estimator = ChatCompletionEstimator()
 
     chat_completion_payload = {"messages": [{"role": "user", "content": "Hello "},
@@ -41,6 +44,7 @@ def test_valid__get_prompt():
 
 
 def test_invalid_get_prompt():
+    """Test get prompt invalid case."""
     estimator = ChatCompletionEstimator()
 
     completion_payload = {"prompt": "Hello world!", "max_tokens": 10}

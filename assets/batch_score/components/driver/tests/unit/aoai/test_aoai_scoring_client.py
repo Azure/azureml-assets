@@ -13,6 +13,7 @@ from src.batch_score.common.scoring.tally_failed_request_handler import TallyFai
 @pytest.mark.parametrize('authentication_type', ['api_key', 'managed_identity', 'azureml_workspace_connection'])
 @pytest.mark.skip('Need to mock calls for API key')
 def test_create_success(authentication_type):
+    """Test create success."""
     # Arrange
     configuration = ConfigurationParser().parse_configuration([
         '--authentication_type', authentication_type,

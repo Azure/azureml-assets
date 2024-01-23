@@ -40,6 +40,7 @@ exceptions_to_raise = [
 
 
 def test_handle_response_returns_success_result(mock_run_context):
+    """Test handle response returns success result."""
     # Arrange
     response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
     http_response = HttpScoringResponse(
@@ -76,6 +77,7 @@ def test_handle_response_returns_success_result(mock_run_context):
 
 
 def test_handle_response_non_retriable_exception_returns_failure(mock_run_context):
+    """Test handle response non retriable exception returns failure."""
     # Arrange
     http_response = HttpScoringResponse(exception=Exception)
     scoring_request = _get_test_scoring_request()
@@ -112,6 +114,7 @@ def test_handle_response_non_retriable_exception_returns_failure(mock_run_contex
     (asyncio.TimeoutError())
 ])
 def test_handle_response_retriable_exception_throws_exception(exception_to_throw: Exception, mock_run_context):
+    """Test handle response retriable exception throws exception."""
     # Arrange
     http_response = HttpScoringResponse(exception=exception_to_throw, status=500)
     scoring_request = _get_test_scoring_request()
@@ -136,6 +139,7 @@ def test_handle_response_retriable_exception_throws_exception(exception_to_throw
 
 @pytest.mark.parametrize('status_code', [(408), (429), (500), (502), (503), (504)])
 def test_handle_response_retriable_status_code_throws_exception(status_code, mock_run_context):
+    """Test handle response retriable status code throws exception."""
     # Arrange
     http_response = HttpScoringResponse(status=status_code, payload=['hello'])
     scoring_request = _get_test_scoring_request()
@@ -163,6 +167,7 @@ def test_handle_response_retriable_status_code_throws_exception(status_code, moc
 def test_handle_response_non_retriable_status_code_returns_failure(status_code,
                                                                    tally_handler_enable,
                                                                    mock_run_context):
+    """Test handle response non retriable status code returns failure."""
     # Arrange
     http_response = HttpScoringResponse(status=status_code, payload=['hello'])
     scoring_request = _get_test_scoring_request()

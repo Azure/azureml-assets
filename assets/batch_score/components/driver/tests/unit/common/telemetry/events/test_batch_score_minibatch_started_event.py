@@ -13,6 +13,7 @@ from tests.fixtures.telemetry_events import (
 
 
 def test_init(mock_run_context, make_batch_score_minibatch_started_event):
+    """Test init function."""
     # Arrange & Act
     result: BatchScoreMinibatchStartedEvent = make_batch_score_minibatch_started_event
 

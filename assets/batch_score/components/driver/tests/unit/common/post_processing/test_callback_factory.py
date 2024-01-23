@@ -19,6 +19,7 @@ def test_generate_callback_success(mock_get_logger,
                                    mock_get_events_client,
                                    make_input_transformer,
                                    make_scoring_result):
+    """Test generate callback success case."""
     # Arrange
     mock_input_to_output_transformer = make_input_transformer(modifiers=[FakeInputOutputModifier()])
 
@@ -52,6 +53,7 @@ def test_generate_callback_exception_with_mini_batch_id(mock_get_logger,
                                                         mock_get_events_client,
                                                         make_input_transformer,
                                                         make_scoring_result):
+    """Test generate callback exception case."""
     # Arrange
     mock_input_to_output_transformer = make_input_transformer(modifiers=[FakeInputOutputModifier()])
 

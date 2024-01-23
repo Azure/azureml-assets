@@ -112,6 +112,7 @@ def test_run_emit_minibatch_started_event(mock_run_context):
 
 
 def test_run_generate_minibatch_summary(mock_run_context):
+    """Test run generate minibatch summary."""
     # Arrange
     input_data, mini_batch_context = _setup_main()
 
@@ -127,6 +128,7 @@ def test_run_generate_minibatch_summary(mock_run_context):
 
 
 def test_enqueue_emit_minibatch_started_event(mock_run_context):
+    """Test enqueue emit minibatch started event."""
     # Arrange
     input_data, mini_batch_context = _setup_main()
 
@@ -146,6 +148,7 @@ def test_enqueue_emit_minibatch_started_event(mock_run_context):
 
 
 def test_enqueue_no_exception_does_not_generate_minibatch_summary(mock_run_context):
+    """Test enqueue no exception does not generate minibatch summary."""
     # Arrange
     input_data, mini_batch_context = _setup_main()
 
@@ -158,6 +161,7 @@ def test_enqueue_no_exception_does_not_generate_minibatch_summary(mock_run_conte
 
 
 def test_enqueue_exception_generate_minibatch_summary(mock_run_context):
+    """Test enqueue exception generate minibatch summary."""
     # Arrange
     input_data, mini_batch_context = _setup_main(par_exception=Exception)
 

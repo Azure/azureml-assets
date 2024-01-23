@@ -8,6 +8,7 @@ from src.batch_score.common.auth.auth_provider import WorkspaceConnectionAuthPro
 
 
 def test_get_headers_no_additional_headers(mocker):
+    """Test get headers no additional headers."""
     # Arrange
     handler = MIREndpointV2HeaderHandler('my_connection')
     mocker.patch.object(WorkspaceConnectionAuthProvider, 'get_auth_headers',
@@ -22,6 +23,7 @@ def test_get_headers_no_additional_headers(mocker):
 
 
 def test_get_headers_with_additional_headers(mocker):
+    """Test get headers with additional headers."""
     # Arrange
     additional_headers = '{"hello": "world"}'
     handler = MIREndpointV2HeaderHandler('my_connection', additional_headers)

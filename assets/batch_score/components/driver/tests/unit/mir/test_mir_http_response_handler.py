@@ -24,6 +24,7 @@ scoring_url = 'https://mirendpoint@inference.com'
 
 
 def test_handle_response_returns_success_result():
+    """Test handle response returns success result."""
     # Arrange
     http_response = HttpScoringResponse(status=200, payload=['hello'], headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
@@ -48,6 +49,7 @@ def test_handle_response_returns_success_result():
 
 
 def test_handle_response_retriable_failure_throws_exception():
+    """Test handle response retriable failure throws exception."""
     # Arrange
     http_response = HttpScoringResponse(status=403, payload=['hello'], headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
@@ -61,6 +63,7 @@ def test_handle_response_retriable_failure_throws_exception():
 
 @pytest.mark.parametrize('enable_tally_handler', [True, False])
 def test_handle_response_non_retriable_failure(enable_tally_handler):
+    """Test handle response non retriable failure."""
     # Arrange
     http_response = HttpScoringResponse(status=500, payload=['hello'], headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
@@ -93,6 +96,7 @@ def test_handle_response_non_retriable_failure(enable_tally_handler):
     (asyncio.TimeoutError())
 ])
 def test_handler_retriable_exception_throws_exception(exception_to_throw):
+    """Test handler retriable exception throws exception."""
     # Arrange
     http_response = HttpScoringResponse(exception=exception_to_throw, headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
@@ -106,6 +110,7 @@ def test_handler_retriable_exception_throws_exception(exception_to_throw):
 
 @pytest.mark.parametrize('enable_tally_handler', [True, False])
 def test_handler_non_retriable_exception_returns_failure(enable_tally_handler):
+    """Test handler non retriable exception returns failure."""
     # Arrange
     http_response = HttpScoringResponse(exception=Exception, headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')

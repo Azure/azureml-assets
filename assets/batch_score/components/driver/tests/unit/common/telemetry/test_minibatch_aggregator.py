@@ -17,6 +17,7 @@ from src.batch_score.common.telemetry.events.batch_score_input_row_completed_eve
 
 
 def test_minibatch_aggregator(mock_run_context):
+    """Test minibatch aggregator."""
     # Arrange
     minibatch_aggregator = MinibatchAggregator()
 

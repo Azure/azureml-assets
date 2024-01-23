@@ -14,6 +14,7 @@ from tests.fixtures.telemetry_events import (
 
 
 def test_init(mock_run_context, make_configuration, make_metadata):
+    """Test init function."""
     # Arrange
     event_utils.setup_context_vars(make_configuration, make_metadata)
 

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for mini batch aggregator event listener."""
+
 from datetime import datetime
 from unittest.mock import call, MagicMock
 
@@ -16,6 +18,7 @@ from src.batch_score.common.telemetry.events.batch_score_input_row_completed_eve
 
 
 def test_handle_batch_score_event(mock_run_context):
+    """Test handle batch score event."""
     # Arrange
     minibatch_aggregator = MagicMock()
     minibatch_aggregator_event_listener._minibatch_aggregator = minibatch_aggregator
