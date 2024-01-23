@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""A factory to create post-gathering callbacks used in async mode."""
+
 import traceback
 
 from ...utils.common import convert_result_list
@@ -18,6 +20,7 @@ from .result_utils import (
 
 
 def add_callback(callback, cur):
+    """Append a callback to a list."""
     def wrapper(scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
         scoring_results = callback(scoring_results, mini_batch_context)
         return cur(scoring_results, mini_batch_context)
@@ -25,13 +28,17 @@ def add_callback(callback, cur):
 
 
 class CallbackFactory:
+    """A factory to create post-gathering callbacks used in async mode."""
+
     def __init__(self,
                  configuration: Configuration,
                  input_to_output_transformer):
+        """Initialize CallbackFactory."""
         self._configuration = configuration
         self.__input_to_output_transformer = input_to_output_transformer
 
     def generate_callback(self):
+        """Generate a list of callbacks used in async mode."""
         callback = self._save_mini_batch_result_and_emit
         callback = add_callback(self._convert_result_list, callback)
         callback = add_callback(self._apply_input_transformer, callback)
