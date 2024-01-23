@@ -58,14 +58,10 @@ class StoreUrl:
     def get_credential(self) -> Union[str, ClientSecretCredential, AzureSasCredential, None]:
         """Get credential for this store url."""
         if not self._datastore:
-            if self._is_secure():
-                raise InvalidInputError(
-                    "abfss, wasbs and https URLs are credential less and are NOT supported by Model Monitoring job, "
-                    "please use azureml file system path with credential data store, e.g. "
-                    "azureml://datastores/<credential_datastore_name>/paths/<path_to_data>")
-            else:
-                # abfs, wasb and http URLs are public accessible, can be accessed without credential
-                return None
+            raise InvalidInputError(
+                "abfs(s), wasb(s) and http(s) URLs are credential less and are NOT supported by Model Monitoring job, "
+                "please use azureml file system path with credential data store, e.g. "
+                "azureml://datastores/<credential_datastore_name>/paths/<path_to_data>")
         elif self._datastore.datastore_type == "AzureBlob":
             if self._datastore.credential_type == "AccountKey":
                 return self._datastore.account_key
@@ -203,9 +199,10 @@ class StoreUrl:
             matches = re.match(data_pattern0, self._base_url) or re.match(data_pattern1, self._base_url)
             if matches:
                 raise InvalidInputError(
-                    f"You are using AzureML data url {self._base_url}, but this format of url is NOT supported as "
-                    "input of Model Monitoring job, please use "
-                    f"azureml:{matches.group('data')}:{matches.group('version')} instead.")
+                    "Seems you are using AzureML dataset v1 as input of Model Monitoring Job, but we only support "
+                    "dataset v2. Please follow "
+                    "https://learn.microsoft.com/en-us/azure/machine-learning/migrate-to-v2-assets-data?view=azureml-api-2"  # noqa: E501
+                    "to upgrade your dataset to v2.")                    
             else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
