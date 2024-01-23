@@ -39,7 +39,7 @@ class ScoringRequest:
             self.__loggable_payload_obj = self.__input_to_log_transformer.apply_modifications(
                 self.__loggable_payload_obj)
 
-        # Pop _batch_request_metadata property from payload, if present 
+        # Pop _batch_request_metadata property from payload, if present
         # Override with request_metadata, if present
         # In case both exist, we call pop twice to make sure these properties
         # are removed from the cleaned payload object

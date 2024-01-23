@@ -24,8 +24,8 @@ class SegmentedScoreContext:
             self.__original_max_tokens = int(payload_object.get("max_tokens"))
 
         if ("n" in payload_object and (int)(payload_object["n"]) > 1) or \
-            ("stream" in payload_object and str2bool(payload_object["stream"])) or \
-            (self.__original_max_tokens is not None and self.__original_max_tokens <= segment_max_token_size):
+           ("stream" in payload_object and str2bool(payload_object["stream"])) or \
+           (self.__original_max_tokens is not None and self.__original_max_tokens <= segment_max_token_size):
             self.__supports_segmentation = False
 
         self.__segment_max_token_size = segment_max_token_size
@@ -106,7 +106,7 @@ class SegmentedScoreContext:
             return final_result
 
     def __merge_logprobs(self, final_result: ScoringResult):
-        logprobs_properties = [ "tokens", "token_logprobs", "top_logprobs", "text_offset"]
+        logprobs_properties = ["tokens", "token_logprobs", "top_logprobs", "text_offset"]
 
         if "logprobs" in final_result.response_body["choices"][0]:
             final_logprobs = final_result.response_body["choices"][0]["logprobs"]
@@ -120,8 +120,9 @@ class SegmentedScoreContext:
                         current_logprobs = current_result.response_body["choices"][0]["logprobs"]
 
                         for logprobs_property in logprobs_properties:
-                            if logprobs_property in current_logprobs and current_logprobs[logprobs_property] is not None:
-                                final_logprobs[logprobs_property].extend(current_logprobs[logprobs_property])
+                            if logprobs_property in current_logprobs:
+                                if current_logprobs[logprobs_property] is not None:
+                                    final_logprobs[logprobs_property].extend(current_logprobs[logprobs_property])
 
     def __get_usage(self, segmented_result: ScoringResult, usage_key: str):
         return segmented_result.response_body["usage"][usage_key]
@@ -135,7 +136,6 @@ class SegmentedScoreContext:
         from the final result's `completion_tokens` value due to slight variations in the prompt token
         count as the input grows.
         """
-        usage_properties = ["prompt_tokens", "completion_tokens", "total_tokens"]
 
         if "usage" in final_result.response_body:
             final_usage = final_result.response_body["usage"]
