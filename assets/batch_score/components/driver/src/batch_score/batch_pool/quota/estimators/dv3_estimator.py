@@ -78,10 +78,11 @@ class DV3Estimator(QuotaEstimator):
     def __load_tokenizer(self):
         # Parameters taken from https://github.com/openai/tiktoken/blob/main/tiktoken_ext/openai_public.py
         # We're providing these manually so we can load the tokens from a local file, instead of from a URL.
-        data_path = os.path.join(os.path.dirname(__file__), "data", "cl100k_base.tiktoken")
+        # We split the token file because of the 1MB file size limit in azureml-assets repo.
+        bpe_ranks = {}
 
-        with open(data_path, "rb") as f:
-            bpe_ranks = {b64decode(token): int(rank) for token, rank in (line.split() for line in f)}
+        self.__load_tokens(bpe_ranks, "cl100k_base_1.tiktoken")
+        self.__load_tokens(bpe_ranks, "cl100k_base_2.tiktoken")
 
         return Encoding(
             name="cl100k_base",
@@ -96,6 +97,12 @@ class DV3Estimator(QuotaEstimator):
                 "<|endofprompt|>": 100276,
             },
         )
+
+    def __load_tokens(self, bpe_ranks, file_name):
+        data_path = os.path.join(os.path.dirname(__file__), "data", file_name)
+
+        with open(data_path, "rb") as f:
+            bpe_ranks.update({b64decode(token): int(rank) for token, rank in (line.split() for line in f)})
 
     @abstractmethod
     def _get_prompt(self, request_obj: any) -> str:
