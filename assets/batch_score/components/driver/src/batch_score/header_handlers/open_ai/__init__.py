@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+# flake8: noqa: F401
+
 """__init__."""
 
 from .open_ai_header_handler import OpenAIHeaderHandler
