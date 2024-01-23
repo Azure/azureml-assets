@@ -1,9 +1,16 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Routing utilities."""
+
 from enum import Enum
 
 from ...common.telemetry import logging_utils as lu
 
 
 class RoutingResponseType(Enum):
+    """Routing response type."""
+
     RETRY = 1,
     USE_EXISTING = 2,
     FAILURE = 3,
@@ -11,6 +18,7 @@ class RoutingResponseType(Enum):
 
 
 def classify_response(response_status: int) -> RoutingResponseType:
+    """Classify response."""
     if abs(response_status) == 200:
         classification = RoutingResponseType.SUCCESS
     elif abs(response_status) == 408 or response_status == -1:

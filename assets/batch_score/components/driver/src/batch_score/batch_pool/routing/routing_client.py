@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Routing client."""
+
 import asyncio
 import os
 import random
@@ -19,17 +24,23 @@ from ...utils.common import get_base_url
 
 
 class InvalidPoolRoutes(Exception):
+    """Invalid pool routes."""
+
     def __init__(self, message: str):
+        """Initialize InvalidPoolRoutes."""
         super().__init__(message)
 
 
 class RoutingClient(ClientSettingsProvider):
+    """Routing client."""
+
     def __init__(
             self,
             service_namespace: str,
             target_batch_pool: str,
             header_handler: MedsHeaderHandler,
             request_path: str):
+        """Initialize RoutingClient."""
         self.__BASE_URL = os.environ.get(
             "BATCH_SCORE_ROUTING_BASE_URL",
             "https://model-endpoint-discovery.api.azureml.ms/modelendpointdiscovery")
@@ -62,6 +73,7 @@ class RoutingClient(ClientSettingsProvider):
         self.__current_distribution_costs: dict[str, int] = {}
 
     async def refresh_pool_routes(self, session: aiohttp.ClientSession):
+        """Refresh pool routes."""
         retry_count = 0
 
         # Retry a certain number of times or while we have no __target_distribution_percentages
@@ -132,10 +144,12 @@ class RoutingClient(ClientSettingsProvider):
         self.__last_refresh = datetime.now(timezone.utc)
 
     def is_expired(self) -> bool:
+        """Check whether the lease is expired."""
         return self.__last_refresh is None or \
             (self.__last_refresh + timedelta(seconds=self.__REFRESH_INTERVAL)) <= datetime.now(timezone.utc)
 
     def increment(self, endpoint: str, request: ScoringRequest):
+        """Increment."""
         if endpoint not in self.__current_distribution_counts:
             self.__current_distribution_counts[endpoint] = 1
             self.__current_distribution_costs[endpoint] = request.estimated_cost
@@ -146,20 +160,24 @@ class RoutingClient(ClientSettingsProvider):
         self.__emit_request_concurrency(endpoint)
 
     def decrement(self, endpoint: str, request: ScoringRequest):
+        """Decrement."""
         self.__current_distribution_counts[endpoint] -= 1
         self.__current_distribution_costs[endpoint] -= request.estimated_cost
 
         self.__emit_request_concurrency(endpoint)
 
     def get_client_setting(self, key: ClientSettingsKey) -> str:
+        """Get client setting."""
         return self.__client_settings.get(key)
 
     async def get_quota_scope(self, session: aiohttp.ClientSession) -> str:
+        """Get quota scope."""
         await self.__check_and_refresh_pool_routes(session=session)
 
         return self.__quota_scope
 
     async def get_target_endpoint(self, session: aiohttp.ClientSession, exclude_endpoint: str = None) -> str:
+        """Get target endpoint."""
         await self.__check_and_refresh_pool_routes(session=session)
 
         if len(self.__target_distribution_percentages) == 0:

@@ -24,6 +24,7 @@ class AoaiScoringClient:
         tally_handler: TallyFailedRequestHandler = None,
         additional_headers: str = None,
     ):
+        """Initialize AoaiScoringClient."""
         header_provider = AoaiHeaderProvider(
             auth_provider=auth_provider,
             additional_headers=additional_headers,
@@ -42,7 +43,7 @@ class AoaiScoringClient:
         timeout: aiohttp.ClientTimeout = None,
         worker_id: str = "1",
     ) -> ScoringResult:
-        """ Scores a single request until terminal status is reached."""
+        """Score a single request until terminal status is reached."""
         return await self._generic_scoring_client.score(
             session=session,
             scoring_request=scoring_request,
@@ -51,5 +52,5 @@ class AoaiScoringClient:
         )
 
     def validate_auth(self):
-        """Validates the auth by sending dummy request to the scoring url."""
+        """Validate the auth by sending dummy request to the scoring url."""
         self._generic_scoring_client.validate_auth()

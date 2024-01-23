@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Scoring client."""
+
 import asyncio
 import time
 import traceback
@@ -29,6 +31,8 @@ from ..routing.routing_client import RoutingClient
 
 
 class ScoringClient:
+    """Scoring client."""
+
     MINIMUM_SCORING_TIMEOUT = 10
 
     def __init__(
@@ -38,6 +42,7 @@ class ScoringClient:
             routing_client: RoutingClient = None,
             scoring_url: str = None,
             tally_handler: TallyFailedRequestHandler = None):
+        """Initialize ScoringClient."""
         self.__header_handler = header_handler
         self.__routing_client = routing_client
         self.__quota_client = quota_client
@@ -53,6 +58,7 @@ class ScoringClient:
             timeout: aiohttp.ClientTimeout = None,
             worker_id: str = "1"
     ) -> ScoringResult:
+        """Make a scoring call to the endpoint and return the result."""
         if self.__routing_client and self.__quota_client:
             quota_scope = await self.__routing_client.get_quota_scope(session)
 
@@ -75,6 +81,7 @@ class ScoringClient:
             timeout: aiohttp.ClientTimeout = None,
             worker_id: str = "1"
     ) -> ScoringResult:
+        """Make a scoring call to the endpoint and return the result."""
         response = None
         response_payload = None
         response_status = None
@@ -255,6 +262,7 @@ class ScoringClient:
         return result
 
     def get_next_retry_timeout(timeout_generator):
+        """Get next retry timeout."""
         try:
             return next(timeout_generator)
         except StopIteration:
@@ -265,9 +273,7 @@ class ScoringClient:
             return None
 
     def get_retry_timeout_generator(default_timeout: aiohttp.ClientTimeout):
-        """
-        A Python generator that yields aiohttp.ClientTimeout objects.
-        """
+        """Get a Python generator that yields aiohttp.ClientTimeout objects."""
         for iteration in range(2, 10):
             timeout = max(ScoringClient.MINIMUM_SCORING_TIMEOUT, int(2.7 ** iteration))
             if timeout >= default_timeout.total:
@@ -313,11 +319,10 @@ class ScoringClient:
             scoring_request.loggable_payload))
 
     def _validate_init_params(self):
-        # Check for invalid parameter combination
-        '''Even though we check for `scoring_url` the error message says `online_endpoint_url` instead.
-        This is because the below condition can occur only in batch-pool mode and the component that supports
-        batch-pool mode exposes `online_endpoint_url` and not `scoring_url`.
-        '''
+        """Check for invalid parameter combination."""
+        # Even though we check for `scoring_url` the error message says `online_endpoint_url` instead.
+        # This is because the below condition can occur only in batch-pool mode and the component that supports
+        # batch-pool mode exposes `online_endpoint_url` and not `scoring_url`.
         if self.__routing_client is not None and \
             (self.__scoring_url is not None or
              "azureml-model-deployment" in self.__header_handler.get_headers()):

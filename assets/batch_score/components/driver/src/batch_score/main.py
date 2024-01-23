@@ -303,7 +303,7 @@ def setup_loop() -> asyncio.AbstractEventLoop:
 
 
 def setup_input_to_request_transformer() -> InputTransformer:
-    """This tranformer is used to modify each row of the input data before it is sent to MIR for scoring."""
+    """Set up the tranformer used to modify each row of the input data before it is sent to MIR for scoring."""
     modifiers: "list[RequestModifier]" = []
     if configuration.is_vesta():
         modifiers.append(
@@ -317,7 +317,7 @@ def setup_input_to_request_transformer() -> InputTransformer:
 
 
 def setup_input_to_log_transformer() -> InputTransformer:
-    """This tranformer is used to modify each row of the input data before it is logged."""
+    """Set up the tranformer used to modify each row of the input data before it is logged."""
     modifiers: "list[RequestModifier]" = []
     if configuration.is_vesta():
         modifiers.append(VestaEncodedImageScrubber())

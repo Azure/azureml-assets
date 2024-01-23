@@ -38,6 +38,8 @@ from .estimators.vesta_estimator import VestaEstimator
 
 
 class QuotaClient:
+    """Quota client."""
+
     ESTIMATORS = {
         "completion": CompletionEstimator,
         "chat_completion": ChatCompletionEstimator,
@@ -68,6 +70,7 @@ class QuotaClient:
                  quota_audience: str,
                  batch_pool: str,
                  quota_estimator: str):
+        """Initialize QuotaClient."""
         self.__header_handler = header_handler
         self.__namespace = service_namespace
         self.__audience = quota_audience
@@ -88,7 +91,6 @@ class QuotaClient:
     @asynccontextmanager
     async def reserve_capacity(self, session: ClientSession, scope: str, request: ScoringRequest):
         """Request capacity from the quota service and release it when finished."""
-
         if request.estimated_cost == 0:
             estimated_cost = self.__estimator.estimate_request_cost(request.cleaned_payload_obj)
             if isinstance(estimated_cost, int):
@@ -114,11 +116,13 @@ class QuotaClient:
     # read-only
     @property
     def batch_pool(self):
+        """The batch pool."""
         return self.__batch_pool
 
     # read-only
     @property
     def audience(self):
+        """The audience."""
         return self.__audience
 
     async def __acquire_lease(
@@ -323,6 +327,7 @@ class QuotaLease:
             lease: Dict[str, any],
             capacity: int,
             request_id: str):
+        """Initialize quota lease."""
         self.__client = client
         self.__session = session
         self.__scope = scope
@@ -338,7 +343,6 @@ class QuotaLease:
 
     async def end(self):
         """Terminates the background renewal task and releases the quota lease."""
-
         self.__task.cancel()
 
         try:
@@ -348,11 +352,11 @@ class QuotaLease:
             lu.get_logger().exception(f"QuotaClient: Failed to release quota lease {self.__lease_id}.")
 
     def report_result(self, result: ScoringResult):
+        """Report result."""
         self.__client._report_result(self.__lease_id, self.__capacity, result)
 
     async def __keep_alive(self):
         """Background task that periodically renews the quota lease."""
-
         attempt = 0
 
         while True:
@@ -413,20 +417,30 @@ class QuotaLease:
 
 # Used as placeholder object when quota management is disabled.
 class NullQuotaLease:
+    """Null quota lease."""
+
     async def end(self, *args, **kwargs):
+        """End function."""
         pass
 
     def report_result(self, *args, **kwargs):
+        """Report result."""
         pass
 
 
 class QuotaUnavailableException(RetriableException):
+    """Quota unavailable exception."""
+
     def __init__(self, *, retry_after: float = None):
+        """Initialize QuotaUnavailableException."""
         super().__init__(429, retry_after=retry_after)
 
 
 class QuotaPermanentlyUnavailableException(PermanentException):
+    """Quota permanently unavailable exception."""
+
     def __init__(self, scope: str, audience: str, capacity: int, status_code: int, message: str):
+        """Initialize QuotaPermanentlyUnavailableException."""
         message = f"Audience {audience} under scope {scope} does not have enough quota to "
         message += f"satisfy a request of {capacity} tokens. Rate limiter service returned {status_code}: {message}"
         super().__init__(message, status_code)
