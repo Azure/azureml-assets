@@ -156,6 +156,7 @@ def update_model_metadata(
     try:
         model = ml_client.models.get(name=model_name, version=model_version)
         need_update = False
+        archive_latest = False
 
         # Update tags
         if update.tags:
@@ -197,6 +198,15 @@ def update_model_metadata(
             model.description = update.description
             need_update = True
 
+        # On no_op update, ensure archived model is archived after calling create_or_update
+        if allow_no_op_update:
+            # If model version doesn't show under list, it is currently archived
+            models = ml_client.models.list(name=model_name)
+            active_model_versions = [model.version for model in models]
+
+            if model_version not in active_model_versions:
+                archive_latest = True
+
         if allow_no_op_update or need_update:
             ml_client.models.create_or_update(model)
             logger.print(f"Model metadata updated successfully for {model_name}")
@@ -207,7 +217,7 @@ def update_model_metadata(
 
     # Archive or restore model based on stage
     try:
-        if update.stage == "Archived":
+        if update.stage == "Archived" or archive_latest:
             logger.print(f"Archiving model {model_name} version {model_version}")
             ml_client.models.archive(name=model_name, version=model_version)
         elif update.stage == "Active":
