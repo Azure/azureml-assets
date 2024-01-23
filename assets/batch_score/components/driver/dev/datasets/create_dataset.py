@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Helper script to create a test dataset."""
+
 # https://huggingface.co/datasets/cnn_dailymail
 from datasets import load_dataset
 import pandas as pd
@@ -20,6 +22,6 @@ df.to_json(f'{dataname}/{dataname}.jsonl', orient='records', lines=True)
 
 
 m = mltable.from_json_lines_files([
-     {'file':f'{dataname}/{dataname}.jsonl'}
+     {'file': f'{dataname}/{dataname}.jsonl'}
     ])
 m.save(dataname)

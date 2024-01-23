@@ -13,12 +13,13 @@ from azure.ai.ml import MLClient, load_component
 from azure.identity import DefaultAzureCredential
 
 from src.batch_score.common.constants import METADATA_JSON_FILENAME
-from .util import _get_component_name, _set_and_get_component_name_ver, create_copy, create_metadata_json_file
+from .util import _get_component_name, _set_and_get_component_name_ver, create_copy
 
 
 # Marks all tests in this directory as e2e tests
 @pytest.fixture(autouse=True, params=[pytest.param(None, marks=pytest.mark.e2e)])
 def mark_as_e2e_test():
+    """Mark as e2e tests."""
     pass
 
 
@@ -29,11 +30,13 @@ lock_file = ".lock"
 # But when we run tests locally without xdist, we need to provide a default value.
 @pytest.fixture(scope="session")
 def worker_id(request):
+    """Worker id."""
     if hasattr(request.config, 'workerinput'):
         return request.config.workerinput['workerid']
     else:
         # Default value for local runs where xdist is not used
         return 'master'
+
 
 def _is_main_worker(worker_id):
     return worker_id == "gw0" or worker_id == "master"
@@ -92,6 +95,7 @@ def asset_version(main_worker_lock):
 
 
 def pytest_configure():
+    """Set up pytest configuration."""
     print("Pytest configure started.")
     # ML_Client set up
     pytest.ml_client = MLClient(
@@ -111,7 +115,9 @@ def pytest_configure():
         pytest.source_dir, "driver", "src", "batch_score", METADATA_JSON_FILENAME
     )
 
+
 def pytest_unconfigure():
+    """Tear down pytest configuration."""
     print("Pytest unconfigure started.")
 
     # Delete copied component to not muddle dev environments
@@ -124,45 +130,24 @@ def pytest_unconfigure():
 
 @pytest.fixture(autouse=True, scope="session")
 def register_components(main_worker_lock, asset_version):
-
+    """Register components in the test workspace for e2e tests."""
     if not _is_main_worker(main_worker_lock):
         return
 
-    register_component("batch_score.yml", asset_version)
-    register_component("../llm/batch_score_llm.yml", asset_version)
-    register_component("batch_score_embeddings.yml", asset_version)
-    register_component("batch_score_vesta_chat_completion.yml", asset_version)
-
-
-@pytest.fixture(scope="session")
-def batch_score_yml_component(asset_version):
-    return get_component_metadata("batch_score.yml", asset_version)
-
-
-@pytest.fixture(scope="session")
-def batch_score_embeddings_yml_component(asset_version):
-    return get_component_metadata("batch_score_embeddings.yml", asset_version)
-
-
-@pytest.fixture(scope="session")
-def batch_score_vesta_chat_completion_yml_component(asset_version):
-    return get_component_metadata("batch_score_vesta_chat_completion.yml", asset_version)
+    _register_component("../llm/batch_score_llm.yml", asset_version)
 
 
 @pytest.fixture(scope="session")
 def llm_batch_score_yml_component(asset_version):
-    return get_component_metadata("../llm/batch_score_llm.yml", asset_version)
+    """Get batch score llm component."""
+    return _get_component_metadata("batch_score_llm", asset_version)
 
 
-def register_component(component_yml_name, asset_version):
+def _register_component(component_name, asset_version):
+    """Register component."""
     # Copy component to a temporary file to not muddle dev environments
-    batch_score_component_filepath = os.path.join(
-        pytest.source_dir, "yamls", "components", "v2", component_yml_name
-    )
-
-    create_copy(
-        batch_score_component_filepath, pytest.copied_batch_score_component_filepath
-    )
+    batch_score_component_filepath = _get_spec_filepath(component_name)
+    create_copy(batch_score_component_filepath, pytest.copied_batch_score_component_filepath)
 
     # pins batch_component version
     component_name, component_version = _set_and_get_component_name_ver(
@@ -170,13 +155,6 @@ def register_component(component_yml_name, asset_version):
     )
 
     print(f"Component Name: {component_name}, Version: {component_version}.")
-
-    # create metadata.json file
-    create_metadata_json_file(
-        pytest.copied_batch_score_component_metadata_json_filepath,
-        component_name,
-        component_version
-    )
 
     # registers the specified component from local yaml
     batch_component = load_component(
@@ -187,8 +165,10 @@ def register_component(component_yml_name, asset_version):
     return component_name, component_version
 
 
-def get_component_metadata(component_yml_name, asset_version):
-    batch_score_component_filepath = os.path.join(
-        pytest.source_dir, "yamls", "components", "v2", component_yml_name
-    )
+def _get_component_metadata(component_name, asset_version):
+    batch_score_component_filepath = _get_spec_filepath(component_name)
     return _get_component_name(batch_score_component_filepath), asset_version
+
+
+def _get_spec_filepath(component_name):
+    return os.path.join(pytest.source_dir, component_name, "spec.yaml")

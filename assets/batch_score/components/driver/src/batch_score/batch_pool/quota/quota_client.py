@@ -441,9 +441,9 @@ class QuotaPermanentlyUnavailableException(PermanentException):
 
     def __init__(self, scope: str, audience: str, capacity: int, status_code: int, message: str):
         """Initialize QuotaPermanentlyUnavailableException."""
-        message = (f"Audience {audience} under scope {scope} does not have enough quota to 
-                   satisfy a request of {capacity} tokens. Rate limiter service returned {status_code}: {message}")
-        
+        message = (f"Audience {audience} under scope {scope} does not have enough quota to"
+                   f"satisfy a request of {capacity} tokens. Rate limiter service returned {status_code}: {message}")
+
         super().__init__(message, status_code)
 
         self.scope = scope

@@ -33,6 +33,7 @@ from tests.fixtures.worker import *
 # Marks all tests in this directory as unit tests
 @pytest.fixture(autouse=True, params=[pytest.param(None, marks=pytest.mark.unit)])
 def mark_as_unit_test(monkeypatch):
+    """Mark as unit tests."""
     monkeypatch.setenv(BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR, 'True')
 
 # Sets up the logger for all tests in this directory

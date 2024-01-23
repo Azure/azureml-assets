@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Batch score simulator."""
+
 import mltable
 import os
 
@@ -11,6 +13,7 @@ from pathlib import Path
 from endpoint_simulator import EndpointSimulator
 from quota_simulator import QuotaSimulator
 from routing_simulator import RoutingSimulator
+
 
 class MiniBatchContext(object):
     """This is a context class containing partition and dataset info of mini-batches partitioned by keys."""
@@ -36,17 +39,22 @@ class MiniBatchContext(object):
         """Return the minibatch identity."""
         return self._minibatch_index
 
+
 # Simulate PRS with a single Processor on a single Node
 class Simulator:
+    """PRS Simulator."""
+
     def __init__(self, data_input_folder_path):
-        cwd = os.getcwd()
+        """Initialize PRS Simulator."""
+        os.getcwd()
 
         self.__mltable_data: mltable = mltable.load(data_input_folder_path)
         self.__df_data = self.__mltable_data.to_pandas_dataframe()
-        self.__minibatch_size = 500 # lines
+        self.__minibatch_size = 500  # lines
         self.__cur_index = 0
 
     def start(self):
+        """Start the simulator."""
         main.init()
         results: list[str] = []
 
