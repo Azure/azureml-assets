@@ -179,37 +179,18 @@ class ScoringClient:
             is_retriable=is_retriable
         )
 
-        # Emit request completed event (TO DO: Move this to a method) 
-        def get_prompt_tokens(response_body: any):
-            if response_body and not isinstance(response_body, list):
-                usage: dict[str, int] = response_body["usage"]
-                return usage.get("prompt_tokens", None)
-
-        def get_completion_tokens(response_body: any):
-            if response_body and not isinstance(response_body, list):
-                usage: dict[str, int] = response_body["usage"]
-                return usage.get("completion_tokens", None)
-
-        def get_mini_batch_id(scoring_request: ScoringRequest):
-            if scoring_request and scoring_request.mini_batch_context:
-                return scoring_request.mini_batch_context.mini_batch_id
-
-        request_completed_event = BatchScoreRequestCompletedEvent(
-            minibatch_id=get_mini_batch_id(scoring_request),
-            input_row_id=scoring_request.internal_id,
-            x_ms_client_request_id=headers["x-ms-client-request-id"],
-            worker_id=worker_id,
-            scoring_url=target_endpoint_url,
-            is_successful=response_status == 200,
-            is_retriable=is_retriable,
-            response_code=response_status,
+        self._emit_request_completed_event(
+            response_payload=response_payload,
+            response_status=response_status,
+            scoring_request=scoring_request,
+            target_endpoint_url=target_endpoint_url,
+            headers=headers,
             model_response_code=model_response_code,
-            prompt_tokens=get_prompt_tokens(response_payload),
-            completion_tokens=get_completion_tokens(response_payload),
-            duration_ms=(end - start) * 1000,
-            segmented_request_id=scoring_request.segment_id
+            start=start,
+            end=end,
+            worker_id=worker_id,
+            is_retriable=is_retriable
         )
-        event_utils.emit_event(batch_score_event=request_completed_event)
 
         result: ScoringResult = None
 
@@ -337,3 +318,53 @@ class ScoringClient:
                 "azureml-model-deployment header) are provided.")
 
             raise Exception("Invalid parameter combination")
+
+    @event_utils.catch_and_log_all_exceptions
+    def _emit_request_completed_event(
+            self,
+            response_payload: any,
+            response_status: int,
+            scoring_request: ScoringRequest,
+            target_endpoint_url: str,
+            headers: any,
+            model_response_code: str,
+            start: float,
+            end: float,
+            worker_id: str,
+            is_retriable: bool) -> None:
+
+        def get_prompt_tokens(response_body: any):
+            if not isinstance(response_body, dict):
+                return None
+
+            return response_body.get("usage", {}).get("prompt_tokens")
+
+        def get_completion_tokens(response_body: any):
+            if not isinstance(response_body, dict):
+                return None
+
+        def get_mini_batch_id(scoring_request: ScoringRequest):
+            if scoring_request is not None and scoring_request.mini_batch_context is not None:
+                return scoring_request.mini_batch_context.mini_batch_id
+
+        def get_client_request_id(headers: any):
+            if headers is not None and isinstance(headers, dict):
+                return headers.get("x-ms-client-request-id", None)
+
+        request_completed_event = BatchScoreRequestCompletedEvent(
+            minibatch_id=get_mini_batch_id(scoring_request),
+            input_row_id=scoring_request.internal_id,
+            x_ms_client_request_id=get_client_request_id(headers),
+            worker_id=worker_id,
+            scoring_url=target_endpoint_url,
+            is_successful=response_status == 200,
+            is_retriable=is_retriable,
+            response_code=response_status,
+            model_response_code=model_response_code,
+            prompt_tokens=get_prompt_tokens(response_payload),
+            completion_tokens=get_completion_tokens(response_payload),
+            duration_ms=(end - start) * 1000,
+            segmented_request_id=scoring_request.segment_id
+        )
+
+        event_utils.emit_event(batch_score_event=request_completed_event)
