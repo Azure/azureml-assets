@@ -4,7 +4,7 @@ type: pipeline
 name: model_performance_signal_monitor
 display_name: Model Performance - Signal Monitor
 description: Computes the model performance
-version: 0.0.4
+version: 0.0.5
 is_deterministic: true
 inputs:
   task:
