@@ -9,7 +9,8 @@ from azure.ai.ml.entities import Spark, AmlTokenConfiguration
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_MDC_PREPROCESSOR,
-    DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT
+    DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT,
+    DATA_ASSET_LLM_INPUTS
 )
 
 
@@ -62,7 +63,7 @@ class TestMDCPreprocessorE2E:
             # traditional model
             (DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT, "2023-01-29T00:00:00Z", "2023-02-03T00:00:00Z"),
             # LLM model, disable until we generate the LLM logs in the gated test workspace
-            # (DATA_ASSET_LLM_INPUTS, "2023-10-24T22:00:00Z", "2023-10-24T23:00:00Z")
+            (DATA_ASSET_LLM_INPUTS, "2023-10-24T22:00:00Z", "2023-10-24T23:00:00Z")
         ]
     )
     def test_mdc_preprocessor_successful(

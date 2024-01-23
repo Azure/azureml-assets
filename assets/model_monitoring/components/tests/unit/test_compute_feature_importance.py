@@ -4,8 +4,11 @@
 """This file contains unit tests for the Data Drift Output Metrics component."""
 
 from feature_importance_metrics.compute_feature_importance import (
-    compute_feature_importance, determine_task_type,
-    get_train_test_data, CONTINUOUS_ERR)
+    determine_task_type,
+    get_train_test_data,
+    check_df_has_target_column_with_error,
+    compute_feature_importance,
+    CONTINUOUS_ERR)
 from feature_importance_metrics.feature_importance_utilities import mark_categorical_column
 from feature_importance_metrics.compute_feature_attribution_drift import (
     drop_metadata_columns, calculate_attribution_drift)
@@ -168,6 +171,19 @@ class TestComputeFeatureImportanceMetrics:
         production_dataframe = pd.DataFrame(production_data)
         drift = calculate_attribution_drift(baseline_dataframe, production_dataframe)
         assert drift == 0.5135443210660507
+
+    @pytest.mark.parametrize("column_name", ["fake_column", "", None])
+    def test_check_df_has_target_column_with_error_throw_exception(self, get_fraud_data, column_name):
+        """Test that has target column not present in the reference data."""
+        try:
+            check_df_has_target_column_with_error(get_fraud_data, column_name)
+            pytest.fail("Should throw InvalidInputError Exception.")
+        except Exception as e:
+            assert f"Target column = '{column_name}'" in e.args[0]
+
+    def test_check_df_has_target_column_with_error_successful(self, get_fraud_data):
+        """Test that has target column present in the reference data."""
+        check_df_has_target_column_with_error(get_fraud_data, "IS_FRAUD")
 
     def test_raise_user_error_invalid_task(self, get_fraud_data):
         """Test classification task with continuous numeric label."""
