@@ -8,6 +8,7 @@
 import pytest
 import requests
 
+from src.batch_score.common.constants import BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR
 from src.batch_score.common.telemetry.logging_utils import setup_logger
 from tests.fixtures.adjustment import *
 from tests.fixtures.completion_header_handler import *
@@ -31,9 +32,8 @@ from tests.fixtures.worker import *
 
 # Marks all tests in this directory as unit tests
 @pytest.fixture(autouse=True, params=[pytest.param(None, marks=pytest.mark.unit)])
-def mark_as_unit_test():
-    """Mark all tests in this directory as unit tests."""
-    pass
+def mark_as_unit_test(monkeypatch):
+    monkeypatch.setenv(BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR, 'True')
 
 # Sets up the logger for all tests in this directory
 @pytest.fixture(autouse=True, params=[pytest.param(None, marks=pytest.mark.unit)])
