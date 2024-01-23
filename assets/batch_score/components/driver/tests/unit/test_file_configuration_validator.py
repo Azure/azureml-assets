@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains unit tests for file configuration validator."""
+
 import os
 from pathlib import Path
 
@@ -26,10 +28,12 @@ invalid_dir = configuration_files_dir / "invalid"
 
 @pytest.mark.parametrize("instance", list_files_recursively(valid_dir))
 def test_valid_configurations_pass(instance):
+    """Test valid configuration."""
     FileConfigurationValidator().validate(instance)
 
 
 @pytest.mark.parametrize("instance", list_files_recursively(invalid_dir))
 @pytest.mark.xfail(strict=True, raises=InvalidConfigurationError)
 def test_invalid_configurations_fail(instance):
+    """Test invalid configuration."""
     FileConfigurationValidator().validate(instance)

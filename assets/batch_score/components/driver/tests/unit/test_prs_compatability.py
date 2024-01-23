@@ -12,6 +12,7 @@ from tests.fixtures.geneva_event_listener import mock_import
 
 
 def test_prs_code_importing():
+    """Test PRS code importing."""
     # Should point to the same root as the "code" in the batch-score component yamls
     component_code_root = "../../src"
     file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), component_code_root))

@@ -35,6 +35,7 @@ DISABLED_TRACE_CONFIG_TESTS = [
 @patch("os.environ.get")
 def test_setup_trace_configs_disabled_scenario(mock_os_environ_get: MagicMock, mock_get_logger,
                                                environment_variables: "dict[str, str]"):
+    """Test setup trace configs disabled scenario."""
     mock_os_environ_get.side_effect = environment_variables.get
 
     trace_configs = main.setup_trace_configs()
@@ -55,6 +56,7 @@ ENABLED_TRACE_CONFIG_TESTS = [
 def test_setup_trace_configs_enabled_scenario(mock_os_environ_get: MagicMock, mock_get_logger,
                                               environment_variables: "dict[str, str]",
                                               expected_trace_configs: "list[TraceConfig]"):
+    """Test setup trace configs enabled scenario."""
     mock_os_environ_get.side_effect = environment_variables.get
 
     trace_configs = main.setup_trace_configs()
@@ -78,6 +80,7 @@ GET_RETURN_VALUE_TEST_CASES = [
 
 @pytest.mark.parametrize("dummy_return_data, output_behavior", GET_RETURN_VALUE_TEST_CASES)
 def test_get_return_value(mock_get_logger, dummy_return_data: "list[str]", output_behavior: str):
+    """Test get return value."""
     actual_result = main.get_return_value(dummy_return_data, output_behavior)
     if output_behavior == "summary_only":
         assert len(actual_result) == len(dummy_return_data)
@@ -89,6 +92,7 @@ def test_get_return_value(mock_get_logger, dummy_return_data: "list[str]", outpu
 
 
 def test_run_emit_minibatch_started_event(mock_run_context):
+    """Test emit minibatch started event."""
     # Arrange
     input_data, mini_batch_context = _setup_main()
 
