@@ -78,7 +78,7 @@ class SegmentedScoreContext:
     def has_more(self) -> bool:
         """Check whether there is any more segment."""
         if len(self.__segmented_results) > 0:
-            if self.__original_max_tokens is not None:
+            if self.__original_max_tokens is None:
                 # No provided max_tokens scenario
                 return self.__last_stop_reason is None or self.__last_stop_reason != "stop"
             elif self.__supports_segmentation:
