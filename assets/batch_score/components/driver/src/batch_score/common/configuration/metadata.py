@@ -32,7 +32,7 @@ class Metadata(Namespace):
             print(f"The component metadata file '{metadata_file_path}' does not exist.")
 
         except Exception as e:
-            print("An unexpected error occurred when extracting component name and version"
+            print("An unexpected error occurred when extracting component name and version "
                   f"from metadata.json file: {e}")
 
         return Metadata.get_metadata(component_metadata)
