@@ -14,12 +14,7 @@ cpu_compute_target = "cpu-cluster"
 
 source_dir = os.getcwd()
 gated_llm_pipeline_filepath = os.path.join(
-    source_dir,
-    "driver",
-    "tests",
-    "e2e",
-    "prs_pipeline_templates",
-    "base_llm.yml")
+    pytest.source_dir, "tests", "e2e", "prs_pipeline_templates", "base_llm.yml")
 
 RUN_NAME = "batch_score_mir_endpoint_llm_test"
 JOB_NAME = "gated_batch_score_llm"  # Should be equivalent to base_llm.yml's job name

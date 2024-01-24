@@ -12,7 +12,6 @@ import pytest
 from azure.ai.ml import MLClient, load_component
 from azure.identity import DefaultAzureCredential
 
-from src.batch_score.common.constants import METADATA_JSON_FILENAME
 from .util import _get_component_name, _set_and_get_component_name_ver, create_copy
 
 
