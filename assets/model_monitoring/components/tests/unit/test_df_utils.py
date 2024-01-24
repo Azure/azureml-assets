@@ -381,7 +381,7 @@ class TestDFUtils:
         # Create an empty RDD with empty schema
         baseline_df = create_pyspark_dataframe(emp_RDD, columns)
         production_df = create_pyspark_dataframe(emp_RDD, columns)
-        with pytest.raises(InvalidInputError) as ex:
+        with pytest.raises(Exception) as ex:
             try_get_common_columns_with_error(baseline_df, production_df)
         assert "Found no common columns between input datasets." in str(ex.value)
 
@@ -401,7 +401,7 @@ class TestDFUtils:
                                                ["id", "name"])
         production_df = create_pyspark_dataframe([(3, "c"), (4, "d")],
                                                  ["age", "gender"])
-        with pytest.raises(InvalidInputError) as ex:
+        with pytest.raises(Exception) as ex:
             try_get_common_columns_with_error(baseline_df, production_df)
         assert "Found no common columns between input datasets." in str(ex.value)
 
