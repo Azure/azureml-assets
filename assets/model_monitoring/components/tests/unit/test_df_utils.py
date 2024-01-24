@@ -20,7 +20,6 @@ from src.shared_utilities.df_utils import (
     get_numerical_and_categorical_cols,
     modify_categorical_columns
 )
-from src.shared_utilities.momo_exceptions import InvalidInputError
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp
 import pandas as pd
