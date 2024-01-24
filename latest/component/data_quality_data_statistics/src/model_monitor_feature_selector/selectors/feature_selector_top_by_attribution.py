@@ -31,8 +31,6 @@ class FeatureSelectorTopNByAttribution(FeatureSelector):
         # Sort and find Top N features with higher importance
         top_N_feature_importance_names_importance = sorted(
             feature_importance_names_importance, key=lambda x: x[1], reverse=True)[: self.N_value]
-        print(top_N_feature_importance_names_importance)
-
         # Get top N feature names and find common features in both input dataset
         top_features = [x[0] for x in top_N_feature_importance_names_importance]
         # Select top N common feature in both inputs
