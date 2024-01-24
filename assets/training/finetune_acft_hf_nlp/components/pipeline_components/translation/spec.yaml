@@ -523,7 +523,6 @@ jobs:
       validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
       test_mltable_path: '${{parent.inputs.test_mltable_path}}'
       user_column_names: '${{parent.inputs.source_lang}},${{parent.inputs.target_lang}}'
-      system_properties: '${{parent.inputs.system_properties}}'
       num_train_epochs: '${{parent.inputs.num_train_epochs}}'
       max_steps: '${{parent.inputs.max_steps}}'
       per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'

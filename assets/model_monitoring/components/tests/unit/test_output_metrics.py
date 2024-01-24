@@ -61,6 +61,17 @@ class TestDataDriftOutputMetrics:
             ),
         ]
 
+        feature_importance = [
+            Row(
+                feature="petal_length",
+                metric_value=0.269
+            ),
+            Row(
+                feature="sepal_length",
+                metric_value=0.746
+            )
+        ]
+
         signal_name = "my-data-drift-signal"
         monitor_name = "my-monitor"
 
@@ -70,6 +81,7 @@ class TestDataDriftOutputMetrics:
             metrics=signal_metrics,
             baseline_histogram=None,
             target_histogram=None,
+            feature_importance=feature_importance,
         )
 
         payload = data_drift_signal.to_dict()

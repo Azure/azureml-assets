@@ -23,12 +23,21 @@ class FeatureSelectorTopNByAttribution(FeatureSelector):
         self, input_df1: pyspark_sql.DataFrame, input_df2: pyspark_sql.DataFrame
     ) -> pyspark_sql.DataFrame:
         """Select the top N contributing features."""
-        feature_importance_names = (
-            self.feature_importance.select("feature").rdd.flatMap(lambda x: x).collect()
+        # Collect All feature and importance value from input
+        feature_importance_names_importance = (
+            self.feature_importance.select(self.feature_importance.feature, self.feature_importance.metric_value)
+            .collect()
         )
-        top_N_feature_importance_names = feature_importance_names[: self.N_value]
+        # Sort and find Top N features with higher importance
+        top_N_feature_importance_names_importance = sorted(
+            feature_importance_names_importance, key=lambda x: x[1], reverse=True)[: self.N_value]
+        print(top_N_feature_importance_names_importance)
+
+        # Get top N feature names and find common features in both input dataset
+        top_features = [x[0] for x in top_N_feature_importance_names_importance]
+        # Select top N common feature in both inputs
         return (
             FeatureSelectorAll()
             .select(input_df1, input_df2)
-            .filter(col("featureName").isin(top_N_feature_importance_names))
+            .filter(col("featureName").isin(top_features))
         )
