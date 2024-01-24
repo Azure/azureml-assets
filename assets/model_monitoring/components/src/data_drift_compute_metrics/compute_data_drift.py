@@ -48,7 +48,7 @@ def compute_data_drift_measures_tests(
 
     if len(numerical_columns_names) == 0 and \
        len(categorical_columns_names) == 0:
-        raise ValueError("No numerical or categorical columns found in common between production data and baseline"
+        raise ValueError("No numerical or categorical columns detected in common between production data and baseline"
               " data. We dont support this scenario.")
 
     if len(numerical_columns_names) != 0:
