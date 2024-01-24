@@ -108,7 +108,7 @@ class TestRoutingClient:
 
     # If the exception handling fails, this test will hang indefinitely.
     # So we expect the test to pass in 40 seconds if the code is correct.
-    @pytest.mark.timeout(5)
+    @pytest.mark.timeout(40)
     async def test_get_quota_scope_InvalidPoolRoutes_raised(
             self,
             monkeypatch,
