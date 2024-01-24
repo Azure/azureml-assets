@@ -7,12 +7,14 @@ from enum import Enum
 from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities.event_utils import post_warning_event
 
+
 class NoCommonColumnsApproach(Enum):
     """Enum for no common columns approach."""
 
     IGNORE = 0
     WARNING = 1
     ERROR = 2
+
 
 data_type_long_group = ["long", "int", "bigint", "short", "tinyint", "smallint"]
 data_type_numerical_group = ["float", "double", "decimal"]
@@ -181,11 +183,13 @@ def add_value_if_present(
         dict[target_property_name] = row[row_name]
     return dict
 
+
 def try_get_common_columns_with_warning(
     baseline_df: pyspark_sql.DataFrame, production_df: pyspark_sql.DataFrame
 ) -> dict:
     """Get common columns. Post warning to the job and return empty dict."""
     return try_get_common_columns(baseline_df, production_df, NoCommonColumnsApproach.WARNING)
+
 
 def try_get_common_columns_with_error(
     baseline_df: pyspark_sql.DataFrame, production_df: pyspark_sql.DataFrame
@@ -193,8 +197,11 @@ def try_get_common_columns_with_error(
     """Get common columns. Raise error if dictionary is empty."""
     return try_get_common_columns(baseline_df, production_df, NoCommonColumnsApproach.ERROR)
 
+
 def try_get_common_columns(
-    baseline_df: pyspark_sql.DataFrame, production_df: pyspark_sql.DataFrame, no_common_columns_approach=NoCommonColumnsApproach.IGNORE
+    baseline_df: pyspark_sql.DataFrame,
+    production_df: pyspark_sql.DataFrame,
+    no_common_columns_approach=NoCommonColumnsApproach.IGNORE
 ) -> dict:
     """
     Compute the common columns between baseline and production dataframes.
