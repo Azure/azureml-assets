@@ -10,9 +10,10 @@ from numerical_data_drift_metrics import compute_numerical_data_drift_measures_t
 from categorical_data_drift_metrics import compute_categorical_data_drift_measures_tests
 from io_utils import get_output_spark_df
 from shared_utilities.df_utils import (
-    get_common_columns,
+    try_get_common_columns_with_error,
     get_numerical_and_categorical_cols
 )
+from shared_utilities.momo_exceptions import InvalidInputError
 
 
 def compute_data_drift_measures_tests(
@@ -26,7 +27,7 @@ def compute_data_drift_measures_tests(
     override_categorical_features: str
 ):
     """Compute Data drift metrics and tests."""
-    common_columns_dict = get_common_columns(baseline_df, production_df)
+    common_columns_dict = try_get_common_columns_with_error(baseline_df, production_df)
 
     numerical_columns_names, categorical_columns_names = get_numerical_and_categorical_cols(
                                                             baseline_df,
@@ -48,8 +49,8 @@ def compute_data_drift_measures_tests(
 
     if len(numerical_columns_names) == 0 and \
        len(categorical_columns_names) == 0:
-        raise ValueError("No common columns found between production data and baseline"
-              "data. We dont support this scenario.")
+        raise ValueError("No numerical or categorical columns found in common between production data and baseline"
+              " data. We dont support this scenario.")
 
     if len(numerical_columns_names) != 0:
         numerical_df = compute_numerical_data_drift_measures_tests(

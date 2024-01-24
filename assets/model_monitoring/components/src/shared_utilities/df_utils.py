@@ -3,6 +3,16 @@
 
 """This file contains additional utilities that are applicable to dataframe."""
 import pyspark.sql as pyspark_sql
+from enum import Enum
+from shared_utilities.momo_exceptions import InvalidInputError
+from shared_utilities.event_utils import post_warning_event
+
+class NoCommonColumnsApproach(Enum):
+    """Enum for no common columns approach."""
+
+    IGNORE = 0
+    WARNING = 1
+    ERROR = 2
 
 data_type_long_group = ["long", "int", "bigint", "short", "tinyint", "smallint"]
 data_type_numerical_group = ["float", "double", "decimal"]
@@ -170,3 +180,46 @@ def add_value_if_present(
     if row_has_value(row, row_name):
         dict[target_property_name] = row[row_name]
     return dict
+
+def try_get_common_columns_with_warning(
+    baseline_df: pyspark_sql.DataFrame, production_df: pyspark_sql.DataFrame
+) -> dict:
+    """Get common columns. Post warning to the job and return empty dict."""
+    return try_get_common_columns(baseline_df, production_df, NoCommonColumnsApproach.WARNING)
+
+def try_get_common_columns_with_error(
+    baseline_df: pyspark_sql.DataFrame, production_df: pyspark_sql.DataFrame
+) -> dict:
+    """Get common columns. Raise error if dictionary is empty."""
+    return try_get_common_columns(baseline_df, production_df, NoCommonColumnsApproach.ERROR)
+
+def try_get_common_columns(
+    baseline_df: pyspark_sql.DataFrame, production_df: pyspark_sql.DataFrame, no_common_columns_approach=NoCommonColumnsApproach.IGNORE
+) -> dict:
+    """
+    Compute the common columns between baseline and production dataframes.
+
+    If common columns are not found, conduct different error handling based on no_common_columns_approach.
+    """
+    common_columns_dict = get_common_columns(baseline_df, production_df)
+    if not common_columns_dict:
+        error_message = (
+            "Found no common columns between input datasets. Try double-checking"
+            " if there are common columns between the input datasets."
+            " Common columns must have the same names (case-sensitive) and similar data types."
+        )
+        if no_common_columns_approach == NoCommonColumnsApproach.ERROR:
+            raise InvalidInputError(
+                error_message
+            )
+        elif no_common_columns_approach == NoCommonColumnsApproach.WARNING:
+            post_warning_event(
+                error_message
+                + " Please visit aka.ms/mlmonitoringhelp for more information."
+            )
+            return {}
+        # no_common_columns_approach == NoCommonColumnsApproach.IGNORE:
+        else:
+            return {}
+    # returns found common columns.
+    return common_columns_dict
