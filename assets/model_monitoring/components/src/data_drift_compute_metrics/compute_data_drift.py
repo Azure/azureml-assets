@@ -13,7 +13,6 @@ from shared_utilities.df_utils import (
     try_get_common_columns_with_error,
     get_numerical_and_categorical_cols
 )
-from shared_utilities.momo_exceptions import InvalidInputError
 
 
 def compute_data_drift_measures_tests(
