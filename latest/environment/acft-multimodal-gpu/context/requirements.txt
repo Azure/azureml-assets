@@ -4,7 +4,7 @@ azureml-acft-common-components==0.0.43
 azureml-acft-contrib-hf-nlp==0.0.43
 azureml-acft-multimodal-components==0.0.43
 # needed by multimodal
-mltable==1.6.0
+mltable==1.6.1
 transformers==4.36.2
 peft==0.4.0
 deepspeed==0.9.5
