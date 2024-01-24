@@ -137,11 +137,19 @@ def test_handle_response_retriable_exception_throws_exception(exception_to_throw
     mock_emit_event.assert_called_with(batch_score_event=expected_request_completed_event)
 
 
+# This is an actual failed response payload from a model.
+# We use the 'r' prefix to create a raw string so we don't have to escape the escape characters in the string.
+failed_response_payload = r'{\n  "error": {\n    "message": "This model\'s maximum context length is 16385 tokens, ' \
+                          r'"however you requested 9000027 tokens (27 in your prompt; 9000000 for the completion). ' \
+                          r'Please reduce your prompt; or completion length.",\n    "type": "invalid_request_error"' \
+                          r',\n    "param": null,\n    "code": null\n  }\n}\n'
+
+
 @pytest.mark.parametrize('status_code', [(408), (429), (500), (502), (503), (504)])
 def test_handle_response_retriable_status_code_throws_exception(status_code, mock_run_context):
     """Test handle response retriable status code throws exception."""
     # Arrange
-    http_response = HttpScoringResponse(status=status_code, payload=['hello'])
+    http_response = HttpScoringResponse(status=status_code, payload=failed_response_payload)
     scoring_request = _get_test_scoring_request()
     response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
     expected_request_completed_event = _get_expected_request_completed_event(response_handler,
@@ -169,7 +177,7 @@ def test_handle_response_non_retriable_status_code_returns_failure(status_code,
                                                                    mock_run_context):
     """Test handle response non retriable status code returns failure."""
     # Arrange
-    http_response = HttpScoringResponse(status=status_code, payload=['hello'])
+    http_response = HttpScoringResponse(status=status_code, payload=failed_response_payload)
     scoring_request = _get_test_scoring_request()
     response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=tally_handler_enable))
     expected_request_completed_event = _get_expected_request_completed_event(response_handler,

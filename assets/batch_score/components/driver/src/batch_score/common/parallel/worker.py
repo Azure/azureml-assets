@@ -149,8 +149,8 @@ class Worker:
                 queue_item.scoring_request.retry_count += 1
                 wait_time = 0
 
-                # To activate this, set BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS_ENV_VAR to True.
-                # And to override the default back-off time, set BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF_ENV_VAR
+                # To activate this, set BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS to True.
+                # And to override the default back-off time, set BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF
                 # to a value in seconds.
                 if is_zero_traffic_group_error(e.status_code, e.response_payload):
                     if str2bool(os.environ.get(constants.BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS_ENV_VAR, "False")):

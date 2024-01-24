@@ -134,14 +134,16 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             worker_id: str) -> None:
 
         def get_prompt_tokens(response_body: any):
-            if response_body and not isinstance(response_body, list):
-                usage: dict[str, int] = response_body["usage"]
-                return usage.get("prompt_tokens", None)
+            if not isinstance(response_body, dict):
+                return None
+
+            return response_body.get("usage", {}).get("prompt_tokens")
 
         def get_completion_tokens(response_body: any):
-            if response_body and not isinstance(response_body, list):
-                usage: dict[str, int] = response_body["usage"]
-                return usage.get("completion_tokens", None)
+            if not isinstance(response_body, dict):
+                return None
+
+            return response_body.get("usage", {}).get("completion_tokens")
 
         def get_mini_batch_id(mini_batch_context: any):
             if mini_batch_context:
