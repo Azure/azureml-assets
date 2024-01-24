@@ -19,6 +19,12 @@ gated_llm_pipeline_filepath = os.path.join(
 RUN_NAME = "batch_score_aoai_endpoint_test"
 JOB_NAME = "gated_batch_score_llm"  # Should be equivalent to base_llm.yml's job name
 YAML_COMPONENT = {"jobs": {JOB_NAME: {"component": None}}}  # Placeholder for component name set below.
+YAML_ENV_VARS = {"jobs": {JOB_NAME: {
+    "environment_variables": {
+        "BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG": "false",
+        "BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS": "True"
+    }
+}}}
 YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
     "inputs": {
         # TODO: add tally_failed_requests to the file config
@@ -78,6 +84,7 @@ def test_gated_aoai_batch_score_completion(llm_batch_score_yml_component):
         YAML_COMPONENT,
         YAML_AOAI_COMPLETION_TEST_DATA_ASSET,
         YAML_AOAI_COMPLETION_FILE_CONFIG,
+        YAML_ENV_VARS,
         YAML_DISALLOW_FAILED_REQUESTS,
         display_name)
     _submit_job_and_monitor_till_completion(
@@ -97,6 +104,7 @@ def test_gated_aoai_batch_score_chat_completion(llm_batch_score_yml_component):
         YAML_COMPONENT,
         YAML_AOAI_CHAT_COMPLETION_TEST_DATA_ASSET,
         YAML_AOAI_CHAT_COMPLETION_FILE_CONFIG,
+        YAML_ENV_VARS,
         YAML_DISALLOW_FAILED_REQUESTS,
         display_name)
     _submit_job_and_monitor_till_completion(
@@ -116,6 +124,7 @@ def test_gated_aoai_batch_score_embedding(llm_batch_score_yml_component):
         YAML_COMPONENT,
         YAML_AOAI_EMBEDDING_TEST_DATA_ASSET,
         YAML_AOAI_EMBEDDING_FILE_CONFIG,
+        YAML_ENV_VARS,
         YAML_DISALLOW_FAILED_REQUESTS,
         display_name)
     _submit_job_and_monitor_till_completion(
