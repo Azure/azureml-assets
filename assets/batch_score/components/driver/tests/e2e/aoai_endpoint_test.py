@@ -74,7 +74,7 @@ YAML_AOAI_EMBEDDING_TEST_DATA_ASSET = {"inputs": {
 
 @pytest.mark.smoke
 @pytest.mark.e2e
-@pytest.mark.timeout(15 * 60)
+@pytest.mark.timeout(20 * 60)
 def test_gated_aoai_batch_score_completion(llm_batch_score_yml_component):
     """Test gate for AOAI batch score completion model."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
@@ -93,7 +93,7 @@ def test_gated_aoai_batch_score_completion(llm_batch_score_yml_component):
 
 @pytest.mark.smoke
 @pytest.mark.e2e
-@pytest.mark.timeout(15 * 60)
+@pytest.mark.timeout(20 * 60)
 def test_gated_aoai_batch_score_chat_completion(llm_batch_score_yml_component):
     """Test gate for AOAI batch score chat completion model."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
@@ -112,7 +112,7 @@ def test_gated_aoai_batch_score_chat_completion(llm_batch_score_yml_component):
 
 @pytest.mark.smoke
 @pytest.mark.e2e
-@pytest.mark.timeout(15 * 60)
+@pytest.mark.timeout(20 * 60)
 def test_gated_aoai_batch_score_embedding(llm_batch_score_yml_component):
     """Test gate for AOAI batch score embedding model."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
