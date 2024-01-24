@@ -207,8 +207,6 @@ class Configuration(Namespace):
             return AuthenticationType.ApiKey
         elif self.authentication_type == AuthenticationType.ManagedIdentity:
             return AuthenticationType.ManagedIdentity
-        # elif self.authentication_type == constants.CONNECTION_AUTH_TYPE or
-        # self.authentication_type == AuthenticationType.WorkspaceConnection:
         elif self.authentication_type in [constants.CONNECTION_AUTH_TYPE, AuthenticationType.WorkspaceConnection]:
             return AuthenticationType.WorkspaceConnection
         else:

@@ -140,7 +140,7 @@ def test_handle_response_retriable_exception_throws_exception(exception_to_throw
 # This is an actual failed response payload from a model.
 # We use the 'r' prefix to create a raw string so we don't have to escape the escape characters in the string.
 failed_response_payload = r'{\n  "error": {\n    "message": "This model\'s maximum context length is 16385 tokens, ' \
-                          r'"however you requested 9000027 tokens (27 in your prompt; 9000000 for the completion). ' \
+                          r'however you requested 9000027 tokens (27 in your prompt; 9000000 for the completion). ' \
                           r'Please reduce your prompt; or completion length.",\n    "type": "invalid_request_error"' \
                           r',\n    "param": null,\n    "code": null\n  }\n}\n'
 
