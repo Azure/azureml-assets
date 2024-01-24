@@ -19,7 +19,7 @@ class Gatherer:
         """Gatherer metrics."""
 
         def __init__(self):
-            """Init function."""
+            """Initialize gatherer metrics."""
             self.handled_scoring_result_count = 0
             self.handled_minibatch_count = 0
             self.returned_minibatch_count = 0
@@ -36,11 +36,12 @@ class Gatherer:
             """Increase the metric of returned mini batch count."""
             self.returned_minibatch_count += minibatch_count
 
-    def __init__(self,
-                 scoring_result_queue: "deque[ScoringResult]",
-                 failed_scoring_result_queue: "deque[ScoringResult]",
-                 callback):
-        """Init function."""
+    def __init__(
+            self,
+            scoring_result_queue: "deque[ScoringResult]",
+            failed_scoring_result_queue: "deque[ScoringResult]",
+            callback):
+        """Initialize Gatherer."""
         self.__finished_callback = callback
         self.__scoring_result_queue = scoring_result_queue
         self.__failed_scoring_result_queue = failed_scoring_result_queue
@@ -69,8 +70,8 @@ class Gatherer:
                 set_mini_batch_id(mini_batch_id)
 
                 if mini_batch_id in self.__finished_minibatch_id_set:
-                    msg = "Gatherer: Received scoring_result, mini_batch_id : {}, but already finished, omit"
-                    lu.get_logger().info(msg.format(mini_batch_id))
+                    lu.get_logger().info(f"Gatherer: Received scoring_result, mini_batch_id : {mini_batch_id}, "
+                                         "but already finished, omit")
                     continue
 
                 self.__result_list_map[mini_batch_id].append(scoring_result)
@@ -84,10 +85,10 @@ class Gatherer:
                         scoring_result.mini_batch_context.exception = e
                         self._add_to_finished_result_list_map([], scoring_result.mini_batch_context, exception=e)
                     else:
-                        msg = "Gatherer: Received 'none' mini batch id in scoring result. Exception: {}"
-                        lu.get_logger().error(msg.format(e))
-                        msg = "Gatherer: Skipping the scoring result. Current unfinished mini batch count: {}"
-                        lu.get_logger().error(msg.format(len(self.__result_list_map)))
+                        lu.get_logger().error("Gatherer: Received 'none' mini batch id in scoring result. "
+                                              f"Exception: {e}")
+                        lu.get_logger().error("Gatherer: Skipping the scoring result. Current unfinished "
+                                              f"mini batch count: {len(self.__result_list_map)}")
 
         set_mini_batch_id(None)
         lu.get_logger().info("Gatherer: Received None, exiting")
@@ -96,9 +97,10 @@ class Gatherer:
     def _move_minibatch_to_finished_result_list_queue(self, scoring_result):
         mini_batch_context = scoring_result.mini_batch_context
         mini_batch_id = mini_batch_context.mini_batch_id
-        lu.get_logger().debug("Gatherer: Move Result: {}, target_result_len : {}".format(
-            len(self.__result_list_map[mini_batch_id]),
-            mini_batch_context.target_result_len))
+        lu.get_logger().debug("Gatherer: Move Result: {}, target_result_len : {}"
+                              .format(
+                                  len(self.__result_list_map[mini_batch_id]),
+                                  mini_batch_context.target_result_len))
 
         ret = [result for result in self.__result_list_map[mini_batch_id] if not result.omit]
         result_after_callback = self.__finished_callback(ret, mini_batch_context)
@@ -122,8 +124,7 @@ class Gatherer:
     def get_finished_minibatch_result(self) -> "dict[str, dict[str, any]]":
         """Get finished mini batch result."""
         result_map = copy.deepcopy(self.__finished_result_list_map)
-        msg = "Gatherer: get_finished_minibatch_result. Mini batch IDs: {}"
-        lu.get_logger().info(msg.format(list(result_map.keys())))
+        lu.get_logger().info(f"Gatherer: get_finished_minibatch_result. Mini batch IDs: {list(result_map.keys())}")
         self.__finished_result_list_map.clear()
         self.__metrics.emit_minibatch_returned(len(result_map))
         return result_map
