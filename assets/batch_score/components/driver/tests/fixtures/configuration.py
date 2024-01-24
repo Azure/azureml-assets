@@ -11,7 +11,7 @@ from src.batch_score.common.configuration.metadata import Metadata
 
 TEST_COMPONENT_NAME = "test_component_name"
 TEST_COMPONENT_VERSION = "test_component_version"
-TEST_SCORING_URI = "test_scoring_uri"
+TEST_SCORING_URI = "https://test.openai.azure.com/openai/deployments/"
 
 
 @pytest.fixture
