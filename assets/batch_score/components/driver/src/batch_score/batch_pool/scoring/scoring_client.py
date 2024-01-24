@@ -356,6 +356,8 @@ class ScoringClient:
             if not isinstance(response_body, dict):
                 return None
 
+            return response_body.get("usage", {}).get("completion_tokens")
+
         def get_mini_batch_id(scoring_request: ScoringRequest):
             if scoring_request is not None and scoring_request.mini_batch_context is not None:
                 return scoring_request.mini_batch_context.mini_batch_id
