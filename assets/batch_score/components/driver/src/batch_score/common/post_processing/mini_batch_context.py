@@ -8,7 +8,7 @@ class MiniBatchContext(object):
     """Mini batch context."""
 
     def __init__(self, raw_mini_batch_context, target_result_len) -> None:
-        """Init function."""
+        """Initialize MiniBatchContext."""
         self.__target_result_len = target_result_len
         self.raw_mini_batch_context = raw_mini_batch_context
         self.exception = None

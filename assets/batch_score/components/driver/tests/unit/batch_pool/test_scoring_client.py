@@ -70,7 +70,10 @@ exceptions_to_raise = [
     [['caplog', 'make_completion_header_handler', e] for e in exceptions_to_raise],
     indirect=['caplog', 'make_completion_header_handler'],
 )
-async def test_score_once_raises_retriable_exception(caplog, make_completion_header_handler, exception_to_raise):
+async def test_score_once_raises_retriable_exception(caplog,
+                                                     make_completion_header_handler,
+                                                     exception_to_raise,
+                                                     mock_run_context):
     """Test score once raises retriable exception scenario."""
     def mock_post(**kwargs):
         """Mock post function."""

@@ -9,6 +9,7 @@ from ...utils.common import convert_result_list
 from ..configuration.configuration import Configuration
 from ..scoring.scoring_result import ScoringResult
 from ..telemetry import logging_utils as lu
+from ..telemetry.events import event_utils
 from ..telemetry.logging_utils import set_mini_batch_id
 from .mini_batch_context import MiniBatchContext
 from .result_utils import (
@@ -32,30 +33,29 @@ class CallbackFactory:
     def __init__(self,
                  configuration: Configuration,
                  input_to_output_transformer):
-        """Init function."""
+        """Initialize CallbackFactory."""
         self._configuration = configuration
         self.__input_to_output_transformer = input_to_output_transformer
 
     def generate_callback(self):
         """Generate a list of callbacks used in async mode."""
-        callback = self.save_mini_batch_result_and_emit
-        callback = add_callback(self.convert_result_list, callback)
-        callback = add_callback(self.apply_input_transformer, callback)
+        callback = self._save_mini_batch_result_and_emit
+        callback = add_callback(self._convert_result_list, callback)
+        callback = add_callback(self._apply_input_transformer, callback)
         return callback
 
-    def convert_result_list(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
-        """Convert result list."""
-        return convert_result_list(results=scoring_results,
-                                   batch_size_per_request=self._configuration.batch_size_per_request)
+    def _convert_result_list(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
+        return convert_result_list(
+            results=scoring_results,
+            batch_size_per_request=self._configuration.batch_size_per_request)
 
-    def apply_input_transformer(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
-        """Apply input transformer."""
+    def _apply_input_transformer(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
         return apply_input_transformer(self.__input_to_output_transformer, scoring_results)
 
-    def save_mini_batch_result_and_emit(self,
-                                        scoring_results: "list[ScoringResult]",
-                                        mini_batch_context: MiniBatchContext):
-        """Save mini batch result and emit."""
+    def _save_mini_batch_result_and_emit(
+            self,
+            scoring_results: "list[ScoringResult]",
+            mini_batch_context: MiniBatchContext):
         mini_batch_id = mini_batch_context.mini_batch_id
         set_mini_batch_id(mini_batch_context.mini_batch_id)
         lu.get_logger().info("Start saving result of data subset {}.".format(mini_batch_id))
@@ -86,6 +86,11 @@ class CallbackFactory:
                 output_row_count=len(scoring_results),
                 exception=type(e).__name__,
                 stacktrace=traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
+        finally:
+            event_utils.generate_minibatch_summary(
+                minibatch_id=mini_batch_id,
+                output_row_count=len(scoring_results),
+            )
 
         lu.get_logger().info("Completed data subset {}.".format(mini_batch_id))
         set_mini_batch_id(None)
