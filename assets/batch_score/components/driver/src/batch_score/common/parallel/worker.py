@@ -152,18 +152,18 @@ class Worker:
                 # To activate this, set BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS to True.
                 # And to override the default back-off time, set BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF
                 # to a value in seconds.
-                if is_zero_traffic_group_error(e.status_code, e.response_payload):
-                    if str2bool(os.environ.get(constants.BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS_ENV_VAR, "False")):
-                        back_off = int(
-                            os.environ.get(constants.BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF_ENV_VAR)
-                            or self.get_client_settings(ClientSettingsKey.NO_DEPLOYMENTS_BACK_OFF)
-                            or self.NO_DEPLOYMENTS_BACK_OFF)
+                if is_zero_traffic_group_error(e.status_code, e.response_payload) and \
+                   str2bool(os.environ.get(constants.BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS_ENV_VAR, "False")):
+                    back_off = int(
+                        os.environ.get(constants.BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF_ENV_VAR) or
+                        self.get_client_settings(ClientSettingsKey.NO_DEPLOYMENTS_BACK_OFF) or
+                        self.NO_DEPLOYMENTS_BACK_OFF)
 
-                        wait_time = back_off
-                        queue_item.scoring_request.total_wait_time += wait_time
-                        # Reset timeout generator since this error is not due to timeout or model congestion.
-                        queue_item.timeout_generator = ScoringClient.get_retry_timeout_generator(
-                            self.__client_session.timeout)
+                    wait_time = back_off
+                    queue_item.scoring_request.total_wait_time += wait_time
+                    # Reset timeout generator since this error is not due to timeout or model congestion.
+                    queue_item.timeout_generator = ScoringClient.get_retry_timeout_generator(
+                        self.__client_session.timeout)
 
                 elif e.status_code == 429 or e.model_response_code == "429":
                     wait_time = back_off
