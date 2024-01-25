@@ -4,10 +4,14 @@ type: command
 name: batch_benchmark_config_generator
 display_name: Batch Benchmark Config Generator
 description: Generates the config for the batch score component.
-version: 0.0.1
+version: 0.0.3
 is_deterministic: true
 
 inputs:
+  configuration_file:
+    type: uri_file
+    optional: true
+    description: An optional configuration file to use for deployment settings. This overrides passed in parameters.
   scoring_url:
     type: string
     optional: false
@@ -15,7 +19,7 @@ inputs:
   model_type:
     type: string
     description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
-    optional: True
+    optional: false
     enum:
         - oai
         - oss
@@ -82,16 +86,17 @@ code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
   python -m aml_benchmark.batch_config_generator.main 
-  --scoring_url '$${{inputs.scoring_url}}'
-  --model_type $${{inputs.model_type}}
-  --authentication_type $${{inputs.authentication_type}}
-  $[[--connection_name '$${{inputs.connection_name}}']]
-  $[[--deployment_name '$${{inputs.deployment_name}}']]
-  --debug_mode $${{inputs.debug_mode}}
-  $[[--additional_headers '$${{inputs.additional_headers}}']]
-  --ensure_ascii $${{inputs.ensure_ascii}}
-  --max_retry_time_interval $${{inputs.max_retry_time_interval}}
-  --initial_worker_count $${{inputs.initial_worker_count}}
-  --max_worker_count $${{inputs.max_worker_count}}
-  --response_segment_size $${{inputs.response_segment_size}}
+  --scoring_url '${{inputs.scoring_url}}'
+  --model_type ${{inputs.model_type}}
+  --authentication_type ${{inputs.authentication_type}}
+  --debug_mode ${{inputs.debug_mode}}
+  --ensure_ascii ${{inputs.ensure_ascii}}
+  --initial_worker_count ${{inputs.initial_worker_count}}
+  --max_worker_count ${{inputs.max_worker_count}}
+  --response_segment_size ${{inputs.response_segment_size}}
   --batch_score_config_path ${{outputs.batch_score_config}}
+  $[[--configuration_file ${{inputs.configuration_file}}]]
+  $[[--max_retry_time_interval ${{inputs.max_retry_time_interval}}]]
+  $[[--connection_name '${{inputs.connection_name}}']]
+  $[[--deployment_name '${{inputs.deployment_name}}']]
+  $[[--additional_headers '${{inputs.additional_headers}}']]

@@ -6,7 +6,7 @@
 import argparse
 import json
 from enum import Enum
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from aml_benchmark.utils.io import save_json_to_file
 from aml_benchmark.utils.logging import get_logger
@@ -37,6 +37,13 @@ def parse_args() -> argparse.Namespace:
     # Input and output arguments
     parser = argparse.ArgumentParser(description=f"{__file__}")
     parser.add_argument(
+        "--configuration_file",
+        type=str,
+        required=False,
+        default=None,
+        help="An optional config file path that contains deployment configurations.",
+    )
+    parser.add_argument(
         "--scoring_url",
         type=str,
         help="The URL of the endpoint."
@@ -50,13 +57,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--authentication_type",
-        type=str,
+        type=AuthenticationType,
         help="Authentication type for endpoint.",
         choices=list(AuthenticationType)
     )
     parser.add_argument(
         "--model_type",
-        type=str,
+        type=ModelType,
         help="Type of model.",
         choices=list(ModelType)
     )
@@ -89,7 +96,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--max_retry_time_interval",
         type=int,
-        help="The maximum time (in seconds) spent retrying a payload. If unspecified, payloads are retried unlimited times.",
+        help="The maximum time (in seconds) spent retrying a payload. \
+            If unspecified, payloads are retried unlimited times.",
         required=False,
         default=None
     )
@@ -159,6 +167,13 @@ def _get_complete_additional_headers(
     additional_headers: Optional[str],
     deployment_name: Optional[str],
 ) -> Dict[str, str]:
+    """
+    Get the complete additional headers for the requests.
+    :param model_type: The type of the model.
+    :param additional_headers: Additional headers for the model.
+    :param deployment_name: The deployment name of the endpoint.
+    :returns: The complete additional headers dictionary.
+    """
     if additional_headers:
         try:
             additional_headers_dict = json.loads(additional_headers)
@@ -174,7 +189,8 @@ def _get_complete_additional_headers(
             raise BenchmarkUserException._with_error(
                 AzureMLError.create(
                     BenchmarkUserError,
-                    error_details="additional_headers provided is not a valid dictionary of key value pairs."
+                    error_details="additional_headers provided is not a valid dictionary \
+                        of key value pairs."
                 )
             )
     else:
@@ -184,21 +200,75 @@ def _get_complete_additional_headers(
     return additional_headers_dict
 
 
+def _get_request_settings(
+    additional_headers_dict: Dict[str, Any],
+    max_retry_time_interval: Optional[int],
+) -> Dict[str, Any]:
+    """
+    Get request settings config.
+    :param additional_headers_dict: Additional headers for the requests.
+    :param max_return_time_interval: The maximum time (in seconds) spent retrying a payload.
+    :returns: The request settings config.
+    """
+    if max_retry_time_interval:
+        return {
+            "headers": additional_headers_dict,
+            "timeout": max_retry_time_interval,
+        }
+    return {
+        "headers": additional_headers_dict,
+    }
+
+
+def _get_overriding_configs(configuration_file: Optional[str]) -> Dict[Any, Any]:
+    """
+    Get overriding config file.
+    :param configuration_file: Additional configuration file.
+    :returns: The additional configuration dictionary.
+    """
+    config = {}
+    if configuration_file:
+        try:
+            with open(configuration_file) as file:
+                config_from_file = json.load(file)
+        except Exception as ex:
+            raise BenchmarkUserException._with_error(
+                AzureMLError.create(
+                    BenchmarkUserError,
+                    error_details=f"Failed to read configuration file due to \
+                        error: {str(ex)}"
+                )
+            )
+        logger.info(f"Config from file: {config_from_file}")
+        if isinstance(config_from_file, dict):
+            config = config_from_file
+        else:
+            raise BenchmarkUserException._with_error(
+                AzureMLError.create(
+                    BenchmarkUserError,
+                    error_details="configuration_file provided is not a valid dictionary \
+                        of key value pairs."
+                )
+            )
+    return config
+
+
 @swallow_all_exceptions(logger)
 def main(
-        scoring_url: str,
-        connection_name: str,
-        authentication_type: AuthenticationType,
-        debug_mode: bool,
-        ensure_ascii: bool,
-        initial_worker_count: int,
-        max_worker_count: int,
-        model_type: ModelType,
-        response_segment_size: int,
-        batch_score_config_path: str,
-        additional_headers: Optional[str],
-        deployment_name: Optional[str],
-        max_retry_time_interval: Optional[int],
+    scoring_url: str,
+    connection_name: str,
+    authentication_type: AuthenticationType,
+    debug_mode: bool,
+    ensure_ascii: bool,
+    initial_worker_count: int,
+    max_worker_count: int,
+    model_type: ModelType,
+    response_segment_size: int,
+    batch_score_config_path: str,
+    configuration_file: Optional[str],
+    additional_headers: Optional[str],
+    deployment_name: Optional[str],
+    max_retry_time_interval: Optional[int],
 ) -> None:
     """
     Entry script for the script.
@@ -214,6 +284,7 @@ def main(
     :param model_type: The type of the model.
     :param response_segment_size: The maximum number of tokens to generate at a time.
     :param batch_score_config_path: The config json file for the batch score component.
+    :param configuration_file: An optional config file path that contains deployment configurations.
     :param additional_headers: A stringified json expressing additional headers to be added
         to each request.
     :param deployment_name: The deployment name. Only needed for managed OSS deployment.
@@ -221,6 +292,17 @@ def main(
         If unspecified, payloads are retried unlimited times.
     :return: None
     """
+    overriding_configs = _get_overriding_configs(configuration_file)
+    # {
+    #     "scoring_url": online_endpoint.scoring_url,
+    #     "deployment_name": online_endpoint.deployment_name,
+    #     "is_managed_endpoint": is_managed_endpoint,
+    #     "is_managed_deployment": is_managed_deployment,
+    #     "is_managed_connections": is_managed_connections,
+    #     "scoring_headers": headers,
+    #     "model_type": online_endpoint.model.model_type,
+    #     "connection_name": online_endpoint.connections_name
+    # }
 
     endpoint_type = "azure_openai" if model_type is ModelType.OAI else "azureml_online_endpoint"
     authentication_dict = _get_authentication_config(authentication_type, connection_name)
@@ -229,6 +311,7 @@ def main(
         additional_headers=additional_headers,
         deployment_name=deployment_name
     )
+    request_settings_dict = _get_request_settings(additional_headers_dict, max_retry_time_interval)
 
     config_dict = {
         "api": {
@@ -245,13 +328,10 @@ def main(
             "url": scoring_url,
         },
         "output_settings": {
-            "save_partitioned_scoring_results": False, # TODO: try this with both true and false.
+            "save_partitioned_scoring_results": True, # TODO: try this with both true and false.
             "ensure_ascii": ensure_ascii,
         },
-        "request_settings": {
-            "headers": additional_headers_dict,
-            "timeout": max_retry_time_interval,
-        },
+        "request_settings": request_settings_dict,
         "log_settings": {
             "stdout_log_level": "debug" if debug_mode else "info"
         }
@@ -264,9 +344,10 @@ def main(
 if __name__ == "__main__":
     args = parse_args()
     main(
+        configuration_file=args.configuration_file,
         scoring_url=args.scoring_url,
         connection_name=args.connection_name,
-        authentication_type=AuthenticationType(args.authentication_type),
+        authentication_type=args.authentication_type,
         debug_mode=args.debug_mode,
         ensure_ascii=args.ensure_ascii,
         initial_worker_count=args.initial_worker_count,
@@ -275,6 +356,6 @@ if __name__ == "__main__":
         additional_headers=args.additional_headers,
         deployment_name=args.deployment_name,
         max_retry_time_interval=args.max_retry_time_interval,
-        model_type=ModelType(args.model_type),
+        model_type=args.model_type,
         response_segment_size=args.response_segment_size,
     )
