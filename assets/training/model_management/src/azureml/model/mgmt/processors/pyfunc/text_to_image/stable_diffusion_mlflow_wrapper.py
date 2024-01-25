@@ -7,7 +7,7 @@ Contains MLFlow pyfunc wrapper for stable diffusion models.
 Has methods to load the model and predict.
 """
 
-from diffusers import StableDiffusionPipeline
+from diffusers import StableDiffusionPipeline, DiffusionPipeline
 import mlflow
 import os
 import pandas as pd
@@ -59,6 +59,8 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
                 if self._model_family == SupportedTextToImageModelFamily.DECI_DIFFUSION.value:
                     self._pipe = StableDiffusionPipeline.from_pretrained(model_dir, custom_pipeline=model_dir)
                     self._pipe.unet = self._pipe.unet.from_pretrained(model_dir, subfolder='flexible_unet')
+                elif self._model_family == SupportedTextToImageModelFamily.STABLE_DIFFUSION_XL.value:
+                    self._pipe = DiffusionPipeline.from_pretrained(model_dir, custom_pipeline=model_dir)
                 else:
                     self._pipe = StableDiffusionPipeline.from_pretrained(model_dir)
 

@@ -67,4 +67,5 @@ class SupportedTextToImageModelFamily(_CustomEnum):
     """Supported text to image models."""
 
     STABLE_DIFFUSION = "stable-diffusion"
+    STABLE_DIFFUSION_XL = "stable-diffusion-xl"
     DECI_DIFFUSION = "decidiffusion"
