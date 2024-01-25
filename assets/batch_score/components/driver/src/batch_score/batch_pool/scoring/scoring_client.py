@@ -33,7 +33,6 @@ from ..routing.routing_client import RoutingClient
 class ScoringClient:
     """Scoring client."""
 
-
     def __init__(
             self,
             header_handler: OpenAIHeaderHandler,

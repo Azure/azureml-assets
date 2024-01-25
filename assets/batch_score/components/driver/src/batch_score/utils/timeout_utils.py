@@ -11,6 +11,7 @@ from ..common import constants
 
 MINIMUM_SCORING_TIMEOUT = 10
 
+
 def get_next_retry_timeout(timeout_generator):
     """Get next retry timeout."""
     try:

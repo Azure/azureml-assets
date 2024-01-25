@@ -42,7 +42,7 @@ def test_get_next_retry_timeout(time, expected_iters):
 
     # Act
     for i in range(expected_iters):
-        timeout = timeout_utils.get_next_retry_timeout(timeout_generator)
+        timeout_utils.get_next_retry_timeout(timeout_generator)
 
     # Assert
     assert timeout_utils.get_next_retry_timeout(timeout_generator) is None

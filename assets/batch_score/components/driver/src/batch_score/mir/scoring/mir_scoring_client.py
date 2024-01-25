@@ -51,7 +51,6 @@ class MirScoringClient:
         worker_id: str = "1"
     ) -> ScoringResult:
         """Score a single request until terminal status is reached."""
-
         # Timeout can be None. See `timeout_utils.get_next_retry_timeout` for more info on why.
         if timeout is None:
             timeout = session.timeout
