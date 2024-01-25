@@ -46,6 +46,9 @@ from .common.scoring.scoring_client_factory import ScoringClientFactory
 from .common.telemetry import logging_utils as lu
 from .common.telemetry.event_listeners.geneva_event_listener import setup_geneva_event_handlers
 from .common.telemetry.event_listeners.job_log_event_listener import setup_job_log_event_handlers
+from .common.telemetry.event_listeners.minibatch_aggregator_event_listener import (
+    setup_minibatch_aggregator_event_handlers,
+)
 from .common.telemetry.events import event_utils
 from .common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
 from .common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
@@ -85,6 +88,7 @@ def init():
     event_utils.setup_context_vars(configuration, metadata)
     setup_geneva_event_handlers()
     setup_job_log_event_handlers()
+    setup_minibatch_aggregator_event_handlers()
     setup_logger(configuration.stdout_log_level,
                  configuration.app_insights_log_level,
                  configuration.app_insights_connection_string)

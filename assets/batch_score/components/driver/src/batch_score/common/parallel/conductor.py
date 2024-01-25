@@ -12,6 +12,7 @@ from aiohttp import TraceConfig
 
 from ...batch_pool.routing.routing_client import RoutingClient
 from ...batch_pool.scoring.scoring_client import ScoringClient
+from ...utils import timeout_utils
 from ..configuration.client_settings import NullClientSettingsProvider
 from ..configuration.configuration import Configuration
 from ..post_processing.gatherer import Gatherer
@@ -170,7 +171,7 @@ class Conductor:
 
     def __add_requests(self, requests: "list[ScoringRequest]"):
         for request in requests:
-            timeout_generator = ScoringClient.get_retry_timeout_generator(self.__client_session.timeout)
+            timeout_generator = timeout_utils.get_retry_timeout_generator(self.__client_session.timeout)
             self.__scoring_request_queue.append(
                 QueueItem(scoring_request=request, timeout_generator=timeout_generator))
 

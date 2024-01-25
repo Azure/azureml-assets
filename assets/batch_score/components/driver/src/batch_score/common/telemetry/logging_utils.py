@@ -160,9 +160,19 @@ def get_events_client():
     return _events_client
 
 
+def get_worker_id():
+    """Get worker id."""
+    return _ctx_worker_id.get()
+
+
 def set_worker_id(worker_id: int):
     """Set worker id."""
     _ctx_worker_id.set(worker_id)
+
+
+def get_mini_batch_id():
+    """Get mini batch id."""
+    return _ctx_mini_batch_id.get()
 
 
 def set_mini_batch_id(mini_batch_id: int):
@@ -170,9 +180,19 @@ def set_mini_batch_id(mini_batch_id: int):
     _ctx_mini_batch_id.set(mini_batch_id)
 
 
+def get_quota_audience():
+    """Get quota audience."""
+    return _ctx_quota_audience.get()
+
+
 def set_quota_audience(quota_audience: str):
     """Set quota audience."""
     _ctx_quota_audience.set(quota_audience)
+
+
+def get_batch_pool():
+    """Get batch pool."""
+    return _ctx_batch_pool.get()
 
 
 def set_batch_pool(batch_pool: str):
