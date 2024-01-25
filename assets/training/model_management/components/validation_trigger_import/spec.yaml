@@ -56,7 +56,14 @@ inputs:
     - text-classification
     - translation
     - image-classification
+    - image-classification-multilabel
+    - zero-shot-image-classification
     - text-to-image
+    - text-to-image-inpainting
+    - image-to-image
+    - image-to-text
+    - visual-question-answering
+    - mask-generation
     optional: true
     type: string
 
