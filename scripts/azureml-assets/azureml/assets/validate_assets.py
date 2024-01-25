@@ -3,6 +3,7 @@
 
 """Validate assets."""
 
+import os
 import argparse
 import json
 import re
@@ -13,12 +14,16 @@ from ruamel.yaml import YAML
 from typing import List
 
 from azure.ai.ml import load_model
+from azure.ai.ml.entities import Model
 from azure.ai.ml.operations._run_history_constants import JobStatus
+from azure.identity import AzureCliCredential
+
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets import PublishLocation, PublishVisibility
 from azureml.assets.config import ValidationException
 from azureml.assets.util import logger
+from azureml.assets.util.sku_utils import get_all_sku_details
 
 ERROR_TEMPLATE = "Validation of {file} failed: {error}"
 WARNING_TEMPLATE = "Warning during validation of {file}: {warning}"
@@ -38,27 +43,50 @@ MODEL_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]{0,254}$")
 # model validations
 MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
 VALIDATION_SUMMARY = "results.json"
+SUPPORTED_INFERENCE_SKU_FILE_NAME = "config/supported_inference_skus.json"
+SUPPORTED_INFERENCE_SKU_FILE_PATH = Path(__file__).parent / SUPPORTED_INFERENCE_SKU_FILE_NAME
+
+# credential and mlcient initialization
+# credential might not always be present
+# check in try-except block
+credential = None
+try:
+    credential = AzureCliCredential()
+    token = credential.get_token("https://management.azure.com/.default")
+except Exception as e:
+    credential = None
+    logger.log_warning(f"Exception in creating credential. {e}")
 
 
 class MLFlowModelProperties:
     """Commonly defined model properties."""
 
     EVALUATION_RECOMMENDED_SKU = "evaluation-recommended-sku"
-    FINETINE_RECOMMENDED_SKU = "finetune-recommended-sku"
+    EVALUATION_MIN_SKU_SPEC = "evaluation-min-sku-spec"
+    FINETUNE_RECOMMENDED_SKU = "finetune-recommended-sku"
+    FINETUNE_MIN_SKU_SPEC = "finetune-min-sku-spec"
     INFERENCE_RECOMMENDED_SKU = "inference-recommended-sku"
-    COMPUTE_ALLOW_LIST = "computes_allow_list"
+    INFERENCE_MIN_SKU_SPEC = "inference-min-sku-spec"
+
     FINETUNING_TASKS = "finetuning-tasks"
+    SHARED_COMPUTE_CAPACITY = "SharedComputeCapacityEnabled"
 
 
 class MLFlowModelTags:
     """Commonly defined model tags."""
 
+    TASK = "task"
+    LICENSE = "license"
+    AUTHOR = "author"
+
     EVALUATION_COMPUTE_ALLOWLIST = "evaluation_compute_allow_list"
     FINETUNE_COMPUTE_ALLOWLIST = "finetune_compute_allow_list"
+    FINETUNING_DEFAULTS = "model_specific_defaults"
     INFERENCE_COMPUTE_ALLOWLIST = "inference_compute_allow_list"
     INFERENCE_SUPPORTED_ENVS = "inference_supported_envs"
-    FINETUNING_DEFAULTS = "model_specific_defaults"
-    TASK = "task"
+
+    # This enables model to use shared quota for deployment
+    SHARED_COMPUTE_CAPACITY = "SharedComputeCapacityEnabled"
 
 
 class ModelValidationState:
@@ -78,6 +106,7 @@ class ModelValidationOverallSummary:
     BATCH_DEPLOYMENT = "BatchDeployment"
     ONLINE_DEPLOYMENT = "OnlineDeployment"
     VALIDATION_RUN = "ValidationRun"
+    BUILD_URI = "BuildUri"
 
     @staticmethod
     def get_default_summary():
@@ -216,6 +245,23 @@ def validate_environment_name(asset_config: assets.AssetConfig) -> int:
         error_count += 1
 
     return error_count
+
+
+def validate_environment_version(asset_config: assets.AssetConfig) -> int:
+    """Validate environment version.
+
+    Args:
+        asset_config (AssetConfig): Asset config.
+
+    Returns:
+        int: Number of errors.
+    """
+    if not asset_config.auto_version:
+        _log_error(asset_config.file_name_with_path,
+                   f"Environment version must be auto but is {asset_config.version}")
+        return 1
+
+    return 0
 
 
 def validate_dockerfile(environment_config: assets.EnvironmentConfig) -> int:
@@ -462,12 +508,23 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
     return error_count
 
 
-def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_asset_config: assets.AssetConfig) -> int:
-    """Check if current model asset and validated one matches and has a successful run."""
+def confirm_model_validation_results(
+    latest_asset_config: assets.AssetConfig,
+    validated_asset_config: assets.AssetConfig
+) -> int:
+    """Compare latest model with validation results.
+
+    Args:
+        latest_asset_config (assets.AssetConfig): asset config for latest model
+        validated_asset_config (assets.AssetConfig): asset cofig for validated model
+
+    Returns:
+        int: Number of errors.
+
+    """
+    error_count = 0
     try:
         latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
-        validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
-
         if latest_model_config.type != assets.config.ModelType.MLFLOW:
             logger.print(
                 f"Bypass validation for {latest_asset_config.name} as model type is: {latest_model_config.type.value}"
@@ -478,6 +535,7 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
             logger.log_error(f"Validated asset config is None for {latest_asset_config.name}")
             return 1
 
+        validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
         logger.print(f"Comparing validated and latest model asset files for {latest_asset_config.name}")
 
         latest_model_path_uri = latest_model_config.path.uri
@@ -500,21 +558,29 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
             )
 
             if latest_model_config.type != validated_model_config.type:
-                logger.log_warning(f"latest_model_config_type: [{latest_model_config.type}]")
-                logger.log_warning(f"validated_model_config_type: [{validated_model_config.type}]")
+                logger.log_warning(
+                    f"latest_model_config_type: [{latest_model_config.type}] and "
+                    f"validated_model_config_type: [{validated_model_config.type}] does not match."
+                )
+                error_count += 1
 
             if latest_model_config.path.type != validated_model_config.path.type:
-                logger.log_warning(f"latest_model_config_path_type: [{latest_model_config.path.type}]")
-                logger.log_warning(f"validated_model_config_path_type: [{validated_model_config.path.type}]")
+                logger.log_warning(
+                    f"latest_model_config_path_type: [{latest_model_config.path.type}] and "
+                    f"validated_model_config_path_type: [{validated_model_config.path.type}] does not match."
+                )
+                error_count += 1
 
             if latest_model_path_uri != validated_model_path_uri:
-                logger.log_warning(f"latest_model_config_path_uri: [{latest_model_path_uri}]")
-                logger.log_warning(f"validated_model_config_path_uri: [{validated_model_path_uri}]")
+                logger.log_warning(
+                    f"latest_model_config_path_uri: [{latest_model_path_uri}] and "
+                    f"validated_model_config_path_uri: [{validated_model_path_uri}] does not match."
+                )
+                error_count += 1
 
             if latest_model_config.description != validated_model_config.description:
                 logger.log_warning("Description does not match, for latest and validated asset")
-
-            return 1
+                error_count += 1
 
         # check if spec has changes
         latest_model = load_model(latest_asset_config.spec_with_path)
@@ -524,25 +590,25 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
             logger.log_error("version mismatch")
             logger.log_warning(f"latest_model tags: [[{latest_model.version}]]")
             logger.log_warning(f"validated_model: [[{validated_model.version}]]")
-            return 1
+            error_count += 1
 
         if latest_model.tags != validated_model.tags:
             logger.log_error("tags mismatch")
             logger.log_warning(f"latest_model tags: [{latest_model.tags}]")
             logger.log_warning(f"validated_model: [{validated_model.tags}]")
-            return 1
+            error_count += 1
 
         if latest_model.properties != validated_model.properties:
             logger.log_error("properties mismatch")
             logger.log_warning(f"latest_model properties: [{latest_model.properties}]")
             logger.log_warning(f"validated_model properties: [{validated_model.properties}]")
-            return 1
+            error_count += 1
 
         if latest_model.description != validated_model.description:
             logger.log_error("description mismatch")
             logger.log_warning(f"latest_model description: [{latest_model.description}]")
             logger.log_warning(f"validated_model description: [{validated_model.description}]")
-            return 1
+            error_count += 1
 
         # check validation results now
         validation_results_dir = validated_asset_config.file_path / MODEL_VALIDATION_RESULTS_FOLDER
@@ -552,27 +618,30 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
                 f"{VALIDATION_SUMMARY} missing for model {latest_asset_config.name}. "
                 "Either last validation run for model had failed or its still running."
             )
-            return 1
+            error_count += 1
+        else:
+            overall_summary = {}
+            with open(validation_job_details_path) as f:
+                overall_summary = json.load(f)
 
-        with open(validation_job_details_path) as f:
-            overall_summary = json.load(f)
             validation_run_status = overall_summary.get(
                 ModelValidationOverallSummary.VALIDATION_RUN, ModelValidationState.NOT_STARTED)
             batch_deployment_status = overall_summary.get(
                 ModelValidationOverallSummary.BATCH_DEPLOYMENT, ModelValidationState.NOT_STARTED)
             online_deployment_status = overall_summary.get(
                 ModelValidationOverallSummary.ONLINE_DEPLOYMENT, ModelValidationState.NOT_STARTED)
+            buildUri = overall_summary.get(ModelValidationOverallSummary.BUILD_URI, None)
 
             if validation_run_status != ModelValidationState.COMPLETED:
                 logger.log_error(
                     f"run status for model {latest_asset_config.name} is {validation_run_status}. "
                     "Please ensure that there is a completed model validation job."
                 )
-                return 1
+                error_count += 1
 
             # check is batch supported?
-            supports_batch_str = latest_model.tags.get("disable-batch", "true")
-            supports_batch = True if supports_batch_str.lower() == "true" else False
+            disable_batch_str = latest_model.tags.get("disable-batch", "false")
+            supports_batch = True if disable_batch_str.lower() == "false" else False
 
             if supports_batch and batch_deployment_status != ModelValidationState.COMPLETED:
                 logger.log_error(
@@ -580,7 +649,7 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
                     f"But its status is {batch_deployment_status}. "
                     "Please ensure that that batch is validated for the model."
                 )
-                return 1
+                error_count += 1
 
             # check if online inference is supported
             supports_inference = (
@@ -596,14 +665,266 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
                     f"But its status is {online_deployment_status}. "
                     "Please ensure that that online inference is validated for the model."
                 )
-                return 1
+                error_count += 1
 
-        return 0
+            if error_count > 0 and buildUri:
+                logger.print(f"Check model: {latest_model.name} validation logs here: {buildUri}")
+
+        return error_count
     except Exception as e:
         logger.log_error(
             f"Exception when confirming validation results for model {latest_asset_config.name}. Exception {e}"
         )
         return 1
+
+
+def validate_model_scenario(
+    asset_file_name_with_path: Path,
+    model: Model,
+    min_sku_prop_name: str,
+    recommended_skus_prop_name: str,
+    compute_allowlist_tags_name: str,
+) -> int:
+    """Validate model properties, tags for different scenarios.
+
+    Args:
+        asset_file_name_with_path (Path): file path to model asset
+        model (Model): model loaded from spec
+        min_sku_prop_name (str): min sku property name for the scenario
+        recommended_skus_prop_name (str): recommended sku property name for the scenario
+        compute_allowlist_tags_name (str): compute allowlist tag name for the scenario
+
+    Returns:
+        int: Number of errors.
+
+    """
+    error_count = 0
+    min_sku = model.properties.get(min_sku_prop_name, "").strip()
+    recommended_skus = model.properties.get(recommended_skus_prop_name, "").strip()
+    compute_allowlists = set(model.tags.get(compute_allowlist_tags_name, []))
+
+    if not min_sku:
+        _log_error(asset_file_name_with_path, f"{min_sku_prop_name} is missing in model properties")
+        error_count += 1
+
+    if not recommended_skus:
+        _log_error(asset_file_name_with_path, f"{recommended_skus_prop_name} is missing in model properties")
+        error_count += 1
+
+    if not compute_allowlists:
+        _log_error(asset_file_name_with_path, f"{compute_allowlist_tags_name} is missing in model tags")
+        error_count += 1
+
+    recommended_skus = set([sku.strip() for sku in recommended_skus.split(",")])
+    if (recommended_skus != compute_allowlists):
+        a_minus_b = recommended_skus - compute_allowlists
+        b_minus_a = compute_allowlists - recommended_skus
+        _log_error(
+            asset_file_name_with_path,
+            f"{recommended_skus_prop_name} and {compute_allowlist_tags_name} does not match for model.\n"
+            f"skus in recommended sku and not in compute allowlists => {a_minus_b}\n"
+            f"skus in compute allowlists and not in recommended sku => {b_minus_a}\n"
+        )
+        error_count += 1
+
+    # confirm min_sku_spec with list of supported computes
+    error_count += confirm_min_sku_spec(asset_file_name_with_path, min_sku_prop_name, compute_allowlists, min_sku)
+
+    return error_count
+
+
+def confirm_min_sku_spec(
+    asset_file_name_with_path: Path,
+    min_sku_prop_name: str,
+    supported_skus: set,
+    min_sku_spec: str
+):
+    """Validate model properties, tags for different scenarios.
+
+    Args:
+        asset_file_name_with_path (Path): file path to model asset
+        min_sku_prop_name (str): min sku property name for the scenario
+        supported_skus (List): supported SKUs for the scenario
+        min_sku_spec (str): Scenario min SKU spec
+
+    Returns:
+        int: Number of errors.
+    """
+    subscription_id = os.getenv("SUBSCRIPTION_ID", None)
+    if not (credential and subscription_id):
+        logger.log_warning("credential or subscription_id missing. Skipping min sku valdn")
+        return 0
+
+    try:
+        all_sku_details = get_all_sku_details(credential, subscription_id)
+        min_disk = min_cpu_mem = min_ngpus = min_ncpus = -1
+        for sku in supported_skus:
+            sku_details = all_sku_details.get(sku)
+            if not sku_details:
+                raise Exception(
+                    f"Caught exception while checking {min_sku_prop_name}."
+                    f" Either invalid sku {sku} or issue with fetching sku details"
+                )
+
+            num_cpus = sku_details["vCPUs"]
+            num_gpus = sku_details["gpus"]
+            cpu_mem = int(sku_details["memoryGB"])
+            disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
+
+            min_ncpus = min(num_cpus, min_ncpus) if min_ncpus > 0 else num_cpus
+            min_ngpus = min(num_gpus, min_ngpus) if min_ngpus >= 0 else num_gpus
+            min_cpu_mem = min(cpu_mem, min_cpu_mem) if min_cpu_mem > 0 else cpu_mem
+            min_disk = min(disk_space, min_disk) if min_disk > 0 else disk_space
+
+        ncpus, ngpus, mem, disk = [int(item) for item in min_sku_spec.split("|")]
+        if ncpus != min_ncpus or ngpus != min_ngpus or mem != min_cpu_mem or disk != min_disk:
+            _log_error(
+                asset_file_name_with_path,
+                f"for {min_sku_prop_name} => "
+                f"{ncpus}|{ngpus}|{mem}|{disk} != {min_ncpus}|{min_ngpus}|{min_cpu_mem}|{min_disk}"
+            )
+
+            # list of skus larger than current specific min-sku
+            skus_failing_valdn = []
+            for sku in supported_skus:
+                sku_details = all_sku_details.get(sku)
+                num_cpus = sku_details["vCPUs"]
+                num_gpus = sku_details["gpus"]
+                cpu_mem = int(sku_details["memoryGB"])
+                disk_space = int(sku_details["maxResourceVolumeMB"] / 1024)
+
+                if num_cpus < ncpus or num_gpus < ngpus or cpu_mem < mem or disk_space < disk:
+                    sku_spec = "|".join([str(num_cpus), str(num_gpus), str(cpu_mem), str(disk_space)])
+                    skus_failing_valdn.append(f"{sku}: {sku_spec}")
+
+            _log_error(
+                asset_file_name_with_path,
+                f"for {min_sku_prop_name} => "
+                f"SKUs having smaller spec: {skus_failing_valdn}"
+            )
+
+            return 1
+    except Exception as e:
+        _log_error(asset_file_name_with_path, f"Exception in fetching SKU details => {e}")
+        return 1
+    return 0
+
+
+def validate_model_spec(asset_config: assets.AssetConfig) -> int:
+    """Validate model spec.
+
+    Args:
+        asset_config (assets.AssetConfig): asset config for model spec
+
+    Returns:
+        int: error count
+    """
+    error_count = 0
+    model = model_config = None
+
+    try:
+        model = load_model(asset_config.spec_with_path)
+    except Exception:
+        _log_error(asset_config.file_name_with_path, "Invalid spec file")
+        return 1
+
+    try:
+        model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+    except Exception:
+        _log_error(asset_config.file_name_with_path, "Invalid model config")
+        return 1
+
+    if model_config.type != assets.config.ModelType.MLFLOW:
+        logger.print(
+            f"Bypass validation for {asset_config.name} as model type is: {model_config.type.value}"
+        )
+        return 0
+
+    # confirm must have
+    if not model.tags.get(MLFlowModelTags.TASK):
+        _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.TASK} missing")
+        error_count += 1
+
+    if not model.tags.get(MLFlowModelTags.LICENSE):
+        _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
+        error_count += 1
+
+    # shared compute check
+    if MLFlowModelTags.SHARED_COMPUTE_CAPACITY not in model.tags:
+        _log_error(asset_config.file_name_with_path, f"Tag {MLFlowModelTags.SHARED_COMPUTE_CAPACITY} missing")
+        error_count += 1
+
+    if not model.properties.get(MLFlowModelProperties.SHARED_COMPUTE_CAPACITY, False):
+        _log_error(
+            asset_config.file_name_with_path, f"Property {MLFlowModelProperties.SHARED_COMPUTE_CAPACITY} is not set"
+        )
+        error_count += 1
+
+    # if any of the relevant tags or properies is present
+    # assume support as true and then fail in valdn
+    supports_eval = (
+        MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST in model.tags
+        or MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU in model.properties
+        or MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC in model.properties
+    )
+
+    # If any of the relevant tags or properies is present
+    # assume support as true and then fail in valdn
+    supports_ft = (
+        MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST in model.tags
+        or MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU in model.properties
+        or MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC in model.properties
+        or MLFlowModelProperties.FINETUNING_TASKS in model.properties
+    )
+
+    # validate inference compute req.
+    error_count += validate_model_scenario(
+        asset_config.file_name_with_path,
+        model,
+        MLFlowModelProperties.INFERENCE_MIN_SKU_SPEC,
+        MLFlowModelProperties.INFERENCE_RECOMMENDED_SKU,
+        MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST,
+    )
+
+    # check valid computes for inference
+    with open(SUPPORTED_INFERENCE_SKU_FILE_PATH) as f:
+        supported_inference_skus = set(json.load(f))
+        unsupported_skus_in_spec = [
+            sku
+            for sku in model.tags.get(MLFlowModelTags.INFERENCE_COMPUTE_ALLOWLIST, [])
+            if sku not in supported_inference_skus
+        ]
+        if unsupported_skus_in_spec:
+            _log_error(asset_config.file_name_with_path,
+                       f"Unsupported inference SKU in spec: {unsupported_skus_in_spec}")
+            error_count += 1
+
+    if supports_eval:
+        error_count += validate_model_scenario(
+            asset_config.file_name_with_path,
+            model,
+            MLFlowModelProperties.EVALUATION_MIN_SKU_SPEC,
+            MLFlowModelProperties.EVALUATION_RECOMMENDED_SKU,
+            MLFlowModelTags.EVALUATION_COMPUTE_ALLOWLIST,
+        )
+
+    if supports_ft:
+        if not model.properties.get(MLFlowModelProperties.FINETUNING_TASKS):
+            _log_error(
+                asset_config.file_name_with_path,
+                f"{MLFlowModelProperties.FINETUNING_TASKS} not set for supporting finetuning scenario"
+            )
+            error_count += 1
+
+        error_count += validate_model_scenario(
+            asset_config.file_name_with_path,
+            model,
+            MLFlowModelProperties.FINETUNE_MIN_SKU_SPEC,
+            MLFlowModelProperties.FINETUNE_RECOMMENDED_SKU,
+            MLFlowModelTags.FINETUNE_COMPUTE_ALLOWLIST,
+        )
+
+    return error_count
 
 
 def get_validated_models_assets_map(model_validation_results_dir: str):
@@ -636,7 +957,8 @@ def validate_assets(input_dirs: List[Path],
                     check_images: bool = False,
                     check_categories: bool = False,
                     check_build_context: bool = False,
-                    check_tests: bool = False) -> bool:
+                    check_tests: bool = False,
+                    check_environment_version: bool = False) -> bool:
     """Validate assets.
 
     Args:
@@ -650,6 +972,7 @@ def validate_assets(input_dirs: List[Path],
         check_categories (bool, optional): Whether to check asset categories. Defaults to False.
         check_build_context (bool, optional): Whether to check environment build context. Defaults to False.
         check_tests (bool, optional): Whether to check test references. Defaults to False.
+        check_environment_version (bool, optional): Whether to check environment version. Defaults to False.
 
     Raises:
         ValidationException: If validation fails.
@@ -686,8 +1009,14 @@ def validate_assets(input_dirs: List[Path],
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
         # validated_model_map would be empty for non-drop scenario
-        if validated_model_map and asset_config.type == assets.AssetType.MODEL:
-            error_count += validate_model_assets(asset_config, validated_model_map.get(asset_config.name, None))
+        if asset_config.type == assets.AssetType.MODEL:
+            error_count += validate_model_spec(asset_config)
+            # should run during drop creation only
+            if validated_model_map:
+                error_count += confirm_model_validation_results(
+                    asset_config,
+                    validated_model_map.get(asset_config.name, None)
+                )
 
         # Populate dictionary of image names to asset config paths
         environment_config = None
@@ -720,11 +1049,15 @@ def validate_assets(input_dirs: List[Path],
             if check_tests:
                 error_count += validate_tests(asset_config)
 
-            # Validate Dockerfile
             if asset_config.type == assets.AssetType.ENVIRONMENT:
+                # Validate Dockerfile
                 error_count += validate_dockerfile(asset_config.extra_config_as_object())
                 if check_build_context:
                     error_count += validate_build_context(asset_config.extra_config_as_object())
+
+                # Validate environment version
+                if check_environment_version:
+                    error_count += validate_environment_version(asset_config)
 
             if asset_config.type == assets.AssetType.PROMPT or asset_config.type == assets.AssetType.EVALUATIONRESULT:
                 error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
@@ -796,6 +1129,8 @@ if __name__ == '__main__':
                         help="Check environment build context")
     parser.add_argument("-t", "--check-tests", action="store_true",
                         help="Check test references")
+    parser.add_argument("-e", "--check-environment-version", action="store_true",
+                        help="Check environment version")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -820,6 +1155,7 @@ if __name__ == '__main__':
                               check_categories=args.check_categories,
                               check_build_context=args.check_build_context,
                               model_validation_results_dir=args.model_validation_results_dir,
-                              check_tests=args.check_tests)
+                              check_tests=args.check_tests,
+                              check_environment_version=args.check_environment_version)
     if not success:
         sys.exit(1)

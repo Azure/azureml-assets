@@ -20,6 +20,7 @@ class DataQualitySignal(Signal):
         monitor_name: str,
         signal_name: str,
         metrics: List[Row],
+        feature_importance: List[Row]
     ):
         """Build Data Quality signal."""
         super().__init__(
@@ -27,7 +28,7 @@ class DataQualitySignal(Signal):
         )
         self.row_count_metrics = None
         self.feature_metrics: List[FeatureMetrics] = self._build_feature_metrics(
-            monitor_name, signal_name, metrics
+            monitor_name, signal_name, metrics, feature_importance
         )
 
     def to_dict(self) -> dict:
@@ -67,7 +68,7 @@ class DataQualitySignal(Signal):
             publish_metrics(run_id=run_metric["runId"], metrics=metrics, step=step)
 
     def _build_feature_metrics(
-        self, monitor_name: str, signal_name: str, metrics: List[dict]
+        self, monitor_name: str, signal_name: str, metrics: List[dict], feature_importance: List[Row]
     ) -> List[FeatureMetrics]:
         """Build feature-level metrics.
 
@@ -76,6 +77,11 @@ class DataQualitySignal(Signal):
         """
         if not metrics or len(metrics) == 0:
             return []
+
+        featureimportance_dictionary = {}
+        if feature_importance is not None:
+            for row in feature_importance:
+                featureimportance_dictionary[row[0]] = row[1]
 
         output = {}
 
@@ -130,5 +136,14 @@ class DataQualitySignal(Signal):
                 metric, "threshold_value", feature_metrics, "threshold"
             )
             output[feature_name].metrics.append(feature_metrics)
+
+            # Add the feature importance metrics
+            if len(featureimportance_dictionary) != 0:
+                if not any('BaselineFeatureImportance' in d.values() for d in output[feature_name].metrics):
+                    feature_importance_metric = {
+                        "metricName": "BaselineFeatureImportance",
+                        "metricValue": featureimportance_dictionary[feature_name],
+                    }
+                    output[feature_name].metrics.append(feature_importance_metric)
 
         return list(output.values())

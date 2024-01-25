@@ -10,9 +10,8 @@ from numerical_data_drift_metrics import compute_numerical_data_drift_measures_t
 from categorical_data_drift_metrics import compute_categorical_data_drift_measures_tests
 from io_utils import get_output_spark_df
 from shared_utilities.df_utils import (
-    get_common_columns,
-    get_numerical_cols_with_df,
-    get_categorical_cols_with_df,
+    try_get_common_columns_with_error,
+    get_numerical_and_categorical_cols
 )
 
 
@@ -23,14 +22,18 @@ def compute_data_drift_measures_tests(
     categorical_metric: str,
     numerical_threshold: str,
     categorical_threshold: str,
+    override_numerical_features: str,
+    override_categorical_features: str
 ):
     """Compute Data drift metrics and tests."""
-    common_columns_dict = get_common_columns(baseline_df, production_df)
-    numerical_columns_names = get_numerical_cols_with_df(common_columns_dict,
-                                                         baseline_df)
-    categorical_columns_names = get_categorical_cols_with_df(
-        common_columns_dict,
-        baseline_df)
+    common_columns_dict = try_get_common_columns_with_error(baseline_df, production_df)
+
+    numerical_columns_names, categorical_columns_names = get_numerical_and_categorical_cols(
+                                                            baseline_df,
+                                                            override_numerical_features,
+                                                            override_categorical_features,
+                                                            common_columns_dict)
+
     baseline_df = baseline_df.dropna()
     production_df = production_df.dropna()
 
@@ -45,8 +48,8 @@ def compute_data_drift_measures_tests(
 
     if len(numerical_columns_names) == 0 and \
        len(categorical_columns_names) == 0:
-        raise ValueError("No common columns found between production data and baseline"
-              "data. We dont support this scenario.")
+        raise ValueError("No numerical or categorical columns detected in common between production data and baseline"
+              " data. We dont support this scenario.")
 
     if len(numerical_columns_names) != 0:
         numerical_df = compute_numerical_data_drift_measures_tests(

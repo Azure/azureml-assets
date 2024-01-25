@@ -4,7 +4,7 @@ type: spark
 name: data_drift_compute_metrics
 display_name: Data Drift - Compute Metrics
 description: Compute data drift metrics given a baseline and a deployment's model data input.
-version: 0.3.9
+version: 0.3.11
 is_deterministic: true
 
 code: ../../src
@@ -31,6 +31,12 @@ inputs:
     type: number
   instance_type:
     type: string
+  override_numerical_features:
+    type: string
+    optional: true
+  override_categorical_features:
+    type: string
+    optional: true
 outputs:
   signal_metrics:
     mode: direct
@@ -63,6 +69,7 @@ conf:
         - numpy~=1.21.0
         - pandas~=1.4.3
         - azureml-mlflow~=1.49.0
+        - azure-storage-file-datalake~=12.8.0
         - mltable~=1.3.0
         - azureml-fsspec
         - fsspec~=2023.4.0
@@ -75,4 +82,6 @@ args: >-
   --numerical_threshold ${{inputs.numerical_threshold}}
   --categorical_threshold ${{inputs.categorical_threshold}}
   --feature_names ${{inputs.feature_names}}
+  $[[--override_numerical_features ${{inputs.override_numerical_features}}]]
+  $[[--override_categorical_features ${{inputs.override_categorical_features}}]]
   --signal_metrics ${{outputs.signal_metrics}}

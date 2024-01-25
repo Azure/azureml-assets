@@ -36,7 +36,7 @@ This folder does not verify any yaml configurations.
             },
             "args": [
                 "--debug_mode", "true",
-                "--online_endpoint_url", "https://real-dv3-stable.centralus.inference.ml.azure.com/v1/engines/davinci/completions"
+                "--online_endpoint_url", "https://real-dv3-stable.centralus.inference.ml.azure.com/v1/engines/davinci/completions",
             ]
         }
     ]

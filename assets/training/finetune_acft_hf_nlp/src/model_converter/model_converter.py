@@ -56,7 +56,7 @@ from peft import (
 )
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.model_converter.model_converter")
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.model_converter.model_converter")
 
 COMPONENT_NAME = "ACFT-Model_converter"
 
@@ -224,12 +224,16 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
             update_json_file_and_overwrite(peft_adapter_config_file, update_config)
             auto_cls = ACFT_TASKS_PEFT_MODELS_MAPPING[self.component_args.task_name]
             logger.info(f"Identified auto cls: {auto_cls}")
+            load_model_kwargs = {
+                "device_map": "cpu",
+                "low_cpu_mem_usage": True,
+                "torch_dtype": "auto",
+            }
+            load_model_kwargs.update(self.ft_config.get("load_model_kwargs", {}))
+            logger.info(f"Loading model with kwargs: {load_model_kwargs}")
             ds3_peft_model = auto_cls.from_pretrained(
                 peft_lora_adapter_path,
-                device_map="cpu",
-                low_cpu_mem_usage=True,
-                torch_dtype="auto",
-                **self.ft_config.get("load_model_kwargs", {}),
+                **load_model_kwargs,
             )  # loads both base weights and lora weights
 
             # merge LoRA weights
@@ -237,9 +241,11 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
             print_model_summary(merged_model, True)
 
             # load tokenizer
+            load_tokenizer_kwargs = self.ft_config.get("load_tokenizer_kwargs", {})
+            logger.info(f"Loading tokenizer with kwargs: {load_model_kwargs}")
             tokenizer = AutoTokenizer.from_pretrained(
                 ft_pytorch_model_path,
-                **self.ft_config.get("load_tokenizer_kwargs", {})
+                **load_tokenizer_kwargs,
             )
 
             self.convert_to_mlflow_model(self.component_args, merged_model, tokenizer)

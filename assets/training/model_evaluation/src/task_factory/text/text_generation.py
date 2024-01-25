@@ -5,6 +5,7 @@
 
 from task_factory.base import PredictWrapper
 from logging_utilities import get_logger
+from constants import MODEL_FLAVOR
 
 logger = get_logger(name=__name__)
 
@@ -26,6 +27,8 @@ class TextGenerator(PredictWrapper):
             _type_: _description_
         """
         self._ensure_base_model_input_schema(X_test)
+        if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
+            X_test = X_test.to_string(index=False, header=False).split('\n')
         try:
             y_pred = self.model.predict(X_test, **kwargs)
         except TypeError:

@@ -11,6 +11,7 @@ from azure.storage.blob import ContainerClient, BlobServiceClient
 from azure.storage.blob._shared.authentication import SharedKeyCredentialPolicy
 from azure.storage.filedatalake import FileSystemClient
 from model_data_collector_preprocessor.store_url import StoreUrl
+from shared_utilities.momo_exceptions import InvalidInputError
 
 
 @pytest.mark.unit
@@ -18,63 +19,57 @@ class TestStoreUrl:
     """Test class for StoreUrl."""
 
     @pytest.mark.parametrize(
-        "store_base_url, expected_hdfs_path, expected_abfs_path, expected_container_client",
+        "store_base_url, expected_hdfs_path, expected_abfs_path",
         [
             (
                 "https://my_account.blob.core.windows.net/my_container/path/to/folder",
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                ContainerClient("https://my_account.blob.core.windows.net", "my_container", DefaultAzureCredential())
+                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
             ),
             (
                 "https://my_account.dfs.core.windows.net/my_container/path/to/folder",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container", DefaultAzureCredential())
+                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
             ),
             (
                 "http://my_account.blob.core.windows.net/my_container/path/to/folder",
                 "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                ContainerClient("http://my_account.blob.core.windows.net", "my_container")
+                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder"
             ),
             (
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                ContainerClient("https://my_account.blob.core.windows.net", "my_container", DefaultAzureCredential())
+                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
             ),
             (
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container", DefaultAzureCredential())
+                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
             ),
             (
                 "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                FileSystemClient("http://my_account.dfs.core.windows.net", "my_container")
-            ),
-            (
-                "file:///path/to/folder", "file:///path/to/folder", "file:///path/to/folder", None
+                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder"
             )
         ]
     )
-    def test_store_url(self, store_base_url, expected_hdfs_path, expected_abfs_path, expected_container_client):
+    def test_store_url(self, store_base_url, expected_hdfs_path, expected_abfs_path):
         """Test StoreUrl constructor with http(s), abfs(s), wasb(s) and local file path."""
         store_url = StoreUrl(store_base_url)
 
         assert store_url.get_hdfs_url() == expected_hdfs_path
         assert store_url.get_abfs_url() == expected_abfs_path
-        assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
+
+        # before we support credential-less data, should raise InvalidInputError
+        with pytest.raises(InvalidInputError):
+            store_url.get_container_client()
 
     @pytest.mark.parametrize(
         "azureml_path, datastore_type, credential_type, expected_protocol, expected_hdfs_path, expected_abfs_path, "
         "expected_credential, expected_container_client",
         [
             (
-                "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
+                "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
                 "AzureBlob", "AccountKey", "https",
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
@@ -103,7 +98,7 @@ class TestStoreUrl:
                                 AzureSasCredential("my_sas_token"))
             ),
             (
-                "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
+                "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
                 "AzureBlob", "AccountKey", "http",
                 "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
@@ -138,6 +133,7 @@ class TestStoreUrl:
         """Test StoreUrl constructor with azureml path."""
         mock_datastore = Mock(datastore_type=datastore_type, protocol=expected_protocol, endpoint="core.windows.net",
                               account_name="my_account", container_name="my_container")
+        mock_datastore.name = "my_datastore"
         if datastore_type == "AzureBlob":
             mock_container_client = Mock(
                 spec=ContainerClient, account_name="my_account", container_name="my_container",
@@ -166,8 +162,29 @@ class TestStoreUrl:
 
         assert store_url.get_hdfs_url() == expected_hdfs_path
         assert store_url.get_abfs_url() == expected_abfs_path
-        assert_credentials_are_equal(store_url.get_credential(), expected_credential)
-        assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
+        if expected_credential:
+            assert_credentials_are_equal(store_url.get_credential(), expected_credential)
+            assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
+        else:
+            # should raise InvalidInputError for credential less data
+            with pytest.raises(InvalidInputError):
+                store_url.get_credential()
+            with pytest.raises(InvalidInputError):
+                store_url.get_container_client()
+
+    @pytest.mark.parametrize(
+        "azureml_path",
+        [
+            "azureml://data/my_data/versions/1",
+            "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/data/my_data/versions/1",
+            "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/data/my_data/versions/2"
+            "azureml://locations/my_loc/workspaces/my_ws/data/my_data/versions/1"
+        ]
+    )
+    def test_store_url_with_azureml_data_url(self, azureml_path: str):
+        """Test StoreUrl constructor with azureml data url."""
+        with pytest.raises(InvalidInputError):
+            _ = StoreUrl(azureml_path)
 
     @pytest.mark.parametrize(
         "base_url, relative_path, expected_root_path, expected_abfs_url",

@@ -8,7 +8,7 @@ from azure.ai.ml import MLClient, Output
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR,
-    DATA_ASSET_IRIS_BASELINE_DATA,
+    DATA_ASSET_MODEL_PERFORMANCE_PRODUCTION_DATA,
 )
 
 
@@ -17,7 +17,6 @@ def _submit_model_performance_signal_monitor_job(
     get_component,
     experiment_name,
     task,
-    baseline_data,
     baseline_data_target_column,
     production_data,
     production_data_target_column,
@@ -34,7 +33,6 @@ def _submit_model_performance_signal_monitor_job(
     def _model_performance_signal_monitor_e2e():
         mp_signal_monitor_output = mp_signal_monitor(
             task=task,
-            baseline_data=baseline_data,
             baseline_data_target_column=baseline_data_target_column,
             production_data=production_data,
             production_data_target_column=production_data_target_column,
@@ -53,7 +51,7 @@ def _submit_model_performance_signal_monitor_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+        pipeline_job, experiment_name=experiment_name, skip_validation=True
     )
 
     # Wait until the job completes
@@ -75,10 +73,9 @@ class TestModelPerformanceModelMonitor:
             get_component,
             test_suite_name,
             "tabular-regression",
-            DATA_ASSET_IRIS_BASELINE_DATA,
-            "sepal_length",
-            DATA_ASSET_IRIS_BASELINE_DATA,
-            "sepal_length",
+            "regression-targetvalue",
+            DATA_ASSET_MODEL_PERFORMANCE_PRODUCTION_DATA,
+            "regression",
             0.1,
             0.1
         )
@@ -94,15 +91,14 @@ class TestModelPerformanceModelMonitor:
             get_component,
             test_suite_name,
             "tabular-classification",
-            DATA_ASSET_IRIS_BASELINE_DATA,
-            "target",
-            DATA_ASSET_IRIS_BASELINE_DATA,
-            "target",
+            "classification-targetvalue",
+            DATA_ASSET_MODEL_PERFORMANCE_PRODUCTION_DATA,
+            "classification",
             None,
             None,
-            0.9,
-            0.9,
-            0.9,
+            0.1,
+            0.1,
+            0.1,
         )
 
         assert pipeline_job.status == "Completed"

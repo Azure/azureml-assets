@@ -12,7 +12,11 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_EMPTY,
     DATA_ASSET_IRIS_BASELINE_DATA,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
-    DATA_ASSET_VALID_DATATYPE
+    DATA_ASSET_VALID_DATATYPE,
+    DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE,
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE,
+    DATA_ASSET_WITH_TIMESTAMP_BASELINE_DATA,
+    DATA_ASSET_WITH_TIMESTAMP_PRODUCTION_DATA
 )
 
 
@@ -24,7 +28,9 @@ def _submit_data_quality_signal_monitor_job(
     target_data,
     target_column=None,
     filter_type=None,
-    filter_value=None
+    filter_value=None,
+    override_numerical_features=None,
+    override_categorical_features=None
 ):
     dd_signal_monitor = get_component(COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR)
 
@@ -41,6 +47,8 @@ def _submit_data_quality_signal_monitor_job(
             filter_value=filter_value,
             numerical_threshold=0.5,
             categorical_threshold=0.5,
+            override_numerical_features=override_numerical_features,
+            override_categorical_features=override_categorical_features
         )
         return {"signal_output": dd_signal_monitor_output.outputs.signal_output}
 
@@ -48,7 +56,7 @@ def _submit_data_quality_signal_monitor_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+        pipeline_job, experiment_name=experiment_name, skip_validation=True
     )
 
     # Wait until the job completes
@@ -76,6 +84,42 @@ class TestDataQualityModelMonitor:
             DATA_ASSET_IRIS_BASELINE_DATA,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
             "target",
+            "TopNByAttribution",
+            "3"
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    def test_monitoring_run_successful_with_datatype_override(
+        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+    ):
+        """Test the happy path scenario with datatype override."""
+        pipeline_job = _submit_data_quality_signal_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE,
+            "target",
+            "TopNByAttribution",
+            "3",
+            "sepal_width",
+            "petal_length"
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    def test_monitoring_run_successful_with_timestamp_data(
+        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+    ):
+        """Test the happy path scenario with timestamp data."""
+        pipeline_job = _submit_data_quality_signal_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_WITH_TIMESTAMP_BASELINE_DATA,
+            DATA_ASSET_WITH_TIMESTAMP_PRODUCTION_DATA,
+            "DEFAULT_NEXT_MONTH",
             "TopNByAttribution",
             "3"
         )

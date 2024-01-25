@@ -11,4 +11,4 @@ sepal_length,sepal_width,petal_length,petal_width,target
 4,3,1,5,virginica
 5,3,1,6,versicolor
 4,3,1,5,virginica
-5,3,1,6,versicolor
+5,3,1.0,6,versicolor

@@ -159,7 +159,7 @@ def print_stats(model: LinearRegression, test_x, test_y, *, name=''):
     print(f'Model {name}')
     print('=====')
     print()
-    print('Coefficients: ', model.coef_, sep='\n')
+    print('Coefficients:', model.coef_, sep='\n')
     print('---')
     print(f'Min: {test_y.min()}')
     print(f'Avg: {int(test_y.mean())}')

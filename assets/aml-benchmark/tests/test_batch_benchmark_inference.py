@@ -128,16 +128,16 @@ class TestBatchBenchmarkInferenceComponent:
         )
 
     def _get_pipeline_job(
-        self,
-        display_name: str,
-        online_endpoint_url: str,
-        deployment_name: str,
-        connections_name: str,
-        batch_input_pattern: str,
-        label_column_name: str,
-        temp_dir: Optional[str] = None,
-        model_type: Optional[str] = None,
-    ) -> Job:
+                self,
+                display_name: str,
+                online_endpoint_url: str,
+                deployment_name: str,
+                connections_name: str,
+                batch_input_pattern: str,
+                label_column_name: str,
+                temp_dir: Optional[str] = None,
+                model_type: Optional[str] = None,
+            ) -> Job:
         temp_yaml = self._create_inference_yaml()
         pipeline_job = load_yaml_pipeline('batch-benchmark-inference.yaml')
         os.remove(temp_yaml)

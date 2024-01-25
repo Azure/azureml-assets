@@ -7,6 +7,7 @@ import pytest
 
 from pyspark.sql.types import StringType, StructField, StructType
 from src.model_monitor_data_joiner.run import join_data
+from shared_utilities.momo_exceptions import InvalidInputError
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 
 LEFT_JOIN_COLUMN = 'left_join_column'
@@ -106,14 +107,13 @@ class TestModelMonitorDataJoiner:
         else:
             right_data_df = _generate_right_data_df(True)
 
-        joined_data_df = join_data(
-            left_data_df,
-            LEFT_JOIN_COLUMN,
-            right_data_df,
-            RIGHT_JOIN_COLUMN
-        )
-
-        assert joined_data_df.count() == 0
+        with pytest.raises(InvalidInputError):
+            join_data(
+                left_data_df,
+                LEFT_JOIN_COLUMN,
+                right_data_df,
+                RIGHT_JOIN_COLUMN
+            )
 
     @pytest.mark.parametrize("is_left_data_empty, is_right_data_empty", test_data)
     def test_join_data_empty_input_without_schema_raises_exception(
@@ -132,7 +132,7 @@ class TestModelMonitorDataJoiner:
         else:
             right_data_df = _generate_right_data_df(True)
 
-        with pytest.raises(Exception):
+        with pytest.raises(InvalidInputError):
             join_data(
                 left_data_df,
                 LEFT_JOIN_COLUMN,

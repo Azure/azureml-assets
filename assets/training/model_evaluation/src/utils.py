@@ -94,16 +94,41 @@ def assert_and_raise(condition, exception_cls, error_cls, **message_kwargs):
         raise exception
 
 
-def filter_pipeline_params(evaluation_config):
-    """Filter Pipeline params in evaluation_config.
+def get_task_from_model(model_uri):
+    """Get task type from model config.
 
     Args:
-        evaluation_config (_type_): _description_
+        model_uri (_type_): _description_
 
     Returns:
         _type_: _description_
     """
-    filtered_params = {i: j for i, j in evaluation_config.items() if i in constants.ALLOWED_PIPELINE_PARAMS}
+    mlflow_model = aml_mlflow.models.Model.load(model_uri)
+    task_type = ""
+    if "hftransformers" in mlflow_model.flavors:
+        if "task_type" in mlflow_model.flavors["hftransformers"]:
+            task_type = mlflow_model.flavors["hftransformers"]["task_type"]
+            if task_type.startswith("translation"):
+                task_type = constants.TASK.TRANSLATION
+    return task_type
+
+
+def filter_pipeline_params(evaluation_config, model_flavor=""):
+    """Filter Pipeline params in evaluation_config.
+
+    Args:
+        evaluation_config (_type_): _description_
+        model_flavor (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    if model_flavor == constants.MODEL_FLAVOR.TRANSFORMERS:
+        filtered_params = {i: j for i, j in evaluation_config.items() if
+                           i in constants.ALLOWED_PIPELINE_MLFLOW_TRANSFORMER_PARAMS}
+        filtered_params = {"params": filtered_params}  # Transformers curently accepts dict and not **kwargs
+    else:
+        filtered_params = {i: j for i, j in evaluation_config.items() if i in constants.ALLOWED_PIPELINE_HF_PARAMS}
     return filtered_params
 
 

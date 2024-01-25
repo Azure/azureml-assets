@@ -70,7 +70,10 @@ exceptions_to_raise = [
     [['caplog', 'make_completion_header_handler', e] for e in exceptions_to_raise],
     indirect=['caplog', 'make_completion_header_handler'],
 )
-async def test_score_once_raises_retriable_exception(caplog, make_completion_header_handler, exception_to_raise):
+async def test_score_once_raises_retriable_exception(caplog,
+                                                     make_completion_header_handler,
+                                                     exception_to_raise,
+                                                     mock_run_context):
     """Test score once raises retriable exception scenario."""
     def mock_post(**kwargs):
         """Mock post function."""
@@ -87,30 +90,3 @@ async def test_score_once_raises_retriable_exception(caplog, make_completion_hea
 
     assert 'Score failed' in caplog.text
     assert type(exception_to_raise).__name__ in caplog.text
-
-
-@pytest.mark.parametrize("time, expected_iters",
-                         [(5, 1), (10, 1), (100, 4), (30*60*60, 9)])
-def test_get_retry_timeout_generator(time, expected_iters):
-    """Test get retry timeout generator."""
-    t = aiohttp.ClientTimeout(time)
-    timeout_generator = ScoringClient.get_retry_timeout_generator(t)
-    for i in range(expected_iters):
-        timeout = next(timeout_generator)
-
-    with pytest.raises(StopIteration):
-        next(timeout_generator)
-
-    assert timeout.total == time
-
-
-@pytest.mark.parametrize("time, expected_iters",
-                         [(5, 1), (10, 1), (100, 4), (30*60*60, 9)])
-def test_get_next_retry_timeout(time, expected_iters):
-    """Test get next retry timeout."""
-    t = aiohttp.ClientTimeout(time)
-    timeout_generator = ScoringClient.get_retry_timeout_generator(t)
-    for i in range(expected_iters):
-        ScoringClient.get_next_retry_timeout(timeout_generator)
-
-    assert ScoringClient.get_next_retry_timeout(timeout_generator) is None

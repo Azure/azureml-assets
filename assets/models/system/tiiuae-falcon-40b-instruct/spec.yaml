@@ -2,29 +2,36 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: tiiuae-falcon-40b-instruct
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: ca78eac0ed45bf64445ff0687fabba1598daebf3
   datasets: tiiuae/falcon-refinedweb
   languages: en
-  evaluation-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3,
-    Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-min-sku-spec: 24|4|448|1344
+  evaluation-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  inference-min-sku-spec: 40|8|672|2900
   inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
 tags:
-  Featured: ''
-  Preview: ''
+  Featured: ""
+  Preview: ""
   license: apache-2.0
-  SharedComputeCapacityEnabled: ''
+  SharedComputeCapacityEnabled: ""
   task: text-generation
   author: tiiuae
+  huggingface_model_id: tiiuae/falcon-40b-instruct
   evaluation_compute_allow_list:
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
+    [
+      Standard_NC24s_v3,
+      Standard_NC24rs_v3,
+      Standard_ND40rs_v2,
+      Standard_ND96asr_v4,
+      Standard_ND96amsr_A100_v4,
+    ]
   inference_compute_allow_list:
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
+    [
+      Standard_ND40rs_v2,
+      Standard_ND96asr_v4,
+      Standard_ND96amsr_A100_v4,
+    ]    
   inference_supported_envs:
-  - vllm
-version: 2
+    - vllm
+version: 3
