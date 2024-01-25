@@ -65,14 +65,13 @@ Token Classification | Token Classification | <a href="https://huggingface.co/da
 {
   "input_data": {
     "input_string": [
-      "the meaning of life is"
+      "The meaning of the life is"
     ],
-    "params": {
-      "top_p": 0.9,
-      "temperature": 0.2,
-      "max_new_tokens": 100,
-      "do_sample": true,
-      "return_full_text": true
+    "parameters": {
+      "top_p": 0.95,
+      "temperature": 0.6,
+      "max_new_tokens": 10,
+      "do_sample": true
     }
   }
 }
