@@ -105,3 +105,27 @@ The model is licensed under the <a href="https://huggingface.co/microsoft/phi-1_
   ]
 }
 ```
+
+#### Sample Code input
+```json
+{
+    "input_data":{
+       "input_string":["the meaning of life is"],
+       "parameters":{
+             "temperature":0.5,
+             "top_p":0.5,
+             "max_new_tokens":100,
+              "do_sample":true
+       }
+    }
+}
+```
+
+#### Sample output
+```json
+[
+  {
+    "0": "the meaning of life is a complex and multifaceted concept that has been debated by philosophers, theologians, and scientists for centuries. However, despite the many different perspectives on this topic, there are certain truths that are universally accepted.\n\nOne of the most important truths about the meaning of life is that it is ultimately a personal journey. Each individual has their own unique experiences, beliefs, and values that shape their understanding of what it means to live a meaningful life. While there may be certain universal truths that apply to"
+  }
+]
+```
