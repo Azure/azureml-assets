@@ -11,6 +11,7 @@ tags:
   Featured: ""
   Preview: ""
   SharedComputeCapacityEnabled: ""
+  MaaS-inference: true
   disable-batch: "true"
   inference_compute_allow_list:
     [

@@ -10,6 +10,7 @@ tags:
   Featured: ''
   Preview: ''
   SharedComputeCapacityEnabled: ''
+  MaaS-inference: true
   disable-batch: 'true'
   huggingface_model_id: mistralai/Mixtral-8x7B-Instruct-v0.1
   inference_compute_allow_list:
