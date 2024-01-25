@@ -65,8 +65,8 @@ class MinibatchAggregator:
             batch_pool=self._start_event_per_minibatch[minibatch_id].batch_pool,
             quota_audience=self._start_event_per_minibatch[minibatch_id].quota_audience,
 
-            total_prompt_tokens=sum(e.prompt_tokens for e in rows_completed_events),
-            total_completion_tokens=sum(e.completion_tokens for e in rows_completed_events),
+            total_prompt_tokens=sum(e.prompt_tokens or 0 for e in rows_completed_events),
+            total_completion_tokens=sum(e.completion_tokens or 0 for e in rows_completed_events),
 
             input_row_count=self._start_event_per_minibatch[minibatch_id].input_row_count or 0,
             succeeded_row_count=len([e for e in rows_completed_events if e.is_successful]),

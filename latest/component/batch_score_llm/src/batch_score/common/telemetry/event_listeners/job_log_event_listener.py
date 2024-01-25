@@ -5,7 +5,7 @@
 
 from .. import logging_utils as lu
 from ..events.batch_score_event import BatchScoreEvent
-from ..events.event_utils import add_handler, catch_and_log_all_exceptions
+from ..events.event_utils import add_handler, catch_and_log_all_exceptions, Signal
 
 
 @catch_and_log_all_exceptions
@@ -21,4 +21,4 @@ def handle_batch_score_event(batch_score_event: BatchScoreEvent = None, sender=N
 
 def setup_job_log_event_handlers():
     """Set up job log event handlers."""
-    add_handler(handle_batch_score_event)
+    add_handler(handle_batch_score_event, signal=Signal.EmitTelemetryEvent)

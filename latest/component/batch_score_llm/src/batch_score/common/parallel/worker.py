@@ -14,6 +14,7 @@ import aiohttp
 from ...batch_pool.quota.quota_client import QuotaUnavailableException
 from ...batch_pool.scoring.scoring_client import ScoringClient
 from ...utils.common import str2bool
+from ...utils import timeout_utils
 from .. import constants
 from ..configuration.client_settings import ClientSettingsKey, ClientSettingsProvider
 from ..configuration.configuration import Configuration
@@ -162,7 +163,7 @@ class Worker:
                     wait_time = back_off
                     queue_item.scoring_request.total_wait_time += wait_time
                     # Reset timeout generator since this error is not due to timeout or model congestion.
-                    queue_item.timeout_generator = ScoringClient.get_retry_timeout_generator(
+                    queue_item.timeout_generator = timeout_utils.get_retry_timeout_generator(
                         self.__client_session.timeout)
 
                 elif e.status_code == 429 or e.model_response_code == "429":
@@ -282,9 +283,9 @@ class Worker:
 
     async def __process_queue_item(self, queue_item: QueueItem):
         if queue_item.timeout_generator is None:
-            queue_item.timeout_generator = ScoringClient.get_retry_timeout_generator(self.__client_session.timeout)
+            queue_item.timeout_generator = timeout_utils.get_retry_timeout_generator(self.__client_session.timeout)
 
-        timeout = ScoringClient.get_next_retry_timeout(queue_item.timeout_generator)
+        timeout = timeout_utils.get_next_retry_timeout(queue_item.timeout_generator)
 
         if self._configuration.segment_large_requests == "enabled":
             if queue_item.segmented_score_context is None:
@@ -303,7 +304,7 @@ class Worker:
                 if scoring_result.status == ScoringResultStatus.SUCCESS:
                     if queue_item.segmented_score_context.has_more():
                         # Reset timeout generator for the next segment.
-                        queue_item.timeout_generator = ScoringClient.get_retry_timeout_generator(
+                        queue_item.timeout_generator = timeout_utils.get_retry_timeout_generator(
                             self.__client_session.timeout)
                         self.__scoring_request_queue.append(queue_item)
                     else:
@@ -326,10 +327,6 @@ class Worker:
                 worker_id=self.id)
 
             self.__add_result(queue_item.scoring_request, scoring_result)
-
-    def _get_minibatch_id(self, scoring_request: ScoringRequest) -> str:
-        if scoring_request and scoring_request.mini_batch_context:
-            return scoring_request.mini_batch_context.mini_batch_id
 
     def __add_result(
             self,
@@ -362,7 +359,6 @@ class Worker:
             processed_segments_count: int = 0) -> None:
         # Emit input row completed event
         input_row_completed_event = BatchScoreInputRowCompletedEvent(
-            minibatch_id=self._get_minibatch_id(scoring_request),
             input_row_id=scoring_request.internal_id,
             worker_id=self.id,
             scoring_url=scoring_request.scoring_url,

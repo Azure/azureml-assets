@@ -5,6 +5,7 @@
 
 import os
 import functools
+import traceback
 
 from contextvars import ContextVar
 from datetime import datetime
@@ -68,10 +69,13 @@ def setup_context_vars(configuration: Configuration, metadata: Metadata):
 def emit_event(batch_score_event):
     """Emit the event using the dispatcher."""
     try:
-        dispatcher.send(batch_score_event=batch_score_event)
-    except Exception as e:
+        dispatcher.send(batch_score_event=batch_score_event, signal=Signal.EmitTelemetryEvent)
+    except Exception:
         # TO DO: Replace get_logger().info with an event to Geneva for debugging
-        get_logger().info(f"An exception occurred while emitting event {batch_score_event.name}: {e}")
+        get_logger().info(f"An exception occurred while emitting event {batch_score_event.name}: "
+                          f"{traceback.format_exc()}")
+        if os.getenv(BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR) == 'True':
+            raise
 
 
 def add_handler(handler, sender=dispatcher.Any, signal=dispatcher.Any):
@@ -90,9 +94,9 @@ def catch_and_log_all_exceptions(f):
     def inner(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except Exception as e:
+        except Exception:
             # TO DO: Replace get_logger().info with an event to Geneva for debugging
-            get_logger().info(f"An exception occurred in {f.__name__}: {e}")
+            get_logger().info(f"An exception occurred in {f.__name__}: {traceback.format_exc()}")
             if os.getenv(BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR) == 'True':
                 raise
             return None
@@ -102,21 +106,19 @@ def catch_and_log_all_exceptions(f):
 class Signal(StrEnum):
     """Defines the signal."""
 
+    EmitTelemetryEvent = 'EmitTelemetryEvent'
     GenerateMinibatchSummary = 'GenerateMinibatchSummary'
 
 
+@catch_and_log_all_exceptions
 def generate_minibatch_summary(
         minibatch_id: str,
         timestamp: datetime = None,
         output_row_count: int = None):
     """Generate the minibatch summary."""
-    try:
-        dispatcher.send(
-            signal=Signal.GenerateMinibatchSummary,
-            minibatch_id=minibatch_id,
-            timestamp=timestamp or datetime.now(),
-            output_row_count=output_row_count or 0,
-        )
-    except Exception:
-        # TBD: Handle exceptions without exposing to the user (write to Geneva for debugging?)
-        pass
+    dispatcher.send(
+        signal=Signal.GenerateMinibatchSummary,
+        minibatch_id=minibatch_id,
+        timestamp=timestamp or datetime.now(),
+        output_row_count=output_row_count or 0,
+    )

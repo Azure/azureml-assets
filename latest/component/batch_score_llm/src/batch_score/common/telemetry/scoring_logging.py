@@ -6,6 +6,7 @@
 
 """Scoring logging helpers."""
 
+import aiohttp
 from abc import abstractmethod
 
 from .logging_utils import get_logger
@@ -33,14 +34,19 @@ class ScoreStartLog(BaseLog):
                  internal_id,
                  x_ms_client_request_id,
                  scoring_url,
+                 timeout: aiohttp.ClientTimeout
                  ) -> None:
         """Initialize ScoreStartLog."""
         super().__init__(internal_id, x_ms_client_request_id, scoring_url)
+        self._timeout = -1
+        if timeout is not None:
+            self._timeout = timeout.total
 
     def log(self):
         """Log function."""
         get_logger().info(f"Score start: url={self.scoring_url} internal_id={self.internal_id} "
-                          f"x-ms-client-request-id=[{self.x_ms_client_request_id}]")
+                          f"x-ms-client-request-id=[{self.x_ms_client_request_id}] "
+                          f"timeout={self._timeout}")
 
 
 class ScoreFailedLog(BaseLog):
