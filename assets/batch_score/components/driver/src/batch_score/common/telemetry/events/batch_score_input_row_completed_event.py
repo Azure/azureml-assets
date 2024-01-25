@@ -6,6 +6,8 @@
 from dataclasses import dataclass, field
 from .batch_score_event import BatchScoreEvent
 
+from .. import logging_utils as lu
+
 
 # TODO: Add comments to describe each field
 @dataclass
@@ -17,11 +19,11 @@ class BatchScoreInputRowCompletedEvent(BatchScoreEvent):
         """Get the name of the event."""
         return "BatchScore.InputRow.Completed"
 
-    minibatch_id: str = field(init=True, default=None)
+    minibatch_id: str = field(init=True, default_factory=lu.get_mini_batch_id)
     input_row_id: str = field(init=True, default=None)
     node_id: str = field(init=True, default=None)
     process_id: str = field(init=True, default=None)
-    worker_id: str = field(init=True, default=None)
+    worker_id: str = field(init=True, default_factory=lu.get_worker_id)
     scoring_url: str = field(init=True, default=None)
     is_successful: bool = field(init=True, default=None)
     response_code: int = field(init=True, default=None)

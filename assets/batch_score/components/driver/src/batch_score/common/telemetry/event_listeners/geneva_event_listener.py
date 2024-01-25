@@ -8,13 +8,13 @@ from ..events.batch_score_init_completed_event import BatchScoreInitCompletedEve
 from ..events.batch_score_init_started_event import BatchScoreInitStartedEvent
 from ..events.batch_score_minibatch_completed_event import BatchScoreMinibatchCompletedEvent
 from ..events.batch_score_minibatch_started_event import BatchScoreMinibatchStartedEvent
-from ..events.event_utils import add_handler, catch_and_log_all_exceptions
+from ..events.event_utils import add_handler, catch_and_log_all_exceptions, Signal
 from ..geneva_event_client import GenevaEventClient
 
 
 def setup_geneva_event_handlers():
     """Set up Geneva event handlers."""
-    add_handler(_handle_batch_score_event)
+    add_handler(_handle_batch_score_event, signal=Signal.EmitTelemetryEvent)
 
 
 _geneva_event_client = GenevaEventClient()
