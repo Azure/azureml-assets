@@ -63,9 +63,9 @@ class BatchConstants:
     BATCH_OUTPUT_PATH = "AZUREML_BI_OUTPUT_PATH"
 
 
-class SupportedTextToImageModelFamily(_CustomEnum):
+class SupportedTextToImageModelFamilyPipelines(_CustomEnum): #SupportedTextToImageModelFamily(_CustomEnum):
     """Supported text to image models."""
 
-    STABLE_DIFFUSION = "stable-diffusion"
-    STABLE_DIFFUSION_XL = "stable-diffusion-xl"
-    DECI_DIFFUSION = "decidiffusion"
+    STABLE_DIFFUSION = "diffusers:stablediffusionpipeline" #"stable-diffusion"
+    STABLE_DIFFUSION_XL = "diffusers:stablediffusionxlpipeline" #"stable-diffusion-xl"
+    DECI_DIFFUSION = "diffusers:decidiffusionpipeline" # "decidiffusion"

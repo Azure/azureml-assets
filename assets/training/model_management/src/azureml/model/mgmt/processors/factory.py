@@ -16,7 +16,7 @@ from azureml.model.mgmt.processors.pyfunc.config import (
     MMLabTrackingTasks,
     SupportedTasks as PyFuncSupportedTasks,
 )
-from azureml.model.mgmt.processors.pyfunc.text_to_image.config import SupportedTextToImageModelFamily
+from azureml.model.mgmt.processors.pyfunc.text_to_image.config import SupportedTextToImageModelFamilyPipelines
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.processors.transformers.convertors import (
     NLPMLflowConvertor,
@@ -180,21 +180,21 @@ class TextToImageMLflowConvertorFactory(MLflowConvertorFactoryInterface):
         """Create MLflow convertor for diffusers."""
         misc = translate_params["misc"]
         kwargs = {}
-        model_family = None
+        model_family_pipeline = None
 
-        def get_text_to_image_model_family():
+        def get_text_to_image_model_family_pipeline():
             if not misc:
                 return None
-            for model_family in SupportedTextToImageModelFamily.list_values():
-                if model_family in misc:
-                    return model_family
+            for model_family_pipeline in SupportedTextToImageModelFamilyPipelines.list_values():
+                if model_family_pipeline in misc:
+                    return model_family_pipeline
             return None
 
         if translate_params["task"] == PyFuncSupportedTasks.TEXT_TO_IMAGE.value:
-            model_family = get_text_to_image_model_family()
-            if not model_family:
-                raise Exception("Unsupported model family for text to image model")
-            kwargs.update({"model_family": model_family})
+            model_family_pipeline = get_text_to_image_model_family_pipeline()
+            if not model_family_pipeline:
+                raise Exception("Unsupported model family pipeline for text to image model")
+            kwargs.update({"model_family_pipeline": model_family_pipeline})
         try:
             converter = TextToImageMLflowConvertorFactory.STABLE_DIFFUSION_TASK_MAP[translate_params["task"]]
             return converter(
