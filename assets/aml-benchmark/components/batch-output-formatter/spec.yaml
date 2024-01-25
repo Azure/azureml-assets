@@ -7,7 +7,7 @@ description: Output Formatter for batch inference output
 inputs:
   model_type:
     type: string
-    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss', 'claude')
+    description: Type of model. Can be one of ('oai', 'oss', 'vision_oss', 'claude')
     optional: True
   batch_inference_output:
     type: uri_folder
@@ -35,6 +35,7 @@ inputs:
     enum:
       - use_fallback
       - neglect
+      - raise_error
     default: use_fallback
   fallback_value:
     description: The fallback value that can be used when request payload failed.

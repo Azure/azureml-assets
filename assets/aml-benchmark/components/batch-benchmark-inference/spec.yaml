@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.4
+version: 0.0.6
 
 inputs:
   input_dataset:
@@ -13,7 +13,7 @@ inputs:
     optional: True
   model_type:
     type: string
-    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    description: Type of model's input and output contract. Can be one of ('oai', 'oss', 'vision_oss')
     optional: False
     enum:
         - oai
@@ -59,14 +59,22 @@ inputs:
     type: boolean
     default: False
     description: If true, the performance test will be run and the input dataset will be neglected.
+  authentication_type:
+    type: string
+    optional: False
+    description: Authentication type for endpoint- azureml_workspace_connection or managed_identity.
+    default: azureml_workspace_connection
+    enum:
+      - azureml_workspace_connection
+      - managed_identity
   deployment_name:
     type: string
     optional: True
     description: The deployment name. Only needed for managed OSS deployment.
   connections_name:
     type: string
-    optional: False
-    description: Connections name for the endpoint.
+    optional: True
+    description: Connections name for the endpoint. Only required if authentication_type is "azureml_workspace_connection".
   label_column_name:
     type: string
     optional: True
@@ -82,10 +90,11 @@ inputs:
   handle_response_failure:
     type: string
     optional: False
-    description: The way that the formatter handles the failed response.
+    description: The way that the formatter handles the failed response. 'use_fallback' will replace them with fallback_value, 'neglect' will drop those rows and 'raise_error' will throw an error.
     enum:
       - use_fallback
       - neglect
+      - raise_error
     default: use_fallback
   fallback_value:
     description: The fallback value that can be used when request payload failed. If not provided, the fallback value will be an empty string.
@@ -136,14 +145,12 @@ inputs:
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
-  authentication_type:
-    type: string
+  response_segment_size:
+    type: integer
     optional: False
-    description: Authentication type for endpoint.
-    default: azureml_workspace_connection
-    enum:
-      - azureml_workspace_connection
-      - managed_identity
+    default: 0
+    min: 0
+    description: Set to 0 by default- The maximum number of tokens to generate at a time. If set to 0, the full response is generated all at once. If greater than 0, tokens are generated incrementally in segments. During each increment, the request and the previous partial response are sent to the model to generate the next segment. Segments are stitched together to form the full response.
 outputs:
   predictions:
     type: uri_file
@@ -159,7 +166,7 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: azureml:batch_inference_preparer:0.0.4
+    component: ../batch-inference-preparer/spec.yaml
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       model_type: ${{parent.inputs.model_type}}
@@ -194,6 +201,7 @@ jobs:
     outputs:
       batch_score_config:
         type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
   # Inference
   endpoint_batch_score:
     type: parallel
@@ -217,7 +225,7 @@ jobs:
   # Reformat
   batch_output_formatter: 
     type: command
-    component: ../batch-benchmark-config-generator/spec.yaml
+    component: ../batch-output-formatter/spec.yaml
     inputs:
       model_type: ${{parent.inputs.model_type}}
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_output_directory}}

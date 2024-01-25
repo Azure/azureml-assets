@@ -228,7 +228,21 @@ class ResultConverters:
     @staticmethod
     def _get_aoai_response_result(result: Dict[str, Any]) -> Any:
         response = ResultConverters._get_response(result)
-        return response["choices"][0]["message"]["content"]
+        response_message = response["choices"][0]
+        if "text" in response_message:
+            # This is the text generation OAI contract scenario.
+            return response_message["text"]
+        if "message" in response_message:
+            # This is the chat completion OAI contract scenario.
+            return response_message["message"]["content"]
+        # Unknown contract specified as OAI.
+        raise BenchmarkUserException._with_error(
+            AzureMLError.create(
+                BenchmarkUserError,
+                error_details="Endpoint returned response with unknown contract. \
+                    Please specify correct model type."
+            )
+        )
 
     @staticmethod
     def _get_oss_response_result(result: Dict[str, Any]) -> Any:

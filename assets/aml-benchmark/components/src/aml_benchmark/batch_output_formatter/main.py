@@ -6,12 +6,16 @@
 import argparse
 import os
 import pandas as pd
+import mlflow
 
 from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.error_definitions import BenchmarkUserError
+from azureml._common._error_definition.azureml_error import AzureMLError
 from .result_converters import ResultConverters
 
 
@@ -102,14 +106,30 @@ def main(
         label_key, additional_columns, ground_truth_df,
         fallback_value=fallback_value, is_performance_test=is_performance_test)
     logger.info("Convert the data now.")
+
+    failed_requests = 0
+    successful_requests = 0
+
     for f in data_files:
         logger.info(f"Processing file {f}")
         df = pd.read_json(os.path.join(batch_inference_output, f), lines=True)
         for index, row in df.iterrows():
             if not rc.is_result_success(row):
+                failed_requests += 1
                 logger.warn("Met failed response {} at index {} of file {}".format(row, index, f))
                 if handle_response_failure == 'neglect':
                     continue
+                if handle_response_failure == 'raise_error':
+                    raise BenchmarkUserException._with_error(
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details="One of the requests failed. If you want to ignore \
+                                such failures, please set handle_response_failure parameter to \
+                                'neglect' or 'use_fallback'."
+                        )
+                    )
+            else:
+                successful_requests += 1
             new_df.append(rc.convert_result(row))
             perf_df.append(rc.convert_result_perf(row))
             if not is_performance_test:
@@ -124,6 +144,12 @@ def main(
     new_df.to_json(prediction_data, orient="records", lines=True)
     perf_df.to_json(perf_data, orient="records", lines=True)
     ground_truth.to_json(predict_ground_truth_data, orient="records", lines=True)
+
+    mlflow.log_metrics({
+        'failed_requests': failed_requests,
+        'successful_requests': successful_requests,
+        'total_requests': failed_requests + successful_requests,
+    })
 
 
 if __name__ == "__main__":
