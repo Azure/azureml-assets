@@ -31,6 +31,10 @@ def test_handle_batch_score_event(mock_run_context):
         "output_row_count": 100,
     }
 
+    kwargs_with_end_time = kwargs.copy()
+    kwargs_with_end_time["end_time"] = kwargs_with_end_time["timestamp"]
+    del kwargs_with_end_time["timestamp"]
+
     # Setup
     setup_minibatch_aggregator_event_handlers()
 
@@ -42,7 +46,7 @@ def test_handle_batch_score_event(mock_run_context):
     minibatch_aggregator.add.assert_has_calls([
         call(input_row_completed_event),
     ])
-    minibatch_aggregator.summarize.assert_called_with(**kwargs)
+    minibatch_aggregator.summarize.assert_called_with(**kwargs_with_end_time)
     minibatch_aggregator.clear.assert_called_with(minibatch_id=my_minibatch_id)
 
     # Teardown

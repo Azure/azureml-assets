@@ -57,7 +57,8 @@ class GenericScoringClient:
         ScoreStartLog(
             internal_id=scoring_request.internal_id,
             x_ms_client_request_id=http_request.headers['x-ms-client-request-id'],
-            scoring_url=self._scoring_url
+            scoring_url=self._scoring_url,
+            timeout=timeout
         ).log()
 
         http_response: HttpScoringResponse = await self._send_http_request(

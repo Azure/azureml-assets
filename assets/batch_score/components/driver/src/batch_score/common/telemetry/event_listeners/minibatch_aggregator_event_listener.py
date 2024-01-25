@@ -18,13 +18,13 @@ from ..minibatch_aggregator import MinibatchAggregator
 
 def setup_minibatch_aggregator_event_handlers():
     """Set up minibatch aggregator event handlers."""
-    add_handler(_handle_batch_score_event)
+    add_handler(_handle_batch_score_event, signal=Signal.EmitTelemetryEvent)
     add_handler(_handle_generate_minibatch_summary, signal=Signal.GenerateMinibatchSummary)
 
 
 def teardown_minibatch_aggregator_event_handlers():
     """Tear down minibatch aggregator event handlers."""
-    remove_handler(_handle_batch_score_event)
+    remove_handler(_handle_batch_score_event, signal=Signal.EmitTelemetryEvent)
     remove_handler(_handle_generate_minibatch_summary, signal=Signal.GenerateMinibatchSummary)
 
 
@@ -46,7 +46,7 @@ def _handle_generate_minibatch_summary(
 ):
     summary_event = _minibatch_aggregator.summarize(
         minibatch_id=minibatch_id,
-        timestamp=timestamp,
+        end_time=timestamp,
         output_row_count=output_row_count,
     )
     _minibatch_aggregator.clear(minibatch_id=minibatch_id)

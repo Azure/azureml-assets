@@ -33,8 +33,6 @@ from ..routing.routing_client import RoutingClient
 class ScoringClient:
     """Scoring client."""
 
-    MINIMUM_SCORING_TIMEOUT = 10
-
     def __init__(
             self,
             header_handler: OpenAIHeaderHandler,
@@ -90,7 +88,7 @@ class ScoringClient:
         model_response_reason = None
         client_exception = None
 
-        # Timeout can be None. See `ScoringClient.get_next_retry_timeout` for more info on why.
+        # Timeout can be None. See `timeout_utils.get_next_retry_timeout` for more info on why.
         if timeout is None:
             timeout = session.timeout
 
@@ -261,27 +259,6 @@ class ScoringClient:
 
         return result
 
-    def get_next_retry_timeout(timeout_generator):
-        """Get next retry timeout."""
-        try:
-            return next(timeout_generator)
-        except StopIteration:
-            # We may encounter this if there is no max_retry_time_interval configured to stop attempting to
-            # process the queue item when scoring duration continues to grow. In that case, the customer
-            # wants to allow the score to retry forever. Setting the timeout to None will default to use the
-            # aiohttp.ClientSession's timeout, which is set in `Conductor.__configure_session_timeout`
-            return None
-
-    def get_retry_timeout_generator(default_timeout: aiohttp.ClientTimeout):
-        """Get a Python generator that yields aiohttp.ClientTimeout objects."""
-        for iteration in range(2, 10):
-            timeout = max(ScoringClient.MINIMUM_SCORING_TIMEOUT, int(2.7 ** iteration))
-            if timeout >= default_timeout.total:
-                break
-            else:
-                yield aiohttp.ClientTimeout(timeout)
-        yield default_timeout
-
     async def _get_target_endpoint_url(self, session, scoring_request, worker_id):
         if self.__routing_client is None:
             return self.__scoring_url
@@ -358,16 +335,11 @@ class ScoringClient:
 
             return response_body.get("usage", {}).get("completion_tokens")
 
-        def get_mini_batch_id(scoring_request: ScoringRequest):
-            if scoring_request is not None and scoring_request.mini_batch_context is not None:
-                return scoring_request.mini_batch_context.mini_batch_id
-
         def get_client_request_id(headers: any):
             if headers is not None and isinstance(headers, dict):
                 return headers.get("x-ms-client-request-id", None)
 
         request_completed_event = BatchScoreRequestCompletedEvent(
-            minibatch_id=get_mini_batch_id(scoring_request),
             input_row_id=scoring_request.internal_id,
             x_ms_client_request_id=get_client_request_id(headers),
             worker_id=worker_id,
