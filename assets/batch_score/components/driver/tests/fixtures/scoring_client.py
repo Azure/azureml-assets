@@ -19,14 +19,13 @@ def make_scoring_client(make_completion_header_handler,
     def make(header_handler=make_completion_header_handler(),
              quota_client=make_quota_client(),
              routing_client=make_routing_client(),
-             online_endpoint_url: str = None,
+             scoring_url: str = None,
              tally_handler=make_tally_failed_request_handler()):
-        """Make a mock scoring client."""
         client = ScoringClient(
             header_handler=header_handler,
             quota_client=quota_client,
             routing_client=routing_client,
-            online_endpoint_url=online_endpoint_url,
+            scoring_url=scoring_url,
             tally_handler=tally_handler,
         )
         return client

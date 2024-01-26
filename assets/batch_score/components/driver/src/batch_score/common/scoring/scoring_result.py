@@ -17,7 +17,7 @@ class PermanentException(Exception):
     """Permanent exception."""
 
     def __init__(self, message: str, status_code: int = None, response_payload: any = None):
-        """Init function."""
+        """Initialize PermanentException."""
         super().__init__(message)
 
         self.status_code = status_code
@@ -27,13 +27,15 @@ class PermanentException(Exception):
 class RetriableException(Exception):
     """Retriable exception."""
 
-    def __init__(self,
-                 status_code: int,
-                 response_payload: any = None,
-                 model_response_code: str = None,
-                 model_response_reason: str = None,
-                 retry_after: float = None):
-        """Init function."""
+    def __init__(
+            self,
+            status_code: int,
+            response_payload:
+            any = None,
+            model_response_code: str = None,
+            model_response_reason: str = None,
+            retry_after: float = None):
+        """Initialize RetriableException."""
         self.status_code = status_code
         self.response_payload = response_payload
         self.model_response_code = model_response_code
@@ -51,19 +53,20 @@ class ScoringResultStatus(Enum):
 class ScoringResult:
     """Scoring result."""
 
-    def __init__(self,
-                 status: ScoringResultStatus,
-                 start: float,
-                 end: float,
-                 request_obj: any,
-                 request_metadata: any,
-                 response_body: any,
-                 response_headers: CIMultiDictProxy[str],
-                 num_retries: int,
-                 omit: bool = False,
-                 token_counts: "tuple[int]" = (),
-                 mini_batch_context: MiniBatchContext = None):
-        """Init function."""
+    def __init__(
+            self,
+            status: ScoringResultStatus,
+            start: float,
+            end: float,
+            request_obj: any,
+            request_metadata: any,
+            response_body: any,
+            response_headers: CIMultiDictProxy[str],
+            num_retries: int,
+            omit: bool = False,
+            token_counts: "tuple[int]" = (),
+            mini_batch_context: MiniBatchContext = None):
+        """Initialize ScoringResult."""
         self.status = status
         self.start = start
         self.end = end

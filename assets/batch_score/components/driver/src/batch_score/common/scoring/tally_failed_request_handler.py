@@ -10,7 +10,7 @@ class TallyFailedRequestHandler(object):
     """Tally failed request handler."""
 
     def __init__(self, enabled: bool, tally_exclusions: str = None):
-        """Init function."""
+        """Initialize TallyFailedRequestHandler."""
         self.__enabled = enabled
         self.__exclusions: list[str] = []
 
@@ -25,8 +25,10 @@ class TallyFailedRequestHandler(object):
         if not self.__enabled:
             return False
 
-        failure_category = TallyFailedRequestHandler._categorize(response_status=response_status,
-                                                                 model_response_status=model_response_status)
+        failure_category = TallyFailedRequestHandler._categorize(
+            response_status=response_status,
+            model_response_status=model_response_status)
+
         should_tally = failure_category not in self.__exclusions
 
         lu.get_logger().debug(f"should_tally: {should_tally}")

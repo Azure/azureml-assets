@@ -5,8 +5,10 @@
 
 import pytest
 
-import src.batch_score.common.constants as constants
-import src.batch_score.main as main
+from src.batch_score.common.common_enums import ApiType
+from src.batch_score.header_handlers.mir_and_batch_pool_header_handler_factory import (
+    MirAndBatchPoolHeaderHandlerFactory
+)
 from src.batch_score.common.auth.auth_provider import EndpointType
 from src.batch_score.common.configuration.configuration_parser import (
     ConfigurationParser,
@@ -23,24 +25,24 @@ def test_success_defaults():
     assert configuration.additional_headers is None
 
 
-def test_success_scoring_url_copied_to_endpoint_url():
+def test_success_online_endpoint_url_copied_to_scoring_url():
     """Test success scoring url copied to endpoint url."""
     # Act
-    scoring_url = "https://non-existent-endpoint.centralus.inference.ml.azure.com/score"
-    configuration = ConfigurationParser().parse_configuration(["--scoring_url", scoring_url])
+    online_endpoint_url = "https://non-existent-endpoint.centralus.inference.ml.azure.com/score"
+    configuration = ConfigurationParser().parse_configuration(["--online_endpoint_url", online_endpoint_url])
 
     # Assert
-    assert configuration.online_endpoint_url == scoring_url
+    assert configuration.scoring_url == online_endpoint_url
 
 
 @pytest.mark.parametrize(
     'api_type, segment_large_requests',
     [
-        (constants.CHAT_COMPLETION_API_TYPE, 'disabled'),
-        (constants.COMPLETION_API_TYPE, 'enabled'),
-        (constants.EMBEDDINGS_API_TYPE, 'disabled'),
-        (constants.VESTA_API_TYPE, 'disabled'),
-        (constants.VESTA_CHAT_COMPLETION_API_TYPE, 'disabled'),
+        (ApiType.ChatCompletion, 'disabled'),
+        (ApiType.Completion, 'enabled'),
+        (ApiType.Embedding, 'disabled'),
+        (ApiType.Vesta, 'disabled'),
+        (ApiType.VestaChatCompletion, 'disabled'),
     ],
 )
 def test_success_set_default_for_segment_large_requests(api_type, segment_large_requests):
@@ -87,7 +89,7 @@ def test_success_set_default_for_segment_large_requests(api_type, segment_large_
      "pool",
      {"azureml-collect-request": "false", "some": "else", "Azureml-inferencing-offer-name": 'my_custom_offering'})
 ])
-def test_success_additional_header(header, pool, expected_values, request_path):
+def test_success_additional_header(make_metadata, header, pool, expected_values, request_path):
     """Test success additional header."""
     # TODO: headers with booleans fail during session.post.
     #  Prevent users from providing additional_headers that json.loads with boolean values.
@@ -97,8 +99,7 @@ def test_success_additional_header(header, pool, expected_values, request_path):
         args += ["--batch_pool", pool]
 
     configuration = ConfigurationParser().parse_configuration(args)
-    main.configuration = configuration
-    header_handler = main.setup_header_handler(None, None)
+    header_handler = MirAndBatchPoolHeaderHandlerFactory().get_header_handler(configuration, make_metadata, None, None)
 
     # Assert
     for key, value in expected_values.items():
@@ -156,8 +157,7 @@ def test_invalid_batch_size_greater_than_one_with_completions_api():
     with pytest.raises(ValueError) as excinfo:
         _ = ConfigurationParser().parse_configuration(["--request_path",
                                                        "v1/engines/davinci/chat/completions",
-                                                       "--batch_size_per_request",
-                                                       '2'])
+                                                       "--batch_size_per_request", '2'])
 
     # Assert
     assert "The optional parameter 'batch_size_per_request' is only allowed to be greater than 1 for the Embeddings " \
@@ -175,10 +175,11 @@ def test_invalid_segment_large_requests_with_unsupported_api(request_path):
     with pytest.raises(ValueError) as excinfo:
         _ = ConfigurationParser().parse_configuration(["--request_path",
                                                        request_path,
-                                                       "--segment_large_requests", 'enabled'])
+                                                       "--segment_large_requests",
+                                                       'enabled'])
 
     # Assert
-    assert "The optional parameter 'segment_large_requests' is supported only with the Completion API." \
+    assert "The optional parameter 'segment_large_requests' is supported only with the Completion API. " \
            "Please set 'segment_large_requests' to 'disabled' or remove it from the configuration." \
            in str(excinfo.value)
 

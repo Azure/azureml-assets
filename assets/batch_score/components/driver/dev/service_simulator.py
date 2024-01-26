@@ -15,7 +15,7 @@ class ServiceSimulator:
     """Service simulator."""
 
     def __init__(self, handler):
-        """Init function."""
+        """Initialize ServiceSimulator."""
         self.__server = ThreadingHTTPServer(("localhost", 0), handler)
         self.__thread = Thread(target=self.__server.serve_forever, daemon=True)
 
