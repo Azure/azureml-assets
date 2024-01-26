@@ -65,7 +65,7 @@ def test_handle_response_retriable_failure_throws_exception():
 def test_handle_response_non_retriable_failure(enable_tally_handler):
     """Test handle response non retriable failure."""
     # Arrange
-    http_response = HttpScoringResponse(status=500, payload=['hello'], headers={'x-ms-client-request-id': '123'})
+    http_response = HttpScoringResponse(status=404, payload=['hello'], headers={'x-ms-client-request-id': '123'})
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
     response_handler = MirHttpResponseHandler(TallyFailedRequestHandler(enabled=enable_tally_handler))
 

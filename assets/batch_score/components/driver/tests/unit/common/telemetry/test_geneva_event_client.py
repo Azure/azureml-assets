@@ -58,7 +58,7 @@ def test_generate_extension_fields_init_completed(mock_import_module, make_batch
     assert result == {
         # Common fields
         'api_type': 'chat_completion',
-        'async_mode': False,
+        'async_mode': 'False',
         'authentication_type': 'api_key',
         'component_name': f'{TEST_COMPONENT_NAME}',
         'component_version': f'{TEST_COMPONENT_VERSION}',
@@ -69,7 +69,7 @@ def test_generate_extension_fields_init_completed(mock_import_module, make_batch
         'workspace_name': 'testws',
 
         # Event specific fields
-        'init_duration_ms': 5,
+        'init_duration_ms': '5',
     }
 
 
@@ -85,7 +85,7 @@ def test_generate_extension_fields_init_started(mock_import_module, make_batch_s
     assert result == {
         # Common fields
         'api_type': 'chat_completion',
-        'async_mode': False,
+        'async_mode': 'False',
         'authentication_type': 'api_key',
         'component_name': f'{TEST_COMPONENT_NAME}',
         'component_version': f'{TEST_COMPONENT_VERSION}',
@@ -109,7 +109,7 @@ def test_generate_extension_fields_minibatch_completed(mock_import_module, make_
     assert result == {
         # Common fields
         'api_type': 'chat_completion',
-        'async_mode': False,
+        'async_mode': 'False',
         'authentication_type': 'api_key',
         'component_name': f'{TEST_COMPONENT_NAME}',
         'component_version': f'{TEST_COMPONENT_VERSION}',
@@ -125,31 +125,31 @@ def test_generate_extension_fields_minibatch_completed(mock_import_module, make_
         'batch_pool': 'test_pool',
         'quota_audience': 'test_audience',
 
-        'total_prompt_tokens': 50,
-        'total_completion_tokens': 1000,
+        'total_prompt_tokens': '50',
+        'total_completion_tokens': '1000',
 
-        'input_row_count': 10,
-        'output_row_count': 8,
+        'input_row_count': '10',
+        'output_row_count': '8',
 
-        'http_request_count': 10,
-        'http_request_succeeded_count': 5,
-        'http_request_user_error_count': 3,
-        'http_request_system_error_count': 2,
-        'http_request_retry_count': 40,
+        'http_request_count': '10',
+        'http_request_succeeded_count': '5',
+        'http_request_user_error_count': '3',
+        'http_request_system_error_count': '2',
+        'http_request_retry_count': '40',
 
-        'http_request_duration_p0_ms': 0,
-        'http_request_duration_p50_ms': 2,
-        'http_request_duration_p90_ms': 5,
-        'http_request_duration_p95_ms': 7,
-        'http_request_duration_p99_ms': 10,
-        'http_request_duration_p100_ms': 30,
+        'http_request_duration_p0_ms': '0',
+        'http_request_duration_p50_ms': '2',
+        'http_request_duration_p90_ms': '5',
+        'http_request_duration_p95_ms': '7',
+        'http_request_duration_p99_ms': '10',
+        'http_request_duration_p100_ms': '30',
 
-        'progress_duration_p0_ms': 100,
-        'progress_duration_p50_ms': 102,
-        'progress_duration_p90_ms': 105,
-        'progress_duration_p95_ms': 107,
-        'progress_duration_p99_ms': 110,
-        'progress_duration_p100_ms': 130,
+        'progress_duration_p0_ms': '100',
+        'progress_duration_p50_ms': '102',
+        'progress_duration_p90_ms': '105',
+        'progress_duration_p95_ms': '107',
+        'progress_duration_p99_ms': '110',
+        'progress_duration_p100_ms': '130',
     }
 
 
@@ -165,7 +165,7 @@ def test_generate_extension_fields_minibatch_started(mock_import_module, make_ba
     assert result == {
         # Common fields
         'api_type': 'chat_completion',
-        'async_mode': False,
+        'async_mode': 'False',
         'authentication_type': 'api_key',
         'component_name': f'{TEST_COMPONENT_NAME}',
         'component_version': f'{TEST_COMPONENT_VERSION}',
@@ -180,5 +180,5 @@ def test_generate_extension_fields_minibatch_started(mock_import_module, make_ba
         'scoring_url': TEST_SCORING_URI,
         'batch_pool': 'test_pool',
         'quota_audience': 'test_audience',
-        'input_row_count': 10,
+        'input_row_count': '10',
     }
