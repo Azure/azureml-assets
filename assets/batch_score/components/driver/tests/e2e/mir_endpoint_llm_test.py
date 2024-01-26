@@ -16,7 +16,6 @@ source_dir = os.getcwd()
 gated_llm_pipeline_filepath = os.path.join(
     pytest.source_dir, "tests", "e2e", "prs_pipeline_templates", "base_llm.yml")
 
-RUN_NAME = "batch_score_mir_endpoint_llm_test"
 JOB_NAME = "gated_batch_score_llm"  # Should be equivalent to base_llm.yml's job name
 YAML_COMPONENT = {"jobs": {JOB_NAME: {"component": None}}}  # Placeholder for component name set below.
 
@@ -75,7 +74,7 @@ YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
 def test_gated_batch_score_single_endpoint_using_scoring_url_parameter(llm_batch_score_yml_component):
     """Test gate for batch score single endpoint using scoring url parameter."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
-    display_name = {"display_name": f"{RUN_NAME}_smoke"}
+    display_name = {"display_name": "llm_mir_scoring_url_param_smoke"}
     yaml_update = deep_update(
         YAML_COMPONENT,
         YAML_SMOKE_TEST_DATA_ASSET,
@@ -95,7 +94,7 @@ def test_gated_batch_score_single_endpoint_using_scoring_url_parameter(llm_batch
 def test_gated_batch_score_mir_endpoint_using_connection(llm_batch_score_yml_component):
     """Test gate for batch score mir endpoint using connection parameter."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
-    display_name = {"display_name": f"{RUN_NAME}_smoke"}
+    display_name = {"display_name": "llm_mir_ws_connection_smoke"}
     yaml_update = deep_update(
         YAML_COMPONENT,
         YAML_CLIP_MODEL_INPUT_DATA,
