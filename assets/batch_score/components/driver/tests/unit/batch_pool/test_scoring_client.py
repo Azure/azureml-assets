@@ -90,3 +90,79 @@ async def test_score_once_raises_retriable_exception(caplog,
 
     assert 'Score failed' in caplog.text
     assert type(exception_to_raise).__name__ in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_score_once_raises_retriable_exception_until_max_retries(
+    caplog,
+    make_completion_header_handler,
+    mock_run_context
+):
+    """Test score once raises retriable exception when retry count < max retries."""
+    scoring_client = ScoringClient(
+        header_handler=make_completion_header_handler(),
+        quota_client=None,
+        routing_client=None)
+    session = MagicMock()
+    session.post = MagicMock(side_effect=MockPost)
+    scoring_request = MagicMock()
+    scoring_request.retry_count = 1
+
+    with pytest.raises(RetriableException):
+        await scoring_client.score_once(session=session, scoring_request=scoring_request, timeout=MagicMock())
+
+    assert 'Score failed' in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_score_once_fails_when_max_retries_are_exhausted(
+    caplog,
+    make_completion_header_handler,
+    mock_run_context
+):
+    """Test score once fails when retry count >= max retries."""
+    scoring_client = ScoringClient(
+        header_handler=make_completion_header_handler(),
+        quota_client=None,
+        routing_client=None)
+    session = MagicMock()
+    session.post = MagicMock(side_effect=MockPost)
+    scoring_request = MagicMock()
+    scoring_request.retry_count = 2
+
+    await scoring_client.score_once(session=session, scoring_request=scoring_request, timeout=MagicMock())
+
+    assert 'Score failed' in caplog.text
+
+
+class MockClientResponse():
+    """Mock client response."""
+
+    def __init__(self, status, headers, reason):
+        """Initialize mock client response."""
+        self.status = status
+        self.headers = headers
+        self.reason = reason
+
+    async def text(self):
+        """Return mock client response text."""
+        return 'Mock response text'
+
+
+class MockPost():
+    """Mock client session post."""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize mock client session post."""
+        pass
+
+    async def __aenter__(self):
+        """Return a mock client response when post is invoked."""
+        return MockClientResponse(
+            507,
+            {'Content-Type': 'application/json', 'Random-Header': 'Random-Value'},
+            'Insufficient Storage')
+
+    async def __aexit__(self, exc_type, exc, tb):
+        """Clean up any resources."""
+        pass
