@@ -32,6 +32,7 @@ from azureml.model.mgmt.processors.pyfunc.convertors import (
     StableDiffusionMlflowConvertor,
     StableDiffusionInpaintingMlflowConvertor,
     StableDiffusionImageToImageMlflowConvertor,
+    DinoV2MLFlowConvertor,
     LLaVAMLFlowConvertor,
     SegmentAnythingMLFlowConvertor,
 )
@@ -43,6 +44,9 @@ logger = get_logger(__name__)
 def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params):
     """Instantiate and return MLflow convertor."""
     task = translate_params["task"]
+
+    # TODO: do not assume 1-to-1 association between tasks and models when making a convertor. There are ways to get
+    # around this but they are hacky.
 
     if model_framework == ModelFramework.HUGGINGFACE.value:
         # Models from Hugging face framework exported in transformers mlflow flavor
@@ -62,8 +66,12 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return ASRMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
         # Models from Hugging face framework exported in PyFunc mlflow flavor
         elif task in \
-                [PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, PyFuncSupportedTasks.EMBEDDINGS.value]:
+                [PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, PyFuncSupportedTasks.EMBEDDINGS_CLIP.value]:
             return CLIPMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif task == PyFuncSupportedTasks.EMBEDDINGS_DINOV2.value:
+            return DinoV2MLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         elif task in [PyFuncSupportedTasks.IMAGE_TO_TEXT.value, PyFuncSupportedTasks.VISUAL_QUESTION_ANSWERING.value]:
@@ -240,6 +248,19 @@ class BLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for BLIP model family."""
         return BLIPMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class DinoV2MLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for DinoV2 model family."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for DinoV2 model."""
+        return DinoV2MLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,

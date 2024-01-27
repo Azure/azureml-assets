@@ -29,9 +29,12 @@ class SupportedTasks(_CustomEnum):
     # MmTrack video tasks
     MM_MULTI_OBJECT_TRACKING = "video-multi-object-tracking"
 
-    # CLIP task
+    # CLIP tasks
     ZERO_SHOT_IMAGE_CLASSIFICATION = "zero-shot-image-classification"
-    EMBEDDINGS = "embeddings"
+    EMBEDDINGS_CLIP = "embeddings-clip"
+
+    # DinoV2 task
+    EMBEDDINGS_DINOV2 = "embeddings-dinov2"
 
     # BLIP tasks
     IMAGE_TO_TEXT = "image-to-text"
