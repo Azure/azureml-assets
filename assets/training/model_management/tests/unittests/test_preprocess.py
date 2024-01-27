@@ -274,7 +274,7 @@ class TestFactoryModule(unittest.TestCase):
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
 
-        translate_params = {"task": PyFuncSupportedTasks.EMBEDDINGS.value}
+        translate_params = {"task": PyFuncSupportedTasks.EMBEDDINGS_CLIP.value}
         mock_convertor = mock_clip_factory.create_mlflow_convertor.return_value
         result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
         self.assertEqual(result, mock_convertor)

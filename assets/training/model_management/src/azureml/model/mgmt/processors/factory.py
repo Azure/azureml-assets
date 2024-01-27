@@ -65,8 +65,9 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
         elif task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
             return ASRMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
         # Models from Hugging face framework exported in PyFunc mlflow flavor
-        elif task in \
-                [PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, PyFuncSupportedTasks.EMBEDDINGS_CLIP.value]:
+        elif task in [
+            PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, PyFuncSupportedTasks.EMBEDDINGS_CLIP.value
+        ]:
             return CLIPMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
