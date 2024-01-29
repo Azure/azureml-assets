@@ -27,6 +27,7 @@ code: ../../src/
 entry:
   file: ./data_quality_metrics_joiner/run.py
 conf:
+  spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 1
   spark.driver.memory: 2g
   spark.executor.cores: 2
