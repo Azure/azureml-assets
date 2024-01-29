@@ -1,0 +1,24 @@
+type: evaluationresult
+name: truthfulqa_mc1_phi_2_question_answering
+version: 1.0.0
+display_name: truthfulqa_mc1_phi_2_question_answering
+description: microsoft-phi-2 run for truthfulqa mc1 dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_mc1
+
+model_name: microsoft-phi-2
+model_version: "5"
+model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.431
+
+path: ./job_files

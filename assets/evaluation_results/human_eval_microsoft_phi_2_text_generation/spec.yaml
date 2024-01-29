@@ -1,0 +1,24 @@
+type: evaluationresult
+name: human_eval_microsoft_phi_2_text_generation
+version: 1.0.0
+display_name: human_eval_microsoft_phi_2_text_generation
+description: microsoft-phi-2 run for human_eval dataset
+dataset_family: human_eval
+dataset_name: human_eval
+
+model_name: microsoft-phi-2
+model_version: "5"
+model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+
+tags:
+  task: text-generation
+  accuracy_metric_name: pass@1
+
+metrics:
+  accuracy: 0.48
+
+path: ./job_files

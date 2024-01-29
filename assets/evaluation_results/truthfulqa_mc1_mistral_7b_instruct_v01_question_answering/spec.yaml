@@ -1,0 +1,24 @@
+type: evaluationresult
+name: truthfulqa_mc1_mistral_7b_instruct_v01_question_answering
+version: 1.0.0
+display_name: truthfulqa_mc1_mistral_7b_instruct_v01_question_answering
+description: mistralai-mistral-7b-instruct-v01 run for truthfulqa mc1 dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_mc1
+
+model_name: mistralai-mistral-7b-instruct-v01
+model_version: "2"
+model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v01/versions/2
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v01/versions/2
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.43
+
+path: ./job_files

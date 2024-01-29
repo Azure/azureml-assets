@@ -1,0 +1,24 @@
+type: evaluationresult
+name: winogrande_mistral_7b_v01_question_answering
+version: 1.0.0
+display_name: winogrande_mistral_7b_v01_question_answering
+description: mistralai-mistral-7b-v01 run for winogrande dataset
+dataset_family: winogrande
+dataset_name: winogrande
+
+model_name: mistralai-mistral-7b-v01
+model_version: "3"
+model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-v01/versions/3
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-v01/versions/3
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.49
+
+path: ./job_files

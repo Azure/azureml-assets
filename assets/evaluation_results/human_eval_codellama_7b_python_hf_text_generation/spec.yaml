@@ -1,0 +1,24 @@
+type: evaluationresult
+name: human_eval_codellama_7b_python_hf_text_generation
+version: 1.0.0
+display_name: human_eval_codellama_7b_python_hf_text_generation
+description: codellama-7b-python-hf run for human_eval dataset
+dataset_family: human_eval
+dataset_name: human_eval
+
+model_name: codellama-7b-python-hf
+model_version: "3"
+model_asset_id: azureml://registries/azureml-meta/models/CodeLlama-7b-Python-hf/versions/3
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-meta/models/CodeLlama-7b-Python-hf/versions/3
+
+tags:
+  task: text-generation
+  accuracy_metric_name: pass@1
+
+metrics:
+  accuracy: 0.396
+
+path: ./job_files
