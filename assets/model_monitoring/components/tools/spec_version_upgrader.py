@@ -128,7 +128,7 @@ class SpecVersionUpgrader:
         """
         Upgrade spec version.
 
-        Also for each of its parent specs(spec that has reference to this spec), update the reference version to be 
+        Also for each of its parent specs(spec that has reference to this spec), update the reference version to be
         new version. Return all the parent specs that refer the upgraded spec.
         """
         # find the spec for spec_name, upgrade its version+1
@@ -163,7 +163,7 @@ class SpecVersionUpgrader:
 
 
 if __name__ == "__main__":
-    # TODO get specs from arguments
+    # TODO add --all to upgrade all components
     argparser = ArgumentParser()
     argparser.add_argument("--specs", help="spec names to upgrade")
     args = argparser.parse_args()
