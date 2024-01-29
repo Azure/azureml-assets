@@ -29,6 +29,8 @@ inputs:
     type: number
   numerical_threshold:
     type: number
+  instance_type:
+    type: string
   override_numerical_features:
     type: string
     optional: true
