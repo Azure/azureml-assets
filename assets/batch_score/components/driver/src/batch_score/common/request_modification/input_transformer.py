@@ -10,7 +10,7 @@ class InputTransformer():
     """Input transformer."""
 
     def __init__(self, modifiers: "list[RequestModifier]") -> None:
-        """Init function."""
+        """Initialize InputTransformer."""
         self.__modifiers = modifiers or []
 
     def apply_modifications(self, request_obj: any):

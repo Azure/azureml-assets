@@ -44,7 +44,7 @@ def _submit_data_drift_and_create_manifest_job(
         )
 
         create_manifest_output: Spark = create_manifest(
-            signal_outputs_1=dd_model_monitor_metrics_output.outputs.signal_output,
+            signal_outputs_1=dd_model_monitor_metrics_output.outputs.signal_output
         )
 
         mdc_preprocessor_output.identity = AmlTokenConfiguration()
@@ -69,7 +69,7 @@ def _submit_data_drift_and_create_manifest_job(
     )
 
     pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+        pipeline_job, experiment_name=experiment_name, skip_validation=True
     )
 
     # Wait until the job completes
