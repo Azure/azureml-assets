@@ -12,8 +12,11 @@ from argparse import ArgumentParser
 
 
 class Spec:
+    """Spec class, represents a component spec."""
+
     def __init__(self, name: str, version: str, references: dict = None, path: str = None,
                  need_to_update: bool = False):
+        """Init Spec instance."""
         self.name = name
         self.version = Version(version)
         self.references = references
@@ -21,12 +24,15 @@ class Spec:
         self.need_to_update = need_to_update
 
     def __str__(self):
+        """Get string representation of Spec."""
         return f"name:{self.name}, version:{self.version}, need_to_update:{self.need_to_update}"
 
     def __repr__(self):
+        """Get string representation of Spec."""
         return self.__str__()
 
     def __eq__(self, other):
+        """Compare two Spec instances."""
         if not other:
             return False
         if not isinstance(other, Spec):
@@ -60,7 +66,10 @@ class Spec:
 
 
 class SpecVersionUpgrader:
+    """Spec version upgrader class, upgrade spec version in spec yaml files."""
+
     def __init__(self, spec_folder: str, spec_dict: dict = None):
+        """Init SpecVersionUpgrader instance."""
         self._spec_dict = spec_dict or SpecVersionUpgrader._scan_spec_folder(spec_folder)
 
     def upgrade_versions(self, specs: List[str]):
@@ -117,9 +126,10 @@ class SpecVersionUpgrader:
 
     def _upgrade_version_and_reference(self, spec_name: str) -> List[str]:
         """
-        Upgrade spec version, and for each of its parent specs(spec that has reference to this spec), update the
-        reference version to be new version
-        Return all the parent specs that refer the upgraded spec.
+        Upgrade spec version.
+
+        Also for each of its parent specs(spec that has reference to this spec), update the reference version to be 
+        new version. Return all the parent specs that refer the upgraded spec.
         """
         # find the spec for spec_name, upgrade its version+1
         curr_spec = self._spec_dict.get(spec_name)
