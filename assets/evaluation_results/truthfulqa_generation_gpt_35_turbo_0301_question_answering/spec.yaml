@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation_gpt_35_turbo_0301_question_answering
-version: 1.0.0
+version: 1.0.2
 display_name: truthfulqa_generation_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for truthfulqa generation dataset
 dataset_family: truthfulqa
@@ -24,3 +24,11 @@ metrics:
   GPTSimilarity: 3.528
 
 path: ./job_files
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

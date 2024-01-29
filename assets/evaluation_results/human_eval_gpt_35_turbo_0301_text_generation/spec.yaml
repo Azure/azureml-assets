@@ -1,6 +1,6 @@
 type: evaluationresult
 name: human_eval_gpt_35_turbo_0301_text_generation
-version: 1.0.1
+version: 1.0.2
 display_name: human_eval_gpt_35_turbo_0301_text_generation
 description: gpt-35-turbo-0301 run for human_eval dataset
 dataset_family: human_eval

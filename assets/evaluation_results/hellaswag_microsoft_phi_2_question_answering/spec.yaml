@@ -1,6 +1,6 @@
 type: evaluationresult
 name: hellaswag_microsoft_phi_2_question_answering
-version: 1.0.0
+version: 1.0.2
 display_name: hellaswag_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for hellaswag dataset
 dataset_family: hellaswag
@@ -22,3 +22,11 @@ metrics:
   accuracy: 0.5199
 
 path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 0.1
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 0.1
+  fewshot_split: "train"

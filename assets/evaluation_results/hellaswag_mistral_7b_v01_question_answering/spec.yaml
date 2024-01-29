@@ -1,6 +1,6 @@
 type: evaluationresult
 name: hellaswag_mistral_7b_v01_question_answering
-version: 1.0.0
+version: 1.0.2
 display_name: hellaswag_mistral_7b_v01_question_answering
 description: mistralai-mistral-7b-v01 run for hellaswag dataset
 dataset_family: hellaswag
@@ -22,3 +22,11 @@ metrics:
   accuracy: 0.496
 
 path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"

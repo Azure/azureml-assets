@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_mc1_gpt_4_32k_0613_question_answering
-version: 1.0.0
+version: 1.0.2
 display_name: truthfulqa_mc1_gpt_4_32k_0613_question_answering
 description: gpt-4-32k-0613 run for truthfulqa mc1 dataset
 dataset_family: truthfulqa
@@ -22,3 +22,11 @@ metrics:
   accuracy: 0.842
 
 path: ./job_files
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

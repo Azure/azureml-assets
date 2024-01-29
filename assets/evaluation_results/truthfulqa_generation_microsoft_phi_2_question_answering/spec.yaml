@@ -1,7 +1,7 @@
 type: evaluationresult
-name: truthfulqa_generation_phi_2_question_answering
-version: 1.0.0
-display_name: truthfulqa_generation_phi_2_question_answering
+name: truthfulqa_generation_microsoft_phi_2_question_answering
+version: 1.0.2
+display_name: truthfulqa_generation_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for truthfulqa generation dataset
 dataset_family: truthfulqa
 dataset_name: truthfulqa_generation
@@ -24,3 +24,11 @@ metrics:
   GPTSimilarity: 2.288
 
 path: ./job_files
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

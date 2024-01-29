@@ -1,6 +1,6 @@
 type: evaluationresult
 name: winogrande_microsoft_phi_2_question_answering
-version: 1.0.0
+version: 1.0.2
 display_name: winogrande_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for winogrande dataset
 dataset_family: winogrande
@@ -22,3 +22,11 @@ metrics:
   accuracy: 0.547
 
 path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"
