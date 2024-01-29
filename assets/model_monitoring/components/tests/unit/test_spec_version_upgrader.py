@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Test file for SpecVersionUpgrader."""
+
 import pytest
 from packaging.version import Version
 from tools.spec_version_upgrader import SpecVersionUpgrader, Spec

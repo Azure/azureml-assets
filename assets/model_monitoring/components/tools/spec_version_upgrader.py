@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Class file for SpecVersionUpgrader and its helper class Spec."""
+
 from typing import List
 import os
 import yaml
