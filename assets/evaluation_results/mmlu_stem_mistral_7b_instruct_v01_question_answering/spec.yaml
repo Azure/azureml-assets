@@ -1,0 +1,32 @@
+type: evaluationresult
+name: mmlu_stem_mistral_7b_instruct_v01_question_answering
+version: 1.0.2
+display_name: mmlu_stem_mistral_7b_instruct_v01_question_answering
+description: mistralai-mistral-7b-instruct-v01 run for mmlu_stem dataset
+dataset_family: mmlu
+dataset_name: mmlu_stem
+
+model_name: mistralai-mistral-7b-instruct-v01
+model_version: "1"
+model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v01/versions/1
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v01/versions/1
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.352
+
+path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"
