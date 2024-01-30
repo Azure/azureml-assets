@@ -1,0 +1,34 @@
+type: evaluationresult
+name: truthfulqa_generation_gpt_4_32k_0314_question_answering
+version: 1.0.2
+display_name: truthfulqa_generation_gpt_4_32k_0314_question_answering
+description: gpt-4-32k-0314 run for truthfulqa generation dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_generation
+
+model_name: gpt-4-32k-0314
+model_version: "0314"
+model_asset_id: azureml://registries/azure-openai-preview/models/gpt-4-32k/versions/629592.2a481b56
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azure-openai-preview/models/gpt-4-32k/versions/629592.2a481b56
+
+tags:
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  coherence: 4.93
+  fluency: 4.962
+  GPTSimilarity: 3.851
+
+path: ./job_files
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

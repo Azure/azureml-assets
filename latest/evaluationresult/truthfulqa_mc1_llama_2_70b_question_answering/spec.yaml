@@ -1,0 +1,32 @@
+type: evaluationresult
+name: truthfulqa_mc1_llama_2_70b_question_answering
+version: 1.0.2
+display_name: truthfulqa_mc1_llama_2_70b_question_answering
+description: llama-2-70b run for truthfulqa mc1 dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_mc1
+
+model_name: llama-2-70b
+model_version: "15"
+model_asset_id: azureml://registries/azureml-meta/models/Llama-2-70b/versions/15
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azureml-meta/models/Llama-2-70b/versions/15
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.574
+
+path: ./job_files
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

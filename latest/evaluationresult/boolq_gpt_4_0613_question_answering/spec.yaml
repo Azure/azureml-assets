@@ -1,6 +1,6 @@
 type: evaluationresult
 name: boolq_gpt_4_0613_question_answering
-version: 1.0.1
+version: 1.0.2
 display_name: boolq_gpt_4_0613_question_answering
 description: gpt-4-0613 run for boolq dataset
 dataset_family: boolq
