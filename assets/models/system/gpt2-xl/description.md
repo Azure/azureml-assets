@@ -35,30 +35,31 @@ Resources for more information: Check out our blog post-https://d4mucfpksywv.clo
 
 # **Inference samples**
 
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
-
+| Inference type | Python sample (Notebook)                                                                                                          | CLI with YAML                                                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Real time      | <a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a> | <a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a> |
+| Batch          | <a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>         | coming soon                                                                                                                    |
 
 ## **Sample inputs and outputs (for real-time inference)**
 
 ### **Sample input**
+
 ```json
 {
-    "input_data":{
-       "input_string":["the meaning of life is"],
-       "parameters":{
-             "temperature":0.5,
-             "top_p":0.5,
-             "max_new_tokens":100,
-              "do_sample":true
-       }
+  "input_data": {
+    "input_string": ["the meaning of life is"],
+    "parameters": {
+      "temperature": 0.5,
+      "top_p": 0.5,
+      "max_new_tokens": 100,
+      "do_sample": true
     }
+  }
 }
 ```
 
 ### **Sample output**
+
 ```json
 [
   {
