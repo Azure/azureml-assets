@@ -1,0 +1,228 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+display_name: batch_score_file_based_test
+experiment_name: batch_score_test
+description: Benchmark__Llama-2-7b__hf_openbookqa__text_generation
+jobs:
+  downloader:
+    type: command
+    component: azureml://registries/azureml/components/dataset_downloader/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      dataset_name: openbookqa
+      configuration: main
+      split: validation
+    outputs:
+      output_dataset:
+        type: uri_folder
+  sampler:
+    type: command
+    component: azureml://registries/azureml/components/dataset_sampler/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      dataset:
+        type: uri_folder
+        path: ${{parent.jobs.downloader.outputs.output_dataset}}
+      sampling_style: head
+      sampling_ratio: 0.11
+      random_seed: 0
+    outputs:
+      output_dataset:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+  preprocessor:
+    type: command
+    component: azureml://registries/azureml/components/dataset_preprocessor/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      dataset:
+        type: uri_folder
+        path: ${{parent.jobs.sampler.outputs.output_dataset}}
+      template_input: '{"question":{{question_stem}}, "choices":{{choices.text}},
+        "answer":{{answerKey}}}'
+      encoder_config: '{"column_name": "answer", "A": 1, "B": 2, "C": 3, "D": 4}'
+    outputs:
+      output_dataset:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+  fewshot_downloader:
+    type: command
+    component: azureml://registries/azureml/components/dataset_downloader/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      dataset_name: openbookqa
+      configuration: main
+      split: train
+    outputs:
+      output_dataset:
+        type: uri_folder
+  fewshot_sampler:
+    type: command
+    component: azureml://registries/azureml/components/dataset_sampler/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      dataset:
+        type: uri_folder
+        path: ${{parent.jobs.fewshot_downloader.outputs.output_dataset}}
+      sampling_style: head
+      sampling_ratio: 0.11
+      random_seed: 0
+    outputs:
+      output_dataset:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+  fewshot_preprocessor:
+    type: command
+    component: azureml://registries/azureml/components/dataset_preprocessor/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      dataset:
+        type: uri_folder
+        path: ${{parent.jobs.fewshot_sampler.outputs.output_dataset}}
+      template_input: '{"question":{{question_stem}}, "choices":{{choices.text}},
+        "answer":{{answerKey}}}'
+      encoder_config: '{"column_name": "answer", "A": 1, "B": 2, "C": 3, "D": 4}'
+    outputs:
+      output_dataset:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+  promptcrafter:
+    type: command
+    component: azureml://registries/azureml/components/prompt_crafter/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      test_data:
+        type: uri_folder
+        path: ${{parent.jobs.preprocessor.outputs.output_dataset}}
+      few_shot_data:
+        type: uri_folder
+        path: ${{parent.jobs.fewshot_preprocessor.outputs.output_dataset}}
+      prompt_type: completions
+      prompt_pattern: 'Question: {{question}}
+
+        Answer options:
+
+        (1) {{choices[0]}}
+
+        (2) {{choices[1]}}
+
+        (3) {{choices[2]}}
+
+        (4) {{choices[3]}}
+
+        The answer is:'
+      n_shots: 10
+      output_pattern: ' {{answer}}'
+      few_shot_separator: '
+
+
+        '
+      random_seed: 0
+    outputs:
+      output_file:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+  prediction:
+    type: pipeline
+    component: azureml:batch_benchmark_inference@latest
+    inputs:
+      input_dataset:
+        type: uri_folder
+        path: ${{parent.jobs.promptcrafter.outputs.output_file}}
+      model_type: oss
+      batch_input_pattern: '{"input_data": {"input_string": ["###<prompt>"], "parameters": { "max_new_tokens": 10, "top_p": 1.0,"do_sample": false, "return_full_text": false}}}'
+      endpoint_url: https://lllama-2-7b-ep.australiaeast.inference.ml.azure.com/score
+      is_performance_test: false
+      authentication_type: azureml_workspace_connection
+      connections_name: llama-batchscore-conn
+      label_column_name: completion
+      additional_headers: '{"Authorization":"Bearer hAKoUI2etay4S0ozahW87DTWAsVB34F6"}'
+      handle_response_failure: use_fallback
+      ensure_ascii: false
+      initial_worker_count: 5
+      max_worker_count: 200
+      instance_count: 1
+      max_concurrency_per_instance: 3
+      debug_mode: true
+      response_segment_size: 5
+    outputs:
+      predictions:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+      ground_truth:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+      performance_metadata:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+  postprocessor:
+    type: command
+    component: azureml://registries/azureml/components/inference_postprocessor/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      ground_truth_dataset:
+        type: uri_folder
+        path: ${{parent.jobs.prediction.outputs.ground_truth}}
+      prediction_dataset:
+        type: uri_folder
+        path: ${{parent.jobs.prediction.outputs.predictions}}
+      ground_truth_column_name: completion
+      prediction_column_name: prediction
+      separator: '
+
+
+        '
+      extract_number: first
+      strip_characters: .
+    outputs:
+      output_dataset_result:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+  quality:
+    type: command
+    component: azureml://registries/azureml/components/compute_metrics/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      ground_truth:
+        type: uri_folder
+        path: ${{parent.jobs.postprocessor.outputs.output_dataset_result}}
+      prediction:
+        type: uri_folder
+        path: ${{parent.jobs.postprocessor.outputs.output_dataset_result}}
+      task: question-answering
+      ground_truth_column_name: completion
+      prediction_column_name: prediction
+      evaluation_config_params: '{"regexes_to_ignore": ["\\W"]}'
+    outputs:
+      evaluation_result:
+        type: uri_folder
+  aggregator:
+    type: command
+    component: azureml://registries/azureml/components/benchmark_result_aggregator/labels/latest
+    limits:
+      timeout: 900
+    inputs:
+      quality_metrics:
+        type: uri_folder
+        path: ${{parent.jobs.quality.outputs.evaluation_result}}
+    outputs:
+      benchmark_result:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
+tags:
+  workflow: llm_benchmark
+properties:
+  _azureml.evaluation_run: Benchmark
+settings:
+  continue_on_step_failure: true
+  force_rerun: false
+  default_compute: azureml:a100-lp
