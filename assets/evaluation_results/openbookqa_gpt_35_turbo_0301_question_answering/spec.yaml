@@ -1,6 +1,6 @@
 type: evaluationresult
 name: openbookqa_gpt_35_turbo_0301_question_answering
-version: 1.0.1
+version: 1.0.2
 display_name: openbookqa_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for openbookqa dataset
 dataset_family: openbookqa
