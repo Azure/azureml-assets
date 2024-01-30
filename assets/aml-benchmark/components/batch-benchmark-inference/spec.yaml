@@ -182,6 +182,7 @@ jobs:
     inputs:
       scoring_url: ${{parent.inputs.endpoint_url}}
       connection_name: ${{parent.inputs.connections_name}}
+      deployment_name: ${{parent.inputs.deployment_name}}
       authentication_type: ${{parent.inputs.authentication_type}}
       debug_mode: ${{parent.inputs.debug_mode}}
       additional_headers: ${{parent.inputs.additional_headers}}
