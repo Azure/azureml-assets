@@ -61,39 +61,39 @@ inputs:
     - text-classification
     - translation
     - image-classification
-    - text-to-image
+    - image-classification-multilabel
     - zero-shot-image-classification
-    - video-multi-object-tracking
+    - text-to-image
+    - text-to-image-inpainting
+    - image-to-image
+    - image-to-text
+    - visual-question-answering
+    - mask-generation
     optional: true
     type: string
 
   hf_config_args:
     type: string
     description: |
-      Provide args that should be used to load Huggingface model config.
-      eg: trust_remote_code=True;
+      Provide args that should be used to load Huggingface model config, eg: trust_remote_code=True;
     optional: true
 
   hf_tokenizer_args:
     type: string
     description: |
-      Provide args that should be used to load Huggingface model tokenizer.
-      eg: trust_remote_code=True, device_map=auto,
+      Provide args that should be used to load Huggingface model tokenizer, eg: trust_remote_code=True, device_map=auto,
     optional: true
 
   hf_model_args:
     type: string
     description: |
-      Provide args that should be used to load Huggingface model.
-      eg: trust_remote_code=True, device_map=auto, low_cpu_mem_usage=True
+      Provide args that should be used to load Huggingface model, eg: trust_remote_code=True, device_map=auto, low_cpu_mem_usage=True
     optional: true
 
   hf_pipeline_args:
     type: string
     description: |
-      Provide pipeline args that should be used while loading the hugging face model.
-      Dont use quotes. If value cannot be eval'ed it will be taken as as string.
-      eg: trust_remote_code=True, device_map=auto
+      Provide pipeline args that should be used while loading the hugging face model. Don't use quotes. If value cannot be eval'ed it will be taken as as string, eg: trust_remote_code=True, device_map=auto
     optional: true
 
   hf_config_class:
@@ -120,9 +120,13 @@ inputs:
   extra_pip_requirements:
     type: string
     description: |
-      Extra pip dependencies that MLflow model should capture as part of conversion. This would be used to create environment while loading the model for inference.
-      Pip dependencies expressed as below. Do not use quotes for passing.
-      eg: pkg1==1.0, pkg2, pkg3==1.0
+      Extra pip dependencies that MLflow model should capture as part of conversion. This would be used to create environment while loading the model for inference. Pip dependencies expressed as below. Do not use quotes for passing, eg: pkg1==1.0, pkg2, pkg3==1.0
+    optional: true
+
+  inference_base_image:
+    type: string
+    description: |
+      The docker image to use in model inference. This image id is assigned to `azureml.base_image` key in metadata section of mlmodel file.
     optional: true
 
   ## Inputs for MLflow local validation
@@ -135,8 +139,7 @@ inputs:
     type: string
     optional: true
     description: |
-      Provide mapping for local validation test data column names, that should be renamed before inferencing
-      eg: col1:ren1; col2:ren2; col3:ren3
+      Provide mapping for local validation test data column names, that should be renamed before inferencing, eg: col1:ren1; col2:ren2; col3:ren3
 
   ## Inputs for Model registration
   custom_model_name:
@@ -239,10 +242,8 @@ jobs:
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
     inputs:
+      model_framework: "Huggingface"
       task_name: ${{parent.inputs.task_name}}
-      license_file_path: ${{parent.inputs.license_file_path}}
-      model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
-      model_path: ${{parent.jobs.download_model.outputs.model_output}}
       hf_config_args: ${{parent.inputs.hf_config_args}}
       hf_tokenizer_args:  ${{parent.inputs.hf_tokenizer_args}}
       hf_model_args: ${{parent.inputs.hf_model_args}}
@@ -252,6 +253,10 @@ jobs:
       hf_tokenizer_class:  ${{parent.inputs.hf_tokenizer_class}}
       hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
       extra_pip_requirements: ${{parent.inputs.extra_pip_requirements}}
+      inference-base-image: ${{parent.inputs.inference_base_image}}
+      model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
+      model_path: ${{parent.jobs.download_model.outputs.model_output}}
+      license_file_path: ${{parent.inputs.license_file_path}}
     outputs:
       mlflow_model_folder:
         type: mlflow_model

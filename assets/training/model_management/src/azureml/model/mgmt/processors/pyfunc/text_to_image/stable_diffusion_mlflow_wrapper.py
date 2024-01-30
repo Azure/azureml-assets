@@ -7,7 +7,7 @@ Contains MLFlow pyfunc wrapper for stable diffusion models.
 Has methods to load the model and predict.
 """
 
-from diffusers import StableDiffusionPipeline
+from diffusers import StableDiffusionPipeline, DiffusionPipeline
 import mlflow
 import os
 import pandas as pd
@@ -16,7 +16,8 @@ import torch
 from config import (
     MLflowSchemaLiterals, Tasks, MLflowLiterals,
     BatchConstants, DatatypeLiterals,
-    SupportedTextToImageModelFamily)
+    SupportedTextToImageModelFamilyPipelines
+)
 from vision_utils import image_to_base64
 
 
@@ -56,9 +57,11 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             try:
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
                 model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
-                if self._model_family == SupportedTextToImageModelFamily.DECI_DIFFUSION.value:
+                if self._model_family == SupportedTextToImageModelFamilyPipelines.DECI_DIFFUSION.value:
                     self._pipe = StableDiffusionPipeline.from_pretrained(model_dir, custom_pipeline=model_dir)
                     self._pipe.unet = self._pipe.unet.from_pretrained(model_dir, subfolder='flexible_unet')
+                elif self._model_family == SupportedTextToImageModelFamilyPipelines.STABLE_DIFFUSION_XL.value:
+                    self._pipe = DiffusionPipeline.from_pretrained(model_dir, custom_pipeline=model_dir)
                 else:
                     self._pipe = StableDiffusionPipeline.from_pretrained(model_dir)
 
