@@ -152,13 +152,13 @@ def _get_authentication_config(
 
 
 def _get_complete_additional_headers(
-    model_type: ModelType,
+    endpoint_type: str,
     additional_headers: Optional[str],
     deployment_name: Optional[str],
 ) -> Dict[str, str]:
     """
     Get the complete additional headers for the requests.
-    :param model_type: The type of the model.
+    :param endpoint_type: The type of the model endpoint.
     :param additional_headers: Additional headers for the model.
     :param deployment_name: The deployment name of the endpoint.
     :returns: The complete additional headers dictionary.
@@ -184,7 +184,7 @@ def _get_complete_additional_headers(
             )
     else:
         additional_headers_dict = {}
-    if deployment_name and model_type is not ModelType.OAI:
+    if deployment_name and endpoint_type == "azureml_online_endpoint":
         additional_headers_dict["azureml-model-deployment"] = deployment_name
     return additional_headers_dict
 
@@ -296,7 +296,7 @@ def main(
     endpoint_type = get_endpoint_type(scoring_url)
     authentication_dict = _get_authentication_config(authentication_type, connection_name)
     additional_headers_dict = _get_complete_additional_headers(
-        model_type=model_type,
+        endpoint_type=endpoint_type,
         additional_headers=additional_headers,
         deployment_name=deployment_name
     )
