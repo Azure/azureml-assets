@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.4
+version: 0.0.6
 
 inputs:
   input_dataset:
@@ -13,8 +13,12 @@ inputs:
     optional: True
   model_type:
     type: string
-    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
-    optional: True
+    description: Type of model's input and output contract. Can be one of ('oai', 'oss', 'vision_oss')
+    optional: False
+    enum:
+        - oai
+        - oss
+        - vision_oss
   batch_input_pattern:
     type: string
     description: >- 
@@ -38,9 +42,7 @@ inputs:
 
       For AOAI model, the following pattern can be used,
       {
-          "messages":
-          [
-            {"role": "user", "content": "###<prompt>" } ],
+          "messages": ###<prompt>,
             "temperature": 0.7,
             "top_p": 0.95,
             "frequency_penalty": 0,
@@ -52,19 +54,27 @@ inputs:
   endpoint_url:
     type: string
     optional: False
-    description: The endpointurl.
+    description: The URL of the endpoint.
   is_performance_test:
     type: boolean
     default: False
     description: If true, the performance test will be run and the input dataset will be neglected.
+  authentication_type:
+    type: string
+    optional: False
+    description: Authentication type for endpoint- azureml_workspace_connection or managed_identity.
+    default: azureml_workspace_connection
+    enum:
+      - azureml_workspace_connection
+      - managed_identity
   deployment_name:
     type: string
     optional: True
     description: The deployment name. Only needed for managed OSS deployment.
   connections_name:
     type: string
-    optional: False
-    description: Connections name for the endpoint.
+    optional: True
+    description: Connections name for the endpoint. Only required if authentication_type is "azureml_workspace_connection".
   label_column_name:
     type: string
     optional: True
@@ -80,10 +90,11 @@ inputs:
   handle_response_failure:
     type: string
     optional: False
-    description: The way that the formatter handles the failed response.
+    description: The way that the formatter handles the failed response. 'use_fallback' will replace them with fallback_value, 'neglect' will drop those rows and 'raise_error' will throw an error.
     enum:
       - use_fallback
       - neglect
+      - raise_error
     default: use_fallback
   fallback_value:
     description: The fallback value that can be used when request payload failed. If not provided, the fallback value will be an empty string.
@@ -134,6 +145,12 @@ inputs:
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
+  response_segment_size:
+    type: integer
+    optional: False
+    default: 0
+    min: 0
+    description: Set to 0 by default- The maximum number of tokens to generate at a time. If set to 0, the full response is generated all at once. If greater than 0, tokens are generated incrementally in segments. During each increment, the request and the previous partial response are sent to the model to generate the next segment. Segments are stitched together to form the full response.
 outputs:
   predictions:
     type: uri_file
@@ -149,7 +166,7 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: azureml:batch_inference_preparer:0.0.5
+    component: ../batch-inference-preparer/spec.yaml
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       model_type: ${{parent.inputs.model_type}}
@@ -164,45 +181,54 @@ jobs:
         type: mltable
       ground_truth_metadata:
         type: uri_folder
-  # Inference
-  endpoint_batch_score:
-    type: parallel
-    component: azureml:batch_benchmark_score:0.0.4
+  # Config generation
+  config_generation:
+    type: command
+    component: ../batch-benchmark-config-generator/spec.yaml
     inputs:
-      model_type: ${{parent.inputs.model_type}}
-      online_endpoint_url: ${{parent.inputs.endpoint_url}}
-      deployment_name: ${{parent.inputs.deployment_name}}
-      connections_name: ${{parent.inputs.connections_name}}
+      scoring_url: ${{parent.inputs.endpoint_url}}
+      connection_name: ${{parent.inputs.connections_name}}
+      authentication_type: ${{parent.inputs.authentication_type}}
       debug_mode: ${{parent.inputs.debug_mode}}
       additional_headers: ${{parent.inputs.additional_headers}}
       ensure_ascii: ${{parent.inputs.ensure_ascii}}
       max_retry_time_interval: ${{parent.inputs.max_retry_time_interval}}
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
-      data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
-      mini_batch_size: ${{parent.inputs.mini_batch_size}}
-      deployment_metadata: ${{parent.inputs.endpoint_config_file}}
+      configuration_file: ${{parent.inputs.endpoint_config_file}}
+      response_segment_size: ${{parent.inputs.response_segment_size}}
+      model_type: ${{parent.inputs.model_type}}
     outputs:
-      job_out_path:
+      batch_score_config:
         type: uri_file
-      mini_batch_results_out_directory:
-        type: uri_folder
-      metrics_out_directory:
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
+  # Inference
+  endpoint_batch_score:
+    type: parallel
+    component: azureml://registries/azureml/components/batch_score_llm/labels/latest
+    inputs:
+      async_mode: False
+      data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
+      configuration_file: ${{parent.jobs.config_generation.outputs.batch_score_config}}
+    outputs:
+      job_output_path:
+        type: uri_file
+      mini_batch_results_output_directory:
         type: uri_folder
     resources:
       instance_count: ${{parent.inputs.instance_count}}
     max_concurrency_per_instance:  ${{parent.inputs.max_concurrency_per_instance}}
-    mini_batch_size: "100KB"
+    mini_batch_size: ${{parent.inputs.mini_batch_size}}
     retry_settings:
       timeout: 6000
       max_retries: 10
   # Reformat
   batch_output_formatter: 
     type: command
-    component: azureml:batch_output_formatter:0.0.5
+    component: ../batch-output-formatter/spec.yaml
     inputs:
       model_type: ${{parent.inputs.model_type}}
-      batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
+      batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_output_directory}}
       label_column_name: ${{parent.inputs.label_column_name}}
       additional_columns: ${{parent.inputs.additional_columns}}
       ground_truth_input: ${{parent.jobs.batch_inference_preparer.outputs.ground_truth_metadata}}
@@ -220,4 +246,3 @@ jobs:
       ground_truth:
         type: uri_file
         path: ${{parent.outputs.ground_truth}}
-

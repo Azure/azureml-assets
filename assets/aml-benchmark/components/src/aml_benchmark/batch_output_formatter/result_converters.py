@@ -95,13 +95,16 @@ class ResultConverters:
                         "Cannot find {} in result {}. Using default now.".format(old_key, result))
                     usage[new_key] = ResultConverters.DEFAULT_ISO_FORMAT
                     continue
-                dt = datetime.datetime.utcfromtimestamp(result[old_key] / 1000)
+                # Batch score component output the time in seconds.
+                dt = datetime.datetime.utcfromtimestamp(result[old_key])
                 usage[new_key] = dt.astimezone().isoformat()
             else:
                 # For the token and latency scenarios, no need to do the conversion.
                 usage[new_key] = usage[old_key] if old_key in usage else result.get(old_key, -1)
             if old_key in usage:
                 del usage[old_key]
+        if usage['time_taken_ms'] == -1:
+            usage['time_taken_ms'] = (result.get('end', -1) - result.get('start', 0)) * 1000
         if self._model.is_oss_model():
             usage['input_token_count'] = self._get_oss_input_token(usage)
             usage['output_token_count'] = self._get_oss_output_token(result, usage)
@@ -225,7 +228,21 @@ class ResultConverters:
     @staticmethod
     def _get_aoai_response_result(result: Dict[str, Any]) -> Any:
         response = ResultConverters._get_response(result)
-        return response["choices"][0]["message"]["content"]
+        response_message = response["choices"][0]
+        if "text" in response_message:
+            # This is the text generation OAI contract scenario.
+            return response_message["text"]
+        if "message" in response_message:
+            # This is the chat completion OAI contract scenario.
+            return response_message["message"]["content"]
+        # Unknown contract specified as OAI.
+        raise BenchmarkUserException._with_error(
+            AzureMLError.create(
+                BenchmarkUserError,
+                error_details="Endpoint returned response with unknown contract. \
+                    Please specify correct model type."
+            )
+        )
 
     @staticmethod
     def _get_oss_response_result(result: Dict[str, Any]) -> Any:

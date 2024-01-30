@@ -1,0 +1,102 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: batch_benchmark_config_generator
+display_name: Batch Benchmark Config Generator
+description: Generates the config for the batch score component.
+version: 0.0.3
+is_deterministic: true
+
+inputs:
+  configuration_file:
+    type: uri_file
+    optional: true
+    description: An optional configuration file to use for deployment settings. This overrides passed in parameters.
+  scoring_url:
+    type: string
+    optional: false
+    description: The URL of the endpoint.
+  model_type:
+    type: string
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    optional: false
+    enum:
+        - oai
+        - oss
+        - vision_oss
+  authentication_type:
+    type: string
+    optional: False
+    description: Authentication type for endpoint.
+    default: azureml_workspace_connection
+    enum:
+      - azureml_workspace_connection
+      - managed_identity
+  connection_name:
+    type: string
+    optional: true
+    description: The name of the connection to fetch the API_KEY for the endpoint authentication.
+  deployment_name:
+    type: string
+    optional: True
+    description: The deployment name. Only needed for managed OSS deployment.
+  debug_mode:
+    type: boolean
+    optional: False
+    default: False
+    description: Enable debug mode will print all the debug logs in the score step.
+  additional_headers:
+    type: string
+    optional: True
+    description: A stringified json expressing additional headers to be added to each request.
+  ensure_ascii:
+    type: boolean
+    optional: False
+    default: False
+    description: If ensure_ascii is true, the output is guaranteed to have all incoming non-ASCII characters escaped. If ensure_ascii is false, these characters will be output as-is. More detailed information can be found at https://docs.python.org/3/library/json.html
+  max_retry_time_interval:
+    type: integer
+    optional: True
+    description: The maximum time (in seconds) spent retrying a payload. If unspecified, payloads are retried unlimited times.
+  initial_worker_count:
+    type: integer
+    optional: False
+    default: 5
+    min: 1
+    description: The initial number of workers to use for scoring.
+  max_worker_count:
+    type: integer
+    optional: False
+    default: 200
+    min: 1
+    description: Overrides initial_worker_count if necessary
+  response_segment_size:
+    type: integer
+    optional: False
+    default: 0
+    min: 0
+    description: Set to 0 by default- The maximum number of tokens to generate at a time. If set to 0, the full response is generated all at once. If greater than 0, tokens are generated incrementally in segments. During each increment, the request and the previous partial response are sent to the model to generate the next segment. Segments are stitched together to form the full response.
+
+outputs:
+  batch_score_config:
+    type: uri_file
+    description: The config json file for the batch score component.
+
+code: ../src
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+command: >-
+  python -m aml_benchmark.batch_config_generator.main 
+  --scoring_url '${{inputs.scoring_url}}'
+  --model_type ${{inputs.model_type}}
+  --authentication_type ${{inputs.authentication_type}}
+  --debug_mode ${{inputs.debug_mode}}
+  --ensure_ascii ${{inputs.ensure_ascii}}
+  --initial_worker_count ${{inputs.initial_worker_count}}
+  --max_worker_count ${{inputs.max_worker_count}}
+  --response_segment_size ${{inputs.response_segment_size}}
+  --batch_score_config_path ${{outputs.batch_score_config}}
+  $[[--configuration_file ${{inputs.configuration_file}}]]
+  $[[--max_retry_time_interval ${{inputs.max_retry_time_interval}}]]
+  $[[--connection_name '${{inputs.connection_name}}']]
+  $[[--deployment_name '${{inputs.deployment_name}}']]
+  $[[--additional_headers '${{inputs.additional_headers}}']]
