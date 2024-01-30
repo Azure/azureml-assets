@@ -6,6 +6,7 @@
 from typing import Any
 import logging
 import os
+import sys
 import hashlib
 import mlflow
 
@@ -46,30 +47,27 @@ def log_mlflow_params(**kwargs: Any) -> None:
 
 def get_logger(filename: str) -> logging.Logger:
     """
-    Create and configure a logger based on the provided filename.
+    Create and configure a logger to always print logs on the stdout console.
 
     This function creates a logger with the specified filename and configures it
-    by setting the logging level to INFO, adding a StreamHandler and a FileHandler to the logger,
-    and specifying a specific log message format for both handlers.
+    by setting the logging level to INFO, adding a StreamHandler to the logger
+    that outputs to stdout, and specifying a specific log message format.
 
     :param filename: The name of the file associated with the logger.
     :return: The configured logger.
     """
     logger = logging.getLogger(filename)
     logger.setLevel(logging.INFO)
+    logger.handlers = []  # Clear existing handlers to avoid duplicates
 
-    # StreamHandler for stdout, temporary for debugging
-    stream_handler = logging.StreamHandler()
-    logger.addHandler(stream_handler)
-
-    # FileHandler for logging to a file
-    file_handler = logging.FileHandler(filename)
-    logger.addHandler(file_handler)
-
+    # Create a StreamHandler for stdout
+    stream_handler = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter(
         "[%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
     )
     stream_handler.setFormatter(formatter)
-    file_handler.setFormatter(formatter)
+
+    # Add the handler to the logger
+    logger.addHandler(stream_handler)
 
     return logger
