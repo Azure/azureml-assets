@@ -61,10 +61,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ### **Sample output**
 ```json
 [
-  "the meaning of life is to be found in the heart of the person, not in the words of
-  the Bible. " The church's statement said the church would continue to support the LGBT
-  community and "will not be silent in the face of hate and violence." "We will not be
-  silent in the face of hate and violence, " the statement said. "We will stand with our
-  LGBT brothers and sisters in the fight for equality." The statement also said the church would continue to support the LGBT community and"
+  "the meaning of life is to be found in the heart of the person, not in the words of the Bible. " The church's statement said the church would continue to support the LGBT community and "will not be silent in the face of hate and violence." "We will not be silent in the face of hate and violence, " the statement said. "We will stand with our LGBT brothers and sisters in the fight for equality." The statement also said the church would continue to support the LGBT community and"
 ]
 ```
