@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.6
+version: 0.0.7
 
 inputs:
   input_dataset:
@@ -145,12 +145,6 @@ inputs:
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
-  response_segment_size:
-    type: integer
-    optional: False
-    default: 0
-    min: 0
-    description: Set to 0 by default- The maximum number of tokens to generate at a time. If set to 0, the full response is generated all at once. If greater than 0, tokens are generated incrementally in segments. During each increment, the request and the previous partial response are sent to the model to generate the next segment. Segments are stitched together to form the full response.
 outputs:
   predictions:
     type: uri_file
@@ -196,7 +190,6 @@ jobs:
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
       configuration_file: ${{parent.inputs.endpoint_config_file}}
-      response_segment_size: ${{parent.inputs.response_segment_size}}
       model_type: ${{parent.inputs.model_type}}
     outputs:
       batch_score_config:
