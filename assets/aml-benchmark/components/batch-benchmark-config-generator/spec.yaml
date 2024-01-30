@@ -75,7 +75,7 @@ inputs:
     optional: False
     default: 0
     min: 0
-    description: Set to 0 by default- The maximum number of tokens to generate at a time. If set to 0, the full response is generated all at once. If greater than 0, tokens are generated incrementally in segments. During each increment, the request and the previous partial response are sent to the model to generate the next segment. Segments are stitched together to form the full response.
+    description: The maximum number of tokens to generate at a time. 0 is default. If set to 0, the full response is generated all at once. If greater than 0, tokens are generated incrementally in segments. During each increment, the request and the previous partial response are sent to the model to generate the next segment. Segments are stitched together to form the full response.
 
 outputs:
   batch_score_config:

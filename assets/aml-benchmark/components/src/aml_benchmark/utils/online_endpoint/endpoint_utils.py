@@ -87,16 +87,26 @@ class EndpointUtilities:
     ) -> str:
         """Hash the payload and prompt."""
         try:
-            if model.is_oss_model():
-                prompt = payload["input_data"]["input_string"]
-                if isinstance(prompt[0], dict):
-                    prompt = " ".join([p['content'] for p in prompt])
-            elif model.is_aoai_model():
-                if isinstance(payload["messages"], list):
-                    prompt = " ".join([msg.get("content", "") for msg in payload["messages"]])
+            if model.is_oss_model() or model.is_aoai_model():
+                if "input_data" in payload and "input_string" in payload["input_data"]:
+                    # For OSS endpoint
+                    prompt = payload["input_data"]["input_string"]
+                    if isinstance(prompt[0], dict):
+                        # For OSS chat model
+                        prompt = " ".join([p["content"] for p in prompt])
+                elif "messages" in payload:
+                    # For OAI chat model
+                    if isinstance(payload["messages"], list):
+                        prompt = " ".join([msg.get("content", "") for msg in payload["messages"]])
+                    else:
+                        # unknown format, try to stringify all of them.
+                        prompt = str(payload["messages"])
+                elif "prompt" in payload:
+                    # For OAI text generation model
+                    prompt = payload["prompt"]
                 else:
-                    # unkwon format, try to stringify all of them.
-                    prompt = str(payload["messages"])
+                    # unknown format, try to stringify all of them.
+                    prompt = str(payload)
             elif model.is_claude_model():
                 prompt = str(payload["prompt"])
             else:
