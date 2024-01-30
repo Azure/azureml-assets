@@ -118,7 +118,6 @@ jobs:
       categorical_metric: ${{parent.inputs.categorical_metric}}
       numerical_threshold: ${{parent.inputs.numerical_threshold}}
       categorical_threshold: ${{parent.inputs.categorical_threshold}}
-      instance_type: ${{parent.inputs.instance_type}}
       override_numerical_features: ${{parent.inputs.override_numerical_features}}
       override_categorical_features: ${{parent.inputs.override_categorical_features}}
     outputs:
