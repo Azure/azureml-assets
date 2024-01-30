@@ -74,7 +74,7 @@ class StoreUrl:
                 raise InvalidInputError(f"Unsupported credential type: {self._datastore.credential_type}, "
                                         "only AccountKey and Sas are supported.")
         elif self._datastore.datastore_type == "AzureDataLakeGen2":
-            if self._datastore.tenant_id and self._datastore.client_id:
+            if self._datastore.tenant_id and self._datastore.client_id and self._datastore.client_secret:
                 return ClientSecretCredential(tenant_id=self._datastore.tenant_id, client_id=self._datastore.client_id,
                                               client_secret=self._datastore.client_secret)
             else:
