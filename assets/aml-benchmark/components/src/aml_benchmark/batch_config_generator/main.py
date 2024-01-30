@@ -5,31 +5,20 @@
 
 import argparse
 import json
-from enum import Enum
+
 from typing import Any, Dict, Optional
 
 from aml_benchmark.utils.io import save_json_to_file
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.constants import AuthenticationType, ModelType, get_endpoint_type
 from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from azureml._common._error_definition.azureml_error import AzureMLError
-from aml_benchmark.utils.exceptions import BenchmarkUserException
 
 
 logger = get_logger(__name__)
-
-
-class AuthenticationType(Enum):
-    """Authentication Type enum for endpoints."""
-    AZUREML_WORKSPACE_CONNECTION = "azureml_workspace_connection"
-    MANAGED_IDENTITY = "managed_identity"
-
-class ModelType(Enum):
-    """Model Type enum."""
-    OAI = "oai"
-    OSS = "oss"
-    VISION_OSS = "vision_oss"
 
 
 def parse_args() -> argparse.Namespace:
@@ -304,7 +293,7 @@ def main(
     #     "connection_name": online_endpoint.connections_name
     # }
 
-    endpoint_type = "azure_openai" if model_type is ModelType.OAI else "azureml_online_endpoint"
+    endpoint_type = get_endpoint_type(scoring_url)
     authentication_dict = _get_authentication_config(authentication_type, connection_name)
     additional_headers_dict = _get_complete_additional_headers(
         model_type=model_type,
@@ -315,7 +304,7 @@ def main(
 
     config_dict = {
         "api": {
-            "type": "completion", # TODO: verify this for chat scenario.
+            "type": "completion",
             "response_segment_size": response_segment_size
         },
         "authentication": authentication_dict,
@@ -328,7 +317,7 @@ def main(
             "url": scoring_url,
         },
         "output_settings": {
-            "save_partitioned_scoring_results": True, # TODO: try this with both true and false.
+            "save_partitioned_scoring_results": True,
             "ensure_ascii": ensure_ascii,
         },
         "request_settings": request_settings_dict,
