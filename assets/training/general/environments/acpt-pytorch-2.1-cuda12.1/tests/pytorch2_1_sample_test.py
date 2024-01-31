@@ -16,7 +16,7 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_pytorch_2_0():
+def test_pytorch_2_1():
     """Tests a sample job using pytorch 2.1 as the environment."""
     this_dir = Path(__file__).parent
 
@@ -59,7 +59,7 @@ def test_pytorch_2_0():
         compute=os.environ.get("gpu_v100_cluster"),
         display_name="bert-pretrain-GLUE",
         description="Pretrain the BERT model on the GLUE dataset.",
-        experiment_name="pytorch20_Cuda117_Experiment",
+        experiment_name="pytorch21_Cuda121_Experiment",
         distribution=PyTorchDistribution(process_count_per_instance=1),
         resources=JobResourceConfiguration(instance_count=2, shm_size='3100m'),
     )
