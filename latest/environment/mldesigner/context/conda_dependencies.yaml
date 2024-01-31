@@ -7,4 +7,4 @@ dependencies:
 - pip:
   - azure-ai-ml==1.13.0
   - azureml-mlflow==1.54.0.post1
-  - mldesigner==0.1.0b17
+  - mldesigner==0.1.0b18
