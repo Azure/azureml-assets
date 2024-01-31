@@ -15,5 +15,4 @@ pyarrow=={{latest-pypi-version}}
 GitPython=={{latest-pypi-version}}
 Pillow=={{latest-pypi-version}}
 paramiko=={{latest-pypi-version}}
-mlflow=={{latest-pypi-version}}
 cryptography=={{latest-pypi-version}}
