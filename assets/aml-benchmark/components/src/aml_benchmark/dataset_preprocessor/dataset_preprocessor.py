@@ -144,7 +144,7 @@ class DatasetPreprocessor(object):
             return
 
     def run_user_preprocessor(self) -> None:
-        """Postprocessor run using custom template."""
+        """Preprocessor run using custom script."""
         try:
             _ = subprocess.check_output(
                 f"python {self.user_preprocessor} --input_path {self.input_dataset} \
