@@ -2,27 +2,26 @@
 # Licensed under the MIT License.
 """File for the flow creation."""
 import argparse
-import os
-import json
 import errno
-import uuid
-
-import requests
-import traceback
+import json
+import os
 import time
+import traceback
+import uuid
+from logging import Logger
 from pathlib import Path
 from typing import Tuple
-from logging import Logger
+
+import requests
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
 from azureml.rag.utils.logging import (
-    get_logger,
-    enable_stdout_logging,
-    enable_appinsights_logging,
-    track_activity,
     _logger_factory,
+    enable_appinsights_logging,
+    enable_stdout_logging,
+    get_logger,
+    track_activity,
 )
-
 
 logger = get_logger("flow_creation")
 
@@ -116,7 +115,8 @@ def try_request(url, json_payload, headers, activity_logger):
                     f"[Promptflow Creation]: Failed to send json payload log {json_payload}"
                 )
             activity_logger.info(
-                f"[Promptflow Creation]: Failed to send log with error {str(http_err)} response Code: {resp.status_code}, Content: {resp.content}. Detail: {traceback.format_exc()}"
+                f"[Promptflow Creation]: Failed to send log with error {str(http_err)}"
+                + f" response Code: {resp.status_code}, Content: {resp.content}. Detail: {traceback.format_exc()}"
             )
 
             if resp.status_code >= 500:
@@ -126,7 +126,8 @@ def try_request(url, json_payload, headers, activity_logger):
                 return resp
         except BaseException as exc:  # pylint: disable=broad-except
             activity_logger.info(
-                f"[Promptflow Creation]: Failed to send log: {json_payload} with error {exc}. Detail: {traceback.format_exc()}."
+                f"[Promptflow Creation]: Failed to send log: {json_payload} with error {exc}."
+                + f" Detail: {traceback.format_exc()}."
             )
 
             return resp
@@ -457,7 +458,8 @@ def main(args, ws, current_run, activity_logger: Logger):
     response = try_request(promptflow_mt_url, json_payload, headers, activity_logger)
     if not response.ok:
         activity_logger.error(
-            f"[Promptflow Creation]: Flow creation failed with Response Code: {response.status_code}, response:{response.text}."
+            f"[Promptflow Creation]: Flow creation failed with Response Code: {response.status_code},"
+            + f"response:{response.text}."
         )
         raise Exception(
             f"Flow creation failed with Response Code: {response.status_code}, response:{response.text}."
@@ -465,12 +467,13 @@ def main(args, ws, current_run, activity_logger: Logger):
     pf_response_json = json.loads(response.text)
     if "flowResourceId" not in pf_response_json:
         activity_logger.error(
-            "[Promptflow Creation]: Flow creation failed with Response Code: {response.status_code}, response:{response.text}."
+            f"[Promptflow Creation]: Flow creation failed with Response Code: {response.status_code},"
+            + f" response:{response.text}."
         )
     else:
         flow_id = pf_response_json["flowResourceId"]
         activity_logger.info(
-            "[Promptflow Creation]: Flow creation Succeeded! Id is:" + flow_id,
+            f"[Promptflow Creation]: Flow creation Succeeded! Id is:{flow_id}",
             extra={"properties": {"flow_id": flow_id}},
         )
         run_properties = current_run.get_properties()
