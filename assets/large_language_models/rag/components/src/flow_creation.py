@@ -104,7 +104,7 @@ def try_request(url, json_payload, headers, activity_logger):
 
     It will sallow exceptions to avoid breaking callers.
     """
-    activity_logger.info("[Promptflow Creation]: url is: {}".format(url))
+    activity_logger.info(f"[Promptflow Creation]: url is: {url}")
     for index in range(MAX_POST_TIMES):
         try:
             resp = requests.post(url, json=json_payload, headers=headers)
@@ -113,18 +113,10 @@ def try_request(url, json_payload, headers, activity_logger):
         except requests.exceptions.HTTPError as http_err:
             if index == 0:
                 activity_logger.info(
-                    "[Promptflow Creation]: Failed to send json payload log {}".format(
-                        json_payload
-                    )
+                    f"[Promptflow Creation]: Failed to send json payload log {json_payload}"
                 )
             activity_logger.info(
-                "[Promptflow Creation]: Failed to send log with error {} response Code: {}, "
-                "Content: {}. Detail: {}".format(
-                    str(http_err),
-                    resp.status_code,
-                    resp.content,
-                    traceback.format_exc(),
-                )
+                f"[Promptflow Creation]: Failed to send log with error {str(http_err)} response Code: {resp.status_code}, Content: {resp.content}. Detail: {traceback.format_exc()}"
             )
 
             if resp.status_code >= 500:
@@ -134,9 +126,7 @@ def try_request(url, json_payload, headers, activity_logger):
                 return resp
         except BaseException as exc:  # pylint: disable=broad-except
             activity_logger.info(
-                "[Promptflow Creation]: Failed to send log: {} with error {}. Detail: {}.".format(
-                    json_payload, exc, traceback.format_exc()
-                )
+                f"[Promptflow Creation]: Failed to send log: {json_payload} with error {exc}. Detail: {traceback.format_exc()}."
             )
 
             return resp
@@ -236,7 +226,7 @@ def main(args, ws, current_run, activity_logger: Logger):
         completion_connection_name == "azureml-rag-default-aoai"
         and embedding_connection_name != "azureml-rag-default-aoai"
     ):
-        # default completion connection name to embedding ones if embedding conenction is provided
+        # default completion connection name to embedding ones if embedding connection is provided
         completion_connection_name = embedding_connection_name
 
     embedding_deployment_name_and_model_name = get_deployment_and_model_name(
