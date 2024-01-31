@@ -1,6 +1,6 @@
 type: evaluationresult
 name: boolq_gpt_35_turbo_0301_question_answering
-version: 1.0.1
+version: 1.0.2
 display_name: boolq_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for boolq dataset
 dataset_family: boolq
