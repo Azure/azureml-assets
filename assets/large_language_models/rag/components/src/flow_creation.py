@@ -421,7 +421,7 @@ def main(args, ws, current_run, activity_logger: Logger):
         )
         json_payload = json.loads(flow_submit_data)
         activity_logger.info(
-            "[Promptflow Creation]: Code first json payload successfully parsed, submit to promptflow service now..."
+            "[Promptflow Creation]: Code first json payload successfully parsed, submit to Promptflow service now..."
         )
     else:
         flow_with_variants = flow_with_variants.replace("@@Flow_Name", flow_name)
@@ -466,19 +466,24 @@ def main(args, ws, current_run, activity_logger: Logger):
 
     response = try_request(promptflow_mt_url, json_payload, headers, activity_logger)
     pf_response_json = json.loads(response.text)
-    flow_id = pf_response_json["flowResourceId"]
-    activity_logger.info(
-        "[Promptflow Creation]: Flow creation Succeeded! Id is:" + flow_id,
-        extra={"properties": {"flow_id": flow_id}},
-    )
-    run_properties = current_run.get_properties()
-    parent_run_id = run_properties["azureml.pipelinerunid"]
-    parent_run = ws.get_run(parent_run_id)
-    parent_run.add_properties({"azureml.promptFlowResourceId": flow_id})
-    activity_logger.info(
-        "[Promptflow Creation]: Add into run property Succeed! All operation is done!",
-        extra={"properties": {"flow_id": flow_id}},
-    )
+    if "flowResourceId" not in pf_response_json:
+        activity_logger.error(
+            "[Promptflow Creation]: Flow creation failed with Response Code: {response.status_code}, response:{response.text}."
+        )
+    else:
+        flow_id = pf_response_json["flowResourceId"]
+        activity_logger.info(
+            "[Promptflow Creation]: Flow creation Succeeded! Id is:" + flow_id,
+            extra={"properties": {"flow_id": flow_id}},
+        )
+        run_properties = current_run.get_properties()
+        parent_run_id = run_properties["azureml.pipelinerunid"]
+        parent_run = ws.get_run(parent_run_id)
+        parent_run.add_properties({"azureml.promptFlowResourceId": flow_id})
+        activity_logger.info(
+            "[Promptflow Creation]: Add into run property Succeed! All operation is done!",
+            extra={"properties": {"flow_id": flow_id}},
+        )
 
 
 def main_wrapper(args, ws, current_run, logger):
