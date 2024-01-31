@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
-RUN apt-get update -y && apt-get install libc-bin libc-dev-bin libc6 libc6-dev libcurl3-gnutls tar openssh-server openssh-client openssl curl -y
+RUN apt-get update -y && apt-get install binutils libssh-4 libsqlite3-0 libpam-modules libc-bin libc-dev-bin libc6 libc6-dev libcurl3-gnutls libgnutls30 tar openssh-server openssh-client openssl curl -y
 
 WORKDIR /
 
