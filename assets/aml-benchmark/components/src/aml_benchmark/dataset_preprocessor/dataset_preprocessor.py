@@ -6,9 +6,9 @@
 """DataPreprocessor class and runner."""
 
 import json
-import os
 import re
 import jinja2
+import subprocess
 
 from azureml._common._error_definition.azureml_error import AzureMLError
 from aml_benchmark.utils.exceptions import BenchmarkValidationException, BenchmarkUserException
@@ -144,13 +144,17 @@ class DatasetPreprocessor(object):
             return
 
     def run_user_preprocessor(self) -> None:
-        """Prerpocessor run using custom template."""
+        """Postprocessor run using custom template."""
         try:
-            os.system(
-                f'python {self.user_preprocessor} --input_path {self.input_dataset} \
-                --output_path {self.output_dataset}'
+            _ = subprocess.check_output(
+                f"python {self.user_preprocessor} --input_path {self.input_dataset} \
+                    --output_path {self.output_dataset}",
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                shell=True,
             )
-        except Exception as e:
+        except subprocess.CalledProcessError as e:
+            error_message = e.output.strip()
             raise BenchmarkUserException._with_error(
-                AzureMLError.create(BenchmarkUserError, error_details=e)
+                AzureMLError.create(BenchmarkUserError, error_details=error_message)
             )
