@@ -1,0 +1,12 @@
+image:
+  name: azureml/curated/acpt-pytorch-2.1-cuda12.1
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - requirements.txt
+  publish:
+    location: mcr
+    visibility: public
