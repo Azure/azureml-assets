@@ -11,4 +11,7 @@ applicationinsights==0.11.10
 azureml-automl-core==1.54.0
 azureml-telemetry==1.54.0
 azureml-automl-dnn-vision==1.54.0.post1
-pyarrow==15.0.0
+pyarrow==14.0.2
+GitPython==3.1.41
+paramiko==3.4.0
+cryptography==42.0.2
