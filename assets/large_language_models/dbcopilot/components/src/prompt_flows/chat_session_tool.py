@@ -10,6 +10,7 @@ import uuid
 # Please update the function name/signature per need
 @tool
 def session_python_tool(chat_history: list) -> str:
+    """Session Python Tool."""
     if chat_history:
         if 'session_id' in chat_history[-1]['outputs']:
             return chat_history[-1]['outputs']['session_id']
