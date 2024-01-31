@@ -17,6 +17,9 @@ RUN echo "Downloading azcopy to file azcopy.tar ....";\
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
+## Vulnerability fix
+RUN pip install Pillow==10.2.0
+
 # List installed packages
 RUN pip list
 
