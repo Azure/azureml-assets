@@ -465,6 +465,13 @@ def main(args, ws, current_run, activity_logger: Logger):
     headers = get_default_headers(RUN_TOKEN, content_type="application/json")
 
     response = try_request(promptflow_mt_url, json_payload, headers, activity_logger)
+    if not response.ok:
+        activity_logger.error(
+            f"[Promptflow Creation]: Flow creation failed with Response Code: {response.status_code}, response:{response.text}."
+        )
+        raise Exception(
+            f"Flow creation failed with Response Code: {response.status_code}, response:{response.text}."
+        )
     pf_response_json = json.loads(response.text)
     if "flowResourceId" not in pf_response_json:
         activity_logger.error(
@@ -558,4 +565,4 @@ if __name__ == "__main__":
     finally:
         if _logger_factory.appinsights:
             _logger_factory.appinsights.flush()
-            time.sleep(5)  # wait for appinsights to send telemetry
+            time.sleep(5)  # wait for AppInsights to send telemetry
