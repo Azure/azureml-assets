@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+"""The component deploys the promptflow for db copilot."""
 from promptflow import tool
 import uuid
 
