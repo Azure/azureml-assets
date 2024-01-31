@@ -13,7 +13,7 @@ You can use the raw model for feature extraction.
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href=\"https://aka.ms/azureml-infer-sdk-image-embeddings\" target=\"_blank\">image-embeddings-online-endpoint.ipynb</a>|<a href=\"https://aka.ms/azureml-infer-cli-image-embeddings\" target=\"_blank\">image-embeddings-online-endpoint.sh</a>
+Real time|<a href="https://aka.ms/azureml-infer-sdk-image-embeddings" target="_blank">image-embeddings-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-image-embeddings" target="_blank">image-embeddings-online-endpoint.sh</a>
 
 ### Sample inputs and outputs (for real-time inference)
 
@@ -21,29 +21,29 @@ Real time|<a href=\"https://aka.ms/azureml-infer-sdk-image-embeddings\" target=\
 
 ```json
 {
-   \"input_data\":{
-      \"columns\":[
-         \"image\"
+   "input_data":{
+      "columns":[
+         "image"
       ],
-      \"index\":[0, 1],
-      \"data\":[
-         [\"image1\"],
-         [\"image2\"]
+      "index":[0, 1],
+      "data":[
+         ["image1"],
+         ["image2"]
       ]
    }
 }
 ```
-Note: \"image1\" and \"image2\" should be publicly accessible urls or strings in `base64` format.
+Note: "image1" and "image2" should be publicly accessible urls or strings in `base64` format.
 
 #### Sample output
 
 ```json
 [
     {
-        \"image_features\": [0.55, 0.32, -0.82, ... , 0.29],
+        "image_features": [0.55, 0.32, -0.82, ... , 0.29],
     },
     {
-        \"image_features\": [-0.36, -0.97, 0.43, ... , 0.11],
+        "image_features": [-0.36, -0.97, 0.43, ... , 0.11],
     }
 ]
 ```
