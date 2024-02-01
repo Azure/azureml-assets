@@ -175,7 +175,13 @@ def run_humaneval_postprocessor(
             # If the model regenerates the prompt/ function name
             pred_combined_prompt = row["original_prediction"]
         else:
-            pred_combined_prompt = row["prompt"]+"\n"+row["original_prediction"]
+            original_prediction = row["original_prediction"]
+            # If spaces were stripped from endpoint responses, add those back.
+            if original_prediction.startswith(" ") or original_prediction.startswith("\t"):
+                prefix = ""
+            else:
+                prefix = "    "
+            pred_combined_prompt = prefix + row["prompt"]+"\n" + original_prediction
 
         # Applying regex on the prediction column
         if regex_exp:
