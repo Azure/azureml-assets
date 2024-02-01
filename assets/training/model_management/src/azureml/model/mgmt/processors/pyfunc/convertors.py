@@ -228,7 +228,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         """Initialize MLflow convertor for CLIP models."""
         super().__init__(**kwargs)
         if self._task not in \
-                [SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, SupportedTasks.EMBEDDINGS_CLIP.value]:
+                [SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, SupportedTasks.EMBEDDINGS.value]:
             raise Exception("Unsupported task")
 
     def get_model_signature(self) -> ModelSignature:
@@ -255,7 +255,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
                             CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_LABELS),
                 ]
             )
-        elif self._task == SupportedTasks.EMBEDDINGS_CLIP.value:
+        elif self._task == SupportedTasks.EMBEDDINGS.value:
             output_schema = Schema(
                 [
                     ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
@@ -276,7 +276,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         if self._task == SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
             from clip_mlflow_wrapper import CLIPMLFlowModelWrapper
             mlflow_model_wrapper = CLIPMLFlowModelWrapper(task_type=CLIPTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value)
-        elif self._task == SupportedTasks.EMBEDDINGS_CLIP.value:
+        elif self._task == SupportedTasks.EMBEDDINGS.value:
             from clip_embeddings_mlflow_wrapper import CLIPEmbeddingsMLFlowModelWrapper
             mlflow_model_wrapper = CLIPEmbeddingsMLFlowModelWrapper(task_type=CLIPTasks.EMBEDDINGS.value)
         else:
@@ -304,7 +304,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
             os.path.join(self.MODEL_DIR, "config.py"),
             os.path.join(self.COMMON_DIR, "vision_utils.py")
         ]
-        if self._task == SupportedTasks.EMBEDDINGS_CLIP.value:
+        if self._task == SupportedTasks.EMBEDDINGS.value:
             code_path.append(os.path.join(self.MODEL_DIR, "clip_embeddings_mlflow_wrapper.py"))
 
         return code_path
@@ -331,7 +331,7 @@ class DinoV2MLFlowConvertor(PyFuncMLFLowConvertor):
         """Initialize MLflow convertor for DinoV2 models."""
         super().__init__(**kwargs)
 
-        if self._task != SupportedTasks.EMBEDDINGS_DINOV2.value:
+        if self._task != SupportedTasks.EMBEDDINGS.value:
             raise Exception("Unsupported task")
 
     def get_model_signature(self) -> ModelSignature:

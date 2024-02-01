@@ -31,10 +31,9 @@ class SupportedTasks(_CustomEnum):
 
     # CLIP tasks
     ZERO_SHOT_IMAGE_CLASSIFICATION = "zero-shot-image-classification"
-    EMBEDDINGS_CLIP = "embeddings-clip"
 
-    # DinoV2 task
-    EMBEDDINGS_DINOV2 = "embeddings-dinov2"
+    # Embedding tasks
+    EMBEDDINGS = "embeddings"
 
     # BLIP tasks
     IMAGE_TO_TEXT = "image-to-text"
@@ -56,3 +55,13 @@ class SupportedTasks(_CustomEnum):
     IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
     IMAGE_OBJECT_DETECTION = "image-object-detection"
     IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
+
+
+class ModelFamilyPrefixes(_CustomEnum):
+    """Prefixes for some of the models converted to PyFunc MLflow."""
+
+    # CLIP model family.
+    CLIP = "openai/clip-vit"
+
+    # DinoV2 model family.
+    DINOV2 = "facebook/dinov2"

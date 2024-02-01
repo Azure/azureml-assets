@@ -14,6 +14,7 @@ from azureml.model.mgmt.processors.transformers.config import (
 from azureml.model.mgmt.processors.pyfunc.config import (
     MMLabDetectionTasks,
     MMLabTrackingTasks,
+    ModelFamilyPrefixes,
     SupportedTasks as PyFuncSupportedTasks,
 )
 from azureml.model.mgmt.processors.pyfunc.text_to_image.config import SupportedTextToImageModelFamily
@@ -44,9 +45,9 @@ logger = get_logger(__name__)
 def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params):
     """Instantiate and return MLflow convertor."""
     task = translate_params["task"]
-
-    # TODO: do not assume 1-to-1 association between tasks and models when making a convertor. There are ways to get
-    # around this but they are hacky.
+    model_id = translate_params.get("model_id")
+    if model_id is None:
+        model_id = ""
 
     if model_framework == ModelFramework.HUGGINGFACE.value:
         # Models from Hugging face framework exported in transformers mlflow flavor
@@ -65,13 +66,13 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
         elif task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
             return ASRMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
         # Models from Hugging face framework exported in PyFunc mlflow flavor
-        elif task in [
-            PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, PyFuncSupportedTasks.EMBEDDINGS_CLIP.value
-        ]:
+        elif (task == PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value) or (
+                (task == PyFuncSupportedTasks.EMBEDDINGS.value) and model_id.startswith(ModelFamilyPrefixes.CLIP.value)
+        ):
             return CLIPMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
-        elif task == PyFuncSupportedTasks.EMBEDDINGS_DINOV2.value:
+        elif (task == PyFuncSupportedTasks.EMBEDDINGS.value) and model_id.startswith(ModelFamilyPrefixes.DINOV2.value):
             return DinoV2MLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
@@ -84,7 +85,10 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
-            raise Exception(f"Models from {model_framework} for {task} not supported for MLflow conversion")
+            raise Exception(
+                f"Models from {model_framework} for task {task} and model {model_id} "
+                "not supported for MLflow conversion"
+            )
     elif model_framework == ModelFramework.MMLAB.value:
         # Models from MMLAB model framework exported in PyFunc mlflow flavor
         if MMLabDetectionTasks.has_value(task):
