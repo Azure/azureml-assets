@@ -66,7 +66,7 @@ class BatchConstants:
 class SupportedTextToImageModelFamily(_CustomEnum):
     """Supported text to image models."""
 
-    STABLE_DIFFUSION = "stable-diffusion"
+    STABLE_DIFFUSION = "diffusers:stablediffusionpipeline"
     DECI_DIFFUSION = "decidiffusion"
-    STABLE_DIFFUSION_XL = "stable-diffusion-xl"
+    STABLE_DIFFUSION_XL = "diffusers:stablediffusionxlpipeline"
 
