@@ -4,7 +4,7 @@ type: command
 name: dataset_downloader
 display_name: Dataset Downloader
 description: Downloads the dataset onto blob store.
-version: 0.0.1
+version: 0.0.2
 
 inputs:
   dataset_name:

@@ -1,6 +1,6 @@
 $schema: http://azureml/sdk-2-0/ParallelComponent.json
 name: batch_benchmark_score
-version: 0.0.4
+version: 0.0.5
 display_name: Batch Benchmark Score
 is_deterministic: false
 type: parallel
