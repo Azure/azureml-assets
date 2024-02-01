@@ -122,8 +122,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
 
         if self._task_type in [Tasks.MM_OBJECT_DETECTION.value, Tasks.MM_INSTANCE_SEGMENTATION.value]:
             # Install mmcv and mmdet using mim, with pip installation is not working
-            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmcv==2.0.1"])
-            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==3.1.0"])
+            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==3.3.0"])
             # mmdet installs opencv-python but it results in error while importing libGL.so.1. So, we
             # need to re-install headless version of opencv-python.
             subprocess.check_call(
