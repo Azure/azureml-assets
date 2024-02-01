@@ -14,7 +14,7 @@ import time
 import traceback
 
 from azureml.core import Run
-from aml_benchmark.utils.logging import get_logger
+from aml_benchmark.utils.logging import get_logger, BufferStore
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool, get_dependent_run
 from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
@@ -414,6 +414,7 @@ def main(
         if deployment_retries <= 0:
             logger.warning("Deployment retries is less than 0, resetting it to 1 to allow at least one attempt")
             deployment_retries = 1
+        retries_err_msg = f"Deployment is not successful after {deployment_retries} retries."
         while deployment_retries > 0:
             is_deployment_successful = deploy_model_in_list_maybe(
                 subscriptions_list,
@@ -443,7 +444,7 @@ def main(
             raise BenchmarkUserException._with_error(
                 AzureMLError.create(
                     BenchmarkUserError,
-                    error_details=f"Deployment is not successful after {deployment_retries} retries.")
+                    error_details=f"{retries_err_msg} Details: {BufferStore.get_all_data()}"
                 )
     elif delete_managed_deployment:
         if not deployment_metadata:
