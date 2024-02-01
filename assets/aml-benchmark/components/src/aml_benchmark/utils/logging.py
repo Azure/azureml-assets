@@ -7,6 +7,8 @@ from typing import Any
 import logging
 import os
 import sys
+import traceback
+from collections import deque
 import hashlib
 import mlflow
 
@@ -44,6 +46,34 @@ def log_mlflow_params(**kwargs: Any) -> None:
 
     mlflow.log_params(params)
 
+import traceback
+
+class BufferStore:
+    # create a maximum 10000 lines deque to store the logs
+    _data = deque(maxlen=10000)
+
+    @classmethod
+    def push_data(cls, value):
+        """Append a string to the list of strings stored under the given key."""
+        cls._data.append(value)
+
+    @classmethod
+    def clear_buffer(cls):
+        """Clear the buffer."""
+        cls._data.clear()
+
+    @classmethod
+    def get_all_data(cls):
+        """Return all the data stored."""
+        return '\n'.join(cls._data)
+    
+
+# implement a logging handler that appends to the BufferStore
+class BufferStoreHandler(logging.Handler):
+    def emit(self, record):
+        msg = self.format(record)
+        BufferStore.push_data(msg)
+
 
 def get_logger(filename: str) -> logging.Logger:
     """
@@ -60,14 +90,20 @@ def get_logger(filename: str) -> logging.Logger:
     logger.setLevel(logging.INFO)
     logger.handlers = []  # Clear existing handlers to avoid duplicates
 
-    # Create a StreamHandler for stdout
-    stream_handler = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter(
         "[%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
     )
+
+    # Create a StreamHandler for stdout
+    stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(formatter)
 
-    # Add the handler to the logger
+    # create a BufferStoreHandler for storing logs
+    buffer_store_handler = BufferStoreHandler()
+    buffer_store_handler.setFormatter(formatter)
+
+    # Add the handlers to the logger
     logger.addHandler(stream_handler)
+    logger.addHandler(buffer_store_handler)
 
     return logger
