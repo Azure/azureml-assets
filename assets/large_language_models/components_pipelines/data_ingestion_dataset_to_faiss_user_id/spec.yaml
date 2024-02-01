@@ -106,10 +106,12 @@ jobs:
     identity:
       type: user_identity
     inputs:
-      llm_config: ${{parent.inputs.llm_config}}
       embeddings_model: ${{parent.inputs.embeddings_model}}
-      check_embeddings: "True"
-      check_completion: "False"
+      embeddings_connection: ${{parent.inputs.embedding_connection}}
+      llm_config: ${{parent.inputs.llm_config}}
+      llm_connection: ${{parent.inputs.llm_connection}}
+      acs_config: ${{parent.inputs.acs_config}}
+      index_connection: ${{parent.inputs.acs_connection}}
     outputs:
       output_data:
         type: uri_file
