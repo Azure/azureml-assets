@@ -4,7 +4,7 @@ tags:
   Preview: ""
 name: llm_dbcopilot_create_promptflow
 display_name: LLM - Create DBCopilot Prompt Flow
-version: 0.0.41
+version: 0.0.42
 inputs:
   index_name:
     type: string
@@ -33,6 +33,9 @@ inputs:
   llm_config:
     type: string
     optional: true
+  runtime:
+    type: string
+    optional: false
 outputs: {}
 code: ../src
 environment: azureml:llm-dbcopilot-embeddings@latest
@@ -41,3 +44,4 @@ command: python prompt_flow_creation.py --index_name '${{inputs.index_name}}' --
   --db_context_uri '${{inputs.db_context_uri}}' --asset_uri '${{inputs.asset_uri}}'
   $[[--chat_aoai_deployment_name '${{inputs.chat_aoai_deployment_name}}']] $[[--example_embedding_uri
   '${{inputs.example_embedding_uri}}']] $[[--llm_config '${{inputs.llm_config}}']]
+  --runtime '${{inputs.runtime}}'
