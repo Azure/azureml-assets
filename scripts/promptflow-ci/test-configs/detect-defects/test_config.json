@@ -2,8 +2,8 @@
   "nodes": [
     {
       "name": "GPT4V_AOAI",
-      "connection": "zhizho_gpt4v_connection",
       "inputs": {
+        "connection": "zhizho_gpt4v_connection",
         "deployment_name": "GPT-4V-Demo"
       }
     }
