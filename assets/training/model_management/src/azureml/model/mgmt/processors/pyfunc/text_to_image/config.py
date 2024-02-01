@@ -69,4 +69,3 @@ class SupportedTextToImageModelFamily(_CustomEnum):
     STABLE_DIFFUSION = "diffusers:stablediffusionpipeline"
     DECI_DIFFUSION = "decidiffusion"
     STABLE_DIFFUSION_XL = "diffusers:stablediffusionxlpipeline"
-
