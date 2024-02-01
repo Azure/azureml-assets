@@ -1,10 +1,10 @@
 {
   "nodes": [
     {
-      "name": "embed_the_question",
+      "name": "lookup",
       "inputs": {
-        "connection": "aoai_connection",
-        "deployment_name": "text-embedding-ada-002"
+        "mlindex_content": "embeddings:  api_base: https://adrama-oai.openai.azure.com/  api_type: Azure  api_version: 2023-07-01-preview  batch_size: '16'  connection:    id:       /subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourceGroups/azureml-rag-ci/providers/Microsoft.MachineLearningServices/workspaces/azureml-rag-eastus2euap/connections/adrama-oai  connection_type: workspace_connection  deployment: ada2  dimension: 1536  file_format_version: '2'  kind: open_ai  model: text-embedding-ada-002  schema_version: '2'index:  api_version: 2023-07-01-preview  connection:    id:       /subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourceGroups/azureml-rag-ci/providers/Microsoft.MachineLearningServices/workspaces/azureml-rag-eastus2euap/connections/azureml-rag-acs  connection_type: workspace_connection  endpoint: https://azureml-rag-acs.search.windows.net  engine: azure-sdk  field_mapping:    content: content    embedding: contentVector    filename: filepath    metadata: meta_json_string    title: title    url: url  index: loyal-library-3rnyftsy2d  kind: acs  semantic_configuration_name: azureml-defaultself:  path:     azureml://subscriptions/79a1ba0c-35bb-436b-bff2-3074d5ff1f89/resourcegroups/azureml-rag-ci/workspaces/azureml-rag-eastus2euap/datastores/workspaceblobstore/paths/azureml/211a4ad3-95bf-4dae-afff-4d543173bdc6/index/  asset_id:     azureml://locations/eastus2euap/workspaces/77e30de2-0c14-4aac-8154-37d5131034e0/data/loyal-library-3rnyftsy2d/versions/1",
+        "query_type": "Vector"
       }
     },
     {
