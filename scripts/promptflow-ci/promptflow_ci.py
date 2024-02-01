@@ -138,9 +138,6 @@ def check_flow_run_status(
 
 
 if __name__ == "__main__":
-    import os
-    os.system('az ad signed-in-user show')
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--tenant_id", type=str)
     parser.add_argument("--client_id", type=str)
