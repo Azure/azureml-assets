@@ -14,7 +14,7 @@ import time
 import traceback
 
 from azureml.core import Run
-from aml_benchmark.utils.logging import get_logger
+from aml_benchmark.utils.logging import get_logger, BufferStore
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool, get_dependent_run
 from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
@@ -313,10 +313,15 @@ def _wait_finetuned_step(finetuned_step_name: Optional[str]) -> None:
     finetuned_step_name = finetuned_step_name if finetuned_step_name else "openai_completions_finetune_pipeline"
     running_states = RunStatus.get_running_statuses()
     wait_step_run = get_dependent_run(finetuned_step_name)
+    logger.info(f"wait_step_run status is {wait_step_run.get_status()}.")
     while wait_step_run and wait_step_run.get_status() in running_states:
-        logger.info("Waiting for finetuned step to finish.")
+        logger.info("Waiting for finetuned step to finish. Current status is %s.", wait_step_run.get_status())
         time.sleep(60)
     if not wait_step_run or wait_step_run.get_status() != RunStatus.COMPLETED:
+        if not wait_step_run:
+            logger.error(f"Finetuned wait step {finetuned_step_name} is not found.")
+        else:
+            logger.error(f"Finetuned wait step {finetuned_step_name} is failed, status: %s.", wait_step_run.get_status())
         raise BenchmarkUserException._with_error(
             AzureMLError.create(
                 BenchmarkUserError,
@@ -406,6 +411,10 @@ def main(
             finetuned_step_name
         )
         is_deployment_successful = False
+        if deployment_retries <= 0:
+            logger.warning("Deployment retries is less than 0, resetting it to 1 to allow at least one attempt")
+            deployment_retries = 1
+        retries_err_msg = f"Deployment is not successful after {deployment_retries} retries."
         while deployment_retries > 0:
             is_deployment_successful = deploy_model_in_list_maybe(
                 subscriptions_list,
@@ -435,7 +444,7 @@ def main(
             raise BenchmarkUserException._with_error(
                 AzureMLError.create(
                     BenchmarkUserError,
-                    error_details=f"Deployment is not successful after {deployment_retries} retries.")
+                    error_details=f"{retries_err_msg} Details: {BufferStore.get_all_data()}"
                 )
     elif delete_managed_deployment:
         if not deployment_metadata:
