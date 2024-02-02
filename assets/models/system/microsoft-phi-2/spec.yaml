@@ -43,8 +43,9 @@ tags:
   license: mit
   model_specific_defaults:
     apply_deepspeed: 'true'
-    apply_lora: 'false'
+    apply_lora: 'true'
     apply_ort: 'false'
     precision: 16
+    ignore_mismatched_sizes: 'false'
   task: text-generation
-version: 8
+version: 9
