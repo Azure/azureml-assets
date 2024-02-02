@@ -4,7 +4,7 @@ tags:
   Preview: ""
 name: llm_ingest_db_to_acs
 display_name: LLM - SQL Datastore to ACS Pipeline
-version: 0.0.62
+version: 0.0.63
 description: Single job pipeline to chunk data from AzureML sql data store, and create ACS embeddings index
 settings:
   default_compute: serverless
@@ -50,6 +50,10 @@ inputs:
     type: string
     optional: true
     description: The name of the llm config
+  runtime:
+    type: string
+    optional: false
+    description: The name of the runtime
   serverless_instance_count:
     type: integer
     optional: true
