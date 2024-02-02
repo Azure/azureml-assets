@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/core42-jais-13b/1706880272/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
