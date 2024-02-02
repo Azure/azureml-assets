@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.8
-  - pip=21.2.4
+  - pip=23.3
   - pip:
     - azure-ai-ml=={{latest-pypi-version}}
     - azure-identity=={{latest-pypi-version}}
@@ -14,3 +14,4 @@ dependencies:
     - cryptography=={{latest-pypi-version}}
     - certifi=={{latest-pypi-version}}
     - urllib3=={{latest-pypi-version}}
+    - paramiko=={{latest-pypi-version}}

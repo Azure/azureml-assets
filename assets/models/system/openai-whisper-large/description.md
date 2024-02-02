@@ -15,18 +15,21 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-asr" target="_blank">asr-
 #### Sample input
 ```json
 {
-    "input_data": {
-        "audio": ["https://datasets-server.huggingface.co/assets/librispeech_asr/--/all/train.clean.100/84/audio/audio.mp3"],
-        "language": ["en"]
-    }
+   "input_data": {
+       "audio": ["https://www2.cs.uic.edu/~i101/SoundFiles/gettysburg.wav", "https://www2.cs.uic.edu/~i101/SoundFiles/preamble.wav"],
+       "language": ["en", "en"]
+   }
 }
 ```
 
 #### Sample output
 ```json
 [
-    {
-        "text": "Since that day, he had never been heard of. In vain, Marguerite dismissed her guests, changed her way of life. The Duke was not to be heard of. I was the gainer in so."
-    }
+  {
+    "text": " Four score and seven years ago, our fathers brought forth on this continent a new nation, conceived in liberty and dedicated to the proposition that all men are created equal. Now we are engaged in a great civil war, testing whether that nation or any nation so conceived and so dedicated can long endure."
+  },
+  {
+    "text": " We, the people of the United States, in order to form a more perfect union, establish justice, ensure domestic tranquility, provide for the common defense, promote the general welfare, and secure the blessings of liberty to ourselves and our posterity, do ordain and establish this Constitution for the United States of America."
+  }
 ]
 ```

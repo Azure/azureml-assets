@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    {
+      "name": "GPT4V_AOAI_1",
+      "inputs": {
+        "connection": "zhizho_gpt4v_connection",
+        "deployment_name": "GPT-4V-Demo"
+      }
+    },
+    {
+      "name": "GPT4V_AOAI_2",
+      "inputs": {
+        "connection": "zhizho_gpt4v_connection",
+        "deployment_name": "GPT-4V-Demo"
+      }
+    }
+  ]
+}
