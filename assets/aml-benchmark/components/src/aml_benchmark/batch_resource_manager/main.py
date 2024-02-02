@@ -313,7 +313,7 @@ def _wait_finetuned_step(finetuned_step_name: Optional[str]) -> None:
     finetuned_step_name = finetuned_step_name if finetuned_step_name else "openai_completions_finetune_pipeline"
     running_states = RunStatus.get_running_statuses()
     wait_step_run = get_dependent_run(finetuned_step_name)
-    logger.info(f"wait_step_run status is {wait_step_run.get_status()}.")
+    logger.info(f"wait_step_run status is {wait_step_run.get_status() if wait_step_run else 'wait_step_run==None'}.")
     while wait_step_run and wait_step_run.get_status() in running_states:
         logger.info("Waiting for finetuned step to finish. Current status is %s.", wait_step_run.get_status())
         time.sleep(60)
