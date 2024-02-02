@@ -58,7 +58,10 @@ class DinoV2EmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             raise ValueError(f"invalid task type {self._task_type}")
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
-        """Perform inference on the input data.
+        """Perform inference on the input images.
+
+        Assumption: it is ok to crash if the user sends too many images, causing an OOM error. CLIP and BLIP
+        assume the same.
 
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
@@ -69,24 +72,21 @@ class DinoV2EmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         """
         from vision_utils import process_image
 
-        # Initialize the result embedding list to empty.
-        embeddings = []
+        # Read all the input images.
+        pil_images = [
+            Image.open(io.BytesIO(process_image(image)))
+            for image in input_data[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
+        ]
 
-        # Go through the input images.
-        for image in input_data[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]:
-            # Decode the image and make a PIL Image object.
-            pil_image = Image.open(io.BytesIO(process_image(image)))
+        # Do inference and extract the embeddings out of the output structure.
+        inputs = self._processor(images=pil_images, return_tensors="pt")
+        outputs = self._model(**{
+            key: inputs[key].to(self._device) for key in inputs
+        })
+        embeddings = outputs.last_hidden_state[:, 0, :]
 
-            # Do inference and extract the embeddings out of the output structure.
-            inputs = self._processor(images=pil_image, return_tensors="pt")
-            outputs = self._model(**{
-                key: inputs[key].to(self._device) for key in inputs
-            })
-            embedding = outputs.last_hidden_state[0, 0, :]
-
-            # Offload to CPU, convert to Python list and accumulate into result embedding list.
-            embedding = embedding.detach().cpu().numpy().tolist()
-            embeddings.append(embedding)
+        # Offload to CPU, convert to Python list and accumulate into result embedding list.
+        embeddings = embeddings.detach().cpu().numpy().tolist()
 
         # Convert embeddings to Pandas dataframe and return.
         df_responses = pd.DataFrame({MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE_FEATURES: embeddings})
