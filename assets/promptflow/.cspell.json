@@ -69,7 +69,8 @@
       "embeded",
       "metad",
       "orignal",
-      "mlindex"
+      "mlindex",
+      "chjinche"
     ],
     "ignoreWords": [
       "openmpi",
