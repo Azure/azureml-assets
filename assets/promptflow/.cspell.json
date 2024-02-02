@@ -23,6 +23,8 @@
       "openai",
       "pfazure",
       "eastus",
+      "eastus2",
+      "euap",
       "azureai",
       "vectordb",
       "Qdrant",
