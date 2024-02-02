@@ -8,6 +8,7 @@ import errno
 import uuid
 
 import requests
+import textwrap
 import traceback
 import time
 from pathlib import Path
@@ -280,6 +281,9 @@ def main(args, ws, current_run, activity_logger: Logger):
     print(mlindex_asset_id)
     print(top_prompts)
 
+    with open(mlindex_asset_id, "r") as f:
+        mlindex_content = f.read()
+
     if isinstance(top_prompts, str):
         top_prompts = [top_prompts, top_prompts, top_prompts]
 
@@ -311,6 +315,8 @@ def main(args, ws, current_run, activity_logger: Logger):
         "@@Completion_Provider", completion_provider)
     flow_with_variants = flow_with_variants.replace(
         "@@MLIndex_Asset_Id", mlindex_asset_id)
+    flow_with_variants = flow_with_variants.replace(
+        "@@MLIndex_Content", textwrap.indent(mlindex_content, '      '))
 
     api_name = "chat" if completion_model_name.startswith("gpt-") else "completion"
     flow_with_variants = flow_with_variants.replace("@@API", api_name)
