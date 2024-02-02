@@ -1,0 +1,34 @@
+type: evaluationresult
+name: truthfulqa_generation_llama_2_7b_chat_question_answering
+version: 1.0.3
+display_name: truthfulqa_generation_llama_2_7b_chat_question_answering
+description: llama-2-7b-chat run for truthfulqa generation dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_generation
+
+model_name: llama-2-7b-chat
+model_version: "16"
+model_asset_id: azureml://registries/azureml-meta/models/Llama-2-7b-chat/versions/16
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-meta/models/Llama-2-7b-chat/versions/16
+
+tags:
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  coherence: 4.709
+  fluency: 4.847
+  GPTSimilarity: 2.705
+
+path: ./job_files
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

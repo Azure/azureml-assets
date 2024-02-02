@@ -54,20 +54,21 @@ class TestIOUtils:
         _verify_mltable_paths("foo_path", mock_ws, mltable_dict)
 
     @pytest.mark.parametrize(
-        "mltable_path",
+        "mltable_path, datastore_type",
         [
-            {"file": "azureml://datastores/my_datastore/paths/path/to/data.parquet"},
-            {"folder": "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore/paths/path/to/folder"},  # noqa: E501
-            {"pattern": "azureml://datastores/my_datastore/paths/path/to/folder/**/*.jsonl"},
-            {"file": "azureml:my_data:1"}
+            ({"file": "azureml://datastores/my_datastore/paths/path/to/data.parquet"}, "AzureDataLakeGen2"),
+            ({"folder": "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore/paths/path/to/folder"}, "AzureBlob"),  # noqa: E501
+            ({"pattern": "azureml://datastores/my_datastore/paths/path/to/folder/**/*.jsonl"}, "AzureDataLakeGen2"),
+            ({"file": "azureml:my_data:1"}, "AzureBlob")
         ]
     )
-    def test_verify_mltable_paths_azureml_path_error(self, mltable_path):
+    def test_verify_mltable_paths_azureml_path_error(self, mltable_path, datastore_type):
         """Test _verify_mltable_paths, for azureml paths, negative cases."""
-        mock_datastore = Mock(datastore_type="AzureDataLakeGen2", protocol="https", endpoint="core.windows.net",
+        mock_datastore = Mock(datastore_type=datastore_type, protocol="https", endpoint="core.windows.net",
                               account_name="my_account", container_name="my_container")
         mock_datastore.name = "my_datastore"
         mock_datastore.tenant_id = None
+        mock_datastore.credential_type = "None"
         mock_ws = Mock(datastores={"my_datastore": mock_datastore})
         mltable_dict = {
             "type": "mltable",
