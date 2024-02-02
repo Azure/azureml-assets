@@ -445,7 +445,7 @@ def main(
                 AzureMLError.create(
                     BenchmarkUserError,
                     error_details=f"{retries_err_msg} Details: {BufferStore.get_all_data()}"
-                )
+                ))
     elif delete_managed_deployment:
         if not deployment_metadata:
             logger.info("Delete deployment using input parameters.")
