@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 """This module provides the FMScore class for running inference engines with given prompts and parameters."""
+import json
 import os
 from typing import Dict, List
 
@@ -48,6 +49,24 @@ class FMScore:
         return replica_manager
 
     @log_execution_time
+    async def run_async(self, payload: MIRPayload) -> List[InferenceResult]:
+        """Run the engine with the given prompts and parameters.
+
+        :param payload: The parsed input from managed inference that contains the parameters and prompts from the user
+        :return: A list of InferenceResult objects, each containing the response and metadata related to the inference
+        """
+        formatted_prompts = [
+            self.formatter.format_prompt(self.task_config.task_type, prompt, payload.params)
+            for prompt in payload.query
+        ]
+        try:
+            inference_results = await self.replica_manager.get_replica().generate(formatted_prompts, payload.params)
+        except Exception as e:
+            raise Exception(
+                json.dumps({"error": "Error in processing request", "exception": str(e)}))
+        return inference_results
+
+    @log_execution_time
     def run(self, payload: MIRPayload) -> List[InferenceResult]:
         """Run the engine with the given prompts and parameters.
 
@@ -64,6 +83,10 @@ class FMScore:
     def _initialize_formatter(self):
         formatter = get_formatter(model_name="Llama2")
         return formatter
+
+    async def shutdown_async(self):
+        """Terminate DS-MII Server."""
+        await self.replica_manager.get_replica().shutdown_async()
 
 
 if __name__ == "__main__":

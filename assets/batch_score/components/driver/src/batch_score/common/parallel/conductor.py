@@ -12,6 +12,7 @@ from aiohttp import TraceConfig
 
 from ...batch_pool.routing.routing_client import RoutingClient
 from ...batch_pool.scoring.scoring_client import ScoringClient
+from ...utils import timeout_utils
 from ..configuration.client_settings import NullClientSettingsProvider
 from ..configuration.configuration import Configuration
 from ..post_processing.gatherer import Gatherer
@@ -19,6 +20,7 @@ from ..post_processing.mini_batch_context import MiniBatchContext
 from ..scoring.scoring_request import ScoringRequest
 from ..scoring.scoring_result import ScoringResult
 from ..telemetry import logging_utils as lu
+from ..telemetry.events import event_utils
 from ..telemetry.logging_utils import get_events_client
 from .adjustment import AIMD
 from .request_metrics import RequestMetrics
@@ -37,7 +39,7 @@ class Conductor:
         trace_configs: "list[TraceConfig]" = None,
         finished_callback=None,
     ):
-        """Init function."""
+        """Initialize Conductor."""
         self._configuration = configuration
         self.__loop: asyncio.AbstractEventLoop = loop
         self.__scoring_client: ScoringClient = scoring_client
@@ -45,8 +47,9 @@ class Conductor:
         self.__trace_configs = trace_configs
 
         if self._configuration.max_worker_count is not None:
-            self.__target_worker_count = min(self._configuration.initial_worker_count,
-                                             self._configuration.max_worker_count)
+            self.__target_worker_count = min(
+                self._configuration.initial_worker_count,
+                self._configuration.max_worker_count)
         else:
             self.__target_worker_count = self._configuration.initial_worker_count
 
@@ -66,8 +69,9 @@ class Conductor:
         # When the target is a single endpoint, the routing client is not present.
         # Then default to NullClientSettingsProvider.
         self.__clients_settings_provider = self.__routing_client or NullClientSettingsProvider()
-        self.__cas = AIMD(request_metrics=self.__request_metrics,
-                          client_settings_provider=self.__clients_settings_provider)
+        self.__cas = AIMD(
+            request_metrics=self.__request_metrics,
+            client_settings_provider=self.__clients_settings_provider)
 
         if self._configuration.async_mode:
             self._init_workers()
@@ -77,11 +81,12 @@ class Conductor:
         """Run function."""
         self.__add_requests(requests)
 
-        msg = "Conductor: Starting with {} running workers and {} target worker count." \
-              + "There are {} workers in the worker pool."
-        lu.get_logger().info(msg.format(len(list(filter(lambda worker: worker.is_running, self.__workers))),
-                                        self.__target_worker_count,
-                                        len(self.__workers)))
+        lu.get_logger().info(
+            "Conductor: Starting with {} running workers and {} target worker count."
+            " There are {} workers in the worker pool."
+            .format(
+                len(list(filter(lambda worker: worker.is_running, self.__workers))),
+                self.__target_worker_count, len(self.__workers)))
 
         target_result_len = len(self.__scoring_request_queue)
 
@@ -101,19 +106,26 @@ class Conductor:
 
         return ret
 
-    def enqueue(self,
-                requests: "list[ScoringRequest]",
-                failed_results: "list[ScoringResult]",
-                mini_batch_context: MiniBatchContext):
+    def enqueue(
+            self,
+            requests: "list[ScoringRequest]",
+            failed_results: "list[ScoringResult]",
+            mini_batch_context: MiniBatchContext):
         """Enqueue function."""
         self.__minibatch_index_set.add(mini_batch_context.mini_batch_id)
         if len(requests) == 0:
-            msg = "Conductor: Encountered empty requests in minibatch id {}, adding empty results."
-            lu.get_logger().info(msg.format(mini_batch_context.mini_batch_id))
+            lu.get_logger().info(
+                "Conductor: Encountered empty requests in minibatch id {}, adding empty results."
+                .format(mini_batch_context.mini_batch_id))
+
             self.__gatherer.add_empty_result(mini_batch_context)
             lu.get_events_client().emit_mini_batch_completed(
                 input_row_count=mini_batch_context.target_result_len,
                 output_row_count=0)
+            event_utils.generate_minibatch_summary(
+                minibatch_id=mini_batch_context.minibatch_index,
+                output_row_count=0,
+            )
             return
 
         self.__add_requests(requests)
@@ -124,9 +136,12 @@ class Conductor:
     def check_all_tasks_processed(self):
         """Check all tasks processed function."""
         lu.get_logger().info("Conductor: Checking if all tasks are processed, ")
-        msg = "Conductor: len minibatch_index_set is {}, self.__gatherer.get_returned_minibatch_count() is {}"
-        lu.get_logger().info(msg.format(len(self.__minibatch_index_set),
-                                        self.__gatherer.get_returned_minibatch_count()))
+        lu.get_logger().info(
+            "Conductor: len minibatch_index_set: {}, __gatherer.get_returned_minibatch_count(): {}"
+            .format(
+                len(self.__minibatch_index_set),
+                self.__gatherer.get_returned_minibatch_count()))
+
         # no input items, no output items, and minibatch set count is equal to minibatch return count
         return len(self.__scoring_request_queue) == 0 and \
             len(self.__scoring_result_queue) == 0 and \
@@ -139,9 +154,12 @@ class Conductor:
     def get_processing_batch_number(self):
         """Get processing batch number function."""
         lu.get_logger().info("Conductor: Getting number of processing mini batches.")
-        msg = "Conductor: len minibatch_index_set is {}, self.__gatherer.get_returned_minibatch_count() is {}"
-        lu.get_logger().info(msg.format(len(self.__minibatch_index_set),
-                                        self.__gatherer.get_returned_minibatch_count()))
+        lu.get_logger().info(
+            "Conductor: len minibatch_index_set: {}, __gatherer.get_returned_minibatch_count(): {}"
+            .format(
+                len(self.__minibatch_index_set),
+                self.__gatherer.get_returned_minibatch_count()))
+
         return len(self.__minibatch_index_set) - self.__gatherer.get_returned_minibatch_count()
 
     def shutdown(self):
@@ -153,9 +171,9 @@ class Conductor:
 
     def __add_requests(self, requests: "list[ScoringRequest]"):
         for request in requests:
-            timeout_generator = ScoringClient.get_retry_timeout_generator(self.__client_session.timeout)
-            self.__scoring_request_queue.append(QueueItem(scoring_request=request,
-                                                          timeout_generator=timeout_generator))
+            timeout_generator = timeout_utils.get_retry_timeout_generator(self.__client_session.timeout)
+            self.__scoring_request_queue.append(
+                QueueItem(scoring_request=request, timeout_generator=timeout_generator))
 
     def __add_failed_scoring_results(self, failed_results: "list[ScoringResult]"):
         self.__failed_scoring_result_queue.extend(failed_results)
@@ -194,16 +212,17 @@ class Conductor:
 
         return client_session
 
-    async def __sleep(self,
-                      duration: int,
-                      tasks: "list[asyncio.Task]",
-                      target_result_len: int = None) -> "list[asyncio.Task]":
+    async def __sleep(
+            self,
+            duration: int,
+            tasks: "list[asyncio.Task]",
+            target_result_len: int = None) -> "list[asyncio.Task]":
         """Wait for the configured sleep interval, but wakes up early if the workers finish."""
         sleep_task = asyncio.create_task(asyncio.sleep(duration))
         tasks = [*tasks, sleep_task]
 
-        while not sleep_task.done() and \
-                (target_result_len is None or len(self.__scoring_result_queue) < target_result_len):
+        while not sleep_task.done() and (target_result_len is None or
+                                         len(self.__scoring_result_queue) < target_result_len):
             _, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
 
         sleep_task.cancel()
@@ -239,14 +258,18 @@ class Conductor:
         if adjustments.new_concurrency <= self.__target_worker_count or \
                 (adjustments.new_concurrency > self.__target_worker_count and
                  adjustments.new_concurrency < len(self.__scoring_request_queue)):
-            lu.get_logger().info("Conductor: Taking adjustment of target worker count {} to {}"
-                                 .format(self.__target_worker_count, adjustments.new_concurrency))
+
+            lu.get_logger().info(
+                "Conductor: Taking adjustment of target worker count {} to {}"
+                .format(self.__target_worker_count, adjustments.new_concurrency))
+
             self.__target_worker_count = adjustments.new_concurrency
 
             if self._configuration.max_worker_count is not None:
                 if self._configuration.max_worker_count < self.__target_worker_count:
-                    msg = "Conductor: Overriding with self._configuration.max_worker_count value of {}"
-                    lu.get_logger().debug(msg.format(self._configuration.max_worker_count))
+                    lu.get_logger().debug(
+                        "Conductor: Overriding with self._configuration.max_worker_count value of {}"
+                        .format(self._configuration.max_worker_count))
                     # Upper bound is self._configuration.max_worker_count, if present
                 self.__target_worker_count = min(self.__target_worker_count, self._configuration.max_worker_count)
 
@@ -259,20 +282,22 @@ class Conductor:
 
         # Start regular workers
         self._adjust_worker_concurrency()
-        msg = "Conductor: Starting with {} running workers and {} target worker count."
-        msg += " There are {} workers in the worker pool."
-        lu.get_logger().info(msg.format(len(list(filter(lambda worker: worker.is_running, self.__workers))),
-                                        self.__target_worker_count,
-                                        len(self.__workers)))
+        lu.get_logger().info(
+            "Conductor: Starting with {} running workers and {} target worker count. "
+            "There are {} workers in the worker pool."
+            .format(
+                len(list(filter(lambda worker: worker.is_running, self.__workers))),
+                self.__target_worker_count, len(self.__workers)))
 
         # Start specialized workers
         self._init_gatherer()
         self._init_monitor()
 
     def _init_gatherer(self):
-        self.__gatherer = Gatherer(self.__scoring_result_queue,
-                                   self.__failed_scoring_result_queue,
-                                   self.__finished_callback)
+        self.__gatherer = Gatherer(
+            self.__scoring_result_queue,
+            self.__failed_scoring_result_queue,
+            self.__finished_callback)
         self.__tasks.append(self.__loop.create_task(self.__gatherer.run()))
 
     def _init_monitor(self):

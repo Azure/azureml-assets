@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import os
 import re
 from typing import Union
-from azure.identity import ClientSecretCredential, DefaultAzureCredential
+from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
 from azure.storage.filedatalake import FileSystemClient
@@ -57,24 +57,24 @@ class StoreUrl:
 
     def get_credential(self) -> Union[str, ClientSecretCredential, AzureSasCredential, None]:
         """Get credential for this store url."""
-        def get_default_credential():
-            return DefaultAzureCredential() if self._is_secure() else None
-
         if not self._datastore:
-            return get_default_credential()
+            raise InvalidInputError(
+                "abfs(s), wasb(s) and http(s) URLs are credential less and are NOT supported by Model Monitoring job, "
+                "please use azureml file system path with credential data store, e.g. "
+                "azureml://datastores/<credential_datastore_name>/paths/<path_to_data>")
         elif self._datastore.datastore_type == "AzureBlob":
             if self._datastore.credential_type == "AccountKey":
                 return self._datastore.account_key
             elif self._datastore.credential_type == "Sas":
                 return AzureSasCredential(self._datastore.sas_token)
-            elif self._datastore.credential_type is None:
+            elif self._datastore.credential_type is None or self._datastore.credential_type == "None":
                 raise InvalidInputError("Credential-less input data is NOT supported for Model Monitoring job, "
                                         f"please add credential to datastore {self._datastore.name}.")
             else:
                 raise InvalidInputError(f"Unsupported credential type: {self._datastore.credential_type}, "
                                         "only AccountKey and Sas are supported.")
         elif self._datastore.datastore_type == "AzureDataLakeGen2":
-            if self._datastore.tenant_id and self._datastore.client_id:
+            if self._datastore.tenant_id and self._datastore.client_id and self._datastore.client_secret:
                 return ClientSecretCredential(tenant_id=self._datastore.tenant_id, client_id=self._datastore.client_id,
                                               client_secret=self._datastore.client_secret)
             else:
@@ -98,7 +98,8 @@ class StoreUrl:
             return None
 
         # blob, has cred datastore
-        if self.store_type == "blob" and self._datastore and self._datastore.credential_type:
+        if self.store_type == "blob" and self._datastore \
+                and (self._datastore.credential_type and self._datastore.credential_type != "None"):
             return self._datastore.blob_service.get_container_client(self.container_name)
         # TODO fallback to DefaultAzureCredential for credential less datastore for now, may need better fallback logic
         credential = credential or self.get_credential()
@@ -190,10 +191,20 @@ class StoreUrl:
             self.path = matches.group("path").strip("/")
             self._datastore = None
         elif url.scheme == "azureml":
-            if ':' in url.path:  # azureml asset path
+            if ':' in url.path:  # azureml:<data_name>:<version> asset path
                 # asset path should be translated to azureml or hdfs path in service, should not reach here
                 raise InvalidInputError("AzureML asset path is not supported as uri_folder.")
-            else:  # azureml long or short form
+
+            data_pattern0 = r"azureml://(subscriptions/([^/]+)/resource[gG]roups/([^/]+)/workspaces/([^/]+)/)?data/(?P<data>[^/]+)/versions/(?P<version>.+)"  # noqa: E501
+            data_pattern1 = r"azureml://locations/([^/]+)/workspaces/([^/]+)/data/(?P<data>[^/]+)/versions/(?P<version>.+)"  # noqa: E501
+            matches = re.match(data_pattern0, self._base_url) or re.match(data_pattern1, self._base_url)
+            if matches:
+                raise InvalidInputError(
+                    "Seems you are using AzureML dataset v1 as input of Model Monitoring Job, but we only support "
+                    "dataset v2. Please follow "
+                    "https://learn.microsoft.com/en-us/azure/machine-learning/migrate-to-v2-assets-data?view=azureml-api-2"  # noqa: E501
+                    "to upgrade your dataset to v2.")
+            else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
                 self._datastore = ws.datastores.get(datastore_name)
@@ -214,9 +225,11 @@ class StoreUrl:
 
     def _get_datastore_and_path_from_azureml_path(self) -> (str, str):
         """Get datastore name and path from azureml path."""
-        start_idx = self._base_url.find('/datastores/')
-        end_idx = self._base_url.find('/paths/')
-        return self._base_url[start_idx+12:end_idx], self._base_url[end_idx+7:].rstrip('/')
+        pattern = r"azureml://(subscriptions/([^/]+)/resource[gG]roups/([^/]+)/workspaces/([^/]+)/)?datastores/(?P<datastore_name>[^/]+)/paths/(?P<path>.+)"  # noqa: E501
+        matches = re.match(pattern, self._base_url)
+        if not matches:
+            raise InvalidInputError(f"Unsupported azureml uri: {self._base_url}")
+        return matches.group("datastore_name"), matches.group("path").rstrip('/')
 
     def _is_secure(self):
         """Check if the store url is secure."""

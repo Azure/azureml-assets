@@ -6,6 +6,7 @@
 import dataclasses
 import json
 import os
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -33,7 +34,9 @@ g_aacs_client = None
 # default values
 DEVICE_COUNT = torch.cuda.device_count()
 MLMODEL_PATH = "mlflow_model_folder/MLmodel"
-DEFAULT_MLFLOW_MODEL_PATH = "mlflow_model_folder/data/model"
+DEPRECATED_MLFLOW_MODEL_PATH = "mlflow_model_folder/data/model"
+DEFAULT_MLFLOW_MODEL_PATH = "mlflow_model_folder/model"
+DEFAULT_TOKENIZER_PATH = "mlflow_model_folder/components/tokenizer"
 task_type = SupportedTask.TEXT_GENERATION
 g_fmscorer: FMScore = None
 g_model_signature = None
@@ -318,11 +321,20 @@ def init():
             DEFAULT_MLFLOW_MODEL_PATH,
         )
 
-        config_path = os.path.join(
+        tokenizer_path = os.path.join(
             os.getenv("AZUREML_MODEL_DIR", ""),
-            DEFAULT_MLFLOW_MODEL_PATH,
-            "config.json",
+            DEFAULT_TOKENIZER_PATH,
         )
+
+        # Maintain Backwards Compatibility with old file structure
+        if not os.path.exists(model_path):
+            model_path = os.path.join(
+                os.getenv("AZUREML_MODEL_DIR", ""),
+                DEPRECATED_MLFLOW_MODEL_PATH,
+            )
+            tokenizer_path = model_path
+
+        config_path = os.path.join(model_path, "config.json")
         
         default_engine = EngineName.VLLM
         tensor_parallel = os.getenv("TENSOR_PARALLEL", None)
@@ -331,7 +343,8 @@ def init():
         engine_config = {
             "engine_name": os.getenv("ENGINE_NAME", default_engine),
             "model_id": model_path,
-            "tensor_parallel": tensor_parallel
+            "tokenizer": tokenizer_path,
+            "tensor_parallel": tensor_parallel,
         }
 
         _init_cuda_visible_devices()
@@ -350,13 +363,30 @@ def init():
         if mlmodel:
             flavors = mlmodel.get("flavors", {})
             g_model_signature = mlmodel.get("signature", None)
-            if "hftransformersv2" in flavors:
+            if "transformers" in flavors:
+                task_type = flavors["transformers"]["task"]
+
+                model_generator_configs = flavors["transformers"].get(
+                    "generator_config",
+                    {},
+                )
+                if task_type not in (
+                    SupportedTask.TEXT_GENERATION,
+                    SupportedTask.CHAT_COMPLETION,
+                ):
+                    raise Exception(f"Unsupported task_type {task_type}")
+
+                # update default gen configs with model configs
+                default_generator_configs = get_generator_params(
+                    model_generator_configs,
+                )
+            elif "hftransformersv2" in flavors:
                 task_type = flavors["hftransformersv2"]["task_type"]
+
                 model_generator_configs = flavors["hftransformersv2"].get(
                     "generator_config",
                     {},
                 )
-
                 if task_type not in (
                     SupportedTask.TEXT_GENERATION,
                     SupportedTask.CHAT_COMPLETION,
@@ -368,7 +398,6 @@ def init():
                     model_generator_configs,
                 )
             elif "python_function" in flavors:
-
                 task_type = mlmodel["metadata"]["base_model_task"]
                 if task_type not in (TaskType.TEXT_TO_IMAGE):
                     raise Exception(f"Unsupported task_type {task_type}")
@@ -452,29 +481,29 @@ def run(data):
             f"Processing new request with parameters: {payload.params}",
         )
 
-        result_dict = {}
+        results = {}
         inference_results = None
         if task_type == SupportedTask.CHAT_COMPLETION:
             payload.convert_query_to_list()
             inference_results = g_fmscorer.run(payload)
             outputs = {str(i): res.response for i, res in enumerate(inference_results)}
-            result_dict = {
+            results = {
                 "output": f"{outputs['0']}",
             }  # outputs will only have one key for chat-completion
         elif task_type == SupportedTask.TEXT_TO_IMAGE:
             inference_results = g_fmscorer.run(payload)
-            result_dict = [dataclasses.asdict(res.response) for res in inference_results]
+            results = [dataclasses.asdict(res.response) for res in inference_results]
         else:
             assert task_type == SupportedTask.TEXT_GENERATION and isinstance(
                 payload.query,
                 list,
             ), "query should be a list for text-generation"
             inference_results = g_fmscorer.run(payload)
-            outputs = {str(i): res.response for i, res in enumerate(inference_results)}
-            result_dict = pd.DataFrame([outputs])
+            # output format: [output1, output2, ...]
+            results = [res.response for res in inference_results]
 
-        for result in inference_results:
-            result.print_results()
+        for inference_result in inference_results:
+            inference_result.print_results()
         all_logged_results = f""" ### Inference Results ###\n \
 Total Generation Time: {inference_results[0].inference_time_ms}\n \
 Throughput (prompt/sec): {len(inference_results) / (inference_results[0].inference_time_ms / 1000):.2f}"""
@@ -482,7 +511,7 @@ Throughput (prompt/sec): {len(inference_results) / (inference_results[0].inferen
 
         stats_dict = [vars(result) for result in inference_results]
         g_collector.collect(stats_dict)
-        return get_safe_response(result_dict)
+        return get_safe_response(results)
 
     except Exception as e:
         logger.exception(e)
@@ -496,23 +525,19 @@ if __name__ == "__main__":
     valid_inputs = {
         "text-generation": [
             {
-                "input_data": {
-                    "input_string": ["the meaning of life is"],
-                    "parameters": {"max_new_tokens": 256, "do_sample": True},
-                },
+                "input_data": ["the meaning of life is"],
+                "params": {"max_new_tokens": 256, "do_sample": True},
             },
             {
-                "input_data": {
-                    "input_string": [
-                        "The recipe of a good movie is",
-                        "Quantum physics is",
-                        "the meaning of life is",
-                    ],
-                    "parameters": {
-                        "max_new_tokens": 256,
-                        "do_sample": True,
-                        # "_batch_size": 32,
-                    },
+                "input_data": [
+                    "The recipe of a good movie is",
+                    "Quantum physics is",
+                    "the meaning of life is",
+                ],
+                "params": {
+                    "max_new_tokens": 256,
+                    "do_sample": True,
+                    # "_batch_size": 32,
                 },
             },
         ],

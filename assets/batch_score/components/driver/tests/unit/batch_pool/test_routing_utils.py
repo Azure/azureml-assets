@@ -27,8 +27,8 @@ def test_classify_response(mock_get_logger,
     assert classification == expected_classification
 
     if mock_get_logger.info.called:
-        assert str(response_status) in mock_get_logger.info.call_args.args[0] and\
+        assert str(response_status) in mock_get_logger.info.call_args.args[0] and \
                 str(expected_classification) in mock_get_logger.info.call_args.args[0]
     else:  # mock_get_logger.debug.called
-        assert str(response_status) in mock_get_logger.debug.call_args.args[0] and\
+        assert str(response_status) in mock_get_logger.debug.call_args.args[0] and \
                 str(expected_classification) in mock_get_logger.debug.call_args.args[0]

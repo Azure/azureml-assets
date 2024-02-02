@@ -348,6 +348,15 @@ def publish_prediction_drift_model_monitor_component(
         component["jobs"]["output_signal_metrics"][
             "component"
         ] = f"azureml:model_monitor_output_metrics:{asset_version}"
+        component["jobs"]["compute_histogram_buckets"][
+            "component"
+        ] = f"azureml:model_monitor_compute_histogram_buckets:{asset_version}"
+        component["jobs"]["compute_baseline_histogram"][
+            "component"
+        ] = f"azureml:model_monitor_compute_histogram:{asset_version}"
+        component["jobs"]["compute_target_histogram"][
+            "component"
+        ] = f"azureml:model_monitor_compute_histogram:{asset_version}"
         component["jobs"]["evaluate_metric_thresholds"][
             "component"
         ] = f"azureml:model_monitor_evaluate_metrics_threshold:{asset_version}"
@@ -462,12 +471,62 @@ def publish_model_performance_model_monitor_component(
         print(f"Successfully published {component['name']}.")
 
 
+def format_component_name(component_name, asset_version):
+    """Format the component name as an azureml asset."""
+    return f"azureml:{component_name}:{asset_version}"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def publish_generation_safety_signal_monitor_component(
+    main_worker_lock,
+    publish_command_components,
+    model_monitoring_components,
+    root_temporary_directory,
+    asset_version,
+    ml_client,
+):
+    """Publish the data drift model monitor pipeline component to the test workspace."""
+    if not _is_main_worker(main_worker_lock):
+        return
+
+    print_header("Publishing Generation Safety Signal Monitor")
+    out_directory = os.path.join(root_temporary_directory, "command_components")
+    os.makedirs(out_directory, exist_ok=True)
+
+    for component in model_monitoring_components:
+        if component["name"] != "generation_safety_quality_signal_monitor":
+            continue
+        print(f"Publishing {component['name']}..")
+        jobs = component["jobs"]
+        jobs["compute_metrics"]["component"] = format_component_name(
+            "gsq_annotation_compute_metrics", asset_version
+        )
+        jobs["compute_histogram"]["component"] = format_component_name(
+            "gsq_annotation_compute_histogram", asset_version
+        )
+        jobs["output_signal_metrics"]["component"] = format_component_name(
+            "model_monitor_metric_outputter", asset_version
+        )
+        jobs["evaluate_metric_thresholds"][
+            "component"
+        ] = format_component_name("model_monitor_evaluate_metrics_threshold",
+                                  asset_version)
+        component["version"] = asset_version
+        spec_path = os.path.join(
+            out_directory, f"{component['name']}-{generate_random_filename('yaml')}"
+        )
+        write_to_yaml(spec_path, component)
+        ml_client.components.create_or_update(load_component(spec_path))
+        print(f"Successfully published {component['name']}.")
+
+
 @pytest.fixture(scope="session", autouse=True)
 def release_lock(
     publish_data_quality_model_monitor_component,
     publish_prediction_drift_model_monitor_component,
     publish_data_drift_model_monitor_component,
     publish_feature_attr_drift_signal_monitor_component,
+    publish_generation_safety_signal_monitor_component,
     publish_command_components,
     publish_model_performance_model_monitor_component,
     main_worker_lock,

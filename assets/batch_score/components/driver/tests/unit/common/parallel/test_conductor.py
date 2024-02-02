@@ -7,10 +7,12 @@ import asyncio
 import os
 
 import pytest
+from mock import MagicMock, patch
 
 from src.batch_score.common.parallel.conductor import Conductor
 from src.batch_score.common.scoring.scoring_request import ScoringRequest
 from src.batch_score.common.scoring.scoring_result import ScoringResult
+from src.batch_score.common.telemetry.events import event_utils
 
 
 @pytest.mark.asyncio
@@ -68,6 +70,34 @@ async def test_run_returns_same_number_of_results_as_requests(
 
     results3 = await conductor.run(requests=requests3)
     assert len(results3) == len(requests3)
+
+
+def test_enqueue_empty_minibatch_generate_minibatch_summary(
+    make_conductor,
+    mock_get_logger,
+    mock_get_events_client,
+    monkeypatch,
+):
+    """Test enqueue empty minibatch generate minibatch summary."""
+    # Arrange
+    conductor: Conductor = make_conductor(async_mode=True)
+
+    mini_batch_context = MagicMock()
+    mini_batch_context.minibatch_index = 1
+
+    # Act
+    with patch.object(event_utils, 'generate_minibatch_summary') as mock_generate_minibatch_summary:
+        conductor.enqueue(
+            requests=[],
+            failed_results=[],
+            mini_batch_context=mini_batch_context,
+        )
+
+    # Assert
+    mock_generate_minibatch_summary.assert_called_once_with(
+        minibatch_id=1,
+        output_row_count=0,
+    )
 
 
 @pytest.mark.parametrize("segment_large_requests, max_retry_time_interval",

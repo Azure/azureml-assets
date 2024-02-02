@@ -56,7 +56,7 @@ from peft import (
 )
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.model_converter.model_converter")
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.model_converter.model_converter")
 
 COMPONENT_NAME = "ACFT-Model_converter"
 

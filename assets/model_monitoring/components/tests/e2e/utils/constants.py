@@ -20,7 +20,7 @@ COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR = "model_performance_signal_moni
 # Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
 DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT = "azureml:uri_folder_iris_model_inputs_with_drift:1"
 # TODO generate this data asset in the gated test workspace
-DATA_ASSET_LLM_INPUTS = "azureml:ChatHistoryModelInput:1"
+DATA_ASSET_LLM_INPUTS = "azureml:uri_folder_llm_model_inputs:1"
 
 
 # MDC-generated target dataset of an iris model. The data contains no drift.
@@ -89,6 +89,13 @@ DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE = (
     "azureml:mltable_iris_baseline_data_type_override:1"
 )
 
+DATA_ASSET_WITH_TIMESTAMP_BASELINE_DATA = (
+    "azureml:mltable_test_with_timestamp_baseline_data:1"
+)
+DATA_ASSET_WITH_TIMESTAMP_PRODUCTION_DATA = (
+    "azureml:mltable_test_with_timestamp_production_data:1"
+)
+
 # used for checking against histogram regressions where a numerical data-column has a single distinct value
 DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM = (
     "azureml:mltable_iris_preprocessed_model_inputs_int_single_value_histogram:1"
@@ -106,7 +113,7 @@ DATA_ASSET_IRIS_MODEL_INPUTS_OUTPUTS_WITH_NO_DRIFT = (
 DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME = 'model_inputs_join_column'
 DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME = 'model_outputs_join_column'
 # Groundedness target dataset as a MLTable.
-DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = 'azureml:groundedness_preprocess_target_small:1'
+DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = 'azureml:mltable_groundedness_preprocessed_target_small:1'
 
 # For Data Quality with timestamp and boolean type in the MLTable
 DATA_ASSET_VALID_DATATYPE = 'azureml:mltable_validate_datatype_for_data_quality:1'

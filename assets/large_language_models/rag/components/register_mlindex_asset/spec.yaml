@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.49
+version: 0.0.50
 name: llm_rag_register_mlindex_asset
 display_name: LLM - Register Vector Index Asset
 is_deterministic: true
@@ -31,6 +31,6 @@ environment: azureml:llm-rag-embeddings@latest
 code: '../src'
 command: >-
   python -m azureml.rag.tasks.register_mlindex
-  --storage-uri ${{inputs.storage_uri}}
-  $[[--asset-name ${{inputs.asset_name}}]]
+  --storage-uri '${{inputs.storage_uri}}'
+  $[[--asset-name '${{inputs.asset_name}}']]
   --output-asset-id ${{outputs.asset_id}}

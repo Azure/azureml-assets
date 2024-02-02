@@ -26,7 +26,7 @@ from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from finetune_config import FinetuneConfig
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.model_selector.model_selector")
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.model_selector.model_selector")
 
 COMPONENT_NAME = "ACFT-Model_import"
 

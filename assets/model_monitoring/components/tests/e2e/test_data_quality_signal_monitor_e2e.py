@@ -14,7 +14,9 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
     DATA_ASSET_VALID_DATATYPE,
     DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE,
+    DATA_ASSET_WITH_TIMESTAMP_BASELINE_DATA,
+    DATA_ASSET_WITH_TIMESTAMP_PRODUCTION_DATA
 )
 
 
@@ -54,7 +56,7 @@ def _submit_data_quality_signal_monitor_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+        pipeline_job, experiment_name=experiment_name, skip_validation=True
     )
 
     # Wait until the job completes
@@ -103,6 +105,23 @@ class TestDataQualityModelMonitor:
             "3",
             "sepal_width",
             "petal_length"
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    def test_monitoring_run_successful_with_timestamp_data(
+        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+    ):
+        """Test the happy path scenario with timestamp data."""
+        pipeline_job = _submit_data_quality_signal_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_WITH_TIMESTAMP_BASELINE_DATA,
+            DATA_ASSET_WITH_TIMESTAMP_PRODUCTION_DATA,
+            "DEFAULT_NEXT_MONTH",
+            "TopNByAttribution",
+            "3"
         )
 
         assert pipeline_job.status == "Completed"

@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.1
+version: 0.0.2
 name: finetune_common_validation
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
@@ -22,22 +22,27 @@ inputs:
 
   # ###################################### Data validation ###################################### #
   # component input: training mltable
-  training_data:
+  train_mltable_path:
     type: mltable
     optional: false
     description: Path to the mltable of the training dataset.
 
   # optional component input: validation mltable
-  validation_data:
+  validation_mltable_path:
     type: mltable
     optional: true
     description: Path to the mltable of the validation dataset.
 
   # component input: test mltable
-  test_data:
+  test_mltable_path:
     type: mltable
     optional: true
     description: Path to the mltable of the test dataset.
+
+  user_column_names:
+    type: string
+    optional: true
+    description: Comma separated list of column names to be used for training.
 
   # ###################################### Compute validation ###################################### #
   compute_preprocess:
@@ -130,12 +135,6 @@ inputs:
     optional: true
     description: Label column name in provided test dataset, for example "label".
 
-  input_column_names:
-    type: string
-    default: image_url
-    optional: true
-    description: Input column names in provided test dataset, for example column1. Add comma delimited values in case of multiple input columns, for example column1,column2.
-
   device:
     type: string
     optional: False
@@ -159,7 +158,7 @@ inputs:
   task_specific_extra_params:
     type: string
     optional: true
-    description: All extra params
+    description: All extra params. The values should be key values pairs separated by semi-colon. For example "param1=value1;param2=value2"
 
 outputs:
   validation_info:
