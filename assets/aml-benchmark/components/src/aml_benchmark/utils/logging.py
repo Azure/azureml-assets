@@ -50,10 +50,10 @@ import traceback
 
 class BufferStore:
     # create a maximum 10000 lines deque to store the logs
-    _data = deque(maxlen=10000)
+    _data : "deque[str]" = deque(maxlen=10000)
 
     @classmethod
-    def push_data(cls, value):
+    def push_data(cls, value: str):
         """Append a string to the list of strings stored under the given key."""
         cls._data.append(value)
 
@@ -65,7 +65,7 @@ class BufferStore:
     @classmethod
     def get_all_data(cls):
         """Return all the data stored."""
-        return '\n'.join(cls._data)
+        return "\n".join(cls._data)
     
 
 # implement a logging handler that appends to the BufferStore
@@ -91,7 +91,7 @@ def get_logger(filename: str) -> logging.Logger:
     logger.handlers = []  # Clear existing handlers to avoid duplicates
 
     formatter = logging.Formatter(
-        "[%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
+        "SystemLog: [%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
     )
 
     # Create a StreamHandler for stdout
