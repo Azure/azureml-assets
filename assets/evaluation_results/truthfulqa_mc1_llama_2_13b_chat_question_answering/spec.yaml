@@ -1,0 +1,32 @@
+type: evaluationresult
+name: truthfulqa_mc1_llama_2_13b_chat_question_answering
+version: 1.0.2
+display_name: truthfulqa_mc1_llama_2_13b_chat_question_answering
+description: llama-2-13b-chat run for truthfulqa mc1 dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_mc1
+
+model_name: llama-2-13b-chat
+model_version: "14"
+model_asset_id: azureml://registries/azureml-meta/models/Llama-2-13b-chat/versions/14
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-meta/models/Llama-2-13b-chat/versions/14
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.364
+
+path: ./job_files
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

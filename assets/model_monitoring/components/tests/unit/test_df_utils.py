@@ -8,16 +8,18 @@ from pyspark.sql.types import (
     StructField,
     StructType)
 from pyspark.sql import SparkSession
-from shared_utilities.df_utils import (
-        get_common_columns,
-        get_feature_type_override_map,
-        is_numerical,
-        is_categorical,
-        get_numerical_cols_with_df_with_override,
-        get_categorical_cols_with_df_with_override,
-        get_numerical_and_categorical_cols,
-        modify_categorical_columns
-    )
+from src.shared_utilities.df_utils import (
+    get_common_columns,
+    try_get_common_columns_with_error,
+    try_get_common_columns,
+    get_feature_type_override_map,
+    is_numerical,
+    is_categorical,
+    get_numerical_cols_with_df_with_override,
+    get_categorical_cols_with_df_with_override,
+    get_numerical_and_categorical_cols,
+    modify_categorical_columns
+)
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp
 import pandas as pd
@@ -366,3 +368,83 @@ class TestDFUtils:
         """Get or create spark session."""
         spark = SparkSession.builder.appName("test").getOrCreate()
         return spark
+
+    def test_try_get_common_columns_error(self):
+        """Test scenarios for common_columns with error."""
+        # Test with two empty dataframes
+        spark = SparkSession.builder.appName("test").getOrCreate()
+        emp_RDD = spark.sparkContext.emptyRDD()
+        # Create empty schema
+        columns = StructType([])
+
+        # Create an empty RDD with empty schema
+        baseline_df = create_pyspark_dataframe(emp_RDD, columns)
+        production_df = create_pyspark_dataframe(emp_RDD, columns)
+        with pytest.raises(Exception) as ex:
+            try_get_common_columns_with_error(baseline_df, production_df)
+        assert "Found no common columns between input datasets." in str(ex.value)
+
+        # Test with two dataframes that have common columns but datatype is not in the same type
+        float_data = [(3.55,), (6.88,), (7.99,)]
+        schema = StructType([
+            StructField("target", FloatType(), True)])
+        baseline_df = create_pyspark_dataframe(float_data, schema)
+        double_data = [(3.55,), (6.88,), (7.99,)]
+        schema = StructType([
+            StructField("target", DoubleType(), True)])
+        production_df = create_pyspark_dataframe(double_data, schema)
+        assert try_get_common_columns_with_error(baseline_df, production_df) == {'target': 'double'}
+
+        # Test with two dataframes that have no common columns
+        baseline_df = create_pyspark_dataframe([(1, "a"), (2, "b")],
+                                               ["id", "name"])
+        production_df = create_pyspark_dataframe([(3, "c"), (4, "d")],
+                                                 ["age", "gender"])
+        with pytest.raises(Exception) as ex:
+            try_get_common_columns_with_error(baseline_df, production_df)
+        assert "Found no common columns between input datasets." in str(ex.value)
+
+        # Test with two dataframes that have different Types in common columns
+        baseline_df = create_pyspark_dataframe([(1.0, "a", 10), (2.0, "b", 20)],
+                                               ["id", "name", "age"])
+        production_df = create_pyspark_dataframe([(1, "c", 30), (2, "d", 40)],
+                                                 ["id", "name", "age"])
+        assert try_get_common_columns_with_error(baseline_df, production_df) == {"name": "string", "age": "bigint"}
+
+    def test_try_get_common_columns_ignore(self):
+        """Test scenarios for common columns with ignore."""
+        # Test with two empty dataframes
+        spark = SparkSession.builder.appName("test").getOrCreate()
+        emp_RDD = spark.sparkContext.emptyRDD()
+        # Create empty schema
+        columns = StructType([])
+
+        # Create an empty RDD with empty schema
+        baseline_df = create_pyspark_dataframe(emp_RDD, columns)
+        production_df = create_pyspark_dataframe(emp_RDD, columns)
+        assert try_get_common_columns(baseline_df, production_df) == {}
+
+        # Test with two dataframes that have common columns but datatype is not in the same type
+        float_data = [(3.55,), (6.88,), (7.99,)]
+        schema = StructType([
+            StructField("target", FloatType(), True)])
+        baseline_df = create_pyspark_dataframe(float_data, schema)
+        double_data = [(3.55,), (6.88,), (7.99,)]
+        schema = StructType([
+            StructField("target", DoubleType(), True)])
+        production_df = create_pyspark_dataframe(double_data, schema)
+        assert try_get_common_columns(baseline_df, production_df) == {'target': 'double'}
+
+        # Test with two dataframes that have no common columns
+        baseline_df = create_pyspark_dataframe([(1, "a"), (2, "b")],
+                                               ["id", "name"])
+        production_df = create_pyspark_dataframe([(3, "c"), (4, "d")],
+                                                 ["age", "gender"])
+        assert try_get_common_columns(baseline_df, production_df) == {}
+
+        # Test with two dataframes that have different Types in common columns
+        baseline_df = create_pyspark_dataframe([(1.0, "a", 10), (2.0, "b", 20)],
+                                               ["id", "name", "age"])
+        production_df = create_pyspark_dataframe([(1, "c", 30), (2, "d", 40)],
+                                                 ["id", "name", "age"])
+        assert try_get_common_columns(baseline_df, production_df) == {"name": "string", "age": "bigint"}

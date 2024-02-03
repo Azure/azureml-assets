@@ -3,7 +3,11 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.16.33 (2023-01-222)
+## 1.16.34 (2023-01-29)
+### 🐛 Bugs Fixed
+- [#2196](https://github.com/Azure/azureml-assets/pull/2196) Allow evaluation results to have names similar to models 
+
+## 1.16.33 (2023-01-22)
 ### 🐛 Bugs Fixed
 - [#2161](https://github.com/Azure/azureml-assets/pull/2161) Fix credential not found issue for asset validation 
 

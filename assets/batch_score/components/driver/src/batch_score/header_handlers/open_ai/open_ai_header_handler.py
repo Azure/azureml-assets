@@ -13,14 +13,22 @@ from ..header_handler import HeaderHandler
 class OpenAIHeaderHandler(HeaderHandler):
     """OpenAI header handler."""
 
-    def __init__(self,
-                 token_provider: TokenProvider,
-                 user_agent_segment: str = None,
-                 batch_pool: str = None,
-                 quota_audience: str = None,
-                 additional_headers: str = None) -> None:
-        """Init function."""
-        super().__init__(token_provider, user_agent_segment, batch_pool, quota_audience, additional_headers)
+    def __init__(
+            self,
+            token_provider: TokenProvider,
+            component_version: str = None,
+            user_agent_segment: str = None,
+            batch_pool: str = None,
+            quota_audience: str = None,
+            additional_headers: str = None) -> None:
+        """Initialize OpenAIHeaderHandler."""
+        super().__init__(
+            token_provider,
+            component_version,
+            user_agent_segment,
+            batch_pool,
+            quota_audience,
+            additional_headers)
         if batch_pool is not None:
             self.__set_default_additional_headers()
 

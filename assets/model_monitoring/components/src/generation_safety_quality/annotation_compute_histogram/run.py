@@ -41,6 +41,8 @@ logging.basicConfig(level=logging.INFO)
 
 DEFAULT_INDENT = 2
 
+TEST_CONNECTION = "test_connection"
+
 RATING = "rating"
 INDEX = "index"
 LABEL_KEYS = [RATING]
@@ -1307,6 +1309,26 @@ def _parse_responses(
         job.response_data["index_mapping"] = index_mapping
 
 
+def _get_model_type(token_manager, get_model_endpoint):
+    try:
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": token_manager.get_token()
+        }
+        response = requests.get(url=get_model_endpoint, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
+        if response.status_code == 200:
+            response_data = response.json()
+            model_type = response_data["model"]
+        else:
+            raise Exception(
+                "Received unexpected HTTP status: "
+                f"{response.status_code} {response.text}"
+            )
+    except Exception:
+        raise Exception("Error encountered while attempting to get model type")
+    return model_type
+
+
 class _JobManager:
     """Handles batching and job state management."""
 
@@ -1350,9 +1372,18 @@ class _JobManager:
         )
         print(f"Generated prompts: \n{prompts_to_print}\n")
 
-        _request_prompt_batch(
-            jobs=jobs, token_manager=token_manager, **endpoint_args
-        )
+        if token_manager is None:
+            # Dummy responses for e2e testing
+            for job in jobs:
+                job.response_data = {
+                    "output_examples": [[{RATING: 0}] * num_samples],
+                    "index_mapping": list(range(num_samples))
+                }
+                job.status = _JobStatus.SUCCESS
+        else:
+            _request_prompt_batch(
+                jobs=jobs, token_manager=token_manager, **endpoint_args
+            )
 
         responses_to_print = "\n".join(
             [f"    Response: {job.response_data}" for job in jobs]
@@ -1360,8 +1391,9 @@ class _JobManager:
         print(f"Received responses from annotation: \n{responses_to_print}\n")
 
         # Parse responses for this batch of jobs
-        for job in jobs:
-            _parse_responses(job, num_samples)
+        if token_manager is not None:
+            for job in jobs:
+                _parse_responses(job, num_samples)
 
         # TODO handle errors and attempt retries
         job_results = [
@@ -1540,7 +1572,7 @@ def apply_annotation(
         raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
                                   "column. ")
 
-    production_df = io_utils.try_read_mltable_in_spark_with_error(production_dataset)
+    production_df = io_utils.try_read_mltable_in_spark_with_error(production_dataset, "production_dataset")
     # Ensure input data has the correct columns given the metrics
     # Question, answer required for coherence and fluency
     qa_required = len(list(set(QA_METRIC_NAMES).intersection(
@@ -1622,49 +1654,46 @@ def apply_annotation(
             "TID",
         ]
     }
-    try:
-        # Define authorization token manager
-        token_manager_class = _WorkspaceConnectionTokenManager
+    is_test_connection = False
+    if workspace_connection_arm_id == TEST_CONNECTION:
+        # Used for testing component e2e without consuming OpenAI endpoint
+        endpoint_domain_name = TEST_CONNECTION
+        api_version = "2023-07-01-preview"
+        is_test_connection = True
+        token_manager = None
+    else:
+        try:
+            # Define authorization token manager
+            token_manager_class = _WorkspaceConnectionTokenManager
 
-        token_manager = token_manager_class(
-            connection_name=workspace_connection_arm_id,
-            auth_header=API_KEY
+            token_manager = token_manager_class(
+                connection_name=workspace_connection_arm_id,
+                auth_header=API_KEY
+            )
+        except Exception as e:
+            print(f"Unable to process request: {e}")
+            return
+
+        endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
+        api_version = token_manager.get_api_version()
+
+        print(
+            "Created token manager for auth type "
+            f"managed identity using auth header {API_KEY}."
         )
-    except Exception as e:
-        print(f"Unable to process request: {e}")
-        return
-
-    endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
-    api_version = token_manager.get_api_version()
-
-    print(
-        "Created token manager for auth type "
-        f"managed identity using auth header {API_KEY}."
-    )
     endpoint_args["azure_endpoint_domain_name"] = endpoint_domain_name
     endpoint_args["azure_openai_api_version"] = api_version
 
-    # use fixed API version since newer versions aren't supported
-    get_model_endpoint = _check_and_format_azure_endpoint_url(AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
-                                                              AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-                                                              endpoint_domain_name, "2022-12-01",
-                                                              model_deployment_name)
-    try:
-        headers = {
-            "Content-Type": "application/json",
-            "api-key": token_manager.get_token()
-        }
-        response = requests.get(url=get_model_endpoint, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
-        if response.status_code == 200:
-            response_data = response.json()
-            model_type = response_data["model"]
-        else:
-            raise Exception(
-                "Received unexpected HTTP status: "
-                f"{response.status_code} {response.text}"
-            )
-    except Exception:
-        raise Exception("Error encountered while attempting to get model type")
+    if is_test_connection:
+        model_type = GPT_4
+    else:
+        # use fixed API version since newer versions aren't supported
+        get_model_endpoint = _check_and_format_azure_endpoint_url(
+            AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
+            AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
+            endpoint_domain_name, "2022-12-01",
+            model_deployment_name)
+        model_type = _get_model_type(token_manager, get_model_endpoint)
 
     request_args["max_tokens"] = BASE_MAX_TOKENS * MODEL_TYPE_FACTOR[model_type]
     max_inputs = BASE_MAX_INPUTS * MODEL_TYPE_FACTOR[model_type]
