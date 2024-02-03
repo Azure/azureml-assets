@@ -17,7 +17,7 @@ description: |
 inputs:
   embeddings_model:
     type: string
-    optional: true
+    optional: false
     description: The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2'
       or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'
   embeddings_connection:
@@ -39,7 +39,7 @@ inputs:
     optional: true
   acs_config:
     type: string
-    optional: false
+    optional: true
     description: 'JSON string containing the ACS configuration. e.g. {"index_name":
       "my-index"}'
   index_connection:
