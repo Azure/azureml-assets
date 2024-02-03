@@ -121,7 +121,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: "azureml:llm_rag_generate_embeddings:0.0.46"
+    component: "azureml:llm_rag_generate_embeddings:0.0.47"
     inputs:
       chunks_source:
         type: uri_folder
@@ -173,7 +173,7 @@ jobs:
         path: ${{parent.inputs.acs_config}}
     outputs:
       index: ${{parent.outputs.grounding_index}}
-    component: "azureml:llm_rag_update_acs_index:0.0.50"
+    component: "azureml:llm_rag_update_acs_index:0.0.51"
     type: command
   register_mlindex_asset_job:
     resources:
@@ -190,7 +190,7 @@ jobs:
     outputs:
       asset_id:
         type: uri_file
-    component: "azureml:llm_rag_register_mlindex_asset:0.0.50"
+    component: "azureml:llm_rag_register_mlindex_asset:0.0.51"
     type: command
   create_prompt_flow:
     environment_variables:
