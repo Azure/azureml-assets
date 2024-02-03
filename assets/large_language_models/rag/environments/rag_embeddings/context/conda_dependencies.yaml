@@ -21,7 +21,7 @@ dependencies:
     # Azure ML
   - azureml-contrib-services
   - azureml-core=={{latest-pypi-version}}
-  - azureml-dataprep>=4.12.7 # Change back to latest version once azureml-fsspec is compatible
+  - azureml-dataset-runtime=={{latest-pypi-version}}
   - azureml-inference-server-http==0.7.6
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
