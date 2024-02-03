@@ -18,7 +18,7 @@ dependencies:
   - azureml-contrib-services
   - azureml-core==1.54.0.post1
   - azureml-telemetry==1.54.0
-  - azureml-dataprep>=4.12.7 # Change back to latest version once azureml-fsspec is compatible
+  - azureml-dataset-runtime==1.54.0.post1
   - azureml-fsspec
   - azureml-inference-server-http==0.7.6
   - azureml-mlflow==1.54.0.post1
