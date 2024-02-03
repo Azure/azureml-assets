@@ -281,8 +281,8 @@ def main(args, ws, current_run, activity_logger: Logger):
     print(mlindex_asset_id)
     print(top_prompts)
 
-    with open(mlindex_asset_id, "r") as f:
-        mlindex_content = f.read()
+    with open(os.path.join(args.mlindex_asset_uri, "MLIndex"), "r", encoding="utf-8") as src:
+        mlindex_content = src.read()
 
     if isinstance(top_prompts, str):
         top_prompts = [top_prompts, top_prompts, top_prompts]
@@ -432,6 +432,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--best_prompts", type=str)
     parser.add_argument("--mlindex_asset_id", type=str)
+    parser.add_argument("--mlindex_asset_uri", type=str)
     parser.add_argument("--mlindex_name", type=str, required=False,
                         dest='mlindex_name', default='Baker_Example_With_Variants')
     parser.add_argument(

@@ -162,6 +162,7 @@ jobs:
     component: 'azureml:llm_rag_create_promptflow:0.0.62'
     inputs:
       mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
+      mlindex_asset_uri: ${{parent.jobs.create_acs_index_job.outputs.index}}
       mlindex_name: ${{parent.inputs.embeddings_dataset_name}}
       llm_connection_name: ${{parent.inputs.llm_connection}}
       llm_config: ${{parent.inputs.llm_config}}

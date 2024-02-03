@@ -19,11 +19,16 @@ inputs:
     description: "JSON file containing prompt options to create variants from. Must either have single key of 'best_prompt' with a value of a list of prompt strings or have best prompts specific to certain metrics."
   mlindex_asset_id:
     type: uri_file
+    mode: ro_mount
     description: "Asset ID for MLIndex file that contains information about index to use for document lookup in promptflow"
   mlindex_name:
     type: string
     optional: true
     description: "Name of the MLIndex asset"
+  mlindex_asset_uri:
+    type: uri_folder
+    mode: direct
+    description: Folder containing MLIndex to use in the generated flow.
   llm_connection_name:
     type: string
     optional: true
@@ -47,6 +52,7 @@ code: '../src'
 command: >-
   python flow_creation.py
   --mlindex_asset_id '${{inputs.mlindex_asset_id}}'
+  --mlindex_asset_uri '${{inputs.mlindex_asset_uri}}'
   $[[--best_prompts '${{inputs.best_prompts}}']]
   $[[--mlindex_name '${{inputs.mlindex_name}}']]
   $[[--llm_connection_name '${{inputs.llm_connection_name}}']]
