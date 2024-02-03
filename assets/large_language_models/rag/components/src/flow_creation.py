@@ -470,6 +470,7 @@ def main(args, ws, current_run, activity_logger: Logger):
             f"[Promptflow Creation]: Flow creation failed with Response Code: {response.status_code},"
             + f" response:{response.text}."
         )
+        raise Exception("flowResourceId is missing in the flow creation response.")
     else:
         flow_id = pf_response_json["flowResourceId"]
         activity_logger.info(
