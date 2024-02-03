@@ -8,33 +8,24 @@ outputs:
     reference: ${answer_the_question_with_context.output}
     evaluation_only: false
 nodes:
-- name: embed_the_question
+- name: lookup_question_from_indexed_docs
   type: python
   source:
     type: package
-    tool: promptflow.tools.embedding.embedding
+    tool: promptflow_vectordb.tool.common_index_lookup.search
   inputs:
-    connection: @@Embedding_Connection
-    deployment_name: @@Embedding_Deployment_Name
-    input: ${flow.question}
-  aggregation: false
-- name: search_question_from_indexed_docs
-  type: python
-  source:
-    type: package
-    tool: promptflow_vectordb.tool.vector_index_lookup.VectorIndexLookup.search
-  inputs:
-    path: @@MLIndex_Asset_Id
-    query: ${embed_the_question.output}
+    mlindex_content: >
+@@MLIndex_Content
+    queries: ${flow.question}
+    query_type: Vector
     top_k: 2
-  aggregation: false
 - name: generate_prompt_context
   type: python
   source:
     type: code
     path: generate_prompt_context.py
   inputs:
-    search_result: ${search_question_from_indexed_docs.output}
+    search_result: ${lookup_question_from_indexed_docs.output}
   aggregation: false
 - name: Prompt_variants
   use_variants: true
