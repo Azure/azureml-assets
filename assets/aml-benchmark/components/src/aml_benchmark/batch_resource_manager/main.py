@@ -29,6 +29,8 @@ from azureml._restclient.constants import RunStatus
 
 logger = get_logger(__name__)
 
+# TODO: check back here if there is a way to have a published contract supporitng this
+_FINAL_STATUSES = { RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELED }
 
 def parse_args() -> argparse.Namespace:
     """Parse the args for the method."""
@@ -311,21 +313,24 @@ def deploy_model_in_list_maybe(
 def _wait_finetuned_step(finetuned_step_name: Optional[str]) -> None:
     """Wait for finetuned step to finish."""
     finetuned_step_name = finetuned_step_name if finetuned_step_name else "openai_completions_finetune_pipeline"
-    running_states = RunStatus.get_running_statuses()
+    
     wait_step_run = get_dependent_run(finetuned_step_name)
-    logger.info(f"wait_step_run status is {wait_step_run.get_status() if wait_step_run else 'wait_step_run==None'}.")
-    while wait_step_run and wait_step_run.get_status() in running_states:
-        logger.info("Waiting for finetuned step to finish. Current status is %s.", wait_step_run.get_status())
-        time.sleep(60)
-    if not wait_step_run or wait_step_run.get_status() != RunStatus.COMPLETED:
-        if not wait_step_run:
-            logger.error(f"Finetuned wait step {finetuned_step_name} is not found.")
-        else:
-            logger.error(f"Finetuned wait step {finetuned_step_name} is failed, status: %s.", wait_step_run.get_status())
+    if wait_step_run is None:
         raise BenchmarkUserException._with_error(
             AzureMLError.create(
                 BenchmarkUserError,
-                error_details=f"Finetuned wait step {finetuned_step_name} is failed. Or wait step not found.")
+                error_details=f"Finetuned wait step {finetuned_step_name} not found in the current job, check spelling.")
+            )
+    # TODO: this needs a timeout    
+    while (wait_step_status:=wait_step_run.get_status()) not in _FINAL_STATUSES:
+        logger.info("Waiting for finetuned step to finish. Current status is %s.", wait_step_status)
+        time.sleep(60)
+    if wait_step_status != RunStatus.COMPLETED:
+        logger.error(f"Finetuned wait step {finetuned_step_name} is not COMPLETED, status: %s.", wait_step_run.get_status())
+        raise BenchmarkUserException._with_error(
+            AzureMLError.create(
+                BenchmarkUserError,
+                error_details=f"Finetuned wait step {finetuned_step_name} is not successful, status: {wait_step_status}.")
             )
 
 
