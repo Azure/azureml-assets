@@ -52,6 +52,6 @@ command: >-
   $[[--embeddings_connection_id ${{inputs.embeddings_connection}}]]
   $[[--llm_config '${{inputs.llm_config}}']]
   $[[--llm_connection_id ${{inputs.llm_connection}}]]
-  $[--index_config '${{inputs.acs_config}}']]
+  $[[--index_config '${{inputs.acs_config}}']]
   $[[--index_connection_id ${{inputs.index_connection}}]]
   --output_data ${{outputs.output_data}}
