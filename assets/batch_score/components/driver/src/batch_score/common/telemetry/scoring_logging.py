@@ -6,6 +6,7 @@
 
 """Scoring logging helpers."""
 
+import aiohttp
 from abc import abstractmethod
 
 from .logging_utils import get_logger
@@ -14,10 +15,11 @@ from .logging_utils import get_logger
 class BaseLog:
     """Base log."""
 
-    def __init__(self, internal_id, x_ms_client_request_id) -> None:
-        """Init function."""
+    def __init__(self, internal_id, x_ms_client_request_id, scoring_url) -> None:
+        """Initialize BaseLog."""
         self.internal_id = internal_id
         self.x_ms_client_request_id = x_ms_client_request_id
+        self.scoring_url = scoring_url
 
     @abstractmethod
     def log(self):
@@ -31,20 +33,20 @@ class ScoreStartLog(BaseLog):
     def __init__(self,
                  internal_id,
                  x_ms_client_request_id,
-                 timestamp,
                  scoring_url,
+                 timeout: aiohttp.ClientTimeout
                  ) -> None:
-        """Init function."""
-        super().__init__(internal_id, x_ms_client_request_id)
-        self.timestamp = timestamp
-        self.scoring_url = scoring_url
+        """Initialize ScoreStartLog."""
+        super().__init__(internal_id, x_ms_client_request_id, scoring_url)
+        self._timeout = -1
+        if timeout is not None:
+            self._timeout = timeout.total
 
     def log(self):
         """Log function."""
-        msg = "Score start: url={} internal_id={} x-ms-client-request-id=[{}]"
-        get_logger().info(msg.format(self.scoring_url,
-                                     self.internal_id,
-                                     self.x_ms_client_request_id))
+        get_logger().info(f"Score start: url={self.scoring_url} internal_id={self.internal_id} "
+                          f"x-ms-client-request-id=[{self.x_ms_client_request_id}] "
+                          f"timeout={self._timeout}")
 
 
 class ScoreFailedLog(BaseLog):
@@ -53,12 +55,13 @@ class ScoreFailedLog(BaseLog):
     def __init__(self,
                  internal_id,
                  x_ms_client_request_id,
+                 scoring_url,
                  status_code,
                  reason,
                  response_headers,
                  response_payload) -> None:
-        """Init function."""
-        super().__init__(internal_id, x_ms_client_request_id)
+        """Initialize ScoreFailedLog."""
+        super().__init__(internal_id, x_ms_client_request_id, scoring_url)
         self.status_code = status_code
         self.reason = reason
         self.response_headers = response_headers
@@ -67,8 +70,9 @@ class ScoreFailedLog(BaseLog):
     def log(self):
         """Log function."""
         get_logger().error(f"Score failed: status_code={self.status_code}, reason={self.reason} "
-                           + f"response_headers={self.response_headers} response_payload={self.response_payload} "
-                           + f"internal_id={self.internal_id} x-ms-client-request-id=[{self.x_ms_client_request_id}]")
+                           f"response_headers={self.response_headers} response_payload={self.response_payload} "
+                           f"url={self.scoring_url} internal_id={self.internal_id} "
+                           f"x-ms-client-request-id=[{self.x_ms_client_request_id}]")
 
 
 class ScoreFailedWithExceptionLog(BaseLog):
@@ -77,12 +81,13 @@ class ScoreFailedWithExceptionLog(BaseLog):
     def __init__(self,
                  internal_id,
                  x_ms_client_request_id,
+                 scoring_url,
                  exception_type,
                  exception,
                  unhandled_exc=False
                  ) -> None:
-        """Init function."""
-        super().__init__(internal_id, x_ms_client_request_id)
+        """Initialize ScoreFailedWithExceptionLog."""
+        super().__init__(internal_id, x_ms_client_request_id, scoring_url)
         self.exception_type = exception_type
         self.exception = exception
         self.unhandled_exc = unhandled_exc
@@ -90,19 +95,20 @@ class ScoreFailedWithExceptionLog(BaseLog):
     def log(self):
         """Log function."""
         get_logger().error(f"Score failed with exception: unhandled_exception={self.unhandled_exc} "
-                           + f"exception_type={self.exception_type}, exception={self.exception} "
-                           + f"internal_id={self.internal_id} x-ms-client-request-id=[{self.x_ms_client_request_id}]")
+                           f"exception_type={self.exception_type}, exception={self.exception} "
+                           f"url={self.scoring_url} internal_id={self.internal_id} "
+                           f"x-ms-client-request-id=[{self.x_ms_client_request_id}]")
 
 
 class ScoreSucceedLog(BaseLog):
     """Log a message for score succeed."""
 
-    def __init__(self, internal_id, x_ms_client_request_id, duration) -> None:
-        """Init function."""
-        super().__init__(internal_id, x_ms_client_request_id)
+    def __init__(self, internal_id, x_ms_client_request_id, scoring_url, duration) -> None:
+        """Initialize ScoreSucceedLog."""
+        super().__init__(internal_id, x_ms_client_request_id, scoring_url)
         self.duration = duration
 
     def log(self):
         """Log function."""
-        msg = "Score succeeded after {:.3f}s: internal_id={} x-ms-client-request-id=[{}]"
-        get_logger().info(msg.format(self.duration, self.internal_id, self.x_ms_client_request_id))
+        get_logger().info(f"Score succeeded after {self.duration:.3f}s: url={self.scoring_url} "
+                          f"internal_id={self.internal_id} x-ms-client-request-id=[{self.x_ms_client_request_id}]")

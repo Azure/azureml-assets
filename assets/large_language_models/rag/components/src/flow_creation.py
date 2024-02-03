@@ -6,6 +6,7 @@ import errno
 import json
 import os
 import time
+import textwrap
 import traceback
 import uuid
 from logging import Logger
@@ -308,6 +309,9 @@ def main(args, ws, current_run, activity_logger: Logger):
     print(mlindex_asset_id)
     print(top_prompts)
 
+    with open(os.path.join(args.mlindex_asset_uri, "MLIndex"), "r", encoding="utf-8") as src:
+        mlindex_content = src.read()
+
     if isinstance(top_prompts, str):
         top_prompts = [top_prompts, top_prompts, top_prompts]
 
@@ -345,8 +349,9 @@ def main(args, ws, current_run, activity_logger: Logger):
         "@@Completion_Provider", completion_provider
     )
     flow_with_variants = flow_with_variants.replace(
-        "@@MLIndex_Asset_Id", mlindex_asset_id
-    )
+        "@@MLIndex_Asset_Id", mlindex_asset_id)
+    flow_with_variants = flow_with_variants.replace(
+        "@@MLIndex_Content", textwrap.indent(mlindex_content, '      '))
 
     api_name = "chat" if completion_model_name.startswith("gpt-") else "completion"
     flow_with_variants = flow_with_variants.replace("@@API", api_name)
@@ -512,13 +517,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--best_prompts", type=str)
     parser.add_argument("--mlindex_asset_id", type=str)
-    parser.add_argument(
-        "--mlindex_name",
-        type=str,
-        required=False,
-        dest="mlindex_name",
-        default="Baker_Example_With_Variants",
-    )
+    parser.add_argument("--mlindex_asset_uri", type=str)
+    parser.add_argument("--mlindex_name", type=str, required=False,
+                        dest='mlindex_name', default='Baker_Example_With_Variants')
     parser.add_argument(
         "--llm_connection_name",
         type=str,

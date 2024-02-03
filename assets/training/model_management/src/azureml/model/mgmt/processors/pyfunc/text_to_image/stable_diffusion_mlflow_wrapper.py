@@ -7,7 +7,7 @@ Contains MLFlow pyfunc wrapper for stable diffusion models.
 Has methods to load the model and predict.
 """
 
-from diffusers import StableDiffusionPipeline
+from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline
 import mlflow
 import os
 import pandas as pd
@@ -59,6 +59,10 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
                 if self._model_family == SupportedTextToImageModelFamily.DECI_DIFFUSION.value:
                     self._pipe = StableDiffusionPipeline.from_pretrained(model_dir, custom_pipeline=model_dir)
                     self._pipe.unet = self._pipe.unet.from_pretrained(model_dir, subfolder='flexible_unet')
+                elif self._model_family == SupportedTextToImageModelFamily.STABLE_DIFFUSION_XL.value:
+                    self._pipe = StableDiffusionXLPipeline.from_pretrained(model_dir,
+                                                                           torch_dtype=torch.float16,
+                                                                           variant="fp16")
                 else:
                     self._pipe = StableDiffusionPipeline.from_pretrained(model_dir)
 
@@ -93,11 +97,15 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         for img in output.images:
             generated_images.append(image_to_base64(img, format=DatatypeLiterals.IMAGE_FORMAT))
 
+        nsfw_content = None
+        if hasattr(output, MLflowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG):
+            nsfw_content = output.nsfw_content_detected
+
         df = pd.DataFrame(
             {
                 MLflowSchemaLiterals.INPUT_COLUMN_PROMPT: text_prompts,
                 MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE: generated_images,
-                MLflowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG: output.nsfw_content_detected,
+                MLflowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG: nsfw_content,
             }
         )
 

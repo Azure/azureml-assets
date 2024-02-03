@@ -1,6 +1,6 @@
 type: evaluationresult
 name: piqa_llama_2_7b_chat_question_answering
-version: 1.0.1
+version: 1.0.2
 display_name: piqa_llama_2_7b_chat_question_answering
 description: llama-2-7b-chat run for piqa dataset
 dataset_family: piqa

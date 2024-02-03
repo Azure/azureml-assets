@@ -5,9 +5,11 @@
 
 import json
 import logging
-from contextvars import ContextVar
 
+from contextvars import ContextVar
 from opencensus.ext.azure.log_exporter import AzureEventHandler
+
+COMPONENT_NAME = "BatchScoreLlm"
 
 
 class EventsClient:
@@ -113,7 +115,7 @@ class AppInsightsEventsClient(EventsClient):
                  mini_batch_id: ContextVar,
                  quota_audience: ContextVar,
                  batch_pool: ContextVar):
-        """Init function."""
+        """Initialize AppInsightsEventsClient."""
         self.__custom_dimensions = custom_dimensions
         self.__worker_id = worker_id
         self.__mini_batch_id = mini_batch_id
