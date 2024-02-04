@@ -176,7 +176,7 @@ def run_humaneval_postprocessor(
         else:
             original_prediction = row["original_prediction"]
             # If spaces were stripped from endpoint responses, add those back.
-            if original_prediction.startswith(" ") or original_prediction.startswith("\t"):
+            if not len(original_prediction) or (len(original_prediction) and original_prediction[0].isspace()):
                 prefix = ""
             else:
                 prefix = "    "
