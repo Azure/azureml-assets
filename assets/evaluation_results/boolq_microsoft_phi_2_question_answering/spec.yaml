@@ -1,0 +1,32 @@
+type: evaluationresult
+name: boolq_microsoft_phi_2_question_answering
+version: 1.0.2
+display_name: boolq_microsoft_phi_2_question_answering
+description: microsoft-phi-2 run for boolq dataset
+dataset_family: boolq
+dataset_name: boolq
+
+model_name: microsoft-phi-2
+model_version: "5"
+model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.8079999999999999
+
+path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"

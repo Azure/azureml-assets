@@ -118,7 +118,7 @@ class TestStoreUrl:
             (
                 "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", None, "http",
+                "AzureBlob", "None", "http",
                 "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
                 "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 None,
