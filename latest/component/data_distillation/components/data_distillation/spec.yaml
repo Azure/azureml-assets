@@ -1,0 +1,72 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: data_distillation
+display_name: Data Distillation
+version: 0.0.1
+
+environment: azureml:distillation@latest
+
+code: ../../src/data_distillation/
+
+inputs:
+
+  # Distillation parameters
+  distillation_technique:
+    type: string
+    optional: false
+    enum:
+    - "Zero-Shot"
+    - "Chain-of-Density"
+    default: "Zero-Shot"
+    description: distillation technique
+
+  cod_steps:
+    type: integer
+    optional: false
+    default: 4
+    description: cod steps
+
+  # Task parameters
+  text_key:
+    type: string
+    optional: false
+    description: text key
+
+  # Dataset path parameters
+  train_file_path:
+    type: uri_file
+    optional: false
+    description: Path to the registered training data asset. The supported data formats
+      are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
+      ' are invalid in the parameter value.
+    mode: rw_mount
+
+  validation_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered validation data asset. The supported data
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters
+      like \ and ' are invalid in the parameter value.
+    mode: rw_mount
+
+outputs:
+  distilled_train_dataset:
+    type: uri_folder
+    description: Output folder containing distilled train.jsonl file.
+    mode: rw_mount
+  distilled_validation_dataset:
+    type: uri_folder
+    description: Output folder containing distilled validation.jsonl file.
+    mode: rw_mount
+  distilled_test_dataset:
+    type: uri_folder
+    description: Output folder containing distilled test.jsonl file.
+    mode: rw_mount
+
+command: >-
+  python data_distillation.py --text_key '${{inputs.text_key}}' --distillation_technique
+  '${{inputs.distillation_technique}}' --cod_steps '${{inputs.cod_steps}}' --train_file_path
+  '${{inputs.train_file_path}}' $[[--validation_file_path '${{inputs.validation_file_path}}']]
+  --distilled_train_dataset '${{outputs.distilled_train_dataset}}' --distilled_validation_dataset
+  '${{outputs.distilled_validation_dataset}}

@@ -1,0 +1,142 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+name: openai_distillation_finetune_pipeline
+version: 0.0.1
+type: pipeline
+display_name: OpenAI Finetune Pipeline with Distillation
+description: OpenAI Finetune Pipeline with Distillation
+
+inputs:
+  # Distillation parameters
+  distillation_technique:
+    type: string
+    optional: false
+    enum:
+    - "Zero-Shot"
+    - "Chain-of-Density"
+    default: "Zero-Shot"
+    description: distillation technique
+
+  cod_steps:
+    type: integer
+    optional: false
+    default: 4
+    description: cod steps
+
+  # Task parameters
+  text_key:
+    type: string
+    optional: false
+    description: text key
+
+  # Dataset path parameters
+  train_file_path:
+    type: uri_file
+    optional: false
+    description: Path to the registered training data asset. The supported data formats
+      are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
+      ' are invalid in the parameter value.
+    mode: rw_mount
+
+  validation_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered validation data asset. The supported data
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters
+      like \ and ' are invalid in the parameter value.
+    mode: rw_mount
+
+  # Teacher model settings
+  openai_api_type:
+    type: string
+    optional: false
+    description: OPENAI_API_TYPE
+
+  openai_api_base:
+    type: string
+    optional: false
+    description: OPENAI_API_BASE
+
+  openai_api_version:
+    type: string
+    optional: false
+    description: OPENAI_API_VERSION
+
+  openai_api_key:
+    type: string
+    optional: false
+    description: OPENAI_API_KEY
+
+  # OpenAI Finetune parameters
+  model:
+    type: string
+    optional: false
+    default: gpt-35-turbo
+    description: GPT model engine
+    enum:
+    - babbage-002
+    - davinci-002
+    - gpt-35-turbo
+    - gpt-4
+  registered_model_name:
+    type: string
+    optional: false
+    description: User-defined registered model name
+  n_epochs:
+    type: integer
+    optional: false
+    default: -1
+    description: Number of training epochs. If set to -1, number of epochs will be
+      determined dynamically based on the input data.
+  learning_rate_multiplier:
+    type: number
+    optional: false
+    default: 1.0
+    description: The learning rate multiplier to use for training.
+  batch_size:
+    type: integer
+    optional: false
+    default: -1
+    description: Global batch size. If set to -1, batch size will be determined dynamically
+      based on the input data.
+
+outputs:
+  output_model:
+    type: uri_folder
+    description: Dataset with the output model weights (LoRA weights)
+    mode: mount
+
+jobs:
+  data_distillation:
+    type: command
+    component: ../../data_distillation/spec.yaml
+    environment_variables:
+      OPENAI_API_TYPE: '${{parent.inputs.openai_api_type}}'
+      OPENAI_API_BASE: '${{parent.inputs.openai_api_base}}'
+      OPENAI_API_VERSION: '${{parent.inputs.openai_api_version}}'
+      OPENAI_API_KEY: '${{parent.inputs.openai_api_key}}'
+    inputs:
+      text_key: '${{parent.inputs.text_key}}'
+      distillation_technique: '${{parent.inputs.distillation_technique}}'
+      cod_steps: '${{parent.inputs.cod_steps}}'
+      train_file_path: '${{parent.inputs.train_file_path}}'
+      validation_file_path: '${{parent.inputs.validation_file_path}}'
+  openai_data_import:
+    type: command
+    component: azureml://registries/azure-openai-v2/components/openai_data_import/versions/0.3.5
+    inputs:
+      train_dataset: '${{parent.jobs.data_distillation.outputs.distilled_train_dataset}}'
+      validation_dataset: '${{parent.jobs.data_distillation.outputs.distilled_validation_dataset}}'
+      model: ${{parent.inputs.model}}
+  openai_completions_finetune:
+    type: command
+    component: azureml://registries/azure-openai-v2/components/openai_completions_finetune/versions/0.4.5
+    inputs:
+      input_dataset: ${{parent.jobs.openai_data_import.outputs.out_dataset}}
+      model: ${{parent.inputs.model}}
+      task_type: chat
+      registered_model_name: ${{parent.inputs.registered_model_name}}
+      n_epochs: ${{parent.inputs.n_epochs}}
+      learning_rate_multiplier: ${{parent.inputs.learning_rate_multiplier}}
+      batch_size: ${{parent.inputs.batch_size}}
+    outputs:
+      output_model: ${{parent.outputs.output_model}}
