@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.js
 type: pipeline
 
 name: llm_ingest_dbcopilot_faiss_e2e
-version: 0.0.32
+version: 0.0.34
 display_name: Data Ingestion for DB Data Output to FAISS E2E Deployment
 description: Single job pipeline to chunk data from AzureML DB Datastore and create faiss embeddings index
 
