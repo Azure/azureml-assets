@@ -24,7 +24,11 @@ from azureml.model.mgmt.processors.pyfunc.config import (
     MMLabDetectionTasks, MMLabTrackingTasks, SupportedTasks)
 
 from azureml.model.mgmt.processors.pyfunc.clip.config import \
-    MLflowSchemaLiterals as CLIPMLFlowSchemaLiterals, MLflowLiterals as CLIPMLflowLiterals
+    MLflowSchemaLiterals as CLIPMLFlowSchemaLiterals, MLflowLiterals as CLIPMLflowLiterals, \
+    Tasks as CLIPTasks
+from azureml.model.mgmt.processors.pyfunc.dinov2.config import \
+    MLflowSchemaLiterals as DinoV2MLFlowSchemaLiterals, MLflowLiterals as DinoV2MLflowLiterals, \
+    Tasks as DinoV2Tasks
 from azureml.model.mgmt.processors.pyfunc.blip.config import \
     MLflowSchemaLiterals as BLIPMLFlowSchemaLiterals, MLflowLiterals as BLIPMLflowLiterals
 from azureml.model.mgmt.processors.pyfunc.text_to_image.config import (
@@ -271,10 +275,10 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
 
         if self._task == SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
             from clip_mlflow_wrapper import CLIPMLFlowModelWrapper
-            mlflow_model_wrapper = CLIPMLFlowModelWrapper(task_type=self._task)
+            mlflow_model_wrapper = CLIPMLFlowModelWrapper(task_type=CLIPTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value)
         elif self._task == SupportedTasks.EMBEDDINGS.value:
             from clip_embeddings_mlflow_wrapper import CLIPEmbeddingsMLFlowModelWrapper
-            mlflow_model_wrapper = CLIPEmbeddingsMLFlowModelWrapper(task_type=self._task)
+            mlflow_model_wrapper = CLIPEmbeddingsMLFlowModelWrapper(task_type=CLIPTasks.EMBEDDINGS.value)
         else:
             raise Exception("Unsupported task")
 
@@ -313,6 +317,83 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         artifacts_dict = {
             CLIPMLflowLiterals.MODEL_DIR: self._model_dir
+        }
+        return artifacts_dict
+
+
+class DinoV2MLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for DinoV2 models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "dinov2")
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for DinoV2 models."""
+        super().__init__(**kwargs)
+
+        if self._task != SupportedTasks.EMBEDDINGS.value:
+            raise Exception("Unsupported task")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+        input_schema = Schema(
+            [
+                ColSpec(DataType.string, DinoV2MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
+            ]
+        )
+
+        output_schema = Schema(
+            [
+                ColSpec(DataType.string, DinoV2MLFlowSchemaLiterals.OUTPUT_COLUMN_IMAGE_FEATURES),
+            ]
+        )
+
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+
+        from dinov2_embeddings_mlflow_wrapper import DinoV2EmbeddingsMLFlowModelWrapper
+        mlflow_model_wrapper = DinoV2EmbeddingsMLFlowModelWrapper(task_type=DinoV2Tasks.EMBEDDINGS.value)
+
+        artifacts_dict = self._prepare_artifacts_dict()
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = self._get_code_path()
+
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=code_path,
+        )
+
+    def _get_code_path(self):
+        """Return code path for saving mlflow model depending on task type.
+
+        :return: code path
+        :rtype: List[str]
+        """
+        code_path = [
+            os.path.join(self.MODEL_DIR, "dinov2_embeddings_mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
+        ]
+
+        return code_path
+
+    def _prepare_artifacts_dict(self) -> Dict:
+        """Prepare artifacts dict for MLflow model.
+
+        :return: artifacts dict
+        :rtype: Dict
+        """
+        artifacts_dict = {
+            DinoV2MLflowLiterals.MODEL_DIR: self._model_dir
         }
         return artifacts_dict
 
