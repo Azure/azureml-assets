@@ -43,6 +43,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--handle_response_failure", type=str, help="how to handler failed response.")
     parser.add_argument("--fallback_value", type=str, help="The fallback value.", default='')
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
+    parser.add_argument("--min_endpoint_success_ratio", default=0, type=float, help="Min success ratio.")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
     return args
@@ -63,7 +64,8 @@ def main(
         handle_response_failure: str,
         fallback_value: str,
         is_performance_test: bool,
-        endpoint_url: str
+        endpoint_url: str,
+        min_endpoint_success_ratio: float,
 ) -> None:
     """
     Entry script for the script.
@@ -83,6 +85,7 @@ def main(
     :param handle_response_failure: How to handle the response failure.
     :param fallback_value: The fallback value.
     :param is_performance_test: Whether it is a performance test.
+    :param min_endpoint_success_ratio: Min endpoint success ratio.
     :return: None
     """
     logger.info("Read batch output data now.")
@@ -116,18 +119,9 @@ def main(
         for index, row in df.iterrows():
             if not rc.is_result_success(row):
                 failed_requests += 1
-                logger.warn("Met failed response {} at index {} of file {}".format(row, index, f))
+                logger.warning("Met failed response {} at index {} of file {}".format(row, index, f))
                 if handle_response_failure == 'neglect':
                     continue
-                if handle_response_failure == 'raise_error':
-                    raise BenchmarkUserException._with_error(
-                        AzureMLError.create(
-                            BenchmarkUserError,
-                            error_details="One of the requests failed. If you want to ignore \
-                                such failures, please set handle_response_failure parameter to \
-                                'neglect' or 'use_fallback'."
-                        )
-                    )
             else:
                 successful_requests += 1
             new_df.append(rc.convert_result(row))
@@ -145,11 +139,28 @@ def main(
     perf_df.to_json(perf_data, orient="records", lines=True)
     ground_truth.to_json(predict_ground_truth_data, orient="records", lines=True)
 
+    total_requests = failed_requests + successful_requests
+    endpoint_success_ratio = successful_requests / total_requests
+    logger.info(f"Total requests: {total_requests}")
+    logger.info(f"Successful requests: {successful_requests}")
+    logger.info(f"Failed requests: {failed_requests}")
     mlflow.log_metrics({
         'failed_requests': failed_requests,
         'successful_requests': successful_requests,
-        'total_requests': failed_requests + successful_requests,
+        'total_requests': total_requests,
     })
+    if endpoint_success_ratio < min_endpoint_success_ratio:
+        raise BenchmarkUserException._with_error(
+            AzureMLError.create(
+                BenchmarkUserError,
+                error_details=f"""
+                Marking run as failed because endpoint success ratio is {endpoint_success_ratio}
+                 which is less than {min_endpoint_success_ratio}. Please check why endpoint
+                 requests are failing or set a lower value for min_endpoint_success_ratio parameter.
+                 Check the logs for failed entries. Check the metrics for failure statistics.
+                """
+            )
+        )
 
 
 if __name__ == "__main__":
@@ -168,5 +179,6 @@ if __name__ == "__main__":
         handle_response_failure=args.handle_response_failure,
         fallback_value=args.fallback_value,
         is_performance_test=args.is_performance_test,
-        endpoint_url=args.endpoint_url
+        endpoint_url=args.endpoint_url,
+        min_endpoint_success_ratio=args.min_endpoint_success_ratio,
     )

@@ -6,14 +6,14 @@
 import argparse
 import json
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from aml_benchmark.utils.io import save_json_to_file
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
 from aml_benchmark.utils.exceptions import BenchmarkUserException
-from aml_benchmark.utils.constants import AuthenticationType, ModelType, get_endpoint_type
+from aml_benchmark.utils.constants import AuthenticationType, get_endpoint_type
 from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from azureml._common._error_definition.azureml_error import AzureMLError
 
@@ -49,12 +49,6 @@ def parse_args() -> argparse.Namespace:
         type=AuthenticationType,
         help="Authentication type for endpoint.",
         choices=list(AuthenticationType)
-    )
-    parser.add_argument(
-        "--model_type",
-        type=ModelType,
-        help="Type of model.",
-        choices=list(ModelType)
     )
     parser.add_argument(
         "--deployment_name",
@@ -153,7 +147,7 @@ def _get_authentication_config(
 
 def _get_complete_additional_headers(
     endpoint_type: str,
-    additional_headers: Optional[str],
+    additional_headers: Optional[Union[str, Dict[Any, Any]]],
     deployment_name: Optional[str],
 ) -> Dict[str, str]:
     """
@@ -163,7 +157,7 @@ def _get_complete_additional_headers(
     :param deployment_name: The deployment name of the endpoint.
     :returns: The complete additional headers dictionary.
     """
-    if additional_headers:
+    if additional_headers and isinstance(additional_headers, str):
         try:
             additional_headers_dict = json.loads(additional_headers)
         except json.JSONDecodeError as err:
@@ -182,6 +176,8 @@ def _get_complete_additional_headers(
                         of key value pairs."
                 )
             )
+    elif isinstance(additional_headers, dict):
+        additional_headers_dict = additional_headers
     else:
         additional_headers_dict = {}
     if deployment_name and endpoint_type == "azureml_online_endpoint":
@@ -199,13 +195,11 @@ def _get_request_settings(
     :param max_return_time_interval: The maximum time (in seconds) spent retrying a payload.
     :returns: The request settings config.
     """
-    if max_retry_time_interval:
-        return {
-            "headers": additional_headers_dict,
-            "timeout": max_retry_time_interval,
-        }
+    if not max_retry_time_interval:
+        max_retry_time_interval = 0
     return {
         "headers": additional_headers_dict,
+        "timeout": max_retry_time_interval
     }
 
 
@@ -251,7 +245,6 @@ def main(
     ensure_ascii: bool,
     initial_worker_count: int,
     max_worker_count: int,
-    model_type: ModelType,
     response_segment_size: int,
     batch_score_config_path: str,
     configuration_file: Optional[str],
@@ -270,7 +263,6 @@ def main(
     :param ensure_ascii: If true, the output will have all non-ASCII characters escaped.
     :param initial_worker_count: The initial number of workers to use for scoring.
     :param max_worker_count: Overrides initial_worker_count if necessary
-    :param model_type: The type of the model.
     :param response_segment_size: The maximum number of tokens to generate at a time.
     :param batch_score_config_path: The config json file for the batch score component.
     :param configuration_file: An optional config file path that contains deployment configurations.
@@ -281,23 +273,19 @@ def main(
         If unspecified, payloads are retried unlimited times.
     :return: None
     """
+    # Override the configs if config file is passed. Config file takes precedence
+    # as resource manager determined them based on deployment it did on fly.
     overriding_configs = _get_overriding_configs(configuration_file)
-    # {
-    #     "scoring_url": online_endpoint.scoring_url,
-    #     "deployment_name": online_endpoint.deployment_name,
-    #     "is_managed_endpoint": is_managed_endpoint,
-    #     "is_managed_deployment": is_managed_deployment,
-    #     "is_managed_connections": is_managed_connections,
-    #     "scoring_headers": headers,
-    #     "model_type": online_endpoint.model.model_type,
-    #     "connection_name": online_endpoint.connections_name
-    # }
+    merged_scoring_url = overriding_configs.get("scoring_url", scoring_url)
+    merged_online_headers = overriding_configs.get("scoring_headers", additional_headers)
+    merged_connection_name = overriding_configs.get("connections_name", connection_name)
 
-    endpoint_type = get_endpoint_type(scoring_url)
-    authentication_dict = _get_authentication_config(authentication_type, connection_name)
+
+    endpoint_type = get_endpoint_type(merged_scoring_url)
+    authentication_dict = _get_authentication_config(authentication_type, merged_connection_name)
     additional_headers_dict = _get_complete_additional_headers(
         endpoint_type=endpoint_type,
-        additional_headers=additional_headers,
+        additional_headers=merged_online_headers,
         deployment_name=deployment_name
     )
     request_settings_dict = _get_request_settings(additional_headers_dict, max_retry_time_interval)
@@ -345,6 +333,5 @@ if __name__ == "__main__":
         additional_headers=args.additional_headers,
         deployment_name=args.deployment_name,
         max_retry_time_interval=args.max_retry_time_interval,
-        model_type=args.model_type,
         response_segment_size=args.response_segment_size,
     )

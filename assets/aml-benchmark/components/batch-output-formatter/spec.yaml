@@ -35,12 +35,18 @@ inputs:
     enum:
       - use_fallback
       - neglect
-      - raise_error
     default: use_fallback
   fallback_value:
     description: The fallback value that can be used when request payload failed.
     type: string
     optional: True
+  min_endpoint_success_ratio:
+    description: The minimum value of (successful_requests / total_requests) required for classifying inference as successful. If (successful_requests / total_requests) < min_endpoint_success_ratio, the experiment will be marked as failed. By default it is 0. (0 means all requests are allowed to fail while 1 means no request should fail.)
+    type: number
+    min: 0
+    max: 1
+    default: 0
+    optional: False
   is_performance_test:
     type: boolean
     default: False
@@ -64,6 +70,7 @@ command: >-
   $[[--model_type ${{inputs.model_type}}]]
   --batch_inference_output ${{inputs.batch_inference_output}}
   --prediction_data ${{outputs.predictions}}
+  --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   --perf_data ${{outputs.performance_metadata}}
   --predict_ground_truth_data ${{outputs.ground_truth}}
   $[[--endpoint_url ${{inputs.endpoint_url}}]]

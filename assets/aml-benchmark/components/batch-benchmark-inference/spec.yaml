@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.7
+version: 0.0.9
 
 inputs:
   input_dataset:
@@ -90,16 +90,22 @@ inputs:
   handle_response_failure:
     type: string
     optional: False
-    description: The way that the formatter handles the failed response. 'use_fallback' will replace them with fallback_value, 'neglect' will drop those rows and 'raise_error' will throw an error.
+    description: The way that the formatter handles the failed response. 'use_fallback' will replace them with fallback_value and 'neglect' will drop those rows.
     enum:
       - use_fallback
       - neglect
-      - raise_error
     default: use_fallback
   fallback_value:
     description: The fallback value that can be used when request payload failed. If not provided, the fallback value will be an empty string.
     type: string
     optional: True
+  min_endpoint_success_ratio:
+    type: number
+    description: The minimum value of (successful_requests / total_requests) required for classifying inference as successful. If (successful_requests / total_requests) < min_endpoint_success_ratio, the experiment will be marked as failed. By default it is 0. (0 means all requests are allowed to fail while 1 means no request should fail.)
+    min: 0
+    max: 1
+    default: 0
+    optional: False
   additional_headers:
     type: string
     optional: True
@@ -212,7 +218,7 @@ jobs:
     resources:
       instance_count: ${{parent.inputs.instance_count}}
     max_concurrency_per_instance:  ${{parent.inputs.max_concurrency_per_instance}}
-    mini_batch_size: ${{parent.inputs.mini_batch_size}}
+    mini_batch_size: 100KB # ${{parent.inputs.mini_batch_size}}
     retry_settings:
       timeout: 6000
       max_retries: 10
@@ -230,6 +236,7 @@ jobs:
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
       endpoint_url: ${{parent.inputs.endpoint_url}}
+      min_endpoint_success_ratio: ${{parent.inputs.min_endpoint_success_ratio}}
     outputs:
       predictions:
         type: uri_file
