@@ -4,7 +4,7 @@ type: command
 name: validation_trigger_import
 display_name: Validation Trigger Import model
 description: Component for enabling validation of import pipeline.
-version: 0.0.4
+version: 0.0.5
 
 # Pipeline inputs
 inputs:
