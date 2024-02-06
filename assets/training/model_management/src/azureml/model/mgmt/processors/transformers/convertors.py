@@ -30,7 +30,7 @@ from azureml.model.mgmt.utils.common_utils import (
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from mlflow.models import ModelSignature, Model
-from mlflow.types.schema import ColSpec, DataType, Schema
+from mlflow.types.schema import ColSpec, DataType, Schema, ParamSpec, ParamSchema
 from mlflow.utils.requirements_utils import _get_pinned_requirement
 from pathlib import Path
 from transformers import (
@@ -514,6 +514,16 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         )
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else AutoConfig
         self._hf_tokenizer_cls = self._hf_tokenizer_cls if self._hf_tokenizer_cls else AutoTokenizer
+
+        if self._task == SupportedNLPTasks.TEXT_GENERATION.value:
+            inputs = Schema([ColSpec(DataType.string)])
+            outputs = Schema([ColSpec(DataType.string)])
+            params = ParamSchema([ParamSpec("top_p", "float", default=1.0),
+                                  ParamSpec("temperature", "float", default=1.0),
+                                  ParamSpec("max_new_tokens", "integer", default=50),
+                                  ParamSpec("do_sample", "boolean", default=True),
+                                  ParamSpec("return_full_text", "boolean", default=True)])
+            self._signatures = ModelSignature(inputs=inputs, outputs=outputs, params=params)
 
         hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_config_cls.__name__
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__
