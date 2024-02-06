@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: >-
   Environment for evaluating mlflow models. 
 name: "model-evaluation"
-version: "19"
+version: "20"
 
 build:
   path: context/

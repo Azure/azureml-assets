@@ -5,7 +5,7 @@ description: >-
   additional python packages.
 
 name: "tensorflow-2.12-cuda11"
-version: "20"
+version: "21"
 
 build:
   path: "context"

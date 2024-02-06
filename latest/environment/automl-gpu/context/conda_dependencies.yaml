@@ -19,20 +19,20 @@ dependencies:
 - openssl=1.1.1s
 - pip:
   - inference-schema
-  - azureml-core==1.54.0.post1
-  - azureml-mlflow==1.54.0.post1
-  - azureml-defaults==1.54.0
-  - azureml-telemetry==1.54.0
-  - azureml-interpret==1.54.0
-  - azureml-responsibleai==1.54.0
-  - azureml-automl-core==1.54.0
-  - azureml-automl-runtime==1.54.0
-  - azureml-train-automl-client==1.54.0.post1
-  - azureml-train-automl-runtime==1.54.0.post1
-  - azureml-dataset-runtime==1.54.0.post1
-  - azureml-contrib-dataset==1.54.0
-  - azureml-train-automl==1.54.0
-  - azureml-contrib-automl-dnn-forecasting==1.54.0
+  - azureml-core==1.55.0
+  - azureml-mlflow==1.55.0
+  - azureml-defaults==1.55.0
+  - azureml-telemetry==1.55.0
+  - azureml-interpret==1.55.0
+  - azureml-responsibleai==1.55.0
+  - azureml-automl-core==1.55.0
+  - azureml-automl-runtime==1.55.0
+  - azureml-train-automl-client==1.55.0
+  - azureml-train-automl-runtime==1.55.0
+  - azureml-dataset-runtime==1.55.0
+  - azureml-contrib-dataset==1.55.0
+  - azureml-train-automl==1.55.0
+  - azureml-contrib-automl-dnn-forecasting==1.55.0
   - https://aka.ms/automl-resources/packages/en_core_web_sm-2.1.0.tar.gz
   - cryptography>=41.0.4
   - scipy==1.10.1

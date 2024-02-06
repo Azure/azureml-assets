@@ -27,10 +27,10 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
                           'domonic==0.9.10'
 
 # Install azureml packages
-RUN pip install 'azureml-dataset-runtime==1.54.0.post1' \
-                'azureml-core==1.54.0.post1' \
-                'azureml-mlflow==1.54.0.post1' \
-                'azureml-telemetry==1.54.0' \
+RUN pip install 'azureml-dataset-runtime==1.55.0' \
+                'azureml-core==1.55.0' \
+                'azureml-mlflow==1.55.0' \
+                'azureml-telemetry==1.55.0' \
                 'azureml-rai-utils==0.0.6'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0

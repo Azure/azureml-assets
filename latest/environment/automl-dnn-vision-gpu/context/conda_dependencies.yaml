@@ -16,15 +16,15 @@ dependencies:
 - pip:
   - cryptography>=41.0.4
   - pyarrow-hotfix>=0.5
-  - azureml-mlflow==1.54.0.post1
-  - azureml-dataset-runtime==1.54.0.post1
-  - azureml-telemetry==1.54.0
-  - azureml-responsibleai==1.54.0
-  - azureml-automl-core==1.54.0
-  - azureml-automl-runtime==1.54.0
-  - azureml-train-automl-client==1.54.0.post1
-  - azureml-defaults==1.54.0
-  - azureml-interpret==1.54.0
-  - azureml-train-automl-runtime==1.54.0.post1
-  - azureml-automl-dnn-vision==1.54.0.post1
+  - azureml-mlflow==1.55.0
+  - azureml-dataset-runtime==1.55.0
+  - azureml-telemetry==1.55.0
+  - azureml-responsibleai==1.55.0
+  - azureml-automl-core==1.55.0
+  - azureml-automl-runtime==1.55.0
+  - azureml-train-automl-client==1.55.0
+  - azureml-defaults==1.55.0
+  - azureml-interpret==1.55.0
+  - azureml-train-automl-runtime==1.55.0
+  - azureml-automl-dnn-vision==1.55.0
   - azureml-dataprep>=2.24.4
