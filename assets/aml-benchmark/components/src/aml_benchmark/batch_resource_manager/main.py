@@ -79,6 +79,12 @@ def parse_args() -> argparse.Namespace:
         help="Force redeploymodels or not.",
     )
     parser.add_argument(
+        "--finetuned_start_timeout_seconds",
+        default=900, 
+        type=int,
+        help="Maximum time to wait for fine tune step to start.",
+    )
+    parser.add_argument(
         "--finetuned_step_name", type=str, help="finetuned_step_name", default=None)
     parser.add_argument(
         "--delete_managed_deployment",
@@ -309,12 +315,19 @@ def deploy_model_in_list_maybe(
             online_endpoint.delete_endpoint()
     return False
 
+def _repeat_till_success_or_timeout(timeout_seconds : int, interval_seconds : int, func, *args, **kwargs):
+    start_time = time.time()
+    while not (result:=func(*args, **kwargs)):
+        if time.time() - start_time > timeout_seconds:
+            return False
+        time.sleep(interval_seconds)
+    return result
 
-def _wait_finetuned_step(finetuned_step_name: Optional[str]) -> None:
+def _wait_finetuned_step(finetuned_step_name: Optional[str], start_timeout_seconds = 900) -> None:
     """Wait for finetuned step to finish."""
     finetuned_step_name = finetuned_step_name if finetuned_step_name else "openai_completions_finetune_pipeline"
     
-    wait_step_run = get_dependent_run(finetuned_step_name)
+    wait_step_run = _repeat_till_success_or_timeout(start_timeout_seconds,30,get_dependent_run,finetuned_step_name)
     if wait_step_run is None:
         raise BenchmarkUserException._with_error(
             AzureMLError.create(
@@ -364,7 +377,8 @@ def main(
     deployment_retries: int,
     deployment_retry_interval_seconds: int,
     wait_finetuned_step: bool,
-    finetuned_step_name: str
+    finetuned_step_name: str,
+    finetuned_start_timeout_seconds: int
 ) -> None:
     """
     Entry function of the script.
@@ -398,7 +412,7 @@ def main(
     if not deletion_model:
         if wait_finetuned_step:
             logger.info("Wait for finetuned step to finish.")
-            _wait_finetuned_step(finetuned_step_name)
+            _wait_finetuned_step(finetuned_step_name, finetuned_start_timeout_seconds)
         subscriptions_list = [
             s.strip() for s in endpoint_subscription_id.split(',')] if endpoint_subscription_id else [None]
         locations_list = [
@@ -479,33 +493,34 @@ def main(
 if __name__ == "__main__":
     args = parse_args()
     main(
-        args.model,
-        args.model_version,
-        args.model_type,
-        args.endpoint_name,
-        args.endpoint_workspace,
-        args.endpoint_resource_group,
-        args.endpoint_subscription_id,
-        args.endpoint_location,
-        args.deployment_name,
-        args.deployment_sku,
-        args.output_metadata,
-        args.deployment_metadata,
-        args.deletion_model,
-        args.connections_name,
-        args.additional_deployment_env_vars,
-        args.do_quota_validation,
-        args.use_max_quota,
-        args.redeploy_model,
-        args.deployment_env,
-        args.cli_file,
-        args.is_finetuned_model,
-        args.finetuned_subscription_id,
-        args.finetuned_resource_group,
-        args.finetuned_workspace,
-        args.delete_managed_deployment,
-        args.deployment_retries,
-        args.deployment_retry_interval_seconds,
-        args.wait_finetuned_step,
-        args.finetuned_step_name
+        model=args.model,
+        model_version=args.model_version,
+        model_type=args.model_type,
+        endpoint_name=args.endpoint_name,
+        endpoint_workspace=args.endpoint_workspace,
+        endpoint_resource_group=args.endpoint_resource_group,
+        endpoint_subscription_id=args.endpoint_subscription_id,
+        endpoint_location=args.endpoint_location,
+        deployment_name=args.deployment_name,
+        deployment_sku=args.deployment_sku,
+        output_metadata_dir=args.output_metadata,
+        deployment_metadata=args.deployment_metadata,
+        deletion_model=args.deletion_model,
+        connections_name=args.connections_name,
+        additional_deployment_env_vars=args.additional_deployment_env_vars,
+        do_quota_validation=args.do_quota_validation,
+        use_max_quota=args.use_max_quota,
+        redeploy_model=args.redeploy_model,
+        deployment_env=args.deployment_env,
+        cli_file=args.cli_file,
+        is_finetuned_model=args.is_finetuned_model,
+        finetuned_subscription_id=args.finetuned_subscription_id,
+        finetuned_resource_group=args.finetuned_resource_group,
+        finetuned_workspace=args.finetuned_workspace,
+        delete_managed_deployment=args.delete_managed_deployment,
+        deployment_retries=args.deployment_retries,
+        deployment_retry_interval_seconds=args.deployment_retry_interval_seconds,
+        wait_finetuned_step=args.wait_finetuned_step,
+        finetuned_step_name=args.finetuned_step_name,
+        finettune_start_timeout_seconds=args.finetuned_start_timeout_seconds
     )
