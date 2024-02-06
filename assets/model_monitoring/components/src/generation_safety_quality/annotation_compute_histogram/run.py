@@ -1749,8 +1749,6 @@ def apply_annotation(
             ),
         ).cache()
 
-        print("Annotation_df")
-        annotations_df.show()
         # Get rating counts
         metrics_df = annotations_df.select(RATING).groupBy(RATING).count()
         metrics_df.show()
