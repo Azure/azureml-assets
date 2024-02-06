@@ -2,8 +2,7 @@
 # Licensed under the MIT License.
 
 """Class for endpoint utilities."""
-
-
+import os
 from typing import Any
 import json
 import hashlib
@@ -50,12 +49,20 @@ class EndpointUtilities:
             "model_type": online_endpoint.model.model_type,
             "connection_name": online_endpoint.connections_name
         }
+        # if output_path is a directory, append the file name
+        if os.path.isdir(output_path):
+            output_path = os.path.join(output_path, EndpointUtilities.METADATA_FILE)
         with open(output_path, 'w') as metadata_file:
             json.dump(endpoint_metadata, metadata_file)
 
     @staticmethod
     def load_endpoint_metadata_json(output_path: str) -> dict:
         """Load endpoint info metadata json."""
+        if os.path.isdir(output_path):
+            output_path = os.path.join(output_path, EndpointUtilities.METADATA_FILE)
+            # verify the file exists
+            if not os.path.exists(output_path):
+                raise FileNotFoundError(f"Endpoint metadata file {output_path} not found.")
         with open(output_path, 'r') as metadata_file:
             return json.load(metadata_file)
 
@@ -72,6 +79,9 @@ class EndpointUtilities:
             "is_deployment_deleted": is_deployment_deleted,
             "is_connections_deleted": is_connections_deleted,
         }
+        # if output_path is a directory, append the file name
+        if os.path.isdir(output_path):
+            output_path = os.path.join(output_path, EndpointUtilities.DELETE_STATUS_FILE)
         with open(output_path, 'w') as delete_status_file:
             json.dump(delete_status, delete_status_file)
 
