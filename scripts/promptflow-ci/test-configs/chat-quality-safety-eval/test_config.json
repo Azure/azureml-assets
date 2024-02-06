@@ -1,0 +1,16 @@
+{
+  "nodes": [
+    {
+      "name": "evaluate_chat_rag",
+      "inputs": {
+        "connection": "aoai_connection"
+      }
+    },
+    {
+      "name": "evaluate_coherence_fluency",
+      "inputs": {
+        "connection": "aoai_connection"
+      }
+    }
+  ]
+}
