@@ -173,5 +173,5 @@ command: >-
   $[[--deployment_retry_interval_seconds ${{inputs.deployment_retry_interval_seconds}}]]
   $[[--wait_finetuned_step ${{inputs.wait_finetuned_step}}]]
   $[[--finetuned_step_name ${{inputs.finetuned_step_name}}]]
-  #[[--finetuned_start_timeout_seconds ${{inputs.finetuned_start_timeout_seconds}}]]
+  $[[--finetuned_start_timeout_seconds ${{inputs.finetuned_start_timeout_seconds}}]]
 
