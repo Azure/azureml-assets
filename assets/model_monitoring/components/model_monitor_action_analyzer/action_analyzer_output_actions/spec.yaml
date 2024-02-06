@@ -1,0 +1,70 @@
+$schema: http://azureml/sdk-2-0/SparkComponent.json
+type: spark
+
+name: action_analyzer_output_actions
+display_name: Action Analyzer - Output Actions
+description: Merge and output actions.
+version: 0.0.1
+is_deterministic: True
+inputs:
+  action_data:
+    type: mltable
+    mode: direct
+  model_deployment_name:
+    type: string
+    optional: False
+  signal_name:
+    type: string
+outputs:
+  action_output:
+    type: mltable
+    mode: direct
+
+conf:
+  spark.driver.cores: 1
+  spark.driver.memory: 2g
+  spark.executor.cores: 2
+  spark.executor.memory: 2g
+  spark.executor.instances: 1
+  spark.dynamicAllocation.enabled: True
+  spark.dynamicAllocation.minExecutors: 1
+  spark.dynamicAllocation.maxExecutors: 1 # avoid AOAI API limits by running only one executor at a time
+  spark.jars.packages: com.microsoft.azure:synapseml_2.12:0.11.0-26-52919ce4-SNAPSHOT,org.apache.spark:spark-avro_2.12:3.3.1
+  spark.jars.repositories: https://mmlspark.azureedge.net/maven
+  spark.jars.excludes: org.scala-lang:scala-reflect,org.apache.spark:spark-tags_2.12,org.scalactic:scalactic_2.12,org.scalatest:scalatest_2.12,com.fasterxml.jackson.core:jackson-databind
+  spark.yarn.user.classpath.first: true
+  spark.sql.parquet.enableVectorizedReader: false
+  spark.sql.legacy.replaceDatabricksSparkAvro.enabled: true
+  spark.driver.userClassPathFirst: false
+  spark.executor.userClassPathFirst: false
+  spark.synapse.library.python.env: |
+    channels:
+      - defaults
+      - conda-forge
+    dependencies:
+      - python=3.10
+      - pip:
+          - azure-cli-core~=2.45.0
+          - azure-identity~=1.12.0
+          - azure-ai-ml~=1.10.0
+          - azure-keyvault-secrets==4.7.0
+          - tiktoken==0.3.3
+          - json5==0.9.11
+          - scipy~=1.10.0
+          - numpy~=1.21.0
+          - pandas~=1.4.3
+          - azureml-mlflow~=1.49.0
+          - mltable~=1.3.0
+          - azureml-fsspec
+          - fsspec~=2023.4.0
+          - protobuf==3.20.1
+
+code: ../../src
+
+entry:
+  file: ./action_analyzer/action_analyzer_correlation_test/run.py
+
+args: >-
+  --action_data ${{inputs.action_data}}
+  --model_deployment_name ${{inputs.model_deployment_name}}
+  --action_output ${{outputs.action_output}}

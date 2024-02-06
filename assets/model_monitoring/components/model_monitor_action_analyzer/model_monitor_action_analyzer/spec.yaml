@@ -1,0 +1,105 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+
+name: model_monitor_action_analyzer
+display_name: Model Monitor - Action Analyzer
+description: Generate and output actions to the default datastore.
+version: 0.0.1
+is_deterministic: true
+inputs:
+  production_data:
+    type: mltable
+    description: production data from model data collector preprocessor
+  signal_scored_output:
+    type: mltable
+    description: production data with signal scores from monitoring signal
+  signal_name:
+    type: string
+  violated_metric_names:
+    type: mltable
+    description: violated metric names
+    optional: True
+  model_deployment_name:
+    type: string
+    optional: False
+    description: model name, e.g., name of the deployment for Azure OpenAI
+  instance_type:
+    type: string
+    default: "standard_e4s_v3"
+    optional: True
+outputs:
+  action_output:
+    type: uri_folder
+    mode: direct
+    description: output actions
+jobs:
+  identify_problem_traffic:
+    type: spark
+    component: azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.1
+    inputs:
+      production_dataset:
+        type: mltable
+        path: ${{parent.inputs.production_data}}
+      signal_scored_output:
+        type: mltable
+        path: ${{parent.inputs.signal_scored_output}}
+      violated_metric_names: 
+        type: mltable
+        path: ${{parent.inputs.violated_metric_names}}
+    outputs:
+      data_with_groups:
+        type: mltable
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  metrics_calculation:
+    type: spark
+    component: azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.1
+    inputs:
+      data_with_groups:
+        type: mltable
+        path: ${{parent.jobs.identify_problem_traffic.outputs.data_with_groups}}
+    outputs:
+      data_with_action_metric_score:
+        type: mltable
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  correlation_test:
+    type: spark
+    component: azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.1
+    inputs:
+      data_with_action_metric_score:
+        type: mltable
+        path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
+    outputs:
+      action_data:
+        type: mltable
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  output_actions:
+    type: spark
+    component: azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.1
+    inputs:
+      action_data:
+        type: mltable
+        path: ${{parent.jobs.correlation_test.outputs.action_data}}
+      model_deployment_name: ${{parent.inputs.model_deployment_name}}
+      signal_name: ${{parent.inputs.signal_name}}
+    outputs:
+      action_output:
+        type: uri_folder
+        path: ${{parent.outputs.signal_output}}
+        mode: direct
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
