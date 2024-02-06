@@ -522,5 +522,5 @@ if __name__ == "__main__":
         deployment_retry_interval_seconds=args.deployment_retry_interval_seconds,
         wait_finetuned_step=args.wait_finetuned_step,
         finetuned_step_name=args.finetuned_step_name,
-        finettune_start_timeout_seconds=args.finetuned_start_timeout_seconds
+        finetuned_start_timeout_seconds=args.finetuned_start_timeout_seconds
     )
