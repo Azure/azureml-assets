@@ -4,10 +4,15 @@
 """Entry script for Action Analyzer metric calculation."""
 
 import argparse
+from pyspark.sql.types import (
+    StructType,
+    StructField,
+    StringType
+)
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable, init_spark
 
 
-def write_empty_dataframe():
+def write_empty_dataframe(output_path):
     """Write an empty action data frame."""
     spark = init_spark()
     metadata_schema = StructType(
@@ -17,7 +22,7 @@ def write_empty_dataframe():
     )
     # Create a new DataFrame with the metadata
     df = spark.createDataFrame([], metadata_schema)
-    save_spark_df_as_mltable(df, args.signal_metrics)
+    save_spark_df_as_mltable(df, output_path)
 
 
 def run():
@@ -37,7 +42,7 @@ def run():
 
     print("calculate metrics")
 
-    write_empty_dataframe()
+    write_empty_dataframe(args.data_with_action_metric_score)
 
 
 if __name__ == "__main__":
