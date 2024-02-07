@@ -24,3 +24,6 @@ RUN pip install scipy==1.10.1
 RUN pip install pyarrow==14.0.1
 RUN pip install aiohttp==3.9.1
 # dummy number to change when needing to force rebuild without changing the definition: 1
+
+# It is recommended to upgrade to numpy version 1.23.5 or later to address the numpy.core.multiarray issue
+RUN pip install numpy>=1.23.5
