@@ -11,7 +11,7 @@ from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
 from azure.storage.filedatalake import FileSystemClient
-from azureml.core import Workspace, Run
+from azureml.core import Workspace, Run, Datastore
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -207,7 +207,9 @@ class StoreUrl:
             else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
-                self._datastore = ws.datastores.get(datastore_name)
+                self._datastore = Datastore.get(ws, datastore_name)
+                if self._datastore is None:
+                    raise InvalidInputError(f"Datastore {datastore_name} not found in the workspace.")
                 datastore_type = self._datastore.datastore_type
                 if datastore_type not in ["AzureBlob", "AzureDataLakeGen2"]:
                     raise InvalidInputError("Only Azure Blob and Azure Data Lake Gen2 are supported, "
