@@ -71,14 +71,15 @@ conf:
     dependencies:
       - python=3.8
       - pip:
-        - scipy~=1.10.0
-        - numpy~=1.21.0
-        - pandas~=1.4.3
-        - azureml-mlflow~=1.49.0
         - azure-storage-file-datalake~=12.8.0
         - mltable~=1.3.0
         - azureml-fsspec
         - fsspec~=2023.4.0
+        - responsibleai~=0.29.0
+        - azure-ai-ml~=1.10.0
+        - tiktoken==0.3.3
+        - json5==0.9.11
+        - azureml-metrics[tabular]~=0.0.42
     name: momo-base-spark
 args: >-
   --signal_outputs_1 ${{inputs.signal_outputs_1}} $[[--signal_outputs_2 ${{inputs.signal_outputs_2}}]] $[[--signal_outputs_3 ${{inputs.signal_outputs_3}}]] $[[--signal_outputs_4 ${{inputs.signal_outputs_4}}]] $[[--signal_outputs_5 ${{inputs.signal_outputs_5}}]] $[[--signal_outputs_6 ${{inputs.signal_outputs_6}}]] $[[--signal_outputs_7 ${{inputs.signal_outputs_7}}]] $[[--signal_outputs_8 ${{inputs.signal_outputs_8}}]] $[[--signal_outputs_9 ${{inputs.signal_outputs_9}}]] $[[--signal_outputs_10 ${{inputs.signal_outputs_10}}]] --model_monitor_metrics_output ${{outputs.model_monitor_metrics_output}}

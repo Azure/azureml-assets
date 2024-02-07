@@ -43,6 +43,13 @@ conf:
       - pip:
         - azure-storage-file-datalake~=12.8.0
         - mltable~=1.3.0
+        - azureml-fsspec
+        - fsspec~=2023.4.0
+        - responsibleai~=0.29.0
+        - azure-ai-ml~=1.10.0
+        - tiktoken==0.3.3
+        - json5==0.9.11
+        - azureml-metrics[tabular]~=0.0.42
     name: momo-base-spark
 args: >-
   --data_window_end ${{inputs.data_window_end}}
