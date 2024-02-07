@@ -6,7 +6,8 @@
 import pytest
 from shared_utilities.io_utils import _verify_mltable_paths
 from shared_utilities.momo_exceptions import InvalidInputError
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+from azureml.core import Datastore
 
 
 @pytest.mark.unit
@@ -51,7 +52,8 @@ class TestIOUtils:
         mock_datastore.sas_token = "my_sas_token"
         mock_ws = Mock(datastores={"my_datastore": mock_datastore})
 
-        _verify_mltable_paths("foo_path", mock_ws, mltable_dict)
+        with patch.object(Datastore, "get", return_value=mock_datastore):
+            _verify_mltable_paths("foo_path", mock_ws, mltable_dict)
 
     @pytest.mark.parametrize(
         "mltable_path, datastore_type",
@@ -75,5 +77,5 @@ class TestIOUtils:
             "paths": [mltable_path]
         }
 
-        with pytest.raises(InvalidInputError):
+        with patch.object(Datastore, "get", return_value=mock_datastore), pytest.raises(InvalidInputError):
             _verify_mltable_paths("foo_path", mock_ws, mltable_dict)
