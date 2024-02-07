@@ -4,12 +4,13 @@
 """Test file for StoreUrl."""
 
 import pytest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient, BlobServiceClient
 from azure.storage.blob._shared.authentication import SharedKeyCredentialPolicy
 from azure.storage.filedatalake import FileSystemClient
+from azureml.core import Datastore
 from model_data_collector_preprocessor.store_url import StoreUrl
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -156,9 +157,10 @@ class TestStoreUrl:
             mock_datastore.client_id = "my_client_id" if credential_type else None
             mock_datastore.client_secret = "my_client_secret" if credential_type else None
             mock_datastore.tenant_id = "00000" if credential_type else None
-        mock_ws = Mock(datastores={"my_datastore": mock_datastore})
+        mock_ws = Mock()
 
-        store_url = StoreUrl(azureml_path, mock_ws)
+        with patch.object(Datastore, "get", return_value=mock_datastore):
+            store_url = StoreUrl(azureml_path, mock_ws)
 
         assert store_url.get_hdfs_url() == expected_hdfs_path
         assert store_url.get_abfs_url() == expected_abfs_path
@@ -185,6 +187,16 @@ class TestStoreUrl:
         """Test StoreUrl constructor with azureml data url."""
         with pytest.raises(InvalidInputError):
             _ = StoreUrl(azureml_path)
+
+    def test_store_url_datastore_not_found(self):
+        """Test StoreUrl constructor, in case datastore not found ."""
+        mock_ws = Mock()
+
+        with patch.object(Datastore, "get", return_value=None):
+            with pytest.raises(InvalidInputError, match=r"Datastore my_datastore not found .*"):
+                _ = StoreUrl("azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws"
+                             "/datastores/my_datastore/paths/path/to/folder",
+                             mock_ws)
 
     @pytest.mark.parametrize(
         "base_url, relative_path, expected_root_path, expected_abfs_url",
