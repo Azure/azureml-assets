@@ -3,7 +3,7 @@ type: command
 tags: {}
 name: llm_dbcopilot_deploy_endpoint
 display_name: LLM - DBCopilot Deploy Endpoint Component
-version: 0.0.20
+version: 0.0.21
 inputs:
   deployment_name:
     type: string
