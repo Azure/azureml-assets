@@ -208,6 +208,8 @@ class StoreUrl:
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
                 self._datastore = ws.datastores.get(datastore_name)
+                if self._datastore is None:
+                    raise InvalidInputError(f"Datastore {datastore_name} not found in the workspace.")
                 datastore_type = self._datastore.datastore_type
                 if datastore_type not in ["AzureBlob", "AzureDataLakeGen2"]:
                     raise InvalidInputError("Only Azure Blob and Azure Data Lake Gen2 are supported, "

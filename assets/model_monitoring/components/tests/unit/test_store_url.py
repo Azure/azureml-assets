@@ -186,6 +186,14 @@ class TestStoreUrl:
         with pytest.raises(InvalidInputError):
             _ = StoreUrl(azureml_path)
 
+    def test_store_url_datastore_not_found(self):
+        mock_ws = Mock(datastores={})
+
+        with pytest.raises(InvalidInputError, match=r"Datastore my_datastore not found .*"):
+            _ = StoreUrl("azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws"
+                         "/datastores/my_datastore/paths/path/to/folder",
+                         mock_ws)
+
     @pytest.mark.parametrize(
         "base_url, relative_path, expected_root_path, expected_abfs_url",
         [
