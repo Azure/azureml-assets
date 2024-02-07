@@ -16,7 +16,7 @@ from typing import List
 from azureml.assets.util import logger
 
 # Handles {{latest-pypi-version}} and {{latest-pypi-version:flags}}
-LATEST_PYPI_VERSION = re.compile(r"([^\"'\s]+)([=~]=)\{\{latest-pypi-version(?::(.+))?\}\}")
+LATEST_PYPI_VERSION = re.compile(r"([^\"'\s]+?)(?:\[.*\])?([=~]=)\{\{latest-pypi-version(?::(.+))?\}\}")
 LATEST_PYPY_VERSION_FLAGS_PRE = "pre"
 PYPI_URL = "https://pypi.org/simple"
 
