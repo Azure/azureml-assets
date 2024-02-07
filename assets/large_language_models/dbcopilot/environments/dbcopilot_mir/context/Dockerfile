@@ -3,20 +3,19 @@ WORKDIR /
 
 USER root
 
-RUN NGINX_CONF=/etc/nginx/sites-enabled/app; sed -i "$(grep "location /" $NGINX_CONF -n | cut -f1 -d:) a proxy_buffering off;" $NGINX_CONF;
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl unixodbc gnupg2 \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc \
+    && curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
+    && apt-get install -y libpam0g=1.4.0-11ubuntu2.4 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install vim
-RUN apt-get update && apt-get clean && apt install -y curl && apt-get install -y unixodbc
-# Install ODBC
-# adding custom MS repository
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc
-
-RUN curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | tee /etc/apt/sources.list.d/mssql-release.list
-
-# install SQL Server drivers
-# install SQL Server tools
-RUN apt-get update
-RUN ACCEPT_EULA=Y apt-get install -y msodbcsql18
+# NGINX configuration
+RUN NGINX_CONF=/etc/nginx/sites-enabled/app; \
+    sed -i "$(grep "location /" $NGINX_CONF -n | cut -f1 -d:) a proxy_buffering off;" $NGINX_CONF
 
 # remove because promptflow need root
 # USER dockeruser
