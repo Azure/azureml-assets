@@ -187,6 +187,7 @@ class TestStoreUrl:
             _ = StoreUrl(azureml_path)
 
     def test_store_url_datastore_not_found(self):
+        """Test StoreUrl constructor, in case datastore not found ."""
         mock_ws = Mock(datastores={})
 
         with pytest.raises(InvalidInputError, match=r"Datastore my_datastore not found .*"):
