@@ -35,7 +35,7 @@ tags:
     precision: "4"
   inference_supported_envs:
   - vllm
-version: 6
+version: 7
 description: |
   # Description
   Falcon-7B is a large language model with 7 billion parameters. It is a causal decoder-only model developed by TII and trained on 1,500 billion tokens of RefinedWeb dataset, which was enhanced with curated corpora. The model is available under the Apache 2.0 license. It outperforms comparable open-source models and features an architecture optimized for inference. However, it is a raw, pretrained model that should be further finetuned for most use cases.

@@ -35,7 +35,7 @@ tags:
     precision: "4"
   inference_supported_envs:
   - vllm
-version: 5
+version: 6
 description: |-
   # Description
   Falcon-7B-Instruct is a large language model with 7 billion parameters, developed by TII. It is a causal decoder-only model and is released under the Apache 2.0 license. This model is optimized for inference and features FlashAttention and multiquery architectures. It is primarily designed for chat and instruct applications in English and French. However, it may not be suitable for further fine-tuning. It is available under the Apache 2.0 license.
