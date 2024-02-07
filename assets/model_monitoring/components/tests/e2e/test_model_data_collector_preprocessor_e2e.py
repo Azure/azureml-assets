@@ -31,7 +31,7 @@ def _submit_mdc_preprocessor_job(
 
         mdc_preprocessor_output.identity = AmlTokenConfiguration()
         mdc_preprocessor_output.resources = {
-            'instance_type': 'Standard_E8S_V3',
+            'instance_type': 'Standard_E4S_V3',
             'runtime_version': '3.3',
         }
 
