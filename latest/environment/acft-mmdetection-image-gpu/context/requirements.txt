@@ -1,9 +1,9 @@
-azureml-metrics[image]~=0.0.42
+azureml-metrics[image]~=0.0.44
 azureml-evaluate-mlflow==0.0.44
 azureml-acft-accelerator==0.0.44
-azureml-acft-common-components[image]~=0.0.42
+azureml-acft-common-components[image]~=0.0.44
 azureml-acft-image-components==0.0.44
-azureml-core==1.54.0
+azureml-core==1.55.0
 azure-ai-ml==1.11.0
 requests
 datasets==2.15.0
