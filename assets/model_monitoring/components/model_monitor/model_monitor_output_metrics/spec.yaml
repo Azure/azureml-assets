@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_output_metrics
 display_name: Model Monitor - Output Metrics
 description: Output the computed model monitor metrics to the default datastore.
-version: 0.3.8
+version: 0.3.10
 is_deterministic: true
 
 code: ../../src/
@@ -40,10 +40,10 @@ outputs:
     type: uri_folder
     mode: direct
 conf:
-  spark.driver.cores: 1
-  spark.driver.memory: 2g
-  spark.executor.cores: 2
-  spark.executor.memory: 2g
+  spark.driver.cores: 4
+  spark.driver.memory: 28g
+  spark.executor.cores: 4
+  spark.executor.memory: 28g
   spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1

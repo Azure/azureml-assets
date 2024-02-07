@@ -1,0 +1,32 @@
+type: evaluationresult
+name: human_eval_codellama_13b_instruct_hf_text_generation
+version: 1.0.2
+display_name: human_eval_codellama_13b_instruct_hf_text_generation
+description: codellama-13b-instruct-hf run for human_eval dataset
+dataset_family: human_eval
+dataset_name: human_eval
+
+model_name: codellama-13b-instruct-hf
+model_version: "4"
+model_asset_id: azureml://registries/azureml-meta/models/CodeLlama-13b-Instruct-hf/versions/4
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-meta/models/CodeLlama-13b-Instruct-hf/versions/4
+
+tags:
+  task: text-generation
+  accuracy_metric_name: pass@1
+
+metrics:
+  accuracy: 0.402
+
+path: ./job_files
+
+
+properties:
+  n_shot: 0
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: None
+  fewshot_split: "None"

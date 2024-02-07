@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_metric_outputter
 display_name: Model Monitor - Metric Outputter
 description: Output the computed model monitor metrics.
-version: 0.3.13
+version: 0.3.15
 is_deterministic: true
 
 code: ../../src/
@@ -32,10 +32,10 @@ outputs:
     type: uri_folder
     mode: direct
 conf:
-  spark.driver.cores: 1
-  spark.driver.memory: 2g
-  spark.executor.cores: 2
-  spark.executor.memory: 2g
+  spark.driver.cores: 4
+  spark.driver.memory: 28g
+  spark.executor.cores: 4
+  spark.executor.memory: 28g
   spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1

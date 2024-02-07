@@ -23,6 +23,8 @@
       "openai",
       "pfazure",
       "eastus",
+      "eastus2",
+      "euap",
       "azureai",
       "vectordb",
       "Qdrant",
@@ -66,7 +68,9 @@
       "zelin",
       "embeded",
       "metad",
-      "orignal"
+      "orignal",
+      "mlindex",
+      "chjinche"
     ],
     "ignoreWords": [
       "openmpi",

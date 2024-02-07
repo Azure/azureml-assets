@@ -5,6 +5,7 @@
 
 import datetime
 
+from src.batch_score.common.common_enums import AuthenticationType, ApiType, EndpointType
 from src.batch_score.common.telemetry.minibatch_aggregator import MinibatchAggregator
 from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
@@ -109,6 +110,20 @@ def test_minibatch_aggregator(mock_run_context):
 
     # Assert
     assert isinstance(summary, BatchScoreMinibatchCompletedEvent)
+
+    # Confirm that numpy types are not present in the summary object.
+    expected_types = [
+        ApiType,
+        AuthenticationType,
+        bool,
+        datetime.datetime,
+        EndpointType,
+        float,
+        int,
+        str,
+        type(None)]
+    types = [type(value) for value in summary.to_dictionary().values()]
+    assert all(t in expected_types for t in types)
 
     assert summary.minibatch_id == 'minibatch_id'
     assert summary.scoring_url == 'scoring_url'

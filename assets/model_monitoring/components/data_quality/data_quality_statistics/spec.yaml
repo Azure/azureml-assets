@@ -4,7 +4,7 @@ type: spark
 name: data_quality_data_statistics
 display_name: Data Quality - Data Statistics
 description: Compute data statistics leveraged by the data quality monitor.
-version: 0.3.6
+version: 0.3.7
 is_deterministic: true
 
 inputs:
@@ -26,10 +26,10 @@ code: ../../src/
 entry:
   file: ./data_quality_statistics/run.py
 conf:
-  spark.driver.cores: 1
-  spark.driver.memory: 2g
-  spark.executor.cores: 2
-  spark.executor.memory: 2g
+  spark.driver.cores: 4
+  spark.driver.memory: 28g
+  spark.executor.cores: 4
+  spark.executor.memory: 28g
   spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1

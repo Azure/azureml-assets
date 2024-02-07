@@ -168,7 +168,9 @@ class ScoringClient:
             model_response_code=model_response_code,
             model_response_reason=model_response_reason)
 
-        is_retriable = scoring_utils.is_retriable(retriable_type)
+        is_retriable = scoring_utils.is_retriable(
+            retriable_type=retriable_type,
+            retry_count=scoring_request.retry_count + 1)
 
         # Record endpoint url and response_status
         scoring_request.request_history.append(ScoringAttempt(
@@ -251,9 +253,10 @@ class ScoringClient:
             )
 
         if result.status == ScoringResultStatus.FAILURE:
-            should_tally = self.__tally_handler.should_tally(
-                response_status=response_status,
-                model_response_status=model_response_code)
+            should_tally = self.__tally_handler \
+                and self.__tally_handler.should_tally(
+                    response_status=response_status,
+                    model_response_status=model_response_code)
             if should_tally:
                 result.omit = True
 

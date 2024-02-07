@@ -137,6 +137,40 @@ def test_handle_response_retriable_exception_throws_exception(exception_to_throw
     mock_emit_event.assert_called_with(batch_score_event=expected_request_completed_event)
 
 
+def test_handle_response_server_error_max_retries_reached(mock_run_context):
+    """Test handle response returns failure when retry count reaches max retries."""
+    # Arrange
+    http_response = HttpScoringResponse(status=507)
+    scoring_request = _get_test_scoring_request()
+    scoring_request.retry_count = 3
+    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
+    expected_request_completed_event = _get_expected_request_completed_event(
+        response_handler,
+        scoring_request,
+        http_response)
+
+    # Act
+    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+        scoring_result = response_handler.handle_response(
+            http_response,
+            scoring_request,
+            test_x_ms_client_request_id,
+            test_start_time,
+            test_end_time,
+            test_worker_id)
+
+    # Assert
+    assert_scoring_result(
+        scoring_result,
+        ScoringResultStatus.FAILURE,
+        scoring_request,
+        http_response,
+        test_end_time,
+        test_start_time
+    )
+    mock_emit_event.assert_called_with(batch_score_event=expected_request_completed_event)
+
+
 # This is an actual failed response payload from a model.
 # We use the 'r' prefix to create a raw string so we don't have to escape the escape characters in the string.
 failed_response_payload = r'{\n  "error": {\n    "message": "This model\'s maximum context length is 16385 tokens, ' \
@@ -232,7 +266,7 @@ def _get_expected_request_completed_event(
         worker_id=test_worker_id,
         scoring_url=test_scoring_url,
         is_successful=True if http_response.status == 200 else False,
-        is_retriable=aoai_response_handler.is_retriable(http_response.status),
+        is_retriable=aoai_response_handler.is_retriable(http_response.status, scoring_request.retry_count + 1),
         response_code=http_response.status,
         model_response_code=model_response_code,
         prompt_tokens=prompt_tokens,
@@ -246,5 +280,6 @@ def _get_test_scoring_request() -> ScoringRequest:
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
     scoring_request.scoring_url = test_scoring_url
     scoring_request.segment_id = test_segment_count
+    scoring_request.retry_count = 0
 
     return scoring_request

@@ -25,7 +25,8 @@ from ...common.telemetry.events.batch_score_request_completed_event import Batch
 class AoaiHttpResponseHandler(HttpResponseHandler):
     """Defines the AOAI HTTP response handler."""
 
-    RETRIABLE_STATUS_CODES = [408, 429, 500, 502, 503, 504]
+    DEFAULT_MAX_RETRIES = 3
+    RETRIABLE_STATUS_CODES = [408, 429]
 
     def __init__(self, tally_handler: TallyFailedRequestHandler):
         """Initialize AoaiHttpResponseHandler."""
@@ -68,7 +69,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
                 http_post_response=http_response,
             )
 
-        if self.is_retriable(response_status):
+        if self.is_retriable(response_status, scoring_request.retry_count + 1):
             raise RetriableException(
                 status_code=http_response.status,
                 response_payload=http_response.payload)
@@ -92,9 +93,15 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
 
         return result
 
-    def is_retriable(self, http_status: int) -> bool:
+    def is_retriable(
+        self,
+        http_status: int,
+        retry_count: int,
+        max_retries: int = DEFAULT_MAX_RETRIES
+    ) -> bool:
         """Is the http status retriable."""
-        return http_status in self.RETRIABLE_STATUS_CODES
+        return http_status in self.RETRIABLE_STATUS_CODES \
+            or (http_status and http_status >= 500 and retry_count < max_retries)
 
     def _handle_exception(
             self,
@@ -156,7 +163,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             worker_id=worker_id,
             scoring_url=scoring_request.scoring_url,
             is_successful=http_response.status == 200,
-            is_retriable=self.is_retriable(http_response.status),
+            is_retriable=self.is_retriable(http_response.status, scoring_request.retry_count + 1),
             response_code=http_response.status,
             model_response_code=http_response.get_model_response_code(),
             prompt_tokens=get_prompt_tokens(http_response.payload),
