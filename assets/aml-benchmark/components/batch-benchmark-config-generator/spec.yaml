@@ -76,7 +76,10 @@ inputs:
     default: 0
     min: 0
     description: The maximum number of tokens to generate at a time. 0 is default. If set to 0, the full response is generated all at once. If greater than 0, tokens are generated incrementally in segments. During each increment, the request and the previous partial response are sent to the model to generate the next segment. Segments are stitched together to form the full response.
-
+  app_insights_connection_string:
+    type: string
+    optional: True
+    description: Application insights connection string where the batch score component will log metrics and logs.
 outputs:
   batch_score_config:
     type: uri_file
@@ -100,3 +103,4 @@ command: >-
   $[[--connection_name '${{inputs.connection_name}}']]
   $[[--deployment_name '${{inputs.deployment_name}}']]
   $[[--additional_headers '${{inputs.additional_headers}}']]
+  $[[--app_insights_connection_string '${{inputs.app_insights_connection_string}}']]

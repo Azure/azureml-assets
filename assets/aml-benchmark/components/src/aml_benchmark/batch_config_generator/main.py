@@ -104,6 +104,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         help="The maximum number of tokens to generate at a time."
     )
+    parser.add_argument(
+        "--app_insights_connection_string",
+        type=str,
+        required=False,
+        help="The azure application insights connection string where metrics and logs will be logged."
+    )
     arguments, _ = parser.parse_known_args()
     logger.info(f"Arguments: {arguments}")
     return arguments
@@ -251,6 +257,7 @@ def main(
     additional_headers: Optional[str],
     deployment_name: Optional[str],
     max_retry_time_interval: Optional[int],
+    app_insights_connection_string: Optional[str],
 ) -> None:
     """
     Entry script for the script.
@@ -271,6 +278,7 @@ def main(
     :param deployment_name: The deployment name. Only needed for managed OSS deployment.
     :param max_retry_time_interval: The maximum time (in seconds) spent retrying a payload.
         If unspecified, payloads are retried unlimited times.
+    :param app_insights_connection_string: The application insights connection string.
     :return: None
     """
     # Override the configs if config file is passed. Config file takes precedence
@@ -310,9 +318,11 @@ def main(
         },
         "request_settings": request_settings_dict,
         "log_settings": {
-            "stdout_log_level": "debug" if debug_mode else "info"
+            "stdout_log_level": "debug" if debug_mode else "info",
         }
     }
+    if app_insights_connection_string:
+        config_dict["log_settings"]["app_insights_connection_string"] = app_insights_connection_string
     logger.info("Saving config file")
     save_json_to_file(config_dict, batch_score_config_path)
     logger.info("Saved config file.")
@@ -334,4 +344,5 @@ if __name__ == "__main__":
         deployment_name=args.deployment_name,
         max_retry_time_interval=args.max_retry_time_interval,
         response_segment_size=args.response_segment_size,
+        app_insights_connection_string=args.app_insights_connection_string,
     )

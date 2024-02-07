@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.9
+version: 0.0.10
 
 inputs:
   input_dataset:
@@ -19,6 +19,10 @@ inputs:
         - oai
         - oss
         - vision_oss
+  inferencing_compute:
+    type: string
+    description: Compute to be used for inferencing.
+    optional: True
   batch_input_pattern:
     type: string
     description: >- 
@@ -151,6 +155,10 @@ inputs:
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
+  app_insights_connection_string:
+    type: string
+    optional: True
+    description: Application insights connection string where the batch score component will log metrics and logs.
 outputs:
   predictions:
     type: uri_file
@@ -187,6 +195,7 @@ jobs:
     component: ../batch-benchmark-config-generator/spec.yaml
     inputs:
       scoring_url: ${{parent.inputs.endpoint_url}}
+      inferencing_compute: ${{parent.inputs.inferencing_compute}}
       connection_name: ${{parent.inputs.connections_name}}
       deployment_name: ${{parent.inputs.deployment_name}}
       authentication_type: ${{parent.inputs.authentication_type}}
@@ -198,6 +207,7 @@ jobs:
       max_worker_count: ${{parent.inputs.max_worker_count}}
       configuration_file: ${{parent.inputs.endpoint_config_file}}
       model_type: ${{parent.inputs.model_type}}
+      app_insights_connection_string: ${{parent.inputs.app_insights_connection_string}}
     outputs:
       batch_score_config:
         type: uri_file
@@ -222,6 +232,7 @@ jobs:
     retry_settings:
       timeout: 6000
       max_retries: 10
+    compute: ${{parent.inputs.inferencing_compute}}
   # Reformat
   batch_output_formatter: 
     type: command

@@ -6,6 +6,7 @@
 import os
 import argparse
 import pandas as pd
+import mlflow
 
 from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files
 from aml_benchmark.utils.logging import get_logger
@@ -144,6 +145,7 @@ def main(
     ground_truth_df = pd.DataFrame(ground_truth_df)
     ground_truth_df.to_json(
         os.path.join(output_metadata, "ground_truth_data.jsonl"), orient="records", lines=True)
+    mlflow.log_metrics({'total_records': len(df)})
 
 
 if __name__ == "__main__":
