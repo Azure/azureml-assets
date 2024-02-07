@@ -1,7 +1,6 @@
 # **Model Details**
 
 Model Name: EleutherAI/gpt-neo-1.3B
-
 GPT-Neo 1.3B is a transformer model created by EleutherAI, replicating the GPT-3 architecture with 1.3 billion parameters. Trained on the Pile dataset, consisting of diverse texts, the model underwent training for 362,000 steps on 380 billion tokens. The training focused on masked autoregressive language modeling using cross-entropy loss.
 
 The intended use of GPT-Neo is for generating text from prompts, leveraging its understanding of the English language to extract features for downstream tasks. Its core functionality is predicting the next token in a given text string. However, the model has limitations, and uncertainties exist in its response to prompts. The training dataset, Pile, contains profanity and potentially offensive language, leading to a warning about the generation of socially unacceptable text. Human curation is recommended for output filtering.
