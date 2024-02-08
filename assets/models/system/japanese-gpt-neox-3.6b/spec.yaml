@@ -13,8 +13,11 @@ properties:
   finetune-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: text-classification, token-classification
 tags:
-  Featured: ''
-  Preview: ''
+  datasets: cc100, wikipedia, mc4
+  license: mit
+  SharedComputeCapacityEnabled: ''
+  task: text-generation
+  huggingface_model_id: rinna/japanese-gpt-neox-3.6b
   inference_compute_allow_list:
     [
       Standard_NC6s_v3,
