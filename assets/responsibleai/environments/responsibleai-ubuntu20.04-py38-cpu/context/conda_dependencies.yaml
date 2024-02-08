@@ -7,8 +7,8 @@ dependencies:
   - python=3.8
   - pip
   - pip:
-    - responsibleai~=0.32.1
-    - raiwidgets~=0.32.1
+    - responsibleai~=0.34.1
+    - raiwidgets~=0.34.1
     - markupsafe<=2.0.1
     - itsdangerous==2.0.1
     - mlflow
