@@ -73,6 +73,8 @@ class PropertyKeyValues:
     RAI_INSIGHTS_DATETIME_FEATURES_KEY = "datetime_features"
     RAI_INSIGHTS_TIME_SERIES_ID_FEATURES_KEY = "time_series_id_features"
 
+    RAI_INSIGHTS_DATA_TYPE_KEY = "data_type"
+
 
 class RAIToolType:
     CAUSAL = "causal"
