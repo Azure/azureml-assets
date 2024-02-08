@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/chat_quality_safety_eval/v1
+  container_path: models/chat_quality_safety_eval/v2
   storage_name: amlraipfmodels
   type: azureblob
 publish:
