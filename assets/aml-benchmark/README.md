@@ -77,13 +77,16 @@ python scripts/validation/doc_style.py -i assets/aml-benchmark/
 # Release checklist
 
 ## 1. Component release
-We need to make sure that the spec file is updated for all the components before kicking off the release process. From the root of this repo, run the following command to upgrade the components:
-```
-python assets/aml-benchmark/scripts/_internal/upgrade_components.py [--env_version <version>]
-```
-parameter `env_version` can take the following values:
-| **Value** | **Description** |
-| --- | --- |
-| `"latest"` | This is the default value. It will upgrade the components' environment to the latest version. |
-| `""` | This will keep the components' environment version as is. |
-| `"<specific_version>"` | This will upgrade the components' environment to the specified version. |
+- From the root of this repo, you can run either of the following to install the dependencies:
+    - `pip install -r assets/aml-benchmark/requirements.txt`
+    - `conda env create -f assets/aml-benchmark/dev_conda_env.yaml`
+- We need to make sure that the spec file is updated for all the components before kicking off the release process. From the root of this repo, run the following command to upgrade the components:
+    ```
+    python assets/aml-benchmark/scripts/_internal/upgrade_components.py [--env_version <version>]
+    ```
+    parameter `env_version` can take the following values:
+    | **Value** | **Description** |
+    | --- | --- |
+    | `"latest"` | This is the default value. It will upgrade the components' environment to the latest version. |
+    | `""` | This will keep the components' environment version as is. |
+    | `"<specific_version>"` | This will upgrade the components' environment to the specified version. |
