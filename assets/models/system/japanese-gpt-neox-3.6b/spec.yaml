@@ -10,7 +10,7 @@ properties:
   inference-min-sku-spec: 6|1|112|336
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetuning-min-sku-spec: 6|1|112|336
-  finetune-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetune-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: text-classification, token-classification
 tags:
   Featured: ''
