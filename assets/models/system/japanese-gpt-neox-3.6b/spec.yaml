@@ -16,7 +16,6 @@ tags:
   datasets: cc100, wikipedia, mc4
   license: mit
   SharedComputeCapacityEnabled: ''
-  task: text-generation
   huggingface_model_id: rinna/japanese-gpt-neox-3.6b
   inference_compute_allow_list:
     [
