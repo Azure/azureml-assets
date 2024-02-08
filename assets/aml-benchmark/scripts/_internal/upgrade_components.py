@@ -10,6 +10,7 @@ prints the regular expression to be used in the release.
 
 import os
 import re
+import argparse
 from typing import List, Union, Dict, Any, Tuple, Optional
 from concurrent.futures import ThreadPoolExecutor
 
@@ -78,52 +79,60 @@ def __replace_pipeline_comp_job_version(match: re.Match) -> str:
     return f"component: {component_name_with_registry}:{new_version}"
 
 
-def _upgrade_component_env(spec: Dict[str, Any], spec_str: str) -> str:
+def _upgrade_component_env(spec: Dict[str, Any], spec_str: str, env_version: str) -> str:
     """Upgrade component's environment."""
     type = spec["type"]
-    if type == NodeType.COMMAND:
-        env_arr = spec["environment"].split("/")
-        if env_arr[-1] != "latest":
+
+    if type == NodeType.COMMAND or type == NodeType.PARALLEL:
+        if type == NodeType.COMMAND:
+            env_arr = spec["environment"].split("/")
+        elif type == NodeType.PARALLEL:
+            env_arr = spec["task"]["environment"].split("/")
+        else:
+            raise ValueError(f"Invalid type {type}.")
+
+        # if env_version is '', keep the version as is, no replacement needed
+        if env_version == "":
+            return spec_str
+        # else if env_version is latest, get the latest version
+        elif env_version == "latest":
             latest_version = _get_asset_latest_version(
                 asset_name=env_arr[-3],
                 asset_type=AzureMLResourceType.ENVIRONMENT,
                 asset_version=env_arr[-1],
             )
-            env_arr[-1] = latest_version
-            spec_str = re.sub(
-                pattern=r"environment: .*",
-                repl=f"environment: {'/'.join(env_arr)}",
-                string=spec_str,
-            )
+        # else, use the provided version
+        else:
+            latest_version = env_version
+
+        if env_arr[-1] == "latest":
+            env_arr[-2] = "versions"
+        env_arr[-1] = latest_version
+        spec_str = re.sub(
+            pattern=r"environment: .*",
+            repl=f"environment: {'/'.join(env_arr)}",
+            string=spec_str,
+        )
+
     elif type == NodeType.PIPELINE:
         spec_str = re.sub(
             pattern=r"component: (\S+:\S+):(\d+\.\d+\.\d+)",
             repl=__replace_pipeline_comp_job_version,
             string=spec_str,
         )
-    elif type == NodeType.PARALLEL:
-        env_arr = spec["task"]["environment"].split("/")
-        if env_arr[-1] != "latest":
-            latest_version = _get_asset_latest_version(
-                asset_name=env_arr[-3],
-                asset_type=AzureMLResourceType.ENVIRONMENT,
-                asset_version=env_arr[-1],
-            )
-            env_arr[-1] = latest_version
-            spec_str = re.sub(
-                pattern=r"environment: .*",
-                repl=f"environment: {'/'.join(env_arr)}",
-                string=spec_str,
-            )
+
     return spec_str
 
 
 def _upgrade_component(
     component_path: str,
+    env_version: str,
 ) -> Tuple[bool, Union[str, None], str, Optional[str]]:
     """Upgrade component spec.
 
     :param component_path: Path to component spec.
+    :param env_version: Environment version to upgrade to. Defaults to 'latest', which will update env to the latest
+        version. Use '' to keep the version as is. Use a specific version to upgrade to that version."
     :return: Tuple of (error, error_message, component_path, component_name).
     """
     is_error = False
@@ -149,7 +158,7 @@ def _upgrade_component(
         )
 
         # bump component's environment only where version is hardcoded
-        spec_str = _upgrade_component_env(spec, spec_str)
+        spec_str = _upgrade_component_env(spec, spec_str, env_version)
 
         with open(component_path, "w") as file:
             file.write(spec_str)
@@ -159,8 +168,30 @@ def _upgrade_component(
     return is_error, error, component_path, name
 
 
-def main():
-    """Entry function."""
+def _parse_args() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description=f"{__file__}")
+    parser.add_argument(
+        "--env_version",
+        type=str,
+        default="latest",
+        help=(
+            "Environment version to upgrade to. Defaults to latest, which will update env to the latest version."
+            "Use '' to keep the version as is. Use a specific version to upgrade to that version."
+        ),
+    )
+    args, _ = parser.parse_known_args()
+    return args
+
+
+def main(env_version: str = "latest") -> None:
+    """
+    Entry function.
+
+    :param env_version: Environment version to upgrade to. Defaults to 'latest', which will update env to the latest
+        version. Use '' to keep the version as is. Use a specific version to upgrade to that version."
+    :return: None
+    """
     components = _get_all_components_spec()
 
     # upgrade components concurrently with tqdm
@@ -172,7 +203,8 @@ def main():
         results = list(
             tqdm(
                 executor.map(
-                    _upgrade_component, [component for component in components]
+                    lambda args: _upgrade_component(*args),
+                    [(component, env_version) for component in components]
                 ),
                 total=len(components),
             )
@@ -211,4 +243,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = _parse_args()
+    main(env_version=args.env_version)

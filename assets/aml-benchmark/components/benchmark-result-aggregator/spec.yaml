@@ -4,7 +4,7 @@ type: command
 name: benchmark_result_aggregator
 display_name: Benchmark result aggregator
 description: Aggregate quality metrics, performance metrics and all of the metadata from the pipeline. Also add them to the root run.
-version: 0.0.4
+version: 0.0.5
 is_deterministic: false
 
 inputs:
@@ -23,7 +23,7 @@ outputs:
     description: The json file with all of the aggregated results.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+environment: azureml://registries/azureml/environments/model-evaluation/versions/19
 command: >-
   python -m aml_benchmark.result_aggregator.main 
   $[[--quality_metrics_path ${{inputs.quality_metrics}}]] 
