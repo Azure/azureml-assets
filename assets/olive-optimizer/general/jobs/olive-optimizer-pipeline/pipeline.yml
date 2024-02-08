@@ -8,7 +8,7 @@ compute: azureml:cpu-cluster
 jobs:
   optimize:
     type: command
-    component: azureml:olive_optimizer:0.0.9
+    component: azureml:olive_optimizer:0.0.10
     inputs:
       config:
         type: uri_file

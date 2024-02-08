@@ -11,7 +11,7 @@ from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
 from azure.storage.filedatalake import FileSystemClient
-from azureml.core import Workspace, Run
+from azureml.core import Workspace, Run, Datastore
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -67,14 +67,14 @@ class StoreUrl:
                 return self._datastore.account_key
             elif self._datastore.credential_type == "Sas":
                 return AzureSasCredential(self._datastore.sas_token)
-            elif self._datastore.credential_type is None:
+            elif self._datastore.credential_type is None or self._datastore.credential_type == "None":
                 raise InvalidInputError("Credential-less input data is NOT supported for Model Monitoring job, "
                                         f"please add credential to datastore {self._datastore.name}.")
             else:
                 raise InvalidInputError(f"Unsupported credential type: {self._datastore.credential_type}, "
                                         "only AccountKey and Sas are supported.")
         elif self._datastore.datastore_type == "AzureDataLakeGen2":
-            if self._datastore.tenant_id and self._datastore.client_id:
+            if self._datastore.tenant_id and self._datastore.client_id and self._datastore.client_secret:
                 return ClientSecretCredential(tenant_id=self._datastore.tenant_id, client_id=self._datastore.client_id,
                                               client_secret=self._datastore.client_secret)
             else:
@@ -98,7 +98,8 @@ class StoreUrl:
             return None
 
         # blob, has cred datastore
-        if self.store_type == "blob" and self._datastore and self._datastore.credential_type:
+        if self.store_type == "blob" and self._datastore \
+                and (self._datastore.credential_type and self._datastore.credential_type != "None"):
             return self._datastore.blob_service.get_container_client(self.container_name)
         # TODO fallback to DefaultAzureCredential for credential less datastore for now, may need better fallback logic
         credential = credential or self.get_credential()
@@ -206,7 +207,9 @@ class StoreUrl:
             else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
-                self._datastore = ws.datastores.get(datastore_name)
+                self._datastore = Datastore.get(ws, datastore_name)
+                if self._datastore is None:
+                    raise InvalidInputError(f"Datastore {datastore_name} not found in the workspace.")
                 datastore_type = self._datastore.datastore_type
                 if datastore_type not in ["AzureBlob", "AzureDataLakeGen2"]:
                     raise InvalidInputError("Only Azure Blob and Azure Data Lake Gen2 are supported, "

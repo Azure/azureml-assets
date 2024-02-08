@@ -27,7 +27,16 @@ tags:
       Standard_NC96ads_A100_v4,
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4,
-    ]    
+    ]
+  batch_compute_allow_list:
+    [
+      Standard_ND40rs_v2,
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96amsr_A100_v4,
+      Standard_ND96asr_v4,
+    ] 
   inference_compute_allow_list:
     [
       Standard_NC12s_v3,
@@ -47,13 +56,15 @@ tags:
     ]    
   model_specific_defaults:
     precision: "16"
-    deepspeed_stage: "3"
+    deepspeed_stage: "2"
     apply_deepspeed: "true"
     apply_ort: "true"
+    apply_lora: "true"
+    ignore_mismatched_sizes: "false"
   inference_supported_envs:
     - vllm
     - ds_mii
   license: apache-2.0
   task: text-generation
   author: mistralai
-version: 8
+version: 10

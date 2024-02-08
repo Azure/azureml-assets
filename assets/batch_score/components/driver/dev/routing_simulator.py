@@ -19,7 +19,7 @@ class RoutingSimulator(ServiceSimulator):
     """Routing simulator."""
 
     def __init__(self):
-        """Init function."""
+        """Initialize RoutingSimulator."""
         super().__init__(handler=self.RequestHandler)
 
     @classmethod

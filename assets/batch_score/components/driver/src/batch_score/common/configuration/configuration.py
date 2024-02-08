@@ -7,9 +7,8 @@ from argparse import Namespace
 from dataclasses import dataclass, field
 
 from ...batch_pool.routing.routing_client import RoutingClient
-from ...batch_pool.scoring.scoring_client import ScoringClient
 from .. import constants
-from ..auth.auth_provider import EndpointType
+from ..common_enums import EndpointType, ApiType, AuthenticationType
 from ..telemetry import logging_utils as lu
 
 
@@ -19,14 +18,15 @@ class Configuration(Namespace):
 
     additional_headers: str = field(init=True, default=None)
     additional_properties: str = field(init=True, default=None)
-    configuration_file: str = field(init=True, default=None)
     api_key_name: str = field(init=True, default=None)
     api_type: str = field(init=True, default=None)
     app_insights_connection_string: str = field(init=True, default=None)
+    app_insights_log_level: str = field(init=True, default="debug")
     async_mode: bool = field(init=True, default=False)
     authentication_type: str = field(init=True, default=None)
     batch_pool: str = field(init=True, default=None)
     batch_size_per_request: int = field(init=True, default=1)
+    configuration_file: str = field(init=True, default=None)
     connection_name: str = field(init=True, default=None)
     debug_mode: bool = field(init=True, default=None)
     ensure_ascii: bool = field(init=True, default=None)
@@ -45,6 +45,7 @@ class Configuration(Namespace):
     segment_large_requests: str = field(init=True, default=None)
     segment_max_token_size: int = field(init=True, default=None)
     service_namespace: str = field(init=True, default=None)
+    stdout_log_level: str = field(init=True, default="debug")
     tally_exclusions: str = field(init=True, default=None)
     tally_failed_requests: bool = field(init=True, default=None)
     token_file_path: str = field(init=True, default=None)
@@ -69,23 +70,22 @@ class Configuration(Namespace):
                              " Valid range is 1-2000.")
 
         if self.batch_size_per_request > 1 and not self.is_embeddings():
-            raise ValueError("The optional parameter 'batch_size_per_request' is only allowed to be greater than 1"
-                             " for the Embeddings API. Valid range is 1-2000.")
+            raise ValueError("The optional parameter 'batch_size_per_request' is only allowed to be "
+                             "greater than 1 for the Embeddings API. Valid range is 1-2000.")
 
     def _validate_online_endpoint_url_and_request_path(self):
         if (self.online_endpoint_url
                 and self.request_path is not None
-                and self.request_path not in ScoringClient.DEFAULT_REQUEST_PATHS):
-            raise ValueError("The optional parameter 'online_endpoint_url' is not allowed"
-                             " in combination with 'request_path'. "
-                             "Please put the entire scoring url in the `online_endpoint_url` parameter"
-                             " and remove 'request_path'.")
+                and self.request_path not in constants.DEFAULT_REQUEST_PATHS):
+            raise ValueError("The optional parameter 'online_endpoint_url' is not allowed in combination "
+                             "with 'request_path'. Please put the entire scoring url in the "
+                             "`online_endpoint_url` parameter and remove 'request_path'.")
 
     def _validate_segment_large_requests(self):
         if self.segment_large_requests == 'enabled' and not self.is_completion():
-            raise ValueError("The optional parameter 'segment_large_requests' is supported only"
-                             " with the Completion API."
-                             "Please set 'segment_large_requests' to 'disabled' or remove it from the configuration.")
+            raise ValueError("The optional parameter 'segment_large_requests' is supported only with "
+                             "the Completion API. Please set 'segment_large_requests' to 'disabled' or "
+                             "remove it from the configuration.")
 
     def log(self):
         """Log the configuration as alpha-sorted key-value pairs."""
@@ -98,44 +98,77 @@ class Configuration(Namespace):
 
     def is_embeddings(self) -> bool:
         """Check if the target endpoint is for embeddings models."""
-        return self.request_path == ScoringClient.DV_EMBEDDINGS_API_PATH or\
-            (self.online_endpoint_url and self.online_endpoint_url.endswith(ScoringClient.DV_EMBEDDINGS_API_PATH)) or\
-            (self.scoring_url and self.api_type in [constants.EMBEDDINGS_API_TYPE, "embedding"])
+        return (
+            self.request_path == constants.DV_EMBEDDINGS_API_PATH
+            or (
+                self.scoring_url is not None
+                and (
+                    self.scoring_url.endswith(constants.DV_EMBEDDINGS_API_PATH)
+                    or self.api_type in [ApiType.Embedding, "embeddings"]
+                )
+            )
+        )
 
     def is_chat_completion(self) -> bool:
         """Check if the target endpoint is for chat completion models."""
-        return self.request_path == ScoringClient.DV_CHAT_COMPLETIONS_API_PATH or\
-            (self.online_endpoint_url and
-             self.online_endpoint_url.endswith(ScoringClient.DV_CHAT_COMPLETIONS_API_PATH)) or\
-            (self.scoring_url and self.api_type == constants.CHAT_COMPLETION_API_TYPE)
+        return (
+            self.request_path == constants.DV_CHAT_COMPLETIONS_API_PATH
+            or (
+                self.scoring_url is not None
+                and (
+                    self.scoring_url.endswith(constants.DV_CHAT_COMPLETIONS_API_PATH)
+                    or self.api_type == ApiType.ChatCompletion
+                )
+            )
+        )
 
     def is_completion(self) -> bool:
         """Check if the target endpoint is for completion models."""
-        return self.request_path == ScoringClient.DV_COMPLETION_API_PATH or\
-            (self.online_endpoint_url and self.online_endpoint_url.endswith(ScoringClient.DV_COMPLETION_API_PATH)) or\
-            (self.scoring_url and self.api_type == constants.COMPLETION_API_TYPE)
+        return (
+            self.request_path == constants.DV_COMPLETION_API_PATH
+            or (
+                self.scoring_url is not None
+                and (
+                    self.scoring_url.endswith(constants.DV_COMPLETION_API_PATH)
+                    or self.api_type == ApiType.Completion
+                )
+            )
+        )
 
     def is_sahara(self, routing_client: RoutingClient) -> bool:
         """Check if the target endpoint is for sahara models."""
-        return routing_client and routing_client.target_batch_pool and\
+        return routing_client and routing_client.target_batch_pool and \
             routing_client.target_batch_pool.lower() == "sahara-global"
 
     def is_vesta(self) -> bool:
         """Check if the target endpoint is for vesta models."""
-        return self.request_path == ScoringClient.VESTA_RAINBOW_API_PATH or\
-            (self.online_endpoint_url and self.online_endpoint_url.endswith(ScoringClient.VESTA_RAINBOW_API_PATH)) or\
-            (self.scoring_url and self.api_type == constants.VESTA_API_TYPE)
+        return (
+            self.request_path == constants.VESTA_RAINBOW_API_PATH
+            or (
+                self.scoring_url is not None
+                and (
+                    self.scoring_url.endswith(constants.VESTA_RAINBOW_API_PATH)
+                    or self.api_type == ApiType.Vesta
+                )
+            )
+        )
 
     def is_vesta_chat_completion(self) -> bool:
         """Check if the target endpoint is for vesta chat completion models."""
-        return self.request_path == ScoringClient.VESTA_CHAT_COMPLETIONS_API_PATH or\
-            (self.online_endpoint_url and
-             self.online_endpoint_url.endswith(ScoringClient.VESTA_CHAT_COMPLETIONS_API_PATH)) or\
-            (self.scoring_url and self.api_type == constants.VESTA_CHAT_COMPLETION_API_TYPE)
+        return (
+            self.request_path == constants.VESTA_CHAT_COMPLETIONS_API_PATH
+            or (
+                self.scoring_url is not None
+                and (
+                    self.scoring_url.endswith(constants.VESTA_CHAT_COMPLETIONS_API_PATH)
+                    or self.api_type == ApiType.VestaChatCompletion
+                )
+            )
+        )
 
     def is_aoai_endpoint(self) -> bool:
         """Check if the target endpoint is for Azure OpenAI models."""
-        return self.scoring_url and\
+        return self.scoring_url and \
             any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
 
     def is_serverless_endpoint(self) -> bool:
@@ -144,9 +177,37 @@ class Configuration(Namespace):
 
     def get_endpoint_type(self) -> EndpointType:
         """Get endpoint type."""
-        if (self.is_aoai_endpoint()):
+        if self.is_aoai_endpoint():
             return EndpointType.AOAI
-        elif (self.is_serverless_endpoint()):
+        elif self.is_serverless_endpoint():
             return EndpointType.Serverless
+        elif self.batch_pool:
+            return EndpointType.BatchPool
         else:
             return EndpointType.MIR
+
+    def get_api_type(self) -> ApiType:
+        """Get api type."""
+        if self.is_completion():
+            return ApiType.Completion
+        elif self.is_chat_completion():
+            return ApiType.ChatCompletion
+        elif self.is_vesta():
+            return ApiType.Vesta
+        elif self.is_vesta_chat_completion():
+            return ApiType.VestaChatCompletion
+        elif self.is_embeddings():
+            return ApiType.Embedding
+        else:
+            return ApiType.Unknown
+
+    def get_authentication_type(self) -> AuthenticationType:
+        """Get authentication type."""
+        if self.authentication_type == AuthenticationType.ApiKey:
+            return AuthenticationType.ApiKey
+        elif self.authentication_type == AuthenticationType.ManagedIdentity:
+            return AuthenticationType.ManagedIdentity
+        elif self.authentication_type in [constants.CONNECTION_AUTH_TYPE, AuthenticationType.WorkspaceConnection]:
+            return AuthenticationType.WorkspaceConnection
+        else:
+            return AuthenticationType.Unknown

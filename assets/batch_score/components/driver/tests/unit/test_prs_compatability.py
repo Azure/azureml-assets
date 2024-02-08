@@ -4,8 +4,11 @@
 """This file contains unit tests for PRS compatibility."""
 
 import importlib
+import mock
 import os
 import sys
+
+from tests.fixtures.geneva_event_listener import mock_import
 
 
 def test_prs_code_importing():
@@ -18,7 +21,8 @@ def test_prs_code_importing():
     # Should be the exact same as the "entry_script" in the batch-score component yamls
     entry_script = "batch_score.main"
 
-    module = importlib.import_module(entry_script, file_path)
+    with mock.patch('importlib.import_module', side_effect=mock_import):
+        module = importlib.import_module(entry_script, file_path)
 
     sys.path.pop()
     assert module
