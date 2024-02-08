@@ -1,7 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Script to upgrade aml-benchmark components before release. Prints the regular expression to be used in the release."""
+"""
+Script to upgrade aml-benchmark components before release.
+Prints the regular expression to be used in the release.
+"""
 
 import os
 import re
@@ -177,10 +180,13 @@ def main():
     error_count = 0
     error_mssgs = []
     regex = "component/("
-    for is_error, error_mssg, comp_path, comp_name in results:
+    for is_error, error_mssg, _, comp_name in results:
         if is_error:
             error_count += 1
-            mssg = f"#{error_count}. Error in upgrading component '{comp_path.split('/')[-2]}'. Error details: \n\n{error_mssg}"
+            mssg = (
+                f"#{error_count}. Error in upgrading component '{comp_name}'. "
+                f"Error details: \n\n{error_mssg}"
+            )
             error_mssgs.append(mssg)
         else:
             regex += f"{comp_name}|"
