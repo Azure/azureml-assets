@@ -225,7 +225,7 @@ jobs:
         type: uri_file
 
   download_model:
-    component: azureml:download_model:0.0.20
+    component: azureml:download_model:0.0.21
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
