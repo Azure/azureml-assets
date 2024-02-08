@@ -3,7 +3,9 @@
 
 """
 Script to upgrade aml-benchmark components before release.
-Prints the regular expression to be used in the release.
+
+This script updates all the required parts in a component and finally
+prints the regular expression to be used in the release.
 """
 
 import os
