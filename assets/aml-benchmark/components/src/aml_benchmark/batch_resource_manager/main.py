@@ -315,11 +315,12 @@ def deploy_model_in_list_maybe(
             online_endpoint.delete_endpoint()
     return False
 
+# the function must not return None on a non-error path
 def _repeat_till_success_or_timeout(timeout_seconds : int, interval_seconds : int, func, *args, **kwargs):
     start_time = time.time()
     while not (result:=func(*args, **kwargs)):
         if time.time() - start_time > timeout_seconds:
-            return False
+            return None
         time.sleep(interval_seconds)
     return result
 
@@ -332,7 +333,7 @@ def _wait_finetuned_step(finetuned_step_name: Optional[str], start_timeout_secon
         raise BenchmarkUserException._with_error(
             AzureMLError.create(
                 BenchmarkUserError,
-                error_details=f"Finetuned wait step {finetuned_step_name} not found in the current job, check spelling.")
+                error_details=f"Finetuned wait step {finetuned_step_name} not found or failed to start in allotted {start_timeout_seconds} seconds.")
             )
     # TODO: this needs a timeout    
     while (wait_step_status:=wait_step_run.get_status()) not in _FINAL_STATUSES:
