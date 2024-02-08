@@ -16,7 +16,7 @@ dependencies:
     - datasets
     - ddt
     - tqdm
-    - yaml
+    - pyyaml
     - azure-core
     ## Test requirements
     - pytest

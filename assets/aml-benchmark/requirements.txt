@@ -11,5 +11,5 @@ pytest
 pytest-xdist
 ddt
 tqdm
-yaml
+pyyaml
 azure-core
