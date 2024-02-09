@@ -9,7 +9,6 @@ from typing import Dict, Any, Optional, List
 import hashlib
 import time
 import uuid
-import threading
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -24,9 +23,6 @@ from azure.ai.ml.entities import WorkspaceConnection
 from azure.ai.ml.entities import AccessKeyConfiguration
 from azureml._common._error_response._error_response_constants import ErrorCodes
 import mlflow
-
-
-CREDENTIAL = None
 
 
 class Constants:
@@ -119,26 +115,6 @@ def get_current_path() -> str:
     return os.path.dirname(os.path.abspath(__file__))
 
 
-def _get_credential():
-    """Get the credential."""
-    global CREDENTIAL
-    try:
-        CREDENTIAL = AzureCliCredential()
-        CREDENTIAL.get_token("https://management.azure.com/.default")
-    except Exception as ex:
-        print(f"Unable to authenticate via Azure CLI:\n{ex}")
-        CREDENTIAL = DefaultAzureCredential()
-        CREDENTIAL.get_token("https://management.azure.com/.default")
-
-
-def _credential_refresher():
-    """Refresh the credential."""
-    while True:
-        _get_credential()
-        # Refresh every four minutes because tokens are only guaranteed to live for 5 minutes
-        time.sleep(4 * 60)
-
-
 def get_mlclient(registry_name: Optional[str] = None) -> MLClient:
     """
     Get the MLClient instance for either workspace or registry.
@@ -149,15 +125,18 @@ def get_mlclient(registry_name: Optional[str] = None) -> MLClient:
     :param registry_name: Name of the registry.
     :return: MLClient instance.
     """
-    if CREDENTIAL is None:
-        _get_credential()
-        credential_refresher_thread = threading.Thread(target=_credential_refresher, daemon=True)
-        credential_refresher_thread.start()
     try:
-        ml_client = MLClient.from_config(credential=CREDENTIAL)
+        credential = AzureCliCredential()
+        credential.get_token("https://management.azure.com/.default")
+    except Exception as ex:
+        print(f"Unable to authenticate via Azure CLI:\n{ex}")
+        credential = DefaultAzureCredential()
+        credential.get_token("https://management.azure.com/.default")
+    try:
+        ml_client = MLClient.from_config(credential=credential)
     except Exception:
         ml_client = MLClient(
-            credential=CREDENTIAL,
+            credential=credential,
             subscription_id=os.environ.get("subscription_id"),
             resource_group_name=os.environ.get("resource_group"),
             workspace_name=os.environ.get("workspace"),
@@ -165,7 +144,7 @@ def get_mlclient(registry_name: Optional[str] = None) -> MLClient:
 
     if registry_name:
         ml_client = MLClient(
-            CREDENTIAL,
+            credential,
             ml_client.subscription_id,
             ml_client.resource_group_name,
             registry_name=registry_name,
