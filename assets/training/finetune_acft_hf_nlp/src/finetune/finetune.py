@@ -1128,11 +1128,13 @@ def finetune(args: Namespace):
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
 
-    # remove "azureml.base_image" metadata for icm mitigation.
-    # icm: https://portal.microsofticm.com/imp/v3/incidents/details/458481445/home
-    removed_base_image = metadata.pop("azureml.base_image", None)
-    logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
+    if args.task_name not in [Tasks.TEXT_GENERATION]:
+        removed_base_image = metadata.pop("azureml.base_image", None)
+        logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
                     base image value is {removed_base_image}.")
+    else:
+        logger.info("Adding inferencing base image {} for text generation task.".format(metadata["azureml.base_image"]))
+
     args.model_metadata = update_acft_metadata(metadata=metadata,
                                                finetuning_task=args.task_name,
                                                base_model_asset_id=model_asset_id)
