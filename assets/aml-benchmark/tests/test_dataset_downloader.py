@@ -157,7 +157,7 @@ class TestDatasetDownloaderScript:
         "dataset_name, configuration, split",
         [
             ("squad_v2", None, "test"),
-            ("ai2_arc", None, "validation"),
+            ("winogrande", None, "validation"),
             ("some_random_name", None, "test"),
         ],
     )
@@ -166,13 +166,13 @@ class TestDatasetDownloaderScript:
     ):
         """Test for unsupported url file."""
         expected_exception_mssg = f"Split '{split}' not available for dataset '{dataset_name}' and config '{None}'."
-        if dataset_name == "ai2_arc" and configuration is None:
+        if dataset_name == "winogrande" and configuration is None:
             expected_exception_mssg = (
                 f"Multiple configurations available for dataset '{dataset_name}'. Please specify either one of "
                 f"the following: {get_dataset_config_names(dataset_name)} or 'all'."
             )
         elif dataset_name == "some_random_name":
-            expected_exception_mssg = "FileNotFoundError: Couldn't find a dataset script at "
+            expected_exception_mssg = f"FileNotFoundError: Dataset '{dataset_name}' doesn't exist on the Hub."
 
         # Run the script and verify the exception
         try:
