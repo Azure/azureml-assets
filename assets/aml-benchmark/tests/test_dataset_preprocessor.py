@@ -17,7 +17,7 @@ from azure.ai.ml.constants import AssetTypes
 
 from .test_utils import (
     load_yaml_pipeline,
-    ML_CLIENT_SINGLETON,
+    get_mlclient,
     Constants,
     get_src_dir,
     download_outputs,
@@ -120,7 +120,7 @@ class TestDatasetPreprocessorComponent:
             os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE),
             "process_one_example.jsonl"
         )
-        ml_client = ML_CLIENT_SINGLETON.ml_client
+        ml_client = get_mlclient()
         exp_name = f"{self.EXP_NAME}"
         pipeline_job = self._get_pipeline_job(
             dataset,

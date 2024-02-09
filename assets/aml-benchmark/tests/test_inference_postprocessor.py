@@ -19,7 +19,7 @@ from azure.ai.ml.constants import AssetTypes
 
 from .test_utils import (
     load_yaml_pipeline,
-    ML_CLIENT_SINGLETON,
+    get_mlclient,
     Constants,
     download_outputs,
     assert_logged_params,
@@ -162,7 +162,7 @@ class TestInferencePostprocessorComponent:
             os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE),
             "process_one_prediction_example.jsonl",
         )
-        ml_client = ML_CLIENT_SINGLETON.ml_client
+        ml_client = get_mlclient()
         exp_name = f"{self.EXP_NAME}"
         pipeline_job = self._get_pipeline_job(
             prediction_dataset,

@@ -14,7 +14,7 @@ from azure.ai.ml import Input
 
 from .test_utils import (
     load_yaml_pipeline,
-    ML_CLIENT_SINGLETON,
+    get_mlclient,
     Constants,
     download_outputs
 )
@@ -30,7 +30,7 @@ class TestBatchOutputFormatterComponent:
     )
     def test_batch_output_formatter(self, model_type: str, temp_dir: str):
         """Test method for batch inference preparer."""
-        ml_client = ML_CLIENT_SINGLETON.ml_client
+        ml_client = get_mlclient()
         pipeline_job = self._get_pipeline_job(
             self.test_batch_output_formatter.__name__,
             'label',

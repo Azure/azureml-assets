@@ -11,7 +11,7 @@ import pytest
 
 from .test_utils import (
     load_yaml_pipeline,
-    ML_CLIENT_SINGLETON,
+    get_mlclient,
     download_outputs,
 )
 
@@ -37,7 +37,7 @@ class TestBenchmarkResultAggregatorComponent:
         has_quality_step: bool,
     ) -> None:
         """Benchmark result aggregator component test."""
-        ml_client = ML_CLIENT_SINGLETON.ml_client
+        ml_client = get_mlclient()
 
         pipeline_job = self._get_pipeline_job(
             pipeline_file_name,
