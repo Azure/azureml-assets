@@ -19,6 +19,9 @@ class Span:
                 yield span
         yield self
 
+    def __lt__(self, other):
+        return self.end < other.end
+
 class SpanTree:
     def __init__(self, spans):
         self.root_span = self._construct_span_tree(spans)
@@ -36,9 +39,9 @@ class SpanTree:
             else:
                 parent_span = span_map.get(parent_id)
                 # insert in order of end
-                bisect.insort(parent_span.children, span, key=lambda s: s.end)
+                bisect.insort(parent_span.children, span)
         return root_span
-    
+
     def show(self):
         if self.root_span is None:
             return
