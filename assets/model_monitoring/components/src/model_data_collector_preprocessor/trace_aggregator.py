@@ -6,23 +6,17 @@ import json
 from math import dist
 
 from pyspark.sql import DataFrame, Row
-from pyspark.sql.types import StructType, StructField, StringType, TimestampNTZType
+from pyspark.sql.types import StructType, StructField, StringType, ArrayType
 from pyspark.sql.functions import from_json, to_json, udf, collect_list
 from typing import Dict, Iterator, List, Union
 
 from assets.model_monitoring.components.src.shared_utilities.io_utils import init_spark
 
-        
 
-class Span:
+class SpanTreeNode:
     def __init__(self, span_row: Row):
         self.span_row = span_row
-        self.children = []
-
-    def show(self, indent=0):
-        print(f"{' '*indent}[{self.span_row.span_id}({self.span_row.start_time}, {self.span_row.end_time})]")
-        for c in self.children:
-            c.show(indent+4)
+        self._children: List[SpanTreeNode] = []
 
     @property
     def span_id(self) -> str:
@@ -34,22 +28,44 @@ class Span:
         """Get the span's parent id."""
         return self.span_row.parent_id
 
-    def __iter__(self) -> Iterator["Span"]:
-        for child_span in self.children:
+    @property
+    def children(self) -> List["SpanTreeNode"]:
+        """Get the span's children as list."""
+        return self._children
+
+    def insert_child(self, span):
+        """Inserts a child span in ascending time order due to __lt__()."""
+        bisect.insort(self._children, span)
+
+    def show(self, indent=0):
+        print(f"{' '*indent}[{self.span_row.span_id}({self.span_row.start_time}, {self.span_row.end_time})]")
+        for c in self.children:
+            c.show(indent+4)
+
+    def __iter__(self) -> Iterator["SpanTreeNode"]:
+        for child_span in self._children:
             for span in child_span:
                 yield span
         yield self
 
-    def from_dict(self, row_dict: dict):
-        """Load Span object from a pyspark.sql.Row.AsDict() representation."""
-        self.span_id = row_dict.get("trace_id")
+    def __lt__(self, other):
+        """Custom less-than comparison for sorting by time in bisect.insort() for python3.8."""
+        return self.span_row.end_time < other.span_row.end_time
+
+    def to_dict(self) -> dict:
+        """Dictionary representation of Span."""
+        span_node_schema_names = _get_span_tree_node_spark_df_schema().fieldNames()
+        span_dict = self.span_row.asDict()
+        out_dict = {key_name: span_dict.get(key_name) for key_name in span_node_schema_names}
+        out_dict['children'] = self.children
+        return out_dict
 
 
 class SpanTree:
-    def __init__(self, spans: List[Span]) -> None:
+    def __init__(self, spans: List[SpanTreeNode]) -> None:
         self.root_span = self._construct_span_tree(spans)
 
-    def _construct_span_tree(self, spans: List[Span]):
+    def _construct_span_tree(self, spans: List[SpanTreeNode]):
         # construct a dict with span_id as key and span as value
         span_map = { span.span_id: span for span in spans }
         for span in span_map.values():
@@ -58,8 +74,8 @@ class SpanTree:
                 root_span = span
             else:
                 parent_span = span_map.get(parent_id)
-                # insert in order of end time
-                bisect.insort(parent_span.children, span, key = lambda s: s.end)
+                if parent_span is not None:
+                    parent_span.insert_child(span)
         return root_span
 
     def show(self):
@@ -67,24 +83,38 @@ class SpanTree:
             return
         self.root_span.show()
 
-    def __iter__(self) -> Iterator[Span]:
+    def __iter__(self) -> Iterator[SpanTreeNode]:
+        if self.root_span is None:
+            return
         for span in self.root_span.__iter__():
             yield span
 
-    def to_json_string(self) -> str:
-        return SpanTreeSerialization(self.root_span).to_json_str()
-
-
-class SpanTreeSerialization():
-    def __init__(self, span_tree: SpanTree):
-        self.tree = span_tree
-
     def to_json_str(self) -> str:
-        
-        for span in self.tree:
-            
-        return ""
+        """Function to return jsons tring tree structure."""
+        # TODO:
+        output_dict = {}
+        self._get_json_str_repr(self.root_span, output_dict)
+        return json.dumps(output_dict['root_span'])
 
+    def _get_json_str_repr(self, curr_span: SpanTreeNode, output: dict) -> str:
+        """Recursively get tree structure JSON string."""
+        # TODO:
+        for child in curr_span.children:
+            self._get_json_str_repr(child, output)
+
+def _get_span_tree_node_spark_df_schema():
+    """Get SpanTree spark df schema."""
+    schema = StructType(
+        [
+            StructField("parent_id", StringType(), True),
+            StructField("span_id", StringType(), False),
+            StructField("span_type", StringType(), False),
+            StructField("start_time", StringType(), False),
+            StructField("end_time", StringType(), False),
+            StructField("children", ArrayType(StringType(), True), False),
+        ]
+    )
+    return schema
 
 def _get_aggregated_trace_log_spark_df_schema():
     """Get Aggregated Trace Log DataFrame Schema."""
@@ -94,8 +124,8 @@ def _get_aggregated_trace_log_spark_df_schema():
             StructField("trace_id", StringType(), False),
             StructField("user_id", StringType(), True),
             StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampNTZType(), False),
-            StructField("end_time", TimestampNTZType(), False),
+            StructField("start_time", StringType(), False),
+            StructField("end_time", StringType(), False),
             StructField("input", StringType(), False),
             StructField("output", StringType(), False),
             StructField("root_span", StringType(), True),
@@ -104,22 +134,34 @@ def _get_aggregated_trace_log_spark_df_schema():
     return schema
 
 
-def _construct_span_tree(span_rows: List[Row]):
-    """Transforms a single trace id into a """
-    span_list = [Span(row) for row in span_rows]
-    tree_builder = SpanTree(spans)
-    tree_builder.build_tree(spans)
-    return tree_builder.to_json_string()
+def _construct_aggregated_trace_df(span_tree: SpanTree) -> DataFrame:
+    """Build an aggregated trace dataframe from a span tree."""
+    spark = init_spark()
+    trace_schema = _get_aggregated_trace_log_spark_df_schema()
+    agg_trace_schema_names = trace_schema.fieldNames()
+    span_dict = span_tree.root_span.span_row.asDict()
+
+    data = {key_name: span_dict.get(key_name, None) for key_name in agg_trace_schema_names}
+    # TODO: decide jsonString format for tree and encode below:
+    data['root_span'] = str(span_tree)
+
+    return spark.createDataFrame([(data)], trace_schema)
+
+
+def _construct_span_tree(span_rows: List[Row]) -> SpanTree:
+    """Build a span tree from the raw span rows."""
+    span_list = [SpanTreeNode(row) for row in span_rows]
+    tree = SpanTree(span_list)
+    return tree
 
 
 def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
-    """"""
+    """Group span logs into aggregated trace logs."""
     spark = init_spark()
-    aggregated_traces = []
-    traces = span_logs.groupBy(span_logs.trace_id).agg(collect_list('*'))
-    for row in distinct_trace_id.collect():
-        span_logs.where(span_logs.trace_id == row.trace_id)
-        aggregated_traces.append(
-            _construct_span_tree()
-        )
-    return spark.createDataFrame(data=aggregated_traces, schema=_get_aggregated_trace_log_spark_df_schema())
+    distinct_trace_ids = span_logs.select("trace_id").distinct()
+    all_aggregated_traces = spark.createDataFrame(data=[], schema=_get_aggregated_trace_log_spark_df_schema())
+    for trace_id in distinct_trace_ids.collect():
+        tree = _construct_span_tree(span_logs.where(span_logs.trace_id == trace_id.trace_id).collect())
+        new_entry = _construct_aggregated_trace_df(tree)
+        all_aggregated_traces.union(new_entry)
+    return all_aggregated_traces
