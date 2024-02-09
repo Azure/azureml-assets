@@ -102,6 +102,7 @@ class SpanTree:
         for child in curr_span.children:
             self._get_json_str_repr(child, output)
 
+
 def _get_span_tree_node_spark_df_schema():
     """Get SpanTree spark df schema."""
     schema = StructType(
@@ -115,6 +116,7 @@ def _get_span_tree_node_spark_df_schema():
         ]
     )
     return schema
+
 
 def _get_aggregated_trace_log_spark_df_schema():
     """Get Aggregated Trace Log DataFrame Schema."""
@@ -142,10 +144,9 @@ def _construct_aggregated_trace_df(span_tree: SpanTree) -> DataFrame:
     span_dict = span_tree.root_span.span_row.asDict()
 
     data = {key_name: span_dict.get(key_name, None) for key_name in agg_trace_schema_names}
-    # TODO: decide jsonString format for tree and encode below:
-    data['root_span'] = str(span_tree)
+    data['root_span'] = span_tree.to_json_str()
 
-    return spark.createDataFrame([(data)], trace_schema)
+    return spark.createDataFrame([data], trace_schema)
 
 
 def _construct_span_tree(span_rows: List[Row]) -> SpanTree:
