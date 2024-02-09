@@ -2,8 +2,11 @@
 # Licensed under the MIT License.
 
 """Contains functionality for publishing run metrics."""
+from .constants import MAX_RETRY_COUNT
 import mlflow
 import os
+import traceback
+import time
 
 
 def _get_experiment_id():
@@ -129,4 +132,11 @@ def publish_metrics(run_id: str, metrics: dict, step: int):
     """Publish metrics to the run metrics store."""
     print(f"Publishing metrics to run id '{run_id}'.")
     with mlflow.start_run(run_id=run_id, nested=True):
-        mlflow.log_metrics(metrics=metrics, step=step)
+        for _ in range(MAX_RETRY_COUNT):
+            try:
+                mlflow.log_metrics(metrics=metrics, step=step)
+                return
+            except Exception as e:
+                print(f"Exception occurred in publishing metrics: {traceback.format_exc()}")
+                time.sleep(1)
+        
