@@ -168,10 +168,10 @@ class TestBatchBenchmarkInferenceComponent:
 
     def _create_inference_yaml(self):
         original_yml_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "..", "components", "batch-benchmark-inference", "spec.yaml")
         new_yaml_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "pipelines", "batch-benchmark-inference.yaml")
         new_lines = []
         current_section = "main"

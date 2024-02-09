@@ -9,7 +9,6 @@ import pytest
 import json
 import os
 import glob
-import subprocess
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
@@ -362,8 +361,8 @@ class TestDatasetPreprocessorScript:
             argss = " ".join(["--template_input", f"'{template_input}'"])
             cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
             run_command(f"{cmd}")
-        except subprocess.CalledProcessError as e:
-            out_message = e.output.strip()
+        except RuntimeError as e:
+            out_message = str(e)
             assert invalid_dataset_error_mssg in out_message
 
         dummy_dataset_path = os.path.join(os.getcwd(), "input_dataset_path")
@@ -372,16 +371,16 @@ class TestDatasetPreprocessorScript:
             argss = " ".join(["--dataset", dummy_dataset_path])
             cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
             run_command(f"{cmd}")
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, invalid_jsonl_dataset_mssg)
 
         try:
             argss = " ".join(["--dataset", dataset])
             cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
             run_command(f"{cmd}")
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, invalid_preprocessor_logic_exception_mssg)
 
         dummy_script_path = os.path.join(os.getcwd(), "user_script.json")
@@ -390,8 +389,8 @@ class TestDatasetPreprocessorScript:
             argss = " ".join(["--dataset", dataset, "--script_path", dummy_script_path])
             cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
             run_command(f"{cmd}")
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, invalid_user_script_mssg)
 
     @pytest.mark.parametrize(

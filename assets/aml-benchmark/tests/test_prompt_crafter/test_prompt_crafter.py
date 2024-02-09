@@ -6,7 +6,6 @@
 from typing import Optional
 import os
 import json
-import subprocess
 import pytest
 
 from azure.ai.ml.entities import Job
@@ -53,11 +52,11 @@ def _verify_and_get_output_records(
 
 
 # test patterns
-_prompt_pattern_test = "Question:{{question}} \nChoices:(1) {{choices.text[0]}}\n(2) {{choices.text[1]}}\n(3) {{choices.text[2]}}\n(4) {{choices.text[3]}}\nThe answer is: "  # noqa: E501
-_few_shot_pattern_test = "Question:{{question}} \nChoices:(1) {{choices.text[0]}}\n(2) {{choices.text[1]}}\n(3) {{choices.text[2]}}\n(4) {{choices.text[3]}}\nThe answer is: {{answerKey}}"  # noqa: E501
-_output_pattern_test = "{{answerKey}}"
-_ground_truth_column = "answerKey"
-_additional_columns = "question,answerKey"
+_prompt_pattern_test = r"Question:{{question}} \nChoices:(1) {{choices.text[0]}}\n(2) {{choices.text[1]}}\n(3) {{choices.text[2]}}\n(4) {{choices.text[3]}}\nThe answer is: "  # noqa: E501
+_few_shot_pattern_test = r"Question:{{question}} \nChoices:(1) {{choices.text[0]}}\n(2) {{choices.text[1]}}\n(3) {{choices.text[2]}}\n(4) {{choices.text[3]}}\nThe answer is: {{answerKey}}"  # noqa: E501
+_output_pattern_test = r"{{answerKey}}"
+_ground_truth_column = r"answerKey"
+_additional_columns = r"question,answerKey"
 
 
 class TestPromptCrafterComponent:
@@ -248,7 +247,7 @@ class TestPromptCrafterScript:
         ground_truth_column: str,
         additional_columns: str,
         output_file: str = os.path.join(
-            os.path.dirname(__file__), 'data/prompt_crafter_output.jsonl'),
+            os.path.dirname(os.path.dirname(__file__)), 'data/prompt_crafter_output.jsonl'),
     ):
         """Test for valid input dataset."""
         # Run the script
@@ -301,7 +300,7 @@ class TestPromptCrafterScript:
         additional_columns: str,
         expected_error_message: str,
         output_file: str = os.path.join(
-            os.path.dirname(__file__), 'data/prompt_crafter_output.jsonl'),
+            os.path.dirname(os.path.dirname(__file__)), 'data/prompt_crafter_output.jsonl'),
     ):
         """Test for valid input dataset."""
         try:
@@ -317,8 +316,8 @@ class TestPromptCrafterScript:
                 ground_truth_column=ground_truth_column,
                 additional_columns=additional_columns,
             )
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, expected_error_message)
 
     def _run_prompt_crafter_script(

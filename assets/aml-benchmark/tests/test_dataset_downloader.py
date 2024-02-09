@@ -5,7 +5,6 @@
 
 from typing import Union, Optional
 import os
-import subprocess
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
@@ -150,8 +149,8 @@ class TestDatasetDownloaderScript:
         # Run the script and verify the exception
         try:
             self._run_downloader_script(dataset_name, None, split, script)
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.parametrize(
@@ -178,8 +177,8 @@ class TestDatasetDownloaderScript:
         # Run the script and verify the exception
         try:
             self._run_downloader_script(dataset_name, None, split, None)
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     def _run_downloader_script(

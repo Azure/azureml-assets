@@ -10,7 +10,6 @@ import json
 import os
 import glob
 import sys
-import subprocess
 from typing import List
 
 from azure.ai.ml.entities import Job
@@ -490,8 +489,8 @@ class TestInferencePostprocessorScript:
             )
             cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
-        except subprocess.CalledProcessError as e:
-            out_message = e.output.strip()
+        except RuntimeError as e:
+            out_message = str(e)
             assert invalid_prediction_dataset_error_mssg in out_message
         try:
             argss = " ".join(
@@ -504,10 +503,9 @@ class TestInferencePostprocessorScript:
             )
             cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
-            out_message = e.output.strip()
-            assert invalid_prediction_colname_error_mssg in out_message
+        except RuntimeError as e:
+            exception_message = str(e)
+            assert invalid_prediction_colname_error_mssg in exception_message
 
         dummy_dataset_path = os.path.join(os.getcwd(), "prediction_dataset_path")
         os.system(f"mkdir {dummy_dataset_path}")
@@ -524,8 +522,8 @@ class TestInferencePostprocessorScript:
             )
             cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, invalid_jsonl_dataset_mssg)
 
         dummy_script_path = os.path.join(os.getcwd(), "user_script.json")
@@ -543,8 +541,8 @@ class TestInferencePostprocessorScript:
             )
             cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, invalid_user_script_mssg)
 
     @pytest.mark.parametrize(
@@ -934,6 +932,6 @@ class TestInferencePostprocessorScript:
             )
             cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
             run_command(f"{cmd}")
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, empty_dataset_error_mssg)
