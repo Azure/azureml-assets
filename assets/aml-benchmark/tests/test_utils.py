@@ -29,39 +29,38 @@ import mlflow
 class _MLClientSingleton:
     _instance = None
     _lock = threading.Lock()
+    _update_thread_started = False  # Flag to track whether update thread is started
+
 
     def __new__(cls, *args, **kwargs):
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super().__new__(cls)
                 cls._instance._initialize_mlclient()
+                if not cls._update_thread_started:
+                    cls._instance._start_auto_update_thread()
+                    cls._update_thread_started = True
         return cls._instance
 
     def _initialize_mlclient(self):
         try:
-            credential = AzureCliCredential()
-            credential.get_token("https://management.azure.com/.default")
-        except Exception as ex:
-            print(f"Unable to authenticate via Azure CLI:\n{ex}")
-            credential = DefaultAzureCredential()
-            credential.get_token("https://management.azure.com/.default")
-        try:
-            self.ml_client = MLClient.from_config(credential=credential)
+            self.ml_client = MLClient.from_config(credential=DefaultAzureCredential())
         except Exception:
             self.ml_client = MLClient(
-                credential=credential,
+                credential=DefaultAzureCredential(),
                 subscription_id=os.environ.get("subscription_id"),
                 resource_group_name=os.environ.get("resource_group"),
                 workspace_name=os.environ.get("workspace"),
             )
 
-    def start_auto_update_thread(self):
+    def _start_auto_update_thread(self):
         update_thread = threading.Thread(target=self._update_mlclient, daemon=True)
         update_thread.start()
 
     def _update_mlclient(self):
-        self._initialize_mlclient()
-        time.sleep(240)  # Sleep for 4 minutes
+        while True:
+            self._initialize_mlclient()
+            time.sleep(240)  # Sleep for 4 minutes
 
 
 class Constants:
@@ -394,4 +393,3 @@ def deploy_fake_test_endpoint_maybe(
 
 
 ML_CLIENT_SINGLETON = _MLClientSingleton()
-ML_CLIENT_SINGLETON.start_auto_update_thread()
