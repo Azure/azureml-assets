@@ -14,7 +14,7 @@ from datasets import get_dataset_config_names, get_dataset_split_names
 
 from .test_utils import (
     load_yaml_pipeline,
-    get_mlclient,
+    ML_CLIENT_SINGLETON,
     Constants,
     download_outputs,
     get_src_dir,
@@ -47,7 +47,7 @@ class TestDatasetDownloaderComponent:
         script: Union[str, None],
     ) -> None:
         """Dataset Downloader component test."""
-        ml_client = get_mlclient()
+        ml_client = ML_CLIENT_SINGLETON.ml_client
 
         pipeline_job = self._get_pipeline_job(
             dataset_name,

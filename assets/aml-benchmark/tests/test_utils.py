@@ -5,10 +5,11 @@
 
 import os
 import subprocess
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 import hashlib
 import time
 import uuid
+import threading
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -23,6 +24,44 @@ from azure.ai.ml.entities import WorkspaceConnection
 from azure.ai.ml.entities import AccessKeyConfiguration
 from azureml._common._error_response._error_response_constants import ErrorCodes
 import mlflow
+
+
+class _MLClientSingleton:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls, *args, **kwargs):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                cls._instance._initialize_mlclient()
+        return cls._instance
+
+    def _initialize_mlclient(self):
+        try:
+            credential = AzureCliCredential()
+            credential.get_token("https://management.azure.com/.default")
+        except Exception as ex:
+            print(f"Unable to authenticate via Azure CLI:\n{ex}")
+            credential = DefaultAzureCredential()
+            credential.get_token("https://management.azure.com/.default")
+        try:
+            self.ml_client = MLClient.from_config(credential=credential)
+        except Exception:
+            self.ml_client = MLClient(
+                credential=credential,
+                subscription_id=os.environ.get("subscription_id"),
+                resource_group_name=os.environ.get("resource_group"),
+                workspace_name=os.environ.get("workspace"),
+            )
+
+    def start_auto_update_thread(self):
+        update_thread = threading.Thread(target=self._update_mlclient, daemon=True)
+        update_thread.start()
+
+    def _update_mlclient(self):
+        self._initialize_mlclient()
+        time.sleep(240)  # Sleep for 4 minutes
 
 
 class Constants:
@@ -94,7 +133,7 @@ def _get_runs(job_name: str, exp_name: str) -> List[mlflow.entities.Run]:
     :param exp_name: Name of the azureml experiment.
     :return: List of runs.
     """
-    ml_client = get_mlclient()
+    ml_client = ML_CLIENT_SINGLETON.ml_client
 
     # get and set the mlflow tracking uri
     mlflow_tracking_uri = ml_client.workspaces.get(
@@ -113,43 +152,6 @@ def _get_runs(job_name: str, exp_name: str) -> List[mlflow.entities.Run]:
 def get_current_path() -> str:
     """Get the current path of the script."""
     return os.path.dirname(os.path.abspath(__file__))
-
-
-def get_mlclient(registry_name: Optional[str] = None) -> MLClient:
-    """
-    Get the MLClient instance for either workspace or registry.
-
-    If `registry_name` is None, then the MLClient instance will be created for workspace.
-    Else, the MLClient instance will be created for registry.
-
-    :param registry_name: Name of the registry.
-    :return: MLClient instance.
-    """
-    try:
-        credential = AzureCliCredential()
-        credential.get_token("https://management.azure.com/.default")
-    except Exception as ex:
-        print(f"Unable to authenticate via Azure CLI:\n{ex}")
-        credential = DefaultAzureCredential()
-        credential.get_token("https://management.azure.com/.default")
-    try:
-        ml_client = MLClient.from_config(credential=credential)
-    except Exception:
-        ml_client = MLClient(
-            credential=credential,
-            subscription_id=os.environ.get("subscription_id"),
-            resource_group_name=os.environ.get("resource_group"),
-            workspace_name=os.environ.get("workspace"),
-        )
-
-    if registry_name:
-        ml_client = MLClient(
-            credential,
-            ml_client.subscription_id,
-            ml_client.resource_group_name,
-            registry_name=registry_name,
-        )
-    return ml_client
 
 
 def load_yaml_pipeline(file_name: str, base_path: str = "pipelines") -> Job:
@@ -186,7 +188,7 @@ def download_outputs(
     :return: None
     :rtype: NoneType
     """
-    ml_client = get_mlclient()
+    ml_client = ML_CLIENT_SINGLETON.ml_client
     ml_client.jobs.download(
         name=job_name,
         output_name=output_name,
@@ -389,3 +391,7 @@ def deploy_fake_test_endpoint_maybe(
     ml_client.connections.create_or_update(workspace_connection=wps_connection)
 
     return endpoint.scoring_uri, deployment.name, connections_name
+
+
+ML_CLIENT_SINGLETON = _MLClientSingleton()
+ML_CLIENT_SINGLETON.start_auto_update_thread()

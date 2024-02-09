@@ -14,7 +14,7 @@ from azure.ai.ml import Input
 
 from .test_utils import (
     load_yaml_pipeline,
-    get_mlclient,
+    ML_CLIENT_SINGLETON,
     Constants,
     download_outputs
 )
@@ -56,7 +56,7 @@ class TestBatchInferencePreparerComponent:
     )
     def test_batch_inference_preparer(self, model_type: str, temp_dir: str):
         """Test batch inference preparer."""
-        ml_client = get_mlclient()
+        ml_client = ML_CLIENT_SINGLETON.ml_client
         score_url = "https://test.com"
         request = self.VISION_REQUEST if model_type == "vision_oss" else self.LLM_REQUEST
         pipeline_job = self._get_pipeline_job(

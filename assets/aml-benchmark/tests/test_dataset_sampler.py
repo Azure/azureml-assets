@@ -18,7 +18,7 @@ from azure.ai.ml import Input
 
 from .test_utils import (
     load_yaml_pipeline,
-    get_mlclient,
+    ML_CLIENT_SINGLETON,
     Constants,
     download_outputs,
     get_src_dir,
@@ -106,7 +106,7 @@ class TestDatasetSamplerComponent:
         n_samples: Union[int, None],
     ) -> None:
         """Dataset Sampler component test."""
-        ml_client = get_mlclient()
+        ml_client = ML_CLIENT_SINGLETON.ml_client
 
         input_file_path = self._create_input_file(temp_dir)
         pipeline_job = self._get_pipeline_job(
@@ -157,7 +157,7 @@ class TestDatasetSamplerComponent:
     ) -> None:
         """Test reproducibility when `sampling_style` is `random`."""
         sampling_style = "random"
-        ml_client = get_mlclient()
+        ml_client = ML_CLIENT_SINGLETON.ml_client
         output_records = []
         input_file_path = self._create_input_file(temp_dir)
 

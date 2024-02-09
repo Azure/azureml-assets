@@ -14,7 +14,7 @@ from azure.ai.ml import Input
 
 from .test_utils import (
     load_yaml_pipeline,
-    get_mlclient,
+    ML_CLIENT_SINGLETON,
     Constants,
     download_outputs,
     deploy_fake_test_endpoint_maybe
@@ -41,7 +41,7 @@ class TestBatchBenchmarkScoreComponent:
     )
     def test_batch_benchmark_score(self, model_type: str, temp_dir: str):
         """Test batch score preparer."""
-        ml_client = get_mlclient()
+        ml_client = ML_CLIENT_SINGLETON.ml_client
         score_url, deployment_name, connections_name = deploy_fake_test_endpoint_maybe(ml_client)
         pipeline_job = self._get_pipeline_job(
             self.test_batch_benchmark_score.__name__,

@@ -15,7 +15,7 @@ from azure.ai.ml.constants import AssetTypes
 
 from .test_utils import (
     load_yaml_pipeline,
-    get_mlclient,
+    ML_CLIENT_SINGLETON,
     Constants,
     download_outputs,
     get_src_dir,
@@ -111,7 +111,7 @@ class TestPromptCrafterComponent:
         few_shot_pattern: Optional[str],
     ) -> None:
         """Prompt Crafter component test."""
-        ml_client = get_mlclient()
+        ml_client = ML_CLIENT_SINGLETON.ml_client
 
         pipeline_job = self._get_pipeline_job(
             test_data,

@@ -19,7 +19,7 @@ from azure.ai.ml import Input
 
 from .test_utils import (
     load_yaml_pipeline,
-    get_mlclient,
+    ML_CLIENT_SINGLETON,
     Constants,
     download_outputs,
     get_mlflow_logged_metrics,
@@ -269,7 +269,7 @@ class TestComputePerfMetricsComponent:
         temp_dir: str,
     ) -> None:
         """Compute Performance Metrics component test."""
-        ml_client = get_mlclient()
+        ml_client = ML_CLIENT_SINGLETON.ml_client
 
         percentiles = "50,90,99"
         pipeline_job = self._get_pipeline_job(
@@ -340,7 +340,7 @@ class TestComputePerfMetricsComponent:
         has_output_chars: bool,
     ) -> None:
         """Test that the correct metrics are emitted when omitting_columns."""
-        ml_client = get_mlclient()
+        ml_client = ML_CLIENT_SINGLETON.ml_client
 
         percentiles = "50,90,99"
         pipeline_job = self._get_pipeline_job(
@@ -399,7 +399,7 @@ class TestComputePerfMetricsComponent:
         self, temp_dir: str, percentiles: Optional[str]
     ) -> None:
         """Test that the correct percentile metrics are emitted when modifying the percentile value."""
-        ml_client = get_mlclient()
+        ml_client = ML_CLIENT_SINGLETON.ml_client
 
         pipeline_job = self._get_pipeline_job(
             self.test_correct_percentiles.__name__,

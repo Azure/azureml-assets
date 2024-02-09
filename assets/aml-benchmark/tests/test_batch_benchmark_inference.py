@@ -15,7 +15,7 @@ from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
 from .test_utils import (
-    get_mlclient,
+    ML_CLIENT_SINGLETON,
     Constants,
     download_outputs,
     load_yaml_pipeline,
@@ -101,7 +101,7 @@ class TestBatchBenchmarkInferenceComponent:
     def test_batch_benchmark_inference(self, model_type: str, temp_dir: str):
         """Test batch inference preparer."""
         self._model_type = model_type
-        ml_client = get_mlclient()
+        ml_client = ML_CLIENT_SINGLETON.ml_client
         score_url, deployment_name, connections_name = deploy_fake_test_endpoint_maybe(ml_client)
         request = self.VISION_REQUEST if model_type == "vision_oss" else self.LLM_REQUEST
         pipeline_job = self._get_pipeline_job(
