@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_text_generation_data_import
-version: 0.0.9
+version: 0.0.10
 type: command
 
 is_deterministic: True
@@ -28,6 +28,11 @@ inputs:
     type: string
     optional: true
     description: Validation parameters propagated from pipeline.
+  
+  user_column_names:
+    type: string
+    optional: true
+    description: Comma separated list of column names to be used for training.
 
 outputs:
   output_dataset:
