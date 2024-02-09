@@ -92,6 +92,7 @@ MDC_DATA_COLUMN = 'data'
 MDC_DATAREF_COLUMN = 'dataref'
 
 SCHEMA_INFER_ROW_COUNT = 10
+MAX_RETRY_COUNT = 3
 
 AML_MOMO_ERROR_TAG = "azureml.modelmonitor.error"
 

@@ -125,7 +125,10 @@ def publish_metric(run_id: str, value: float, threshold, step: int):
     metrics["value"] = value
     if threshold is not None:
         metrics["threshold"] = float(threshold)
-    publish_metrics(run_id=run_id, metrics=metrics, step=step)
+    try:
+        publish_metrics(run_id=run_id, metrics=metrics, step=step)
+    except Exception:
+        print(f"Exception occurred in publish_metric: {traceback.format_exc()}")
 
 
 def publish_metrics(run_id: str, metrics: dict, step: int):
@@ -136,7 +139,6 @@ def publish_metrics(run_id: str, metrics: dict, step: int):
             try:
                 mlflow.log_metrics(metrics=metrics, step=step)
                 return
-            except Exception as e:
-                print(f"Exception occurred in publishing metrics: {traceback.format_exc()}")
+            except Exception:
+                print(f"Exception occurred in publish_metrics: {traceback.format_exc()}")
                 time.sleep(1)
-        
