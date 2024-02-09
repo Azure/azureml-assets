@@ -29,7 +29,9 @@ def run():
     args = parser.parse_args()
 
     input_df1 = try_read_mltable_in_spark(args.input_data_1, "input_data_1")
-    input_df2 = try_read_mltable_in_spark(args.input_data_2, "input_data_2")
+    input_df2 = input_df1
+    if args.input_data_2 is not None:
+        input_df2 = try_read_mltable_in_spark(args.input_data_2, "input_data_2")
 
     if not input_df1 and not input_df2:
         print("Both input data are empty. Skipping feature selection.")
