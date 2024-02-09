@@ -5,5 +5,5 @@ azureml.core==1.55.0
 pandas==2.2.0
 plotly==5.18.0
 psutil==5.9.8
-datasets==2.16.1
+datasets==2.17.0
 transformers==4.37.2

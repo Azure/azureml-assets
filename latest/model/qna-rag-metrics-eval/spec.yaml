@@ -10,7 +10,7 @@ properties:
     question based on the retrieved documents
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 4
+version: 5
 description: |-
   The Q&A RAG (Retrieval Augmented Generation) evaluation flow will evaluate the Q&A RAG systems by leveraging the state-of-the-art Large Language Models (LLM) to measure the quality and safety of your responses . Utilizing GPT model to assist with measurements aims to achieve a high agreement with human evaluations compared to traditional mathematical measurements.
 
