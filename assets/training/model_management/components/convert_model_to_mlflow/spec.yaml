@@ -51,12 +51,12 @@ inputs:
   task_name:
     type: string
     enum:
-      - text-classification
       - fill-mask
       - token-classification
       - question-answering
       - summarization
       - text-generation
+      - text2text-generation
       - text-classification
       - translation
       - image-classification

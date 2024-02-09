@@ -69,6 +69,7 @@ class SupportedNLPTasks(_CustomEnum):
     TEXT_GENERATION = "text-generation"
     TEXT_CLASSIFICATION = "text-classification"
     TRANSLATION = "translation"
+    TEXT2TEXT_GENERATION = "text2text-generation"
 
 
 class SupportedASRModelFamily(_CustomEnum):

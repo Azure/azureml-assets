@@ -165,11 +165,6 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
     ):
         model = str(self._model_dir)
 
-        # Set experimental flag
-        if self._experimental:
-            logger.info("Experimental features enabled for MLflow conversion")
-            self._hf_conf["exp"] = True
-
         # set metadata info
         metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
                                               is_finetuned_model=False,
@@ -237,6 +232,11 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
     def _save_in_hftransformersv2_flavor(self, metadata, conda_env,
                                          code_paths, input_example,
                                          requirements_file, pip_requirements):
+
+        # Set experimental flag
+        if self._experimental:
+            logger.info("Experimental features enabled for MLflow conversion")
+            self._hf_conf["exp"] = True
 
         logger.info("Segregate input model dir and present into separate folders for model, config and tokenizer")
         logger.info("Preparing model files")
@@ -325,7 +325,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         PIP_LIST = ['accelerate', 'cffi', 'dill', 'google-api-core', 'numpy',
                     'packaging', 'pillow', 'protobuf', 'pyyaml', 'requests', 'scikit-learn',
                     'scipy', 'sentencepiece', 'torch', 'mlflow']
-        ADD_PACKAGE_LIST = ['torchvision==0.14.1', 'transformers==4.34.1']
+        ADD_PACKAGE_LIST = ['torchvision==0.14.1', 'transformers==4.35.2']
 
         if self._task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
             ADD_PACKAGE_LIST.append(['soundfile==0.12.1', 'librosa==0.10.1', 'diffusers==0.21.4',
@@ -348,8 +348,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
             if pkg_name in PIP_LIST:
                 pip_list.append(pkg_name + "==" + pkg_version)
 
-        for pkg in ADD_PACKAGE_LIST:
-            pip_list.append(pkg)
+        pip_list.extend(ADD_PACKAGE_LIST)
 
         logger.info("pip list: {}".format(pip_list))
         return pip_list

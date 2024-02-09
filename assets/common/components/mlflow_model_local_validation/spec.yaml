@@ -41,17 +41,27 @@ inputs:
   task_name:
     description: A Hugging face task on which model was trained on
     enum:
-      - text-classification
       - fill-mask
       - token-classification
       - question-answering
       - summarization
       - text-generation
+      - text2text-generation
       - text-classification
       - translation
       - image-classification
+      - image-classification-multilabel
+      - image-object-detection
+      - image-instance-segmentation
+      - image-to-text
       - text-to-image
+      - text-to-image-inpainting
+      - image-text-to-text
+      - image-to-image
       - zero-shot-image-classification
+      - mask-generation
+      - video-multi-object-tracking
+      - visual-question-answering
     optional: true
     type: string
 
