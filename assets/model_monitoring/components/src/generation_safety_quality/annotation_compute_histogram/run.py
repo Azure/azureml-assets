@@ -354,44 +354,6 @@ def run():
     request_args["model"] = args.model_deployment_name
     endpoint_args["model"] = args.model_deployment_name
 
-    input_metric_names = [m.strip() for m in args.metric_names.split(",")]
-
-    if not (set(input_metric_names) <= set(ALL_METRIC_NAMES)):
-        raise ValueError(
-            f"metric_names must be a comma-separated list of metric names "
-            f"and a subset of {ALL_METRIC_NAMES}, got {args.metric_names}."
-        )
-
-    # remove all but groundedness/fluency/coherence/relevance/similarity from metric names and
-    # remove duplicates
-    pruned_metric_names = [re.sub(r'^(.*?)(Groundedness|Fluency|Coherence|Relevance|Similarity)(.*?)$', r'\2', m) for
-                           m in input_metric_names]
-    metric_names = list(set(pruned_metric_names))
-
-    # Validate inputs
-    if args.temperature < 0.0 or args.temperature > 2.0:
-        raise ValueError(f"temperature must be between 0.0 and 2.0, inclusive; "
-                         f"got {args.temperature}.")
-    if args.top_p < 0.0 or args.top_p > 1.0:
-        raise ValueError(f"top_p must be between 0.0 and 1.0, inclusive; got {args.top_p}.")
-    if args.num_samples <= 0:
-        # TODO support multiple returned annotations
-        raise ValueError(f"num_samples must be 1, got {args.num_samples}.")
-    if args.frequency_penalty < -2.0 or args.frequency_penalty > 2.0:
-        raise ValueError(
-            "frequency_penalty must be between -2.0 and 2.0, inclusive; "
-            f"got {args.frequency_penalty}."
-        )
-    if args.presence_penalty < -2.0 or args.presence_penalty > 2.0:
-        raise ValueError(
-            f"presence_penalty must be between -2.0 and 2.0, inclusive; "
-            f"got {args.presence_penalty}."
-        )
-
-    if args.sample_rate <= 0.0 or args.sample_rate > 1.0:
-        raise ValueError(f"sample_rate must be larger than 0.0 and at most 1.0, "
-                         f"got {args.sample_rate}.")
-
     # TODO add validation for threshold args!!
     print(f"Running with args: {args}")
 
@@ -404,7 +366,7 @@ def run():
     }
 
     apply_annotation(
-        metric_names=metric_names,
+        metric_names=args.metric_names,
         production_dataset=args.production_dataset,
         histogram=args.histogram,
         samples_index=args.samples_index,
@@ -419,8 +381,64 @@ def run():
         completion_column_name=args.completion_column_name,
         context_column_name=args.context_column_name,
         ground_truth_column_name=args.ground_truth_column_name,
-        violations=violations,
+        violations=violations
     )
+
+
+def process_metric_names(metric_names):
+    """Process metric names, remove whitespace and prune."""
+    input_metric_names = [m.strip() for m in metric_names.split(",")]
+
+    if not (set(input_metric_names) <= set(ALL_METRIC_NAMES)):
+        raise InvalidInputError(
+            f"metric_names must be a comma-separated list of metric names "
+            f"and a subset of {ALL_METRIC_NAMES}, got {metric_names}."
+        )
+
+    # remove all but groundedness/fluency/coherence/relevance/similarity from metric names and
+    # remove duplicates
+    pruned_metric_names = [re.sub(r'^(.*?)(Groundedness|Fluency|Coherence|Relevance|Similarity)(.*?)$', r'\2', m) for
+                           m in input_metric_names]
+    metric_names = list(set(pruned_metric_names))
+    return metric_names
+
+
+def get_request_arg_or_default(arg, request_args):
+    """Get request arg or default."""
+    return request_args[arg] if arg in request_args else None
+
+
+def validate_parameters(request_args, sample_rate):
+    """Validate input parameters."""
+    temperature = get_request_arg_or_default("temperature", request_args)
+    top_p = get_request_arg_or_default("top_p", request_args)
+    num_samples = get_request_arg_or_default("num_samples", request_args)
+    frequency_penalty = get_request_arg_or_default("frequency_penalty", request_args)
+    presence_penalty = get_request_arg_or_default("presence_penalty", request_args)
+    if temperature is not None and (temperature < 0.0 or temperature > 2.0):
+        raise InvalidInputError(f"temperature must be between 0.0 and 2.0, inclusive; "
+                                f"got {temperature}.")
+    if top_p is not None and (top_p < 0.0 or top_p > 1.0):
+        raise InvalidInputError(
+            f"top_p must be between 0.0 and 1.0, inclusive; got {top_p}.")
+    if num_samples is not None and num_samples <= 0:
+        # TODO support multiple returned annotations
+        raise InvalidInputError(f"num_samples must be 1, got {num_samples}.")
+    if frequency_penalty is not None and (frequency_penalty < -2.0 or frequency_penalty > 2.0):
+        raise InvalidInputError(
+            "frequency_penalty must be between -2.0 and 2.0, inclusive; "
+            f"got {frequency_penalty}."
+        )
+    if presence_penalty is not None and (presence_penalty < -2.0 or presence_penalty > 2.0):
+        raise InvalidInputError(
+            f"presence_penalty must be between -2.0 and 2.0, inclusive; "
+            f"got {presence_penalty}."
+        )
+
+    if sample_rate <= 0.0 or sample_rate > 1.0:
+        raise InvalidInputError(
+            f"sample_rate must be larger than 0.0 and at most 1.0, "
+            f"got {sample_rate}.")
 
 
 def apply_annotation(
@@ -440,9 +458,12 @@ def apply_annotation(
     context_column_name,
     ground_truth_column_name,
     samples_index,
-    violations,
+    violations
 ):
     """Apply annotation to all samples in the production_dataset."""
+    metric_names = process_metric_names(metric_names)
+    validate_parameters(request_args, sample_rate)
+
     if "chat_history" in [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]:
         raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
                                   "column. ")
@@ -454,23 +475,24 @@ def apply_annotation(
         set(metric_names))))
     for col_name in [prompt_column_name, completion_column_name]:
         if col_name not in production_df.columns and qa_required:
-            raise ValueError(f"production_dataset must have column: {col_name}")
+            raise InvalidInputError(f"production_dataset must have column: {col_name}")
     # Question, answer, context required for relevance and groundedness
     qac_required = len(list(set(QAC_METRIC_NAMES).intersection(
         set(metric_names))))
     if qac_required and context_column_name not in production_df.columns:
-        raise ValueError(f"production_dataset must have column: {context_column_name}")
+        raise InvalidInputError(f"production_dataset must have column: {context_column_name}")
     # Question, answer, ground-truth required for similarity
     if SIMILARITY in metric_names and ground_truth_column_name not in production_df.columns:
-        raise ValueError(f"production_dataset must have column: {ground_truth_column_name}")
+        raise InvalidInputError(f"production_dataset must have column: {ground_truth_column_name}")
 
     column_names = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
     if len(column_names) != len(set(column_names)):
-        raise ValueError("Detected duplicate specified columns. Column name input cannot be the same. Please ensure "
-                         f"that the column input specified is unique.\nReceived prompt_column_name: "
-                         f"{prompt_column_name}\ncompletion_column_name: {completion_column_name}\n"
-                         f"context_column_name: {context_column_name}\nground_truth_column_name: "
-                         f"{ground_truth_column_name}")
+        raise InvalidInputError(
+            "Detected duplicate specified columns. Column name input cannot be the same. Please ensure "
+            f"that the column input specified is unique.\nReceived prompt_column_name: "
+            f"{prompt_column_name}\ncompletion_column_name: {completion_column_name}\n"
+            f"context_column_name: {context_column_name}\nground_truth_column_name: "
+            f"{ground_truth_column_name}")
 
     # rename columns to prompt, completion, context, ground truth to match metaprompt data
     production_df = (production_df.withColumnRenamed(prompt_column_name, PROMPT)
