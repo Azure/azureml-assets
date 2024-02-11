@@ -46,7 +46,7 @@ class Signal:
             threshold = None
             if "threshold" in run_metric:
                 threshold = run_metric["threshold"]
-            if "value" in run_metric and run_metric["value"]:
+            if run_metric.get("value") is not None:
                 publish_metric(
                     run_metric["runId"], float(run_metric["value"]), threshold, step
                 )

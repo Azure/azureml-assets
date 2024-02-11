@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 """Contains functionality for publishing run metrics."""
-from .constants import MAX_RETRY_COUNT
+from .constants import MAX_RETRY_COUNT, MLFLOW_RUN_ID
 import mlflow
 import os
 import traceback
@@ -103,6 +103,9 @@ def get_or_create_run_id(
         with mlflow.start_run(run_id=_get_or_create_parent_run_id(monitor_name)) as current_run:
             print(f"Current parent run id: {current_run.info.run_id}")
             run_name = f"{signal_name}_{metric_name}"
+            if MLFLOW_RUN_ID in os.environ:
+                print(f"environment variable MLFLOW_RUN_ID:{os.environ[MLFLOW_RUN_ID]}")
+                del os.environ[MLFLOW_RUN_ID]
             with mlflow.start_run(
                 nested=True,
                 run_name=run_name,
