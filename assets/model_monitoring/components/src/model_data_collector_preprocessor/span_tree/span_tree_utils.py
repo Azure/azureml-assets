@@ -28,6 +28,7 @@ def _get_span_tree_node_spark_df_schema() -> StructType:
 
 class SpanTreeNode:
     """Spantree node class."""
+
     def __init__(self, span_row: Row) -> None:
         """Represent a singular node in a span tree."""
         self._span_row = span_row
