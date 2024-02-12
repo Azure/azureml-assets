@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/qna_rag_metrics_eval/v5
+  container_path: models/qna_rag_metrics_eval/v6
   storage_name: amlraipfmodels
   type: azureblob
 publish:
