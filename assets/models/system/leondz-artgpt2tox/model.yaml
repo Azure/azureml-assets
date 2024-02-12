@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: models/huggingface/leondz-artgpt2tox/1704717164/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:ss
+  description: description.md
+  type: mlflow_model
