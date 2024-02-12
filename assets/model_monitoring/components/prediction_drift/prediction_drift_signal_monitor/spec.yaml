@@ -57,7 +57,7 @@ outputs:
 jobs:
   feature_selection:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.5
+    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.7
     inputs:
       input_data_1:
         type: mltable
