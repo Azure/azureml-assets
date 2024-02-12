@@ -417,21 +417,30 @@ class OnlineEndpoint:
             bearer_token = self.curr_workspace._auth.token
 
         endpoint = self.curr_workspace.service_context._get_endpoint("api")
-        url_list = [
-            endpoint,
-            "rp/workspaces/subscriptions",
-            self.curr_workspace.subscription_id,
-            "resourcegroups",
-            self.curr_workspace.resource_group,
-            "providers",
-            "Microsoft.MachineLearningServices",
-            "workspaces",
-            self.curr_workspace.name,
-            "connections",
-            self._connections_name,
-            "listsecrets?api-version=2023-02-01-preview"
-        ]
-        resp = self._send_post_request('/'.join(url_list), {
+        #TODO: remove print
+        print(endpoint);
+        # url_list = [
+        #     endpoint,
+        #     "rp/workspaces/subscriptions",
+        #     self.curr_workspace.subscription_id,
+        #     "resourcegroups",
+        #     self.curr_workspace.resource_group,
+        #     "providers",
+        #     "Microsoft.MachineLearningServices",
+        #     "workspaces",
+        #     self.curr_workspace.name,
+        #     "connections",
+        #     self._connections_name,
+        #     "listsecrets?api-version=2023-02-01-preview"
+        # ]
+
+
+        # https://management.azure.com/subscriptions/95e0ae98-c287-4f51-b23e-4e2317b7e169/resourcegroups/EYESON.HERON.PROD.b816bb35-33ec-4d3f-82b2-6cb692a5679e/providers/Microsoft.MachineLearningServices/workspaces/amlworkspaceyu3zl4oks34ye/connections/b-689314967ddd45/listsecrets?api-version=2023-02-01-preview
+        final_url=f"https://management.azure.com/subscriptions/{self.curr_workspace.subscription_id}"\
+                   f"/resourcegroups/{self.curr_workspace.resource_group}"\
+                   f"/providers/Microsoft.MachineLearningServices/workspaces/{self.curr_workspace.workspace_name}"\
+                   f"/connections/{self._connections_name}/listsecrets?api-version=2023-02-01-preview"
+        resp = self._send_post_request(final_url, {
             "Authorization": f"Bearer {bearer_token}",
             "content-type": "application/json"
         }, {})
