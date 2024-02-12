@@ -15,6 +15,8 @@ from jinja2 import Environment
 from datasets import load_dataset
 from typing import Any, Dict, List, Union
 
+from aml_benchmark.utils.evaluation_utils import extract_text_from_markdown_tag
+
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
 \\S|$))"""
@@ -172,9 +174,9 @@ def run_humaneval_postprocessor(
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
         if str("def " + row["entry_point"] + "(") in row["original_prediction"]:
             # If the model regenerates the prompt/ function name
-            pred_combined_prompt = row["original_prediction"]
+            pred_combined_prompt = extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
         else:
-            original_prediction = row["original_prediction"]
+            original_prediction = extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
             # If spaces were stripped from endpoint responses, add those back.
             if not len(original_prediction) or (len(original_prediction) and original_prediction[0].isspace()):
                 prefix = ""
