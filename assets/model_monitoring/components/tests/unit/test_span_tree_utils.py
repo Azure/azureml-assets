@@ -9,7 +9,7 @@ from src.model_data_collector_preprocessor.span_tree.span_tree_utils import (
     SpanTreeNode,
     _get_span_tree_node_spark_df_schema
 )
-from tests.e2e.utils.io_utils import create_pyspark_dataframe
+
 import pytest
 from datetime import datetime
 
@@ -17,8 +17,6 @@ from datetime import datetime
 @pytest.mark.unit
 class TestSpanTreeUtilities:
     """Test class for span Row Tree Utilities."""
-
-    ################### SpanTree class tests:###################
 
     def test_span_tree_construct(self):
         """Test basic scenario to construct span tree with ascending time order."""
@@ -28,11 +26,21 @@ class TestSpanTreeUtilities:
         # s01 = 35, 60
         # s02 = 65, 90
         # s010 = 40, 50
-        s0 = SpanTreeNode(Row(span_id="0", parent_id=None, start_time="2024-02-12T00:00:01", end_time="2024-02-12T01:40:00"))
-        s00 = SpanTreeNode(Row(span_id="00", parent_id="0", start_time="2024-02-12T00:05:00", end_time="2024-02-12T00:30:00"))
-        s01 = SpanTreeNode(Row(span_id="01", parent_id="0", start_time="2024-02-12T00:35:00", end_time="2024-02-12T01:00:00"))
-        s02 = SpanTreeNode(Row(span_id="02", parent_id="0", start_time="2024-02-12T01:05:00", end_time="2024-02-12T01:30:00"))
-        s010 = SpanTreeNode(Row(span_id="010", parent_id="01", start_time="2024-02-12T00:40:00", end_time="2024-02-12T00:50:00"))
+        s0 = SpanTreeNode(
+            Row(span_id="0", parent_id=None, start_time="2024-02-12T00:00:01", end_time="2024-02-12T01:40:00")
+        )
+        s00 = SpanTreeNode(
+            Row(span_id="00", parent_id="0", start_time="2024-02-12T00:05:00", end_time="2024-02-12T00:30:00")
+        )
+        s01 = SpanTreeNode(
+            Row(span_id="01", parent_id="0", start_time="2024-02-12T00:35:00", end_time="2024-02-12T01:00:00")
+        )
+        s02 = SpanTreeNode(
+            Row(span_id="02", parent_id="0", start_time="2024-02-12T01:05:00", end_time="2024-02-12T01:30:00")
+        )
+        s010 = SpanTreeNode(
+            Row(span_id="010", parent_id="01", start_time="2024-02-12T00:40:00", end_time="2024-02-12T00:50:00")
+        )
         spans = [s0, s02, s010, s00, s01]
 
         tree = SpanTree(spans)
@@ -46,9 +54,9 @@ class TestSpanTreeUtilities:
         """Test scenario to construct span tree from json string."""
         json_string = ""
         try:
-            node = SpanTree.create_tree_from_json_string(json_string)
+            SpanTree.create_tree_from_json_string(json_string)
             assert False
-        except:
+        except Exception:
             assert True
 
         # Todo: once we have preprocessed span log data to test with
@@ -58,10 +66,6 @@ class TestSpanTreeUtilities:
         # assert "0x7fd179134fb9e709" == node.root_span.span_id
         # assert None == node.root_span.parent_id
         # assert 5 == len(node.root_span.children)
-
-    ################### End ###################
-
-    ################### SpanTreeNode class tests:###################
 
     def test_span_tree_node_children(self):
         """Test scenarios for inserting child span tree nodes."""
@@ -99,7 +103,7 @@ class TestSpanTreeUtilities:
             ]
 
     )
-    def test_span_tree_node_children_property(self, expected_children_arrays:list):
+    def test_span_tree_node_children_property(self, expected_children_arrays: list):
         """Test scenarios for setting and getting span tree node children."""
         node = SpanTreeNode(Row())
         node.children = expected_children_arrays
@@ -113,7 +117,7 @@ class TestSpanTreeUtilities:
                 (Row(span_id=None, parent_id=None, start_time=None, end_time=None))
             ]
     )
-    def test_span_tree_node_other_properties(self, expected_row:Row):
+    def test_span_tree_node_other_properties(self, expected_row: Row):
         """Test scenarios for getting the other tree node properties"""
         node = SpanTreeNode(expected_row)
         assert expected_row.span_id == node.span_id
@@ -124,9 +128,9 @@ class TestSpanTreeUtilities:
         """Test scenario for creating new node from json string."""
         json_string = ""
         try:
-            node = SpanTreeNode.create_node_from_json_str(json_string)
+            SpanTreeNode.create_node_from_json_str(json_string)
             assert False
-        except:
+        except Exception:
             assert True
 
         json_string = '{"parent_id":null,"span_id":"0x7fd179134fb9e709","span_type":"SpanKind.INTERNAL",' + \
@@ -140,7 +144,7 @@ class TestSpanTreeUtilities:
 
         node = SpanTreeNode.create_node_from_json_str(json_string)
         assert node.span_id == "0x7fd179134fb9e709"
-        assert node.parent_id == None
+        assert node.parent_id is None
         assert node.span_row == expected_row
         assert node.children == expected_children
 
@@ -179,7 +183,7 @@ class TestSpanTreeUtilities:
                 )
             ]
     )
-    def test_span_tree_node_to_dict(self, expected_row:Row, expected_children):
+    def test_span_tree_node_to_dict(self, expected_row: Row, expected_children):
         """Test scenario for to_dict() of SpanTreeNode."""
         dict_schema_keynames = _get_span_tree_node_spark_df_schema().fieldNames()
         node = SpanTreeNode(expected_row)
@@ -191,5 +195,3 @@ class TestSpanTreeUtilities:
                 assert actual_dict[keyname] == expected_children
             else:
                 assert actual_dict[keyname] == node.span_row[keyname]
-
-    ################### End ###################
