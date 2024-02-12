@@ -33,12 +33,13 @@ def run():
     if args.input_data_2 is not None:
         input_df2 = try_read_mltable_in_spark(args.input_data_2, "input_data_2")
 
+    # At least we need one input either input_df1 or input_df2 for feature selection.
     if not input_df1 and not input_df2:
         print("Both input data are empty. Skipping feature selection.")
         return
     elif not input_df1:
+        # input_df1 used as primary data in feature selection
         input_df1 = input_df2
-    # it's ok if input_df1 and not input_df2
 
     feature_importance = None
     try:
