@@ -118,7 +118,7 @@ class TestSpanTreeUtilities:
             ]
     )
     def test_span_tree_node_other_properties(self, expected_row: Row):
-        """Test scenarios for getting the other tree node properties"""
+        """Test scenarios for getting the other tree node properties."""
         node = SpanTreeNode(expected_row)
         assert expected_row.span_id == node.span_id
         assert expected_row.parent_id == node.parent_id
