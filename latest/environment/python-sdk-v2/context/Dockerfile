@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20240123.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20240211.v1
 
 RUN apt-get update -y && apt-get install binutils libssh-4 libsqlite3-0 libpam-modules linux-libc-dev libldap-common libldap-2.4-2 libc-bin libc-dev-bin libc6 libc6-dev libcurl3-gnutls libgnutls30 tar openssh-server openssh-client openssl curl -y
 

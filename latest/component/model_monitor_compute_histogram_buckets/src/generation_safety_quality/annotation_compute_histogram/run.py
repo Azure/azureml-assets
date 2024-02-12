@@ -25,6 +25,7 @@ from pyspark.sql import Window
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
 from pyspark.sql.functions import col, row_number, monotonically_increasing_id
 from shared_utilities import io_utils
+from shared_utilities.momo_exceptions import InvalidInputError
 
 _logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.INFO)
@@ -167,7 +168,9 @@ def _check_and_format_azure_endpoint_url(
         domain = domain[:-1]
 
     if not re.match(domain_pattern_re, domain):
-        raise RuntimeError(f"Invalid Azure endpoint domain URL: {domain}.")
+        err_msg = f"Invalid Azure endpoint domain URL: {domain}."
+        err_msg += " The domain must be in the format of 'inference.ml.azure.com' or 'openai.azure.com'."
+        raise InvalidInputError(err_msg)
 
     url = url_pattern.format(domain, model)
 
