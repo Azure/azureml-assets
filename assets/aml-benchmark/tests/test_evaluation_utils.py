@@ -6,11 +6,8 @@
 import pytest
 import sys
 
-from .test_utils import get_src_dir
-
-sys.path.append(get_src_dir())
-print(get_src_dir())
 from aml_benchmark.utils.evaluation_utils import extract_python_function, extract_text_from_markdown_tag
+
 
 @pytest.mark.parametrize(
         'tag_open,tag_close',
@@ -21,6 +18,7 @@ def test_extract_markdown_tags(tag_open, tag_close):
     response = tag_open + python_func_text + tag_close
     response_parsed = extract_text_from_markdown_tag(response, tag_type='python')
     assert response_parsed == python_func_text
+
 
 @pytest.mark.parametrize(
         'is_partial,extra_text',

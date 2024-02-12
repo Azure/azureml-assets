@@ -7,6 +7,7 @@
 
 import re
 
+
 def extract_text_from_markdown_tag(input_string: str, tag_type='python') -> str:
     """
     Extract text between markdown code tags.
@@ -19,6 +20,7 @@ def extract_text_from_markdown_tag(input_string: str, tag_type='python') -> str:
         pattern_partial = f"```{tag_type}(.*)"
         m = re.search(pattern_partial, input_string, flags=re.DOTALL)
     return m.group(1) if m else input_string
+
 
 def extract_python_function(input_string: str, partial=False) -> str:
     """
