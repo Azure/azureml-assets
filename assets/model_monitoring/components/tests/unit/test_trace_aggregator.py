@@ -15,7 +15,8 @@ import pytest
 class TestTraceAggregator:
     """Test class for Trace Aggregator."""
 
-    def test_trace_aggregator(self):
+    def test_trace_aggregator_empty(self):
+        """Test scenario where data is empty."""
         processed_span_logs = create_pyspark_dataframe([], _get_aggregated_trace_log_spark_df_schema().fieldNames())
         trace_logs = process_spans_into_aggregated_traces(processed_span_logs)
         assert trace_logs.isEmpty()

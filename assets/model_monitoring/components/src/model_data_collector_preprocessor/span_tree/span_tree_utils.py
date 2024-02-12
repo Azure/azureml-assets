@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""Span Tree internal utilities and classes for building a Span Tree from preprocessed span logs."""
 
 
 import bisect
@@ -26,6 +27,7 @@ def _get_span_tree_node_spark_df_schema() -> StructType:
 
 
 class SpanTreeNode:
+    """Spantree node class."""
     def __init__(self, span_row: Row) -> None:
         """Represent a singular node in a span tree."""
         self._span_row = span_row
@@ -70,17 +72,17 @@ class SpanTreeNode:
         return obj
 
     def insert_child(self, span: "SpanTreeNode") -> None:
-        """Inserts a child span in ascending time order due to __lt__()."""
+        """Insert a child span in ascending time order due to __lt__()."""
         bisect.insort(self._children, span)
 
     def show(self, indent: int = 0) -> None:
-        """Prints the current span in a formatted syntax to stdout."""
+        """Print the current span in a formatted syntax to stdout."""
         print(f"{' '*indent}[{self._span_row.span_id}({self._span_row.start_time}, {self._span_row.end_time})]")
         for c in self.children:
             c.show(indent + 4)
 
     def to_dict(self) -> dict:
-        """Dictionary representation of Span."""
+        """Get dictionary representation of SpanTreeNode."""
         span_node_schema_names = _get_span_tree_node_spark_df_schema().fieldNames()
         span_dict = self._span_row.asDict()
         out_dict = {key_name: span_dict.get(key_name) for key_name in span_node_schema_names}
@@ -96,19 +98,21 @@ class SpanTreeNode:
         yield self
 
     def __lt__(self, other) -> bool:
-        """Custom less-than comparison for sorting by time in bisect.insort() for python3.8."""
+        """Compare by end_time in bisect.insort() for python3.8."""
         return self._span_row.end_time < other.span_row.end_time
 
 
 class SpanTree:
+    """Spantree class."""
+
     def __init__(self, spans: List[SpanTreeNode]) -> None:
-        """SpanTree constructor to build up tree from span list."""
+        """Spantree constructor to build up tree from span list."""
         self.root_span = self._construct_span_tree(spans)
         self._load_json_tree_lazy = False
 
     @classmethod
     def create_tree_from_json_string(cls, json_string: str, load_tree_lazy: bool = False) -> "SpanTree":
-        """Default SpanTree constructor."""
+        """Create SpanTree object from "root_span" json string."""
         obj = cls.__new__(cls)
         super(SpanTree, obj).__init__()
         obj._load_json_tree_lazy = load_tree_lazy
@@ -119,19 +123,19 @@ class SpanTree:
         return obj
 
     def show(self) -> None:
-        """Prints to stdout a formatted representation of the Span Tree."""
+        """Print to stdout a formatted representation of the Span Tree."""
         if self.root_span is None:
             return
         self.root_span.show()
 
     def to_json_str(self) -> str:
-        """Function to return jsons tring tree structure."""
+        """Get tree structure as json string."""
         if self.root_span is None:
             return None  # type: ignore
         return self._to_json_str_repr(self.root_span)
 
     def _construct_span_tree(self, spans: List[SpanTreeNode]) -> SpanTreeNode:
-        """Builds the span tree in ascending time order from list of all spans."""
+        """Build the span tree in ascending time order from list of all spans."""
         # construct a dict with span_id as key and span as value
         span_map = {span.span_id: span for span in spans}
         for span in span_map.values():
@@ -152,7 +156,7 @@ class SpanTree:
             yield span
 
     def _from_json_str_repr(self, json_string: str) -> SpanTreeNode:
-        """Creates a SpanTree where the children are JSON string representation."""
+        """Convert json string to SpanTree Node fully."""
         output_node = SpanTreeNode.create_node_from_json_str(json_string)
         child_subtree_nodes = []
         for child in output_node.children:

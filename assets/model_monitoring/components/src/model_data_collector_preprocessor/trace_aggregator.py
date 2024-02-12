@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""Internal logic for Trace Aggregator step of Gen AI preprocessor component."""
 
 
 from pyspark.sql import DataFrame, Row
