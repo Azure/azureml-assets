@@ -16,7 +16,7 @@ def extract_text_from_markdown_tag(input_string: str, tag_type='python') -> str:
     pattern = f"```{tag_type}(.*?)```"
     m = re.search(pattern, input_string, flags=re.DOTALL)
     if not m:
-        pattern_partial = f"```{tag_type}(.*?)"
+        pattern_partial = f"```{tag_type}(.*)"
         m = re.search(pattern_partial, input_string, flags=re.DOTALL)
     return m.group(1) if m else input_string
 
