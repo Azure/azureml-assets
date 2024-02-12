@@ -5,7 +5,7 @@
 import bisect
 import json
 
-from pyspark.sql.types import DataType, StructType, StructField, StringType, ArrayType, TimestampNTZType
+from pyspark.sql.types import StructType, StructField, StringType, ArrayType, TimestampNTZType
 from typing import Iterator, List
 from pyspark.sql import Row
 
@@ -95,6 +95,7 @@ class SpanTreeNode:
         """Custom less-than comparison for sorting by time in bisect.insort() for python3.8."""
         return self.span_row.end_time < other.span_row.end_time
 
+
 class SpanTree:
     def __init__(self, spans: List[SpanTreeNode]) -> None:
         """SpanTree constructor to build up tree from span list."""
@@ -122,13 +123,13 @@ class SpanTree:
     def to_json_str(self) -> str:
         """Function to return jsons tring tree structure."""
         if self.root_span is None:
-            return None # type: ignore
+            return None  # type: ignore
         return self._to_json_str_repr(self.root_span)
 
     def _construct_span_tree(self, spans: List[SpanTreeNode]) -> SpanTreeNode:
         """Builds the span tree in ascending time order from list of all spans."""
         # construct a dict with span_id as key and span as value
-        span_map = { span.span_id: span for span in spans }
+        span_map = {span.span_id: span for span in spans}
         for span in span_map.values():
             parent_id = span.parent_id
             if parent_id is None:
@@ -151,7 +152,7 @@ class SpanTree:
         output_node = SpanTreeNode.create_node_from_json_str(json_string)
         child_subtree_nodes = []
         for child in output_node.children:
-            new_node = self._from_json_str_repr(child) # type: ignore
+            new_node = self._from_json_str_repr(child)  # type: ignore
             child_subtree_nodes.append(new_node)
         output_node.children = child_subtree_nodes
         return output_node

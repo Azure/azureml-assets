@@ -4,7 +4,6 @@
 
 from pyspark.sql import DataFrame, Row
 from pyspark.sql.types import StructType, StructField, StringType, TimestampNTZType
-from pyspark.sql.functions import from_json, to_json, udf
 from typing import List
 
 from assets.model_monitoring.components.src.shared_utilities.io_utils import init_spark
@@ -39,7 +38,7 @@ def _construct_aggregated_trace_df(span_tree: SpanTree) -> DataFrame:
     data = {key_name: span_dict.get(key_name, None) for key_name in agg_trace_schema_names}
     data['root_span'] = span_tree.to_json_str()
 
-    return spark.createDataFrame([data], trace_schema) # type: ignore
+    return spark.createDataFrame([data], trace_schema)  # type: ignore
 
 
 def _construct_span_tree(span_rows: List[Row]) -> SpanTree:
