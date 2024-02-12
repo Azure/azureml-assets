@@ -30,7 +30,6 @@ class SpanTreeNode:
         """Represent a singular node in a span tree."""
         self.span_row = span_row
         self._children = []
-        self._lazy_load_children = False
 
     @property
     def span_id(self) -> str:
