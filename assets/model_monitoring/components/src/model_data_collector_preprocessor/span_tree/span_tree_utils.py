@@ -28,23 +28,28 @@ def _get_span_tree_node_spark_df_schema() -> StructType:
 class SpanTreeNode:
     def __init__(self, span_row: Row) -> None:
         """Represent a singular node in a span tree."""
-        self.span_row = span_row
+        self._span_row = span_row
         self._children = []
 
     @property
     def span_id(self) -> str:
         """Get the span id."""
-        return self.span_row.span_id
+        return self._span_row.span_id
 
     @property
     def parent_id(self) -> str:
         """Get the span's parent id."""
-        return self.span_row.parent_id
+        return self._span_row.parent_id
 
     @property
     def children(self) -> List["SpanTreeNode"]:
         """Get the span's children as list."""
         return self._children
+
+    @property
+    def span_row(self) -> Row:
+        """Get the span's internal row."""
+        return self._span_row
 
     @children.setter
     def children(self, value: list) -> None:
@@ -60,7 +65,7 @@ class SpanTreeNode:
 
         obj = cls.__new__(cls)
         super(SpanTreeNode, obj).__init__()
-        obj.span_row = new_row
+        obj._span_row = new_row
         obj._children = children
         return obj
 
@@ -70,14 +75,14 @@ class SpanTreeNode:
 
     def show(self, indent: int = 0) -> None:
         """Prints the current span in a formatted syntax to stdout."""
-        print(f"{' '*indent}[{self.span_row.span_id}({self.span_row.start_time}, {self.span_row.end_time})]")
+        print(f"{' '*indent}[{self._span_row.span_id}({self._span_row.start_time}, {self._span_row.end_time})]")
         for c in self.children:
             c.show(indent + 4)
 
     def to_dict(self) -> dict:
         """Dictionary representation of Span."""
         span_node_schema_names = _get_span_tree_node_spark_df_schema().fieldNames()
-        span_dict = self.span_row.asDict()
+        span_dict = self._span_row.asDict()
         out_dict = {key_name: span_dict.get(key_name) for key_name in span_node_schema_names}
         out_dict['children'] = self.children
         return out_dict
@@ -92,7 +97,7 @@ class SpanTreeNode:
 
     def __lt__(self, other) -> bool:
         """Custom less-than comparison for sorting by time in bisect.insort() for python3.8."""
-        return self.span_row.end_time < other.span_row.end_time
+        return self._span_row.end_time < other.span_row.end_time
 
 
 class SpanTree:
