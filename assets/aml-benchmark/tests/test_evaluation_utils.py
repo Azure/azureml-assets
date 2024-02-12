@@ -4,7 +4,6 @@
 """Tests for common evaluation utilities."""
 
 import pytest
-import sys
 
 from aml_benchmark.utils.evaluation_utils import extract_python_function, extract_text_from_markdown_tag
 
