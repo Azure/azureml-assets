@@ -89,6 +89,7 @@ class SupportedTasks(_CustomEnum):
     TEXT_GENERATION = "text-generation"
     TEXT_CLASSIFICATION = "text-classification"
     TRANSLATION = "translation"
+    TEXT2TEXT_GENERATION = "text2text-generation"
     # Vision tasks
     IMAGE_CLASSIFICATION = "image-classification"
     # ASR
