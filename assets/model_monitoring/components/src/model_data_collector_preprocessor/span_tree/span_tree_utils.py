@@ -46,15 +46,15 @@ class SpanTreeNode:
         """Get the span's children as list."""
         return self._children
 
-    @property
-    def span_row(self) -> Row:
-        """Get the span's internal row."""
-        return self._span_row
-
     @children.setter
     def children(self, value: list) -> None:
         """Set the span's children."""
         self._children = value
+
+    @property
+    def span_row(self) -> Row:
+        """Get the span's internal row."""
+        return self._span_row
 
     @classmethod
     def create_node_from_json_str(cls, json_str: str) -> "SpanTreeNode":
