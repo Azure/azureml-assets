@@ -69,13 +69,13 @@ class TestGenAISparkPreprocessor:
     ])
     _preprocessed_data = [
         ["01", "1", None, "llm", datetime(2024,2,12,0,1,0)] + \
-            [datetime(2024,2,12,0,2,0), "name", "OK", "LLM", "in", "out", {}, "[]", "[]"],
+            [datetime(2024,2,12,0,2,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
         ["01", "2", None, "llm", datetime(2024,2,12,0,3,0)] + \
-            [datetime(2024,2,12,0,4,0), "name", "OK", "LLM", "in", "out", {}, "[]", "[]"],
+            [datetime(2024,2,12,0,4,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
         ["02", "3", None, "llm", datetime(2024,2,12,0,5,0)] + \
-            [datetime(2024,2,12,0,6,0), "name", "OK", "LLM", "in", "out", {}, "[]", "[]"],
+            [datetime(2024,2,12,0,6,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
         ["02", "4", None, "llm", datetime(2024,2,12,0,7,0)] + \
-            [datetime(2024,2,12,0,8,0), "name", "OK", "LLM", "in", "out", {}, "[]", "[]"],
+            [datetime(2024,2,12,0,8,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
     ]
 
     @pytest.mark.parametrize(
