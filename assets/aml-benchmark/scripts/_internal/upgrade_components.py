@@ -43,11 +43,26 @@ def _get_all_components_spec() -> List[str]:
     return components
 
 
+def _get_bumped_version(version: str, increment: bool = True) -> str:
+    """
+    Return bumped version.
+
+    :param version: Version to bump.
+    :param increment: If True, increment the last part of the version. Else, decrement the last part of the version.
+    :return: Bumped version.
+    """
+    version_arr = list(map(int, version.split(".")))
+    if increment:
+        version_arr[-1] += 1
+    else:
+        version_arr[-1] -= 1
+    return ".".join(map(str, version_arr))
+
+
 def _get_asset_latest_version(
     asset_name: str,
     asset_type: Union[AzureMLResourceType.COMPONENT, AzureMLResourceType.ENVIRONMENT],
-    asset_version: str,
-) -> str:
+) -> Optional[str]:
     """Get component latest version."""
     try:
         if asset_type == AzureMLResourceType.COMPONENT:
@@ -55,15 +70,8 @@ def _get_asset_latest_version(
         elif asset_type == AzureMLResourceType.ENVIRONMENT:
             asset = REG_ML_CLIENT.environments.get(name=asset_name, label="latest")
     except ResourceNotFoundError:
-        return asset_version
+        return None
     return asset.version
-
-
-def _get_bumped_version(version: str) -> str:
-    """Return bumped version."""
-    version_arr = list(map(int, version.split(".")))
-    version_arr[-1] += 1
-    return ".".join(map(str, version_arr))
 
 
 def __replace_pipeline_comp_job_version(match: re.Match) -> str:
@@ -73,9 +81,11 @@ def __replace_pipeline_comp_job_version(match: re.Match) -> str:
     latest_version = _get_asset_latest_version(
         asset_name=component_name,
         asset_type=AzureMLResourceType.COMPONENT,
-        asset_version=match.group(2),
     )
-    new_version = _get_bumped_version(latest_version)
+    if latest_version is None:
+        new_version = match.group(2)
+    else:
+        new_version = _get_bumped_version(latest_version)
     return f"component: {component_name_with_registry}:{new_version}"
 
 
@@ -99,8 +109,9 @@ def _upgrade_component_env(spec: Dict[str, Any], spec_str: str, env_version: str
             latest_version = _get_asset_latest_version(
                 asset_name=env_arr[-3],
                 asset_type=AzureMLResourceType.ENVIRONMENT,
-                asset_version=env_arr[-1],
             )
+            if latest_version is None:
+                latest_version = env_arr[-1]
         # else, use the provided version
         else:
             latest_version = env_version
@@ -149,9 +160,11 @@ def _upgrade_component(
         latest_version = _get_asset_latest_version(
             asset_name=name,
             asset_type=AzureMLResourceType.COMPONENT,
-            asset_version=spec["version"],
         )
-        new_version = _get_bumped_version(latest_version)
+        if latest_version is None:
+            new_version = spec["version"]
+        else:
+            new_version = _get_bumped_version(latest_version)
         spec["version"] = new_version
         spec_str = re.sub(
             pattern=r"version: .*", repl=f"version: {new_version}", string=spec_str
