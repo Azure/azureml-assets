@@ -8,7 +8,7 @@ import sys
 import pytest
 import mlflow
 
-from .test_utils import get_src_dir
+from ..test_utils import get_src_dir
 
 sys.path.append(get_src_dir())
 try:
@@ -19,9 +19,9 @@ except ImportError:
 
 # Setting dataset path
 TEST_DATA = os.path.join(
-            os.path.dirname(__file__), 'data/test_data_prompt_crafter')
+            os.path.dirname(os.path.dirname(__file__)), 'data/test_data_prompt_crafter')
 OUTPUT_PATH = os.path.join(
-            os.path.dirname(__file__), 'data')
+            os.path.dirname(os.path.dirname(__file__)), 'data')
 
 
 def setup_folder(dataset_name: str):

@@ -10,3 +10,6 @@ datasets
 pytest
 pytest-xdist
 ddt
+tqdm
+pyyaml
+azure-core

@@ -6,7 +6,6 @@
 from typing import Union, List, Dict, Any, Optional
 import json
 import os
-import subprocess
 import shutil
 import uuid
 import random
@@ -310,8 +309,8 @@ class TestDatasetSamplerScript:
         # Run the script and verify the exception
         try:
             self._run_sampler_script(input_file_path)
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.skip(
@@ -337,8 +336,8 @@ class TestDatasetSamplerScript:
         # Run the script and verify the exception
         try:
             self._run_sampler_script(input_file_path)
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.parametrize(
@@ -422,8 +421,8 @@ class TestDatasetSamplerScript:
         # Run the script and verify the exception
         try:
             self._run_sampler_script(input_file_path, sampling_ratio=sampling_ratio)
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.parametrize("n_samples", [0, -1, None])
@@ -443,8 +442,8 @@ class TestDatasetSamplerScript:
         # Run the script and verify the exception
         try:
             self._run_sampler_script(input_file_path, n_samples=n_samples)
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     def test_sampling_ratio_n_samples_together(self, temp_dir: str):
@@ -458,8 +457,8 @@ class TestDatasetSamplerScript:
         # Run the script and verify the exception
         try:
             self._run_sampler_script(input_file_path, sampling_ratio=0.2, n_samples=10)
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.parametrize("sampling_style", ["haphazard"])
@@ -478,8 +477,8 @@ class TestDatasetSamplerScript:
             self._run_sampler_script(
                 input_file_path, sampling_style=sampling_style, sampling_ratio=0.2
             )
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert expected_exception_mssg in exception_message
 
     @pytest.mark.parametrize("sampling_style", ["head", "tail", "duplicate"])
@@ -505,8 +504,8 @@ class TestDatasetSamplerScript:
                 sampling_ratio=0.2,
                 output_dataset=out_file_path,
             )
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert expected_warning_mssg in exception_message
 
     def _create_input_file(self, directory: str, file_name: str) -> str:

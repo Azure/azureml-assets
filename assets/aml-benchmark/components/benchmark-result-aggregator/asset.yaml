@@ -5,4 +5,4 @@ test:
   pytest:
     enabled: true
     conda_environment: ../../dev_conda_env.yaml
-    tests_dir: ../../tests
+    tests_dir: ../../tests/test_benchmark_result_aggregator.py

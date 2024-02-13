@@ -9,6 +9,7 @@ from typing import Dict, Any, Optional, List
 import hashlib
 import time
 import uuid
+import sys
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -242,12 +243,17 @@ def run_command(command: str) -> None:
     :param command: The command to run.
     :return: None
     """
-    _ = subprocess.check_output(
+    result = subprocess.run(
         command,
-        stderr=subprocess.STDOUT,
-        universal_newlines=True,
         shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        encoding=sys.stdout.encoding,
+        universal_newlines=True,
+        errors="ignore",
     )
+    if result.returncode != 0:
+        raise RuntimeError(f"Command: {command} failed with error:\n{result.stdout}")
 
 
 def assert_exception_mssg(exception_message: str, expected_exception_mssg: str) -> None:
