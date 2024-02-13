@@ -7,7 +7,7 @@ import argparse
 
 from pyspark.sql import DataFrame
 from pyspark.sql.types import TimestampType, StructType, StructField, StringType
-from pyspark.errors.exceptions.base import AnalysisException
+from pyspark.sql.utils import AnalysisException
 from shared_utilities.io_utils import save_spark_df_as_mltable
 from model_data_collector_preprocessor.store_url import StoreUrl
 # TODO: once finish trace aggregator import here.
