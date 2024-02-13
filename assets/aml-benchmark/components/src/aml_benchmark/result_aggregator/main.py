@@ -4,10 +4,9 @@
 
 from typing import Any, Dict, Optional, Tuple, cast
 import argparse
-import mlflow
 from azureml.core import Run
 
-from aml_benchmark.utils.logging import get_logger, log_mlflow_params
+from aml_benchmark.utils.logging import get_logger, log_params_and_metrics
 from aml_benchmark.utils.io import read_json_data, save_json_to_file
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import (
@@ -203,46 +202,6 @@ def _get_pipeline_params() -> Tuple[
     return pipeline_params, loggable_params, model_name, model_version, model_registry
 
 
-def _log_params_and_metrics(parameters: Dict[str, Any], metrics: Dict[str, Any]) -> None:
-    """Log mlflow params and metrics to current run and parent run."""
-    filtered_metrics = {}
-    for key in metrics:
-        if isinstance(metrics[key], bool):
-            # For bool value, latest version of mlflow throws an error.
-            filtered_metrics[key] = float(metrics[key])
-        elif isinstance(metrics[key], (int, float)):
-            filtered_metrics[key] = metrics[key]
-    # Log to current run
-    logger.info(
-        f"Attempting to log {len(parameters)} parameters and {len(filtered_metrics)} metrics."
-    )
-    try:
-        log_mlflow_params(**parameters)
-    except Exception as ex:
-        logger.error(f"Failed to log parameters to current run due to {ex}")
-    try:
-        mlflow.log_metrics(filtered_metrics)
-    except Exception as ex:
-        logger.error(f"Failed to log parameters to current run due to {ex}")
-
-    # Log to parent run
-    parent_run_id = get_parent_run_id()
-    ml_client = mlflow.tracking.MlflowClient()
-    for param_name, param_value in parameters.items():
-        param_value_to_log = param_value
-        if isinstance(param_value, str) and len(param_value) > 500:
-            param_value_to_log = param_value[: 497] + '...'
-        try:
-            ml_client.log_param(parent_run_id, param_name, param_value_to_log)
-        except Exception as ex:
-            logger.error(f"Failed to log parameter {param_name} to root run due to {ex}.")
-    for metric_name, metric_value in filtered_metrics.items():
-        try:
-            ml_client.log_metric(parent_run_id, metric_name, metric_value)
-        except Exception as ex:
-            logger.error(f"Failed to log metric {metric_name} to root run due to {ex}.")
-
-
 @swallow_all_exceptions(logger)
 def main(
     quality_metrics_path: Optional[str],
@@ -302,9 +261,10 @@ def main(
         result['model_registry'] = model_registry
         loggable_pipeline_params['model_registry'] = model_registry
     save_json_to_file(result, output_dataset_path)
-    _log_params_and_metrics(
+    log_params_and_metrics(
         parameters={**parameters, **loggable_pipeline_params},
         metrics={**quality_metrics, **performance_metrics},
+        log_to_parent=True,
     )
 
 

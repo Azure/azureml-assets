@@ -70,6 +70,8 @@ class ResultConverters:
 
     def convert_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the input result to predictions."""
+        if self.is_result_content_safety_failure(result):
+            return self._get_fallback_output()
         if not self.is_result_success(result):
             return self._get_fallback_output()
         return self._get_raw_output(result)
@@ -173,6 +175,17 @@ class ResultConverters:
             logger.warning(f'Converting meet errors {e}')
             return False
         return True
+
+    def is_result_content_safety_failure(self, result: Dict[str, Any]) -> bool:
+        """Check if result failed due to content safety."""
+        response = result.get("response", {})
+        policy_violation = "ResponsibleAIPolicyViolation"
+        content_filter = "content_filter"
+        if response.get("error", {}).get("innererror", {}).get("code") == policy_violation:
+            return True
+        if response.get("choices", [{}])[0].get("finish_reason") == content_filter:
+            return True
+        return False
 
     def _get_oss_input_token(self, perf_metrics: Any) -> Tuple[int, int]:
         if self._is_performance_test:

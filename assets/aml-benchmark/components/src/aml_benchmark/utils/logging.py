@@ -3,11 +3,13 @@
 
 """Contains helper functions for logging."""
 
-from typing import Any
+from typing import Any, Dict
 import logging
 import os
 import hashlib
 import mlflow
+
+from azureml.core import Run
 
 
 def log_mlflow_params(**kwargs: Any) -> None:
@@ -65,3 +67,48 @@ def get_logger(filename: str) -> logging.Logger:
     )
     stream_handler.setFormatter(formatter)
     return logger
+
+logger = get_logger(__name__)
+
+def log_params_and_metrics(
+    parameters: Dict[str, Any],
+    metrics: Dict[str, Any],
+    log_to_parent: bool,
+) -> None:
+    """Log mlflow params and metrics to current run and parent run."""
+    filtered_metrics = {}
+    for key in metrics:
+        if isinstance(metrics[key], bool):
+            # For bool value, latest version of mlflow throws an error.
+            filtered_metrics[key] = float(metrics[key])
+        elif isinstance(metrics[key], (int, float)):
+            filtered_metrics[key] = metrics[key]
+    # Log to current run
+    logger.info(
+        f"Attempting to log {len(parameters)} parameters and {len(filtered_metrics)} metrics."
+    )
+    try:
+        log_mlflow_params(**parameters)
+    except Exception as ex:
+        logger.error(f"Failed to log parameters to current run due to {ex}")
+    try:
+        mlflow.log_metrics(filtered_metrics)
+    except Exception as ex:
+        logger.error(f"Failed to log parameters to current run due to {ex}")
+    if log_to_parent:
+        # Log to parent run
+        parent_run_id = Run.get_context().parent.id
+        ml_client = mlflow.tracking.MlflowClient()
+        for param_name, param_value in parameters.items():
+            param_value_to_log = param_value
+            if isinstance(param_value, str) and len(param_value) > 500:
+                param_value_to_log = param_value[: 497] + '...'
+            try:
+                ml_client.log_param(parent_run_id, param_name, param_value_to_log)
+            except Exception as ex:
+                logger.error(f"Failed to log parameter {param_name} to root run due to {ex}.")
+        for metric_name, metric_value in filtered_metrics.items():
+            try:
+                ml_client.log_metric(parent_run_id, metric_name, metric_value)
+            except Exception as ex:
+                logger.error(f"Failed to log metric {metric_name} to root run due to {ex}.")

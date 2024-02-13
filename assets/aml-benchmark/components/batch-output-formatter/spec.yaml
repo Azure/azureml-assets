@@ -59,6 +59,10 @@ outputs:
     type: uri_file
   ground_truth:
     type: uri_file
+  failed_requests:
+    type: uri_file
+  unsafe_content_blocked_requests:
+    type: uri_file
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 
@@ -72,6 +76,8 @@ command: >-
   --prediction_data ${{outputs.predictions}}
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   --perf_data ${{outputs.performance_metadata}}
+  --failed_requests_data ${{outputs.failed_requests}}
+  --blocked_requests_data ${{outputs.unsafe_content_blocked_requests}}
   --predict_ground_truth_data ${{outputs.ground_truth}}
   $[[--endpoint_url ${{inputs.endpoint_url}}]]
   $[[--label_key ${{inputs.label_column_name}}]]

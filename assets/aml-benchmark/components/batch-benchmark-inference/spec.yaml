@@ -19,10 +19,10 @@ inputs:
         - oai
         - oss
         - vision_oss
-  inferencing_compute:
+  inference_compute:
     type: string
     description: Compute to be used for inferencing.
-    optional: True
+    optional: False
   batch_input_pattern:
     type: string
     description: >- 
@@ -169,7 +169,12 @@ outputs:
   ground_truth:
     type: uri_file
     description: The ground truth data that has a one-to-one mapping with the prediction data.
-
+  failed_requests:
+    type: uri_file
+    description: The failed requests.
+  unsafe_content_blocked_requests:
+    type: uri_file
+    description: The unsafe requests that were blocked due to Responsible AI concerns.
 jobs:
   # Preparer
   batch_inference_preparer: 
@@ -195,7 +200,6 @@ jobs:
     component: ../batch-benchmark-config-generator/spec.yaml
     inputs:
       scoring_url: ${{parent.inputs.endpoint_url}}
-      inferencing_compute: ${{parent.inputs.inferencing_compute}}
       connection_name: ${{parent.inputs.connections_name}}
       deployment_name: ${{parent.inputs.deployment_name}}
       authentication_type: ${{parent.inputs.authentication_type}}
@@ -232,7 +236,12 @@ jobs:
     retry_settings:
       timeout: 6000
       max_retries: 10
-    compute: ${{parent.inputs.inferencing_compute}}
+    compute: ${{parent.inputs.inference_compute}}
+    environment_variables:
+      BATCH_SCORE_INITIAL_REQUEST_TIMEOUT: '4'
+      BATCH_SCORE_CONCURRENCY_ADJUSTMENT_INTERVAL: '120'
+      BATCH_SCORE_DELAY_AFTER_SUCCESSFUL_REQUEST: 'False'
+      
   # Reformat
   batch_output_formatter: 
     type: command
@@ -258,3 +267,9 @@ jobs:
       ground_truth:
         type: uri_file
         path: ${{parent.outputs.ground_truth}}
+      failed_requests:
+        type: uri_file
+        path: ${{parent.outputs.failed_requests}}
+      unsafe_content_blocked_requests:
+        type: uri_file
+        path: ${{parent.outputs.failed_requests}}
