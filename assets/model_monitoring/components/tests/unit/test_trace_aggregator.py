@@ -15,6 +15,7 @@ class TestTraceAggregator:
     """Test class for Trace Aggregator."""
 
     def init_spark(self)-> SparkSession:
+        """Create spark session."""
         return SparkSession.builder.appName("test").getOrCreate()
 
     def test_trace_aggregator_empty(self):
