@@ -16,14 +16,14 @@ def _get_aggregated_trace_log_spark_df_schema() -> StructType:
     # TODO: The user_id and session_id may not be available in v0 of trace aggregator.
     schema = StructType(
         [
-            StructField("trace_id", StringType(), False),
-            StructField("user_id", StringType(), True),
-            StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampType(), False),
             StructField("end_time", TimestampType(), False),
             StructField("input", StringType(), False),
             StructField("output", StringType(), False),
             StructField("root_span", StringType(), True),
+            StructField("session_id", StringType(), True),
+            StructField("start_time", TimestampType(), False),
+            StructField("trace_id", StringType(), False),
+            StructField("user_id", StringType(), True),
         ]
     )
     return schema
