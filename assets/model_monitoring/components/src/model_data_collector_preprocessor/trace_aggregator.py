@@ -4,7 +4,7 @@
 
 
 from pyspark.sql import DataFrame, Row
-from pyspark.sql.types import StructType, StructField, StringType, TimestampNTZType
+from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from typing import List
 
 from assets.model_monitoring.components.src.shared_utilities.io_utils import init_spark
@@ -19,8 +19,8 @@ def _get_aggregated_trace_log_spark_df_schema() -> StructType:
             StructField("trace_id", StringType(), False),
             StructField("user_id", StringType(), True),
             StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampNTZType(), False),
-            StructField("end_time", TimestampNTZType(), False),
+            StructField("start_time", TimestampType(), False),
+            StructField("end_time", TimestampType(), False),
             StructField("input", StringType(), False),
             StructField("output", StringType(), False),
             StructField("root_span", StringType(), True),
