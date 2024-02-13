@@ -280,15 +280,10 @@ def get_safe_input(input_data: Dict):
 
 def get_aacs_access_key():
     """Get aacs access key."""
-    key = os.environ.get("CONTENT_SAFETY_KEY")
-
-    if key:
-        return key
-
     uai_client_id = os.environ.get("UAI_CLIENT_ID")
     if not uai_client_id:
         raise RuntimeError(
-            "Cannot get AACS access key, both UAI_CLIENT_ID and " "CONTENT_SAFETY_KEY are not set, exiting...",
+            "Cannot get AACS access key, UAI_CLIENT_ID is not set, exiting...",
         )
 
     subscription_id = os.environ.get("SUBSCRIPTION_ID")
