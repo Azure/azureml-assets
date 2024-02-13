@@ -5,13 +5,11 @@
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import (
-    StructField, StringType, DoubleType, BooleanType, IntegerType, LongType, TimestampType,
-    ArrayType, StructType, MapType
+    StructField, StringType, TimestampType, StructType
 )
 import pytest
 import os
 import sys
-import json
 from datetime import datetime
 from src.model_data_collector_preprocessor.genai_run import (
     _preprocess_raw_logs_to_span_logs_spark_df,
@@ -67,13 +65,13 @@ class TestGenAISparkPreprocessor:
         # StructField('user_id', StringType(), True),
     ])
     _preprocessed_data = [
-        ["{}", datetime(2024,2,5,0,2,0), "[]", "LLM", "in", "[]", "name",  "out", None] + \
+        ["{}", datetime(2024,2,5,0,2,0), "[]", "LLM", "in", "[]", "name",  "out", None] +
             ["1", "llm", datetime(2024,2,5,0,1,0), "OK", "01"],
-        ["{}", datetime(2024,2,5,0,4,0), "[]", "LLM", "in", "[]", "name",  "out", None] + \
+        ["{}", datetime(2024,2,5,0,4,0), "[]", "LLM", "in", "[]", "name",  "out", None] +
             ["2", "llm", datetime(2024,2,5,0,3,0), "OK", "01"],
-        ["{}", datetime(2024,2,5,0,6,0), "[]", "LLM", "in", "[]", "name",  "out", None] + \
+        ["{}", datetime(2024,2,5,0,6,0), "[]", "LLM", "in", "[]", "name",  "out", None] +
             ["3", "llm", datetime(2024,2,5,0,5,0), "OK", "02"],
-        ["{}", datetime(2024,2,5,0,8,0), "[]", "LLM", "in", "[]", "name",  "out", None] + \
+        ["{}", datetime(2024,2,5,0,8,0), "[]", "LLM", "in", "[]", "name",  "out", None] +
             ["4", "llm", datetime(2024,2,5,0,7,0), "OK", "02"],
     ]
 
@@ -121,6 +119,10 @@ class TestGenAISparkPreprocessor:
         expected_df.printSchema()
 
         assert_spark_dataframe_equal(actual_df, expected_df)
+
+        for field in _get_preprocessed_span_logs_df_schema().fieldNames():
+            assert field in actual_df.columns
+
 
 def assert_spark_dataframe_equal(df1, df2):
     """Assert two spark dataframes are equal."""
