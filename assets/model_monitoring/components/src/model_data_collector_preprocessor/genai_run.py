@@ -103,7 +103,7 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
 
 def _genai_uri_folder_to_preprocessed_spark_df(
         data_window_start: str, data_window_end: str, store_url: StoreUrl, add_tags_func=None
-    ) -> DataFrame:
+) -> DataFrame:
     """Read raw gen AI logs data, preprocess, and return in a Spark DataFrame."""
     df = _mdc_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url, False, add_tags_func)
 

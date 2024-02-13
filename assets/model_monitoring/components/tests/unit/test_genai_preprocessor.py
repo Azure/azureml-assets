@@ -68,7 +68,7 @@ class TestGenAISparkPreprocessor:
         ["{}", datetime(2024, 2, 5, 0, 2, 0), "[]", "LLM", "in", "[]", "name",  "out", None] +
         ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
         ["{}", datetime(2024, 2, 5, 0, 4, 0), "[]", "LLM", "in", "[]", "name",  "out", None] +
-        ["2", "llm", datetime(2024, 2,5, 0, 3, 0), "OK", "01"],
+        ["2", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
         ["{}", datetime(2024, 2, 5, 0, 6, 0), "[]", "LLM", "in", "[]", "name",  "out", None] +
         ["3", "llm", datetime(2024, 2, 5, 0, 5, 0), "OK", "02"],
         ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "LLM", "in", "[]", "name",  "out", None] +
