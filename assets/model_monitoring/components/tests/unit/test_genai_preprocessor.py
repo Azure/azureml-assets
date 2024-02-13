@@ -16,10 +16,9 @@ from datetime import datetime
 from src.model_data_collector_preprocessor.genai_run import (
     _preprocess_raw_logs_to_span_logs_spark_df,
     _get_preprocessed_span_logs_df_schema,
-    _mdc_uri_folder_to_preprocessed_spark_df
+    _genai_uri_folder_to_preprocessed_spark_df
 )
 from src.model_data_collector_preprocessor.store_url import StoreUrl
-from src.shared_utilities.momo_exceptions import DataNotFoundError
 
 
 @pytest.fixture(scope="module")
@@ -49,33 +48,33 @@ class TestGenAISparkPreprocessor:
         return SparkSession.builder.appName("test").getOrCreate()
 
     _preprocessed_schema = StructType([
-        StructField('trace_id', StringType(), True),
-        StructField('span_id', StringType(), True),
-        StructField('parent_id', StringType(), True),
-        # TODO: this field might not be in v1. Double check later
-        # StructField('user_id', StringType(), True),
-        # StructField('session_id', StringType(), True),
-        StructField('span_type', StringType(), True),
-        StructField('start_time', TimestampType(), True),
+        StructField('attributes', StringType(), True),
         StructField('end_time', TimestampType(), True),
-        StructField('name', StringType(), True),
-        StructField('status', StringType(), True),
+        StructField('events', StringType(), True),
         StructField('framework', StringType(), True),
         StructField('input', StringType(), True),
-        StructField('output', StringType(), True),
-        StructField('attributes', StringType(), True),
-        StructField('events', StringType(), True),
         StructField('links', StringType(), True),
+        StructField('name', StringType(), True),
+        StructField('output', StringType(), True),
+        StructField('parent_id', StringType(), True),
+        StructField('span_id', StringType(), True),
+        StructField('span_type', StringType(), True),
+        StructField('start_time', TimestampType(), True),
+        StructField('status', StringType(), True),
+        StructField('trace_id', StringType(), True),
+        # TODO: this field might not be in v1. Double check later
+        # StructField('session_id', StringType(), True),
+        # StructField('user_id', StringType(), True),
     ])
     _preprocessed_data = [
-        ["01", "1", None, "llm", datetime(2024,2,5,0,1,0)] + \
-            [datetime(2024,2,5,0,2,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
-        ["01", "2", None, "llm", datetime(2024,2,5,0,3,0)] + \
-            [datetime(2024,2,5,0,4,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
-        ["02", "3", None, "llm", datetime(2024,2,5,0,5,0)] + \
-            [datetime(2024,2,5,0,6,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
-        ["02", "4", None, "llm", datetime(2024,2,5,0,7,0)] + \
-            [datetime(2024,2,5,0,8,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
+        ["{}", datetime(2024,2,5,0,2,0), "[]", "LLM", "in", "[]", "name",  "out", None] + \
+            ["1", "llm", datetime(2024,2,5,0,1,0), "OK", "01"],
+        ["{}", datetime(2024,2,5,0,4,0), "[]", "LLM", "in", "[]", "name",  "out", None] + \
+            ["2", "llm", datetime(2024,2,5,0,3,0), "OK", "01"],
+        ["{}", datetime(2024,2,5,0,6,0), "[]", "LLM", "in", "[]", "name",  "out", None] + \
+            ["3", "llm", datetime(2024,2,5,0,5,0), "OK", "02"],
+        ["{}", datetime(2024,2,5,0,8,0), "[]", "LLM", "in", "[]", "name",  "out", None] + \
+            ["4", "llm", datetime(2024,2,5,0,7,0), "OK", "02"],
     ]
 
     @pytest.mark.parametrize(
@@ -91,7 +90,7 @@ class TestGenAISparkPreprocessor:
             # (datetime(2023, 10, 16, 21), datetime(2023, 10, 16, 22), _preprocessed_schema, _preprocessed_data),
         ]
     )
-    def test_mdc_uri_folder_to_preprocessed_spark_df(
+    def test_genai_uri_folder_to_preprocessed_spark_df(
             self, genai_preprocessor_test_setup, window_start_time: datetime, window_end_time: datetime,
             expected_schema, expected_data):
         """Test uri_folder_to_spark_df()."""
@@ -102,9 +101,9 @@ class TestGenAISparkPreprocessor:
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
         input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
 
-        actual_df = _mdc_uri_folder_to_preprocessed_spark_df(
+        actual_df = _genai_uri_folder_to_preprocessed_spark_df(
             window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
-            input_url, False, my_add_tags)
+            input_url, my_add_tags)
         print("raw dataframe:")
         actual_df.show()
         actual_df.printSchema()
