@@ -57,8 +57,7 @@ def _get_important_field_mapping() -> dict:
 
 
 def _promote_fields_from_attributes(df: DataFrame) -> DataFrame:
-    """Retrieve common/important fields(span_type, input, output, etc.) from attributes
-    and make them first level columns.
+    """Retrieve common/important fields(span_type, input, etc.) from attributes and make them first level columns.
 
     Args:
         df: The raw span logs data in a dataframe.
