@@ -68,14 +68,14 @@ class TestGenAISparkPreprocessor:
         StructField('links', StringType(), True),
     ])
     _preprocessed_data = [
-        ["01", "1", None, "llm", datetime(2024,2,12,0,1,0)] + \
-            [datetime(2024,2,12,0,2,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
-        ["01", "2", None, "llm", datetime(2024,2,12,0,3,0)] + \
-            [datetime(2024,2,12,0,4,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
-        ["02", "3", None, "llm", datetime(2024,2,12,0,5,0)] + \
-            [datetime(2024,2,12,0,6,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
-        ["02", "4", None, "llm", datetime(2024,2,12,0,7,0)] + \
-            [datetime(2024,2,12,0,8,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
+        ["01", "1", None, "llm", datetime(2024,2,5,0,1,0)] + \
+            [datetime(2024,2,5,0,2,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
+        ["01", "2", None, "llm", datetime(2024,2,5,0,3,0)] + \
+            [datetime(2024,2,5,0,4,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
+        ["02", "3", None, "llm", datetime(2024,2,5,0,5,0)] + \
+            [datetime(2024,2,5,0,6,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
+        ["02", "4", None, "llm", datetime(2024,2,5,0,7,0)] + \
+            [datetime(2024,2,5,0,8,0), "name", "OK", "LLM", "in", "out", "{}", "[]", "[]"],
     ]
 
     @pytest.mark.parametrize(
@@ -127,4 +127,6 @@ def assert_spark_dataframe_equal(df1, df2):
     """Assert two spark dataframes are equal."""
     assert df1.schema == df2.schema
     assert df1.count() == df2.count()
+    print(f'df1: {df1.collect()}')
+    print(f'df2: {df2.collect()}')
     assert df1.collect() == df2.collect()
