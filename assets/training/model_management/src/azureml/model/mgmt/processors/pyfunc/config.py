@@ -29,8 +29,10 @@ class SupportedTasks(_CustomEnum):
     # MmTrack video tasks
     MM_MULTI_OBJECT_TRACKING = "video-multi-object-tracking"
 
-    # CLIP task
+    # CLIP tasks
     ZERO_SHOT_IMAGE_CLASSIFICATION = "zero-shot-image-classification"
+
+    # Embedding tasks
     EMBEDDINGS = "embeddings"
 
     # BLIP tasks
@@ -53,3 +55,13 @@ class SupportedTasks(_CustomEnum):
     IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
     IMAGE_OBJECT_DETECTION = "image-object-detection"
     IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
+
+
+class ModelFamilyPrefixes(_CustomEnum):
+    """Prefixes for some of the models converted to PyFunc MLflow."""
+
+    # CLIP model family.
+    CLIP = "openai/clip-vit"
+
+    # DinoV2 model family.
+    DINOV2 = "facebook/dinov2"

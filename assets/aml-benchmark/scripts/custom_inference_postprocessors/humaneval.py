@@ -135,7 +135,7 @@ def run_humaneval_postprocessor(
     data: List[Dict[str, Any]],
     label_key: str,
     prediction_key: str,
-    regex_exp: str = None,
+    regex_exp: str,
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
     Run the custom post processor function to extract the expected code.
@@ -170,13 +170,17 @@ def run_humaneval_postprocessor(
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
-
         if str("def " + row["entry_point"] + "(") in row["original_prediction"]:
             # If the model regenerates the prompt/ function name
             pred_combined_prompt = row["original_prediction"]
         else:
-            pred_combined_prompt = row["prompt"]+"\n"+row["original_prediction"]
-
+            original_prediction = row["original_prediction"]
+            # If spaces were stripped from endpoint responses, add those back.
+            if not len(original_prediction) or (len(original_prediction) and original_prediction[0].isspace()):
+                prefix = ""
+            else:
+                prefix = "    "
+            pred_combined_prompt = row["prompt"] + "\n" + prefix + original_prediction
         # Applying regex on the prediction column
         if regex_exp:
             pred = apply_regex_expr(pred_combined_prompt, regex_exp)
@@ -218,7 +222,7 @@ def generate_output(
     return op_details
 
 
-def run_code(code):
+def run_code(code: str):
     """To run the test cases."""
     original_stdout = sys.stdout
     original_stderr = sys.stderr
@@ -230,7 +234,7 @@ def run_code(code):
     error_type = None
 
     try:
-        exec(code)
+        exec(code, {})
         output = sys.stdout.getvalue()
         output = "No error, executed successfully"
     except Exception as e:
@@ -248,7 +252,7 @@ def run_code(code):
 
 def apply_regex_expr(
         text: str,
-        regex_exp: str = None
+        regex_exp: str
         ) -> str:
     """Apply regex on the given text."""
     if regex_exp:

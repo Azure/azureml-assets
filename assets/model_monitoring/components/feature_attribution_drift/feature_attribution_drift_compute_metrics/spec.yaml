@@ -25,12 +25,12 @@ outputs:
     mode: direct
 
 conf:
-  spark.driver.cores: 1
-  spark.driver.memory: 2g
-  spark.executor.cores: 2
-  spark.executor.memory: 2g
+  spark.driver.cores: 4
+  spark.driver.memory: 28g
+  spark.executor.cores: 4
+  spark.executor.memory: 28g
   spark.executor.instances: 1
-  spark.dynamicAllocation.enabled: False
+  spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4
   spark.synapse.library.python.env: |

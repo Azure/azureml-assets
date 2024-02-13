@@ -30,10 +30,10 @@ outputs:
     mode: direct
     type: mltable
 conf:
-  spark.driver.cores: 1
-  spark.driver.memory: 2g
-  spark.executor.cores: 2
-  spark.executor.memory: 2g
+  spark.driver.cores: 4
+  spark.driver.memory: 28g
+  spark.executor.cores: 4
+  spark.executor.memory: 28g
   spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
