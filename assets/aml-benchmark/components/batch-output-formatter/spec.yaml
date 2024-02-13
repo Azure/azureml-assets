@@ -1,5 +1,5 @@
 name: batch_output_formatter
-version: 0.0.6
+version: 0.0.7
 display_name: Batch Output Formatter
 is_deterministic: True
 type: command
@@ -53,7 +53,7 @@ outputs:
   ground_truth:
     type: uri_file
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+environment: azureml://registries/azureml/environments/model-evaluation/versions/19
 
 resources:
   instance_count: 1

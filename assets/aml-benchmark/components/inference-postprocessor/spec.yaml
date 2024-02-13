@@ -4,7 +4,7 @@ type: command
 name: inference_postprocessor
 display_name: Inference Postprocessor
 description: Inference Postprocessor
-version: 0.0.3
+version: 0.0.4
 is_deterministic: true
 
 inputs:
@@ -130,7 +130,7 @@ outputs:
 
 code: ../src
 
-environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+environment: azureml://registries/azureml/environments/model-evaluation/versions/19
 
 command: >-
   python -m aml_benchmark.inference_postprocessor.main

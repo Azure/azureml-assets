@@ -15,6 +15,9 @@ dependencies:
     - mltable>=1.5.0
     - datasets
     - ddt
+    - tqdm
+    - pyyaml
+    - azure-core
     ## Test requirements
     - pytest
     - pytest-xdist

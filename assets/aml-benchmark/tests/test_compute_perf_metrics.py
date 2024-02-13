@@ -6,7 +6,6 @@
 from typing import List, Dict, Any, Optional
 import json
 import os
-import subprocess
 from math import isclose
 import time
 import uuid
@@ -811,8 +810,8 @@ class TestComputePerfMetricsScript:
                 input_char_count_column_name=cols[5],
                 output_char_count_column_name=cols[6],
             )
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.parametrize(
@@ -856,8 +855,8 @@ class TestComputePerfMetricsScript:
                 "start_time_iso",
                 "end_time_iso",
             )
-        except subprocess.CalledProcessError as e:
-            exception_message = e.output.strip()
+        except RuntimeError as e:
+            exception_message = str(e)
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     def _create_input_file(

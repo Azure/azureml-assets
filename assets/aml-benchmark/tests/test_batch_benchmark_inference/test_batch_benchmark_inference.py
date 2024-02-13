@@ -14,7 +14,7 @@ import pytest
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
-from .test_utils import (
+from ..test_utils import (
     get_mlclient,
     Constants,
     download_outputs,
@@ -168,10 +168,10 @@ class TestBatchBenchmarkInferenceComponent:
 
     def _create_inference_yaml(self):
         original_yml_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "..", "components", "batch-benchmark-inference", "spec.yaml")
         new_yaml_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "pipelines", "batch-benchmark-inference.yaml")
         new_lines = []
         current_section = "main"

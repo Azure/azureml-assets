@@ -13,7 +13,7 @@ import tempfile
 import pandas as pd
 
 from pandas._testing.asserters import assert_frame_equal
-from .test_utils import get_src_dir
+from ..test_utils import get_src_dir
 
 
 sys.path.append(get_src_dir())
