@@ -18,13 +18,14 @@ from model_data_collector_preprocessor.spark_run import (
 )
 
 
-def _get_span_logs_df_schema() -> StructType:
+def _get_preprocessed_span_logs_df_schema() -> StructType:
     schema = StructType([
         StructField('trace_id', StringType(), False),
         StructField('span_id', StringType(), False),
         StructField('parent_id', StringType(), True),
-        StructField('user_id', StringType(), True),
-        StructField('session_id', StringType(), True),
+        # TODO: this field might not be in v1. Double check later
+        # StructField('user_id', StringType(), True),
+        # StructField('session_id', StringType(), True),
         StructField('span_type', StringType(), False),
         StructField('start_time', TimestampType(), False),
         StructField('end_time', TimestampType(), False),
@@ -89,6 +90,9 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     
     # Cast all remaining fields in attributes to string to make it Map(String, String), or make it json string, for easier schema unifying
     df = _convert_complex_columns_to_json_string(df)
+
+    # select only span log schema columns
+    df = df.select(*_get_preprocessed_span_logs_df_schema().fieldNames())
 
     return df
 
