@@ -94,9 +94,6 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     # or make it json string, for easier schema unifying
     df = _convert_complex_columns_to_json_string(df)
 
-    # select only span log schema columns
-    # df = df.select(*_get_preprocessed_span_logs_df_schema().fieldNames())
-
     print("df processed from raw Gen AI logs:")
     df.show(truncate=False)
     df.printSchema()
