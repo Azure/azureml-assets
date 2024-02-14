@@ -10,12 +10,11 @@ from pyspark.sql.types import TimestampType, StructType, StructField, StringType
 from pyspark.sql.utils import AnalysisException
 from shared_utilities.io_utils import save_spark_df_as_mltable
 from model_data_collector_preprocessor.store_url import StoreUrl
-# TODO: once finish trace aggregator import here.
-# from model_data_collector_preprocessor.trace_aggregator import process_spans_into_aggregated_traces
 from model_data_collector_preprocessor.spark_run import (
     _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string,
 )
+from model_data_collector_preprocessor.trace_aggregator import process_spans_into_aggregated_traces
 
 
 def _get_preprocessed_span_logs_df_schema() -> StructType:
@@ -132,11 +131,11 @@ def genai_preprocessor(
 
     transformed_df = _genai_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url)
 
-    save_spark_df_as_mltable(transformed_df, preprocessed_span_data)
-    # TODO: once finish trace aggregator uncomment here.
-    # trace_logs_df = process_spans_into_aggregated_traces(transformed_df)
+    trace_logs_df = process_spans_into_aggregated_traces(transformed_df)
 
-    # save_spark_df_as_mltable(trace_logs_df, aggregated_trace_data)
+    save_spark_df_as_mltable(transformed_df, preprocessed_span_data)
+
+    save_spark_df_as_mltable(trace_logs_df, aggregated_trace_data)
 
 
 def run():
