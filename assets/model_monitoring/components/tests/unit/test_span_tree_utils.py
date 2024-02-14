@@ -233,7 +233,5 @@ class TestSpanTreeUtilities:
             assert keyname in actual_dict
             if keyname == "children":
                 assert actual_dict[keyname] == expected_children
-            elif keyname == "start_time" or keyname == "end_time":
-                assert datetime.fromisoformat(actual_dict[keyname]) == node.span_row[keyname]
             else:
                 assert actual_dict[keyname] == node.span_row[keyname]
