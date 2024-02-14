@@ -23,7 +23,7 @@ outputs:
 jobs:
   run_dataset_sampler:
     type: command
-    component: ../../components/dataset-sampler/spec.yaml
+    component: ../../components/dataset_sampler/spec.yaml
     limits: 
       timeout: 900
     inputs:

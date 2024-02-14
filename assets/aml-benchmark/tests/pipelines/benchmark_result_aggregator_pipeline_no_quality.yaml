@@ -40,7 +40,7 @@ jobs:
         path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
   performance:
     type: command
-    component: ../../components/compute-performance-metrics/spec.yaml
+    component: ../../components/compute_performance_metrics/spec.yaml
     limits:
       timeout: 900
     inputs:
@@ -56,7 +56,7 @@ jobs:
         type: uri_folder
   aggregator:
     type: command
-    component: ../../components/benchmark-result-aggregator/spec.yaml
+    component: ../../components/benchmark_result_aggregator/spec.yaml
     limits:
       timeout: 900
     inputs:

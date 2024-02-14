@@ -37,7 +37,7 @@ outputs:
 jobs:
   run_batch_inference_preparer:
     type: command
-    component: ../../components/batch-inference-preparer/spec.yaml
+    component: ../../components/batch_inference_preparer/spec.yaml
     limits: 
       timeout: 900
     inputs:
