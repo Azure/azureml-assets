@@ -70,7 +70,7 @@ class TestTraceAggregator:
         spark = self.init_spark()
         processed_spans_df = spark.createDataFrame(span_input_logs, self._preprocessed_log_schema)
         expected_traces_df = spark.createDataFrame(expected_trace_logs, self._trace_log_schema)
-        
+
         print("processed logs:")
         processed_spans_df.show()
         processed_spans_df.printSchema()
@@ -78,7 +78,7 @@ class TestTraceAggregator:
         print("expected trace logs:")
         expected_traces_df.show()
         expected_traces_df.printSchema()
-        
+
         actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df)
 
         print("actual trace logs:")
