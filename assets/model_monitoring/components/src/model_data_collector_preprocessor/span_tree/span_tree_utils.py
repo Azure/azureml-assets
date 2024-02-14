@@ -4,6 +4,7 @@
 
 
 import bisect
+from datetime import datetime
 import json
 
 from pyspark.sql.types import StructType, StructField, StringType, ArrayType, TimestampNTZType
@@ -63,6 +64,8 @@ class SpanTreeNode:
     def create_node_from_json_str(cls, json_str: str) -> "SpanTreeNode":
         """Parse json string to get a single SpanTree node."""
         node_dict: dict = json.loads(json_str)
+        node_dict['start_time'] = datetime.fromisoformat(node_dict['start_time'])
+        node_dict['end_time'] = datetime.fromisoformat(node_dict['end_time'])
         children = node_dict.pop('children', [])
         new_row = Row(**node_dict)
 
@@ -88,6 +91,10 @@ class SpanTreeNode:
         span_dict = self._span_row.asDict()
         out_dict = {key_name: span_dict.get(key_name) for key_name in span_node_schema_names}
         out_dict['children'] = self.children
+        start_time: datetime = out_dict['start_time']  # type: ignore
+        end_time: datetime = out_dict['end_time']  # type: ignore
+        out_dict['start_time'] = start_time.isoformat()
+        out_dict['end_time'] = end_time.isoformat()
         return out_dict
 
     def __iter__(self) -> Iterator["SpanTreeNode"]:
