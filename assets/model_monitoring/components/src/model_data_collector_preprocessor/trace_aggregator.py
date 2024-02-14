@@ -7,8 +7,8 @@ from pyspark.sql import DataFrame, Row
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from typing import List
 
-from assets.model_monitoring.components.src.shared_utilities.io_utils import init_spark
-from span_tree.span_tree_utils import SpanTree, SpanTreeNode
+from shared_utilities.io_utils import init_spark
+from model_data_collector_preprocessor.span_tree_utils import SpanTree, SpanTreeNode
 
 
 def _get_aggregated_trace_log_spark_df_schema() -> StructType:
@@ -53,9 +53,15 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
     """Group span logs into aggregated trace logs."""
     spark = init_spark()
     distinct_trace_ids = span_logs.select("trace_id").distinct()
+    distinct_trace_ids.show()
+
     all_aggregated_traces = spark.createDataFrame(data=[], schema=_get_aggregated_trace_log_spark_df_schema())
     for trace_id in distinct_trace_ids.collect():
-        tree = _construct_span_tree(span_logs.where(span_logs.trace_id == trace_id.trace_id).collect())
+        grouped_spans_df = span_logs.where(span_logs.trace_id == trace_id.trace_id)
+        print(f"spans grouped by trace_id: {trace_id}")
+        grouped_spans_df.show()
+
+        tree = _construct_span_tree(grouped_spans_df.collect())
         new_entry = _construct_aggregated_trace_df(tree)
         all_aggregated_traces.union(new_entry)
     return all_aggregated_traces

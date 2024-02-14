@@ -2,7 +2,9 @@
 # Licensed under the MIT License.
 """This file contains unit tests for the trace aggregator."""
 
+from datetime import datetime
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from src.model_data_collector_preprocessor.trace_aggregator import (
     process_spans_into_aggregated_traces,
     _get_aggregated_trace_log_spark_df_schema
@@ -18,9 +20,78 @@ class TestTraceAggregator:
         """Create spark session."""
         return SparkSession.builder.appName("test").getOrCreate()
 
-    def test_trace_aggregator_empty(self):
-        """Test scenario where data is empty."""
+    _trace_log_schema = _get_aggregated_trace_log_spark_df_schema()
+
+    _preprocessed_log_schema = StructType([
+        StructField('attributes', StringType(), False),
+        StructField('end_time', TimestampType(), False),
+        StructField('events', StringType(), False),
+        StructField('framework', StringType(), False),
+        StructField('input', StringType(), False),
+        StructField('links', StringType(), False),
+        StructField('name', StringType(), False),
+        StructField('output', StringType(), False),
+        StructField('parent_id', StringType(), True),
+        StructField('span_id', StringType(), False),
+        StructField('span_type', StringType(), False),
+        StructField('start_time', TimestampType(), False),
+        StructField('status', StringType(), False),
+        StructField('trace_id', StringType(), False),
+        # TODO: this field might not be in v1. Double check later
+        # StructField('session_id', StringType(), True),
+        # StructField('user_id', StringType(), True),
+    ])
+
+    _span_log_data = [
+        ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
+        ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+        ["{}", datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
+        ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
+        ["{}", datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "in", "[]", "name",  "out", "2"] +
+        ["3", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
+        ["{}", datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "in", "[]", "name",  "out", "1"] +
+        ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
+    ]
+
+    _trace_log_data = [
+            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", "{\"TBD\": \"TBD\"}", None] +
+            [datetime(2024, 2, 5, 0, 1, 0), "01", None],
+    ]
+
+    @pytest.mark.parametrize(
+            "span_input_logs, expected_trace_logs",
+            [
+                ([], []),
+                (_span_log_data, _trace_log_data)
+            ]
+    )
+    def test_trace_aggregator(self, span_input_logs, expected_trace_logs):
+        """Test scenario where spans has real data."""
         spark = self.init_spark()
-        processed_span_logs = spark.createDataFrame([], _get_aggregated_trace_log_spark_df_schema())
-        trace_logs = process_spans_into_aggregated_traces(processed_span_logs)
-        assert trace_logs.isEmpty()
+        processed_spans_df = spark.createDataFrame(span_input_logs, self._preprocessed_log_schema)
+        expected_traces_df = spark.createDataFrame(expected_trace_logs, self._trace_log_schema)
+        
+        print("processed logs:")
+        processed_spans_df.show()
+        processed_spans_df.printSchema()
+
+        print("expected trace logs:")
+        expected_traces_df.show()
+        expected_traces_df.printSchema()
+        
+        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df)
+
+        print("actual trace logs:")
+        actual_trace_df.show()
+        actual_trace_df.printSchema()
+
+        assert_spark_dataframe_equal(actual_trace_df, expected_traces_df)
+
+
+def assert_spark_dataframe_equal(df1, df2):
+    """Assert two spark dataframes are equal."""
+    print(f"df1: {df1.collect()}")
+    print(f"df2: {df2.collect()}")
+    assert df1.schema == df2.schema
+    assert df1.count() == df2.count()
+    assert df1.collect() == df2.collect()
