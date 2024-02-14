@@ -58,11 +58,10 @@ class TestSpanTreeUtilities:
             curr_end_time = next_end_time
 
         json_str = tree.to_json_str()
-
         json_tree = SpanTree.create_tree_from_json_string(json_str)
-        
-        expected_span_ids = ["00", "010", "01", "02", "0"]
-        for actual_span, expected_span_id in zip(json_tree, expected_span_ids):
+        expected_span_id_order = ["00", "010", "01", "02", "0"]
+
+        for actual_span, expected_span_id in zip(json_tree, expected_span_id_order):
             assert expected_span_id == actual_span.span_id
 
     def test_span_tree_from_json_string(self):
