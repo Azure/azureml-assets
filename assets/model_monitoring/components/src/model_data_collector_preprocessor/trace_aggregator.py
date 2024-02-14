@@ -58,13 +58,9 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
     all_aggregated_traces = spark.createDataFrame(data=[], schema=_get_aggregated_trace_log_spark_df_schema())
     for trace_id in distinct_trace_ids.collect():
         grouped_spans_df = span_logs.where(span_logs.trace_id == trace_id.trace_id)
-        print(f"spans grouped by trace_id: {trace_id.trace_id}")
-        grouped_spans_df.show()
-
         tree = _construct_span_tree(grouped_spans_df.collect())
         new_entry = _construct_aggregated_trace_df(tree)
-        print(f"aggregated trace log for trace_id: {trace_id.trace_id}")
-        new_entry.show()
-        
         all_aggregated_traces = all_aggregated_traces.union(new_entry)
+
+    all_aggregated_traces.show()
     return all_aggregated_traces

@@ -53,8 +53,17 @@ class TestTraceAggregator:
         ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
+    _root_span_str = '{"parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00",' + \
+        ' "end_time": "2024-02-05T00:08:00", "children": ["{\\"parent_id\\": \\"1\\", \\"span_id\\": \\"2\\", ' + \
+        '\\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:02:00\\", \\"end_time\\": \\"2024-02-05' + \
+        'T00:05:00\\", \\"children\\": [\\"{\\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\", \\\\\\"span_id\\\\\\": \\\\\\"'+ \
+        '3\\\\\\", \\\\\\"span_type\\\\\\": \\\\\\"llm\\\\\\", \\\\\\"start_time\\\\\\": \\\\\\"2024-02-05T00:' + \
+        '03:00\\\\\\", \\\\\\"end_time\\\\\\": \\\\\\"2024-02-05T00:04:00\\\\\\", \\\\\\"children\\\\\\": []}\\"]}",' + \
+        ' "{\\"parent_id\\": \\"1\\", \\"span_id\\": \\"4\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024' + \
+        '-02-05T00:06:00\\", \\"end_time\\": \\"2024-02-05T00:07:00\\", \\"children\\": []}"]}'
+
     _trace_log_data = [
-            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", "{\"TBD\": \"TBD\"}", None] +
+            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str, None] +
             [datetime(2024, 2, 5, 0, 1, 0), "01", None],
     ]
 
