@@ -36,7 +36,7 @@ outputs:
 jobs:
   run_inference_postprocessor:
     type: command
-    component: ../../components/inference-postprocessor/spec.yaml
+    component: ../../components/inference_postprocessor/spec.yaml
     limits:
       timeout: 900
     inputs:
