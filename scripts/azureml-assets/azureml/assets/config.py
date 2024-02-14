@@ -11,7 +11,7 @@ from functools import total_ordering
 from pathlib import Path
 from ruamel.yaml import YAML
 from packaging import version
-from typing import Dict, List, Set, Tuple, Union
+from typing import Dict, List, Set, Tuple, Union, Optional
 import requests
 import sys
 from azure.ai.ml._azure_environments import (
@@ -1367,6 +1367,11 @@ class AssetConfig(Config):
         return self._yaml.get('test', {})
 
     @property
+    def _code(self) -> Dict[str, object]:
+        """Raw 'code' value."""
+        return self._yaml.get('code', {})
+
+    @property
     def _test_pytest(self) -> Dict[str, object]:
         """Raw 'test.pytest' value."""
         return self._test.get('pytest', {})
@@ -1408,3 +1413,14 @@ class AssetConfig(Config):
         """Directory containing pytest scripts, appended to parent directory of asset config."""
         tests_dir = self.pytest_tests_dir
         return self._append_to_file_path(tests_dir) if tests_dir else None
+
+    @property
+    def code_dir(self) -> Optional[Path]:
+        """Directory containing code."""
+        return self._code.get('code_dir', None)
+
+    @property
+    def code_dir_with_path(self) -> Optional[Path]:
+        """Directory containing code, appended to parent directory of asset config."""
+        code_dir = self.code_dir
+        return self._append_to_file_path(code_dir) if code_dir else None

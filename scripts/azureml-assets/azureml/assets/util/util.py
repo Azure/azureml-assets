@@ -337,8 +337,20 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
     found_assets = []
     for input_dir in input_dirs:
         for file in input_dir.rglob(asset_config_filename):
-            # If specified, skip assets with no changed files
-            if changed_files and not any([f for f in changed_files if file.parent in f.parents]):
+            # If specified, skip assets when no change in asset, source_code and test_code
+            asset_config = assets.AssetConfig(file)
+            test_dir_path = asset_config.pytest_tests_dir_with_path
+            test_dir_path = test_dir_path.resolve() if test_dir_path else Path()
+
+            code_dir_path = asset_config.code_dir_with_path
+            code_dir_path = code_dir_path.resolve() if code_dir_path else Path()
+
+            if changed_files and not any(
+                file.parent in f.parents or
+                test_dir_path in f.resolve().parents or
+                code_dir_path in f.resolve().parents
+                for f in changed_files
+            ):
                 continue
 
             # If specified, skip excluded directories

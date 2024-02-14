@@ -6,3 +6,5 @@ test:
     enabled: true
     conda_environment: ../../dev_conda_env.yaml
     tests_dir: ../../tests/inference_postprocessor
+code:
+  code_dir: ../src/aml_benchmark/inference_postprocessor
