@@ -42,6 +42,24 @@ class StoreUrl:
         scheme = "abfss" if (not self.is_local_path()) and self._is_secure() else "abfs"
         return self._get_url(scheme=scheme, store_type="dfs", relative_path=relative_path)
 
+    def get_azureml_url(self, relative_path: str = None) -> str:
+        """
+        Get azureml url for the store url.
+
+        :param relative_path: relative path to the base path
+        :return: azureml url
+        """
+        if self._datastore is None:
+            raise ValueError(f"{self._base_url} is not an azureml url.")
+        url = (f"azureml://subscriptions/{self._datastore.subscription_id}/resourceGroups"
+               f"/{self._datastore.resource_group}/workspaces/{self._datastore.workspace.name}"
+               f"/datastores/{self._datastore.name}/paths")
+        if self.path:
+            url = f"{url}/{self.path}"
+        if relative_path:
+            url = f"{url}/{relative_path.lstrip('/')}"
+        return url
+
     def _get_url(self, scheme=None, store_type=None, relative_path=None) -> str:
         if not self.account_name:
             return f"{self._base_url}/{relative_path}" if relative_path else self._base_url

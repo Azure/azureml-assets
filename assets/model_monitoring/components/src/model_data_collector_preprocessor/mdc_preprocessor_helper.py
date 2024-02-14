@@ -11,12 +11,17 @@ import json
 import calendar
 from azure.core.credentials import AzureSasCredential
 from azure.identity import ClientSecretCredential
+from azure.storage.blob import BlobServiceClient, ContainerClient, ContainerSasPermissions, generate_container_sas
+from azure.storage.filedatalake import (
+    DataLakeServiceClient, FileSystemClient, FileSystemSasPermissions, generate_file_system_sas
+)
 from pyspark.sql import SparkSession
 from model_data_collector_preprocessor.store_url import StoreUrl
+from shared_utilities.momo_exceptions import InvalidInputError
 
 
 def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: StoreUrl = None,
-                  input_data: str = None) -> List[str]:
+                  input_data: str = None, scheme: str = "abfs") -> List[str]:
     """Get the available file list for the given time window under the input_data folder."""
     def date_range(start, end, step):
         cur = start
@@ -52,11 +57,19 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
     def is_end_of_day(d) -> bool:
         return d.hour == 23
 
+    def get_url(path) -> str:
+        if scheme == "abfs":
+            return store_url.get_abfs_url(path)
+        elif scheme == "azureml":
+            return store_url.get_azureml_url(path)
+        else:
+            raise ValueError(f"Unsupported scheme {scheme}")
+
     def same_year(start, end) -> List[str]:
         if is_same_month(start, end):
             return same_month(start, end)
         if is_start_of_year(start) and is_end_of_year(end):
-            return [store_url.get_abfs_url(f"{start.strftime('%Y')}/*/*/*/*.jsonl")] \
+            return [get_url(f"{start.strftime('%Y')}/*/*/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{start.strftime('%Y')}") else []
         return cross_month(start, end)
 
@@ -64,56 +77,56 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
         if is_same_day(start, end):
             return same_day(start, end)
         if is_start_of_month(start) and is_end_of_month(end):
-            return [store_url.get_abfs_url(f"{start.strftime('%Y/%m')}/*/*/*.jsonl")] \
+            return [get_url(f"{start.strftime('%Y/%m')}/*/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{start.strftime('%Y/%m')}") else []
         return cross_day(start, end)
 
     def same_day(start, end) -> List[str]:
         if is_start_of_day(start) and is_end_of_day(end):
-            return [store_url.get_abfs_url(f"{start.strftime('%Y/%m/%d')}/*/*.jsonl")] \
+            return [get_url(f"{start.strftime('%Y/%m/%d')}/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{start.strftime('%Y/%m/%d')}") else []
         return cross_hour(start, end)
 
     def start_of_year(y) -> List[str]:
         if is_end_of_year(y):
-            return [store_url.get_abfs_url(f"{y.strftime('%Y')}/*/*/*/*.jsonl")] \
+            return [get_url(f"{y.strftime('%Y')}/*/*/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{y.strftime('%Y')}") else []
         return same_year(y.replace(month=1, day=1, hour=0, minute=0, second=0), y)
 
     def end_of_year(y) -> List[str]:
         if is_start_of_year(y):
-            return [store_url.get_abfs_url(f"{y.strftime('%Y')}/*/*/*/*.jsonl")] \
+            return [get_url(f"{y.strftime('%Y')}/*/*/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{y.strftime('%Y')}") else []
         return same_year(y, y.replace(month=12, day=31, hour=23, minute=59, second=59))
 
     def start_of_month(m) -> List[str]:
         if is_end_of_month(m):
-            return [store_url.get_abfs_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")] \
+            return [get_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{m.strftime('%Y/%m')}") else []
         return same_month(m.replace(day=1, hour=0, minute=0, second=0), m)
 
     def end_of_month(m) -> List[str]:
         if is_start_of_month(m):
-            return [store_url.get_abfs_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")] \
+            return [get_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{m.strftime('%Y/%m')}") else []
         _, month_days = calendar.monthrange(m.year, m.month)
         return same_month(m, m.replace(day=month_days, hour=23, minute=59, second=59))
 
     def start_of_day(d) -> List[str]:
         if is_end_of_day(d):
-            return [store_url.get_abfs_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")] \
+            return [get_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{d.strftime('%Y/%m/%d')}") else []
         return same_day(d.replace(hour=0, minute=0, second=0), d)
 
     def end_of_day(d) -> List[str]:
         if is_start_of_day(d):
-            return [store_url.get_abfs_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")] \
+            return [get_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")] \
                 if store_url.is_folder_exists(f"{d.strftime('%Y/%m/%d')}") else []
         return same_day(d, d.replace(hour=23, minute=59, second=59))
 
     def cross_year(start, end) -> List[str]:
         middle_years = [
-            store_url.get_abfs_url(f"{y}/*/*/*/*.jsonl") for y in range(start.year+1, end.year)
+            get_url(f"{y}/*/*/*/*.jsonl") for y in range(start.year+1, end.year)
             if store_url.is_folder_exists(f"{y}")
         ]
         return end_of_year(start) + middle_years + start_of_year(end)
@@ -122,7 +135,7 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
         _start = (start + relativedelta(months=1)).replace(day=1, hour=1)
         _end = end.replace(day=1, hour=0)  # skip last month
         middle_months = [
-            store_url.get_abfs_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")
+            get_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")
             for m in date_range(_start, _end, relativedelta(months=1))
             if store_url.is_folder_exists(f"{m.strftime('%Y/%m')}")
         ]
@@ -132,7 +145,7 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
         _start = (start + timedelta(days=1)).replace(hour=1)
         _end = end.replace(hour=0)  # skip last day
         middle_days = [
-            store_url.get_abfs_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")
+            get_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")
             for d in date_range(_start, _end, timedelta(days=1))
             if store_url.is_folder_exists(f"{d.strftime('%Y/%m/%d')}")
         ]
@@ -142,7 +155,7 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
         _start = start.replace(minute=0)
         _end = end.replace(minute=59)
         return [
-            store_url.get_abfs_url(f"{h.strftime('%Y/%m/%d/%H')}/*.jsonl")
+            get_url(f"{h.strftime('%Y/%m/%d/%H')}/*.jsonl")
             for h in date_range(_start, _end, timedelta(hours=1))
             if store_url.is_folder_exists(f"{h.strftime('%Y/%m/%d/%H')}")
         ]
@@ -164,6 +177,99 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
     if is_same_year(start_datetime, end_datetime):
         return same_year(start_datetime, end_datetime)
     return cross_year(start_datetime, end_datetime)
+
+
+def copy_appendblob_to_blockblob(appendblob_url: StoreUrl, start_datetime: datetime, end_datetime: datetime):
+    """Copy append blob to block blob."""
+    datastore_type = None if appendblob_url._datastore is None else appendblob_url._datastore.datastore_type
+    sas_token = _get_sas_token(appendblob_url.account_name, appendblob_url.container_name,
+                               appendblob_url.get_credential(), datastore_type)
+    base_path = appendblob_url.path
+
+    if datastore_type == "AzureBlob":
+        return _blob_copy_appendblob_to_blockblob(appendblob_url.get_container_client, base_path,
+                                                  start_datetime, end_datetime, sas_token)
+    elif datastore_type == "AzureDataLakeStorageGen2":
+        return _gen2_copy_appendblob_to_blockblob(appendblob_url.get_container_client, base_path,
+                                                  start_datetime, end_datetime, sas_token)
+    else:
+        raise InvalidInputError(f"Storage account type {datastore_type} is not supported!")
+
+
+def _get_sas_token(account_name, container_name, credential, datastore_type) -> str:
+    """Get sas token for append blob."""
+    def get_blob_sas_token_from_client_secret_credential(client_secret_credential: ClientSecretCredential):
+        account_url = f"https://{account_name}.blob.core.windows.net"
+        blob_service_client = BlobServiceClient(account_url=account_url, credential=client_secret_credential)
+        # get a user delegation key for the Blob service that's valid for 1 day
+        key_start_time = datetime.utcnow() - timedelta(minutes=15)
+        key_expiry_time = datetime.utcnow() + timedelta(days=1)
+        # TODO raise validation error if the SP has no permission to generate user delegation key
+        user_delegation_key = blob_service_client.get_user_delegation_key(key_start_time, key_expiry_time)
+        # get a sas token with the user delegation key
+        return generate_container_sas(
+            account_name=account_name, container_name=container_name,
+            user_delegation_key=user_delegation_key, permission=ContainerSasPermissions(read=True),
+            expiry=datetime.utcnow() + timedelta(hours=8))
+
+    def get_gen2_sas_token_from_client_secret_credential(client_secret_credential: ClientSecretCredential):
+        account_url = f"https://{account_name}.dfs.core.windows.net"
+        gen2_service_client = DataLakeServiceClient(account_url=account_url, credential=client_secret_credential)
+        # get a user delegation key for the Blob service that's valid for 1 day
+        key_start_time = datetime.utcnow() - timedelta(minutes=15)
+        key_expiry_time = datetime.utcnow() + timedelta(days=1)
+        # TODO raise validation error if the SP has no permission to generate user delegation key
+        user_delegation_key = gen2_service_client.get_user_delegation_key(key_start_time, key_expiry_time)
+        # get a sas token with the user delegation key
+        return generate_file_system_sas(
+            account_name=account_name, file_system_name=container_name,
+            credential=user_delegation_key, permission=FileSystemSasPermissions(read=True),
+            expiry=datetime.utcnow() + timedelta(hours=8))
+
+    if credential is None:
+        raise InvalidInputError("credential-less input data is NOT supported!")
+    if isinstance(credential, AzureSasCredential):
+        return credential.signature
+    if isinstance(credential, str):  # account key
+        return generate_container_sas(
+            account_name=account_name, container_name=container_name,
+            account_key=credential, permission=ContainerSasPermissions(read=True),
+            expiry=datetime.utcnow() + timedelta(hours=8))
+    if isinstance(credential, ClientSecretCredential):
+        if datastore_type == "AzureBlob":
+            return get_blob_sas_token_from_client_secret_credential(credential)
+        elif datastore_type == "AzureDataLakeStorageGen2":
+            return get_gen2_sas_token_from_client_secret_credential()
+        else:
+            raise InvalidInputError(f"Storage account type {datastore_type} is not supported!")
+    raise InvalidInputError(f"Credential type {type(credential)} is not supported!")
+
+
+def _blob_copy_appendblob_to_blockblob(container_client: ContainerClient, base_path: str, start_datetime, end_datetime,
+                                       sas_token):
+    cur_datetime = start_datetime
+    while cur_datetime <= end_datetime:
+        datetime_path = cur_datetime.strftime('%Y/%m/%d/%H')
+        appendblob_names = container_client.list_blob_names(name_starts_with=f"{base_path}/{datetime_path}")
+        for appendblob_name in appendblob_names:
+            if not appendblob_name.endswith(".jsonl"):
+                continue
+            appendblob_client = container_client.get_blob_client(appendblob_name)
+            blockblob_client = container_client.get_blob_client(f"{base_path}/block_blob/{datetime_path}"
+                                                                f"/{appendblob_name.split('/')[-1]}")
+            if not blockblob_client.exists():
+                blockblob_client.upload_blob_from_url(f"{appendblob_client.url}?{sas_token}", overwrite=False)
+
+        cur_datetime += timedelta(hours=1)
+    blockblob_url = (f"wasbs://{container_client.container_name}@{container_client.account_name}.blob.core.windows.net"
+                     f"/{base_path.strip('/')}/block_blob")
+    return StoreUrl(blockblob_url)
+
+
+def _gen2_copy_appendblob_to_blockblob(file_system_client: FileSystemClient, base_path, start_datetime, end_datetime,
+                                       sas_token):
+    # TODO use BlobContainerClient to access adlsgen2 data and achieve the copy.
+    raise NotImplementedError("Copy append blob to block blob in adlsgen2 is not supported yet!")
 
 
 def set_data_access_config(spark: SparkSession, input_data: str = None, store_url: StoreUrl = None):

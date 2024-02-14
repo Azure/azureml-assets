@@ -8,6 +8,7 @@ import argparse
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import posexplode, concat_ws, udf, from_json, when, col, to_json
 from pyspark.sql.types import StringType, AtomicType
+from py4j.protocol import Py4JJavaError
 from dateutil import parser
 from datetime import datetime
 from shared_utilities.momo_exceptions import DataNotFoundError
@@ -16,7 +17,9 @@ from shared_utilities.event_utils import add_tags_to_root_run
 from shared_utilities.constants import (
     MDC_CORRELATION_ID_COLUMN, MDC_DATA_COLUMN, MDC_DATAREF_COLUMN, AML_MOMO_ERROR_TAG
 )
-from mdc_preprocessor_helper import get_file_list, set_data_access_config, serialize_credential
+from mdc_preprocessor_helper import (
+    get_file_list, set_data_access_config, serialize_credential, copy_appendblob_to_blockblob
+)
 from model_data_collector_preprocessor.store_url import StoreUrl
 from model_data_collector_preprocessor.mdc_preprocessor_helper import deserialize_credential
 # from store_url import StoreUrl
@@ -24,6 +27,7 @@ from model_data_collector_preprocessor.mdc_preprocessor_helper import deserializ
 
 def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: datetime, store_url: StoreUrl,
                                     add_tags_func=None) -> DataFrame:
+    """Read raw MDC data, and return in a Spark DataFrame."""
     def handle_data_not_found():
         add_tags_func({AML_MOMO_ERROR_TAG: "No data found for the given time window."})
         raise DataNotFoundError(
@@ -33,16 +37,34 @@ def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: date
 
     add_tags_func = add_tags_func or add_tags_to_root_run
 
-    file_list = get_file_list(start_datetime, end_datetime, store_url=store_url)
-    if not file_list:
+    try:
+        return _uri_folder_to_spark_df(start_datetime, end_datetime, store_url, soft_delete_enabled=False)
+    except FileNotFoundError:
         handle_data_not_found()
+    except Py4JJavaError as pe:
+        if pe.java_exception.getMessage().contains("This endpoint does not support BlobStorageEvents or SoftDelete"):
+            blockblob_url = copy_appendblob_to_blockblob(store_url, start_datetime, end_datetime)
+            return _uri_folder_to_spark_df(start_datetime, end_datetime, blockblob_url,
+                                           add_tags_func, soft_delete_enabled=True)
+        else:
+            raise pe
+
+
+def _uri_folder_to_spark_df(start_datetime: datetime, end_datetime: datetime, store_url: StoreUrl,
+                            soft_delete_enabled: bool = False) -> DataFrame:
+    scheme = "azureml" if soft_delete_enabled else "abfs"
+    file_list = get_file_list(start_datetime, end_datetime, store_url=store_url, scheme=scheme)
+    if not file_list:
+        raise FileNotFoundError(f"No data found for the given time window: {start_datetime} to {end_datetime}")
     # print("DEBUG file_list:", file_list)
 
     spark = init_spark()
-    set_data_access_config(spark, store_url=store_url)
+    if not soft_delete_enabled:
+        # need to set credential in spark conf for abfs access
+        set_data_access_config(spark, store_url=store_url)
     df = spark.read.json(file_list)
     if df.rdd.isEmpty():
-        handle_data_not_found()
+        raise FileNotFoundError(f"No data found for the given time window: {start_datetime} to {end_datetime}")
 
     return df
 
