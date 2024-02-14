@@ -28,7 +28,7 @@ from ..test_utils import (
 )
 
 
-INPUT_PATH = os.path.join(os.path.dirname(__file__), "data")
+INPUT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 
 
 def _verify_and_get_output_records(

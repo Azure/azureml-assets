@@ -920,7 +920,7 @@ class TestComputePerfMetricsScript:
         src_dir = get_src_dir()
         args = [
             f"cd {src_dir} &&",
-            "python -m aml_benchmark.perf_metrics.main",
+            "python -m aml_benchmark.compute_performance_metrics.main",
             "--performance_data",
             dataset,
             "--batch_size_column_name",
