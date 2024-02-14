@@ -404,21 +404,33 @@ class OnlineEndpoint:
         with self._create_session_with_retry() as session:
             response = session.post(url, data=json.dumps(payload), headers=headers)
             # Raise an exception if the response contains an HTTP error status code
+            logger.info(f"""POST request to {url} with headers {headers} and payload {payload} 
+                         returned status: {response.status_code},
+                         body:
+                         {response.content}""")
             response.raise_for_status()
 
         return response
 
     def _get_connections_by_name(self) -> dict:
         """Get a connection from a workspace."""
-        if hasattr(self.curr_workspace._auth, "get_token"):
-            bearer_token = self.curr_workspace._auth.get_token(
-                "https://management.azure.com/.default").token
-        else:
-            bearer_token = self.curr_workspace._auth.token
+        # if hasattr(self.curr_workspace._auth, "get_token"):
+        #     bearer_token = self.curr_workspace._auth.get_token(
+        #         "https://management.azure.com/.default").token
+        # else:
+        #     bearer_token = self.curr_workspace._auth.token
 
-        endpoint = self.curr_workspace.service_context._get_endpoint("api")
-        #TODO: remove print
-        print(endpoint);
+        # import DefaultAzureCredential
+
+        from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+
+        credential = ManagedIdentityCredential()
+        # Check if given credential can get token successfully.
+        access_token = credential.get_token("https://management.azure.com/.default")
+        print(access_token)
+
+        workspace = self.curr_workspace;        
+        # endpoint = workspace.service_context._get_endpoint("api")
         # url_list = [
         #     endpoint,
         #     "rp/workspaces/subscriptions",
@@ -436,12 +448,12 @@ class OnlineEndpoint:
 
 
         # https://management.azure.com/subscriptions/95e0ae98-c287-4f51-b23e-4e2317b7e169/resourcegroups/EYESON.HERON.PROD.b816bb35-33ec-4d3f-82b2-6cb692a5679e/providers/Microsoft.MachineLearningServices/workspaces/amlworkspaceyu3zl4oks34ye/connections/b-689314967ddd45/listsecrets?api-version=2023-02-01-preview
-        final_url=f"https://management.azure.com/subscriptions/{self.curr_workspace.subscription_id}"\
-                   f"/resourcegroups/{self.curr_workspace.resource_group}"\
-                   f"/providers/Microsoft.MachineLearningServices/workspaces/{self.curr_workspace.name}"\
+        final_url=f"https://management.azure.com/subscriptions/{workspace.subscription_id}"\
+                   f"/resourcegroups/{workspace.resource_group}"\
+                   f"/providers/Microsoft.MachineLearningServices/workspaces/{workspace.name}"\
                    f"/connections/{self._connections_name}/listsecrets?api-version=2023-02-01-preview"
         resp = self._send_post_request(final_url, {
-            "Authorization": f"Bearer {bearer_token}",
+            "Authorization": f"Bearer {access_token.token}",
             "content-type": "application/json"
         }, {})
 

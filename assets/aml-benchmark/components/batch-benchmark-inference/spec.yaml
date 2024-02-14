@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.6.2
+version: 0.0.6.3.d
 
 inputs:
   input_dataset:
@@ -111,6 +111,11 @@ inputs:
     type: uri_file
     optional: True
     description: The endpoint config file.
+  target_compute_name:
+    type: string
+    optional: True
+    default: "serverless"
+    description: The name of the compute target to run the batch inference on.
   initial_worker_count:
     type: integer
     optional: False
@@ -167,8 +172,8 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml:batch_benchmark_score:0.0.6.2
-    # component: "azureml:/subscriptions/381b38e9-9840-4719-a5a0-61d9585e1e91/resourcegroups/yuzhua-rg-eastasia/workspaces/yuzhua-ws-swedencentral/components/batch_benchmark_score:0.0.5.1"
+    component: azureml:batch_benchmark_score:0.0.6.3.d
+    compute: ${{parent.inputs.target_compute_name}}
     inputs:
       model_type: ${{parent.inputs.model_type}}
       online_endpoint_url: ${{parent.inputs.endpoint_url}}
