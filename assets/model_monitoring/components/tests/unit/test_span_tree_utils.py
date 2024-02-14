@@ -68,7 +68,7 @@ class TestSpanTreeUtilities:
         # 1
         # |-> 2 -> 3
         # |-> 4
-        json_string = '{"parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:'+ \
+        json_string = '{"parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:' + \
             '01:00", "end_time": "2024-02-05T00:08:00", "children": ["{\\"parent_id\\": \\"1\\", \\"span_id\\"' + \
             ': \\"2\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:02:00\\", \\"end_time\\"' + \
             ': \\"2024-02-05T00:05:00\\", \\"children\\": [\\"{\\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\"' + \
