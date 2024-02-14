@@ -82,14 +82,14 @@ class SpanTreeNode:
 
     def show(self, indent: int = 0) -> None:
         """Print the current span in a formatted syntax to stdout."""
-        print(f"{' '*indent}[{self._span_row.span_id}({self._span_row.start_time}, {self._span_row.end_time})]")
+        print(f"{' '*indent}[{self.span_row.span_id}({self.span_row.start_time}, {self.span_row.end_time})]")
         for c in self.children:
             c.show(indent + 4)
 
     def to_dict(self) -> dict:
         """Get dictionary representation of SpanTreeNode."""
         span_node_schema_names = _get_span_tree_node_spark_df_schema().fieldNames()
-        span_dict = self._span_row.asDict()
+        span_dict = self.span_row.asDict()
         out_dict = {key_name: span_dict.get(key_name) for key_name in span_node_schema_names}
 
         out_dict['children'] = self.children
@@ -107,9 +107,9 @@ class SpanTreeNode:
                 yield span
         yield self
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: "SpanTreeNode") -> bool:
         """Compare by end_time in bisect.insort() for python3.8."""
-        return self._span_row.end_time < other.span_row.end_time
+        return self.span_row.end_time < other.span_row.end_time
 
 
 class SpanTree:
