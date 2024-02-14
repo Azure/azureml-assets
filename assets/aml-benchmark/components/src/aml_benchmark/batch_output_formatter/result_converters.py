@@ -247,7 +247,10 @@ class ResultConverters:
             return response_message["text"]
         if "message" in response_message:
             # This is the chat completion OAI contract scenario.
-            return response_message["message"]["content"]
+            if "content" in response_message["message"]:
+                return response_message["message"]["content"]
+            # If content is not there, that means the model filtered the response.
+            return ""
         # Unknown contract specified as OAI.
         raise BenchmarkUserException._with_error(
             AzureMLError.create(

@@ -94,21 +94,24 @@ def log_params_and_metrics(
     try:
         mlflow.log_metrics(filtered_metrics)
     except Exception as ex:
-        logger.error(f"Failed to log parameters to current run due to {ex}")
+        logger.error(f"Failed to log metrics to current run due to {ex}")
     if log_to_parent:
         # Log to parent run
-        parent_run_id = Run.get_context().parent.id
-        ml_client = mlflow.tracking.MlflowClient()
-        for param_name, param_value in parameters.items():
-            param_value_to_log = param_value
-            if isinstance(param_value, str) and len(param_value) > 500:
-                param_value_to_log = param_value[: 497] + '...'
-            try:
-                ml_client.log_param(parent_run_id, param_name, param_value_to_log)
-            except Exception as ex:
-                logger.error(f"Failed to log parameter {param_name} to root run due to {ex}.")
-        for metric_name, metric_value in filtered_metrics.items():
-            try:
-                ml_client.log_metric(parent_run_id, metric_name, metric_value)
-            except Exception as ex:
-                logger.error(f"Failed to log metric {metric_name} to root run due to {ex}.")
+        try:
+            parent_run_id = Run.get_context().parent.id
+            ml_client = mlflow.tracking.MlflowClient()
+            for param_name, param_value in parameters.items():
+                param_value_to_log = param_value
+                if isinstance(param_value, str) and len(param_value) > 500:
+                    param_value_to_log = param_value[: 497] + '...'
+                try:
+                    ml_client.log_param(parent_run_id, param_name, param_value_to_log)
+                except Exception as ex:
+                    logger.error(f"Failed to log parameter {param_name} to root run due to {ex}.")
+            for metric_name, metric_value in filtered_metrics.items():
+                try:
+                    ml_client.log_metric(parent_run_id, metric_name, metric_value)
+                except Exception as ex:
+                    logger.error(f"Failed to log metric {metric_name} to root run due to {ex}.")
+        except Exception as ex:
+            logger.error(f"Failed to log parameters and metrics to root run due to {ex}.")

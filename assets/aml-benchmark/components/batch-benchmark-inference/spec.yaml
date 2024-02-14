@@ -169,6 +169,9 @@ outputs:
   ground_truth:
     type: uri_file
     description: The ground truth data that has a one-to-one mapping with the prediction data.
+  successful_requests:
+    type: uri_file
+    description: The successful requests.
   failed_requests:
     type: uri_file
     description: The failed requests.
@@ -267,9 +270,12 @@ jobs:
       ground_truth:
         type: uri_file
         path: ${{parent.outputs.ground_truth}}
+      successful_requests:
+        type: uri_file
+        path: ${{parent.outputs.successful_requests}}
       failed_requests:
         type: uri_file
         path: ${{parent.outputs.failed_requests}}
       unsafe_content_blocked_requests:
         type: uri_file
-        path: ${{parent.outputs.failed_requests}}
+        path: ${{parent.outputs.unsafe_content_blocked_requests}}

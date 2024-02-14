@@ -59,6 +59,8 @@ outputs:
     type: uri_file
   ground_truth:
     type: uri_file
+  successful_requests:
+    type: uri_file
   failed_requests:
     type: uri_file
   unsafe_content_blocked_requests:
@@ -76,6 +78,7 @@ command: >-
   --prediction_data ${{outputs.predictions}}
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   --perf_data ${{outputs.performance_metadata}}
+  --successful_requests_data ${{outputs.successful_requests}}
   --failed_requests_data ${{outputs.failed_requests}}
   --blocked_requests_data ${{outputs.unsafe_content_blocked_requests}}
   --predict_ground_truth_data ${{outputs.ground_truth}}
