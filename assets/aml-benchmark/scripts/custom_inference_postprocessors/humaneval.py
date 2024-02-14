@@ -15,7 +15,6 @@ from jinja2 import Environment
 from datasets import load_dataset
 from typing import Any, Dict, List, Union
 
-from aml_benchmark.utils.evaluation_utils import extract_text_from_markdown_tag
 
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
@@ -92,6 +91,20 @@ def _write_to_jsonl_file(
                 for example in prediction:
                     writer.write(json.dumps(example) + "\n")
     return
+
+
+def _extract_text_from_markdown_tag(input_string: str, tag_type='python') -> str:
+    """
+    Extract text between markdown code tags.
+
+    If the tag pattern search returns no matches, the input string is returned.
+    """
+    pattern = f"```{tag_type}(.*?)```"
+    m = re.search(pattern, input_string, flags=re.DOTALL)
+    if not m:
+        pattern_partial = f"```{tag_type}(.*)"
+        m = re.search(pattern_partial, input_string, flags=re.DOTALL)
+    return m.group(1) if m else input_string
 
 
 def _run(
@@ -174,9 +187,9 @@ def run_humaneval_postprocessor(
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
         if str("def " + row["entry_point"] + "(") in row["original_prediction"]:
             # If the model regenerates the prompt/ function name
-            pred_combined_prompt = extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
+            pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
         else:
-            original_prediction = extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
+            original_prediction = _extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
             # If spaces were stripped from endpoint responses, add those back.
             if not len(original_prediction) or (len(original_prediction) and original_prediction[0].isspace()):
                 prefix = ""
