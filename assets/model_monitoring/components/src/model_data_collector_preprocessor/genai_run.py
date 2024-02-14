@@ -16,7 +16,6 @@ from model_data_collector_preprocessor.spark_run import (
 )
 from model_data_collector_preprocessor.trace_aggregator import (
     process_spans_into_aggregated_traces,
-    _get_aggregated_trace_log_spark_df_schema,
 )
 
 
