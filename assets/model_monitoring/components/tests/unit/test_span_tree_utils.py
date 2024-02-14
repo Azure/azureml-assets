@@ -64,13 +64,46 @@ class TestSpanTreeUtilities:
         except Exception:
             assert True
 
-        # Todo: once we have preprocessed span log data to test with
-        # load that data into here as a string and create a span tree form json.
-        # json_string = ''
-        # node = SpanTree.create_tree_from_json_string(json_string)
-        # assert "0x7fd179134fb9e709" == node.root_span.span_id
-        # assert None == node.root_span.parent_id
-        # assert 5 == len(node.root_span.children)
+        # The tree is structured like this:
+        # 1
+        # |-> 2 -> 3
+        # |-> 4
+        json_string = '{"parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00",' + \
+        ' "end_time": "2024-02-05T00:08:00", "children": ["{\\"parent_id\\": \\"1\\", \\"span_id\\": \\"2\\", ' + \
+        '\\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:02:00\\", \\"end_time\\": \\"2024-02-05' + \
+        'T00:05:00\\", \\"children\\": [\\"{\\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\", \\\\\\"span_id\\\\\\": \\\\\\"'+ \
+        '3\\\\\\", \\\\\\"span_type\\\\\\": \\\\\\"llm\\\\\\", \\\\\\"start_time\\\\\\": \\\\\\"2024-02-05T00:' + \
+        '03:00\\\\\\", \\\\\\"end_time\\\\\\": \\\\\\"2024-02-05T00:04:00\\\\\\", \\\\\\"children\\\\\\": []}\\"]}",' + \
+        ' "{\\"parent_id\\": \\"1\\", \\"span_id\\": \\"4\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024' + \
+        '-02-05T00:06:00\\", \\"end_time\\": \\"2024-02-05T00:07:00\\", \\"children\\": []}"]}'
+        tree = SpanTree.create_tree_from_json_string(json_string)
+
+        assert "1" == tree.root_span.span_id
+        assert None == tree.root_span.parent_id
+        assert datetime(2024, 2, 5, 0, 8, 0) == tree.root_span.span_row.end_time
+        assert datetime(2024, 2, 5, 0, 1, 0) == tree.root_span.span_row.start_time
+        assert 2 == len(tree.root_span.children)
+
+        first_child = tree.root_span.children[0]
+        assert "2" == first_child.span_id
+        assert "1" == first_child.parent_id
+        assert datetime(2024, 2, 5, 0, 5, 0) == first_child.span_row.end_time
+        assert datetime(2024, 2, 5, 0, 2, 0) == first_child.span_row.start_time
+        assert 1 == len(first_child.children)
+
+        second_child = first_child.children[0]
+        assert "3" == second_child.span_id
+        assert "2" == second_child.parent_id
+        assert datetime(2024, 2, 5, 0, 4, 0) == second_child.span_row.end_time
+        assert datetime(2024, 2, 5, 0, 3, 0) == second_child.span_row.start_time
+        assert 0 == len(second_child.children)
+
+        third_child = tree.root_span.children[1]
+        assert "4" == third_child.span_id
+        assert "1" == third_child.parent_id
+        assert datetime(2024, 2, 5, 0, 7, 0) == third_child.span_row.end_time
+        assert datetime(2024, 2, 5, 0, 6, 0) == third_child.span_row.start_time
+        assert 0 == len(third_child.children)
 
     def test_span_tree_node_children(self):
         """Test scenarios for inserting child span tree nodes."""
