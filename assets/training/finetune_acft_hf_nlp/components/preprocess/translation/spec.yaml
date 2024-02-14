@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Translation DataPreProcess
 description: Component to preprocess data for translation task. See [docs](https://aka.ms/azureml/components/translation_datapreprocess) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/39
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/41
 
 code: ../../../src/preprocess
 
