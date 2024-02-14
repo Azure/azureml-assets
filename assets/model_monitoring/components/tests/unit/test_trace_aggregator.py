@@ -63,8 +63,8 @@ class TestTraceAggregator:
         'me\\": \\"2024-02-05T00:06:00\\", \\"end_time\\": \\"2024-02-05T00:07:00\\", \\"children\\": []}"]}'
 
     _trace_log_data = [
-            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str, None] +
-            [datetime(2024, 2, 5, 0, 1, 0), "01", None],
+            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str] +
+            [datetime(2024, 2, 5, 0, 1, 0), "01"],
     ]
 
     @pytest.mark.parametrize(
