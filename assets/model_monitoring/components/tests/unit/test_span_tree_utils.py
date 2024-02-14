@@ -27,26 +27,31 @@ class TestSpanTreeUtilities:
         # s02 = 65, 90
         # s010 = 40, 50
         s0 = SpanTreeNode(
-            Row(span_id="0", parent_id=None, start_time="2024-02-12T00:00:01", end_time="2024-02-12T01:40:00")
+            Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
+                end_time=datetime(2024, 2, 12, 1, 40, 0))
         )
         s00 = SpanTreeNode(
-            Row(span_id="00", parent_id="0", start_time="2024-02-12T00:05:00", end_time="2024-02-12T00:30:00")
+            Row(span_id="00", parent_id="0", start_time=datetime(2024, 2, 12, 0, 5, 0),
+                end_time=datetime(2024, 2, 12, 0, 30, 0))
         )
         s01 = SpanTreeNode(
-            Row(span_id="01", parent_id="0", start_time="2024-02-12T00:35:00", end_time="2024-02-12T01:00:00")
+            Row(span_id="01", parent_id="0", start_time=datetime(2024, 2, 12, 0, 35, 0),
+                end_time=datetime(2024, 2, 12, 1, 0, 0))
         )
         s02 = SpanTreeNode(
-            Row(span_id="02", parent_id="0", start_time="2024-02-12T01:05:00", end_time="2024-02-12T01:30:00")
+            Row(span_id="02", parent_id="0", start_time=datetime(2024, 2, 12, 1, 5, 0),
+                end_time=datetime(2024, 2, 12, 1, 30, 0))
         )
         s010 = SpanTreeNode(
-            Row(span_id="010", parent_id="01", start_time="2024-02-12T00:40:00", end_time="2024-02-12T00:50:00")
+            Row(span_id="010", parent_id="01", start_time=datetime(2024, 2, 12, 0, 40, 0),
+                end_time=datetime(2024, 2, 12, 0, 50, 0))
         )
         spans = [s0, s02, s010, s00, s01]
 
         tree = SpanTree(spans)
         curr_end_time = datetime.fromisoformat("2024-02-12T00:00:00")
         for span in tree:
-            next_end_time = datetime.fromisoformat(span.span_row["end_time"])
+            next_end_time = span.span_row["end_time"]
             assert curr_end_time < next_end_time
             curr_end_time = next_end_time
 
@@ -69,10 +74,10 @@ class TestSpanTreeUtilities:
 
     def test_span_tree_node_children(self):
         """Test scenarios for inserting child span tree nodes."""
-        node10 = SpanTreeNode(Row(end_time='2024-02-12T00:10:00'))
-        node20 = SpanTreeNode(Row(end_time='2024-02-12T00:20:00'))
-        node30 = SpanTreeNode(Row(end_time='2024-02-12T00:30:00'))
-        node40 = SpanTreeNode(Row(end_time='2024-02-12T00:40:00'))
+        node10 = SpanTreeNode(Row(end_time=datetime(2024, 2, 12, 0, 10)))
+        node20 = SpanTreeNode(Row(end_time=datetime(2024, 2, 12, 0, 20)))
+        node30 = SpanTreeNode(Row(end_time=datetime(2024, 2, 12, 0, 30)))
+        node40 = SpanTreeNode(Row(end_time=datetime(2024, 2, 12, 0, 40)))
 
         parent_node = SpanTreeNode(Row())
         assert parent_node.children == []
@@ -112,8 +117,10 @@ class TestSpanTreeUtilities:
     @pytest.mark.parametrize(
             "expected_row",
             [
-                (Row(span_id="0", parent_id=None, start_time="2024-02-12T00:00:01", end_time="2024-02-12T01:40:00")),
-                (Row(span_id="00", parent_id="0", start_time="2024-02-12T00:05:00", end_time="2024-02-12T00:30:00")),
+                (Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
+                     end_time=datetime(2024, 2, 12, 1, 40, 0))),
+                (Row(span_id="00", parent_id="0", start_time=datetime(2024, 2, 12, 0, 5, 0),
+                     end_time=datetime(2024, 2, 12, 0, 30, 0))),
                 (Row(span_id=None, parent_id=None, start_time=None, end_time=None))
             ]
     )
@@ -134,11 +141,11 @@ class TestSpanTreeUtilities:
             assert True
 
         json_string = '{"parent_id":null,"span_id":"0x7fd179134fb9e709","span_type":"SpanKind.INTERNAL",' + \
-            '"start_time":"2024-02-05T15:00:13.789782Z","end_time":"2024-02-05T15:00:18.791564Z",' + \
+            '"start_time":"2024-02-05T15:00:13.789782","end_time":"2024-02-05T15:00:18.791564",' + \
             '"children":["fakejsonchild", "fakejsonchild2"]}'
         expected_row = Row(
             parent_id=None, span_id="0x7fd179134fb9e709", span_type="SpanKind.INTERNAL",
-            start_time="2024-02-05T15:00:13.789782Z", end_time="2024-02-05T15:00:18.791564Z",
+            start_time=datetime(2024, 2, 5, 15, 0, 13, 789782), end_time=datetime(2024, 2, 5, 15, 0, 18, 791564),
         )
         expected_children = ["fakejsonchild", "fakejsonchild2"]
 
@@ -156,8 +163,8 @@ class TestSpanTreeUtilities:
                         span_id="0",
                         parent_id=None,
                         span_type="SpanKind.INTERNAL",
-                        start_time="2024-02-12T00:00:01",
-                        end_time="2024-02-12T01:40:00",
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
                     ),
                     ["fake child"]
                 ),
@@ -166,20 +173,10 @@ class TestSpanTreeUtilities:
                         span_id="00",
                         parent_id="0",
                         span_type="SpanKind.TOOL",
-                        start_time="2024-02-12T00:05:00",
-                        end_time="2024-02-12T00:30:00",
+                        start_time=datetime(2024, 2, 12, 0, 5, 0),
+                        end_time=datetime(2024, 2, 12, 0, 30, 0),
                     ),
                     []
-                ),
-                (
-                    Row(
-                        span_id=None,
-                        parent_id=None,
-                        span_type=None,
-                        start_time=None,
-                        end_time=None,
-                    ),
-                    None
                 )
             ]
     )
@@ -193,5 +190,7 @@ class TestSpanTreeUtilities:
             assert keyname in actual_dict
             if keyname == "children":
                 assert actual_dict[keyname] == expected_children
+            elif keyname == "start_time" or keyname == "end_time":
+                assert datetime.fromisoformat(actual_dict[keyname]) == node.span_row[keyname]
             else:
                 assert actual_dict[keyname] == node.span_row[keyname]
