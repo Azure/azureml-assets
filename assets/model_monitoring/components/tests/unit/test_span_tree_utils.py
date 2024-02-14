@@ -18,8 +18,8 @@ from datetime import datetime
 class TestSpanTreeUtilities:
     """Test class for span Row Tree Utilities."""
 
-    def test_span_tree_construct(self):
-        """Test basic scenario to construct span tree with ascending time order."""
+    def test_span_tree_construct_and_to_json(self):
+        """Test basic scenario to construct span tree with ascending time order and convert to json."""
         # The data end, start times in easy to read format:
         # s0 = 0, 100
         # s00 = 5, 30
@@ -49,11 +49,21 @@ class TestSpanTreeUtilities:
         spans = [s0, s02, s010, s00, s01]
 
         tree = SpanTree(spans)
+
+        # Test the __iter__ functionality also
         curr_end_time = datetime.fromisoformat("2024-02-12T00:00:00")
         for span in tree:
             next_end_time = span.span_row["end_time"]
             assert curr_end_time < next_end_time
             curr_end_time = next_end_time
+
+        json_str = tree.to_json_str()
+
+        json_tree = SpanTree.create_tree_from_json_string(json_str)
+        
+        expected_span_ids = ["00", "010", "01", "02", "0"]
+        for actual_span, expected_span_id in zip(json_tree, expected_span_ids):
+            assert expected_span_id == actual_span.span_id
 
     def test_span_tree_from_json_string(self):
         """Test scenario to construct span tree from json string."""
