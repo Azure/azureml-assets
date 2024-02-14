@@ -30,7 +30,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
-from azureml.acft.accelerator.utils.run_utils import add_run_properties, is_main_process
+from azureml.acft.accelerator.utils.run_utils import add_run_properties
 from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError, ACFTSystemError
@@ -128,7 +128,13 @@ MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS = {
     Tasks.TEXT_GENERATION: {
         "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
-        "params": '[{"name": "top_p", "type": "float", "default": 1.0, "shape": null}, {"name": "temperature", "type": "float", "default": 0.8, "shape": null}, {"name": "max_new_tokens", "type": "integer", "default": 50, "shape": null}, {"name": "do_sample", "type": "boolean", "default": true, "shape": null}, {"name": "return_full_text", "type": "boolean", "default": true, "shape": null}]',
+        "params": '[{"name": "top_p", "type": "float", "default": 1.0, \
+            "shape": null}, {"name": "temperature", "type": "float", \
+            "default": 0.8, "shape": null}, {"name": "max_new_tokens", \
+            "type": "integer", "default": 50, "shape": null}, {"name": \
+            "do_sample", "type": "boolean", "default": true, "shape": null}, \
+            {"name": "return_full_text", "type": "boolean", "default": true, \
+            "shape": null}]',
     },
 }
 
