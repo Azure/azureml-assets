@@ -48,16 +48,6 @@ from azureml._common._error_definition.azureml_error import AzureMLError  # type
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
-UNWANTED_PACKAGES = [
-    "apex>",
-    "apex<",
-    "apex=",
-    "transformers=",
-    "transformers>",
-    "transformers<"
-]
-PINNED_PACAKGES = ["transformers==4.34.1"]
-
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
@@ -134,6 +124,11 @@ MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS = {
     Tasks.TRANSLATION: {
         "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
+    },
+    Tasks.TEXT_GENERATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+        "params": '[{"name": "top_p", "type": "float", "default": 1.0, "shape": null}, {"name": "temperature", "type": "float", "default": 0.8, "shape": null}, {"name": "max_new_tokens", "type": "integer", "default": 50, "shape": null}, {"name": "do_sample", "type": "boolean", "default": true, "shape": null}, {"name": "return_full_text", "type": "boolean", "default": true, "shape": null}]',
     },
 }
 
@@ -1141,49 +1136,6 @@ def finetune(args: Namespace):
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
-
-    # remove unwanted packages and add pinned packages in requirements.txt and conda.yaml
-    # TODO: Workaround for now, we need to find better solution
-    if mlflow_flavor == MLFLOW_FLAVORS.TRANSFORMERS:
-        _update_packages(getattr(args, 'mlflow_model_folder', None))
-
-
-def _update_packages(model_save_path: str):
-    # Update to conda/requirements file only with single process
-    if is_main_process():
-        req_file_path = os.path.join(model_save_path, "requirements.txt")
-        conda_file_path = os.path.join(model_save_path, "conda.yaml")
-        requirements = None
-        if os.path.exists(req_file_path):
-            with open(req_file_path, "r") as f:
-                requirements = f.readlines()
-            if requirements:
-                for package in UNWANTED_PACKAGES:
-                    requirements = [item for item in requirements if not item.startswith(package)]
-                pinned_packages = [pin_pack + '\n' for pin_pack in PINNED_PACAKGES]
-                requirements[-1:-1] = pinned_packages
-                with open(req_file_path, "w") as f:
-                    f.writelines(requirements)
-                logger.info("Updated requirements.txt file")
-
-        conda_dict = None
-        if os.path.exists(conda_file_path):
-            with open(conda_file_path, "r") as f:
-                conda_dict = yaml.safe_load(f)
-            if conda_dict is not None and "dependencies" in conda_dict:
-                for i in range(len(conda_dict["dependencies"])):
-                    if "pip" in conda_dict["dependencies"][i] and isinstance(conda_dict["dependencies"][i], dict):
-                        pip_list = conda_dict["dependencies"][i]["pip"]
-                        if len(pip_list) > 0:
-                            for package in UNWANTED_PACKAGES:
-                                pip_list = [item for item in pip_list if not item.startswith(package)]
-                            pip_list.extend(PINNED_PACAKGES)
-                            conda_dict["dependencies"][i]["pip"] = pip_list
-                            break
-
-                with open(conda_file_path, "w") as f:
-                    yaml.safe_dump(conda_dict, f)
-                logger.info("Updated conda.yaml file")
 
 
 def can_apply_ort(args: Namespace, logger):
