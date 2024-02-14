@@ -89,14 +89,10 @@ class SpanTreeNode:
     def to_dict(self) -> dict:
         """Get dictionary representation of SpanTreeNode."""
         span_node_schema_names = _get_span_tree_node_spark_df_schema().fieldNames()
-        span_dict = self.span_row.asDict()
-        out_dict = {key_name: span_dict.get(key_name) for key_name in span_node_schema_names}
+        span_row_dict = self.span_row.asDict()
 
+        out_dict = {key_name: span_row_dict.get(key_name) for key_name in span_node_schema_names}
         out_dict['children'] = self.children
-        start_time: datetime = out_dict['start_time']  # type: ignore
-        end_time: datetime = out_dict['end_time']  # type: ignore
-        out_dict['start_time'] = start_time.isoformat()
-        out_dict['end_time'] = end_time.isoformat()
         return out_dict
 
     def __iter__(self) -> Iterator["SpanTreeNode"]:
@@ -178,6 +174,11 @@ class SpanTree:
     def _to_json_str_repr(self, curr_span: SpanTreeNode) -> str:
         """Recursively get tree structure JSON string."""
         output = curr_span.to_dict()
+        start_time: datetime = output['start_time']  # type: ignore
+        end_time: datetime = output['end_time']  # type: ignore
+        output['start_time'] = start_time.isoformat()
+        output['end_time'] = end_time.isoformat()
+
         child_subtree_strs = []
         for child in output['children']:
             subtree_str = self._to_json_str_repr(child)
