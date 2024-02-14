@@ -38,8 +38,6 @@ def _get_preprocessed_span_logs_df_schema() -> StructType:
         StructField('start_time', TimestampType(), False),
         StructField('status', StringType(), False),
         StructField('trace_id', StringType(), False),
-        # TODO: this field might not be in v1. Double check later
-        # StructField('session_id', StringType(), True),
         # StructField('user_id', StringType(), True),
     ])
     return schema
