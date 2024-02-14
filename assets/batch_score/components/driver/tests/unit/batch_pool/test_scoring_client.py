@@ -70,7 +70,10 @@ exceptions_to_raise = [
     [['caplog', 'make_completion_header_handler', e] for e in exceptions_to_raise],
     indirect=['caplog', 'make_completion_header_handler'],
 )
-async def test_score_once_raises_retriable_exception(caplog, make_completion_header_handler, exception_to_raise):
+async def test_score_once_raises_retriable_exception(caplog,
+                                                     make_completion_header_handler,
+                                                     exception_to_raise,
+                                                     mock_run_context):
     """Test score once raises retriable exception scenario."""
     def mock_post(**kwargs):
         """Mock post function."""
@@ -89,28 +92,77 @@ async def test_score_once_raises_retriable_exception(caplog, make_completion_hea
     assert type(exception_to_raise).__name__ in caplog.text
 
 
-@pytest.mark.parametrize("time, expected_iters",
-                         [(5, 1), (10, 1), (100, 4), (30*60*60, 9)])
-def test_get_retry_timeout_generator(time, expected_iters):
-    """Test get retry timeout generator."""
-    t = aiohttp.ClientTimeout(time)
-    timeout_generator = ScoringClient.get_retry_timeout_generator(t)
-    for i in range(expected_iters):
-        timeout = next(timeout_generator)
+@pytest.mark.asyncio
+async def test_score_once_raises_retriable_exception_until_max_retries(
+    caplog,
+    make_completion_header_handler,
+    mock_run_context
+):
+    """Test score once raises retriable exception when retry count < max retries."""
+    scoring_client = ScoringClient(
+        header_handler=make_completion_header_handler(),
+        quota_client=None,
+        routing_client=None)
+    session = MagicMock()
+    session.post = MagicMock(side_effect=MockPost)
+    scoring_request = MagicMock()
+    scoring_request.retry_count = 1
 
-    with pytest.raises(StopIteration):
-        next(timeout_generator)
+    with pytest.raises(RetriableException):
+        await scoring_client.score_once(session=session, scoring_request=scoring_request, timeout=MagicMock())
 
-    assert timeout.total == time
+    assert 'Score failed' in caplog.text
 
 
-@pytest.mark.parametrize("time, expected_iters",
-                         [(5, 1), (10, 1), (100, 4), (30*60*60, 9)])
-def test_get_next_retry_timeout(time, expected_iters):
-    """Test get next retry timeout."""
-    t = aiohttp.ClientTimeout(time)
-    timeout_generator = ScoringClient.get_retry_timeout_generator(t)
-    for i in range(expected_iters):
-        ScoringClient.get_next_retry_timeout(timeout_generator)
+@pytest.mark.asyncio
+async def test_score_once_fails_when_max_retries_are_exhausted(
+    caplog,
+    make_completion_header_handler,
+    mock_run_context
+):
+    """Test score once fails when retry count >= max retries."""
+    scoring_client = ScoringClient(
+        header_handler=make_completion_header_handler(),
+        quota_client=None,
+        routing_client=None)
+    session = MagicMock()
+    session.post = MagicMock(side_effect=MockPost)
+    scoring_request = MagicMock()
+    scoring_request.retry_count = 2
 
-    assert ScoringClient.get_next_retry_timeout(timeout_generator) is None
+    await scoring_client.score_once(session=session, scoring_request=scoring_request, timeout=MagicMock())
+
+    assert 'Score failed' in caplog.text
+
+
+class MockClientResponse():
+    """Mock client response."""
+
+    def __init__(self, status, headers, reason):
+        """Initialize mock client response."""
+        self.status = status
+        self.headers = headers
+        self.reason = reason
+
+    async def text(self):
+        """Return mock client response text."""
+        return 'Mock response text'
+
+
+class MockPost():
+    """Mock client session post."""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize mock client session post."""
+        pass
+
+    async def __aenter__(self):
+        """Return a mock client response when post is invoked."""
+        return MockClientResponse(
+            507,
+            {'Content-Type': 'application/json', 'Random-Header': 'Random-Value'},
+            'Insufficient Storage')
+
+    async def __aexit__(self, exc_type, exc, tb):
+        """Clean up any resources."""
+        pass

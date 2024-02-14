@@ -1,0 +1,32 @@
+type: evaluationresult
+name: mmlu_humanities_microsoft_phi_2_question_answering
+version: 1.0.2
+display_name: mmlu_humanities_microsoft_phi_2_question_answering
+description: microsoft-phi-2 run for mmlu_humanities dataset
+dataset_family: mmlu
+dataset_name: mmlu_humanities
+
+model_name: microsoft-phi-2
+model_version: "5"
+model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.48700000000000004
+
+path: ./job_files
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

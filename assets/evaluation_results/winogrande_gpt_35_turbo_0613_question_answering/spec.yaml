@@ -1,6 +1,6 @@
 type: evaluationresult
 name: winogrande_gpt_35_turbo_0613_question_answering
-version: 1.0.1
+version: 1.0.2
 display_name: winogrande_gpt_35_turbo_0613_question_answering
 description: gpt-35-turbo-0613 run for winogrande dataset
 dataset_family: winogrande

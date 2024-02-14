@@ -72,13 +72,13 @@ class BaseEngine(ABC):
     ) -> str:
         """Delete the prompt from the response if required."""
         if force:
-            return response[len(prompt):].strip()
+            return response[len(prompt):]
         elif self.task_config.task_type == TaskType.TEXT_GENERATION:
             if not return_full_text:
-                return response[len(prompt):].strip()
+                return response[len(prompt):]
             return response
         elif self.task_config.task_type == TaskType.CONVERSATIONAL:
-            return response[len(prompt):].strip()
+            return response[len(prompt):]
         else:
             raise ValueError(f"Invalid task type {self.task_config.task_type}.")
 
@@ -110,7 +110,7 @@ class BaseEngine(ABC):
     def get_tokens(self, response: str):
         """Load tokenizer and get tokens from a prompt."""
         if not hasattr(self, "tokenizer"):
-            self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.model_id)
+            self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.tokenizer)
         tokens = self.tokenizer.encode(response)
         return tokens
 
@@ -124,7 +124,7 @@ class HfEngine(BaseEngine):
 
     def load_model(self, env=None):
         """Load the model from the pretrained model specified in the engine configuration."""
-        self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.model_id)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.tokenizer)
         self.model = AutoModelForCausalLM.from_pretrained(self.engine_config.model_id)
         # move to the model to the GPU if testing on GPU
         if torch.cuda.is_available():

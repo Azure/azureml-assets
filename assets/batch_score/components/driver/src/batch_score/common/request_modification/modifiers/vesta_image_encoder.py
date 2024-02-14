@@ -21,7 +21,7 @@ class ImageEncoder():
     IMAGE_FILE = "ImageFile!"
 
     def __init__(self, image_input_folder_str: str = None) -> None:
-        """Init function."""
+        """Initialize ImageEncoder."""
         self.__image_input_folder_str: str = None
         if image_input_folder_str:
             self.__image_input_folder_str = str(Path(image_input_folder_str))
@@ -55,8 +55,8 @@ class ImageEncoder():
         start = time.time()
         resp = requests.get(url)
         if resp.status_code != 200:
-            msg = f"URL '{url}' responded with an unsuccessful response: {resp.status_code}, {resp.reason}."
-            lu.get_logger().info(msg)
+            lu.get_logger().info(
+                f"URL '{url}' responded with an unsuccessful response: {resp.status_code}, {resp.reason}.")
             raise UnsuccessfulUrlResponse()
 
         img = resp.content
@@ -84,7 +84,7 @@ class UnsuccessfulUrlResponse(Exception):
     """Unsuccessful url response."""
 
     def __init__(self, *args: object) -> None:
-        """Init function."""
+        """Initialize UnsuccessfulUrlResponse."""
         super().__init__(f"{ImageEncoder.IMAGE_URL} used in data, but url did not respond succesfully.")
 
 
@@ -92,7 +92,7 @@ class FolderNotMounted(Exception):
     """Folder not mounted."""
 
     def __init__(self, *args: object) -> None:
-        """Init function."""
+        """Initialize FolderNotMounted."""
         super().__init__(f"{ImageEncoder.IMAGE_FILE} used in data, but no folder is mounted.")
 
 
@@ -100,5 +100,5 @@ class VestaImageModificationException(RequestModificationException):
     """Vesta image modification exception."""
 
     def __init__(self) -> None:
-        """Init function."""
+        """Initialize VestaImageModificationException."""
         super().__init__("The ImageEncoder raised an exception")

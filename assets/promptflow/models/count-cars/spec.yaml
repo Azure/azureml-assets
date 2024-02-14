@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: count-cars
+path: ./
+properties:
+  is-promptflow: true
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: standard
+  azureml.promptflow.name: Count Cars
+  azureml.promptflow.description: Quantify red cars in images with Azure OpenAI GPT-4 Turbo with Vision to provide accurate vehicle counts.
+  inference-min-sku-spec: 2|0|14|28
+  inference-recommended-sku: Standard_DS3_v2
+version: 1

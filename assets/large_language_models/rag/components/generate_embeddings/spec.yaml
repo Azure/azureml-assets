@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.43
+version: 0.0.48
 name: llm_rag_generate_embeddings
 display_name: LLM - Generate Embeddings
 is_deterministic: true
@@ -58,9 +58,9 @@ code: '../src'
 
 command: >-
   python -m azureml.rag.tasks.embed
-  --chunks_source ${{inputs.chunks_source}}
+  --chunks_source '${{inputs.chunks_source}}'
   --embeddings_model ${{inputs.embeddings_model}}
-  $[[--embeddings_container ${{inputs.embeddings_container}}]]
-  --output ${{outputs.embeddings}}
+  $[[--embeddings_container '${{inputs.embeddings_container}}']]
+  --output '${{outputs.embeddings}}'
   --batch_size ${{inputs.batch_size}}
   --num_workers ${{inputs.num_workers}}

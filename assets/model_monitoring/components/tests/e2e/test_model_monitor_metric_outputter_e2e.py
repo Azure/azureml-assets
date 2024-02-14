@@ -43,7 +43,7 @@ def _submit_metric_outputter_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+        pipeline_job, experiment_name=experiment_name, skip_validation=True
     )
 
     # Wait until the job completes

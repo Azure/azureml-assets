@@ -10,6 +10,9 @@ from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 from azureml._common._error_definition.system_error import ClientError  # type: ignore
 
+from azureml.core.run import Run  # type: ignore
+from azureml.automl.core._run import run_lifecycle_utilities
+
 
 class ModelImportErrorStrings:
     """Error strings."""
@@ -24,6 +27,7 @@ class ModelImportErrorStrings:
     ERROR_FETCHING_HUGGING_FACE_MODEL_INFO = "Error in fetching model info for {model_id}. Error [{error}]"
     BLOBSTORAGE_DOWNLOAD_ERROR = "Failed to download artifacts from {uri}. Error: [{error}]"
     GIT_CLONE_ERROR = "Failed to clone {uri}. Error: [{error}]"
+    GIT_CONFIG_ERROR = "Failed to set up GitHub config. Error: [{error}]"
     VM_NOT_SUFFICIENT_FOR_OPERATION = "VM not sufficient for {operation} operation. Details: [{details}]"
     CMD_EXECUTION_ERROR = "Error in executing command. Error: [{error}]"
     MODEL_ALREADY_EXISTS = "Model with name {model_id} already exists in registry {registry} at {url}"
@@ -42,6 +46,9 @@ class ModelImportErrorStrings:
         " About - https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
         " sdk - https://aka.ms/azureml-import-model \n"
         " cli - https://aka.ms/obo-cli-sample"
+    )
+    HF_AUTHENTICATION_ERROR = (
+        "Failed to authenticate with the HF Token provided: [{error}]"
     )
 
 
@@ -78,6 +85,15 @@ class GITCloneError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.GIT_CLONE_ERROR
+
+
+class GITConfigError(ClientError):
+    """GIT configuration error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.GIT_CONFIG_ERROR
 
 
 class BlobStorageDownloadError(ClientError):
@@ -161,6 +177,15 @@ class UnsupportedTaskType(ClientError):
         return ModelImportErrorStrings.UNSUPPORTED_TASK_TYPE
 
 
+class HFAuthenticationError(ClientError):
+    """Error when failed to authenticate user with token provided."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.HF_AUTHENTICATION_ERROR
+
+
 def swallow_all_exceptions(logger: logging.Logger):
     """Swallow all exceptions.
 
@@ -185,6 +210,11 @@ def swallow_all_exceptions(logger: logging.Logger):
                 logger.error("Exception {} when calling {}".format(azureml_exception, func.__name__))
                 for handler in logger.handlers:
                     handler.flush()
+
+                # fail the run
+                run = Run.get_context()
+                run_lifecycle_utilities.fail_run(run, azureml_exception, is_aml_compute=True)
+
                 raise azureml_exception
             finally:
                 time.sleep(60)  # Let telemetry logger flush its logs before terminating.

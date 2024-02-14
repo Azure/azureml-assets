@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.47
+version: 0.0.52
 name: llm_rag_git_clone
 display_name: LLM - Clone Git Repo
 is_deterministic: true
@@ -44,4 +44,4 @@ command: >-
   $[[--branch-name ${{inputs.branch_name}}]]
   $[[--authentication-key-prefix ${{inputs.authentication_key_prefix}}]]
   $[[--git-connection-id ${{inputs.git_connection_id}}]]
-  --output-data ${{outputs.output_data}}
+  --output-data '${{outputs.output_data}}'

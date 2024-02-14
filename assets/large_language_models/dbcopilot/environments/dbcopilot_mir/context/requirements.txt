@@ -1,4 +1,4 @@
-azureml-rag[cognitive_search,data_generation]>=0.2.8
+azureml-rag[cognitive_search,data_generation]==0.2.24.1
 plotly~=5.13.1
 azure-kusto-data==4.2.0
 recognizers-text-suite~=1.0.2a2

@@ -25,7 +25,7 @@ class FileConfigurationValidator:
     """Validator for file-based configuration."""
 
     def __init__(self, schema_file=None):
-        """Init function."""
+        """Initialize FileConfigurationValidator."""
         if schema_file is None:
             schema_file = SCHEMAS_ROOT / "configuration.json"
 

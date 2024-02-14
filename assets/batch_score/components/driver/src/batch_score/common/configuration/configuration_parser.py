@@ -6,7 +6,6 @@
 import json
 from argparse import ArgumentParser
 
-from .. import constants
 from .configuration import Configuration
 from .command_line_argument_specification import COMMAND_LINE_ARGUMENT_SPECIFICATION
 
@@ -19,6 +18,7 @@ class ConfigurationParser:
         """If args are provided, they are parsed. Otherwise, sys.argv is parsed."""
         parsed_args, _ = self._setup_parser().parse_known_args(args=args)
         args_dict = vars(parsed_args)
+        # Custom solution provided for Benchmark.
         args_dict = ConfigurationParser._update_configuration_from_file(args_dict)
         args_dict = ConfigurationParser._set_defaults(args_dict)
 
@@ -42,11 +42,13 @@ class ConfigurationParser:
 
     @staticmethod
     def _set_defaults(args: dict) -> dict:
-        # if scoring_url is set but is an MIR endpoint url, then copy it to online_endpoint_url
-        # TODO: dedup these two so that all scoring clients using scoring_url
-        # https://msdata.visualstudio.com/Vienna/_workitems/edit/2836354
-        if args.get('scoring_url') and constants.MIR_ENDPOINT_DOMAIN_SUFFIX in args['scoring_url']:
-            args['online_endpoint_url'] = args['scoring_url']
+        """Set default values."""
+        """
+        The v1.5, v2 and v2_singularity components expose `online_endpoint_url` whereas LLM component
+        exposes `scoring_url`. With the assignment below, all of the internal logic will use `scoring_url`.
+        """
+        if args.get('online_endpoint_url'):
+            args['scoring_url'] = args['online_endpoint_url']
 
         # if segment_large_requests is not set, then default it.
         # set to enabled if completion api, disabled otherwise
@@ -55,6 +57,14 @@ class ConfigurationParser:
                 args['segment_large_requests'] = 'enabled'
             else:
                 args['segment_large_requests'] = 'disabled'
+
+        # Override log levels for backward compactability
+        if args.get('debug_mode') is None or args.get('debug_mode'):
+            args['app_insights_log_level'] = 'debug'
+            args['stdout_log_level'] = 'debug'
+        else:
+            args['app_insights_log_level'] = 'info'
+            args['stdout_log_level'] = 'info'
 
         return args
 

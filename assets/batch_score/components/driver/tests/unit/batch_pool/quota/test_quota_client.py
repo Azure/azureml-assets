@@ -135,7 +135,7 @@ class FakeClientSession:
     """Mock client session."""
 
     def __init__(self, *, throttle_lease=False, error_headers=None):
-        """Init function."""
+        """Initialize FakeClientSession."""
         self._throttle_lease = throttle_lease
         self._error_headers = error_headers
 
@@ -159,7 +159,7 @@ class FakeResponse:
     """Mock responsse."""
 
     def __init__(self, status, json, *, error=None):
-        """Init function."""
+        """Initialize FakeResponse."""
         self.status = status
         self._json = json
         self._error = error

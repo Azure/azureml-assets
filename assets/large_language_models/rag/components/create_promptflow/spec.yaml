@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.59
+version: 0.0.64
 name: llm_rag_create_promptflow
 display_name: LLM - Create Prompt Flow
 is_deterministic: true
@@ -24,6 +24,10 @@ inputs:
     type: string
     optional: true
     description: "Name of the MLIndex asset"
+  mlindex_asset_uri:
+    type: uri_folder
+    mode: ro_mount
+    description: Folder containing MLIndex to use in the generated flow.
   llm_connection_name:
     type: string
     optional: true
@@ -47,6 +51,7 @@ code: '../src'
 command: >-
   python flow_creation.py
   --mlindex_asset_id '${{inputs.mlindex_asset_id}}'
+  --mlindex_asset_uri '${{inputs.mlindex_asset_uri}}'
   $[[--best_prompts '${{inputs.best_prompts}}']]
   $[[--mlindex_name '${{inputs.mlindex_name}}']]
   $[[--llm_connection_name '${{inputs.llm_connection_name}}']]

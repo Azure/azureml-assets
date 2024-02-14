@@ -1,0 +1,25 @@
+{
+  "nodes": [
+    {
+      "name": "modify_query_with_history",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    },
+    {
+      "name": "lookup",
+      "inputs": {
+        "mlindex_content": "embeddings:\r\n  api_base: https:\/\/promptflow-ci-sweden-central.openai.azure.com\/\r\n  api_type: azure\r\n  api_version: 2023-07-01-preview\r\n  batch_size: '16'\r\n  connection:\r\n    id: \/subscriptions\/96aede12-2f73-41cb-b983-6d11a904839b\/resourceGroups\/promptflow\/providers\/Microsoft.MachineLearningServices\/workspaces\/chjinche-pf-eus\/connections\/chjinche-aoai\r\n  connection_type: workspace_connection\r\n  deployment: text-embedding-ada-002\r\n  dimension: 1536\r\n  file_format_version: '2'\r\n  kind: open_ai\r\n  model: text-embedding-ada-002\r\n  schema_version: '2'\r\nindex:\r\n  engine: langchain.vectorstores.FAISS\r\n  kind: faiss\r\n  method: FlatL2\r\n  path: azureml:\/\/subscriptions\/96aede12-2f73-41cb-b983-6d11a904839b\/resourcegroups\/promptflow\/workspaces\/chjinche-pf-eus\/datastores\/workspaceblobstore\/paths\/azureml\/f6495468-6137-4cb8-8107-9f312e4fc91d\/index\/\r\nself:\r\n  path: \r\n    azureml:\/\/subscriptions\/96aede12-2f73-41cb-b983-6d11a904839b\/resourcegroups\/promptflow\/workspaces\/chjinche-pf-eus\/datastores\/workspaceblobstore\/paths\/azureml\/f6495468-6137-4cb8-8107-9f312e4fc91d\/index\/\r\n  asset_id: \r\n    azureml:\/\/locations\/eastus2euap\/workspaces\/4d49a4bb-8594-4ccd-842e-73a9aeb3fcb1\/data\/azureml-runbook-faiss\/versions\/1",
+        "query_type": "Vector"
+      }
+    },
+    {
+      "name": "chat_with_context",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    }
+  ]
+}

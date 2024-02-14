@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_gpt_4_32k_0613_question_answering
-version: 1.0.1
+version: 1.0.2
 display_name: social_iqa_gpt_4_32k_0613_question_answering
 description: gpt-4-32k-0613 run for social_iqa dataset
 dataset_family: social_iqa
