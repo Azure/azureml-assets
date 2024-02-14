@@ -139,7 +139,7 @@ class TestBatchBenchmarkInferenceComponent:
                 model_type: Optional[str] = None,
             ) -> Job:
         temp_yaml = self._create_inference_yaml()
-        pipeline_job = load_yaml_pipeline('batch-benchmark-inference.yaml')
+        pipeline_job = load_yaml_pipeline('batch_benchmark_inference.yaml')
         os.remove(temp_yaml)
         # avoid blob exists error when running pytest with multiple workers
         if temp_dir is not None:
@@ -169,10 +169,10 @@ class TestBatchBenchmarkInferenceComponent:
     def _create_inference_yaml(self):
         original_yml_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "..", "components", "batch-benchmark-inference", "spec.yaml")
+            "..", "components", "batch_benchmark_inference", "spec.yaml")
         new_yaml_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "pipelines", "batch-benchmark-inference.yaml")
+            "pipelines", "batch_benchmark_inference.yaml")
         new_lines = []
         current_section = "main"
         param_dict = self._get_updated_params()
@@ -199,7 +199,7 @@ class TestBatchBenchmarkInferenceComponent:
         if current_section == "jobs":
             for component in ["batch_inference_preparer", "batch_benchmark_score", "batch_output_formatter"]:
                 if f"azureml:{component}" in line:
-                    return [f"    component: ../../components/{component.replace('_', '-')}/spec.yaml\n"]
+                    return [f"    component: ../../components/{component}/spec.yaml\n"]
         return [line]
 
     def _get_yml_key(self, line):
