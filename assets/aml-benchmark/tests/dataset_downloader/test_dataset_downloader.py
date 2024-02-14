@@ -172,7 +172,7 @@ class TestDatasetDownloaderScript:
                 f"the following: {get_dataset_config_names(dataset_name)} or 'all'."
             )
         elif dataset_name == "some_random_name":
-            expected_exception_mssg = f"FileNotFoundError: Dataset '{dataset_name}' doesn't exist on the Hub."
+            expected_exception_mssg = f"FileNotFoundError: Dataset '{dataset_name}' doesn't exist on the Hub"
 
         # Run the script and verify the exception
         try:

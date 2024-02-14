@@ -30,7 +30,7 @@ outputs:
 jobs:
   run_batch_output_formatter:
     type: command
-    component: ../../components/batch-output-formatter/spec.yaml
+    component: ../../components/batch_output_formatter/spec.yaml
     limits: 
       timeout: 900
     inputs:
