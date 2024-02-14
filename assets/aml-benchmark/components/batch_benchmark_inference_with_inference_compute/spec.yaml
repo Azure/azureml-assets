@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-name: batch_benchmark_inference
-display_name: Batch Benchmark Inference
-description: Components for batch endpoint inference
-version: 0.0.6
+name: batch_benchmark_inference_with_inference_compute
+display_name: Batch Benchmark Inference (With Inference compute Support)
+description: Components for batch endpoint inference with inference compute support.
+version: 0.0.1
 
 inputs:
   input_dataset:
@@ -19,6 +19,10 @@ inputs:
         - oai
         - oss
         - vision_oss
+  inference_compute:
+    type: string
+    description: Compute to be used for inferencing.
+    optional: False
   batch_input_pattern:
     type: string
     description: >- 
@@ -213,6 +217,7 @@ jobs:
     retry_settings:
       timeout: 6000
       max_retries: 10
+    compute: ${{parent.inputs.inference_compute}}
     environment_variables:
       BATCH_SCORE_INITIAL_REQUEST_TIMEOUT: '4'
       BATCH_SCORE_CONCURRENCY_ADJUSTMENT_INTERVAL: '120'
