@@ -66,5 +66,5 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
         print(f"aggregated trace log for trace_id: {trace_id.trace_id}")
         new_entry.show()
         
-        all_aggregated_traces.union(new_entry)
+        all_aggregated_traces = all_aggregated_traces.union(new_entry)
     return all_aggregated_traces
