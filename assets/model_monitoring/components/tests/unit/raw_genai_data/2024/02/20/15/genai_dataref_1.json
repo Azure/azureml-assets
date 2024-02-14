@@ -1,9 +1,19 @@
 [
-    {"sepal_length":2,"sepal_width":3.2,"petal_length":3,"petal_width":1.5},
     {
-        "sepal_length":3,
-        "sepal_width":3.4,
-        "petal_length":3.2,
-        "petal_width":1.8
-    }
+        "trace_id":"02",
+        "span_id":"4",
+        "parent_id":null,
+        "span_type":"llm",
+        "start_time": "2024-02-05T00:07:00",
+        "end_time": "2024-02-05T00:08:00",
+        "name":"name",
+        "status":"OK",
+        "framework":"LLM",
+        "input":"in",
+        "output":"out",
+        "attributes":"{}",
+        "events":"[]",
+        "links":"[]"
+    },
+    {"trace_id":"02", "span_id":"5", "parent_id":"4", "span_type":"llm", "start_time": "2024-02-05T00:11:00", "end_time": "2024-02-05T00:12:00", "name":"name", "status":"OK", "framework":"LLM", "input":"in", "output":"out", "attributes":"{}", "events":"[]", "links":"[]"}
 ]

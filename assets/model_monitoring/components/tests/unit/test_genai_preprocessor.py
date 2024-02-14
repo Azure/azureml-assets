@@ -73,6 +73,8 @@ class TestGenAISparkPreprocessor:
         ["3", "llm", datetime(2024, 2, 5, 0, 5, 0), "OK", "02"],
         ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "LLM", "in", "[]", "name",  "out", None] +
         ["4", "llm", datetime(2024, 2, 5, 0, 7, 0), "OK", "02"],
+        ["{}", datetime(2024, 2, 5, 0, 11, 0), "[]", "LLM", "in", "[]", "name",  "out", "4"] +
+        ["5", "llm", datetime(2024, 2, 5, 0, 12, 0), "OK", "02"],
     ]
 
     @pytest.mark.parametrize(
@@ -82,7 +84,7 @@ class TestGenAISparkPreprocessor:
             (datetime(2024, 2, 5, 15), datetime(2024, 2, 5, 16), _preprocessed_schema, _preprocessed_data),
             # data and dataref mix
             # comment out the mix scenario due to package not found error from executor in remote run
-            # (datetime(2023, 10, 15, 17), datetime(2023, 10, 15, 18), _preprocessed_schema, _preprocessed_data),
+            # (datetime(2024, 2, 20, 15), datetime(2024, 2, 20, 16), _preprocessed_schema, _preprocessed_data),
             # dataref only
             # dataref only is not supported yet due to lack of schema
             # (datetime(2023, 10, 16, 21), datetime(2023, 10, 16, 22), _preprocessed_schema, _preprocessed_data),
