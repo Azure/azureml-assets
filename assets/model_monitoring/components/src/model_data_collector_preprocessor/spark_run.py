@@ -42,10 +42,9 @@ def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: date
     except FileNotFoundError:
         handle_data_not_found()
     except Py4JJavaError as pe:
-        if pe.java_exception.getMessage().contains("This endpoint does not support BlobStorageEvents or SoftDelete"):
+        if "This endpoint does not support BlobStorageEvents or SoftDelete" in pe.java_exception.getMessage():
             blockblob_url = copy_appendblob_to_blockblob(store_url, start_datetime, end_datetime)
-            return _uri_folder_to_spark_df(start_datetime, end_datetime, blockblob_url,
-                                           add_tags_func, soft_delete_enabled=True)
+            return _uri_folder_to_spark_df(start_datetime, end_datetime, blockblob_url, soft_delete_enabled=True)
         else:
             raise pe
 

@@ -134,11 +134,11 @@ class TestStoreUrl:
         expected_abfs_path, expected_relative_path, expected_credential, expected_container_client
     ):
         """Test StoreUrl constructor with azureml path."""
-        mock_ws = Mock()
+        mock_ws = Mock(subscription_id="sub_id", resource_group="my_rg")
         mock_ws.name = "my_ws"
         mock_datastore = Mock(datastore_type=datastore_type, protocol=expected_protocol, endpoint="core.windows.net",
-                              account_name="my_account", container_name="my_container", subscription_id="sub_id",
-                              resource_group="my_rg", workspace=mock_ws)
+                              account_name="my_account", container_name="my_container", subscription_id="store_sub_id",
+                              resource_group="store_rg", workspace=mock_ws)
         mock_datastore.name = "my_datastore"
         if datastore_type == "AzureBlob":
             mock_container_client = Mock(
