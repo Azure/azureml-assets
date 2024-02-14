@@ -73,8 +73,8 @@ class TestGenAISparkPreprocessor:
         ["3", "llm", datetime(2024, 2, 5, 0, 5, 0), "OK", "02"],
         ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "LLM", "in", "[]", "name",  "out", None] +
         ["4", "llm", datetime(2024, 2, 5, 0, 7, 0), "OK", "02"],
-        ["{}", datetime(2024, 2, 5, 0, 11, 0), "[]", "LLM", "in", "[]", "name",  "out", "4"] +
-        ["5", "llm", datetime(2024, 2, 5, 0, 12, 0), "OK", "02"],
+        ["{}", datetime(2024, 2, 5, 0, 12, 0), "[]", "LLM", "in", "[]", "name",  "out", "4"] +
+        ["5", "llm", datetime(2024, 2, 5, 0, 11, 0), "OK", "02"],
     ]
 
     @pytest.mark.parametrize(
