@@ -51,11 +51,9 @@ def _construct_span_tree(span_rows: List[Row]) -> SpanTree:
 
 def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
     """Group span logs into aggregated trace logs."""
-    print("Processing spans into aggregated traces.")
+    print("Processing spans into aggregated traces...")
     spark = init_spark()
     distinct_trace_ids = span_logs.select("trace_id").distinct()
-    print("Distinct trace_id DF:")
-    distinct_trace_ids.show()
 
     all_aggregated_traces = spark.createDataFrame(data=[], schema=_get_aggregated_trace_log_spark_df_schema())
     for trace_id in distinct_trace_ids.collect():
@@ -65,5 +63,6 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
         all_aggregated_traces = all_aggregated_traces.union(new_entry)
 
     print("Aggregated Trace DF:")
-    all_aggregated_traces.show()
+    all_aggregated_traces.show(truncate=False)
+    all_aggregated_traces.printSchema()
     return all_aggregated_traces
