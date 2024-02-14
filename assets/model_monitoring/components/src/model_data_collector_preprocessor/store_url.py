@@ -50,7 +50,7 @@ class StoreUrl:
         :return: azureml url
         """
         if self._datastore is None:
-            raise ValueError(f"{self._base_url} is not an azureml url.")
+            raise InvalidInputError(f"{self._base_url} is not an azureml url.")
         url = (f"azureml://subscriptions/{self._datastore.workspace.subscription_id}/resourceGroups"
                f"/{self._datastore.workspace.resource_group}/workspaces/{self._datastore.workspace.name}"
                f"/datastores/{self._datastore.name}/paths")

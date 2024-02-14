@@ -181,7 +181,9 @@ def copy_appendblob_to_blockblob(appendblob_url: StoreUrl,
                                  start_datetime: datetime, end_datetime: datetime) -> StoreUrl:
     """Copy append blob to block blob and return the StoreUrl of block blob."""
     datastore = appendblob_url._datastore
-    datastore_type = None if datastore is None else datastore.datastore_type
+    if datastore is None:
+        raise InvalidInputError("Credential-less input data is NOT supported!")
+    datastore_type = datastore.datastore_type
     if datastore_type == "AzureBlob":
         sas_token = _get_sas_token(appendblob_url.account_name, appendblob_url.container_name,
                                    appendblob_url.get_credential())
@@ -200,8 +202,6 @@ def copy_appendblob_to_blockblob(appendblob_url: StoreUrl,
     elif datastore_type == "AzureDataLakeStorageGen2":
         raise NotImplementedError("Append blob in AdlsGen2 storage should be accessible via abfss protocol "
                                   "even soft delete is enabled, should not need to copy to block blob.")
-    elif datastore_type is None:
-        raise InvalidInputError("Credential-less input data is not supported.")
     else:
         raise InvalidInputError(f"Storage account type {datastore_type} is not supported!")
 
@@ -280,7 +280,7 @@ def _azcopy_appendblob_to_blockblob(account_name: str, container_name: str, base
         stdout, stderr = process.communicate()
         # Print the output
         if process.returncode == 0:
-            print(f"Success: {stdout.decode()}")
+            print(f"Successfully copied append blob to block blob for {datetime_path}.")
         else:
             print(f"Error: {stdout.decode()}\n{stderr.decode()}")
             raise RuntimeError(f"Failed to copy append blob to block blob: {stdout.decode()}")
