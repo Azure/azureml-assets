@@ -23,6 +23,7 @@ class TestTraceAggregator:
     _trace_log_schema = _get_aggregated_trace_log_spark_df_schema()
 
     _preprocessed_log_schema = StructType([
+        # TODO: The user_id and session_id may not be available in v1.
         StructField('attributes', StringType(), False),
         StructField('end_time', TimestampType(), False),
         StructField('events', StringType(), False),
@@ -32,13 +33,12 @@ class TestTraceAggregator:
         StructField('name', StringType(), False),
         StructField('output', StringType(), False),
         StructField('parent_id', StringType(), True),
+        # StructField('session_id', StringType(), True),
         StructField('span_id', StringType(), False),
         StructField('span_type', StringType(), False),
         StructField('start_time', TimestampType(), False),
         StructField('status', StringType(), False),
         StructField('trace_id', StringType(), False),
-        # TODO: this field might not be in v1. Double check later
-        # StructField('session_id', StringType(), True),
         # StructField('user_id', StringType(), True),
     ])
 

@@ -14,11 +14,15 @@ from model_data_collector_preprocessor.spark_run import (
     _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string,
 )
-from model_data_collector_preprocessor.trace_aggregator import process_spans_into_aggregated_traces
+from model_data_collector_preprocessor.trace_aggregator import (
+    process_spans_into_aggregated_traces,
+    _get_aggregated_trace_log_spark_df_schema,
+)
 
 
 def _get_preprocessed_span_logs_df_schema() -> StructType:
     """Get processed span logs Dataframe schema."""
+    # TODO: The user_id and session_id may not be available in v1.
     schema = StructType([
         StructField('attributes', StringType(), False),
         StructField('end_time', TimestampType(), False),
@@ -29,6 +33,7 @@ def _get_preprocessed_span_logs_df_schema() -> StructType:
         StructField('name', StringType(), False),
         StructField('output', StringType(), False),
         StructField('parent_id', StringType(), True),
+        # StructField('session_id', StringType(), True),
         StructField('span_id', StringType(), False),
         StructField('span_type', StringType(), False),
         StructField('start_time', TimestampType(), False),
