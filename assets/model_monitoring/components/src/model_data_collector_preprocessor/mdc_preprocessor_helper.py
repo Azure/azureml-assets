@@ -4,6 +4,7 @@
 """Helper methods for MDC preprocessor Component."""
 
 import os
+import subprocess
 from typing import List, Union
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -12,9 +13,6 @@ import calendar
 from azure.core.credentials import AzureSasCredential
 from azure.identity import ClientSecretCredential
 from azure.storage.blob import BlobServiceClient, ContainerClient, ContainerSasPermissions, generate_container_sas
-from azure.storage.filedatalake import (
-    DataLakeServiceClient, FileSystemClient, FileSystemSasPermissions, generate_file_system_sas
-)
 from pyspark.sql import SparkSession
 from model_data_collector_preprocessor.store_url import StoreUrl
 from shared_utilities.momo_exceptions import InvalidInputError
@@ -179,25 +177,37 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
     return cross_year(start_datetime, end_datetime)
 
 
-def copy_appendblob_to_blockblob(appendblob_url: StoreUrl, start_datetime: datetime, end_datetime: datetime):
-    """Copy append blob to block blob."""
-    datastore_type = None if appendblob_url._datastore is None else appendblob_url._datastore.datastore_type
-    sas_token = _get_sas_token(appendblob_url.account_name, appendblob_url.container_name,
-                               appendblob_url.get_credential(), datastore_type)
-    base_path = appendblob_url.path
-
+def copy_appendblob_to_blockblob(appendblob_url: StoreUrl,
+                                 start_datetime: datetime, end_datetime: datetime) -> StoreUrl:
+    """Copy append blob to block blob and return the StoreUrl of block blob."""
+    datastore = appendblob_url._datastore
+    datastore_type = None if datastore is None else datastore.datastore_type
     if datastore_type == "AzureBlob":
-        return _blob_copy_appendblob_to_blockblob(appendblob_url.get_container_client, base_path,
-                                                  start_datetime, end_datetime, sas_token)
+        sas_token = _get_sas_token(appendblob_url.account_name, appendblob_url.container_name,
+                                   appendblob_url.get_credential())
+        base_path = appendblob_url.path.strip('/')
+        blockblob_folder_suffix = "block_blob"
+        _azcopy_appendblob_to_blockblob(appendblob_url.account_name, appendblob_url.container_name, base_path,
+                                        blockblob_folder_suffix, start_datetime, end_datetime, sas_token)
+        # return the StoreUrl for block blob
+        sub_id = datastore.workspace.subscription_id
+        rg = datastore.workspace.resource_group
+        ws_name = datastore.workspace.name
+        datastore_name = datastore.name
+        blockblob_url = (f"azureml://subscriptions/{sub_id}/resourcegroups/{rg}/workspaces/{ws_name}"
+                         f"/datastores/{datastore_name}/paths/{base_path}_{blockblob_folder_suffix}")
+        return StoreUrl(blockblob_url)
     elif datastore_type == "AzureDataLakeStorageGen2":
-        return _gen2_copy_appendblob_to_blockblob(appendblob_url.get_container_client, base_path,
-                                                  start_datetime, end_datetime, sas_token)
+        raise NotImplementedError("Append blob in AdlsGen2 storage should be accessible via abfss protocol "
+                                  "even soft delete is enabled, should not need to copy to block blob.")
+    elif datastore_type is None:
+        raise InvalidInputError("Credential-less input data is not supported.")
     else:
         raise InvalidInputError(f"Storage account type {datastore_type} is not supported!")
 
 
-def _get_sas_token(account_name, container_name, credential, datastore_type) -> str:
-    """Get sas token for append blob."""
+def _get_sas_token(account_name, container_name, credential) -> str:
+    """Get sas token for append blob in blob storage."""
     def get_blob_sas_token_from_client_secret_credential(client_secret_credential: ClientSecretCredential):
         account_url = f"https://{account_name}.blob.core.windows.net"
         blob_service_client = BlobServiceClient(account_url=account_url, credential=client_secret_credential)
@@ -209,21 +219,8 @@ def _get_sas_token(account_name, container_name, credential, datastore_type) -> 
         # get a sas token with the user delegation key
         return generate_container_sas(
             account_name=account_name, container_name=container_name,
-            user_delegation_key=user_delegation_key, permission=ContainerSasPermissions(read=True),
-            expiry=datetime.utcnow() + timedelta(hours=8))
-
-    def get_gen2_sas_token_from_client_secret_credential(client_secret_credential: ClientSecretCredential):
-        account_url = f"https://{account_name}.dfs.core.windows.net"
-        gen2_service_client = DataLakeServiceClient(account_url=account_url, credential=client_secret_credential)
-        # get a user delegation key for the Blob service that's valid for 1 day
-        key_start_time = datetime.utcnow() - timedelta(minutes=15)
-        key_expiry_time = datetime.utcnow() + timedelta(days=1)
-        # TODO raise validation error if the SP has no permission to generate user delegation key
-        user_delegation_key = gen2_service_client.get_user_delegation_key(key_start_time, key_expiry_time)
-        # get a sas token with the user delegation key
-        return generate_file_system_sas(
-            account_name=account_name, file_system_name=container_name,
-            credential=user_delegation_key, permission=FileSystemSasPermissions(read=True),
+            user_delegation_key=user_delegation_key,
+            permission=ContainerSasPermissions(read=True, write=True, list=True),
             expiry=datetime.utcnow() + timedelta(hours=8))
 
     if credential is None:
@@ -233,20 +230,17 @@ def _get_sas_token(account_name, container_name, credential, datastore_type) -> 
     if isinstance(credential, str):  # account key
         return generate_container_sas(
             account_name=account_name, container_name=container_name,
-            account_key=credential, permission=ContainerSasPermissions(read=True),
+            account_key=credential, permission=ContainerSasPermissions(read=True, write=True, list=True),
             expiry=datetime.utcnow() + timedelta(hours=8))
     if isinstance(credential, ClientSecretCredential):
-        if datastore_type == "AzureBlob":
-            return get_blob_sas_token_from_client_secret_credential(credential)
-        elif datastore_type == "AzureDataLakeStorageGen2":
-            return get_gen2_sas_token_from_client_secret_credential()
-        else:
-            raise InvalidInputError(f"Storage account type {datastore_type} is not supported!")
-    raise InvalidInputError(f"Credential type {type(credential)} is not supported!")
+        return get_blob_sas_token_from_client_secret_credential(credential)
+
+    raise InvalidInputError(f"Credential type {type(credential)} is not supported, "
+                            "please use account key or SAS token.")
 
 
-def _blob_copy_appendblob_to_blockblob(container_client: ContainerClient, base_path: str, start_datetime, end_datetime,
-                                       sas_token):
+def _copy_appendblob_to_blockblob(container_client: ContainerClient, base_path: str, start_datetime, end_datetime,
+                                  sas_token: str):
     cur_datetime = start_datetime
     while cur_datetime <= end_datetime:
         datetime_path = cur_datetime.strftime('%Y/%m/%d/%H')
@@ -261,15 +255,36 @@ def _blob_copy_appendblob_to_blockblob(container_client: ContainerClient, base_p
                 blockblob_client.upload_blob_from_url(f"{appendblob_client.url}?{sas_token}", overwrite=False)
 
         cur_datetime += timedelta(hours=1)
-    blockblob_url = (f"wasbs://{container_client.container_name}@{container_client.account_name}.blob.core.windows.net"
-                     f"/{base_path.strip('/')}/block_blob")
-    return StoreUrl(blockblob_url)
 
 
-def _gen2_copy_appendblob_to_blockblob(file_system_client: FileSystemClient, base_path, start_datetime, end_datetime,
-                                       sas_token):
-    # TODO use BlobContainerClient to access adlsgen2 data and achieve the copy.
-    raise NotImplementedError("Copy append blob to block blob in adlsgen2 is not supported yet!")
+def _azcopy_appendblob_to_blockblob(account_name: str, container_name: str, base_path: str, blockblob_suffix: str,
+                                    start_datetime: datetime, end_datetime: datetime, sas_token: str):
+    """
+    Copy append blob to block blob using azcopy.
+
+    The block blob base path will be same as append blob base path with 'blockblob_suffix' as suffix.
+    """
+    base_path = base_path.strip('/')
+    start_datetime = start_datetime.replace(hour=0, minute=0, second=0)
+    end_datetime = end_datetime.replace(hour=23, minute=59, second=59)
+    cur_datetime = start_datetime
+    # copy day by day to utilize parallelism of azcopy
+    while cur_datetime <= end_datetime:
+        datetime_path = cur_datetime.strftime('%Y/%m/%d')
+        src_url = f"https://{account_name}.blob.core.windows.net/{container_name}/{base_path}/{datetime_path}/*?{sas_token}"  # noqa: E501
+        dst_url = f"https://{account_name}.blob.core.windows.net/{container_name}/{base_path}_{blockblob_suffix}/{datetime_path}?{sas_token}"  # noqa: E501
+        cmd = (f'azcopy copy "{src_url}" "{dst_url}" --recursive --overwrite false --blob-type BlockBlob')
+        # Execute the command
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Get the output and error messages, if any
+        stdout, stderr = process.communicate()
+        # Print the output
+        if process.returncode == 0:
+            print(f"Success: {stdout.decode()}")
+        else:
+            print(f"Error: {stdout.decode()}\n{stderr.decode()}")
+            raise RuntimeError(f"Failed to copy append blob to block blob: {stdout.decode()}")
+        cur_datetime += timedelta(days=1)
 
 
 def set_data_access_config(spark: SparkSession, input_data: str = None, store_url: StoreUrl = None):
