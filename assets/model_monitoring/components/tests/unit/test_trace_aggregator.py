@@ -65,6 +65,28 @@ class TestTraceAggregator:
     ]
 
     # pass data that might have extra information like context, resource, etc
+    _preprocessed_log_schema_extra = StructType([
+        # TODO: The user_id and session_id may not be available in v1.
+        StructField('attributes', StringType(), False),
+        StructField('context', StringType(), True),
+        StructField('c_resources', StringType(), True),
+        StructField('end_time', TimestampType(), False),
+        StructField('events', StringType(), False),
+        StructField('framework', StringType(), False),
+        StructField('input', StringType(), False),
+        StructField('links', StringType(), False),
+        StructField('name', StringType(), False),
+        StructField('output', StringType(), False),
+        StructField('parent_id', StringType(), True),
+        # StructField('session_id', StringType(), True),
+        StructField('span_id', StringType(), False),
+        StructField('span_type', StringType(), False),
+        StructField('start_time', TimestampType(), False),
+        StructField('status', StringType(), False),
+        StructField('trace_id', StringType(), False),
+        # StructField('user_id', StringType(), True),
+    ])
+
     _extra_info_span_log_data = [
         ["resource", "c", "{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
         ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
@@ -93,17 +115,17 @@ class TestTraceAggregator:
     @pytest.mark.parametrize(
             "span_input_logs, expected_trace_logs",
             [
-                ([], []),
-                (_span_log_data, _trace_log_data),
-                (_extra_info_span_log_data, _trace_log_data)
+                ([], _preprocessed_log_schema, [], _trace_log_schema),
+                (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema),
+                (_extra_info_span_log_data, _preprocessed_log_schema_extra, _trace_log_data, _trace_log_schema)
             ]
     )
-    def test_trace_aggregator(self, span_input_logs, expected_trace_logs):
+    def test_trace_aggregator(self, span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema):
         """Test scenario where spans has real data."""
         spark = self.init_spark()
         # infer schema only when we have data.
-        processed_spans_df = spark.createDataFrame(span_input_logs, self._preprocessed_log_schema if span_input_logs == [] else None)
-        expected_traces_df = spark.createDataFrame(expected_trace_logs, self._trace_log_schema)
+        processed_spans_df = spark.createDataFrame(span_input_logs, span_input_schema)
+        expected_traces_df = spark.createDataFrame(expected_trace_logs, expected_trace_schema)
 
         print("processed logs:")
         processed_spans_df.show()
