@@ -9,6 +9,6 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Vulnerability fixes
-RUN pip install cryptography>=42.0.2
+RUN pip install 'cryptography>=42.0.2'
 
 # dummy number to change when needing to force rebuild without changing the definition: 1
