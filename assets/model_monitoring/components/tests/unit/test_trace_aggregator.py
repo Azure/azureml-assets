@@ -113,11 +113,11 @@ class TestTraceAggregator:
     ]
 
     @pytest.mark.parametrize(
-            "span_input_logs, expected_trace_logs",
+            "span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema",
             [
                 ([], _preprocessed_log_schema, [], _trace_log_schema),
                 (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema),
-                (_extra_info_span_log_data, _preprocessed_log_schema_extra, _trace_log_data, _trace_log_schema)
+                (_extra_info_span_log_data, _preprocessed_log_schema_extra, _trace_log_data, _trace_log_schema),
             ]
     )
     def test_trace_aggregator(self, span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema):
