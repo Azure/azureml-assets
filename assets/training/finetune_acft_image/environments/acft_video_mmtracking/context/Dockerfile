@@ -18,4 +18,6 @@ RUN mim install mmdet==2.28.2
 
 # vulnerability fixes - this will be removed once we update to MMTracking's latest version
 RUN pip install scipy==1.10.1
+RUN pip install cryptography>=42.0.2
+
 # dummy number to change when needing to force rebuild without changing the definition: 1

@@ -15,4 +15,7 @@ RUN mim install mmcv==2.0.1
 # Note: mmdet should be installed via mim to access the model zoo config folder.
 RUN mim install mmdet==3.1.0
 
+# Vulnerability fixes
+RUN pip install cryptography>=42.0.2
+
 # dummy number to change when needing to force rebuild without changing the definition: 1
