@@ -6,6 +6,9 @@
 from typing import Any
 import logging
 import os
+import sys
+import traceback
+from collections import deque
 import hashlib
 import mlflow
 
@@ -43,25 +46,64 @@ def log_mlflow_params(**kwargs: Any) -> None:
 
     mlflow.log_params(params)
 
+import traceback
+
+class BufferStore:
+    # create a maximum 10000 lines deque to store the logs
+    _data : "deque[str]" = deque(maxlen=10000)
+
+    @classmethod
+    def push_data(cls, value: str):
+        """Append a string to the list of strings stored under the given key."""
+        cls._data.append(value)
+
+    @classmethod
+    def clear_buffer(cls):
+        """Clear the buffer."""
+        cls._data.clear()
+
+    @classmethod
+    def get_all_data(cls):
+        """Return all the data stored."""
+        return "\n".join(cls._data)
+    
+
+# implement a logging handler that appends to the BufferStore
+class BufferStoreHandler(logging.Handler):
+    def emit(self, record):
+        msg = self.format(record)
+        BufferStore.push_data(msg)
+
 
 def get_logger(filename: str) -> logging.Logger:
     """
-    Create and configure a logger based on the provided filename.
+    Create and configure a logger to always print logs on the stdout console.
 
     This function creates a logger with the specified filename and configures it
-    by setting the logging level to INFO, adding a StreamHandler to the logger,
-    and specifying a specific log message format.
+    by setting the logging level to INFO, adding a StreamHandler to the logger
+    that outputs to stdout, and specifying a specific log message format.
 
     :param filename: The name of the file associated with the logger.
     :return: The configured logger.
     """
     logger = logging.getLogger(filename)
     logger.setLevel(logging.INFO)
-    stream_handler = logging.StreamHandler()
-    logger.addHandler(stream_handler)
+    logger.handlers = []  # Clear existing handlers to avoid duplicates
 
     formatter = logging.Formatter(
-        "[%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
+        "SystemLog: [%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
     )
+
+    # Create a StreamHandler for stdout
+    stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(formatter)
+
+    # create a BufferStoreHandler for storing logs
+    buffer_store_handler = BufferStoreHandler()
+    buffer_store_handler.setFormatter(formatter)
+
+    # Add the handlers to the logger
+    logger.addHandler(stream_handler)
+    logger.addHandler(buffer_store_handler)
+
     return logger

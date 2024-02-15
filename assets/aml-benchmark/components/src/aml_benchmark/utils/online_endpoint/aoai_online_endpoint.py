@@ -142,6 +142,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
             payload['properties']["raiPolicyName"] = "Microsoft.Default"
         resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
+        logger.info(f"Calling(PUT) {self._aoai_deployment_url} returned {resp.status_code} with content {resp.content}.")
         self._raise_if_not_success(resp)
         logger.info("Calling(PUT) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
