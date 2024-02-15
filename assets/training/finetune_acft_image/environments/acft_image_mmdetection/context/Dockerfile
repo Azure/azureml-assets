@@ -15,9 +15,4 @@ RUN mim install mmcv==2.0.1
 # Note: mmdet should be installed via mim to access the model zoo config folder.
 RUN mim install mmdet==3.1.0
 
-# Vulnerability fixes
-RUN pip install pydash==6.0.0
-RUN pip install urllib3==2.0.7
-RUN pip install pyarrow==14.0.1
-RUN pip install aiohttp==3.9.1
 # dummy number to change when needing to force rebuild without changing the definition: 1
