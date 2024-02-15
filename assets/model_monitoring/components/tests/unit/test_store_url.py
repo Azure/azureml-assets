@@ -66,24 +66,25 @@ class TestStoreUrl:
             store_url.get_container_client()
 
     @pytest.mark.parametrize(
-        "azureml_path, datastore_type, credential_type, expected_protocol, expected_hdfs_path, expected_abfs_path, "
-        "expected_credential, expected_container_client",
+        "azureml_path, datastore_type, credential_type, relative_path, expected_protocol, expected_hdfs_path, "
+        "expected_abfs_path, expected_relative_path, expected_credential, expected_container_client",
         [
             (
                 "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", "AccountKey", "https",
+                "AzureBlob", "AccountKey", None, "https",
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "my_account_key",
+                "", "my_account_key",
                 ContainerClient("https://my_account.blob.core.windows.net", "my_container",
                                 SharedKeyCredentialPolicy("my_account", "my_account_key"))
             ),
             (
                 "azureml://datastores/my_datastore/paths/path/to/folder",
-                "AzureDataLakeGen2", "ServicePrincipal", "https",
+                "AzureDataLakeGen2", "ServicePrincipal", "rpath", "https",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "/rpath",
                 ClientSecretCredential("00000", "my_client_id", "my_client_secret"),
                 FileSystemClient("https://my_account.dfs.core.windows.net", "my_container",
                                  ClientSecretCredential("00000", "my_client_id", "my_client_secret"))
@@ -91,9 +92,10 @@ class TestStoreUrl:
             (
                 "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", "Sas", "https",
+                "AzureBlob", "Sas", "rpath/to/target", "https",
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "/rpath/to/target",
                 AzureSasCredential("my_sas_token"),
                 ContainerClient("https://my_account.blob.core.windows.net", "my_container",
                                 AzureSasCredential("my_sas_token"))
@@ -101,39 +103,42 @@ class TestStoreUrl:
             (
                 "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", "AccountKey", "http",
+                "AzureBlob", "AccountKey", "", "http",
                 "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
                 "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "my_account_key",
+                "", "my_account_key",
                 ContainerClient("http://my_account.blob.core.windows.net", "my_container",
                                 SharedKeyCredentialPolicy("my_account", "my_account_key"))
             ),
             (
                 "azureml://datastores/my_datastore/paths/path/to/folder",
-                "AzureDataLakeGen2", None, "http",
+                "AzureDataLakeGen2", None, "/", "http",
                 "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                None,
+                "/", None,
                 FileSystemClient("https://my_account.dfs.core.windows.net", "my_container")
             ),
             (
                 "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", "None", "http",
+                "AzureBlob", "None", "/rpath", "http",
                 "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
                 "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                None,
+                "/rpath", None,
                 ContainerClient("http://my_account.blob.core.windows.net", "my_container")
             )
         ]
     )
     def test_store_url_with_azureml_path(
-        self, azureml_path, datastore_type, credential_type, expected_protocol, expected_hdfs_path, expected_abfs_path,
-        expected_credential, expected_container_client
+        self, azureml_path, datastore_type, credential_type, relative_path, expected_protocol, expected_hdfs_path,
+        expected_abfs_path, expected_relative_path, expected_credential, expected_container_client
     ):
         """Test StoreUrl constructor with azureml path."""
+        mock_ws = Mock(subscription_id="sub_id", resource_group="my_rg")
+        mock_ws.name = "my_ws"
         mock_datastore = Mock(datastore_type=datastore_type, protocol=expected_protocol, endpoint="core.windows.net",
-                              account_name="my_account", container_name="my_container")
+                              account_name="my_account", container_name="my_container", subscription_id="store_sub_id",
+                              resource_group="store_rg", workspace=mock_ws)
         mock_datastore.name = "my_datastore"
         if datastore_type == "AzureBlob":
             mock_container_client = Mock(
@@ -157,13 +162,16 @@ class TestStoreUrl:
             mock_datastore.client_id = "my_client_id" if credential_type else None
             mock_datastore.client_secret = "my_client_secret" if credential_type else None
             mock_datastore.tenant_id = "00000" if credential_type else None
-        mock_ws = Mock()
 
         with patch.object(Datastore, "get", return_value=mock_datastore):
             store_url = StoreUrl(azureml_path, mock_ws)
 
         assert store_url.get_hdfs_url() == expected_hdfs_path
         assert store_url.get_abfs_url() == expected_abfs_path
+        assert store_url.get_azureml_url(relative_path) == \
+            ("azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore"
+             f"/paths/path/to/folder{expected_relative_path}")
+
         if expected_credential:
             assert_credentials_are_equal(store_url.get_credential(), expected_credential)
             assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
