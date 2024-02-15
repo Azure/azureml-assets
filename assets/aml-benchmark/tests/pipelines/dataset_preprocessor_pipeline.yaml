@@ -24,7 +24,7 @@ outputs:
 jobs:
   run_dataset_preprocessor:
     type: command
-    component: ../../components/dataset-preprocessor/spec.yaml
+    component: ../../components/dataset_preprocessor/spec.yaml
     limits:
       timeout: 900
     inputs:

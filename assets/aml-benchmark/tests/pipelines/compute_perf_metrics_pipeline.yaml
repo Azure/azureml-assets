@@ -27,7 +27,7 @@ outputs:
 jobs:
   run_compute_perf_metrics:
     type: command
-    component: ../../components/compute-performance-metrics/spec.yaml
+    component: ../../components/compute_performance_metrics/spec.yaml
     limits: 
       timeout: 900
     inputs:
