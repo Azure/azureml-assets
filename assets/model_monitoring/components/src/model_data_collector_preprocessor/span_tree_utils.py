@@ -7,24 +7,8 @@ import bisect
 from datetime import datetime
 import json
 
-from pyspark.sql.types import StructType, StructField, StringType, ArrayType, TimestampNTZType
 from typing import Iterator, List
 from pyspark.sql import Row
-
-
-def _get_span_tree_node_spark_df_schema() -> StructType:
-    """Get SpanTree node spark df schema."""
-    schema = StructType(
-        [
-            StructField("parent_id", StringType(), True),
-            StructField("span_id", StringType(), False),
-            StructField("span_type", StringType(), False),
-            StructField("start_time", TimestampNTZType(), False),
-            StructField("end_time", TimestampNTZType(), False),
-            StructField("children", ArrayType(StringType(), True), False),
-        ]
-    )
-    return schema
 
 
 class SpanTreeNode:
