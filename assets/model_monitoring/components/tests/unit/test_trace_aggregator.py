@@ -53,6 +53,18 @@ class TestTraceAggregator:
         ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
+    # pass data that might have extra information like context, resource, etc
+    _extra_info_span_log_data = [
+        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
+        ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
+        ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
+        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "in", "[]", "name",  "out", "2"] +
+        ["3", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
+        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "in", "[]", "name",  "out", "1"] +
+        ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
+    ]
+
     _root_span_str = '{"parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00",' + \
         ' "end_time": "2024-02-05T00:08:00", "children": ["{\\"parent_id\\": \\"1\\", \\"span_id\\": \\"2\\", ' + \
         '\\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:02:00\\", \\"end_time\\": \\"2024-02-05' + \
@@ -71,13 +83,15 @@ class TestTraceAggregator:
             "span_input_logs, expected_trace_logs",
             [
                 ([], []),
-                (_span_log_data, _trace_log_data)
+                (_span_log_data, _trace_log_data),
+                (_extra_info_span_log_data, _trace_log_data)
             ]
     )
     def test_trace_aggregator(self, span_input_logs, expected_trace_logs):
         """Test scenario where spans has real data."""
         spark = self.init_spark()
-        processed_spans_df = spark.createDataFrame(span_input_logs, self._preprocessed_log_schema)
+        # infer schema only when we have data.
+        processed_spans_df = spark.createDataFrame(span_input_logs, self._preprocessed_log_schema if span_input_logs == [] else None)
         expected_traces_df = spark.createDataFrame(expected_trace_logs, self._trace_log_schema)
 
         print("processed logs:")

@@ -4,42 +4,24 @@
 
 
 from pyspark.sql import DataFrame, Row
-from pyspark.sql.types import StructType, StructField, StringType, TimestampType
+from pyspark.sql.functions import collect_list, struct
 from typing import List
 
-from shared_utilities.io_utils import init_spark
 from model_data_collector_preprocessor.span_tree_utils import SpanTree, SpanTreeNode
+from assets.model_monitoring.components.src.model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
+    _get_preprocessed_span_logs_df_schema,
+    _get_aggregated_trace_log_spark_df_schema
+)
 
 
-def _get_aggregated_trace_log_spark_df_schema() -> StructType:
-    """Get Aggregated Trace Log DataFrame Schema."""
-    # TODO: The user_id and session_id may not be available in v0 of trace aggregator.
-    schema = StructType(
-        [
-            StructField("end_time", TimestampType(), False),
-            StructField("input", StringType(), False),
-            StructField("output", StringType(), False),
-            StructField("root_span", StringType(), True),
-            # StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampType(), False),
-            StructField("trace_id", StringType(), False),
-            # StructField("user_id", StringType(), True),
-        ]
-    )
-    return schema
-
-
-def _construct_aggregated_trace_df(span_tree: SpanTree) -> DataFrame:
-    """Build an aggregated trace dataframe from a span tree."""
-    spark = init_spark()
-    trace_schema = _get_aggregated_trace_log_spark_df_schema()
-    agg_trace_schema_names = trace_schema.fieldNames()
+def _construct_aggregated_trace_entry(span_tree: SpanTree) -> tuple:
+    """Build an aggregated trace tuple for RDD from a span tree."""
+    trace_schema_names = _get_aggregated_trace_log_spark_df_schema().fieldNames()
     span_dict = span_tree.root_span.span_row.asDict()
-
-    data = {key_name: span_dict.get(key_name, None) for key_name in agg_trace_schema_names}
+    
+    data = {key_name: span_dict.get(key_name, None) for key_name in trace_schema_names}
     data['root_span'] = span_tree.to_json_str()
-
-    return spark.createDataFrame([data], trace_schema)  # type: ignore
+    return tuple(entry for entry in data.values())
 
 
 def _construct_span_tree(span_rows: List[Row]) -> SpanTree:
@@ -49,18 +31,25 @@ def _construct_span_tree(span_rows: List[Row]) -> SpanTree:
     return tree
 
 
+def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
+    """Aggregate grouped span logs into trace logs."""
+    tree = _construct_span_tree(grouped_row.span_rows)
+    return _construct_aggregated_trace_entry(tree)
+
+
 def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
     """Group span logs into aggregated trace logs."""
     print("Processing spans into aggregated traces...")
-    spark = init_spark()
-    distinct_trace_ids = span_logs.select("trace_id").distinct()
 
-    all_aggregated_traces = spark.createDataFrame(data=[], schema=_get_aggregated_trace_log_spark_df_schema())
-    for trace_id in distinct_trace_ids.collect():
-        grouped_spans_df = span_logs.where(span_logs.trace_id == trace_id.trace_id)
-        tree = _construct_span_tree(grouped_spans_df.collect())
-        new_entry = _construct_aggregated_trace_df(tree)
-        all_aggregated_traces = all_aggregated_traces.union(new_entry)
+    grouped_spans_df = span_logs.groupBy('trace_id').agg(
+        collect_list(
+            struct(_get_preprocessed_span_logs_df_schema().fieldNames())
+        ).alias('span_rows')
+    )
+    all_aggregated_traces = grouped_spans_df \
+        .rdd \
+        .map(lambda x: _aggregate_span_logs_to_trace_logs(x)) \
+        .toDF(_get_aggregated_trace_log_spark_df_schema())
 
     print("Aggregated Trace DF:")
     all_aggregated_traces.show(truncate=False)
