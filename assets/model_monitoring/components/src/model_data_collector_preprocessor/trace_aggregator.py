@@ -8,13 +8,17 @@ from pyspark.sql.functions import collect_list, struct
 from pyspark.sql.types import StringType, StructField, StructType
 from typing import List
 from model_data_collector_preprocessor.span_tree_utils import SpanTree, SpanTreeNode
+from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
+    _get_aggregated_trace_log_spark_df_schema,
+)
 
 
 def _construct_aggregated_trace_entry(span_tree: SpanTree) -> tuple:
     """Build an aggregated trace tuple for RDD from a span tree."""
-    span_dict = span_tree.root_span.span_row.asDict()
+    agg_trace_schema = _get_aggregated_trace_log_spark_df_schema()
+    span_dict = span_tree.root_span.to_dict()
     span_dict['root_span'] = span_tree.to_json_str()
-    return tuple(entry for entry in span_dict.values())
+    return tuple(span_dict.get(fieldName, None) for fieldName in agg_trace_schema.fieldNames())
 
 
 def _construct_span_tree(span_rows: List[Row]) -> SpanTree:
@@ -46,7 +50,7 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
     all_aggregated_traces = grouped_spans_df \
         .rdd \
         .map(lambda x: _aggregate_span_logs_to_trace_logs(x)) \
-        .toDF(output_schema)
+        .toDF(_get_aggregated_trace_log_spark_df_schema())
 
     print("Aggregated Trace DF:")
     all_aggregated_traces.show(truncate=False)
