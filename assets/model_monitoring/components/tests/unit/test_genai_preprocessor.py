@@ -13,8 +13,10 @@ import sys
 from datetime import datetime
 from src.model_data_collector_preprocessor.genai_run import (
     _preprocess_raw_logs_to_span_logs_spark_df,
-    _get_preprocessed_span_logs_df_schema,
     _genai_uri_folder_to_preprocessed_spark_df
+)
+from src.model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
+    _get_preprocessed_span_logs_df_schema
 )
 from src.model_data_collector_preprocessor.store_url import StoreUrl
 

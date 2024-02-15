@@ -2,13 +2,33 @@
 # Licensed under the MIT License.
 """This file contains unit tests for the trace aggregator."""
 
+import os
+import pytest
+import sys
 from datetime import datetime
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from src.model_data_collector_preprocessor.trace_aggregator import (
     process_spans_into_aggregated_traces,
 )
-import pytest
+
+
+@pytest.fixture(scope="module")
+def genai_preprocessor_test_setup():
+    """Change working directory to root of the assets/model_monitoring_components."""
+    original_work_dir = os.getcwd()
+    momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
+    os.chdir(momo_work_dir)  # change working directory to root of the assets/model_monitoring_components
+    python_path = sys.executable
+    os.environ["PYSPARK_PYTHON"] = python_path
+    print("PYSPARK_PYTHON", os.environ.get("PYSPARK_PYTHON", "NA"))
+    module_path = f"{os.getcwd()}/src"
+    old_python_path = os.environ.get("PYTHONPATH", None)
+    old_python_path = f"{old_python_path};" if old_python_path else ""
+    os.environ["PYTHONPATH"] = f"{old_python_path}{module_path}"
+    print("PYTHONPATH:", os.environ.get("PYTHONPATH", "NA"))
+    yield
+    os.chdir(original_work_dir)  # change working directory back to original
 
 
 @pytest.mark.unit
@@ -120,7 +140,8 @@ class TestTraceAggregator:
                 (_extra_info_span_log_data, _preprocessed_log_schema_extra, _trace_log_data, _trace_log_schema),
             ]
     )
-    def test_trace_aggregator(self, span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema):
+    def test_trace_aggregator(self, genai_preprocessor_test_setup,
+        span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema):
         """Test scenario where spans has real data."""
         spark = self.init_spark()
         # infer schema only when we have data.
