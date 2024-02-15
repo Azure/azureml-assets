@@ -57,7 +57,7 @@ jobs:
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 
       - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n auto -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8 -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
