@@ -5,7 +5,6 @@
 
 from pyspark.sql import DataFrame, Row
 from pyspark.sql.functions import collect_list, struct
-from pyspark.sql.types import StringType, StructField, StructType
 from typing import List
 from model_data_collector_preprocessor.span_tree_utils import SpanTree, SpanTreeNode
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
