@@ -45,8 +45,6 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
         ).alias('span_rows')
     )
 
-    # the output aggregated traces schema will be the same as span log but include new 'root_span' column
-    output_schema = StructType(span_logs_schema.fields + [StructField("root_span", StringType(), False)])
     all_aggregated_traces = grouped_spans_df \
         .rdd \
         .map(lambda x: _aggregate_span_logs_to_trace_logs(x)) \
