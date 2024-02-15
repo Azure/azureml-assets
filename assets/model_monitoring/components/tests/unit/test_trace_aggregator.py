@@ -7,7 +7,6 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from src.model_data_collector_preprocessor.trace_aggregator import (
     process_spans_into_aggregated_traces,
-    _get_aggregated_trace_log_spark_df_schema
 )
 import pytest
 
@@ -20,7 +19,19 @@ class TestTraceAggregator:
         """Create spark session."""
         return SparkSession.builder.appName("test").getOrCreate()
 
-    _trace_log_schema = _get_aggregated_trace_log_spark_df_schema()
+    _trace_log_schema = StructType(
+        [
+            # TODO: The user_id and session_id may not be available in v1.
+            StructField("end_time", TimestampType(), False),
+            StructField("input", StringType(), False),
+            StructField("output", StringType(), False),
+            StructField("root_span", StringType(), True),
+            # StructField("session_id", StringType(), True),
+            StructField("start_time", TimestampType(), False),
+            StructField("trace_id", StringType(), False),
+            # StructField("user_id", StringType(), True),
+        ]
+    )
 
     _preprocessed_log_schema = StructType([
         # TODO: The user_id and session_id may not be available in v1.

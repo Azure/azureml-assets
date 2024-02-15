@@ -8,7 +8,7 @@ from pyspark.sql.functions import collect_list, struct
 from typing import List
 
 from model_data_collector_preprocessor.span_tree_utils import SpanTree, SpanTreeNode
-from assets.model_monitoring.components.src.model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
+from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_preprocessed_span_logs_df_schema,
     _get_aggregated_trace_log_spark_df_schema
 )
