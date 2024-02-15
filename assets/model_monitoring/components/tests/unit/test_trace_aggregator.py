@@ -39,20 +39,6 @@ class TestTraceAggregator:
         """Create spark session."""
         return SparkSession.builder.appName("test").getOrCreate()
 
-    _trace_log_schema = StructType(
-        [
-            # TODO: The user_id and session_id may not be available in v1.
-            StructField("end_time", TimestampType(), False),
-            StructField("input", StringType(), False),
-            StructField("output", StringType(), False),
-            StructField("root_span", StringType(), True),
-            # StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampType(), False),
-            StructField("trace_id", StringType(), False),
-            # StructField("user_id", StringType(), True),
-        ]
-    )
-
     _preprocessed_log_schema = StructType([
         # TODO: The user_id and session_id may not be available in v1.
         StructField('attributes', StringType(), False),
@@ -118,26 +104,88 @@ class TestTraceAggregator:
         ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
-    _root_span_str = '{"parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00",' + \
-        ' "end_time": "2024-02-05T00:08:00", "children": ["{\\"parent_id\\": \\"1\\", \\"span_id\\": \\"2\\", ' + \
-        '\\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:02:00\\", \\"end_time\\": \\"2024-02-05' + \
-        'T00:05:00\\", \\"children\\": [\\"{\\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\", \\\\\\"span_id\\\\\\":' + \
-        ' \\\\\\"3\\\\\\", \\\\\\"span_type\\\\\\": \\\\\\"llm\\\\\\", \\\\\\"start_time\\\\\\": \\\\\\"2024-02-0' + \
-        '5T00:03:00\\\\\\", \\\\\\"end_time\\\\\\": \\\\\\"2024-02-05T00:04:00\\\\\\", \\\\\\"children\\\\\\": [' + \
-        ']}\\"]}", "{\\"parent_id\\": \\"1\\", \\"span_id\\": \\"4\\", \\"span_type\\": \\"llm\\", \\"start_ti' + \
-        'me\\": \\"2024-02-05T00:06:00\\", \\"end_time\\": \\"2024-02-05T00:07:00\\", \\"children\\": []}"]}'
+    _root_span_str_extra = '{"attributes": "resource", "context": "c", "c_resources": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FLOW", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01", "children": ["{\\"attributes\\": \\"resource\\", \\"context\\": \\"c\\", \\"c_resources\\": \\"{}\\", \\"end_time\\": \\"2024-02-05T00:05:00\\", \\"events\\": \\"[]\\", \\"framework\\": \\"RAG\\", \\"input\\": \\"in\\", \\"links\\": \\"[]\\", \\"name\\": \\"name\\", \\"output\\": \\"out\\", \\"parent_id\\": \\"1\\", \\"span_id\\": \\"2\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:02:00\\", \\"status\\": \\"OK\\", \\"trace_id\\": \\"01\\", \\"children\\": [\\"{\\\\\\"attributes\\\\\\": \\\\\\"resource\\\\\\", \\\\\\"context\\\\\\": \\\\\\"c\\\\\\", \\\\\\"c_resources\\\\\\": \\\\\\"{}\\\\\\", \\\\\\"end_time\\\\\\": \\\\\\"2024-02-05T00:04:00\\\\\\", \\\\\\"events\\\\\\": \\\\\\"[]\\\\\\", \\\\\\"framework\\\\\\": \\\\\\"INTERNAL\\\\\\", \\\\\\"input\\\\\\": \\\\\\"in\\\\\\", \\\\\\"links\\\\\\": \\\\\\"[]\\\\\\", \\\\\\"name\\\\\\": \\\\\\"name\\\\\\", \\\\\\"output\\\\\\": \\\\\\"out\\\\\\", \\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\", \\\\\\"span_id\\\\\\": \\\\\\"3\\\\\\", \\\\\\"span_type\\\\\\": \\\\\\"llm\\\\\\", \\\\\\"start_time\\\\\\": \\\\\\"2024-02-05T00:03:00\\\\\\", \\\\\\"status\\\\\\": \\\\\\"OK\\\\\\", \\\\\\"trace_id\\\\\\": \\\\\\"01\\\\\\", \\\\\\"children\\\\\\": []}\\"]}", "{\\"attributes\\": \\"resource\\", \\"context\\": \\"c\\", \\"c_resources\\": \\"{}\\", \\"end_time\\": \\"2024-02-05T00:07:00\\", \\"events\\": \\"[]\\", \\"framework\\": \\"LLM\\", \\"input\\": \\"in\\", \\"links\\": \\"[]\\", \\"name\\": \\"name\\", \\"output\\": \\"out\\", \\"parent_id\\": \\"1\\", \\"span_id\\": \\"4\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:06:00\\", \\"status\\": \\"OK\\", \\"trace_id\\": \\"01\\", \\"children\\": []}"]}'
+
+    _root_span_str = '{"attributes": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FLOW",' + \
+        ' "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id":' + \
+        ' "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "0' + \
+        '1", "children": ["{\\"attributes\\": \\"{}\\", \\"end_time\\": \\"2024-02-05T00:05:00\\", \\"e' + \
+        'vents\\": \\"[]\\", \\"framework\\": \\"RAG\\", \\"input\\": \\"in\\", \\"links\\": \\"[]\\", \\"' + \
+        'name\\": \\"name\\", \\"output\\": \\"out\\", \\"parent_id\\": \\"1\\", \\"span_id\\": \\"2\\"' + \
+        ', \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:02:00\\", \\"status\\": \\"OK\\"' + \
+        ', \\"trace_id\\": \\"01\\", \\"children\\": [\\"{\\\\\\"attributes\\\\\\": \\\\\\"{}\\\\\\"' + \
+        ', \\\\\\"end_time\\\\\\": \\\\\\"2024-02-05T00:04:00\\\\\\", \\\\\\"events\\\\\\": \\\\\\"[]\\\\\\"' + \
+        ', \\\\\\"framework\\\\\\": \\\\\\"INTERNAL\\\\\\", \\\\\\"input\\\\\\": \\\\\\"in\\\\\\", \\\\\\"li' + \
+        'nks\\\\\\": \\\\\\"[]\\\\\\", \\\\\\"name\\\\\\": \\\\\\"name\\\\\\", \\\\\\"output\\\\\\": \\\\\\"' + \
+        'out\\\\\\", \\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\", \\\\\\"span_id\\\\\\": \\\\\\"3\\\\\\", \\\\\\"' + \
+        'span_type\\\\\\": \\\\\\"llm\\\\\\", \\\\\\"start_time\\\\\\": \\\\\\"2024-02-05T00:03:00\\\\\\",' + \
+        ' \\\\\\"status\\\\\\": \\\\\\"OK\\\\\\", \\\\\\"trace_id\\\\\\": \\\\\\"01\\\\\\", \\\\\\"childre' + \
+        'n\\\\\\": []}\\"]}", "{\\"attributes\\": \\"{}\\", \\"end_time\\": \\"2024-02-05T00:07:00\\", \\"even' + \
+        'ts\\": \\"[]\\", \\"framework\\": \\"LLM\\", \\"input\\": \\"in\\", \\"links\\": \\"[]\\", \\"name\\"' + \
+        ': \\"name\\", \\"output\\": \\"out\\", \\"parent_id\\": \\"1\\", \\"span_id\\": \\"4\\", \\"span_typ' + \
+        'e\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:06:00\\", \\"status\\": \\"OK\\", \\"trace_id\\":' + \
+        ' \\"01\\", \\"children\\": []}"]}'
 
     _trace_log_data = [
-            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str] +
-            [datetime(2024, 2, 5, 0, 1, 0), "01"],
+            ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
+            ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01", _root_span_str],
     ]
+
+    _trace_log_schema = StructType([
+        # TODO: The user_id and session_id may not be available in v1.
+        StructField('attributes', StringType(), False),
+        StructField('end_time', TimestampType(), False),
+        StructField('events', StringType(), False),
+        StructField('framework', StringType(), False),
+        StructField('input', StringType(), False),
+        StructField('links', StringType(), False),
+        StructField('name', StringType(), False),
+        StructField('output', StringType(), False),
+        StructField('parent_id', StringType(), True),
+        # StructField('session_id', StringType(), True),
+        StructField('span_id', StringType(), False),
+        StructField('span_type', StringType(), False),
+        StructField('start_time', TimestampType(), False),
+        StructField('status', StringType(), False),
+        StructField('trace_id', StringType(), False),
+        # StructField('user_id', StringType(), True),
+        StructField('root_span', StringType(), False),
+    ])
+
+    _trace_log_data_extra = [
+            ["resource", "c", "{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
+            ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01", _root_span_str_extra],
+    ]
+
+    _trace_log_schema_extra = StructType([
+        # TODO: The user_id and session_id may not be available in v1.
+        StructField('attributes', StringType(), False),
+        StructField('context', StringType(), True),
+        StructField('c_resources', StringType(), True),
+        StructField('end_time', TimestampType(), False),
+        StructField('events', StringType(), False),
+        StructField('framework', StringType(), False),
+        StructField('input', StringType(), False),
+        StructField('links', StringType(), False),
+        StructField('name', StringType(), False),
+        StructField('output', StringType(), False),
+        StructField('parent_id', StringType(), True),
+        # StructField('session_id', StringType(), True),
+        StructField('span_id', StringType(), False),
+        StructField('span_type', StringType(), False),
+        StructField('start_time', TimestampType(), False),
+        StructField('status', StringType(), False),
+        StructField('trace_id', StringType(), False),
+        # StructField('user_id', StringType(), True),
+        StructField('root_span', StringType(), False),
+    ])
 
     @pytest.mark.parametrize(
             "span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema",
             [
                 ([], _preprocessed_log_schema, [], _trace_log_schema),
                 (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema),
-                (_extra_info_span_log_data, _preprocessed_log_schema_extra, _trace_log_data, _trace_log_schema),
+                (_extra_info_span_log_data, _preprocessed_log_schema_extra, _trace_log_data_extra, _trace_log_schema_extra),
             ]
     )
     def test_trace_aggregator(

@@ -88,12 +88,9 @@ class SpanTreeNode:
 
     def to_dict(self) -> dict:
         """Get dictionary representation of SpanTreeNode."""
-        span_node_schema_names = _get_span_tree_node_spark_df_schema().fieldNames()
         span_row_dict = self.span_row.asDict()
-
-        out_dict = {key_name: span_row_dict.get(key_name) for key_name in span_node_schema_names}
-        out_dict['children'] = self.children
-        return out_dict
+        span_row_dict['children'] = self.children
+        return span_row_dict
 
     def __iter__(self) -> Iterator["SpanTreeNode"]:
         """Iterate over current span and child spans."""
