@@ -58,7 +58,7 @@ outputs:
 
 code: ../src/
 
-environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/42
+environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/43
 
 command: >-
   python create_causal.py
