@@ -410,15 +410,27 @@ class OnlineEndpoint:
 
     def _get_connections_by_name(self) -> dict:
         """Get a connection from a workspace."""
-        if hasattr(self.curr_workspace._auth, "get_token"):
-            bearer_token = self.curr_workspace._auth.get_token(
-                "https://management.azure.com/.default").token
-        else:
-            bearer_token = self.curr_workspace._auth.token
+        # if hasattr(self.curr_workspace._auth, "get_token"):
+        #     bearer_token = self.curr_workspace._auth.get_token(
+        #         "https://management.azure.com/.default").token
+        # else:
+        #     bearer_token = self.curr_workspace._auth.token
+
+        from azure.identity import DefaultAzureCredential
+
+        try:
+            print(f"SystemLog: Getting token from DefaultAzureCredential, connection_name: {self._connections_name}")
+            default_credential = DefaultAzureCredential()
+            bearer_token = default_credential.get_token("https://management.azure.com/.default").token
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"SystemLog: Failed to get token from DefaultAzureCredential: {e}")
+            raise e
 
         endpoint = self.curr_workspace.service_context._get_endpoint("api")
         #TODO: remove print
-        print(endpoint);
+        print(endpoint)
         # url_list = [
         #     endpoint,
         #     "rp/workspaces/subscriptions",
@@ -439,11 +451,18 @@ class OnlineEndpoint:
         final_url=f"https://management.azure.com/subscriptions/{self.curr_workspace.subscription_id}"\
                    f"/resourcegroups/{self.curr_workspace.resource_group}"\
                    f"/providers/Microsoft.MachineLearningServices/workspaces/{self.curr_workspace.name}"\
-                   f"/connections/{self._connections_name}/listsecrets?api-version=2023-02-01-preview"
-        resp = self._send_post_request(final_url, {
-            "Authorization": f"Bearer {bearer_token}",
-            "content-type": "application/json"
-        }, {})
+                   f"/connections/{self._connections_name}/listsecrets?api-version=2024-01-01-preview"
+
+        try:
+            resp = self._send_post_request(final_url, {
+                "Authorization": f"Bearer {bearer_token}",
+                "content-type": "application/json"
+            }, {})
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"SystemLog: Failed to get connections by name: {e}")
+            raise e
 
         return resp.json()
 
