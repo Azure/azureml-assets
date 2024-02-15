@@ -140,7 +140,8 @@ class TestTraceAggregator:
                 (_extra_info_span_log_data, _preprocessed_log_schema_extra, _trace_log_data, _trace_log_schema),
             ]
     )
-    def test_trace_aggregator(self, genai_preprocessor_test_setup,
+    def test_trace_aggregator(
+        self, genai_preprocessor_test_setup,
         span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema):
         """Test scenario where spans has real data."""
         spark = self.init_spark()
