@@ -104,7 +104,26 @@ class TestTraceAggregator:
         ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
-    _root_span_str_extra = '{"attributes": "resource", "context": "c", "c_resources": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FLOW", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01", "children": ["{\\"attributes\\": \\"resource\\", \\"context\\": \\"c\\", \\"c_resources\\": \\"{}\\", \\"end_time\\": \\"2024-02-05T00:05:00\\", \\"events\\": \\"[]\\", \\"framework\\": \\"RAG\\", \\"input\\": \\"in\\", \\"links\\": \\"[]\\", \\"name\\": \\"name\\", \\"output\\": \\"out\\", \\"parent_id\\": \\"1\\", \\"span_id\\": \\"2\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:02:00\\", \\"status\\": \\"OK\\", \\"trace_id\\": \\"01\\", \\"children\\": [\\"{\\\\\\"attributes\\\\\\": \\\\\\"resource\\\\\\", \\\\\\"context\\\\\\": \\\\\\"c\\\\\\", \\\\\\"c_resources\\\\\\": \\\\\\"{}\\\\\\", \\\\\\"end_time\\\\\\": \\\\\\"2024-02-05T00:04:00\\\\\\", \\\\\\"events\\\\\\": \\\\\\"[]\\\\\\", \\\\\\"framework\\\\\\": \\\\\\"INTERNAL\\\\\\", \\\\\\"input\\\\\\": \\\\\\"in\\\\\\", \\\\\\"links\\\\\\": \\\\\\"[]\\\\\\", \\\\\\"name\\\\\\": \\\\\\"name\\\\\\", \\\\\\"output\\\\\\": \\\\\\"out\\\\\\", \\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\", \\\\\\"span_id\\\\\\": \\\\\\"3\\\\\\", \\\\\\"span_type\\\\\\": \\\\\\"llm\\\\\\", \\\\\\"start_time\\\\\\": \\\\\\"2024-02-05T00:03:00\\\\\\", \\\\\\"status\\\\\\": \\\\\\"OK\\\\\\", \\\\\\"trace_id\\\\\\": \\\\\\"01\\\\\\", \\\\\\"children\\\\\\": []}\\"]}", "{\\"attributes\\": \\"resource\\", \\"context\\": \\"c\\", \\"c_resources\\": \\"{}\\", \\"end_time\\": \\"2024-02-05T00:07:00\\", \\"events\\": \\"[]\\", \\"framework\\": \\"LLM\\", \\"input\\": \\"in\\", \\"links\\": \\"[]\\", \\"name\\": \\"name\\", \\"output\\": \\"out\\", \\"parent_id\\": \\"1\\", \\"span_id\\": \\"4\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:06:00\\", \\"status\\": \\"OK\\", \\"trace_id\\": \\"01\\", \\"children\\": []}"]}'
+    _root_span_str_extra = '{"attributes": "resource", "context": "c", "c_resources": "{}", "end_time": "2024-02-' + \
+        '05T00:08:00", "events": "[]", "framework": "FLOW", "input": "in", "links": "[]", "name": "name", "output"' + \
+        ': "out", "parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "sta' + \
+        'tus": "OK", "trace_id": "01", "children": ["{\\"attributes\\": \\"resource\\", \\"context\\": \\"c\\",' + \
+        ' \\"c_resources\\": \\"{}\\", \\"end_time\\": \\"2024-02-05T00:05:00\\", \\"events\\": \\"[]\\", \\"fram' + \
+        'ework\\": \\"RAG\\", \\"input\\": \\"in\\", \\"links\\": \\"[]\\", \\"name\\": \\"name\\", \\"output\\":' + \
+        ' \\"out\\", \\"parent_id\\": \\"1\\", \\"span_id\\": \\"2\\", \\"span_type\\": \\"llm\\", \\"start_time\\"' + \
+        ': \\"2024-02-05T00:02:00\\", \\"status\\": \\"OK\\", \\"trace_id\\": \\"01\\", \\"children\\": [\\"{\\\\\\"' + \
+        'attributes\\\\\\": \\\\\\"resource\\\\\\", \\\\\\"context\\\\\\": \\\\\\"c\\\\\\", \\\\\\"c_resourc' + \
+        'es\\\\\\": \\\\\\"{}\\\\\\", \\\\\\"end_time\\\\\\": \\\\\\"2024-02-05T00:04:00\\\\\\", \\\\\\"event' + \
+        's\\\\\\": \\\\\\"[]\\\\\\", \\\\\\"framework\\\\\\": \\\\\\"INTERNAL\\\\\\", \\\\\\"input\\\\\\": \\\\\\"' + \
+        'in\\\\\\", \\\\\\"links\\\\\\": \\\\\\"[]\\\\\\", \\\\\\"name\\\\\\": \\\\\\"name\\\\\\", \\\\\\"outpu' + \
+        't\\\\\\": \\\\\\"out\\\\\\", \\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\", \\\\\\"span_id\\\\\\": \\\\\\"' + \
+        '3\\\\\\", \\\\\\"span_type\\\\\\": \\\\\\"llm\\\\\\", \\\\\\"start_time\\\\\\": \\\\\\"2024-02-05T00:03:0' + \
+        '0\\\\\\", \\\\\\"status\\\\\\": \\\\\\"OK\\\\\\", \\\\\\"trace_id\\\\\\": \\\\\\"01\\\\\\", \\\\\\"childre' + \
+        'n\\\\\\": []}\\"]}", "{\\"attributes\\": \\"resource\\", \\"context\\": \\"c\\", \\"c_resources\\": \\"' + \
+        '{}\\", \\"end_time\\": \\"2024-02-05T00:07:00\\", \\"events\\": \\"[]\\", \\"framework\\": \\"LLM\\", \\"' + \
+        'input\\": \\"in\\", \\"links\\": \\"[]\\", \\"name\\": \\"name\\", \\"output\\": \\"out\\", \\"parent_' + \
+        'id\\": \\"1\\", \\"span_id\\": \\"4\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:0' + \
+        '6:00\\", \\"status\\": \\"OK\\", \\"trace_id\\": \\"01\\", \\"children\\": []}"]}'
 
     _root_span_str = '{"attributes": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FLOW",' + \
         ' "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id":' + \
@@ -185,7 +204,9 @@ class TestTraceAggregator:
             [
                 ([], _preprocessed_log_schema, [], _trace_log_schema),
                 (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema),
-                (_extra_info_span_log_data, _preprocessed_log_schema_extra, _trace_log_data_extra, _trace_log_schema_extra),
+                (
+                    _extra_info_span_log_data, _preprocessed_log_schema_extra,
+                    _trace_log_data_extra, _trace_log_schema_extra),
             ]
     )
     def test_trace_aggregator(
