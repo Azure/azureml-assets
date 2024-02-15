@@ -416,16 +416,18 @@ class OnlineEndpoint:
         # else:
         #     bearer_token = self.curr_workspace._auth.token
 
-        from azure.identity import DefaultAzureCredential
 
         try:
-            print(f"SystemLog: Getting token from DefaultAzureCredential, connection_name: {self._connections_name}")
-            default_credential = DefaultAzureCredential()
-            bearer_token = default_credential.get_token("https://management.azure.com/.default").token
+            from azure.identity import ManagedIdentityCredential
+
+            print(f"SystemLog: Getting token from ManagedIdentityCredential, connection_name: {self._connections_name}")
+            client_id = os.environ.get('DEFAULT_IDENTITY_CLIENT_ID')
+            credential = ManagedIdentityCredential(client_id=client_id)
+            bearer_token = credential.get_token('https://management.azure.com/.default').token
         except Exception as e:
             import traceback
             traceback.print_exc()
-            print(f"SystemLog: Failed to get token from DefaultAzureCredential: {e}")
+            print(f"SystemLog: Failed to get token from ManagedIdentityCredential: {e}")
             raise e
 
         endpoint = self.curr_workspace.service_context._get_endpoint("api")
