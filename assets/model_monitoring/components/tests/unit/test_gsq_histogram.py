@@ -3,8 +3,10 @@
 
 """This file contains unit tests for the GSQ component."""
 
+import json
 import os
 import sys
+import shutil
 import pytest
 import zipfile
 import time
@@ -19,10 +21,14 @@ from generation_safety_quality.annotation_compute_histogram.run import (
     GPT_4,
     TEST_CONNECTION,
     THRESHOLD_PARAMS,
-    ALL_METRIC_NAMES)
+    ALL_METRIC_NAMES,
+    PROMPT)
 from shared_utilities.momo_exceptions import InvalidInputError
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
+
+
+QUESTION = "question"
 
 
 @pytest.fixture(scope="session")
@@ -141,15 +147,66 @@ class TestGSQHistogram:
             call_apply_annotation(
                 ",".join(metric_names), completion_column_name=missing_completion_col)
 
+    def test_gsq_with_same_column_name(self, gsq_zip_test_setup,
+                                       gsq_preprocessor_test_setup):
+        """Test passing same column name as in file for prompt."""
+        metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
+        mltable_path = get_mltable_path()
+        # make copy of directory
+        test_folder = "test_output_gsq_with_same_column_name"
+        mltable_path_copy = os.path.abspath(os.path.join(os.getcwd(), test_folder))
+        shutil.copytree(mltable_path, mltable_path_copy, dirs_exist_ok=True)
+        # modify the file data.jsonl in folder to have same column name as in file
+        with open(os.path.join(mltable_path_copy, "data.jsonl"), "r", encoding="utf8") as file:
+            data = file.read()
+        data = data.replace(f'"{QUESTION}":', f'"{PROMPT}":')
+        with open(os.path.join(mltable_path_copy, "data.jsonl"), "w", encoding="utf8") as file:
+            file.write(data)
+        call_apply_annotation(
+            ",".join(metric_names), prompt_column_name=PROMPT, mltable_path=mltable_path_copy)
+        # remove test folder
+        shutil.rmtree(mltable_path_copy)
 
-def call_apply_annotation(metric_names, prompt_column_name="question",
-                          completion_column_name="answer",
-                          context_column_name="context"):
-    """Call apply_annotation method in GSQ component."""
+    def test_gsq_with_added_prompt_column_name(self, gsq_zip_test_setup,
+                                               gsq_preprocessor_test_setup):
+        """Test dataset with extra prompt column, same as in requested dataset."""
+        metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
+        mltable_path = get_mltable_path()
+        # make copy of directory
+        test_folder = "test_output_gsq_with_added_prompt_column_name"
+        mltable_path_copy = os.path.abspath(os.path.join(os.getcwd(), test_folder))
+        shutil.copytree(mltable_path, mltable_path_copy, dirs_exist_ok=True)
+        # modify the file data.jsonl in folder to have same column name as in file
+        with open(os.path.join(mltable_path_copy, "data.jsonl"), "r", encoding="utf8") as file:
+            data = file.read()
+            data = data.split("\n")
+        json_data = [json.loads(line) for line in data]
+        for row in json_data:
+            row[PROMPT] = row[QUESTION]
+        data = "\n".join([json.dumps(row) for row in json_data])
+        with open(os.path.join(mltable_path_copy, "data.jsonl"), "w", encoding="utf8") as file:
+            file.write(data)
+        call_apply_annotation(
+            ",".join(metric_names), prompt_column_name=PROMPT, mltable_path=mltable_path_copy)
+        # remove test folder
+        shutil.rmtree(mltable_path_copy)
+
+
+def get_mltable_path():
+    """Get mltable path."""
     test_file_dir = os.path.dirname(os.path.realpath(__file__))
-    mltable_path = os.path.join(
+    return os.path.join(
         test_file_dir, "..", "e2e", "resources",
         "mltable_groundedness_preprocessed_target_small")
+
+
+def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
+                          completion_column_name="answer",
+                          context_column_name="context",
+                          mltable_path=None):
+    """Call apply_annotation method in GSQ component."""
+    if mltable_path is None:
+        mltable_path = get_mltable_path()
     test_path = os.path.abspath(os.path.join(os.getcwd(), "test_output"))
     fuse_prefix = "file://"
     histogram_path = fuse_prefix + os.path.join(test_path, "histogram")
