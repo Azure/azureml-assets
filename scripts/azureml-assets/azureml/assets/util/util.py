@@ -333,6 +333,7 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
         List[Path]: Asset config files found.
     """
     input_dirs, exclude_dirs = _convert_excludes(input_dirs, exclude_dirs)
+    changed_files_resolved = set([file.resolve() for file in changed_files] if changed_files else [])
 
     found_assets = []
     for input_dir in input_dirs:
@@ -342,13 +343,12 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
             test_dir_path = asset_config.pytest_tests_dir_with_path
             test_dir_path = test_dir_path.resolve() if test_dir_path else Path()
 
-            code_dir_path = asset_config.code_dir_with_path
-            code_dir_path = code_dir_path.resolve() if code_dir_path else Path()
+            release_paths_resolved = [path.resolve() for path in asset_config.release_paths]
+            asset_changed_files = changed_files_resolved & set(release_paths_resolved)
 
-            if changed_files and not any(
+            if changed_files and not asset_changed_files and not any(
                 file.parent in f.parents or
-                test_dir_path in f.resolve().parents or
-                code_dir_path in f.resolve().parents
+                test_dir_path in f.resolve().parents
                 for f in changed_files
             ):
                 continue

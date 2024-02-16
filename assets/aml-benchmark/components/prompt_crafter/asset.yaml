@@ -6,5 +6,3 @@ test:
     enabled: true
     conda_environment: ../../dev_conda_env.yaml
     tests_dir: ../../tests/prompt_crafter
-code:
-  code_dir: ../src/aml_benchmark/prompt_crafter

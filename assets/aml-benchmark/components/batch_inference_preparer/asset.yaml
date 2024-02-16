@@ -6,5 +6,3 @@ test:
     enabled: true
     conda_environment: ../../dev_conda_env.yaml
     tests_dir: ../../tests/batch_benchmark_inference
-code:
-  code_dir: ../src/aml_benchmark/batch_inference_preparer
