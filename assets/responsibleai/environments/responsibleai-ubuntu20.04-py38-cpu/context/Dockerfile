@@ -40,6 +40,9 @@ RUN pip install 'pyarrow>=14.0.1'
 # To resolve vulnerability issue
 RUN pip install 'Werkzeug==2.2.3'
 
+# To resolve vulnerability issue regarding crytography
+RUN pip install 'cryptography>=42.0.0'
+
 RUN pip freeze
 
 # This is needed for mpi to locate libpython
