@@ -4,10 +4,9 @@
 
 
 from pyspark.sql import Row
-from assets.model_monitoring.components.src.model_data_collector_preprocessor.span_tree_utils import (
+from src.model_data_collector_preprocessor.span_tree_utils import (
     SpanTree,
     SpanTreeNode,
-    _get_span_tree_node_spark_df_schema
 )
 
 import pytest
@@ -225,11 +224,10 @@ class TestSpanTreeUtilities:
     )
     def test_span_tree_node_to_dict(self, expected_row: Row, expected_children):
         """Test scenario for to_dict() of SpanTreeNode."""
-        dict_schema_keynames = _get_span_tree_node_spark_df_schema().fieldNames()
         node = SpanTreeNode(expected_row)
         node.children = expected_children
         actual_dict = node.to_dict()
-        for keyname in dict_schema_keynames:
+        for keyname in expected_row.asDict().keys():
             assert keyname in actual_dict
             if keyname == "children":
                 assert actual_dict[keyname] == expected_children
