@@ -19,7 +19,6 @@ rouge-score==0.1.2
 sacrebleu==2.2.1
 bitsandbytes==0.41.0
 einops==0.6.1
-aiohttp==3.9.1
 certifi==2023.07.22
 numpy==1.22
 azure-ai-ml==1.13.0
