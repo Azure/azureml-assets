@@ -195,13 +195,23 @@ class TestTraceAggregator:
         expected_traces_df.show()
         expected_traces_df.printSchema()
 
-        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df)
+        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df, True)
 
         print("actual trace logs:")
         actual_trace_df.show()
         actual_trace_df.printSchema()
 
         assert_spark_dataframe_equal(actual_trace_df, expected_traces_df)
+
+    def test_trace_aggregator_empty(
+            self, genai_preprocessor_test_setup):
+        """Test scenario where we don't calculate trace logs."""
+        spark = self.init_spark()
+        # infer schema only when we have data.
+        processed_spans_df = spark.createDataFrame([], self._preprocessed_log_schema)
+        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df, True)
+
+        assert actual_trace_df.isEmpty()
 
 
 def assert_spark_dataframe_equal(df1, df2):

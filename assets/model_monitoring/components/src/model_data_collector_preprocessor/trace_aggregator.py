@@ -7,6 +7,7 @@ from pyspark.sql import DataFrame, Row
 from pyspark.sql.types import StructType
 from pyspark.sql.functions import collect_list, struct
 from typing import List
+from shared_utilities.io_utils import init_spark
 from model_data_collector_preprocessor.span_tree_utils import SpanTree, SpanTreeNode
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_aggregated_trace_log_spark_df_schema,
@@ -33,8 +34,18 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row, output_schema: StructTy
     return _construct_aggregated_trace_entry(tree, output_schema)
 
 
-def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
+def _create_empty_trace_logs_df() -> DataFrame:
+    """Create empty trace log df."""
+    spark = init_spark()
+    schema = _get_aggregated_trace_log_spark_df_schema()
+    return spark.createDataFrame(data=[], schema=schema)
+
+
+def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_data: bool) -> DataFrame:
     """Group span logs into aggregated trace logs."""
+    if not require_trace_data:
+        return _create_empty_trace_logs_df()
+
     print("Processing spans into aggregated traces...")
 
     span_logs_schema = span_logs.schema
@@ -50,7 +61,4 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
         .map(lambda x: _aggregate_span_logs_to_trace_logs(x, output_trace_schema)) \
         .toDF(output_trace_schema)
 
-    print("Aggregated Trace DF:")
-    all_aggregated_traces.show(truncate=False)
-    all_aggregated_traces.printSchema()
     return all_aggregated_traces

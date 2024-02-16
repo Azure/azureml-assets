@@ -94,7 +94,8 @@ def genai_preprocessor(
         data_window_end: str,
         input_data: str,
         preprocessed_span_data: str,
-        aggregated_trace_data: str):
+        aggregated_trace_data: str,
+        require_trace_data: bool):
     """Extract data based on window size provided and preprocess it into MLTable.
 
     Args:
@@ -110,7 +111,7 @@ def genai_preprocessor(
 
     transformed_df = _genai_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url)
 
-    trace_logs_df = process_spans_into_aggregated_traces(transformed_df)
+    trace_logs_df = process_spans_into_aggregated_traces(transformed_df, require_trace_data)
 
     save_spark_df_as_mltable(transformed_df, preprocessed_span_data)
 
@@ -126,6 +127,7 @@ def run():
     parser.add_argument("--input_data", type=str)
     parser.add_argument("--preprocessed_span_data", type=str)
     parser.add_argument("--aggregated_trace_data", type=str)
+    parser.add_argument("--require_trace_data", type=str)
     args = parser.parse_args()
 
     genai_preprocessor(
@@ -134,6 +136,7 @@ def run():
         args.input_data,
         args.preprocessed_span_data,
         args.aggregated_trace_data,
+        eval(args.require_trace_data.capitalize())
     )
 
 
