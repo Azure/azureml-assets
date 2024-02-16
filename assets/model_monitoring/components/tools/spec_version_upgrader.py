@@ -72,6 +72,10 @@ class SpecVersionUpgrader:
         """Init SpecVersionUpgrader instance."""
         self._spec_dict = spec_dict or SpecVersionUpgrader._scan_spec_folder(spec_folder)
 
+    def upgrade_all(self):
+        """Upgrade version of all specs."""
+        self.upgrade_versions(list(self._spec_dict.keys()))
+
     def upgrade_versions(self, specs: List[str]):
         """Upgrade version of all specs in `spec_names`, including the specs that refer to the given specs."""
         # upgrade in spec_dict
@@ -165,9 +169,15 @@ class SpecVersionUpgrader:
 if __name__ == "__main__":
     # TODO add --all to upgrade all components
     argparser = ArgumentParser()
-    argparser.add_argument("--specs", help="spec names to upgrade")
+    argparser.add_argument("-s", "--specs", help="spec names to upgrade")
+    argparser.add_argument("-a", "--all", action="store_true", help="upgrade all components")
     args = argparser.parse_args()
+    upgrade_all = args.all
     specs = args.specs.split(",") if args.specs else []
     spec_folder = os.path.abspath(f"{os.path.dirname(__file__)}/..")
     spec_version_upgrader = SpecVersionUpgrader(spec_folder)
-    spec_version_upgrader.upgrade_versions(specs)
+    if upgrade_all:
+        # spec_version_upgrader.upgrade_versions(list(spec_version_upgrader._spec_dict.keys()))
+        spec_version_upgrader.upgrade_all()
+    else:
+        spec_version_upgrader.upgrade_versions(specs)
