@@ -13,6 +13,7 @@ from typing import List, Tuple, Union
 
 import azureml.assets as assets
 from azureml.assets.util import logger
+from azureml.assets.config import ValidationException
 
 RELEASE_SUBDIR = "latest"
 EXCLUDE_DIR_PREFIX = "!"
@@ -339,12 +340,16 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
     for input_dir in input_dirs:
         for file in input_dir.rglob(asset_config_filename):
             # If specified, skip assets when no change in asset, source_code and test_code
-            asset_config = assets.AssetConfig(file)
-            test_dir_path = asset_config.pytest_tests_dir_with_path
-            test_dir_path = test_dir_path.resolve() if test_dir_path else Path()
+            try:
+                asset_config = assets.AssetConfig(file)
+                test_dir_path = asset_config.pytest_tests_dir_with_path
+                test_dir_path = test_dir_path.resolve() if test_dir_path else Path()
 
-            release_paths_resolved = [path.resolve() for path in asset_config.release_paths]
-            asset_changed_files = changed_files_resolved & set(release_paths_resolved)
+                release_paths_resolved = [path.resolve() for path in asset_config.release_paths]
+                asset_changed_files = changed_files_resolved & set(release_paths_resolved)
+            except ValidationException:
+                test_dir_path = Path()
+                asset_changed_files = set()
 
             if changed_files and not asset_changed_files and not any(
                 file.parent in f.parents or
