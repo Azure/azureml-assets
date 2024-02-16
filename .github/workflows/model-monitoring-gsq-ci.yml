@@ -1,4 +1,4 @@
-name: model-monitoring-ci
+name: model-monitoring-gsq-ci
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - main 
     paths:
       - assets/model_monitoring/**
-      - .github/workflows/model-monitoring-ci.yml
+      - .github/workflows/model-monitoring-gsq-ci.yml
       
 
 concurrency:
@@ -32,7 +32,7 @@ jobs:
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
   run-momo-tests:
-    name: Run Monitoring Component Tests
+    name: Run GSQ Monitoring Component Tests
     runs-on: ubuntu-latest
     needs: check-execution-context
     environment: Testing
@@ -45,6 +45,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.8'
+
+      - name: Install fusepy
+        run: sudo apt-get install -y fuse
+
       - name: Log in to Azure and create resources
         uses: ./.github/actions/create-azure-resources
         with:
@@ -54,10 +58,10 @@ jobs:
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
 
       - name: Install dependencies
-        run: pip install -r ${{ env.testsRootPath }}/requirements.txt
+        run: pip install -r ${{ env.testsRootPath }}/gsq-requirements.txt
 
       - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8 -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py ${{ env.momoComponentsRootPath }}/tests/e2e/test_generation_safety_quality_e2e.py -o log_level=DEBUG -m gsq_test
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
