@@ -10,6 +10,7 @@ from pyspark.sql.types import TimestampType
 from pyspark.sql.utils import AnalysisException
 from shared_utilities.io_utils import save_spark_df_as_mltable
 from model_data_collector_preprocessor.store_url import StoreUrl
+# TODO: move shared utils to a util py file
 from model_data_collector_preprocessor.spark_run import (
     _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string,
@@ -60,14 +61,14 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     Args:
         df: The raw span logs data in a dataframe.
     """
+    # TODO: handle if original start/endtime not valid time string
     df = df.withColumns(
         {'end_time': df.end_time.cast(TimestampType()), 'start_time': df.start_time.cast(TimestampType())}
     )
 
     df = _promote_fields_from_attributes(df)
 
-    # Cast all remaining fields in attributes to string to make it Map(String, String),
-    # or make it json string, for easier schema unifying
+    # Cast all remaining fields in attributes to json string, for easier schema unifying
     df = _convert_complex_columns_to_json_string(df)
 
     print("df processed from raw Gen AI logs:")
