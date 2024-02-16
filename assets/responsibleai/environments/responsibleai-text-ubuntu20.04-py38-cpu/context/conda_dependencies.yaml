@@ -13,17 +13,16 @@ dependencies:
   - cpuonly
   - pip:
     - numpy==1.22.0
-    - responsibleai~=0.33.0
-    - raiwidgets~=0.33.0
-    - azure-core==1.29.5
+    - ml-wrappers~=0.5.4
+    - responsibleai~=0.34.1
+    - raiwidgets~=0.34.1
     - mlflow
     - markupsafe<=2.1.2
     - itsdangerous<=2.1.2
-    - responsibleai-text[qa]==0.2.5
+    - responsibleai-text[qa]==0.2.6
     - click<8.0.0
     - mltable==1.5.0
     - transformers>=4.17.0
-    - ml-wrappers~=0.5.3
     - nlp-feature-extractors==0.1.0
     - datasets
     - typing-extensions<4.6.1

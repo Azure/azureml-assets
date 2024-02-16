@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: rai_vision_insights
 display_name: RAI Vision Insights
-version: 0.0.13
+version: 0.0.14
 tags:
   Preview: ""
 type: command
@@ -116,7 +116,7 @@ outputs:
     type: path
     description: Json file to which UX is serialized to for viewing in static AzureML Studio UI
 code: ../src
-environment: azureml://registries/azureml/environments/responsibleai-vision-ubuntu20.04-py38-cpu/versions/44
+environment: azureml://registries/azureml/environments/responsibleai-vision-ubuntu20.04-py38-cpu/versions/49
 command: >-
   python ./rai_vision_insights.py
   --task_type ${{inputs.task_type}}
