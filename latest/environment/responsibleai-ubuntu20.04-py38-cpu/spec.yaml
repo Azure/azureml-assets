@@ -4,7 +4,7 @@ description: >-
   AzureML Responsible AI environment.
 
 name: "responsibleai-ubuntu20.04-py38-cpu"
-version: "43"
+version: "44"
 
 build:
   path: "context"
