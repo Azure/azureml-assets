@@ -420,7 +420,11 @@ class OnlineEndpoint:
 
         try:
             print(f"SystemLog: Getting token from DefaultAzureCredential, connection_name: {self._connections_name}")
-            default_credential = DefaultAzureCredential()
+            # print all environment variables
+            for key in os.environ.keys():
+                print(f"{key}={os.environ[key]}")
+            client_id = os.environ.get('DEFAULT_IDENTITY_CLIENT_ID')
+            default_credential = DefaultAzureCredential(client_id=client_id)
             bearer_token = default_credential.get_token("https://management.azure.com/.default").token
         except Exception as e:
             import traceback
