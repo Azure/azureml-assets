@@ -7,40 +7,43 @@ import datasets
 
 
 _CITATION = """\
-@misc{wei2022chainofthought,
-    title={Squad_v2: Measuring How Models Mimic Human Falsehoods},
-    author={Stephanie Lin and Jacob Hilton and Owain Evans},
-    year={2022},
-    eprint={2109.07958v2},
-    archivePrefix={arXiv},
-    primaryClass={cs.CL}
+@article{2016arXiv160605250R,
+       author = {{Rajpurkar}, Pranav and {Zhang}, Jian and {Lopyrev},
+                 Konstantin and {Liang}, Percy},
+        title = "{SQuAD: 100,000+ Questions for Machine Comprehension of Text}",
+      journal = {arXiv e-prints},
+         year = 2016,
+          eid = {arXiv:1606.05250},
+        pages = {arXiv:1606.05250},
+archivePrefix = {arXiv},
+       eprint = {1606.05250},
 }
 """
 
 _DESCRIPTION = """\
-This dataset contains 2 static shots to give examples of how to respond to questions with no answer in
-the context data for squad_v2.These shots was created by Microsoft.
+This dataset contains 2 static shots to give examples of how to respond to questions which does not have the answer in
+the context data.These shots are not part of squad_v2 dataset but is created by Microsoft Corporation.
 """
 
 _SQUAD_v2_STATIC_SHOT_DATA = [
     {
-        "question":
-            ("What is human life expectancy in the United States?"),
         "context":
-            ("Happiness is the key to a long life."),
+            ("The population of India is more than a billion."),
+        "question":
+            ("What is the population of Italy?"),
         "answers":({"text": [],"answer_start": []}),
     },
     {
-        "question":
-            ("What is the colour of the box?"),
         "context":
             ("A black box is lying on a table."),
+        "question":
+            ("What is the colour of the box?"),
         "answers":({"text": ["The colour of the box is black."], "answer_start": []}),
     }
 ]
 
 
-class GSM8kStaticShots(datasets.GeneratorBasedBuilder):
+class Squadv2StaticShots(datasets.GeneratorBasedBuilder):
     """Squad_v2 static shot dataset."""
 
     BUILDER_CONFIGS = [
