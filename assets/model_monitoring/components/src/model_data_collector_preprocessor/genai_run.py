@@ -8,6 +8,7 @@ import argparse
 from pyspark.sql import DataFrame
 from pyspark.sql.types import TimestampType
 from pyspark.sql.utils import AnalysisException
+from pyspark.sql.functions import lit
 from shared_utilities.io_utils import save_spark_df_as_mltable
 from model_data_collector_preprocessor.store_url import StoreUrl
 # TODO: move shared utils to a util py file
@@ -41,6 +42,7 @@ def _promote_fields_from_attributes(df: DataFrame) -> DataFrame:
         df: The raw span logs data in a dataframe.
     """
     def try_get_df_column(df: DataFrame, name: str):
+        """Get column if it exists in DF. Return none if column does not exist."""
         try:
             return df[name]
         except AnalysisException:
@@ -48,8 +50,8 @@ def _promote_fields_from_attributes(df: DataFrame) -> DataFrame:
 
     df = df.withColumns(
         {
-            key: df_column for key, col_name in _get_important_field_mapping().items()
-            if (df_column := try_get_df_column(df, col_name)) is not None
+            key: (df_col if (df_col := try_get_df_column(df, col_name)) is not None else lit(df_col))
+            for key, col_name in _get_important_field_mapping().items()
         }
     )
     return df
