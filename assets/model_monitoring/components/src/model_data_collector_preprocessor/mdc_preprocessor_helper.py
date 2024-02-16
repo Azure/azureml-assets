@@ -241,6 +241,7 @@ def _get_sas_token(account_name, container_name, credential) -> str:
 
 def _copy_appendblob_to_blockblob(container_client: ContainerClient, base_path: str, start_datetime, end_datetime,
                                   sas_token: str):
+    """Copy append blob to block blob in the same container, using azure storage SDK."""
     cur_datetime = start_datetime
     while cur_datetime <= end_datetime:
         datetime_path = cur_datetime.strftime('%Y/%m/%d/%H')
