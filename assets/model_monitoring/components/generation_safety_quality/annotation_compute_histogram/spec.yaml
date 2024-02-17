@@ -86,7 +86,6 @@ outputs:
     mode: direct
 
 conf:
-  spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 4
   spark.driver.memory: 28g
   spark.executor.cores: 4
@@ -106,29 +105,20 @@ conf:
   spark.synapse.library.python.env: |
     channels:
       - defaults
-      - conda-forge
     dependencies:
       - python=3.10
       - pip:
-        - azure-storage-file-datalake~=12.8.0
-        - azureml-fsspec
-        - fsspec~=2023.4.0
-        - responsibleai~=0.29.0
-        - tiktoken==0.3.3
-        - json5==0.9.11
-        - azureml-metrics[tabular]~=0.0.42
         - azure-cli-core~=2.56.0
         - azure-ai-ml~=1.13.0
-        - azure-ai-generative==1.0.0b6
-        - azure-ai-resources==1.0.0b6
-        - openai==1.11.1
+        - azure-ai-generative==1.0.0b7
+        - azure-ai-resources==1.0.0b7
+        - openai~=1.11.1
         - json5==0.9.11
         - mltable~=1.5.0
         - promptflow[azure]~=1.4.1
         - promptflow-tools~=1.1.0
         - keyrings.alt~=5.0.0
 code: ../../src
-
 entry:
   file: ./generation_safety_quality/annotation_compute_histogram/run.py
 
