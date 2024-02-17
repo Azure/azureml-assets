@@ -10,16 +10,24 @@ inputs:
   data_with_groups:
     type: mltable
     mode: direct
+  model_deployment_name:
+    type: string
+    optional: False
+    description: model name, e.g., name of the deployment for Azure OpenAI
+  workspace_connection_arm_id:
+    type: string
+    optional: false
+    description: path to the workspace connection
 outputs:
   data_with_action_metric_score:
     type: mltable
     mode: direct
 
 conf:
-  spark.driver.cores: 1
-  spark.driver.memory: 2g
-  spark.executor.cores: 2
-  spark.executor.memory: 2g
+  spark.driver.cores: 4
+  spark.driver.memory: 28g
+  spark.executor.cores: 4
+  spark.executor.memory: 28g
   spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
@@ -61,4 +69,6 @@ entry:
 
 args: >-
   --data_with_groups ${{inputs.data_with_groups}}
+  --model_deployment_name ${{inputs.model_deployment_name}}
+  --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
   --data_with_action_metric_score ${{outputs.data_with_action_metric_score}}

@@ -15,21 +15,28 @@ inputs:
     type: mltable
     mode: direct
     description: production data with signal scores from monitoring signal
-  violated_metric_names:
+  violated_metrics_names:
     type: mltable
     mode: direct
-    description: violated metric names
-    optional: True
+    description: violated metrics names
+  workspace_connection_arm_id:
+    type: string
+    optional: false
+    description: path to the workspace connection
+  model_deployment_name:
+    type: string
+    optional: false
+    description: model name, e.g., name of the deployment for Azure OpenAI
 outputs:
   data_with_groups:
     type: mltable
     mode: direct
 
 conf:
-  spark.driver.cores: 1
-  spark.driver.memory: 2g
-  spark.executor.cores: 2
-  spark.executor.memory: 2g
+  spark.driver.cores: 4
+  spark.driver.memory: 28g
+  spark.executor.cores: 4
+  spark.executor.memory: 28g
   spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
@@ -72,5 +79,7 @@ entry:
 args: >-
   --production_data ${{inputs.production_data}}
   --signal_scored_output ${{inputs.signal_scored_output}}
-  $[[--violated_metric_names ${{inputs.violated_metric_names}}]]
+  --violated_metrics_names ${{inputs.violated_metrics_names}}
+  --model_deployment_name ${{inputs.model_deployment_name}}
+  --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
   --data_with_groups ${{outputs.data_with_groups}}

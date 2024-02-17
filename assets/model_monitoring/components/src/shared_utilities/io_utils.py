@@ -10,6 +10,7 @@ from pyspark.sql import SparkSession, DataFrame
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 from model_data_collector_preprocessor.store_url import StoreUrl  # TODO: move StoreUrl to share_utilities
+from pyspark.sql.types import StructType
 
 
 class NoDataApproach(Enum):
@@ -138,3 +139,16 @@ def np_encoder(object):
     """Json encoder for numpy types."""
     if isinstance(object, np.generic):
         return object.item()
+
+
+def create_spark_df(rows: list, schema: StructType):
+    """Create Spark DataFrame."""
+    spark = init_spark()
+    return spark.createDataFrame(data=rows, schema=schema)
+
+
+def save_empty_dataframe(schema: StructType, output_path: str):
+    """Save empty Data Spark DataFrame."""
+    schema = get_output_schema()
+    df = create_spark_df([], schema)
+    save_spark_df_as_mltable(df, output_path)

@@ -10,6 +10,9 @@ inputs:
   action_data:
     type: mltable
     mode: direct
+  data_with_action_metric_score:
+    type: mltable
+    mode: direct
   model_deployment_name:
     type: string
     optional: False
@@ -21,10 +24,10 @@ outputs:
     mode: direct
 
 conf:
-  spark.driver.cores: 1
-  spark.driver.memory: 2g
-  spark.executor.cores: 2
-  spark.executor.memory: 2g
+  spark.driver.cores: 4
+  spark.driver.memory: 28g
+  spark.executor.cores: 4
+  spark.executor.memory: 28g
   spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
@@ -62,9 +65,11 @@ conf:
 code: ../../src
 
 entry:
-  file: ./action_analyzer/action_analyzer_correlation_test/run.py
+  file: ./action_analyzer/action_analyzer_output_actions/run.py
 
 args: >-
   --action_data ${{inputs.action_data}}
   --model_deployment_name ${{inputs.model_deployment_name}}
+  --data_with_action_metric_score ${{inputs.data_with_action_metric_score}}
+  --signal_name ${{inputs.signal_name}}
   --action_output ${{outputs.action_output}}
