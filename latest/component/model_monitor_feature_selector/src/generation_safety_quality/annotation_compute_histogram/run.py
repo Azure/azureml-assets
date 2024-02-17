@@ -21,9 +21,8 @@ import pandas as pd
 import requests
 from azure.ai.generative.evaluate import evaluate
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from pyspark.sql import Window
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
-from pyspark.sql.functions import col, row_number, monotonically_increasing_id
+from pyspark.sql.functions import col
 from shared_utilities import io_utils
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -33,11 +32,11 @@ logging.basicConfig(level=logging.INFO)
 TEST_CONNECTION = "test_connection"
 
 RATING = "rating"
-INDEX = "index"
 PROMPT = "prompt"
 COMPLETION = "completion"
 CONTEXT = "context"
 GROUND_TRUTH = "ground_truth"
+CORRELATION_ID = "correlationid"
 
 
 # ==================  HTTP Constants ==================
@@ -494,11 +493,28 @@ def apply_annotation(
             f"context_column_name: {context_column_name}\nground_truth_column_name: "
             f"{ground_truth_column_name}")
 
+    columns_to_select = [prompt_column_name, completion_column_name]
+    renamed_columns = [PROMPT, COMPLETION]
+    if context_column_name in production_df.columns:
+        columns_to_select.append(context_column_name)
+        renamed_columns.append(CONTEXT)
+    if ground_truth_column_name in production_df.columns:
+        columns_to_select.append(ground_truth_column_name)
+        renamed_columns.append(GROUND_TRUTH)
+    has_correlation_id = CORRELATION_ID in production_df.columns
+    if has_correlation_id:
+        columns_to_select.append(CORRELATION_ID)
+        renamed_columns.append(CORRELATION_ID)
+
+    # select the relevant column names
+    production_df = production_df.select(columns_to_select)
+
     # rename columns to prompt, completion, context, ground truth to match metaprompt data
     production_df = (production_df.withColumnRenamed(prompt_column_name, PROMPT)
                      .withColumnRenamed(completion_column_name, COMPLETION)
                      .withColumnRenamed(context_column_name, CONTEXT)
                      .withColumnRenamed(ground_truth_column_name, GROUND_TRUTH))
+    production_df = production_df.select(renamed_columns)
     # Sampling
     production_df_sampled = production_df.sample(withReplacement=False, fraction=sample_rate)
     if production_df_sampled.count() == 0:
@@ -510,8 +526,6 @@ def apply_annotation(
 
     production_df = production_df_sampled
     row_count = production_df.count()
-    production_df_with_index = production_df_sampled.withColumn("id", row_number()
-                                                                .over(Window.orderBy(monotonically_increasing_id()))-1)
 
     spark = io_utils.init_spark()
     spark_conf = spark.sparkContext.getConf()
@@ -597,6 +611,9 @@ def apply_annotation(
                 os.environ[env_var_key] = env_var_value
 
             rows = []
+            correlation_ids = None
+            if has_correlation_id:
+                correlation_ids = batch[CORRELATION_ID]
             for index, row in batch.iterrows():
                 qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
                 if has_context:
@@ -613,8 +630,8 @@ def apply_annotation(
                 data_mapping={
                     "questions": PROMPT,
                     "contexts": CONTEXT,
-                    "y_pred": COMPLETION,
-                    "y_test": GROUND_TRUTH
+                    "answer": COMPLETION,
+                    "ground_truth": GROUND_TRUTH
                 },
                 model_config={
                     "api_version": api_version,
@@ -627,8 +644,8 @@ def apply_annotation(
                 output_path=output_dir.name
             )
             tabular_result = pd.read_json(os.path.join(output_dir.name, "eval_results.jsonl"), lines=True)
-            # add index column
-            tabular_result = tabular_result.reset_index(names=INDEX)
+            if correlation_ids is not None:
+                tabular_result[CORRELATION_ID] = correlation_ids
             # rename metric columns
             for column_name in metrics_list:
                 tabular_result.rename(
@@ -640,6 +657,9 @@ def apply_annotation(
     def mock_metrics_batch(iterator):
         for batch in iterator:
             rows = []
+            correlation_ids = None
+            if has_correlation_id:
+                correlation_ids = batch[CORRELATION_ID]
             for index, row in batch.iterrows():
                 qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
                 if has_context:
@@ -651,12 +671,11 @@ def apply_annotation(
                     qca[metric_name_compact] = 1
                 rows.append(qca)
             tabular_result = pd.DataFrame(rows)
-            # add index column
-            tabular_result = tabular_result.reset_index(names=INDEX)
+            if correlation_ids is not None:
+                tabular_result[CORRELATION_ID] = correlation_ids
             yield tabular_result
 
     schema_fields = [
-        StructField(INDEX, IntegerType(), True),
         StructField(PROMPT, StringType(), True)
     ]
     if has_context:
@@ -664,6 +683,8 @@ def apply_annotation(
     schema_fields.append(StructField(COMPLETION, StringType(), True))
     if has_ground_truth:
         schema_fields.append(StructField(GROUND_TRUTH, StringType(), True))
+    if has_correlation_id:
+        schema_fields.append(StructField(CORRELATION_ID, StringType(), True))
     for metric_name in metric_names:
         metric_name_compact = get_compact_metric_name(metric_name)
         schema_fields.append(StructField(metric_name_compact, IntegerType(), True))
@@ -705,17 +726,18 @@ def apply_annotation(
         print(metrics_pdf)
 
         # create violations table if there are violations
-        violations_df = annotations_df.select(
-            [metric_name_compact, INDEX]).filter(
-                (col(metric_name_compact) < metric_threshold_value) & (col(INDEX) != -1))
+        violation_columns = renamed_columns.copy()
+        violation_columns.append(metric_name_compact)
+        violations_df = annotations_df.select(violation_columns).filter(
+                col(metric_name_compact) < metric_threshold_value)
         if violations_df.count() > 0:
-            violations_df_full = production_df_with_index.join(violations_df,
-                                                               production_df_with_index.id == violations_df.index,
-                                                               "inner").drop(violations_df.index).drop(
-                                                                   production_df_with_index.id).withColumnRenamed(
-                                                                       'rating', metric_name_compact)
+            # rename columns back to original names
+            violations_df = (violations_df.withColumnRenamed(PROMPT, prompt_column_name)
+                             .withColumnRenamed(COMPLETION, completion_column_name)
+                             .withColumnRenamed(CONTEXT, context_column_name)
+                             .withColumnRenamed(GROUND_TRUTH, ground_truth_column_name))
             run_id = os.environ.get("AZUREML_RUN_ID")
-            io_utils.save_spark_df_as_mltable(violations_df_full, violations[metric_name_compact.lower()])
+            io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()])
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
                                        GROUP_DIMENSION: "",
