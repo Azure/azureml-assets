@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.56
+version: 0.0.58
 name: llm_rag_validate_deployments
 display_name: LLM - Validate Deployments
 is_deterministic: false
@@ -17,7 +17,7 @@ description: |
 inputs:
   embeddings_model:
     type: string
-    optional: true
+    optional: false
     description: The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2' or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'
   embeddings_connection:
     type: string
@@ -33,7 +33,7 @@ inputs:
     optional: true
   acs_config:
     type: string
-    optional: false
+    optional: true
     description: 'JSON string containing the ACS configuration. e.g. {"index_name": "my-index"}'
   index_connection:
     type: string
@@ -48,10 +48,10 @@ code: '../src'
 
 command: >-
   python -m azureml.rag.tasks.validate_deployments
-  $[[--embeddings_model '${{inputs.embeddings_model}}']]
+  --embeddings_model '${{inputs.embeddings_model}}'
   $[[--embeddings_connection_id ${{inputs.embeddings_connection}}]]
   $[[--llm_config '${{inputs.llm_config}}']]
   $[[--llm_connection_id ${{inputs.llm_connection}}]]
-  --index_config '${{inputs.acs_config}}'
+  $[[--index_config '${{inputs.acs_config}}']]
   $[[--index_connection_id ${{inputs.index_connection}}]]
   --output_data ${{outputs.output_data}}

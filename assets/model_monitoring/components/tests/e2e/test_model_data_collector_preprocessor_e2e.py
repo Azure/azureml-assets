@@ -31,7 +31,7 @@ def _submit_mdc_preprocessor_job(
 
         mdc_preprocessor_output.identity = AmlTokenConfiguration()
         mdc_preprocessor_output.resources = {
-            'instance_type': 'Standard_E8S_V3',
+            'instance_type': 'Standard_E4S_V3',
             'runtime_version': '3.3',
         }
 
@@ -62,7 +62,7 @@ class TestMDCPreprocessorE2E:
         [
             # traditional model
             (DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT, "2023-01-29T00:00:00Z", "2023-02-03T00:00:00Z"),
-            # LLM model, disable until we generate the LLM logs in the gated test workspace
+            # LLM model
             (DATA_ASSET_LLM_INPUTS, "2023-10-24T22:00:00Z", "2023-10-24T23:00:00Z")
         ]
     )

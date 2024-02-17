@@ -21,7 +21,7 @@ outputs:
 jobs:
   run_dataset_downloader:
     type: command
-    component: ../../components/dataset-downloader/spec.yaml
+    component: ../../components/dataset_downloader/spec.yaml
     limits: 
       timeout: 900
     inputs:

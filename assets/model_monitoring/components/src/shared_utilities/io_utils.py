@@ -38,11 +38,14 @@ def init_spark():
 
 
 def _get_input_not_found_category(error: Exception):
-    if isinstance(error, IndexError) or (error.args and "Partition 0 is out of bounds." in error.args[0]):
+    err_msg = error.args[0] if len(error.args) > 0 else ""
+    if not isinstance(err_msg, str):
+        err_msg = ""
+    if isinstance(error, IndexError) or ("Partition 0 is out of bounds." in err_msg):
         return InputNotFoundCategory.NO_INPUT_IN_WINDOW
-    elif "The requested stream was not found" in error.args[0]:
+    elif "The requested stream was not found" in err_msg:
         return InputNotFoundCategory.ROOT_FOLDER_NOT_FOUND
-    elif "Not able to find MLTable file" in error.args[0]:
+    elif "Not able to find MLTable file" in err_msg:
         return InputNotFoundCategory.MLTABLE_NOT_FOUND
     else:
         return InputNotFoundCategory.NOT_INPUT_MISSING
