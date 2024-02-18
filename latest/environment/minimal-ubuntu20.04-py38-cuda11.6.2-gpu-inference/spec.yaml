@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: >-
   AzureML minimal/Ubuntu 20.04/Python 3.8 gpu environment.
 name: "minimal-ubuntu20.04-py38-cuda11.6.2-gpu-inference"
-version: "28"
+version: "29"
 
 build:
   path: "context"
