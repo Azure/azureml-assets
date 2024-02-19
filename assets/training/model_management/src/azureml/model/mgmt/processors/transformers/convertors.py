@@ -224,7 +224,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
             pip_requirements=pip_requirements,
             extra_pip_requirements=self._extra_pip_requirements,
             metadata=metadata,
-            path=self._output_dir.as_posix(),
+            path=str(self._output_dir),
         )
 
         logger.info("Model saved with mlflow OSS flow for task: {}".format(self._task))
