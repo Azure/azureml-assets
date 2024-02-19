@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 from mlflow.models.signature import ModelSignature
 from mlflow.pyfunc import PyFuncModel
 from mlflow.types import DataType
-from mlflow.types.schema import ColSpec, Schema
+from mlflow.types.schema import ColSpec, Schema, ParamSchema, ParamSpec
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -167,9 +167,17 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
                             VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_BOXES),
                 ]
             )
+            param_schema = ParamSchema(
+                [
+                    ParamSpec(VisionMLFlowSchemaLiterals.TEXT_PROMPT, 
+                              DataType.string, None),
+                    ParamSpec(VisionMLFlowSchemaLiterals.CUSTOM_ENTTIES,
+                              DataType.boolean, True),
+                ]
+            )
         else:
             raise NotImplementedError(f"Task type: {self._task} is not supported yet.")
-        return ModelSignature(inputs=input_schema, outputs=output_schema)
+        return ModelSignature(inputs=input_schema, outputs=output_schema, params=param_schema)
 
     def save_as_mlflow(self):
         """Prepare model for save to MLflow."""

@@ -8,3 +8,4 @@ transformers==4.34.0
 accelerate==0.23.0
 scikit-image==0.19.3
 simplification==0.5.7
+fairscale==0.4.13

@@ -69,7 +69,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         self._inference_detector = None
         self._task_type = task_type
 
-    def _post_process_model_results(self, batch_results: List) -> List[Dict[str, Any]]:
+    def _post_process_model_results(self, batch_results: List, classes: List) -> List[Dict[str, Any]]:
         """Convert model results to OD or IS output format.
 
         :param batch_results: List of model results for images in batch.
@@ -100,7 +100,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                         ODLiterals.BOTTOM_X: float(bboxes[i][2]) / image_width,
                         ODLiterals.BOTTOM_Y: float(bboxes[i][3]) / image_height,
                     },
-                    ODLiterals.LABEL: self.classes[labels[i]],
+                    ODLiterals.LABEL: classes[labels[i]],
                     ODLiterals.SCORE: float(scores[i]),
                 }
                 if masks is not None:
@@ -141,8 +141,10 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
                 _config = Config.fromfile(model_config_path)
                 self._model = init_detector(_config, model_weights_path, device=_map_location)
-                self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES]
-
+                self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES] if MMDetLiterals.CLASSES in self._model.dataset_meta else \
+                []
+                self.language_model = hasattr(self._model, "language_model")
+                print(f"length of classes: {len(self.classes)}")
                 print("Model loaded successfully")
             except Exception:
                 print("Failed to load the the model.")
@@ -150,7 +152,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         else:
             raise ValueError(f"invalid task type {self._task_type}")
 
-    def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
+    def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame, params = {}) -> pd.DataFrame:
         """Perform inference on the input data.
 
         :param context: MLflow context containing artifacts that the model can use for inference
@@ -165,13 +167,19 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         processed_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
             axis=1, func=process_image_pandas_series
         )
-
+        if not params:
+            params = {}
+        text_prompt = params.get("text_prompt", None)
+        custom_entities = params.get("custom_entities", True)
+        if not text_prompt and self.language_model:
+            raise ValueError("text prompt not sent. please send text_prompt for Launguage models")
+        classes = text_prompt.split(". ") if self.language_model else self.classes
         with tempfile.TemporaryDirectory() as tmp_output_dir:
             image_path_list = (
                 processed_images.iloc[:, 0].map(lambda row: create_temp_file(row, tmp_output_dir)[0]).tolist()
             )
 
-            results = self._inference_detector(imgs=image_path_list, model=self._model)
+            results = self._inference_detector(imgs=image_path_list, model=self._model, text_prompt=text_prompt, custom_entities=custom_entities)
 
-            predictions = self._post_process_model_results(results)
+            predictions = self._post_process_model_results(results, classes)
             return pd.DataFrame(predictions)
