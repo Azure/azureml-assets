@@ -3,7 +3,7 @@ type: command
 tags:
   Preview: ""
 name: llm_dbcopilot_grounding
-version: 0.0.45
+version: 0.0.46
 inputs:
   asset_uri:
     type: string

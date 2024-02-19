@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.js
 type: pipeline
 
 name: llm_ingest_dbcopilot_faiss_e2e
-version: 0.0.35
+version: 0.0.37
 display_name: Data Ingestion for DB Data Output to FAISS E2E Deployment
 description: Single job pipeline to chunk data from AzureML DB Datastore and create faiss embeddings index
 
@@ -110,7 +110,7 @@ jobs:
   #########################################
   db_meta_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding:0.0.45"
+    component: "azureml:llm_dbcopilot_grounding:0.0.46"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -135,7 +135,7 @@ jobs:
   #########################################
   generate_meta_embeddings:
     type: command
-    component: "azureml:llm_rag_generate_embeddings:0.0.47"
+    component: "azureml:llm_rag_generate_embeddings:0.0.48"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -156,7 +156,7 @@ jobs:
   #########################################
   create_meta_faiss_index_job:
     type: command
-    component: "azureml:llm_rag_create_faiss_index:0.0.52"
+    component: "azureml:llm_rag_create_faiss_index:0.0.53"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -176,7 +176,7 @@ jobs:
   #########################################
   db_sample_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.21"
+    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.22"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -196,7 +196,7 @@ jobs:
   #########################################
   generate_sample_embeddings:
     type: command
-    component: "azureml:llm_rag_generate_embeddings:0.0.47"
+    component: "azureml:llm_rag_generate_embeddings:0.0.48"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -217,7 +217,7 @@ jobs:
   #########################################
   create_sample_faiss_index_job:
     type: command
-    component: "azureml:llm_rag_create_faiss_index:0.0.52"
+    component: "azureml:llm_rag_create_faiss_index:0.0.53"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -234,7 +234,7 @@ jobs:
   #########################################
   endpoint_deployment_job:
     type: command
-    component: "azureml:llm_dbcopilot_deploy_endpoint:0.0.21"
+    component: "azureml:llm_dbcopilot_deploy_endpoint:0.0.22"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}

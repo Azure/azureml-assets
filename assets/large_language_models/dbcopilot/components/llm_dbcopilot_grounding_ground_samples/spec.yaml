@@ -3,7 +3,7 @@ type: command
 tags: {}
 name: llm_dbcopilot_grounding_ground_samples
 display_name: LLM - DBCopilot Grounding Ground Samples Component
-version: 0.0.21
+version: 0.0.22
 inputs:
   grounding_context:
     type: uri_folder
