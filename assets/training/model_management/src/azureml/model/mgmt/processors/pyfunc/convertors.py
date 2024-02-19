@@ -169,7 +169,7 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
             )
             param_schema = ParamSchema(
                 [
-                    ParamSpec(VisionMLFlowSchemaLiterals.TEXT_PROMPT, 
+                    ParamSpec(VisionMLFlowSchemaLiterals.TEXT_PROMPT,
                               DataType.string, None),
                     ParamSpec(VisionMLFlowSchemaLiterals.CUSTOM_ENTTIES,
                               DataType.boolean, True),

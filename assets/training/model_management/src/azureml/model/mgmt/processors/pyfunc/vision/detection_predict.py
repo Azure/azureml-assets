@@ -141,8 +141,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
                 _config = Config.fromfile(model_config_path)
                 self._model = init_detector(_config, model_weights_path, device=_map_location)
-                self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES] if MMDetLiterals.CLASSES in self._model.dataset_meta else \
-                []
+                self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES] if MMDetLiterals.CLASSES in self._model.dataset_meta else []
                 self.language_model = hasattr(self._model, "language_model")
                 print(f"length of classes: {len(self.classes)}")
                 print("Model loaded successfully")
@@ -152,7 +151,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         else:
             raise ValueError(f"invalid task type {self._task_type}")
 
-    def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame, params = {}) -> pd.DataFrame:
+    def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame, params={}) -> pd.DataFrame:
         """Perform inference on the input data.
 
         :param context: MLflow context containing artifacts that the model can use for inference
