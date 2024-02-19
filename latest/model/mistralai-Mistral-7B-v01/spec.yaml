@@ -18,6 +18,7 @@ properties:
   languages: EN
 tags:
   Featured: ""
+  Preview: ""
   SharedComputeCapacityEnabled: ""
   huggingface_model_id: mistralai/Mistral-7B-v0.1
   evaluation_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
