@@ -6,8 +6,8 @@ dependencies:
 - pycocotools==2.0.4
 - pip:
   ## src requirements
-  - mlflow~=2.3.1
-  - mlflow-skinny~=2.3.1
+  - mlflow~=2.7.1
+  - mlflow-skinny~=2.7.1
   - azureml-mlflow~=1.51.0
   - azure-ai-ml~=1.8.0
   - azureml-core~=1.52.0

@@ -141,7 +141,8 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
                 _config = Config.fromfile(model_config_path)
                 self._model = init_detector(_config, model_weights_path, device=_map_location)
-                self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES] if MMDetLiterals.CLASSES in self._model.dataset_meta else []
+                self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES] \
+                    if MMDetLiterals.CLASSES in self._model.dataset_meta else []
                 self.language_model = hasattr(self._model, "language_model")
                 print(f"length of classes: {len(self.classes)}")
                 print("Model loaded successfully")
@@ -178,7 +179,10 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                 processed_images.iloc[:, 0].map(lambda row: create_temp_file(row, tmp_output_dir)[0]).tolist()
             )
 
-            results = self._inference_detector(imgs=image_path_list, model=self._model, text_prompt=text_prompt, custom_entities=custom_entities)
+            results = self._inference_detector(imgs=image_path_list,
+                                               model=self._model,
+                                               text_prompt=text_prompt,
+                                               custom_entities=custom_entities)
 
             predictions = self._post_process_model_results(results, classes)
             return pd.DataFrame(predictions)
