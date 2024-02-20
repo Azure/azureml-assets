@@ -110,11 +110,11 @@ def genai_preprocessor(
     """
     store_url = StoreUrl(input_data)
 
-    transformed_df = _genai_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url)
+    span_logs_df = _genai_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url)
 
-    trace_logs_df = process_spans_into_aggregated_traces(transformed_df)
+    trace_logs_df = process_spans_into_aggregated_traces(span_logs_df)
 
-    save_spark_df_as_mltable(transformed_df, preprocessed_span_data)
+    save_spark_df_as_mltable(span_logs_df, preprocessed_span_data)
 
     save_spark_df_as_mltable(trace_logs_df, aggregated_trace_data)
 
