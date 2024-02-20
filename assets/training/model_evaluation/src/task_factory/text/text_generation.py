@@ -31,9 +31,11 @@ class TextGenerator(PredictWrapper):
             X_test = X_test.to_string(index=False, header=False).split('\n')
         try:
             y_pred = self.model.predict(X_test, **kwargs)
-        except TypeError:
+        except TypeError as exp:
+            logger.warning(f"TypeError exception raised. Reason: {exp}")
             y_pred = self.model.predict(X_test)
-        except RuntimeError:
+        except RuntimeError as exp:
+            logger.warning(f"RuntimeError exception raised. Reason: {exp}")
             return self.handle_device_failure(X_test, **kwargs)
 
         return y_pred
