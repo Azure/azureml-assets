@@ -1133,7 +1133,9 @@ def finetune(args: Namespace):
         logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
                     base image value is {removed_base_image}.")
     else:
-        logger.info("Adding inferencing base image {} for text generation task.".format(metadata["azureml.base_image"]))
+        logger.info(
+            "Adding inferencing base image {} for text generation task.".format(metadata["azureml.base_image"])
+        )
 
     args.model_metadata = update_acft_metadata(metadata=metadata,
                                                finetuning_task=args.task_name,
