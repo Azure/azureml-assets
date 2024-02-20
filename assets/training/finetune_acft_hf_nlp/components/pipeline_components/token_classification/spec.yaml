@@ -637,7 +637,7 @@ jobs:
       model_path: '${{parent.jobs.token_classification_finetune.outputs.pytorch_model_folder}}'
       converted_model: '${{parent.jobs.token_classification_finetune.outputs.mlflow_model_folder}}'
     outputs:
-      output_dir: '${{parent.outputs.mlflow_model_folder}}'
+      mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
     component: azureml:model_prediction:0.0.21

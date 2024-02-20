@@ -32,10 +32,10 @@ inputs:
     description: Validation parameters propagated from pipeline.
 
 outputs:
-  output_dir:
+  mlflow_model_folder:
     type: mlflow_model
     description: output folder containing _best_ finetuned model in mlflow format.
     mode: rw_mount
 
 command: >-
-  python model_converter.py --model_path '${{inputs.model_path}}' $[[--converted_model '${{inputs.converted_model}}']] $[[--system_properties '${{inputs.system_properties}}']] --output_dir '${{outputs.output_dir}}'
+  python model_converter.py --model_path '${{inputs.model_path}}' $[[--converted_model '${{inputs.converted_model}}']] $[[--system_properties '${{inputs.system_properties}}']] --output_dir '${{outputs.mlflow_model_folder}}'
