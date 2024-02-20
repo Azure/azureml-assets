@@ -21,7 +21,7 @@ from src.model_data_collector_preprocessor.genai_preprocessor_df_schemas import 
 from src.model_data_collector_preprocessor.store_url import StoreUrl
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def genai_preprocessor_test_setup():
     """Change working directory to root of the assets/model_monitoring_components."""
     original_work_dir = os.getcwd()
