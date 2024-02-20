@@ -27,6 +27,7 @@ RUN pip install 'azureml-core==1.55.0.post1' \
 RUN pip install 'azureml-dataset-runtime==1.55.0' \
                 'azureml-automl-dnn-vision==1.55.0.post1'
 
+# TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'shap==0.41.0' \
                 'interpret-community==0.30.0' \
                 'Pillow>=10.2.0' \
@@ -34,7 +35,8 @@ RUN pip install 'shap==0.41.0' \
                 'setuptools>=65.5.1' \
                 'numpy==1.22.0' \
                 'scipy==1.10.0' \
-                'statsmodels==0.14.0'
+                'statsmodels==0.14.0' \
+                'rai-core-flask==0.7.4'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
