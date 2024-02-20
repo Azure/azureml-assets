@@ -4,7 +4,7 @@ type: spark
 name: gsq_annotation_compute_histogram
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-version: 0.4.11
+version: 0.4.12
 is_deterministic: false
 inputs:
   production_dataset: 
@@ -108,16 +108,17 @@ conf:
     dependencies:
       - python=3.10
       - pip:
-        - azure-cli-core~=2.56.0
-        - azure-ai-ml~=1.13.0
-        - azure-ai-generative==1.0.0b7
-        - azure-ai-resources==1.0.0b7
-        - openai~=1.11.1
-        - json5==0.9.11
-        - mltable~=1.5.0
-        - promptflow[azure]~=1.4.1
-        - promptflow-tools~=1.1.0
-        - keyrings.alt~=5.0.0
+          - azure-cli-core~=2.56.0
+          - azure-ai-ml~=1.13.0
+          - azure-ai-generative==1.0.0b7
+          - azure-ai-resources==1.0.0b7
+          - openai~=1.11.1
+          - json5==0.9.11
+          - mltable~=1.5.0
+          - promptflow[azure]~=1.4.1
+          - promptflow-tools~=1.1.0
+          - keyrings.alt~=5.0.0
+    name: momo-base-spark
 code: ../../src
 entry:
   file: ./generation_safety_quality/annotation_compute_histogram/run.py

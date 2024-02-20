@@ -10,6 +10,9 @@ from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 from azureml._common._error_definition.system_error import ClientError  # type: ignore
 
+from azureml.core.run import Run  # type: ignore
+from azureml.automl.core._run import run_lifecycle_utilities
+
 
 class ModelImportErrorStrings:
     """Error strings."""
@@ -207,6 +210,11 @@ def swallow_all_exceptions(logger: logging.Logger):
                 logger.error("Exception {} when calling {}".format(azureml_exception, func.__name__))
                 for handler in logger.handlers:
                     handler.flush()
+
+                # fail the run
+                run = Run.get_context()
+                run_lifecycle_utilities.fail_run(run, azureml_exception, is_aml_compute=True)
+
                 raise azureml_exception
             finally:
                 time.sleep(60)  # Let telemetry logger flush its logs before terminating.
