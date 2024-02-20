@@ -11,7 +11,7 @@ dependencies:
 - pip:
   - scikit-learn-intelex==2024.1.0
   - wheel~=0.38.1
-  - azureml-core==1.55.0
+  - azureml-core==1.55.0.post1
   - azureml-defaults==1.55.0
   - azureml-mlflow==1.55.0
   - azureml-telemetry==1.55.0

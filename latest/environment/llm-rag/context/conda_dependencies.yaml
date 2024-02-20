@@ -16,7 +16,7 @@ dependencies:
   - azure-keyvault-secrets==4.6.0
   - azure-mgmt-cognitiveservices~=13.4.0
   - azureml-contrib-services
-  - azureml-core==1.55.0
+  - azureml-core==1.55.0.post1
   - azureml-telemetry==1.55.0
   - azureml-dataset-runtime==1.55.0
   - azureml-fsspec

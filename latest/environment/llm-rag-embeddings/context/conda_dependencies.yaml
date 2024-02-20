@@ -20,7 +20,7 @@ dependencies:
   - azure-search-documents==11.4.0b8
     # Azure ML
   - azureml-contrib-services
-  - azureml-core==1.55.0
+  - azureml-core==1.55.0.post1
   - azureml-dataset-runtime==1.55.0
   - azureml-inference-server-http==0.7.6
   - azureml-mlflow==1.55.0

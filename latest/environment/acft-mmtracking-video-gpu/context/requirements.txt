@@ -3,7 +3,7 @@ azureml-evaluate-mlflow==0.0.45
 azureml-acft-accelerator==0.0.45
 azureml-acft-common-components[image]~=0.0.45
 azureml-acft-image-components==0.0.45
-azureml-core==1.55.0
+azureml-core==1.55.0.post1
 azure-ai-ml==1.13.0
 requests>=2.31.0
 datasets==2.15.0

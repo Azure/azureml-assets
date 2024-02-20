@@ -19,7 +19,7 @@ dependencies:
 - openssl=1.1.1s
 - pip:
   - inference-schema
-  - azureml-core==1.55.0
+  - azureml-core==1.55.0.post1
   - azureml-mlflow==1.55.0
   - azureml-defaults==1.55.0
   - azureml-telemetry==1.55.0

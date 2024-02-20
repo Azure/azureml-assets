@@ -15,7 +15,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # Install main azureml packages
-RUN pip install 'azureml-core==1.55.0' \
+RUN pip install 'azureml-core==1.55.0.post1' \
                 'azureml-mlflow==1.55.0' \
                 'azureml-rai-utils==0.0.6'
 
