@@ -176,7 +176,6 @@ class TestGenAISparkPreprocessor:
             assert field in actual_df.columns
 
 
-
 def assert_spark_dataframe_equal(df1, df2):
     """Assert two spark dataframes are equal."""
     assert df1.schema == df2.schema
