@@ -659,11 +659,6 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
             invalid_settings=dict(auto_find_batch_size=True),
             fail_run=False,
             valid_settings=dict(auto_find_batch_size=False)
-        ),
-        dict(  # Phi models, disable deepspeed stage 3
-            invalid_settings=dict(model_type=MIXFORMER_SEQUENTIAL),
-            fail_run=True,
-            valid_settings=None
         )
     ]
     for setting in invalid_ds_zero3_settings:

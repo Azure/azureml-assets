@@ -393,6 +393,16 @@ def model_converter(args: Namespace):
     logger.info(f"Successfully converted {input_model_format} model to {output_model_format} model")
 
 
+def enable_trust_remote_code_for_causal_lm():
+    """Enable trust remote code for causal lm task."""
+    from functools import partial
+
+    AutoModelForCausalLM.from_pretrained = partial(
+        AutoModelForCausalLM.from_pretrained, trust_remote_code=True
+    )
+    logger.info("Updated `from_pretrained` method for Text Gen task")
+
+
 @swallow_all_exceptions(time_delay=60)
 def main():
     """Parse args and import model."""
@@ -413,6 +423,11 @@ def main():
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
 
+    # FIXME - This is a hack to load model in case where trust_remote_code needs to be set to true.
+    # This is needed when deepspeed stage3 is enabled with LoRA as
+    # PeftAutoModelForCausalLM.from_pretrained doesn't accept trust_remote_code.
+    # This is for peft 0.4.0. Check if this is fixed in later versions.
+    enable_trust_remote_code_for_causal_lm()
     model_converter(args)
 
 
