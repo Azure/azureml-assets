@@ -31,14 +31,14 @@ _SQUAD_v2_STATIC_SHOT_DATA = [
             ("The population of India is more than a billion."),
         "question":
             ("What is the population of Italy?"),
-        "answers":({"text": [],"answer_start": []}),
+        "answers": ({"text": [], "answer_start": []}),
     },
     {
         "context":
             ("A black box is lying on a table."),
         "question":
             ("What is the colour of the box?"),
-        "answers":({"text": ["The colour of the box is black."], "answer_start": []}),
+        "answers": ({"text": ["The colour of the box is black."], "answer_start": []}),
     }
 ]
 
