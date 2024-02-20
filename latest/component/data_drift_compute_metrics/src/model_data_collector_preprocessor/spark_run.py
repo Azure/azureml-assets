@@ -17,7 +17,8 @@ from shared_utilities.event_utils import add_tags_to_root_run
 from shared_utilities.constants import (
     MDC_CORRELATION_ID_COLUMN, MDC_DATA_COLUMN, MDC_DATAREF_COLUMN, AML_MOMO_ERROR_TAG
 )
-from mdc_preprocessor_helper import (
+
+from model_data_collector_preprocessor.mdc_preprocessor_helper import (
     get_file_list, set_data_access_config, serialize_credential, copy_appendblob_to_blockblob
 )
 from model_data_collector_preprocessor.store_url import StoreUrl
