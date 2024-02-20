@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py38-torch212:biweekly.202402.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py38-torch212:biweekly.202402.2
 
 # Install pip dependencies
 COPY requirements.txt .

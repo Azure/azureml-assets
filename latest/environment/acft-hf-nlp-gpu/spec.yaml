@@ -4,7 +4,7 @@ description: >-
   Environment used by Hugging Face NLP Finetune components
 
 name: "acft-hf-nlp-gpu"
-version: "42"
+version: "43"
 
 build:
   path: "context"

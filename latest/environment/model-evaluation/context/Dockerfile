@@ -1,5 +1,5 @@
 # PTCA Image (enabling Singularity Support)
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch201:biweekly.202402.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch201:biweekly.202402.2
 
 RUN apt-get update && apt-get -y upgrade
 
