@@ -35,7 +35,7 @@ inputs:
       - OSS
     default: HFTransformersV2
     optional: false
-    description: Flavor of MLFlow to which model the model is converted to.
+    description: Flavor of MLFlow to which the model is converted to.
 
   model_framework:
     type: string

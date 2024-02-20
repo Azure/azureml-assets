@@ -171,7 +171,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                                               base_model_task=self._task)
         if self._model_flavor == "OSS":
             try:
-                self._save_in_oss_flavor(model, code_paths, input_example, pip_requirements, metadata)
+                self._save_in_oss_flavor(model, metadata, conda_env, code_paths, input_example, pip_requirements)
             except Exception as e:
                 logger.error("Model save failed with mlflow OSS flow for task: {} "
                              "with exception: {}".format(self._task, e))
@@ -190,7 +190,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         if self._task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
             self._update_conda_dependencies({"ffmpeg": "4.2.2"})
 
-    def _save_in_oss_flavor(self, model, code_paths, input_example, pip_requirements, metadata):
+    def _save_in_oss_flavor(self, model, metadata, conda_env, code_paths, input_example, pip_requirements):
         # create a conda environment for OSS transformers Flavor
         python_version = platform.python_version()
         pip_pkgs = self._get_curated_environment_pip_package_list()
@@ -199,7 +199,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                                               pip_packages=pip_pkgs,
                                               pin_sdk_version=False)
 
-        curated_conda_env = conda_deps.as_dict()
+        curated_conda_env = conda_env or conda_deps.as_dict()
 
         # handle OSS trust_remote_code value
         trust_remote_code_val = False
@@ -326,11 +326,6 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                     'packaging', 'pillow', 'protobuf', 'pyyaml', 'requests', 'scikit-learn',
                     'scipy', 'sentencepiece', 'torch', 'mlflow']
         ADD_PACKAGE_LIST = ['torchvision==0.14.1', 'transformers==4.35.2']
-
-        if self._task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
-            ADD_PACKAGE_LIST.append(['soundfile==0.12.1', 'librosa==0.10.1', 'diffusers==0.21.4',
-                                     'wget', 'torchaudio', 'ffmpeg-python==0.2.0', 'cloudpickle==2.2.1',
-                                     'jsonpickle==3.0.1', 'more-itertools==9.1.0', 'cryptography==41.0.1'])
 
         conda_list_cmd = ["conda", "list", "--json"]
         try:
@@ -487,21 +482,18 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
 
     def get_model_signature(self):
         """Return model signature for NLP models."""
-        if self._task == SupportedNLPTasks.QUESTION_ANSWERING.value:
-            return ModelSignature(
-                inputs=Schema(
-                    inputs=[
-                        ColSpec(name="question", type=DataType.string),
-                        ColSpec(name="context", type=DataType.string),
-                    ]
-                ),
-                outputs=Schema(inputs=[ColSpec(name="text", type=DataType.string)]),
-            )
 
-        return ModelSignature(
-            inputs=Schema(inputs=[ColSpec(name="input_string", type=DataType.string)]),
-            outputs=Schema(inputs=[ColSpec(name="text", type=DataType.string)]),
-        )
+        if self._task == SupportedNLPTasks.TEXT_GENERATION.value:
+            inputs = Schema([ColSpec(DataType.string)])
+            outputs = Schema([ColSpec(DataType.string)])
+            params = ParamSchema([ParamSpec("top_p", "float", default=1.0),
+                                  ParamSpec("temperature", "float", default=1.0),
+                                  ParamSpec("max_new_tokens", "integer", default=50),
+                                  ParamSpec("do_sample", "boolean", default=True),
+                                  ParamSpec("return_full_text", "boolean", default=True)])
+            return ModelSignature(inputs=inputs, outputs=outputs, params=params)
+
+        return self._signatures
 
     def save_as_mlflow(self):
         """Prepate NLP model for save to MLflow."""
@@ -513,16 +505,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         )
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else AutoConfig
         self._hf_tokenizer_cls = self._hf_tokenizer_cls if self._hf_tokenizer_cls else AutoTokenizer
-
-        if self._task == SupportedNLPTasks.TEXT_GENERATION.value:
-            inputs = Schema([ColSpec(DataType.string)])
-            outputs = Schema([ColSpec(DataType.string)])
-            params = ParamSchema([ParamSpec("top_p", "float", default=1.0),
-                                  ParamSpec("temperature", "float", default=1.0),
-                                  ParamSpec("max_new_tokens", "integer", default=50),
-                                  ParamSpec("do_sample", "boolean", default=True),
-                                  ParamSpec("return_full_text", "boolean", default=True)])
-            self._signatures = ModelSignature(inputs=inputs, outputs=outputs, params=params)
+        self._signatures = self._signatures or self.get_model_signature()
 
         hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_config_cls.__name__
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__

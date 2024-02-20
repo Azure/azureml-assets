@@ -3,18 +3,27 @@ channels:
 - pytorch
 - conda-forge
 dependencies:
-- pip<=22.2.2
-- python=3.8.13
+- pip<=23.2.1
+- python=3.8.17
 - ffmpeg=4.2.2
 - pip:
-  - azureml-evaluate-mlflow==0.0.27
-  - torchaudio
-  - pyctcdecode==0.5.0
-  - phonemizer==3.2.1
-  - more-itertools==9.1.0
   - ffmpeg-python==0.2.0
-  - decord==0.6.0
-  - wget==3.2
-  - numpy>=1.22.0
-  - scipy>=1.10.0
+  - mlflow==2.9.2
+  - cloudpickle==2.2.1
+  - soundfile==0.12.1
+  - jsonpickle==3.0.1
+  - azureml-core
+  - azureml-mlflow==1.51.0
+  - azureml-metrics[all]==0.0.32
+  - scikit-learn==1.2.2
+  - datasets==2.14.6
+  - librosa==0.10.1
+  - diffusers==0.21.4
+  - sentencepiece==0.1.99
+  - azureml-evaluate-mlflow
+  - torchaudio
+  - more-itertools==9.1.0
+  - transformers==4.35.2
+  - wget
+  - torch==2.1.0
 name: mlflow-env
