@@ -27,10 +27,20 @@ class MyDateTime:
 
     def abfs_path(self):
         """Return the abfs path of this MyDateTime."""
+        month, day, hour = self._get_month_day_hour()
+        return f"abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/{self.year}/{month}/{day}/{hour}/*.jsonl"  # noqa
+
+    def azureml_path(self):
+        """Return the azureml path of this MyDateTime."""
+        month, day, hour = self._get_month_day_hour()
+        return f"azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_workspace/datastores/my_datastore/path/to/folder/{self.year}/{month}/{day}/{hour}/*.jsonl"  # noqa
+
+    def _get_month_day_hour(self):
+        """Return month, day, hour."""
         month = f"{self.month:02d}" if self.month else "*"
         day = f"{self.day:02d}" if self.day else "*"
         hour = f"{self.hour:02d}" if self.hour is not None else "*"
-        return f"abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/{self.year}/{month}/{day}/{hour}/*.jsonl"  # noqa
+        return month, day, hour
 
 
 @pytest.mark.unit
@@ -193,22 +203,27 @@ class TestMDCPreprocessorHelper:
             # hour, day, month, year folders
             for f in (d.strftime("%Y/%m/%d/%H"), d.strftime("%Y/%m/%d"), d.strftime("%Y/%m"), d.strftime("%Y"))
         }
-        expected_result = [d.abfs_path() for d in expected_datetimes]
 
         mock_store_url = Mock(spec=StoreUrl)
         mock_store_url.is_local_path.return_value = False
         mock_store_url.is_folder_exists.side_effect = lambda path: path in non_empty_folders
         mock_store_url.get_abfs_url.side_effect = \
             lambda rpath: f"abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/{rpath}"
+        mock_store_url.get_azureml_url.side_effect = \
+            lambda rpath: ("azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_workspace"
+                           f"/datastores/my_datastore/path/to/folder/{rpath}")
 
-        for i in range(4):
-            # test with and without timezone
-            _start = start.replace(tzinfo=timezone.utc) if i % 2 else start
-            _end = end.replace(tzinfo=timezone.utc) if (i >> 1) % 2 else end
+        for scheme in ["abfs", "azureml"]:
+            expected_result = [d.abfs_path() if scheme == "abfs" else d.azureml_path() for d in expected_datetimes]
+            for i in range(4):
+                # test with and without timezone
+                _start = start.replace(tzinfo=timezone.utc) if i % 2 else start
+                _end = end.replace(tzinfo=timezone.utc) if (i >> 1) % 2 else end
+                # scheme = "abfs" if (i >> 2) % 2 else "azureml"
 
-            file_list = get_file_list(_start, _end, mock_store_url)
+                file_list = get_file_list(_start, _end, mock_store_url, scheme=scheme)
 
-            assert file_list == expected_result
+                assert file_list == expected_result
 
     @pytest.mark.parametrize(
         "is_local, store_type, credential, expected_spark_conf",

@@ -11,7 +11,7 @@ from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
 from azure.storage.filedatalake import FileSystemClient
-from azureml.core import Workspace, Run
+from azureml.core import Workspace, Run, Datastore
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -41,6 +41,24 @@ class StoreUrl:
         """
         scheme = "abfss" if (not self.is_local_path()) and self._is_secure() else "abfs"
         return self._get_url(scheme=scheme, store_type="dfs", relative_path=relative_path)
+
+    def get_azureml_url(self, relative_path: str = None) -> str:
+        """
+        Get azureml url for the store url.
+
+        :param relative_path: relative path to the base path
+        :return: azureml url
+        """
+        if self._datastore is None:
+            raise InvalidInputError(f"{self._base_url} is not an azureml url.")
+        url = (f"azureml://subscriptions/{self._datastore.workspace.subscription_id}/resourceGroups"
+               f"/{self._datastore.workspace.resource_group}/workspaces/{self._datastore.workspace.name}"
+               f"/datastores/{self._datastore.name}/paths")
+        if self.path:
+            url = f"{url}/{self.path}"
+        if relative_path:
+            url = f"{url}/{relative_path.lstrip('/')}"
+        return url
 
     def _get_url(self, scheme=None, store_type=None, relative_path=None) -> str:
         if not self.account_name:
@@ -207,7 +225,9 @@ class StoreUrl:
             else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
-                self._datastore = ws.datastores.get(datastore_name)
+                self._datastore = Datastore.get(ws, datastore_name)
+                if self._datastore is None:
+                    raise InvalidInputError(f"Datastore {datastore_name} not found in the workspace.")
                 datastore_type = self._datastore.datastore_type
                 if datastore_type not in ["AzureBlob", "AzureDataLakeGen2"]:
                     raise InvalidInputError("Only Azure Blob and Azure Data Lake Gen2 are supported, "

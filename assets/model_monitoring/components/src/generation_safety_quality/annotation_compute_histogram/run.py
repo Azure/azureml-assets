@@ -11,26 +11,20 @@ The functionality to simplify this code injection is still being developed.
 """
 
 import argparse
-import json
 import logging
 import os
 import re
 import tempfile
-import time
 import traceback
-from abc import ABC, abstractmethod
-from urllib.request import Request, urlopen
 
 import pandas as pd
 import requests
 from azure.ai.generative.evaluate import evaluate
-from azure.ai.ml.identity import CredentialUnavailableError
-from azure.ai.ml.identity._internal import _scopes_to_resource
-from azure.core.credentials import AccessToken, TokenCredential
-from pyspark.sql import Window
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
-from pyspark.sql.functions import col, row_number, monotonically_increasing_id
+from pyspark.sql.functions import col
 from shared_utilities import io_utils
+from shared_utilities.momo_exceptions import InvalidInputError
 
 _logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.INFO)
@@ -38,11 +32,11 @@ logging.basicConfig(level=logging.INFO)
 TEST_CONNECTION = "test_connection"
 
 RATING = "rating"
-INDEX = "index"
 PROMPT = "prompt"
 COMPLETION = "completion"
 CONTEXT = "context"
 GROUND_TRUTH = "ground_truth"
+CORRELATION_ID = "correlationid"
 
 
 # ==================  HTTP Constants ==================
@@ -173,7 +167,9 @@ def _check_and_format_azure_endpoint_url(
         domain = domain[:-1]
 
     if not re.match(domain_pattern_re, domain):
-        raise RuntimeError(f"Invalid Azure endpoint domain URL: {domain}.")
+        err_msg = f"Invalid Azure endpoint domain URL: {domain}."
+        err_msg += " The domain must be in the format of 'inference.ml.azure.com' or 'openai.azure.com'."
+        raise InvalidInputError(err_msg)
 
     url = url_pattern.format(domain, model)
 
@@ -183,197 +179,7 @@ def _check_and_format_azure_endpoint_url(
     return url
 
 
-# --- The following is copied from the yet to be released azureml-featurestore.
-# TODO: replace with import once it's released.
-class AzureMLHoboSparkOnBehalfOfCredential(TokenCredential):
-    """Authenticates a user via the on-behalf-of flow on Hobo Spark compute.
-
-    This credential can only be used on
-    `Azure Machine Learning Hobo Spark Compute.`
-    during job execution when user request to run job during its identity.
-    """
-
-    def __init__(self, **kwargs):  # noqa: D107
-        provider_type = os.environ.get("AZUREML_DATAPREP_TOKEN_PROVIDER")
-        if provider_type != "sparkobo":
-            # OBO identity isn't available in this environment
-            self._credential = None
-        self._credential = _AzureMLHoboSparkOnBehalfOfCredential(**kwargs)
-
-    def get_token(self, *scopes, **kwargs):
-        """Request an access token for `scopes`.
-
-        This method is called automatically by Azure SDK clients.
-
-        :param str scopes: desired scope for the access token.
-            This credential allows only one scope per request.
-        :rtype: azure.core.credentials.AccessToken
-        :return: AzureML On behalf of credentials isn't available in the
-            hosting environment
-        :raises: ~azure.ai.ml.identity.CredentialUnavailableError
-        """
-        if not self._credential:
-            raise CredentialUnavailableError(message=self.get_unavailable_message())
-
-        return self._credential.get_token(*scopes, **kwargs)
-
-    def get_unavailable_message(self) -> str:  # noqa: D102
-        return "AzureML On Behalf of credentials not available in this environment."
-
-
-class _AzureMLHoboSparkOnBehalfOfCredential(object):
-    def __init__(self, **kwargs):
-        if len(kwargs) > 0:
-            env_key_from_kwargs = [
-                "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER",
-                "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT",
-                "AZUREML_RUN_ID",
-                "AZUREML_RUN_TOKEN_EXPIRY",
-            ]
-            for env_key in env_key_from_kwargs:
-                if env_key in kwargs.keys():
-                    os.environ[env_key] = kwargs[env_key]
-                else:
-                    raise Exception(
-                        "Unable to initialize AzureMLHoboSparkOBOCredential "
-                        "due to invalid arguments"
-                    )
-        else:
-            from pyspark.sql import SparkSession
-
-            try:
-                spark = SparkSession.builder.getOrCreate()
-            except Exception:  # noqa: B902
-                raise Exception(
-                    "Fail to get spark session, please check if spark "
-                    "environment is set up."
-                )
-
-            spark_conf = spark.sparkContext.getConf()
-            spark_conf_vars = {
-                "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",
-                "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",
-            }
-            for env_key, conf_key in spark_conf_vars.items():
-                value = spark_conf.get(conf_key)
-                if value:
-                    os.environ[env_key] = value
-
-        self.obo_service_endpoint = os.environ.get("AZUREML_OBO_SERVICE_ENDPOINT")
-        self.token_service_endpoint = os.environ.get(
-            "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT"
-        )
-        self.obo_access_token = os.environ.get("AZUREML_OBO_CANARY_TOKEN")
-        self.cluster_identifier = os.environ.get("AZUREML_SYNAPSE_CLUSTER_IDENTIFIER")
-        self.subscription_id = os.environ.get("AZUREML_ARM_SUBSCRIPTION")
-        self.resource_group = os.environ.get("AZUREML_ARM_RESOURCEGROUP")
-        self.workspace_name = os.environ.get("AZUREML_ARM_WORKSPACE_NAME")
-        self.experiment_name = os.environ.get("AZUREML_ARM_PROJECT_NAME")
-        self.run_id = os.environ.get("AZUREML_RUN_ID")
-        self.oid = os.environ.get("OID")
-        self.tid = os.environ.get("TID")
-
-        if not self.obo_access_token:
-            return None
-
-    def get_token(self, *scopes, **kwargs) -> AccessToken:
-        resource = _scopes_to_resource(*scopes)
-        request_url = (
-            f"https://{self.token_service_endpoint}/api/v1/proxy/obotoken"
-            f"/v1.0/subscriptions/{self.subscription_id}"
-            f"/resourceGroups/{self.resource_group}"
-            "/providers/Microsoft.MachineLearningServices/"
-            f"workspaces/{self.workspace_name}/getuseraccesstokenforspark"
-        )
-
-        request_body = {
-            "oboToken": self.obo_access_token,
-            "oid": self.oid,
-            "tid": self.tid,
-            "resource": resource,
-            "experimentName": self.experiment_name,
-            "runId": self.run_id,
-        }
-
-        headers = {
-            "Content-Type": "application/json;charset=utf-8",
-            "x-ms-proxy-host": self.obo_service_endpoint,
-            "obo-access-token": self.obo_access_token,
-            "x-ms-cluster-identifier": self.cluster_identifier,
-        }
-
-        print("Attempting to get token from AzureML OBO service.")
-        try:
-            response = _send_request(request_url, request_body, headers)
-            if response:
-                response_dict = json.loads(response.read().decode("utf-8"))
-                access_token = AccessToken(
-                    response_dict["token"], int(time.time()) + 3600
-                )
-                print("Finished getting token from AzureML OBO service.")
-                return access_token
-            else:
-                print(
-                    "Failed to get token from AzureML OBO service. "
-                    f"Invalid response: {response.__dict__}"
-                )
-                return None
-
-        except Exception as e:  # noqa: B902
-            print(f"Failing in auth while sending request: {response.__dict__}")
-            raise e
-
-
-def _send_request(url, data=None, headers=None, method=None):
-    args = {"url": url}
-    if data:
-        data = json.dumps(data)
-        args["data"] = data.encode("utf8")
-    if headers:
-        args["headers"] = headers
-    if method:
-        # the default is GET if data is None, POST otherwise
-        args["method"] = method
-
-    try:
-        return urlopen(Request(**args), timeout=5)
-    except:  # noqa: E722
-        raise Exception(f"Failed while sending a request to {url} with data {data}.")
-
-
-# END of copied code from azureml-featurestore
-
-
-class _APITokenManager(ABC):
-    def __init__(
-        self,
-        *,
-        auth_header,
-        **kwargs,
-    ):
-        self.credential = self.get_aad_credential()
-        self.token = None
-        self.auth_header = auth_header
-        self.last_refresh_time = None
-
-    def get_aad_credential(self):
-        return AzureMLHoboSparkOnBehalfOfCredential(
-            AZUREML_SYNAPSE_CLUSTER_IDENTIFIER=os.environ[
-                "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER"
-            ],
-            AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT=os.environ[
-                "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT"
-            ],
-            AZUREML_RUN_ID=os.environ["AZUREML_RUN_ID"],
-            AZUREML_RUN_TOKEN_EXPIRY=os.environ["AZUREML_RUN_TOKEN_EXPIRY"],
-        )
-
-    @abstractmethod
-    def get_token(self):
-        pass
-
-
-class _WorkspaceConnectionTokenManager(_APITokenManager):
+class _WorkspaceConnectionTokenManager(object):
     def __init__(
         self,
         *,
@@ -381,7 +187,9 @@ class _WorkspaceConnectionTokenManager(_APITokenManager):
         auth_header,
         **kwargs,
     ):
-        super().__init__(auth_header=auth_header)
+        self.credential = self.get_aad_credential()
+        self.token = None
+        self.auth_header = auth_header
 
         try:
             from azureml.dataprep.api._aml_auth._azureml_token_authentication import AzureMLTokenAuthentication
@@ -438,6 +246,18 @@ class _WorkspaceConnectionTokenManager(_APITokenManager):
         except Exception:
             tb = traceback.format_exc()
             raise Exception(f"Error encountered while attempting to authentication token: {tb}")
+
+    def get_aad_credential(self):
+        return AzureMLOnBehalfOfCredential(
+            AZUREML_SYNAPSE_CLUSTER_IDENTIFIER=os.environ[
+                "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER"
+            ],
+            AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT=os.environ[
+                "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT"
+            ],
+            AZUREML_RUN_ID=os.environ["AZUREML_RUN_ID"],
+            AZUREML_RUN_TOKEN_EXPIRY=os.environ["AZUREML_RUN_TOKEN_EXPIRY"],
+        )
 
     def get_api_version(self):
         return self.api_version
@@ -533,44 +353,6 @@ def run():
     request_args["model"] = args.model_deployment_name
     endpoint_args["model"] = args.model_deployment_name
 
-    input_metric_names = [m.strip() for m in args.metric_names.split(",")]
-
-    if not (set(input_metric_names) <= set(ALL_METRIC_NAMES)):
-        raise ValueError(
-            f"metric_names must be a comma-separated list of metric names "
-            f"and a subset of {ALL_METRIC_NAMES}, got {args.metric_names}."
-        )
-
-    # remove all but groundedness/fluency/coherence/relevance/similarity from metric names and
-    # remove duplicates
-    pruned_metric_names = [re.sub(r'^(.*?)(Groundedness|Fluency|Coherence|Relevance|Similarity)(.*?)$', r'\2', m) for
-                           m in input_metric_names]
-    metric_names = list(set(pruned_metric_names))
-
-    # Validate inputs
-    if args.temperature < 0.0 or args.temperature > 2.0:
-        raise ValueError(f"temperature must be between 0.0 and 2.0, inclusive; "
-                         f"got {args.temperature}.")
-    if args.top_p < 0.0 or args.top_p > 1.0:
-        raise ValueError(f"top_p must be between 0.0 and 1.0, inclusive; got {args.top_p}.")
-    if args.num_samples <= 0:
-        # TODO support multiple returned annotations
-        raise ValueError(f"num_samples must be 1, got {args.num_samples}.")
-    if args.frequency_penalty < -2.0 or args.frequency_penalty > 2.0:
-        raise ValueError(
-            "frequency_penalty must be between -2.0 and 2.0, inclusive; "
-            f"got {args.frequency_penalty}."
-        )
-    if args.presence_penalty < -2.0 or args.presence_penalty > 2.0:
-        raise ValueError(
-            f"presence_penalty must be between -2.0 and 2.0, inclusive; "
-            f"got {args.presence_penalty}."
-        )
-
-    if args.sample_rate <= 0.0 or args.sample_rate > 1.0:
-        raise ValueError(f"sample_rate must be larger than 0.0 and at most 1.0, "
-                         f"got {args.sample_rate}.")
-
     # TODO add validation for threshold args!!
     print(f"Running with args: {args}")
 
@@ -583,7 +365,7 @@ def run():
     }
 
     apply_annotation(
-        metric_names=metric_names,
+        metric_names=args.metric_names,
         production_dataset=args.production_dataset,
         histogram=args.histogram,
         samples_index=args.samples_index,
@@ -598,8 +380,64 @@ def run():
         completion_column_name=args.completion_column_name,
         context_column_name=args.context_column_name,
         ground_truth_column_name=args.ground_truth_column_name,
-        violations=violations,
+        violations=violations
     )
+
+
+def process_metric_names(metric_names):
+    """Process metric names, remove whitespace and prune."""
+    input_metric_names = [m.strip() for m in metric_names.split(",")]
+
+    if not (set(input_metric_names) <= set(ALL_METRIC_NAMES)):
+        raise InvalidInputError(
+            f"metric_names must be a comma-separated list of metric names "
+            f"and a subset of {ALL_METRIC_NAMES}, got {metric_names}."
+        )
+
+    # remove all but groundedness/fluency/coherence/relevance/similarity from metric names and
+    # remove duplicates
+    pruned_metric_names = [re.sub(r'^(.*?)(Groundedness|Fluency|Coherence|Relevance|Similarity)(.*?)$', r'\2', m) for
+                           m in input_metric_names]
+    metric_names = list(set(pruned_metric_names))
+    return metric_names
+
+
+def get_request_arg_or_default(arg, request_args):
+    """Get request arg or default."""
+    return request_args[arg] if arg in request_args else None
+
+
+def validate_parameters(request_args, sample_rate):
+    """Validate input parameters."""
+    temperature = get_request_arg_or_default("temperature", request_args)
+    top_p = get_request_arg_or_default("top_p", request_args)
+    num_samples = get_request_arg_or_default("num_samples", request_args)
+    frequency_penalty = get_request_arg_or_default("frequency_penalty", request_args)
+    presence_penalty = get_request_arg_or_default("presence_penalty", request_args)
+    if temperature is not None and (temperature < 0.0 or temperature > 2.0):
+        raise InvalidInputError(f"temperature must be between 0.0 and 2.0, inclusive; "
+                                f"got {temperature}.")
+    if top_p is not None and (top_p < 0.0 or top_p > 1.0):
+        raise InvalidInputError(
+            f"top_p must be between 0.0 and 1.0, inclusive; got {top_p}.")
+    if num_samples is not None and num_samples <= 0:
+        # TODO support multiple returned annotations
+        raise InvalidInputError(f"num_samples must be 1, got {num_samples}.")
+    if frequency_penalty is not None and (frequency_penalty < -2.0 or frequency_penalty > 2.0):
+        raise InvalidInputError(
+            "frequency_penalty must be between -2.0 and 2.0, inclusive; "
+            f"got {frequency_penalty}."
+        )
+    if presence_penalty is not None and (presence_penalty < -2.0 or presence_penalty > 2.0):
+        raise InvalidInputError(
+            f"presence_penalty must be between -2.0 and 2.0, inclusive; "
+            f"got {presence_penalty}."
+        )
+
+    if sample_rate <= 0.0 or sample_rate > 1.0:
+        raise InvalidInputError(
+            f"sample_rate must be larger than 0.0 and at most 1.0, "
+            f"got {sample_rate}.")
 
 
 def apply_annotation(
@@ -619,9 +457,12 @@ def apply_annotation(
     context_column_name,
     ground_truth_column_name,
     samples_index,
-    violations,
+    violations
 ):
     """Apply annotation to all samples in the production_dataset."""
+    metric_names = process_metric_names(metric_names)
+    validate_parameters(request_args, sample_rate)
+
     if "chat_history" in [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]:
         raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
                                   "column. ")
@@ -633,29 +474,47 @@ def apply_annotation(
         set(metric_names))))
     for col_name in [prompt_column_name, completion_column_name]:
         if col_name not in production_df.columns and qa_required:
-            raise ValueError(f"production_dataset must have column: {col_name}")
+            raise InvalidInputError(f"production_dataset must have column: {col_name}")
     # Question, answer, context required for relevance and groundedness
     qac_required = len(list(set(QAC_METRIC_NAMES).intersection(
         set(metric_names))))
     if qac_required and context_column_name not in production_df.columns:
-        raise ValueError(f"production_dataset must have column: {context_column_name}")
+        raise InvalidInputError(f"production_dataset must have column: {context_column_name}")
     # Question, answer, ground-truth required for similarity
     if SIMILARITY in metric_names and ground_truth_column_name not in production_df.columns:
-        raise ValueError(f"production_dataset must have column: {ground_truth_column_name}")
+        raise InvalidInputError(f"production_dataset must have column: {ground_truth_column_name}")
 
     column_names = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
     if len(column_names) != len(set(column_names)):
-        raise ValueError("Detected duplicate specified columns. Column name input cannot be the same. Please ensure "
-                         f"that the column input specified is unique.\nReceived prompt_column_name: "
-                         f"{prompt_column_name}\ncompletion_column_name: {completion_column_name}\n"
-                         f"context_column_name: {context_column_name}\nground_truth_column_name: "
-                         f"{ground_truth_column_name}")
+        raise InvalidInputError(
+            "Detected duplicate specified columns. Column name input cannot be the same. Please ensure "
+            f"that the column input specified is unique.\nReceived prompt_column_name: "
+            f"{prompt_column_name}\ncompletion_column_name: {completion_column_name}\n"
+            f"context_column_name: {context_column_name}\nground_truth_column_name: "
+            f"{ground_truth_column_name}")
+
+    columns_to_select = [prompt_column_name, completion_column_name]
+    renamed_columns = [PROMPT, COMPLETION]
+    if context_column_name in production_df.columns:
+        columns_to_select.append(context_column_name)
+        renamed_columns.append(CONTEXT)
+    if ground_truth_column_name in production_df.columns:
+        columns_to_select.append(ground_truth_column_name)
+        renamed_columns.append(GROUND_TRUTH)
+    has_correlation_id = CORRELATION_ID in production_df.columns
+    if has_correlation_id:
+        columns_to_select.append(CORRELATION_ID)
+        renamed_columns.append(CORRELATION_ID)
+
+    # select the relevant column names
+    production_df = production_df.select(columns_to_select)
 
     # rename columns to prompt, completion, context, ground truth to match metaprompt data
     production_df = (production_df.withColumnRenamed(prompt_column_name, PROMPT)
                      .withColumnRenamed(completion_column_name, COMPLETION)
                      .withColumnRenamed(context_column_name, CONTEXT)
                      .withColumnRenamed(ground_truth_column_name, GROUND_TRUTH))
+    production_df = production_df.select(renamed_columns)
     # Sampling
     production_df_sampled = production_df.sample(withReplacement=False, fraction=sample_rate)
     if production_df_sampled.count() == 0:
@@ -667,8 +526,6 @@ def apply_annotation(
 
     production_df = production_df_sampled
     row_count = production_df.count()
-    production_df_with_index = production_df_sampled.withColumn("id", row_number()
-                                                                .over(Window.orderBy(monotonically_increasing_id()))-1)
 
     spark = io_utils.init_spark()
     spark_conf = spark.sparkContext.getConf()
@@ -754,6 +611,9 @@ def apply_annotation(
                 os.environ[env_var_key] = env_var_value
 
             rows = []
+            correlation_ids = None
+            if has_correlation_id:
+                correlation_ids = batch[CORRELATION_ID]
             for index, row in batch.iterrows():
                 qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
                 if has_context:
@@ -770,8 +630,8 @@ def apply_annotation(
                 data_mapping={
                     "questions": PROMPT,
                     "contexts": CONTEXT,
-                    "y_pred": COMPLETION,
-                    "y_test": GROUND_TRUTH
+                    "answer": COMPLETION,
+                    "ground_truth": GROUND_TRUTH
                 },
                 model_config={
                     "api_version": api_version,
@@ -784,8 +644,8 @@ def apply_annotation(
                 output_path=output_dir.name
             )
             tabular_result = pd.read_json(os.path.join(output_dir.name, "eval_results.jsonl"), lines=True)
-            # add index column
-            tabular_result = tabular_result.reset_index(names=INDEX)
+            if correlation_ids is not None:
+                tabular_result[CORRELATION_ID] = correlation_ids
             # rename metric columns
             for column_name in metrics_list:
                 tabular_result.rename(
@@ -797,6 +657,9 @@ def apply_annotation(
     def mock_metrics_batch(iterator):
         for batch in iterator:
             rows = []
+            correlation_ids = None
+            if has_correlation_id:
+                correlation_ids = batch[CORRELATION_ID]
             for index, row in batch.iterrows():
                 qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
                 if has_context:
@@ -808,12 +671,11 @@ def apply_annotation(
                     qca[metric_name_compact] = 1
                 rows.append(qca)
             tabular_result = pd.DataFrame(rows)
-            # add index column
-            tabular_result = tabular_result.reset_index(names=INDEX)
+            if correlation_ids is not None:
+                tabular_result[CORRELATION_ID] = correlation_ids
             yield tabular_result
 
     schema_fields = [
-        StructField(INDEX, IntegerType(), True),
         StructField(PROMPT, StringType(), True)
     ]
     if has_context:
@@ -821,6 +683,8 @@ def apply_annotation(
     schema_fields.append(StructField(COMPLETION, StringType(), True))
     if has_ground_truth:
         schema_fields.append(StructField(GROUND_TRUTH, StringType(), True))
+    if has_correlation_id:
+        schema_fields.append(StructField(CORRELATION_ID, StringType(), True))
     for metric_name in metric_names:
         metric_name_compact = get_compact_metric_name(metric_name)
         schema_fields.append(StructField(metric_name_compact, IntegerType(), True))
@@ -862,17 +726,18 @@ def apply_annotation(
         print(metrics_pdf)
 
         # create violations table if there are violations
-        violations_df = annotations_df.select(
-            [metric_name_compact, INDEX]).filter(
-                (col(metric_name_compact) < metric_threshold_value) & (col(INDEX) != -1))
+        violation_columns = renamed_columns.copy()
+        violation_columns.append(metric_name_compact)
+        violations_df = annotations_df.select(violation_columns).filter(
+                col(metric_name_compact) < metric_threshold_value)
         if violations_df.count() > 0:
-            violations_df_full = production_df_with_index.join(violations_df,
-                                                               production_df_with_index.id == violations_df.index,
-                                                               "inner").drop(violations_df.index).drop(
-                                                                   production_df_with_index.id).withColumnRenamed(
-                                                                       'rating', metric_name_compact)
+            # rename columns back to original names
+            violations_df = (violations_df.withColumnRenamed(PROMPT, prompt_column_name)
+                             .withColumnRenamed(COMPLETION, completion_column_name)
+                             .withColumnRenamed(CONTEXT, context_column_name)
+                             .withColumnRenamed(GROUND_TRUTH, ground_truth_column_name))
             run_id = os.environ.get("AZUREML_RUN_ID")
-            io_utils.save_spark_df_as_mltable(violations_df_full, violations[metric_name_compact.lower()])
+            io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()])
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
                                        GROUP_DIMENSION: "",

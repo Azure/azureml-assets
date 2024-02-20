@@ -24,7 +24,8 @@ RUN apt-get update && \
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/local/bin/pip3.10 1
 
-RUN pip3 install torch==2.1.1 --index-url https://download.pytorch.org/whl/cu121
+# Needed for megablocks
+RUN pip3 install torch~=2.1.2 --index-url https://download.pytorch.org/whl/cu121
 
 COPY . .
 
