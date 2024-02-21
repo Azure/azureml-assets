@@ -22,6 +22,8 @@ def run():
 
     production_data_df = try_read_mltable_in_spark_with_error(args.production_dataset, "production_dataset")
 
+    # TODO: Add input schema adaptor logic. For now just pass data through.
+
     save_spark_df_as_mltable(production_data_df, args.adapted_production_data)
 
 
