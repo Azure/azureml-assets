@@ -1,25 +1,38 @@
-This `stabilityai-stable-diffusion-xl-base-1.0` model is fine-tuned from [stable-diffusion-xl-base-1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0) 
+[SDXL](https://arxiv.org/abs/2307.01952) consists of an [ensemble of experts](https://arxiv.org/abs/2211.01324) pipeline for latent diffusion: 
+In a first step, the base model (available here: https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0) is used to generate (noisy) latents, which are then further processed with a refinement model specialized for the final denoising steps. Note that the base model can be used as a standalone module.
 
-The SD-XL 1.0-base Model, developed by Stability AI, is a Diffusion-based text-to-image generative model. It utilizes a two-stage pipeline for latent diffusion, consisting of a base model and a refinement model. The base model generates noisy latents, which are then processed by a refinement model for final denoising. Alternatively, a two-stage pipeline involves using a specialized high-resolution model and applying the SDEdit technique to the latents generated in the first step.
+Alternatively, we can use a two-stage pipeline as follows:
+First, the base model is used to generate latents of the desired output size. In the second step, we use a specialized high-resolution model and apply a technique called SDEdit (https://arxiv.org/abs/2108.01073, also known as "img2img") to the latents generated in the first step, using the same prompt. This technique is slightly slower than the first one, as it requires more function evaluations.
 
-The model is available on GitHub, and for research purposes, Stability AI recommends their generative-models repository. The model is licensed under the CreativeML Open RAIL++-M License. It is designed for various research areas, such as generating artworks, educational tools, and understanding the limitations and biases of generative models. However, it is not intended for factual or true representations of people or events.
+The model is intended for research purposes only. Possible research areas and tasks include
 
-The model has limitations, including not achieving perfect photorealism, struggling with tasks involving compositionality, and facing challenges with rendering faces and legible text. The autoencoding part of the model is lossy, and there is a potential for reinforcing social biases in generated content. The model's deployment is restricted to safe applications, and certain use cases, like generating factual content, are considered out-of-scope for its abilities.
+- Generation of artworks and use in design and other artistic processes.
+- Applications in educational or creative tools.
+- Research on generative models.
+- Safe deployment of models which have the potential to generate harmful content.
+- Probing and understanding the limitations and biases of generative models.
 
-You can find more examples in optimum https://huggingface.co/docs/optimum/main/en/onnxruntime/usage_guides/models#stable-diffusion-xl
+# Evaluation Results
 
-### Misuse and Malicious Use
+This <a href="https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/comparison.png" target="_blank">chart</a> evaluates user preference for SDXL (with and without refinement) over SDXL 0.9 and Stable Diffusion 1.5 and 2.1. The SDXL base model performs significantly better than the previous variants, and the model combined with the refinement module achieves the best overall performance.
 
-Using the model to generate content that is cruel to individuals is a misuse of this model. This includes, but is not limited to:
+# Limitations and Biases
 
-- Generating demeaning, dehumanizing, or otherwise harmful representations of people or their environments, cultures, religions, etc.
-- Intentionally promoting or propagating discriminatory content or harmful stereotypes.
-- Impersonating individuals without their consent.
-- Sexual content without consent of the people who might see it.
-- Mis- and disinformation
-- Representations of egregious violence and gore
-- Sharing of copyrighted or licensed material in violation of its terms of use.
-- Sharing content that is an alteration of copyrighted or licensed material in violation of its terms of use.
+## Limitations
+
+- The model does not achieve perfect photorealism
+- The model cannot render legible text
+- The model struggles with more difficult tasks which involve compositionality, such as rendering an image corresponding to “A red cube on top of a blue sphere”
+- Faces and people in general may not be generated properly.
+- The autoencoding part of the model is lossy.
+
+## Bias
+
+While the capabilities of image generation models are impressive, they can also reinforce or exacerbate social biases.
+
+## Out-of-Scope Use
+
+The model was not trained to be factual or true representations of people or events, and therefore using the model to generate such content is out-of-scope for the abilities of this model.
 
 # License
 
@@ -43,13 +56,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 
 # Sample input and output
 
-### Supported Parameters
-
-- num_inference_steps: The number of de-noising steps. More de-noising steps usually lead to a higher quality image at the expense of slower inference, defaults to 50.
-- guidance_scale: A higher guidance scale value encourages the model to generate images closely linked to the text `prompt` at the expense of lower image quality. Guidance scale is enabled when `guidance_scale > 1`, defaults to 7.5.
-
-> These `parameters` are optional inputs. If you need support for new parameters, please file a support ticket.
-
 ### Sample input
 
 ```json
@@ -58,10 +64,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
         "columns": ["prompt"],
         "data": ["a photograph of an astronaut riding a horse"],
         "index": [0],
-        "parameters": {
-            "num_inference_steps": 50,
-            "guidance_scale": 7.5
-        }
     }
 }
 ```
@@ -81,8 +83,8 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 > Note:
 >
 > - "image" string is in base64 format.
-> - The `stabilityai-stable-diffusion-xl-base-1.0` model doesn't check for the NSFW content in generated image. We highly recommend to use the model with <a href="https://learn.microsoft.com/en-us/azure/ai-services/content-safety/studio-quickstart" target="_blank">Azure AI Content Safety (AACS)</a>. Please refer sample <a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image" target="_blank">online</a>  and <a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" target="_blank">batch</a> notebooks for AACS integrated deployments.
+> - The `stabilityai-stable-diffusion-xl-base-1-0` model doesn't check for the NSFW content in generated image. We highly recommend to use the model with <a href="https://learn.microsoft.com/en-us/azure/ai-services/content-safety/studio-quickstart" target="_blank">Azure AI Content Safety (AACS)</a>. Please refer sample <a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image" target="_blank">online</a>  and <a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" target="_blank">batch</a> notebooks for AACS integrated deployments.
 
 #### Visualization for the prompt - "a photograph of an astronaut riding a horse"
 
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_stabilityai_stable_diffusion_2_1.png" alt="stabilityai_stable_diffusion_2_1 visualization">
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_stabilityai_stable_diffusion_xl_base-1-0.png" alt="stabilityai_stable_diffusion_2_1 visualization">
