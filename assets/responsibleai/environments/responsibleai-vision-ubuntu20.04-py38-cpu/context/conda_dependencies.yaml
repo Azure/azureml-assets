@@ -12,14 +12,14 @@ dependencies:
   - captum
   - cpuonly
   - pip:
-    - responsibleai~=0.33.0
-    - raiwidgets~=0.33.0
+    - ml-wrappers~=0.5.4
+    - responsibleai~=0.34.1
+    - raiwidgets~=0.34.1
     - mlflow
     - markupsafe<=2.1.2
     - itsdangerous<=2.1.2
     - vision_explanation_methods
-    - ml_wrappers
-    - responsibleai-vision==0.3.5
+    - responsibleai-vision==0.3.6
     - opencv-python==4.3.0.36
     - click<8.0.0
     - mltable==1.5.0

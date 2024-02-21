@@ -31,7 +31,7 @@ class InputNotFoundCategory(Enum):
     GENERAL = 10
 
 
-def init_spark():
+def init_spark() -> SparkSession:
     """Get or create spark session."""
     spark = SparkSession.builder.appName("AccessParquetFiles").getOrCreate()
     return spark

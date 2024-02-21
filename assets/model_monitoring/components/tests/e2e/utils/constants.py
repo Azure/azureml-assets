@@ -11,6 +11,7 @@ COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR = (
 )
 COMPONENT_NAME_CREATE_MANIFEST = "model_monitor_create_manifest"
 COMPONENT_NAME_MDC_PREPROCESSOR = "model_data_collector_preprocessor"
+COMPONENT_NAME_GENAI_PREPROCESSOR = "genai_mdc_preprocessor"
 COMPONENT_NAME_METRIC_OUTPUTTER = "model_monitor_metric_outputter"
 COMPONENT_NAME_DATA_JOINER = "model_monitor_data_joiner"
 COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR = 'generation_safety_quality_signal_monitor'
@@ -127,3 +128,6 @@ DATA_ASSET_GENAI_PREPROCESSOR_TRACE_AGGREGATED = 'azureml:mltable_aggregated_tra
 DATA_ASSET_GSQ_INPUT = 'azureml:mltable_gsq_input:1'
 
 
+DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS = (
+    "azureml:uri_folder_genai_raw_log_model_inputs:1"
+)
