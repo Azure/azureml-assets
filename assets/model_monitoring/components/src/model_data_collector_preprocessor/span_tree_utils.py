@@ -19,15 +19,26 @@ class SpanTreeNode:
         self._span_row = span_row
         self._children = []
 
+    def _try_get_row_attribute(self, attribute_key: str):
+        """Wrap span row retrieval to catch access errors."""
+        try:
+            return self._span_row[attribute_key]
+        except AnalysisException as ex:
+            print(
+                "Failed to retrieve row attribute with error: " + 
+                str(ex)
+            )
+            return None
+
     @property
     def span_id(self) -> str:
         """Get the span id."""
-        return self._span_row.span_id
+        return self._try_get_row_attribute("span_id")  # type: ignore
 
     @property
     def parent_id(self) -> str:
         """Get the span's parent id."""
-        return self._span_row.parent_id
+        return self._try_get_row_attribute("parent_id")  # type: ignore
 
     @property
     def children(self) -> List["SpanTreeNode"]:
@@ -40,9 +51,54 @@ class SpanTreeNode:
         self._children = value
 
     @property
-    def span_row(self) -> Row:
-        """Get the span's internal row."""
-        return self._span_row
+    def span_type(self) -> str:
+        """Get the span's type."""
+        return self._try_get_row_attribute("span_type")  # type: ignore
+
+    @property
+    def start_time(self) -> datetime:
+        """Get the span's start_time."""
+        return self._try_get_row_attribute("start_time")  # type: ignore
+
+    @property
+    def end_time(self) -> datetime:
+        """Get the span's end_time."""
+        return self._try_get_row_attribute("end_time")  # type: ignore
+
+    @property
+    def attributes(self) -> str:
+        """Get the span's attributes."""
+        return self._try_get_row_attribute("attributes")  # type: ignore
+
+    @property
+    def input(self) -> str:
+        """Get the span's input."""
+        return self._try_get_row_attribute("input")  # type: ignore
+
+    @property
+    def output(self) -> str:
+        """Get the span's output."""
+        return self._try_get_row_attribute("output")  # type: ignore
+
+    @property
+    def status(self) -> str:
+        """Get the span's status."""
+        return self._try_get_row_attribute("status")  # type: ignore
+
+    @property
+    def framework(self) -> str:
+        """Get the span's framework."""
+        return self._try_get_row_attribute("framework")  # type: ignore
+
+    @property
+    def name(self) -> str:
+        """Get the span's name."""
+        return self._try_get_row_attribute("name")  # type: ignore
+
+    @property
+    def trace_id(self) -> str:
+        """Get the span's trace id."""
+        return self._try_get_row_attribute("trace_id")  # type: ignore
 
     @classmethod
     def create_node_from_json_str(cls, json_str: str) -> "SpanTreeNode":
@@ -66,7 +122,7 @@ class SpanTreeNode:
 
     def show(self, indent: int = 0) -> None:
         """Print the current span in a formatted syntax to stdout."""
-        print(f"{' '*indent}[{self.span_row.span_id}({self.span_row.start_time}, {self.span_row.end_time})]")
+        print(f"{' '*indent}[{self.span_id}({self.start_time}, {self.end_time})]")
         for c in self.children:
             c.show(indent + 4)
 
@@ -78,15 +134,14 @@ class SpanTreeNode:
 
     def __iter__(self) -> Iterator["SpanTreeNode"]:
         """Iterate over current span and child spans."""
-        for child_span in self._children:
+        for child_span in self._children or []:
             for span in child_span:
-                # print(f"iter func: child_span: {child_span}, span: {span}.")
                 yield span
         yield self
 
     def __lt__(self, other: "SpanTreeNode") -> bool:
         """Compare by end_time in bisect.insort() for python3.8."""
-        return self.span_row.end_time < other.span_row.end_time
+        return self.end_time < other.end_time
 
 
 class SpanTree:

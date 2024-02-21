@@ -52,7 +52,7 @@ class TestSpanTreeUtilities:
         # Test the __iter__ functionality also
         curr_end_time = datetime.fromisoformat("2024-02-12T00:00:00")
         for span in tree:
-            next_end_time = span.span_row["end_time"]
+            next_end_time = span.end_time
             assert curr_end_time < next_end_time
             curr_end_time = next_end_time
 
@@ -89,29 +89,29 @@ class TestSpanTreeUtilities:
 
         assert "1" == tree.root_span.span_id
         assert tree.root_span.parent_id is None
-        assert datetime(2024, 2, 5, 0, 8, 0) == tree.root_span.span_row.end_time
-        assert datetime(2024, 2, 5, 0, 1, 0) == tree.root_span.span_row.start_time
+        assert datetime(2024, 2, 5, 0, 8, 0) == tree.root_span.end_time
+        assert datetime(2024, 2, 5, 0, 1, 0) == tree.root_span.start_time
         assert 2 == len(tree.root_span.children)
 
         first_child = tree.root_span.children[0]
         assert "2" == first_child.span_id
         assert "1" == first_child.parent_id
-        assert datetime(2024, 2, 5, 0, 5, 0) == first_child.span_row.end_time
-        assert datetime(2024, 2, 5, 0, 2, 0) == first_child.span_row.start_time
+        assert datetime(2024, 2, 5, 0, 5, 0) == first_child.end_time
+        assert datetime(2024, 2, 5, 0, 2, 0) == first_child.start_time
         assert 1 == len(first_child.children)
 
         second_child = first_child.children[0]
         assert "3" == second_child.span_id
         assert "2" == second_child.parent_id
-        assert datetime(2024, 2, 5, 0, 4, 0) == second_child.span_row.end_time
-        assert datetime(2024, 2, 5, 0, 3, 0) == second_child.span_row.start_time
+        assert datetime(2024, 2, 5, 0, 4, 0) == second_child.end_time
+        assert datetime(2024, 2, 5, 0, 3, 0) == second_child.start_time
         assert 0 == len(second_child.children)
 
         third_child = tree.root_span.children[1]
         assert "4" == third_child.span_id
         assert "1" == third_child.parent_id
-        assert datetime(2024, 2, 5, 0, 7, 0) == third_child.span_row.end_time
-        assert datetime(2024, 2, 5, 0, 6, 0) == third_child.span_row.start_time
+        assert datetime(2024, 2, 5, 0, 7, 0) == third_child.end_time
+        assert datetime(2024, 2, 5, 0, 6, 0) == third_child.start_time
         assert 0 == len(third_child.children)
 
     def test_span_tree_node_children(self):
@@ -126,19 +126,19 @@ class TestSpanTreeUtilities:
 
         parent_node.insert_child(node30)
         assert len(parent_node.children) == 1
-        assert node30.span_row['end_time'] == parent_node.children[0].span_row['end_time']
+        assert node30.end_time == parent_node.children[0].end_time
 
         parent_node.insert_child(node10)
         assert len(parent_node.children) == 2
-        assert node10.span_row['end_time'] == parent_node.children[0].span_row['end_time']
+        assert node10.end_time == parent_node.children[0].end_time
 
         parent_node.insert_child(node20)
         assert len(parent_node.children) == 3
-        assert node20.span_row['end_time'] == parent_node.children[1].span_row['end_time']
+        assert node20.end_time == parent_node.children[1].end_time
 
         parent_node.insert_child(node40)
         assert len(parent_node.children) == 4
-        assert node40.span_row['end_time'] == parent_node.children[-1].span_row['end_time']
+        assert node40.end_time == parent_node.children[-1].end_time
 
     @pytest.mark.parametrize(
             "expected_children_arrays",
@@ -160,10 +160,15 @@ class TestSpanTreeUtilities:
             "expected_row",
             [
                 (Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
-                     end_time=datetime(2024, 2, 12, 1, 40, 0))),
+                     end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK", attributes="{\"inputs\": \"null\"}",
+                     span_type="SpanKind.INTERNAL", input="{\"context\":\"...\", \"ground_truth\":\"...\"}", output="ex...", 
+                     name="exampleName", framework="LLM")),
                 (Row(span_id="00", parent_id="0", start_time=datetime(2024, 2, 12, 0, 5, 0),
-                     end_time=datetime(2024, 2, 12, 0, 30, 0))),
-                (Row(span_id=None, parent_id=None, start_time=None, end_time=None))
+                     end_time=datetime(2024, 2, 12, 0, 30, 0), trace_id="1", status="", attributes="{}",
+                     span_type="SpanKind.INTERNAL", input="{}", output="{}", 
+                     name="", framework="")),
+                (Row(span_id=None, parent_id=None, start_time=None, end_time=None, trace_id=None, status=None, attributes=None,
+                     span_type=None, input=None, output=None, name=None, framework=None)),
             ]
     )
     def test_span_tree_node_other_properties(self, expected_row: Row):
@@ -171,9 +176,17 @@ class TestSpanTreeUtilities:
         node = SpanTreeNode(expected_row)
         assert expected_row.span_id == node.span_id
         assert expected_row.parent_id == node.parent_id
-        assert expected_row == node.span_row
-
-    def test_span_tree_node_create_from_json(self):
+        assert expected_row.trace_id == node.trace_id
+        assert expected_row.status == node.status
+        assert expected_row.attributes == node.attributes
+        assert expected_row.start_time == node.start_time
+        assert expected_row.end_time == node.end_time
+        assert expected_row.span_type == node.span_type
+        assert expected_row.input == node.input
+        assert expected_row.output == node.output
+        assert expected_row.name == node.name
+        assert expected_row.framework == node.framework
+        assert expected_row == node._span_row
         """Test scenario for creating new node from json string."""
         json_string = ""
         try:
@@ -194,8 +207,7 @@ class TestSpanTreeUtilities:
         node = SpanTreeNode.create_node_from_json_str(json_string)
         assert node.span_id == "0x7fd179134fb9e709"
         assert node.parent_id is None
-        assert node.span_row == expected_row
-        assert node.children == expected_children
+        assert node._span_row == expected_row
 
     @pytest.mark.parametrize(
             "expected_row, expected_children",
@@ -232,4 +244,4 @@ class TestSpanTreeUtilities:
             if keyname == "children":
                 assert actual_dict[keyname] == expected_children
             else:
-                assert actual_dict[keyname] == node.span_row[keyname]
+                assert actual_dict[keyname] == node._span_row[keyname]
