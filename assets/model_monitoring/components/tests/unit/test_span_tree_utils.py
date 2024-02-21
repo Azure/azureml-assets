@@ -77,14 +77,12 @@ class TestSpanTreeUtilities:
         # |-> 2 -> 3
         # |-> 4
         json_string = '{"parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:' + \
-            '01:00", "end_time": "2024-02-05T00:08:00", "children": ["{\\"parent_id\\": \\"1\\", \\"span_id\\"' + \
-            ': \\"2\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:02:00\\", \\"end_time\\"' + \
-            ': \\"2024-02-05T00:05:00\\", \\"children\\": [\\"{\\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\"' + \
-            ', \\\\\\"span_id\\\\\\": \\\\\\"3\\\\\\", \\\\\\"span_type\\\\\\": \\\\\\"llm\\\\\\", \\\\\\"' + \
-            'start_time\\\\\\": \\\\\\"2024-02-05T00:03:00\\\\\\", \\\\\\"end_time\\\\\\": \\\\\\"2024-02-05' + \
-            'T00:04:00\\\\\\", \\\\\\"children\\\\\\": []}\\"]}", "{\\"parent_id\\": \\"1\\", \\"span_id\\":' + \
-            ' \\"4\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:06:00\\", \\"end_time\\"' + \
-            ': \\"2024-02-05T00:07:00\\", \\"children\\": []}"]}'
+            '01:00", "end_time": "2024-02-05T00:08:00", "children": [{"parent_id": "1", "span_id"' + \
+            ': "2", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "end_time"' + \
+            ': "2024-02-05T00:05:00", "children": [{"parent_id": "2", "span_id": "3", "span_type": "llm", "' + \
+            'start_time": "2024-02-05T00:03:00", "end_time": "2024-02-05' + \
+            'T00:04:00", "children": []}]}, {"parent_id": "1", "span_id": "4", "span_type": "llm", ' + \
+            '"start_time": "2024-02-05T00:06:00", "end_time": "2024-02-05T00:07:00", "children": []}]}'
         tree = SpanTree.create_tree_from_json_string(json_string)
 
         assert "1" == tree.root_span.span_id
@@ -187,27 +185,50 @@ class TestSpanTreeUtilities:
         assert expected_row.name == node.name
         assert expected_row.framework == node.framework
         assert expected_row == node._span_row
+
+    def test_span_tree_node_create_from_dict(self):
         """Test scenario for creating new node from json string."""
-        json_string = ""
+        json_dict = {}
         try:
-            SpanTreeNode.create_node_from_json_str(json_string)
+            SpanTreeNode.create_node_from_dict(json_dict)
             assert False
         except Exception:
             assert True
 
-        json_string = '{"parent_id":null,"span_id":"0x7fd179134fb9e709","span_type":"SpanKind.INTERNAL",' + \
-            '"start_time":"2024-02-05T15:00:13.789782","end_time":"2024-02-05T15:00:18.791564",' + \
-            '"children":["fakejsonchild", "fakejsonchild2"]}'
+        json_dict = None
+        try:
+            SpanTreeNode.create_node_from_dict(json_dict)
+            assert False
+        except Exception:
+            assert True
+
+        json_dict = {
+            "parent_id": None, "span_id": "0x7fd179134fb9e709", "span_type": "SpanKind.INTERNAL",
+            "start_time": "2024-02-05T15:00:13.789782", "end_time": "2024-02-05T15:00:18.791564",
+            "children": [
+                {"name": "fakejsonchild", "start_time": "2024-02-05T15:00:14", "end_time": "2024-02-05T15:00:15"},
+                {"name": "fakejsonchild2", "start_time": "2024-02-05T15:00:16", "end_time": "2024-02-05T15:00:17"}
+            ]
+        }
         expected_row = Row(
             parent_id=None, span_id="0x7fd179134fb9e709", span_type="SpanKind.INTERNAL",
             start_time=datetime(2024, 2, 5, 15, 0, 13, 789782), end_time=datetime(2024, 2, 5, 15, 0, 18, 791564),
         )
-        expected_children = ["fakejsonchild", "fakejsonchild2"]
+        expected_children = [
+            SpanTreeNode(Row(
+                **{"name": "fakejsonchild", "start_time": datetime(2024, 2, 5, 15, 0, 14),
+                   "end_time": datetime(2024, 2, 5, 15, 0, 15)})),
+            SpanTreeNode(Row(
+                **{"name": "fakejsonchild2", "start_time": datetime(2024, 2, 5, 15, 0, 16),
+                   "end_time": datetime(2024, 2, 5, 15, 0, 17)})),
+        ]
 
-        node = SpanTreeNode.create_node_from_json_str(json_string)
+        node = SpanTreeNode.create_node_from_dict(json_dict)
         assert node.span_id == "0x7fd179134fb9e709"
         assert node.parent_id is None
         assert node._span_row == expected_row
+        assert node.children[0]._span_row == expected_children[0]._span_row
+        assert node.children[1]._span_row == expected_children[1]._span_row
 
     @pytest.mark.parametrize(
             "expected_row, expected_children",
@@ -220,7 +241,12 @@ class TestSpanTreeUtilities:
                         start_time=datetime(2024, 2, 12, 0, 0, 1),
                         end_time=datetime(2024, 2, 12, 1, 40, 0),
                     ),
-                    ["fake child"]
+                    [SpanTreeNode(Row(**{
+                        "span_id":"1",
+                        "parent_id":"0",
+                        "start_time": datetime(2024, 2, 12, 0, 0, 2),
+                        "end_time": datetime(2024, 2, 12, 0, 0, 5)
+                    }))]
                 ),
                 (
                     Row(
@@ -243,5 +269,8 @@ class TestSpanTreeUtilities:
             assert keyname in actual_dict
             if keyname == "children":
                 assert actual_dict[keyname] == expected_children
+            elif keyname == "start_time" or keyname == "end_time":
+                expected_datetime: datetime = node._span_row[keyname]
+                assert actual_dict[keyname] == expected_datetime.isoformat()
             else:
                 assert actual_dict[keyname] == node._span_row[keyname]
