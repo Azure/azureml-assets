@@ -15,6 +15,9 @@ from pyspark.sql.types import (
     StringType,
     ArrayType
 )
+from shared_utilities.span_tree_utils import SpanTree
+from shared_utilities.gsq import apply_annotation
+
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     try_read_mltable_in_spark_with_error,
@@ -34,6 +37,7 @@ from shared_utilities.llm_utils import (
     _request_api,
     get_openai_request_args
 )
+
 
 N_SAMPLES = 100
 
@@ -181,37 +185,72 @@ def assign_good_topic(topic_list, question, metrics_score, topics_dict):
             topic_list = _append_value(topic_list, topic)
     return topic_list
 
-
+# Todo: temp usage, need to remove later
 @udf(returnType=StructType([
+    StructField("question", StringType()),
+    StructField("answer", StringType()),
+    StructField("text", StringType())]))
+def Get_gsq_input(input, output, root_span):
+    try:
+        tree = SpanTree.create_tree_from_json_string(root_span)
+        text_builder = ""
+        for span in tree:
+            if span.span_row["name"] == "vector_lookup":
+                span_id = span.span_row["span_id"]
+                lookup_input = json.loads(span.span_row["input"])
+                index_content = lookup_input["mlindex_content"]
+                index_payload = yaml.safe_load(index_content)
+                index_id = index_payload['self']['asset_id']
+                queries = lookup_input["queries"]
+                lookup_outputs = json.loads(span.span_row["output"])
+                if isinstance(queries, list):
+                    query = queries[0]
+                    top_k_list = lookup_outputs[0]
+                    for lookup_output in top_k_list:
+                        text_builder = text_builder + lookup_output["text"]
+                elif isinstance(queries, str):
+                    for lookup_output in lookup_outputs:
+                        text_builder = text_builder + lookup_output["text"]
+                break
+        return json.loads(input)["question"], json.loads(output)["output"], text_builder
+    except KeyError as e:
+        print("Required field not found: ", e)
+        return None
+
+
+@udf(returnType=ArrayType(StructType([
     StructField("span_id", StringType()),
     StructField("index_content", StringType()),
     StructField("index_id", StringType()),
-    StructField("query_text_pairs", ArrayType(StructType([StructField("query", StringType()),
-                                              StructField("text", StringType())])))]))
-def parse_debugging_info(debugging_info):
+    StructField("query", StringType()),
+    StructField("text", StringType())])))
+def parse_debugging_info(root_span):
     try:
-        # Todo: utilize the span tree iterator to find all the "vector_lookup" span
-        vector_lookup = json.loads(debugging_info)
-        index_content = vector_lookup["input"]["mlindex_content"]
-        index_payload = yaml.safe_load(index_content)
-        index_id = index_payload['self']['asset_id']
-        queries = vector_lookup["input"]["queries"]
-        lookup_outputs = vector_lookup["output"]
-        query_text_output = []
-        if isinstance(queries, list):
-            for i in range(len(queries)):
-                query = queries[i]
-                top_k_list = lookup_outputs[i]
-                text_builder = ""
-                for lookup_output in top_k_list:
-                    text_builder = text_builder + lookup_output["text"]
-                query_text_output.append((query, text_builder))
-        elif isinstance(queries, str):
-            text_builder = ""
-            for lookup_output in lookup_outputs:
-                    text_builder = text_builder + lookup_output["text"]
-            query_text_output.append((queries, text_builder))
-        return "span_id", index_content, index_id, query_text_output
+        tree = SpanTree.create_tree_from_json_string(root_span)
+        spans_array = []
+        for span in tree:
+            if span.span_row["name"] == "vector_lookup":
+                span_id = span.span_row["span_id"]
+                lookup_input = json.loads(span.span_row["input"])
+                index_content = lookup_input["mlindex_content"]
+                index_payload = yaml.safe_load(index_content)
+                index_id = index_payload['self']['asset_id']
+                queries = lookup_input["queries"]
+                lookup_outputs = json.loads(span.span_row["output"])
+                if isinstance(queries, list):
+                    for i in range(len(queries)):
+                        query = queries[i]
+                        top_k_list = lookup_outputs[i]
+                        text_builder = ""
+                        for lookup_output in top_k_list:
+                            text_builder = text_builder + lookup_output["text"]
+                        spans_array.append((span_id, index_content, index_id, query, text_builder))
+                elif isinstance(queries, str):
+                    text_builder = ""
+                    for lookup_output in lookup_outputs:
+                            text_builder = text_builder + lookup_output["text"]
+                    spans_array.append((span_id, index_content, index_id, queries, text_builder))
+        return spans_array
     except KeyError as e:
         print("Required field not found: ", e)
         return None
@@ -219,12 +258,16 @@ def parse_debugging_info(debugging_info):
 
 def convert_to_span_level(df):
     debugging_details = parse_debugging_info(col("root_span"))
-    df = df.withColumn("span_id", debugging_details["span_id"])\
-        .withColumn("index_id", debugging_details["index_id"])\
-        .withColumn("index_content", debugging_details["index_content"])\
-        .withColumn("query_text_pairs", debugging_details["query_text_pairs"])
-    df_exploaded = df.withColumn("query_text", explode("query_text_pairs")).drop("query_text_pairs")
-    span_level_df = df_exploaded.withColumn("query", col("query_text.query")).withColumn("text", col("query_text.text")).drop("query_text")
+    if debugging_details is None:
+        return df
+    df = df.withColumn("debugging_info", debugging_details)
+    df_exploaded = df.withColumn("debugging_details", explode("debugging_info")).drop("debugging_info")
+    span_level_df = df_exploaded.withColumn("span_id", col("debugging_details.span_id"))\
+        .withColumn("index_id", col("debugging_details.index_id"))\
+        .withColumn("index_content", col("debugging_details.index_content"))\
+        .withColumn("query", col("debugging_details.query"))\
+        .withColumn("text", col("debugging_details.text"))\
+        .drop("debugging_details")
     return span_level_df
 
 
@@ -263,62 +306,82 @@ def run():
         save_empty_dataframe(get_output_schema(), args.data_with_groups)
         return
 
-    # only production data may have input data user error
     production_data_df = try_read_mltable_in_spark_with_error(args.production_data, "production_data")
+    gsq_input = Get_gsq_input(col("input"), col("output"), col("root_span"))
+    production_data_df = production_data_df.withColumn("question", gsq_input["question"])\
+                                           .withColumn("answer", gsq_input["answer"])\
+                                           .withColumn("context", gsq_input["text"])\
+                                           .drop("user_id").drop("session_id").drop("start_time").drop("end_time").drop("input").drop("output")
 
-    signal_scored_output_df = try_read_mltable_in_spark(args.signal_scored_output, "signal_scored_output")
-    df = signal_scored_output_df.withColumn("topic_list", lit("")).withColumn("group_list", lit("")).withColumn("violated_metrics", lit(""))
+    production_data_df = production_data_df.withColumn("ground_truth", col("answer"))
+    print("production df")
+    production_data_df.show()
 
-    trace_log = try_read_mltable_in_spark("azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/yuachengtestrg/workspaces/momo-eastus/datastores/workspaceblobstore/paths/LocalUpload/591d756286cd48c38e4b790ab5742018/mltable_aggregated_trace_log/", "trace")
-    root_span = trace_log.rdd.collect()[0]["root_span"]
-    df = df.withColumn("root_span", lit(root_span))
+    gsq_df = apply_annotation(
+        metric_names="AcceptableCoherenceScorePerInstance,AggregatedCoherencePassRate,AcceptableFluencyScorePerInstance,AggregatedFluencyPassRate,AggregatedGroundednessPassRate,AcceptableGroundednessScorePerInstance,AggregatedRelevancePassRate,AcceptableRelevanceScorePerInstance",
+        production_df=production_data_df,
+        model_deployment_name=args.model_deployment_name,
+        workspace_connection_arm_id=args.workspace_connection_arm_id,
+        num_samples=args.num_samples,
+        sample_rate=1.0,
+        request_args=request_args,
+        prompt_column_name="question",
+        completion_column_name="answer",
+        context_column_name="context",
+        ground_truth_column_name="ground_truth")
 
-    print("Show df")
-    df.show()
+    print("gsq_df")
+    gsq_df.show()
+    #signal_scored_output_df = try_read_mltable_in_spark(args.signal_scored_output, "signal_scored_output")
+    # df = signal_scored_output_df.withColumn("topic_list", lit("")).withColumn("group_list", lit("")).withColumn("violated_metrics", lit(""))
 
-    # seperate bad groups with semantic topic
-    violated_metrics = violated_metrics_df.select(collect_list("metrics")).collect()[0][0]
-    for metrics in violated_metrics:
-        score_name = metrics+"_score"
-        df = df.withColumn("violated_metrics", assign_violated_metrics(col("violated_metrics"), col(score_name), lit(metrics)))
+    # trace_log = try_read_mltable_in_spark("azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/yuachengtestrg/workspaces/momo-eastus/datastores/workspaceblobstore/paths/LocalUpload/591d756286cd48c38e4b790ab5742018/mltable_aggregated_trace_log/", "trace")
+    # root_span = trace_log.rdd.collect()[0]["root_span"]
+    # df = df.withColumn("root_span", lit(root_span))
 
-        # add good group and bad default group
-        good_group_name = f"{metrics}_good_group"
-        default_bad_group_name = f"{metrics}_bad_group_default"
-        df = df.withColumn("group_list",
-            when((col(score_name) == 5) & (col("group_list") == ""), good_group_name)
-            .otherwise(when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(good_group_name)))
-            .otherwise(when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)
-            .otherwise(when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(default_bad_group_name)))
-            .otherwise(col("group_list"))))))
+    # # seperate bad groups with semantic topic
+    # violated_metrics = violated_metrics_df.select(collect_list("metrics")).collect()[0][0]
+    # for metrics in violated_metrics:
+    #     score_name = metrics+"_score"
+    #     df = df.withColumn("violated_metrics", assign_violated_metrics(col("violated_metrics"), col(score_name), lit(metrics)))
 
-        pdf = df.toPandas()
-        bad_answers = pdf[pdf[score_name] < 4]
-        bad_samples = bad_answers.sample(n=min(N_SAMPLES, len(bad_answers)))
-        good_answers = pdf[pdf[score_name] == 5]
-        # sample good samples to have same size as bad samples
-        #good_samples = good_answers.sample(n=min(N_SAMPLES, len(bad_answers)))
-        good_samples = good_answers
+    #     # add good group and bad default group
+    #     good_group_name = f"{metrics}_good_group"
+    #     default_bad_group_name = f"{metrics}_bad_group_default"
+    #     df = df.withColumn("group_list",
+    #         when((col(score_name) == 5) & (col("group_list") == ""), good_group_name)
+    #         .otherwise(when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(good_group_name)))
+    #         .otherwise(when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)
+    #         .otherwise(when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(default_bad_group_name)))
+    #         .otherwise(col("group_list"))))))
 
-        # add semantic groups for bad queries
-        topics_dict = get_topic(bad_samples["question"].tolist(), args.workspace_connection_arm_id, args.model_deployment_name,
-                    args.api_call_retry_max_count, args.api_call_retry_backoff_factor, json.dumps(request_args))
-        topic_group_dict = {f"{metrics}_bad_group_{i}": (k, v) for i, (k, v) in enumerate(topics_dict.items())}
-        topic_group_columns = assign_topic_and_group(col("topic_list"), col("group_list"), col("question"), col("violated_metrics"), lit(metrics), lit(json.dumps(topic_group_dict)))
-        df = df.withColumn("topic_list", topic_group_columns[0])
-        df = df.withColumn("group_list", topic_group_columns[1])
+    #     pdf = df.toPandas()
+    #     bad_answers = pdf[pdf[score_name] < 4]
+    #     bad_samples = bad_answers.sample(n=min(N_SAMPLES, len(bad_answers)))
+    #     good_answers = pdf[pdf[score_name] == 5]
+    #     # sample good samples to have same size as bad samples
+    #     #good_samples = good_answers.sample(n=min(N_SAMPLES, len(bad_answers)))
+    #     good_samples = good_answers
 
-        # add semantic groups for good queries
-        topics_dict = get_topic(good_samples["question"].tolist(), args.workspace_connection_arm_id, args.model_deployment_name,
-                        args.api_call_retry_max_count, args.api_call_retry_backoff_factor, json.dumps(request_args))
-        df = df.withColumn("topic_list", assign_good_topic(col("topic_list"), col("question"), col(score_name), lit(json.dumps(topics_dict))))
+    #     # add semantic groups for bad queries
+    #     topics_dict = get_topic(bad_samples["question"].tolist(), args.workspace_connection_arm_id, args.model_deployment_name,
+    #                 args.api_call_retry_max_count, args.api_call_retry_backoff_factor, json.dumps(request_args))
+    #     topic_group_dict = {f"{metrics}_bad_group_{i}": (k, v) for i, (k, v) in enumerate(topics_dict.items())}
+    #     topic_group_columns = assign_topic_and_group(col("topic_list"), col("group_list"), col("question"), col("violated_metrics"), lit(metrics), lit(json.dumps(topic_group_dict)))
+    #     df = df.withColumn("topic_list", topic_group_columns[0])
+    #     df = df.withColumn("group_list", topic_group_columns[1])
 
-    sampled_df = df.filter(col("topic_list") != "")
-    # azure_text = "Azure is Microsoft's cloud platform, offering a comprehensive suite of over 200 products and services designed to address today's challenges and shape the future."
-    # sampled_df = sampled_df.withColumn("text", lit(azure_text))
+    #     # add semantic groups for good queries
+    #     topics_dict = get_topic(good_samples["question"].tolist(), args.workspace_connection_arm_id, args.model_deployment_name,
+    #                     args.api_call_retry_max_count, args.api_call_retry_backoff_factor, json.dumps(request_args))
+    #     df = df.withColumn("topic_list", assign_good_topic(col("topic_list"), col("question"), col(score_name), lit(json.dumps(topics_dict))))
 
-    span_level_df = convert_to_span_level(sampled_df)
-    save_spark_df_as_mltable(span_level_df, args.data_with_groups)
+    # sampled_df = df.filter(col("topic_list") != "")
+    # # azure_text = "Azure is Microsoft's cloud platform, offering a comprehensive suite of over 200 products and services designed to address today's challenges and shape the future."
+    # # sampled_df = sampled_df.withColumn("text", lit(azure_text))
+
+    # span_level_df = convert_to_span_level(sampled_df)
+    save_spark_df_as_mltable(gsq_df, args.data_with_groups)
 
 if __name__ == "__main__":
     run()
