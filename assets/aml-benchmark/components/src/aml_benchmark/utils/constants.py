@@ -33,6 +33,7 @@ _URL_TYPES_MAPPING = {
 }
 _DEFAULT_URL_TYPE = "azureml_online_endpoint"
 
+
 def get_endpoint_type(url: str) -> str:
     """
     Get the endpoint type for a given endpoint URL.

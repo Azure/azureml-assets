@@ -68,7 +68,9 @@ def get_logger(filename: str) -> logging.Logger:
     stream_handler.setFormatter(formatter)
     return logger
 
+
 logger = get_logger(__name__)
+
 
 def log_params_and_metrics(
     parameters: Dict[str, Any],

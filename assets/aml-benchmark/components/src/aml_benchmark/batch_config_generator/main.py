@@ -131,8 +131,10 @@ def _get_authentication_config(
             raise BenchmarkUserException._with_error(
                 AzureMLError.create(
                     BenchmarkUserError,
-                    error_details="Connection name should be provided \
-                        when authentication_type is set to azureml_workspace_connection."
+                    error_details=(
+                        "Connection name should be provided when authentication_type is"
+                        " set to azureml_workspace_connection."
+                    )
                 )
             )
         return {
@@ -186,7 +188,7 @@ def _get_complete_additional_headers(
         additional_headers_dict = additional_headers
     else:
         additional_headers_dict = {}
-    if deployment_name and endpoint_type == "azureml_online_endpoint":
+    if deployment_name and endpoint_type != "azure_openai":
         additional_headers_dict["azureml-model-deployment"] = deployment_name
     return additional_headers_dict
 
@@ -224,8 +226,7 @@ def _get_overriding_configs(configuration_file: Optional[str]) -> Dict[Any, Any]
             raise BenchmarkUserException._with_error(
                 AzureMLError.create(
                     BenchmarkUserError,
-                    error_details=f"Failed to read configuration file due to \
-                        error: {str(ex)}"
+                    error_details=f"Failed to read configuration file due to error: {str(ex)}"
                 )
             )
         logger.info(f"Config from file: {config_from_file}")
@@ -235,8 +236,8 @@ def _get_overriding_configs(configuration_file: Optional[str]) -> Dict[Any, Any]
             raise BenchmarkUserException._with_error(
                 AzureMLError.create(
                     BenchmarkUserError,
-                    error_details="configuration_file provided is not a valid dictionary \
-                        of key value pairs."
+                    error_details=("configuration_file provided is not "
+                        "a valid dictionary of key value pairs.")
                 )
             )
     return config
@@ -284,10 +285,13 @@ def main(
     # Override the configs if config file is passed. Config file takes precedence
     # as resource manager determined them based on deployment it did on fly.
     overriding_configs = _get_overriding_configs(configuration_file)
+    logger.info(f"Overriding config is {overriding_configs}")
     merged_scoring_url = overriding_configs.get("scoring_url", scoring_url)
     merged_online_headers = overriding_configs.get("scoring_headers", additional_headers)
-    merged_connection_name = overriding_configs.get("connections_name", connection_name)
-
+    merged_connection_name = overriding_configs.get("connection_name", connection_name)
+    logger.info(f"scoring URL: {scoring_url}")
+    logger.info(f"headers: {merged_online_headers}")
+    logger.info(f"Connection name: {merged_connection_name}")
 
     endpoint_type = get_endpoint_type(merged_scoring_url)
     authentication_dict = _get_authentication_config(authentication_type, merged_connection_name)
@@ -310,7 +314,7 @@ def main(
         },
         "inference_endpoint": {
             "type": endpoint_type,
-            "url": scoring_url,
+            "url": merged_scoring_url,
         },
         "output_settings": {
             "save_partitioned_scoring_results": True,
