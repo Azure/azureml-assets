@@ -73,7 +73,7 @@ conf:
         - promptflow[azure]~=1.4.1
         - promptflow-tools~=1.1.0
         - keyrings.alt~=5.0.0
-    name: momo-base-spark
+    name: momo-gsq-spark
 code: ../../src
 
 entry:
