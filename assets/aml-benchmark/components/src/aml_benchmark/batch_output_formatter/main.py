@@ -39,6 +39,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--handle_response_failure", type=str, help="how to handler failed response.")
     parser.add_argument("--fallback_value", type=str, help="The fallback value.", default='')
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
+    parser.add_argument(
+        "--use_tiktoken",
+        type=str2bool,
+        default=False,
+        help="If true, `cl100k_base` encoder is used from tiktoken to calculate token count; overrides any other token count calculation.")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
     return args
@@ -59,7 +64,8 @@ def main(
         handle_response_failure: str,
         fallback_value: str,
         is_performance_test: bool,
-        endpoint_url: str
+        endpoint_url: str,
+        use_tiktoken: bool = False
 ) -> None:
     """
     Entry script for the script.
@@ -79,6 +85,9 @@ def main(
     :param handle_response_failure: How to handle the response failure.
     :param fallback_value: The fallback value.
     :param is_performance_test: Whether it is a performance test.
+    :param endpoint_url: The endpoint url.
+    :param use_tiktoken: If true, `cl100k_base` encoder is used from tiktoken to calculate token count;
+    overrides any other token count calculation.
     :return: None
     """
     logger.info("Read batch output data now.")
@@ -111,7 +120,7 @@ def main(
                 if handle_response_failure == 'neglect':
                     continue
             new_df.append(rc.convert_result(row))
-            perf_df.append(rc.convert_result_perf(row))
+            perf_df.append(rc.convert_result_perf(row, use_tiktoken))
             if not is_performance_test:
                 ground_truth.append(rc.convert_result_ground_truth(row))
             else:
@@ -142,5 +151,6 @@ if __name__ == "__main__":
         handle_response_failure=args.handle_response_failure,
         fallback_value=args.fallback_value,
         is_performance_test=args.is_performance_test,
-        endpoint_url=args.endpoint_url
+        endpoint_url=args.endpoint_url,
+        use_tiktoken=args.use_tiktoken
     )
