@@ -101,7 +101,7 @@ outputs:
 jobs:
   input_schema_adaptor:
     type: spark
-    component: azureml://registries/azureml/components/gsq_input_schema_adaptor/versions/0.0.1
+    component: azureml://registries/azureml/components/gsq_input_schema_adaptor/versions/0.0.2
     inputs:
       production_dataset:
         type: mltable
