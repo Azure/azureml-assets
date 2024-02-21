@@ -9,6 +9,9 @@ import json
 
 from typing import Iterator, List
 from pyspark.sql import Row
+from pyspark.sql.utils import AnalysisException
+
+from shared_utilities.momo_exceptions import InvalidInputError
 
 
 class SpanTreeNode:
@@ -101,19 +104,25 @@ class SpanTreeNode:
         return self._try_get_row_attribute("trace_id")  # type: ignore
 
     @classmethod
-    def create_node_from_json_str(cls, json_str: str) -> "SpanTreeNode":
-        """Parse json string to get a single SpanTree node."""
-        node_dict: dict = json.loads(json_str)
+    def create_node_from_dict(cls, span_node_dict: dict) -> "SpanTreeNode":
+        """Parse dict representation to create a single SpanTree node."""
+        if span_node_dict is None or span_node_dict == {}:
+            raise InvalidInputError(f"Can not create SpanTreeNode from empty input. Input encountered = {span_node_dict}.")
 
-        node_dict['start_time'] = datetime.fromisoformat(node_dict['start_time'])
-        node_dict['end_time'] = datetime.fromisoformat(node_dict['end_time'])
-        children = node_dict.pop('children', [])
-        new_row = Row(**node_dict)
+        span_node_dict['start_time'] = datetime.fromisoformat(span_node_dict['start_time'])
+        span_node_dict['end_time'] = datetime.fromisoformat(span_node_dict['end_time'])
+        children_dicts = span_node_dict.pop('children', [])
 
         obj = cls.__new__(cls)
         super(SpanTreeNode, obj).__init__()
-        obj._span_row = new_row
-        obj._children = children
+
+        child_nodes = []
+        for child_dict in children_dicts:
+            new_node = SpanTreeNode.create_node_from_dict(child_dict)
+            child_nodes.append(new_node)
+
+        obj._span_row = Row(**span_node_dict)
+        obj._children = child_nodes
         return obj
 
     def insert_child(self, span: "SpanTreeNode") -> None:
@@ -128,8 +137,21 @@ class SpanTreeNode:
 
     def to_dict(self) -> dict:
         """Get dictionary representation of SpanTreeNode."""
-        span_row_dict = self.span_row.asDict()
+        # map datetime object to iso-string and then turn children into list of dicts as well.
+        span_row_dict = self._span_row.asDict()
         span_row_dict['children'] = self.children
+        start_time: datetime = span_row_dict['start_time']  # type: ignore
+        end_time: datetime = span_row_dict['end_time']  # type: ignore
+        span_row_dict['start_time'] = start_time.isoformat()
+        span_row_dict['end_time'] = end_time.isoformat()
+
+        child_subtree_dicts = []
+        for child_node in span_row_dict['children'] or []:
+            child_node: SpanTreeNode
+            subtree_dict = child_node.to_dict()
+            child_subtree_dicts.append(subtree_dict)
+
+        span_row_dict['children'] = child_subtree_dicts
         return span_row_dict
 
     def __iter__(self) -> Iterator["SpanTreeNode"]:
@@ -150,18 +172,18 @@ class SpanTree:
     def __init__(self, spans: List[SpanTreeNode]) -> None:
         """Spantree constructor to build up tree from span list."""
         self.root_span = self._construct_span_tree(spans)
-        self._load_json_tree_lazy = False
 
     @classmethod
-    def create_tree_from_json_string(cls, json_string: str, load_tree_lazy: bool = False) -> "SpanTree":
+    def create_tree_from_json_string(cls, json_string: str) -> "SpanTree":
         """Create SpanTree object from "root_span" json string."""
         obj = cls.__new__(cls)
         super(SpanTree, obj).__init__()
-        obj._load_json_tree_lazy = load_tree_lazy
         # Default behavior is to load the whole tree from top level json string.
-        # TODO: Stretch goal will be to load the tree lazily one level at a time to save computation/space.
-        if not load_tree_lazy:
-            obj.root_span = obj._from_json_str_repr(json_string)
+        root_span_dict = json.loads(json_string)
+        if root_span_dict is None:
+            obj.root_span = None
+        else:
+            obj.root_span = SpanTreeNode.create_node_from_dict(root_span_dict)
         return obj
 
     def show(self) -> None:
@@ -173,8 +195,8 @@ class SpanTree:
     def to_json_str(self) -> str:
         """Get tree structure as json string."""
         if self.root_span is None:
-            return None  # type: ignore
-        return self._to_json_str_repr(self.root_span)
+            return json.dumps(None)
+        return json.dumps(self.root_span.to_dict())
 
     def _construct_span_tree(self, spans: List[SpanTreeNode]) -> SpanTreeNode:
         """Build the span tree in ascending time order from list of all spans."""
@@ -196,28 +218,3 @@ class SpanTree:
             return
         for span in self.root_span.__iter__():
             yield span
-
-    def _from_json_str_repr(self, json_string: str) -> SpanTreeNode:
-        """Convert json string to SpanTree Node fully."""
-        output_node = SpanTreeNode.create_node_from_json_str(json_string)
-        child_subtree_nodes = []
-        for child in output_node.children:
-            new_node = self._from_json_str_repr(child)  # type: ignore
-            child_subtree_nodes.append(new_node)
-        output_node.children = child_subtree_nodes
-        return output_node
-
-    def _to_json_str_repr(self, curr_span: SpanTreeNode) -> str:
-        """Recursively get tree structure JSON string."""
-        output = curr_span.to_dict()
-        start_time: datetime = output['start_time']  # type: ignore
-        end_time: datetime = output['end_time']  # type: ignore
-        output['start_time'] = start_time.isoformat()
-        output['end_time'] = end_time.isoformat()
-
-        child_subtree_strs = []
-        for child in output['children']:
-            subtree_str = self._to_json_str_repr(child)
-            child_subtree_strs.append(subtree_str)
-        output['children'] = child_subtree_strs
-        return json.dumps(output)
