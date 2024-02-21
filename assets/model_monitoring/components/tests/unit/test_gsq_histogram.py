@@ -12,6 +12,8 @@ import zipfile
 import time
 import random
 import string
+import pandas as pd
+import pyarrow as pa
 from generation_safety_quality.annotation_compute_histogram.run import (
     _check_and_format_azure_endpoint_url,
     apply_annotation,
@@ -23,7 +25,8 @@ from generation_safety_quality.annotation_compute_histogram.run import (
     THRESHOLD_PARAMS,
     ALL_METRIC_NAMES,
     PROMPT)
-from shared_utilities.momo_exceptions import InvalidInputError
+from shared_utilities.momo_exceptions import (
+    DataNotFoundError, InvalidInputError)
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
 
@@ -190,6 +193,50 @@ class TestGSQHistogram:
             ",".join(metric_names), prompt_column_name=PROMPT, mltable_path=mltable_path_copy)
         # remove test folder
         shutil.rmtree(mltable_path_copy)
+
+    def test_gsq_with_empty_dataset(self, gsq_zip_test_setup, gsq_preprocessor_test_setup):
+        """Test passing empty dataset."""
+        metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
+        empty_mltable_path = write_empty_production_data()
+        err_msg = "No data is found for input 'production_dataset'"
+        with pytest.raises(DataNotFoundError, match=err_msg):
+            call_apply_annotation(
+                ",".join(metric_names), mltable_path=empty_mltable_path)
+        # remove test folder
+        shutil.rmtree(empty_mltable_path)
+
+
+def create_ml_table_file_contents(pq_filename):
+    """Create MLTable file contents."""
+    return (
+        "$schema: http://azureml/sdk-2-0/MLTable.json\n"
+        "type: mltable\n"
+        "paths:\n"
+        " - file: ./{0}\n"
+        "transformations:\n"
+        " - read_parquet\n"
+    ).format(pq_filename)
+
+
+def create_ml_table_file(path, contents):
+    """Create MLTable file."""
+    with open(os.path.join(path, "MLTable"), "w") as f:
+        f.write(contents)
+
+
+def write_empty_production_data():
+    """Write an empty input data frame."""
+    df = pd.DataFrame(columns=['question', 'answer', 'context'],
+                      dtype=str)
+    mltable_path = os.path.join(os.getcwd(), "empty_production_data")
+    os.makedirs(mltable_path, exist_ok=True)
+    pq_filename = "empty_production_data.parquet"
+    pq_file_path = os.path.join(mltable_path, pq_filename)
+    SCHEMA = pa.schema([('question', pa.string()), ('answer', pa.string()), ('context', pa.string())])
+    df.to_parquet(pq_file_path, index=False, schema=SCHEMA)
+    mltable_file_contents = create_ml_table_file_contents(pq_filename)
+    create_ml_table_file(mltable_path, mltable_file_contents)
+    return mltable_path
 
 
 def get_mltable_path():
