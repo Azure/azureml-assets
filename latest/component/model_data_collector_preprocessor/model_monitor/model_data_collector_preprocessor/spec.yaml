@@ -4,7 +4,7 @@ type: spark
 name: model_data_collector_preprocessor
 display_name: Model Data Collector - Preprocessor
 description: Filters the data based on the window provided.
-version: 0.4.7
+version: 0.4.8
 is_deterministic: true
 
 code: ../../src
@@ -31,6 +31,7 @@ conf:
   spark.driver.memory: 28g
   spark.executor.cores: 4
   spark.executor.memory: 28g
+  spark.executor.instances: 1
   spark.dynamicAllocation.enabled: true
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4
