@@ -28,7 +28,7 @@ class SpanTreeNode:
             return self._span_row[attribute_key]
         except AnalysisException as ex:
             print(
-                "Failed to retrieve row attribute with error: " + 
+                "Failed to retrieve row attribute with error: " +
                 str(ex)
             )
             return None
@@ -107,7 +107,10 @@ class SpanTreeNode:
     def create_node_from_dict(cls, span_node_dict: dict) -> "SpanTreeNode":
         """Parse dict representation to create a single SpanTree node."""
         if span_node_dict is None or span_node_dict == {}:
-            raise InvalidInputError(f"Can not create SpanTreeNode from empty input. Input encountered = {span_node_dict}.")
+            raise InvalidInputError(
+                "Can not create SpanTreeNode from empty input." +
+                f" Input encountered: '{span_node_dict}'."
+            )
 
         span_node_dict['start_time'] = datetime.fromisoformat(span_node_dict['start_time'])
         span_node_dict['end_time'] = datetime.fromisoformat(span_node_dict['end_time'])

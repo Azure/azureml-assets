@@ -158,15 +158,17 @@ class TestSpanTreeUtilities:
             "expected_row",
             [
                 (Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
-                     end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK", attributes="{\"inputs\": \"null\"}",
-                     span_type="SpanKind.INTERNAL", input="{\"context\":\"...\", \"ground_truth\":\"...\"}", output="ex...", 
+                     end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
+                     attributes="{\"inputs\": \"null\"}", span_type="SpanKind.INTERNAL",
+                     input="{\"context\":\"...\", \"ground_truth\":\"...\"}", output="ex...",
                      name="exampleName", framework="LLM")),
                 (Row(span_id="00", parent_id="0", start_time=datetime(2024, 2, 12, 0, 5, 0),
-                     end_time=datetime(2024, 2, 12, 0, 30, 0), trace_id="1", status="", attributes="{}",
-                     span_type="SpanKind.INTERNAL", input="{}", output="{}", 
+                     end_time=datetime(2024, 2, 12, 0, 30, 0), trace_id="1", status="",
+                     attributes="{}", span_type="SpanKind.INTERNAL", input="{}", output="{}",
                      name="", framework="")),
-                (Row(span_id=None, parent_id=None, start_time=None, end_time=None, trace_id=None, status=None, attributes=None,
-                     span_type=None, input=None, output=None, name=None, framework=None)),
+                (Row(span_id=None, parent_id=None, start_time=None, end_time=None,
+                     trace_id=None, status=None, attributes=None, span_type=None, input=None,
+                     output=None, name=None, framework=None)),
             ]
     )
     def test_span_tree_node_other_properties(self, expected_row: Row):
@@ -242,10 +244,10 @@ class TestSpanTreeUtilities:
                         end_time=datetime(2024, 2, 12, 1, 40, 0),
                     ),
                     [SpanTreeNode(Row(**{
-                        "span_id":"1",
-                        "parent_id":"0",
+                        "span_id": "1",
+                        "parent_id": "0",
                         "start_time": datetime(2024, 2, 12, 0, 0, 2),
-                        "end_time": datetime(2024, 2, 12, 0, 0, 5)
+                        "end_time": datetime(2024, 2, 12, 0, 0, 5),
                     }))]
                 ),
                 (
