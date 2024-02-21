@@ -15,6 +15,7 @@ import mlflow
 
 AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT = "azureml-benchmark-custom-logger"
 
+
 def log_mlflow_params(**kwargs: Any) -> None:
     """
     Log the provided key-value pairs as parameters in MLflow.
@@ -67,8 +68,7 @@ def get_logger(filename: str) -> logging.Logger:
 
     for custom_logger in entry_points(group=AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT):
         custom_handler = custom_logger.load()
-        logger.addHandler(custom_handler)
-
+        logger.addHandler(deepcopy(custom_handler))
 
     formatter = logging.Formatter(
         "[%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
