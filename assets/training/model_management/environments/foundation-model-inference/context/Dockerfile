@@ -42,7 +42,6 @@ ENV TORCH_CUDA_ARCH_LIST=${torch_cuda_arch_list}
 RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd6
 
 RUN pip install --no-cache-dir -e .
-RUN pip list    # show installed packages
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
