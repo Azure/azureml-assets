@@ -81,11 +81,13 @@ class TestInputSchemaAdaptor:
                 (
                     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
                     "{\"output\":\"answer\",\"source\":\"place\"}", "null")], _genai_input_schema,
-                    [("01", "context", "ground-truth", "question", "answer", "place")], _expected_gsq_input_schema_extra
+                    [("01", "context", "ground-truth", "question", "answer", "place")],
+                    _expected_gsq_input_schema_extra
                 ),
             ]
     )
-    def test_adapt_input_schema(self, input_data: list, input_schema: StructType, expected_data: list, expected_schema: StructType):
+    def test_adapt_input_schema(
+        self, input_data: list, input_schema: StructType, expected_data: list, expected_schema: StructType):
         """Test scenario happy path for input schema adaptor."""
         spark = self._init_spark()
         input_data_df = spark.createDataFrame(input_data, input_schema)
@@ -109,7 +111,6 @@ class TestInputSchemaAdaptor:
 
 def assert_spark_dataframe_equal(actual_df: DataFrame, expected_df: DataFrame):
     """Assert two spark dataframes are equal."""
-    # assert df1.schema == df2.schema
     assert actual_df.schema == expected_df.schema
     assert actual_df.count() == expected_df.count()
     assert actual_df.collect() == expected_df.collect()

@@ -14,6 +14,7 @@ from shared_utilities.io_utils import (
     save_spark_df_as_mltable,
     try_read_mltable_in_spark_with_error,
 )
+from shared_utilities.df_utils import try_get_df_column
 
 
 GENAI_ROOT_SPAN_SCHEMA_COLUMN = "root_span"
@@ -70,13 +71,14 @@ def _adapt_data_filtered(self, df: DataFrame) -> DataFrame:
         .toDF(gsq_input_schema)
     return transformed_df
 
+
 def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
     """Adapt the input dataframe schema to fit GSQ input schema."""
     data_schema_field_names = df.schema.fieldNames()
 
     # check if we need to adapt the schema
     if GENAI_ROOT_SPAN_SCHEMA_COLUMN not in data_schema_field_names and \
-        GENAI_TRACE_ID_SCHEMA_COLUMN not in data_schema_field_names:
+    GENAI_TRACE_ID_SCHEMA_COLUMN not in data_schema_field_names:
         return df
 
     spark = init_spark()
@@ -87,6 +89,14 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
         'temp_input': from_json(df.input, input_schema),
         'temp_output': from_json(df.output, output_schema),
     }).select('trace_id', 'temp_input.*', 'temp_output.*')
+
+    # filter down to gsq schema
+    transformed_df = transformed_df.withColumns(
+        {
+            col_name: df_column for col_name, column_mapping in _get_input_schema_adaptor_map().items()
+            if (df_column := try_get_df_column(transformed_df, column_mapping)) is not None
+        }
+    )
     return transformed_df
 
 

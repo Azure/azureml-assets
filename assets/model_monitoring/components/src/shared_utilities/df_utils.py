@@ -6,6 +6,8 @@ import pyspark.sql as pyspark_sql
 from enum import Enum
 from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities.event_utils import post_warning_event
+from pyspark.sql.utils import AnalysisException
+from typing import Optional
 
 
 class NoCommonColumnsApproach(Enum):
@@ -230,3 +232,11 @@ def try_get_common_columns(
             return {}
     # returns found common columns.
     return common_columns_dict
+
+
+def try_get_df_column(df: pyspark_sql.DataFrame, name: str) -> Optional[pyspark_sql.Column]:
+    """Get column if it exists in DF. Return none if column does not exist."""
+    try:
+        return df[name]
+    except AnalysisException:
+        return None

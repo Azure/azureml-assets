@@ -7,7 +7,7 @@ from pyspark.sql.types import (
     FloatType,
     StructField,
     StructType)
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, DataFrame
 from src.shared_utilities.df_utils import (
     get_common_columns,
     try_get_common_columns_with_error,
@@ -18,7 +18,8 @@ from src.shared_utilities.df_utils import (
     get_numerical_cols_with_df_with_override,
     get_categorical_cols_with_df_with_override,
     get_numerical_and_categorical_cols,
-    modify_categorical_columns
+    modify_categorical_columns,
+    try_get_df_column,
 )
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp
@@ -34,7 +35,7 @@ class TestDFUtils:
     def test_get_common_columns(self):
         """Test get common columns."""
         # Test with two empty dataframes
-        spark = SparkSession.builder.appName("test").getOrCreate()
+        spark = self.init_spark()
         emp_RDD = spark.sparkContext.emptyRDD()
         # Create empty schema
         columns = StructType([])
@@ -364,7 +365,7 @@ class TestDFUtils:
         modified_categorical_columns = modify_categorical_columns(df_with_timestamp, categorical_columns)
         assert expected_categorical_columns == modified_categorical_columns
 
-    def init_spark(self):
+    def init_spark(self) -> SparkSession:
         """Get or create spark session."""
         spark = SparkSession.builder.appName("test").getOrCreate()
         return spark
@@ -372,7 +373,7 @@ class TestDFUtils:
     def test_try_get_common_columns_error(self):
         """Test scenarios for common_columns with error."""
         # Test with two empty dataframes
-        spark = SparkSession.builder.appName("test").getOrCreate()
+        spark = self.init_spark()
         emp_RDD = spark.sparkContext.emptyRDD()
         # Create empty schema
         columns = StructType([])
@@ -414,7 +415,7 @@ class TestDFUtils:
     def test_try_get_common_columns_ignore(self):
         """Test scenarios for common columns with ignore."""
         # Test with two empty dataframes
-        spark = SparkSession.builder.appName("test").getOrCreate()
+        spark = self.init_spark()
         emp_RDD = spark.sparkContext.emptyRDD()
         # Create empty schema
         columns = StructType([])
@@ -448,3 +449,25 @@ class TestDFUtils:
         production_df = create_pyspark_dataframe([(1, "c", 30), (2, "d", 40)],
                                                  ["id", "name", "age"])
         assert try_get_common_columns(baseline_df, production_df) == {"name": "string", "age": "bigint"}
+    
+    def test_try_get_df_column(self):
+        """Test scenarios for try_get_df_column()."""
+        spark = self.init_spark()
+
+        empty_data = []
+        columns = StructType([])
+        empty_df = spark.createDataFrame(empty_data, columns)
+        assert try_get_df_column(empty_df, 'random') is None
+
+        mixed_data_df = create_pyspark_dataframe([(1.0, "a", 10), (2.0, "b", 20)],
+                                               ["id", "name", "age"])
+        retrieved_col = try_get_df_column(mixed_data_df, 'id')
+        assert retrieved_col is not None
+        assert_spark_dataframe_equal(mixed_data_df.select(retrieved_col), mixed_data_df.select('id'))
+
+
+def assert_spark_dataframe_equal(actual_df: DataFrame, expected_df: DataFrame):
+    """Assert two spark dataframes are equal."""
+    assert actual_df.schema == expected_df.schema
+    assert actual_df.count() == expected_df.count()
+    assert actual_df.collect() == expected_df.collect()
