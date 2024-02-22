@@ -3,7 +3,7 @@ The Swin Transformer V2 model is a type of Vision Transformer, pre-trained on Im
 Swin Transformer V2 introduces three improvements:
 - a residual-post-norm method with cosine attention to improve training stability
 - a log-spaced continuous position bias method, aiding the transfer of pre-trained models from low-resolution images to tasks with high-resolution inputs
-- the application of a self-supervised pre-training method called SimMIM, designed to reduce the need for extensive labeled images
+- the application of a self-supervised pre-training method called SimMIM, designed to reduce the need for extensive labeled image1
 
 # License
 
