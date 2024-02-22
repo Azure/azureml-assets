@@ -87,4 +87,4 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 
 #### Visualization for the prompt - "a photograph of an astronaut riding a horse"
 
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_stabilityai_stable_diffusion_xl_base-1-0.png" alt="stabilityai_stable_diffusion_2_1 visualization">
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_stabilityai_stable_diffusion_xl_base-1-0.png" alt="stabilityai_stable_diffusion_xl_base-1-0 visualization">
