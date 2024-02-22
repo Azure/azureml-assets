@@ -11,6 +11,8 @@ from functools import partial
 from logging_utilities import get_logger
 from constants import MODEL_FLAVOR
 
+import traceback
+
 logger = get_logger(name=__name__)
 
 
@@ -118,9 +120,11 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
             kwargs = {"params": params}
         try:
             y_pred = predict_fn(X_test, **kwargs)
-        except TypeError:
+        except TypeError as exp:
+            logger.warning(f"TypeError exception raised. Reason: {traceback.print_exc()}")
             y_pred = predict_fn(X_test)
-        except RuntimeError:
+        except RuntimeError as exp:
+            logger.warning(f"RuntimeError exception raised. Reason: {exp}")
             y_pred, kwargs = self.handle_device_failure(X_test, **kwargs)
         if y_transformer is not None:
             y_pred = y_transformer.transform(y_pred).toarray()
