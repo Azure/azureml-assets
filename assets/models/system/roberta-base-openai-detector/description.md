@@ -54,38 +54,76 @@ Text Classification|Detecting GPT2 Output|<a href="https://huggingface.co/datase
 #### Sample output
 ```json
 [ 
-2 items
-0:{ 
-2 items
-"0":{ 
-2 items
-"label":
-string"Fake"
-"score":
-float0.881293773651123
-}
-"1":{
-2 items
-"label":
-string"Real"
-"score":
-float0.11870620399713516
-}
-}
-1:{
+
 2 items 
-"0":{
-2 items
-"label": string"Fake"
-"score": float0.9996414184570312
-}
-"1":{
-2 items
-"label":
-string"Real"
-"score":
-float0.00035851693246513605
-}
-}
-]
+
+0:{ 
+
+2 items 
+
+"0":{ 
+
+2 items 
+
+"label": 
+
+string"Fake" 
+
+"score": 
+
+float0.881293773651123 
+
+} 
+
+"1":{ 
+
+2 items 
+
+"label": 
+
+string"Real" 
+
+"score": 
+
+float0.11870620399713516 
+
+} 
+
+} 
+
+1:{ 
+
+2 items 
+
+"0":{ 
+
+2 items 
+
+"label": 
+
+string"Fake" 
+
+"score": 
+
+float0.9996414184570312 
+
+} 
+
+"1":{ 
+
+2 items 
+
+"label": 
+
+string"Real" 
+
+"score": 
+
+float0.00035851693246513605 
+
+} 
+
+} 
+
+] 
 ```
