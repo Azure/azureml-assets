@@ -30,9 +30,10 @@ class TestConfigGenerator:
           "/chat/completions?api-version=2023-07-01-preview"),
          AuthenticationType.MANAGED_IDENTITY)
     ])
-    @pytest.mark.parametrize('debug_mode, ensure_ascii, additional_headers, '
+    @pytest.mark.parametrize(
+        'debug_mode, ensure_ascii, additional_headers, '
         'deployment_name, max_retry_time_interval, app_insights_connection_string, '
-            'override_config_file_path, connection_name, expected_headers',
+        'override_config_file_path, connection_name, expected_headers',
         [
             (True, False, None, "sample-deployment",
                 None, '', None, 'sample_connection_name', {'azureml-model-deployment': 'sample-deployment'}),
