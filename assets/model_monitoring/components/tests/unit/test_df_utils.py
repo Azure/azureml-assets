@@ -449,7 +449,7 @@ class TestDFUtils:
         production_df = create_pyspark_dataframe([(1, "c", 30), (2, "d", 40)],
                                                  ["id", "name", "age"])
         assert try_get_common_columns(baseline_df, production_df) == {"name": "string", "age": "bigint"}
-    
+
     def test_try_get_df_column(self):
         """Test scenarios for try_get_df_column()."""
         spark = self.init_spark()
@@ -459,8 +459,10 @@ class TestDFUtils:
         empty_df = spark.createDataFrame(empty_data, columns)
         assert try_get_df_column(empty_df, 'random') is None
 
-        mixed_data_df = create_pyspark_dataframe([(1.0, "a", 10), (2.0, "b", 20)],
-                                               ["id", "name", "age"])
+        mixed_data_df = create_pyspark_dataframe(
+            [(1.0, "a", 10), (2.0, "b", 20)],
+            ["id", "name", "age"]
+        )
         retrieved_col = try_get_df_column(mixed_data_df, 'id')
         assert retrieved_col is not None
         assert_spark_dataframe_equal(mixed_data_df.select(retrieved_col), mixed_data_df.select('id'))

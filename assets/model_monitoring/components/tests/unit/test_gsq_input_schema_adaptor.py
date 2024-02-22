@@ -74,20 +74,20 @@ class TestInputSchemaAdaptor:
                 # Test with genai columns
                 (
                     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
-                    "{\"output\":\"answer\"}", "null")], _genai_input_schema,
+                      "{\"output\":\"answer\"}", "null")], _genai_input_schema,
                     [("01", "context", "ground-truth", "question", "answer")], _expected_gsq_input_schema
                 ),
                 # genai, data fall-through
                 (
                     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
-                    "{\"output\":\"answer\",\"source\":\"place\"}", "null")], _genai_input_schema,
+                      "{\"output\":\"answer\",\"source\":\"place\"}", "null")], _genai_input_schema,
                     [("01", "context", "ground-truth", "question", "answer", "place")],
                     _expected_gsq_input_schema_extra
                 ),
             ]
     )
-    def test_adapt_input_schema(
-        self, input_data: list, input_schema: StructType, expected_data: list, expected_schema: StructType):
+    def test_adapt_input_schema(self, input_data: list, input_schema: StructType,
+                                expected_data: list, expected_schema: StructType):
         """Test scenario happy path for input schema adaptor."""
         spark = self._init_spark()
         input_data_df = spark.createDataFrame(input_data, input_schema)

@@ -78,7 +78,8 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
 
     # check if we need to adapt the schema
     if GENAI_ROOT_SPAN_SCHEMA_COLUMN not in data_schema_field_names and \
-    GENAI_TRACE_ID_SCHEMA_COLUMN not in data_schema_field_names:
+        GENAI_TRACE_ID_SCHEMA_COLUMN not in data_schema_field_names:
+
         return df
 
     spark = init_spark()
