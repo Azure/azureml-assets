@@ -74,12 +74,10 @@ def _adapt_data_filtered(self, df: DataFrame) -> DataFrame:
 
 def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
     """Adapt the input dataframe schema to fit GSQ input schema."""
-    data_schema_field_names = df.schema.fieldNames()
+    df_field_names = df.schema.fieldNames()
 
     # check if we need to adapt the schema
-    if GENAI_ROOT_SPAN_SCHEMA_COLUMN not in data_schema_field_names and \
-        GENAI_TRACE_ID_SCHEMA_COLUMN not in data_schema_field_names:
-
+    if GENAI_ROOT_SPAN_SCHEMA_COLUMN not in df_field_names and GENAI_TRACE_ID_SCHEMA_COLUMN not in df_field_names:
         return df
 
     spark = init_spark()
