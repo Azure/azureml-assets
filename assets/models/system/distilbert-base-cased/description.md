@@ -45,15 +45,7 @@ Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-
 
 #### Sample output
 ```json
-[ 
-
-1 item 
-
-0 
-
-: 
-
-string"part" 
-
+[
+  "part"
 ]
 ```
