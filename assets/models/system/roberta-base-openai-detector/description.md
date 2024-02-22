@@ -76,10 +76,8 @@ float0.11870620399713516
 2 items 
 "0":{
 2 items
-"label":
-string"Fake"
-"score":
-float0.9996414184570312
+"label": string"Fake"
+"score": float0.9996414184570312
 }
 "1":{
 2 items
