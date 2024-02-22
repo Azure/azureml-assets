@@ -26,10 +26,13 @@ class TestConfigGenerator:
     @pytest.mark.parametrize('scoring_url, authentication_type', [
         ("https://sample.sample_region.inference.ml.azure.com/score",
          AuthenticationType.AZUREML_WORKSPACE_CONNECTION),
-        ("https://demo.api.cognitive.microsoft.com/openai/deployments/demo/chat/completions?api-version=2023-07-01-preview",
+        (("https://demo.api.cognitive.microsoft.com/openai/deployments/demo"
+          "/chat/completions?api-version=2023-07-01-preview"),
          AuthenticationType.MANAGED_IDENTITY)
     ])
-    @pytest.mark.parametrize('debug_mode, ensure_ascii, additional_headers, deployment_name, max_retry_time_interval, app_insights_connection_string, override_config_file_path, connection_name, expected_headers', [
+    @pytest.mark.parametrize('debug_mode, ensure_ascii, additional_headers, '\
+        'deployment_name, max_retry_time_interval, app_insights_connection_string, '\
+        'override_config_file_path, connection_name, expected_headers', [
         (True, False, None, "sample-deployment",
          None, '', None, 'sample_connection_name', {'azureml-model-deployment': 'sample-deployment'}),
         (False, True, '{"header-key": "header-value"}', None,
@@ -61,7 +64,8 @@ class TestConfigGenerator:
         with tempfile.TemporaryDirectory() as d:
             config_file_path = os.path.join(d, "config.json")
             if override_config_file_path:
-                override_config_file_path =os.path.join(get_current_path(), "data", override_config_file_path)
+                override_config_file_path = os.path.join(
+                    get_current_path(), "data", override_config_file_path)
             if not connection_name and authentication_type is AuthenticationType.AZUREML_WORKSPACE_CONNECTION:
                 with pytest.raises(Exception):
                     batch_config_generator(
@@ -98,11 +102,17 @@ class TestConfigGenerator:
                     app_insights_connection_string=app_insights_connection_string,
                 )
                 config_output = json.load(open(config_file_path, 'r'))
-                override_config = json.load(open(override_config_file_path, 'r')) if override_config_file_path else {}
-                expected_scoring_url = override_config.get('scoring_url', scoring_url)
-                expected_connection_name = override_config.get('connection_name', connection_name)
+                override_config = json.load(
+                    open(override_config_file_path, 'r')) if override_config_file_path else {}
+                expected_scoring_url = override_config.get(
+                    'scoring_url', scoring_url)
+                expected_connection_name = override_config.get(
+                    'connection_name', connection_name)
                 assert config_output['api']['type'] == 'completion'
-                assert config_output['authentication']['type'] == ('connection' if authentication_type is AuthenticationType.AZUREML_WORKSPACE_CONNECTION else 'managed_identity')
+                if authentication_type is AuthenticationType.AZUREML_WORKSPACE_CONNECTION:
+                    assert config_output['authentication']['type'] == 'connection'
+                else:
+                    assert config_output['authentication']['type'] == 'managed_identity'
                 if expected_connection_name and authentication_type is AuthenticationType.AZUREML_WORKSPACE_CONNECTION:
                     assert config_output['authentication']['name'] == expected_connection_name
                 else:
@@ -116,8 +126,10 @@ class TestConfigGenerator:
                     if deployment_name:
                         del expected_headers["azureml-model-deployment"]
                 assert config_output['inference_endpoint']['url'] == expected_scoring_url
-                assert config_output['output_settings']['save_partitioned_scoring_results'] == True
+                assert config_output['output_settings']['save_partitioned_scoring_results']
                 assert config_output['output_settings']['ensure_ascii'] == ensure_ascii
-                assert config_output['log_settings']['stdout_log_level'] == ('debug' if debug_mode else 'info')
-                assert config_output['request_settings']['timeout'] == (max_retry_time_interval or 0)
+                assert config_output['log_settings']['stdout_log_level'] == (
+                    'debug' if debug_mode else 'info')
+                assert config_output['request_settings']['timeout'] == (
+                    max_retry_time_interval or 0)
                 assert config_output['request_settings']['headers'] == expected_headers

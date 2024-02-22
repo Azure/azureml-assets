@@ -236,8 +236,7 @@ def _get_overriding_configs(configuration_file: Optional[str]) -> Dict[Any, Any]
             raise BenchmarkUserException._with_error(
                 AzureMLError.create(
                     BenchmarkUserError,
-                    error_details=("configuration_file provided is not "
-                        "a valid dictionary of key value pairs.")
+                    error_details="configuration_file provided is not a valid dictionary of key value pairs."
                 )
             )
     return config
