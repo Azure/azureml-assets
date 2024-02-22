@@ -4,7 +4,7 @@ description: >-
   An environment for olive_optimizer cpu components.
 
 name: "olive-optimizer"
-version: "12"
+version: "11"
 
 build:
   path: "context"
