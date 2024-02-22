@@ -5,7 +5,6 @@
 
 from typing import Any
 from importlib.metadata import entry_points
-from copy import deepcopy
 
 import logging
 import os
@@ -67,8 +66,7 @@ def get_logger(filename: str) -> logging.Logger:
     logger.addHandler(stream_handler)
 
     for custom_logger in entry_points(group=AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT):
-        custom_handler = custom_logger.load()
-        logger.addHandler(deepcopy(custom_handler))
+        logger.addHandler(custom_logger.load())
 
     formatter = logging.Formatter(
         "[%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
