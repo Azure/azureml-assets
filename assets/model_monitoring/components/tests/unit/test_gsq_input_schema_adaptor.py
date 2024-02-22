@@ -70,7 +70,7 @@ class TestInputSchemaAdaptor:
                 ([("", "")], _simple_input_schema, [("", "")], _simple_input_schema),
                 # genai, empty data
                 ([], _genai_input_schema, [], _expected_gsq_schema_empty),
-                ([("", "null", "null", "null")], _genai_input_schema, [("")], _expected_gsq_schema_empty),
+                ([("null", "null", "null", "null")], _genai_input_schema, [("null",)], _expected_gsq_schema_empty),
                 # Test with genai columns
                 (
                     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
