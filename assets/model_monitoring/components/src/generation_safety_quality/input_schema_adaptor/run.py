@@ -64,10 +64,10 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
 
     gsq_input_schema = StructType(
         [
-            StructField("question", StringType(), False),
-            StructField("answer", StringType(), False),
-            StructField("context", StringType(), False),
-            StructField("ground_truth", StringType(), False),
+            StructField("question", StringType(), True),
+            StructField("answer", StringType(), True),
+            StructField("context", StringType(), True),
+            StructField("ground_truth", StringType(), True),
         ]
     )
     transformed_df = df \
