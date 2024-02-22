@@ -7,12 +7,14 @@ from enum import Enum
 
 class AuthenticationType(Enum):
     """Authentication Type enum for endpoints."""
+
     AZUREML_WORKSPACE_CONNECTION = "azureml_workspace_connection"
     MANAGED_IDENTITY = "managed_identity"
 
 
 class ModelType(Enum):
     """Model Type enum."""
+
     OAI = "oai"
     OSS = "oss"
     VISION_OSS = "vision_oss"

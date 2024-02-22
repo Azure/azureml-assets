@@ -121,6 +121,7 @@ def _get_authentication_config(
 ) -> Dict[str, str]:
     """
     Get authentication config for the provided authentication type and connection name.
+
     :param authentication_type: Authentication type for endpoint.
     :param connection_name: The name of the connection to fetch the API_KEY for the
         endpoint authentication.
@@ -160,6 +161,7 @@ def _get_complete_additional_headers(
 ) -> Dict[str, str]:
     """
     Get the complete additional headers for the requests.
+
     :param endpoint_type: The type of the model endpoint.
     :param additional_headers: Additional headers for the model.
     :param deployment_name: The deployment name of the endpoint.
@@ -199,6 +201,7 @@ def _get_request_settings(
 ) -> Dict[str, Any]:
     """
     Get request settings config.
+
     :param additional_headers_dict: Additional headers for the requests.
     :param max_return_time_interval: The maximum time (in seconds) spent retrying a payload.
     :returns: The request settings config.
@@ -214,6 +217,7 @@ def _get_request_settings(
 def _get_overriding_configs(configuration_file: Optional[str]) -> Dict[Any, Any]:
     """
     Get overriding config file.
+
     :param configuration_file: Additional configuration file.
     :returns: The additional configuration dictionary.
     """
