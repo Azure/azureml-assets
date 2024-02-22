@@ -9,7 +9,8 @@ from azure.ai.ml.dsl import pipeline
 from azure.ai.ml.exceptions import JobException
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR,
-    DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA
+    DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA,
+    DATA_ASSET_AGGREGATED_TRACE_LOGS_DATA,
 )
 
 
@@ -75,12 +76,25 @@ class TestGenerationSafetyQualityModelMonitor:
     def test_generation_safety_quality_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
-        """Test GSQ is successful with expected data."""
+        """Test GSQ is successful with traditional expected data."""
         pipeline_job = _submit_generation_safety_quality_model_monitor_job(
             ml_client,
             get_component,
             test_suite_name,
             DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    def test_generation_safety_quality_genai_successful(
+        self, ml_client: MLClient, get_component, test_suite_name
+    ):
+        """Test GSQ is successful with genai trace logs."""
+        pipeline_job = _submit_generation_safety_quality_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_AGGREGATED_TRACE_LOGS_DATA,
         )
 
         assert pipeline_job.status == "Completed"

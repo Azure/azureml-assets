@@ -498,6 +498,9 @@ def publish_generation_safety_signal_monitor_component(
             continue
         print(f"Publishing {component['name']}..")
         jobs = component["jobs"]
+        jobs["input_schema_adaptor"]["component"] = format_component_name(
+            "gsq_input_schema_adaptor", asset_version
+        )
         jobs["compute_metrics"]["component"] = format_component_name(
             "gsq_annotation_compute_metrics", asset_version
         )
