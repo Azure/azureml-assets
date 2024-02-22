@@ -14,7 +14,7 @@ dependencies:
 - setuptools=65.5.1
 - wheel=0.38.1
 - pip:
-  - cryptography>=41.0.4
+  - cryptography>=42.0.2
   - pyarrow-hotfix>=0.5
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
