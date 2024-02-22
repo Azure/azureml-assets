@@ -8,6 +8,7 @@ import json
 
 from pyspark.sql import DataFrame, Row
 from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql.functions import from_json
 from shared_utilities.io_utils import (
     init_spark,
     save_spark_df_as_mltable,
@@ -53,15 +54,8 @@ def _adapt_trace_logs_to_gsq_input_data(json_row: Row, output_schema: StructType
     return _construct_gsq_input_schema_entry(adapted_data_dict, output_schema)
 
 
-def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
-    """Adapt the input dataframe schema to fit GSQ input schema."""
-    data_schema_field_names = df.schema.fieldNames()
-
-    # check if we need to adapt the schema
-    if GENAI_ROOT_SPAN_SCHEMA_COLUMN not in data_schema_field_names and \
-        GENAI_TRACE_ID_SCHEMA_COLUMN not in data_schema_field_names:
-        return df
-
+def _adapt_data_filtered(self, df: DataFrame) -> DataFrame:
+    """Helper to adapt and filter ony GSQ input schema fields from the data."""
     gsq_input_schema = StructType(
         [
             StructField("question", StringType(), True),
@@ -74,7 +68,25 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
         .rdd \
         .map(lambda x: _adapt_trace_logs_to_gsq_input_data(x, gsq_input_schema)) \
         .toDF(gsq_input_schema)
+    return transformed_df
 
+def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
+    """Adapt the input dataframe schema to fit GSQ input schema."""
+    data_schema_field_names = df.schema.fieldNames()
+
+    # check if we need to adapt the schema
+    if GENAI_ROOT_SPAN_SCHEMA_COLUMN not in data_schema_field_names and \
+        GENAI_TRACE_ID_SCHEMA_COLUMN not in data_schema_field_names:
+        return df
+
+    spark = init_spark()
+    input_schema = spark.read.json(df.rdd.map(lambda row: row.input)).schema
+    output_schema = spark.read.json(df.rdd.map(lambda row: row.output)).schema
+
+    transformed_df = df.withColumns({
+        'temp_input': from_json(df.input, input_schema),
+        'temp_output': from_json(df.output, output_schema),
+    }).select('trace_id', 'temp_input.*', 'temp_output.*')
     return transformed_df
 
 
