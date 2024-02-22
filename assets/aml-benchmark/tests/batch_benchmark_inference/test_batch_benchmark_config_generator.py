@@ -30,16 +30,18 @@ class TestConfigGenerator:
           "/chat/completions?api-version=2023-07-01-preview"),
          AuthenticationType.MANAGED_IDENTITY)
     ])
-    @pytest.mark.parametrize('debug_mode, ensure_ascii, additional_headers, '\
-        'deployment_name, max_retry_time_interval, app_insights_connection_string, '\
-        'override_config_file_path, connection_name, expected_headers', [
-        (True, False, None, "sample-deployment",
-         None, '', None, 'sample_connection_name', {'azureml-model-deployment': 'sample-deployment'}),
-        (False, True, '{"header-key": "header-value"}', None,
-         0, 'some-appinsights-connection-string', None, None, {'header-key': 'header-value'}),
-        (False, True, '{"header-key": "header-value"}', None, 20, None,
-         'resource_manager_output_config.json', 'sample_connection_name', {'header-key': 'header-value'}),
-    ])
+    @pytest.mark.parametrize('debug_mode, ensure_ascii, additional_headers, '
+        'deployment_name, max_retry_time_interval, app_insights_connection_string, '
+            'override_config_file_path, connection_name, expected_headers',
+        [
+            (True, False, None, "sample-deployment",
+                None, '', None, 'sample_connection_name', {'azureml-model-deployment': 'sample-deployment'}),
+            (False, True, '{"header-key": "header-value"}', None,
+                0, 'some-appinsights-connection-string', None, None, {'header-key': 'header-value'}),
+            (False, True, '{"header-key": "header-value"}', None, 20, None,
+                'resource_manager_output_config.json', 'sample_connection_name', {'header-key': 'header-value'}),
+        ]
+    )
     @pytest.mark.parametrize('initial_worker_count', [7])
     @pytest.mark.parametrize('max_worker_count', [10])
     @pytest.mark.parametrize('response_segment_size', [0])
