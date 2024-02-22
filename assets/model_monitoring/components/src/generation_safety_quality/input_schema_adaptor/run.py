@@ -32,46 +32,6 @@ def _get_input_schema_adaptor_map() -> dict:
     return map
 
 
-def _construct_gsq_input_schema_entry(row_dict: dict, output_schema: StructType) -> tuple:
-    """Build an entry following the gsq input schema for RDD."""
-    return tuple(row_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
-
-
-def _adapt_trace_logs_to_gsq_input_data(json_row: Row, output_schema: StructType):
-    """Adapt a single trace log row to match the gsq input data schema."""
-    input_dict = json.loads(json_row.input)
-    output_dict = json.loads(json_row.output)
-    output_dict = output_dict if output_dict is not None else {}
-    input_dict = input_dict if input_dict is not None else {}
-
-    combined_input_output_dict = {**input_dict, **output_dict}
-
-    adapted_data_dict = {}
-    for output_schema_key, input_schema_mapping in _get_input_schema_adaptor_map().items():
-        _, field = input_schema_mapping.split('.')
-        value = combined_input_output_dict.pop(field, None)
-        adapted_data_dict[output_schema_key] = value
-
-    return _construct_gsq_input_schema_entry(adapted_data_dict, output_schema)
-
-
-def _adapt_data_filtered(self, df: DataFrame) -> DataFrame:
-    """Helper to adapt and filter ony GSQ input schema fields from the data."""
-    gsq_input_schema = StructType(
-        [
-            StructField("question", StringType(), True),
-            StructField("answer", StringType(), True),
-            StructField("context", StringType(), True),
-            StructField("ground_truth", StringType(), True),
-        ]
-    )
-    transformed_df = df \
-        .rdd \
-        .map(lambda x: _adapt_trace_logs_to_gsq_input_data(x, gsq_input_schema)) \
-        .toDF(gsq_input_schema)
-    return transformed_df
-
-
 def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
     """Adapt the input dataframe schema to fit GSQ input schema."""
     df_field_names = df.schema.fieldNames()
