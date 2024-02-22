@@ -193,6 +193,8 @@ class OnlineEndpoint:
         should_retry = True
         while should_retry:
             headers = self.get_resource_authorization_header()
+            # TODO: !!!! For office debug, remove this log !!!!!
+            logger.info(f"SystemLog: headers for __call_endpoint: {headers}")
             resp = ClientBase._execute_func(
                 call_method, url, params={}, headers=headers, json=payload
             )
