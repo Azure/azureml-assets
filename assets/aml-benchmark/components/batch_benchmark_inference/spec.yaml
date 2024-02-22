@@ -231,13 +231,12 @@ jobs:
     resources:
       instance_count: ${{parent.inputs.instance_count}}
     max_concurrency_per_instance:  ${{parent.inputs.max_concurrency_per_instance}}
-    mini_batch_size: ${{parent.inputs.mini_batch_size}}
+    mini_batch_size: 100KB #${{parent.inputs.mini_batch_size}}
     retry_settings:
       timeout: 6000
       max_retries: 10
     environment_variables:
       BATCH_SCORE_INITIAL_REQUEST_TIMEOUT: '4'
-      BATCH_SCORE_CONCURRENCY_ADJUSTMENT_INTERVAL: '120'
       BATCH_SCORE_DELAY_AFTER_SUCCESSFUL_REQUEST: 'False'
       
   # Reformat
