@@ -20,7 +20,7 @@ inputs:
     type: uri_folder
     mode: direct
   require_trace_data:
-    type: bool
+    type: boolean
     default: true
 outputs:
   preprocessed_span_data:
