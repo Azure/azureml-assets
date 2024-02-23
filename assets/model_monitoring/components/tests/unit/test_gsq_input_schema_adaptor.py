@@ -77,7 +77,7 @@ class TestInputSchemaAdaptor:
                 # genai, empty input/output columns
                 (
                     [("01", "null", "null", "null")], _genai_input_schema,
-                    [("01","null")], _expected_gsq_input_schema_empty
+                    [("01", "null")], _expected_gsq_input_schema_empty
                 ),
                 # Test with genai columns
                 (
