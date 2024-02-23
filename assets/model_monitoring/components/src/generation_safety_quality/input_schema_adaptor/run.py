@@ -47,18 +47,18 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
         'temp_output': from_json(df.output, output_schema),
     }).select('trace_id', 'temp_input.*', 'temp_output.*')
 
-    select_cols = []
+    select_gsq_cols = []
     df_columns = transformed_df.columns
     for mapping in _get_input_schema_adaptor_map().values():
         _, col_name = mapping.split('.')
         if col_name in df_columns:
-            select_cols.append(col_name)
-    transformed_df = transformed_df.select(select_cols)
+            select_gsq_cols.append(col_name)
+    transformed_df = transformed_df.select(select_gsq_cols)
     transformed_df.show(truncate=False)
     if transformed_df.isEmpty():
         raise InvalidInputError(
             "Failed to adapt the GenAI trace log schema to GSQ input columns." +
-            " Double check the input trace log input/output columns to make sure there is GSQ expected data at" +
+            " Double-check the trace log dataframe 'input'/'output' columns to make sure there is GSQ expected data" +
             f" (ex. should have some of these: '{', '.join(_get_input_schema_adaptor_map().values())})'"
         )
     return transformed_df
