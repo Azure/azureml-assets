@@ -266,13 +266,17 @@ class TestSpanTreeUtilities:
         """Test scenario for to_dict() of SpanTreeNode."""
         node = SpanTreeNode(expected_row)
         node.children = expected_children
-        actual_dict = node.to_dict()
-        for keyname in expected_row.asDict().keys():
-            assert keyname in actual_dict
-            if keyname == "children":
-                assert actual_dict[keyname] == expected_children
-            elif keyname == "start_time" or keyname == "end_time":
-                expected_datetime: datetime = node._span_row[keyname]
-                assert actual_dict[keyname] == expected_datetime.isoformat()
-            else:
-                assert actual_dict[keyname] == node._span_row[keyname]
+        for datetime_to_str in [True, False]:
+            actual_dict = node.to_dict(datetime_to_str)
+            for keyname in expected_row.asDict().keys():
+                assert keyname in actual_dict
+                if keyname == "children":
+                    assert actual_dict[keyname] == expected_children
+                elif keyname == "start_time" or keyname == "end_time":
+                    expected_datetime: datetime = node._span_row[keyname]
+                    if datetime_to_str:
+                        assert actual_dict[keyname] == expected_datetime.isoformat()
+                    else:
+                        assert actual_dict[keyname] == expected_datetime
+                else:
+                    assert actual_dict[keyname] == node._span_row[keyname]

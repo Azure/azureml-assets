@@ -16,7 +16,7 @@ from shared_utilities.io_utils import init_spark
 
 def _construct_aggregated_trace_entry(span_tree: SpanTree, output_schema: StructType) -> tuple:
     """Build an aggregated trace tuple for RDD from a span tree."""
-    span_dict = span_tree.root_span.to_dict()
+    span_dict = span_tree.root_span.to_dict(datetime_to_str=False)
     span_dict['root_span'] = span_tree.to_json_str()
     return tuple(span_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
 

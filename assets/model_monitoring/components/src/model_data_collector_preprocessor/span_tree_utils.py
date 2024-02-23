@@ -138,15 +138,16 @@ class SpanTreeNode:
         for c in self.children:
             c.show(indent + 4)
 
-    def to_dict(self) -> dict:
+    def to_dict(self, datetime_to_str: bool = True) -> dict:
         """Get dictionary representation of SpanTreeNode."""
         # map datetime object to iso-string and then turn children into list of dicts as well.
         span_row_dict = self._span_row.asDict()
         span_row_dict['children'] = self.children
-        start_time: datetime = span_row_dict['start_time']  # type: ignore
-        end_time: datetime = span_row_dict['end_time']  # type: ignore
-        span_row_dict['start_time'] = start_time.isoformat()
-        span_row_dict['end_time'] = end_time.isoformat()
+        if datetime_to_str:
+            start_time: datetime = span_row_dict['start_time']  # type: ignore
+            end_time: datetime = span_row_dict['end_time']  # type: ignore
+            span_row_dict['start_time'] = start_time.isoformat()
+            span_row_dict['end_time'] = end_time.isoformat()
 
         child_subtree_dicts = []
         for child_node in span_row_dict['children'] or []:
