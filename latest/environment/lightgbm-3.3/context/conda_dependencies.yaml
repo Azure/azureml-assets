@@ -15,7 +15,7 @@ dependencies:
   - azureml-mlflow==1.55.0
   - azureml-telemetry==1.55.0
   - azureml-automl-common-tools==1.55.0
-  - scikit-learn~=0.24.1
+  - scikit-learn~=1.0.1
   - xgboost~=1.4.0
   - lightgbm~=3.3.5
   - distributed~=2021.10.0
