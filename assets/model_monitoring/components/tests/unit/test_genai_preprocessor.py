@@ -11,14 +11,14 @@ import pytest
 import os
 import sys
 from datetime import datetime
-from src.model_data_collector_preprocessor.genai_run import (
+from model_data_collector_preprocessor.genai_run import (
     _genai_uri_folder_to_preprocessed_spark_df,
     process_spans_into_aggregated_traces,
 )
-from src.model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
+from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_preprocessed_span_logs_df_schema
 )
-from src.model_data_collector_preprocessor.store_url import StoreUrl
+from model_data_collector_preprocessor.store_url import StoreUrl
 
 
 @pytest.fixture(scope="function")
@@ -244,43 +244,31 @@ class TestGenAISparkPreprocessor:
     _root_span_str_extra = '{"attributes": "resource", "context": "c", "c_resources": "{}", "end_time": "2024-02-' + \
         '05T00:08:00", "events": "[]", "framework": "FLOW", "input": "in", "links": "[]", "name": "name", "output"' + \
         ': "out", "parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "sta' + \
-        'tus": "OK", "trace_id": "01", "children": ["{\\"attributes\\": \\"resource\\", \\"context\\": \\"c\\",' + \
-        ' \\"c_resources\\": \\"{}\\", \\"end_time\\": \\"2024-02-05T00:05:00\\", \\"events\\": \\"[]\\", \\"fram' + \
-        'ework\\": \\"RAG\\", \\"input\\": \\"in\\", \\"links\\": \\"[]\\", \\"name\\": \\"name\\", \\"output\\":' + \
-        ' \\"out\\", \\"parent_id\\": \\"1\\", \\"span_id\\": \\"2\\", \\"span_type\\": \\"llm\\", \\"start_tim' + \
-        'e\\": \\"2024-02-05T00:02:00\\", \\"status\\": \\"OK\\", \\"trace_id\\": \\"01\\", \\"children\\": [\\"' + \
-        '{\\\\\\"attributes\\\\\\": \\\\\\"resource\\\\\\", \\\\\\"context\\\\\\": \\\\\\"c\\\\\\", \\\\\\"c_resou' + \
-        'rces\\\\\\": \\\\\\"{}\\\\\\", \\\\\\"end_time\\\\\\": \\\\\\"2024-02-05T00:04:00\\\\\\", \\\\\\"event' + \
-        's\\\\\\": \\\\\\"[]\\\\\\", \\\\\\"framework\\\\\\": \\\\\\"INTERNAL\\\\\\", \\\\\\"input\\\\\\": \\\\\\"' + \
-        'in\\\\\\", \\\\\\"links\\\\\\": \\\\\\"[]\\\\\\", \\\\\\"name\\\\\\": \\\\\\"name\\\\\\", \\\\\\"outpu' + \
-        't\\\\\\": \\\\\\"out\\\\\\", \\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\", \\\\\\"span_id\\\\\\": \\\\\\"' + \
-        '3\\\\\\", \\\\\\"span_type\\\\\\": \\\\\\"llm\\\\\\", \\\\\\"start_time\\\\\\": \\\\\\"2024-02-05T00:03:0' + \
-        '0\\\\\\", \\\\\\"status\\\\\\": \\\\\\"OK\\\\\\", \\\\\\"trace_id\\\\\\": \\\\\\"01\\\\\\", \\\\\\"childr' + \
-        'en\\\\\\": []}\\"]}", "{\\"attributes\\": \\"resource\\", \\"context\\": \\"c\\", \\"c_resources\\": \\"' + \
-        '{}\\", \\"end_time\\": \\"2024-02-05T00:07:00\\", \\"events\\": \\"[]\\", \\"framework\\": \\"LLM\\", \\"' + \
-        'input\\": \\"in\\", \\"links\\": \\"[]\\", \\"name\\": \\"name\\", \\"output\\": \\"out\\", \\"parent_' + \
-        'id\\": \\"1\\", \\"span_id\\": \\"4\\", \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:0' + \
-        '6:00\\", \\"status\\": \\"OK\\", \\"trace_id\\": \\"01\\", \\"children\\": []}"]}'
+        'tus": "OK", "trace_id": "01", "children": [{"attributes": "resource", "context": "c", "c_resources": "{}"' + \
+        ', "end_time": "2024-02-05T00:05:00", "events": "[]", "framework": "RAG", "input": "in", "links": "[]", "n' + \
+        'ame": "name", "output": "out", "parent_id": "1", "span_id": "2", "span_type": "llm", "start_time": "2024' + \
+        '-02-05T00:02:00", "status": "OK", "trace_id": "01", "children": [{"attributes": "resource", "context": "' + \
+        'c", "c_resources": "{}", "end_time": "2024-02-05T00:04:00", "events": "[]", "framework": "INTERNAL", "in' + \
+        'put": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "2", "span_id": "3", "span_type' + \
+        '": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": "01", "children": []}]}, {"at' + \
+        'tributes": "resource", "context": "c", "c_resources": "{}", "end_time": "2024-02-05T00:07:00", "events":' + \
+        ' "[]", "framework": "LLM", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "' + \
+        '1", "span_id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id":' + \
+        ' "01", "children": []}]}'
 
-    _root_span_str = '{"attributes": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FLOW",' + \
-        ' "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id":' + \
-        ' "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "0' + \
-        '1", "children": ["{\\"attributes\\": \\"{}\\", \\"end_time\\": \\"2024-02-05T00:05:00\\", \\"e' + \
-        'vents\\": \\"[]\\", \\"framework\\": \\"RAG\\", \\"input\\": \\"in\\", \\"links\\": \\"[]\\", \\"' + \
-        'name\\": \\"name\\", \\"output\\": \\"out\\", \\"parent_id\\": \\"1\\", \\"span_id\\": \\"2\\"' + \
-        ', \\"span_type\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:02:00\\", \\"status\\": \\"OK\\"' + \
-        ', \\"trace_id\\": \\"01\\", \\"children\\": [\\"{\\\\\\"attributes\\\\\\": \\\\\\"{}\\\\\\"' + \
-        ', \\\\\\"end_time\\\\\\": \\\\\\"2024-02-05T00:04:00\\\\\\", \\\\\\"events\\\\\\": \\\\\\"[]\\\\\\"' + \
-        ', \\\\\\"framework\\\\\\": \\\\\\"INTERNAL\\\\\\", \\\\\\"input\\\\\\": \\\\\\"in\\\\\\", \\\\\\"li' + \
-        'nks\\\\\\": \\\\\\"[]\\\\\\", \\\\\\"name\\\\\\": \\\\\\"name\\\\\\", \\\\\\"output\\\\\\": \\\\\\"' + \
-        'out\\\\\\", \\\\\\"parent_id\\\\\\": \\\\\\"2\\\\\\", \\\\\\"span_id\\\\\\": \\\\\\"3\\\\\\", \\\\\\"' + \
-        'span_type\\\\\\": \\\\\\"llm\\\\\\", \\\\\\"start_time\\\\\\": \\\\\\"2024-02-05T00:03:00\\\\\\",' + \
-        ' \\\\\\"status\\\\\\": \\\\\\"OK\\\\\\", \\\\\\"trace_id\\\\\\": \\\\\\"01\\\\\\", \\\\\\"childre' + \
-        'n\\\\\\": []}\\"]}", "{\\"attributes\\": \\"{}\\", \\"end_time\\": \\"2024-02-05T00:07:00\\", \\"even' + \
-        'ts\\": \\"[]\\", \\"framework\\": \\"LLM\\", \\"input\\": \\"in\\", \\"links\\": \\"[]\\", \\"name\\"' + \
-        ': \\"name\\", \\"output\\": \\"out\\", \\"parent_id\\": \\"1\\", \\"span_id\\": \\"4\\", \\"span_typ' + \
-        'e\\": \\"llm\\", \\"start_time\\": \\"2024-02-05T00:06:00\\", \\"status\\": \\"OK\\", \\"trace_id\\":' + \
-        ' \\"01\\", \\"children\\": []}"]}'
+    _root_span_str = '{{"attributes": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FL' + \
+        'OW", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id": "1",' + \
+        ' "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01", "children"' + \
+        ': [{"attributes": "{}", "end_time": "2024-02-05T00:05:00", "event' + \
+        's": "[]", "framework": "RAG", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_i' + \
+        'd": "1", "span_id": "2", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "tra' + \
+        'ce_id": "01", "children": [{"attributes": "{}", "end_time": "2024-02-05T00:04:00", "events": "[]", "fr' + \
+        'amework": "INTERNAL", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "2",' + \
+        ' "span_id": "3", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": ' + \
+        '"01", "children": []}]}, {"attributes": "{}", "end_time": "2024-02-05T00:07:00", "events": "[]", "fram' + \
+        'ework": "LLM", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "1", "span_' + \
+        'id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01", "' + \
+        'children": []}]}'
 
     _trace_log_data = [
             ["01", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
