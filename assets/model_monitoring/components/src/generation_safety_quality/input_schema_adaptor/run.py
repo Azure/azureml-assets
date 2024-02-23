@@ -4,10 +4,8 @@
 """Entry script for GSQ Input Schema Adaptor Spark Component."""
 
 import argparse
-import json
 
-from pyspark.sql import DataFrame, Row
-from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql import DataFrame
 from pyspark.sql.functions import from_json
 from shared_utilities.io_utils import (
     init_spark,
