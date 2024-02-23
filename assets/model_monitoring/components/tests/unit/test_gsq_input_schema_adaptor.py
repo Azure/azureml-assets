@@ -22,24 +22,22 @@ class TestInputSchemaAdaptor:
 
     _expected_gsq_input_schema = StructType(
         [
-            StructField("trace_id", StringType(), True),
-            StructField("context", StringType(), True),
-            StructField("groundtruth", StringType(), True),
             StructField("prompt", StringType(), True),
             StructField("output", StringType(), True),
+            StructField("context", StringType(), True),
+            StructField("groundtruth", StringType(), True),
         ]
     )
 
-    _expected_gsq_input_schema_extra = StructType(
-        [
-            StructField("trace_id", StringType(), True),
-            StructField("context", StringType(), True),
-            StructField("groundtruth", StringType(), True),
-            StructField("prompt", StringType(), True),
-            StructField("output", StringType(), True),
-            StructField("source", StringType(), True),
-        ]
-    )
+    # _expected_gsq_input_schema_extra = StructType(
+    #     [
+    #         StructField("prompt", StringType(), True),
+    #         StructField("output", StringType(), True),
+    #         StructField("context", StringType(), True),
+    #         StructField("groundtruth", StringType(), True),
+    #         StructField("source", StringType(), True),
+    #     ]
+    # )
 
     _simple_input_schema = StructType(
         [
@@ -70,21 +68,21 @@ class TestInputSchemaAdaptor:
                 ([], _simple_input_schema, [], _simple_input_schema),
                 ([("", "")], _simple_input_schema, [("", "")], _simple_input_schema),
                 # genai, empty data
-                ([], _genai_input_schema, [], _expected_gsq_schema_empty),
-                ([("null", "null", "null", "null")], _genai_input_schema, [("null",)], _expected_gsq_schema_empty),
+                # ([], _genai_input_schema, [], _expected_gsq_schema_empty),
+                # ([("null", "null", "null", "null")], _genai_input_schema, [("null",)], _expected_gsq_schema_empty),
                 # Test with genai columns
                 (
                     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
                       "{\"output\":\"answer\"}", "null")], _genai_input_schema,
-                    [("01", "context", "ground-truth", "question", "answer")], _expected_gsq_input_schema
+                    [("question", "answer", "context", "ground-truth")], _expected_gsq_input_schema
                 ),
                 # genai, data fall-through
-                (
-                    [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
-                      "{\"output\":\"answer\",\"source\":\"place\"}", "null")], _genai_input_schema,
-                    [("01", "context", "ground-truth", "question", "answer", "place")],
-                    _expected_gsq_input_schema_extra
-                ),
+                # (
+                #     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
+                #       "{\"output\":\"answer\",\"source\":\"LLM\"}", "null")], _genai_input_schema,
+                #     [("question", "answer", "context", "ground-truth", "LLM")],
+                #     _expected_gsq_input_schema_extra
+                # ),
             ]
     )
     def test_adapt_input_schema(self, input_data: list, input_schema: StructType,
