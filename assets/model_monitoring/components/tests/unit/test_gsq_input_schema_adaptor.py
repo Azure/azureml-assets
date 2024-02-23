@@ -22,22 +22,33 @@ class TestInputSchemaAdaptor:
 
     _expected_gsq_input_schema = StructType(
         [
-            StructField("prompt", StringType(), True),
-            StructField("output", StringType(), True),
+            StructField("trace_id", StringType(), True),
             StructField("context", StringType(), True),
             StructField("groundtruth", StringType(), True),
+            StructField("prompt", StringType(), True),
+            StructField("output", StringType(), True),
+            StructField("root_span", StringType(), True),
         ]
     )
 
-    # _expected_gsq_input_schema_extra = StructType(
-    #     [
-    #         StructField("prompt", StringType(), True),
-    #         StructField("output", StringType(), True),
-    #         StructField("context", StringType(), True),
-    #         StructField("groundtruth", StringType(), True),
-    #         StructField("source", StringType(), True),
-    #     ]
-    # )
+    _expected_gsq_input_schema_extra = StructType(
+        [
+            StructField("trace_id", StringType(), True),
+            StructField("context", StringType(), True),
+            StructField("groundtruth", StringType(), True),
+            StructField("prompt", StringType(), True),
+            StructField("output", StringType(), True),
+            StructField("source", StringType(), True),
+            StructField("root_span", StringType(), True),
+        ]
+    )
+
+    _expected_gsq_input_schema_empty = StructType(
+        [
+            StructField("trace_id", StringType(), True),
+            StructField("root_span", StringType(), True),
+        ]
+    )
 
     _simple_input_schema = StructType(
         [
@@ -55,34 +66,32 @@ class TestInputSchemaAdaptor:
         ]
     )
 
-    _expected_gsq_schema_empty = StructType(
-        [
-            StructField("trace_id", StringType(), True),
-        ]
-    )
-
     @pytest.mark.parametrize(
             "input_data, input_schema, expected_data, expected_schema",
             [
                 # Test no data, should be pass-through
                 ([], _simple_input_schema, [], _simple_input_schema),
                 ([("", "")], _simple_input_schema, [("", "")], _simple_input_schema),
-                # genai, empty data
+                # genai, empty data, throws error
                 # ([], _genai_input_schema, [], _expected_gsq_schema_empty),
-                # ([("null", "null", "null", "null")], _genai_input_schema, [("null",)], _expected_gsq_schema_empty),
+                # genai, empty input/output columns
+                (
+                    [("01", "null", "null", "null")], _genai_input_schema,
+                    [("01","null")], _expected_gsq_input_schema_empty
+                ),
                 # Test with genai columns
                 (
                     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
                       "{\"output\":\"answer\"}", "null")], _genai_input_schema,
-                    [("question", "answer", "context", "ground-truth")], _expected_gsq_input_schema
+                    [("01", "context", "ground-truth", "question", "answer", "null")], _expected_gsq_input_schema
                 ),
                 # genai, data fall-through
-                # (
-                #     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
-                #       "{\"output\":\"answer\",\"source\":\"LLM\"}", "null")], _genai_input_schema,
-                #     [("question", "answer", "context", "ground-truth", "LLM")],
-                #     _expected_gsq_input_schema_extra
-                # ),
+                (
+                    [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
+                      "{\"output\":\"answer\",\"source\":\"LLM\"}", "null")], _genai_input_schema,
+                    [("01", "context", "ground-truth", "question", "answer", "LLM", "null")],
+                    _expected_gsq_input_schema_extra
+                ),
             ]
     )
     def test_adapt_input_schema(self, input_data: list, input_schema: StructType,

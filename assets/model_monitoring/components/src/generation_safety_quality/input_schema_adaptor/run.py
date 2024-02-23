@@ -13,21 +13,11 @@ from shared_utilities.io_utils import (
     try_read_mltable_in_spark_with_error,
 )
 from shared_utilities.momo_exceptions import InvalidInputError
+from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
 
 
 GENAI_ROOT_SPAN_SCHEMA_COLUMN = "root_span"
 GENAI_TRACE_ID_SCHEMA_COLUMN = "trace_id"
-
-
-def _get_input_schema_adaptor_map() -> dict:
-    """Map the gsq input schema names to expected agg trace log schema colum/field name."""
-    map = {
-        "prompt": "input.prompt",
-        "answer": "output.output",
-        "context": "input.context",
-        "ground_truth": "input.groundtruth",
-    }
-    return map
 
 
 def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
@@ -42,26 +32,21 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
     input_schema = spark.read.json(df.rdd.map(lambda row: row.input)).schema
     output_schema = spark.read.json(df.rdd.map(lambda row: row.output)).schema
 
-    transformed_df = df.withColumns({
+    df = df.withColumns({
         'temp_input': from_json(df.input, input_schema),
         'temp_output': from_json(df.output, output_schema),
-    }).select('trace_id', 'temp_input.*', 'temp_output.*')
+    }).select('trace_id', 'temp_input.*', 'temp_output.*', 'root_span')
 
-    select_gsq_cols = []
-    df_columns = transformed_df.columns
-    for mapping in _get_input_schema_adaptor_map().values():
-        _, col_name = mapping.split('.')
-        if col_name in df_columns:
-            select_gsq_cols.append(col_name)
-    transformed_df = transformed_df.select(select_gsq_cols)
-    transformed_df.show(truncate=False)
-    if transformed_df.isEmpty():
+    # flatten unpacked json columns to json_string if necessary
+    df = _convert_complex_columns_to_json_string(df)
+
+    df.show(truncate=False)
+    if df.isEmpty():
         raise InvalidInputError(
             "Failed to adapt the GenAI trace log schema to GSQ input columns." +
-            " Double-check the trace log dataframe 'input'/'output' columns to make sure there is GSQ expected data" +
-            f" (ex. should have some of these: '{', '.join(_get_input_schema_adaptor_map().values())})'"
+            " Double-check the trace log dataframe 'input'/'output' columns to make sure there is data."
         )
-    return transformed_df
+    return df
 
 
 def run():
