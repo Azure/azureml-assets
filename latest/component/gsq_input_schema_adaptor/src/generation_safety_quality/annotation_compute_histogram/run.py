@@ -628,8 +628,8 @@ def apply_annotation(
                 data=rows,
                 task_type="qa",
                 data_mapping={
-                    "questions": PROMPT,
-                    "contexts": CONTEXT,
+                    "question": PROMPT,
+                    "context": CONTEXT,
                     "answer": COMPLETION,
                     "ground_truth": GROUND_TRUTH
                 },
