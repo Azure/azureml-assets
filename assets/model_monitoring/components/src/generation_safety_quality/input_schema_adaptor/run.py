@@ -12,7 +12,6 @@ from shared_utilities.io_utils import (
     save_spark_df_as_mltable,
     try_read_mltable_in_spark_with_error,
 )
-from shared_utilities.df_utils import try_get_df_column
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
