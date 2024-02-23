@@ -3,7 +3,7 @@ channels:
 - anaconda
 - conda-forge
 dependencies:
-- python=3.8
+- python=3.9
 - pip=21.3.1
 - pandas>=1.1,<1.2
 - scipy~=1.10.0
@@ -21,7 +21,7 @@ dependencies:
   - distributed~=2021.10.0
   - adlfs~=0.7.0
   # vulnerabilities
-  - cryptography>=41.0.4
+  - cryptography>=42.0.2
   - aiohttp>=3.8.5
   - certifi >= 2023.07.22
   - requests >= 2.31.0
