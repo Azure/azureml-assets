@@ -9,6 +9,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import TimestampType
 from pyspark.sql.utils import AnalysisException
 from pyspark.sql.functions import lit
+from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities.io_utils import save_spark_df_as_mltable
 from model_data_collector_preprocessor.store_url import StoreUrl
 
@@ -67,6 +68,14 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     df = df.withColumns(
         {'end_time': df.end_time.cast(TimestampType()), 'start_time': df.start_time.cast(TimestampType())}
     )
+
+    # check that cast was successful. Failed cast will result in 'null' values
+    if not df.filter(df.start_time.isNull()).isEmpty() or not df.filter(df.end_time.isNull()).isEmpty():
+        raise InvalidInputError(
+            "The start or end time columns of the raw span logs contain invalid Timestamp strings." +
+            " The strings should be parseable by pyspark's TimestampType(), usually we expect iso-format." +
+            " Double check the raw input data 'start_time' and 'end_time' column values."
+        )
 
     df = _promote_fields_from_attributes(df)
 
