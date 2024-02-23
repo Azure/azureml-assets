@@ -306,18 +306,19 @@ class TestGenAISparkPreprocessor:
     ]
 
     @pytest.mark.parametrize(
-            "span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema",
+            "span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data",
             [
-                ([], _preprocessed_log_schema, [], _trace_log_schema),
-                (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema),
+                ([], _preprocessed_log_schema, [], _trace_log_schema, True),
+                (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema, True),
                 (
                     _span_log_data_extra, _preprocessed_log_schema_extra,
-                    _trace_log_data_extra, _trace_log_schema),
+                    _trace_log_data_extra, _trace_log_schema, True),
+                (_span_log_data, _preprocessed_log_schema, [], _trace_log_schema, False),
             ]
     )
     def test_trace_aggregator(
             self, genai_preprocessor_test_setup,
-            span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema):
+            span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data):
         """Test scenario where spans has real data."""
         spark = self._init_spark()
         # infer schema only when we have data.
@@ -332,7 +333,7 @@ class TestGenAISparkPreprocessor:
         expected_traces_df.show()
         expected_traces_df.printSchema()
 
-        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df)
+        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df, require_trace_data)
 
         print("actual trace logs:")
         actual_trace_df.show()

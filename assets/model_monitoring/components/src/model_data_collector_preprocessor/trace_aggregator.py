@@ -11,6 +11,7 @@ from model_data_collector_preprocessor.span_tree_utils import SpanTree, SpanTree
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_aggregated_trace_log_spark_df_schema,
 )
+from shared_utilities.io_utils import init_spark
 
 
 def _construct_aggregated_trace_entry(span_tree: SpanTree, output_schema: StructType) -> tuple:
@@ -33,8 +34,14 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row, output_schema: StructTy
     return _construct_aggregated_trace_entry(tree, output_schema)
 
 
-def process_spans_into_aggregated_traces(span_logs: DataFrame) -> DataFrame:
+def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_data: bool) -> DataFrame:
     """Group span logs into aggregated trace logs."""
+    if not require_trace_data:
+        print("Skip processing of spans into aggregated traces.")
+        spark = init_spark()
+        schema = _get_aggregated_trace_log_spark_df_schema()
+        return spark.createDataFrame(data=[], schema=schema)
+
     print("Processing spans into aggregated traces...")
 
     span_logs_schema = span_logs.schema

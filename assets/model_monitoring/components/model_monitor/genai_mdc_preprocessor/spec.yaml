@@ -19,6 +19,9 @@ inputs:
   input_data:
     type: uri_folder
     mode: direct
+  require_trace_data:
+    type: bool
+    default: true
 outputs:
   preprocessed_span_data:
     type: mltable
