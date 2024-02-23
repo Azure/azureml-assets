@@ -26,6 +26,7 @@ Contact Information:
 Where to Send Comments: Feedback can be provided by opening an issue in the Hugging Face community's model repository.
 
 Why Upstage LLM: The Upstage LLM research, particularly the 70B model, holds a leading position in openLLM rankings as of August 1st. The model invites businesses to implement private LLM, offering fine-tuning options with personalized data. Contact details are provided for a tailored solution.
+
 In summary, Upstage's LLaMa-30b-instruct-2048 is an English language model with various parameter sizes and sequence lengths. Access is granted through a form submission due to licensing restrictions. The model has been tested on specific hardware, fine-tuned using a combination of libraries, and evaluated on benchmark datasets. Ethical considerations are addressed, and the model's success is highlighted, inviting businesses to explore private LLM implementation.
 
 For More details reach out to us: https://www.upstage.ai/
