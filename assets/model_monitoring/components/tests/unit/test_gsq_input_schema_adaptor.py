@@ -11,6 +11,7 @@ from src.generation_safety_quality.input_schema_adaptor.run import (
 )
 
 
+@pytest.mark.gsq_test
 @pytest.mark.unit
 class TestInputSchemaAdaptor:
     """Test class for GSQ - Input Schema Adaptor."""
