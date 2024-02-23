@@ -356,8 +356,8 @@ class TestGenAISparkPreprocessor:
 
         try:
             _ = _genai_uri_folder_to_preprocessed_spark_df(
-            window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
-            input_url, my_add_tags)
+                window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
+                input_url, my_add_tags)
             assert False
         except Exception as ex:
             assert "The start or end time columns of the raw span logs contain invalid Timestamp strings." in str(ex)
