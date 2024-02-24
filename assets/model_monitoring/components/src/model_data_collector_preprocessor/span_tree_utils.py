@@ -173,6 +173,7 @@ class SpanTreeNode:
         """String representation of SpanTreeNode"""
         return f"SpanTreeNode(span_id: {self.span_id}, trace_id: {self.trace_id})"
 
+
 class SpanTree:
     """Spantree class."""
 
