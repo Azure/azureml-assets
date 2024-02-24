@@ -648,6 +648,9 @@ def apply_annotation(
                 tabular_result[CORRELATION_ID] = correlation_ids
             # rename metric columns
             for column_name in metrics_list:
+                # set failures to -1
+                tabular_result[column_name] = pd.to_numeric(tabular_result[column_name], errors='coerce')
+                tabular_result[column_name].fillna(-1, inplace=True)
                 tabular_result.rename(
                     columns={column_name: COLUMN_TO_COMPACT_METRIC_NAME[column_name]},
                     inplace=True)
@@ -708,7 +711,9 @@ def apply_annotation(
         print(f"Begin {metric_name} processing.")
         metric_name_compact = get_compact_metric_name(metric_name)
         # Get rating counts
-        metrics_df = annotations_df.select(metric_name_compact).groupBy(metric_name_compact).count()
+        filtered_annotations_df = annotations_df.select(
+            metric_name_compact).filter(col(metric_name_compact) != -1)
+        metrics_df = filtered_annotations_df.groupBy(metric_name_compact).count()
         metrics_df.show()
         print("Finished annotating answers.")
         metrics_pdf = metrics_df.withColumnRenamed(metric_name_compact, RATING).select("*").toPandas()
@@ -729,7 +734,7 @@ def apply_annotation(
         violation_columns = renamed_columns.copy()
         violation_columns.append(metric_name_compact)
         violations_df = annotations_df.select(violation_columns).filter(
-                col(metric_name_compact) < metric_threshold_value)
+                (col(metric_name_compact) < metric_threshold_value) & (col(metric_name_compact) != -1))
         if violations_df.count() > 0:
             # rename columns back to original names
             violations_df = (violations_df.withColumnRenamed(PROMPT, prompt_column_name)
