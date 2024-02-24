@@ -170,7 +170,7 @@ class SpanTreeNode:
         return self.end_time < other.end_time
 
     def __repr__(self) -> str:
-        """String representation of SpanTreeNode"""
+        """Get representation of SpanTreeNode."""
         return f"SpanTreeNode(span_id: {self.span_id}, trace_id: {self.trace_id})"
 
 
