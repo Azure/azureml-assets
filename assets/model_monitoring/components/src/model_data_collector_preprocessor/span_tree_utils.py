@@ -9,7 +9,7 @@ import json
 
 from typing import Iterator, List
 from pyspark.sql import Row
-from pyspark.sql.utils import AnalysisException
+from pyspark.sql.types import PySparkValueError
 
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -26,7 +26,7 @@ class SpanTreeNode:
         """Wrap span row retrieval to catch access errors."""
         try:
             return self._span_row[attribute_key]
-        except AnalysisException as ex:
+        except PySparkValueError as ex:
             print(
                 "Failed to retrieve row attribute with error: " +
                 str(ex)
@@ -169,6 +169,9 @@ class SpanTreeNode:
         """Compare by end_time in bisect.insort() for python3.8."""
         return self.end_time < other.end_time
 
+    def __repr__(self) -> str:
+        """String representation of SpanTreeNode"""
+        return f"SpanTreeNode(span_id: {self.span_id}, trace_id: {self.trace_id})"
 
 class SpanTree:
     """Spantree class."""
@@ -205,6 +208,7 @@ class SpanTree:
     def _construct_span_tree(self, spans: List[SpanTreeNode]) -> SpanTreeNode:
         """Build the span tree in ascending time order from list of all spans."""
         # construct a dict with span_id as key and span as value
+        root_span = None
         span_map = {span.span_id: span for span in spans}
         for span in span_map.values():
             parent_id = span.parent_id
@@ -214,6 +218,10 @@ class SpanTree:
                 parent_span = span_map.get(parent_id)
                 if parent_span is not None:
                     parent_span.insert_child(span)
+        if root_span is None:
+            raise InvalidInputError(
+                f"Failed to get root span while building trace tree from span map: {span_map}"
+            )
         return root_span
 
     def __iter__(self) -> Iterator[SpanTreeNode]:

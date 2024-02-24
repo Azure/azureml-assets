@@ -280,3 +280,17 @@ class TestSpanTreeUtilities:
                         assert actual_dict[keyname] == expected_datetime
                 else:
                     assert actual_dict[keyname] == node._span_row[keyname]
+
+    def test_span_tree_no_root(self):
+        """Test scenario where we don't have a root span node in spans."""
+        s0 = SpanTreeNode(
+            Row(trace_id="1", span_id="1", parent_id="0", start_time=datetime(2024, 2, 12, 0, 0, 1),
+                end_time=datetime(2024, 2, 12, 1, 40, 0))
+        )
+        spans = [s0]
+
+        try:
+            _ = SpanTree(spans)
+            assert False
+        except Exception as ex:
+            assert "Failed to get root span while building trace tree" in str(ex)
