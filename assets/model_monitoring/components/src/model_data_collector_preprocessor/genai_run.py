@@ -49,12 +49,33 @@ def _promote_fields_from_attributes(df: DataFrame) -> DataFrame:
         except AnalysisException:
             return None
 
+    fields_to_promote_mapping = _get_important_field_mapping()
     df = df.withColumns(
         {
             key: (df_col if (df_col := try_get_df_column(df, col_name)) is not None else lit(df_col))
-            for key, col_name in _get_important_field_mapping().items()
+            for key, col_name in fields_to_promote_mapping.items()
         }
     )
+
+    def try_drop_field(df: DataFrame, col_name: str, field_name: str):
+        """Drop field (or whole column) from nested columns like context, attributes. No op if encounter exception."""
+        df_col = try_get_df_column(df, col_name)
+        if df_col is None:
+            return df
+        try:
+            return df.withColumn(col_name, df_col.dropFields(field_name))
+        except AnalysisException as ex:
+            if "DATATYPE_MISMATCH.CANNOT_DROP_ALL_FIELDS" in str(ex):
+                return df.drop(col_name)
+            print(ex)
+            return df
+
+    # remove promoted data from source to avoid duplication. 'status' col is already overwritten so no duplication
+    fields_to_promote_mapping.pop('status', None)
+
+    for field_name_in_data in fields_to_promote_mapping.values():
+        col_name, nested_field_name = field_name_in_data.split('.')
+        df = try_drop_field(df, col_name, nested_field_name)
     return df
 
 
