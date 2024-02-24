@@ -3,7 +3,7 @@ channels:
 - anaconda
 - conda-forge
 dependencies:
-- python=3.8
+- python=3.9
 - pip=21.3.1
 - pandas>=1.1,<1.2
 - scipy~=1.10.0
@@ -15,13 +15,13 @@ dependencies:
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
   - azureml-automl-common-tools=={{latest-pypi-version}}
-  - scikit-learn~=0.24.1
+  - scikit-learn~=1.0.1
   - xgboost~=1.4.0
   - lightgbm~=3.3.5
   - distributed~=2021.10.0
   - adlfs~=0.7.0
   # vulnerabilities
-  - cryptography>=41.0.4
+  - cryptography>=42.0.2
   - aiohttp>=3.8.5
   - certifi >= 2023.07.22
   - requests >= 2.31.0
