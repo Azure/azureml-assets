@@ -257,7 +257,7 @@ class TestGenAISparkPreprocessor:
         '1", "span_id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id":' + \
         ' "01", "children": []}]}'
 
-    _root_span_str = '{{"attributes": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FL' + \
+    _root_span_str = '{"attributes": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FL' + \
         'OW", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id": "1",' + \
         ' "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01", "children"' + \
         ': [{"attributes": "{}", "end_time": "2024-02-05T00:05:00", "event' + \
