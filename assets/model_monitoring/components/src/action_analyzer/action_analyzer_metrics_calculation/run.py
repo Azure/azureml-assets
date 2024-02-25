@@ -141,26 +141,6 @@ Retrieval_document_RELEVANCE_TEMPLATE = "\n\n".join(
     ]
 )
 
-def get_output_schema() -> StructType:
-    """Get Action Data Spark DataFrame Schema."""
-    schema = StructType(
-        [
-            StructField("trace_id", StringType(), True),
-            StructField("span_id", StringType(), True),
-            StructField("root_question", StringType(), True),
-            StructField("question", StringType(), True),
-            StructField("answer", StringType(), True),
-            StructField("topic_list", StringType(), True),
-            StructField("group_list", StringType(), True),
-            StructField("violated_metrics", StringType(), True),
-            StructField("index_content", StringType(), True),
-            StructField("index_id", StringType(), True),
-            StructField("context", StringType(), True),
-            StructField("index_score", IntegerType(), True),
-        ]
-    )
-    return schema
-
 
 def query_relevance_scores(
     turns: List[Tuple[str, str, str]],
@@ -267,6 +247,26 @@ def get_index_score(question, answer, context, workspace_connection_arm_id, mode
         )
     return rating
 
+def get_output_schema() -> StructType:
+    """Get Action Data Spark DataFrame Schema."""
+    schema = StructType(
+        [
+            StructField("trace_id", StringType(), True),
+            StructField("span_id", StringType(), True),
+            StructField("root_question", StringType(), True),
+            StructField("question", StringType(), True),
+            StructField("answer", StringType(), True),
+            StructField("topic_list", StringType(), True),
+            StructField("group_list", StringType(), True),
+            StructField("violated_metrics", StringType(), True),
+            StructField("index_content", StringType(), True),
+            StructField("index_id", StringType(), True),
+            StructField("context", StringType(), True),
+            StructField("index_score", IntegerType(), True),
+        ]
+    )
+    return schema
+
 
 def run():
     """Calculate metrics."""
@@ -283,11 +283,15 @@ def run():
     parser.add_argument("--presence_penalty", type=float, default=0.0)
     parser.add_argument("--stop", type=str, default=None)
     parser.add_argument("--api_call_retry_backoff_factor", type=int, default=4)
-    parser.add_argument("--api_call_retry_max_count", type=int, default=10)
+    parser.add_argument("--api_call_retry_max_count", type=int, default=20)
     args = parser.parse_args()
     request_args = get_openai_request_args(args)
 
-    data_with_groups_df = try_read_mltable_in_spark(args.data_with_groups, "data_with_groups")
+    data_with_groups_df = try_read_mltable_in_spark(
+        args.data_with_groups, "data_with_groups"
+    )
+
+    #data_with_groups_df = try_read_mltable_in_spark("azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/rag-prp-test/workspaces/fepproj2/datastores/workspaceblobstore/paths/LocalUpload/0c2c0d4d3d24ef52727ae12fbd6b7e55/mltable_empty/", "empty")
 
     if not data_with_groups_df or data_with_groups_df.isEmpty():
         print("No input data found, creating an empty dataframe.")
@@ -298,7 +302,8 @@ def run():
         get_index_score(col("query"), col("answer"), col("text"), lit(args.workspace_connection_arm_id), lit(args.model_deployment_name),
                           lit(args.api_call_retry_max_count), lit(args.api_call_retry_backoff_factor), lit(json.dumps(request_args))))
 
-    data_with_metric_score_df = data_with_metric_score_df.withColumn("index_id", lit("1"))
+    print("data_with_metric_score_df")
+    data_with_metric_score_df.show()
     save_spark_df_as_mltable(data_with_metric_score_df, args.data_with_action_metric_score)
 
 if __name__ == "__main__":

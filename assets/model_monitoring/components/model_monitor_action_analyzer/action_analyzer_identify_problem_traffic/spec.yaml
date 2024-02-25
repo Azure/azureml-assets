@@ -70,9 +70,9 @@ conf:
           - azureml-fsspec
           - fsspec~=2023.4.0
           - protobuf==3.20.1
-          - azure-ai-generative==1.0.0b6
-          - azure-ai-resources==1.0.0b6
-          - openai
+          - azure-ai-generative==1.0.0b7
+          - azure-ai-resources==1.0.0b7
+          - openai~=1.11.1
           - promptflow[azure]~=1.4.1
           - promptflow-tools~=1.1.0
           - keyrings.alt~=5.0.0

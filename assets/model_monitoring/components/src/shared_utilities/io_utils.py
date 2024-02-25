@@ -152,6 +152,5 @@ def create_spark_df(rows: list, schema: StructType):
 
 def save_empty_dataframe(schema: StructType, output_path: str):
     """Save empty Data Spark DataFrame."""
-    schema = get_output_schema()
     df = create_spark_df([], schema)
     save_spark_df_as_mltable(df, output_path)

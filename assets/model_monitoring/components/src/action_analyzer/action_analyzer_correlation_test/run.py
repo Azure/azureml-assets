@@ -44,6 +44,7 @@ def generate_action_rows(pdf, index_set, group_set):
     actions_row = []
     for index in index_set:
         for group in group_set:
+            print("Group: ", group)
             metrics = group.split("_")[0]
             good_group_name = f"{metrics}_good_group"
             if group == good_group_name:
@@ -52,20 +53,26 @@ def generate_action_rows(pdf, index_set, group_set):
             index_df = pdf[pdf['index_id'] == index]
             good_answer_scores = index_df[index_df['group_list'].apply(lambda x: good_group_name in x)]['index_score']
             bad_answer_scores = index_df[index_df['group_list'].apply(lambda x: group in x)]['index_score']
+            good_answer_names = index_df[index_df['group_list'].apply(lambda x: good_group_name in x)][["question", "index_score"]]
+            bad_answer_names = index_df[index_df['group_list'].apply(lambda x: group in x)][["question", "index_score"]]
+            print("good answer questions: ")
+            print(good_answer_names)
+            print("bad answer questions: ")
+            print(bad_answer_names)
             t_stat, p_value = perform_ttest(good_answer_scores, bad_answer_scores)
             if t_stat > 0 and p_value < 0.05:
-                # entry: [index_id, group, confidence_score]
+                #entry: [index_id, group, confidence_score]
                 entry = [
                     index,
                     group,
-                    1-p_value
+                    float(1.0 - p_value)
                 ]
                 actions_row.append(entry)
     return actions_row
 
 
 def perform_ttest(good_answer_scores, bad_answer_scores):
-    t_stat, p_value = stats.ttest_ind(good_answer_scores, good_answer_scores)
+    t_stat, p_value = stats.ttest_ind(good_answer_scores, bad_answer_scores, equal_var=False)
     print(f"T-statistic: {t_stat}, P-value: {p_value}")
     return t_stat, p_value
 
@@ -92,7 +99,7 @@ def run():
         args.data_with_action_metric_score, "data_with_action_metric_score"
     )
 
-    if data_with_action_metric_score_df.isEmpty():
+    if not data_with_action_metric_score_df or data_with_action_metric_score_df.isEmpty():
         print("Empty metrics score data")
         save_empty_dataframe(get_output_schema(), args.action_data)
         return

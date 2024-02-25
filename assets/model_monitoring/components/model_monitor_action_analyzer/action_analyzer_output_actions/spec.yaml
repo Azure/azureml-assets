@@ -20,7 +20,7 @@ inputs:
     type: string
 outputs:
   action_output:
-    type: mltable
+    type: uri_folder
     mode: direct
 
 conf:

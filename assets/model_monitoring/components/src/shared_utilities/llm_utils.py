@@ -386,7 +386,6 @@ def _request_api(
                 ],
             }
         )
-
         return parsed_response, time_taken
 
     else:

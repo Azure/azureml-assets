@@ -15,6 +15,7 @@ from shared_utilities.io_utils import try_read_mltable_in_spark, save_spark_df_a
 import uuid
 import datetime
 import copy
+from shared_utilities.amlfs import amlfs_upload
 
 INDEX_ACTION_TYPE = "Index Action"
 DESCRIPTION = "Poor answers are caused by poor indexing, please update the doc index with id "
@@ -40,6 +41,7 @@ def get_unique_index(df):
 
 def write_actions(action_bad_group_df, action_good_group_df, action_output_folder, model_deployment_name, signal_name):
     index_set = get_unique_index(action_bad_group_df)
+    local_path = str(uuid.uuid4())
     action_summary = {}
     for index_id in index_set:
         row = action_bad_group_df.filter(col("index_id") == index_id).collect()[0]
@@ -52,7 +54,7 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
             "ConfidenceScore": confidence_score,
             "Signal": signal_name,
             "CreationTime": str(datetime.datetime.now()),
-            "RelativePath": os.path.join(action_output_folder, f"{action_id}.json")
+            "RelativePath": os.path.join(action_output_folder, f"actions/{action_id}.json")
         }
         action_summary[action_id] = action
         action_detail = copy.deepcopy(action)
@@ -61,8 +63,14 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
         action_detail["Index"] = row["index_content"]
         action_detail["PositiveSamples"] = generate_samples(action_bad_group_df, False)
         action_detail["NegativeSamples"] = generate_samples(action_good_group_df, True)
-        write_to_file(action_detail, action_output_folder, action_id)
-    write_to_file(action_summary, action_output_folder, "action_summary")
+        print("Writing action detail of action: ")
+        print(action)
+        write_to_file(action_detail, local_path, action_id)
+    print("Writing action summary to location ", action_output_folder)
+    print(action_summary)
+    write_to_file(action_summary, local_path, "action_summary")
+    target_remote_path = os.path.join(action_output_folder, "actions")
+    amlfs_upload(local_path=local_path, remote_path=target_remote_path)
 
 
 def generate_samples(action_df, is_negative_sample):
@@ -108,7 +116,6 @@ def run():
 
     if not action_data_df or action_data_df.isEmpty():
         print("Empty action data, create an empty folder.")
-        os.makedirs(args.action_output, exist_ok=True)
         return
 
     data_with_action_metric_score_df = try_read_mltable_in_spark(
@@ -121,12 +128,17 @@ def run():
     action_with_group_df = data_with_action_metric_score_df.join(merged_action, ['index_id'], "inner")
 
     action_bad_group_df = action_with_group_df.filter(is_action_bad_group(col("group_list"), col("action_group_set"))== True)
+    print("bad group")
     action_bad_group_df.show()
-    action_good_group_df = action_with_group_df.filter((col("groundedness_score") == 5)
-                                                        & (col("relevance_score") == 5)
-                                                        & (col("coherence_score") == 5)
-                                                        & (col("fluency_score") == 5)
-                                                        & (col("similarity_score") == 5))
+    # action_good_group_df = action_with_group_df.filter((col("groundedness_score") == 5)
+    #                                                     & (col("relevance_score") == 5)
+    #                                                     & (col("coherence_score") == 5)
+    #                                                     & (col("fluency_score") == 5)
+    #                                                     & (col("similarity_score") == 5))
+
+    action_good_group_df = action_with_group_df.filter((col("coherence_score") == 5)
+                                                    & (col("fluency_score") == 5))
+    print("good group")
     action_good_group_df.show()
 
     write_actions(action_bad_group_df, action_good_group_df, args.action_output, args.model_deployment_name, args.signal_name)
