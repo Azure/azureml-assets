@@ -318,16 +318,15 @@ def run():
         save_empty_dataframe(get_output_schema(), args.data_with_action_metric_score)
         return
 
-    data_with_metric_score_df = data_with_groups_df
-                                .withColumn("index_score",
-                                            get_index_score(col("query"),
-                                            col("answer"),
-                                            col("text"),
-                                            lit(args.workspace_connection_arm_id),
-                                            lit(args.model_deployment_name),
-                                            lit(args.api_call_retry_max_count),
-                                            lit(args.api_call_retry_backoff_factor),
-                                            lit(json.dumps(request_args))))
+    idnex_score = get_index_score(col("query"),
+                                  col("answer"),
+                                  col("text"),
+                                  lit(args.workspace_connection_arm_id),
+                                  lit(args.model_deployment_name),
+                                  lit(args.api_call_retry_max_count),
+                                  lit(args.api_call_retry_backoff_factor),
+                                  lit(json.dumps(request_args)))
+    data_with_metric_score_df = data_with_groups_df.withColumn("index_score", idnex_score)
 
     print("data_with_metric_score_df")
     data_with_metric_score_df.show()

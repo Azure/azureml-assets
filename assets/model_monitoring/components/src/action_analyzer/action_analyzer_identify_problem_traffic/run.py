@@ -312,13 +312,13 @@ def run():
 
     signal_scored_data_df.show()
     gsq_input = Get_gsq_input(col("input"), col("output"), col("root_span"))
-    signal_scored_data_df = signal_scored_data_df.withColumn("question", gsq_input["question"])
-                                                 .withColumn("answer", gsq_input["answer"])
-                                                 .drop("user_id")
-                                                 .drop("session_id")
-                                                 .drop("start_time")
-                                                 .drop("end_time")
-                                                 .drop("input")
+    signal_scored_data_df = signal_scored_data_df.withColumn("question", gsq_input["question"]) \
+                                                 .withColumn("answer", gsq_input["answer"]) \
+                                                 .drop("user_id") \
+                                                 .drop("session_id") \
+                                                 .drop("start_time") \
+                                                 .drop("end_time") \
+                                                 .drop("input") \
                                                  .drop("output")
                                             # .withColumn("context", gsq_input["text"])\
     # signal_scored_data_df = signal_scored_data_df.withColumn("ground_truth", col("answer"))

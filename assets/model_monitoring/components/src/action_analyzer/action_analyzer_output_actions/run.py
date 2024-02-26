@@ -125,8 +125,7 @@ def run():
 
     # todo remove the groupby logic by using pure python or pandas
     merged_action = action_data_df.groupby("index_id").agg(collect_set("group").alias("action_group_set"),
-                                                           mean("confidence_score").alias("action_confidence_score"))
-                                                      .withColumn("action_id", generate_guid())
+                                                           mean("confidence_score").alias("action_confidence_score")).withColumn("action_id", generate_guid()) # noqa: E501
     action_with_group_df = data_with_action_metric_score_df.join(merged_action, ['index_id'], "inner")
 
     action_bad_group_df = action_with_group_df.filter(is_action_bad_group(col("group_list"),

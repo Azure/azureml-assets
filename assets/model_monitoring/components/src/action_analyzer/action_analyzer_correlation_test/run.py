@@ -51,10 +51,8 @@ def generate_action_rows(pdf, index_set, group_set):
             index_df = pdf[pdf['index_id'] == index]
             good_answer_scores = index_df[index_df['group_list'].apply(lambda x: good_group_name in x)]['index_score']
             bad_answer_scores = index_df[index_df['group_list'].apply(lambda x: group in x)]['index_score']
-            good_answer_names = index_df[index_df['group_list']
-                                .apply(lambda x: good_group_name in x)][["question", "index_score"]]
-            bad_answer_names = index_df[index_df['group_list']
-                                .apply(lambda x: group in x)][["question", "index_score"]]
+            good_answer_names = index_df[index_df['group_list'].apply(lambda x: good_group_name in x)][["question", "index_score"]] # noqa: E501
+            bad_answer_names = index_df[index_df['group_list'].apply(lambda x: group in x)][["question", "index_score"]] # noqa: E501
             print("good answer questions: ")
             print(good_answer_names)
             print("bad answer questions: ")
