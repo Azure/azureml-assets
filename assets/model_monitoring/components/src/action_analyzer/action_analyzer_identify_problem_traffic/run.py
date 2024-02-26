@@ -286,9 +286,8 @@ def run():
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_with_groups", type=str)
-    parser.add_argument("--production_data", type=str)
-    parser.add_argument("--signal_scored_output", type=str)
-    parser.add_argument("--violated_metrics_names", type=str)
+    parser.add_argument("--signal_scored_data", type=str)
+    parser.add_argument("--signal_output", type=str)
     parser.add_argument("--model_deployment_name", type=str, required=True)
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
     parser.add_argument("--temperature", type=float, default=0.0)
@@ -303,32 +302,25 @@ def run():
 
     request_args = get_openai_request_args(args)
 
-    violated_metrics_df = try_read_mltable_in_spark(
-        args.violated_metrics_names, "violated_metrics"
+    # Todo: parse signal_output and get the violated metrics. Or return empty
+
+    signal_scored_data_df = try_read_mltable_in_spark(
+        args.signal_scored_data, "signal_scored_data"
     )
 
-    if not violated_metrics_df or violated_metrics_df.isEmpty():
-        print("No violated metrics, creating an empty action dataframe.")
-        save_empty_dataframe(get_output_schema(), args.data_with_groups)
-        return
-
-    production_data_df = try_read_mltable_in_spark(
-        "azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/rag-prp-test/workspaces/fepproj2/datastores/workspaceblobstore/paths/azureml/b65a831c-c819-490c-8a04-2a04daa0833e/aggregated_trace_data/", "production_data"
-    )
-
-    production_data_df.show()
+    signal_scored_data_df.show()
     gsq_input = Get_gsq_input(col("input"), col("output"), col("root_span"))
-    production_data_df = production_data_df.withColumn("question", gsq_input["question"])\
+    signal_scored_data_df = signal_scored_data_df.withColumn("question", gsq_input["question"])\
                                            .withColumn("answer", gsq_input["answer"])\
                                            .drop("user_id").drop("session_id").drop("start_time").drop("end_time").drop("input").drop("output")
                                             #.withColumn("context", gsq_input["text"])\
-    #production_data_df = production_data_df.withColumn("ground_truth", col("answer"))
-    print("modified production df")
-    production_data_df.show()
+    #signal_scored_data_df = signal_scored_data_df.withColumn("ground_truth", col("answer"))
+    print("gsq input production df")
+    signal_scored_data_df.show()
 
     annotations_df = apply_annotation(
         metric_names="AcceptableCoherenceScorePerInstance,AggregatedCoherencePassRate,AcceptableFluencyScorePerInstance,AggregatedFluencyPassRate",
-        production_df=production_data_df,
+        production_df=signal_scored_data_df,
         model_deployment_name=args.model_deployment_name,
         workspace_connection_arm_id=args.workspace_connection_arm_id,
         num_samples=args.num_samples,

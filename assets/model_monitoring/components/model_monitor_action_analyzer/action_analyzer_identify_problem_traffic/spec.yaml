@@ -7,16 +7,12 @@ description: Separate bad queries into different groups.
 version: 0.0.1
 is_deterministic: True
 inputs:
-  production_data:
+  signal_scored_data:
     type: mltable
     mode: direct
-    description: production data from model data collector preprocessor
-  signal_scored_output:
-    type: mltable
-    mode: direct
-    description: production data with signal scores from monitoring signal
-  violated_metrics_names:
-    type: mltable
+    description: production data with metrics scores from monitoring signal
+  signal_output:
+    type: uri_folder
     mode: direct
     description: violated metrics names
   workspace_connection_arm_id:
@@ -82,9 +78,8 @@ entry:
   file: ./action_analyzer/action_analyzer_identify_problem_traffic/run.py
 
 args: >-
-  --production_data ${{inputs.production_data}}
-  --signal_scored_output ${{inputs.signal_scored_output}}
-  --violated_metrics_names ${{inputs.violated_metrics_names}}
+  --signal_scored_data ${{inputs.signal_scored_data}}
+  --signal_output ${{inputs.signal_output}}
   --model_deployment_name ${{inputs.model_deployment_name}}
   --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
   --data_with_groups ${{outputs.data_with_groups}}
