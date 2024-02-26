@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/google-gemma-2b/1708930345
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
