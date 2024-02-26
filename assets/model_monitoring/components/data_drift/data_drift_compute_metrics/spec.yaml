@@ -56,6 +56,7 @@ conf:
   spark.sql.legacy.replaceDatabricksSparkAvro.enabled: true
   spark.driver.userClassPathFirst: false
   spark.executor.userClassPathFirst: false
+  spark.aml.internal.system.job: True
   spark.synapse.library.python.env: |
     channels:
       - conda-forge
