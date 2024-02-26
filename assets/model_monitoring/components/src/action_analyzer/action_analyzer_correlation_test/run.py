@@ -13,9 +13,7 @@ from pyspark.sql.types import (
 )
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
-    try_read_mltable_in_spark_with_error,
     save_spark_df_as_mltable,
-    init_spark,
     create_spark_df,
     save_empty_dataframe
 )
@@ -53,15 +51,17 @@ def generate_action_rows(pdf, index_set, group_set):
             index_df = pdf[pdf['index_id'] == index]
             good_answer_scores = index_df[index_df['group_list'].apply(lambda x: good_group_name in x)]['index_score']
             bad_answer_scores = index_df[index_df['group_list'].apply(lambda x: group in x)]['index_score']
-            good_answer_names = index_df[index_df['group_list'].apply(lambda x: good_group_name in x)][["question", "index_score"]]
-            bad_answer_names = index_df[index_df['group_list'].apply(lambda x: group in x)][["question", "index_score"]]
+            good_answer_names = index_df[index_df['group_list']
+                                .apply(lambda x: good_group_name in x)][["question", "index_score"]]
+            bad_answer_names = index_df[index_df['group_list']
+                                .apply(lambda x: group in x)][["question", "index_score"]]
             print("good answer questions: ")
             print(good_answer_names)
             print("bad answer questions: ")
             print(bad_answer_names)
             t_stat, p_value = perform_ttest(good_answer_scores, bad_answer_scores)
             if t_stat > 0 and p_value < 0.05:
-                #entry: [index_id, group, confidence_score]
+                # entry: [index_id, group, confidence_score]
                 entry = [
                     index,
                     group,

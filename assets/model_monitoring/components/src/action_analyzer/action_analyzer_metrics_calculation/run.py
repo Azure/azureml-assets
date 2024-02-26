@@ -6,7 +6,7 @@
 import argparse
 import requests
 import json
-from pyspark.sql.functions import collect_list, col, lit, udf, when
+from pyspark.sql.functions import col, lit, udf
 from typing import List, Tuple
 from pyspark.sql.types import (
     StructType,
@@ -16,17 +16,13 @@ from pyspark.sql.types import (
 )
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
-    try_read_mltable_in_spark_with_error,
     save_spark_df_as_mltable,
-    init_spark,
-    create_spark_df,
     save_empty_dataframe
 )
 from shared_utilities.llm_utils import (
     API_KEY,
     AZURE_OPENAI_API_COMPLETION_URL_PATTERN,
     AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-    OPENAI_REQUEST_PARAMS,
     RATING,
     PROMPT,
     COMPLETION,
@@ -47,11 +43,13 @@ Retrieval_document_RELEVANCE_TEMPLATE = "\n\n".join(
         "System:",
         f"You are an AI assistant. You will be given the definition of an evaluation metric for assessing the \
             quality of an {CONTEXT} in a question-answering task. Your job is to compute an accurate evaluation \
-                score using the provided evaluation metric.",
-        f"Index quality measures how well the retrieved document {CONTEXT} provides relevant background information or knowledge to answer this question {PROMPT}. Consider whether \
+            score using the provided evaluation metric.",
+        f"Index quality measures how well the retrieved document {CONTEXT} provides relevant background information \
+            or knowledge to answer this question {PROMPT}. Consider whether \
             all and only the important aspects are contained in the {CONTEXT} when \
-                evaluating index quality. Given the {PROMPT} and {COMPLETION}, score the index quality of the {COMPLETION} \
-                    between {MIN_RATING} to {MAX_RATING} using the following {RATING} scale:",
+            evaluating index quality. Given the {PROMPT} and {COMPLETION}, \
+            score the index quality of the {COMPLETION} \
+            between {MIN_RATING} to {MAX_RATING} using the following {RATING} scale:",
         f"{RATING} 1: the document completely lacks information or knowledge of the question",
         f"{RATING} 2: the document mostly lacks information or knowledge of the question",
         f"{RATING} 3: the document is partially information or knowledge of the question",
@@ -60,7 +58,7 @@ Retrieval_document_RELEVANCE_TEMPLATE = "\n\n".join(
         f"The score should be integer only, between {MIN_RATING} and {MAX_RATING}.",
         "## Example Task #0",
         json.dumps({
-            CONTEXT: "Python is a popular general-purpose programming language that can be used for a wide variety of applications. It includes high-level data structures, dynamic typing, dynamic binding, and many more features that make it as useful for complex application development as it is for scripting or glue code that connects components together.",
+            CONTEXT: "Python is a popular general-purpose programming language that can be used for a wide variety of applications. It includes high-level data structures, dynamic typing, dynamic binding, and many more features that make it as useful for complex application development as it is for scripting or glue code that connects components together.", # noqa: E501
             PROMPT: "How can I use the python tool in the langchain frame",
             COMPLETION: "Sorry, the provided context does not include information about question.",
         }),
@@ -144,20 +142,21 @@ Retrieval_document_RELEVANCE_TEMPLATE = "\n\n".join(
 
 def query_relevance_scores(
     turns: List[Tuple[str, str, str]],
-    template:str,
+    template: str,
     session: requests.Session,
     endpoint_url: str,
     token_manager: _APITokenManager,
-    # request_error_rate_threshold: float,
-    model: str, temperature: float, top_p: float, num_samples: int,
-    frequency_penalty: float, presence_penalty: float, max_tokens=3000, stop: str = None) -> List[int]:
-    # if we count too many errors, we stop and raise an exception
-    # error_count = 0
-    # request_count = 0
+    model: str,
+    temperature: float,
+    top_p: float,
+    num_samples: int,
+    frequency_penalty: float,
+    presence_penalty: float,
+    max_tokens=3000,
+    stop: str = None) -> List[int]:
 
-    # request_count += 1
-    # Copy request_data to avoid modifying the original dict.
-    prompts = [template.replace("{input_samples", f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1], 'context': turn[2]}, indent=4)}") for turn in turns]
+    input_samples = f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1], 'context': turn[2]}, indent=4)}"
+    prompts = [template.replace("{input_samples", input_samples) for turn in turns]
     print("prompts:", prompts)
     ratings = []
     for prompt in prompts:
@@ -170,7 +169,7 @@ def query_relevance_scores(
             "frequency_penalty": frequency_penalty,
             "presence_penalty": presence_penalty,
             "messages": [
-                {"role": "user", "content": prompt }
+                {"role": "user", "content": prompt}
             ]
         }
 
@@ -202,21 +201,43 @@ def query_relevance_scores(
 
 def query_relevance_score(
     turn: Tuple[str, str, str],
-    template:str,
+    template: str,
     session: requests.Session,
     endpoint_url: str,
     token_manager: _APITokenManager,
-    # request_error_rate_threshold: float,
-    model: str, temperature: float, top_p: float, num_samples: int,
-    frequency_penalty: float, presence_penalty: float, max_tokens=3000, stop: str = None) -> int:
+    model: str,
+    temperature: float,
+    top_p: float,
+    num_samples: int,
+    frequency_penalty: float,
+    presence_penalty: float,
+    max_tokens=3000,
+    stop: str = None) -> int:
     turns = [turn]
-    return query_relevance_scores(turns,template, session, endpoint_url, token_manager, model, temperature, top_p, num_samples,
-                                  frequency_penalty, presence_penalty, max_tokens, stop)[0]
+    return query_relevance_scores(turns,
+                                  template,
+                                  session,
+                                  endpoint_url,
+                                  token_manager,
+                                  model,
+                                  temperature,
+                                  top_p,
+                                  num_samples,
+                                  frequency_penalty,
+                                  presence_penalty,
+                                  max_tokens,
+                                  stop)[0]
 
 
 @udf(IntegerType())
-def get_index_score(question, answer, context, workspace_connection_arm_id, model_deployment_name,
-                      api_call_retry_max_count, api_call_retry_backoff_factor, request_args):
+def get_index_score(question,
+                    answer,
+                    context,
+                    workspace_connection_arm_id,
+                    model_deployment_name,
+                    api_call_retry_max_count,
+                    api_call_retry_backoff_factor,
+                    request_args):
     token_manager = _WorkspaceConnectionTokenManager(
         connection_name=workspace_connection_arm_id,
         auth_header=API_KEY)
@@ -246,6 +267,7 @@ def get_index_score(question, answer, context, workspace_connection_arm_id, mode
             **request_args,
         )
     return rating
+
 
 def get_output_schema() -> StructType:
     """Get Action Data Spark DataFrame Schema."""
@@ -291,20 +313,26 @@ def run():
         args.data_with_groups, "data_with_groups"
     )
 
-    #data_with_groups_df = try_read_mltable_in_spark("azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/rag-prp-test/workspaces/fepproj2/datastores/workspaceblobstore/paths/LocalUpload/0c2c0d4d3d24ef52727ae12fbd6b7e55/mltable_empty/", "empty")
-
     if not data_with_groups_df or data_with_groups_df.isEmpty():
         print("No input data found, creating an empty dataframe.")
         save_empty_dataframe(get_output_schema(), args.data_with_action_metric_score)
         return
 
-    data_with_metric_score_df = data_with_groups_df.withColumn("index_score",
-        get_index_score(col("query"), col("answer"), col("text"), lit(args.workspace_connection_arm_id), lit(args.model_deployment_name),
-                          lit(args.api_call_retry_max_count), lit(args.api_call_retry_backoff_factor), lit(json.dumps(request_args))))
+    data_with_metric_score_df = data_with_groups_df
+                                .withColumn("index_score",
+                                            get_index_score(col("query"),
+                                            col("answer"),
+                                            col("text"),
+                                            lit(args.workspace_connection_arm_id),
+                                            lit(args.model_deployment_name),
+                                            lit(args.api_call_retry_max_count),
+                                            lit(args.api_call_retry_backoff_factor),
+                                            lit(json.dumps(request_args))))
 
     print("data_with_metric_score_df")
     data_with_metric_score_df.show()
     save_spark_df_as_mltable(data_with_metric_score_df, args.data_with_action_metric_score)
+
 
 if __name__ == "__main__":
     run()

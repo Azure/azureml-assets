@@ -10,7 +10,6 @@ don't have access to other files by default.
 The functionality to simplify this code injection is still being developed.
 """
 
-import argparse
 import logging
 import os
 import re
@@ -22,7 +21,6 @@ import requests
 from azure.ai.generative.evaluate import evaluate
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
-from pyspark.sql.functions import col
 from shared_utilities import io_utils
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -428,7 +426,6 @@ def apply_annotation(
         production_df_sampled = production_df.limit(5)
 
     production_df = production_df_sampled
-    row_count = production_df.count()
 
     spark = io_utils.init_spark()
     spark_conf = spark.sparkContext.getConf()
@@ -497,8 +494,6 @@ def apply_annotation(
             model_deployment_name)
         model_type = _get_model_type(token_manager, get_model_endpoint)
 
-    all_metrics_pdf = None
-    samples_index_rows = []
     metrics_list = []
     for metric_name in metric_names:
         metric_name_compact = get_compact_metric_name(metric_name)

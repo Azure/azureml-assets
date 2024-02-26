@@ -485,7 +485,7 @@ def publish_generation_safety_signal_monitor_component(
     asset_version,
     ml_client,
 ):
-    """Publish the generation safety and quality model monitor pipeline component to the test workspace."""
+    """Publish the data drift model monitor pipeline component to the test workspace."""
     if not _is_main_worker(main_worker_lock):
         return
 
@@ -521,50 +521,6 @@ def publish_generation_safety_signal_monitor_component(
 
 
 @pytest.fixture(scope="session", autouse=True)
-def publish_action_analyzer_component(
-    main_worker_lock,
-    publish_command_components,
-    model_monitoring_components,
-    root_temporary_directory,
-    asset_version,
-    ml_client,
-):
-    """Publish the action analyzer model monitor pipeline component to the test workspace."""
-    if not _is_main_worker(main_worker_lock):
-        return
-
-    print_header("Publishing Action Analyzer Component")
-    out_directory = os.path.join(root_temporary_directory, "command_components")
-    os.makedirs(out_directory, exist_ok=True)
-
-    for component in model_monitoring_components:
-        if component["name"] != "model_monitor_action_analyzer":
-            continue
-        print(f"Publishing {component['name']}..")
-        jobs = component["jobs"]
-        print("job", jobs)
-        jobs["identify_problem_traffic"]["component"] = format_component_name(
-            "action_analyzer_identify_problem_traffic", asset_version
-        )
-        jobs["metrics_calculation"]["component"] = format_component_name(
-            "action_analyzer_metrics_calculation", asset_version
-        )
-        jobs["correlation_test"]["component"] = format_component_name(
-            "action_analyzer_correlation_test", asset_version
-        )
-        jobs["output_actions"]["component"] = format_component_name(
-            "action_analyzer_output_actions", asset_version)
-        component["version"] = asset_version
-        spec_path = os.path.join(
-            out_directory, f"{component['name']}-{generate_random_filename('yaml')}"
-        )
-        
-        write_to_yaml(spec_path, component)
-        ml_client.components.create_or_update(load_component(spec_path))
-        print(f"Successfully published {component['name']}.")
-
-
-@pytest.fixture(scope="session", autouse=True)
 def release_lock(
     publish_data_quality_model_monitor_component,
     publish_prediction_drift_model_monitor_component,
@@ -573,7 +529,6 @@ def release_lock(
     publish_generation_safety_signal_monitor_component,
     publish_command_components,
     publish_model_performance_model_monitor_component,
-    publish_action_analyzer_component,
     main_worker_lock,
 ):
     """Release the main worker lock."""

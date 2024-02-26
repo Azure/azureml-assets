@@ -5,13 +5,13 @@
 
 import argparse
 from pyspark.sql.types import (
-    StructType,
-    StructField,
     StringType,
     BooleanType
 )
-from pyspark.sql.functions import collect_set, col, lit, udf, when, concat, mean
-from shared_utilities.io_utils import try_read_mltable_in_spark, save_spark_df_as_mltable, init_spark, np_encoder
+from pyspark.sql.functions import collect_set, col, udf, mean
+from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder
+import os
+import json
 import uuid
 import datetime
 import copy
@@ -20,6 +20,7 @@ from shared_utilities.amlfs import amlfs_upload
 INDEX_ACTION_TYPE = "Index Action"
 DESCRIPTION = "Poor answers are caused by poor indexing, please update the doc index with id "
 MAX_SAMPLE_SIZE = 20
+
 
 @udf(returnType=BooleanType())
 def is_action_bad_group(group_list, action_group_set):
@@ -124,10 +125,12 @@ def run():
 
     # todo remove the groupby logic by using pure python or pandas
     merged_action = action_data_df.groupby("index_id").agg(collect_set("group").alias("action_group_set"),
-                mean("confidence_score").alias("action_confidence_score")).withColumn("action_id", generate_guid())
+                                                           mean("confidence_score").alias("action_confidence_score"))
+                                                      .withColumn("action_id", generate_guid())
     action_with_group_df = data_with_action_metric_score_df.join(merged_action, ['index_id'], "inner")
 
-    action_bad_group_df = action_with_group_df.filter(is_action_bad_group(col("group_list"), col("action_group_set"))== True)
+    action_bad_group_df = action_with_group_df.filter(is_action_bad_group(col("group_list"),
+                                                                          col("action_group_set")) is True)
     print("bad group")
     action_bad_group_df.show()
     # action_good_group_df = action_with_group_df.filter((col("groundedness_score") == 5)
@@ -137,11 +140,15 @@ def run():
     #                                                     & (col("similarity_score") == 5))
 
     action_good_group_df = action_with_group_df.filter((col("coherence_score") == 5)
-                                                    & (col("fluency_score") == 5))
+                                                       & (col("fluency_score") == 5))
     print("good group")
     action_good_group_df.show()
 
-    write_actions(action_bad_group_df, action_good_group_df, args.action_output, args.model_deployment_name, args.signal_name)
+    write_actions(action_bad_group_df,
+                  action_good_group_df,
+                  args.action_output,
+                  args.model_deployment_name,
+                  args.signal_name)
 
 
 if __name__ == "__main__":

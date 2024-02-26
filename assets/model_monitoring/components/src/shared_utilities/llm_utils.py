@@ -4,12 +4,10 @@
 """LLM helper functions."""
 
 import os
-import argparse
 import re
 import json
 import time
 from abc import abstractmethod, ABC
-from typing import List, Tuple
 import requests
 from azure.core.credentials import AccessToken, TokenCredential
 from azure.ai.ml.identity import CredentialUnavailableError
@@ -58,8 +56,6 @@ AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE = r"^(?=.{1,255}$)(?!-)[a-zA-Z0-9-]{1,63}
 AZURE_OPENAI_API_COMPLETION_URL_PATTERN = "https://{}/openai/deployments/{}/chat/completions"
 LISTSECRETS_API_PATTERN = "https://management.azure.com{}/listsecrets?api-version=2023-06-01-preview"
 AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN = "https://{}/openai/deployments/{}"
-
-
 
 
 # --- The following is copied from the yet to be released azureml-featurestore.
@@ -332,11 +328,10 @@ class _HTTPClientWithRetry:
         self.client.mount("https://", adapter)
 
 
-def _request_api(
-    session,
-    endpoint_url: str,
-    token_manager: _APITokenManager,
-    **request_params):
+def _request_api(session,
+                 endpoint_url,
+                 token_manager,
+                 **request_params):
     """Make REST call to API and return parsed result."""
     token = token_manager.get_token()
 

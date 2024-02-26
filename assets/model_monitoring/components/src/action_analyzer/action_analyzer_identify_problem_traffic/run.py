@@ -7,8 +7,8 @@ import argparse
 import requests
 import json
 import yaml
-from pyspark.sql.functions import collect_list, col, lit, udf, when, concat, explode
-from typing import List, Tuple
+from pyspark.sql.functions import col, lit, udf, when, concat, explode
+from typing import List
 from pyspark.sql.types import (
     StructType,
     StructField,
@@ -20,11 +20,7 @@ from shared_utilities.gsq import apply_annotation
 
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
-    try_read_mltable_in_spark_with_error,
-    save_spark_df_as_mltable,
-    init_spark,
-    create_spark_df,
-    save_empty_dataframe
+    save_spark_df_as_mltable
 )
 from shared_utilities.llm_utils import (
     API_KEY,
@@ -38,23 +34,24 @@ from shared_utilities.llm_utils import (
     get_openai_request_args
 )
 
-#Todo: remove later
-VIOLATED_METRICS=["fluency", "coherence"]
+# Todo: remove later
+VIOLATED_METRICS = ["fluency", "coherence"]
 
 N_SAMPLES = 100
 
 TOPIC_TEMPLATE = "\n\n".join(
     [
         "System:",
-        "You are an AI assistant. You will be given a set of questions. Please categorize these quesitons into a few topics based on their intent, "
-        "please try your best to avoid categorize question into its own topic whenever appropriate, and format your answer in this format:",
-        '{ "<topic_0>": ["<question_00>", "<question_01>", ...], "<topic_1>": ["<question_10>", "<question_11>", ...], ... }',
-        "Please only return the json content without prefix or suffix. If there are too many topics, please sort the topics with the querestion counts belong to it, in descent order, and returns the top 10."
+        "You are an AI assistant. You will be given a set of questions. Please categorize these quesitons into a few topics based on their intent, " # noqa: E501
+        "please try your best to avoid categorize question into its own topic whenever appropriate, and format your answer in this format:", # noqa: E501
+        '{ "<topic_0>": ["<question_00>", "<question_01>", ...], "<topic_1>": ["<question_10>", "<question_11>", ...], ... }', # noqa: E501
+        "Please only return the json content without prefix or suffix. If there are too many topics, please sort the topics with the querestion counts belong to it, in descent order, and returns the top 10." # noqa: E501
         "User:",
-        f"Here are the queries:", 
+        "Here are the queries:",
         "{queries}",
     ]
 )
+
 
 def get_output_schema() -> StructType:
     """Get Action Data Spark DataFrame Schema."""
@@ -81,14 +78,19 @@ def query_topic(
     session: requests.Session,
     endpoint_url: str,
     token_manager: _APITokenManager,
-    # request_error_rate_threshold: float,
-    model: str, temperature: float, top_p: float, num_samples: int,
-    frequency_penalty: float, presence_penalty: float, max_tokens=3000, stop: str = None) -> List[int]:
+    model: str,
+    temperature: float,
+    top_p: float,
+    num_samples: int,
+    frequency_penalty: float,
+    presence_penalty:
+    float,
+    max_tokens=3000,
+    stop: str = None) -> List[int]:
 
     # Copy request_data to avoid modifying the original dict.
     prompt = TOPIC_TEMPLATE.replace("{queries}", json.dumps(queries))
-    
-    
+
     print("prompt:", prompt)
     request_data = {
         "model": model,
@@ -99,7 +101,7 @@ def query_topic(
         "frequency_penalty": frequency_penalty,
         "presence_penalty": presence_penalty,
         "messages": [
-            {"role": "user", "content": prompt }
+            {"role": "user", "content": prompt}
         ]
     }
 
@@ -118,7 +120,7 @@ def query_topic(
         # Append time taken to the line
         response["response_time_sec"] = time_taken
         print(response["samples"][0])
-        topics = response["samples"][0] #json.loads(response["samples"][0])
+        topics = response["samples"][0]
     except Exception as e:  # noqa: B902
         response["finish_reason"] = ["error"]
         response["error"] = [str(e)]
@@ -127,8 +129,12 @@ def query_topic(
     return topics
 
 
-def get_topic(questions, workspace_connection_arm_id, model_deployment_name,
-                      api_call_retry_max_count, api_call_retry_backoff_factor, request_args):
+def get_topic(questions,
+              workspace_connection_arm_id,
+              model_deployment_name,
+              api_call_retry_max_count,
+              api_call_retry_backoff_factor,
+              request_args):
     token_manager = _WorkspaceConnectionTokenManager(
         connection_name=workspace_connection_arm_id,
         auth_header=API_KEY)
@@ -187,6 +193,7 @@ def assign_good_topic(topic_list, question, metrics_score, topics_dict):
             topic_list = _append_value(topic_list, topic)
     return topic_list
 
+
 # Todo: temp usage, need to remove later
 @udf(returnType=StructType([
     StructField("question", StringType()),
@@ -199,15 +206,10 @@ def Get_gsq_input(input, output, root_span):
         for span in tree:
             # Todo: get retrieval span
             if span.span_row["name"] == "lookup":
-                span_id = span.span_row["span_id"]
                 lookup_input = json.loads(span.span_row["input"])
-                index_content = lookup_input["mlindex_content"]
-                index_payload = yaml.safe_load(index_content)
-                index_id = index_payload['index']['index']
                 queries = lookup_input["queries"]
                 lookup_outputs = json.loads(span.span_row["output"])
                 if isinstance(queries, list):
-                    query = queries[0]
                     top_k_list = lookup_outputs[0]
                     for lookup_output in top_k_list:
                         text_builder = text_builder + lookup_output["text"]
@@ -245,13 +247,13 @@ def parse_debugging_info(root_span):
                         query = queries[i]
                         top_k_list = lookup_outputs[i]
                         text_builder = ""
-                        lookup_output = top_k_list[0]
-                        text_builder = lookup_output["text"]
+                        for lookup_output in top_k_list:
+                            text_builder = text_builder + lookup_output["text"]
                         spans_array.append((span_id, index_content, index_id, query, text_builder))
                 elif isinstance(queries, str):
                     text_builder = ""
-                    lookup_output = lookup_outputs[0]
-                    text_builder = lookup_output["text"]
+                    for lookup_output in lookup_outputs:
+                        text_builder = text_builder + lookup_output["text"]
                     spans_array.append((span_id, index_content, index_id, queries, text_builder))
         return spans_array
     except KeyError as e:
@@ -310,16 +312,21 @@ def run():
 
     signal_scored_data_df.show()
     gsq_input = Get_gsq_input(col("input"), col("output"), col("root_span"))
-    signal_scored_data_df = signal_scored_data_df.withColumn("question", gsq_input["question"])\
-                                           .withColumn("answer", gsq_input["answer"])\
-                                           .drop("user_id").drop("session_id").drop("start_time").drop("end_time").drop("input").drop("output")
-                                            #.withColumn("context", gsq_input["text"])\
-    #signal_scored_data_df = signal_scored_data_df.withColumn("ground_truth", col("answer"))
+    signal_scored_data_df = signal_scored_data_df.withColumn("question", gsq_input["question"])
+                                                 .withColumn("answer", gsq_input["answer"])
+                                                 .drop("user_id")
+                                                 .drop("session_id")
+                                                 .drop("start_time")
+                                                 .drop("end_time")
+                                                 .drop("input")
+                                                 .drop("output")
+                                            # .withColumn("context", gsq_input["text"])\
+    # signal_scored_data_df = signal_scored_data_df.withColumn("ground_truth", col("answer"))
     print("gsq input production df")
     signal_scored_data_df.show()
 
     annotations_df = apply_annotation(
-        metric_names="AcceptableCoherenceScorePerInstance,AggregatedCoherencePassRate,AcceptableFluencyScorePerInstance,AggregatedFluencyPassRate",
+        metric_names="AcceptableCoherenceScorePerInstance,AggregatedCoherencePassRate,AcceptableFluencyScorePerInstance,AggregatedFluencyPassRate", # noqa: E501
         production_df=signal_scored_data_df,
         model_deployment_name=args.model_deployment_name,
         workspace_connection_arm_id=args.workspace_connection_arm_id,
@@ -332,14 +339,20 @@ def run():
         ground_truth_column_name="ground_truth"
     )
     annotations_df = annotations_df.where((col("Fluency") != -1) & (col("Coherence") != -1))
-    signal_scored_output_df = annotations_df.join(production_data_df, ['trace_id'], "inner")
-    signal_scored_output_df = signal_scored_output_df.select([col("trace_id"), col("question"), col("answer"), col("Fluency").alias("fluency_score"), col("Coherence").alias("coherence_score"), col("root_span")])
-    #signal_scored_output_df = signal_scored_output_df.select([col("trace_id"), col("question"), col("answer"), col("Similarity").alias("similarity_score"), col("Relevance").alias("relevance_score"), col("Fluency").alias("fluency_score"), col("Coherence").alias("coherence_score"), col("Groundedness").alias("groundedness_score"), col("root_span")])
-
+    signal_scored_output_df = annotations_df.join(signal_scored_data_df, ['trace_id'], "inner")
+    # Todo: add all violated metrics
+    signal_scored_output_df = signal_scored_output_df.select([col("trace_id"),
+                                                              col("question"),
+                                                              col("answer"),
+                                                              col("Fluency").alias("fluency_score"),
+                                                              col("Coherence").alias("coherence_score"),
+                                                              col("root_span")])
     print("gsq_output")
     signal_scored_output_df.show()
-    #signal_scored_output_df = try_read_mltable_in_spark(args.signal_scored_output, "signal_scored_output")
-    df = signal_scored_output_df.withColumn("topic_list", lit("")).withColumn("group_list", lit("")).withColumn("violated_metrics", lit(""))
+    # signal_scored_output_df = try_read_mltable_in_spark(args.signal_scored_output, "signal_scored_output")
+    df = signal_scored_output_df.withColumn("topic_list", lit(""))
+                                .withColumn("group_list", lit(""))
+                                .withColumn("violated_metrics", lit(""))
 
     # seperate bad groups with semantic topic
     # violated_metrics = violated_metrics_df.select(collect_list("metrics")).collect()[0][0]
@@ -347,43 +360,65 @@ def run():
         print("======Current metrics=====")
         print(metrics)
         score_name = metrics+"_score"
-        df = df.withColumn("violated_metrics", assign_violated_metrics(col("violated_metrics"), col(score_name), lit(metrics)))
+        df = df.withColumn("violated_metrics", 
+                           assign_violated_metrics(col("violated_metrics"), col(score_name), lit(metrics)))
 
         # add good group and bad default group
         good_group_name = f"{metrics}_good_group"
         default_bad_group_name = f"{metrics}_bad_group_default"
         df = df.withColumn("group_list",
-            when((col(score_name) == 5) & (col("group_list") == ""), good_group_name)
-            .otherwise(when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(good_group_name)))
-            .otherwise(when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)
-            .otherwise(when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(default_bad_group_name)))
-            .otherwise(col("group_list"))))))
+                            when((col(score_name) == 5) & (col("group_list") == ""), good_group_name)
+                            .otherwise(when((col(score_name) == 5) & (col("group_list") != ""),
+                                            concat(col("group_list"), lit(","), lit(good_group_name)))
+                            .otherwise(when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)
+                            .otherwise(when((col(score_name) < 4) & (col("group_list") != ""),
+                                            concat(col("group_list"), lit(","), lit(default_bad_group_name)))
+                            .otherwise(col("group_list"))))))
 
         pdf = df.toPandas()
         bad_answers = pdf[pdf[score_name] < 4]
         bad_samples = bad_answers.sample(n=min(N_SAMPLES, len(bad_answers)))
         good_answers = pdf[pdf[score_name] == 5]
         # sample good samples to have same size as bad samples
-        #good_samples = good_answers.sample(n=min(N_SAMPLES, len(bad_answers)))
+        # good_samples = good_answers.sample(n=min(N_SAMPLES, len(bad_answers)))
         good_samples = good_answers
 
         # add semantic groups for bad queries
-        topics_dict = get_topic(bad_samples["question"].tolist(), args.workspace_connection_arm_id, args.model_deployment_name,
-                    args.api_call_retry_max_count, args.api_call_retry_backoff_factor, json.dumps(request_args))
+        topics_dict = get_topic(bad_samples["question"].tolist(),
+                                args.workspace_connection_arm_id,
+                                args.model_deployment_name,
+                                args.api_call_retry_max_count,
+                                args.api_call_retry_backoff_factor,
+                                json.dumps(request_args))
+
         topic_group_dict = {f"{metrics}_bad_group_{i}": (k, v) for i, (k, v) in enumerate(topics_dict.items())}
-        topic_group_columns = assign_topic_and_group(col("topic_list"), col("group_list"), col("question"), col("violated_metrics"), lit(metrics), lit(json.dumps(topic_group_dict)))
+        topic_group_columns = assign_topic_and_group(col("topic_list"),
+                                                     col("group_list"),
+                                                     col("question"),
+                                                     col("violated_metrics"),
+                                                     lit(metrics),
+                                                     lit(json.dumps(topic_group_dict)))
+
         df = df.withColumn("topic_list", topic_group_columns[0])
         df = df.withColumn("group_list", topic_group_columns[1])
 
         # add semantic groups for good queries
-        topics_dict = get_topic(good_samples["question"].tolist(), args.workspace_connection_arm_id, args.model_deployment_name,
-                        args.api_call_retry_max_count, args.api_call_retry_backoff_factor, json.dumps(request_args))
-        df = df.withColumn("topic_list", assign_good_topic(col("topic_list"), col("question"), col(score_name), lit(json.dumps(topics_dict))))
+        topics_dict = get_topic(good_samples["question"].tolist(),
+                                args.workspace_connection_arm_id, args.model_deployment_name,
+                                args.api_call_retry_max_count,
+                                args.api_call_retry_backoff_factor,
+                                json.dumps(request_args))
+
+        df = df.withColumn("topic_list",assign_good_topic(col("topic_list"),
+                                                          col("question"),
+                                                          col(score_name),
+                                                          lit(json.dumps(topics_dict))))
 
     sampled_df = df.filter(col("topic_list") != "")
 
     span_level_df = convert_to_span_level(sampled_df)
     save_spark_df_as_mltable(span_level_df, args.data_with_groups)
+
 
 if __name__ == "__main__":
     run()
