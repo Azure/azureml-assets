@@ -43,7 +43,7 @@ RUN pip install 'shap==0.41.0' \
 RUN pip install 'pyarrow>=14.0.1'
 
 # To resolve vulnerability issue regarding crytography
-RUN pip install 'cryptography>=42.0.0'
+RUN pip install 'cryptography>=42.0.4'
 
 RUN pip freeze
 
