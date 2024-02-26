@@ -18,7 +18,6 @@ tags:
   task: text-classification
   datasets: bookcorpus, wikipedia
   SharedComputeCapacityEnabled: ""
-  OssFlavoured: ''
   huggingface_model_id: roberta-large-openai-detector
   inference_compute_allow_list:
     [

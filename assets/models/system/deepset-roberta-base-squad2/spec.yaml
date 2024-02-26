@@ -18,7 +18,10 @@ tags:
   license: cc-by-4.0
   model_specific_defaults : {'apply_deepspeed': 'true', 'apply_lora': 'true', 'apply_ort': 'true'}
   SharedComputeCapacityEnabled: ''
+<<<<<<< HEAD
   mlflow_flavor: transformers
+=======
+>>>>>>> parent of 2af2ac8ee (Enabling OssFlavoured tags for the model that supports OSS)
   task: question-answering
   huggingface_model_id: deepset/roberta-base-squad2
   inference_compute_allow_list:

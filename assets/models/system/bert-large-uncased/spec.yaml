@@ -14,7 +14,6 @@ properties:
   languages: en
 tags:
   SharedComputeCapacityEnabled: ''
-  OssFlavoured: ''
   task: fill-mask
   license: apache-2.0
   model_specific_defaults : {'apply_deepspeed': 'true', 'apply_lora': 'true', 'apply_ort': 'true'}

@@ -18,7 +18,6 @@ tags:
   task: text-classification
   datasets: multi_nli, wikipedia, bookcorpus
   SharedComputeCapacityEnabled: ""
-  OssFlavoured: ''
   huggingface_model_id: roberta-large-mnli
   inference_compute_allow_list:
     [
