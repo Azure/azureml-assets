@@ -14,7 +14,7 @@ properties:
   languages: en
 tags:
   SharedComputeCapacityEnabled: ''
-  mlflow_flavor: transformers
+  OssFlavoured: ''
   task: fill-mask
   model_specific_defaults : {'apply_deepspeed': 'true', 'apply_lora': 'true', 'apply_ort': 'true'}
   datasets: bookcorpus, wikipedia
