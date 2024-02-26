@@ -1,13 +1,13 @@
 type: evaluationresult
-name: winogrande_mistral_large_text_generation
+name: gsm8k_mistral_large_question_answering
 version: 1.0.0
-display_name: winogrande_mistral_large_text_generation
-description: mistral-large run for winogrande dataset
-dataset_family: winogrande
-dataset_name: winogrande
+display_name: gsm8k_mistral_large_question_answering
+description: mistral-large run for gsm8k dataset
+dataset_family: gsm8k
+dataset_name: gsm8k
 
 model_name: mistral-large
-model_version: "nan"
+model_version: "1"
 model_asset_id: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 relationships:
@@ -15,16 +15,16 @@ relationships:
     assetId: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 tags:
-  task: text-generation
+  task: question-answering
   accuracy_metric_name: exact_match
 
 metrics:
-  accuracy: 0.8208366
+  accuracy: 0.8870356
 
 
 properties:
-  n_shot: 5
+  n_shot: 8
   evaluation_sampling_ratio: 1.0
-  evaluation_split: "validation"
+  evaluation_split: "test"
   fewshot_sampling_ratio: 1.0
-  fewshot_split: "train"
+  fewshot_split: "dev"

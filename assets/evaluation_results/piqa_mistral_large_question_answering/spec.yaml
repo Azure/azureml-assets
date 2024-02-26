@@ -1,13 +1,13 @@
 type: evaluationresult
-name: hellaswag_mistral_large_text_generation
+name: piqa_mistral_large_question_answering
 version: 1.0.0
-display_name: hellaswag_mistral_large_text_generation
-description: mistral-large run for hellaswag dataset
-dataset_family: hellaswag
-dataset_name: hellaswag
+display_name: piqa_mistral_large_question_answering
+description: mistral-large run for piqa dataset
+dataset_family: piqa
+dataset_name: piqa
 
 model_name: mistral-large
-model_version: "nan"
+model_version: "1"
 model_asset_id: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 relationships:
@@ -15,16 +15,16 @@ relationships:
     assetId: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 tags:
-  task: text-generation
+  task: question-answering
   accuracy_metric_name: exact_match
 
 metrics:
-  accuracy: 0.9134635
+  accuracy: 0.898259
 
 
 properties:
   n_shot: 5
   evaluation_sampling_ratio: 1.0
   evaluation_split: "validation"
-  fewshot_sampling_ratio: 1.0
+  fewshot_sampling_ratio: 0.3
   fewshot_split: "train"

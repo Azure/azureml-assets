@@ -1,13 +1,13 @@
 type: evaluationresult
-name: mmlu_humanities_mistral_large_text_generation
+name: mmlu_stem_mistral_large_question_answering
 version: 1.0.0
-display_name: mmlu_humanities_mistral_large_text_generation
-description: mistral-large run for mmlu_humanities dataset
-dataset_family: mmlu_humanities
-dataset_name: mmlu_humanities
+display_name: mmlu_stem_mistral_large_question_answering
+description: mistral-large run for mmlu_stem dataset
+dataset_family: mmlu_stem
+dataset_name: mmlu_stem
 
 model_name: mistral-large
-model_version: "nan"
+model_version: "1"
 model_asset_id: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 relationships:
@@ -15,11 +15,11 @@ relationships:
     assetId: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 tags:
-  task: text-generation
+  task: question-answering
   accuracy_metric_name: exact_match
 
 metrics:
-  accuracy: 0.7387885
+  accuracy: 0.7285125
 
 
 properties:

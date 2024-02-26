@@ -1,13 +1,13 @@
 type: evaluationresult
-name: truthfulqa_mc1_mistral_large_text_generation
+name: social_iqa_mistral_large_question_answering
 version: 1.0.0
-display_name: truthfulqa_mc1_mistral_large_text_generation
-description: mistral-large run for truthfulqa_mc1 dataset
-dataset_family: truthfulqa_mc1
-dataset_name: truthfulqa_mc1
+display_name: social_iqa_mistral_large_question_answering
+description: mistral-large run for social_iqa dataset
+dataset_family: social_iqa
+dataset_name: social_iqa
 
 model_name: mistral-large
-model_version: "nan"
+model_version: "1"
 model_asset_id: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 relationships:
@@ -15,16 +15,16 @@ relationships:
     assetId: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 tags:
-  task: text-generation
+  task: question-answering
   accuracy_metric_name: exact_match
 
 metrics:
-  accuracy: 0.7674419
+  accuracy: 0.778915
 
 
 properties:
-  n_shot: 6
+  n_shot: 5
   evaluation_sampling_ratio: 1.0
   evaluation_split: "validation"
-  fewshot_sampling_ratio: 1.0
-  fewshot_split: "dev"
+  fewshot_sampling_ratio: 0.01
+  fewshot_split: "train"

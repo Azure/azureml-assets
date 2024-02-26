@@ -1,13 +1,13 @@
 type: evaluationresult
-name: boolq_mistral_large_text_generation
+name: openbookqa_mistral_large_question_answering
 version: 1.0.0
-display_name: boolq_mistral_large_text_generation
-description: mistral-large run for boolq dataset
-dataset_family: boolq
-dataset_name: boolq
+display_name: openbookqa_mistral_large_question_answering
+description: mistral-large run for openbookqa dataset
+dataset_family: openbookqa
+dataset_name: openbookqa
 
 model_name: mistral-large
-model_version: "nan"
+model_version: "1"
 model_asset_id: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 relationships:
@@ -15,15 +15,15 @@ relationships:
     assetId: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 tags:
-  task: text-generation
+  task: question-answering
   accuracy_metric_name: exact_match
 
 metrics:
-  accuracy: 0.8993884
+  accuracy: 0.924
 
 
 properties:
-  n_shot: 5
+  n_shot: 10
   evaluation_sampling_ratio: 1.0
   evaluation_split: "validation"
   fewshot_sampling_ratio: 1.0

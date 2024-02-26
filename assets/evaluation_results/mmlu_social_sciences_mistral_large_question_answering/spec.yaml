@@ -1,13 +1,13 @@
 type: evaluationresult
-name: mmlu_social_sciences_mistral_large_text_generation
+name: mmlu_social_sciences_mistral_large_question_answering
 version: 1.0.0
-display_name: mmlu_social_sciences_mistral_large_text_generation
+display_name: mmlu_social_sciences_mistral_large_question_answering
 description: mistral-large run for mmlu_social_sciences dataset
 dataset_family: mmlu_social_sciences
 dataset_name: mmlu_social_sciences
 
 model_name: mistral-large
-model_version: "nan"
+model_version: "1"
 model_asset_id: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 relationships:
@@ -15,7 +15,7 @@ relationships:
     assetId: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 tags:
-  task: text-generation
+  task: question-answering
   accuracy_metric_name: exact_match
 
 metrics:
