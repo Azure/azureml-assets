@@ -7,7 +7,7 @@ dataset_family: human_eval
 dataset_name: human_eval
 
 model_name: mistral-large
-model_version: "nan"
+model_version: "1"
 model_asset_id: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 relationships:
