@@ -70,7 +70,7 @@ def _promote_fields_from_attributes(df: DataFrame) -> DataFrame:
             print(ex)
             return df
 
-    # remove promoted data from source to avoid duplication. 'status' col is already overwritten so no duplication
+    # remove promoted data fields from source to avoid duplication. 'status' col is already overwritten.
     fields_to_promote_mapping.pop('status', None)
 
     for field_name_in_data in fields_to_promote_mapping.values():
@@ -85,7 +85,6 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     Args:
         df: The raw span logs data in a dataframe.
     """
-    # TODO: handle if original start/endtime not valid time string
     df = df.withColumns(
         {'end_time': df.end_time.cast(TimestampType()), 'start_time': df.start_time.cast(TimestampType())}
     )
