@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 """Class for online endpoint."""
-
-
+import sys
+import traceback
 from typing import Any, Optional
 from abc import abstractmethod
 from enum import Enum
@@ -193,8 +193,6 @@ class OnlineEndpoint:
         should_retry = True
         while should_retry:
             headers = self.get_resource_authorization_header()
-            # TODO: !!!! For office debug, remove this log !!!!!
-            logger.info(f"SystemLog: headers for __call_endpoint: {headers}")
             resp = ClientBase._execute_func(
                 call_method, url, params={}, headers=headers, json=payload
             )
@@ -248,6 +246,7 @@ class OnlineEndpoint:
             return True
         except Exception as e:
             logger.warning(f"Failed to create connections: {e}")
+            logger.error(traceback.format_exception(*sys.exc_info()))
             return False
 
     def _get_access_key_config(self) -> AccessKeyConfiguration:
