@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/NumbersStation-nsql-llama-2-7B/1706221726/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
