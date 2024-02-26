@@ -158,7 +158,8 @@ class TestGenAISparkPreprocessor:
             # comment out the mix scenario due to package not found error from executor in remote run
             # (datetime(2024, 2, 20, 15), datetime(2024, 2, 20, 16), _preprocessed_schema, _preprocessed_data),
             # data but missing some promoted attribute fields
-            (datetime(2024, 2, 7, 12), datetime(2024, 2, 7, 13), _preprocessed_schema_no_input, _preprocessed_data_no_inputs),
+            (datetime(2024, 2, 7, 12), datetime(2024, 2, 7, 13),
+             _preprocessed_schema_no_input, _preprocessed_data_no_inputs),
         ]
     )
     def test_genai_uri_folder_to_preprocessed_spark_df(
