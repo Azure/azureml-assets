@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: stabilityai-stable-diffusion-xl-base-1.0
+name: stabilityai-stable-diffusion-xl-base-1-0
 path: ./
 properties:
   SharedComputeCapacityEnabled: true
