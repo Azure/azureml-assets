@@ -14,6 +14,7 @@ properties:
   languages: en
 tags:
   SharedComputeCapacityEnabled: ''
+  OssFlavoured: ''
   task: fill-mask
   license: mit
   model_specific_defaults : {'apply_deepspeed': 'true', 'apply_lora': 'true', 'apply_ort': 'true'}
