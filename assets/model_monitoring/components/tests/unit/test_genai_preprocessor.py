@@ -49,7 +49,6 @@ class TestGenAISparkPreprocessor:
         return SparkSession.builder.appName("test").getOrCreate()
 
     _preprocessed_schema = StructType([
-        StructField('attributes', StringType(), True),
         StructField('context', StringType(), True),
         StructField('end_time', TimestampType(), True),
         StructField('events', StringType(), True),
@@ -70,31 +69,24 @@ class TestGenAISparkPreprocessor:
     ])
 
     _preprocessed_data = [
-        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"1\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
+        ["{\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 0, 2, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 0, 1, 0), "OK", "01", "1", "llm", "LLM", "in", "out"],
-        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"2\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
+        ["{\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 0, 4, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 0, 3, 0), "OK", "01", "2", "llm", "LLM", "in", "out"],
-        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"3\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        ["{\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 0, 6, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 0, 5, 0), "OK", "02", "3", "llm", "LLM", "in", "out"],
-        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"4\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        ["{\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 0, 8, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 0, 7, 0), "OK", "02", "4", "llm", "LLM", "in", "out"],
-        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"5\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        ["{\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 0, 12, 0), "[]", "[]", "name", "4"] +
         [datetime(2024, 2, 5, 0, 11, 0), "OK", "02", "5", "llm", "LLM", "in", "out"],
     ]
 
     _preprocessed_schema_no_input = StructType([
-        StructField('attributes', StringType(), True),
-        StructField('context', StringType(), True),
         StructField('end_time', TimestampType(), True),
         StructField('events', StringType(), True),
         StructField('links', StringType(), True),
@@ -113,24 +105,14 @@ class TestGenAISparkPreprocessor:
     ])
 
     _preprocessed_data_no_inputs = [
-        ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"1\",\"trace_id\":\"01\"}"] +
         [datetime(2024, 2, 5, 0, 2, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 0, 1, 0), "OK", "01", "1", "llm", "LLM", None, "out"],
-        ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"2\",\"trace_id\":\"01\"}"] +
         [datetime(2024, 2, 5, 0, 4, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 0, 3, 0), "OK", "01", "2", "llm", "LLM", None, "out"],
-        ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"3\",\"trace_id\":\"02\"}"] +
         [datetime(2024, 2, 5, 0, 6, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 0, 5, 0), "OK", "02", "3", "llm", "LLM", None, "out"],
-        ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"4\",\"trace_id\":\"02\"}"] +
         [datetime(2024, 2, 5, 0, 8, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 0, 7, 0), "OK", "02", "4", "llm", "LLM", None, "out"],
-        ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"5\",\"trace_id\":\"02\"}"] +
         [datetime(2024, 2, 5, 0, 12, 0), "[]", "[]", "name", "4"] +
         [datetime(2024, 2, 5, 0, 11, 0), "OK", "02", "5", "llm", "LLM", None, "out"],
     ]
@@ -144,7 +126,7 @@ class TestGenAISparkPreprocessor:
             # comment out the mix scenario due to package not found error from executor in remote run
             # (datetime(2024, 2, 20, 15), datetime(2024, 2, 20, 16), _preprocessed_schema, _preprocessed_data),
             # data but missing some promoted attribute fields
-            (datetime(2024, 2, 7, 12), datetime(2024, 2, 7, 13), _preprocessed_schema, _preprocessed_data_no_inputs),
+            (datetime(2024, 2, 7, 12), datetime(2024, 2, 7, 13), _preprocessed_schema_no_input, _preprocessed_data_no_inputs),
         ]
     )
     def test_genai_uri_folder_to_preprocessed_spark_df(
