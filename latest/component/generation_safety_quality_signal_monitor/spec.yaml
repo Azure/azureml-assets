@@ -135,6 +135,8 @@ jobs:
         type: mltable
       similarity_violations:
         type: mltable
+      evaluation:
+        type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
