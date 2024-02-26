@@ -22,6 +22,7 @@ from model_data_collector_preprocessor.genai_run import (
 from model_data_collector_preprocessor.store_url import StoreUrl
 from spark_mltable import SPARK_ZIP_PATH
 
+
 @pytest.fixture(scope="session")
 def genai_zip_test_setup():
     """Zip files in module_path to src.zip."""
