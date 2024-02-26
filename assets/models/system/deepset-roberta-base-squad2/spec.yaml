@@ -18,6 +18,7 @@ tags:
   license: cc-by-4.0
   model_specific_defaults : {'apply_deepspeed': 'true', 'apply_lora': 'true', 'apply_ort': 'true'}
   SharedComputeCapacityEnabled: ''
+  mlflow_flavor: transformers
   task: question-answering
   huggingface_model_id: deepset/roberta-base-squad2
   inference_compute_allow_list:
