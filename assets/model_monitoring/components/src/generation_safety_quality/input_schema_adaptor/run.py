@@ -14,11 +14,7 @@ from shared_utilities.io_utils import (
 )
 from shared_utilities.momo_exceptions import InvalidInputError
 from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
-
-
-GENAI_ROOT_SPAN_SCHEMA_COLUMN = "root_span"
-GENAI_TRACE_ID_SCHEMA_COLUMN = "trace_id"
-
+from shared_utilities.constants import GENAI_ROOT_SPAN_SCHEMA_COLUMN, GENAI_TRACE_ID_SCHEMA_COLUMN
 
 def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
     """Adapt the input dataframe schema to fit GSQ input schema."""
