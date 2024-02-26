@@ -53,7 +53,7 @@ def genai_zip_test_setup():
     os.environ.pop(SPARK_ZIP_PATH, None)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def genai_preprocessor_test_setup():
     """Change working directory to root of the assets/model_monitoring_components."""
     original_work_dir = os.getcwd()
