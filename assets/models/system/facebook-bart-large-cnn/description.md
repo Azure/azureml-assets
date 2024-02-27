@@ -1,4 +1,6 @@
-The BART model is a transformer encoder-encoder model trained on English language data, and fine-tuned on CNN Daily Mail. It is used for text summarization and has been trained to reconstruct text that has been corrupted using an arbitrary noising function. The model is effective for text generation tasks such as summarization, and works well for comprehension tasks such as text classification and question answering. It can be used with the pipeline API in Python, as detailed in the code snippet provided. Lastly, it was introduced in the paper "BART: Denoising Sequence-to-Sequence Pre-training for Natural Language Generation, Translation, and Comprehension" by Lewis et al.
+BART is a transformer model that combines a bidirectional encoder similar to BERT with an autoregressive decoder akin to GPT. It is trained using two main techniques: (1) corrupting text with a chosen noising function, and (2) training a model to reconstruct the original text.
+
+When fine-tuned for specific tasks such as text generation (e.g., summarization, translation), BART demonstrates exceptional effectiveness. However, it also performs well on comprehension tasks like text classification and question answering. This specific checkpoint has undergone fine-tuning on CNN Daily Mail, a vast dataset consisting of text-summary pairs.
 
 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/facebook/bart-large-cnn" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
@@ -9,14 +11,6 @@ Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|<a href="https://aka.ms/azureml-infer-online-sdk-summarization" target="_blank">summarization-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-summarization" target="_blank">summarization-online-endpoint.sh</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-summarization" target="_blank">summarization-batch-endpoint.ipynb</a>| coming soon
-
-
-### Finetuning samples
-
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Summarization|News Summary|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">CNN DailyMail</a>|<a href="https://aka.ms/azureml-ft-sdk-news-summary" target="_blank">news-summary.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-news-summary" target="_blank">news-summary.sh</a>
-Translation|Translate English to Romanian|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">WMT16</a>|<a href="https://aka.ms/azureml-ft-sdk-translation" target="_blank">translate-english-to-romanian.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-translation" target="_blank">translate-english-to-romanian.sh</a>
 
 
 ### Model Evaluation
