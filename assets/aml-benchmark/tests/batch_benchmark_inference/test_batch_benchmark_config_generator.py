@@ -17,7 +17,7 @@ from aml_benchmark.utils.constants import AuthenticationType
 sys.path.append(get_src_dir())
 print(get_src_dir())
 
-from aml_benchmark.batch_config_generator.main import main as batch_config_generator
+from aml_benchmark.batch_config_generator.main import main as batch_config_generator  # noqa: E402
 
 
 class TestConfigGenerator:
