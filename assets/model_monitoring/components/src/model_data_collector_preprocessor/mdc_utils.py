@@ -138,11 +138,11 @@ def _mdc_uri_folder_to_preprocessed_spark_df(
 
     df = _mdc_uri_folder_to_raw_spark_df(start_datetime, end_datetime, store_url, add_tags_func)
     print("df converted from MDC raw uri folder:")
-    df.select("data").show(truncate=False)
+    df.select("data").show()
     df.printSchema()
 
     df = _load_dataref_into_data_column(df, store_url)
-    df.select("data").show(truncate=False)
+    df.select("data").show()
     df.printSchema()
 
     df = _extract_data_and_correlation_id(df, extract_correlation_id)

@@ -58,6 +58,6 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_dat
         .toDF(output_trace_schema)
 
     print("Aggregated Trace DF:")
-    all_aggregated_traces.show(truncate=False)
+    all_aggregated_traces.show()
     all_aggregated_traces.printSchema()
     return all_aggregated_traces

@@ -108,7 +108,7 @@ class SpanTreeNode:
         """Parse dict representation to create a single SpanTree node."""
         if span_node_dict is None or span_node_dict == {}:
             raise InvalidInputError(
-                "Can not create SpanTreeNode from empty input." +
+                "Can not create SpanTreeNode from empty root_span." +
                 f" Input encountered: '{span_node_dict}'."
             )
 

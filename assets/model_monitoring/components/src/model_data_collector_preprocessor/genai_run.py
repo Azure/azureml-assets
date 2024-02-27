@@ -105,7 +105,7 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     df = _convert_complex_columns_to_json_string(df)
 
     print("df processed from raw Gen AI logs:")
-    df.show(truncate=False)
+    df.show()
     df.printSchema()
 
     return df
