@@ -1,0 +1,52 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: bloomz-560m
+path: ./
+properties:
+  SharedComputeCapacityEnabled: true
+  SHA: a2845d7e13dd12efae154a9f1c63fcc2e0cc4b05
+  datasets: bigscience/xP3
+  inference-min-sku-spec: 4|0|14|28
+  inference-recommended-sku: Standard_DS3_v2, Standard_DS4_v2, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4
+  languages : ak, ar, as, bm, bn, ca, en, es, eu, fon, fr, gu, hi, id, ig, ki, kn, lg, ln, ml, mr, ne, nso, ny, or, pa, pt, rn, rw, sn, st, sw, ta, te, tn, ts, tum, tw, ur, vi, wo, xh, yo, zh, zu
+  model_id : bigscience/bloomz-560m
+  evaluation-min-sku-spec: 4|0|28|56
+  evaluation-recommended-sku: Standard_DS4_v2, Standard_DS5_v2, Standard_DS12_v2, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4
+  finetuning-tasks: text-generation
+  license : bigscience-bloom-rail-1.0
+  finetune-min-sku-spec: 12|2|224|672
+  finetune-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4
+tags:
+  Preview: ''
+  SharedComputeCapacityEnabled: ''
+  evaluation_compute_allow_list:
+  - Standard_DS4_v2
+  - Standard_DS5_v2
+  - Standard_DS12_v2
+  - Standard_NC6s_v3
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  finetune_compute_allow_list:
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  inference_compute_allow_list:
+  - Standard_DS3_v2
+  - Standard_DS4_v2
+  - Standard_NC6s_v3
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  license: other
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'false'
+    apply_ort: 'false'
+    precision: 16
+  task: text-generation
+version: 1
