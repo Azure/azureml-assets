@@ -4,10 +4,10 @@ type: spark
 name: gsq_annotation_compute_histogram
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-version: 0.4.12
+version: 0.4.13
 is_deterministic: false
 inputs:
-  production_dataset: 
+  production_dataset:
     type: mltable
     mode: direct
   metric_names:
@@ -84,6 +84,10 @@ outputs:
   relevance_violations:
     type: mltable
     mode: direct
+  evaluation:
+    type: mltable
+    mode: direct
+    description: evaluation results
 
 conf:
   spark.driver.cores: 4
@@ -105,7 +109,6 @@ conf:
   spark.synapse.library.python.env: |
     channels:
       - defaults
-      - conda-forge
     dependencies:
       - python=3.10
       - pip:
@@ -119,9 +122,8 @@ conf:
           - promptflow[azure]~=1.4.1
           - promptflow-tools~=1.1.0
           - keyrings.alt~=5.0.0
-
+    name: momo-base-spark
 code: ../../src
-
 entry:
   file: ./generation_safety_quality/annotation_compute_histogram/run.py
 
@@ -147,3 +149,4 @@ args: >-
   --similarity_violations ${{outputs.similarity_violations}}
   --coherence_violations ${{outputs.coherence_violations}}
   --relevance_violations ${{outputs.relevance_violations}}
+  --evaluation ${{outputs.evaluation}}
