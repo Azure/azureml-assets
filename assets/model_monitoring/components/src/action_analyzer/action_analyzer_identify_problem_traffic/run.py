@@ -365,11 +365,12 @@ def run():
         # add good group and bad default group
         good_group_name = f"{metrics}_good_group"
         default_bad_group_name = f"{metrics}_bad_group_default"
-        df = df.withColumn("group_list", when((col(score_name) == 5) & (col("group_list") == ""), good_group_name)
-                                             .otherwise(when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(good_group_name)))  # noqa: E501
-                                             .otherwise(when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)  # noqa: E501
-                                             .otherwise(when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(default_bad_group_name)))  # noqa: E501
-                                             .otherwise(col("group_list"))))))
+        df = df.withColumn("group_list",
+                           when((col(score_name) == 5) & (col("group_list") == ""), good_group_name)
+                          .otherwise(when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(good_group_name)))  # noqa: E501
+                          .otherwise(when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)
+                          .otherwise(when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(default_bad_group_name)))  # noqa: E501
+                          .otherwise(col("group_list"))))))
 
         pdf = df.toPandas()
         bad_answers = pdf[pdf[score_name] < 4]
