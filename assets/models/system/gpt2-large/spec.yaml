@@ -16,6 +16,7 @@ tags:
   license: mit
   model_specific_defaults: { "apply_deepspeed": "true", "apply_lora": "true", "apply_ort": "true" }
   SharedComputeCapacityEnabled: ''
+  mlflow_flavor: transformers
   task: text-generation
   huggingface_model_id: gpt2-large
   inference_compute_allow_list:

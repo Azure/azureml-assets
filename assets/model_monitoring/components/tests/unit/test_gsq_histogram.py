@@ -270,6 +270,8 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     for k, v in violations.items():
         violations[k] = fuse_prefix + os.path.join(test_path, v)
 
+    evaluation_path = fuse_prefix + os.path.join(test_path, "evaluation")
+
     apply_annotation(
         metric_names=metric_names,
         production_dataset=mltable_path,
@@ -286,5 +288,6 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
         context_column_name=context_column_name,
         ground_truth_column_name=None,
         samples_index=samples_index_path,
-        violations=violations
+        violations=violations,
+        evaluation=evaluation_path
     )
