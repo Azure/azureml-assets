@@ -94,6 +94,9 @@ class EndpointUtilities:
                     if isinstance(prompt[0], dict):
                         # For OSS chat model
                         prompt = " ".join([p["content"] for p in prompt])
+                    elif isinstance(prompt[0], str):
+                        # For OSS text generation model.
+                        prompt = " ".join(prompt)
                 elif "messages" in payload:
                     # For OAI chat model
                     if isinstance(payload["messages"], list):
