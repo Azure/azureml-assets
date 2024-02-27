@@ -215,19 +215,20 @@ def _query_relevance_score(
     stop: str = None
 ) -> int:
     turns = [turn]
-    return _query_relevance_scores(turns,
-                                  template,
-                                  session,
-                                  endpoint_url,
-                                  token_manager,
-                                  model,
-                                  temperature,
-                                  top_p,
-                                  num_samples,
-                                  frequency_penalty,
-                                  presence_penalty,
-                                  max_tokens,
-                                  stop)[0]
+    scores = _query_relevance_scores(turns,
+                                     template,
+                                     session,
+                                     endpoint_url,
+                                     token_manager,
+                                     model,
+                                     temperature,
+                                     top_p,
+                                     num_samples,
+                                     frequency_penalty,
+                                     presence_penalty,
+                                     max_tokens,
+                                     stop)
+    return scores[0]
 
 
 @udf(IntegerType())

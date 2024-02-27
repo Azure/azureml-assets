@@ -136,7 +136,7 @@ def get_topic(questions,
               api_call_retry_max_count,
               api_call_retry_backoff_factor,
               request_args):
-    
+    """Get semantic groups for queries."""
     token_manager = _WorkspaceConnectionTokenManager(
         connection_name=workspace_connection_arm_id,
         auth_header=API_KEY)
@@ -155,7 +155,7 @@ def get_topic(questions,
         n_retry=api_call_retry_max_count,
         backoff_factor=api_call_retry_backoff_factor,
     )
-    """Get semantic groups for queries."""
+
     request_args = json.loads(request_args)
     result = ""
     with httpClient.client as session:
