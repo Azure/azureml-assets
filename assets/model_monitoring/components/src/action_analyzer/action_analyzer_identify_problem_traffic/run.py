@@ -370,7 +370,7 @@ def run():
                           .when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(good_group_name)))  # noqa
                           .when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)  # noqa
                           .when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(default_bad_group_name)))  # noqa
-                          .otherwise(col("group_list")))
+                          .otherwise(col("group_list")))  # noqa
 
         pdf = df.toPandas()
         bad_answers = pdf[pdf[score_name] < 4]
