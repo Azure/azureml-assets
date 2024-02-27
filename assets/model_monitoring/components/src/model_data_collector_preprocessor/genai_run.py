@@ -112,9 +112,7 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
 
 
 def _filter_look_backward_logs(logs_df: DataFrame, data_window_start: datetime) -> DataFrame:
-    """Filter out trace logs that were got from our 1-hour look backward window
-    but are not in our desired time window.
-    """
+    """Filter out logs that were got from our 1-hour look backward window but are not in our desired time window."""
     desired_trace_ids = logs_df.where(logs_df.start_time >= data_window_start).select('trace_id').distinct()
     filtered_logs = desired_trace_ids.join(
         logs_df, on="trace_id", how="left"
