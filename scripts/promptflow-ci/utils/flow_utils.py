@@ -53,7 +53,7 @@ def _assign_flow_values(flow_dirs):
                 yaml.dump(flow_dag, dag_file, allow_unicode=True)
         test_data_file = Path(os.path.join(config_dir, TEST_DATA_FILE))
         if config_dir.exists() and test_data_file.exists():
-            log_debug(f"Using the test_data.json file from the test-configs to run the flow.")
+            log_debug("Using the test_data.json file from the test-configs to run the flow.")
             shutil.copy(os.path.join(config_dir, TEST_DATA_FILE), flow_dir)
         else:
             with open(flow_dir/"test_data.json", 'w', encoding="utf-8") as data_file:
