@@ -58,7 +58,7 @@ Retrieval_document_RELEVANCE_TEMPLATE = "\n\n".join(
         f"The score should be integer only, between {MIN_RATING} and {MAX_RATING}.",
         "## Example Task #0",
         json.dumps({
-            CONTEXT: "Python is a popular general-purpose programming language that can be used for a wide variety of applications. It includes high-level data structures, dynamic typing, dynamic binding, and many more features that make it as useful for complex application development as it is for scripting or glue code that connects components together.", # noqa: E501
+            CONTEXT: "Python is a popular general-purpose programming language that can be used for a wide variety of applications. It includes high-level data structures, dynamic typing, dynamic binding, and many more features that make it as useful for complex application development as it is for scripting or glue code that connects components together.",  # noqa: E501
             PROMPT: "How can I use the python tool in the langchain frame",
             COMPLETION: "Sorry, the provided context does not include information about question.",
         }),
@@ -155,8 +155,7 @@ def query_relevance_scores(
     max_tokens=3000,
     stop: str = None) -> List[int]:
 
-    input_samples = f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1], 'context': turn[2]}, indent=4)}"
-    prompts = [template.replace("{input_samples", input_samples) for turn in turns]
+    prompts = [template.replace("{input_samples", f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1], 'context': turn[2]}, indent=4)}") for turn in turns]  # noqa: E501
     print("prompts:", prompts)
     ratings = []
     for prompt in prompts:
@@ -212,7 +211,8 @@ def query_relevance_score(
     frequency_penalty: float,
     presence_penalty: float,
     max_tokens=3000,
-    stop: str = None) -> int:
+    stop: str=None):
+
     turns = [turn]
     return query_relevance_scores(turns,
                                   template,

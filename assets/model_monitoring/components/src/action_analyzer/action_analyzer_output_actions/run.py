@@ -15,6 +15,7 @@ import json
 import uuid
 import datetime
 import copy
+from mlflow import MlflowClient
 from shared_utilities.amlfs import amlfs_upload
 
 INDEX_ACTION_TYPE = "Index Action"
@@ -119,13 +120,18 @@ def run():
         print("Empty action data, create an empty folder.")
         return
 
+    root_run_id = os.environ.get("AZUREML_ROOT_RUN_ID", None)
+    print("Action generated, setting tag for pipeline run: ", root_run_id)
+    client = MlflowClient()
+    client.set_tag(root_run_id, "momo_action_analyzer_has_action", "true")
+
     data_with_action_metric_score_df = try_read_mltable_in_spark(
         args.data_with_action_metric_score, "data_with_action_metric_score"
     )
 
     # todo remove the groupby logic by using pure python or pandas
     merged_action = action_data_df.groupby("index_id").agg(collect_set("group").alias("action_group_set"),
-                                                           mean("confidence_score").alias("action_confidence_score")).withColumn("action_id", generate_guid()) # noqa: E501
+                                                           mean("confidence_score").alias("action_confidence_score")).withColumn("action_id", generate_guid())  # noqa: E501
     action_with_group_df = data_with_action_metric_score_df.join(merged_action, ['index_id'], "inner")
 
     action_bad_group_df = action_with_group_df.filter(is_action_bad_group(col("group_list"),

@@ -350,8 +350,8 @@ def run():
     print("gsq_output")
     signal_scored_output_df.show()
     # signal_scored_output_df = try_read_mltable_in_spark(args.signal_scored_output, "signal_scored_output")
-    df = signal_scored_output_df.withColumn("topic_list", lit(""))
-                                .withColumn("group_list", lit(""))
+    df = signal_scored_output_df.withColumn("topic_list", lit("")) \
+                                .withColumn("group_list", lit("")) \
                                 .withColumn("violated_metrics", lit(""))
 
     # seperate bad groups with semantic topic
