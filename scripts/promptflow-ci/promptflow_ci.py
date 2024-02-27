@@ -112,8 +112,7 @@ def check_flow_run_status(
     submitted_flow_run_links,
     submitted_flow_run_ids,
     check_run_status_interval,
-    check_run_status_max_attempts,
-    subscription_id
+    check_run_status_max_attempts
 ):
     """Check flow run status."""
     for flow_run_id, flow_run_link in zip(flow_runs_to_check, submitted_flow_run_links):
@@ -123,7 +122,7 @@ def check_flow_run_status(
         while current_attempt < check_run_status_max_attempts:
             bulk_test_run = run_workspace.get_run(run_id=flow_run_id)
             command = f"pfazure run show -n {flow_run_id}" \
-                f" -s {subscription_id} -g {args.resource_group} -w {args.workspace_name}"
+                f" --subscription {args.subscription_id} -g {args.resource_group} -w {args.workspace_name}"
             log_debug(
                     f"command : {command}")
             res = run_command(command)
@@ -264,7 +263,7 @@ if __name__ == "__main__":
     log_debug(f"\nrun ids to check: {submitted_flow_run_ids}")
     log_debug(f"\n{flow_runs_count} bulk test runs need to check status.")
     check_flow_run_status(flow_runs_to_check, submitted_flow_run_links, submitted_flow_run_ids,
-                          check_run_status_interval, check_run_status_max_attempts, args.subscription_id)
+                          check_run_status_interval, check_run_status_max_attempts)
 
     if len(submitted_flow_run_ids) > 0:
         failure_message = f"Not all bulk test runs or bulk test evaluation runs are completed after " \
