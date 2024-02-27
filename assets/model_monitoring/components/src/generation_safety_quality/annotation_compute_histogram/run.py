@@ -337,6 +337,7 @@ def run():
     parser.add_argument("--similarity_violations", type=str, required=True)
 
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
+    parser.add_argument("--evaluation", type=str, required=True)
     args = parser.parse_args()
 
     request_args = {
@@ -380,7 +381,8 @@ def run():
         completion_column_name=args.completion_column_name,
         context_column_name=args.context_column_name,
         ground_truth_column_name=args.ground_truth_column_name,
-        violations=violations
+        violations=violations,
+        evaluation=args.evaluation
     )
 
 
@@ -457,7 +459,8 @@ def apply_annotation(
     context_column_name,
     ground_truth_column_name,
     samples_index,
-    violations
+    violations,
+    evaluation
 ):
     """Apply annotation to all samples in the production_dataset."""
     metric_names = process_metric_names(metric_names)
@@ -597,8 +600,10 @@ def apply_annotation(
     all_metrics_pdf = None
     samples_index_rows = []
     metrics_list = []
+    compact_metric_names = []
     for metric_name in metric_names:
         metric_name_compact = get_compact_metric_name(metric_name)
+        compact_metric_names.append(metric_name_compact)
         column_name = COMPACT_METRIC_NAME_TO_COLUMN[metric_name_compact]
         metrics_list.append(column_name)
     has_context = CONTEXT in production_df.columns
@@ -628,8 +633,8 @@ def apply_annotation(
                 data=rows,
                 task_type="qa",
                 data_mapping={
-                    "questions": PROMPT,
-                    "contexts": CONTEXT,
+                    "question": PROMPT,
+                    "context": CONTEXT,
                     "answer": COMPLETION,
                     "ground_truth": GROUND_TRUTH
                 },
@@ -648,6 +653,9 @@ def apply_annotation(
                 tabular_result[CORRELATION_ID] = correlation_ids
             # rename metric columns
             for column_name in metrics_list:
+                # set failures to -1
+                tabular_result[column_name] = pd.to_numeric(tabular_result[column_name], errors='coerce')
+                tabular_result[column_name].fillna(-1, inplace=True)
                 tabular_result.rename(
                     columns={column_name: COLUMN_TO_COMPACT_METRIC_NAME[column_name]},
                     inplace=True)
@@ -666,8 +674,7 @@ def apply_annotation(
                     qca[CONTEXT] = row[CONTEXT]
                 if has_ground_truth:
                     qca[GROUND_TRUTH] = row[GROUND_TRUTH]
-                for metric_name in metric_names:
-                    metric_name_compact = get_compact_metric_name(metric_name)
+                for metric_name_compact in compact_metric_names:
                     qca[metric_name_compact] = 1
                 rows.append(qca)
             tabular_result = pd.DataFrame(rows)
@@ -685,8 +692,7 @@ def apply_annotation(
         schema_fields.append(StructField(GROUND_TRUTH, StringType(), True))
     if has_correlation_id:
         schema_fields.append(StructField(CORRELATION_ID, StringType(), True))
-    for metric_name in metric_names:
-        metric_name_compact = get_compact_metric_name(metric_name)
+    for metric_name_compact in compact_metric_names:
         schema_fields.append(StructField(metric_name_compact, IntegerType(), True))
     schema = StructType(schema_fields)
     if is_test_connection:
@@ -703,12 +709,13 @@ def apply_annotation(
     print("showing annotations dataframe: ")
     annotations_df.show()
 
-    for metric_name in metric_names:
+    for metric_name_compact in compact_metric_names:
         # Run inference over input dataset
-        print(f"Begin {metric_name} processing.")
-        metric_name_compact = get_compact_metric_name(metric_name)
+        print(f"Begin {metric_name_compact} processing.")
         # Get rating counts
-        metrics_df = annotations_df.select(metric_name_compact).groupBy(metric_name_compact).count()
+        filtered_annotations_df = annotations_df.select(
+            metric_name_compact).filter(col(metric_name_compact) != -1)
+        metrics_df = filtered_annotations_df.groupBy(metric_name_compact).count()
         metrics_df.show()
         print("Finished annotating answers.")
         metrics_pdf = metrics_df.withColumnRenamed(metric_name_compact, RATING).select("*").toPandas()
@@ -729,7 +736,7 @@ def apply_annotation(
         violation_columns = renamed_columns.copy()
         violation_columns.append(metric_name_compact)
         violations_df = annotations_df.select(violation_columns).filter(
-                col(metric_name_compact) < metric_threshold_value)
+                (col(metric_name_compact) < metric_threshold_value) & (col(metric_name_compact) != -1))
         if violations_df.count() > 0:
             # rename columns back to original names
             violations_df = (violations_df.withColumnRenamed(PROMPT, prompt_column_name)
@@ -769,6 +776,15 @@ def apply_annotation(
             StructField(ASSET, StringType(), True),
         ]
     )
+
+    # Save the annotations dataframe as output
+    io_utils.save_spark_df_as_mltable(annotations_df, evaluation)
+    samples_index_rows.append({METRIC_NAME: "Evaluation",
+                               GROUP: "",
+                               GROUP_DIMENSION: "",
+                               SAMPLES_NAME: "Evaluation",
+                               ASSET: f"azureml_{run_id}_output_data_evaluation:1"})
+
     # Create a new DataFrame for the samples index data
     samples_df = spark.createDataFrame(samples_index_rows, metadata_schema)
     io_utils.save_spark_df_as_mltable(samples_df, samples_index)
