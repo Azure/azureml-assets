@@ -134,8 +134,7 @@ def run():
                                                            mean("confidence_score").alias("action_confidence_score")).withColumn("action_id", generate_guid())  # noqa: E501
     action_with_group_df = data_with_action_metric_score_df.join(merged_action, ['index_id'], "inner")
 
-    action_bad_group_df = action_with_group_df.filter(is_action_bad_group(col("group_list"),
-                                                                          col("action_group_set")) is True)
+    action_bad_group_df = action_with_group_df.filter(is_action_bad_group(col("group_list"), col("action_group_set")))
     print("bad group")
     action_bad_group_df.show()
     # action_good_group_df = action_with_group_df.filter((col("groundedness_score") == 5)

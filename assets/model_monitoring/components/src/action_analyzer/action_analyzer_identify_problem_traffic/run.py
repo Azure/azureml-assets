@@ -42,10 +42,10 @@ N_SAMPLES = 100
 TOPIC_TEMPLATE = "\n\n".join(
     [
         "System:",
-        "You are an AI assistant. You will be given a set of questions. Please categorize these quesitons into a few topics based on their intent, " # noqa: E501
-        "please try your best to avoid categorize question into its own topic whenever appropriate, and format your answer in this format:", # noqa: E501
-        '{ "<topic_0>": ["<question_00>", "<question_01>", ...], "<topic_1>": ["<question_10>", "<question_11>", ...], ... }', # noqa: E501
-        "Please only return the json content without prefix or suffix. If there are too many topics, please sort the topics with the querestion counts belong to it, in descent order, and returns the top 10." # noqa: E501
+        "You are an AI assistant. You will be given a set of questions. Please categorize these quesitons into a few topics based on their intent, "  # noqa: E501
+        "please try your best to avoid categorize question into its own topic whenever appropriate, and format your answer in this format:",  # noqa: E501
+        '{ "<topic_0>": ["<question_00>", "<question_01>", ...], "<topic_1>": ["<question_10>", "<question_11>", ...], ... }',  # noqa: E501
+        "Please only return the json content without prefix or suffix. If there are too many topics, please sort the topics with the querestion counts belong to it, in descent order, and returns the top 10."  # noqa: E501
         "User:",
         "Here are the queries:",
         "{queries}",
@@ -74,19 +74,20 @@ def get_output_schema() -> StructType:
 
 
 def query_topic(
-    queries,
-    session: requests.Session,
-    endpoint_url: str,
-    token_manager: _APITokenManager,
-    model: str,
-    temperature: float,
-    top_p: float,
-    num_samples: int,
-    frequency_penalty: float,
-    presence_penalty:
-    float,
-    max_tokens=3000,
-    stop: str = None) -> List[int]:
+        queries,
+        session: requests.Session,
+        endpoint_url: str,
+        token_manager: _APITokenManager,
+        model: str,
+        temperature: float,
+        top_p: float,
+        num_samples: int,
+        frequency_penalty: float,
+        presence_penalty:
+        float,
+        max_tokens=3000,
+        stop: str = None
+    ) -> List[int]:
 
     # Copy request_data to avoid modifying the original dict.
     prompt = TOPIC_TEMPLATE.replace("{queries}", json.dumps(queries))
@@ -320,13 +321,11 @@ def run():
                                                  .drop("end_time") \
                                                  .drop("input") \
                                                  .drop("output")
-                                            # .withColumn("context", gsq_input["text"])\
-    # signal_scored_data_df = signal_scored_data_df.withColumn("ground_truth", col("answer"))
     print("gsq input production df")
     signal_scored_data_df.show()
 
     annotations_df = apply_annotation(
-        metric_names="AcceptableCoherenceScorePerInstance,AggregatedCoherencePassRate,AcceptableFluencyScorePerInstance,AggregatedFluencyPassRate", # noqa: E501
+        metric_names="AcceptableCoherenceScorePerInstance,AggregatedCoherencePassRate,AcceptableFluencyScorePerInstance,AggregatedFluencyPassRate",  # noqa: E501
         production_df=signal_scored_data_df,
         model_deployment_name=args.model_deployment_name,
         workspace_connection_arm_id=args.workspace_connection_arm_id,
@@ -360,20 +359,17 @@ def run():
         print("======Current metrics=====")
         print(metrics)
         score_name = metrics+"_score"
-        df = df.withColumn("violated_metrics", 
+        df = df.withColumn("violated_metrics",
                            assign_violated_metrics(col("violated_metrics"), col(score_name), lit(metrics)))
 
         # add good group and bad default group
         good_group_name = f"{metrics}_good_group"
         default_bad_group_name = f"{metrics}_bad_group_default"
-        df = df.withColumn("group_list",
-                            when((col(score_name) == 5) & (col("group_list") == ""), good_group_name)
-                            .otherwise(when((col(score_name) == 5) & (col("group_list") != ""),
-                                            concat(col("group_list"), lit(","), lit(good_group_name)))
-                            .otherwise(when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)
-                            .otherwise(when((col(score_name) < 4) & (col("group_list") != ""),
-                                            concat(col("group_list"), lit(","), lit(default_bad_group_name)))
-                            .otherwise(col("group_list"))))))
+        df = df.withColumn("group_list", when((col(score_name) == 5) & (col("group_list") == ""), good_group_name)
+                                         .otherwise(when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(good_group_name)))  # noqa: E501
+                                         .otherwise(when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)  # noqa: E501
+                                         .otherwise(when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(default_bad_group_name)))  # noqa: E501
+                                         .otherwise(col("group_list"))))))
 
         pdf = df.toPandas()
         bad_answers = pdf[pdf[score_name] < 4]
@@ -409,10 +405,10 @@ def run():
                                 args.api_call_retry_backoff_factor,
                                 json.dumps(request_args))
 
-        df = df.withColumn("topic_list",assign_good_topic(col("topic_list"),
-                                                          col("question"),
-                                                          col(score_name),
-                                                          lit(json.dumps(topics_dict))))
+        df = df.withColumn("topic_list", assign_good_topic(col("topic_list"),
+                                                           col("question"),
+                                                           col(score_name),
+                                                           lit(json.dumps(topics_dict))))
 
     sampled_df = df.filter(col("topic_list") != "")
 
