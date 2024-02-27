@@ -6,7 +6,6 @@
 import pytest
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
-from src.shared_utilities.momo_exceptions import InvalidInputError
 from src.generation_safety_quality.input_schema_adaptor.run import (
     _adapt_input_data_schema,
 )
@@ -120,11 +119,12 @@ class TestInputSchemaAdaptor:
         spark = self._init_spark()
         input_data_df = spark.createDataFrame([("01", "asdfjkl", "421jjfd", "fdsa")], self._genai_input_schema)
 
+        match_err = "Failed to parse the input/output column json string for the trace logs provided."
         try:
-            _ = _adapt_input_data_schema(input_data_df)
-            assert False
-        except InvalidInputError:
-            assert True
+            _adapt_input_data_schema(input_data_df)
+            pytest.fail("Should have thrown InvalidInputError exception.")
+        except Exception as ex:
+            assert match_err in str(ex)
 
 
 def assert_spark_dataframe_equal(actual_df: DataFrame, expected_df: DataFrame):
