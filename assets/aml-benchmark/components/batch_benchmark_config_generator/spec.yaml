@@ -4,7 +4,7 @@ type: command
 name: batch_benchmark_config_generator
 display_name: Batch Benchmark Config Generator
 description: Generates the config for the batch score component.
-version: 0.0.3
+version: 0.0.1
 is_deterministic: true
 
 inputs:
@@ -18,7 +18,7 @@ inputs:
     description: The URL of the endpoint.
   model_type:
     type: string
-    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss')
+    description: Type of model. Can be one of ('oai', 'oss', 'vision_oss')
     optional: false
     enum:
         - oai
@@ -27,7 +27,7 @@ inputs:
   authentication_type:
     type: string
     optional: False
-    description: Authentication type for endpoint.
+    description: Authentication type for endpoint. Can be one of ('azureml_workspace_connection' or 'managed_identity')
     default: azureml_workspace_connection
     enum:
       - azureml_workspace_connection
