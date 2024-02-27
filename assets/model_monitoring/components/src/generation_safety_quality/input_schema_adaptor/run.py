@@ -26,8 +26,17 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
         return df
 
     spark = init_spark()
-    input_schema = spark.read.json(df.rdd.map(lambda row: row.input)).schema
-    output_schema = spark.read.json(df.rdd.map(lambda row: row.output)).schema
+    try:
+        input_schema = spark.read.json(df.rdd.map(lambda row: row.input), mode="FAILFAST").schema
+        output_schema = spark.read.json(df.rdd.map(lambda row: row.output), mode="FAILFAST").schema
+    except Exception as ex:
+        if "Malformed records are detected in record parsing. Parse Mode: FAILFAST." in str(ex):
+            raise InvalidInputError(
+                "Failed to parse the input/output column json string for the trace logs provided."
+                " The input/output columns in the inputted production data are not in a parseable json string format." +
+                " Please double-check the data columns are being passed or stored correctly."
+            )
+        raise ex
 
     df = df.withColumns({
         'temp_input': from_json(df.input, input_schema),
