@@ -123,9 +123,9 @@ def check_flow_run_status(
             bulk_test_run = run_workspace.get_run(run_id=flow_run_id)
             if bulk_test_run.status == "Completed":
                 submitted_flow_run_ids.remove(flow_run_id)
-                for run in bulk_test_run.get_children():
-                    log_debug(
-                        f"child run info {run}")
+                child_run = run_workspace.get_run(run_id=flow_run_id + "_0")
+                log_debug(
+                        f"child run info {child_run}")
                 log_debug(
                     f"run details with log {bulk_test_run.get_details_with_logs()}")
                 break
