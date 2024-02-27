@@ -1,0 +1,17 @@
+azure-ai-ml==1.13.0
+azure-ai-generative==1.0.0b7
+azure-cli-core~=2.56.0
+azure-identity~=1.12.0
+# apparently this is still needed for some azureml paths, see:
+# assets/model_monitoring/components/src/model_data_collector_preprocessor/store_url.py
+azureml-core~=1.55.0
+fsspec~=2023.4.0
+mltable~=1.5.0
+openai~=1.12.0
+pandas~=2.0.3
+ruamel.yaml==0.17.21
+scipy~=1.10.0
+pyspark
+pytest~=7.2.1
+pytest-xdist
+pyspark-test~=0.2.0

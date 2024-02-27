@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: microsoft_azureml_rai_tabular_explanation
 display_name: Add Explanation to RAI Insights Dashboard
 description: Add Explanation to RAI Insights Dashboard [Learn More](https://aka.ms/RAIComponents)
-version: 0.12.0
+version: 0.13.0
 type: command
 
 inputs:
@@ -17,7 +17,7 @@ outputs:
 
 code: ../src/
 
-environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/39
+environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/43
 
 command: >-
   python create_explanation.py

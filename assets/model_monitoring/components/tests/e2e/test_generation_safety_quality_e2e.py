@@ -67,6 +67,7 @@ def _submit_generation_safety_quality_model_monitor_job(
     return ml_client.jobs.get(pipeline_job.name)
 
 
+@pytest.mark.gsq_test
 @pytest.mark.e2e
 class TestGenerationSafetyQualityModelMonitor:
     """Test class for GSQ."""

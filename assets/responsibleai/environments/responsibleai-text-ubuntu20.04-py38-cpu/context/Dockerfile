@@ -27,9 +27,15 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
 # so we install pyarrow in extra step to avoid conflict
 RUN pip install 'pyarrow>=14.0.1'
 
+# To resolve vulnerability issue regarding crytography
+RUN pip install 'cryptography>=42.0.4'
+
 # Install huggingface evaluate package from source
 # see issue https://github.com/huggingface/datasets/issues/6182
 RUN pip install git+https://github.com/huggingface/evaluate.git
+
+# TODO: remove rai-core-flask pin with next raiwidgets release
+RUN pip install 'rai-core-flask==0.7.4'
 
 RUN pip freeze
 

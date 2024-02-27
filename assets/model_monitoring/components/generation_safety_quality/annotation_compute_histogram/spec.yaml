@@ -4,10 +4,10 @@ type: spark
 name: gsq_annotation_compute_histogram
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-version: 0.4.11
+version: 0.4.12
 is_deterministic: false
 inputs:
-  production_dataset: 
+  production_dataset:
     type: mltable
     mode: direct
   metric_names:
@@ -84,6 +84,10 @@ outputs:
   relevance_violations:
     type: mltable
     mode: direct
+  evaluation:
+    type: mltable
+    mode: direct
+    description: evaluation results
 
 conf:
   spark.driver.cores: 4
@@ -111,8 +115,8 @@ conf:
       - pip:
           - azure-cli-core~=2.56.0
           - azure-ai-ml~=1.13.0
-          - azure-ai-generative==1.0.0b6
-          - azure-ai-resources==1.0.0b6
+          - azure-ai-generative==1.0.0b7
+          - azure-ai-resources==1.0.0b7
           - openai~=1.11.1
           - json5==0.9.11
           - mltable~=1.5.0
@@ -147,3 +151,4 @@ args: >-
   --similarity_violations ${{outputs.similarity_violations}}
   --coherence_violations ${{outputs.coherence_violations}}
   --relevance_violations ${{outputs.relevance_violations}}
+  --evaluation ${{outputs.evaluation}}
