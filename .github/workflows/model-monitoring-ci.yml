@@ -36,9 +36,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: check-execution-context
     environment: Testing
-    strategy:
-      matrix:
-        group: [1, 2, 3, 4, 5]
     steps:
       - name: Clone branch
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
@@ -60,7 +57,7 @@ jobs:
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 
       - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/group_${{ matrix.group }}_${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8 -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py --splits 5 --group ${{ matrix.group }}
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/group_${{ matrix.group }}_${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8 -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py --store-durations
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -71,7 +68,9 @@ jobs:
         if: always()
         with:
           name: ${{ env.pytest_report_folder }}
-          path: ${{ env.pytest_report_folder }}
+          path: |
+            ${{ env.pytest_report_folder }}
+            ./.test_durations
   report:
       name: Publish test results
       if: always()
