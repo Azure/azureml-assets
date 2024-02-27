@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/ajibawa-2023-scarlett-33b/1706273431/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
