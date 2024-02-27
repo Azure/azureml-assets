@@ -6,6 +6,7 @@
 import pytest
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
+from src.shared_utilities.momo_exceptions import InvalidInputError
 from src.generation_safety_quality.input_schema_adaptor.run import (
     _adapt_input_data_schema,
 )
@@ -72,8 +73,6 @@ class TestInputSchemaAdaptor:
                 # Test no data, should be pass-through
                 ([], _simple_input_schema, [], _simple_input_schema),
                 ([("", "")], _simple_input_schema, [("", "")], _simple_input_schema),
-                # genai, empty data, throws error
-                # ([], _genai_input_schema, [], _expected_gsq_schema_empty),
                 # genai, empty input/output columns
                 (
                     [("01", "null", "null", "null")], _genai_input_schema,
@@ -115,6 +114,17 @@ class TestInputSchemaAdaptor:
         actual_df.printSchema()
 
         assert_spark_dataframe_equal(actual_df, expected_data_df)
+
+    def test_adapt_input_schema_bad_json(self):
+        """Test scenario for input schema adaptor with invalid json object column."""
+        spark = self._init_spark()
+        input_data_df = spark.createDataFrame([("01", "asdfjkl", "421jjfd", "fdsa")], self._genai_input_schema)
+
+        try:
+            _ = _adapt_input_data_schema(input_data_df)
+            assert False
+        except InvalidInputError:
+            assert True
 
 
 def assert_spark_dataframe_equal(actual_df: DataFrame, expected_df: DataFrame):
