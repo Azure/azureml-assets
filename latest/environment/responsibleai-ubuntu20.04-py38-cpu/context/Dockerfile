@@ -15,6 +15,10 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
+RUN conda list
+# Conda install and pip install could happen side by side. Remove crypytography with vulnerability from conda
+RUN conda remove cryptography
+
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # no-deps install for domonic due to unresolvable dependencies requirment on urllib3 and requests.
