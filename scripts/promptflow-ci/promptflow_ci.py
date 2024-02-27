@@ -123,6 +123,10 @@ def check_flow_run_status(
             bulk_test_run = run_workspace.get_run(run_id=flow_run_id)
             if bulk_test_run.status == "Completed":
                 submitted_flow_run_ids.remove(flow_run_id)
+                log_debug(
+                    f"error info {bulk_test_run.error}")
+                if bulk_test_run.error != null:
+                    failed_flow_runs.update({flow_run_id: flow_run_link})
                 break
             elif bulk_test_run.status == "Failed":
                 submitted_flow_run_ids.remove(flow_run_id)
