@@ -122,7 +122,7 @@ def check_flow_run_status(
         while current_attempt < check_run_status_max_attempts:
             bulk_test_run = run_workspace.get_run(run_id=flow_run_id)
             command = f"pfazure run show -n {flow_run_id}" \
-                 f" -s {args.subscription_id} -g {args.resource_group} -w {args.workspace_name}"
+                f" -s {args.subscription_id} -g {args.resource_group} -w {args.workspace_name}"
             log_debug(
                     f"command : {command}")
             res = run_command(command)
