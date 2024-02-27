@@ -5,6 +5,8 @@
 
 import argparse
 
+from datetime import datetime, timedelta
+from dateutil import parser
 from pyspark.sql import DataFrame
 from pyspark.sql.types import TimestampType
 from pyspark.sql.utils import AnalysisException
@@ -109,13 +111,31 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     return df
 
 
+def _filter_look_backward_logs(logs_df: DataFrame, data_window_start: datetime) -> DataFrame:
+    """Filter out trace logs that were got from our 1-hour look backward window
+    but are not in our desired time window.
+    """
+    desired_trace_ids = logs_df.where(logs_df.start_time >= data_window_start).select('trace_id').distinct()
+    filtered_logs = desired_trace_ids.join(
+        logs_df, on="trace_id", how="left"
+    )
+    return filtered_logs
+
+
 def _genai_uri_folder_to_preprocessed_spark_df(
         data_window_start: str, data_window_end: str, store_url: StoreUrl, add_tags_func=None
 ) -> DataFrame:
     """Read raw gen AI logs data, preprocess, and return in a Spark DataFrame."""
-    df = _mdc_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url, False, add_tags_func)
+    # look-back 1 hour for extra span logs
+    data_window_start_as_datetime = parser.parse(data_window_start)
+    adjusted_date_window_start = data_window_start_as_datetime - timedelta(hours=1)
+
+    df = _mdc_uri_folder_to_preprocessed_spark_df(
+        adjusted_date_window_start.strftime("%Y%m%dT%H:%M:%S"), data_window_end, store_url, False, add_tags_func)
 
     df = _preprocess_raw_logs_to_span_logs_spark_df(df)
+
+    df = _filter_look_backward_logs(df, data_window_start_as_datetime)
 
     return df
 
@@ -152,14 +172,14 @@ def genai_preprocessor(
 def run():
     """Compute data window and preprocess data from MDC."""
     # Parse arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data_window_start", type=str)
-    parser.add_argument("--data_window_end", type=str)
-    parser.add_argument("--input_data", type=str)
-    parser.add_argument("--preprocessed_span_data", type=str)
-    parser.add_argument("--aggregated_trace_data", type=str)
-    parser.add_argument("--require_trace_data", type=bool, default=True)
-    args = parser.parse_args()
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--data_window_start", type=str)
+    arg_parser.add_argument("--data_window_end", type=str)
+    arg_parser.add_argument("--input_data", type=str)
+    arg_parser.add_argument("--preprocessed_span_data", type=str)
+    arg_parser.add_argument("--aggregated_trace_data", type=str)
+    arg_parser.add_argument("--require_trace_data", type=bool, default=True)
+    args = arg_parser.parse_args()
 
     genai_preprocessor(
         args.data_window_start,

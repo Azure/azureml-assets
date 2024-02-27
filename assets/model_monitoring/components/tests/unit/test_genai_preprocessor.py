@@ -15,11 +15,13 @@ import random
 import time
 import zipfile
 from datetime import datetime
-from model_data_collector_preprocessor.genai_run import (
+from src.model_data_collector_preprocessor.genai_run import (
     _genai_uri_folder_to_preprocessed_spark_df,
+)
+from src.model_data_collector_preprocessor.trace_aggregator import (
     process_spans_into_aggregated_traces,
 )
-from model_data_collector_preprocessor.store_url import StoreUrl
+from src.model_data_collector_preprocessor.store_url import StoreUrl
 from spark_mltable import SPARK_ZIP_PATH
 
 
@@ -81,6 +83,7 @@ class TestGenAISparkPreprocessor:
         return SparkSession.builder.appName("test").getOrCreate()
 
     _preprocessed_schema = StructType([
+        StructField('trace_id', StringType(), True),
         StructField('context', StringType(), True),
         StructField('end_time', TimestampType(), True),
         StructField('events', StringType(), True),
@@ -89,7 +92,6 @@ class TestGenAISparkPreprocessor:
         StructField('parent_id', StringType(), True),
         StructField('start_time', TimestampType(), True),
         StructField('status', StringType(), True),
-        StructField('trace_id', StringType(), True),
         StructField('span_id', StringType(), True),
         StructField('span_type', StringType(), True),
         StructField('framework', StringType(), True),
@@ -101,24 +103,25 @@ class TestGenAISparkPreprocessor:
     ])
 
     _preprocessed_data = [
-        ["{\"trace_state\":\"[]\"}"] +
+        ["01", "{\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 0, 2, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 1, 0), "OK", "01", "1", "llm", "LLM", "in", "out"],
-        ["{\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 5, 0, 1, 0), "OK", "1", "llm", "LLM", "in", "out"],
+        ["01", "{\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 0, 4, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 3, 0), "OK", "01", "2", "llm", "LLM", "in", "out"],
-        ["{\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 5, 0, 3, 0), "OK", "2", "llm", "LLM", "in", "out"],
+        ["02", "{\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 0, 6, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 5, 0), "OK", "02", "3", "llm", "LLM", "in", "out"],
-        ["{\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 5, 0, 5, 0), "OK", "3", "llm", "LLM", "in", "out"],
+        ["02", "{\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 0, 8, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 7, 0), "OK", "02", "4", "llm", "LLM", "in", "out"],
-        ["{\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 5, 0, 7, 0), "OK", "4", "llm", "LLM", "in", "out"],
+        ["02", "{\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 0, 12, 0), "[]", "[]", "name", "4"] +
-        [datetime(2024, 2, 5, 0, 11, 0), "OK", "02", "5", "llm", "LLM", "in", "out"],
+        [datetime(2024, 2, 5, 0, 11, 0), "OK", "5", "llm", "LLM", "in", "out"],
     ]
 
     _preprocessed_schema_no_input = StructType([
+        StructField('trace_id', StringType(), True),
         StructField('end_time', TimestampType(), True),
         StructField('events', StringType(), True),
         StructField('links', StringType(), True),
@@ -126,7 +129,6 @@ class TestGenAISparkPreprocessor:
         StructField('parent_id', StringType(), True),
         StructField('start_time', TimestampType(), True),
         StructField('status', StringType(), True),
-        StructField('trace_id', StringType(), True),
         StructField('span_id', StringType(), True),
         StructField('span_type', StringType(), True),
         StructField('framework', StringType(), True),
@@ -138,16 +140,34 @@ class TestGenAISparkPreprocessor:
     ])
 
     _preprocessed_data_no_inputs = [
-        [datetime(2024, 2, 5, 0, 2, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 1, 0), "OK", "01", "1", "llm", "LLM", None, "out"],
-        [datetime(2024, 2, 5, 0, 4, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 3, 0), "OK", "01", "2", "llm", "LLM", None, "out"],
-        [datetime(2024, 2, 5, 0, 6, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 5, 0), "OK", "02", "3", "llm", "LLM", None, "out"],
-        [datetime(2024, 2, 5, 0, 8, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 7, 0), "OK", "02", "4", "llm", "LLM", None, "out"],
-        [datetime(2024, 2, 5, 0, 12, 0), "[]", "[]", "name", "4"] +
-        [datetime(2024, 2, 5, 0, 11, 0), "OK", "02", "5", "llm", "LLM", None, "out"],
+        ["01", datetime(2024, 2, 5, 0, 2, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 5, 0, 1, 0), "OK", "1", "llm", "LLM", None, "out"],
+        ["01", datetime(2024, 2, 5, 0, 4, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 5, 0, 3, 0), "OK", "2", "llm", "LLM", None, "out"],
+        ["02", datetime(2024, 2, 5, 0, 6, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 5, 0, 5, 0), "OK", "3", "llm", "LLM", None, "out"],
+        ["02", datetime(2024, 2, 5, 0, 8, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 5, 0, 7, 0), "OK", "4", "llm", "LLM", None, "out"],
+        ["02", datetime(2024, 2, 5, 0, 12, 0), "[]", "[]", "name", "4"] +
+        [datetime(2024, 2, 5, 0, 11, 0), "OK", "5", "llm", "LLM", None, "out"],
+    ]
+
+    _preprocessed_data_look_back = [
+        ["01", "{\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 10, 15, 4, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 10, 15, 3, 0), "OK", "2", "llm", "LLM", "in", "out"],
+        ["01", "{\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 10, 15, 2, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 10, 15, 1, 0), "OK", "1", "llm", "LLM", "in", "out"],
+        ["02", "{\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 10, 15, 12, 0), "[]", "[]", "name", "4"] +
+        [datetime(2024, 2, 10, 15, 11, 0), "OK", "5", "llm", "LLM", "in", "out"],
+        ["02", "{\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 10, 15, 6, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 10, 15, 5, 0), "OK", "3", "llm", "LLM", "in", "out"],
+        ["02", "{\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 10, 14, 10, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 10, 14, 9, 0), "OK", "4", "llm", "LLM", "in", "out"],
     ]
 
     @pytest.mark.parametrize(
@@ -161,6 +181,9 @@ class TestGenAISparkPreprocessor:
             # data but missing some promoted attribute fields
             (datetime(2024, 2, 7, 12), datetime(2024, 2, 7, 13),
              _preprocessed_schema_no_input, _preprocessed_data_no_inputs),
+            # test the 1-hour lookback functionality
+            (datetime(2024, 2, 10, 15), datetime(2024, 2, 10, 16),
+             _preprocessed_schema, _preprocessed_data_look_back)
         ]
     )
     def test_genai_uri_folder_to_preprocessed_spark_df(
@@ -189,6 +212,27 @@ class TestGenAISparkPreprocessor:
         expected_df.printSchema()
 
         assert_spark_dataframe_equal(actual_df, expected_df)
+
+    def test_genai_preprocessor_fails(self, genai_preprocessor_test_setup):
+        """Test scenarios where the preprocessor should throw validation errors."""
+        def my_add_tags(tags: dict):
+            print("my_add_tags:", tags)
+
+        print("testing genai_uri_folder_to_preprocessed_spark_df...")
+        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
+
+        # Data with invalid timestamps
+        window_start_time = datetime(2024, 2, 8, 15)
+        window_end_time = datetime(2024, 2, 8, 16)
+
+        try:
+            _ = _genai_uri_folder_to_preprocessed_spark_df(
+                window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
+                input_url, my_add_tags)
+            assert False
+        except Exception as ex:
+            assert "The start or end time columns of the raw span logs contain invalid Timestamp strings." in str(ex)
 
     _preprocessed_log_schema = StructType([
         # TODO: The user_id and session_id may not be available in v1.
@@ -342,27 +386,6 @@ class TestGenAISparkPreprocessor:
         actual_trace_df.printSchema()
 
         assert_spark_dataframe_equal(actual_trace_df, expected_traces_df)
-
-    def test_genai_preprocessor_fails(self, genai_preprocessor_test_setup):
-        """Test scenarios where the preprocessor should throw validation errors."""
-        def my_add_tags(tags: dict):
-            print("my_add_tags:", tags)
-
-        print("testing genai_uri_folder_to_preprocessed_spark_df...")
-        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
-        input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
-
-        # Data with invalid timestamps
-        window_start_time = datetime(2024, 2, 8, 15)
-        window_end_time = datetime(2024, 2, 8, 16)
-
-        try:
-            _ = _genai_uri_folder_to_preprocessed_spark_df(
-                window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
-                input_url, my_add_tags)
-            assert False
-        except Exception as ex:
-            assert "The start or end time columns of the raw span logs contain invalid Timestamp strings." in str(ex)
 
 
 def assert_spark_dataframe_equal(df1, df2):
