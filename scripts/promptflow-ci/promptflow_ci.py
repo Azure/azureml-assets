@@ -128,7 +128,7 @@ def check_flow_run_status(
                 res = run_command(command)
                 log_debug(f"log debug info: {res.stdout}.")
                 stdout_obj = json.loads(res.stdout)
-                log_debug(f"stdout error info: {stdout_obj.error}.")
+                log_debug(f"stdout error info: {stdout_obj.get("error")}")
                 break
             elif bulk_test_run.status == "Failed":
                 submitted_flow_run_ids.remove(flow_run_id)
