@@ -39,6 +39,7 @@ def save_action_data(action_rows, output_path):
 
 
 def generate_action_rows(pdf, index_set, group_set):
+    """Generate the action data."""
     actions_row = []
     for index in index_set:
         for group in group_set:
@@ -70,12 +71,14 @@ def generate_action_rows(pdf, index_set, group_set):
 
 
 def perform_ttest(good_answer_scores, bad_answer_scores):
+    """Do the Welch's t-test."""
     t_stat, p_value = stats.ttest_ind(good_answer_scores, bad_answer_scores, equal_var=False)
     print(f"T-statistic: {t_stat}, P-value: {p_value}")
     return t_stat, p_value
 
 
 def get_unique_group_and_index(data_with_action_metric_score_df):
+    """Get the group set and index set."""
     group_set = set()
     index_set = set()
     for score_data_row in data_with_action_metric_score_df.collect():

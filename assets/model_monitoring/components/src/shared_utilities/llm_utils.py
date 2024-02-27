@@ -407,6 +407,7 @@ def _check_and_format_azure_endpoint_url(url_pattern, domain_pattern_re, domain,
 
 
 def get_openai_request_args(args):
+    """Get openai request parameters."""
     request_args = {
         arg: getattr(args, arg) for arg in OPENAI_REQUEST_PARAMS if hasattr(args, arg)
     }

@@ -140,7 +140,7 @@ Retrieval_document_RELEVANCE_TEMPLATE = "\n\n".join(
 )
 
 
-def query_relevance_scores(
+def _query_relevance_scores(
     turns: List[Tuple[str, str, str]],
     template: str,
     session: requests.Session,
@@ -199,7 +199,7 @@ def query_relevance_scores(
     return ratings
 
 
-def query_relevance_score(
+def _query_relevance_score(
     turn: Tuple[str, str, str],
     template: str,
     session: requests.Session,
@@ -215,7 +215,7 @@ def query_relevance_score(
     stop: str = None
 ) -> int:
     turns = [turn]
-    return query_relevance_scores(turns,
+    return _query_relevance_scores(turns,
                                   template,
                                   session,
                                   endpoint_url,
@@ -239,6 +239,7 @@ def get_index_score(question,
                     api_call_retry_max_count,
                     api_call_retry_backoff_factor,
                     request_args):
+    """Calculate index score."""
     token_manager = _WorkspaceConnectionTokenManager(
         connection_name=workspace_connection_arm_id,
         auth_header=API_KEY)
@@ -261,7 +262,7 @@ def get_index_score(question,
     request_args = json.loads(request_args)
     rating = -1
     with httpClient.client as session:
-        rating = query_relevance_score(
+        rating = _query_relevance_score(
             (question, answer, context),
             Retrieval_document_RELEVANCE_TEMPLATE,
             session, azure_endpoint_url, token_manager,
@@ -271,7 +272,7 @@ def get_index_score(question,
 
 
 def get_output_schema() -> StructType:
-    """Get Action Data Spark DataFrame Schema."""
+    """Get Output Data Spark DataFrame Schema."""
     schema = StructType(
         [
             StructField("trace_id", StringType(), True),

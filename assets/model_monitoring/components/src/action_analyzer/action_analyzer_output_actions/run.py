@@ -23,18 +23,20 @@ DESCRIPTION = "Poor answers are caused by poor indexing, please update the doc i
 MAX_SAMPLE_SIZE = 20
 
 
+@udf(returnType=StringType())
+def _generate_guid():
+    return str(uuid.uuid4())
+
+
 @udf(returnType=BooleanType())
 def is_action_bad_group(group_list, action_group_set):
+    """Check if the group list contains action bad group."""
     group_set = set(group_list.split(","))
     return len(group_set.intersection(action_group_set)) > 0
 
 
-@udf(returnType=StringType())
-def generate_guid():
-    return str(uuid.uuid4())
-
-
-def get_unique_index(df):
+def get_index_set(df):
+    """Get the index set."""
     index_set = set()
     for data_row in df.collect():
         index_set.add(data_row["index_id"])
@@ -42,7 +44,8 @@ def get_unique_index(df):
 
 
 def write_actions(action_bad_group_df, action_good_group_df, action_output_folder, model_deployment_name, signal_name):
-    index_set = get_unique_index(action_bad_group_df)
+    """Write the action summary and action detail files."""
+    index_set = get_index_set(action_bad_group_df)
     local_path = str(uuid.uuid4())
     action_summary = {}
     for index_id in index_set:
@@ -76,6 +79,7 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
 
 
 def generate_samples(action_df, is_negative_sample):
+    """Generate positive and negative samples in action file."""
     samples = []
     sample_data = action_df.rdd.collect()
     for i in range(len(sample_data)):
@@ -131,7 +135,7 @@ def run():
 
     # todo remove the groupby logic by using pure python or pandas
     merged_action = action_data_df.groupby("index_id").agg(collect_set("group").alias("action_group_set"),
-                                                           mean("confidence_score").alias("action_confidence_score")).withColumn("action_id", generate_guid())  # noqa: E501
+                                                           mean("confidence_score").alias("action_confidence_score")).withColumn("action_id", _generate_guid())  # noqa: E501
     action_with_group_df = data_with_action_metric_score_df.join(merged_action, ['index_id'], "inner")
 
     action_bad_group_df = action_with_group_df.filter(is_action_bad_group(col("group_list"), col("action_group_set")))

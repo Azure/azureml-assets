@@ -54,7 +54,7 @@ TOPIC_TEMPLATE = "\n\n".join(
 
 
 def get_output_schema() -> StructType:
-    """Get Action Data Spark DataFrame Schema."""
+    """Get Output Data Spark DataFrame Schema."""
     schema = StructType(
         [
             StructField("trace_id", StringType(), True),
@@ -73,7 +73,7 @@ def get_output_schema() -> StructType:
     return schema
 
 
-def query_topic(
+def _query_topic(
     queries,
     session: requests.Session,
     endpoint_url: str,
@@ -136,6 +136,7 @@ def get_topic(questions,
               api_call_retry_max_count,
               api_call_retry_backoff_factor,
               request_args):
+    
     token_manager = _WorkspaceConnectionTokenManager(
         connection_name=workspace_connection_arm_id,
         auth_header=API_KEY)
@@ -154,11 +155,11 @@ def get_topic(questions,
         n_retry=api_call_retry_max_count,
         backoff_factor=api_call_retry_backoff_factor,
     )
-
+    """Get semantic groups for queries."""
     request_args = json.loads(request_args)
     result = ""
     with httpClient.client as session:
-        result = query_topic(
+        result = _query_topic(
             questions,
             session, azure_endpoint_url, token_manager,
             **request_args,
@@ -178,6 +179,7 @@ def _append_value(string_input, value):
 
 @udf(returnType=ArrayType(StringType()))
 def assign_topic_and_group(topic_list, group_list, question, violated_metrics, metrics, topic_group_dict):
+    """Assign topic name and group name for bad queries."""
     topic_group = json.loads(topic_group_dict)
     for group_name, (topic, q_list) in topic_group.items():
         if question in q_list and (metrics in violated_metrics):
@@ -188,6 +190,7 @@ def assign_topic_and_group(topic_list, group_list, question, violated_metrics, m
 
 @udf(returnType=StringType())
 def assign_good_topic(topic_list, question, metrics_score, topics_dict):
+    """Assign topic name for good queries."""
     topic_question = json.loads(topics_dict)
     for topic, q_list in topic_question.items():
         if question in q_list and metrics_score == 5:
@@ -201,6 +204,7 @@ def assign_good_topic(topic_list, question, metrics_score, topics_dict):
     StructField("answer", StringType()),
     StructField("text", StringType())]))
 def Get_gsq_input(input, output, root_span):
+    """Gsq Adapter."""
     try:
         tree = SpanTree.create_tree_from_json_string(root_span)
         text_builder = ""
@@ -231,6 +235,7 @@ def Get_gsq_input(input, output, root_span):
     StructField("query", StringType()),
     StructField("text", StringType())])))
 def parse_debugging_info(root_span):
+    """Parse the span tree to get debugging info."""
     try:
         tree = SpanTree.create_tree_from_json_string(root_span)
         spans_array = []
@@ -263,6 +268,7 @@ def parse_debugging_info(root_span):
 
 
 def convert_to_span_level(df):
+    """Convert the dataframe from trace level to span level."""
     debugging_details = parse_debugging_info(col("root_span"))
     if debugging_details is None:
         return df
@@ -279,6 +285,7 @@ def convert_to_span_level(df):
 
 @udf(returnType=StringType())
 def assign_violated_metrics(violated_metrics, metric_score, metrics):
+    """Add violated metrics name."""
     if (metric_score < 4):
         violated_metrics = _append_value(violated_metrics, metrics)
     return violated_metrics
