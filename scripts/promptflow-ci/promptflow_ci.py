@@ -124,7 +124,7 @@ def check_flow_run_status(
             if bulk_test_run.status == "Completed":
                 submitted_flow_run_ids.remove(flow_run_id)
                 log_debug(
-                    f"run info {bulk_test_run}")
+                    f"run info {bulk_test_run.get_details}")
                 break
             elif bulk_test_run.status == "Failed":
                 submitted_flow_run_ids.remove(flow_run_id)
