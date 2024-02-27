@@ -74,20 +74,20 @@ def get_output_schema() -> StructType:
 
 
 def query_topic(
-        queries,
-        session: requests.Session,
-        endpoint_url: str,
-        token_manager: _APITokenManager,
-        model: str,
-        temperature: float,
-        top_p: float,
-        num_samples: int,
-        frequency_penalty: float,
-        presence_penalty:
-        float,
-        max_tokens=3000,
-        stop: str = None
-    ) -> List[int]:
+    queries,
+    session: requests.Session,
+    endpoint_url: str,
+    token_manager: _APITokenManager,
+    model: str,
+    temperature: float,
+    top_p: float,
+    num_samples: int,
+    frequency_penalty: float,
+    presence_penalty:
+    float,
+    max_tokens=3000,
+    stop: str = None
+) -> List[int]:
 
     # Copy request_data to avoid modifying the original dict.
     prompt = TOPIC_TEMPLATE.replace("{queries}", json.dumps(queries))
@@ -366,10 +366,10 @@ def run():
         good_group_name = f"{metrics}_good_group"
         default_bad_group_name = f"{metrics}_bad_group_default"
         df = df.withColumn("group_list", when((col(score_name) == 5) & (col("group_list") == ""), good_group_name)
-                                         .otherwise(when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(good_group_name)))  # noqa: E501
-                                         .otherwise(when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)  # noqa: E501
-                                         .otherwise(when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(default_bad_group_name)))  # noqa: E501
-                                         .otherwise(col("group_list"))))))
+                                             .otherwise(when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(good_group_name)))  # noqa: E501
+                                             .otherwise(when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)  # noqa: E501
+                                             .otherwise(when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(default_bad_group_name)))  # noqa: E501
+                                             .otherwise(col("group_list"))))))
 
         pdf = df.toPandas()
         bad_answers = pdf[pdf[score_name] < 4]

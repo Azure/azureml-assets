@@ -141,20 +141,20 @@ Retrieval_document_RELEVANCE_TEMPLATE = "\n\n".join(
 
 
 def query_relevance_scores(
-        turns: List[Tuple[str, str, str]],
-        template: str,
-        session: requests.Session,
-        endpoint_url: str,
-        token_manager: _APITokenManager,
-        model: str,
-        temperature: float,
-        top_p: float,
-        num_samples: int,
-        frequency_penalty: float,
-        presence_penalty: float,
-        max_tokens=3000,
-        stop: str = None
-    ) -> List[int]:
+    turns: List[Tuple[str, str, str]],
+    template: str,
+    session: requests.Session,
+    endpoint_url: str,
+    token_manager: _APITokenManager,
+    model: str,
+    temperature: float,
+    top_p: float,
+    num_samples: int,
+    frequency_penalty: float,
+    presence_penalty: float,
+    max_tokens=3000,
+    stop: str = None
+) -> List[int]:
 
     prompts = [template.replace("{input_samples", f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1], 'context': turn[2]}, indent=4)}") for turn in turns]  # noqa: E501
     print("prompts:", prompts)
@@ -200,21 +200,20 @@ def query_relevance_scores(
 
 
 def query_relevance_score(
-        turn: Tuple[str, str, str],
-        template: str,
-        session: requests.Session,
-        endpoint_url: str,
-        token_manager: _APITokenManager,
-        model: str,
-        temperature: float,
-        top_p: float,
-        num_samples: int,
-        frequency_penalty: float,
-        presence_penalty: float,
-        max_tokens=3000,
-        stop: str = None
-    ) -> int:
-
+    turn: Tuple[str, str, str],
+    template: str,
+    session: requests.Session,
+    endpoint_url: str,
+    token_manager: _APITokenManager,
+    model: str,
+    temperature: float,
+    top_p: float,
+    num_samples: int,
+    frequency_penalty: float,
+    presence_penalty: float,
+    max_tokens=3000,
+    stop: str = None
+) -> int:
     turns = [turn]
     return query_relevance_scores(turns,
                                   template,
