@@ -112,7 +112,11 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                 "type": "SystemAssigned"
             }
         }
+        # TODO: !!! For office debug, remove these loggings !!!
+        logger.info(f"Creating AOAI account {self.endpoint_name} with payload {payload}.")
         resp = self._call_endpoint(get_requests_session().put, self._aoai_account_url, payload=payload)
+        logger.info(f"Calling(PUT) {self._aoai_account_url} returned {resp.status_code} "
+                    f"with content {self._get_content_from_response(resp)}.")
         self._raise_if_not_success(resp)
         logger.info("Calling(PUT) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
