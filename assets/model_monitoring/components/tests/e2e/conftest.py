@@ -93,7 +93,7 @@ def e2e_resources_directory(components_directory):
     return os.path.abspath(os.path.join(components_directory, "tests", "e2e", "resources"))
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", name="publish_data_assets")
 def register_data_assets(main_worker_lock, ml_client, e2e_resources_directory) -> MLClient:
     """Return a MLClient used to manage AML resources."""
     if not _is_main_worker(main_worker_lock):
@@ -130,7 +130,8 @@ def asset_version(main_worker_lock, components_are_uploaded, uploaded_version_fi
             with open(version_file, "w") as fp:
                 fp.write(version)
             yield version
-        os.remove(version_file)
+        if os.path.exists(version_file):
+            os.remove(version_file)
         return
 
     _watch_file(file=version_file, timeout_in_seconds=120)
@@ -529,7 +530,7 @@ def publish_generation_safety_signal_monitor_component(
         print(f"Successfully published {component['name']}.")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", name="publish_components")
 def register_components(
     publish_data_quality_model_monitor_component,
     publish_prediction_drift_model_monitor_component,
@@ -544,15 +545,14 @@ def register_components(
 
 @pytest.fixture(scope="session", autouse=True)
 def release_lock(
-    components_are_uploaded, main_worker_lock
+    components_are_uploaded, main_worker_lock, request
 ):
     """Release the main worker lock."""
     if _is_main_worker(main_worker_lock):
-        print(f"\n\IS upload_file: {components_are_uploaded}\n\n")
+        print(f"\n\nIS upload_file: {components_are_uploaded}\n\n")
         with open(lock_file, "w"):
-            if not components_are_uploaded:
-                register_components
-                register_data_assets
+            request.getfixturevalue("publish_components")
+            request.getfixturevalue("publish_data_assets")
         yield
         os.remove(lock_file)
     else:
