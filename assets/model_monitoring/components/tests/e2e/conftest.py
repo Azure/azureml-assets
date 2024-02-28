@@ -115,21 +115,22 @@ def asset_version(main_worker_lock, components_are_uploaded, uploaded_version_fi
     """Return the asset version for this run."""
     # Ensure all workers leverages the same asset versions
     # Main worker is gw0 - everyone else will be reading the version the main worker has created.
+    # Extra logic for when the fixture is called on github CI using pytest-splits.
+    # The version file will already exist as we create it before the split jobs execute
+    # and upload an artifact with the desired .version file.
+    # for backwards compatability/use in local e2e keep the old logic as a backup.
+    if components_are_uploaded:
+        with open(uploaded_version_file_name, "r") as fp:
+            version = fp.read()
+            yield version
+            return
+
     version_file = ".version"
     if main_worker_lock == "gw0" or main_worker_lock == "master":
-        # Extra logic for when the fixture is called on github CI using pytest-splits.
-        # The version file will already exist as we create it before the split jobs execute
-        # and upload an artifact with the desired .version file.
-        # for backwards compatability/use in local e2e keep the old logic as a backup.
-        if components_are_uploaded:
-            with open(uploaded_version_file_name, "r") as fp:
-                version = fp.read()
-                yield version
-        else:
-            version = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
-            with open(version_file, "w") as fp:
-                fp.write(version)
-            yield version
+        version = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+        with open(version_file, "w") as fp:
+            fp.write(version)
+        yield version
         if os.path.exists(version_file):
             os.remove(version_file)
         return
