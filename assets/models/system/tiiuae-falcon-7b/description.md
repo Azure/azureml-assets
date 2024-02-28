@@ -119,6 +119,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 [
     0:
-string "the meaning of life is to find your gift. the purpose of life is to give it away."
+"string" "the meaning of life is to find your gift. the purpose of life is to give it away."
 ]
 ```
