@@ -91,7 +91,7 @@ jobs:
       - name: Clone branch
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
-          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+          forked-pr: ${{ needs.upload-component-specs.outputs.forked_pr }}
       - name: Use Python 3.8
         uses: actions/setup-python@v4
         with:
