@@ -231,7 +231,7 @@ jobs:
     resources:
       instance_count: ${{parent.inputs.instance_count}}
     max_concurrency_per_instance:  ${{parent.inputs.max_concurrency_per_instance}}
-    mini_batch_size: 100KB #${{parent.inputs.mini_batch_size}}
+    mini_batch_size: 100KB
     retry_settings:
       timeout: 6000
       max_retries: 10
@@ -243,7 +243,7 @@ jobs:
   # Reformat
   batch_output_formatter: 
     type: command
-    component: azureml:batch_score_llm@latest
+    component: azureml:batch_output_formatter@latest
     inputs:
       model_type: ${{parent.inputs.model_type}}
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_output_directory}}
