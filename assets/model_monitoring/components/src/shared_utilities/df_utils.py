@@ -240,3 +240,8 @@ def try_get_df_column(df: pyspark_sql.DataFrame, name: str) -> Optional[pyspark_
         return df[name]
     except AnalysisException:
         return None
+
+
+def has_duplicated_columns(df: pyspark_sql.DataFrame) -> bool:
+    """Check if a dataframe has duplicate columns."""
+    return not df.groupBy(df.columns).count().where("count > 1").isEmpty()

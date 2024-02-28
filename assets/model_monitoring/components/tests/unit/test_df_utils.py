@@ -6,10 +6,15 @@ from pyspark.sql.types import (
     DoubleType,
     FloatType,
     StructField,
-    StructType)
+    StructType,
+    StringType,
+    BooleanType,
+    TimestampType,
+)
 from pyspark.sql import SparkSession, DataFrame
 from src.shared_utilities.df_utils import (
     get_common_columns,
+    has_duplicated_columns,
     try_get_common_columns_with_error,
     try_get_common_columns,
     get_feature_type_override_map,
@@ -466,6 +471,39 @@ class TestDFUtils:
         retrieved_col = try_get_df_column(mixed_data_df, 'id')
         assert retrieved_col is not None
         assert_spark_dataframe_equal(mixed_data_df.select(retrieved_col), mixed_data_df.select('id'))
+
+    @pytest.mark.parametrize(
+            "input_data, input_data_columns, expected_output",
+            [
+                ([], StructType([]), False),
+                (
+                    [datetime.datetime(2024, 3, 2), 1.0, "b", False],
+                    StructType(
+                        [
+                            StructField("input", TimestampType(), True),
+                            StructField("percent", FloatType(), True),
+                            StructField("number", StringType(), True),
+                            StructField("input", BooleanType(),True)
+                        ]),
+                    True
+                ),
+                (
+                    [False, 1.0, "a"],
+                    StructType(
+                        [
+                            StructField("input", BooleanType(), True),
+                            StructField("label", FloatType(), True),
+                            StructField("number", StringType(), True),
+                        ]),
+                    False
+                )
+            ]
+    )
+    def test_has_duplicate_columns(self, input_data: list, input_data_columns: list, expected_output: bool):
+        """Test scenarios for has_duplicate_columns()."""
+        spark = self.init_spark()
+        empty_df = spark.createDataFrame(input_data, input_data_columns)
+        assert has_duplicated_columns(empty_df) == expected_output
 
 
 def assert_spark_dataframe_equal(actual_df: DataFrame, expected_df: DataFrame):

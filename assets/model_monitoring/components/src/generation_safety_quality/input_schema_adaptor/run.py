@@ -14,6 +14,7 @@ from shared_utilities.io_utils import (
 )
 from shared_utilities.momo_exceptions import InvalidInputError
 from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
+from shared_utilities.df_utils import has_duplicated_columns
 from shared_utilities.constants import GENAI_ROOT_SPAN_SCHEMA_COLUMN, GENAI_TRACE_ID_SCHEMA_COLUMN
 
 
@@ -44,6 +45,13 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
         'temp_input': from_json(df.input, input_schema),
         'temp_output': from_json(df.output, output_schema),
     }).select('trace_id', 'temp_input.*', 'temp_output.*', 'root_span')
+
+    if has_duplicated_columns(df):
+        raise InvalidInputError(
+            "Expanding the input and output columms resulted in duplicate columns."
+            " This scenario is unsupported as of right now please clean up the production data logs"
+            " so there are no duplicate fields in 'input' and 'output' columns."
+        )
 
     # flatten unpacked json columns to json_string if necessary
     df = _convert_complex_columns_to_json_string(df)

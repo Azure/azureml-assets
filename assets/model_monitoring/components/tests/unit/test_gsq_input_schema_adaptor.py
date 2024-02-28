@@ -126,6 +126,23 @@ class TestInputSchemaAdaptor:
         except Exception as ex:
             assert match_err in str(ex)
 
+    def test_adapt_input_schema_duplicate_columns(self):
+        """Test scenario for input schema adaptor with invalid json object column."""
+        spark = self._init_spark()
+        input_data_df = spark.createDataFrame(
+            [("01",
+              "{\"prompt\":\"question\",\"context\":{\"name\": \"random\"},\"groundtruth\":\"ground-truth\"}",
+              "{\"output\":\"answer\",\"context\":\"LLM\"}",
+              "fdsa")],
+            self._genai_input_schema)
+
+        match_err = "Expanding the input and output columms resulted in duplicate columns."
+        try:
+            _adapt_input_data_schema(input_data_df)
+            pytest.fail("Should have thrown InvalidInputError exception.")
+        except Exception as ex:
+            assert match_err in str(ex)
+
 
 def assert_spark_dataframe_equal(actual_df: DataFrame, expected_df: DataFrame):
     """Assert two spark dataframes are equal."""
