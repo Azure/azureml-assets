@@ -148,7 +148,7 @@ jobs:
           path: ${{ env.pytest_split_test_durations_file }}
 
   update_durations:
-    name: Combine and update integration test durations
+    name: Combine and update testcase durations
     runs-on: ubuntu-latest
     needs: [check-execution-context, run-momo-tests]
     steps:
