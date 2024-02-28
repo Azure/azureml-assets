@@ -48,7 +48,7 @@ jobs:
         with:
           python-version: '3.8'
       - name: Install dependencies
-        run: pip install pytest
+        run: pip install -r ${{ env.testsRootPath }}/requirements.txt
       - name: Publish Component Specs
         run: python -m pytest ${{ env.testsRootPath }}/e2e/utils/test_publish_components_for_ci.py::TestPublishComponentsForCI::test_publish_components
         env:
