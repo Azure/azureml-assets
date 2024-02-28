@@ -550,7 +550,7 @@ def release_lock(
 ):
     """Release the main worker lock."""
     if _is_main_worker(main_worker_lock):
-        print(f"\n\nIS upload_file: {components_are_uploaded}\n\n")
+        print(f"\n\nAlready uploaded components and data: {components_are_uploaded}\n\n")
         with open(lock_file, "w"):
             if not components_are_uploaded:
                 request.getfixturevalue("publish_components")
