@@ -6,6 +6,7 @@
 import pytest
 import os
 
+
 @pytest.mark.skipif(
     condition=os.path.exists('.version_upload'),
     reason="For local e2e pytest runs and in CI if we already uploaded the shared component version")
