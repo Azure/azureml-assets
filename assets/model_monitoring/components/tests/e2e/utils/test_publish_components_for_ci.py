@@ -6,7 +6,9 @@
 import pytest
 import os
 
-@pytest.mark.skipif(os.path.exists('.version_upload'))
+@pytest.mark.skipif(
+    condition=os.path.exists('.version_upload'),
+    reason="For local e2e pytest runs and in CI if we already uploaded the shared component version")
 class TestPublishComponentsForCI():
     """Class for model-monitoring-ci workflow to upload components and data once before splitting tests to runners."""
 
