@@ -551,8 +551,9 @@ def release_lock(
     if _is_main_worker(main_worker_lock):
         print(f"\n\nIS upload_file: {components_are_uploaded}\n\n")
         with open(lock_file, "w"):
-            request.getfixturevalue("publish_components")
-            request.getfixturevalue("publish_data_assets")
+            if not components_are_uploaded:
+                request.getfixturevalue("publish_components")
+                request.getfixturevalue("publish_data_assets")
         yield
         os.remove(lock_file)
     else:
