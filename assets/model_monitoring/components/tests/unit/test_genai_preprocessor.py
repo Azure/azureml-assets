@@ -27,6 +27,8 @@ from spark_mltable import SPARK_ZIP_PATH
 
 @pytest.fixture(scope="session")
 def genai_zip_test_setup():
+    # TODO: move this zip utility to shared conftest later.
+    # Check gsq tests and mdc tests for possible duplications.
     """Zip files in module_path to src.zip."""
     momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
     module_path = os.path.join(momo_work_dir, "src")
@@ -46,7 +48,7 @@ def genai_zip_test_setup():
     zf.close()
     # add files to zip folder
     os.environ[SPARK_ZIP_PATH] = zip_path
-    print("zip path set in ganai_preprocessor_test_setup: ", zip_path)
+    print("zip path set in genai_preprocessor_test_setup: ", zip_path)
 
     yield
     # remove zip file
@@ -55,8 +57,10 @@ def genai_zip_test_setup():
     os.environ.pop(SPARK_ZIP_PATH, None)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def genai_preprocessor_test_setup():
+    # TODO: move this test utility to shared conftest later.
+    # Check gsq tests and mdc tests for possible duplications.
     """Change working directory to root of the assets/model_monitoring_components."""
     original_work_dir = os.getcwd()
     momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
@@ -363,7 +367,7 @@ class TestGenAISparkPreprocessor:
             ]
     )
     def test_trace_aggregator(
-            self, genai_preprocessor_test_setup,
+            self, genai_zip_test_setup, genai_preprocessor_test_setup,
             span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data):
         """Test scenario where spans has real data."""
         spark = self._init_spark()
