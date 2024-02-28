@@ -39,6 +39,12 @@ jobs:
     needs: check-execution-context
     environment: Testing
     steps:
+      - name: Use Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - name: Install dependencies
+        run: pip install pytest
       - name: Publish Component Specs
         run: python -m pytest -m ${{ env.testsRootPath }}/utils/test_publish_components_for_ci.py::TestPublishComponentsForCI::test_publish_components
         env:
