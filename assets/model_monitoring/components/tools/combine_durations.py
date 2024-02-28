@@ -33,5 +33,6 @@ def run():
     durations_path.parent.mkdir(parents=True, exist_ok=True)
     durations_path.write_text(json.dumps(new_durations))
 
+
 if __name__ == "__main__":
     run()
