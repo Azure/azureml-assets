@@ -12,7 +12,7 @@ import time
 import copy
 from azureml.core import Workspace
 
-from utils.utils import get_diff_files
+from utils.utils import get_diff_files, run_command
 from utils.logging_utils import log_debug, log_error, log_warning
 from azure.storage.blob import BlobServiceClient
 from azure.identity import AzureCliCredential
@@ -123,6 +123,15 @@ def check_flow_run_status(
             bulk_test_run = run_workspace.get_run(run_id=flow_run_id)
             if bulk_test_run.status == "Completed":
                 submitted_flow_run_ids.remove(flow_run_id)
+                # get the run detail with error info
+                command = f"pfazure run show -n {flow_run_id}" \
+                    f" --subscription {args.subscription_id} -g {args.resource_group} -w {args.workspace_name}"
+                res = run_command(command)
+                stdout_obj = json.loads(res.stdout)
+                error_info = stdout_obj.get("error")
+                log_debug(f"stdout error info: {error_info}")
+                if error_info:
+                    failed_flow_runs.update({flow_run_id: flow_run_link})
                 break
             elif bulk_test_run.status == "Failed":
                 submitted_flow_run_ids.remove(flow_run_id)
