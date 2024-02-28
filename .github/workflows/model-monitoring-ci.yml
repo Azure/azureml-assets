@@ -69,13 +69,10 @@ jobs:
         with:
           name: ${{ env.pytest_component_version_folder }}
           path: ${{ env.pytest_component_version_file }}
-    outputs:
-      continue: ${{ env.continue }}
-      forked_pr: ${{ env.forked_pr }}
   run-momo-tests:
     name: Run Monitoring Component Tests
     runs-on: ubuntu-latest
-    needs: upload-component-specs
+    needs: [check-execution-context, upload-component-specs]
     environment: Testing
     strategy:
       matrix:
@@ -91,7 +88,7 @@ jobs:
       - name: Clone branch
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
-          forked-pr: ${{ needs.upload-component-specs.outputs.forked_pr }}
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
       - name: Use Python 3.8
         uses: actions/setup-python@v4
         with:
