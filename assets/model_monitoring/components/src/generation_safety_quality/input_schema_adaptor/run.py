@@ -35,8 +35,8 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
         if "Malformed records are detected in schema inference. Parse Mode: FAILFAST." in str(ex):
             raise InvalidInputError(
                 "Failed to parse the input/output column json string for the trace logs provided."
-                " The input/output columns in the inputted production data are not in a parseable" +
-                " json string format. Please double-check the data columns are being passed or" +
+                " The input/output columns in the inputted production data are not in a parseable"
+                " json string format. Please double-check the data columns are being passed or"
                 " stored correctly."
             )
         raise ex
@@ -56,12 +56,6 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
     # flatten unpacked json columns to json_string if necessary
     df = _convert_complex_columns_to_json_string(df)
 
-    df.show(truncate=False)
-    if df.isEmpty():
-        raise InvalidInputError(
-            "Failed to adapt the GenAI trace log schema to GSQ input columns." +
-            " Double-check the trace log dataframe 'input'/'output' columns to make sure there is data."
-        )
     return df
 
 
@@ -76,9 +70,12 @@ def run():
 
     production_data_df = try_read_mltable_in_spark_with_error(args.production_dataset, "production_dataset")
 
-    transformed_df = _adapt_input_data_schema(production_data_df)
+    adapted_df = _adapt_input_data_schema(production_data_df)
 
-    save_spark_df_as_mltable(transformed_df, args.adapted_production_data)
+    print("df adapted from production data:")
+    adapted_df.show()
+
+    save_spark_df_as_mltable(adapted_df, args.adapted_production_data)
 
 
 if __name__ == "__main__":
