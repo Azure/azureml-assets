@@ -483,7 +483,7 @@ class TestDFUtils:
                             StructField("input", TimestampType(), True),
                             StructField("percent", FloatType(), True),
                             StructField("number", StringType(), True),
-                            StructField("input", BooleanType(),True)
+                            StructField("input", BooleanType(), True)
                         ]),
                     True
                 ),
