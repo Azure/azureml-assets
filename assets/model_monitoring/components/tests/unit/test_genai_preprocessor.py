@@ -191,8 +191,8 @@ class TestGenAISparkPreprocessor:
         ]
     )
     def test_genai_uri_folder_to_preprocessed_spark_df(
-            self, genai_preprocessor_test_setup, window_start_time: datetime, window_end_time: datetime,
-            expected_schema, expected_data):
+            self, genai_zip_test_setup, genai_preprocessor_test_setup,
+            window_start_time: datetime, window_end_time: datetime, expected_schema, expected_data):
         """Test uri_folder_to_spark_df()."""
         def my_add_tags(tags: dict):
             print("my_add_tags:", tags)
@@ -217,7 +217,7 @@ class TestGenAISparkPreprocessor:
 
         assert_spark_dataframe_equal(actual_df, expected_df)
 
-    def test_genai_preprocessor_fails(self, genai_preprocessor_test_setup):
+    def test_genai_preprocessor_fails(self, genai_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where the preprocessor should throw validation errors."""
         def my_add_tags(tags: dict):
             print("my_add_tags:", tags)
