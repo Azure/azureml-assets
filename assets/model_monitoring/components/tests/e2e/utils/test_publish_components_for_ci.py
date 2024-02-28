@@ -5,6 +5,8 @@
 
 
 class TestPublishComponentsForCI():
+    """Class for model-monitoring-ci workflow to upload components and data once before splitting tests to runners."""
+
     def test_publish_components(self, upload_component_version_file):
         """Init calls fixture to publish components."""
         pass
