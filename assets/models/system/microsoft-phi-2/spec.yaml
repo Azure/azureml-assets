@@ -94,4 +94,4 @@ tags:
     precision: 16
     max_seq_length: 1536
   task: text-generation
-version: 10
+version: 11
