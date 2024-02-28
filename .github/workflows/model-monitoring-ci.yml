@@ -18,6 +18,8 @@ env:
   pytest_report_folder: results
   pytest_report_file: junit3.xml
   scripts_setup_dir: scripts/setup
+  pytest_component_version_folder: component_version
+  pytest_component_version_file: .version_upload
 permissions:
   # Required to clone repo
   contents: read
@@ -31,15 +33,41 @@ defaults:
 jobs:
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+  upload-component-specs:
+    name: Upload Monitoring Component Specs for E2E Tests
+    runs-on: ubuntu-latest
+    needs: check-execution-context
+    environment: Testing
+    steps:
+      - name: Publish Component Specs
+        run: python -m pytest -m ${{ env.testsRootPath }}/utils/test_publish_components_for_ci.py::TestPublishComponentsForCI::test_publish_components
+        env:
+          SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          RESOURCE_GROUP: ${{ env.resource_group }}
+          WORKSPACE_NAME: ${{ env.workspace }}
+      - name: Upload component Version artifact
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ${{ env.pytest_component_version_folder }}
+          path: ${{ env.pytest_component_version_file }}
   run-momo-tests:
     name: Run Monitoring Component Tests
     runs-on: ubuntu-latest
-    needs: check-execution-context
+    needs: upload-component-specs
     environment: Testing
     strategy:
       matrix:
         group: [1, 2, 3, 4, 5]
     steps:
+      - name: Download component version
+        id: download-version
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.pytest_component_version_folder }}
+          path: ${{ env.pytest_component_version_file }}
+        continue-on-error: true
       - name: Clone branch
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
