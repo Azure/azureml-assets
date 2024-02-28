@@ -8,7 +8,7 @@ sentencepiece==0.2.0
 accelerate==0.27.2
 wget==3.2
 applicationinsights==0.11.10
-azureml-automl-core==1.55.0
+azureml-automl-core==1.55.0.post1
 azureml-telemetry==1.55.0
 azureml-automl-dnn-vision==1.55.0.post1
 pyarrow==14.0.2
