@@ -5,7 +5,7 @@
 
 """Entry script for Batch resource manager."""
 
-from typing import List, Generator, Optional
+from typing import List, Generator, Optional, Tuple
 import argparse
 import json
 import subprocess
@@ -172,7 +172,7 @@ def deploy_endpoint_maybe(online_endpoint: OnlineEndpoint) -> bool:
 def deploy_model_maybe(
         online_endpoint: OnlineEndpoint, output_metadata_dir: str,
         managed_endpoint: bool, redeploy_model: bool
-) -> bool:
+) -> Tuple[bool, bool]:
     """Deploy the model if it is not deployed."""
     managed_deployment = False
     managed_connections = True
@@ -187,11 +187,13 @@ def deploy_model_maybe(
         logger.info("Deployment is not found, create it now.")
         online_endpoint.create_deployment()
         managed_deployment = True
-    online_endpoint.create_connections()
+    is_conn_created = online_endpoint.create_connections()
     EndpointUtilities.dump_endpoint_metadata_json(
         online_endpoint, managed_endpoint, managed_deployment, managed_connections, output_metadata_dir)
+    if not is_conn_created:
+        logger.warning("Connections were not created. The deployment may not work properly.")
     logger.info("model is ready/checked now.")
-    return managed_deployment
+    return managed_deployment, is_conn_created
 
 
 def _online_endpoint_generator(
@@ -299,12 +301,15 @@ def deploy_model_in_list_maybe(
             continue
         managed_deployment = False
         try:
-            managed_deployment = deploy_model_maybe(
+            managed_deployment, is_conn_created = deploy_model_maybe(
                 online_endpoint, output_metadata_dir, managed_endpoint, redeploy_model)
-            logger.info("Endpoint is deployed successfully.")
-            return True
+            if not is_conn_created:
+                error_msg = "Deployment was created, but connection was not, making it unusable."
+                raise ValueError(error_msg)
+            logger.info("Deployment and connections are created successfully.")
+            return managed_deployment
         except Exception as e:
-            logger.error(f"Failed to deploy model with error {e}.")
+            logger.error(f"Model deployment failed with error {e}.")
             logger.error(traceback.format_exception(*sys.exc_info()))
         # If endpoint is deployed successfully, the deletion code won't be reached
         if managed_deployment and online_endpoint.deployment_state() != ResourceState.NOT_FOUND:
@@ -315,21 +320,26 @@ def deploy_model_in_list_maybe(
             online_endpoint.delete_endpoint()
     return False
 
+
 # the function must not return None on a non-error path
 def _repeat_till_success_or_timeout(timeout_seconds : int, interval_seconds : int, func, *args, **kwargs):
     start_time = time.time()
     while not (result:=func(*args, **kwargs)):
         if time.time() - start_time > timeout_seconds:
             return None
+        logger.info("Waiting for %d seconds before retrying to get dependent run.", interval_seconds)
         time.sleep(interval_seconds)
     return result
+
 
 def _wait_finetuned_step(finetuned_step_name: Optional[str], start_timeout_seconds = 900) -> None:
     """Wait for finetuned step to finish."""
     finetuned_step_name = finetuned_step_name if finetuned_step_name else "openai_completions_finetune_pipeline"
-    
+    logger.info(f"Wait for finetuned step {finetuned_step_name} to finish.")
     wait_step_run = _repeat_till_success_or_timeout(start_timeout_seconds,30,get_dependent_run,finetuned_step_name)
     if wait_step_run is None:
+        logger.error(f"Finetuned wait step {finetuned_step_name} not found or failed to "
+                     f"start in allotted {start_timeout_seconds} seconds.")
         raise BenchmarkUserException._with_error(
             AzureMLError.create(
                 BenchmarkUserError,
@@ -346,6 +356,8 @@ def _wait_finetuned_step(finetuned_step_name: Optional[str], start_timeout_secon
                 BenchmarkUserError,
                 error_details=f"Finetuned wait step {finetuned_step_name} is not successful, status: {wait_step_status}.")
             )
+
+    logger.info(f"Finetuned wait step {finetuned_step_name} is COMPLETED.")
 
 
 @swallow_all_exceptions(logger)
@@ -412,13 +424,13 @@ def main(
         )
     if not deletion_model:
         if wait_finetuned_step:
-            logger.info("Wait for finetuned step to finish.")
             _wait_finetuned_step(finetuned_step_name, finetuned_start_timeout_seconds)
         subscriptions_list = [
             s.strip() for s in endpoint_subscription_id.split(',')] if endpoint_subscription_id else [None]
         locations_list = [
             s.strip() for s in endpoint_location.split(',')] if endpoint_location else [None]
         if is_finetuned_model:
+            logger.info("Detected a finetuned model, setting up an online endpoint.")
             workspace = Run.get_context().experiment.workspace
             finetuned_workspace = finetuned_workspace if finetuned_workspace else workspace.name
             finetuned_resource_group = finetuned_resource_group \
