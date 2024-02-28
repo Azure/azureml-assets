@@ -93,7 +93,7 @@ def e2e_resources_directory(components_directory):
     return os.path.abspath(os.path.join(components_directory, "tests", "e2e", "resources"))
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def register_data_assets(main_worker_lock, ml_client, e2e_resources_directory) -> MLClient:
     """Return a MLClient used to manage AML resources."""
     if not _is_main_worker(main_worker_lock):
@@ -111,16 +111,25 @@ def register_data_assets(main_worker_lock, ml_client, e2e_resources_directory) -
 
 
 @pytest.fixture(scope="session")
-def asset_version(main_worker_lock):
+def asset_version(main_worker_lock, components_are_uploaded, uploaded_version_file_name):
     """Return the asset version for this run."""
     # Ensure all workers leverages the same asset versions
     # Main worker is gw0 - everyone else will be reading the version the main worker has created.
     version_file = ".version"
     if main_worker_lock == "gw0" or main_worker_lock == "master":
-        version = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
-        with open(version_file, "w") as fp:
-            fp.write(version)
-        yield version
+        # Extra logic for when the fixture is called on github CI using pytest-splits.
+        # The version file will already exist as we create it before the split jobs execute
+        # and upload an artifact with the desired .version file.
+        # for backwards compatability/use in local e2e keep the old logic as a backup.
+        if components_are_uploaded:
+            with open(uploaded_version_file_name, "r") as fp:
+                version = fp.read()
+                yield version
+        else:
+            version = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+            with open(version_file, "w") as fp:
+                fp.write(version)
+            yield version
         os.remove(version_file)
         return
 
@@ -151,7 +160,7 @@ def source_directory(components_directory) -> str:
     return os.path.abspath(os.path.join(components_directory, "src"))
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def model_monitoring_component_specs(components_directory) -> List[dict]:
     """Return the dictionary representation of all model monitoring component yaml definitions."""
     specs = []
@@ -164,7 +173,7 @@ def model_monitoring_component_specs(components_directory) -> List[dict]:
     return specs
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def model_monitoring_components(model_monitoring_component_specs) -> List[dict]:
     """Return the dictionary representation of all model monitoring component yaml definitions."""
     components = []
@@ -173,13 +182,13 @@ def model_monitoring_components(model_monitoring_component_specs) -> List[dict]:
     return components
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def test_suite_name() -> str:
     """Name of the test suite."""
     return os.environ.get("GITHUB_REF_NAME", "local").replace("/", "_")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def publish_command_components(
     main_worker_lock,
     model_monitoring_components,
@@ -212,7 +221,7 @@ def publish_command_components(
         print(f"Successfully published {component['name']}.")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def publish_data_drift_model_monitor_component(
     main_worker_lock,
     publish_command_components,
@@ -269,7 +278,7 @@ def publish_data_drift_model_monitor_component(
         print(f"Successfully published {component['name']}.")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def publish_feature_attr_drift_signal_monitor_component(
     main_worker_lock,
     publish_command_components,
@@ -317,7 +326,7 @@ def publish_feature_attr_drift_signal_monitor_component(
         print(f"Successfully published {component['name']}.")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def publish_prediction_drift_model_monitor_component(
     main_worker_lock,
     publish_command_components,
@@ -371,7 +380,7 @@ def publish_prediction_drift_model_monitor_component(
         print(f"Successfully published {component['name']}.")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def publish_data_quality_model_monitor_component(
     main_worker_lock,
     publish_command_components,
@@ -428,7 +437,7 @@ def publish_data_quality_model_monitor_component(
         print(f"Successfully published {component['name']}.")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def publish_model_performance_model_monitor_component(
     main_worker_lock,
     publish_command_components,
@@ -476,7 +485,7 @@ def format_component_name(component_name, asset_version):
     return f"azureml:{component_name}:{asset_version}"
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def publish_generation_safety_signal_monitor_component(
     main_worker_lock,
     publish_command_components,
@@ -520,21 +529,30 @@ def publish_generation_safety_signal_monitor_component(
         print(f"Successfully published {component['name']}.")
 
 
-@pytest.fixture(scope="session", autouse=True)
-def release_lock(
+@pytest.fixture(scope="session")
+def register_components(
     publish_data_quality_model_monitor_component,
     publish_prediction_drift_model_monitor_component,
     publish_data_drift_model_monitor_component,
     publish_feature_attr_drift_signal_monitor_component,
     publish_generation_safety_signal_monitor_component,
-    publish_command_components,
     publish_model_performance_model_monitor_component,
-    main_worker_lock,
+):
+    """Publish all model monitor components."""
+    yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def release_lock(
+    components_are_uploaded, main_worker_lock
 ):
     """Release the main worker lock."""
     if _is_main_worker(main_worker_lock):
+        print(f"\n\IS upload_file: {components_are_uploaded}\n\n")
         with open(lock_file, "w"):
-            pass
+            if not components_are_uploaded:
+                register_components
+                register_data_assets
         yield
         os.remove(lock_file)
     else:
@@ -564,3 +582,25 @@ def download_job_output(ml_client, unique_temporary_directory):
         return os.path.join(unique_temporary_directory, "named-outputs", output_name)
 
     return download_output
+
+
+@pytest.fixture(scope="session")
+def upload_component_version_file(worker_id, asset_version, uploaded_version_file_name):
+    """Upload  upload all components and save .version file for github CI."""
+    if _is_main_worker(worker_id):
+        with open(uploaded_version_file_name, "w") as fp:
+            fp.write(asset_version)
+        yield
+    return
+
+
+@pytest.fixture(scope="session")
+def uploaded_version_file_name():
+    """Get uploaded version file name."""
+    yield ".version_upload"
+
+
+@pytest.fixture(scope="session")
+def components_are_uploaded(uploaded_version_file_name):
+    """Check if we already have a component version available uploaded by github CI."""
+    return os.path.exists(uploaded_version_file_name)
