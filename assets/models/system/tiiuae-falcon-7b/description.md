@@ -1,12 +1,12 @@
 # Description
-Falcon-7B is a large language model with 7 billion parameters. It is a causal decoder-only model developed by TII and trained on 1,500 billion tokens of RefinedWeb dataset, which was enhanced with curated corpora. The model is available under the Apache 2.0 license. It outperforms comparable open-source models and features an architecture optimized for inference. However, it is a raw, pretrained model that should be further finetuned for most use cases.
+Falcon-7B, a substantial language model boasting 7 billion parameters, stands out as a causal decoder-only model crafted by TII. Its training involved a vast corpus of 1,500 billion tokens from the RefinedWeb dataset, enriched with carefully curated corpora. Released under the Apache 2.0 license, Falcon-7B surpasses comparable open-source models, offering an architecture fine-tuned for efficient inference. However, it serves as a raw, pretrained model that typically requires additional finetuning to suit diverse use cases.
 
-The model is recommended for research on large language models and as a foundation for further specialization and finetuning for specific tasks. It should not be used in production without adequate assessment of risks and mitigation. The model carries biases commonly encountered online and is trained on English and French data only.
+Primarily recommended for research into large language models, Falcon-7B serves as a foundational resource for further specialization and task-specific finetuning. Caution is advised when considering its deployment in production, necessitating a thorough assessment of risks and the implementation of adequate mitigation measures. Notably, the model inherits biases commonly encountered in online content and is exclusively trained on English and French data.
 
-The training details of Falcon-7B include information about the training data, training procedure, and hyperparameters used. It was trained on 384 A100 40GB GPUs using a 2D parallelism strategy combined with ZeRO. The model description mentions the architectural adaptations from the GPT-3 model, such as rotary positional embeddings, multiquery attention, and FlashAttention.
+The training specifics of Falcon-7B encompass comprehensive details regarding the training data, procedure, and hyperparameters. Its training occurred across 384 A100 40GB GPUs, employing a 2D parallelism strategy in conjunction with ZeRO. The model description highlights architectural enhancements from the GPT-3 model, including rotary positional embeddings, multiquery attention, and FlashAttention.
 
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/tiiuae/falcon-7b" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model. Some of the content has been made available below.
+> The summary provided above was created utilizing ChatGPT. To gain insights into the model's training data, evaluation metrics, licensing, intended applications, limitations, and potential biases, it is essential to refer to the <a href="https://huggingface.co/tiiuae/falcon-7b" target="_blank">original model card</a>. Selected content from the model card is presented below for your convenience.
 
 ### Training Details
 
@@ -90,13 +90,6 @@ Falcon-7B was trained a custom distributed training codebase, Gigatron. It uses 
 Falcon-7B is made available under the Apache 2.0 license.
 
 
-# Finetuning samples
-
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-
-
 # Model Evaluation Sample
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
@@ -115,17 +108,17 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 
 ```json
 {
-  "input_data": {
-      "input_string":["the meaning of life is"]
-  }
+  "input_data": [
+    "the meaning of life is"
+],
+"params": {}
 }
 ```
 
 ## Sample output
 ```json
 [
-  {
-    "0": "the meaning of life is to find your gift. the purpose of life is to give it away."
-  }
+    0:
+string "the meaning of life is to find your gift. the purpose of life is to give it away."
 ]
 ```
