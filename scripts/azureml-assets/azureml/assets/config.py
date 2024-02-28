@@ -1163,7 +1163,7 @@ class AssetConfig(Config):
     def name(self) -> str:
         """Retrieve the asset's name from its YAML file, falling back to the spec if not set.
 
-        Raises:spec_as_object
+        Raises:
             ValidationException: If the name isn't set in the asset's YAML file and the name from spec includes a
                 template tag.
 
