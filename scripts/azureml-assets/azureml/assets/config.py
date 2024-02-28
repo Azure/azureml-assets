@@ -450,7 +450,7 @@ class Spec(Config):
                         deps[AssetType.COMPONENT].add(component)
 
         return deps
-    
+
     @property
     def properties(self) -> str:
         """Asset properties."""
