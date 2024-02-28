@@ -448,8 +448,12 @@ class Spec(Config):
                     if isinstance(component, str):
                         # Skip inline environments
                         deps[AssetType.COMPONENT].add(component)
-
         return deps
+    
+    @property
+    def properties(self) -> str:
+        """Asset properties."""
+        return self._yaml.get('properties', {})
 
 
 class AssetPath:
@@ -1159,7 +1163,7 @@ class AssetConfig(Config):
     def name(self) -> str:
         """Retrieve the asset's name from its YAML file, falling back to the spec if not set.
 
-        Raises:
+        Raises:spec_as_object
             ValidationException: If the name isn't set in the asset's YAML file and the name from spec includes a
                 template tag.
 
