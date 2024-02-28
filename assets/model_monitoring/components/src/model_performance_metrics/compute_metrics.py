@@ -11,7 +11,7 @@ import pandas as pd
 from azureml.metrics import compute_metrics, constants
 from azureml.metrics.constants import Metric
 
-from model_performance_metrics.constants import TASK
+from constants import TASK
 
 
 class EvaluatorFactory:
