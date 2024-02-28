@@ -448,7 +448,7 @@ class Spec(Config):
                     if isinstance(component, str):
                         # Skip inline environments
                         deps[AssetType.COMPONENT].add(component)
-                        
+
         return deps
     
     @property
