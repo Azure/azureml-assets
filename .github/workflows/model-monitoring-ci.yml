@@ -105,7 +105,7 @@ jobs:
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 
       - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/group_${{ matrix.group }}_${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 7 -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py --splits 7 --group ${{ matrix.group }} --durations-path ${{ env.testsRootPath }}/.test_durations
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/group_${{ matrix.group }}_${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 7 -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py --splits 7 --group ${{ matrix.group }} --durations-path ${{ env.testsRootPath }}/.test_durations --store-durations
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -117,6 +117,12 @@ jobs:
         with:
           name: ${{ env.pytest_report_folder }}
           path: ${{ env.pytest_report_folder }}
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: updated test durations
+          path: ./.test_durations
   report:
       name: Publish test results
       if: always()
