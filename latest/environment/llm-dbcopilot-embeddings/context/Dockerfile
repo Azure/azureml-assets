@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:20240205.v2
+FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:20240222.v3
 
 USER root
 # Install necessary tools
