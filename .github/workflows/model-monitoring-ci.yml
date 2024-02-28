@@ -43,13 +43,6 @@ jobs:
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
-      - name: Log in to Azure and create resources
-        uses: ./.github/actions/create-azure-resources
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          scripts-setup-dir: ${{ env.scripts_setup_dir }}
       - name: Use Python 3.8
         uses: actions/setup-python@v4
         with:
@@ -57,7 +50,7 @@ jobs:
       - name: Install dependencies
         run: pip install pytest
       - name: Publish Component Specs
-        run: python -m pytest ${{ env.testsRootPath }}/utils/test_publish_components_for_ci.py::TestPublishComponentsForCI::test_publish_components
+        run: python -m pytest ${{ env.testsRootPath }}/e2e/utils/test_publish_components_for_ci.py::TestPublishComponentsForCI::test_publish_components
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
