@@ -27,8 +27,9 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
 
     spark = init_spark()
     try:
-        input_schema = spark.read.json(df.rdd.map(lambda row: row.input), mode="FAILFAST").schema
-        output_schema = spark.read.json(df.rdd.map(lambda row: row.output), mode="FAILFAST").schema
+        sampled_df_slice = df.sample(0.2)
+        input_schema = spark.read.json(sampled_df_slice.rdd.map(lambda row: row.input), mode="FAILFAST").schema
+        output_schema = spark.read.json(sampled_df_slice.rdd.map(lambda row: row.output), mode="FAILFAST").schema
     except Exception as ex:
         if "Malformed records are detected in schema inference. Parse Mode: FAILFAST." in str(ex):
             raise InvalidInputError(
