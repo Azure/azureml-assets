@@ -46,7 +46,7 @@ jobs:
       - name: Install dependencies
         run: pip install pytest
       - name: Publish Component Specs
-        run: python -m pytest -m ${{ env.testsRootPath }}/utils/test_publish_components_for_ci.py::TestPublishComponentsForCI::test_publish_components
+        run: python -m pytest ${{ env.testsRootPath }}/utils/test_publish_components_for_ci.py::TestPublishComponentsForCI::test_publish_components
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
