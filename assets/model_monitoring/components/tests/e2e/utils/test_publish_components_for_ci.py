@@ -3,7 +3,10 @@
 
 """This file contains utility that will upload components in special way for use in github CI."""
 
+import pytest
+import os
 
+@pytest.mark.skipif(os.path.exists('.version_upload'))
 class TestPublishComponentsForCI():
     """Class for model-monitoring-ci workflow to upload components and data once before splitting tests to runners."""
 
