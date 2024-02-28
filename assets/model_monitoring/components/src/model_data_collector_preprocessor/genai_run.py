@@ -104,10 +104,6 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     # Cast all remaining fields in attributes to json string, for easier schema unifying
     df = _convert_complex_columns_to_json_string(df)
 
-    print("df processed from raw Gen AI logs:")
-    df.show()
-    df.printSchema()
-
     return df
 
 
@@ -134,6 +130,10 @@ def _genai_uri_folder_to_preprocessed_spark_df(
     df = _preprocess_raw_logs_to_span_logs_spark_df(df)
 
     df = _filter_look_backward_logs(df, data_window_start_as_datetime)
+
+    print("df processed from raw Gen AI logs:")
+    df.show()
+    df.printSchema()
 
     return df
 

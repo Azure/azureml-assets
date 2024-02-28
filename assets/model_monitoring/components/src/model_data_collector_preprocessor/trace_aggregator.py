@@ -36,22 +36,20 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row, output_schema: StructTy
 
 def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_data: bool) -> DataFrame:
     """Group span logs into aggregated trace logs."""
+    output_trace_schema = _get_aggregated_trace_log_spark_df_schema()
     if not require_trace_data:
         print("Skip processing of spans into aggregated traces.")
         spark = init_spark()
-        schema = _get_aggregated_trace_log_spark_df_schema()
-        return spark.createDataFrame(data=[], schema=schema)
+        return spark.createDataFrame(data=[], schema=output_trace_schema)
 
     print("Processing spans into aggregated traces...")
 
-    span_logs_schema = span_logs.schema
     grouped_spans_df = span_logs.groupBy('trace_id').agg(
         collect_list(
-            struct(span_logs_schema.fieldNames())
+            struct(span_logs.schema.fieldNames())
         ).alias('span_rows')
     )
 
-    output_trace_schema = _get_aggregated_trace_log_spark_df_schema()
     all_aggregated_traces = grouped_spans_df \
         .rdd \
         .map(lambda x: _aggregate_span_logs_to_trace_logs(x, output_trace_schema)) \
