@@ -1,9 +1,0 @@
-path:
-  container_name: models
-  container_path: huggingface/codellama-CodeLlama-7b-hf/1709124963/mlflow_model_folder
-  storage_name: automlcesdkdataresources
-  type: azureblob
-publish:
-  description: description.md
-  type: mlflow_model
-  
