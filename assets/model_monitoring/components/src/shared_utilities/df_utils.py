@@ -244,4 +244,6 @@ def try_get_df_column(df: pyspark_sql.DataFrame, name: str) -> Optional[pyspark_
 
 def has_duplicated_columns(df: pyspark_sql.DataFrame) -> bool:
     """Check if a dataframe has duplicate columns."""
-    return not df.groupBy(df.columns).count().where("count > 1").isEmpty()
+    col_names = df.columns
+    col_names_set = set(col_names)
+    return len(col_names) > len(col_names_set)
