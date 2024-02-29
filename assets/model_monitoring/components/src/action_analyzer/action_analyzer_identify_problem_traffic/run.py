@@ -34,8 +34,16 @@ from shared_utilities.llm_utils import (
     get_openai_request_args
 )
 
+from bertopic import BERTopic
+from openai import AzureOpenAI
+from bertopic.representation import OpenAI
+
 # Todo: remove later
 VIOLATED_METRICS = ["fluency", "coherence"]
+
+RETRIEVAL_SPAN_TYPE = "Retrieval"
+PARENT_ID = "parent_id"
+SPLITTER = "#<Splitter>#"
 
 N_SAMPLES = 100
 
@@ -45,7 +53,7 @@ TOPIC_TEMPLATE = "\n\n".join(
         "You are an AI assistant. You will be given a set of questions. Please categorize these quesitons into a few topics based on their intent, "  # noqa: E501
         "please try your best to avoid categorize question into its own topic whenever appropriate, and format your answer in this format:",  # noqa: E501
         '{ "<topic_0>": ["<question_00>", "<question_01>", ...], "<topic_1>": ["<question_10>", "<question_11>", ...], ... }',  # noqa: E501
-        "Please only return the json content without prefix or suffix. If there are too many topics, please sort the topics with the querestion counts belong to it, in descent order, and returns the top 10."  # noqa: E501
+        "Please make sure each topic has at least 5 questions in the list. If there are too many topics, please sort the topics with the querestion counts belong to it, in descent order, and returns the top 10."  # noqa: E501
         "User:",
         "Here are the queries:",
         "{queries}",
@@ -130,6 +138,36 @@ def _query_topic(
     return topics
 
 
+def bertopic_get_topic(queries):
+    client = AzureOpenAI(api_version="2023-07-01-preview",
+                         api_key="bd4b91263c544e1abf5225d6db5f3c30",
+                         azure_endpoint="https://azureml-rag-eastus-aoai.openai.azure.com/",
+                         azure_deployment="gpt-35-turbo-16k")
+    representation_model = OpenAI(client, model="gpt-35-turbo-16k", chat=True)
+    topic_model = BERTopic(
+        min_topic_size = 5,
+        representation_model=representation_model
+    )
+    topics, probs = topic_model.fit_transform(queries)
+    #topic_result = topic_model.get_topic_info()
+
+    docs = topic_model.get_document_info(queries)
+    docs['Representation'] = docs['Representation'].str.get(0)
+    doc_per_topic = docs.groupby('Representation')['Document'].agg(lambda x: list(x)).reset_index()
+    topics_df = doc_per_topic.set_index('Representation')
+    topics_dict = topics_df.to_dict()["Document"]
+
+    print("Get topic dictionary: ")
+    for k,v in topics_dict.items():
+        print("Topic: ")
+        print(k)
+        print("\n")
+        print("Questions: ", len(v))
+        print("\t", "\n\t".join(v))
+        print("\n")
+    return topics_dict
+
+
 def get_topic(questions,
               workspace_connection_arm_id,
               model_deployment_name,
@@ -172,9 +210,9 @@ def _append_value(string_input, value):
     if string_input == "":
         return value
     else:
-        string_set = set(string_input.split(","))
+        string_set = set(string_input.split(SPLITTER))
         string_set.add(value)
-        return ",".join(string_set)
+        return SPLITTER.join(string_set)
 
 
 @udf(returnType=ArrayType(StringType()))
@@ -248,19 +286,11 @@ def parse_debugging_info(root_span):
                 index_id = index_payload['index']['index']
                 queries = lookup_input["queries"]
                 lookup_outputs = json.loads(span.span_row["output"])
-                if isinstance(queries, list):
-                    for i in range(len(queries)):
-                        query = queries[i]
-                        top_k_list = lookup_outputs[i]
-                        text_builder = ""
-                        for lookup_output in top_k_list:
-                            text_builder = text_builder + lookup_output["text"]
-                        spans_array.append((span_id, index_content, index_id, query, text_builder))
-                elif isinstance(queries, str):
-                    text_builder = ""
+                if isinstance(queries, str):
+                    text = []
                     for lookup_output in lookup_outputs:
-                        text_builder = text_builder + lookup_output["text"]
-                    spans_array.append((span_id, index_content, index_id, queries, text_builder))
+                        text.append(lookup_output["text"])
+                    spans_array.append((span_id, index_content, index_id, queries, "<Action Analyzer Text Splitter>".join(text)))
         return spans_array
     except KeyError as e:
         print("Required field not found: ", e)
@@ -315,9 +345,7 @@ def run():
     # Todo: parse signal_output and get the violated metrics. Or return empty
 
     signal_scored_data_df = try_read_mltable_in_spark(
-        args.signal_scored_data, "signal_scored_data"
-    )
-
+"azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/rag-prp-test/workspaces/fepproj2/datastores/workspaceblobstore/paths/azureml/580c9ad9-6cb3-4be4-b9e7-599b7e5ff737/aggregated_trace_data/", "production_data")
     signal_scored_data_df.show()
     gsq_input = Get_gsq_input(col("input"), col("output"), col("root_span"))
     signal_scored_data_df = signal_scored_data_df.withColumn("question", gsq_input["question"]) \
@@ -361,7 +389,6 @@ def run():
                                 .withColumn("violated_metrics", lit(""))
 
     # seperate bad groups with semantic topic
-    # violated_metrics = violated_metrics_df.select(collect_list("metrics")).collect()[0][0]
     for metrics in VIOLATED_METRICS:
         print("======Current metrics=====")
         print(metrics)
@@ -374,9 +401,9 @@ def run():
         default_bad_group_name = f"{metrics}_bad_group_default"
         df = df.withColumn("group_list",
                            when((col(score_name) == 5) & (col("group_list") == ""), good_group_name)
-                          .when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(good_group_name)))  # noqa
+                          .when((col(score_name) == 5) & (col("group_list") != ""), concat(col("group_list"), lit(SPLITTER), lit(good_group_name)))  # noqa
                           .when((col(score_name) < 4) & (col("group_list") == ""), default_bad_group_name)  # noqa
-                          .when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(","), lit(default_bad_group_name)))  # noqa
+                          .when((col(score_name) < 4) & (col("group_list") != ""), concat(col("group_list"), lit(SPLITTER), lit(default_bad_group_name)))  # noqa
                           .otherwise(col("group_list")))  # noqa
 
         pdf = df.toPandas()
@@ -388,14 +415,17 @@ def run():
         good_samples = good_answers
 
         # add semantic groups for bad queries
-        topics_dict = get_topic(bad_samples["question"].tolist(),
-                                args.workspace_connection_arm_id,
-                                args.model_deployment_name,
-                                args.api_call_retry_max_count,
-                                args.api_call_retry_backoff_factor,
-                                json.dumps(request_args))
+        print("add semantic groups for bad queries")
+        # topics_dict = get_topic(bad_samples["question"].tolist(),
+        #                         args.workspace_connection_arm_id,
+        #                         args.model_deployment_name,
+        #                         args.api_call_retry_max_count,
+        #                         args.api_call_retry_backoff_factor,
+        #                         json.dumps(request_args))
+        
+        topics_dict = bertopic_get_topic(bad_samples["question"].tolist())
 
-        topic_group_dict = {f"{metrics}_bad_group_{i}": (k, v) for i, (k, v) in enumerate(topics_dict.items())}
+        topic_group_dict = {f"{metrics}_bad_group_{i}_{k}": (k, v) for i, (k, v) in enumerate(topics_dict.items())}
         topic_group_columns = assign_topic_and_group(col("topic_list"),
                                                      col("group_list"),
                                                      col("question"),
@@ -407,11 +437,13 @@ def run():
         df = df.withColumn("group_list", topic_group_columns[1])
 
         # add semantic groups for good queries
-        topics_dict = get_topic(good_samples["question"].tolist(),
-                                args.workspace_connection_arm_id, args.model_deployment_name,
-                                args.api_call_retry_max_count,
-                                args.api_call_retry_backoff_factor,
-                                json.dumps(request_args))
+        print("add semantic groups for good queries")
+        # topics_dict = get_topic(good_samples["question"].tolist(),
+        #                         args.workspace_connection_arm_id, args.model_deployment_name,
+        #                         args.api_call_retry_max_count,
+        #                         args.api_call_retry_backoff_factor,
+        #                         json.dumps(request_args))
+        topics_dict = bertopic_get_topic(good_samples["question"].tolist())
 
         df = df.withColumn("topic_list", assign_good_topic(col("topic_list"),
                                                            col("question"),

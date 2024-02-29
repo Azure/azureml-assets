@@ -234,7 +234,7 @@ def _query_relevance_score(
 @udf(IntegerType())
 def get_index_score(question,
                     answer,
-                    context,
+                    text,
                     workspace_connection_arm_id,
                     model_deployment_name,
                     api_call_retry_max_count,
@@ -261,15 +261,19 @@ def get_index_score(question,
     )
 
     request_args = json.loads(request_args)
-    rating = -1
+    rating_out = -1
+    context_array = text.split("<Action Analyzer Text Splitter>")
+    # get the max index score for all contexts
     with httpClient.client as session:
-        rating = _query_relevance_score(
-            (question, answer, context),
-            Retrieval_document_RELEVANCE_TEMPLATE,
-            session, azure_endpoint_url, token_manager,
-            **request_args,
-        )
-    return rating
+        for context in context_array:
+            rating = _query_relevance_score(
+                (question, answer, context),
+                Retrieval_document_RELEVANCE_TEMPLATE,
+                session, azure_endpoint_url, token_manager,
+                **request_args,
+            )
+            rating_out = max(rating_out, rating)
+    return rating_out
 
 
 def get_output_schema() -> StructType:

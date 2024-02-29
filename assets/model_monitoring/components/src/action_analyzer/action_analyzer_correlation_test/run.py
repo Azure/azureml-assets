@@ -18,13 +18,15 @@ from shared_utilities.io_utils import (
     save_empty_dataframe
 )
 
+SPLITTER = "#<Splitter>#"
 
 def get_output_schema() -> StructType:
     """Get Action Data Spark DataFrame Schema."""
     schema = StructType(
         [
             StructField("index_id", StringType(), True),
-            StructField("group", StringType(), True),
+            StructField("bad_group", StringType(), True),
+            StructField("good_group", StringType(), True),
             StructField("confidence_score", FloatType(), True)
         ]
     )
@@ -45,6 +47,7 @@ def generate_action_rows(pdf, index_set, group_set):
         for group in group_set:
             print("Group: ", group)
             metrics = group.split("_")[0]
+            topic = group.split("_")[-1]
             good_group_name = f"{metrics}_good_group"
             if group == good_group_name:
                 print(f"Skip {good_group_name}, only do t-test for bad group")
@@ -59,11 +62,13 @@ def generate_action_rows(pdf, index_set, group_set):
             print("bad answer questions: ")
             print(bad_answer_names)
             t_stat, p_value = perform_ttest(good_answer_scores, bad_answer_scores)
-            if t_stat > 0 and p_value < 0.05:
-                # entry: [index_id, group, confidence_score]
+            if t_stat > 0 and p_value < 1e-5:
+                print("Generating action for topic: ", topic)
+                # entry: [index_id, bad_group, good_group, confidence_score]
                 entry = [
                     index,
                     group,
+                    good_group_name,
                     float(1.0 - p_value)
                 ]
                 actions_row.append(entry)
@@ -72,8 +77,10 @@ def generate_action_rows(pdf, index_set, group_set):
 
 def perform_ttest(good_answer_scores, bad_answer_scores):
     """Do the Welch's t-test."""
-    t_stat, p_value = stats.ttest_ind(good_answer_scores, bad_answer_scores, equal_var=False)
-    print(f"T-statistic: {t_stat}, P-value: {p_value}")
+    t_stat, p_value = stats.ttest_ind(good_answer_scores, bad_answer_scores)
+    t_stat_1, p_value_1 = stats.ttest_ind(good_answer_scores, bad_answer_scores, equal_var=False)
+    print(f"Normal t-test T-statistic: {t_stat}, P-value: {p_value}")
+    print(f"Welch's t-test T-statistic: {t_stat_1}, P-value: {p_value_1}")
     return t_stat, p_value
 
 
@@ -82,7 +89,7 @@ def get_unique_group_and_index(data_with_action_metric_score_df):
     group_set = set()
     index_set = set()
     for score_data_row in data_with_action_metric_score_df.collect():
-        groups = score_data_row["group_list"].split(",")
+        groups = score_data_row["group_list"].split(SPLITTER)
         group_set.update(groups)
         index_set.add(score_data_row["index_id"])
     return group_set, index_set
