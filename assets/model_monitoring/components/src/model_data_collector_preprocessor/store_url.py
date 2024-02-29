@@ -149,9 +149,11 @@ class StoreUrl:
         """Check if the store url is a local path."""
         if not self._base_url:
             return False
-        return os.path.isdir(self._base_url) or os.path.isfile(self._base_url) or self._base_url.startswith("file://")\
-            or self._base_url.startswith("/") or self._base_url.startswith(".") \
-            or re.match(r"^[a-zA-Z]:[/\\]", self._base_url)
+        if os.path.isdir(self._base_url) or os.path.isfile(self._base_url) \
+                or re.match(r"^[a-zA-Z]:[/\\]", self._base_url):
+            return True
+        url = urlparse(self._base_url)
+        return url.scheme is None or url.scheme == "file" or url.scheme == ""
 
     def read_file_content(self, relative_path: str = None,
                           credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None) -> str:

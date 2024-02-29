@@ -178,7 +178,6 @@ if __name__ == "__main__":
     spec_folder = os.path.abspath(f"{os.path.dirname(__file__)}/..")
     spec_version_upgrader = SpecVersionUpgrader(spec_folder)
     if upgrade_all:
-        # spec_version_upgrader.upgrade_versions(list(spec_version_upgrader._spec_dict.keys()))
         spec_version_upgrader.upgrade_all()
     else:
         spec_version_upgrader.upgrade_versions(specs)
