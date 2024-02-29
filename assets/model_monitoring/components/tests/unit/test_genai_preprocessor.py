@@ -73,6 +73,10 @@ def genai_preprocessor_test_setup():
     old_python_path = os.environ.get("PYTHONPATH", None)
     old_python_path = f"{old_python_path};" if old_python_path else ""
     os.environ["PYTHONPATH"] = f"{old_python_path}{module_path}"
+    zip_path = os.environ.get(SPARK_ZIP_PATH, None)
+    if zip_path:
+        tmp_path = os.environ.get("PYTHONPATH")
+        os.environ["PYTHONPATH"] = f"{tmp_path};{zip_path}"
     print("PYTHONPATH:", os.environ.get("PYTHONPATH", "NA"))
     yield
     os.chdir(original_work_dir)  # change working directory back to original
