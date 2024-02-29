@@ -4,7 +4,7 @@ type: spark
 name: genai_mdc_preprocessor
 display_name: GenAI MDC - Preprocessor
 description: Filters the raw span log based on the window provided, and aggregates it to trace level.
-version: 0.0.1
+version: 0.0.3
 is_deterministic: true
 
 code: ../../src
@@ -31,6 +31,7 @@ conf:
   spark.driver.memory: 28g
   spark.executor.cores: 4
   spark.executor.memory: 28g
+  spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4

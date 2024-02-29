@@ -3,20 +3,18 @@ channels:
 - conda-forge
 - anaconda
 dependencies:
-- python=3.8
+- python=3.9
 - pip=22.1.2
 - numpy~=1.22.3
 - pandas~=1.3.5
 - py-xgboost=1.3.3
-- pyopenssl=23.2.0
-# We limit psutil because there is no psutil
-# for python 3.9 resulting in deployment failures.
-- psutil>=5.2.2,<5.9.4
-- GitPython>=3.1.37
+- pyopenssl=24.0.0
+- cryptography=42.0.2
+- 'psutil>=5.2.2,<6.0.0'
 - tqdm
 - setuptools=65.5.1
 - wheel=0.38.1
-- openssl=1.1.1s
+- openssl=3.0.13
 - pip:
   - inference-schema
   - azureml-core=={{latest-pypi-version}}
@@ -30,14 +28,12 @@ dependencies:
   - azureml-train-automl-client=={{latest-pypi-version}}
   - azureml-train-automl-runtime=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
-  - azureml-contrib-dataset=={{latest-pypi-version}}
   - azureml-train-automl=={{latest-pypi-version}}
   - azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}}
-  - https://aka.ms/automl-resources/packages/en_core_web_sm-2.1.0.tar.gz
-  - cryptography>=41.0.4
+  - https://aka.ms/automl-resources/packages/en_core_web_sm-2.3.1.tar.gz
+  - cryptography>=42.0.2
   - scipy==1.10.1
-  - spacy==2.1.8
+  - spacy==2.3.9
   - prophet==1.1.4
+  - GitPython>=3.1.41
   - py-cpuinfo==5.0.0
-  # TODO: Remove urllib pin when azureml-automl-runtime 1.54.0 will be released.
-  - urllib3==1.26.18
