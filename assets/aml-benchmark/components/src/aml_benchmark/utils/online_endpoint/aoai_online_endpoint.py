@@ -144,6 +144,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
             payload['properties']["raiPolicyName"] = "Microsoft.Default"
         
+        logger.info(f"sending payload: {payload}, is finetuned by proxy step : {self._model.finetuned_from_proxy_step}")
         if self._model.finetuned_from_proxy_step:
             resp = self.deploy_for_proxy_finetuned_step(payload)
         else:
@@ -158,12 +159,14 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def deploy_for_proxy_finetuned_step(self, payload) -> Response:
         should_retry = True
         while should_retry:
-            deploy_headers = self.get_resource_authorization_header()
+            deploy_headers = {'Authorization': f'Bearer {self._get_resource_token()}', 'Content-Type': 'application/json'} if self._credential else {}
+            #deploy_headers = self.get_resource_authorization_header()
             deploy_params = {'api-version': "2023-05-01"} 
             deploy_payload = json.dumps(payload)
-
+            logger.info(f"sending payload to request url: {request_url}")
             request_url = f'https://management.azure.com/subscriptions/{self._subscription_id}/resourceGroups/{self._resource_group}/providers/Microsoft.CognitiveServices/accounts/{self._endpoint_name}/deployments/{self._deployment_name}'
             resp = requests.put(request_url, params=deploy_params, headers=deploy_headers, data=deploy_payload)
+            logger.info(f"got response : {resp.status_code}, content: {resp.content}")
             if resp.status_code not in {409, 429}:
                 should_retry = False
             else:
