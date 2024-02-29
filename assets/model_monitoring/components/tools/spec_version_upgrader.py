@@ -169,7 +169,8 @@ class SpecVersionUpgrader:
 if __name__ == "__main__":
     # TODO add --all to upgrade all components
     argparser = ArgumentParser()
-    argparser.add_argument("-s", "--specs", help="spec names to upgrade")
+    argparser.add_argument("-s", "--specs", help="comma separated spec names to upgrade, "
+                           "e.g. model_data_collector_preprocessor,gsq_annotation_compute_histogram")
     argparser.add_argument("-a", "--all", action="store_true", help="upgrade all components")
     args = argparser.parse_args()
     upgrade_all = args.all
