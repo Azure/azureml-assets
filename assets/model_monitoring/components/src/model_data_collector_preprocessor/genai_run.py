@@ -9,9 +9,9 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from pyspark.sql import DataFrame
 from pyspark.sql.types import TimestampType
-from pyspark.sql.utils import AnalysisException
 from pyspark.sql.functions import lit
 from shared_utilities.momo_exceptions import InvalidInputError
+from shared_utilities.df_utils import try_get_df_column
 from shared_utilities.io_utils import save_spark_df_as_mltable
 from model_data_collector_preprocessor.store_url import StoreUrl
 
@@ -38,14 +38,6 @@ def _get_important_field_mapping() -> dict:
     return map
 
 
-def try_get_df_column(df: DataFrame, name: str):
-    """Get column if it exists in DF. Return none if column does not exist."""
-    try:
-        return df[name]
-    except AnalysisException:
-        return None
-
-
 def _drop_promoted_fields(df: DataFrame, promoted_fields_mapping: dict) -> DataFrame:
     """Drop the promoted fields from dataframe to avoid data duplication and save storage space."""
     def try_drop_field(df: DataFrame, col_name: str, field_name: str):
@@ -53,6 +45,7 @@ def _drop_promoted_fields(df: DataFrame, promoted_fields_mapping: dict) -> DataF
         Will set column to null if dropping last field in the column.
         No op if encounter exception.
         """
+
         df_col = try_get_df_column(df, col_name)
         if df_col is None:
             return df
