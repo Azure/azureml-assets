@@ -7,8 +7,8 @@ This file contains unit tests for the Numerical Data Drift Metrics.
 It compares the drift measures of metrics implemented in Spark against their SciPy implementation.
 """
 
-from src.data_drift_compute_metrics.numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
-from src.shared_utilities.io_utils import init_spark
+from data_drift_compute_metrics.numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
+from shared_utilities.io_utils import init_spark
 from scipy.stats import ks_2samp, wasserstein_distance
 from scipy.spatial import distance
 import pandas as pd

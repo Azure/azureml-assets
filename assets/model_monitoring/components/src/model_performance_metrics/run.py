@@ -6,9 +6,9 @@
 import argparse
 import constants
 
-from model_performance_metrics.compute_metrics import EvaluatorFactory
-from model_performance_metrics.data_reader import DataReaderFactory
-from model_performance_metrics.utils import construct_signal_metrics
+from compute_metrics import EvaluatorFactory
+from data_reader import DataReaderFactory
+from utils import construct_signal_metrics
 
 
 def run():

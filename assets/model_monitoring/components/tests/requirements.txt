@@ -13,6 +13,5 @@ responsibleai~=0.29.0
 ruamel.yaml==0.17.21
 scipy~=1.10.0
 pytest-xdist
-pytest-split
 pyspark-test~=0.2.0
 azureml-metrics[tabular]~=0.0.42
