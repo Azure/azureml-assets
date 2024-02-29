@@ -477,7 +477,7 @@ class TestDFUtils:
             [
                 ([], StructType([]), False),
                 (
-                    [datetime.datetime(2024, 3, 2), 1.0, "b", False],
+                    [datetime.datetime(2024, 3, 2, 0, 0, 0), 1.0, "b", False],
                     StructType(
                         [
                             StructField("input", TimestampType(), True),
@@ -488,7 +488,7 @@ class TestDFUtils:
                     True
                 ),
                 (
-                    [False, 1.0, "a"],
+                    ["false", 1.0, "a"],
                     StructType(
                         [
                             StructField("input", BooleanType(), True),
