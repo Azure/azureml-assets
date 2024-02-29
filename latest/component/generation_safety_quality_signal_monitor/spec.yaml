@@ -4,7 +4,7 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.4.20
+version: 0.5.0
 is_deterministic: true
 inputs:
   monitor_name:
@@ -103,13 +103,28 @@ outputs:
     type: mltable
     mode: direct
 jobs:
+  input_schema_adaptor:
+    type: spark
+    component: azureml://registries/azureml/components/gsq_input_schema_adaptor/versions/0.0.2
+    inputs:
+      production_dataset:
+        type: mltable
+        path: ${{parent.inputs.production_data}}
+    outputs:
+      adapted_production_data:
+        type: mltable
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
   compute_histogram:
     type: spark
     component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.13
     inputs:
       production_dataset:
         type: mltable
-        path: ${{parent.inputs.production_data}}
+        path: ${{parent.jobs.input_schema_adaptor.outputs.adapted_production_data}}
       metric_names: ${{parent.inputs.metric_names}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
       sample_rate: ${{parent.inputs.sample_rate}}
