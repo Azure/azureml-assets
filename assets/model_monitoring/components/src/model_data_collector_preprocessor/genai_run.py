@@ -10,6 +10,7 @@ from dateutil import parser
 from pyspark.sql import DataFrame
 from pyspark.sql.types import TimestampType
 from pyspark.sql.functions import lit
+from pyspark.sql.utils import AnalysisException
 from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities.df_utils import try_get_df_column
 from shared_utilities.io_utils import save_spark_df_as_mltable
