@@ -5,6 +5,7 @@
 
 
 from typing import Optional
+import os
 import time
 import json
 from requests.models import Response
@@ -18,6 +19,7 @@ from ..exceptions import BenchmarkValidationException
 from ..logging import get_logger
 from .online_endpoint import OnlineEndpoint, ResourceState
 from .online_endpoint_model import OnlineEndpointModel
+from azure.identity import ManagedIdentityCredential
 
 
 logger = get_logger(__name__)
@@ -138,11 +140,13 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                 }
             }
         }
+        """
         if self._model.is_finetuned:
             payload['properties']['model']['source'] = self._model.source
         else:
             payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
             payload['properties']["raiPolicyName"] = "Microsoft.Default"
+        """
         
         logger.info(f"sending payload: {payload}, is finetuned by proxy step : {self._model.finetuned_from_proxy_step}")
         if self._model.finetuned_from_proxy_step:
@@ -158,9 +162,12 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     
     def deploy_for_proxy_finetuned_step(self, payload) -> Response:
         should_retry = True
+        logger.info(f"endpoint_url : {self._online_endpoint_url} endpoint name: {self._endpoint_name}")
         while should_retry:
-            deploy_headers = {'Authorization': f'Bearer {self._get_resource_token()}', 'Content-Type': 'application/json'} if self._credential else {}
-            #deploy_headers = self.get_resource_authorization_header()
+            identity = ManagedIdentityCredential(client_id=os.environ.get("DEFAULT_IDENTITY_CLIENT_ID", None))
+            token = identity.get_token("https://management.azure.com/.default").token
+            deploy_headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'} if self._credential else {}
+            deploy_headers = self.get_resource_authorization_header()
             deploy_params = {'api-version': "2023-05-01"} 
             deploy_payload = json.dumps(payload)
             
