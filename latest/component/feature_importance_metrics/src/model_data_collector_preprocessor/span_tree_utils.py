@@ -7,7 +7,7 @@ import bisect
 from datetime import datetime
 import json
 
-from typing import Iterator, List
+from typing import Iterator, List, Optional
 from pyspark.sql import Row
 
 
@@ -94,6 +94,7 @@ class SpanTree:
 
     def __init__(self, spans: List[SpanTreeNode]) -> None:
         """Spantree constructor to build up tree from span list."""
+        self._span_node_map: dict = {}
         self.root_span = self._construct_span_tree(spans)
         self._load_json_tree_lazy = False
 
@@ -121,16 +122,22 @@ class SpanTree:
             return None  # type: ignore
         return self._to_json_str_repr(self.root_span)
 
+    def get_span_tree_node_by_span_id(self, span_id: str) -> Optional[SpanTreeNode]:
+        """Get a span tree node by span id. Return none if there is no matching span id."""
+        if self._span_node_map is None:
+            return None
+        return self._span_node_map.get(span_id, None)
+
     def _construct_span_tree(self, spans: List[SpanTreeNode]) -> SpanTreeNode:
         """Build the span tree in ascending time order from list of all spans."""
         # construct a dict with span_id as key and span as value
-        span_map = {span.span_id: span for span in spans}
-        for span in span_map.values():
+        self._span_node_map = {span.span_id: span for span in spans}
+        for span in self._span_node_map.values():
             parent_id = span.parent_id
             if parent_id is None:
                 root_span = span
             else:
-                parent_span = span_map.get(parent_id)
+                parent_span = self.get_span_tree_node_by_span_id(parent_id)
                 if parent_span is not None:
                     parent_span.insert_child(span)
         return root_span
