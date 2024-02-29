@@ -38,6 +38,34 @@ def _get_important_field_mapping() -> dict:
     return map
 
 
+def _drop_promoted_fields(df: DataFrame, promoted_fields_mapping: dict) -> DataFrame:
+    """Drop the promoted fields from dataframe to avoid data duplication and save storage space."""
+    def try_drop_field(df: DataFrame, col_name: str, field_name: str):
+        """Drop field from nested columns like context, attributes.
+        Will set column to null if dropping last field in the column.
+        No op if encounter exception.
+        """
+        df_col = try_get_df_column(df, col_name)
+        if df_col is None:
+            return df
+        try:
+            return df.withColumn(col_name, df_col.dropFields(field_name))
+        except AnalysisException as ex:
+            if "DATATYPE_MISMATCH.CANNOT_DROP_ALL_FIELDS" in str(ex):
+                return df.withColumn(col_name, lit(None))
+            print("MoMo internal exception encountered: \n", ex)
+            return df
+
+    # remove promoted data fields from source to avoid duplication. 'status' col is already overwritten.
+    promoted_fields_mapping.pop('status', None)
+
+    for field_name_in_data in promoted_fields_mapping.values():
+        col_name, nested_field_name = field_name_in_data.split('.')
+        df = try_drop_field(df, col_name, nested_field_name)
+
+    return df
+
+
 def _promote_fields_from_attributes(df: DataFrame) -> DataFrame:
     """Retrieve common/important fields(span_type, input, etc.) from attributes and make them first level columns.
 
@@ -59,25 +87,8 @@ def _promote_fields_from_attributes(df: DataFrame) -> DataFrame:
         }
     )
 
-    def try_drop_field(df: DataFrame, col_name: str, field_name: str):
-        """Drop field (or whole column) from nested columns like context, attributes. No op if encounter exception."""
-        df_col = try_get_df_column(df, col_name)
-        if df_col is None:
-            return df
-        try:
-            return df.withColumn(col_name, df_col.dropFields(field_name))
-        except AnalysisException as ex:
-            if "DATATYPE_MISMATCH.CANNOT_DROP_ALL_FIELDS" in str(ex):
-                return df.drop(col_name)
-            print(ex)
-            return df
-
-    # remove promoted data fields from source to avoid duplication. 'status' col is already overwritten.
-    fields_to_promote_mapping.pop('status', None)
-
-    for field_name_in_data in fields_to_promote_mapping.values():
-        col_name, nested_field_name = field_name_in_data.split('.')
-        df = try_drop_field(df, col_name, nested_field_name)
+    # as of right now UX does not want us to remove the promoted fields. Uncomment logic if we need to change it later.
+    # df = _drop_promoted_fields(df, fields_to_promote_mapping)
     return df
 
 
