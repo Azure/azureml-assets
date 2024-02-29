@@ -108,20 +108,20 @@ class TestGenAISparkPreprocessor:
 
     _preprocessed_data = [
         ["01", "{\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 5, 0, 4, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 3, 0), "OK", "2", "llm", "LLM", "in", "out"],
+        [datetime(2024, 2, 5, 15, 4, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 5, 15, 3, 0), "OK", "2", "llm", "LLM", "in", "out"],
         ["01", "{\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 5, 0, 2, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 1, 0), "OK", "1", "llm", "LLM", "in", "out"],
+        [datetime(2024, 2, 5, 15, 2, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 5, 15, 1, 0), "OK", "1", "llm", "LLM", "in", "out"],
         ["02", "{\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 5, 0, 12, 0), "[]", "[]", "name", "4"] +
-        [datetime(2024, 2, 5, 0, 11, 0), "OK", "5", "llm", "LLM", "in", "out"],
+        [datetime(2024, 2, 5, 15, 12, 0), "[]", "[]", "name", "4"] +
+        [datetime(2024, 2, 5, 15, 11, 0), "OK", "5", "llm", "LLM", "in", "out"],
         ["02", "{\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 5, 0, 8, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 7, 0), "OK", "4", "llm", "LLM", "in", "out"],
+        [datetime(2024, 2, 5, 15, 8, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 5, 15, 7, 0), "OK", "4", "llm", "LLM", "in", "out"],
         ["02", "{\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 5, 0, 6, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 0, 5, 0), "OK", "3", "llm", "LLM", "in", "out"],
+        [datetime(2024, 2, 5, 15, 6, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 5, 15, 5, 0), "OK", "3", "llm", "LLM", "in", "out"],
     ]
 
     _preprocessed_schema_no_input = StructType([
