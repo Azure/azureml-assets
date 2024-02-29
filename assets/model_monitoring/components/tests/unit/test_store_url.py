@@ -271,7 +271,7 @@ class TestStoreUrl:
         mock_datastore.credential_type = "Sas"
         mock_datastore.sas_token = "my_sas_token"
         mock_ws = Mock()
-        
+
         with patch.object(Datastore, "get", return_value=mock_datastore):
             store_url = StoreUrl(path, mock_ws)
             assert store_url.is_local_path() == is_local_path
