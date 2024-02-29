@@ -43,7 +43,7 @@ def try_get_df_column(df: DataFrame, name: str):
     try:
         return df[name]
     except AnalysisException:
-            return None
+        return None
 
 
 def _drop_promoted_fields(df: DataFrame, promoted_fields_mapping: dict) -> DataFrame:
