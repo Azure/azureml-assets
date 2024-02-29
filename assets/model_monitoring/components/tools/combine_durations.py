@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 def run():
-    """Utility function for model-monitoring-ci to combine group test_duration files into a single file."""
+    """Combine group test_duration files into a single file for model-monitoring-ci."""
     split_prefix = sys.argv[1]
     durations_path = Path(sys.argv[2])
 
