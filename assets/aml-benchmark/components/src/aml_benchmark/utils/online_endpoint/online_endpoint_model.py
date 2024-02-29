@@ -118,7 +118,7 @@ class OnlineEndpointModel:
         return self._is_finetuned
     
     @property
-    def _finetuned_from_proxy_step(self) -> bool:
+    def finetuned_from_proxy_step(self) -> bool:
         """Get the finetune flag."""
         return self._finetuned_from_proxy_step
 
