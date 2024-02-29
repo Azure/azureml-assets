@@ -99,6 +99,9 @@ outputs:
   signal_output:
     type: uri_folder
     mode: direct
+  signal_scored_data:
+    type: mltable
+    mode: direct
 jobs:
   compute_histogram:
     type: spark
@@ -137,6 +140,7 @@ jobs:
         type: mltable
       evaluation:
         type: mltable
+        path: ${{parent.outputs.signal_scored_data}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
