@@ -144,7 +144,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
             payload['properties']["raiPolicyName"] = "Microsoft.Default"
         
-        if self._model._finetuned_from_proxy_step:
+        if self._model.finetuned_from_proxy_step:
             resp = self.deploy_for_proxy_finetuned_step(payload)
         else:
             resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
