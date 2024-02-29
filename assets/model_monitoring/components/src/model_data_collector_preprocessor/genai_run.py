@@ -38,6 +38,14 @@ def _get_important_field_mapping() -> dict:
     return map
 
 
+def try_get_df_column(df: DataFrame, name: str):
+    """Get column if it exists in DF. Return none if column does not exist."""
+    try:
+        return df[name]
+    except AnalysisException:
+            return None
+
+
 def _drop_promoted_fields(df: DataFrame, promoted_fields_mapping: dict) -> DataFrame:
     """Drop the promoted fields from dataframe to avoid data duplication and save storage space."""
     def try_drop_field(df: DataFrame, col_name: str, field_name: str):
@@ -72,13 +80,6 @@ def _promote_fields_from_attributes(df: DataFrame) -> DataFrame:
     Args:
         df: The raw span logs data in a dataframe.
     """
-    def try_get_df_column(df: DataFrame, name: str):
-        """Get column if it exists in DF. Return none if column does not exist."""
-        try:
-            return df[name]
-        except AnalysisException:
-            return None
-
     fields_to_promote_mapping = _get_important_field_mapping()
     df = df.withColumns(
         {
