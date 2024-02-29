@@ -3,13 +3,11 @@
 """Internal logic for Trace Aggregator step of Gen AI preprocessor component."""
 
 
-import os
-
 from pyspark.sql import DataFrame, Row
 from pyspark.sql.types import StructType
 from pyspark.sql.functions import collect_list, struct
 from typing import List
-from model_data_collector_preprocessor.span_tree_utils import SpanTree, SpanTreeNode
+from .span_tree_utils import SpanTree, SpanTreeNode
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_aggregated_trace_log_spark_df_schema,
 )
@@ -46,8 +44,6 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_dat
         return spark.createDataFrame(data=[], schema=output_trace_schema)
 
     print("Processing spans into aggregated traces...")
-    # add span tree utils for executor instances
-    spark.sparkContext.addPyFile(os.path.join(os.path.dirname(__file__), "span_tree_utils.py"))
 
     grouped_spans_df = span_logs.groupBy('trace_id').agg(
         collect_list(
