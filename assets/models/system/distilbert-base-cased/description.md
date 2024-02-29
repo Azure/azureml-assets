@@ -8,7 +8,7 @@ In this manner, the model acquires a comparable internal representation of the E
 
 ### Training Details
 
-**Preprocessing**
+### Preprocessing
 
 The texts undergo lowercasing and tokenization using WordPiece with a vocabulary size of 30,000. The model's inputs follow the format:
 
@@ -23,7 +23,7 @@ In 80% of cases, the masked tokens are replaced by [MASK].
 In 10% of cases, the masked tokens are replaced by a randomly selected token (different from the original).
 In the remaining 10% of cases, the masked tokens remain unchanged.
 
-**Pretraining**
+### Pretraining
 The model underwent training using 8 NVIDIA Tesla V100 GPUs, each with 16 GB of memory, for a duration of 90 hours. For specific details regarding hyperparameters and other training configurations, please refer to the training code.
 
 ### Inference samples
