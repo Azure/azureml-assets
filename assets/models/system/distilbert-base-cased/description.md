@@ -4,7 +4,6 @@ Distillation loss: The model was trained to produce probabilities akin to those 
 Masked language modeling (MLM): This constitutes a segment of the original training loss in the BERT base model. By randomly masking 15% of the words in a sentence, the model processes the entire masked sentence and endeavors to predict the masked words. This methodology differs from traditional recurrent neural networks (RNNs) or autoregressive models like GPT, which handle words sequentially or internally mask future tokens. MLM facilitates the acquisition of a bidirectional sentence representation by the model.
 Cosine embedding loss: The model was also trained to generate hidden states that closely resemble those of the BERT base model.
 In this manner, the model acquires a comparable internal representation of the English language to that of its teacher model, while being more efficient for inference or subsequent tasks.
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/distilbert-base-cased" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Training Details
 
