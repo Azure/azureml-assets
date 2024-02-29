@@ -4,3 +4,4 @@ azure-kusto-data==4.2.0
 recognizers-text-suite~=1.0.2a2
 azureml-contrib-services
 azure-cosmos~=4.4.0
+clickhouse_connect~=0.7.1
