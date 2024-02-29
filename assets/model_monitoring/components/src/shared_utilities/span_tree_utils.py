@@ -213,7 +213,7 @@ class SpanTree:
             return None
         return self._span_node_map.get(span_id, None)
 
-    def _construct_span_tree(self, spans: List[SpanTreeNode]) -> SpanTreeNode:
+    def _construct_span_tree(self, spans: List[SpanTreeNode]) -> Optional[SpanTreeNode]:
         """Build the span tree in ascending time order from list of all spans."""
         # construct a dict with span_id as key and span as value
         root_span = None

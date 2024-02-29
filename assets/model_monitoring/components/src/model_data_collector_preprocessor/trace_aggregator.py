@@ -7,10 +7,10 @@ from pyspark.sql import DataFrame, Row
 from pyspark.sql.types import StructType
 from pyspark.sql.functions import collect_list, struct
 from typing import List
-from .span_tree_utils import SpanTree, SpanTreeNode
-from .genai_preprocessor_df_schemas import (
+from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_aggregated_trace_log_spark_df_schema,
 )
+from shared_utilities.span_tree_utils import SpanTree, SpanTreeNode
 from shared_utilities.io_utils import init_spark
 
 
