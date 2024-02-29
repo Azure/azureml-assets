@@ -7,7 +7,7 @@ import bisect
 from datetime import datetime
 import json
 
-from typing import Iterator, List
+from typing import Iterator, List, Optional
 from pyspark.sql import Row
 from pyspark.sql.types import PySparkValueError
 
@@ -179,6 +179,7 @@ class SpanTree:
 
     def __init__(self, spans: List[SpanTreeNode]) -> None:
         """Spantree constructor to build up tree from span list."""
+        self._span_node_map: dict = {}
         self.root_span = self._construct_span_tree(spans)
 
     @classmethod
@@ -206,23 +207,26 @@ class SpanTree:
             return json.dumps(None)
         return json.dumps(self.root_span.to_dict())
 
+    def get_span_tree_node_by_span_id(self, span_id: str) -> Optional[SpanTreeNode]:
+        """Get a span tree node by span id. Return none if there is no matching span id."""
+        if self._span_node_map is None:
+            return None
+        return self._span_node_map.get(span_id, None)
+
     def _construct_span_tree(self, spans: List[SpanTreeNode]) -> SpanTreeNode:
         """Build the span tree in ascending time order from list of all spans."""
         # construct a dict with span_id as key and span as value
         root_span = None
-        span_map = {span.span_id: span for span in spans}
-        for span in span_map.values():
+        self._span_node_map = {span.span_id: span for span in spans}
+        for span in self._span_node_map.values():
             parent_id = span.parent_id
             if parent_id is None:
                 root_span = span
             else:
-                parent_span = span_map.get(parent_id)
+                parent_span = self.get_span_tree_node_by_span_id(parent_id)
                 if parent_span is not None:
                     parent_span.insert_child(span)
-        if root_span is None:
-            raise InvalidInputError(
-                f"Failed to get root span while building trace tree from span map: {span_map}"
-            )
+        # todo: handle logic if root_span is not found or if we have multiple root_spans
         return root_span
 
     def __iter__(self) -> Iterator[SpanTreeNode]:
