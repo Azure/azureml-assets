@@ -9,7 +9,6 @@ from pyspark.sql.types import (
     StructType,
     StringType,
     BooleanType,
-    TimestampType,
 )
 from pyspark.sql import SparkSession, DataFrame
 from src.shared_utilities.df_utils import (
