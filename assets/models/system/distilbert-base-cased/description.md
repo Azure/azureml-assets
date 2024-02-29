@@ -47,21 +47,11 @@ Task	MNLI	QQP	QNLI	SST-2	CoLA	STS-B	MRPC	RTE
 #### Sample input
 ```json
 { 
-
-  "input_data": [ 
-
-    "Paris is [MASK] of France" 
-
-  ], 
-
-  "params": {} 
-
+  "input_data": ["Paris is [MASK] of France"]
 } 
 ```
 
 #### Sample output
 ```json
-[
-  "part"
-]
+["part"]
 ```
