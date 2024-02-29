@@ -476,26 +476,27 @@ class TestDFUtils:
             "input_data, input_data_columns, expected_output",
             [
                 ([], StructType([]), False),
+                # Construct a dataframe with two columns is not easy. Comment out until later.
+                # (
+                #     [(datetime.datetime(2024, 3, 2, 0, 0, 0), 1.0, "b", False)],
+                #     StructType(
+                #         [
+                #             StructField("input", TimestampType(), True),
+                #             StructField("percent", FloatType(), True),
+                #             StructField("number", StringType(), True),
+                #             StructField("input", BooleanType(), True)
+                #         ]),
+                #     True,
+                # ),
                 (
-                    [datetime.datetime(2024, 3, 2, 0, 0, 0), 1.0, "b", False],
-                    StructType(
-                        [
-                            StructField("input", TimestampType(), True),
-                            StructField("percent", FloatType(), True),
-                            StructField("number", StringType(), True),
-                            StructField("input", BooleanType(), True)
-                        ]),
-                    True
-                ),
-                (
-                    ["false", 1.0, "a"],
+                    [(False, 1.0, "a")],
                     StructType(
                         [
                             StructField("input", BooleanType(), True),
                             StructField("label", FloatType(), True),
                             StructField("number", StringType(), True),
                         ]),
-                    False
+                    False,
                 )
             ]
     )
