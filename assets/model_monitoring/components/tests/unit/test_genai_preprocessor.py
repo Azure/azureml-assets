@@ -22,6 +22,7 @@ from model_data_collector_preprocessor.trace_aggregator import (
     process_spans_into_aggregated_traces,
 )
 from model_data_collector_preprocessor.store_url import StoreUrl
+import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
 
 
