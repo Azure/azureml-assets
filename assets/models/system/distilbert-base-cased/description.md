@@ -5,44 +5,45 @@ Masked language modeling (MLM): This constitutes a segment of the original train
 Cosine embedding loss: The model was also trained to generate hidden states that closely resemble those of the BERT base model.
 In this manner, the model acquires a comparable internal representation of the English language to that of its teacher model, while being more efficient for inference or subsequent tasks.
 
-### Training Details
+# Training Details
+
+## Training data
+
+DistilBERT was pretrained on the same data as BERT, which includes the BookCorpus dataset (consisting of 11,038 unpublished books) and English Wikipedia (excluding lists, tables, and headers).
+
+## Training Procedure
 
 ### Preprocessing
 
-The texts undergo lowercasing and tokenization using WordPiece with a vocabulary size of 30,000. The model's inputs follow the format:
-
-[CLS] Sentence A [SEP] Sentence B [SEP]
-
-In this structure, with a probability of 0.5, Sentence A and Sentence B represent two consecutive sentences from the original corpus. Otherwise, they correspond to another random sentence in the corpus. It's important to note that a "sentence" in this context refers to a consecutive span of text, often longer than a single sentence. The only constraint is that the combined length of the two "sentences" does not exceed 512 tokens.
-
-The masking procedure for each sentence is detailed as follows:
-
-15% of the tokens are masked.
-In 80% of cases, the masked tokens are replaced by [MASK].
-In 10% of cases, the masked tokens are replaced by a randomly selected token (different from the original).
-In the remaining 10% of cases, the masked tokens remain unchanged.
+The texts are lowercased and tokenized using WordPiece with a vocabulary size of 30,000.
+The model inputs are structured as follows: [CLS] Sentence A [SEP] Sentence B [SEP]
+With a 50% probability, Sentence A and Sentence B correspond to two consecutive sentences from the original corpus. Otherwise, a random sentence from the corpus is used. The combined length of the two “sentences” must be less than 512 tokens.
+Masking procedure for each sentence:
+15% of tokens are masked.
+In 80% of cases, masked tokens are replaced by [MASK].
+In 10% of cases, masked tokens are replaced by a different random token.
+In the remaining 10%, masked tokens remain unchanged.
 
 ### Pretraining
-The model underwent training using 8 NVIDIA Tesla V100 GPUs, each with 16 GB of memory, for a duration of 90 hours. For specific details regarding hyperparameters and other training configurations, please refer to the training code.
 
-### Inference samples
+The model was trained on 8 NVIDIA V100 GPUs (each with 16 GB memory) for 90 hours. Refer to the training code for detailed hyperparameters.
 
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a>| coming soon
+# Evaluation Results
 
-
-### Evaluation Results
-
-When fine-tuned on downstream tasks, this model demonstrates the following outcomes:
+When fine-tuned on downstream tasks, this model achieves the following results:
 
 Glue test results:
 
 Task	MNLI	QQP	QNLI	SST-2	CoLA	STS-B	MRPC	RTE
 81.5	87.8	88.2	90.4	47.2	85.5	85.6	60.6
 
-### Sample inputs and outputs (for real-time inference)
+
+# Limitations and Biases
+
+While the training data for this model is generally neutral, it can still produce biased predictions. Additionally, it inherits some of the biases from its teacher model.
+
+
+# Sample inputs and outputs
 
 #### Sample input
 ```json
