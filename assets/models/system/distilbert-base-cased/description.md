@@ -42,6 +42,12 @@ Task	MNLI	QQP	QNLI	SST-2	CoLA	STS-B	MRPC	RTE
 
 While the training data for this model is generally neutral, it can still produce biased predictions. Additionally, it inherits some of the biases from its teacher model.
 
+# Inference samples
+
+Inference type|Python sample (Notebook)
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endpoint-oss)
 
 # Sample inputs and outputs
 
