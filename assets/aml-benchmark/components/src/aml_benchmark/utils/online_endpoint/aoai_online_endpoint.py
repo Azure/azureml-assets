@@ -6,7 +6,9 @@
 
 from typing import Optional
 import time
-
+import json
+from requests.models import Response
+import requests
 from azureml._model_management._util import get_requests_session
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azure.ai.ml.entities import AccessKeyConfiguration, ApiKeyConfiguration
@@ -141,13 +143,32 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         else:
             payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
             payload['properties']["raiPolicyName"] = "Microsoft.Default"
-        resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
+        
+        if self._model._finetuned_from_proxy_step:
+            resp = self.deploy_for_proxy_finetuned_step(payload)
+        else:
+            resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
         self._raise_if_not_success(resp)
         logger.info("Calling(PUT) {} returned {} with content {}.".format(
             self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
         while self.deployment_state() == ResourceState.NOT_READY:
             logger.info("Deployment is not ready yet, waiting for 30 seconds...")
             time.sleep(30)
+    
+    def deploy_for_proxy_finetuned_step(self, payload) -> Response:
+        should_retry = True
+        while should_retry:
+            deploy_headers = self.get_resource_authorization_header()
+            deploy_params = {'api-version': "2023-05-01"} 
+            deploy_payload = json.dumps(payload)
+
+            request_url = f'https://management.azure.com/subscriptions/{self._subscription_id}/resourceGroups/{self._resource_group}/providers/Microsoft.CognitiveServices/accounts/{self._endpoint_name}/deployments/{self._deployment_name}'
+            resp = requests.put(request_url, params=deploy_params, headers=deploy_headers, data=deploy_payload)
+            if resp.status_code not in {409, 429}:
+                should_retry = False
+            else:
+                time.sleep(30)
+        return resp
 
     def get_endpoint_authorization_header(self) -> dict:
         """Get the authorization header."""
