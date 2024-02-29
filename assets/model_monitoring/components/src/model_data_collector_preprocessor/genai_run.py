@@ -43,10 +43,10 @@ def _drop_promoted_fields(df: DataFrame, promoted_fields_mapping: dict) -> DataF
     """Drop the promoted fields from dataframe to avoid data duplication and save storage space."""
     def try_drop_field(df: DataFrame, col_name: str, field_name: str):
         """Drop field from nested columns like context, attributes.
+
         Will set column to null if dropping last field in the column.
         No op if encounter exception.
         """
-
         df_col = try_get_df_column(df, col_name)
         if df_col is None:
             return df
