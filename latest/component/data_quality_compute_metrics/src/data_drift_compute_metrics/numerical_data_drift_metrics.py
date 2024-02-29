@@ -8,7 +8,7 @@ import pyspark.sql as pyspark_sql
 import pyspark.sql.functions as F
 from scipy.spatial import distance
 from scipy.stats import ks_2samp, wasserstein_distance
-from io_utils import get_output_spark_df, init_spark
+from data_drift_compute_metrics.io_utils import get_output_spark_df, init_spark
 from shared_utilities.histogram_utils import (
     get_dual_histogram_bin_edges,
     get_histograms,

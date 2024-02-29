@@ -8,7 +8,7 @@ import pyspark.sql as pyspark_sql
 import pyspark.sql.functions as F
 from scipy.spatial import distance
 from scipy.stats import chisquare
-from io_utils import get_output_spark_df
+from data_drift_compute_metrics.io_utils import get_output_spark_df
 from shared_utilities.constants import (
     JENSEN_SHANNON_DISTANCE_METRIC_NAME,
     PEARSONS_CHI_SQUARED_TEST_METRIC_NAME,
