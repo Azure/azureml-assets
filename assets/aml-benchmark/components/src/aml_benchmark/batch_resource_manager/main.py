@@ -93,6 +93,11 @@ def parse_args() -> argparse.Namespace:
         default=False, type=str2bool,
         help="Flag on if this is a finetuned model.",
     )
+    parser.add_argument(
+        "--finetuned_from_proxy_step",
+        default=False, type=str2bool,
+        help="Flag on if this is finetuned from proxy finetune component",
+    )
     parser.add_argument("--deployment_retries", default=5, type=int, help="Number of retries for deployment.")
     parser.add_argument(
         "--deployment_retry_interval_seconds", default=600, type=int, help="Retry interval for deployment.")
@@ -354,7 +359,8 @@ def main(
     deployment_retries: int,
     deployment_retry_interval_seconds: int,
     wait_finetuned_step: bool,
-    finetuned_step_name: str
+    finetuned_step_name: str,
+    finetuned_from_proxy_step: bool = False
 ) -> None:
     """
     Entry function of the script.
@@ -409,7 +415,7 @@ def main(
         online_model = OnlineEndpointModel(
             model, model_version, model_type, endpoint_name, is_finetuned_model,
             finetuned_subscription_id, finetuned_resource_group, finetuned_workspace,
-            finetuned_step_name
+            finetuned_step_name, finetuned_from_proxy_step
         )
         is_deployment_successful = False
         while deployment_retries > 0:
@@ -499,5 +505,6 @@ if __name__ == "__main__":
         args.deployment_retries,
         args.deployment_retry_interval_seconds,
         args.wait_finetuned_step,
-        args.finetuned_step_name
+        args.finetuned_step_name,
+        args.finetuned_from_proxy_step
     )
