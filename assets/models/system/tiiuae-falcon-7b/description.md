@@ -12,7 +12,7 @@ The training specifics of Falcon-7B encompass comprehensive details regarding th
 
 #### Training Data
 
-Falcon-7B was trained on 1,500B tokens of [RefinedWeb](https://huggingface.co/datasets/tiiuae/falcon-refinedweb), a high-quality filtered and deduplicated web dataset which we enhanced with curated corpora. Significant components from our curated copora were inspired by The Pile ([Gao et al., 2020](https://arxiv.org/abs/2101.00027)).
+Falcon-7B underwent training on 1,500 billion tokens sourced from [RefinedWeb](https://huggingface.co/datasets/tiiuae/falcon-refinedweb), a meticulously filtered and deduplicated web dataset that we enriched with curated corpora. Notably, substantial elements of our curated corpora drew inspiration from The Pile ([Gao et al., 2020](https://arxiv.org/abs/2101.00027)).
 
 
 | **Data source**    | **Fraction** | **Tokens** | **Sources**                       |
@@ -28,7 +28,7 @@ The data was tokenized with the Falcon-[7B](https://huggingface.co/tiiuae/falcon
 
 #### Training Procedure 
 
-Falcon-7B was trained on 384 A100 40GB GPUs, using a 2D parallelism strategy (PP=2, DP=192) combined with ZeRO.
+Falcon-7B underwent training utilizing a 2D parallelism strategy (PP=2, DP=192) in conjunction with ZeRO, employing a total of 384 A100 GPUs with a capacity of 40GB each.
 
 
 | **Hyperparameter** | **Value**  | **Comment**                               |
@@ -42,24 +42,22 @@ Falcon-7B was trained on 384 A100 40GB GPUs, using a 2D parallelism strategy (PP
 
 #### Speeds, Sizes, Times
 
-Training happened in early March 2023 and took about two weeks.
-
+The training process occurred in the initial weeks of March 2023, spanning approximately two weeks.
 
 #### Evaluation
 
 *Paper coming soon*.
 
-See the [OpenLLM Leaderboard](https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard) for early results.
-
+Refer to the [OpenLLM Leaderboard](https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard) for preliminary results.
 
 #### Technical Specifications 
 
 #### Model Architecture and Objective
 
 
-Falcon-7B is a causal decoder-only model trained on a causal language modeling task (i.e., predict the next token).
+Falcon-7B is exclusively a causal decoder model, designed and trained specifically for a causal language modeling task, which involves predicting the next token in a sequence.
 
-The architecture is broadly adapted from the GPT-3 paper ([Brown et al., 2020](https://arxiv.org/abs/2005.14165)), with the following differences:
+While the overall architecture draws inspiration from the GPT-3 paper ([Brown et al., 2020](https://arxiv.org/abs/2005.14165)), there are notable distinctions in the following aspects:
 
 * **Positionnal embeddings:** rotary ([Su et al., 2021](https://arxiv.org/abs/2104.09864));
 * **Attention:** multiquery ([Shazeer et al., 2019](https://arxiv.org/abs/1911.02150)) and FlashAttention ([Dao et al., 2022](https://arxiv.org/abs/2205.14135));
@@ -78,16 +76,16 @@ The architecture is broadly adapted from the GPT-3 paper ([Brown et al., 2020](h
 #### Compute Infrastructure
 
 #### Hardware
-
-Falcon-7B was trained on AWS SageMaker, on 384 A100 40GB GPUs in P4d instances. 
+ 
+Falcon-7B underwent training on AWS SageMaker, utilizing 384 A100 40GB GPUs housed in P4d instances.
 
 #### Software
 
-Falcon-7B was trained a custom distributed training codebase, Gigatron. It uses a 3D parallelism approach combined with ZeRO and high-performance Triton kernels (FlashAttention, etc.)
+Falcon-7B was trained using a specialized distributed training codebase named Gigatron. This codebase employs a 3D parallelism approach in conjunction with ZeRO and incorporates high-performance Triton kernels, including FlashAttention.
 
 #### License
 
-Falcon-7B is made available under the Apache 2.0 license.
+Falcon-7B is released under the Apache 2.0 license.
 
 
 # Model Evaluation Sample
