@@ -91,6 +91,10 @@ MDC_CORRELATION_ID_COLUMN = 'correlationid'
 MDC_DATA_COLUMN = 'data'
 MDC_DATAREF_COLUMN = 'dataref'
 
+# Column names in GenAI Preprocessor
+GENAI_ROOT_SPAN_SCHEMA_COLUMN = "root_span"
+GENAI_TRACE_ID_SCHEMA_COLUMN = "trace_id"
+
 SCHEMA_INFER_ROW_COUNT = 10
 
 AML_MOMO_ERROR_TAG = "azureml.modelmonitor.error"
