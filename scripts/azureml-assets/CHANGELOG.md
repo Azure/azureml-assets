@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.35 (2023-02-28)
+### 🐛 Bugs Fixed
+- [#2407](https://github.com/Azure/azureml-assets/pull/2407) Surface properties in the spec configuration 
+
 ## 1.16.34 (2023-01-29)
 ### 🐛 Bugs Fixed
 - [#2196](https://github.com/Azure/azureml-assets/pull/2196) Allow evaluation results to have names similar to models 
