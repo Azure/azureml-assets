@@ -7,7 +7,7 @@ import bisect
 from datetime import datetime
 import json
 
-from typing import Iterator, List, Optional
+from typing import Dict, Iterator, List, Optional
 from pyspark.sql import Row
 from pyspark.sql.types import PySparkValueError
 
@@ -134,7 +134,7 @@ class SpanTreeNode:
 
     def show(self, indent: int = 0) -> None:
         """Print the current span in a formatted syntax to stdout."""
-        print(f"{' '*indent}[{self.span_id}({self.start_time}, {self.end_time})]")
+        print(f"{' '*indent}[{self.span_id} ({self.start_time}, {self.end_time})]")
         for c in self.children:
             c.show(indent + 4)
 
@@ -179,7 +179,7 @@ class SpanTree:
 
     def __init__(self, spans: List[SpanTreeNode]) -> None:
         """Spantree constructor to build up tree from span list."""
-        self._span_node_map: dict = {}
+        self._span_node_map: Dict[str, SpanTreeNode] = {}
         self.root_span = self._construct_span_tree(spans)
 
     @classmethod
@@ -193,12 +193,15 @@ class SpanTree:
             obj.root_span = None
         else:
             obj.root_span = SpanTreeNode.create_node_from_dict(root_span_dict)
+        obj._span_node_map = {span.span_id: span for span in obj}
         return obj
 
     def show(self) -> None:
         """Print to stdout a formatted representation of the Span Tree."""
         if self.root_span is None:
+            print("The SpanTree is empty.")
             return
+        print(f"SpanTree for trace id = {self.root_span.trace_id}:")
         self.root_span.show()
 
     def to_json_str(self) -> str:
@@ -249,3 +252,8 @@ class SpanTree:
             return
         for span in self.root_span.__iter__():
             yield span
+
+    def __repr__(self) -> str:
+        """Get representation of the SpanTree."""
+        return f"SpanTree(trace id = {self.root_span.trace_id if self.root_span is not None else None}," + \
+            f" spans_map = {self._span_node_map})"
