@@ -140,46 +140,22 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                 }
             }
         }
-        """
-        if self._model.is_finetuned:
+
+        if self._model.is_finetuned and not self._model.finetuned_from_proxy_step:
             payload['properties']['model']['source'] = self._model.source
         else:
             payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
             payload['properties']["raiPolicyName"] = "Microsoft.Default"
-        """
         
         logger.info(f"sending payload: {payload}, is finetuned by proxy step : {self._model.finetuned_from_proxy_step}")
-        if self._model.finetuned_from_proxy_step:
-            resp = self.deploy_for_proxy_finetuned_step(payload)
-        else:
-            resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
+        
+        resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
         self._raise_if_not_success(resp)
-        logger.info("Calling(PUT) {} returned {} with content {}.".format(
-            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
+        logger.info("Calling(PUT) {} returned {} with content {}. original request {}".format(
+            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp), resp.request))
         while self.deployment_state() == ResourceState.NOT_READY:
             logger.info("Deployment is not ready yet, waiting for 30 seconds...")
             time.sleep(30)
-    
-    def deploy_for_proxy_finetuned_step(self, payload) -> Response:
-        should_retry = True
-        logger.info(f"endpoint_url : {self._online_endpoint_url} endpoint name: {self._endpoint_name}")
-        while should_retry:
-            identity = ManagedIdentityCredential(client_id=os.environ.get("DEFAULT_IDENTITY_CLIENT_ID", None))
-            token = identity.get_token("https://management.azure.com/.default").token
-            deploy_headers = {'Authorization': 'Bearer {}'.format(token), 'Content-Type': 'application/json'} if self._credential else {}
-            deploy_params = {'api-version': "2023-05-01"} 
-            deploy_payload = json.dumps(payload)
-            print(f"deploy payload: {deploy_payload}")
-            request_url = f'https://management.azure.com/subscriptions/{self._subscription_id}/resourceGroups/{self._resource_group}/providers/Microsoft.CognitiveServices/accounts/{self._endpoint_name}/deployments/{self._deployment_name}'
-            logger.info(f"sending payload to request url: {request_url}")
-            resp = requests.put(request_url, params=deploy_params, headers=deploy_headers, data=deploy_payload)
-            logger.info(f"got response : {resp.status_code}, content: {resp.content}")
-            logger.info(f"actual request : {resp.request}")
-            if resp.status_code not in {409, 429}:
-                should_retry = False
-            else:
-                time.sleep(30)
-        return resp
 
     def get_endpoint_authorization_header(self) -> dict:
         """Get the authorization header."""
