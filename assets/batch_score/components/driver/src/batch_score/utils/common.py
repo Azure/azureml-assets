@@ -10,19 +10,10 @@ from urllib.parse import urlparse
 
 import numpy
 import pandas as pd
-from azureml.core import Run
 
 from ..common.scoring.scoring_result import ScoringResult
 from . import embeddings_utils as embeddings
 from .json_encoder_extensions import BatchComponentJSONEncoder, NumpyArrayEncoder
-
-
-def is_running_in_azureml_job() -> bool:
-    """Check if the batch score client is being run inside an AzureML job."""
-    run = Run.get_context()
-    # When running locally, the run ID will start with "OfflineRun".
-    # e.g. "OfflineRun_f48930fe-5d7c-4e95-8b3f-fcaab354b9a9"
-    return not run.id.startswith("OfflineRun")
 
 
 def get_base_url(url: str) -> str:

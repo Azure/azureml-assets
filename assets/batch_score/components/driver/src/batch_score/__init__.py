@@ -8,7 +8,7 @@
 import subprocess
 import sys
 
-from .utils.common import is_running_in_azureml_job
+from .utils.local_utils import is_running_in_azureml_job
 
 # TODO: remove this hack after dedicated environment is published.
 if is_running_in_azureml_job():

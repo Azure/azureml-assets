@@ -12,7 +12,7 @@ import uuid
 from .events.batch_score_event import BatchScoreEvent
 from .required_fields import RequiredFields
 from .standard_fields import AzureMLTelemetryComputeType, AzureMLTelemetryOS, StandardFields
-from ...utils.common import is_running_in_azureml_job
+from ...utils.local_utils import is_running_in_azureml_job
 
 COMPONENT_NAME = "BatchScoreLlm"
 

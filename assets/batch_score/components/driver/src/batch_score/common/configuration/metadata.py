@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .. import constants
-from ...utils.common import is_running_in_azureml_job
+from ...utils.local_utils import is_running_in_azureml_job
 
 
 @dataclass()
