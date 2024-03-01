@@ -41,18 +41,18 @@ Glue test results:
 
 While the training data for this model is generally neutral, it can still produce biased predictions. Additionally, it inherits some of the biases from its teacher model.
 
+# Evaluation samples
+
+Evaluation type|Python sample
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)](https://github.com/Azure/azureml-examples/blob/main/sdk/python/foundation-models/system/evaluation/fill-mask/fill-mask.ipynb)
+
 # Inference samples
 
-Inference type|Python sample (Notebook)
+Inference type|Python sample
 |--|--|
 Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
 Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endpoint-oss)
-
-# Evaluation samples
-
-Evaluation type|Python sample (Notebook)
-|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)](https://github.com/Azure/azureml-examples/blob/main/sdk/python/foundation-models/system/evaluation/fill-mask/fill-mask.ipynb)
 
 # Sample inputs and outputs
 
