@@ -45,10 +45,10 @@ tags:
       Standard_ND96amsr_A100_v4,
     ]    
   model_specific_defaults:
-    apply_lora: 'true'
-    precision: '16'
+    apply_lora: "true"
+    precision: "4"
     apply_deepspeed: 'true'
     ignore_mismatched_sizes: 'false'
   inference_supported_envs:
     - vllm
-version: 8
+version: 7
