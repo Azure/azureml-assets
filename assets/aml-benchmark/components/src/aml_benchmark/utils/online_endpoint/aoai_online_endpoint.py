@@ -141,11 +141,12 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             }
         }
 
-        if self._model.is_finetuned and not self._model.finetuned_from_proxy_step:
-            payload['properties']['model']['source'] = self._model.source
-        else:
-            payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
-            payload['properties']["raiPolicyName"] = "Microsoft.Default"
+        if not self._model.finetuned_from_proxy_step:
+            if self._model.is_finetuned:
+                payload['properties']['model']['source'] = self._model.source
+            else:
+                payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
+                payload['properties']["raiPolicyName"] = "Microsoft.Default"
         
         logger.info(f"sending payload: {payload}, is finetuned by proxy step : {self._model.finetuned_from_proxy_step}")
         
