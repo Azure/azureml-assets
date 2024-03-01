@@ -94,9 +94,8 @@ def parse_args() -> argparse.Namespace:
         help="Flag on if this is a finetuned model.",
     )
     parser.add_argument(
-        "--finetuned_from_proxy_step",
-        default=False, type=str2bool,
-        help="Flag on if this is finetuned from proxy finetune component",
+        "--finetuned_model_metadata", default=None, type=str,
+        help="Directory contains finetuned_model_metadata.",
     )
     parser.add_argument("--deployment_retries", default=5, type=int, help="Number of retries for deployment.")
     parser.add_argument(
@@ -360,7 +359,7 @@ def main(
     deployment_retry_interval_seconds: int,
     wait_finetuned_step: bool,
     finetuned_step_name: str,
-    finetuned_from_proxy_step: bool = False
+    finetuned_model_metadata: str
 ) -> None:
     """
     Entry function of the script.
@@ -408,8 +407,9 @@ def main(
                 if finetuned_subscription_id else workspace.subscription_id
         
         # if model is finetuned from proxy step then override model name from deployment_metadata
+        finetuned_from_proxy_step = finetuned_model_metadata is not None
         if finetuned_from_proxy_step:
-            with open(deployment_metadata) as f:
+            with open(finetuned_model_metadata) as f:
                 data_upload_output = json.load(f)
                 model = data_upload_output["finetuned_model_id"]
                 
@@ -507,5 +507,5 @@ if __name__ == "__main__":
         args.deployment_retry_interval_seconds,
         args.wait_finetuned_step,
         args.finetuned_step_name,
-        args.finetuned_from_proxy_step
+        args.finetuned_model_metadata
     )
