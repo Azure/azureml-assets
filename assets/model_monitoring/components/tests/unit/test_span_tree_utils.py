@@ -169,7 +169,7 @@ class TestSpanTreeUtilities:
         #  |  |    | -> 3
         #  |  | -> 4
         #  |-> 5
-        
+
         spans_4 = [s1, s2, s3, s4, s5]
         tree_4 = SpanTree(spans_4)
         print("tree 4:")
@@ -181,7 +181,6 @@ class TestSpanTreeUtilities:
         # assert tree_4.root_span == s1
         # assert tree_4.root_span.children[0] == s2
         # assert tree_4.root_span.children[1] == s4
-
 
     def test_span_tree_from_json_string(self):
         """Test scenario to construct span tree from json string."""
