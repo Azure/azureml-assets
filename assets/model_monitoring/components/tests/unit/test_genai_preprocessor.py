@@ -405,6 +405,42 @@ class TestGenAISparkPreprocessor:
         no_root_traces = process_spans_into_aggregated_traces(spans_no_root_df, True)
         assert no_root_traces.isEmpty()
 
+    @pytest.mark.parametrize(
+        "span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data",
+        [
+            ([], _preprocessed_log_schema, [], _trace_log_schema, True),
+            (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema, True),
+            (
+                _span_log_data_extra, _preprocessed_log_schema_extra,
+                _trace_log_data_extra, _trace_log_schema, True),
+            (_span_log_data, _preprocessed_log_schema, [], _trace_log_schema, False),
+        ]
+    )
+    def test_trace_aggregator(
+            self, genai_zip_test_setup, genai_preprocessor_test_setup,
+            span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data):
+        """Test scenario where spans has real data."""
+        spark = self._init_spark()
+         # infer schema only when we have data.
+        processed_spans_df = spark.createDataFrame(span_input_logs, span_input_schema)
+        expected_traces_df = spark.createDataFrame(expected_trace_logs, expected_trace_schema)
+
+        print("processed logs:")
+        processed_spans_df.show()
+        processed_spans_df.printSchema()
+
+        print("expected trace logs:")
+        expected_traces_df.show()
+        expected_traces_df.printSchema()
+
+        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df, require_trace_data)
+
+        print("actual trace logs:")
+        actual_trace_df.show()
+        actual_trace_df.printSchema()
+
+        assert_spark_dataframe_equal(actual_trace_df, expected_traces_df)
+
 
 def assert_spark_dataframe_equal(df1, df2):
     """Assert two spark dataframes are equal."""
