@@ -14,5 +14,5 @@ MarkupSafe==2.1.2
 regex
 pybind11
 urllib3>=1.26.18
-cryptography>=42.0.2
+cryptography>=42.0.4
 aiohttp>=3.8.5
