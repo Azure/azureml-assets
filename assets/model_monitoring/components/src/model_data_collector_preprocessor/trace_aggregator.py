@@ -279,6 +279,16 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_dat
 
     print("Processing spans into aggregated traces...")
 
+    def _aggregate_span_logs_to_trace_logs(grouped_row: Row, output_schema: StructType):
+        """Aggregate grouped span logs into trace logs."""
+        span_list = [SpanTreeNode(row) for row in grouped_row]
+        tree = SpanTree(span_list)
+        if tree.root_span is None:
+            return tuple()
+        span_dict = tree.root_span.to_dict(datetime_to_str=False)
+        span_dict['root_span'] = tree.to_json_str()
+        return tuple(span_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
+
     grouped_spans_df = span_logs.groupBy('trace_id').agg(
         collect_list(
             struct(span_logs.schema.fieldNames())
