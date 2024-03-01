@@ -6,7 +6,7 @@
 from urllib.parse import urlparse
 import os
 import re
-from typing import Union
+from typing import Union, Tuple
 from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
@@ -149,9 +149,11 @@ class StoreUrl:
         """Check if the store url is a local path."""
         if not self._base_url:
             return False
-        return os.path.isdir(self._base_url) or os.path.isfile(self._base_url) or self._base_url.startswith("file://")\
-            or self._base_url.startswith("/") or self._base_url.startswith(".") \
-            or re.match(r"^[a-zA-Z]:[/\\]", self._base_url)
+        if os.path.isdir(self._base_url) or os.path.isfile(self._base_url) \
+                or re.match(r"^[a-zA-Z]:[/\\]", self._base_url):
+            return True
+        url = urlparse(self._base_url)
+        return url.scheme is None or url.scheme == "file" or url.scheme == ""
 
     def read_file_content(self, relative_path: str = None,
                           credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None) -> str:
@@ -243,7 +245,7 @@ class StoreUrl:
             self.path = url.path.strip("/")
             self._datastore = None  # indicator of no credential
 
-    def _get_datastore_and_path_from_azureml_path(self) -> (str, str):
+    def _get_datastore_and_path_from_azureml_path(self) -> Tuple[str, str]:
         """Get datastore name and path from azureml path."""
         pattern = r"azureml://(subscriptions/([^/]+)/resource[gG]roups/([^/]+)/workspaces/([^/]+)/)?datastores/(?P<datastore_name>[^/]+)/paths/(?P<path>.+)"  # noqa: E501
         matches = re.match(pattern, self._base_url)
