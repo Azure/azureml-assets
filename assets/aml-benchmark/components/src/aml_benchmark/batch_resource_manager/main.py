@@ -407,11 +407,12 @@ def main(
             finetuned_subscription_id = finetuned_subscription_id \
                 if finetuned_subscription_id else workspace.subscription_id
         
-        #overriding model name from one we got from deployment_metadata
-        f = open(deployment_metadata)
-        data_upload_output = json.load(f)
-        model = data_upload_output["finetuned_model_id"]
-
+        # if model is finetuned from proxy step then override model name from deployment_metadata
+        if finetuned_from_proxy_step:
+            with open(deployment_metadata) as f:
+                data_upload_output = json.load(f)
+                model = data_upload_output["finetuned_model_id"]
+                
         online_model = OnlineEndpointModel(
             model, model_version, model_type, endpoint_name, is_finetuned_model,
             finetuned_subscription_id, finetuned_resource_group, finetuned_workspace,
