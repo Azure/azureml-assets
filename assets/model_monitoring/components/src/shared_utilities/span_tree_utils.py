@@ -9,7 +9,6 @@ import json
 
 from typing import Dict, Iterator, List, Optional
 from pyspark.sql import Row
-from pyspark.sql.types import PySparkValueError
 
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -19,19 +18,13 @@ class SpanTreeNode:
 
     def __init__(self, span_row: Row) -> None:
         """Represent a singular node in a span tree."""
-        self._span_row = span_row
+        self._span_row: Row = span_row
+        self._span_row_dict = {} if span_row is None else span_row.asDict()
         self._children = []
 
     def _try_get_row_attribute(self, attribute_key: str):
         """Wrap span row retrieval to catch access errors."""
-        try:
-            return self._span_row[attribute_key]
-        except PySparkValueError as ex:
-            print(
-                "Failed to retrieve row attribute with error: " +
-                str(ex)
-            )
-            return None
+        return self._span_row_dict.get(attribute_key, None)
 
     @property
     def span_id(self) -> str:
@@ -141,7 +134,7 @@ class SpanTreeNode:
     def to_dict(self, datetime_to_str: bool = True) -> dict:
         """Get dictionary representation of SpanTreeNode."""
         # map datetime object to iso-string and then turn children into list of dicts as well.
-        span_row_dict = self._span_row.asDict()
+        span_row_dict = self._span_row_dict
         span_row_dict['children'] = self.children
         if datetime_to_str:
             start_time: datetime = span_row_dict['start_time']  # type: ignore
