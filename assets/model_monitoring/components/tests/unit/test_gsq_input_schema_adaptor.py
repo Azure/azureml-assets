@@ -72,6 +72,8 @@ class TestInputSchemaAdaptor:
                 # Test no data, should be pass-through
                 ([], _simple_input_schema, [], _simple_input_schema),
                 ([("", "")], _simple_input_schema, [("", "")], _simple_input_schema),
+                # genai empty data
+                ([], _genai_input_schema, [], _expected_gsq_input_schema_empty),
                 # genai, empty input/output columns
                 (
                     [("01", "null", "null", "null")], _genai_input_schema,

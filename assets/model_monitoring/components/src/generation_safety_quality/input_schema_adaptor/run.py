@@ -24,11 +24,26 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
 
     # check if we need to adapt the schema
     if GENAI_ROOT_SPAN_SCHEMA_COLUMN not in df_field_names and GENAI_TRACE_ID_SCHEMA_COLUMN not in df_field_names:
+        print(
+            f"Did not find '{GENAI_ROOT_SPAN_SCHEMA_COLUMN}' and '{GENAI_TRACE_ID_SCHEMA_COLUMN}' columns in dataset. "
+            "skip adapting dataframe logic."
+        )
         return df
 
+    print("Adapting the GenAI production data to gsq input schema...")
     spark = init_spark()
     try:
         sampled_df_slice = df.sample(0.2)
+        if sampled_df_slice.isEmpty():
+            print(
+                "Not enough data resulting from production data and sample rate. "
+                "Using first 5 rows of production data instead."
+            )
+            sampled_df_slice = df.limit(5)
+        print("Sampled data used to get 'input'/'output' json schema:")
+        sampled_df_slice.show()
+        sampled_df_slice.printSchema()
+
         input_schema = spark.read.json(sampled_df_slice.rdd.map(lambda row: row.input), mode="FAILFAST").schema
         output_schema = spark.read.json(sampled_df_slice.rdd.map(lambda row: row.output), mode="FAILFAST").schema
     except Exception as ex:
@@ -44,7 +59,13 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
     df = df.withColumns({
         'temp_input': from_json(df.input, input_schema),
         'temp_output': from_json(df.output, output_schema),
-    }).select('trace_id', 'temp_input.*', 'temp_output.*', 'root_span')
+    })
+
+    print("Data with expanded from_json():")
+    df.show()
+    df.printSchema()
+
+    df = df.select('trace_id', 'temp_input.*', 'temp_output.*', 'root_span')
 
     if has_duplicated_columns(df):
         raise InvalidInputError(
@@ -74,6 +95,7 @@ def run():
 
     print("df adapted from production data:")
     adapted_df.show()
+    adapted_df.printSchema()
 
     save_spark_df_as_mltable(adapted_df, args.adapted_production_data)
 
