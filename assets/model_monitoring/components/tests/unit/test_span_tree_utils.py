@@ -4,7 +4,7 @@
 
 
 from pyspark.sql import Row
-from src.model_data_collector_preprocessor.span_tree_utils import (
+from src.shared_utilities.span_tree_utils import (
     SpanTree,
     SpanTreeNode,
 )
