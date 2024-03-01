@@ -85,7 +85,7 @@ class TestInputSchemaAdaptor:
                       "{\"output\":\"answer\"}", "null")], _genai_input_schema,
                     [("01", "context", "ground-truth", "question", "answer", "null")], _expected_gsq_input_schema
                 ),
-                Test with genai columns. Mismatched json schema on rows
+                # Test with genai columns. Mismatched json schema on rows
                 (
                     [
                         ("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
