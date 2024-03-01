@@ -34,7 +34,7 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
     spark = init_spark()
     try:
         sampled_df_slice = df.sample(0.2)
-        if sampled_df_slice.isEmpty():
+        if sampled_df_slice.count() == 0:
             print(
                 "Not enough data resulting from production data and sample rate. "
                 "Using first 5 rows of production data instead."
