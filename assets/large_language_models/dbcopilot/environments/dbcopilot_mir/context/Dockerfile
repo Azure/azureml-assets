@@ -25,11 +25,12 @@ COPY ./requirements.txt ./
 RUN pip install -r requirements.txt
 
 COPY ./extra_requirements.txt ./
-RUN pip install promptflow-image-bundle[azure]==0.2.0 && \
-    pip install -r extra_requirements.txt
+RUN pip install -r extra_requirements.txt && \
+    pip install promptflow-image-bundle[azure]==0.2.0
+
 
 ## Install dbcopilot
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.15-py3-none-any.whl
+RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.16-py3-none-any.whl
 
 RUN pip install cryptography==42.0.0 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1
 

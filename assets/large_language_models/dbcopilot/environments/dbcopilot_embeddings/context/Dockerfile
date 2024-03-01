@@ -45,7 +45,7 @@ RUN pip install opentelemetry-instrumentation-django==0.42b0 promptflow-image-bu
     pip install -r requirements.txt
 
 ## Install dbcopilot
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.15-py3-none-any.whl
+RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.16-py3-none-any.whl
 
 RUN pip install cryptography==42.0.0 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1
 
