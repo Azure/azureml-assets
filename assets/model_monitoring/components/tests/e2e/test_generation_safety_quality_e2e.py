@@ -9,12 +9,13 @@ from azure.ai.ml.dsl import pipeline
 from azure.ai.ml.exceptions import JobException
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR,
-    DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA
+    DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA,
+    DATA_ASSET_TRACE_LOGS_DATA_WITH_CONTEXT,
 )
 
 
 def _submit_generation_safety_quality_model_monitor_job(
-    ml_client, get_component, experiment_name, production_data
+    ml_client, get_component, experiment_name, production_data, data_columns_dict: dict = {}
 ):
     generation_safety_quality_signal_monitor = get_component(
         COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR
@@ -31,6 +32,10 @@ def _submit_generation_safety_quality_model_monitor_job(
         "AcceptableRelevanceScorePerInstance"
     ]
     metric_names = ",".join(metrics)
+    prompt_column_name = data_columns_dict.get('prompt_column_name', None)
+    completion_column_name = data_columns_dict.get('completion_column_name', None)
+    ground_truth_column_name = data_columns_dict.get('ground_truth_column_name', None)
+    context_column_name = data_columns_dict.get('context_column_name', None)
 
     @pipeline()
     def _generation_safety_quality_signal_monitor_e2e():
@@ -43,8 +48,10 @@ def _submit_generation_safety_quality_model_monitor_job(
             sample_rate=1,
             monitor_current_time="2023-02-02T00:00:00Z",
             workspace_connection_arm_id="test_connection",
-            prompt_column_name="question",
-            completion_column_name="answer"
+            prompt_column_name=prompt_column_name,
+            completion_column_name=completion_column_name,
+            ground_truth_column_name=ground_truth_column_name,
+            context_column_name=context_column_name,
         )
         return {
             "signal_output": generation_safety_quality_signal_monitor_output.outputs.signal_output
@@ -75,12 +82,34 @@ class TestGenerationSafetyQualityModelMonitor:
     def test_generation_safety_quality_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
-        """Test GSQ is successful with expected data."""
+        """Test GSQ is successful with traditional expected data."""
         pipeline_job = _submit_generation_safety_quality_model_monitor_job(
             ml_client,
             get_component,
             test_suite_name,
-            DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA
+            DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA,
+            {
+                "prompt_column_name": "question",
+                "completion_column_name": "answer",
+            }
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    def test_generation_safety_quality_genai_successful(
+        self, ml_client: MLClient, get_component, test_suite_name
+    ):
+        """Test GSQ is successful with genai trace logs."""
+        pipeline_job = _submit_generation_safety_quality_model_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_TRACE_LOGS_DATA_WITH_CONTEXT,
+            {
+                "prompt_column_name": "question",
+                "completion_column_name": "output",
+                "context_column_name": "context",
+            }
         )
 
         assert pipeline_job.status == "Completed"

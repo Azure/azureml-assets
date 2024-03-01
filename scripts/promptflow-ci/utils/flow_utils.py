@@ -5,6 +5,7 @@
 
 import os
 import re
+import shutil
 from pathlib import Path
 import yaml
 import concurrent.futures
@@ -16,6 +17,7 @@ from utils.utils import run_command
 
 CONFIG_ROOT = 'scripts/promptflow-ci/test-configs'
 CONFIG_FILE = 'test_config.json'
+TEST_DATA_FILE = 'test_data.json'
 
 
 def _assign_flow_values(flow_dirs):
@@ -49,10 +51,14 @@ def _assign_flow_values(flow_dirs):
 
             with open(flow_dir / "flow.dag.yaml", "w", encoding="utf-8") as dag_file:
                 yaml.dump(flow_dag, dag_file, allow_unicode=True)
-        if not os.path.exists(Path(flow_dir)/"samples.json"):
-            with open(flow_dir/"samples.json", 'w', encoding="utf-8") as sample_file:
-                samples = []
-                sample = {}
+        test_data_file = Path(os.path.join(config_dir, TEST_DATA_FILE))
+        if config_dir.exists() and test_data_file.exists():
+            log_debug("Using the test_data.json file from the test-configs to run the flow.")
+            shutil.copy(os.path.join(config_dir, TEST_DATA_FILE), flow_dir)
+        else:
+            with open(flow_dir/"test_data.json", 'w', encoding="utf-8") as data_file:
+                datas = []
+                data = {}
                 for key, val in flow_dag["inputs"].items():
                     value = val.get("default")
                     if isinstance(value, list):
@@ -61,9 +67,9 @@ def _assign_flow_values(flow_dirs):
                     elif isinstance(value, str):
                         if value == "":
                             value = "default"
-                    sample[key] = value
-                samples.append(sample)
-                json.dump(sample, sample_file, indent=4)
+                    data[key] = value
+                datas.append(data)
+                json.dump(datas, data_file, indent=4)
     log_debug("=======Complete overriding values for flows=======\n")
     return flow_dirs
 
@@ -74,7 +80,7 @@ def _create_run_yamls(flow_dirs):
     run_yaml = {
         "$schema": "https://azuremlschemas.azureedge.net/promptflow/latest/Run.schema.json",
         "flow": '.',
-        "data": 'samples.json'
+        "data": 'test_data.json'
     }
     for flow_dir in flow_dirs:
         with open(flow_dir / "run.yml", "w", encoding="utf-8") as dag_file:
