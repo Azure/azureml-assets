@@ -63,6 +63,126 @@ class TestSpanTreeUtilities:
         for actual_span, expected_span_id in zip(json_tree, expected_span_id_order):
             assert expected_span_id == actual_span.span_id
 
+    def test_span_tree_construct_no_root_span(self):
+        """Test various scenarios where we span log data with no root_span for various reason."""
+        s0 = SpanTreeNode(
+            Row(trace_id="01", span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 9, 0, 0),
+                end_time=datetime(2024, 2, 12, 10, 5, 0)))
+        s1 = SpanTreeNode(
+            Row(trace_id="01", span_id="1", parent_id="0", start_time=datetime(2024, 2, 12, 9, 5, 0),
+                end_time=datetime(2024, 2, 12, 9, 40, 0))
+        )
+        s2 = SpanTreeNode(
+            Row(trace_id="01", span_id="2", parent_id="1", start_time=datetime(2024, 2, 12, 9, 15, 0),
+                end_time=datetime(2024, 2, 12, 9, 20, 0))
+        )
+        s3 = SpanTreeNode(
+            Row(trace_id="01", span_id="3", parent_id="1", start_time=datetime(2024, 2, 12, 9, 25, 0),
+                end_time=datetime(2024, 2, 12, 9, 30, 0))
+        )
+        s4 = SpanTreeNode(
+            Row(trace_id="01", span_id="4", parent_id="0", start_time=datetime(2024, 2, 12, 9, 45, 0),
+                end_time=datetime(2024, 2, 12, 9, 50, 0))
+        )
+        s5 = SpanTreeNode(
+            Row(trace_id="01", span_id="5", parent_id="00", start_time=datetime(2024, 2, 12, 10, 10, 0),
+                end_time=datetime(2024, 2, 12, 10, 15, 0))
+        )
+        empty_spans = []
+        empty_tree = SpanTree(empty_spans)
+        empty_tree.show()
+
+        assert empty_tree.root_span is None
+
+        # scenario where single span is given and parent_id is None.
+        # root span should be 0.
+        spans_0 = [s0]
+        tree_0 = SpanTree(spans_0)
+
+        print("tree 0:")
+        tree_0.show()
+        print()
+
+        assert tree_0.root_span is not None
+        assert tree_0.root_span == s0
+        assert tree_0.root_span.children == []
+
+        # scneario 1 where single span is give but parent_id is pointing to an unknown node.
+        #    X
+        # -- | -----
+        #    | -> 1
+
+        # root span should be 1.
+        spans_1 = [s1]
+        tree_1 = SpanTree(spans_1)
+
+        print("tree 1:")
+        tree_1.show()
+        print()
+
+        assert tree_1.root_span is not None
+        assert tree_1.root_span == s1
+        assert tree_1.root_span.children == []
+
+        # scenario 2 where root span "0" is outside our data_window. Visually denoted by the dashes
+        #    0
+        # -- | -----
+        #    | -> 1 -> 2
+        #         | -> 3
+
+        # root span should be 1.
+        spans_2 = [s1, s2, s3]
+        tree_2 = SpanTree(spans_2)
+        print("tree 2:")
+        tree_2.show()
+        print()
+
+        assert tree_2.root_span is not None
+        assert tree_2.root_span == s1
+        assert tree_2.root_span.children[0] == s2
+        assert tree_2.root_span.children[1] == s3
+
+        # scenario 3 where root span "0" is outside our data_window but have multiple spans pointing to it.
+        #    0
+        # -- | -----
+        #    | -> 1 -> 2
+        #    |    | -> 3
+        #    | -> 4
+
+        # root span is undetermined.
+        spans_3 = [s1, s2, s3, s4]
+        tree_3 = SpanTree(spans_3)
+        print("tree 3:")
+        tree_3.show()
+        print()
+
+        # uncomment when we know what to look for in this case.
+        # assert tree_3.root_span is not None
+        # assert tree_3.root_span == s1
+        # assert tree_3.root_span.children[0] == s2
+        # assert tree_3.root_span.children[1] == s4
+
+        # scenario 4 where spans in our data point to multiple outside parent spans.
+        # 00  0
+        # -|--| -----
+        #  |  | -> 1 -> 2
+        #  |  |    | -> 3
+        #  |  | -> 4
+        #  |-> 5
+        
+        spans_4 = [s1, s2, s3, s4, s5]
+        tree_4 = SpanTree(spans_4)
+        print("tree 4:")
+        tree_4.show()
+        print()
+
+        # uncomment when we know what to look for in this case.
+        # assert tree_4.root_span is not None
+        # assert tree_4.root_span == s1
+        # assert tree_4.root_span.children[0] == s2
+        # assert tree_4.root_span.children[1] == s4
+
+
     def test_span_tree_from_json_string(self):
         """Test scenario to construct span tree from json string."""
         json_string = ""

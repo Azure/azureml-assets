@@ -215,18 +215,32 @@ class SpanTree:
 
     def _construct_span_tree(self, spans: List[SpanTreeNode]) -> Optional[SpanTreeNode]:
         """Build the span tree in ascending time order from list of all spans."""
+        possible_root_spans = []
         # construct a dict with span_id as key and span as value
-        root_span = None
         self._span_node_map = {span.span_id: span for span in spans}
         for span in self._span_node_map.values():
             parent_id = span.parent_id
             if parent_id is None:
-                root_span = span
+                possible_root_spans.append(span)
             else:
                 parent_span = self.get_span_tree_node_by_span_id(parent_id)
-                if parent_span is not None:
+                if parent_span is None:
+                    # found a span where we don't have its parent span. consider this a root span
+                    possible_root_spans.append(span)
+                else:
                     parent_span.insert_child(span)
         # todo: handle logic if root_span is not found or if we have multiple root_spans
+        if possible_root_spans == []:
+            print(
+                "Failed to find a single possible root_span."
+                "This should never happen unless you purposefully pass in 0 span logs."
+                " Otherwise, please inspect the span logs to find why we have no spans"
+                " while building the desired trace.")
+            root_span = None
+        elif len(possible_root_spans) == 1:
+            root_span = possible_root_spans[0]
+        else:
+            root_span = None
         return root_span
 
     def __iter__(self) -> Iterator[SpanTreeNode]:
