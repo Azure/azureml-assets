@@ -3,10 +3,8 @@
 """Internal logic for Trace Aggregator step of Gen AI preprocessor component."""
 
 
-from pyspark.sql import DataFrame, Row
-from pyspark.sql.types import StructType
+from pyspark.sql import DataFrame
 from pyspark.sql.functions import collect_list, struct
-from typing import List
 from shared_utilities.span_tree_utils import SpanTree, SpanTreeNode
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_aggregated_trace_log_spark_df_schema,
@@ -14,24 +12,21 @@ from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
 from shared_utilities.io_utils import init_spark
 
 
-def _construct_aggregated_trace_entry(span_tree: SpanTree, output_schema: StructType) -> tuple:
-    """Build an aggregated trace tuple for RDD from a span tree."""
-    span_dict = span_tree.root_span.to_dict(datetime_to_str=False)
-    span_dict['root_span'] = span_tree.to_json_str()
-    return tuple(span_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
-
-
-def _construct_span_tree(span_rows: List[Row]) -> SpanTree:
-    """Build a span tree from the raw span rows."""
-    span_list = [SpanTreeNode(row) for row in span_rows]
-    tree = SpanTree(span_list)
-    return tree
-
-
-def _aggregate_span_logs_to_trace_logs(grouped_row: Row, output_schema: StructType):
+def _aggregate_span_logs_to_trace_logs(grouped_row):
     """Aggregate grouped span logs into trace logs."""
-    tree = _construct_span_tree(grouped_row.span_rows)
-    return _construct_aggregated_trace_entry(tree, output_schema)
+    output_schema = _get_aggregated_trace_log_spark_df_schema()
+    # need to allow null values just in case of empty rdd entry from faulty tree span construction.
+    for field in output_schema.fields:
+        field.nullable = True
+
+    span_list = [SpanTreeNode(row) for row in grouped_row.span_rows]
+    tree = SpanTree(span_list)
+    if tree.root_span is None:
+        output_dict = {}
+    else:
+        output_dict = tree.root_span.to_dict(datetime_to_str=False)
+        output_dict['root_span'] = tree.to_json_str()
+    return tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
 
 
 def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_data: bool) -> DataFrame:
@@ -45,26 +40,23 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_dat
 
     print("Processing spans into aggregated traces...")
 
-    def _aggregate_span_logs_to_trace_logs(grouped_row: Row, output_schema: StructType):
-        """Aggregate grouped span logs into trace logs."""
-        span_list = [SpanTreeNode(row) for row in grouped_row]
-        tree = SpanTree(span_list)
-        if tree.root_span is None:
-            return tuple()
-        span_dict = tree.root_span.to_dict(datetime_to_str=False)
-        span_dict['root_span'] = tree.to_json_str()
-        return tuple(span_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
-
     grouped_spans_df = span_logs.groupBy('trace_id').agg(
         collect_list(
             struct(span_logs.schema.fieldNames())
         ).alias('span_rows')
     )
 
+    # need to allow null values just in case of empty rdd entry from faulty SpanTree construction.
+    for field in output_trace_schema.fields:
+        field.nullable = True
+
     all_aggregated_traces = grouped_spans_df \
         .rdd \
-        .map(lambda x: _aggregate_span_logs_to_trace_logs(x, output_trace_schema)) \
+        .map(_aggregate_span_logs_to_trace_logs) \
         .toDF(output_trace_schema)
+
+    # remove any null root_span rows
+    all_aggregated_traces = all_aggregated_traces.dropna(how="all")
 
     print("Aggregated Trace DF:")
     all_aggregated_traces.show()

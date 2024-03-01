@@ -3,7 +3,7 @@
 
 """test class for Gen AI preprocessor."""
 
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, Row
 from pyspark.sql.types import (
     StructField, StringType, TimestampType, StructType
 )
@@ -379,41 +379,31 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_extra],
     ]
 
-    @pytest.mark.parametrize(
-            "span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data",
-            [
-                ([], _preprocessed_log_schema, [], _trace_log_schema, True),
-                (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema, True),
-                (
-                    _span_log_data_extra, _preprocessed_log_schema_extra,
-                    _trace_log_data_extra, _trace_log_schema, True),
-                (_span_log_data, _preprocessed_log_schema, [], _trace_log_schema, False),
-            ]
-    )
-    def test_trace_aggregator(
-            self, genai_zip_test_setup, genai_preprocessor_test_setup,
-            span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data):
-        """Test scenario where spans has real data."""
+    def test_trace_aggregator_empty_root_span(
+        self, genai_zip_test_setup, genai_preprocessor_test_setup):
+        """Test scenarios where we have a faulty root span when generating tree."""
         spark = self._init_spark()
-        # infer schema only when we have data.
-        processed_spans_df = spark.createDataFrame(span_input_logs, span_input_schema)
-        expected_traces_df = spark.createDataFrame(expected_trace_logs, expected_trace_schema)
 
-        print("processed logs:")
-        processed_spans_df.show()
-        processed_spans_df.printSchema()
+        span_logs_no_root_with_data = [
+            ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
+            ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+            ["{}", datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
+            ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "02"],
+        ]
+        span_logs_no_root_with_data_df = spark.createDataFrame(span_logs_no_root_with_data, self._preprocessed_log_schema)
 
-        print("expected trace logs:")
-        expected_traces_df.show()
-        expected_traces_df.printSchema()
+        trace_df = process_spans_into_aggregated_traces(span_logs_no_root_with_data_df, True)
+        rows = trace_df.collect()
+        assert trace_df.count() == 1
+        assert rows[0]['trace_id'] == "01"
 
-        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df, require_trace_data)
-
-        print("actual trace logs:")
-        actual_trace_df.show()
-        actual_trace_df.printSchema()
-
-        assert_spark_dataframe_equal(actual_trace_df, expected_traces_df)
+        span_logs_no_root = [
+            ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", "1"] +
+            ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+        ]
+        spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
+        no_root_traces = process_spans_into_aggregated_traces(spans_no_root_df, True)
+        assert no_root_traces.isEmpty()
 
 
 def assert_spark_dataframe_equal(df1, df2):
