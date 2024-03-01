@@ -452,7 +452,7 @@ def main(
     elif delete_managed_deployment:
         if not deployment_metadata:
             logger.info("Delete deployment using input parameters.")
-            online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name)
+            online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name, finetuned_from_proxy_step=finetuned_from_proxy_step)
             online_endpoint = OnlineEndpointFactory.get_online_endpoint(
                 endpoint_workspace,
                 endpoint_resource_group,
