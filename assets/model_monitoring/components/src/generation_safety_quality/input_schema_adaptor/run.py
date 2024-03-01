@@ -59,13 +59,7 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
     df = df.withColumns({
         'temp_input': from_json(df.input, input_schema),
         'temp_output': from_json(df.output, output_schema),
-    })
-
-    print("Data with expanded from_json():")
-    df.show()
-    df.printSchema()
-
-    df = df.select('trace_id', 'temp_input.*', 'temp_output.*', 'root_span')
+    }).select('trace_id', 'temp_input.*', 'temp_output.*', 'root_span')
 
     if has_duplicated_columns(df):
         raise InvalidInputError(
