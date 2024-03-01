@@ -25,7 +25,7 @@ def compute_numerical_bins(
 ) -> tuple:
     """Compute numerical bins given two data frames."""
     # Generate histograms only for columns in both baseline and target dataset
-    common_columns_dict = try_get_common_columns_with_error(df1, df2)
+    common_columns_dict = try_get_common_columns_with_error(df2, df1)
     numerical_columns = get_numerical_cols_with_df_with_override(df1,
                                                                  override_numerical_features,
                                                                  override_categorical_features,

@@ -40,6 +40,8 @@ def run():
         return
     elif df1 is None:
         df1 = df2
+    elif df2 is None:
+        df2 = df1
 
     histogram_buckets = compute_histogram_buckets(df1,
                                                   df2,
