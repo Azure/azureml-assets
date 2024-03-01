@@ -30,14 +30,19 @@ THRESHOLD_PARAMS = [
 ALL_METRIC_NAMES = [
     "AcceptableGroundednessScorePerInstance",
     "AggregatedGroundednessPassRate",
+    "AverageGroundednessScore",
     "AcceptableCoherenceScorePerInstance",
     "AggregatedCoherencePassRate",
+    "AverageCoherenceScore",
     "AcceptableFluencyScorePerInstance",
     "AggregatedFluencyPassRate",
+    "AverageFluencyScore",
     "AcceptableSimilarityScorePerInstance",
     "AggregatedSimilarityPassRate",
+    "AverageSimilarityScore",
     "AcceptableRelevanceScorePerInstance",
     "AggregatedRelevancePassRate",
+    "AverageRelevanceScore",
 ]
 
 
@@ -71,8 +76,26 @@ def _calculate_passrate(df, metric_name):
     return str(passrate)
 
 
+def _calculate_average_metric_score(df, metric_name):
+    # get the counts per scoring group
+    average_metric_scores_df = df.filter(
+        col(METRIC_NAME_COLUMN).contains(metric_name)).select(
+            [METRIC_VALUE_COLUMN, GROUP_COLUMN]).toPandas()
+    average_metric_score = 0
+    sum_metric_scores = 0.0
+    sum_row_count = 0.0
+    for index, row in average_metric_scores_df.iterrows():
+        group = float(row[GROUP_COLUMN])
+        metric_value = row[METRIC_VALUE_COLUMN]
+        sum_metric_scores += metric_value * group
+        sum_row_count += metric_value
+    if sum_row_count != 0:
+        average_metric_score = sum_metric_scores / sum_row_count
+    return average_metric_score
+
+
 def run():
-    """Compute metrics."""
+    """Run method for compute metrics."""
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--metric_names", type=str)
@@ -87,19 +110,25 @@ def run():
 
     args = parser.parse_args()
     histogram_df = try_read_mltable_in_spark_with_error(args.annotation_histogram, "annotation_histogram")
+    threshold_args = {
+        arg: getattr(args, arg) for arg in THRESHOLD_PARAMS if hasattr(args, arg)
+    }
+    metric_names = args.metric_names
+    aggregated_metrics_df = compute_metrics(histogram_df, threshold_args, metric_names)
+    save_spark_df_as_mltable(aggregated_metrics_df, args.signal_metrics)
 
+
+def compute_metrics(histogram_df, threshold_args, metric_names):
+    """Compute metrics for given histogram and return them."""
     spark = init_spark()
     # Cast to float because metric_value was integer so far
     # but we're adding percentages now.
     histogram_df = histogram_df.withColumn(
         METRIC_VALUE_COLUMN, histogram_df[METRIC_VALUE_COLUMN].cast("float")
     )
-    threshold_args = {
-        arg: getattr(args, arg) for arg in THRESHOLD_PARAMS if hasattr(args, arg)
-    }
     # remove all but groundedness/fluency/coherence/relevance/similarity from metric names and
     # remove duplicates
-    input_metric_names = [m.strip() for m in args.metric_names.split(",")]
+    input_metric_names = [m.strip() for m in metric_names.split(",")]
     pruned_metric_names = [re.sub(r'^(.*?)(Groundedness|Fluency|Coherence|Relevance|Similarity)(.*?)$', r'\2', m) for
                            m in input_metric_names]
     compact_metric_names = list(set(pruned_metric_names))
@@ -121,6 +150,7 @@ def run():
         passrate_threshold = threshold_args[f"{metric_name.lower()}_passrate_threshold"]
         full_pass_rate_metric_name = f"Aggregated{metric_name}PassRate"
         full_per_instance_score_metric_name = f"Acceptable{metric_name}ScorePerInstance"
+        average_score_metric_name = f"Average{metric_name}Score"
         if full_pass_rate_metric_name in input_metric_names:
             metric_df = spark.createDataFrame(
                     [
@@ -153,7 +183,23 @@ def run():
                     metadata_schema,
                 )
             aggregated_metrics_df = aggregated_metrics_df.union(threshold_row)
-    save_spark_df_as_mltable(aggregated_metrics_df, args.signal_metrics)
+        if average_score_metric_name in input_metric_names:
+            average_metric_score = _calculate_average_metric_score(
+                histogram_df, full_per_instance_score_metric_name)
+            metric_df = spark.createDataFrame(
+                    [
+                        (
+                            "",
+                            average_metric_score,
+                            average_score_metric_name,
+                            "",
+                            "",
+                        )
+                    ],
+                    metadata_schema,
+                )
+            aggregated_metrics_df = aggregated_metrics_df.union(metric_df)
+    return aggregated_metrics_df
 
 
 if __name__ == "__main__":
