@@ -103,6 +103,10 @@ inputs:
     type: uri_file
     optional: True
     description: The deployment metadata directory that contains deployment details.
+  finetuned_model_metadata:
+    type: uri_file
+    optional: True
+    description: The finetuned_model metadata contains finetuned model id.
   additional_deployment_env_vars:
     type: string
     optional: True
@@ -131,11 +135,6 @@ inputs:
     type: string
     optional: True
     description: The finetuned step name.
-  finetuned_from_proxy_step:
-    type: boolean
-    optional: True
-    default: False
-    description: If the model is from proxy finetuned component.
 outputs:
   output_metadata:
     type: uri_file
@@ -173,4 +172,4 @@ command: >-
   $[[--deployment_retry_interval_seconds ${{inputs.deployment_retry_interval_seconds}}]]
   $[[--wait_finetuned_step ${{inputs.wait_finetuned_step}}]]
   $[[--finetuned_step_name ${{inputs.finetuned_step_name}}]]
-  $[[--finetuned_from_proxy_step ${{inputs.finetuned_from_proxy_step}}]]
+  $[[--finetuned_model_metadata ${{inputs.finetuned_model_metadata}}]]
