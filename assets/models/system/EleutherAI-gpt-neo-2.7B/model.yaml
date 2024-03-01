@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: models/huggingface/EleutherAI-gpt-neo-2-7B/1707465211/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:ss
+  description: description.md
+  type: mlflow_model
