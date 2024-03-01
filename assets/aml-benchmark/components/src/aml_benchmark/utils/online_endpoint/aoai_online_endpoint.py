@@ -166,15 +166,15 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         while should_retry:
             identity = ManagedIdentityCredential(client_id=os.environ.get("DEFAULT_IDENTITY_CLIENT_ID", None))
             token = identity.get_token("https://management.azure.com/.default").token
-            deploy_headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'} if self._credential else {}
-            deploy_headers = self.get_resource_authorization_header()
+            deploy_headers = {'Authorization': 'Bearer {}'.format(token), 'Content-Type': 'application/json'} if self._credential else {}
             deploy_params = {'api-version': "2023-05-01"} 
             deploy_payload = json.dumps(payload)
-            
+            print(f"deploy payload: {deploy_payload}")
             request_url = f'https://management.azure.com/subscriptions/{self._subscription_id}/resourceGroups/{self._resource_group}/providers/Microsoft.CognitiveServices/accounts/{self._endpoint_name}/deployments/{self._deployment_name}'
             logger.info(f"sending payload to request url: {request_url}")
             resp = requests.put(request_url, params=deploy_params, headers=deploy_headers, data=deploy_payload)
             logger.info(f"got response : {resp.status_code}, content: {resp.content}")
+            logger.info(f"actual request : {resp.request}")
             if resp.status_code not in {409, 429}:
                 should_retry = False
             else:
