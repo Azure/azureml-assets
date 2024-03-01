@@ -15,6 +15,8 @@ from src.batch_score.batch_pool.quota.quota_client import (
 )
 from src.batch_score.common.scoring.scoring_request import ScoringRequest
 
+from tests.fixtures.client_response import FakeResponse
+
 
 @pytest.mark.asyncio
 async def test_quota_client(make_quota_client, make_completion_header_handler):
@@ -153,25 +155,6 @@ class FakeClientSession:
                 yield FakeResponse(200, {"leaseId": "123", "leaseDuration": "99:99:99"})
         else:
             yield FakeResponse(404, {})
-
-
-class FakeResponse:
-    """Mock responsse."""
-
-    def __init__(self, status, json, *, error=None):
-        """Initialize FakeResponse."""
-        self.status = status
-        self._json = json
-        self._error = error
-
-    async def json(self):
-        """Get json."""
-        return self._json
-
-    def raise_for_status(self):
-        """Raise error."""
-        if self._error is not None:
-            raise self._error
 
 
 class FakeTokenProvider:

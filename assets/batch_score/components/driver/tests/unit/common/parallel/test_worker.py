@@ -178,6 +178,54 @@ async def test_request_exceeds_max_retry_time_interval_and_fails(
 
 
 @pytest.mark.asyncio
+async def test_request_indefinite_max_retry_time_interval(
+        monkeypatch,
+        make_worker,
+        make_scoring_result):
+    """Test request exceeds max retry time interval and fails."""
+    # 0 second maximum
+    max_retry_time_interval = 0
+    scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
+    scoring_request.scoring_url = TEST_SCORING_URL
+
+    queue_item = QueueItem(
+        scoring_request=scoring_request
+    )
+
+    # update duration to exceed timeout value of 1 second
+    # however large this value maybe, we won't stop
+    queue_item.scoring_request.scoring_duration = 1.1
+
+    queue = deque()
+    queue.append(queue_item)
+
+    async def mock_score(*args, **kwargs):
+        if mock_score.counter == 5:
+            return make_scoring_result(
+                request_obj={"prompt": "payload"},
+                response_body={"usage": {
+                        "prompt_tokens": TEST_PROMPT_TOKENS,
+                        "completion_tokens": TEST_COMPLETION_TOKENS,
+                        "total_tokens": TEST_PROMPT_TOKENS + TEST_COMPLETION_TOKENS}},
+                response_headers=CIMultiDictProxy(CIMultiDict([('ms-azureml-model-error-statuscode', '429')])),
+                num_retries=TEST_RETRY_COUNT
+            )
+        mock_score.counter += 1
+        raise Exception("Score Failed")
+    mock_score.counter = 0
+
+    monkeypatch.setattr("src.batch_score.batch_pool.scoring.scoring_client.ScoringClient.score_once", mock_score)
+    worker = make_worker(
+        scoring_request_queue=queue,
+        max_retry_time_interval=max_retry_time_interval)
+
+    await worker.start()
+
+    assert (worker._Worker__request_metrics._RequestMetrics__df["response_code"].head(1)
+            == ScoringResultStatus.SUCCESS).all()
+
+
+@pytest.mark.asyncio
 async def test_model_429_does_not_contribute_to_request_total_wait_time(
         make_worker,
         mock__score_once,

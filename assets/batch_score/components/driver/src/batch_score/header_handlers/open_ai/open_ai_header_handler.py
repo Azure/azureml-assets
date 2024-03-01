@@ -35,7 +35,7 @@ class OpenAIHeaderHandler(HeaderHandler):
     def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
         """Get headers for OpenAI requests."""
         bearer_token = self._token_provider.get_token(scope=TokenProvider.SCOPE_AML)
-        user_agent = self._get_user_agent()
+        user_agent = self.get_user_agent()
 
         headers = {
             'Authorization': f"Bearer {bearer_token}",

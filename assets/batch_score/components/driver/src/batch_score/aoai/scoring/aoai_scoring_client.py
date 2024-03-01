@@ -5,9 +5,8 @@
 
 import aiohttp
 
-from .aoai_header_provider import AoaiHeaderProvider
 from .aoai_response_handler import AoaiHttpResponseHandler
-from ...common.auth.auth_provider import AuthProvider
+from ...common.header_providers.header_provider import HeaderProvider
 from ...common.scoring.generic_scoring_client import GenericScoringClient
 from ...common.scoring.scoring_request import ScoringRequest
 from ...common.scoring.scoring_result import ScoringResult
@@ -19,17 +18,11 @@ class AoaiScoringClient:
 
     def __init__(
         self,
-        auth_provider: AuthProvider,
+        header_provider: HeaderProvider,
         scoring_url: str = None,
         tally_handler: TallyFailedRequestHandler = None,
-        additional_headers: str = None,
     ):
         """Initialize AoaiScoringClient."""
-        header_provider = AoaiHeaderProvider(
-            auth_provider=auth_provider,
-            additional_headers=additional_headers,
-        )
-
         self._generic_scoring_client = GenericScoringClient(
             header_provider=header_provider,
             http_response_handler=AoaiHttpResponseHandler(tally_handler),

@@ -5,7 +5,6 @@
 
 import pytest
 
-from src.batch_score.batch_pool.routing.routing_client import RoutingClient
 from src.batch_score.common import constants
 from src.batch_score.common.common_enums import ApiType
 from src.batch_score.common.configuration.configuration_parser import (
@@ -85,22 +84,16 @@ def test_is_completion(api_type, request_path, scoring_url, expected_result):
 @pytest.mark.parametrize('target_batch_pool, expected_result', [
     ('SaHarA-glObal', True),
     ('sahara-global', True),
-    (None, None),
+    (None, False),
     ('random_pool', False),
 ])
 def test_is_sahara(target_batch_pool, expected_result):
     # Arrange
     """Test is sahara."""
-    routing_client = RoutingClient(
-        service_namespace='test_service_namespace',
-        target_batch_pool=target_batch_pool,
-        header_handler=None,
-        request_path='request_path'
-    )
-    configuration = ConfigurationParser().parse_configuration([])
+    configuration = ConfigurationParser().parse_configuration(["--batch_pool", target_batch_pool])
 
     # Act & assert
-    assert configuration.is_sahara(routing_client) == expected_result
+    assert configuration.is_sahara() == expected_result
 
 
 @pytest.mark.parametrize('api_type, request_path, scoring_url, expected_result', [

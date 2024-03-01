@@ -32,3 +32,4 @@ class BatchScoreRequestCompletedEvent(BatchScoreEvent):
     prompt_tokens: int = field(init=True, default=None)
     completion_tokens: int = field(init=True, default=None)
     duration_ms: float = field(init=True, default=None)
+    model_name: str = field(init=True, default=None)

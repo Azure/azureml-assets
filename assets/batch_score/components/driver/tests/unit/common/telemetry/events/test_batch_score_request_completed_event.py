@@ -34,7 +34,8 @@ def test_init(mock_run_context, make_configuration, make_metadata):
         model_response_code=None,
         prompt_tokens=100,
         completion_tokens=1000,
-        duration_ms=8
+        duration_ms=8,
+        model_name="test_model_name"
     )
     update_common_fields(result)
 
@@ -55,3 +56,4 @@ def test_init(mock_run_context, make_configuration, make_metadata):
     assert result.prompt_tokens == 100
     assert result.completion_tokens == 1000
     assert result.duration_ms == 8
+    assert result.model_name == "test_model_name"

@@ -26,3 +26,4 @@ def test_init(mock_run_context, make_batch_score_minibatch_started_event):
     assert result.batch_pool == "test_pool"
     assert result.quota_audience == "test_audience"
     assert result.input_row_count == 10
+    assert result.retry_count == 0
