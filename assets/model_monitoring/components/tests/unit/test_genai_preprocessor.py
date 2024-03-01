@@ -370,13 +370,13 @@ class TestGenAISparkPreprocessor:
 
     _trace_log_schema = StructType(
         [
-            StructField("trace_id", StringType(), False),
+            StructField("trace_id", StringType(), True),
             StructField("user_id", StringType(), True),
             StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampType(), False),
-            StructField("end_time", TimestampType(), False),
-            StructField("input", StringType(), False),
-            StructField("output", StringType(), False),
+            StructField("start_time", TimestampType(), True),
+            StructField("end_time", TimestampType(), True),
+            StructField("input", StringType(), True),
+            StructField("output", StringType(), True),
             StructField("root_span", StringType(), True),
         ]
     )
