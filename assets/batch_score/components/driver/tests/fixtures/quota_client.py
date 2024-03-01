@@ -18,7 +18,7 @@ def make_quota_client(make_completion_header_handler):
              quota_estimator: str = "completion") -> QuotaClient:
         """Make a mock quota client."""
         quota_client = QuotaClient(
-            header_handler=header_handler,
+            header_provider=header_handler,
             service_namespace=service_namespace,
             quota_audience=quota_audience,
             batch_pool=batch_pool,

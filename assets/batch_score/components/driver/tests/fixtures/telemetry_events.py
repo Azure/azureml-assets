@@ -15,6 +15,9 @@ from src.batch_score.common.telemetry.events.batch_score_init_started_event impo
 from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
 )
+from src.batch_score.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
+    BatchScoreMinibatchEndpointHealthEvent
+)
 from src.batch_score.common.telemetry.events.batch_score_minibatch_started_event import BatchScoreMinibatchStartedEvent
 
 from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
@@ -60,6 +63,7 @@ def mock_run_context(monkeypatch):
         def __init__(self, experiment, run_id, parent_run_id):
             self.experiment = experiment
             self._run_id = run_id
+            self.id = run_id
             self.parent = MockRun(parent_run_id)
 
     def get_mock_run_context():
@@ -103,6 +107,8 @@ def make_batch_score_minibatch_completed_event(mock_run_context, make_configurat
         scoring_url=configuration.scoring_url,
         batch_pool='test_pool',
         quota_audience='test_audience',
+        model_name='test_model_name',
+        retry_count=0,
 
         total_prompt_tokens=50,
         total_completion_tokens=1000,
@@ -135,6 +141,34 @@ def make_batch_score_minibatch_completed_event(mock_run_context, make_configurat
 
 
 @pytest.fixture
+def make_batch_score_minibatch_endpoint_health_event(mock_run_context, make_configuration, make_metadata):
+    """Make a mock BatchScoreMinibatchEndpointHealthEvent."""
+    configuration: Configuration = make_configuration
+    setup_context_vars(configuration, make_metadata)
+
+    event = BatchScoreMinibatchEndpointHealthEvent(
+        minibatch_id='2',
+        scoring_url=configuration.scoring_url,
+        batch_pool='test_pool',
+        quota_audience='test_audience',
+
+        http_request_count=10,
+        http_request_succeeded_count=5,
+        http_request_user_error_count=3,
+        http_request_system_error_count=2,
+
+        http_request_duration_p0_ms=0,
+        http_request_duration_p50_ms=2,
+        http_request_duration_p90_ms=5,
+        http_request_duration_p95_ms=7,
+        http_request_duration_p99_ms=10,
+        http_request_duration_p100_ms=30,
+    )
+
+    return update_common_fields(event)
+
+
+@pytest.fixture
 def make_batch_score_minibatch_started_event(mock_run_context, make_configuration, make_metadata):
     """Make a mock BatchScoreMinibatchStartedEvent."""
     configuration: Configuration = make_configuration
@@ -145,7 +179,8 @@ def make_batch_score_minibatch_started_event(mock_run_context, make_configuratio
         scoring_url=configuration.scoring_url,
         batch_pool='test_pool',
         quota_audience='test_audience',
-        input_row_count=10)
+        input_row_count=10,
+        retry_count=0)
 
     return update_common_fields(event)
 
@@ -171,6 +206,21 @@ def assert_common_fields(event: BatchScoreEvent):
     assert event.endpoint_type == TEST_ENDPOINT_TYPE
     assert event.event_time == TEST_EVENT_TIME
     assert event.execution_mode == TEST_EXECUTION_MODE
+
+
+def assert_http_request_fields(event: BatchScoreEvent):
+    """Assert http request fields of a BatchScoreEvent object."""
+    assert event.http_request_count == 10
+    assert event.http_request_succeeded_count == 5
+    assert event.http_request_user_error_count == 3
+    assert event.http_request_system_error_count == 2
+
+    assert event.http_request_duration_p0_ms == 0
+    assert event.http_request_duration_p50_ms == 2
+    assert event.http_request_duration_p90_ms == 5
+    assert event.http_request_duration_p95_ms == 7
+    assert event.http_request_duration_p99_ms == 10
+    assert event.http_request_duration_p100_ms == 30
 
 
 def update_common_fields(event: BatchScoreEvent):
