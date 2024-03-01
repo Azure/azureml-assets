@@ -179,7 +179,7 @@ class SpanTree:
 
     def __init__(self, spans: List[SpanTreeNode]) -> None:
         """Spantree constructor to build up tree from span list."""
-        self._span_node_map: Dict[str, SpanTreeNode] = {}
+        self._span_node_map: Dict[str, SpanTreeNode] = {span.span_id: span for span in spans}
         self.root_span = self._construct_span_tree(spans)
 
     @classmethod
@@ -220,7 +220,6 @@ class SpanTree:
         """Build the span tree in ascending time order from list of all spans."""
         root_span = None
         # construct a dict with span_id as key and span as value
-        self._span_node_map = {span.span_id: span for span in spans}
         for span in self._span_node_map.values():
             parent_id = span.parent_id
             if parent_id is None:
