@@ -35,7 +35,7 @@ Extensive research has delved into the challenges related to bias and fairness i
 ### Inference samples
 
 Inference type|Python sample (Notebook)
-|--|--|--|
+|--|--|
 Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">text-classification-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a>| coming soon
 
