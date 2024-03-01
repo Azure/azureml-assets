@@ -15,13 +15,13 @@ import random
 import time
 import zipfile
 from datetime import datetime
-from src.model_data_collector_preprocessor.genai_run import (
+from model_data_collector_preprocessor.genai_run import (
     _genai_uri_folder_to_preprocessed_spark_df,
 )
-from src.model_data_collector_preprocessor.trace_aggregator import (
+from model_data_collector_preprocessor.trace_aggregator import (
     process_spans_into_aggregated_traces,
 )
-from src.model_data_collector_preprocessor.store_url import StoreUrl
+from model_data_collector_preprocessor.store_url import StoreUrl
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
 
