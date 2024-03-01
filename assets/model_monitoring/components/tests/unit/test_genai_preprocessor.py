@@ -85,7 +85,14 @@ class TestGenAISparkPreprocessor:
 
     def _init_spark(self) -> SparkSession:
         """Create spark session for tests."""
-        return SparkSession.builder.appName("test").getOrCreate()
+        spark: SparkSession = SparkSession.builder.appName("test").getOrCreate()
+        sc = spark.sparkContext
+        # if SPARK_ZIP_PATH is set, add the zip file to the spark context
+        zip_path = os.environ.get(SPARK_ZIP_PATH, '')
+        print(f"The spark_zip in environment: {zip_path}")
+        if zip_path:
+            sc.addPyFile(zip_path)
+        return spark
 
     _preprocessed_schema = StructType([
         StructField('trace_id', StringType(), True),
