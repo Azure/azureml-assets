@@ -3,22 +3,18 @@ BART is a transformer model that combines a bidirectional encoder similar to BER
 When fine-tuned for specific tasks such as text generation (e.g., summarization, translation), BART demonstrates exceptional effectiveness. However, it also performs well on comprehension tasks like text classification and question answering. This specific checkpoint has undergone fine-tuning on CNN Daily Mail, a vast dataset consisting of text-summary pairs.
 
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/facebook/bart-large-cnn" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+### Evaluation Samples
 
-### Inference samples
-
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-summarization" target="_blank">summarization-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-summarization" target="_blank">summarization-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-summarization" target="_blank">summarization-batch-endpoint.ipynb</a>| coming soon
-
-
-### Model Evaluation
-
-Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+Task| Use case| Dataset| Python sample | CLI with YAML
 |--|--|--|--|--|
 Summarization | Summarization | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">cnn_dailymail</a> | <a href="https://aka.ms/azureml-eval-sdk-summarization" target="_blank">evaluate-model-summarization.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-summarization" target="_blank">evaluate-model-summarization.yml</a>
 
+### Inference samples
+
+Inference type|Python sample |CLI with YAML
+|--|--|--|
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-summarization" target="_blank">summarization-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-summarization" target="_blank">summarization-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-summarization" target="_blank">summarization-batch-endpoint.ipynb</a>| coming soon
 
 ### Sample inputs and outputs (for real-time inference)
 
