@@ -5,7 +5,6 @@
 
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import collect_list, struct
-from pyspark.sql.types import TimestampType, StructType, StructField, StringType
 from shared_utilities.span_tree_utils import SpanTree, SpanTreeNode
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_aggregated_trace_log_spark_df_schema,
@@ -15,18 +14,7 @@ from shared_utilities.io_utils import init_spark
 
 def _aggregate_span_logs_to_trace_logs(grouped_row):
     """Aggregate grouped span logs into trace logs."""
-    output_schema = StructType(
-        [
-            StructField("trace_id", StringType(), True),
-            StructField("user_id", StringType(), True),
-            StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampType(), True),
-            StructField("end_time", TimestampType(), True),
-            StructField("input", StringType(), True),
-            StructField("output", StringType(), True),
-            StructField("root_span", StringType(), True),
-        ]
-    )
+    output_schema = _get_aggregated_trace_log_spark_df_schema()
 
     span_list = [SpanTreeNode(row) for row in grouped_row.span_rows]
     tree = SpanTree(span_list)
