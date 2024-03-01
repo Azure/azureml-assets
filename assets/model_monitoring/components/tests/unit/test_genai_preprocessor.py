@@ -3,7 +3,7 @@
 
 """test class for Gen AI preprocessor."""
 
-from pyspark.sql import SparkSession, Row
+from pyspark.sql import SparkSession
 from pyspark.sql.types import (
     StructField, StringType, TimestampType, StructType
 )
@@ -386,8 +386,7 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_extra],
     ]
 
-    def test_trace_aggregator_empty_root_span(
-        self, genai_zip_test_setup, genai_preprocessor_test_setup):
+    def test_trace_aggregator_empty_root_span(self, genai_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
         spark = self._init_spark()
 
@@ -397,7 +396,9 @@ class TestGenAISparkPreprocessor:
             ["{}", datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
             ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "02"],
         ]
-        span_logs_no_root_with_data_df = spark.createDataFrame(span_logs_no_root_with_data, self._preprocessed_log_schema)
+        span_logs_no_root_with_data_df = spark.createDataFrame(
+            span_logs_no_root_with_data,
+            self._preprocessed_log_schema)
 
         trace_df = process_spans_into_aggregated_traces(span_logs_no_root_with_data_df, True)
         rows = trace_df.collect()
@@ -428,7 +429,7 @@ class TestGenAISparkPreprocessor:
             span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data):
         """Test scenario where spans has real data."""
         spark = self._init_spark()
-         # infer schema only when we have data.
+        # infer schema only when we have data.
         processed_spans_df = spark.createDataFrame(span_input_logs, span_input_schema)
         expected_traces_df = spark.createDataFrame(expected_trace_logs, expected_trace_schema)
 
