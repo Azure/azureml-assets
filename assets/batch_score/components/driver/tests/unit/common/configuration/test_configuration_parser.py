@@ -99,7 +99,7 @@ def test_success_additional_header(make_metadata, header, pool, expected_values,
         args += ["--batch_pool", pool]
 
     configuration = ConfigurationParser().parse_configuration(args)
-    header_handler = MirAndBatchPoolHeaderHandlerFactory().get_header_handler(configuration, make_metadata, None, None)
+    header_handler = MirAndBatchPoolHeaderHandlerFactory().get_header_handler(configuration, make_metadata, None)
 
     # Assert
     for key, value in expected_values.items():

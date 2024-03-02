@@ -16,6 +16,7 @@ from opencensus.ext.azure.log_exporter import AzureLogHandler
 from .. import constants
 from .events_client import AppInsightsEventsClient, EventsClient
 
+DEFAULT_FORMAT = '%(asctime)-15s :%(name)-5s:%(levelname)-8s- %(message)s'
 _default_logger_name = "BatchScoreComponent"
 _custom_dimensions = {}
 _default_logger: logging.LoggerAdapter = None
@@ -25,6 +26,12 @@ _ctx_worker_id = ContextVar("Async worker ID", default=None)
 _ctx_mini_batch_id = ContextVar("Async mini-batch ID", default=None)
 _ctx_quota_audience = ContextVar("Async quota audience", default=None)
 _ctx_batch_pool = ContextVar("Async batch pool", default=None)
+
+_pre_init_logger: logging.LoggerAdapter = logging.getLogger("PreInitLogger")
+_pre_init_logger.setLevel(logging.DEBUG)
+_pre_init_logger_handler = logging.StreamHandler()  # Log to stdout
+_pre_init_logger_handler.setFormatter(logging.Formatter(DEFAULT_FORMAT))
+_pre_init_logger.addHandler(_pre_init_logger_handler)
 
 
 class UTCFormatter(logging.Formatter):
@@ -76,15 +83,14 @@ class AppInsightsLogsFilter(logging.Filter):
 def setup_logger(
         stdout_log_level: str,
         app_insights_log_level: str = None,
-        app_insights_connection_string: str = None):
+        app_insights_connection_string: str = None,
+        component_version: str = None):
     """Set up logger."""
     global _custom_dimensions
     global _default_logger
     global _events_client
 
-    default_format = '%(asctime)-15s :%(name)-5s:%(levelname)-8s- %(message)s'
-
-    set_default_logger_format(default_format)
+    set_default_logger_format(DEFAULT_FORMAT)
 
     stdout_log_level_upper = stdout_log_level.upper()
     # The root logger has a pre-configured stream handler to log to stdout.
@@ -96,7 +102,9 @@ def setup_logger(
 
     logger = logging.getLogger(_default_logger_name)
 
-    if app_insights_connection_string is not None:
+    if app_insights_connection_string is None:
+        print("Application insights logging is disabled.")
+    else:
         app_insights_log_level_upper = app_insights_log_level.upper()
         print(f"Enabling application insights logs, level: {app_insights_log_level_upper}")
         azure_formatter = logging.Formatter('%(message)s')
@@ -117,7 +125,8 @@ def setup_logger(
             _ctx_worker_id,
             _ctx_mini_batch_id,
             _ctx_quota_audience,
-            _ctx_batch_pool)
+            _ctx_batch_pool,
+            component_version)
     else:
         _events_client = EventsClient()
 
@@ -142,6 +151,11 @@ def set_default_logger_format(default_format, root_handlers=None):
 
 def get_logger():
     """Get logger."""
+    # We log some things during initialization, before the default logger is set up.
+    # During this time, use the the pre-init logger.
+    if _default_logger is None:
+        return _pre_init_logger
+
     custom_dimensions = _custom_dimensions.copy()
     custom_dimensions["WorkerId"] = _ctx_worker_id.get()
     custom_dimensions["MiniBatchId"] = _ctx_mini_batch_id.get()

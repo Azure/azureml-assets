@@ -20,7 +20,7 @@ def make_routing_client(make_completion_header_handler):
         return RoutingClient(
             service_namespace=service_namespace,
             target_batch_pool=target_batch_pool,
-            header_handler=header_handler,
+            header_provider=header_handler,
             request_path=request_path
         )
 

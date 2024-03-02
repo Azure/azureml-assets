@@ -18,6 +18,7 @@ from aiohttp import (
     ServerConnectionError,
 )
 
+from ...common.header_providers.header_provider import HeaderProvider
 from ...common.scoring.scoring_request import ScoringRequest
 from ...common.scoring.scoring_result import (
     PermanentException,
@@ -27,9 +28,6 @@ from ...common.scoring.scoring_result import (
 )
 from ...common.telemetry import logging_utils as lu
 from ...common.telemetry.logging_utils import get_events_client
-from ...header_handlers.rate_limiter.rate_limiter_header_handler import (
-    RateLimiterHeaderHandler,
-)
 from ...utils import common
 from .estimators.chat_completion_estimator import ChatCompletionEstimator
 from .estimators.completion_estimator import CompletionEstimator
@@ -65,13 +63,13 @@ class QuotaClient:
     RETRIABLE_RESPONSE_CODES = [500]
 
     def __init__(self,
-                 header_handler: RateLimiterHeaderHandler,
+                 header_provider: HeaderProvider,
                  service_namespace: str,
                  quota_audience: str,
                  batch_pool: str,
                  quota_estimator: str):
         """Initialize QuotaClient."""
-        self.__header_handler = header_handler
+        self.__header_provider = header_provider
         self.__namespace = service_namespace
         self.__audience = quota_audience
         self.__batch_pool = batch_pool
@@ -224,7 +222,7 @@ class QuotaClient:
         if retry_count is not None:
             additional_headers["x-ms-retry-count"] = str(retry_count)
 
-        return self.__header_handler.get_headers(additional_headers=additional_headers)
+        return self.__header_provider.get_headers(additional_headers=additional_headers)
 
     def __get_url(self, scope: str, api_name: str) -> str:
         return f"{self.__base_url}/v1.0/servicenamespaces/{self.__namespace}" \
