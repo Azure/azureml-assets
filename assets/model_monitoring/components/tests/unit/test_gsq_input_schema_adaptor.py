@@ -72,6 +72,8 @@ class TestInputSchemaAdaptor:
                 # Test no data, should be pass-through
                 ([], _simple_input_schema, [], _simple_input_schema),
                 ([("", "")], _simple_input_schema, [("", "")], _simple_input_schema),
+                # genai empty data
+                ([], _genai_input_schema, [], _expected_gsq_input_schema_empty),
                 # genai, empty input/output columns
                 (
                     [("01", "null", "null", "null")], _genai_input_schema,
@@ -82,6 +84,19 @@ class TestInputSchemaAdaptor:
                     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
                       "{\"output\":\"answer\"}", "null")], _genai_input_schema,
                     [("01", "context", "ground-truth", "question", "answer", "null")], _expected_gsq_input_schema
+                ),
+                # Test with genai columns. Mismatched json schema on rows
+                (
+                    [
+                        ("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
+                         "{\"output\":\"answer\"}", "null"),
+                        ("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
+                         "{\"output\":\"answer\", \"source\":\"LLM\"}", "null")
+                      ], _genai_input_schema,
+                    [
+                        ("01", "context", "ground-truth", "question", "answer", None, "null"),
+                        ("01", "context", "ground-truth", "question", "answer", "LLM", "null"),
+                    ], _expected_gsq_input_schema_extra
                 ),
                 # genai, data fall-through
                 (
