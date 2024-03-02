@@ -22,7 +22,7 @@ def make_scoring_client(make_completion_header_handler,
              scoring_url: str = None,
              tally_handler=make_tally_failed_request_handler()):
         client = ScoringClient(
-            header_handler=header_handler,
+            header_provider=header_handler,
             quota_client=quota_client,
             routing_client=routing_client,
             scoring_url=scoring_url,
