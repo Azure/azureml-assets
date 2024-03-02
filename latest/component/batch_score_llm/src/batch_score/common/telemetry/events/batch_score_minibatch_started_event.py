@@ -10,7 +10,6 @@ from .batch_score_event import BatchScoreEvent
 from .. import logging_utils as lu
 
 
-# TODO: Add comments to describe each field
 @dataclass
 class BatchScoreMinibatchStartedEvent(BatchScoreEvent):
     """Defines the batch score minibatch started event."""
@@ -25,5 +24,8 @@ class BatchScoreMinibatchStartedEvent(BatchScoreEvent):
     batch_pool: str = field(init=True, default_factory=lu.get_batch_pool)
     quota_audience: str = field(init=True, default_factory=lu.get_quota_audience)
 
-    # Number of rows in the minibatch
+    """How many rows were in the minibatch?"""
     input_row_count: int = field(init=True, default=None)
+
+    """How many retries were executed on this minibatch prior to the current one."""
+    retry_count: int = field(init=True, default=0)

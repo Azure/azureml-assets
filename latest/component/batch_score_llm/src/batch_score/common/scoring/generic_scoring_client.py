@@ -12,12 +12,12 @@ import uuid
 import aiohttp
 
 from datetime import timedelta
-from .header_provider import HeaderProvider
 from .http_response_handler import HttpResponseHandler
 from .http_scoring_request import HttpScoringRequest
 from .http_scoring_response import HttpScoringResponse
 from .scoring_request import ScoringRequest
 from .scoring_result import ScoringResult
+from ..header_providers.header_provider import HeaderProvider
 
 from ..telemetry.scoring_logging import (
     ScoreFailedLog,
@@ -51,12 +51,14 @@ class GenericScoringClient:
         """Score the request against the scoring url."""
         scoring_request.scoring_url = self._scoring_url
         http_request: HttpScoringRequest = self._create_http_request(scoring_request)
+        x_ms_client_request_id = http_request.headers.get('x-ms-client-request-id', '')
 
         start = time.time()
 
         ScoreStartLog(
+            worker_id=worker_id,
             internal_id=scoring_request.internal_id,
-            x_ms_client_request_id=http_request.headers['x-ms-client-request-id'],
+            x_ms_client_request_id=x_ms_client_request_id,
             scoring_url=self._scoring_url,
             timeout=timeout
         ).log()
@@ -64,7 +66,9 @@ class GenericScoringClient:
         http_response: HttpScoringResponse = await self._send_http_request(
             session=session,
             http_scoring_request=http_request,
+            worker_id=worker_id,
             internal_id=scoring_request.internal_id,
+            x_ms_client_request_id=x_ms_client_request_id,
             timeout=timeout,
         )
 
@@ -72,8 +76,9 @@ class GenericScoringClient:
         if http_response.status == 200:
             # Clean up this log event
             ScoreSucceedLog(
+                worker_id=worker_id,
                 internal_id=scoring_request.internal_id,
-                x_ms_client_request_id=http_request.headers["x-ms-client-request-id"],
+                x_ms_client_request_id=x_ms_client_request_id,
                 scoring_url=self._scoring_url,
                 duration=end-start
             ).log()
@@ -81,7 +86,7 @@ class GenericScoringClient:
         scoring_result: ScoringResult = self._http_response_handler.handle_response(
             scoring_request=scoring_request,
             http_response=http_response,
-            x_ms_client_request_id=http_request.headers['x-ms-client-request-id'],
+            x_ms_client_request_id=x_ms_client_request_id,
             start=start,
             end=end,
             worker_id=worker_id
@@ -107,7 +112,9 @@ class GenericScoringClient:
             http_response: HttpScoringResponse = await self._send_http_request(
                 session=session,
                 http_scoring_request=http_request,
+                worker_id="Validate Auth",
                 internal_id=str(uuid.uuid4()),
+                x_ms_client_request_id=str(uuid.uuid4()),
                 timeout=timeout,
             )
 
@@ -129,7 +136,9 @@ class GenericScoringClient:
         self,
         session: aiohttp.ClientSession,
         http_scoring_request: HttpScoringRequest,
+        worker_id: str,
         internal_id: str,
+        x_ms_client_request_id: str,
         timeout: aiohttp.ClientTimeout = None,
     ) -> HttpScoringResponse:
         """Send HTTP request to scoring url."""
@@ -142,17 +151,20 @@ class GenericScoringClient:
             ) as response:
                 return await self._log_failure_and_create_http_scoring_response(
                     response,
+                    worker_id,
                     internal_id,
-                    http_scoring_request.headers['x-ms-client-request-id'])
+                    x_ms_client_request_id)
         except Exception as ex:
             return self._log_and_create_http_scoring_response_from_exception(
                 ex,
+                worker_id,
                 internal_id,
-                http_scoring_request.headers['x-ms-client-request-id'])
+                x_ms_client_request_id)
 
     async def _log_failure_and_create_http_scoring_response(
         self,
         response: aiohttp.ClientResponse,
+        worker_id: str,
         internal_id: str,
         x_ms_client_request_id: str
     ) -> HttpScoringResponse:
@@ -168,6 +180,7 @@ class GenericScoringClient:
 
         error_response = await response.text()
         ScoreFailedLog(
+            worker_id=worker_id,
             internal_id=internal_id,
             x_ms_client_request_id=x_ms_client_request_id,
             scoring_url=self._scoring_url,
@@ -187,12 +200,14 @@ class GenericScoringClient:
     def _log_and_create_http_scoring_response_from_exception(
         self,
         ex: Exception,
+        worker_id: str,
         internal_id: str,
         x_ms_client_request_id: str
     ) -> HttpScoringResponse:
         """Log failure and creates an instance of HTTP scoring response."""
         error = traceback.format_exc()
         ScoreFailedWithExceptionLog(
+            worker_id=worker_id,
             internal_id=internal_id,
             x_ms_client_request_id=x_ms_client_request_id,
             scoring_url=self._scoring_url,

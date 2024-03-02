@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from azureml.core import Run
 from . import event_utils
 from ...common_enums import AuthenticationType, ApiType, EndpointType
+from ....utils.local_utils import is_running_in_azureml_job
 
 
 # TODO: Add comments to describe each field
@@ -43,15 +44,16 @@ class BatchScoreEvent(ABC):
 
     def __post_init__(self) -> None:
         """Definition of post init for batch score event."""
-        run = Run.get_context()
-        self.run_id = run._run_id
-        self.parent_run_id = run.parent.id if hasattr(run, "parent") and hasattr(run.parent, "id") else None
-        self.experiment_id = run.experiment.id
-        self.subscription_id = run.experiment.workspace.subscription_id
-        self.resource_group = run.experiment.workspace.resource_group
-        self.workspace_id = run.experiment.workspace._workspace_id_internal
-        self.workspace_location = run.experiment.workspace.location
-        self.workspace_name = run.experiment.workspace._workspace_name
+        if is_running_in_azureml_job():
+            run = Run.get_context()
+            self.run_id = run._run_id
+            self.parent_run_id = run.parent.id if hasattr(run, "parent") and hasattr(run.parent, "id") else None
+            self.experiment_id = run.experiment.id
+            self.subscription_id = run.experiment.workspace.subscription_id
+            self.resource_group = run.experiment.workspace.resource_group
+            self.workspace_id = run.experiment.workspace._workspace_id_internal
+            self.workspace_location = run.experiment.workspace.location
+            self.workspace_name = run.experiment.workspace._workspace_name
 
         if self.event_time is None:
             self.event_time = datetime.now(timezone.utc)

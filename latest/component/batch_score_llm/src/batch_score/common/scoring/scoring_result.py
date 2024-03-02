@@ -86,7 +86,7 @@ class ScoringResult:
 
         self.__token_counts = token_counts
 
-        self.__analyze()
+        self.reload()
 
     # read-only
     @property
@@ -94,12 +94,13 @@ class ScoringResult:
         """Get the estimated token count."""
         return self.__token_counts
 
-    def __analyze(self):
+    def reload(self):
+        """Reload the token fields from the usage dictionary in response body after they are updated."""
         try:
             if self.status == ScoringResultStatus.FAILURE:
                 return
 
-            if not isinstance(self.response_body, list):
+            if isinstance(self.response_body, dict) and "usage" in self.response_body:
                 usage: dict[str, int] = self.response_body["usage"]
 
                 self.prompt_tokens = usage.get("prompt_tokens", None)
@@ -107,6 +108,12 @@ class ScoringResult:
                 self.total_tokens = usage.get("total_tokens", None)
         except ValueError:
             lu.get_logger().error("response is not a json")
+        except Exception:
+            # KeyError and AttributeError can also be raised.
+            # It is better to catch any generic exception otherwise any successful request
+            # will be retried like a failed error which is worse than not
+            # having token statistics in the output.
+            lu.get_logger().error("response does not have usage statistics")
 
     def Failed(scoring_request: ScoringRequest = None) -> 'ScoringResult':
         """Get a scoring result of failed status."""

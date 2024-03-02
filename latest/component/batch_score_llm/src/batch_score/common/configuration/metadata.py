@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .. import constants
+from ...utils.local_utils import is_running_in_azureml_job
 
 
 @dataclass()
@@ -28,14 +29,22 @@ class Metadata(Namespace):
 
             with open(metadata_file_path, 'r') as json_file:
                 component_metadata = json.load(json_file)
+                return Metadata.get_metadata(component_metadata)
+
         except FileNotFoundError:
             print(f"The component metadata file '{metadata_file_path}' does not exist.")
+            if is_running_in_azureml_job():
+                raise  # A missing metadata file is treated as a fatal error when running in AzureML.
+            else:
+                return Metadata._dummy()
 
         except Exception as e:
             print("An unexpected error occurred when extracting component name and version "
                   f"from metadata.json file: {e}")
-
-        return Metadata.get_metadata(component_metadata)
+            if is_running_in_azureml_job():
+                raise  # A missing metadata file is treated as a fatal error when running in AzureML.
+            else:
+                return Metadata._dummy()
 
     @staticmethod
     def get_metadata(metadata_payload: dict):
@@ -47,3 +56,8 @@ class Metadata(Namespace):
             component_name = component_name.rsplit('.', 1)[0]
 
         return Metadata(component_name=component_name, component_version=component_version)
+
+    @staticmethod
+    def _dummy():
+        """Get dummy metadata object."""
+        return Metadata(component_name='component_name', component_version='0.0.0')

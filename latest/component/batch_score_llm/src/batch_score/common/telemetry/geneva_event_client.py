@@ -12,6 +12,7 @@ import uuid
 from .events.batch_score_event import BatchScoreEvent
 from .required_fields import RequiredFields
 from .standard_fields import AzureMLTelemetryComputeType, AzureMLTelemetryOS, StandardFields
+from ...utils.local_utils import is_running_in_azureml_job
 
 COMPONENT_NAME = "BatchScoreLlm"
 
@@ -29,9 +30,12 @@ class GenevaEventClient():
             self._event_logger = getattr(telemetry_module, "log_message_internal_v2")
             self._logger.debug("Sucessfully imported log_message_internal_v2.")
         except Exception as e:
-            msg = f"Failed to import log_message_internal_v2, exception: {e}."
-            self._logger.error(msg)
-            raise ImportError(msg)
+            # When running locally, the module is not available.
+            # When running in AzureML, the module should be available.
+            if is_running_in_azureml_job():
+                msg = f"Failed to import log_message_internal_v2, exception: {e}."
+                self._logger.error(msg)
+                raise ImportError(msg)
 
     def emit_event(self, event: BatchScoreEvent):
         """Emit batch score telemetry event."""
@@ -44,7 +48,10 @@ class GenevaEventClient():
                 extension_fields=self.generate_extension_fields(event),
                 run_id=event.run_id)
         except Exception as e:
-            self._logger.error(f"Failed to emit events using log_message_internal_v2, exception: {e}.")
+            # When running locally, the module is not available.
+            # When running in AzureML, the module should be available.
+            if is_running_in_azureml_job():
+                self._logger.error(f"Failed to emit events using log_message_internal_v2, exception: {e}.")
 
     def generate_required_fields(self, event: BatchScoreEvent):
         """Generate required fields (Part A) for any batch score events."""

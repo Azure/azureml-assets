@@ -6,10 +6,10 @@
 import json
 import uuid
 
-from ...batch_pool.routing.routing_client import RoutingClient
 from ...common.auth.auth_provider import AuthProvider, WorkspaceConnectionAuthProvider
 from ...common.auth.token_provider import TokenProvider
 from ...common.configuration.configuration import Configuration
+from ...common.configuration.metadata import Metadata
 from ...common.scoring.generic_scoring_client import HeaderProvider
 from ...header_handlers.mir_and_batch_pool_header_handler_factory import MirAndBatchPoolHeaderHandlerFactory
 
@@ -21,14 +21,14 @@ class MirHeaderProvider(HeaderProvider):
         self,
         auth_provider: AuthProvider,
         configuration: Configuration,
-        routing_client: RoutingClient,
+        metadata: Metadata,
         token_provider: TokenProvider,
         additional_headers: str = None
     ):
         """Initialize MirHeaderProvider."""
         self._auth_provider = auth_provider
         self._configuration = configuration
-        self._routing_client = routing_client
+        self._metadata = metadata
         self._token_provider = token_provider
 
         if additional_headers is not None:
@@ -51,7 +51,7 @@ class MirHeaderProvider(HeaderProvider):
         else:
             header_handler = MirAndBatchPoolHeaderHandlerFactory().get_header_handler(
                 configuration=self._configuration,
-                routing_client=self._routing_client,
+                metadata=self._metadata,
                 token_provider=self._token_provider
             )
             headers = header_handler.get_headers(self._additional_headers)
