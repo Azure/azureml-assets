@@ -58,7 +58,7 @@ class ModelConverter(ABC):
         pass
 
     def download_license_file(self, model_name: str, src_model_path: str, dst_model_path: str):
-        """save LICENSE file to MlFlow model."""
+        """Save LICENSE file to MlFlow model."""
         license_file_path = Path(src_model_path, MLFlowHFFlavourConstants.LICENSE_FILE)
         # check if pytorch model has LICENSE file
         if license_file_path.is_file():
@@ -80,8 +80,10 @@ class ModelConverter(ABC):
 
 
 class PyTorch_to_MlFlow_ModelConverter:
-    """Mixin class to convert pytorch to hftransformers/oss flavour mlflow model"""
+    """Mixin class to convert pytorch to hftransformers/oss flavour mlflow model."""
+
     def __init__(self, component_args: Namespace) -> None:
+        """Init."""
         self.component_args = component_args
         self.ft_config = getattr(component_args, "ft_config", {})
         self.ft_pytorch_model_path = component_args.model_path
@@ -99,7 +101,7 @@ class PyTorch_to_MlFlow_ModelConverter:
         logger.info(f"Autoclasses for {self.mlflow_task_type} - {self.mlflow_hf_args}")
 
     def set_mlflow_model_parameters(self, model):
-        # prepare parameters for mlflow model
+        """Prepare parameters for mlflow model."""
         self.mlflow_task_type = self.component_args.mlflow_task_type
         self.class_names = getattr(self.component_args, "class_names", None)
         self.model_name = self.component_args.model_name
@@ -147,6 +149,7 @@ class PyTorch_to_MlFlow_ModelConverter:
         self.metadata = update_acft_metadata(metadata=self.metadata, finetuning_task=self.mlflow_task_type)
 
     def load_model_and_tokenizer(self):
+        """Load model and tokenizer."""
         model = load_model(self.ft_pytorch_model_path, self.component_args, self.ft_config)
         tokenizer = load_tokenizer(self.ft_pytorch_model_path, self.component_args, self.ft_config)
         return model, tokenizer
@@ -174,13 +177,14 @@ class PyTorch_to_MlFlow_ModelConverter:
 
 class Pytorch_to_HFTransformers_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_ModelConverter):
     """Convert pytorch model to hftransformers mlflow model."""
+
     def __init__(self, component_args: Namespace) -> None:
         """Init."""
         super().__init__()
         super(ModelConverter, self).__init__(component_args)
 
     def convert_model(self) -> None:
-        """convert pytorch model to hftransformers mlflow model."""
+        """Convert pytorch model to hftransformers mlflow model."""
         # load model and tokenizer
         model, tokenizer = self.load_model_and_tokenizer()
 
@@ -218,13 +222,14 @@ class Pytorch_to_HFTransformers_MlFlow_ModelConverter(ModelConverter, PyTorch_to
 
 class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_ModelConverter):
     """Convert pytorch model to OSS mlflow model."""
+
     def __init__(self, component_args: Namespace) -> None:
         """Init."""
         super().__init__()
         super(ModelConverter, self).__init__(component_args)
 
     def convert_model(self) -> None:
-        """convert pytorch model to oss mlflow model"""
+        """Convert pytorch model to oss mlflow model."""
         # load model and tokenizer
         model, tokenizer = self.load_model_and_tokenizer()
 
