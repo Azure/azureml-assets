@@ -315,7 +315,7 @@ def main():
 
     # Copy Mlmodel generator config so that FTed model also uses same generator config while evaluation.
     # (Settings like `max_new_tokens` can help us reduce inference time.)
-    # We are updating generation_config.json so that no conflicts will be present between 
+    # We are updating generation_config.json so that no conflicts will be present between
     # model's config and model's generator_config. (If there is conflict we get warning in logs
     # and from transformers>=4.41.0 exceptions will be raised if `_from_model_config` key is present.)
     if "update_generator_config" in updated_finetune_config:
