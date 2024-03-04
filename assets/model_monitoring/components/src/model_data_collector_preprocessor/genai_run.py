@@ -117,11 +117,11 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     return df
 
 
-def _filter_look_backward_logs(logs_df: DataFrame, data_window_start: datetime) -> DataFrame:
+def _filter_look_backward_logs(span_df: DataFrame, data_window_start: datetime) -> DataFrame:
     """Filter out logs that were got from our 1-hour look backward window but are not in our desired time window."""
-    desired_trace_ids = logs_df.where(logs_df.start_time >= data_window_start).select('trace_id').distinct()
+    desired_trace_ids = span_df.where(span_df.start_time >= data_window_start).select('trace_id').distinct()
     filtered_logs = desired_trace_ids.join(
-        logs_df, on="trace_id", how="left"
+        span_df, on="trace_id", how="left"
     )
     return filtered_logs
 
@@ -165,6 +165,8 @@ def genai_preprocessor(
         outputted span logs mltable will be written to.
         aggregated_trace_data: The mltable path pointing to location where the
         outputted aggregated trace logs mltable will be written to.
+        require_tracec_data: Boolean flag to control if we should calculate trace logs from spans.
+        Optional. Defaults True.
     """
     store_url = StoreUrl(input_data)
 
