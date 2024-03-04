@@ -39,7 +39,7 @@ ACFT_CONFIG = {
             "pad_token": "<|endoftext|>",
             "trust_remote_code": True,
         },
-        "finetune_args": {},
+        "lora_algo": LoraAlgo.PEFT,
         "mlflow_ft_conf": {
             "mlflow_hftransformers_misc_conf": {
                 "config_hf_load_kwargs": {
@@ -52,9 +52,9 @@ ACFT_CONFIG = {
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
                 },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
+                # "tokenizer_config": {
+                #     "return_token_type_ids": False,
+                # },
             },
             "mlflow_save_model_kwargs": {
                 "extra_pip_requirements": ["einops"],
@@ -70,7 +70,7 @@ ACFT_CONFIG = {
             "pad_token": "<|endoftext|>",
             "trust_remote_code": True,
         },
-        "finetune_args": {},
+        "lora_algo": LoraAlgo.PEFT,
         "mlflow_ft_conf": {
             "mlflow_hftransformers_misc_conf": {
                 "config_hf_load_kwargs": {
@@ -83,9 +83,9 @@ ACFT_CONFIG = {
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
                 },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
+                # "tokenizer_config": {
+                #     "return_token_type_ids": False,
+                # },
             },
             "mlflow_save_model_kwargs": {
                 "extra_pip_requirements": ["einops"],
@@ -101,7 +101,7 @@ ACFT_CONFIG = {
             "pad_token": "<|endoftext|>",
             "trust_remote_code": True,
         },
-        "finetune_args": {},
+        "lora_algo": LoraAlgo.PEFT,
         "mlflow_ft_conf": {
             "mlflow_hftransformers_misc_conf": {
                 "config_hf_load_kwargs": {
@@ -114,9 +114,9 @@ ACFT_CONFIG = {
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
                 },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
+                # "tokenizer_config": {
+                #     "return_token_type_ids": False,
+                # },
             },
             "mlflow_save_model_kwargs": {
                 "extra_pip_requirements": ["einops"],
@@ -132,7 +132,7 @@ ACFT_CONFIG = {
             "pad_token": "<|endoftext|>",
             "trust_remote_code": True,
         },
-        "finetune_args": {},
+        "lora_algo": LoraAlgo.PEFT,
         "mlflow_ft_conf": {
             "mlflow_hftransformers_misc_conf": {
                 "config_hf_load_kwargs": {
@@ -145,6 +145,9 @@ ACFT_CONFIG = {
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
                 },
+                # "tokenizer_config": {
+                #     "return_token_type_ids": False,
+                # },
             },
             "mlflow_save_model_kwargs": {
                 "extra_pip_requirements": ["einops"],
@@ -160,7 +163,7 @@ ACFT_CONFIG = {
             "pad_token": "<|endoftext|>",
             "trust_remote_code": True,
         },
-        "finetune_args": {},
+        "lora_algo": LoraAlgo.PEFT,
         "mlflow_ft_conf": {
             "mlflow_hftransformers_misc_conf": {
                 "config_hf_load_kwargs": {
@@ -173,9 +176,9 @@ ACFT_CONFIG = {
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
                 },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
+                # "tokenizer_config": {
+                #     "return_token_type_ids": False,
+                # },
             },
             "mlflow_save_model_kwargs": {
                 "extra_pip_requirements": ["einops"],

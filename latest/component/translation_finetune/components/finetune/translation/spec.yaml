@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: translation_finetune
-version: 0.0.32
+version: 0.0.33
 type: command
 
 is_deterministic: true
@@ -11,7 +11,7 @@ description: Component to finetune Hugging Face pretrained models for translatio
   for performance enhancement. See [docs](https://aka.ms/azureml/components/translation_finetune)
   to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/41
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/43
 
 code: ../../../src/finetune
 
@@ -253,7 +253,7 @@ inputs:
 
   logging_strategy:
     type: string
-    default: epoch
+    default: steps
     optional: true
     enum:
     - epoch
@@ -264,7 +264,7 @@ inputs:
 
   logging_steps:
     type: integer
-    default: 500
+    default: 10
     optional: true
     description: Number of update steps between two logs if logging_strategy='steps'
 
@@ -389,11 +389,6 @@ outputs:
       states.
     mode: rw_mount
 
-  mlflow_model_folder:
-    type: mlflow_model
-    description: output folder containing _best_ finetuned model in mlflow format.
-    mode: rw_mount
-
 command: >-
   python finetune.py $[[--apply_lora '${{inputs.apply_lora}}']] $[[--merge_lora_weights
   '${{inputs.merge_lora_weights}}']] $[[--lora_alpha '${{inputs.lora_alpha}}']] $[[--lora_r
@@ -420,5 +415,4 @@ command: >-
   $[[--apply_deepspeed '${{inputs.apply_deepspeed}}']] $[[--deepspeed '${{inputs.deepspeed}}']]
   $[[--deepspeed_stage '${{inputs.deepspeed_stage}}']] --model_selector_output '${{inputs.model_selector_output}}'
   --preprocess_output '${{inputs.preprocess_output}}' --pytorch_model_folder '${{outputs.pytorch_model_folder}}'
-  --mlflow_model_folder '${{outputs.mlflow_model_folder}}'
 
