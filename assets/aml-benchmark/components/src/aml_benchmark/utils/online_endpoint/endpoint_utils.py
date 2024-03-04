@@ -91,12 +91,16 @@ class EndpointUtilities:
                 prompt = payload["input_data"]["input_string"]
                 if isinstance(prompt[0], dict):
                     prompt = " ".join([p['content'] for p in prompt])
+                elif isinstance(prompt[0], str):
+                    prompt = " ".join(prompt)
             elif model.is_aoai_model():
-                if isinstance(payload["messages"], list):
+                if "messages" in payload and isinstance(payload["messages"], list):
                     prompt = " ".join([msg.get("content", "") for msg in payload["messages"]])
+                elif "prompt" in payload and isinstance(payload["prompt"], str):
+                    prompt = payload["prompt"]
                 else:
                     # unkwon format, try to stringify all of them.
-                    prompt = str(payload["messages"])
+                    prompt = str(payload)
             elif model.is_claude_model():
                 prompt = str(payload["prompt"])
             else:
