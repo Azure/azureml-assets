@@ -616,12 +616,14 @@ def components_are_uploaded(uploaded_version_file_name):
 def submit_pipeline_job(ml_client: MLClient):
     """Submit pipeline job to ml ws. Handle deletion if the testcase is cancelled/stopped."""
     submitted_jobs = []
+
     def _submit_job(job: Job, experiment_name: str):
         pipeline_job = ml_client.jobs.create_or_update(
             job, experiment_name=experiment_name, skip_validation=True
         )
         submitted_jobs.append(pipeline_job)
         return pipeline_job
+
     yield _submit_job
     print("cancelling the jobs submitted:")
     for job in submitted_jobs:

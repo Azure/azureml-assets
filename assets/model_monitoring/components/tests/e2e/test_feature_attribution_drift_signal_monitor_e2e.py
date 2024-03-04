@@ -59,7 +59,8 @@ def _submit_feature_attribution_drift_model_monitor_job(
 
 
 def _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
-    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, model_inputs, model_outputs, baseline_data
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, model_inputs,
+    model_outputs, baseline_data
 ):
     # Get the components.
     data_joiner_component = get_component(COMPONENT_NAME_DATA_JOINER)
