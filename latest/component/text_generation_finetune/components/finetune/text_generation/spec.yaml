@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_finetune
-version: 0.0.32
+version: 0.0.33
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Text Generation Finetune
 description: Component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/41
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/43
 
 code: ../../../src/finetune
 
@@ -240,7 +240,7 @@ inputs:
 
   logging_strategy:
     type: string
-    default: epoch
+    default: steps
     optional: true
     enum:
     - epoch
@@ -249,7 +249,7 @@ inputs:
 
   logging_steps:
     type: integer
-    default: 500
+    default: 10
     optional: true
     description: Number of update steps between two logs if logging_strategy='steps'
 
@@ -366,11 +366,6 @@ outputs:
     description: Output dir to save the finetune model and other metadata
     mode: rw_mount
 
-  mlflow_model_folder:
-    type: mlflow_model
-    description: Output dir to save the finetune model as mlflow model
-    mode: rw_mount
-
 command: >-
   python finetune.py $[[--apply_lora '${{inputs.apply_lora}}']] $[[--merge_lora_weights
   '${{inputs.merge_lora_weights}}']] $[[--lora_alpha '${{inputs.lora_alpha}}']] $[[--lora_r
@@ -397,6 +392,5 @@ command: >-
   $[[--apply_deepspeed '${{inputs.apply_deepspeed}}']] $[[--deepspeed '${{inputs.deepspeed}}']]
   $[[--deepspeed_stage '${{inputs.deepspeed_stage}}']] --model_selector_output '${{inputs.model_selector_output}}'
   --preprocess_output '${{inputs.preprocess_output}}' $[[--system_properties '${{inputs.system_properties}}']]
-  --pytorch_model_folder '${{outputs.pytorch_model_folder}}' --mlflow_model_folder
-  '${{outputs.mlflow_model_folder}}'
+  --pytorch_model_folder '${{outputs.pytorch_model_folder}}'
 

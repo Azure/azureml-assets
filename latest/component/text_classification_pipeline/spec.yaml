@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_classification_pipeline
-version: 0.0.34
+version: 0.0.35
 type: pipeline
 display_name: Text Classification Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for text
@@ -412,7 +412,7 @@ inputs:
 
   logging_strategy:
     type: string
-    default: epoch
+    default: steps
     optional: true
     enum:
     - epoch
@@ -423,7 +423,7 @@ inputs:
 
   logging_steps:
     type: integer
-    default: 500
+    default: 10
     optional: true
     description: Number of update steps between two logs if logging_strategy='steps'
 
@@ -590,7 +590,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.32
+    component: azureml:ft_nlp_common_validation:0.0.33
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -622,9 +622,11 @@ jobs:
       deepspeed_stage: '${{parent.inputs.deepspeed_stage}}'
       apply_ort: '${{parent.inputs.apply_ort}}'
       apply_lora: '${{parent.inputs.apply_lora}}'
+      ignore_mismatched_sizes: '${{parent.inputs.ignore_mismatched_sizes}}'
+      max_seq_length: '${{parent.inputs.max_seq_length}}'
   text_classification_model_import:
     type: command
-    component: azureml:text_classification_model_import:0.0.32
+    component: azureml:text_classification_model_import:0.0.33
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -635,7 +637,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   text_classification_datapreprocess:
     type: command
-    component: azureml:text_classification_datapreprocess:0.0.32
+    component: azureml:text_classification_datapreprocess:0.0.33
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -656,7 +658,7 @@ jobs:
       model_selector_output: '${{parent.jobs.text_classification_model_import.outputs.output_dir}}'
   text_classification_finetune:
     type: command
-    component: azureml:text_classification_finetune:0.0.32
+    component: azureml:text_classification_finetune:0.0.33
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -711,18 +713,16 @@ jobs:
       model_selector_output: '${{parent.jobs.text_classification_model_import.outputs.output_dir}}'
     outputs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
-      # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.32
+    component: azureml:ft_nlp_model_converter:0.0.33
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
     inputs:
       model_path: '${{parent.jobs.text_classification_finetune.outputs.pytorch_model_folder}}'
-      converted_model: '${{parent.jobs.text_classification_finetune.outputs.mlflow_model_folder}}'
     outputs:
-      output_dir: '${{parent.outputs.mlflow_model_folder}}'
+      mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
     component: azureml:model_prediction:0.0.21
@@ -736,7 +736,7 @@ jobs:
       input_column_names: "'${{parent.inputs.sentence1_key}}','${{parent.inputs.sentence2_key}}'"
       batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       device: auto
-      mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.output_dir}}'
+      mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
     component: azureml:compute_metrics:0.0.21
