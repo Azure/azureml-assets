@@ -61,8 +61,8 @@ jobs:
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          RESOURCE_GROUP: azureml-assets-20240301
-          WORKSPACE_NAME: azureml-assets-ws-20240301
+          RESOURCE_GROUP: azureml-assets-20240222
+          WORKSPACE_NAME: azureml-assets-ws-20240222
       - name: Upload component Version artifact
         uses: actions/upload-artifact@v3
         if: always()
