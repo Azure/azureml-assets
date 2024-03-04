@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 class UploadComponent:
     """ Upload component to upload data to AOAI."""
-    def __init__(self, aoai_client : AzureOpenAI):
+    def __init__(self, aoai_client: AzureOpenAI):
         """ Upload component to upload data to AOAI."""
         self.aoai_client = aoai_client
 
@@ -61,7 +61,7 @@ def main():
         upload_component.check_upload_status(train_metadata.dict())
         logger.debug("uploaded train dataset, retrieved metadata : {}".format(train_metadata))
 
-        dataset_upload_output : Dict[str, Dict[str, Any]] = {"train_file_id" : train_metadata.id}
+        dataset_upload_output: Dict[str, Dict[str, Any]] = {"train_file_id": train_metadata.id}
 
         # upload validation data
         if args.validation_dataset is not None:

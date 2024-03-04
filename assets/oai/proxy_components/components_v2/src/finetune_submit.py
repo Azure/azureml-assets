@@ -29,7 +29,7 @@ class FineTuneProxy:
         print("Starting fine-tune job {} {} {} {} {} {} {}"
               .format(model, training_file_id, validation_file_id, n_epochs,
                       batch_size, learning_rate_multiplier, suffix))
-        hyperparameters : Hyperparameters = {
+        hyperparameters: Hyperparameters = {
             "n_epochs": n_epochs if n_epochs else "auto",
             "batch_size": batch_size if batch_size else "auto",
             "learning_rate_multiplier": learning_rate_multiplier if learning_rate_multiplier else "auto"
