@@ -99,11 +99,15 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
 
     # check that cast was successful. Failed cast will result in 'null' values
     if not df.filter(df.start_time.isNull()).isEmpty() or not df.filter(df.end_time.isNull()).isEmpty():
-        raise InvalidInputError(
-            "The start or end time columns of the raw span logs contain invalid Timestamp strings." +
-            " The strings should be parseable by pyspark's TimestampType(), usually we expect iso-format." +
-            " Double check the raw input data 'start_time' and 'end_time' column values."
-        )
+        error_msg = "The start or end time columns of the raw span logs contain invalid Timestamp strings." + \
+            " The strings should be parseable by pyspark's TimestampType(), usually we expect iso-format." + \
+            " Double check the raw input data 'start_time' and 'end_time' column values. Will drop the violating" + \
+            " rows and proceed."
+        print(error_msg)
+        print("rows that will be removed:")
+        df.filter(df.start_time.isNull()).show()
+        df.filter(df.end_time.isNull()).show()
+        df = df.dropna(subset=["start_time", "end_time"])
 
     df = _promote_fields_from_attributes(df)
 
