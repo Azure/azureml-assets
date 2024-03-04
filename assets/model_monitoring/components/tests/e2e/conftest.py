@@ -11,6 +11,7 @@ import time
 
 from azure.ai.ml import MLClient, load_component
 from azure.ai.ml.constants import AssetTypes
+from azure.ai.ml.operations._run_history_constants import RunHistoryConstants
 from azure.ai.ml.entities import Job, Data
 from azure.identity import AzureCliCredential
 import pytest
@@ -609,3 +610,22 @@ def uploaded_version_file_name():
 def components_are_uploaded(uploaded_version_file_name):
     """Check if we already have a component version available uploaded by github CI."""
     return os.path.exists(uploaded_version_file_name)
+
+
+@pytest.fixture(scope="module")
+def submit_pipeline_job(ml_client: MLClient):
+    """Submit pipeline job to ml ws. Handle deletion if the testcase is cancelled/stopped."""
+    submitted_jobs = []
+    def _submit_job(job: Job, experiment_name: str):
+        pipeline_job = ml_client.jobs.create_or_update(
+            job, experiment_name=experiment_name, skip_validation=True
+        )
+        submitted_jobs.append(pipeline_job)
+        return pipeline_job
+    yield _submit_job
+    print("cancelling the jobs submitted:")
+    for job in submitted_jobs:
+        job_at_end = ml_client.jobs.get(job.name)
+        print(f"job: {job.name}, status: {job.status}, end_status: {job_at_end.status}")
+        if job_at_end.status not in RunHistoryConstants.TERMINAL_STATUSES:
+            ml_client.jobs.begin_cancel(job.name)
