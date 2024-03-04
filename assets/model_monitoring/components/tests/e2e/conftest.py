@@ -630,8 +630,8 @@ def submit_pipeline_job(ml_client: MLClient, request):
             job_at_end = ml_client.jobs.get(job.name)
             print(f"job: {job.name}, status: {job.status}, end_status: {job_at_end.status}")
             if job_at_end.status not in RunHistoryConstants.TERMINAL_STATUSES:
-                ml_client.jobs.begin_cancel(job.name)
                 ml_client.jobs.archive(job.name)
+                ml_client.jobs.begin_cancel(job.name)
 
     request.addfinalizer(cancel_jobs)
     yield _submit_job
@@ -652,5 +652,5 @@ def cleanup_previous_e2e_tests(ml_client: MLClient, test_suite_name):
 
             if job.experiment_name == test_suite_name:
                 print(f"job: {job.name}, status: {job.status}. Begin cancelling.")
-                ml_client.jobs.begin_cancel(job.name)
                 ml_client.jobs.archive(job.name)
+                ml_client.jobs.begin_cancel(job.name)
