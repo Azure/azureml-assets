@@ -7,6 +7,7 @@ import argparse
 import time
 import json
 from openai import OpenAI
+from openai.types.fine_tuning.job_create_params import Hyperparameters
 from common import utils
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.logging import get_logger
@@ -28,11 +29,16 @@ class FineTuneProxy:
         print("Starting fine-tune job {} {} {} {} {} {} {}"
               .format(model, training_file_id, validation_file_id, n_epochs,
                       batch_size, learning_rate_multiplier, suffix))
-
+        hyperparameters : Hyperparameters = {
+            "n_epochs": n_epochs if n_epochs else "auto",
+            "batch_size": batch_size if batch_size else "auto",
+            "learning_rate_multiplier": learning_rate_multiplier if learning_rate_multiplier else "auto"
+        }
         finetune_job = self.aoai_client.fine_tuning.jobs.create(
             model=model,
             training_file=training_file_id,
             validation_file=validation_file_id,
+            hyperparameters=hyperparameters,
             suffix=suffix)
         job_id = finetune_job.id
         status = finetune_job.status
