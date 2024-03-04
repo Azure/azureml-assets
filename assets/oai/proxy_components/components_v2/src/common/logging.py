@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation.
-# ---------------------------------------------------------
+# Licensed under the MIT License.
 
 """ Logging Utils"""
 

@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation.
-# ---------------------------------------------------------
+# Licensed under the MIT License.
 
 """data upload component."""
 import logging

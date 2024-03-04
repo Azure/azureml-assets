@@ -1,8 +1,8 @@
-# ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation.
-# ---------------------------------------------------------
+# Licensed under the MIT License.
 
 """Finetune submit component."""
+
 import argparse
 import time
 import json
