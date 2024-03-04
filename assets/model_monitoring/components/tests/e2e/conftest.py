@@ -613,7 +613,7 @@ def components_are_uploaded(uploaded_version_file_name):
 
 
 @pytest.fixture(scope="module")
-def submit_pipeline_job(ml_client: MLClient):
+def submit_pipeline_job(ml_client: MLClient, request):
     """Submit pipeline job to ml ws. Handle deletion if the testcase is cancelled/stopped."""
     submitted_jobs = []
 
@@ -624,10 +624,33 @@ def submit_pipeline_job(ml_client: MLClient):
         submitted_jobs.append(pipeline_job)
         return pipeline_job
 
+    def cancel_jobs():
+        print("cancelling the jobs submitted:")
+        for job in submitted_jobs:
+            job_at_end = ml_client.jobs.get(job.name)
+            print(f"job: {job.name}, status: {job.status}, end_status: {job_at_end.status}")
+            if job_at_end.status not in RunHistoryConstants.TERMINAL_STATUSES:
+                ml_client.jobs.begin_cancel(job.name)
+                ml_client.jobs.archive(job.name)
+
+    request.addfinalizer(cancel_jobs)
     yield _submit_job
-    print("cancelling the jobs submitted:")
-    for job in submitted_jobs:
-        job_at_end = ml_client.jobs.get(job.name)
-        print(f"job: {job.name}, status: {job.status}, end_status: {job_at_end.status}")
-        if job_at_end.status not in RunHistoryConstants.TERMINAL_STATUSES:
-            ml_client.jobs.begin_cancel(job.name)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_previous_e2e_tests(ml_client: MLClient, test_suite_name):
+    """Clean up any previously running e2e tests in test suite name."""
+    print(f"Cleaning up past jobs that weren't cancelled in experiment_name={test_suite_name}.")
+    if test_suite_name == "local":
+        # For local debugging do not cancel other people's jobs.
+        # only cancel jobs that are for the same github_ref when you run a new CI.
+        pass
+    else:
+        for job in ml_client.jobs.list():
+            if job.status in RunHistoryConstants.TERMINAL_STATUSES:
+                continue
+
+            if job.experiment_name == test_suite_name:
+                print(f"job: {job.name}, status: {job.status}. Begin cancelling.")
+                ml_client.jobs.begin_cancel(job.name)
+                ml_client.jobs.archive(job.name)
