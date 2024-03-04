@@ -39,6 +39,12 @@ The impact of model compression techniques â€“ such as knowledge distillation â€
 - [Xu and Hu (2022)](https://arxiv.org/pdf/2201.08542.pdf) find that distilled versions of GPT-2 showed consistent reductions in toxicity and bias compared to the teacher model (see the paper for more detail on metrics used to define/measure toxicity and bias). 
 - [Gupta et al. (2022)](https://arxiv.org/pdf/2203.12574.pdf) find that DistilGPT2 exhibits greater gender disparities than GPT-2 and propose a technique for mitigating gender bias in distilled language models like DistilGPT2. 
 
+# Model Evaluation samples
+
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+
 # Inference samples
 
 Inference type|Python sample (Notebook)

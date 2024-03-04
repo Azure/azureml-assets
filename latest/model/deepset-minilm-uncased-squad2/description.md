@@ -30,6 +30,12 @@ Evaluated on the SQuAD 2.0 dev set with the [official eval script](https://works
 "NoAns_total": 5945
 ```
 
+# Model Evaluation samples
+
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a>|<a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
+
 # Inference samples
 
 Inference type|Python sample (Notebook)

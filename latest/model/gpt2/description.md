@@ -41,6 +41,12 @@ The training data used for this model has not been released as a dataset one can
 
 *Note: This bias will also affect all fine-tuned versions of this model.*
 
+# Model Evaluation samples
+
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+
 # Inference samples
 
 Inference type|Python sample (Notebook)

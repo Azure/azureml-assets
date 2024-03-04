@@ -34,6 +34,12 @@ Significant research has explored bias and fairness issues with language models 
 
 The model should not be used to intentionally create hostile or alienating environments for people. In addition, the model was not trained to be factual or true representations of people or events, and therefore using the model to generate such content is out-of-scope for the abilities of this model.
 
+# Model Evaluation samples
+
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a>|<a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
+
 # Inference samples
 
 Inference type|Python sample (Notebook)

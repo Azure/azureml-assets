@@ -29,6 +29,12 @@ Note that this model is primarily aimed at being fine-tuned on tasks that use th
 
 The model should not be used to intentionally create hostile or alienating environments for people. The model was not trained to be factual or true representations of people or events, and therefore using the models to generate such content is out-of-scope for the abilities of this model
 
+# Model Evaluation samples
+
+Task | Use case | Dataset | Python sample (Notebook) | CLI with YAML
+|--|--|--|--|--|
+Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a>|<a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
+
 # Inference samples
 
 Inference type|Python sample (Notebook)

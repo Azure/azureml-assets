@@ -19,10 +19,10 @@ Token Classification|Named Entity Recognition|<a href="https://huggingface.co/da
 Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
 
 
-### Model Evaluation
+### Model Evaluation samples
 
-Task| Use case| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|
+Task| Use case| Dataset | Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
 Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
 

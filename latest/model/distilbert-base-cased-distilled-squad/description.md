@@ -36,6 +36,12 @@ Significant research has explored bias and fairness issues with language models 
 
 Users (both direct and downstream) should be made aware of the risks, biases and limitations of the model.
 
+# Model Evaluation samples
+
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|--|--|--|--|--|
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a>|<a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
+
 # Inference samples
 
 Inference type|Python sample (Notebook)
