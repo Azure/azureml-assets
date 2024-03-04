@@ -1,5 +1,5 @@
 # ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # ---------------------------------------------------------
 
 """ Common handlers and utilities for OpenAI components."""
