@@ -82,7 +82,7 @@ def _promote_fields_from_attributes(df: DataFrame) -> DataFrame:
         }
     )
 
-    # as of right now UX does not want us to remove the promoted fields. Uncomment logic if we need to change it later.
+    # TODO: as of right now UX does not want us to remove the promoted fields. Uncomment logic if we need to change it later.
     # df = _drop_promoted_fields(df, fields_to_promote_mapping)
     return df
 
