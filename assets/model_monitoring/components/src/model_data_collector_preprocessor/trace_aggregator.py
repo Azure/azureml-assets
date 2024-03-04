@@ -43,6 +43,7 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_dat
         ).alias('span_rows')
     )
 
+    # see if we can return a list of spans and return empty list instead of null rows.
     all_aggregated_traces = grouped_spans_df \
         .rdd \
         .map(_aggregate_span_logs_to_trace_logs) \
