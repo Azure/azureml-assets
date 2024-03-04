@@ -19,14 +19,20 @@ def test_get_headers_for_connection_auth_provider(has_additional_headers, mocker
     # Arrange
     auth_provider = WorkspaceConnectionAuthProvider(connection_name='test', endpoint_type='MIR')
     expected_header_from_auth_provider = {'my_auth': '123'}
-    additional_headers = '{"additional_header": "true"}'
     mocker.patch.object(WorkspaceConnectionAuthProvider, 'get_auth_headers',
                         return_value=expected_header_from_auth_provider)
 
     if has_additional_headers:
-        header_provider = MirHeaderProvider(auth_provider, None, None, None, additional_headers=additional_headers)
+        additional_headers = '{"additional_header": "true"}'
     else:
-        header_provider = MirHeaderProvider(auth_provider, None, None, None)
+        additional_headers = None
+
+    header_provider = MirHeaderProvider(
+        auth_provider=auth_provider,
+        configuration=None,
+        metadata=None,
+        token_provider=None,
+        additional_headers=additional_headers)
 
     # Act
     actual_headers = header_provider.get_headers()
@@ -48,7 +54,12 @@ def test_get_headers_uses_mir_header_handler(mocker):
     mocker.patch.object(MirAndBatchPoolHeaderHandlerFactory, 'get_header_handler', return_value=OpenAIHeaderHandler)
     expected_headers = {'hello': 'world'}
     mocker.patch.object(OpenAIHeaderHandler, 'get_headers', return_value=expected_headers)
-    header_provider = MirHeaderProvider(auth_provider, None, None, None)
+    header_provider = MirHeaderProvider(
+        auth_provider=auth_provider,
+        configuration=None,
+        metadata=None,
+        token_provider=None,
+        additional_headers=None)
 
     # Act
     actual_headers = header_provider.get_headers()

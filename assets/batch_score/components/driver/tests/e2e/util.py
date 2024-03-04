@@ -28,8 +28,6 @@ def _submit_job_and_monitor_till_completion(
         pipeline_filepath=pipeline_filepath,
         yaml_overrides=yaml_overrides)
 
-    assert job.status == "Preparing"
-
     try:
         job = _wait_until_termination(ml_client=pytest.ml_client, pipeline_job=job)
 

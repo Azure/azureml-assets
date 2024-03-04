@@ -64,7 +64,7 @@ def get_retriable_type(
         if model_response_code == "429":
             return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT
 
-        if model_response_code == "" and model_response_reason in ["model_not_ready", "too_few_model_instance"]:
+        if model_response_reason in ["model_not_ready", "too_few_model_instance"]:
             return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT
 
     if response_status >= 500:
