@@ -3,7 +3,7 @@ channels:
 - conda-forge
 - anaconda
 dependencies:
-- python=3.8
+- python=3.9
 - pip=21.3.1
 - pip:
   - azureml-rag==0.2.24.1
@@ -15,3 +15,4 @@ dependencies:
   - recognizers-text-suite~=1.0.2a2
   - applicationinsights~=0.11.10
   - azure-cosmos~=4.4.0
+  - clickhouse_connect~=0.7.1

@@ -4,7 +4,7 @@ WORKDIR /
 USER root
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl unixodbc gnupg2 \
+    && apt-get install -y --no-install-recommends curl unixodbc gnupg2 python3.9 \
     && curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc \
     && curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
@@ -25,12 +25,14 @@ COPY ./requirements.txt ./
 RUN pip install -r requirements.txt
 
 COPY ./extra_requirements.txt ./
-RUN pip install -r extra_requirements.txt
+RUN pip install -r extra_requirements.txt && \
+    pip install promptflow-image-bundle[azure]==0.2.0
+
 
 ## Install dbcopilot
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.15-py3-none-any.whl
+RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.16-py3-none-any.whl
 
-RUN pip install cryptography==41.0.6 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1 promptflow-image-bundle[azure]==0.2.0
+RUN pip install cryptography==42.0.0 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1
 
 # RUN pip install plotly~=5.13.1 azure-kusto-data==4.2.0 recognizers-text-suite~=1.0.2a2
 
