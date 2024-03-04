@@ -86,7 +86,7 @@ class PyTorch_to_MlFlow_ModelConverter:
         self.ft_config = getattr(component_args, "ft_config", {})
         self.ft_pytorch_model_path = component_args.model_path
         self.mlflow_model_save_path = self.component_args.output_dir
-    
+
     def _set_mlflow_hf_args(self):
         # set mlflow hf args
         self.mlflow_hf_args = {
@@ -136,7 +136,7 @@ class PyTorch_to_MlFlow_ModelConverter:
 
         logger.info(f"Adding additional misc to MLModel - {self.mlflow_hftransformers_misc_conf}")
         misc_conf = deep_update(misc_conf, self.mlflow_hftransformers_misc_conf)
-    
+
         self.misc_conf = misc_conf
         logger.info(f"MlModel config - {self.misc_conf}")
 
@@ -145,7 +145,6 @@ class PyTorch_to_MlFlow_ModelConverter:
 
         # update metadata with mlflow task
         self.metadata = update_acft_metadata(metadata=self.metadata, finetuning_task=self.mlflow_task_type)
-
 
     def load_model_and_tokenizer(self):
         model = load_model(self.ft_pytorch_model_path, self.component_args, self.ft_config)
@@ -223,7 +222,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         """Init."""
         super().__init__()
         super(ModelConverter, self).__init__(component_args)
- 
+
     def convert_model(self) -> None:
         """convert pytorch model to oss mlflow model"""
         # load model and tokenizer
@@ -263,4 +262,3 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         self.copy_finetune_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
 
         logger.info("Saved MLFlow model using OSS flavour.")
-

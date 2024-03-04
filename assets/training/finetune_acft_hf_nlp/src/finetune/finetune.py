@@ -131,7 +131,7 @@ MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS = {
     Tasks.TEXT_GENERATION: {
         "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
-        "params": '[{"name": "top_p", "type": "float", "default": 1.0, "shape": null}, {"name": "temperature", "type": "float", "default": 0.8, "shape": null}, {"name": "max_new_tokens", "type": "integer", "default": 50, "shape": null}, {"name": "do_sample", "type": "boolean", "default": true, "shape": null}, {"name": "return_full_text", "type": "boolean", "default": true, "shape": null}]',   # noqa: F501 # Length of line greater than 119 characters limit
+        "params": '[{"name": "top_p", "type": "float", "default": 1.0, "shape": null}, {"name": "temperature", "type": "float", "default": 0.8, "shape": null}, {"name": "max_new_tokens", "type": "integer", "default": 50, "shape": null}, {"name": "do_sample", "type": "boolean", "default": true, "shape": null}, {"name": "return_full_text", "type": "boolean", "default": true, "shape": null}]',   # noqa: E501 # Length of line greater than 119 characters limit
     },
 }
 
