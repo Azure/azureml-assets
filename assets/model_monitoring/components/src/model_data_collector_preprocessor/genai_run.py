@@ -11,7 +11,6 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import TimestampType
 from pyspark.sql.functions import lit
 from pyspark.sql.utils import AnalysisException
-from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities.df_utils import try_get_df_column
 from shared_utilities.io_utils import save_spark_df_as_mltable
 from model_data_collector_preprocessor.store_url import StoreUrl
@@ -82,7 +81,8 @@ def _promote_fields_from_attributes(df: DataFrame) -> DataFrame:
         }
     )
 
-    # TODO: as of right now UX does not want us to remove the promoted fields. Uncomment logic if we need to change it later.
+    # TODO: as of right now UX does not want us to remove the promoted fields.
+    # Uncomment logic if we need to change it later.
     # df = _drop_promoted_fields(df, fields_to_promote_mapping)
     return df
 
