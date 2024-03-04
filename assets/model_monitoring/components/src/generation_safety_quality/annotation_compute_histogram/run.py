@@ -37,6 +37,10 @@ COMPLETION = "completion"
 CONTEXT = "context"
 GROUND_TRUTH = "ground_truth"
 CORRELATION_ID = "correlationid"
+TRACE_ID = "traceid"
+ROOT_SPAN = "rootspan"
+
+PASSTHROUGH_COLUMNS = [CORRELATION_ID, TRACE_ID, ROOT_SPAN]
 
 
 # ==================  HTTP Constants ==================
@@ -337,6 +341,7 @@ def run():
     parser.add_argument("--similarity_violations", type=str, required=True)
 
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
+    parser.add_argument("--evaluation", type=str, required=True)
     args = parser.parse_args()
 
     request_args = {
@@ -380,7 +385,8 @@ def run():
         completion_column_name=args.completion_column_name,
         context_column_name=args.context_column_name,
         ground_truth_column_name=args.ground_truth_column_name,
-        violations=violations
+        violations=violations,
+        evaluation=args.evaluation
     )
 
 
@@ -440,6 +446,15 @@ def validate_parameters(request_args, sample_rate):
             f"got {sample_rate}.")
 
 
+def get_passthrough_cols(df):
+    """Get passthrough columns as a dictionary from name to values."""
+    passthrough_cols = {}
+    for passthrough_column in PASSTHROUGH_COLUMNS:
+        if passthrough_column in df.columns:
+            passthrough_cols[passthrough_column] = df[passthrough_column]
+    return passthrough_cols
+
+
 def apply_annotation(
     *,
     metric_names,
@@ -457,7 +472,8 @@ def apply_annotation(
     context_column_name,
     ground_truth_column_name,
     samples_index,
-    violations
+    violations,
+    evaluation
 ):
     """Apply annotation to all samples in the production_dataset."""
     metric_names = process_metric_names(metric_names)
@@ -501,10 +517,10 @@ def apply_annotation(
     if ground_truth_column_name in production_df.columns:
         columns_to_select.append(ground_truth_column_name)
         renamed_columns.append(GROUND_TRUTH)
-    has_correlation_id = CORRELATION_ID in production_df.columns
-    if has_correlation_id:
-        columns_to_select.append(CORRELATION_ID)
-        renamed_columns.append(CORRELATION_ID)
+    for passthrough_column in PASSTHROUGH_COLUMNS:
+        if passthrough_column in production_df.columns:
+            columns_to_select.append(passthrough_column)
+            renamed_columns.append(passthrough_column)
 
     # select the relevant column names
     production_df = production_df.select(columns_to_select)
@@ -597,8 +613,10 @@ def apply_annotation(
     all_metrics_pdf = None
     samples_index_rows = []
     metrics_list = []
+    compact_metric_names = []
     for metric_name in metric_names:
         metric_name_compact = get_compact_metric_name(metric_name)
+        compact_metric_names.append(metric_name_compact)
         column_name = COMPACT_METRIC_NAME_TO_COLUMN[metric_name_compact]
         metrics_list.append(column_name)
     has_context = CONTEXT in production_df.columns
@@ -611,9 +629,7 @@ def apply_annotation(
                 os.environ[env_var_key] = env_var_value
 
             rows = []
-            correlation_ids = None
-            if has_correlation_id:
-                correlation_ids = batch[CORRELATION_ID]
+            passthrough_cols = get_passthrough_cols(batch)
             for index, row in batch.iterrows():
                 qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
                 if has_context:
@@ -644,8 +660,8 @@ def apply_annotation(
                 output_path=output_dir.name
             )
             tabular_result = pd.read_json(os.path.join(output_dir.name, "eval_results.jsonl"), lines=True)
-            if correlation_ids is not None:
-                tabular_result[CORRELATION_ID] = correlation_ids
+            for passthrough_column, passthrough_values in passthrough_cols.items():
+                tabular_result[passthrough_column] = passthrough_values
             # rename metric columns
             for column_name in metrics_list:
                 # set failures to -1
@@ -660,22 +676,19 @@ def apply_annotation(
     def mock_metrics_batch(iterator):
         for batch in iterator:
             rows = []
-            correlation_ids = None
-            if has_correlation_id:
-                correlation_ids = batch[CORRELATION_ID]
+            passthrough_cols = get_passthrough_cols(batch)
             for index, row in batch.iterrows():
                 qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
                 if has_context:
                     qca[CONTEXT] = row[CONTEXT]
                 if has_ground_truth:
                     qca[GROUND_TRUTH] = row[GROUND_TRUTH]
-                for metric_name in metric_names:
-                    metric_name_compact = get_compact_metric_name(metric_name)
+                for metric_name_compact in compact_metric_names:
                     qca[metric_name_compact] = 1
                 rows.append(qca)
             tabular_result = pd.DataFrame(rows)
-            if correlation_ids is not None:
-                tabular_result[CORRELATION_ID] = correlation_ids
+            for passthrough_column, passthrough_values in passthrough_cols.items():
+                tabular_result[passthrough_column] = passthrough_values
             yield tabular_result
 
     schema_fields = [
@@ -686,10 +699,10 @@ def apply_annotation(
     schema_fields.append(StructField(COMPLETION, StringType(), True))
     if has_ground_truth:
         schema_fields.append(StructField(GROUND_TRUTH, StringType(), True))
-    if has_correlation_id:
-        schema_fields.append(StructField(CORRELATION_ID, StringType(), True))
-    for metric_name in metric_names:
-        metric_name_compact = get_compact_metric_name(metric_name)
+    for passthrough_column in PASSTHROUGH_COLUMNS:
+        if passthrough_column in production_df.columns:
+            schema_fields.append(StructField(passthrough_column, StringType(), True))
+    for metric_name_compact in compact_metric_names:
         schema_fields.append(StructField(metric_name_compact, IntegerType(), True))
     schema = StructType(schema_fields)
     if is_test_connection:
@@ -706,10 +719,9 @@ def apply_annotation(
     print("showing annotations dataframe: ")
     annotations_df.show()
 
-    for metric_name in metric_names:
+    for metric_name_compact in compact_metric_names:
         # Run inference over input dataset
-        print(f"Begin {metric_name} processing.")
-        metric_name_compact = get_compact_metric_name(metric_name)
+        print(f"Begin {metric_name_compact} processing.")
         # Get rating counts
         filtered_annotations_df = annotations_df.select(
             metric_name_compact).filter(col(metric_name_compact) != -1)
@@ -774,6 +786,15 @@ def apply_annotation(
             StructField(ASSET, StringType(), True),
         ]
     )
+
+    # Save the annotations dataframe as output
+    io_utils.save_spark_df_as_mltable(annotations_df, evaluation)
+    samples_index_rows.append({METRIC_NAME: "Evaluation",
+                               GROUP: "",
+                               GROUP_DIMENSION: "",
+                               SAMPLES_NAME: "Evaluation",
+                               ASSET: f"azureml_{run_id}_output_data_evaluation:1"})
+
     # Create a new DataFrame for the samples index data
     samples_df = spark.createDataFrame(samples_index_rows, metadata_schema)
     io_utils.save_spark_df_as_mltable(samples_df, samples_index)
