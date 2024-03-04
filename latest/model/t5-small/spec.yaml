@@ -127,6 +127,12 @@ description: |
 
   The developers evaluated the model on 24 tasks, see the [research paper](https://jmlr.org/papers/volume21/20-074/20-074.pdf) for full details.
 
+  # Model Evaluation samples
+
+  Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+  |--|--|--|--|--|
+  Translation | Translation | <a href="https://huggingface.co/datasets/wmt16/viewer/ro-en/train" target="_blank">wmt16/ro-en</a> | <a href="https://aka.ms/azureml-eval-sdk-translation" target="_blank">evaluate-model-translation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-translation" target="_blank">evaluate-model-translation.yml</a>
+
   # Inference samples
 
   Inference type|Python sample (Notebook)

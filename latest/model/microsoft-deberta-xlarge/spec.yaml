@@ -82,6 +82,12 @@ description: |
   | **[DeBERTa-V2-XXLarge](https://huggingface.co/microsoft/deberta-v2-xxlarge)<sup>1,2</sup>** | **96.1/91.4** | **92.2/89.7** | **91.7/91.9** | 97.2     | **96.0** | **72.0** | 93.5     | **93.1/94.9** | **92.7/90.3** | **93.2/93.1** |
   --------
 
+  # Model Evaluation samples
+
+  Task | Use case | Dataset | Python sample (Notebook) | CLI with YAML
+  |--|--|--|--|--|
+  Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a>|<a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
+
   # Inference samples
 
   Inference type|Python sample (Notebook)
