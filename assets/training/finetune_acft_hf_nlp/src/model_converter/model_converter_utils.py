@@ -150,9 +150,10 @@ def load_and_merge_peft_lora_model(model_path: str, component_args: Namespace, f
 
 
 def copy_tokenizer_files_to_model_folder(mlflow_model_folder: str, task_name: str):
-    """
-    Copying only for Text Gen tasks as this is needed for vLLM inference engine
-    which expects tokenizer and model files in same folder i.e. "data/model"
+    """Copy tokenizer files to model folder.
+
+    Copying only for Text Gen tasks as this is needed for vLLM inference engine.
+    It expects tokenizer and model files in same folder i.e. "data/model".
     """
     if task_name not in [Tasks.TEXT_GENERATION]:
         logger.info("Not copying tokenizer files to model folder for {}".format(task_name))
