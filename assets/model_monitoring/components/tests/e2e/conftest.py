@@ -637,7 +637,7 @@ def submit_pipeline_job(ml_client: MLClient, request):
     yield _submit_job
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def cleanup_previous_e2e_tests(ml_client: MLClient, test_suite_name):
     """Clean up any previously running e2e tests in test suite name."""
     print(f"Cleaning up past jobs that weren't cancelled in experiment_name={test_suite_name}.")
