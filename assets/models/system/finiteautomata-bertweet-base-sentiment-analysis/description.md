@@ -11,6 +11,12 @@ Uses `POS`, `NEG`, `NEU` labels.
 1. [TASS Dataset license](http://tass.sepln.org/tass_data/download.php)
 2. [SEMEval 2017 Dataset license]()
 
+# Model Evaluation samples
+
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Text Classification|Sentiment Classification|<a href="https://huggingface.co/datasets/glue/viewer/sst2/validation" target="_blank">SST2</a>|<a href="https://aka.ms/evaluate-model-sentiment-analysis" target="_blank">evaluate-model-sentiment-analysis.ipynb</a>|<a href="https://aka.ms/evaluate-model-sentiment-analysis-cli" target="_blank">evaluate-model-sentiment-analysis.yml</a>
+
 # Inference samples
 
 Inference type|Python sample (Notebook)

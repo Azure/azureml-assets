@@ -233,3 +233,32 @@ class TestSpanTreeUtilities:
                 assert actual_dict[keyname] == expected_children
             else:
                 assert actual_dict[keyname] == node.span_row[keyname]
+
+    def test_span_tree_get_span_by_span_id(self):
+        """Test scenarios for get_span_by_id()."""
+        s0 = SpanTreeNode(
+            Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
+                end_time=datetime(2024, 2, 12, 1, 40, 0))
+        )
+        s00 = SpanTreeNode(
+            Row(span_id="00", parent_id="0", start_time=datetime(2024, 2, 12, 0, 5, 0),
+                end_time=datetime(2024, 2, 12, 0, 30, 0))
+        )
+        s01 = SpanTreeNode(
+            Row(span_id="01", parent_id="0", start_time=datetime(2024, 2, 12, 0, 35, 0),
+                end_time=datetime(2024, 2, 12, 1, 0, 0))
+        )
+        s02 = SpanTreeNode(
+            Row(span_id="02", parent_id="0", start_time=datetime(2024, 2, 12, 1, 5, 0),
+                end_time=datetime(2024, 2, 12, 1, 30, 0))
+        )
+        s010 = SpanTreeNode(
+            Row(span_id="010", parent_id="01", start_time=datetime(2024, 2, 12, 0, 40, 0),
+                end_time=datetime(2024, 2, 12, 0, 50, 0))
+        )
+        spans = [s0, s02, s010, s00, s01]
+
+        tree = SpanTree(spans)
+        assert tree.get_span_tree_node_by_span_id("") is None
+        assert tree.get_span_tree_node_by_span_id(None) is None  # type: ignore
+        assert tree.get_span_tree_node_by_span_id("0") == s0
