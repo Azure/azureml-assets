@@ -5,6 +5,9 @@
 
 import logging
 import sys
+from importlib.metadata import entry_points
+
+AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT = "azureml-benchmark-custom-logger"
 
 
 def get_logger(filename: str) -> logging.Logger:
@@ -22,6 +25,9 @@ def get_logger(filename: str) -> logging.Logger:
     logger.setLevel(logging.DEBUG)
     stream_handler = logging.StreamHandler(sys.stdout)
     logger.addHandler(stream_handler)
+
+    for custom_logger in entry_points(group=AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT):
+        logger.addHandler(custom_logger.load())
 
     formatter = logging.Formatter(
         "[%(asctime)s - %(name)s - %(levelname)s] - %(message)s"

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-""" Azure OpenAI client manager."""
+"""Azure OpenAI client manager"""
 
 from azureml.core import Run
 from azure.identity import ManagedIdentityCredential
@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 
 
 class AzureOpenAIClientManager:
-    """Class for **authentication** related information used for the run."""
+    """Class for **authentication** related information used for the run"""
 
     ENV_CLIENT_ID_KEY = "DEFAULT_IDENTITY_CLIENT_ID"
     api_version = "2023-12-01-preview"
