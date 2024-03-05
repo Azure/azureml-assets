@@ -386,6 +386,8 @@ class TestGenAISparkPreprocessor:
     def test_trace_aggregator_empty_root_span(self, genai_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
         spark = self._init_spark()
+        start_time = datetime(2024, 2, 5, 0, 1, 0)
+        end_time = datetime(2024, 2, 5, 0, 8, 0)
 
         span_logs_no_root_with_data = [
             ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
@@ -397,7 +399,7 @@ class TestGenAISparkPreprocessor:
             span_logs_no_root_with_data,
             self._preprocessed_log_schema)
 
-        trace_df = process_spans_into_aggregated_traces(span_logs_no_root_with_data_df, True)
+        trace_df = process_spans_into_aggregated_traces(span_logs_no_root_with_data_df, True, start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
         rows = trace_df.collect()
         assert trace_df.count() == 1
         assert rows[0]['trace_id'] == "01"
@@ -407,7 +409,7 @@ class TestGenAISparkPreprocessor:
             ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
         ]
         spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
-        no_root_traces = process_spans_into_aggregated_traces(spans_no_root_df, True)
+        no_root_traces = process_spans_into_aggregated_traces(spans_no_root_df, True, start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
         assert no_root_traces.isEmpty()
 
     @pytest.mark.parametrize(
@@ -425,6 +427,8 @@ class TestGenAISparkPreprocessor:
             self, genai_zip_test_setup, genai_preprocessor_test_setup,
             span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data):
         """Test scenario where spans has real data."""
+        data_window_start = datetime(2024, 2, 5, 0, 0)
+        data_window_end = datetime(2024, 2, 5, 1, 0)
         spark = self._init_spark()
         # infer schema only when we have data.
         processed_spans_df = spark.createDataFrame(span_input_logs, span_input_schema)
@@ -438,7 +442,7 @@ class TestGenAISparkPreprocessor:
         expected_traces_df.show()
         expected_traces_df.printSchema()
 
-        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df, require_trace_data)
+        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df, require_trace_data, data_window_start.strftime("%Y%m%dT%H:%M:%S"), data_window_end.strftime("%Y%m%dT%H:%M:%S"))
 
         print("actual trace logs:")
         actual_trace_df.show()
