@@ -5,7 +5,7 @@
 
 import argparse
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from dateutil import parser
 from pyspark.sql import DataFrame
 from pyspark.sql.types import TimestampType
@@ -18,6 +18,7 @@ from model_data_collector_preprocessor.store_url import StoreUrl
 from model_data_collector_preprocessor.mdc_utils import (
     _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string,
+    _filter_df_by_time_window,
 )
 from model_data_collector_preprocessor.trace_aggregator import (
     process_spans_into_aggregated_traces,
@@ -183,9 +184,8 @@ def genai_preprocessor(
     # filter down the span_logs to original time window
     original_start_time = parser.parse(data_window_start)
     original_end_time = parser.parse(data_window_end)
-    filtered_span_logs_df = enlarged_time_window_span_logs_df \
-        .filter(enlarged_time_window_span_logs_df.start_time >= original_start_time) \
-        .filter(enlarged_time_window_span_logs_df.end_time <= original_end_time)
+    filtered_span_logs_df = _filter_df_by_time_window(
+        enlarged_time_window_span_logs_df, original_start_time, original_end_time)
 
     save_spark_df_as_mltable(filtered_span_logs_df, preprocessed_span_data)
 

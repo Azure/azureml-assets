@@ -261,7 +261,9 @@ class TestGenAISparkPreprocessor:
             span_logs_no_root_with_data,
             self._preprocessed_log_schema)
 
-        trace_df = process_spans_into_aggregated_traces(span_logs_no_root_with_data_df, True, start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
+        trace_df = process_spans_into_aggregated_traces(
+            span_logs_no_root_with_data_df, True,
+            start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
         rows = trace_df.collect()
         assert trace_df.count() == 1
         assert rows[0]['trace_id'] == "01"
@@ -271,11 +273,14 @@ class TestGenAISparkPreprocessor:
             ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
         ]
         spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
-        no_root_traces = process_spans_into_aggregated_traces(spans_no_root_df, True, start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
+        no_root_traces = process_spans_into_aggregated_traces(
+            spans_no_root_df, True,
+            start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
         assert no_root_traces.isEmpty()
 
     @pytest.mark.parametrize(
-        "span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data, data_window_start, data_window_end",
+        "span_input_logs, span_input_schema, expected_trace_logs, " +
+        "expected_trace_schema, require_trace_data, data_window_start, data_window_end",
         [
             # ([], _preprocessed_log_schema, [], _trace_log_schema, True,
             #  datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),

@@ -7,6 +7,7 @@ from pyspark.sql import DataFrame
 from dateutil import parser
 from pyspark.sql.functions import collect_list, struct
 from shared_utilities.span_tree_utils import SpanTree, SpanTreeNode
+from model_data_collector_preprocessor.mdc_utils import _filter_df_by_time_window
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_aggregated_trace_log_spark_df_schema,
 )
@@ -27,7 +28,8 @@ def _aggregate_span_logs_to_trace_logs(grouped_row):
         return [tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())]
 
 
-def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_data: bool, data_window_start: str, data_window_end: str) -> DataFrame:
+def process_spans_into_aggregated_traces(
+        span_logs: DataFrame, require_trace_data: bool,data_window_start: str, data_window_end: str) -> DataFrame:
     """Group span logs into aggregated trace logs."""
     output_trace_schema = _get_aggregated_trace_log_spark_df_schema()
 
@@ -52,9 +54,8 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_dat
 
     data_window_start_as_datetime = parser.parse(data_window_start)
     data_window_end_as_datetime = parser.parse(data_window_end)
-    all_aggregated_traces = all_aggregated_traces \
-        .filter(all_aggregated_traces.start_time >= data_window_start_as_datetime) \
-        .filter(all_aggregated_traces.end_time <= data_window_end_as_datetime)
+    all_aggregated_traces = _filter_df_by_time_window(
+        all_aggregated_traces, data_window_start_as_datetime, data_window_end_as_datetime)
 
     print("Aggregated Trace DF:")
     all_aggregated_traces.show()
