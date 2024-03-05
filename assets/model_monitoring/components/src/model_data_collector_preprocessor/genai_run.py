@@ -174,11 +174,20 @@ def genai_preprocessor(
     """
     store_url = StoreUrl(input_data)
 
-    span_logs_df = _genai_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url)
+    enlarged_time_window_span_logs_df = _genai_uri_folder_to_preprocessed_spark_df(
+        data_window_start, data_window_end, store_url)
 
-    trace_logs_df = process_spans_into_aggregated_traces(span_logs_df, require_trace_data, data_window_start, data_window_end)
+    trace_logs_df = process_spans_into_aggregated_traces(
+        enlarged_time_window_span_logs_df, require_trace_data, data_window_start, data_window_end)
 
-    save_spark_df_as_mltable(span_logs_df, preprocessed_span_data)
+    # filter down the span_logs to original time window
+    original_start_time = parser.parse(data_window_start)
+    original_end_time = parser.parse(data_window_end)
+    filtered_span_logs_df = enlarged_time_window_span_logs_df \
+        .filter(enlarged_time_window_span_logs_df.start_time >= original_start_time) \
+        .filter(enlarged_time_window_span_logs_df.end_time <= original_end_time)
+
+    save_spark_df_as_mltable(filtered_span_logs_df, preprocessed_span_data)
 
     save_spark_df_as_mltable(trace_logs_df, aggregated_trace_data)
 

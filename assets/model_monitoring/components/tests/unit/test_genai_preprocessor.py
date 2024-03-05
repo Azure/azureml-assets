@@ -10,52 +10,13 @@ from pyspark.sql.types import (
 import pytest
 import os
 import sys
-import string
-import random
-import time
-import zipfile
 from datetime import datetime
 from model_data_collector_preprocessor.genai_run import (
     _genai_uri_folder_to_preprocessed_spark_df,
 )
-from model_data_collector_preprocessor.trace_aggregator import (
-    process_spans_into_aggregated_traces,
-)
 from model_data_collector_preprocessor.store_url import StoreUrl
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
-
-
-@pytest.fixture(scope="session")
-def genai_zip_test_setup():
-    # TODO: move this zip utility to shared conftest later.
-    # Check gsq tests and mdc tests for possible duplications.
-    """Zip files in module_path to src.zip."""
-    momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
-    module_path = os.path.join(momo_work_dir, "src")
-    # zip files in module_path to src.zip
-    s = string.ascii_lowercase + string.digits
-    rand_str = '_' + ''.join(random.sample(s, 5))
-    time_str = time.strftime("%Y%m%d-%H%M%S") + rand_str
-    zip_path = os.path.join(module_path, f"src_{time_str}.zip")
-
-    zf = zipfile.ZipFile(zip_path, "w")
-    for dirname, subdirs, files in os.walk(module_path):
-        for filename in files:
-            abs_filepath = os.path.join(dirname, filename)
-            rel_filepath = os.path.relpath(abs_filepath, start=module_path)
-            print("zipping file:", rel_filepath)
-            zf.write(abs_filepath, arcname=rel_filepath)
-    zf.close()
-    # add files to zip folder
-    os.environ[SPARK_ZIP_PATH] = zip_path
-    print("zip path set in genai_preprocessor_test_setup: ", zip_path)
-
-    yield
-    # remove zip file
-    os.remove(zip_path)
-    # remove zip path from environment
-    os.environ.pop(SPARK_ZIP_PATH, None)
 
 
 @pytest.fixture(scope="module")
@@ -95,7 +56,6 @@ class TestGenAISparkPreprocessor:
         return spark
 
     _preprocessed_schema = StructType([
-        StructField('trace_id', StringType(), True),
         StructField('attributes', StringType(), True),
         StructField('context', StringType(), True),
         StructField('end_time', TimestampType(), True),
@@ -105,6 +65,7 @@ class TestGenAISparkPreprocessor:
         StructField('parent_id', StringType(), True),
         StructField('start_time', TimestampType(), True),
         StructField('status', StringType(), True),
+        StructField('trace_id', StringType(), True),
         StructField('span_id', StringType(), True),
         StructField('span_type', StringType(), True),
         StructField('framework', StringType(), True),
@@ -116,30 +77,29 @@ class TestGenAISparkPreprocessor:
     ])
 
     _preprocessed_data = [
-        ["01", "{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"2\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 5, 15, 4, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 15, 3, 0), "OK", "2", "llm", "LLM", "in", "out"],
-        ["01", "{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
         ["{\"span_id\":\"1\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 15, 2, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 15, 1, 0), "OK", "1", "llm", "LLM", "in", "out"],
-        ["02", "{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"5\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 5, 15, 12, 0), "[]", "[]", "name", "4"] +
-        [datetime(2024, 2, 5, 15, 11, 0), "OK", "5", "llm", "LLM", "in", "out"],
-        ["02", "{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"4\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 5, 15, 8, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 15, 7, 0), "OK", "4", "llm", "LLM", "in", "out"],
-        ["02", "{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        [datetime(2024, 2, 5, 15, 1, 0), "OK", "01", "1", "llm", "LLM", "in", "out"],
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"span_id\":\"2\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 5, 15, 4, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 5, 15, 3, 0), "OK", "01", "2", "llm", "LLM", "in", "out"],
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
         ["{\"span_id\":\"3\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 15, 6, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 5, 15, 5, 0), "OK", "3", "llm", "LLM", "in", "out"],
+        [datetime(2024, 2, 5, 15, 5, 0), "OK", "02", "3", "llm", "LLM", "in", "out"],
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"span_id\":\"4\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 5, 15, 8, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 5, 15, 7, 0), "OK", "02", "4", "llm", "LLM", "in", "out"],
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"span_id\":\"5\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 5, 15, 12, 0), "[]", "[]", "name", "4"] +
+        [datetime(2024, 2, 5, 15, 11, 0), "OK", "02", "5", "llm", "LLM", "in", "out"],
     ]
 
     _preprocessed_schema_no_input = StructType([
-        StructField('trace_id', StringType(), True),
         StructField('attributes', StringType(), True),
         StructField('context', StringType(), True),
         StructField('end_time', TimestampType(), True),
@@ -149,6 +109,7 @@ class TestGenAISparkPreprocessor:
         StructField('parent_id', StringType(), True),
         StructField('start_time', TimestampType(), True),
         StructField('status', StringType(), True),
+        StructField('trace_id', StringType(), True),
         StructField('span_id', StringType(), True),
         StructField('span_type', StringType(), True),
         StructField('framework', StringType(), True),
@@ -160,49 +121,49 @@ class TestGenAISparkPreprocessor:
     ])
 
     _preprocessed_data_no_inputs = [
-        ["01", "{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"2\",\"trace_id\":\"01\"}"] +
-        [datetime(2024, 2, 7, 12, 4, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 7, 12, 3, 0), "OK", "2", "llm", "LLM", None, "out"],
-        ["01", "{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
         ["{\"span_id\":\"1\",\"trace_id\":\"01\"}"] +
         [datetime(2024, 2, 7, 12, 2, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 7, 12, 1, 0), "OK", "1", "llm", "LLM", None, "out"],
-        ["02", "{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"5\",\"trace_id\":\"02\"}"] +
-        [datetime(2024, 2, 7, 12, 12, 0), "[]", "[]", "name", "4"] +
-        [datetime(2024, 2, 7, 12, 11, 0), "OK", "5", "llm", "LLM", None, "out"],
-        ["02", "{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"4\",\"trace_id\":\"02\"}"] +
-        [datetime(2024, 2, 7, 12, 8, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 7, 12, 7, 0), "OK", "4", "llm", "LLM", None, "out"],
-        ["02", "{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        [datetime(2024, 2, 7, 12, 1, 0), "OK", "01", "1", "llm", "LLM", None, "out"],
+        ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"span_id\":\"2\",\"trace_id\":\"01\"}"] +
+        [datetime(2024, 2, 7, 12, 4, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 7, 12, 3, 0), "OK", "01", "2", "llm", "LLM", None, "out"],
+        ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
         ["{\"span_id\":\"3\",\"trace_id\":\"02\"}"] +
         [datetime(2024, 2, 7, 12, 6, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 7, 12, 5, 0), "OK", "3", "llm", "LLM", None, "out"],
+        [datetime(2024, 2, 7, 12, 5, 0), "OK", "02", "3", "llm", "LLM", None, "out"],
+        ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"span_id\":\"4\",\"trace_id\":\"02\"}"] +
+        [datetime(2024, 2, 7, 12, 8, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 7, 12, 7, 0), "OK", "02", "4", "llm", "LLM", None, "out"],
+        ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"span_id\":\"5\",\"trace_id\":\"02\"}"] +
+        [datetime(2024, 2, 7, 12, 12, 0), "[]", "[]", "name", "4"] +
+        [datetime(2024, 2, 7, 12, 11, 0), "OK", "02", "5", "llm", "LLM", None, "out"],
     ]
 
     _preprocessed_data_look_back = [
-        ["01", "{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"2\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 10, 15, 4, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 10, 15, 3, 0), "OK", "2", "llm", "LLM", "in", "out"],
-        ["01", "{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
         ["{\"span_id\":\"1\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 10, 15, 2, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 10, 15, 1, 0), "OK", "1", "llm", "LLM", "in", "out"],
-        ["02", "{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"5\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 10, 15, 12, 0), "[]", "[]", "name", "4"] +
-        [datetime(2024, 2, 10, 15, 11, 0), "OK", "5", "llm", "LLM", "in", "out"],
-        ["02", "{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        [datetime(2024, 2, 10, 15, 1, 0), "OK", "01", "1", "llm", "LLM", "in", "out"],
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"span_id\":\"2\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 10, 15, 4, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 10, 15, 3, 0), "OK", "01", "2", "llm", "LLM", "in", "out"],
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
         ["{\"span_id\":\"3\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 10, 15, 6, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 10, 15, 5, 0), "OK", "3", "llm", "LLM", "in", "out"],
-        ["02", "{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        [datetime(2024, 2, 10, 15, 5, 0), "OK", "02", "3", "llm", "LLM", "in", "out"],
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
         ["{\"span_id\":\"4\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
-        [datetime(2024, 2, 10, 14, 10, 0), "[]", "[]", "name", None] +
-        [datetime(2024, 2, 10, 14, 9, 0), "OK", "4", "llm", "LLM", "in", "out"],
+        [datetime(2024, 2, 10, 15, 12, 0), "[]", "[]", "name", "5"] +
+        [datetime(2024, 2, 10, 15, 11, 0), "OK", "02", "4", "llm", "LLM", "in", "out"],
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
+        ["{\"span_id\":\"5\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        [datetime(2024, 2, 10, 16, 1, 0), "[]", "[]", "name", None] +
+        [datetime(2024, 2, 10, 15, 11, 0), "OK", "02", "5", "llm", "LLM", "in", "out"],
     ]
 
     @pytest.mark.parametrize(
@@ -265,190 +226,6 @@ class TestGenAISparkPreprocessor:
             window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
             input_url, my_add_tags)
         assert actual_data.isEmpty()
-
-    _preprocessed_log_schema = StructType([
-        # TODO: The user_id and session_id may not be available in v1.
-        StructField('attributes', StringType(), False),
-        StructField('end_time', TimestampType(), False),
-        StructField('events', StringType(), False),
-        StructField('framework', StringType(), False),
-        StructField('input', StringType(), False),
-        StructField('links', StringType(), False),
-        StructField('name', StringType(), False),
-        StructField('output', StringType(), False),
-        StructField('parent_id', StringType(), True),
-        # StructField('session_id', StringType(), True),
-        StructField('span_id', StringType(), False),
-        StructField('span_type', StringType(), False),
-        StructField('start_time', TimestampType(), False),
-        StructField('status', StringType(), False),
-        StructField('trace_id', StringType(), False),
-        # StructField('user_id', StringType(), True),
-    ])
-
-    _span_log_data = [
-        ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
-        ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-        ["{}", datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
-        ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
-        ["{}", datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "in", "[]", "name",  "out", "2"] +
-        ["3", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
-        ["{}", datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "in", "[]", "name",  "out", "1"] +
-        ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
-    ]
-
-    # pass data that might have extra information like context, resource, etc
-    _preprocessed_log_schema_extra = StructType([
-        # TODO: The user_id and session_id may not be available in v1.
-        StructField('attributes', StringType(), False),
-        StructField('context', StringType(), True),
-        StructField('c_resources', StringType(), True),
-        StructField('end_time', TimestampType(), False),
-        StructField('events', StringType(), False),
-        StructField('framework', StringType(), False),
-        StructField('input', StringType(), False),
-        StructField('links', StringType(), False),
-        StructField('name', StringType(), False),
-        StructField('output', StringType(), False),
-        StructField('parent_id', StringType(), True),
-        # StructField('session_id', StringType(), True),
-        StructField('span_id', StringType(), False),
-        StructField('span_type', StringType(), False),
-        StructField('start_time', TimestampType(), False),
-        StructField('status', StringType(), False),
-        StructField('trace_id', StringType(), False),
-        # StructField('user_id', StringType(), True),
-    ])
-
-    _span_log_data_extra = [
-        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
-        ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
-        ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
-        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "in", "[]", "name",  "out", "2"] +
-        ["3", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
-        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "in", "[]", "name",  "out", "1"] +
-        ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
-    ]
-
-    _root_span_str_extra = '{"attributes": "resource", "context": "c", "c_resources": "{}", "end_time": "2024-02-' + \
-        '05T00:08:00", "events": "[]", "framework": "FLOW", "input": "in", "links": "[]", "name": "name", "output"' + \
-        ': "out", "parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "sta' + \
-        'tus": "OK", "trace_id": "01", "children": [{"attributes": "resource", "context": "c", "c_resources": "{}"' + \
-        ', "end_time": "2024-02-05T00:05:00", "events": "[]", "framework": "RAG", "input": "in", "links": "[]", "n' + \
-        'ame": "name", "output": "out", "parent_id": "1", "span_id": "2", "span_type": "llm", "start_time": "2024' + \
-        '-02-05T00:02:00", "status": "OK", "trace_id": "01", "children": [{"attributes": "resource", "context": "' + \
-        'c", "c_resources": "{}", "end_time": "2024-02-05T00:04:00", "events": "[]", "framework": "INTERNAL", "in' + \
-        'put": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "2", "span_id": "3", "span_type' + \
-        '": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": "01", "children": []}]}, {"at' + \
-        'tributes": "resource", "context": "c", "c_resources": "{}", "end_time": "2024-02-05T00:07:00", "events":' + \
-        ' "[]", "framework": "LLM", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "' + \
-        '1", "span_id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id":' + \
-        ' "01", "children": []}]}'
-
-    _root_span_str = '{"attributes": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FL' + \
-        'OW", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id": "1",' + \
-        ' "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01", "children"' + \
-        ': [{"attributes": "{}", "end_time": "2024-02-05T00:05:00", "event' + \
-        's": "[]", "framework": "RAG", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_i' + \
-        'd": "1", "span_id": "2", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "tra' + \
-        'ce_id": "01", "children": [{"attributes": "{}", "end_time": "2024-02-05T00:04:00", "events": "[]", "fr' + \
-        'amework": "INTERNAL", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "2",' + \
-        ' "span_id": "3", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": ' + \
-        '"01", "children": []}]}, {"attributes": "{}", "end_time": "2024-02-05T00:07:00", "events": "[]", "fram' + \
-        'ework": "LLM", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "1", "span_' + \
-        'id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01", "' + \
-        'children": []}]}'
-
-    _trace_log_data = [
-            ["01", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
-            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str],
-    ]
-
-    _trace_log_schema = StructType(
-        [
-            StructField("trace_id", StringType(), False),
-            StructField("user_id", StringType(), True),
-            StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampType(), False),
-            StructField("end_time", TimestampType(), False),
-            StructField("input", StringType(), False),
-            StructField("output", StringType(), False),
-            StructField("root_span", StringType(), True),
-        ]
-    )
-
-    _trace_log_data_extra = [
-            ["01", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
-            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_extra],
-    ]
-
-    def test_trace_aggregator_empty_root_span(self, genai_zip_test_setup, genai_preprocessor_test_setup):
-        """Test scenarios where we have a faulty root span when generating tree."""
-        spark = self._init_spark()
-        start_time = datetime(2024, 2, 5, 0, 1, 0)
-        end_time = datetime(2024, 2, 5, 0, 8, 0)
-
-        span_logs_no_root_with_data = [
-            ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
-            ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-            ["{}", datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
-            ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "02"],
-        ]
-        span_logs_no_root_with_data_df = spark.createDataFrame(
-            span_logs_no_root_with_data,
-            self._preprocessed_log_schema)
-
-        trace_df = process_spans_into_aggregated_traces(span_logs_no_root_with_data_df, True, start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
-        rows = trace_df.collect()
-        assert trace_df.count() == 1
-        assert rows[0]['trace_id'] == "01"
-
-        span_logs_no_root = [
-            ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", "1"] +
-            ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-        ]
-        spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
-        no_root_traces = process_spans_into_aggregated_traces(spans_no_root_df, True, start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
-        assert no_root_traces.isEmpty()
-
-    @pytest.mark.parametrize(
-        "span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data",
-        [
-            ([], _preprocessed_log_schema, [], _trace_log_schema, True),
-            (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema, True),
-            (
-                _span_log_data_extra, _preprocessed_log_schema_extra,
-                _trace_log_data_extra, _trace_log_schema, True),
-            (_span_log_data, _preprocessed_log_schema, [], _trace_log_schema, False),
-        ]
-    )
-    def test_trace_aggregator(
-            self, genai_zip_test_setup, genai_preprocessor_test_setup,
-            span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema, require_trace_data):
-        """Test scenario where spans has real data."""
-        data_window_start = datetime(2024, 2, 5, 0, 0)
-        data_window_end = datetime(2024, 2, 5, 1, 0)
-        spark = self._init_spark()
-        # infer schema only when we have data.
-        processed_spans_df = spark.createDataFrame(span_input_logs, span_input_schema)
-        expected_traces_df = spark.createDataFrame(expected_trace_logs, expected_trace_schema)
-
-        print("processed logs:")
-        processed_spans_df.show()
-        processed_spans_df.printSchema()
-
-        print("expected trace logs:")
-        expected_traces_df.show()
-        expected_traces_df.printSchema()
-
-        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df, require_trace_data, data_window_start.strftime("%Y%m%dT%H:%M:%S"), data_window_end.strftime("%Y%m%dT%H:%M:%S"))
-
-        print("actual trace logs:")
-        actual_trace_df.show()
-        actual_trace_df.printSchema()
-
-        assert_spark_dataframe_equal(actual_trace_df, expected_traces_df)
 
 
 def assert_spark_dataframe_equal(df1, df2):
