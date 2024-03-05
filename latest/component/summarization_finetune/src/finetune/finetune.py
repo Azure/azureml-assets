@@ -1140,7 +1140,8 @@ def finetune(args: Namespace):
                     base image value is {removed_base_image}.")
     else:
         logger.info(
-            "Adding inferencing base image {} for text generation task.".format(metadata["azureml.base_image"])
+            "Adding inferencing base image {} for text generation \
+            task.".format(metadata.get("azureml.base_image", "Base image for inference does not exist"))
         )
 
     args.model_metadata = update_acft_metadata(metadata=metadata,
