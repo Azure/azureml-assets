@@ -15,7 +15,7 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_generation_safety_quality_model_monitor_job(
-    ml_client, get_component, experiment_name, production_data, data_columns_dict: dict = {}
+    submit_pipeline_job, ml_client, get_component, experiment_name, production_data, data_columns_dict: dict = {}
 ):
     generation_safety_quality_signal_monitor = get_component(
         COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR
@@ -60,8 +60,8 @@ def _submit_generation_safety_quality_model_monitor_job(
     pipeline_job = _generation_safety_quality_signal_monitor_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
-    pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name, skip_validation=True
+    pipeline_job = submit_pipeline_job(
+        pipeline_job, experiment_name
     )
 
     # Wait until the job completes
@@ -80,10 +80,11 @@ class TestGenerationSafetyQualityModelMonitor:
     """Test class for GSQ."""
 
     def test_generation_safety_quality_successful(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test GSQ is successful with traditional expected data."""
         pipeline_job = _submit_generation_safety_quality_model_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -97,10 +98,11 @@ class TestGenerationSafetyQualityModelMonitor:
         assert pipeline_job.status == "Completed"
 
     def test_generation_safety_quality_genai_successful(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test GSQ is successful with genai trace logs."""
         pipeline_job = _submit_generation_safety_quality_model_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,

@@ -21,6 +21,7 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_data_quality_signal_monitor_job(
+    submit_pipeline_job,
     ml_client,
     get_component,
     experiment_name,
@@ -55,8 +56,8 @@ def _submit_data_quality_signal_monitor_job(
     pipeline_job = _data_quality_signal_monitor_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
-    pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name, skip_validation=True
+    pipeline_job = submit_pipeline_job(
+        pipeline_job, experiment_name
     )
 
     # Wait until the job completes
@@ -74,10 +75,11 @@ class TestDataQualityModelMonitor:
     """Test class."""
 
     def test_monitoring_run_use_defaults_data_has_no_drift_successful(
-        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+        self, ml_client: MLClient, get_component, download_job_output, submit_pipeline_job, test_suite_name
     ):
         """Test the happy path scenario where the data has drift and default settings are used."""
         pipeline_job = _submit_data_quality_signal_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -91,10 +93,11 @@ class TestDataQualityModelMonitor:
         assert pipeline_job.status == "Completed"
 
     def test_monitoring_run_successful_with_datatype_override(
-        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+        self, ml_client: MLClient, get_component, download_job_output, submit_pipeline_job, test_suite_name
     ):
         """Test the happy path scenario with datatype override."""
         pipeline_job = _submit_data_quality_signal_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -110,10 +113,11 @@ class TestDataQualityModelMonitor:
         assert pipeline_job.status == "Completed"
 
     def test_monitoring_run_successful_with_timestamp_data(
-        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+        self, ml_client: MLClient, get_component, download_job_output, submit_pipeline_job, test_suite_name
     ):
         """Test the happy path scenario with timestamp data."""
         pipeline_job = _submit_data_quality_signal_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -127,10 +131,11 @@ class TestDataQualityModelMonitor:
         assert pipeline_job.status == "Completed"
 
     def test_monitoring_run_use_defaults_empty_production_data_failed(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test the scenario where the production data is empty."""
         pipeline_job = _submit_data_quality_signal_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -145,12 +150,13 @@ class TestDataQualityModelMonitor:
         assert pipeline_job.status == "Failed"
 
     def test_monitoring_run_add_more_valid_datatype_data_successful(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test the scenario where the datatype contains timestamp and boolean."""
         # The test case does not choose the target_column because of a bug in feature_importance
         # component did not support timestamp type. So we do not select target_column for now for the test
         pipeline_job = _submit_data_quality_signal_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
