@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 
 
 class AzureOpenAIClientManager:
-    """Class for **authentication** related information used for the run"""
+    """Class for **authentication** related information used for the run."""
 
     ENV_CLIENT_ID_KEY = "DEFAULT_IDENTITY_CLIENT_ID"
     api_version = "2023-12-01-preview"

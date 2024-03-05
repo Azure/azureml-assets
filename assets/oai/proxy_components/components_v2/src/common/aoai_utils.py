@@ -14,7 +14,7 @@ api_version = "2023-12-01-preview"
 
 
 def get_azure_oai_client():
-    """Get azure oai client using api key from keyvault"""
+    """Get azure oai client using api key from keyvault."""
     api_key_name = f"OPENAI-API-KEY-{aoai_resource_name}"
     run = Run.get_context()
     api_key = run.get_secret(api_key_name)

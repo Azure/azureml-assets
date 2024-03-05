@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 
 
 class FineTuneProxy:
-    """Fine-tune proxy class to submit fine-tune job to AOAI"""
+    """Fine-tune proxy class to submit fine-tune job to AOAI."""
 
     def __init__(self, aoai_client):
         """ Fine-tune proxy class constructor"""
