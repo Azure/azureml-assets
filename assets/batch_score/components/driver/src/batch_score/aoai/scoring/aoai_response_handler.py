@@ -156,6 +156,12 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             if mini_batch_context:
                 return mini_batch_context.mini_batch_id
 
+        def get_model_name(response_body: any):
+            if not isinstance(response_body, dict):
+                return None
+
+            return response_body.get("model", None)
+
         request_completed_event = BatchScoreRequestCompletedEvent(
             minibatch_id=get_mini_batch_id(scoring_request.mini_batch_context),
             input_row_id=scoring_request.internal_id,
@@ -169,6 +175,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             prompt_tokens=get_prompt_tokens(http_response.payload),
             completion_tokens=get_completion_tokens(http_response.payload),
             duration_ms=(end - start) * 1000,
-            segmented_request_id=scoring_request.segment_id
+            segmented_request_id=scoring_request.segment_id,
+            model_name=get_model_name(http_response.payload)
         )
         event_utils.emit_event(batch_score_event=request_completed_event)
