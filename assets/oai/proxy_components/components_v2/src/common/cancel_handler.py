@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Cancel handler class. """
+"""Cancel handler class."""
 
 import signal
 
