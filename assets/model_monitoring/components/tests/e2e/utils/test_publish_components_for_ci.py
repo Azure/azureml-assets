@@ -13,6 +13,6 @@ import os
 class TestPublishComponentsForCI():
     """Class for model-monitoring-ci workflow to upload components and data once before splitting tests to runners."""
 
-    def test_publish_components(self, upload_component_version_file):
+    def test_publish_components(self, upload_component_version_file, cleanup_previous_e2e_tests):
         """Init calls fixture to publish components."""
         pass
