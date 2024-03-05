@@ -13,6 +13,7 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_model_performance_signal_monitor_job(
+    submit_pipeline_job,
     ml_client,
     get_component,
     experiment_name,
@@ -50,8 +51,8 @@ def _submit_model_performance_signal_monitor_job(
     pipeline_job = _model_performance_signal_monitor_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
-    pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name, skip_validation=True
+    pipeline_job = submit_pipeline_job(
+        pipeline_job, experiment_name
     )
 
     # Wait until the job completes
@@ -65,10 +66,11 @@ class TestModelPerformanceModelMonitor:
     """Test class."""
 
     def test_monitoring_regression_successful(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test model performance on regression model."""
         pipeline_job = _submit_model_performance_signal_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -83,10 +85,11 @@ class TestModelPerformanceModelMonitor:
         assert pipeline_job.status == "Completed"
 
     def test_monitoring_classification_successful(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test model performance on classification model."""
         pipeline_job = _submit_model_performance_signal_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
