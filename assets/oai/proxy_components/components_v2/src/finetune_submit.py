@@ -20,12 +20,12 @@ class FineTuneProxy:
     """Fine-tune proxy class to submit fine-tune job to AOAI."""
 
     def __init__(self, aoai_client):
-        """ Fine-tune proxy class constructor"""
+        """Fine-tune proxy class constructor."""
         self.aoai_client: OpenAI = aoai_client
 
     def submit_finetune_job(self, training_file_id, validation_file_id, model, registered_model,
                             n_epochs, batch_size, learning_rate_multiplier, suffix=None):
-        """ Submit fine-tune job to AOAI."""
+        """Submit fine-tune job to AOAI."""
         print("Starting fine-tune job {} {} {} {} {} {} {}"
               .format(model, training_file_id, validation_file_id, n_epochs,
                       batch_size, learning_rate_multiplier, suffix))
@@ -64,7 +64,7 @@ class FineTuneProxy:
 
 
 def submit_finetune_job():
-    """ Submit fine-tune job to AOAI."""
+    """Submit fine-tune job to AOAI."""
     parser = argparse.ArgumentParser(description="Finetune submit Component")
     parser.add_argument("--model", type=str)
     parser.add_argument("--task_type", type=str)
