@@ -61,7 +61,7 @@ jobs:
         run: pip install -r ${{ env.testsRootPath }}/gsq-requirements.txt
 
       - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py ${{ env.momoComponentsRootPath }}/tests/e2e/test_generation_safety_quality_e2e.py -o log_level=DEBUG -m gsq_test
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_metrics.py ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py ${{ env.momoComponentsRootPath }}/tests/e2e/test_generation_safety_quality_e2e.py -o log_level=DEBUG -m gsq_test
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}

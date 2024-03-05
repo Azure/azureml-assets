@@ -83,7 +83,7 @@ jobs:
     environment: Testing
     strategy:
       matrix:
-        group: [1, 2, 3, 4, 5, 6, 7]
+        group: [1, 2, 3, 4, 5, 6]
     steps:
       - name: Clone branch
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
@@ -126,7 +126,7 @@ jobs:
             test-durations-combined
 
       - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/group_${{ matrix.group }}_${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 7 -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py --splits 7 --group ${{ matrix.group }} --store-durations --clean-durations
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/group_${{ matrix.group }}_${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8 -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_metrics.py --splits 6 --group ${{ matrix.group }} --store-durations --clean-durations
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}

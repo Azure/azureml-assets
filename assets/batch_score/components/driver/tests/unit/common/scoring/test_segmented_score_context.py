@@ -214,3 +214,8 @@ def test_build_scoring_result(
     assert final_result.response_body["usage"]["prompt_tokens"] == 2
     assert final_result.response_body["usage"]["completion_tokens"] == 18
     assert final_result.response_body["usage"]["total_tokens"] == 20
+
+    # Ensure the shorthanded token fields are correct.
+    assert final_result.prompt_tokens == 2
+    assert final_result.completion_tokens == 18
+    assert final_result.total_tokens == 20
