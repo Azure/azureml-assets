@@ -451,6 +451,11 @@ class Spec(Config):
 
         return deps
 
+    @property
+    def properties(self) -> Dict[str, str]:
+        """Asset properties."""
+        return self._yaml.get('properties', {})
+
 
 class AssetPath:
     """Asset path."""

@@ -4,6 +4,8 @@
 """Contains helper functions for logging."""
 
 from typing import Any
+from importlib.metadata import entry_points
+
 import logging
 import os
 import sys
@@ -11,6 +13,9 @@ import traceback
 from collections import deque
 import hashlib
 import mlflow
+
+
+AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT = "azureml-benchmark-custom-logger"
 
 
 def log_mlflow_params(**kwargs: Any) -> None:
@@ -89,6 +94,9 @@ def get_logger(filename: str) -> logging.Logger:
     logger = logging.getLogger(filename)
     logger.setLevel(logging.INFO)
     logger.handlers = []  # Clear existing handlers to avoid duplicates
+
+    for custom_logger in entry_points(group=AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT):
+        logger.addHandler(custom_logger.load())
 
     formatter = logging.Formatter(
         "SystemLog: [%(asctime)s - %(name)s - %(levelname)s] - %(message)s"

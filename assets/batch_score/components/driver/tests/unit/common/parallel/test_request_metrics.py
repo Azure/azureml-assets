@@ -39,11 +39,11 @@ class TestRequestMetrics:
         start_time = pd.Timestamp.utcnow()
 
         self._add_request(request_metrics, "request1")
-        self._add_request(request_metrics, "request2")
+        self._add_request(request_metrics, "request2", delay=0.1)
 
         end_time = pd.Timestamp.utcnow()
 
-        self._add_request(request_metrics, "request3", delay=1)
+        self._add_request(request_metrics, "request3", delay=0.1)
 
         metrics = request_metrics.get_metrics(
             start_time=start_time,
