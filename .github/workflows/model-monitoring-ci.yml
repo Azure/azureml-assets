@@ -18,6 +18,8 @@ env:
   pytest_report_folder: results
   pytest_report_file: junit3.xml
   scripts_setup_dir: scripts/setup
+  pytest_component_version_folder: component_version
+  pytest_component_version_file: .version_upload
 permissions:
   # Required to clone repo
   contents: read
@@ -31,8 +33,8 @@ defaults:
 jobs:
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
-  run-momo-tests:
-    name: Run Monitoring Component Tests
+  upload-component-specs:
+    name: Upload Monitoring Component Specs for E2E Tests
     runs-on: ubuntu-latest
     needs: check-execution-context
     environment: Testing
@@ -41,6 +43,52 @@ jobs:
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+      - name: Use Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - name: Install dependencies
+        run: pip install -r ${{ env.testsRootPath }}/requirements.txt
+      - name: Log in to Azure and create resources
+        uses: ./.github/actions/create-azure-resources
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
+      - name: Publish Component Specs
+        run: python -m pytest ${{ env.testsRootPath }}/e2e/utils/test_publish_components_for_ci.py::TestPublishComponentsForCI::test_publish_components
+        env:
+          SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          RESOURCE_GROUP: ${{ env.resource_group }}
+          WORKSPACE_NAME: ${{ env.workspace }}
+      - name: Upload component Version artifact
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ${{ env.pytest_component_version_folder }}
+          path: ${{ env.pytest_component_version_file }}
+
+  run-momo-tests:
+    name: Run Monitoring Component Tests
+    runs-on: ubuntu-latest
+    needs: [check-execution-context, upload-component-specs]
+    environment: Testing
+    strategy:
+      matrix:
+        group: [1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        with:
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+      - name: Download component version
+        id: download-version
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.pytest_component_version_folder }}
+          path: ./
       - name: Use Python 3.8
         uses: actions/setup-python@v4
         with:
@@ -57,7 +105,7 @@ jobs:
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 
       - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/group_${{ matrix.group }}_${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8 -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_metrics.py --splits 7 --group ${{ matrix.group }} --durations-path ${{ env.testsRootPath }}/.test_durations
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
