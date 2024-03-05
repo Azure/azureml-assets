@@ -33,16 +33,15 @@ def _get_preprocessed_span_logs_df_schema() -> StructType:
 def _get_aggregated_trace_log_spark_df_schema() -> StructType:
     """Get Aggregated Trace Log DataFrame Schema."""
     # TODO: The user_id and session_id may not be available in v0 of trace aggregator.
-    # allow all nullable to handle empty trace rdd entries from SpanTree constuction errors.
     schema = StructType(
         [
-            StructField("trace_id", StringType(), True),
+            StructField("trace_id", StringType(), False),
             StructField("user_id", StringType(), True),
             StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampType(), True),
-            StructField("end_time", TimestampType(), True),
-            StructField("input", StringType(), True),
-            StructField("output", StringType(), True),
+            StructField("start_time", TimestampType(), False),
+            StructField("end_time", TimestampType(), False),
+            StructField("input", StringType(), False),
+            StructField("output", StringType(), False),
             StructField("root_span", StringType(), True),
         ]
     )

@@ -45,6 +45,10 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_dat
         ).alias('span_rows')
     )
 
+    # need to allow null values just in case of empty rdd entry from faulty SpanTree construction.
+    for field in output_trace_schema.fields:
+        field.nullable = True
+
     all_aggregated_traces = grouped_spans_df \
         .rdd \
         .flatMap(_aggregate_span_logs_to_trace_logs) \
