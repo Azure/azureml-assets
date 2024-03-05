@@ -37,7 +37,7 @@ class UploadComponent:
 
 
 def main():
-    """Main function to upload data to AOAI."""
+    """Start upload data to AOAI."""
     parser = argparse.ArgumentParser(description="Upload Component")
     parser.add_argument("--train_dataset", type=str)
     parser.add_argument("--validation_dataset", type=str)
