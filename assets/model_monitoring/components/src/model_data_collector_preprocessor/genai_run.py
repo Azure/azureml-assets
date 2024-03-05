@@ -130,17 +130,20 @@ def _genai_uri_folder_to_preprocessed_spark_df(
     """Read raw gen AI logs data, preprocess, and return in a Spark DataFrame."""
     # look-back 1 hour for extra span logs
     data_window_start_as_datetime = parser.parse(data_window_start)
+    data_window_end_as_datetime = parser.parse(data_window_end)
     adjusted_date_window_start = data_window_start_as_datetime - timedelta(hours=1)
+    adjusted_date_window_end = data_window_end_as_datetime + timedelta(hours=1)
 
     df = _mdc_uri_folder_to_preprocessed_spark_df(
-        adjusted_date_window_start.strftime("%Y%m%dT%H:%M:%S"), data_window_end, store_url, False, add_tags_func)
+        adjusted_date_window_start.strftime("%Y%m%dT%H:%M:%S"),
+        adjusted_date_window_end.strftime("%Y%m%dT%H:%M:%S"), store_url, False, add_tags_func)
 
     df = _preprocess_raw_logs_to_span_logs_spark_df(df)
 
     # filter logs to buffer window
-    # TODO: include end_time later.
     buffer_start_time = data_window_start_as_datetime - timedelta(minutes=DATA_WINDOW_OFFSET_MINUTES_BEFORE)
-    df = df.filter(df.start_time >= buffer_start_time)
+    buffer_end_time = data_window_end_as_datetime + timedelta(minutes=DATA_WINDOW_OFFSET_MINUTES_AFTER)
+    df = df.filter(df.start_time >= buffer_start_time).filter(df.end_time <= buffer_end_time)
 
     print("df processed from raw Gen AI logs:")
     df.show()
