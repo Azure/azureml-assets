@@ -50,10 +50,11 @@ def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_dat
         .flatMap(_aggregate_span_logs_to_trace_logs) \
         .toDF(output_trace_schema)
 
-    # TODO: add end_time parsing when necessary
     data_window_start_as_datetime = parser.parse(data_window_start)
-    all_aggregated_traces = all_aggregated_traces.filter(
-        all_aggregated_traces.start_time >= data_window_start_as_datetime)
+    data_window_end_as_datetime = parser.parse(data_window_end)
+    all_aggregated_traces = all_aggregated_traces \
+        .filter(all_aggregated_traces.start_time >= data_window_start_as_datetime) \
+        .filter(all_aggregated_traces.end_time <= data_window_end_as_datetime)
 
     print("Aggregated Trace DF:")
     all_aggregated_traces.show()
