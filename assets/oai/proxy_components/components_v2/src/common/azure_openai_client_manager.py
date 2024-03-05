@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Azure OpenAI client manager"""
+"""Azure OpenAI client manager."""
 
 from azureml.core import Run
 from azure.identity import ManagedIdentityCredential
@@ -23,7 +23,7 @@ class AzureOpenAIClientManager:
     api_version = "2023-12-01-preview"
 
     def __init__(self, endpoint_name, endpoint_resource_group: Optional[str], endpoint_subscription: Optional[str]):
-        """ Initialize the AzureOpenAIClientManager."""
+        """Initialize the AzureOpenAIClientManager."""
         self.endpoint_name = endpoint_name
         self.endpoint_resource_group = endpoint_resource_group
         self.endpoint_subscription = endpoint_subscription
@@ -46,20 +46,20 @@ class AzureOpenAIClientManager:
         return credential
 
     def get_key_from_cognitive_service_account(self, client: CognitiveServicesManagementClient) -> str:
-        """ Gets key from cognitive service account"""
+        """Get key from cognitive service account."""
         api_keys: ApiKeys = client.accounts.list_keys(resource_group_name=self.endpoint_resource_group,
                                                       account_name=self.endpoint_name)
         return api_keys.key1
 
     def get_endpoint_from_cognitive_service_account(self, client: CognitiveServicesManagementClient) -> str:
-        """ Gets endpoint from cognitive service account"""
+        """Get endpoint from cognitive service account."""
         account = client.accounts.get(resource_group_name=self.endpoint_resource_group,
                                       account_name=self.endpoint_name)
         logger.info("Endpoint: {}".format(account.properties.endpoint))
         return account.properties.endpoint
 
     def get_azure_openai_client(self) -> AzureOpenAI:
-        """ Gets azure openai client"""
+        """Get azure openai client."""
         if self._get_client_id() is None:
             logger.info("Managed identity client id is empty, will fail...")
             raise Exception("Managed identity client id is empty")

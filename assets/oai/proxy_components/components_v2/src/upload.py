@@ -14,12 +14,13 @@ logger = get_logger(__name__)
 
 class UploadComponent:
     """Upload component to upload data to AOAI."""
+
     def __init__(self, aoai_client: AzureOpenAI):
-        """ Upload component to upload data to AOAI."""
+        """Upload component to upload data to AOAI."""
         self.aoai_client = aoai_client
 
     def upload_file(self, file_path):
-        """ Upload file to AOAI."""
+        """Upload file to AOAI."""
         file_data = open(file_path, "rb")
         upload_result = self.aoai_client.files.create(
             file=file_data,
@@ -27,7 +28,7 @@ class UploadComponent:
         return upload_result
 
     def check_upload_status(self, upload_file_metadata_dictionary: dict):
-        """ Check upload status."""
+        """Check upload status."""
         file_id = upload_file_metadata_dictionary["id"]
         if upload_file_metadata_dictionary["status"] == "error":
             error_reason = upload_file_metadata_dictionary["error"]
@@ -36,7 +37,7 @@ class UploadComponent:
 
 
 def main():
-    """ Main function to upload data to AOAI."""
+    """Main function to upload data to AOAI."""
     parser = argparse.ArgumentParser(description="Upload Component")
     parser.add_argument("--train_dataset", type=str)
     parser.add_argument("--validation_dataset", type=str)

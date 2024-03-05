@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-""" Logging Utils"""
+"""Logging Utils."""
 
 import logging
 import sys
