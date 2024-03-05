@@ -24,16 +24,16 @@ def _aggregate_span_logs_to_trace_logs(grouped_row):
     else:
         output_dict = tree.root_span.to_dict(datetime_to_str=False)
         output_dict['root_span'] = tree.to_json_str()
-        return [output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames()]
+        return [tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())]
 
 
 def process_spans_into_aggregated_traces(span_logs: DataFrame, require_trace_data: bool, data_window_start: str, data_window_end: str) -> DataFrame:
     """Group span logs into aggregated trace logs."""
-    spark = init_spark()
     output_trace_schema = _get_aggregated_trace_log_spark_df_schema()
 
     # TODO: figure out optional output behavior and change to that.
     if not require_trace_data:
+        spark = init_spark()
         print("Skip processing of spans into aggregated traces.")
         return spark.createDataFrame(data=[], schema=output_trace_schema)
 
