@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.35 (2023-03-05)
+### 🐛 Bugs Fixed
+- [#2407](https://github.com/Azure/azureml-assets/pull/2282) Add support for extra in LATEST_PYPI_VERSION env var 
+
 ## 1.16.35 (2023-02-28)
 ### 🐛 Bugs Fixed
 - [#2407](https://github.com/Azure/azureml-assets/pull/2407) Surface properties in the spec configuration 
