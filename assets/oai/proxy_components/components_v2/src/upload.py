@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 
 class UploadComponent:
-    """Upload component to upload data to AOAI"""
+    """Upload component to upload data to AOAI."""
     def __init__(self, aoai_client: AzureOpenAI):
         """ Upload component to upload data to AOAI."""
         self.aoai_client = aoai_client

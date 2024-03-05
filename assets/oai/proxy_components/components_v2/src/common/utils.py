@@ -8,7 +8,7 @@ import yaml
 
 
 def save_yaml(content, filename):
-    """Saves yaml file with given content and filename"""
+    """Saves yaml file with given content and filename."""
     with open(filename, encoding='utf-8', mode='w') as fh:
         yaml.dump(content, fh)
 

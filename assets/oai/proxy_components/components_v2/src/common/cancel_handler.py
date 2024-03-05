@@ -11,7 +11,7 @@ class CancelHandler:
     cancel_triggered = False
 
     def __init__(self):
-        """ Constructor for CancelHandler class. """
+        """ Constructor for CancelHandler class."""
         signal.signal(signal.SIGINT, self.cancel)
         signal.signal(signal.SIGTERM, self.cancel)
 
