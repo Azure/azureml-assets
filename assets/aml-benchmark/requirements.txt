@@ -13,3 +13,4 @@ ddt
 tqdm
 pyyaml
 azure-core
+tiktoken
