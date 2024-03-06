@@ -15,7 +15,6 @@ tags:
   SharedComputeCapacityEnabled: ""
   training_datasets: cnn_dailymail
   huggingface_model_id: facebook/bart-large-cnn
-  mlflow_flavor: transformers
   evaluation_compute_allow_list:
     [
       Standard_DS4_v2
