@@ -12,6 +12,9 @@ import zipfile
 import time
 import random
 import string
+import uuid
+import pandas as pd
+import pyarrow as pa
 from generation_safety_quality.annotation_compute_histogram.run import (
     _check_and_format_azure_endpoint_url,
     apply_annotation,
@@ -22,13 +25,19 @@ from generation_safety_quality.annotation_compute_histogram.run import (
     TEST_CONNECTION,
     THRESHOLD_PARAMS,
     ALL_METRIC_NAMES,
-    PROMPT)
-from shared_utilities.momo_exceptions import InvalidInputError
+    PROMPT,
+    CORRELATION_ID,
+    TRACE_ID,
+    ROOT_SPAN)
+from shared_utilities import io_utils
+from shared_utilities.momo_exceptions import (
+    DataNotFoundError, InvalidInputError)
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
 
 
-QUESTION = "question"
+QUESTION = 'question'
+EVALUATION = 'evaluation'
 
 
 @pytest.fixture(scope="session")
@@ -177,19 +186,100 @@ class TestGSQHistogram:
         mltable_path_copy = os.path.abspath(os.path.join(os.getcwd(), test_folder))
         shutil.copytree(mltable_path, mltable_path_copy, dirs_exist_ok=True)
         # modify the file data.jsonl in folder to have same column name as in file
-        with open(os.path.join(mltable_path_copy, "data.jsonl"), "r", encoding="utf8") as file:
-            data = file.read()
-            data = data.split("\n")
-        json_data = [json.loads(line) for line in data]
+        json_data = read_json_data(mltable_path_copy)
         for row in json_data:
             row[PROMPT] = row[QUESTION]
-        data = "\n".join([json.dumps(row) for row in json_data])
-        with open(os.path.join(mltable_path_copy, "data.jsonl"), "w", encoding="utf8") as file:
-            file.write(data)
+        write_json_data(mltable_path_copy, json_data)
         call_apply_annotation(
             ",".join(metric_names), prompt_column_name=PROMPT, mltable_path=mltable_path_copy)
         # remove test folder
         shutil.rmtree(mltable_path_copy)
+
+    def test_gsq_with_added_passthrough_columns(self, gsq_zip_test_setup,
+                                                gsq_preprocessor_test_setup):
+        """Test dataset with extra passthrough columns added."""
+        metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
+        mltable_path = get_mltable_path()
+        # make copy of directory
+        test_folder = "test_output_gsq_with_added_passthrough_columns"
+        mltable_path_copy = os.path.abspath(os.path.join(os.getcwd(), test_folder))
+        shutil.copytree(mltable_path, mltable_path_copy, dirs_exist_ok=True)
+        # modify the file data.jsonl in folder to have additional columns added
+        json_data = read_json_data(mltable_path_copy)
+        for row in json_data:
+            row[CORRELATION_ID] = str(uuid.uuid4())
+            row[TRACE_ID] = str(uuid.uuid4())
+            row[ROOT_SPAN] = 'dummy rootspan'
+        write_json_data(mltable_path_copy, json_data)
+        call_apply_annotation(",".join(metric_names), mltable_path=mltable_path_copy)
+        # assert that the passthrough columns are added to the output
+        test_path = get_test_path()
+        eval_path = os.path.join(test_path, EVALUATION)
+        evaluation_df = io_utils.try_read_mltable_in_spark_with_error(eval_path, EVALUATION)
+        for col in [CORRELATION_ID, TRACE_ID, ROOT_SPAN]:
+            assert col in evaluation_df.columns
+        # remove test folder
+        shutil.rmtree(mltable_path_copy)
+
+    def test_gsq_with_empty_dataset(self, gsq_zip_test_setup, gsq_preprocessor_test_setup):
+        """Test passing empty dataset."""
+        metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
+        empty_mltable_path = write_empty_production_data()
+        err_msg = "No data is found for input 'production_dataset'"
+        with pytest.raises(DataNotFoundError, match=err_msg):
+            call_apply_annotation(
+                ",".join(metric_names), mltable_path=empty_mltable_path)
+        # remove test folder
+        shutil.rmtree(empty_mltable_path)
+
+
+def read_json_data(mltable_path):
+    """Read the json data from the mltable path."""
+    with open(os.path.join(mltable_path, "data.jsonl"), "r", encoding="utf8") as file:
+        data = file.read()
+        data = data.split("\n")
+    json_data = [json.loads(line) for line in data]
+    return json_data
+
+
+def write_json_data(mltable_path, json_data):
+    """Write the json data to the mltable path."""
+    data = "\n".join([json.dumps(row) for row in json_data])
+    with open(os.path.join(mltable_path, "data.jsonl"), "w", encoding="utf8") as file:
+        file.write(data)
+
+
+def create_ml_table_file_contents(pq_filename):
+    """Create MLTable file contents."""
+    return (
+        "$schema: http://azureml/sdk-2-0/MLTable.json\n"
+        "type: mltable\n"
+        "paths:\n"
+        " - file: ./{0}\n"
+        "transformations:\n"
+        " - read_parquet\n"
+    ).format(pq_filename)
+
+
+def create_ml_table_file(path, contents):
+    """Create MLTable file."""
+    with open(os.path.join(path, "MLTable"), "w") as f:
+        f.write(contents)
+
+
+def write_empty_production_data():
+    """Write an empty input data frame."""
+    df = pd.DataFrame(columns=['question', 'answer', 'context'],
+                      dtype=str)
+    mltable_path = os.path.join(os.getcwd(), "empty_production_data")
+    os.makedirs(mltable_path, exist_ok=True)
+    pq_filename = "empty_production_data.parquet"
+    pq_file_path = os.path.join(mltable_path, pq_filename)
+    SCHEMA = pa.schema([('question', pa.string()), ('answer', pa.string()), ('context', pa.string())])
+    df.to_parquet(pq_file_path, index=False, schema=SCHEMA)
+    mltable_file_contents = create_ml_table_file_contents(pq_filename)
+    create_ml_table_file(mltable_path, mltable_file_contents)
+    return mltable_path
 
 
 def get_mltable_path():
@@ -200,6 +290,11 @@ def get_mltable_path():
         "mltable_groundedness_preprocessed_target_small")
 
 
+def get_test_path():
+    """Get path to test output folder."""
+    return os.path.abspath(os.path.join(os.getcwd(), "test_output"))
+
+
 def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
                           completion_column_name="answer",
                           context_column_name="context",
@@ -207,7 +302,7 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     """Call apply_annotation method in GSQ component."""
     if mltable_path is None:
         mltable_path = get_mltable_path()
-    test_path = os.path.abspath(os.path.join(os.getcwd(), "test_output"))
+    test_path = get_test_path()
     fuse_prefix = "file://"
     histogram_path = fuse_prefix + os.path.join(test_path, "histogram")
     samples_index_path = fuse_prefix + os.path.join(test_path, "samples_index")
@@ -222,6 +317,8 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
 
     for k, v in violations.items():
         violations[k] = fuse_prefix + os.path.join(test_path, v)
+
+    evaluation_path = fuse_prefix + os.path.join(test_path, EVALUATION)
 
     apply_annotation(
         metric_names=metric_names,
@@ -239,5 +336,6 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
         context_column_name=context_column_name,
         ground_truth_column_name=None,
         samples_index=samples_index_path,
-        violations=violations
+        violations=violations,
+        evaluation=evaluation_path
     )

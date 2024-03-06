@@ -79,7 +79,7 @@ async def test_score_once_raises_retriable_exception(caplog,
         """Mock post function."""
         raise exception_to_raise
 
-    scoring_client = ScoringClient(header_handler=make_completion_header_handler(),
+    scoring_client = ScoringClient(header_provider=make_completion_header_handler(),
                                    quota_client=None,
                                    routing_client=None)
     aiohttp.ClientSession.post = MagicMock(side_effect=mock_post)
@@ -100,7 +100,7 @@ async def test_score_once_raises_retriable_exception_until_max_retries(
 ):
     """Test score once raises retriable exception when retry count < max retries."""
     scoring_client = ScoringClient(
-        header_handler=make_completion_header_handler(),
+        header_provider=make_completion_header_handler(),
         quota_client=None,
         routing_client=None)
     session = MagicMock()
@@ -122,7 +122,7 @@ async def test_score_once_fails_when_max_retries_are_exhausted(
 ):
     """Test score once fails when retry count >= max retries."""
     scoring_client = ScoringClient(
-        header_handler=make_completion_header_handler(),
+        header_provider=make_completion_header_handler(),
         quota_client=None,
         routing_client=None)
     session = MagicMock()

@@ -15,6 +15,7 @@ DistilBERT was pretrained on the same data as BERT, which includes the BookCorpu
 
 ### Preprocessing
 
+
 The texts are lowercased and tokenized using WordPiece with a vocabulary size of 30,000.
 The model inputs are structured as follows: [CLS] Sentence A [SEP] Sentence B [SEP]
 With a 50% probability, Sentence A and Sentence B correspond to two consecutive sentences from the original corpus. Otherwise, a random sentence from the corpus is used. The combined length of the two “sentences” must be less than 512 tokens.
@@ -25,6 +26,12 @@ In 10% of cases, masked tokens are replaced by a different random token.
 In the remaining 10%, masked tokens remain unchanged.
 
 ### Pretraining
+### Model Evaluation samples
+
+Task| Use case| Dataset | Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
+
 
 The model was trained on 8 NVIDIA V100 GPUs (each with 16 GB memory) for 90 hours. Refer to the training code for detailed hyperparameters.
 

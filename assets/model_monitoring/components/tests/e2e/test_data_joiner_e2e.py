@@ -19,6 +19,7 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_data_joiner_job(
+    submit_pipeline_job,
     ml_client: MLClient,
     get_component,
     experiment_name,
@@ -53,8 +54,8 @@ def _submit_data_joiner_job(
         type='mltable', mode='direct'
     )
 
-    pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name, skip_validation=True
+    pipeline_job = submit_pipeline_job(
+        pipeline_job, experiment_name
     )
 
     # Wait until the job completes
@@ -72,10 +73,11 @@ class TestDataJoinerE2E:
     """Test class."""
 
     def test_data_joiner_successful(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test the happy path scenario for data joiner."""
         pipeline_job = _submit_data_joiner_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -88,10 +90,11 @@ class TestDataJoinerE2E:
         assert pipeline_job.status == 'Completed'
 
     def test_data_joiner_empty_result_failed(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test data joiner that produces empty result."""
         pipeline_job = _submit_data_joiner_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
