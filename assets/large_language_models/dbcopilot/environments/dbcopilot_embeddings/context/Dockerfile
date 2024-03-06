@@ -8,7 +8,7 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 # Create conda environment
 COPY conda_dependencies.yaml .
-RUN conda run -p /azureml-envs/prompt-flow/runtime conda uninstall -y cryptography && \
+RUN conda uninstall -p /azureml-envs/prompt-flow/runtime -y cryptography && \
     conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda clean -a -y
