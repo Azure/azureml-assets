@@ -1,21 +1,11 @@
-name: environments-ci
+name: base-images-ci
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - 'gefitzgerald/create_base_image_workflow'
     paths:
       - assets/**
-  pull_request_target:
-    branches:
-      - main
-    paths:
-      - assets/**
-    types:
-      - opened
-      - labeled
-      - synchronize
-      - reopened
   workflow_dispatch:
     inputs:
       asset_dirs:
