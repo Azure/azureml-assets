@@ -2,12 +2,6 @@ FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:{{latest-ima
 
 USER root
 
-
-RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
-    conda activate azureml-envs/prompt-flow/runtime && \
-    conda uninstall -y cryptography && \
-    conda deactivate"
-
 # Set the shared environment path
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/dbcopilot
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
@@ -55,7 +49,11 @@ RUN pip install opentelemetry-instrumentation-django==0.42b0 promptflow-image-bu
 ## Install dbcopilot
 RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.16-py3-none-any.whl
 
-RUN pip install cryptography==42.0.0 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1
+RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
+    conda activate azureml-envs/prompt-flow/runtime && \
+    pip install cryptography==42.0.0 && \
+    conda deactivate" && \
+    pip install cryptography==42.0.0 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1
 
 # Install certificates and other utilities
 RUN set -eux; \
