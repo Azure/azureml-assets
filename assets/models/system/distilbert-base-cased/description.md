@@ -1,24 +1,31 @@
-The DistilBERT model is a smaller, faster version of the BERT model for Transformer-based language modeling with 40% fewer parameters and 60% faster run time while retaining 95% of BERT's performance on the GLUE language understanding benchmark. This English language question answering model has a F1 score of 87.1 on SQuAD v1.1 and was developed by Hugging Face under the Apache 2.0 license. Training the model requires significant computational power, such as 8 16GB V100 GPUs and 90 hours. Intended uses include fine-tuning on downstream tasks, but it should not be used to create hostile or alienating environments and limitations and biases should be taken into account.
-<br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/distilbert-base-cased" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+DistilBERT, a transformers model, is designed to be smaller and quicker than BERT. It underwent pretraining on the same dataset in a self-supervised manner, utilizing the BERT base model as a reference. This entails training solely on raw texts, without human annotation, thus enabling the utilization of vast amounts of publicly accessible data. An automated process generates inputs and labels from these texts, guided by the BERT base model. Specifically, the pretraining process involved three objectives:
 
-### Inference samples
+Distillation loss: The model was trained to produce probabilities akin to those of the BERT base model.
+Masked language modeling (MLM): This constitutes a segment of the original training loss in the BERT base model. By randomly masking 15% of the words in a sentence, the model processes the entire masked sentence and endeavors to predict the masked words. This methodology differs from traditional recurrent neural networks (RNNs) or autoregressive models like GPT, which handle words sequentially or internally mask future tokens. MLM facilitates the acquisition of a bidirectional sentence representation by the model.
+Cosine embedding loss: The model was also trained to generate hidden states that closely resemble those of the BERT base model.
+In this manner, the model acquires a comparable internal representation of the English language to that of its teacher model, while being more efficient for inference or subsequent tasks.
 
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a>| coming soon
+# Training Details
 
+## Training data
 
-### Finetuning samples
+DistilBERT was pretrained on the same data as BERT, which includes the BookCorpus dataset (consisting of 11,038 unpublished books) and English Wikipedia (excluding lists, tables, and headers).
 
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
-Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
+## Training Procedure
+
+### Preprocessing
 
 
+The texts are lowercased and tokenized using WordPiece with a vocabulary size of 30,000.
+The model inputs are structured as follows: [CLS] Sentence A [SEP] Sentence B [SEP]
+With a 50% probability, Sentence A and Sentence B correspond to two consecutive sentences from the original corpus. Otherwise, a random sentence from the corpus is used. The combined length of the two “sentences” must be less than 512 tokens.
+Masking procedure for each sentence:
+15% of tokens are masked.
+In 80% of cases, masked tokens are replaced by [MASK].
+In 10% of cases, masked tokens are replaced by a different random token.
+In the remaining 10%, masked tokens remain unchanged.
+
+### Pretraining
 ### Model Evaluation samples
 
 Task| Use case| Dataset | Python sample (Notebook)| CLI with YAML
@@ -26,25 +33,44 @@ Task| Use case| Dataset | Python sample (Notebook)| CLI with YAML
 Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
 
-### Sample inputs and outputs (for real-time inference)
+The model was trained on 8 NVIDIA V100 GPUs (each with 16 GB memory) for 90 hours. Refer to the training code for detailed hyperparameters.
+
+# Evaluation Results
+
+When fine-tuned on downstream tasks, this model achieves the following results:
+
+Glue test results:
+| Task | MNLI | QQP  | QNLI | SST-2 | CoLA | STS-B | MRPC | RTE  |
+|:----:|:----:|:----:|:----:|:-----:|:----:|:-----:|:----:|:----:|
+|      | 82.2 | 88.5 | 89.2 | 91.3 | 51.3  | 85.8 | 87.5  | 59.9 |
+
+# Limitations and Biases
+
+While the training data for this model is generally neutral, it can still produce biased predictions. Additionally, it inherits some of the biases from its teacher model.
+
+# Evaluation samples
+
+Evaluation type|Python sample
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)](https://github.com/Azure/azureml-examples/blob/main/sdk/python/foundation-models/system/evaluation/fill-mask/fill-mask.ipynb)
+
+# Inference samples
+
+Inference type|Python sample
+|--|--|
+Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/fill-mask-online-endpoint-oss)
+
+# Sample inputs and outputs
 
 #### Sample input
 ```json
-{
-    "input_data": {
-        "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
-    }
-}
+{ 
+  "input_data": ["Paris is [MASK] of France"]
+} 
 ```
 
 #### Sample output
 ```json
-[
-    {
-        "0": "capital"
-    },
-    {
-        "0": "beautiful"
-    }
-]
+["part"]
 ```
