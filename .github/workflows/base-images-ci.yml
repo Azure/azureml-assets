@@ -1,11 +1,9 @@
-name: base-images-ci
+name: base-images-ci 
 
 on:
   push:
     branches:
       - 'gefitzgerald/create_base_image_workflow'
-    paths:
-      - assets/**
   workflow_dispatch:
     inputs:
       asset_dirs:
