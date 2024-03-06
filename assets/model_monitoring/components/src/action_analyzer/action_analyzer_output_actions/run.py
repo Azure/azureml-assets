@@ -154,12 +154,12 @@ def run():
     )
 
     # todo remove the groupby logic by using pure python or pandas
-    merged_action = action_data_df.groupby(INDEX_ID_COLUMN).agg(collect_set(BAD_GROUP_COLUMN).alias("action_bad_group_set"), # noqa: E501
-                                                                collect_set(GOOD_GROUP_COLUMN).alias("action_good_group_set"), # noqa: E501
+    merged_action = action_data_df.groupby(INDEX_ID_COLUMN).agg(collect_set(BAD_GROUP_COLUMN).alias("action_bad_group_set"),  # noqa: E501
+                                                                collect_set(GOOD_GROUP_COLUMN).alias("action_good_group_set"),  # noqa: E501
                                                                 mean(CONFIDENCE_SCORE_COLUMN).alias("action_confidence_score")).withColumn(ACTION_ID_COLUMN, _generate_guid())  # noqa: E501
     action_with_group_df = data_with_action_metric_score_df.join(merged_action, [INDEX_ID_COLUMN], "inner")
 
-    action_bad_group_df = action_with_group_df.filter(is_query_in_action_sample(col(GROUP_LIST_COLUMN), 
+    action_bad_group_df = action_with_group_df.filter(is_query_in_action_sample(col(GROUP_LIST_COLUMN),
                                                                                 col("action_bad_group_set")))
     print("bad group")
     action_bad_group_df.show()

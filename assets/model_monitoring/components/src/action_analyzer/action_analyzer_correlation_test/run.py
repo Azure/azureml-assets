@@ -72,7 +72,7 @@ def generate_action_rows(pdf, index_set, group_set):
                 print(f"Skip {good_group_name}, only do t-test for bad group")
                 continue
             index_df = pdf[pdf[INDEX_ID_COLUMN] == index]
-            good_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][INDEX_SCORE_COLUMN] # noqa: E501
+            good_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][INDEX_SCORE_COLUMN]  # noqa: E501
             bad_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][INDEX_SCORE_COLUMN]
             good_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][[PROMPT_COLUMN, INDEX_SCORE_COLUMN]]  # noqa: E501
             bad_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][[PROMPT_COLUMN, INDEX_SCORE_COLUMN]]  # noqa: E501

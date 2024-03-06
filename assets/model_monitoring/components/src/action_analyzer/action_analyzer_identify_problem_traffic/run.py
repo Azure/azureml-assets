@@ -37,6 +37,7 @@ from shared_utilities.constants import (
 from shared_utilities.prompts import BERTOPIC_DEFAULT_PROMPT
 from shared_utilities.span_tree_utils import SpanTree
 from shared_utilities.gsq import apply_annotation
+from model_data_collector_preprocessor.store_url import StoreUrl
 
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
@@ -44,7 +45,6 @@ from shared_utilities.io_utils import (
 )
 from shared_utilities.llm_utils import (
     API_KEY,
-    _APITokenManager,
     _WorkspaceConnectionTokenManager,
     get_openai_request_args
 )
@@ -96,7 +96,6 @@ def bertopic_get_topic(queries,
         representation_model=representation_model
     )
     topics, probs = topic_model.fit_transform(queries)
-    #topic_result = topic_model.get_topic_info()
 
     docs = topic_model.get_document_info(queries)
     docs['Representation'] = docs['Representation'].str.get(0)
@@ -105,7 +104,7 @@ def bertopic_get_topic(queries,
     topics_dict = topics_df.to_dict()["Document"]
 
     print("Get topic dictionary: ")
-    for k,v in topics_dict.items():
+    for k, v in topics_dict.items():
         print("Topic: ")
         print(k)
         print("\n")
@@ -222,7 +221,7 @@ def parse_debugging_info(root_span):
                     for lookup_output in lookup_outputs:
                         text.append(lookup_output["text"])
                         score.append(float(lookup_output["score"]))
-                    spans_array.append((parent_id, index_content, index_id, queries, TEXT_SPLITTER.join(text), max(score)))
+                    spans_array.append((parent_id, index_content, index_id, queries, TEXT_SPLITTER.join(text), max(score))) # noqa: E501
         return spans_array
     except KeyError as e:
         print("Required field not found: ", e)
