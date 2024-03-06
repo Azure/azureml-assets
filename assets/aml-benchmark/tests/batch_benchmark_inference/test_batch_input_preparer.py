@@ -98,7 +98,7 @@ class TestBatchInferencePreparerComponent:
                 param_dict["return_full_text"] = return_full_text
                 pattern = json.dumps({
                     key: {
-                        "input_string": [ f"###<{prompt_col}>" ],
+                        "input_string": [f"###<{prompt_col}>"],
                         "parameters": param_dict
                     }
                 })

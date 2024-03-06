@@ -106,12 +106,16 @@ class Constants:
 
 
 class ModelType(Enum):
+    """Model Type."""
+
     OAI = "oai"
     OSS = "oss"
     VISION_OSS = "vision_oss"
 
 
 class PromptType(Enum):
+    """Prompt Type."""
+
     TEXT_GENERATION = "text_generation"
     CHAT_COMPLETION = "chat_completion"
 

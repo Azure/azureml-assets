@@ -222,7 +222,7 @@ class ResultConverters:
         input_tokens = sum([len(encoding.encode(input_str)) for input_str in input])
         output_tokens = len(encoding.encode(output))
         return input_tokens, output_tokens
-    
+
     def _get_additional_columns_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         additional_columns_data = {}
         if self._additional_columns:
@@ -270,18 +270,20 @@ class ResultConverters:
                 raise BenchmarkSystemException._with_error(
                     AzureMLError.create(
                         BenchmarkSystemError,
-                        error_details=f"Cannot find key `prompt` or `messages` for model type aoai in `request`: {request}."))
+                        error_details=("Cannot find key `prompt` or `messages` "
+                                       f"for model type aoai in `request`: {request}.")))
         elif self._model.is_oss_model():
             request = self._get_request(result)['input_data']['input_string']
             if isinstance(request[0], str):
-                return [content for content in request] 
+                return [content for content in request]
             elif isinstance(request[0], dict):
                 return [my_dict.get('content', '') for my_dict in request]
             else:
                 raise BenchmarkSystemException._with_error(
                     AzureMLError.create(
                         BenchmarkSystemError,
-                        error_details=f"Expected `str` or `dict` for model type oss. Unknown type of `request`: {request}."))
+                        error_details=("Expected `str` or `dict` for model type oss. "
+                                       f"Unknown type of `request`: {request}.")))
 
     @staticmethod
     def _get_aoai_response_result(result: Dict[str, Any]) -> Any:

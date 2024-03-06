@@ -50,7 +50,8 @@ def parse_args() -> argparse.Namespace:
         "--use_tiktoken",
         type=str2bool,
         default=False,
-        help="If true, `cl100k_base` encoder is used from tiktoken to calculate token count; overrides any other token count calculation.")
+        help=("If true, `cl100k_base` encoder is used from tiktoken to calculate token count; "
+              "overrides any other token count calculation."))
     parser.add_argument("--min_endpoint_success_ratio", default=0, type=float, help="Min success ratio.")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
