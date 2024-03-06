@@ -187,19 +187,21 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         # pin pycocotools==2.0.4
         self._update_conda_dependencies({"pycocotools": "2.0.4"})
 
-        if self._task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
-            self._update_conda_dependencies({"ffmpeg": "4.2.2"})
 
     def _save_in_oss_flavor(self, model, metadata, conda_env, code_paths, input_example, pip_requirements):
         # create a conda environment for OSS transformers Flavor
-        python_version = platform.python_version()
-        pip_pkgs = self._get_curated_environment_pip_package_list()
-        conda_deps = CondaDependencies.create(conda_packages=None,
-                                              python_version=python_version,
-                                              pip_packages=pip_pkgs,
-                                              pin_sdk_version=False)
 
-        curated_conda_env = conda_env or conda_deps.as_dict()
+        curated_conda_env = None
+        if not self._extra_pip_requirements and not pip_requirements:
+            python_version = platform.python_version()
+            pip_pkgs = self._get_curated_environment_pip_package_list()
+            conda_deps = CondaDependencies.create(conda_packages=None,
+                                                  python_version=python_version,
+                                                  pip_packages=pip_pkgs,
+                                                  pin_sdk_version=False)
+
+            curated_conda_env = conda_env or conda_deps.as_dict()
+            pip_requirements = None
 
         # handle OSS trust_remote_code value
         trust_remote_code_val = False
@@ -215,17 +217,29 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         model_pipeline = transformers.pipeline(task=self._task, model=model,
                                                trust_remote_code=trust_remote_code_val)
 
-        mlflow.transformers.save_model(
-            transformers_model=model_pipeline,
-            conda_env=curated_conda_env,
-            code_paths=code_paths,
-            signature=self._signatures,
-            input_example=input_example,
-            pip_requirements=pip_requirements,
-            extra_pip_requirements=self._extra_pip_requirements,
-            metadata=metadata,
-            path=str(self._output_dir),
-        )
+        params = {
+            "transformers_model": model_pipeline,
+            "code_paths": code_paths,
+            "signature": self._signatures,
+            "input_example": input_example,
+            "metadata": metadata,
+            "path": str(self._output_dir),
+        }
+
+        if curated_conda_env:
+            params.update({
+                "conda_env": curated_conda_env,
+            })
+        elif pip_requirements:
+            params.update({
+                "pip_requirements": pip_requirements,
+            })
+        else:
+            params.update({
+                "extra_pip_requirements": self._extra_pip_requirements,
+            })
+
+        mlflow.transformers.save_model(**params)
 
         logger.info("Model saved with mlflow OSS flow for task: {}".format(self._task))
 
@@ -487,9 +501,9 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
             inputs = Schema([ColSpec(DataType.string)])
             outputs = Schema([ColSpec(DataType.string)])
             params = ParamSchema([ParamSpec("top_p", "float", default=1.0),
-                                  ParamSpec("temperature", "float", default=1.0),
-                                  ParamSpec("max_new_tokens", "integer", default=50),
-                                  ParamSpec("do_sample", "boolean", default=True),
+                                  ParamSpec("temperature", "float", default=0.0),
+                                  ParamSpec("max_new_tokens", "integer", default=250),
+                                  ParamSpec("do_sample", "boolean", default=False),
                                   ParamSpec("return_full_text", "boolean", default=True)])
             return ModelSignature(inputs=inputs, outputs=outputs, params=params)
 
