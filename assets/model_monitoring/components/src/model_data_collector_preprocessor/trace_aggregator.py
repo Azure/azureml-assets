@@ -4,7 +4,6 @@
 
 
 from pyspark.sql import DataFrame
-from dateutil import parser
 from pyspark.sql.functions import collect_list, struct
 from shared_utilities.span_tree_utils import SpanTree, SpanTreeNode
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
