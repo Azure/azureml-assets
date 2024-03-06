@@ -46,7 +46,11 @@ class QueueItem:
         """Initialize QueueItem."""
         self.scoring_request = scoring_request
         self.segmented_score_context = segmented_score_context
-        self.timeout_generator = timeout_generator
+        self.timeout_generator = timeout_generator or timeout_utils.get_retry_timeout_generator()
+
+    def reset_timeout_generator(self):
+        """Reset timeout generator."""
+        self.timeout_generator = timeout_utils.get_retry_timeout_generator()
 
 
 class Worker:
@@ -163,8 +167,7 @@ class Worker:
                     wait_time = back_off
                     queue_item.scoring_request.total_wait_time += wait_time
                     # Reset timeout generator since this error is not due to timeout or model congestion.
-                    queue_item.timeout_generator = timeout_utils.get_retry_timeout_generator(
-                        self.__client_session.timeout)
+                    queue_item.reset_timeout_generator()
 
                 elif e.status_code == 429 or e.model_response_code == "429":
                     wait_time = back_off
@@ -226,7 +229,9 @@ class Worker:
         return self.__client_settings_provider.get_client_setting(client_settings_key)
 
     def _request_exceeds_max_retry_time_interval(self, scoring_request: ScoringRequest) -> bool:
-        if self._configuration.max_retry_time_interval is None:
+        # If max_retry_time_interval is 0, that means request_setting.timeout = 0.
+        # In this case we should try to score the same row indefinitely.
+        if self._configuration.max_retry_time_interval is None or self._configuration.max_retry_time_interval == 0:
             return False
 
         return scoring_request.scoring_duration > self._configuration.max_retry_time_interval
@@ -282,10 +287,7 @@ class Worker:
             trace))
 
     async def __process_queue_item(self, queue_item: QueueItem):
-        if queue_item.timeout_generator is None:
-            queue_item.timeout_generator = timeout_utils.get_retry_timeout_generator(self.__client_session.timeout)
-
-        timeout = timeout_utils.get_next_retry_timeout(queue_item.timeout_generator)
+        timeout = aiohttp.ClientTimeout(total=next(queue_item.timeout_generator))
 
         if self._configuration.segment_large_requests == "enabled":
             if queue_item.segmented_score_context is None:
@@ -304,8 +306,7 @@ class Worker:
                 if scoring_result.status == ScoringResultStatus.SUCCESS:
                     if queue_item.segmented_score_context.has_more():
                         # Reset timeout generator for the next segment.
-                        queue_item.timeout_generator = timeout_utils.get_retry_timeout_generator(
-                            self.__client_session.timeout)
+                        queue_item.reset_timeout_generator()
                         self.__scoring_request_queue.append(queue_item)
                     else:
                         scoring_result = queue_item.segmented_score_context.build_scoring_result(scoring_result)

@@ -11,6 +11,7 @@ import uuid
 import aiohttp
 
 from ...common.scoring import scoring_utils
+from ...common.header_providers.header_provider import HeaderProvider
 from ...common.scoring.scoring_attempt import ScoringAttempt
 from ...common.scoring.scoring_request import ScoringRequest
 from ...common.scoring.scoring_result import (
@@ -24,7 +25,6 @@ from ...common.telemetry import logging_utils as lu
 from ...common.telemetry.events import event_utils
 from ...common.telemetry.events.batch_score_request_completed_event import BatchScoreRequestCompletedEvent
 from ...common.telemetry.logging_utils import get_events_client
-from ...header_handlers.open_ai.open_ai_header_handler import OpenAIHeaderHandler
 from ...utils.common import get_base_url
 from ..quota.quota_client import QuotaClient
 from ..routing.routing_client import RoutingClient
@@ -35,13 +35,13 @@ class ScoringClient:
 
     def __init__(
             self,
-            header_handler: OpenAIHeaderHandler,
+            header_provider: HeaderProvider,
             quota_client: QuotaClient,
             routing_client: RoutingClient = None,
             scoring_url: str = None,
             tally_handler: TallyFailedRequestHandler = None):
         """Initialize ScoringClient."""
-        self.__header_handler = header_handler
+        self.__header_provider = header_provider
         self.__routing_client = routing_client
         self.__quota_client = quota_client
         self.__scoring_url: str = scoring_url
@@ -88,20 +88,13 @@ class ScoringClient:
         model_response_reason = None
         client_exception = None
 
-        # Timeout can be None. See `timeout_utils.get_next_retry_timeout` for more info on why.
-        if timeout is None:
-            timeout = session.timeout
-
-        lu.get_logger().debug(
-            f"Worker_id: {worker_id}, internal_id: {scoring_request.internal_id}, Timeout: {timeout.total}s")
-
         start = time.time()
 
         target_endpoint_url = await self._get_target_endpoint_url(session, scoring_request, worker_id)
         scoring_request.scoring_url = target_endpoint_url
 
         endpoint_base_url = get_base_url(target_endpoint_url)
-        headers = self.__header_handler.get_headers()
+        headers = self.__header_provider.get_headers()
         self._log_score_start(scoring_request, worker_id, target_endpoint_url, headers)
 
         try:
@@ -305,7 +298,7 @@ class ScoringClient:
         # batch-pool mode exposes `online_endpoint_url` and not `scoring_url`.
         if self.__routing_client is not None and \
             (self.__scoring_url is not None or
-             "azureml-model-deployment" in self.__header_handler.get_headers()):
+             "azureml-model-deployment" in self.__header_provider.get_headers()):
             lu.get_logger().error(
                 "Invalid parameter combination. batch_pool AND (online_endpoint_url or "
                 "azureml-model-deployment header) are provided.")
@@ -342,6 +335,12 @@ class ScoringClient:
             if headers is not None and isinstance(headers, dict):
                 return headers.get("x-ms-client-request-id", None)
 
+        def get_model_name(response_body: any):
+            if not isinstance(response_body, dict):
+                return None
+
+            return response_body.get("model", None)
+
         request_completed_event = BatchScoreRequestCompletedEvent(
             input_row_id=scoring_request.internal_id,
             x_ms_client_request_id=get_client_request_id(headers),
@@ -354,7 +353,8 @@ class ScoringClient:
             prompt_tokens=get_prompt_tokens(response_payload),
             completion_tokens=get_completion_tokens(response_payload),
             duration_ms=(end - start) * 1000,
-            segmented_request_id=scoring_request.segment_id
+            segmented_request_id=scoring_request.segment_id,
+            model_name=get_model_name(response_payload)
         )
 
         event_utils.emit_event(batch_score_event=request_completed_event)

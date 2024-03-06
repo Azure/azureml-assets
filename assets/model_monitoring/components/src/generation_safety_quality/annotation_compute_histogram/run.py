@@ -21,9 +21,8 @@ import pandas as pd
 import requests
 from azure.ai.generative.evaluate import evaluate
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from pyspark.sql import Window
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
-from pyspark.sql.functions import col, row_number, monotonically_increasing_id
+from pyspark.sql.functions import col
 from shared_utilities import io_utils
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -33,11 +32,15 @@ logging.basicConfig(level=logging.INFO)
 TEST_CONNECTION = "test_connection"
 
 RATING = "rating"
-INDEX = "index"
 PROMPT = "prompt"
 COMPLETION = "completion"
 CONTEXT = "context"
 GROUND_TRUTH = "ground_truth"
+CORRELATION_ID = "correlationid"
+TRACE_ID = "traceid"
+ROOT_SPAN = "rootspan"
+
+PASSTHROUGH_COLUMNS = [CORRELATION_ID, TRACE_ID, ROOT_SPAN]
 
 
 # ==================  HTTP Constants ==================
@@ -338,6 +341,7 @@ def run():
     parser.add_argument("--similarity_violations", type=str, required=True)
 
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
+    parser.add_argument("--evaluation", type=str, required=True)
     args = parser.parse_args()
 
     request_args = {
@@ -354,44 +358,6 @@ def run():
     request_args["model"] = args.model_deployment_name
     endpoint_args["model"] = args.model_deployment_name
 
-    input_metric_names = [m.strip() for m in args.metric_names.split(",")]
-
-    if not (set(input_metric_names) <= set(ALL_METRIC_NAMES)):
-        raise ValueError(
-            f"metric_names must be a comma-separated list of metric names "
-            f"and a subset of {ALL_METRIC_NAMES}, got {args.metric_names}."
-        )
-
-    # remove all but groundedness/fluency/coherence/relevance/similarity from metric names and
-    # remove duplicates
-    pruned_metric_names = [re.sub(r'^(.*?)(Groundedness|Fluency|Coherence|Relevance|Similarity)(.*?)$', r'\2', m) for
-                           m in input_metric_names]
-    metric_names = list(set(pruned_metric_names))
-
-    # Validate inputs
-    if args.temperature < 0.0 or args.temperature > 2.0:
-        raise ValueError(f"temperature must be between 0.0 and 2.0, inclusive; "
-                         f"got {args.temperature}.")
-    if args.top_p < 0.0 or args.top_p > 1.0:
-        raise ValueError(f"top_p must be between 0.0 and 1.0, inclusive; got {args.top_p}.")
-    if args.num_samples <= 0:
-        # TODO support multiple returned annotations
-        raise ValueError(f"num_samples must be 1, got {args.num_samples}.")
-    if args.frequency_penalty < -2.0 or args.frequency_penalty > 2.0:
-        raise ValueError(
-            "frequency_penalty must be between -2.0 and 2.0, inclusive; "
-            f"got {args.frequency_penalty}."
-        )
-    if args.presence_penalty < -2.0 or args.presence_penalty > 2.0:
-        raise ValueError(
-            f"presence_penalty must be between -2.0 and 2.0, inclusive; "
-            f"got {args.presence_penalty}."
-        )
-
-    if args.sample_rate <= 0.0 or args.sample_rate > 1.0:
-        raise ValueError(f"sample_rate must be larger than 0.0 and at most 1.0, "
-                         f"got {args.sample_rate}.")
-
     # TODO add validation for threshold args!!
     print(f"Running with args: {args}")
 
@@ -404,7 +370,7 @@ def run():
     }
 
     apply_annotation(
-        metric_names=metric_names,
+        metric_names=args.metric_names,
         production_dataset=args.production_dataset,
         histogram=args.histogram,
         samples_index=args.samples_index,
@@ -420,7 +386,73 @@ def run():
         context_column_name=args.context_column_name,
         ground_truth_column_name=args.ground_truth_column_name,
         violations=violations,
+        evaluation=args.evaluation
     )
+
+
+def process_metric_names(metric_names):
+    """Process metric names, remove whitespace and prune."""
+    input_metric_names = [m.strip() for m in metric_names.split(",")]
+
+    if not (set(input_metric_names) <= set(ALL_METRIC_NAMES)):
+        raise InvalidInputError(
+            f"metric_names must be a comma-separated list of metric names "
+            f"and a subset of {ALL_METRIC_NAMES}, got {metric_names}."
+        )
+
+    # remove all but groundedness/fluency/coherence/relevance/similarity from metric names and
+    # remove duplicates
+    pruned_metric_names = [re.sub(r'^(.*?)(Groundedness|Fluency|Coherence|Relevance|Similarity)(.*?)$', r'\2', m) for
+                           m in input_metric_names]
+    metric_names = list(set(pruned_metric_names))
+    return metric_names
+
+
+def get_request_arg_or_default(arg, request_args):
+    """Get request arg or default."""
+    return request_args[arg] if arg in request_args else None
+
+
+def validate_parameters(request_args, sample_rate):
+    """Validate input parameters."""
+    temperature = get_request_arg_or_default("temperature", request_args)
+    top_p = get_request_arg_or_default("top_p", request_args)
+    num_samples = get_request_arg_or_default("num_samples", request_args)
+    frequency_penalty = get_request_arg_or_default("frequency_penalty", request_args)
+    presence_penalty = get_request_arg_or_default("presence_penalty", request_args)
+    if temperature is not None and (temperature < 0.0 or temperature > 2.0):
+        raise InvalidInputError(f"temperature must be between 0.0 and 2.0, inclusive; "
+                                f"got {temperature}.")
+    if top_p is not None and (top_p < 0.0 or top_p > 1.0):
+        raise InvalidInputError(
+            f"top_p must be between 0.0 and 1.0, inclusive; got {top_p}.")
+    if num_samples is not None and num_samples <= 0:
+        # TODO support multiple returned annotations
+        raise InvalidInputError(f"num_samples must be 1, got {num_samples}.")
+    if frequency_penalty is not None and (frequency_penalty < -2.0 or frequency_penalty > 2.0):
+        raise InvalidInputError(
+            "frequency_penalty must be between -2.0 and 2.0, inclusive; "
+            f"got {frequency_penalty}."
+        )
+    if presence_penalty is not None and (presence_penalty < -2.0 or presence_penalty > 2.0):
+        raise InvalidInputError(
+            f"presence_penalty must be between -2.0 and 2.0, inclusive; "
+            f"got {presence_penalty}."
+        )
+
+    if sample_rate <= 0.0 or sample_rate > 1.0:
+        raise InvalidInputError(
+            f"sample_rate must be larger than 0.0 and at most 1.0, "
+            f"got {sample_rate}.")
+
+
+def get_passthrough_cols(df):
+    """Get passthrough columns as a dictionary from name to values."""
+    passthrough_cols = {}
+    for passthrough_column in PASSTHROUGH_COLUMNS:
+        if passthrough_column in df.columns:
+            passthrough_cols[passthrough_column] = df[passthrough_column]
+    return passthrough_cols
 
 
 def apply_annotation(
@@ -441,8 +473,12 @@ def apply_annotation(
     ground_truth_column_name,
     samples_index,
     violations,
+    evaluation
 ):
     """Apply annotation to all samples in the production_dataset."""
+    metric_names = process_metric_names(metric_names)
+    validate_parameters(request_args, sample_rate)
+
     if "chat_history" in [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]:
         raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
                                   "column. ")
@@ -454,29 +490,47 @@ def apply_annotation(
         set(metric_names))))
     for col_name in [prompt_column_name, completion_column_name]:
         if col_name not in production_df.columns and qa_required:
-            raise ValueError(f"production_dataset must have column: {col_name}")
+            raise InvalidInputError(f"production_dataset must have column: {col_name}")
     # Question, answer, context required for relevance and groundedness
     qac_required = len(list(set(QAC_METRIC_NAMES).intersection(
         set(metric_names))))
     if qac_required and context_column_name not in production_df.columns:
-        raise ValueError(f"production_dataset must have column: {context_column_name}")
+        raise InvalidInputError(f"production_dataset must have column: {context_column_name}")
     # Question, answer, ground-truth required for similarity
     if SIMILARITY in metric_names and ground_truth_column_name not in production_df.columns:
-        raise ValueError(f"production_dataset must have column: {ground_truth_column_name}")
+        raise InvalidInputError(f"production_dataset must have column: {ground_truth_column_name}")
 
     column_names = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
     if len(column_names) != len(set(column_names)):
-        raise ValueError("Detected duplicate specified columns. Column name input cannot be the same. Please ensure "
-                         f"that the column input specified is unique.\nReceived prompt_column_name: "
-                         f"{prompt_column_name}\ncompletion_column_name: {completion_column_name}\n"
-                         f"context_column_name: {context_column_name}\nground_truth_column_name: "
-                         f"{ground_truth_column_name}")
+        raise InvalidInputError(
+            "Detected duplicate specified columns. Column name input cannot be the same. Please ensure "
+            f"that the column input specified is unique.\nReceived prompt_column_name: "
+            f"{prompt_column_name}\ncompletion_column_name: {completion_column_name}\n"
+            f"context_column_name: {context_column_name}\nground_truth_column_name: "
+            f"{ground_truth_column_name}")
+
+    columns_to_select = [prompt_column_name, completion_column_name]
+    renamed_columns = [PROMPT, COMPLETION]
+    if context_column_name in production_df.columns:
+        columns_to_select.append(context_column_name)
+        renamed_columns.append(CONTEXT)
+    if ground_truth_column_name in production_df.columns:
+        columns_to_select.append(ground_truth_column_name)
+        renamed_columns.append(GROUND_TRUTH)
+    for passthrough_column in PASSTHROUGH_COLUMNS:
+        if passthrough_column in production_df.columns:
+            columns_to_select.append(passthrough_column)
+            renamed_columns.append(passthrough_column)
+
+    # select the relevant column names
+    production_df = production_df.select(columns_to_select)
 
     # rename columns to prompt, completion, context, ground truth to match metaprompt data
     production_df = (production_df.withColumnRenamed(prompt_column_name, PROMPT)
                      .withColumnRenamed(completion_column_name, COMPLETION)
                      .withColumnRenamed(context_column_name, CONTEXT)
                      .withColumnRenamed(ground_truth_column_name, GROUND_TRUTH))
+    production_df = production_df.select(renamed_columns)
     # Sampling
     production_df_sampled = production_df.sample(withReplacement=False, fraction=sample_rate)
     if production_df_sampled.count() == 0:
@@ -488,8 +542,6 @@ def apply_annotation(
 
     production_df = production_df_sampled
     row_count = production_df.count()
-    production_df_with_index = production_df_sampled.withColumn("id", row_number()
-                                                                .over(Window.orderBy(monotonically_increasing_id()))-1)
 
     spark = io_utils.init_spark()
     spark_conf = spark.sparkContext.getConf()
@@ -561,8 +613,10 @@ def apply_annotation(
     all_metrics_pdf = None
     samples_index_rows = []
     metrics_list = []
+    compact_metric_names = []
     for metric_name in metric_names:
         metric_name_compact = get_compact_metric_name(metric_name)
+        compact_metric_names.append(metric_name_compact)
         column_name = COMPACT_METRIC_NAME_TO_COLUMN[metric_name_compact]
         metrics_list.append(column_name)
     has_context = CONTEXT in production_df.columns
@@ -575,6 +629,7 @@ def apply_annotation(
                 os.environ[env_var_key] = env_var_value
 
             rows = []
+            passthrough_cols = get_passthrough_cols(batch)
             for index, row in batch.iterrows():
                 qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
                 if has_context:
@@ -589,10 +644,10 @@ def apply_annotation(
                 data=rows,
                 task_type="qa",
                 data_mapping={
-                    "questions": PROMPT,
-                    "contexts": CONTEXT,
-                    "y_pred": COMPLETION,
-                    "y_test": GROUND_TRUTH
+                    "question": PROMPT,
+                    "context": CONTEXT,
+                    "answer": COMPLETION,
+                    "ground_truth": GROUND_TRUTH
                 },
                 model_config={
                     "api_version": api_version,
@@ -605,10 +660,13 @@ def apply_annotation(
                 output_path=output_dir.name
             )
             tabular_result = pd.read_json(os.path.join(output_dir.name, "eval_results.jsonl"), lines=True)
-            # add index column
-            tabular_result = tabular_result.reset_index(names=INDEX)
+            for passthrough_column, passthrough_values in passthrough_cols.items():
+                tabular_result[passthrough_column] = passthrough_values
             # rename metric columns
             for column_name in metrics_list:
+                # set failures to -1
+                tabular_result[column_name] = pd.to_numeric(tabular_result[column_name], errors='coerce')
+                tabular_result[column_name].fillna(-1, inplace=True)
                 tabular_result.rename(
                     columns={column_name: COLUMN_TO_COMPACT_METRIC_NAME[column_name]},
                     inplace=True)
@@ -618,23 +676,22 @@ def apply_annotation(
     def mock_metrics_batch(iterator):
         for batch in iterator:
             rows = []
+            passthrough_cols = get_passthrough_cols(batch)
             for index, row in batch.iterrows():
                 qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
                 if has_context:
                     qca[CONTEXT] = row[CONTEXT]
                 if has_ground_truth:
                     qca[GROUND_TRUTH] = row[GROUND_TRUTH]
-                for metric_name in metric_names:
-                    metric_name_compact = get_compact_metric_name(metric_name)
+                for metric_name_compact in compact_metric_names:
                     qca[metric_name_compact] = 1
                 rows.append(qca)
             tabular_result = pd.DataFrame(rows)
-            # add index column
-            tabular_result = tabular_result.reset_index(names=INDEX)
+            for passthrough_column, passthrough_values in passthrough_cols.items():
+                tabular_result[passthrough_column] = passthrough_values
             yield tabular_result
 
     schema_fields = [
-        StructField(INDEX, IntegerType(), True),
         StructField(PROMPT, StringType(), True)
     ]
     if has_context:
@@ -642,8 +699,10 @@ def apply_annotation(
     schema_fields.append(StructField(COMPLETION, StringType(), True))
     if has_ground_truth:
         schema_fields.append(StructField(GROUND_TRUTH, StringType(), True))
-    for metric_name in metric_names:
-        metric_name_compact = get_compact_metric_name(metric_name)
+    for passthrough_column in PASSTHROUGH_COLUMNS:
+        if passthrough_column in production_df.columns:
+            schema_fields.append(StructField(passthrough_column, StringType(), True))
+    for metric_name_compact in compact_metric_names:
         schema_fields.append(StructField(metric_name_compact, IntegerType(), True))
     schema = StructType(schema_fields)
     if is_test_connection:
@@ -660,12 +719,13 @@ def apply_annotation(
     print("showing annotations dataframe: ")
     annotations_df.show()
 
-    for metric_name in metric_names:
+    for metric_name_compact in compact_metric_names:
         # Run inference over input dataset
-        print(f"Begin {metric_name} processing.")
-        metric_name_compact = get_compact_metric_name(metric_name)
+        print(f"Begin {metric_name_compact} processing.")
         # Get rating counts
-        metrics_df = annotations_df.select(metric_name_compact).groupBy(metric_name_compact).count()
+        filtered_annotations_df = annotations_df.select(
+            metric_name_compact).filter(col(metric_name_compact) != -1)
+        metrics_df = filtered_annotations_df.groupBy(metric_name_compact).count()
         metrics_df.show()
         print("Finished annotating answers.")
         metrics_pdf = metrics_df.withColumnRenamed(metric_name_compact, RATING).select("*").toPandas()
@@ -683,17 +743,18 @@ def apply_annotation(
         print(metrics_pdf)
 
         # create violations table if there are violations
-        violations_df = annotations_df.select(
-            [metric_name_compact, INDEX]).filter(
-                (col(metric_name_compact) < metric_threshold_value) & (col(INDEX) != -1))
+        violation_columns = renamed_columns.copy()
+        violation_columns.append(metric_name_compact)
+        violations_df = annotations_df.select(violation_columns).filter(
+                (col(metric_name_compact) < metric_threshold_value) & (col(metric_name_compact) != -1))
         if violations_df.count() > 0:
-            violations_df_full = production_df_with_index.join(violations_df,
-                                                               production_df_with_index.id == violations_df.index,
-                                                               "inner").drop(violations_df.index).drop(
-                                                                   production_df_with_index.id).withColumnRenamed(
-                                                                       'rating', metric_name_compact)
+            # rename columns back to original names
+            violations_df = (violations_df.withColumnRenamed(PROMPT, prompt_column_name)
+                             .withColumnRenamed(COMPLETION, completion_column_name)
+                             .withColumnRenamed(CONTEXT, context_column_name)
+                             .withColumnRenamed(GROUND_TRUTH, ground_truth_column_name))
             run_id = os.environ.get("AZUREML_RUN_ID")
-            io_utils.save_spark_df_as_mltable(violations_df_full, violations[metric_name_compact.lower()])
+            io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()])
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
                                        GROUP_DIMENSION: "",
@@ -725,6 +786,15 @@ def apply_annotation(
             StructField(ASSET, StringType(), True),
         ]
     )
+
+    # Save the annotations dataframe as output
+    io_utils.save_spark_df_as_mltable(annotations_df, evaluation)
+    samples_index_rows.append({METRIC_NAME: "Evaluation",
+                               GROUP: "",
+                               GROUP_DIMENSION: "",
+                               SAMPLES_NAME: "Evaluation",
+                               ASSET: f"azureml_{run_id}_output_data_evaluation:1"})
+
     # Create a new DataFrame for the samples index data
     samples_df = spark.createDataFrame(samples_index_rows, metadata_schema)
     io_utils.save_spark_df_as_mltable(samples_df, samples_index)
