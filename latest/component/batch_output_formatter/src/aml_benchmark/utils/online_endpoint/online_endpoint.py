@@ -17,7 +17,7 @@ from requests.adapters import HTTPAdapter
 from requests.models import Response
 from azureml.core import Run
 from azure.ai.ml import MLClient
-from azure.ai.ml.entities import WorkspaceConnection, AccessKeyConfiguration
+from azure.ai.ml.entities import WorkspaceConnection, ApiKeyConfiguration
 from azureml._restclient.clientbase import ClientBase
 from azureml._common._error_definition.azureml_error import AzureMLError
 
@@ -248,11 +248,9 @@ class OnlineEndpoint:
             logger.warning(f"Failed to create connections: {e}")
             return False
 
-    def _get_access_key_config(self) -> AccessKeyConfiguration:
+    def _get_access_key_config(self) -> ApiKeyConfiguration:
         """Get the access key config."""
-        return AccessKeyConfiguration(
-            access_key_id="api-key" if self._model.is_aoai_model() else "Authorization",
-            secret_access_key=self._get_endpoint_token())
+        return ApiKeyConfiguration(key=self._get_endpoint_token())
 
     @abstractmethod
     def get_endpoint_name_from_url(self) -> str:
