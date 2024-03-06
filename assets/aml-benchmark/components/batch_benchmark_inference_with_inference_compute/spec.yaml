@@ -63,6 +63,11 @@ inputs:
     type: boolean
     default: False
     description: If true, the performance test will be run and the input dataset will be neglected.
+  use_tiktoken:
+    type: boolean
+    default: False
+    description: If true, `cl100k_base` encoder is used from tiktoken to calculate token count; overrides any other token count calculation.
+    optional: True
   authentication_type:
     type: string
     optional: False
@@ -258,6 +263,7 @@ jobs:
       fallback_value: ${{parent.inputs.fallback_value}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
+      use_tiktoken: ${{parent.inputs.use_tiktoken}}
       endpoint_url: ${{parent.inputs.endpoint_url}}
       min_endpoint_success_ratio: ${{parent.inputs.min_endpoint_success_ratio}}
     outputs:
