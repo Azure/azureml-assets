@@ -17,12 +17,24 @@ import datetime
 import copy
 from mlflow import MlflowClient
 from shared_utilities.amlfs import amlfs_upload
-
-INDEX_ACTION_TYPE = "Index Action"
-DESCRIPTION = "Poor answers are caused by poor indexing, please update the doc index with id "
-MAX_SAMPLE_SIZE = 20
-SPLITTER = "#<Splitter>#"
-
+from shared_utilities.constants import (
+    INDEX_SCORE_COLUMN,
+    INDEX_ID_COLUMN,
+    INDEX_CONTENT_COLUMN,
+    INDEX_ACTION_TYPE,
+    ACTION_DESCRIPTION,
+    TEXT_SPLITTER,
+    MAX_SAMPLE_SIZE,
+    BAD_GROUP_COLUMN,
+    GOOD_GROUP_COLUMN,
+    CONFIDENCE_SCORE_COLUMN,
+    GROUP_LIST_COLUMN,
+    TOPIC_LIST_COLUMN,
+    VIOLATED_METRICS_COLUMN,
+    ROOT_QUESTION_COLUMN,
+    ROOT_SPAN_COLUMN,
+    ACTION_ID_COLUMN
+)
 
 @udf(returnType=StringType())
 def _generate_guid():
@@ -32,7 +44,7 @@ def _generate_guid():
 @udf(returnType=BooleanType())
 def is_query_in_action_sample(group_list, action_sample_set):
     """Check if the query in the bad group of the action."""
-    group_set = set(group_list.split(SPLITTER))
+    group_set = set(group_list.split(TEXT_SPLITTER))
     return len(group_set.intersection(action_sample_set)) > 0
 
 
@@ -40,7 +52,7 @@ def get_index_set(df):
     """Get the index set."""
     index_set = set()
     for data_row in df.collect():
-        index_set.add(data_row["index_id"])
+        index_set.add(data_row[INDEX_ID_COLUMN])
     return index_set
 
 
@@ -50,8 +62,8 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
     local_path = str(uuid.uuid4())
     action_summary = {}
     for index_id in index_set:
-        row = action_bad_group_df.filter(col("index_id") == index_id).collect()[0]
-        action_id = row["action_id"]
+        row = action_bad_group_df.filter(col(INDEX_ID_COLUMN) == index_id).collect()[0]
+        action_id = row[ACTION_ID_COLUMN]
         confidence_score = row["action_confidence_score"]
         action = {
             "ActionId": action_id,
@@ -66,8 +78,8 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
         action_detail = copy.deepcopy(action)
         action_detail["DeploymentId"] = model_deployment_name
         action_detail["RunId"] = os.environ.get("AZUREML_RUN_ID", None)
-        action_detail["IndexName"] = row["index_id"]
-        action_detail["IndexContent"] = row["index_content"]
+        action_detail["IndexName"] = row[INDEX_ID_COLUMN]
+        action_detail["IndexContent"] = row[INDEX_CONTENT_COLUMN]
         action_detail["PositiveSamples"] = generate_samples(action_good_group_df, False)
         action_detail["NegativeSamples"] = generate_samples(action_bad_group_df, True)
         print("Writing action detail of action: ")
@@ -83,19 +95,22 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
 def generate_samples(action_df, is_negative_sample):
     """Generate positive and negative samples in action file."""
     samples = []
+    # sort the good samples by index score
+    if not is_negative_sample:
+        action_df = action_df.sort([INDEX_SCORE_COLUMN], ascending = False)
     sample_data = action_df.rdd.collect()
     for i in range(len(sample_data)):
-        if i >= MAX_SAMPLE_SIZE:
+        if i >= MAX_SAMPLE_SIZE and not is_negative_sample:
             break
         sample = {
-            "Question": sample_data[i]["question"],
-            "Answer": sample_data[i]["answer"],
-            "Topic": sample_data[i]["topic_list"].replace(SPLITTER, ","),
-            "LookupScore": sample_data[i]["index_score"],
-            "DebuggingInfo": sample_data[i]["root_span"]
+            "Question": sample_data[i][ROOT_QUESTION_COLUMN],
+            "Answer": sample_data[i][COMPLETION_COLUMN],
+            "Topic": sample_data[i][TOPIC_LIST_COLUMN].replace(TEXT_SPLITTER, ","),
+            "LookupScore": sample_data[i][INDEX_SCORE_COLUMN],
+            "DebuggingInfo": sample_data[i][ROOT_SPAN_COLUMN]
         }
         if is_negative_sample:
-            sample["ViolatedMetrics"] = sample_data[i]["violated_metrics"].replace(SPLITTER, ",")
+            sample["ViolatedMetrics"] = sample_data[i][VIOLATED_METRICS_COLUMN].replace(TEXT_SPLITTER, ",")
         samples.append(sample)
     return samples
 
@@ -137,21 +152,16 @@ def run():
     )
 
     # todo remove the groupby logic by using pure python or pandas
-    merged_action = action_data_df.groupby("index_id").agg(collect_set("bad_group").alias("action_bad_group_set"),
-                                                           collect_set("good_group").alias("action_good_group_set"),
-                                                           mean("confidence_score").alias("action_confidence_score")).withColumn("action_id", _generate_guid())  # noqa: E501
-    action_with_group_df = data_with_action_metric_score_df.join(merged_action, ['index_id'], "inner")
+    merged_action = action_data_df.groupby(INDEX_ID_COLUMN).agg(collect_set(BAD_GROUP_COLUMN).alias("action_bad_group_set"),
+                                                           collect_set(GOOD_GROUP_COLUMN).alias("action_good_group_set"),
+                                                           mean(CONFIDENCE_SCORE_COLUMN).alias("action_confidence_score")).withColumn(ACTION_ID_COLUMN, _generate_guid())  # noqa: E501
+    action_with_group_df = data_with_action_metric_score_df.join(merged_action, [INDEX_ID_COLUMN], "inner")
 
-    action_bad_group_df = action_with_group_df.filter(is_query_in_action_sample(col("group_list"), col("action_bad_group_set")))
+    action_bad_group_df = action_with_group_df.filter(is_query_in_action_sample(col(GROUP_LIST_COLUMN), col("action_bad_group_set")))
     print("bad group")
     action_bad_group_df.show()
-    # action_good_group_df = action_with_group_df.filter((col("groundedness_score") == 5)
-    #                                                     & (col("relevance_score") == 5)
-    #                                                     & (col("coherence_score") == 5)
-    #                                                     & (col("fluency_score") == 5)
-    #                                                     & (col("similarity_score") == 5))
 
-    action_good_group_df = action_with_group_df.filter(is_query_in_action_sample(col("group_list"), col("action_good_group_set")))
+    action_good_group_df = action_with_group_df.filter(is_query_in_action_sample(col(GROUP_LIST_COLUMN), col("action_good_group_set")))
     print("good group")
     action_good_group_df.show()
 

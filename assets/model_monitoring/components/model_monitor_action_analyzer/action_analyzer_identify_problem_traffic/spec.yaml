@@ -15,6 +15,10 @@ inputs:
     type: uri_folder
     mode: direct
     description: violated metrics names
+  signal_name:
+    type: string
+    optional: false
+    description: signal name for action
   workspace_connection_arm_id:
     type: string
     optional: false
@@ -23,12 +27,23 @@ inputs:
     type: string
     optional: false
     description: model name, e.g., name of the deployment for Azure OpenAI
+  prompt_column_name:
+    type: string
+    optional: true
+    default: "prompt"
+    description: prompt column name
+  completion_column_name:
+    type: string
+    optional: true
+    default: "completion"
+    description: completion column name
 outputs:
   data_with_groups:
     type: mltable
     mode: direct
 
 conf:
+  spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 4
   spark.driver.memory: 28g
   spark.executor.cores: 4
@@ -36,15 +51,7 @@ conf:
   spark.executor.instances: 1
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
-  spark.dynamicAllocation.maxExecutors: 1 # avoid AOAI API limits by running only one executor at a time
-  spark.jars.packages: com.microsoft.azure:synapseml_2.12:0.11.0-26-52919ce4-SNAPSHOT,org.apache.spark:spark-avro_2.12:3.3.1
-  spark.jars.repositories: https://mmlspark.azureedge.net/maven
-  spark.jars.excludes: org.scala-lang:scala-reflect,org.apache.spark:spark-tags_2.12,org.scalactic:scalactic_2.12,org.scalatest:scalatest_2.12,com.fasterxml.jackson.core:jackson-databind
-  spark.yarn.user.classpath.first: true
-  spark.sql.parquet.enableVectorizedReader: false
-  spark.sql.legacy.replaceDatabricksSparkAvro.enabled: true
-  spark.driver.userClassPathFirst: false
-  spark.executor.userClassPathFirst: false
+  spark.dynamicAllocation.maxExecutors: 4
   spark.synapse.library.python.env: |
     channels:
       - defaults
@@ -85,4 +92,6 @@ args: >-
   --signal_output ${{inputs.signal_output}}
   --model_deployment_name ${{inputs.model_deployment_name}}
   --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
+  $[[--prompt_column_name ${{inputs.prompt_column_name}}]]
+  $[[--completion_column_name ${{inputs.completion_column_name}}]]
   --data_with_groups ${{outputs.data_with_groups}}

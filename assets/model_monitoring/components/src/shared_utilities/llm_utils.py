@@ -32,17 +32,6 @@ OPENAI_REQUEST_PARAMS = [
     "num_samples",
 ]
 
-RATING = "rating"
-INDEX = "index"
-LABEL_KEYS = [RATING]
-PROMPT = "prompt"
-COMPLETION = "completion"
-CONTEXT = "context"
-GROUND_TRUTH = "ground_truth"
-
-MIN_RATING = 1
-MAX_RATING = 5
-
 AUTHORIZATION = "Authorization"
 BEARER = "Bearer"
 API_KEY = "api-key"

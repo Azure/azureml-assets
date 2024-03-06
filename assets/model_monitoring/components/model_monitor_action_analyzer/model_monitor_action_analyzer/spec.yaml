@@ -12,6 +12,8 @@ inputs:
     description: production data with metrics scores from monitoring signal
   signal_name:
     type: string
+    optional: False
+    description: signal name for action
   signal_output:
     type: uri_folder
     description: signal output with summarize file
@@ -23,6 +25,14 @@ inputs:
     type: string
     optional: false
     description: path to the workspace connection
+  prompt_column_name:
+    type: string
+    optional: true
+    default: "prompt"
+  completion_column_name:
+    type: string
+    optional: true
+    default: "completion"
   instance_type:
     type: string
     default: "standard_e4s_v3"
@@ -43,8 +53,11 @@ jobs:
       signal_output: 
         type: uri_folder
         path: ${{parent.inputs.signal_output}}
+      signal_name: ${{parent.inputs.signal_name}}
       workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
+      prompt_column_name: ${{parent.inputs.prompt_column_name}}
+      completion_column_name: ${{parent.inputs.completion_column_name}}
     outputs:
       data_with_groups:
         type: mltable

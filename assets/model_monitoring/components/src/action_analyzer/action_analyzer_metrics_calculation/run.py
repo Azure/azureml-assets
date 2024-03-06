@@ -14,6 +14,23 @@ from pyspark.sql.types import (
     StringType,
     IntegerType
 )
+from shared_utilities.constants import (
+    TEXT_SPLITTER,
+    PROMPT_COLUMN,
+    COMPLETION_COLUMN,
+    CONTEXT_COLUMN,
+    TRACE_ID_COLUMN,
+    SPAN_ID_COLUMN,
+    ROOT_QUESTION_COLUMN,
+    TOPIC_LIST_COLUMN,
+    GROUP_LIST_COLUMN,
+    VIOLATED_METRICS_COLUMN,
+    INDEX_CONTENT_COLUMN,
+    INDEX_SCORE_COLUMN,
+    INDEX_SCORE_LLM_COLUMN,
+    INDEX_ID_COLUMN
+)
+from shared_utilities.prompts import RETRIEVAL_DOCUMENT_RELEVANCE_TEMPLATE
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     save_spark_df_as_mltable,
@@ -23,120 +40,12 @@ from shared_utilities.llm_utils import (
     API_KEY,
     AZURE_OPENAI_API_COMPLETION_URL_PATTERN,
     AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-    RATING,
-    PROMPT,
-    COMPLETION,
-    CONTEXT,
-    MIN_RATING,
-    MAX_RATING,
     _APITokenManager,
     _WorkspaceConnectionTokenManager,
     _HTTPClientWithRetry,
     _check_and_format_azure_endpoint_url,
     _request_api,
     get_openai_request_args
-)
-
-
-Retrieval_document_RELEVANCE_TEMPLATE = "\n\n".join(
-    [
-        "System:",
-        f"You are an AI assistant. You will be given the definition of an evaluation metric for assessing the \
-            quality of an {CONTEXT} in a question-answering task. Your job is to compute an accurate evaluation \
-            score using the provided evaluation metric.",
-        f"Index quality measures how well the retrieved document {CONTEXT} provides relevant background information \
-            or knowledge to answer this question {PROMPT}. Consider whether \
-            all and only the important aspects are contained in the {CONTEXT} when \
-            evaluating index quality. Given the {PROMPT} and {COMPLETION}, \
-            score the index quality of the {COMPLETION} \
-            between {MIN_RATING} to {MAX_RATING} using the following {RATING} scale:",
-        f"{RATING} 1: the document completely lacks information or knowledge of the question",
-        f"{RATING} 2: the document mostly lacks information or knowledge of the question",
-        f"{RATING} 3: the document is partially information or knowledge of the question",
-        f"{RATING} 4: the document is mostly information or knowledge of the question",
-        f"{RATING} 5: the document has perfect information or knowledge of the question",
-        f"The score should be integer only, between {MIN_RATING} and {MAX_RATING}.",
-        "## Example Task #0",
-        json.dumps({
-            CONTEXT: "Python is a popular general-purpose programming language that can be used for a wide variety of applications. It includes high-level data structures, dynamic typing, dynamic binding, and many more features that make it as useful for complex application development as it is for scripting or glue code that connects components together.",  # noqa: E501
-            PROMPT: "How can I use the python tool in the langchain frame",
-            COMPLETION: "Sorry, the provided context does not include information about question.",
-        }),
-        "A good example response would be:",
-        "## Example Task #0:",
-        json.dumps({
-            RATING: 1,
-        }),
-        json.dumps({
-            CONTEXT: "Marie Curie was a Polish-born physicist and chemist who pioneered research on radioactivity \
-                and was the first woman to win a Nobel Prize.",
-            PROMPT: "What field did Marie Curie excel in?",
-            COMPLETION: "Marie Curie was a renowned painter who focused mainly on impressionist styles and \
-                techniques.",
-        }),
-        "A good example response would be:",
-        "## Example Task #0:",
-        json.dumps({
-            RATING: 1,
-        }),
-        "## Example Task #1",
-        json.dumps({
-            CONTEXT: "The Beatles were an English rock band formed in Liverpool in 1960, and they are widely \
-                regarded as the most influential music band in history.",
-            PROMPT: "Where were The Beatles formed?",
-            COMPLETION: "The band The Beatles began their journey in London, England, and they changed the \
-                history of music.",
-        }),
-        "A good example response would be:",
-        "## Example Task #1:",
-        json.dumps({
-            RATING: 2,
-        }),
-        "## Example Task #2",
-        json.dumps({
-            CONTEXT: "The recent Mars rover, Perseverance, was launched in 2020 with the main goal of searching \
-                for signs of ancient life on Mars. The rover also carries an experiment called MOXIE, which aims \
-                    to generate oxygen from the Martian atmosphere.",
-            PROMPT: "What are the main goals of Perseverance Mars rover mission?",
-            COMPLETION: "The Perseverance Mars rover mission focuses on searching for signs of ancient life on Mars.",
-        }),
-        "A good example response would be:",
-        "## Example Task #2",
-        json.dumps({
-            RATING: 3,
-        }),
-        "## Example Task #3",
-        json.dumps({
-            CONTEXT: "The Mediterranean diet is a commonly recommended dietary plan that emphasizes fruits, \
-                vegetables, whole grains, legumes, lean proteins, and healthy fats. Studies have shown that it \
-                    offers numerous health benefits, including a reduced risk of heart disease and improved \
-                        cognitive health.",
-            PROMPT: "What are the main components of the Mediterranean diet?",
-            COMPLETION: "The Mediterranean diet primarily consists of fruits, vegetables, whole grains, and legumes.",
-        }),
-        "A good example response would be:",
-        "## Example Task #3:",
-        json.dumps({
-            RATING: 4,
-        }),
-        "## Example Task #4",
-        json.dumps({
-            CONTEXT: "The Queen's Royal Castle is a well-known tourist attraction in the United Kingdom. It spans \
-                over 500 acres and contains extensive gardens and parks. The castle was built in the 15th century \
-                    and has been home to generations of royalty.",
-            PROMPT: "What are the main attractions of the Queen's Royal Castle?",
-            COMPLETION: "The main attractions of the Queen's Royal Castle are its expansive 500-acre grounds, \
-                extensive gardens, parks, and the historical castle itself, which dates back to the 15th century \
-                    and has housed generations of royalty.",
-        }),
-        "A good example response would be:",
-        "## Example Task #4:",
-        json.dumps({
-            RATING: 5,
-        }),
-        "User:",
-        "{input_samples}"
-    ]
 )
 
 
@@ -262,13 +171,13 @@ def get_index_score(question,
 
     request_args = json.loads(request_args)
     rating_out = -1
-    context_array = text.split("<Action Analyzer Text Splitter>")
+    context_array = text.split(TEXT_SPLITTER)
     # get the max index score for all contexts
     with httpClient.client as session:
         for context in context_array:
             rating = _query_relevance_score(
                 (question, answer, context),
-                Retrieval_document_RELEVANCE_TEMPLATE,
+                RETRIEVAL_DOCUMENT_RELEVANCE_TEMPLATE,
                 session, azure_endpoint_url, token_manager,
                 **request_args,
             )
@@ -280,18 +189,19 @@ def get_output_schema() -> StructType:
     """Get Output Data Spark DataFrame Schema."""
     schema = StructType(
         [
-            StructField("trace_id", StringType(), True),
-            StructField("span_id", StringType(), True),
-            StructField("root_question", StringType(), True),
-            StructField("question", StringType(), True),
-            StructField("answer", StringType(), True),
-            StructField("topic_list", StringType(), True),
-            StructField("group_list", StringType(), True),
-            StructField("violated_metrics", StringType(), True),
-            StructField("index_content", StringType(), True),
-            StructField("index_id", StringType(), True),
-            StructField("context", StringType(), True),
-            StructField("index_score", IntegerType(), True),
+            StructField(TRACE_ID_COLUMN, StringType(), True),
+            StructField(SPAN_ID_COLUMN, StringType(), True),
+            StructField(ROOT_QUESTION_COLUMN, StringType(), True),
+            StructField(PROMPT_COLUMN, StringType(), True),
+            StructField(COMPLETION_COLUMN, StringType(), True),
+            StructField(TOPIC_LIST_COLUMN, StringType(), True),
+            StructField(GROUP_LIST_COLUMN, StringType(), True),
+            StructField(VIOLATED_METRICS_COLUMN, StringType(), True),
+            StructField(INDEX_CONTENT_COLUMN, StringType(), True),
+            StructField(INDEX_ID_COLUMN, StringType(), True),
+            StructField(CONTEXT_COLUMN, StringType(), True),
+            StructField(INDEX_SCORE_COLUMN, FloatType(), True),
+            StructField(INDEX_SCORE_LLM_COLUMN, IntegerType(), True),
         ]
     )
     return schema
@@ -325,15 +235,15 @@ def run():
         save_empty_dataframe(get_output_schema(), args.data_with_action_metric_score)
         return
 
-    idnex_score = get_index_score(col("query"),
-                                  col("answer"),
-                                  col("text"),
+    idnex_score = get_index_score(col(PROMPT_COLUMN),
+                                  col(COMPLETION_COLUMN),
+                                  col(CONTEXT_COLUMN),
                                   lit(args.workspace_connection_arm_id),
                                   lit(args.model_deployment_name),
                                   lit(args.api_call_retry_max_count),
                                   lit(args.api_call_retry_backoff_factor),
                                   lit(json.dumps(request_args)))
-    data_with_metric_score_df = data_with_groups_df.withColumn("index_score", idnex_score)
+    data_with_metric_score_df = data_with_groups_df.withColumn(INDEX_SCORE_LLM_COLUMN, idnex_score)
 
     print("data_with_metric_score_df")
     data_with_metric_score_df.show()
