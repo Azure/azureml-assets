@@ -4,11 +4,9 @@
 """Entry script for Action Analyzer identify problem traffic."""
 
 import argparse
-import requests
 import json
 import yaml
 from pyspark.sql.functions import col, lit, udf, when, concat, explode
-from typing import List
 from pyspark.sql.types import (
     StructType,
     StructField,
@@ -46,13 +44,8 @@ from shared_utilities.io_utils import (
 )
 from shared_utilities.llm_utils import (
     API_KEY,
-    AZURE_OPENAI_API_COMPLETION_URL_PATTERN,
-    AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
     _APITokenManager,
     _WorkspaceConnectionTokenManager,
-    _HTTPClientWithRetry,
-    _check_and_format_azure_endpoint_url,
-    _request_api,
     get_openai_request_args
 )
 
@@ -61,6 +54,7 @@ from openai import AzureOpenAI
 from bertopic.representation import OpenAI
 
 VIOLATED_METRICS = ["Fluency", "Coherence"]
+
 
 def get_output_schema() -> StructType:
     """Get Output Data Spark DataFrame Schema."""
@@ -97,8 +91,8 @@ def bertopic_get_topic(queries,
                          azure_deployment=model_deployment_name)
     representation_model = OpenAI(client, model=model_deployment_name, chat=True, prompt=BERTOPIC_DEFAULT_PROMPT)
     topic_model = BERTopic(
-        min_topic_size = 3,
-        top_n_words = 5,
+        min_topic_size=3,
+        top_n_words=5,
         representation_model=representation_model
     )
     topics, probs = topic_model.fit_transform(queries)
@@ -199,7 +193,7 @@ def get_index_id(index_content):
     StructField(INDEX_CONTENT_COLUMN, StringType()),
     StructField(INDEX_ID_COLUMN, StringType()),
     StructField(PROMPT_COLUMN, StringType()),
-    StructField(CONTEXT_COLUMN, StringType()),
+    StructField(COMPLETION_COLUMN, StringType()),
     StructField(INDEX_SCORE_COLUMN, FloatType())])))
 def parse_debugging_info(root_span):
     """Parse the span tree to get debugging info."""
@@ -247,7 +241,7 @@ def convert_to_span_level(df):
         .withColumn(INDEX_CONTENT_COLUMN, col(f"debugging_details.{INDEX_CONTENT_COLUMN}"))\
         .withColumn(PROMPT_COLUMN, col(f"debugging_details.{PROMPT_COLUMN}"))\
         .withColumn(COMPLETION_COLUMN, col(f"debugging_details.{COMPLETION_COLUMN}"))\
-        .withColumn(INDEX_SCORE_COLUMN, col(f"debugging_details.{COMPLETION_COLUMN}"))\
+        .withColumn(INDEX_SCORE_COLUMN, col(f"debugging_details.{INDEX_SCORE_COLUMN}"))\
         .drop("debugging_details")
     return span_level_df
 
@@ -333,8 +327,8 @@ def run():
         num_samples=args.num_samples,
         sample_rate=1.0,
         request_args=request_args,
-        prompt_column_name=PROMPT_COLUMN,
-        completion_column_name=COMPLETION_COLUMN,
+        prompt_column_name="question",
+        completion_column_name="answer",
         context_column_name="context",
         ground_truth_column_name="ground_truth"
     )
@@ -366,11 +360,10 @@ def run():
         default_bad_group_name = f"{metrics}_bad_group_default"
         df = df.withColumn(GROUP_LIST_COLUMN,
                            when((col(score_name) == 5) & (col(GROUP_LIST_COLUMN) == ""), good_group_name)
-                          .when((col(score_name) == 5) & (col(GROUP_LIST_COLUMN) != ""), concat(col(GROUP_LIST_COLUMN), lit(SPLITTER), lit(good_group_name)))
-                          .when((col(score_name) < 4) & (col(GROUP_LIST_COLUMN) == ""), default_bad_group_name)  # noqa
-                          .when((col(score_name) < 4) & (col(GROUP_LIST_COLUMN) != ""), concat(col(GROUP_LIST_COLUMN), lit(SPLITTER), lit(default_bad_group_name)))  # noqa
+                          .when((col(score_name) == 5) & (col(GROUP_LIST_COLUMN) != ""), concat(col(GROUP_LIST_COLUMN), lit(TEXT_SPLITTER), lit(good_group_name))) # noqa
+                          .when((col(score_name) < METRICS_VIOLATION_THRESHOLD) & (col(GROUP_LIST_COLUMN) == ""), default_bad_group_name) # noqa
+                          .when((col(score_name) < METRICS_VIOLATION_THRESHOLD) & (col(GROUP_LIST_COLUMN) != ""), concat(col(GROUP_LIST_COLUMN), lit(TEXT_SPLITTER), lit(default_bad_group_name)))  # noqa
                           .otherwise(col(GROUP_LIST_COLUMN)))  # noqa
-
 
         pdf = df.toPandas()
         bad_answers = pdf[pdf[score_name] < METRICS_VIOLATION_THRESHOLD]
@@ -381,7 +374,7 @@ def run():
         good_samples = good_answers
 
         # add semantic groups for bad queries
-        print("add semantic groups for bad queries")    
+        print("add semantic groups for bad queries")
         topics_dict = bertopic_get_topic(bad_samples[PROMPT_COLUMN].tolist(),
                                          args.workspace_connection_arm_id,
                                          args.model_deployment_name)

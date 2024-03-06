@@ -12,7 +12,8 @@ from pyspark.sql.types import (
     StructType,
     StructField,
     StringType,
-    IntegerType
+    IntegerType,
+    FloatType
 )
 from shared_utilities.constants import (
     TEXT_SPLITTER,

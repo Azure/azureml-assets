@@ -47,7 +47,7 @@ RETRIEVAL_DOCUMENT_RELEVANCE_TEMPLATE = "\n\n".join(
             CONTEXT: "Marie Curie was a Polish-born physicist and chemist who pioneered research on radioactivity \
                 and was the first woman to win a Nobel Prize.",
             PROMPT: "What field did Thomas Edison excel in?",
-            COMPLETION: "This context does not include what field Thomas Edison exceled in. It is the introduction of Marie Curie.",
+            COMPLETION: "This context does not include what field Thomas Edison exceled in. It is the introduction of Marie Curie.", # noqa: E501
         }),
         "A good example response would be:",
         "## Example Task #1:",
@@ -56,11 +56,10 @@ RETRIEVAL_DOCUMENT_RELEVANCE_TEMPLATE = "\n\n".join(
         }),
         "## Example Task #2",
         json.dumps({
-            CONTEXT: "SQL stands for Structured Query Language and is a computer language that we use to interact with a relational database. \
-                SQL is a tool for organizing, managing, and retrieving archived data from a computer database. ",
+            CONTEXT: "SQL stands for Structured Query Language and is a computer language that we use to interact with a relational database. SQL is a tool for organizing, managing, and retrieving archived data from a computer database.",  # noqa: E501
             PROMPT: "When was SQL developed and what is SQL used for?",
             COMPLETION: "The developed date for SQL is not explicitly mentioned in the provided content. However\
-            for SQL usage, SQL is a powerful programming language used to query and manipulate data stored in relational databases.",
+            for SQL usage, SQL is a powerful programming language used to query and manipulate data stored in relational databases.", # noqa: E501
         }),
         "A good example response would be:",
         "## Example Task #2:",
@@ -128,11 +127,13 @@ RETRIEVAL_DOCUMENT_RELEVANCE_TEMPLATE = "\n\n".join(
 )
 
 BERTOPIC_DEFAULT_PROMPT = """
-    This is a list of texts where each collection of texts describe a topic. After each collection of texts, the name of the topic they represent is mentioned as a short-highly-descriptive title
+    This is a list of texts where each collection of texts describe a topic. After each collection of texts, \
+    the name of the topic they represent is mentioned as a short-highly-descriptive title
     ---
     Topic:
     Sample texts from this topic:
-    - Traditional diets in most cultures were primarily plant-based with a little meat on top, but with the rise of industrial style meat production and factory farming, meat has become a staple food.
+    - Traditional diets in most cultures were primarily plant-based with a little meat on top, \
+    but with the rise of industrial style meat production and factory farming, meat has become a staple food.
     - Meat, but especially beef, is the worst food in terms of emissions.
     - Eating meat doesn't make you a bad person, not eating meat doesn't make you a good one.
 

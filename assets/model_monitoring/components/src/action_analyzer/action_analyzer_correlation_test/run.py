@@ -19,7 +19,6 @@ from shared_utilities.io_utils import (
 )
 from shared_utilities.constants import (
     P_VALUE_THRESHOLD,
-    MEAN_THRESHOLD,
     TEXT_SPLITTER,
     PROMPT_COLUMN,
     INDEX_SCORE_COLUMN,
@@ -73,7 +72,7 @@ def generate_action_rows(pdf, index_set, group_set):
                 print(f"Skip {good_group_name}, only do t-test for bad group")
                 continue
             index_df = pdf[pdf[INDEX_ID_COLUMN] == index]
-            good_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][INDEX_SCORE_COLUMN]
+            good_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][INDEX_SCORE_COLUMN] # noqa: E501
             bad_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][INDEX_SCORE_COLUMN]
             good_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][[PROMPT_COLUMN, INDEX_SCORE_COLUMN]]  # noqa: E501
             bad_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][[PROMPT_COLUMN, INDEX_SCORE_COLUMN]]  # noqa: E501
@@ -105,7 +104,7 @@ def perform_ttest(good_answer_scores, bad_answer_scores):
     print(f"Welch's t-test T-statistic: {t_stat1}, P-value: {p_value1}")
     t_stat2, p_value2 = mannwhitneyu(good_answer_scores, bad_answer_scores, method='exact')
     print(f"Mann-Whitney U t-test T-statistic: {t_stat2}, P-value: {p_value2}")
-    table = np.vstack((count_values(np.array(good_answer_scores)), _count_values(np.array(bad_answer_scores))))
+    table = np.vstack((_count_values(np.array(good_answer_scores)), _count_values(np.array(bad_answer_scores))))
     # Perform Fisher's Exact Test
     t_stat3, p_value3 = stats.fisher_exact(table)
     print(f"Fisher's Exact Tes odds_ratio: {t_stat3}, P-value: {p_value3}")
