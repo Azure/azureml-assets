@@ -2,7 +2,9 @@ FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:{{latest-ima
 
 USER root
 
-RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh azureml-envs/prompt-flow/runtime && \
+
+RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
+    conda activate azureml-envs/prompt-flow/runtime && \
     conda uninstall -y cryptography && \
     conda deactivate"
 
