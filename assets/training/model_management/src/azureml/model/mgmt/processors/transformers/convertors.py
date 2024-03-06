@@ -187,7 +187,6 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         # pin pycocotools==2.0.4
         self._update_conda_dependencies({"pycocotools": "2.0.4"})
 
-
     def _save_in_oss_flavor(self, model, metadata, conda_env, code_paths, input_example, pip_requirements):
         # create a conda environment for OSS transformers Flavor
 
