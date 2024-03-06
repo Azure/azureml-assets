@@ -70,6 +70,8 @@ class ResultConverters:
 
     def convert_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the input result to predictions."""
+        if self.is_result_content_safety_failure(result):
+            return self._get_fallback_output()
         if not self.is_result_success(result):
             return self._get_fallback_output()
         return self._get_raw_output(result)
@@ -95,13 +97,16 @@ class ResultConverters:
                         "Cannot find {} in result {}. Using default now.".format(old_key, result))
                     usage[new_key] = ResultConverters.DEFAULT_ISO_FORMAT
                     continue
-                dt = datetime.datetime.utcfromtimestamp(result[old_key] / 1000)
+                # Batch score component output the time in seconds.
+                dt = datetime.datetime.utcfromtimestamp(result[old_key])
                 usage[new_key] = dt.astimezone().isoformat()
             else:
                 # For the token and latency scenarios, no need to do the conversion.
                 usage[new_key] = usage[old_key] if old_key in usage else result.get(old_key, -1)
             if old_key in usage:
                 del usage[old_key]
+        if usage['time_taken_ms'] == -1:
+            usage['time_taken_ms'] = (result.get('end', -1) - result.get('start', 0)) * 1000
         if self._model.is_oss_model():
             usage['input_token_count'] = self._get_oss_input_token(usage)
             usage['output_token_count'] = self._get_oss_output_token(result, usage)
@@ -171,6 +176,23 @@ class ResultConverters:
             return False
         return True
 
+    def is_result_content_safety_failure(self, result: Dict[str, Any]) -> bool:
+        """Check if result failed due to content safety."""
+        try:
+            response = result.get("response", {})
+            policy_violation = "ResponsibleAIPolicyViolation"
+            content_filter = "content_filter"
+            # If the response is not a dictionary, return False.
+            if not isinstance(response, dict):
+                return False
+            if response.get("error", {}).get("innererror", {}).get("code") == policy_violation:
+                return True
+            if response.get("choices", [{}])[0].get("finish_reason") == content_filter:
+                return True
+        except Exception as e:
+            logger.warning(f"Failed to check for content safety responses due to {e}")
+        return False
+
     def _get_oss_input_token(self, perf_metrics: Any) -> Tuple[int, int]:
         if self._is_performance_test:
             return ResultConverters.DEFAULT_PERF_INPUT_TOKEN
@@ -225,7 +247,24 @@ class ResultConverters:
     @staticmethod
     def _get_aoai_response_result(result: Dict[str, Any]) -> Any:
         response = ResultConverters._get_response(result)
-        return response["choices"][0]["message"]["content"]
+        response_message = response["choices"][0]
+        if "text" in response_message:
+            # This is the text generation OAI contract scenario.
+            return response_message["text"]
+        if "message" in response_message:
+            # This is the chat completion OAI contract scenario.
+            if "content" in response_message["message"]:
+                return response_message["message"]["content"]
+            # If content is not there, that means the model filtered the response.
+            return ""
+        # Unknown contract specified as OAI.
+        raise BenchmarkUserException._with_error(
+            AzureMLError.create(
+                BenchmarkUserError,
+                error_details="Endpoint returned response with unknown contract. \
+                    Please specify correct model type."
+            )
+        )
 
     @staticmethod
     def _get_oss_response_result(result: Dict[str, Any]) -> Any:
