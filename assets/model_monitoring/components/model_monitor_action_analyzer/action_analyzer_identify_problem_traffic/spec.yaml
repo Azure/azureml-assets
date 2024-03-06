@@ -43,7 +43,6 @@ outputs:
     mode: direct
 
 conf:
-  spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 4
   spark.driver.memory: 28g
   spark.executor.cores: 4
@@ -64,10 +63,6 @@ conf:
           - azure-ai-ml~=1.13.0
           - azure-keyvault-secrets==4.7.0
           - tiktoken==0.4.0
-          - json5==0.9.11
-          - scipy~=1.10.0
-          - numpy~=1.21.0
-          - pandas~=1.5.3
           - azureml-mlflow~=1.49.0
           - mltable~=1.5.0
           - azureml-fsspec
@@ -76,9 +71,6 @@ conf:
           - azure-ai-generative==1.0.0b7
           - azure-ai-resources==1.0.0b7
           - openai~=1.11.1
-          - promptflow[azure]~=1.4.1
-          - promptflow-tools~=1.1.0
-          - keyrings.alt~=5.0.0
           - bertopic[flair]
           - nbformat
           - openAI

@@ -24,7 +24,6 @@ outputs:
     mode: direct
 
 conf:
-  spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 4
   spark.driver.memory: 28g
   spark.executor.cores: 4
@@ -48,9 +47,6 @@ conf:
           - mltable~=1.5.0
           - azureml-fsspec
           - fsspec~=2023.4.0
-          - promptflow[azure]~=1.4.1
-          - promptflow-tools~=1.1.0
-          - keyrings.alt~=5.0.0
     name: momo-base-spark
 code: ../../src
 
