@@ -178,13 +178,19 @@ class ResultConverters:
 
     def is_result_content_safety_failure(self, result: Dict[str, Any]) -> bool:
         """Check if result failed due to content safety."""
-        response = result.get("response", {})
-        policy_violation = "ResponsibleAIPolicyViolation"
-        content_filter = "content_filter"
-        if response.get("error", {}).get("innererror", {}).get("code") == policy_violation:
-            return True
-        if response.get("choices", [{}])[0].get("finish_reason") == content_filter:
-            return True
+        try:
+            response = result.get("response", {})
+            policy_violation = "ResponsibleAIPolicyViolation"
+            content_filter = "content_filter"
+            # If the response is not a dictionary, return False.
+            if not isinstance(response, dict):
+                return False
+            if response.get("error", {}).get("innererror", {}).get("code") == policy_violation:
+                return True
+            if response.get("choices", [{}])[0].get("finish_reason") == content_filter:
+                return True
+        except Exception as e:
+            logger.warning(f"Failed to check for content safety responses due to {e}")
         return False
 
     def _get_oss_input_token(self, perf_metrics: Any) -> Tuple[int, int]:
