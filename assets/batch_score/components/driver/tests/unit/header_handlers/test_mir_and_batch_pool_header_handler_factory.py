@@ -48,7 +48,6 @@ def test_get_header_handler(mocker, make_metadata, method_to_return_true, expect
     header_handler = MirAndBatchPoolHeaderHandlerFactory().get_header_handler(
         configuration=configuration,
         metadata=make_metadata,
-        routing_client=None,
         token_provider=None
     )
 

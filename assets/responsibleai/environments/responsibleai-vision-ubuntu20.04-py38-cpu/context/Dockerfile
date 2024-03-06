@@ -17,6 +17,10 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
+RUN conda list
+# Conda install and pip install could happen side by side. Remove crypytography with vulnerability from conda
+RUN conda remove cryptography
+
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0'
 
 # Install azureml packages
@@ -27,6 +31,7 @@ RUN pip install 'azureml-core=={{latest-pypi-version}}' \
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-automl-dnn-vision=={{latest-pypi-version}}'
 
+# TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'shap==0.41.0' \
                 'interpret-community==0.30.0' \
                 'Pillow>=10.2.0' \
@@ -34,14 +39,15 @@ RUN pip install 'shap==0.41.0' \
                 'setuptools>=65.5.1' \
                 'numpy==1.22.0' \
                 'scipy==1.10.0' \
-                'statsmodels==0.14.0'
+                'statsmodels==0.14.0' \
+                'rai-core-flask==0.7.4'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
 RUN pip install 'pyarrow>=14.0.1'
 
 # To resolve vulnerability issue regarding crytography
-RUN pip install 'cryptography>=42.0.0'
+RUN pip install 'cryptography>=42.0.4'
 
 RUN pip freeze
 

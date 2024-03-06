@@ -5,7 +5,7 @@
 
 import copy
 import datetime
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List
 
 import pandas as pd
 import tiktoken
@@ -72,6 +72,8 @@ class ResultConverters:
 
     def convert_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the input result to predictions."""
+        if self.is_result_content_safety_failure(result):
+            return self._get_fallback_output()
         if not self.is_result_success(result):
             return self._get_fallback_output()
         return self._get_raw_output(result)
@@ -97,13 +99,16 @@ class ResultConverters:
                         "Cannot find {} in result {}. Using default now.".format(old_key, result))
                     usage[new_key] = ResultConverters.DEFAULT_ISO_FORMAT
                     continue
-                dt = datetime.datetime.utcfromtimestamp(result[old_key] / 1000)
+                # Batch score component output the time in seconds.
+                dt = datetime.datetime.utcfromtimestamp(result[old_key])
                 usage[new_key] = dt.astimezone().isoformat()
             else:
                 # For the token and latency scenarios, no need to do the conversion.
                 usage[new_key] = usage[old_key] if old_key in usage else result.get(old_key, -1)
             if old_key in usage:
                 del usage[old_key]
+        if usage['time_taken_ms'] == -1:
+            usage['time_taken_ms'] = (result.get('end', -1) - result.get('start', 0)) * 1000
         if self._model.is_oss_model():
             usage['input_token_count'] = self._get_oss_input_token(usage)
             usage['output_token_count'] = self._get_oss_output_token(result, usage)
@@ -175,6 +180,23 @@ class ResultConverters:
             return False
         return True
 
+    def is_result_content_safety_failure(self, result: Dict[str, Any]) -> bool:
+        """Check if result failed due to content safety."""
+        try:
+            response = result.get("response", {})
+            policy_violation = "ResponsibleAIPolicyViolation"
+            content_filter = "content_filter"
+            # If the response is not a dictionary, return False.
+            if not isinstance(response, dict):
+                return False
+            if response.get("error", {}).get("innererror", {}).get("code") == policy_violation:
+                return True
+            if response.get("choices", [{}])[0].get("finish_reason") == content_filter:
+                return True
+        except Exception as e:
+            logger.warning(f"Failed to check for content safety responses due to {e}")
+        return False
+
     def _get_oss_input_token(self, perf_metrics: Any) -> Tuple[int, int]:
         if self._is_performance_test:
             return ResultConverters.DEFAULT_PERF_INPUT_TOKEN
@@ -185,7 +207,7 @@ class ResultConverters:
         return input_parameters.get("max_new_tokens", perf_metrics.get('output_token_count', -1))
 
     def _get_tiktoken_count(self, result: Any) -> Tuple[int, int]:
-        input: Tuple[str, str] = self._get_request_content(result)
+        input: List[str] = self._get_request_content(result)
         if self._model.is_oss_model():
             output: str = ResultConverters._get_oss_response_result(result)
         elif self._model.is_aoai_model():
@@ -197,7 +219,7 @@ class ResultConverters:
                     error_details=f"Unsupported model type: {self._model.model_type}. Expected `oss` or `aoai`."))
 
         encoding = tiktoken.get_encoding("cl100k_base")
-        input_tokens = len(encoding.encode(input[0])) + len(encoding.encode(input[1]))
+        input_tokens = sum([len(encoding.encode(input_str)) for input_str in input])
         output_tokens = len(encoding.encode(output))
         return input_tokens, output_tokens
     
@@ -237,48 +259,51 @@ class ResultConverters:
     def _get_response(result: Dict[str, Any]) -> Any:
         return result.get('response', None)
 
-    def _get_request_content(self, result: Dict[str, Any]) -> Tuple[str, str]:
+    def _get_request_content(self, result: Dict[str, Any]) -> List[str]:
         if self._model.is_aoai_model():
             request = self._get_request(result)
             if "prompt" in request:
-                return request["prompt"], ""
+                return [request["prompt"]]
             elif "messages" in request:
-                return request['messages'][0]['content'], request['messages'][1]['content']
+                return [my_dict.get('content', '') for my_dict in request['messages']]
             else:
                 raise BenchmarkSystemException._with_error(
                     AzureMLError.create(
                         BenchmarkSystemError,
-                        error_details=f"Cannot find key `prompt` or `messages` in `request`: {request}."))
+                        error_details=f"Cannot find key `prompt` or `messages` for model type aoai in `request`: {request}."))
         elif self._model.is_oss_model():
-            request = self._get_request(result)['input_data']['input_string'][0]
-            if isinstance(request, str):
-                return request, ""
-            elif isinstance(request, dict):
-                return request['content'], ""
+            request = self._get_request(result)['input_data']['input_string']
+            if isinstance(request[0], str):
+                return [content for content in request] 
+            elif isinstance(request[0], dict):
+                return [my_dict.get('content', '') for my_dict in request]
             else:
                 raise BenchmarkSystemException._with_error(
                     AzureMLError.create(
                         BenchmarkSystemError,
-                        error_details=f"Unknown type of `request`: {request}. Expected `str` or `dict`."))
+                        error_details=f"Expected `str` or `dict` for model type oss. Unknown type of `request`: {request}."))
 
     @staticmethod
     def _get_aoai_response_result(result: Dict[str, Any]) -> Any:
         response = ResultConverters._get_response(result)
-        object = response.get("object", None)
-        if object is None:
-            raise BenchmarkSystemException._with_error(
-                AzureMLError.create(
-                    BenchmarkSystemError,
-                    error_details=f"Cannot find key `object` in response {response}."))
-        elif object == "chat.completion":
-            return response["choices"][0]["message"]["content"]
-        elif object == "text_completion":
-            return response["choices"][0]["text"]
-        else:
-            raise BenchmarkSystemException._with_error(
-                AzureMLError.create(
-                    BenchmarkSystemError,
-                    error_details=f"Unknown `object`: {object}. Expected `chat.completion` or `text_completion`."))
+        response_message = response["choices"][0]
+        if "text" in response_message:
+            # This is the text generation OAI contract scenario.
+            return response_message["text"]
+        if "message" in response_message:
+            # This is the chat completion OAI contract scenario.
+            if "content" in response_message["message"]:
+                return response_message["message"]["content"]
+            # If content is not there, that means the model filtered the response.
+            return ""
+        # Unknown contract specified as OAI.
+        raise BenchmarkUserException._with_error(
+            AzureMLError.create(
+                BenchmarkUserError,
+                error_details="Endpoint returned response with unknown contract. \
+                    Please specify correct model type."
+            )
+        )
 
     @staticmethod
     def _get_oss_response_result(result: Dict[str, Any]) -> Any:
