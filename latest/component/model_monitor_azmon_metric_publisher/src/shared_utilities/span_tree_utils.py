@@ -9,7 +9,7 @@ import json
 
 from typing import Dict, Iterator, List, Optional
 from pyspark.sql import Row
-from copy import deepcopy
+from copy import copy
 
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -25,19 +25,19 @@ class SpanTreeNode:
             self._span_row_dict = span_row.asDict()
         self._children = []
 
-    def _try_get_row_attribute(self, attribute_key: str):
-        """Wrap span row retrieval to catch access errors."""
+    def get_node_attribute(self, attribute_key: str):
+        """Get attribute from span row dictionary."""
         return self._span_row_dict.get(attribute_key, None)
 
     @property
     def span_id(self) -> str:
         """Get the span id."""
-        return self._try_get_row_attribute("span_id")  # type: ignore
+        return self.get_node_attribute("span_id")  # type: ignore
 
     @property
     def parent_id(self) -> str:
         """Get the span's parent id."""
-        return self._try_get_row_attribute("parent_id")  # type: ignore
+        return self.get_node_attribute("parent_id")  # type: ignore
 
     @property
     def children(self) -> List["SpanTreeNode"]:
@@ -52,52 +52,52 @@ class SpanTreeNode:
     @property
     def span_type(self) -> str:
         """Get the span's type."""
-        return self._try_get_row_attribute("span_type")  # type: ignore
+        return self.get_node_attribute("span_type")  # type: ignore
 
     @property
     def start_time(self) -> datetime:
         """Get the span's start_time."""
-        return self._try_get_row_attribute("start_time")  # type: ignore
+        return self.get_node_attribute("start_time")  # type: ignore
 
     @property
     def end_time(self) -> datetime:
         """Get the span's end_time."""
-        return self._try_get_row_attribute("end_time")  # type: ignore
+        return self.get_node_attribute("end_time")  # type: ignore
 
     @property
     def attributes(self) -> str:
         """Get the span's attributes."""
-        return self._try_get_row_attribute("attributes")  # type: ignore
+        return self.get_node_attribute("attributes")  # type: ignore
 
     @property
     def input(self) -> str:
         """Get the span's input."""
-        return self._try_get_row_attribute("input")  # type: ignore
+        return self.get_node_attribute("input")  # type: ignore
 
     @property
     def output(self) -> str:
         """Get the span's output."""
-        return self._try_get_row_attribute("output")  # type: ignore
+        return self.get_node_attribute("output")  # type: ignore
 
     @property
     def status(self) -> str:
         """Get the span's status."""
-        return self._try_get_row_attribute("status")  # type: ignore
+        return self.get_node_attribute("status")  # type: ignore
 
     @property
     def framework(self) -> str:
         """Get the span's framework."""
-        return self._try_get_row_attribute("framework")  # type: ignore
+        return self.get_node_attribute("framework")  # type: ignore
 
     @property
     def name(self) -> str:
         """Get the span's name."""
-        return self._try_get_row_attribute("name")  # type: ignore
+        return self.get_node_attribute("name")  # type: ignore
 
     @property
     def trace_id(self) -> str:
         """Get the span's trace id."""
-        return self._try_get_row_attribute("trace_id")  # type: ignore
+        return self.get_node_attribute("trace_id")  # type: ignore
 
     @classmethod
     def create_node_from_dict(cls, span_node_dict: dict) -> "SpanTreeNode":
@@ -138,22 +138,22 @@ class SpanTreeNode:
     def to_dict(self, datetime_to_str: bool = True) -> dict:
         """Get dictionary representation of SpanTreeNode."""
         # map datetime object to iso-string and then turn children into list of dicts as well.
-        span_row_dict = deepcopy(self._span_row_dict)
-        span_row_dict['children'] = self.children
+        output_dict = copy(self._span_row_dict)
+        output_dict['children'] = self.children
         if datetime_to_str:
-            start_time: datetime = span_row_dict['start_time']  # type: ignore
-            end_time: datetime = span_row_dict['end_time']  # type: ignore
-            span_row_dict['start_time'] = start_time.isoformat()
-            span_row_dict['end_time'] = end_time.isoformat()
+            start_time: datetime = output_dict['start_time']  # type: ignore
+            end_time: datetime = output_dict['end_time']  # type: ignore
+            output_dict['start_time'] = start_time.isoformat()
+            output_dict['end_time'] = end_time.isoformat()
 
         child_subtree_dicts = []
-        for child_node in span_row_dict['children'] or []:
+        for child_node in output_dict['children'] or []:
             child_node: SpanTreeNode
             subtree_dict = child_node.to_dict()
             child_subtree_dicts.append(subtree_dict)
 
-        span_row_dict['children'] = child_subtree_dicts
-        return span_row_dict
+        output_dict['children'] = child_subtree_dicts
+        return output_dict
 
     def __iter__(self) -> Iterator["SpanTreeNode"]:
         """Iterate over current span and child spans."""
@@ -226,7 +226,6 @@ class SpanTree:
                 parent_span = self.get_span_tree_node_by_span_id(parent_id)
                 if parent_span is not None:
                     parent_span.insert_child(span)
-        # TODO: handle logic if root_span is not found or if we have multiple root_spans
         return root_span
 
     def __iter__(self) -> Iterator[SpanTreeNode]:
@@ -239,4 +238,4 @@ class SpanTree:
     def __repr__(self) -> str:
         """Get representation of the SpanTree."""
         return f"SpanTree(trace id = {self.root_span.trace_id if self.root_span is not None else None}," + \
-            f" spans_map = {self._span_node_map})"
+            f" spans = {self._span_node_map})"
