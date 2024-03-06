@@ -7,7 +7,7 @@ import argparse
 import requests
 import json
 from pyspark.sql.functions import col, lit, udf
-from typing import List, Tuple
+from typing import Tuple
 from pyspark.sql.types import (
     StructType,
     StructField,
