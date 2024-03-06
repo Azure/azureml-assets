@@ -36,7 +36,6 @@ from shared_utilities.constants import (
 )
 from shared_utilities.prompts import BERTOPIC_DEFAULT_PROMPT
 from shared_utilities.span_tree_utils import SpanTree
-from shared_utilities.gsq import apply_annotation
 from model_data_collector_preprocessor.store_url import StoreUrl
 
 from shared_utilities.io_utils import (
@@ -45,15 +44,12 @@ from shared_utilities.io_utils import (
 )
 from shared_utilities.llm_utils import (
     API_KEY,
-    _WorkspaceConnectionTokenManager,
-    get_openai_request_args
+    _WorkspaceConnectionTokenManager
 )
 
 from bertopic import BERTopic
 from openai import AzureOpenAI
 from bertopic.representation import OpenAI
-
-VIOLATED_METRICS = ["Fluency", "Coherence"]
 
 
 def get_output_schema() -> StructType:
@@ -143,35 +139,6 @@ def assign_good_topic(topic_list, question, metrics_score, topics_dict):
         if question in q_list and metrics_score == 5:
             topic_list = _append_value(topic_list, topic)
     return topic_list
-
-
-# Todo: temp usage, need to remove later
-@udf(returnType=StructType([
-    StructField(PROMPT_COLUMN, StringType()),
-    StructField(COMPLETION_COLUMN, StringType())]))
-def Get_gsq_input(input, output, root_span):
-    """Gsq Adapter."""
-    try:
-        tree = SpanTree.create_tree_from_json_string(root_span)
-        text_builder = ""
-        for span in tree:
-            # Todo: get retrieval span
-            if span.name == "lookup":
-                lookup_input = json.loads(span.input)
-                queries = lookup_input["queries"]
-                lookup_outputs = json.loads(span.output)
-                if isinstance(queries, list):
-                    top_k_list = lookup_outputs[0]
-                    for lookup_output in top_k_list:
-                        text_builder = text_builder + lookup_output["text"]
-                elif isinstance(queries, str):
-                    for lookup_output in lookup_outputs:
-                        text_builder = text_builder + lookup_output["text"]
-                break
-        return json.loads(input)["question"], json.loads(output)["answer"]
-    except KeyError as e:
-        print("Required field not found: ", e)
-        return None
 
 
 def get_index_id(index_content):
@@ -296,59 +263,22 @@ def run():
     parser.add_argument("--completion_column_name", type=str, default=COMPLETION_COLUMN)
     args = parser.parse_args()
 
-    # violated_metrics = get_violated_metrics(args.signal_output, args.signal_name)
-    # if violated_metrics == []:
-    #     print("No violated metrics. No action will be generated.")
-    #     save_empty_dataframe(get_output_schema(), args.data_with_groups)
-    #     return
+    violated_metrics = get_violated_metrics(args.signal_output, args.signal_name)
+    if violated_metrics == []:
+        print("No violated metrics. No action will be generated.")
+        save_empty_dataframe(get_output_schema(), args.data_with_groups)
+        return
 
-    request_args = get_openai_request_args(args)
-
-    signal_scored_data_df = try_read_mltable_in_spark(
-"azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/rag-prp-test/workspaces/fepproj2/datastores/workspaceblobstore/paths/azureml/b2e1d445-8572-40d2-aeaa-928d2080ca2d/aggregated_trace_data/", "production_data") # noqa
-    signal_scored_data_df.show()
-    gsq_input = Get_gsq_input(col("input"), col("output"), col("root_span"))
-    signal_scored_data_df = signal_scored_data_df.withColumn("question", gsq_input[PROMPT_COLUMN]) \
-                                                 .withColumn("answer", gsq_input[COMPLETION_COLUMN]) \
-                                                 .drop("user_id") \
-                                                 .drop("session_id") \
-                                                 .drop("start_time") \
-                                                 .drop("end_time") \
-                                                 .drop("input") \
-                                                 .drop("output")
-    print("gsq input production df")
+    signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
+    print("gsq output df")
     signal_scored_data_df.show()
 
-    annotations_df = apply_annotation(
-        metric_names="AcceptableCoherenceScorePerInstance,AggregatedCoherencePassRate,AcceptableFluencyScorePerInstance,AggregatedFluencyPassRate",  # noqa: E501
-        production_df=signal_scored_data_df,
-        model_deployment_name=args.model_deployment_name,
-        workspace_connection_arm_id=args.workspace_connection_arm_id,
-        num_samples=args.num_samples,
-        sample_rate=1.0,
-        request_args=request_args,
-        prompt_column_name="question",
-        completion_column_name="answer",
-        context_column_name="context",
-        ground_truth_column_name="ground_truth"
-    )
-    annotations_df = annotations_df.where((col("Fluency") != -1) & (col("Coherence") != -1))
-    signal_scored_output_df = annotations_df.join(signal_scored_data_df, ['trace_id'], "inner")
-
-    signal_scored_output_df = signal_scored_output_df.select([col("trace_id"),
-                                                              col(PROMPT_COLUMN).alias(ROOT_QUESTION_COLUMN),
-                                                              col(COMPLETION_COLUMN),
-                                                              col("Fluency"),
-                                                              col("Coherence"),
-                                                              col("root_span")])
-    print("gsq_output")
-    signal_scored_output_df.show()
-    df = signal_scored_output_df.withColumn(TOPIC_LIST_COLUMN, lit("")) \
-                                .withColumn(GROUP_LIST_COLUMN, lit("")) \
-                                .withColumn(VIOLATED_METRICS_COLUMN, lit(""))
+    df = signal_scored_data_df.withColumn(TOPIC_LIST_COLUMN, lit("")) \
+                              .withColumn(GROUP_LIST_COLUMN, lit("")) \
+                              .withColumn(VIOLATED_METRICS_COLUMN, lit(""))
 
     # seperate bad groups with semantic topic
-    for metrics in VIOLATED_METRICS:
+    for metrics in violated_metrics:
         print("======Current metrics=====")
         print(metrics)
         score_name = metrics
