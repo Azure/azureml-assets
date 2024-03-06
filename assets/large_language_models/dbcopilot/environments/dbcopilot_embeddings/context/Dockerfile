@@ -6,11 +6,10 @@ USER root
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/dbcopilot
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-RUN conda activate /azureml-envs/prompt-flow/runtime && \
-    conda uninstall -y cryptography
 # Create conda environment
 COPY conda_dependencies.yaml .
-RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
+RUN conda run -n /azureml-envs/prompt-flow/runtime conda uninstall -y cryptography && \
+    conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda clean -a -y
 
