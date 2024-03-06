@@ -42,9 +42,9 @@ class TestBatchInferencePreparerComponent:
 
     @pytest.mark.parametrize('model_type, prompt_type', [
         (ModelType.OAI, PromptType.CHAT_COMPLETION),
-        (ModelType.OAI, PromptType.TEXT_COMPLETION),
+        (ModelType.OAI, PromptType.TEXT_GENERATION),
         (ModelType.OSS, PromptType.CHAT_COMPLETION),
-        (ModelType.OSS, PromptType.TEXT_COMPLETION),
+        (ModelType.OSS, PromptType.TEXT_GENERATION),
         (ModelType.VISION_OSS, None)
     ])
     def test_batch_inference_preparer(self, model_type: ModelType, prompt_type: Optional[PromptType], temp_dir: str):
@@ -73,7 +73,7 @@ class TestBatchInferencePreparerComponent:
                     key: [{"role": "system", "content": ""}, {"role": "user", "content": f"###<{prompt_col}>"}],
                     **param_dict
                 })
-            elif prompt_type == PromptType.TEXT_COMPLETION:
+            elif prompt_type == PromptType.TEXT_GENERATION:
                 key = "prompt"
                 pattern = json.dumps({
                     key: f"###<{prompt_col}>",
@@ -94,7 +94,7 @@ class TestBatchInferencePreparerComponent:
                         "parameters": param_dict
                     }
                 })
-            elif prompt_type == PromptType.TEXT_COMPLETION:
+            elif prompt_type == PromptType.TEXT_GENERATION:
                 param_dict["return_full_text"] = return_full_text
                 pattern = json.dumps({
                     key: {

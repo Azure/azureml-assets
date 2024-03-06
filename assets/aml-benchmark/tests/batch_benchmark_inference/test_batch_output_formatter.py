@@ -30,9 +30,9 @@ class TestBatchOutputFormatterComponent:
     @pytest.mark.parametrize('model_type, prompt_type, use_tiktoken', [
         (ModelType.OAI, PromptType.CHAT_COMPLETION, False),
         (ModelType.OAI, PromptType.CHAT_COMPLETION, True),
-        (ModelType.OAI, PromptType.TEXT_COMPLETION, True),
+        (ModelType.OAI, PromptType.TEXT_GENERATION, True),
         (ModelType.OSS, PromptType.CHAT_COMPLETION, True),
-        (ModelType.OSS, PromptType.TEXT_COMPLETION, True),
+        (ModelType.OSS, PromptType.TEXT_GENERATION, True),
         (ModelType.VISION_OSS, None, False)
     ])
     def test_batch_output_formatter(
@@ -85,12 +85,12 @@ class TestBatchOutputFormatterComponent:
             if model_type == ModelType.OAI:
                 if prompt_type == PromptType.CHAT_COMPLETION:
                     input_file = Constants.BATCH_OUTPUT_FORMATTER_OAI_CHAT_FILE_PATH
-                elif prompt_type == PromptType.TEXT_COMPLETION:
+                elif prompt_type == PromptType.TEXT_GENERATION:
                     input_file = Constants.BATCH_OUTPUT_FORMATTER_OAI_TEXT_FILE_PATH
             elif model_type == ModelType.OSS:
                 if prompt_type == PromptType.CHAT_COMPLETION:
                     input_file = Constants.BATCH_OUTPUT_FORMATTER_OSS_CHAT_FILE_PATH
-                elif prompt_type == PromptType.TEXT_COMPLETION:
+                elif prompt_type == PromptType.TEXT_GENERATION:
                     input_file = Constants.BATCH_OUTPUT_FORMATTER_OSS_TEXT_FILE_PATH
             with open(input_file, "r") as f:
                 with open(file_path, "w") as f2:

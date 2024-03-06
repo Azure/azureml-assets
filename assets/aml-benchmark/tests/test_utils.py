@@ -112,7 +112,7 @@ class ModelType(Enum):
 
 
 class PromptType(Enum):
-    TEXT_COMPLETION = "text_completion"
+    TEXT_GENERATION = "text_generation"
     CHAT_COMPLETION = "chat_completion"
 
 
