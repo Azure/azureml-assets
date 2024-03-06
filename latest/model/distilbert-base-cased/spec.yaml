@@ -5,7 +5,7 @@ properties:
   SharedComputeCapacityEnabled: true
   SHA: 0dacbb01d604f8adeeb5b87c9339e485ac40d5c0
   evaluation-min-sku-spec: 4|0|28|56
-  inference-min-sku-spec: 2||0|8|28
+  inference-min-sku-spec: 2|0|8|28
   evaluation-recommended-sku: Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
     Standard_DS5_v2, Standard_DS12_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4,
     Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4,
@@ -31,7 +31,7 @@ properties:
 tags:
   license: apache-2.0
   task: fill-mask
-  SharedComputeCapacityEnabled: ""
+  SharedComputeCapacityEnabled: ''
   training_datasets: bookcorpus, wikipedia
   huggingface_model_id: distilbert-base-cased
   evaluation_compute_allow_list: [Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
@@ -55,7 +55,6 @@ tags:
     Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
     Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-
 version: 13
 description: |
   DistilBERT, a transformers model, is designed to be smaller and quicker than BERT. It underwent pretraining on the same dataset in a self-supervised manner, utilizing the BERT base model as a reference. This entails training solely on raw texts, without human annotation, thus enabling the utilization of vast amounts of publicly accessible data. An automated process generates inputs and labels from these texts, guided by the BERT base model. Specifically, the pretraining process involved three objectives:
