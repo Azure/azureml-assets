@@ -72,7 +72,7 @@ class TestResultConverters:
                     'to each other, keeping each other warm and safe. \\n\\nOne day, Rex noticed Charlie '
                     'seemed sad. His tail drooped and he moved slower than usual. \\"What\'s wrong?\\" '
                     'Rex asked. Charlie whined, \\"I", "stop_reason": "max_tokens", "stop": null}, "start": '
-                    '1701718765743.0286, "end": 1701718769229.678, "latency": 3486.64927482605}')
+                    '1701718765.7430286, "end": 1701718769.229678, "latency": 3486.64927482605}')
                 with open(input_file, 'w') as fp:
                     fp.write(json_str)
                 prediction_data = os.path.join(d, 'results.jsonl')
@@ -96,9 +96,9 @@ class TestResultConverters:
                     label_key=None,
                     additional_columns=None,
                     ground_truth_input=ground_truth_input,
-                    prediction_data=prediction_data,
-                    perf_data=os.path.join(d, 'perf.json'),
-                    predict_ground_truth_data=predict_ground_truth_data,
+                    prediction_path=prediction_data,
+                    perf_path=os.path.join(d, 'perf.json'),
+                    ground_truth_path=predict_ground_truth_data,
                     handle_response_failure=False,
                     fallback_value="wrong",
                     is_performance_test=False,
