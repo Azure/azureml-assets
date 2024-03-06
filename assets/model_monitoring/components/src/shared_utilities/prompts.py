@@ -47,7 +47,8 @@ RETRIEVAL_DOCUMENT_RELEVANCE_TEMPLATE = "\n\n".join(
             CONTEXT: "Marie Curie was a Polish-born physicist and chemist who pioneered research on radioactivity \
                 and was the first woman to win a Nobel Prize.",
             PROMPT: "What field did Thomas Edison excel in?",
-            COMPLETION: "This context does not include what field Thomas Edison exceled in. It is the introduction of Marie Curie.", # noqa: E501
+            COMPLETION: "This context does not include what field Thomas Edison exceled in. \
+            It is the introduction of Marie Curie.",
         }),
         "A good example response would be:",
         "## Example Task #1:",
@@ -58,8 +59,8 @@ RETRIEVAL_DOCUMENT_RELEVANCE_TEMPLATE = "\n\n".join(
         json.dumps({
             CONTEXT: "SQL stands for Structured Query Language and is a computer language that we use to interact with a relational database. SQL is a tool for organizing, managing, and retrieving archived data from a computer database.",  # noqa: E501
             PROMPT: "When was SQL developed and what is SQL used for?",
-            COMPLETION: "The developed date for SQL is not explicitly mentioned in the provided content. However\
-            for SQL usage, SQL is a powerful programming language used to query and manipulate data stored in relational databases.", # noqa: E501
+            COMPLETION: "The developed date for SQL is not explicitly mentioned in the provided content. \
+            However for SQL usage, SQL is a powerful programming language used to query and manipulate data stored in relational databases.",  # noqa: E501
         }),
         "A good example response would be:",
         "## Example Task #2:",

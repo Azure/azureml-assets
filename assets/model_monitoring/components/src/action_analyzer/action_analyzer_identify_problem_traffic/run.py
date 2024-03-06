@@ -221,7 +221,7 @@ def parse_debugging_info(root_span):
                     for lookup_output in lookup_outputs:
                         text.append(lookup_output["text"])
                         score.append(float(lookup_output["score"]))
-                    spans_array.append((parent_id, index_content, index_id, queries, TEXT_SPLITTER.join(text), max(score))) # noqa: E501
+                    spans_array.append((parent_id, index_content, index_id, queries, TEXT_SPLITTER.join(text), max(score)))  # noqa: E501
         return spans_array
     except KeyError as e:
         print("Required field not found: ", e)
@@ -304,7 +304,7 @@ def run():
     request_args = get_openai_request_args(args)
 
     signal_scored_data_df = try_read_mltable_in_spark(
-"azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/rag-prp-test/workspaces/fepproj2/datastores/workspaceblobstore/paths/azureml/b2e1d445-8572-40d2-aeaa-928d2080ca2d/aggregated_trace_data/", "production_data")
+"azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/rag-prp-test/workspaces/fepproj2/datastores/workspaceblobstore/paths/azureml/b2e1d445-8572-40d2-aeaa-928d2080ca2d/aggregated_trace_data/", "production_data") # noqa
     signal_scored_data_df.show()
     gsq_input = Get_gsq_input(col("input"), col("output"), col("root_span"))
     signal_scored_data_df = signal_scored_data_df.withColumn("question", gsq_input[PROMPT_COLUMN]) \
