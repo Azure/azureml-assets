@@ -8,6 +8,7 @@ import uuid
 import json
 import os
 import glob
+import pandas as pd
 
 import mltable
 from azureml._common._error_definition.azureml_error import AzureMLError
@@ -193,3 +194,15 @@ def save_json_to_file(json_dict: Dict[Any, Any], path: str) -> None:
     """
     with open(path, mode='w') as file:
         json.dump(json_dict, file, indent=4)
+
+
+def save_list_to_jsonl_if_path_provided(data: List[Any], path: Optional[str]):
+    """
+    Save the list to a jsonl file if path is provided.
+
+    :param data: The data to be saved.
+    :param path: The location where the file has to be saved.
+    """
+    if path:
+        df = pd.DataFrame(data)
+        df.to_json(path, orient='records', lines=True)
