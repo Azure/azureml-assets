@@ -177,9 +177,10 @@ class TestGenAISparkPreprocessor:
             # data but missing some promoted attribute fields
             (datetime(2024, 2, 7, 12), datetime(2024, 2, 7, 13),
              _preprocessed_schema_no_input, _preprocessed_data_no_inputs),
+            # TODO: uncomment when support 1-hour look back/forward
             # test the 1-hour lookback functionality
-            (datetime(2024, 2, 10, 15), datetime(2024, 2, 10, 16),
-             _preprocessed_schema, _preprocessed_data_look_back)
+            # (datetime(2024, 2, 10, 15), datetime(2024, 2, 10, 16),
+            #  _preprocessed_schema, _preprocessed_data_look_back)
         ]
     )
     def test_genai_uri_folder_to_preprocessed_spark_df(

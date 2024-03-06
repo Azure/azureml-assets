@@ -5,8 +5,6 @@
 
 import argparse
 
-from datetime import timedelta
-from dateutil import parser
 from pyspark.sql import DataFrame
 from pyspark.sql.types import TimestampType
 from pyspark.sql.functions import lit
@@ -18,7 +16,6 @@ from model_data_collector_preprocessor.store_url import StoreUrl
 from model_data_collector_preprocessor.mdc_utils import (
     _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string,
-    _filter_df_by_time_window,
 )
 from model_data_collector_preprocessor.trace_aggregator import (
     process_spans_into_aggregated_traces,
@@ -118,28 +115,11 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     return df
 
 
-def _filter_look_backward_logs(span_df: DataFrame, data_window_start: datetime) -> DataFrame:
-    """Filter out logs that were got from our 1-hour look backward window but are not in our desired time window."""
-    desired_trace_ids = span_df.where(span_df.start_time >= data_window_start).select('trace_id').distinct()
-    filtered_logs = desired_trace_ids.join(
-        span_df, on="trace_id", how="left"
-    )
-    return filtered_logs
-
-
 def _genai_uri_folder_to_preprocessed_spark_df(
         data_window_start: str, data_window_end: str, store_url: StoreUrl, add_tags_func=None
 ) -> DataFrame:
     """Read raw gen AI logs data, preprocess, and return in a Spark DataFrame."""
-    # look-back 1 hour for extra span logs
-    data_window_start_as_datetime = parser.parse(data_window_start)
-    data_window_end_as_datetime = parser.parse(data_window_end)
-    adjusted_date_window_start = data_window_start_as_datetime - timedelta(hours=1)
-    adjusted_date_window_end = data_window_end_as_datetime + timedelta(hours=1)
-
-    df = _mdc_uri_folder_to_preprocessed_spark_df(
-        adjusted_date_window_start.strftime("%Y%m%dT%H:%M:%S"),
-        adjusted_date_window_end.strftime("%Y%m%dT%H:%M:%S"), store_url, False, add_tags_func)
+    df = _mdc_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url, False, add_tags_func)
 
     df = _preprocess_raw_logs_to_span_logs_spark_df(df)
 
@@ -175,7 +155,6 @@ def genai_preprocessor(
     span_logs_df = _genai_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url)
 
     trace_logs_df = process_spans_into_aggregated_traces(span_logs_df, require_trace_data)
-
 
     save_spark_df_as_mltable(span_logs_df, preprocessed_span_data)
 
