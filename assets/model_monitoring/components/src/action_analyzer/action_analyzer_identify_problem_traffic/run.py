@@ -193,7 +193,7 @@ def get_index_id(index_content):
     StructField(INDEX_CONTENT_COLUMN, StringType()),
     StructField(INDEX_ID_COLUMN, StringType()),
     StructField(PROMPT_COLUMN, StringType()),
-    StructField(COMPLETION_COLUMN, StringType()),
+    StructField(CONTEXT_COLUMN, StringType()),
     StructField(INDEX_SCORE_COLUMN, FloatType())])))
 def parse_debugging_info(root_span):
     """Parse the span tree to get debugging info."""
@@ -237,12 +237,12 @@ def convert_to_span_level(df):
     df = df.withColumn("debugging_info", debugging_details)
     df_exploaded = df.withColumn("debugging_details", explode("debugging_info")).drop("debugging_info")
     span_level_df = df_exploaded.withColumn(SPAN_ID_COLUMN, col(f"debugging_details.{SPAN_ID_COLUMN}"))\
-        .withColumn(INDEX_ID_COLUMN, col(f"debugging_details.{INDEX_ID_COLUMN}"))\
-        .withColumn(INDEX_CONTENT_COLUMN, col(f"debugging_details.{INDEX_CONTENT_COLUMN}"))\
-        .withColumn(PROMPT_COLUMN, col(f"debugging_details.{PROMPT_COLUMN}"))\
-        .withColumn(COMPLETION_COLUMN, col(f"debugging_details.{COMPLETION_COLUMN}"))\
-        .withColumn(INDEX_SCORE_COLUMN, col(f"debugging_details.{INDEX_SCORE_COLUMN}"))\
-        .drop("debugging_details")
+                                .withColumn(INDEX_ID_COLUMN, col(f"debugging_details.{INDEX_ID_COLUMN}"))\
+                                .withColumn(INDEX_CONTENT_COLUMN, col(f"debugging_details.{INDEX_CONTENT_COLUMN}"))\
+                                .withColumn(PROMPT_COLUMN, col(f"debugging_details.{PROMPT_COLUMN}"))\
+                                .withColumn(CONTEXT_COLUMN, col(f"debugging_details.{CONTEXT_COLUMN}"))\
+                                .withColumn(INDEX_SCORE_COLUMN, col(f"debugging_details.{INDEX_SCORE_COLUMN}"))\
+                                .drop("debugging_details")
     return span_level_df
 
 
@@ -336,7 +336,7 @@ def run():
     signal_scored_output_df = annotations_df.join(signal_scored_data_df, ['trace_id'], "inner")
 
     signal_scored_output_df = signal_scored_output_df.select([col("trace_id"),
-                                                              col(PROMPT_COLUMN),
+                                                              col(PROMPT_COLUMN).alias(ROOT_QUESTION_COLUMN),
                                                               col(COMPLETION_COLUMN),
                                                               col("Fluency"),
                                                               col("Coherence"),
@@ -375,14 +375,14 @@ def run():
 
         # add semantic groups for bad queries
         print("add semantic groups for bad queries")
-        topics_dict = bertopic_get_topic(bad_samples[PROMPT_COLUMN].tolist(),
+        topics_dict = bertopic_get_topic(bad_samples[ROOT_QUESTION_COLUMN].tolist(),
                                          args.workspace_connection_arm_id,
                                          args.model_deployment_name)
 
         topic_group_dict = {f"{metrics}_bad_group_{i}_{k}": (k, v) for i, (k, v) in enumerate(topics_dict.items())}
         topic_group_columns = assign_topic_and_group(col(TOPIC_LIST_COLUMN),
                                                      col(GROUP_LIST_COLUMN),
-                                                     col(PROMPT_COLUMN),
+                                                     col(ROOT_QUESTION_COLUMN),
                                                      col(VIOLATED_METRICS_COLUMN),
                                                      lit(metrics),
                                                      lit(json.dumps(topic_group_dict)))
@@ -392,17 +392,17 @@ def run():
 
         # add semantic groups for good queries
         print("add semantic groups for good queries")
-        topics_dict = bertopic_get_topic(good_samples[PROMPT_COLUMN].tolist(),
+        topics_dict = bertopic_get_topic(good_samples[ROOT_QUESTION_COLUMN].tolist(),
                                          args.workspace_connection_arm_id,
                                          args.model_deployment_name)
 
         df = df.withColumn(TOPIC_LIST_COLUMN, assign_good_topic(col(TOPIC_LIST_COLUMN),
-                                                                col(PROMPT_COLUMN),
+                                                                col(ROOT_QUESTION_COLUMN),
                                                                 col(score_name),
                                                                 lit(json.dumps(topics_dict))))
 
     sampled_df = df.filter(col(TOPIC_LIST_COLUMN) != "")
-
+    sampled_df.show()
     span_level_df = convert_to_span_level(sampled_df)
     save_spark_df_as_mltable(span_level_df, args.data_with_groups)
 

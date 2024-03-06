@@ -50,8 +50,8 @@ from shared_utilities.llm_utils import (
 )
 
 
-def _query_relevance_scores(
-    turns: List[Tuple[str, str, str]],
+def _query_relevance_score(
+    turns: Tuple[str, str, str],
     template: str,
     session: requests.Session,
     endpoint_url: str,
@@ -64,9 +64,10 @@ def _query_relevance_scores(
     presence_penalty: float,
     max_tokens=3000,
     stop: str = None
-) -> List[int]:
+) -> int:
 
-    prompts = [template.replace("{input_samples", f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1], 'context': turn[2]}, indent=4)}") for turn in turns]  # noqa: E501
+    turns_list = [turns]
+    prompts = [template.replace("{input_samples", f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1], 'context': turn[2]}, indent=4)}") for turn in turns_list]  # noqa: E501
     print("prompts:", prompts)
     ratings = []
     for prompt in prompts:
@@ -106,39 +107,7 @@ def _query_relevance_scores(
             response["finish_reason"] = ["error"]
             response["error"] = [str(e)]
             raise e
-    return ratings
-
-
-def _query_relevance_score(
-    turn: Tuple[str, str, str],
-    template: str,
-    session: requests.Session,
-    endpoint_url: str,
-    token_manager: _APITokenManager,
-    model: str,
-    temperature: float,
-    top_p: float,
-    num_samples: int,
-    frequency_penalty: float,
-    presence_penalty: float,
-    max_tokens=3000,
-    stop: str = None
-) -> int:
-    turns = [turn]
-    scores = _query_relevance_scores(turns,
-                                     template,
-                                     session,
-                                     endpoint_url,
-                                     token_manager,
-                                     model,
-                                     temperature,
-                                     top_p,
-                                     num_samples,
-                                     frequency_penalty,
-                                     presence_penalty,
-                                     max_tokens,
-                                     stop)
-    return scores[0]
+    return ratings[0]
 
 
 @udf(IntegerType())
