@@ -80,6 +80,7 @@ def get_output_schema() -> StructType:
 def bertopic_get_topic(queries,
                        workspace_connection_arm_id,
                        model_deployment_name):
+    """Group queries in semantic groups using Bertopic."""
     token_manager = _WorkspaceConnectionTokenManager(connection_name=workspace_connection_arm_id,
                                                      auth_header=API_KEY)
     azure_endpoint_domain_name = token_manager.get_endpoint_domain()
