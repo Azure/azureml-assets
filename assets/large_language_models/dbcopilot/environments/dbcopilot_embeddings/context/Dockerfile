@@ -2,7 +2,9 @@ FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:{{latest-ima
 
 USER root
 
-RUN conda uninstall -y cryptography
+RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh azureml-envs/prompt-flow/runtime && \
+    conda uninstall -y cryptography && \
+    conda deactivate"
 
 # Set the shared environment path
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/dbcopilot
