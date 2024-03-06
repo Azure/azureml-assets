@@ -495,7 +495,6 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
 
     def get_model_signature(self):
         """Return model signature for NLP models."""
-
         if self._task == SupportedNLPTasks.TEXT_GENERATION.value:
             inputs = Schema([ColSpec(DataType.string)])
             outputs = Schema([ColSpec(DataType.string)])
