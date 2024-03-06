@@ -25,13 +25,6 @@ from model_data_collector_preprocessor.trace_aggregator import (
 )
 
 
-# these constants are used for the 1 hour look forward/backward feature.
-# the goal is after we read we filter down to a small "buffer" before and after
-# our actual data window.
-DATA_WINDOW_OFFSET_MINUTES_BEFORE = 5
-DATA_WINDOW_OFFSET_MINUTES_AFTER = 2
-
-
 def _get_important_field_mapping() -> dict:
     """Map the span log schema names to the expected raw log schema column/field name."""
     map = {
@@ -125,6 +118,15 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     return df
 
 
+def _filter_look_backward_logs(span_df: DataFrame, data_window_start: datetime) -> DataFrame:
+    """Filter out logs that were got from our 1-hour look backward window but are not in our desired time window."""
+    desired_trace_ids = span_df.where(span_df.start_time >= data_window_start).select('trace_id').distinct()
+    filtered_logs = desired_trace_ids.join(
+        span_df, on="trace_id", how="left"
+    )
+    return filtered_logs
+
+
 def _genai_uri_folder_to_preprocessed_spark_df(
         data_window_start: str, data_window_end: str, store_url: StoreUrl, add_tags_func=None
 ) -> DataFrame:
@@ -140,11 +142,6 @@ def _genai_uri_folder_to_preprocessed_spark_df(
         adjusted_date_window_end.strftime("%Y%m%dT%H:%M:%S"), store_url, False, add_tags_func)
 
     df = _preprocess_raw_logs_to_span_logs_spark_df(df)
-
-    # filter logs to buffer window
-    buffer_start_time = data_window_start_as_datetime - timedelta(minutes=DATA_WINDOW_OFFSET_MINUTES_BEFORE)
-    buffer_end_time = data_window_end_as_datetime + timedelta(minutes=DATA_WINDOW_OFFSET_MINUTES_AFTER)
-    df = df.filter(df.start_time >= buffer_start_time).filter(df.end_time <= buffer_end_time)
 
     print("df processed from raw Gen AI logs:")
     df.show()
@@ -175,19 +172,12 @@ def genai_preprocessor(
     """
     store_url = StoreUrl(input_data)
 
-    enlarged_time_window_span_logs_df = _genai_uri_folder_to_preprocessed_spark_df(
-        data_window_start, data_window_end, store_url)
+    span_logs_df = _genai_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url)
 
-    trace_logs_df = process_spans_into_aggregated_traces(
-        enlarged_time_window_span_logs_df, require_trace_data, data_window_start, data_window_end)
+    trace_logs_df = process_spans_into_aggregated_traces(span_logs_df, require_trace_data)
 
-    # filter down the span_logs to original time window
-    original_start_time = parser.parse(data_window_start)
-    original_end_time = parser.parse(data_window_end)
-    filtered_span_logs_df = _filter_df_by_time_window(
-        enlarged_time_window_span_logs_df, original_start_time, original_end_time)
 
-    save_spark_df_as_mltable(filtered_span_logs_df, preprocessed_span_data)
+    save_spark_df_as_mltable(span_logs_df, preprocessed_span_data)
 
     save_spark_df_as_mltable(trace_logs_df, aggregated_trace_data)
 
