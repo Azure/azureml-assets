@@ -16,10 +16,13 @@ RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
     unixodbc-dev \
-    # Upgrade libldap to the required version
     libldap-2.4-2=2.4.49+dfsg-2ubuntu1.10 \
-    libldap-common=2.4.49+dfsg-2ubuntu1.10 && \
-    apt-get install --only-upgrade openssl=1.1.1f-1ubuntu2.21 libssl1.1=1.1.1f-1ubuntu2.21 && \
+    libldap-common=2.4.49+dfsg-2ubuntu1.10 \
+    openssl=1.1.1f-1ubuntu2.21 \
+    libssl1.1=1.1.1f-1ubuntu2.21 \
+    login=1:4.8.1-1ubuntu5.20.04.5 \
+    passwd=1:4.8.1-1ubuntu5.20.04.5 \
+    uidmap=1:4.8.1-1ubuntu5.20.04.5 && \
     rm -rf /var/lib/apt/lists/*
 
 # Import the public repository GPG keys
