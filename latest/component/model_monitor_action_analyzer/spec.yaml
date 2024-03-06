@@ -1,0 +1,122 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+
+name: model_monitor_action_analyzer
+display_name: Model Monitor - Action Analyzer
+description: Generate and output actions to the default datastore.
+version: 0.0.1
+is_deterministic: true
+inputs:
+  signal_scored_data:
+    type: mltable
+    description: production data with metrics scores from monitoring signal
+  signal_name:
+    type: string
+    optional: false
+    description: signal name for action
+  signal_output:
+    type: uri_folder
+    description: signal output with summarize file
+  model_deployment_name:
+    type: string
+    optional: false
+    description: model name, e.g., name of the deployment for Azure OpenAI
+  workspace_connection_arm_id:
+    type: string
+    optional: false
+    description: path to the workspace connection
+  prompt_column_name:
+    type: string
+    optional: true
+    default: "prompt"
+  completion_column_name:
+    type: string
+    optional: true
+    default: "completion"
+  instance_type:
+    type: string
+    default: "standard_e4s_v3"
+    optional: true
+outputs:
+  action_output:
+    type: uri_folder
+    mode: direct
+    description: output actions
+jobs:
+  identify_problem_traffic:
+    type: spark
+    component: azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.1
+    inputs:
+      signal_scored_data:
+        type: mltable
+        path: ${{parent.inputs.signal_scored_data}}
+      signal_output:
+        type: uri_folder
+        path: ${{parent.inputs.signal_output}}
+      signal_name: ${{parent.inputs.signal_name}}
+      workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
+      model_deployment_name: ${{parent.inputs.model_deployment_name}}
+      prompt_column_name: ${{parent.inputs.prompt_column_name}}
+      completion_column_name: ${{parent.inputs.completion_column_name}}
+    outputs:
+      data_with_groups:
+        type: mltable
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  metrics_calculation:
+    type: spark
+    component: azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.1
+    inputs:
+      data_with_groups:
+        type: mltable
+        path: ${{parent.jobs.identify_problem_traffic.outputs.data_with_groups}}
+      workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
+      model_deployment_name: ${{parent.inputs.model_deployment_name}}
+    outputs:
+      data_with_action_metric_score:
+        type: mltable
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  correlation_test:
+    type: spark
+    component: azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.1
+    inputs:
+      data_with_action_metric_score:
+        type: mltable
+        path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
+    outputs:
+      action_data:
+        type: mltable
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  output_actions:
+    type: spark
+    component: azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.1
+    inputs:
+      action_data:
+        type: mltable
+        path: ${{parent.jobs.correlation_test.outputs.action_data}}
+      data_with_action_metric_score:
+        type: mltable
+        path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
+      model_deployment_name: ${{parent.inputs.model_deployment_name}}
+      signal_name: ${{parent.inputs.signal_name}}
+    outputs:
+      action_output:
+        type: uri_folder
+        path: ${{parent.outputs.action_output}}
+        mode: direct
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
+      runtime_version: "3.3"
+    identity:
+      type: aml_token

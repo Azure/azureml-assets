@@ -1,0 +1,61 @@
+$schema: http://azureml/sdk-2-0/SparkComponent.json
+type: spark
+
+name: action_analyzer_output_actions
+display_name: Action Analyzer - Output Actions
+description: Merge and output actions.
+version: 0.0.1
+is_deterministic: true
+inputs:
+  action_data:
+    type: mltable
+    mode: direct
+  data_with_action_metric_score:
+    type: mltable
+    mode: direct
+  model_deployment_name:
+    type: string
+    optional: false
+  signal_name:
+    type: string
+outputs:
+  action_output:
+    type: uri_folder
+    mode: direct
+
+conf:
+  spark.driver.cores: 4
+  spark.driver.memory: 28g
+  spark.executor.cores: 4
+  spark.executor.memory: 28g
+  spark.executor.instances: 1
+  spark.dynamicAllocation.enabled: true
+  spark.dynamicAllocation.minExecutors: 1
+  spark.dynamicAllocation.maxExecutors: 4
+  spark.synapse.library.python.env: |
+    channels:
+      - defaults
+    dependencies:
+      - python=3.10
+      - pip:
+          - azure-cli-core~=2.56.0
+          - azure-ai-ml~=1.13.0
+          - azure-ai-generative==1.0.0b7
+          - azure-ai-resources==1.0.0b7
+          - openai~=1.11.1
+          - json5==0.9.11
+          - mltable~=1.5.0
+          - azureml-fsspec
+          - fsspec~=2023.4.0
+    name: momo-base-spark
+code: ../../src
+
+entry:
+  file: ./action_analyzer/action_analyzer_output_actions/run.py
+
+args: >-
+  --action_data ${{inputs.action_data}}
+  --model_deployment_name ${{inputs.model_deployment_name}}
+  --data_with_action_metric_score ${{inputs.data_with_action_metric_score}}
+  --signal_name ${{inputs.signal_name}}
+  --action_output ${{outputs.action_output}}
