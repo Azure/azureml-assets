@@ -40,7 +40,8 @@ from model_data_collector_preprocessor.store_url import StoreUrl
 
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
-    save_spark_df_as_mltable
+    save_spark_df_as_mltable,
+    save_empty_dataframe
 )
 from shared_utilities.llm_utils import (
     API_KEY,
