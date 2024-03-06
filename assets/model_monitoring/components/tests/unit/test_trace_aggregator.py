@@ -248,8 +248,6 @@ class TestGenAISparkPreprocessor:
     def test_trace_aggregator_empty_root_span(self, genai_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
         spark = self._init_spark()
-        start_time = datetime(2024, 2, 5, 0, 1, 0)
-        end_time = datetime(2024, 2, 5, 0, 8, 0)
 
         span_logs_no_root_with_data = [
             ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
