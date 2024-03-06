@@ -126,4 +126,4 @@ tags:
     apply_lora: "true"
     apply_ort: "true"
 
-version: 11
+version: 12
