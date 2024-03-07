@@ -40,4 +40,3 @@ def code_zip_test_setup():
     os.remove(zip_path)
     # remove zip path from environment
     os.environ.pop(SPARK_ZIP_PATH, None)
-

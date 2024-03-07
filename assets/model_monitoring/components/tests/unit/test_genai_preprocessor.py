@@ -3,7 +3,6 @@
 
 """test class for Gen AI preprocessor."""
 
-from pyspark.sql import SparkSession
 from pyspark.sql.types import (
     StructField, StringType, TimestampType, StructType
 )
@@ -18,6 +17,7 @@ from src.model_data_collector_preprocessor.genai_run import (
 from src.model_data_collector_preprocessor.store_url import StoreUrl
 from src.shared_utilities.io_utils import init_spark
 import spark_mltable  # noqa, to enable spark.read.mltable
+
 
 @pytest.fixture(scope="module")
 def genai_preprocessor_test_setup():
@@ -224,12 +224,12 @@ class TestGenAISparkPreprocessor:
                     [(1, datetime(2024, 2, 3, 4, 10), datetime(2024, 2, 3, 4, 15)),
                      (2, datetime(2024, 2, 3, 4, 20), datetime(2024, 2, 3, 4, 25)),
                      (3, datetime(2024, 2, 3, 4, 30), datetime(2024, 2, 3, 4, 35)),
-                    ],
+                     ],
                     ["order", "start_time", "end_time"],
                     [(1, datetime(2024, 2, 3, 4, 10), datetime(2024, 2, 3, 4, 15)),
                      (2, datetime(2024, 2, 3, 4, 20), datetime(2024, 2, 3, 4, 25)),
                      (3, datetime(2024, 2, 3, 4, 30), datetime(2024, 2, 3, 4, 35)),
-                    ],
+                     ],
                     ["order", "start_time", "end_time"],
                 ),
                 # simple case. exclude some data
@@ -240,12 +240,12 @@ class TestGenAISparkPreprocessor:
                      (3, datetime(2024, 2, 3, 4, 30), datetime(2024, 2, 3, 4, 35)),
                      (4, datetime(2024, 2, 3, 4, 40), datetime(2024, 2, 3, 5)),
                      (5, datetime(2024, 2, 3, 4, 50), datetime(2024, 2, 3, 5, 1)),
-                    ],
+                     ],
                     ["order", "start_time", "end_time"],
                     [(1, datetime(2024, 2, 3, 4, 10), datetime(2024, 2, 3, 4, 15)),
                      (2, datetime(2024, 2, 3, 4, 20), datetime(2024, 2, 3, 4, 25)),
                      (3, datetime(2024, 2, 3, 4, 30), datetime(2024, 2, 3, 4, 35)),
-                    ],
+                     ],
                     ["order", "start_time", "end_time"],
                 ),
                 # Compare datetime to string and exclude some data
@@ -256,12 +256,12 @@ class TestGenAISparkPreprocessor:
                      (3, "2024-02-03T04:30:00", "2024-02-03T04:35:00"),
                      (4, "2024-02-03T04:40:00", "2024-02-03 05:00:00"),
                      (5, "2024-02-03T04:50:00", "2024-02-03 05:01:00"),
-                    ],
+                     ],
                     ["order", "start_time", "end_time"],
                     [(1, "2024-02-03T04:10:00", "2024-02-03T04:15:00"),
                      (2, "2024-02-03T04:20:00", "2024-02-03T04:25:00"),
                      (3, "2024-02-03T04:30:00", "2024-02-03T04:35:00"),
-                    ],
+                     ],
                     ["order", "start_time", "end_time"],
                 )
             ]
