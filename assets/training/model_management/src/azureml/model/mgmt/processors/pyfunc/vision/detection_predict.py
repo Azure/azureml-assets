@@ -74,6 +74,8 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
 
         :param batch_results: List of model results for images in batch.
         :type batch_results: List
+        :param classes: list of class names
+        :type classes: List
         :return: List of predictions for images in batch.
         If task type is OD, each prediction is a dict of bbox, labels and classes.
         If task type is IS, each prediction is a dict of bbox, labels, classes and polygons.
@@ -143,7 +145,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                 self._model = init_detector(_config, model_weights_path, device=_map_location)
                 self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES] \
                     if MMDetLiterals.CLASSES in self._model.dataset_meta else []
-                self.language_model = hasattr(self._model, "language_model")
+                self.language_model = hasattr(self._model, MMDetLiterals.LANGUAGE_MODEL)
                 print(f"length of classes: {len(self.classes)}")
                 print("Model loaded successfully")
             except Exception:
@@ -152,7 +154,8 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         else:
             raise ValueError(f"invalid task type {self._task_type}")
 
-    def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame, params={}) -> pd.DataFrame:
+    def predict(self, context: mlflow.pyfunc.PythonModelContext,
+                input_data: pd.DataFrame, params: Dict = {}) -> pd.DataFrame:
         """Perform inference on the input data.
 
         :param context: MLflow context containing artifacts that the model can use for inference
@@ -160,6 +163,8 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         :param input_data: Input images for prediction
         :type input_data: Pandas DataFrame with a first column name ["image"] of images where each
         image is in base64 String format.
+        :param params: Dict of parameters
+        :type params: Dictionary
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns ["boxes"] for object detection
         """
@@ -169,8 +174,8 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         )
         if not params:
             params = {}
-        text_prompt = params.get("text_prompt", None)
-        custom_entities = params.get("custom_entities", True)
+        text_prompt = params.get(MMDetLiterals.TEXT_PROMPT, None)
+        custom_entities = params.get(MMDetLiterals.CUSTOM_ENTITIES, True)
         if not text_prompt and self.language_model:
             raise ValueError("text prompt not sent. please send text_prompt for Launguage models")
         classes = text_prompt.split(". ") if self.language_model else self.classes
