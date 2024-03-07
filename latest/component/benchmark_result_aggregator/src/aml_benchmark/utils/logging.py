@@ -14,7 +14,7 @@ import mlflow
 from azureml.core import Run
 
 
-AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT = "azureml-benchmark-custom-logger"
+AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT = "aml_benchmark.azureml_benchmark_custom_logger"
 
 
 def log_mlflow_params(**kwargs: Any) -> None:
@@ -67,8 +67,17 @@ def get_logger(filename: str) -> logging.Logger:
     stream_handler = logging.StreamHandler()
     logger.addHandler(stream_handler)
 
-    for custom_logger in entry_points(group=AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT):
-        logger.addHandler(custom_logger.load())
+    try:
+        for custom_logger in entry_points(group=AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT):
+            handler = custom_logger.load()
+            logger.addHandler(handler())
+    except TypeError:
+        # For Older python versions
+        custom_loggers = entry_points().get(AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT, ())
+        for custom_logger in custom_loggers:
+            if custom_logger is not None:
+                handler = custom_logger.load()
+                logger.addHandler(handler())
 
     formatter = logging.Formatter(
         "[%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
