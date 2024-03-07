@@ -16,7 +16,6 @@ from src.model_data_collector_preprocessor.genai_run import (
     _filter_df_by_time_window
 )
 from src.model_data_collector_preprocessor.store_url import StoreUrl
-from src.shared_utilities.io_utils import init_spark
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
 
@@ -45,7 +44,7 @@ def genai_preprocessor_test_setup():
 @pytest.mark.unit
 class TestGenAISparkPreprocessor:
     """Test class for Gen AI Preprocessor."""
-    
+
     def _init_spark(self) -> SparkSession:
         """Create spark session for tests."""
         spark: SparkSession = SparkSession.builder.appName("test").getOrCreate()

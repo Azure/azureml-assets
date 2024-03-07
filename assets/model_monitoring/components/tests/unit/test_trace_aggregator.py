@@ -11,10 +11,9 @@ import pytest
 import os
 import sys
 from datetime import datetime
-from model_data_collector_preprocessor.trace_aggregator import (
+from src.model_data_collector_preprocessor.trace_aggregator import (
     aggregate_spans_into_traces,
 )
-from shared_utilities.io_utils import init_spark
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
 
