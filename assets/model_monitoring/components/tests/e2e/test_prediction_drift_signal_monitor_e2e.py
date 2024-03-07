@@ -17,7 +17,7 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_prediction_drift_model_monitor_job(
-    ml_client, get_component, experiment_name, baseline_data, target_data
+    submit_pipeline_job, ml_client, get_component, experiment_name, baseline_data, target_data
 ):
     prediction_drift_signal_monitor = get_component(
         COMPONENT_NAME_PREDICTION_DRIFT_SIGNAL_MONITOR
@@ -42,8 +42,8 @@ def _submit_prediction_drift_model_monitor_job(
     pipeline_job = _prediction_drift_signal_monitor_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
-    pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name, skip_validation=True
+    pipeline_job = submit_pipeline_job(
+        pipeline_job, experiment_name
     )
 
     # Wait until the job completes
@@ -61,10 +61,11 @@ class TestPredictionDriftModelMonitor:
     """Test class."""
 
     def test_monitoring_run_use_defaults_data_has_no_drift_successful(
-        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+        self, ml_client: MLClient, get_component, download_job_output, submit_pipeline_job, test_suite_name
     ):
         """Test the happy path scenario where the data has drift and default settings are used."""
         pipeline_job = _submit_prediction_drift_model_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -75,10 +76,11 @@ class TestPredictionDriftModelMonitor:
         assert pipeline_job.status == "Completed"
 
     def test_monitoring_run_empty_production_data_failed(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test the scenario where the production data is empty."""
         pipeline_job = _submit_prediction_drift_model_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -91,10 +93,11 @@ class TestPredictionDriftModelMonitor:
 
     def test_monitoring_run_no_common_features_production_data_failed(
         self, ml_client: MLClient, get_component, download_job_output,
-        test_suite_name
+        submit_pipeline_job, test_suite_name
     ):
         """Test the scenario where the production data has no common features with baseline."""
         pipeline_job = _submit_prediction_drift_model_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -107,10 +110,11 @@ class TestPredictionDriftModelMonitor:
 
     def test_monitoring_run_empty_production_and_baseline_data(
         self, ml_client: MLClient, get_component, download_job_output,
-        test_suite_name
+        submit_pipeline_job, test_suite_name
     ):
         """Test the scenario where both input data are empty."""
         pipeline_job = _submit_prediction_drift_model_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
