@@ -26,7 +26,7 @@ AML_BENCH_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 REG_ML_CLIENT = MLClient(credential=DefaultAzureCredential(), registry_name="azureml")
-AVOID_COMPONENT_FOLDERS = {"batch-resource-manager"}
+AVOID_COMPONENT_FOLDERS = {"batch_resource_manager", "batch_benchmark_inference_claude"}
 
 
 def _get_all_components_spec() -> List[str]:

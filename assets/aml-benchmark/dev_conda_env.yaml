@@ -18,6 +18,7 @@ dependencies:
     - tqdm
     - pyyaml
     - azure-core
+    - tiktoken
     ## Test requirements
     - pytest
     - pytest-xdist

@@ -3,16 +3,9 @@
 
 """Tests for Checksum functionality used in Prompt Crafter Component."""
 
-import sys
 import pytest
 
-from ..test_utils import get_src_dir
-
-sys.path.append(get_src_dir())
-try:
-    from aml_benchmark.prompt_crafter.package.checksum import SHA256Checksum
-except ImportError:
-    raise ImportError("Please install the package 'prompt_crafter' to run this test.")
+from aml_benchmark.prompt_crafter.package.checksum import SHA256Checksum
 
 
 @pytest.fixture
