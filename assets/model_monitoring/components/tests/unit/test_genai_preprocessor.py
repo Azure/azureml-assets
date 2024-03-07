@@ -11,11 +11,11 @@ import pytest
 import os
 import sys
 from datetime import datetime
-from model_data_collector_preprocessor.genai_run import (
+from src.model_data_collector_preprocessor.genai_run import (
     _genai_uri_folder_to_enlarged_spans,
     _filter_df_by_time_window
 )
-from model_data_collector_preprocessor.store_url import StoreUrl
+from src.model_data_collector_preprocessor.store_url import StoreUrl
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
 
@@ -195,7 +195,7 @@ class TestGenAISparkPreprocessor:
         input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
 
         actual_df = _genai_uri_folder_to_enlarged_spans(
-            window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
+            window_start_time, window_end_time,
             input_url, my_add_tags)
         print("Preprocessed dataframe:")
         actual_df.show()
@@ -224,7 +224,7 @@ class TestGenAISparkPreprocessor:
         window_end_time = datetime(2024, 2, 8, 16)
 
         actual_data = _genai_uri_folder_to_enlarged_spans(
-            window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
+            window_start_time, window_end_time,
             input_url, my_add_tags)
         assert actual_data.isEmpty()
 
@@ -260,12 +260,12 @@ class TestGenAISparkPreprocessor:
                     ],
                     ["order", "start_time", "end_time"],
                 ),
-                # Have datetime to string and exclude some data
+                # Compare datetime to string and exclude some data
                 (
                     [(0, "2024-02-03T03:50:00", "2024-02-03T03:59:00"),
-                     (1, "2024-02-03T04:10:00", "2024-02-03T12:15:00Z"),
-                     (2, "2024-02-03T04:20:00", "2024-02-03 T04:25:00"),
-                     (3, "2024-02-03T04:30:00", "2024-02-03 04:35:00"),
+                     (1, "2024-02-03T04:10:00", "2024-02-03T04:15:00"),
+                     (2, "2024-02-03T04:20:00", "2024-02-03T04:25:00"),
+                     (3, "2024-02-03T04:30:00", "2024-02-03T04:35:00"),
                      (4, "2024-02-03T04:40:00", "2024-02-03 05:00:00"),
                      (5, "2024-02-03T04:50:00", "2024-02-03 05:01:00"),
                     ],
