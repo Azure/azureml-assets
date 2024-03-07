@@ -1,0 +1,84 @@
+name: base-images-ci 
+
+on:
+  push:
+    branches:
+      - 'leelasaikrishna/workflow'
+  workflow_dispatch:
+    inputs:
+      asset_dirs:
+        description: Asset directories
+        default: assets
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check-execution-context:
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+
+  build-images:
+    name: Build and test images
+    if: fromJSON(needs.check-execution-context.outputs.continue)
+    runs-on: ubuntu-latest
+    needs: check-execution-context
+    environment: Testing
+
+    permissions:
+      # Required to clone repo
+      contents: read
+      # Required for OIDC login to Azure
+      id-token: write
+
+    env:
+      default_asset_dirs: assets
+      scripts_azureml_assets_dir: scripts/azureml-assets
+      scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
+      scripts_setup_dir: scripts/setup
+      asset_config_filename: asset.yaml
+      build_logs_artifact_name: build-logs
+      built_dir: built-environments
+
+    steps:
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        with:
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+          fetch-depth: 2
+      
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+        with:
+          files_separator: ','
+          separator: ','
+          sha: ${{ env.merge_commit_hash || github.sha }}
+      
+      - name: Use Python 3.8 or newer
+        uses: actions/setup-python@v4
+        with:
+          python-version: '>=3.8'
+    
+      - name: Install dependencies
+        run: pip install -e $scripts_azureml_assets_dir
+      
+      - name: Log in to Azure and create resources
+        uses: ./.github/actions/create-azure-resources
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
+
+      - name: Build and test changed images
+        id: build-changed-images
+        run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g $resource_group -r $container_registry -T 'python -V' -c "${{ steps.changed-files.outputs.all_modified_files }}" -U 'https://github.com/aquasecurity/trivy/releases/download/v0.42.1/trivy_0.42.1_Linux-64bit.deb'
+
+      - name: Upload build logs
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ${{ env.build_logs_artifact_name }}
+          path: ${{ runner.temp }}/${{ env.build_logs_artifact_name }}
