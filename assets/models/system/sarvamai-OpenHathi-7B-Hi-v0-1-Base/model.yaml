@@ -1,0 +1,9 @@
+path:
+  container_name: models
+  container_path: huggingface/sarvamai-OpenHathi-7B-Hi-v0-1-Base/1705049471/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
+  
