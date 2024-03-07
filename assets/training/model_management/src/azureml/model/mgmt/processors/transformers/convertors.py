@@ -500,7 +500,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
             outputs = Schema([ColSpec(DataType.string)])
             params = ParamSchema([ParamSpec("top_p", "float", default=1.0),
                                   ParamSpec("temperature", "float", default=0.0),
-                                  ParamSpec("max_new_tokens", "integer", default=250),
+                                  ParamSpec("max_new_tokens", "integer", default=100),
                                   ParamSpec("do_sample", "boolean", default=False),
                                   ParamSpec("return_full_text", "boolean", default=True)])
             return ModelSignature(inputs=inputs, outputs=outputs, params=params)
