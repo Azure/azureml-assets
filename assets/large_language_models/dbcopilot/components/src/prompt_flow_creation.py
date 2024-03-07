@@ -1,21 +1,25 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 """The component create the example promptflow for db copilot."""
-import functools
-import json
 import logging
 import os
 from typing import Dict
+import yaml
 
-from component_base import ComponentBase, main_entry_point
+from component_base import main_entry_point, OBOComponentBase
+from promptflow.azure import PFClient
 
 
 @main_entry_point("create")
-class PromptFlowCreation(ComponentBase):
+class PromptFlowCreation(OBOComponentBase):
     """PromptFlowCreation Class."""
 
-    FLOW_JSON = os.path.join(
-        os.path.dirname(__file__), "prompt_flows", "db_copilot_flow.json"
+    FLOW_DIRECTORY = os.path.join(
+        os.path.dirname(__file__), "prompt_flows"
+    )
+
+    FLOW_DAG = os.path.join(
+        os.path.dirname(__file__), "prompt_flows", "flow.dag.yaml"
     )
 
     def __init__(self):
@@ -34,16 +38,6 @@ class PromptFlowCreation(ComponentBase):
         "example_embedding_uri": "direct",
     }
 
-    @functools.cached_property
-    def prompt_flow_url(self) -> str:
-        """Get the prompt flow url."""
-        return (
-            self.service_endpoint
-            + "/studioservice/api"
-            + self.workspace_scope
-            + "/flows"
-        )
-
     def create(
         self,
         index_name: str,
@@ -54,10 +48,10 @@ class PromptFlowCreation(ComponentBase):
         chat_aoai_deployment_name: str = None,
         example_embedding_uri: str = None,
         llm_config: str = None,
+        runtime: str = None,
     ):
         """Create the prompt flow."""
         from utils.asset_utils import get_datastore_uri, parse_connection
-        from utils.requests_utils import request
 
         logging.info("Creating PromptFlow for DBCopilot")
         workspace = self.workspace
@@ -65,10 +59,6 @@ class PromptFlowCreation(ComponentBase):
         # find datastore uri
         datastore_uri = get_datastore_uri(workspace, asset_uri)
         logging.info(f"Datastore uri: {datastore_uri}")
-
-        # find embedding & chat connections
-        embedding_connection_id = ""
-        chat_connection_id = ""
 
         embedding_connection_id = os.environ.get(
             "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING", None
@@ -103,44 +93,42 @@ class PromptFlowCreation(ComponentBase):
             raise ValueError("Unable to find AOAI chat connection")
 
         if (
-            chat_aoai_deployment_name is None
-            and llm_config is not None
-            and llm_config != ""
+                chat_aoai_deployment_name is None
+                and llm_config is not None
+                and llm_config != ""
         ):
             chat_aoai_deployment_name = self.parse_llm_config(llm_config)
 
+        # update flow
+        with open(self.FLOW_DAG, "r", encoding="utf-8") as file:
+            flow_data = yaml.safe_load(file)
+            flow_data['name'] = index_name + "_Flow"
+            flow_data['nodes'][0]['inputs']['embedding_aoai_config'] = embedding_aoai_connection
+            flow_data['nodes'][0]['inputs']['chat_aoai_config'] = chat_aoai_connection
+            flow_data['nodes'][0]['inputs']['db_context_uri'] = db_context_uri
+            flow_data['nodes'][0]['inputs']['grounding_embedding_uri'] = grounding_embedding_uri
+            flow_data['nodes'][0]['inputs']['datastore_uri'] = datastore_uri
+            flow_data['nodes'][0]['inputs']['embedding_aoai_deployment_name'] = embedding_aoai_deployment_name
+            flow_data['nodes'][0]['inputs'][
+                'chat_aoai_deployment_name'] = chat_aoai_deployment_name if chat_aoai_deployment_name else ""
+            flow_data['nodes'][0]['inputs']['example_embedding_uri'] = example_embedding_uri
+
+        with open(self.FLOW_DAG, 'w', encoding="utf-8") as file:
+            yaml.safe_dump(flow_data, file)
+
         # create flow
-        with open(self.FLOW_JSON, "r") as f:
-            flow_string = f.read()
-            flow_string = flow_string.replace(
-                "@@EMBEDDING_CONNECTION@@", embedding_aoai_connection
-            )
-            # TODO: add chat connection into tool
-            flow_string = flow_string.replace(
-                "@@CHAT_CONNECTION@@", chat_aoai_connection
-            )
-            flow_string = flow_string.replace("@@FLOW_NAME@@", index_name + "_Flow")
-            flow_string = flow_string.replace(
-                "@@EMBEDDING_AOAI_DEPLOYMENT_NAME@@", embedding_aoai_deployment_name
-            )
-            flow_string = flow_string.replace(
-                "@@CHAT_AOAI_DEPLOYMENT_NAME@@",
-                chat_aoai_deployment_name if chat_aoai_deployment_name else "",
-            )
-            flow_string = flow_string.replace(
-                "@@GROUNDING_EMBEDDING_URI@@", grounding_embedding_uri
-            )
-            flow_string = flow_string.replace("@@DB_CONTEXT_URI@@", db_context_uri)
-            flow_string = flow_string.replace("@@DATASTORE_URI@@", datastore_uri)
-            flow_string = flow_string.replace("@@EXAMPLE_EMBEDDING_URI@@", example_embedding_uri
-                                              if example_embedding_uri else "")
-            flow_json = json.loads(flow_string)
-        response = request(
-            "post", self.prompt_flow_url, json=flow_json, headers=self.default_headers
+        pf_client = PFClient(ml_client=self.ml_client)
+        flow = self.FLOW_DIRECTORY
+        data = os.path.join(self.FLOW_DIRECTORY, "data.jsonl")
+        environment_variables = {
+            "AZUREML_WORKSPACE_NAME": self.workspace.name,
+            "AZUREML_SUBSCRIPTION_ID": self.workspace.subscription_id,
+            "AZUREML_RESOURCE_GROUP": self.workspace.resource_group,
+        }
+        base_run = pf_client.run(
+            flow=flow,
+            data=data,
+            runtime=runtime,
+            environment_variables=environment_variables,
         )
-        pf_response_json = json.loads(response.text)
-        flow_id = pf_response_json["flowResourceId"]
-        parent_run = self.run.parent
-        while parent_run:
-            parent_run.add_properties({"azureml.promptFlowResourceId": flow_id})
-            parent_run = parent_run.parent
+        pf_client.stream(base_run)

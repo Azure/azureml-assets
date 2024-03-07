@@ -11,7 +11,6 @@ tags:
   Featured: ""
   Preview: ""
   SharedComputeCapacityEnabled: ""
-  maas-inference: true
   disable-batch: "true"
   inference_compute_allow_list:
     [
@@ -30,4 +29,4 @@ tags:
   license: apache-2.0
   task: chat-completion
   author: mistralai
-version: 4
+version: 5

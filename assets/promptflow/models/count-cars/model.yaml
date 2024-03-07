@@ -1,0 +1,8 @@
+path:
+  container_name: promptflowsamples
+  container_path: count_cars/v1/model_folder/
+  storage_name: zhizhosamples
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

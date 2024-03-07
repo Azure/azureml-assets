@@ -2,8 +2,11 @@
 # Licensed under the MIT License.
 
 """Contains functionality for publishing run metrics."""
+from .constants import MAX_RETRY_COUNT, MLFLOW_RUN_ID
 import mlflow
 import os
+import traceback
+import time
 
 
 def _get_experiment_id():
@@ -100,6 +103,9 @@ def get_or_create_run_id(
         with mlflow.start_run(run_id=_get_or_create_parent_run_id(monitor_name)) as current_run:
             print(f"Current parent run id: {current_run.info.run_id}")
             run_name = f"{signal_name}_{metric_name}"
+            if MLFLOW_RUN_ID in os.environ:
+                print(f"environment variable MLFLOW_RUN_ID:{os.environ[MLFLOW_RUN_ID]}")
+                del os.environ[MLFLOW_RUN_ID]
             with mlflow.start_run(
                 nested=True,
                 run_name=run_name,
@@ -122,11 +128,20 @@ def publish_metric(run_id: str, value: float, threshold, step: int):
     metrics["value"] = value
     if threshold is not None:
         metrics["threshold"] = float(threshold)
-    publish_metrics(run_id=run_id, metrics=metrics, step=step)
+    try:
+        publish_metrics(run_id=run_id, metrics=metrics, step=step)
+    except Exception:
+        print(f"Exception occurred in publish_metric: {traceback.format_exc()}")
 
 
 def publish_metrics(run_id: str, metrics: dict, step: int):
     """Publish metrics to the run metrics store."""
     print(f"Publishing metrics to run id '{run_id}'.")
     with mlflow.start_run(run_id=run_id, nested=True):
-        mlflow.log_metrics(metrics=metrics, step=step)
+        for _ in range(MAX_RETRY_COUNT):
+            try:
+                mlflow.log_metrics(metrics=metrics, step=step)
+                return
+            except Exception:
+                print(f"Exception occurred in publish_metrics: {traceback.format_exc()}")
+                time.sleep(1)

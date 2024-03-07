@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+build:
+  path: context
+description: Environment used by OpenAI Distillation components
+name: distillation
+os_type: linux
+tags:
+  Preview: ''
+version: 0.0.1.distillation

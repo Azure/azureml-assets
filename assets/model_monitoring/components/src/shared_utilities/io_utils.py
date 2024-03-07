@@ -10,6 +10,7 @@ from pyspark.sql import SparkSession, DataFrame
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 from model_data_collector_preprocessor.store_url import StoreUrl  # TODO: move StoreUrl to share_utilities
+from pyspark.sql.types import StructType
 
 
 class NoDataApproach(Enum):
@@ -30,18 +31,21 @@ class InputNotFoundCategory(Enum):
     GENERAL = 10
 
 
-def init_spark():
+def init_spark() -> SparkSession:
     """Get or create spark session."""
     spark = SparkSession.builder.appName("AccessParquetFiles").getOrCreate()
     return spark
 
 
 def _get_input_not_found_category(error: Exception):
-    if isinstance(error, IndexError) or (error.args and "Partition 0 is out of bounds." in error.args[0]):
+    err_msg = error.args[0] if len(error.args) > 0 else ""
+    if not isinstance(err_msg, str):
+        err_msg = ""
+    if isinstance(error, IndexError) or ("Partition 0 is out of bounds." in err_msg):
         return InputNotFoundCategory.NO_INPUT_IN_WINDOW
-    elif "The requested stream was not found" in error.args[0]:
+    elif "The requested stream was not found" in err_msg:
         return InputNotFoundCategory.ROOT_FOLDER_NOT_FOUND
-    elif "Not able to find MLTable file" in error.args[0]:
+    elif "Not able to find MLTable file" in err_msg:
         return InputNotFoundCategory.MLTABLE_NOT_FOUND
     else:
         return InputNotFoundCategory.NOT_INPUT_MISSING
@@ -138,3 +142,15 @@ def np_encoder(object):
     """Json encoder for numpy types."""
     if isinstance(object, np.generic):
         return object.item()
+
+
+def create_spark_df(rows: list, schema: StructType):
+    """Create Spark DataFrame."""
+    spark = init_spark()
+    return spark.createDataFrame(data=rows, schema=schema)
+
+
+def save_empty_dataframe(schema: StructType, output_path: str):
+    """Save empty Data Spark DataFrame."""
+    df = create_spark_df([], schema)
+    save_spark_df_as_mltable(df, output_path)
