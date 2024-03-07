@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:latest
+FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:{{latest-image-tag}}
 
 USER root
 
@@ -42,6 +42,7 @@ COPY ./requirements.txt ./
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda clean -a -y && \
+    \
     ## dbcopilot environment
     /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate $AZUREML_CONDA_ENVIRONMENT_PATH" && \
@@ -52,6 +53,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.16-py3-none-any.whl && \
     ## Install other packages
     pip install cryptography==42.0.0 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1 && \
+    \
     ## Other environment
     /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate azureml-envs/prompt-flow/runtime && \
