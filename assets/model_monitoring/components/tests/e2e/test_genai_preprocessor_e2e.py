@@ -15,7 +15,7 @@ from tests.e2e.utils.constants import (
 
 def _submit_genai_preprocessor_job(
     submit_pipeline_job, ml_client: MLClient, get_component, experiment_name,
-    input_data, start_time, end_time
+    input_data, start_time, end_time, require_trace_data
 ):
     genai_preprocessor_component = get_component(COMPONENT_NAME_GENAI_PREPROCESSOR)
 
@@ -25,6 +25,7 @@ def _submit_genai_preprocessor_job(
             data_window_start=start_time,
             data_window_end=end_time,
             input_data=Input(path=input_data, mode="direct", type="uri_folder"),
+            require_trace_data=require_trace_data
         )
 
         genai_preprocessor_output.identity = AmlTokenConfiguration()
@@ -60,15 +61,16 @@ class TestGenAIPreprocessorE2E:
     """Test class."""
 
     @pytest.mark.parametrize(
-        "input_data, start_time, end_time",
+        "input_data, start_time, end_time, require_trace_data",
         [
-            # traditional model
-            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-08T00:00:00Z")
+            # genai logs
+            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-08T00:00:00Z", True)
+            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-08T00:00:00Z", False)
         ]
     )
     def test_mdc_preprocessor_successful(
         self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name, input_data,
-        start_time, end_time
+        start_time, end_time, require_trace_data
     ):
         """Test the happy path scenario for Gen AI preprocessor."""
         pipeline_job = _submit_genai_preprocessor_job(
@@ -78,7 +80,10 @@ class TestGenAIPreprocessorE2E:
             test_suite_name,
             input_data,
             start_time,
-            end_time
+            end_time,
+            require_trace_data
         )
 
         assert pipeline_job.status == 'Completed'
+
+
