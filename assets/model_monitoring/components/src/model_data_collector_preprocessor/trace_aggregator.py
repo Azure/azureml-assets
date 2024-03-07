@@ -29,7 +29,7 @@ def _aggregate_span_logs_to_trace_logs(grouped_row):
 
 
 def aggregate_spans_into_traces(
-        span_logs: DataFrame, require_trace_data: bool,
+        enlarged_span_logs: DataFrame, require_trace_data: bool,
         data_window_start: datetime, data_window_end: datetime) -> DataFrame:
     """Group span logs into aggregated trace logs."""
     output_trace_schema = _get_aggregated_trace_log_spark_df_schema()
@@ -42,9 +42,9 @@ def aggregate_spans_into_traces(
 
     print("Processing spans into aggregated traces...")
 
-    grouped_spans_df = span_logs.groupBy('trace_id').agg(
+    grouped_spans_df = enlarged_span_logs.groupBy('trace_id').agg(
         collect_list(
-            struct(span_logs.schema.fieldNames())
+            struct(enlarged_span_logs.schema.fieldNames())
         ).alias('span_rows')
     )
 
