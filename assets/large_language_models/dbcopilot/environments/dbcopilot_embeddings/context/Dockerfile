@@ -37,6 +37,7 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 # Copy the conda environment file
 COPY conda_dependencies.yaml .
 COPY ./requirements.txt ./
+
 # Create conda environment
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
