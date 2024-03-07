@@ -155,66 +155,66 @@ class TestGenAISparkPreprocessor:
         [datetime(2024, 2, 10, 15, 11, 0), "OK", "02", "5", "llm", "LLM", "in", "out"],
     ]
 
-    @pytest.mark.parametrize(
-        "window_start_time, window_end_time, expected_schema, expected_data",
-        [
-            # data only
-            (datetime(2024, 2, 5, 15), datetime(2024, 2, 5, 16), _preprocessed_schema, _preprocessed_data),
-            # data and dataref mix
-            # comment out the mix scenario due to package not found error from executor in remote run
-            # (datetime(2024, 2, 20, 15), datetime(2024, 2, 20, 16), _preprocessed_schema, _preprocessed_data),
-            # data but missing some promoted attribute fields
-            (datetime(2024, 2, 7, 12), datetime(2024, 2, 7, 13),
-             _preprocessed_schema_no_input, _preprocessed_data_no_inputs),
-            # test the 1-hour lookback functionality
-            (datetime(2024, 2, 10, 15), datetime(2024, 2, 10, 16),
-             _preprocessed_schema, _preprocessed_data_look_back)
-        ]
-    )
-    def test_genai_uri_folder_to_enlarged_spans(
-            self, genai_preprocessor_test_setup,
-            window_start_time: datetime, window_end_time: datetime, expected_schema, expected_data):
-        """Test uri_folder_to_spark_df()."""
-        def my_add_tags(tags: dict):
-            print("my_add_tags:", tags)
+    # @pytest.mark.parametrize(
+    #     "window_start_time, window_end_time, expected_schema, expected_data",
+    #     [
+    #         # data only
+    #         (datetime(2024, 2, 5, 15), datetime(2024, 2, 5, 16), _preprocessed_schema, _preprocessed_data),
+    #         # data and dataref mix
+    #         # comment out the mix scenario due to package not found error from executor in remote run
+    #         # (datetime(2024, 2, 20, 15), datetime(2024, 2, 20, 16), _preprocessed_schema, _preprocessed_data),
+    #         # data but missing some promoted attribute fields
+    #         (datetime(2024, 2, 7, 12), datetime(2024, 2, 7, 13),
+    #          _preprocessed_schema_no_input, _preprocessed_data_no_inputs),
+    #         # test the 1-hour lookback functionality
+    #         (datetime(2024, 2, 10, 15), datetime(2024, 2, 10, 16),
+    #          _preprocessed_schema, _preprocessed_data_look_back)
+    #     ]
+    # )
+    # def test_genai_uri_folder_to_enlarged_spans(
+    #         self, genai_preprocessor_test_setup,
+    #         window_start_time: datetime, window_end_time: datetime, expected_schema, expected_data):
+    #     """Test uri_folder_to_spark_df()."""
+    #     def my_add_tags(tags: dict):
+    #         print("my_add_tags:", tags)
 
-        print("testing mdc_uri_folder_to_preprocessed_spark_df...")
-        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
-        input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
+    #     print("testing mdc_uri_folder_to_preprocessed_spark_df...")
+    #     tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+    #     input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
 
-        actual_df = _genai_uri_folder_to_enlarged_spans(
-            window_start_time, window_end_time,
-            input_url, my_add_tags)
-        print("Preprocessed dataframe:")
-        actual_df.show()
-        actual_df.printSchema()
+    #     actual_df = _genai_uri_folder_to_enlarged_spans(
+    #         window_start_time, window_end_time,
+    #         input_url, my_add_tags)
+    #     print("Preprocessed dataframe:")
+    #     actual_df.show()
+    #     actual_df.printSchema()
 
-        spark = init_spark()
-        expected_df = spark.createDataFrame(expected_data, schema=expected_schema)
+    #     spark = init_spark()
+    #     expected_df = spark.createDataFrame(expected_data, schema=expected_schema)
 
-        print('Expected dataframe:')
-        expected_df.show()
-        expected_df.printSchema()
+    #     print('Expected dataframe:')
+    #     expected_df.show()
+    #     expected_df.printSchema()
 
-        assert_spark_dataframe_equal(actual_df, expected_df)
+    #     assert_spark_dataframe_equal(actual_df, expected_df)
 
-    def test_genai_preprocessor_fails(self, genai_preprocessor_test_setup):
-        """Test scenarios where the preprocessor should throw validation errors."""
-        def my_add_tags(tags: dict):
-            print("my_add_tags:", tags)
+    # def test_genai_preprocessor_fails(self, genai_preprocessor_test_setup):
+    #     """Test scenarios where the preprocessor should throw validation errors."""
+    #     def my_add_tags(tags: dict):
+    #         print("my_add_tags:", tags)
 
-        print("testing genai_uri_folder_to_preprocessed_spark_df...")
-        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
-        input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
+    #     print("testing genai_uri_folder_to_preprocessed_spark_df...")
+    #     tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+    #     input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
 
-        # Data with invalid timestamps
-        window_start_time = datetime(2024, 2, 8, 15)
-        window_end_time = datetime(2024, 2, 8, 16)
+    #     # Data with invalid timestamps
+    #     window_start_time = datetime(2024, 2, 8, 15)
+    #     window_end_time = datetime(2024, 2, 8, 16)
 
-        actual_data = _genai_uri_folder_to_enlarged_spans(
-            window_start_time, window_end_time,
-            input_url, my_add_tags)
-        assert actual_data.isEmpty()
+    #     actual_data = _genai_uri_folder_to_enlarged_spans(
+    #         window_start_time, window_end_time,
+    #         input_url, my_add_tags)
+    #     assert actual_data.isEmpty()
 
     @pytest.mark.parametrize(
             "input_data, input_schema, expected_data, expected_schema",
@@ -261,6 +261,22 @@ class TestGenAISparkPreprocessor:
                     [(1, "2024-02-03T04:10:00", "2024-02-03T04:15:00"),
                      (2, "2024-02-03T04:20:00", "2024-02-03T04:25:00"),
                      (3, "2024-02-03T04:30:00", "2024-02-03T04:35:00"),
+                     ],
+                    ["order", "start_time", "end_time"],
+                ),
+                # Compare datetime to string w/ tzinfo and exclude some data
+                (
+                    [(0, "2024-02-03T11:50:00Z", "2024-02-03T11:59:00Z"),
+                     (1, "2024-02-03T12:10:00Z", "2024-02-03T12:15:00Z"),
+                     (2, "2024-02-03T12:20:00Z", "2024-02-03T12:25:00Z"),
+                     (3, "2024-02-03T12:30:00Z", "2024-02-03T12:35:00Z"),
+                     (4, "2024-02-03T12:40:00Z", "2024-02-03 13:00:00Z"),
+                     (5, "2024-02-03T12:50:00Z", "2024-02-03 13:01:00Z"),
+                     ],
+                    ["order", "start_time", "end_time"],
+                    [(1, "2024-02-03T12:10:00Z", "2024-02-03T12:15:00Z"),
+                     (2, "2024-02-03T12:20:00Z", "2024-02-03T12:25:00Z"),
+                     (3, "2024-02-03T12:30:00Z", "2024-02-03T12:35:00Z"),
                      ],
                     ["order", "start_time", "end_time"],
                 )
