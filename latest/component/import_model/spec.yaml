@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.25
+version: 0.0.26
 
 # Pipeline inputs
 inputs:
@@ -42,6 +42,15 @@ inputs:
       specify `bert-base-uncased` for importing HuggingFace bert base uncased model.
       Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
 
+  model_flavor:
+    type: string
+    enum:
+    - HFTransformersV2
+    - OSS
+    default: HFTransformersV2
+    optional: false
+    description: Flavor of MLFlow to which model the model is converted to.
+
   token:
     type: string
     description: If set use it to access the private models or authenticate the user.
@@ -59,18 +68,27 @@ inputs:
   task_name:
     description: A Hugging face task on which model was trained on
     enum:
-    - text-classification
     - fill-mask
     - token-classification
     - question-answering
     - summarization
     - text-generation
+    - text2text-generation
     - text-classification
     - translation
     - image-classification
+    - image-classification-multilabel
+    - image-object-detection
+    - image-instance-segmentation
+    - image-to-text
     - text-to-image
+    - text-to-image-inpainting
+    - image-text-to-text
+    - image-to-image
     - zero-shot-image-classification
+    - mask-generation
     - video-multi-object-tracking
+    - visual-question-answering
     optional: true
     type: string
 
@@ -200,7 +218,7 @@ outputs:
 
 jobs:
   validation_trigger_import:
-    component: azureml:validation_trigger_import:0.0.4
+    component: azureml:validation_trigger_import:0.0.5
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -212,6 +230,7 @@ jobs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
       model_version: ${{parent.inputs.model_version}}
+      model_flavor: ${{parent.inputs.model_flavor}}
       model_description: ${{parent.inputs.model_description}}
       model_metadata: ${{parent.inputs.model_metadata}}
       registry_name: ${{parent.inputs.registry_name}}
@@ -252,12 +271,13 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.21
+    component: azureml:convert_model_to_mlflow:0.0.22
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
     inputs:
       task_name: ${{parent.inputs.task_name}}
+      model_flavor: ${{parent.inputs.model_flavor}}
       license_file_path: ${{parent.inputs.license_file_path}}
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}
@@ -277,7 +297,7 @@ jobs:
         type: uri_file
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.6
+    component: azureml:mlflow_model_local_validation:0.0.7
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -285,6 +305,7 @@ jobs:
       model_path: ${{parent.jobs.convert_model_to_mlflow.outputs.mlflow_model_folder}}
       test_data_path: ${{parent.inputs.local_validation_test_data}}
       column_rename_map: ${{parent.inputs.local_validation_column_rename_map}}
+      task_name: ${{parent.inputs.task_name}}
     outputs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 

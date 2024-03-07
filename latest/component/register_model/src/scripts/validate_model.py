@@ -6,6 +6,7 @@
 # Script uses minimal required dependency to process data and load mlflow model.
 # Please refrain from adding any additional dependencies that could cause failure while running the script.
 
+import os
 import argparse
 import json
 import mlflow
@@ -20,6 +21,7 @@ CONDA_YAML_FILE_NAME = "conda.yaml"
 KV_COLON_SEP = ":"
 ITEM_COMMA_SEP = ","
 ITEM_SEMI_COLON_SEP = ";"
+SUMMARIZATION = 'summarization'
 
 
 def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str) -> Dict:
@@ -65,7 +67,7 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
     elif ext == ".csv":
         data = pd.read_csv(test_data_path)
     else:
-        raise Exception("Unsupported file type {ext}")
+        raise Exception(f"Unsupported file type {ext}")
 
     # translations
     if col_rename_map:
@@ -91,12 +93,15 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
     return data
 
 
-def _load_and_infer_model(model_dir, data):
+def _load_and_infer_model(model_dir, data, task_name):
     if data is None:
         print("Data not shared. Could not infer the loaded model")
         return
 
     try:
+        if task_name == SUMMARIZATION:
+            os.environ["MLFLOW_HUGGINGFACE_USE_DEVICE_MAP"] = "False"
+
         model = mlflow.pyfunc.load_model(str(model_dir))
     except Exception as e:
         raise Exception(f"Error in loading mlflow model: {e}")
@@ -114,6 +119,7 @@ def _get_parser():
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
     parser.add_argument("--test-data-path", type=Path, required=False, help="Test dataset path")
     parser.add_argument("--column-rename-map", type=str, required=False, help="Column rename map as string")
+    parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
     return parser
 
 
@@ -124,6 +130,7 @@ if __name__ == "__main__":
     model_dir: Path = args.model_path
     test_data_path: Path = args.test_data_path
     col_rename_map_str: str = args.column_rename_map
+    task_name: str = args.task_name
 
     mlmodel_file_path = model_dir / MLMODEL_FILE_NAME
     conda_env_file_path = model_dir / CONDA_YAML_FILE_NAME
@@ -144,6 +151,7 @@ if __name__ == "__main__":
             mlmodel=mlmodel_dict,
             col_rename_map=col_rename_map,
         ),
+        task_name=task_name,
     )
 
     print("Local validation completed")
