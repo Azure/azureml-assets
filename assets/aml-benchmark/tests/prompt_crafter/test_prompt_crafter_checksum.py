@@ -4,17 +4,10 @@
 """Tests for Prompt Crafter Checksums for various samples."""
 
 import os
-import sys
 import pytest
 import mlflow
 
-from ..test_utils import get_src_dir
-
-sys.path.append(get_src_dir())
-try:
-    from aml_benchmark.prompt_crafter.package.prompt_crafter import PromptCrafter
-except ImportError:
-    raise ImportError("Please install the package 'prompt_crafter' to run this test.")
+from aml_benchmark.prompt_crafter.package.prompt_crafter import PromptCrafter
 
 
 # Setting dataset path

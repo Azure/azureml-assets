@@ -311,7 +311,8 @@ class Spec(Config):
             if path.exists():
                 if self.type == DataAssetType.URI_FILE.value and path.is_dir():
                     raise ValidationException(f"type is {self.type} but {self._data_path} is a directory")
-                elif self.type == DataAssetType.URI_FOLDER.value and not path.is_dir():
+                elif self.
+                pe.URI_FOLDER.value and not path.is_dir():
                     raise ValidationException(f"type is {self.type} but {self._data_path} is a file")
             else:
                 raise ValidationException(f"data path {self._data_path} not found")
