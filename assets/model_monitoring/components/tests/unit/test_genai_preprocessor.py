@@ -12,7 +12,8 @@ import os
 import sys
 from datetime import datetime
 from model_data_collector_preprocessor.genai_run import (
-    _genai_uri_folder_to_preprocessed_spark_df,
+    _genai_uri_folder_to_enlarged_spans,
+    _filter_df_by_time_window
 )
 from model_data_collector_preprocessor.store_url import StoreUrl
 import spark_mltable  # noqa, to enable spark.read.mltable
@@ -182,7 +183,7 @@ class TestGenAISparkPreprocessor:
              _preprocessed_schema, _preprocessed_data_look_back)
         ]
     )
-    def test_genai_uri_folder_to_preprocessed_spark_df(
+    def test_genai_uri_folder_to_enlarged_spans(
             self, genai_preprocessor_test_setup,
             window_start_time: datetime, window_end_time: datetime, expected_schema, expected_data):
         """Test uri_folder_to_spark_df()."""
@@ -193,7 +194,7 @@ class TestGenAISparkPreprocessor:
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
         input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
 
-        actual_df = _genai_uri_folder_to_preprocessed_spark_df(
+        actual_df = _genai_uri_folder_to_enlarged_spans(
             window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
             input_url, my_add_tags)
         print("Preprocessed dataframe:")
@@ -222,10 +223,73 @@ class TestGenAISparkPreprocessor:
         window_start_time = datetime(2024, 2, 8, 15)
         window_end_time = datetime(2024, 2, 8, 16)
 
-        actual_data = _genai_uri_folder_to_preprocessed_spark_df(
+        actual_data = _genai_uri_folder_to_enlarged_spans(
             window_start_time.strftime("%Y%m%dT%H:%M:%S"), window_end_time.strftime("%Y%m%dT%H:%M:%S"),
             input_url, my_add_tags)
         assert actual_data.isEmpty()
+
+    @pytest.mark.parametrize(
+            "input_data, input_schema, expected_data, expected_schema",
+            [
+                # simple case. Include all data
+                (
+                    [(1, datetime(2024, 2, 3, 4, 10), datetime(2024, 2, 3, 4, 15)),
+                     (2, datetime(2024, 2, 3, 4, 20), datetime(2024, 2, 3, 4, 25)),
+                     (3, datetime(2024, 2, 3, 4, 30), datetime(2024, 2, 3, 4, 35)),
+                    ],
+                    ["order", "start_time", "end_time"],
+                    [(1, datetime(2024, 2, 3, 4, 10), datetime(2024, 2, 3, 4, 15)),
+                     (2, datetime(2024, 2, 3, 4, 20), datetime(2024, 2, 3, 4, 25)),
+                     (3, datetime(2024, 2, 3, 4, 30), datetime(2024, 2, 3, 4, 35)),
+                    ],
+                    ["order", "start_time", "end_time"],
+                ),
+                # simple case. exclude some data
+                (
+                    [(0, datetime(2024, 2, 3, 3, 50), datetime(2024, 2, 3, 3, 59)),
+                     (1, datetime(2024, 2, 3, 4, 10), datetime(2024, 2, 3, 4, 15)),
+                     (2, datetime(2024, 2, 3, 4, 20), datetime(2024, 2, 3, 4, 25)),
+                     (3, datetime(2024, 2, 3, 4, 30), datetime(2024, 2, 3, 4, 35)),
+                     (4, datetime(2024, 2, 3, 4, 40), datetime(2024, 2, 3, 5)),
+                     (5, datetime(2024, 2, 3, 4, 50), datetime(2024, 2, 3, 5, 1)),
+                    ],
+                    ["order", "start_time", "end_time"],
+                    [(1, datetime(2024, 2, 3, 4, 10), datetime(2024, 2, 3, 4, 15)),
+                     (2, datetime(2024, 2, 3, 4, 20), datetime(2024, 2, 3, 4, 25)),
+                     (3, datetime(2024, 2, 3, 4, 30), datetime(2024, 2, 3, 4, 35)),
+                    ],
+                    ["order", "start_time", "end_time"],
+                ),
+                # Have datetime to string and exclude some data
+                (
+                    [(0, "2024-02-03T03:50:00", "2024-02-03T03:59:00"),
+                     (1, "2024-02-03T04:10:00", "2024-02-03T12:15:00Z"),
+                     (2, "2024-02-03T04:20:00", "2024-02-03 T04:25:00"),
+                     (3, "2024-02-03T04:30:00", "2024-02-03 04:35:00"),
+                     (4, "2024-02-03T04:40:00", "2024-02-03 05:00:00"),
+                     (5, "2024-02-03T04:50:00", "2024-02-03 05:01:00"),
+                    ],
+                    ["order", "start_time", "end_time"],
+                    [(1, "2024-02-03T04:10:00", "2024-02-03T04:15:00"),
+                     (2, "2024-02-03T04:20:00", "2024-02-03T04:25:00"),
+                     (3, "2024-02-03T04:30:00", "2024-02-03T04:35:00"),
+                    ],
+                    ["order", "start_time", "end_time"],
+                )
+            ]
+    )
+    def test_filter_df_by_data_window(self, input_data, input_schema, expected_data, expected_schema):
+        """Test scenarios for filtering dataframe by data window."""
+        start_time = datetime(2024, 2, 3, 4)
+        end_time = datetime(2024, 2, 3, 5)
+        spark = self._init_spark()
+
+        input_data = spark.createDataFrame(input_data, input_schema)
+        expected_data_df = spark.createDataFrame(expected_data, expected_schema)
+
+        actual_data_df = _filter_df_by_time_window(input_data, start_time, end_time)
+
+        assert_spark_dataframe_equal(actual_data_df, expected_data_df)
 
 
 def assert_spark_dataframe_equal(df1, df2):

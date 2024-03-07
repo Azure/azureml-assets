@@ -153,6 +153,6 @@ def _mdc_uri_folder_to_preprocessed_spark_df(
 
 
 def _filter_df_by_time_window(df: DataFrame, data_window_start: datetime, data_window_end: datetime) -> DataFrame:
-    """Filter dataframe with columns: 'start_time' and 'end_time' to fit within the given data window start/end."""
-    df = df.filter(df.start_time >= data_window_start).filter(df.end_time <= data_window_end)
+    """Filter dataframe with columns: 'start_time' and 'end_time' to fit within the given data window: [start, end)."""
+    df = df.filter(df.end_time >= data_window_start).filter(df.end_time < data_window_end)
     return df

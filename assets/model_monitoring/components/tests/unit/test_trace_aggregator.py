@@ -16,7 +16,7 @@ import time
 import zipfile
 from datetime import datetime
 from model_data_collector_preprocessor.trace_aggregator import (
-    process_spans_into_aggregated_traces,
+    aggregate_spans_into_traces,
 )
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
@@ -261,7 +261,7 @@ class TestGenAISparkPreprocessor:
             span_logs_no_root_with_data,
             self._preprocessed_log_schema)
 
-        trace_df = process_spans_into_aggregated_traces(
+        trace_df = aggregate_spans_into_traces(
             span_logs_no_root_with_data_df, True,
             start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
         rows = trace_df.collect()
@@ -273,7 +273,7 @@ class TestGenAISparkPreprocessor:
             ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
         ]
         spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
-        no_root_traces = process_spans_into_aggregated_traces(
+        no_root_traces = aggregate_spans_into_traces(
             spans_no_root_df, True,
             start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
         assert no_root_traces.isEmpty()
@@ -313,7 +313,7 @@ class TestGenAISparkPreprocessor:
         expected_traces_df.show()
         expected_traces_df.printSchema()
 
-        actual_trace_df = process_spans_into_aggregated_traces(
+        actual_trace_df = aggregate_spans_into_traces(
             processed_spans_df, require_trace_data,
             data_window_start.strftime("%Y%m%dT%H:%M:%S"), data_window_end.strftime("%Y%m%dT%H:%M:%S"))
 

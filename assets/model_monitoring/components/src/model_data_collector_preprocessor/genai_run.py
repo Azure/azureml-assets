@@ -5,7 +5,7 @@
 
 import argparse
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from dateutil import parser
 from pyspark.sql import DataFrame
 from pyspark.sql.types import TimestampType
@@ -21,7 +21,7 @@ from model_data_collector_preprocessor.mdc_utils import (
     _filter_df_by_time_window,
 )
 from model_data_collector_preprocessor.trace_aggregator import (
-    process_spans_into_aggregated_traces,
+    aggregate_spans_into_traces,
 )
 
 
@@ -125,26 +125,22 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
     return df
 
 
-def _genai_uri_folder_to_preprocessed_spark_df(
-        data_window_start: str, data_window_end: str, store_url: StoreUrl, add_tags_func=None
+def _genai_uri_folder_to_enlarged_spans(
+        data_window_start: datetime, data_window_end: datetime, store_url: StoreUrl, add_tags_func=None
 ) -> DataFrame:
     """Read raw gen AI logs data, preprocess, and return in a Spark DataFrame."""
-    # look-back 1 hour for extra span logs
-    data_window_start_as_datetime = parser.parse(data_window_start)
-    data_window_end_as_datetime = parser.parse(data_window_end)
-    adjusted_date_window_start = data_window_start_as_datetime - timedelta(hours=1)
-    adjusted_date_window_end = data_window_end_as_datetime + timedelta(hours=1)
+    # look-back and forward by specified buffer minutes. Will retrieve 1-hour back/forward before we filter.
+    adjusted_data_window_start = data_window_start - timedelta(minutes=DATA_WINDOW_OFFSET_MINUTES_BEFORE)
+    adjusted_data_window_end = data_window_end + timedelta(minutes=DATA_WINDOW_OFFSET_MINUTES_AFTER)
 
     df = _mdc_uri_folder_to_preprocessed_spark_df(
-        adjusted_date_window_start.strftime("%Y%m%dT%H:%M:%S"),
-        adjusted_date_window_end.strftime("%Y%m%dT%H:%M:%S"), store_url, False, add_tags_func)
-
-    df = _preprocess_raw_logs_to_span_logs_spark_df(df)
+        adjusted_data_window_start.strftime("%Y%m%dT%H:%M:%S"),
+        adjusted_data_window_end.strftime("%Y%m%dT%H:%M:%S"), store_url, False, add_tags_func)
 
     # filter logs to buffer window
-    buffer_start_time = data_window_start_as_datetime - timedelta(minutes=DATA_WINDOW_OFFSET_MINUTES_BEFORE)
-    buffer_end_time = data_window_end_as_datetime + timedelta(minutes=DATA_WINDOW_OFFSET_MINUTES_AFTER)
-    df = df.filter(df.start_time >= buffer_start_time).filter(df.end_time <= buffer_end_time)
+    df = _filter_df_by_time_window(df, adjusted_data_window_start, adjusted_data_window_end)
+
+    df = _preprocess_raw_logs_to_span_logs_spark_df(df)
 
     print("df processed from raw Gen AI logs:")
     df.show()
@@ -154,8 +150,8 @@ def _genai_uri_folder_to_preprocessed_spark_df(
 
 
 def genai_preprocessor(
-        data_window_start: str,
-        data_window_end: str,
+        data_window_start: datetime,
+        data_window_end: datetime,
         input_data: str,
         preprocessed_span_data: str,
         aggregated_trace_data: str,
@@ -175,17 +171,15 @@ def genai_preprocessor(
     """
     store_url = StoreUrl(input_data)
 
-    enlarged_time_window_span_logs_df = _genai_uri_folder_to_preprocessed_spark_df(
+    enlarged_time_window_span_logs_df = _genai_uri_folder_to_enlarged_spans(
         data_window_start, data_window_end, store_url)
 
-    trace_logs_df = process_spans_into_aggregated_traces(
+    trace_logs_df = aggregate_spans_into_traces(
         enlarged_time_window_span_logs_df, require_trace_data, data_window_start, data_window_end)
 
     # filter down the span_logs to original time window
-    original_start_time = parser.parse(data_window_start)
-    original_end_time = parser.parse(data_window_end)
     filtered_span_logs_df = _filter_df_by_time_window(
-        enlarged_time_window_span_logs_df, original_start_time, original_end_time)
+        enlarged_time_window_span_logs_df, data_window_start, data_window_end)
 
     save_spark_df_as_mltable(filtered_span_logs_df, preprocessed_span_data)
 
@@ -204,9 +198,12 @@ def run():
     arg_parser.add_argument("--require_trace_data", type=bool, default=True)
     args = arg_parser.parse_args()
 
+    data_window_start_time = parser.parse(args.data_window_start)
+    data_window_end_time = parser.parse(args.data_window_end)
+
     genai_preprocessor(
-        args.data_window_start,
-        args.data_window_end,
+        data_window_start_time,
+        data_window_end_time,
         args.input_data,
         args.preprocessed_span_data,
         args.aggregated_trace_data,
