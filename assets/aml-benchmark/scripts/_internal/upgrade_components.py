@@ -194,6 +194,21 @@ def _upgrade_component(
     return is_error, error, component_path, name
 
 
+def _upgrade_sdk_version() -> None:
+    """Upgrade SDK version."""
+    sdk_setup_path = os.path.join(AML_BENCH_DIR, "components", "src", "setup.py")
+    with open(sdk_setup_path, "r") as file:
+        setup_str = file.read()
+    curr_version = re.search(pattern=r"version=\"\d+\.\d+\"", string=setup_str).group().split('"')[1]
+    setup_str = re.sub(
+        pattern=r"version=\"\d+\.\d+\"",
+        repl=f"version=\"{_get_bumped_version(curr_version)}\"",
+        string=setup_str
+    )
+    with open(sdk_setup_path, "w") as file:
+        file.write(setup_str)
+
+
 def _parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=f"{__file__}")
@@ -235,6 +250,9 @@ def main(env_version: str = "latest") -> None:
                 total=len(components),
             )
         )
+
+    # upgrade SDK version from existing version to the bumped version
+    _upgrade_sdk_version()
 
     # check for errors
     error_count = 0
