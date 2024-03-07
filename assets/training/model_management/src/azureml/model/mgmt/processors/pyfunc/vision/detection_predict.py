@@ -14,6 +14,9 @@ import pandas as pd
 import torch
 from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, ODLiterals, ISLiterals
 
+from azureml.model.mgmt.utils.logging_utils import get_logger
+
+logger = get_logger(__name__)
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
     # model wrapper for save_model().
@@ -120,7 +123,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        print("Inside load_context()")
+        logger.info("Inside load_context()")
 
         if self._task_type in [Tasks.MM_OBJECT_DETECTION.value, Tasks.MM_INSTANCE_SEGMENTATION.value]:
             # Install mmcv and mmdet using mim, with pip installation is not working
@@ -146,10 +149,10 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                 self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES] \
                     if MMDetLiterals.CLASSES in self._model.dataset_meta else []
                 self.language_model = hasattr(self._model, MMDetLiterals.LANGUAGE_MODEL)
-                print(f"length of classes: {len(self.classes)}")
-                print("Model loaded successfully")
+                logger.info(f"length of classes: {len(self.classes)}")
+                logger.info("Model loaded successfully")
             except Exception:
-                print("Failed to load the the model.")
+                logger.info("Failed to load the the model.")
                 raise
         else:
             raise ValueError(f"invalid task type {self._task_type}")
