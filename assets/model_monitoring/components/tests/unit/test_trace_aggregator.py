@@ -10,10 +10,10 @@ import pytest
 import os
 import sys
 from datetime import datetime
-from src.model_data_collector_preprocessor.trace_aggregator import (
+from model_data_collector_preprocessor.trace_aggregator import (
     aggregate_spans_into_traces,
 )
-from src.shared_utilities.io_utils import init_spark
+from shared_utilities.io_utils import init_spark
 
 
 @pytest.fixture(scope="module")
@@ -199,8 +199,8 @@ class TestGenAISparkPreprocessor:
     def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
         spark = init_spark()
-        start_time = datetime(2024, 2, 5, 0, 1, 0)
-        end_time = datetime(2024, 2, 5, 0, 8, 0)
+        start_time = datetime(2024, 2, 5, 0,)
+        end_time = datetime(2024, 2, 5, 1)
 
         span_logs_no_root_with_data = [
             ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
