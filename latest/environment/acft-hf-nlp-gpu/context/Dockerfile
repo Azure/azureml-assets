@@ -1,5 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch201:biweekly.202403.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch201:biweekly.202403.1.v1
 
 USER root
 
