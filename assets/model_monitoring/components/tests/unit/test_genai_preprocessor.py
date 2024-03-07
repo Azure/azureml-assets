@@ -3,6 +3,7 @@
 
 """test class for Gen AI preprocessor."""
 
+from pyspark.sql import SparkSession
 from pyspark.sql.types import (
     StructField, StringType, TimestampType, StructType
 )
@@ -17,6 +18,7 @@ from src.model_data_collector_preprocessor.genai_run import (
 from src.model_data_collector_preprocessor.store_url import StoreUrl
 from src.shared_utilities.io_utils import init_spark
 import spark_mltable  # noqa, to enable spark.read.mltable
+from spark_mltable import SPARK_ZIP_PATH
 
 
 @pytest.fixture(scope="module")
@@ -43,6 +45,17 @@ def genai_preprocessor_test_setup():
 @pytest.mark.unit
 class TestGenAISparkPreprocessor:
     """Test class for Gen AI Preprocessor."""
+    
+    def _init_spark(self) -> SparkSession:
+        """Create spark session for tests."""
+        spark: SparkSession = SparkSession.builder.appName("test").getOrCreate()
+        sc = spark.sparkContext
+        # if SPARK_ZIP_PATH is set, add the zip file to the spark context
+        zip_path = os.environ.get(SPARK_ZIP_PATH, '')
+        print(f"The spark_zip in environment: {zip_path}")
+        if zip_path:
+            sc.addPyFile(zip_path)
+        return spark
 
     _preprocessed_schema = StructType([
         StructField('attributes', StringType(), True),
@@ -155,66 +168,66 @@ class TestGenAISparkPreprocessor:
         [datetime(2024, 2, 10, 15, 11, 0), "OK", "02", "5", "llm", "LLM", "in", "out"],
     ]
 
-    # @pytest.mark.parametrize(
-    #     "window_start_time, window_end_time, expected_schema, expected_data",
-    #     [
-    #         # data only
-    #         (datetime(2024, 2, 5, 15), datetime(2024, 2, 5, 16), _preprocessed_schema, _preprocessed_data),
-    #         # data and dataref mix
-    #         # comment out the mix scenario due to package not found error from executor in remote run
-    #         # (datetime(2024, 2, 20, 15), datetime(2024, 2, 20, 16), _preprocessed_schema, _preprocessed_data),
-    #         # data but missing some promoted attribute fields
-    #         (datetime(2024, 2, 7, 12), datetime(2024, 2, 7, 13),
-    #          _preprocessed_schema_no_input, _preprocessed_data_no_inputs),
-    #         # test the 1-hour lookback functionality
-    #         (datetime(2024, 2, 10, 15), datetime(2024, 2, 10, 16),
-    #          _preprocessed_schema, _preprocessed_data_look_back)
-    #     ]
-    # )
-    # def test_genai_uri_folder_to_enlarged_spans(
-    #         self, genai_preprocessor_test_setup,
-    #         window_start_time: datetime, window_end_time: datetime, expected_schema, expected_data):
-    #     """Test uri_folder_to_spark_df()."""
-    #     def my_add_tags(tags: dict):
-    #         print("my_add_tags:", tags)
+    @pytest.mark.parametrize(
+        "window_start_time, window_end_time, expected_schema, expected_data",
+        [
+            # data only
+            (datetime(2024, 2, 5, 15), datetime(2024, 2, 5, 16), _preprocessed_schema, _preprocessed_data),
+            # data and dataref mix
+            # comment out the mix scenario due to package not found error from executor in remote run
+            # (datetime(2024, 2, 20, 15), datetime(2024, 2, 20, 16), _preprocessed_schema, _preprocessed_data),
+            # data but missing some promoted attribute fields
+            (datetime(2024, 2, 7, 12), datetime(2024, 2, 7, 13),
+             _preprocessed_schema_no_input, _preprocessed_data_no_inputs),
+            # test the 1-hour lookback functionality
+            (datetime(2024, 2, 10, 15), datetime(2024, 2, 10, 16),
+             _preprocessed_schema, _preprocessed_data_look_back)
+        ]
+    )
+    def test_genai_uri_folder_to_enlarged_spans(
+            self, genai_preprocessor_test_setup,
+            window_start_time: datetime, window_end_time: datetime, expected_schema, expected_data):
+        """Test uri_folder_to_spark_df()."""
+        def my_add_tags(tags: dict):
+            print("my_add_tags:", tags)
 
-    #     print("testing mdc_uri_folder_to_preprocessed_spark_df...")
-    #     tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
-    #     input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
+        print("testing mdc_uri_folder_to_preprocessed_spark_df...")
+        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
 
-    #     actual_df = _genai_uri_folder_to_enlarged_spans(
-    #         window_start_time, window_end_time,
-    #         input_url, my_add_tags)
-    #     print("Preprocessed dataframe:")
-    #     actual_df.show()
-    #     actual_df.printSchema()
+        actual_df = _genai_uri_folder_to_enlarged_spans(
+            window_start_time, window_end_time,
+            input_url, my_add_tags)
+        print("Preprocessed dataframe:")
+        actual_df.show()
+        actual_df.printSchema()
 
-    #     spark = init_spark()
-    #     expected_df = spark.createDataFrame(expected_data, schema=expected_schema)
+        spark = self._init_spark()
+        expected_df = spark.createDataFrame(expected_data, schema=expected_schema)
 
-    #     print('Expected dataframe:')
-    #     expected_df.show()
-    #     expected_df.printSchema()
+        print('Expected dataframe:')
+        expected_df.show()
+        expected_df.printSchema()
 
-    #     assert_spark_dataframe_equal(actual_df, expected_df)
+        assert_spark_dataframe_equal(actual_df, expected_df)
 
-    # def test_genai_preprocessor_fails(self, genai_preprocessor_test_setup):
-    #     """Test scenarios where the preprocessor should throw validation errors."""
-    #     def my_add_tags(tags: dict):
-    #         print("my_add_tags:", tags)
+    def test_genai_preprocessor_fails(self, genai_preprocessor_test_setup):
+        """Test scenarios where the preprocessor should throw validation errors."""
+        def my_add_tags(tags: dict):
+            print("my_add_tags:", tags)
 
-    #     print("testing genai_uri_folder_to_preprocessed_spark_df...")
-    #     tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
-    #     input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
+        print("testing genai_uri_folder_to_preprocessed_spark_df...")
+        tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
+        input_url = StoreUrl(f"{tests_path}/unit/raw_genai_data/")
 
-    #     # Data with invalid timestamps
-    #     window_start_time = datetime(2024, 2, 8, 15)
-    #     window_end_time = datetime(2024, 2, 8, 16)
+        # Data with invalid timestamps
+        window_start_time = datetime(2024, 2, 8, 15)
+        window_end_time = datetime(2024, 2, 8, 16)
 
-    #     actual_data = _genai_uri_folder_to_enlarged_spans(
-    #         window_start_time, window_end_time,
-    #         input_url, my_add_tags)
-    #     assert actual_data.isEmpty()
+        actual_data = _genai_uri_folder_to_enlarged_spans(
+            window_start_time, window_end_time,
+            input_url, my_add_tags)
+        assert actual_data.isEmpty()
 
     @pytest.mark.parametrize(
             "input_data, input_schema, expected_data, expected_schema",
@@ -286,7 +299,7 @@ class TestGenAISparkPreprocessor:
         """Test scenarios for filtering dataframe by data window."""
         start_time = datetime(2024, 2, 3, 4)
         end_time = datetime(2024, 2, 3, 5)
-        spark = init_spark()
+        spark = self._init_spark()
 
         input_data = spark.createDataFrame(input_data, input_schema)
         expected_data_df = spark.createDataFrame(expected_data, expected_schema)
