@@ -142,7 +142,7 @@ jobs:
 
       - name: Upload partial durations
         uses: actions/upload-artifact@v3
-        if: always()
+        if: success()
         with:
           name: split-${{ matrix.group }}
           path: ${{ env.pytest_split_test_durations_file }}
