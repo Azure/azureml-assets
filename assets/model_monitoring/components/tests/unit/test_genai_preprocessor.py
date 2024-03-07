@@ -15,9 +15,8 @@ from model_data_collector_preprocessor.genai_run import (
     _genai_uri_folder_to_preprocessed_spark_df,
 )
 from model_data_collector_preprocessor.store_url import StoreUrl
+from shared_utilities.io_utils import init_spark
 import spark_mltable  # noqa, to enable spark.read.mltable
-from spark_mltable import SPARK_ZIP_PATH
-
 
 @pytest.fixture(scope="module")
 def genai_preprocessor_test_setup():
@@ -43,17 +42,6 @@ def genai_preprocessor_test_setup():
 @pytest.mark.unit
 class TestGenAISparkPreprocessor:
     """Test class for Gen AI Preprocessor."""
-
-    def _init_spark(self) -> SparkSession:
-        """Create spark session for tests."""
-        spark: SparkSession = SparkSession.builder.appName("test").getOrCreate()
-        sc = spark.sparkContext
-        # if SPARK_ZIP_PATH is set, add the zip file to the spark context
-        zip_path = os.environ.get(SPARK_ZIP_PATH, '')
-        print(f"The spark_zip in environment: {zip_path}")
-        if zip_path:
-            sc.addPyFile(zip_path)
-        return spark
 
     _preprocessed_schema = StructType([
         StructField('attributes', StringType(), True),
@@ -201,7 +189,7 @@ class TestGenAISparkPreprocessor:
         actual_df.show()
         actual_df.printSchema()
 
-        spark = self._init_spark()
+        spark = init_spark()
         expected_df = spark.createDataFrame(expected_data, schema=expected_schema)
 
         print('Expected dataframe:')
