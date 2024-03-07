@@ -517,7 +517,8 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         )
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else AutoConfig
         self._hf_tokenizer_cls = self._hf_tokenizer_cls if self._hf_tokenizer_cls else AutoTokenizer
-        self._signatures = self._signatures or self.get_model_signature()
+        if self._model_flavor == "OSS":
+            self._signatures = self._signatures or self.get_model_signature()
 
         hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_config_cls.__name__
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__
