@@ -28,6 +28,9 @@ def code_zip_test_setup():
         for filename in files:
             abs_filepath = os.path.join(dirname, filename)
             rel_filepath = os.path.relpath(abs_filepath, start=module_path)
+            if not rel_filepath.endswith(".py"):
+                print("skipping file:", rel_filepath)
+                continue
             print("zipping file:", rel_filepath)
             zf.write(abs_filepath, arcname=rel_filepath)
     zf.close()
