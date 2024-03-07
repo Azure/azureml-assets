@@ -154,11 +154,12 @@ def genai_preprocessor(
 
     span_logs_df = _genai_uri_folder_to_preprocessed_spark_df(data_window_start, data_window_end, store_url)
 
-    trace_logs_df = process_spans_into_aggregated_traces(span_logs_df, require_trace_data)
-
     save_spark_df_as_mltable(span_logs_df, preprocessed_span_data)
 
-    save_spark_df_as_mltable(trace_logs_df, aggregated_trace_data)
+    if require_trace_data:
+        trace_logs_df = process_spans_into_aggregated_traces(span_logs_df, require_trace_data)
+
+        save_spark_df_as_mltable(trace_logs_df, aggregated_trace_data)
 
 
 def run():
