@@ -9,7 +9,7 @@ import json
 
 from typing import Dict, Iterator, List, Optional
 from pyspark.sql import Row
-from copy import deepcopy
+from copy import copy
 
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -138,7 +138,7 @@ class SpanTreeNode:
     def to_dict(self, datetime_to_str: bool = True) -> dict:
         """Get dictionary representation of SpanTreeNode."""
         # map datetime object to iso-string and then turn children into list of dicts as well.
-        output_dict = deepcopy(self._span_row_dict)
+        output_dict = copy(self._span_row_dict)
         output_dict['children'] = self.children
         if datetime_to_str:
             start_time: datetime = output_dict['start_time']  # type: ignore
@@ -226,7 +226,6 @@ class SpanTree:
                 parent_span = self.get_span_tree_node_by_span_id(parent_id)
                 if parent_span is not None:
                     parent_span.insert_child(span)
-        # TODO: handle logic if root_span has parent_id not null or if we have multiple root_spans
         return root_span
 
     def __iter__(self) -> Iterator[SpanTreeNode]:

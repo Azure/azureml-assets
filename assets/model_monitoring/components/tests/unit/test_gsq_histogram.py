@@ -8,10 +8,6 @@ import os
 import sys
 import shutil
 import pytest
-import zipfile
-import time
-import random
-import string
 import uuid
 import pandas as pd
 import pyarrow as pa
@@ -33,41 +29,10 @@ from shared_utilities import io_utils
 from shared_utilities.momo_exceptions import (
     DataNotFoundError, InvalidInputError)
 import spark_mltable  # noqa, to enable spark.read.mltable
-from spark_mltable import SPARK_ZIP_PATH
 
 
 QUESTION = 'question'
 EVALUATION = 'evaluation'
-
-
-@pytest.fixture(scope="session")
-def gsq_zip_test_setup():
-    """Zip files in module_path to src.zip."""
-    momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
-    module_path = os.path.join(momo_work_dir, "src")
-    # zip files in module_path to src.zip
-    s = string.ascii_lowercase + string.digits
-    rand_str = '_' + ''.join(random.sample(s, 5))
-    time_str = time.strftime("%Y%m%d-%H%M%S") + rand_str
-    zip_path = os.path.join(module_path, f"src_{time_str}.zip")
-
-    zf = zipfile.ZipFile(zip_path, "w")
-    for dirname, subdirs, files in os.walk(module_path):
-        for filename in files:
-            abs_filepath = os.path.join(dirname, filename)
-            rel_filepath = os.path.relpath(abs_filepath, start=module_path)
-            print("zipping file:", rel_filepath)
-            zf.write(abs_filepath, arcname=rel_filepath)
-    zf.close()
-    # add files to zip folder
-    os.environ[SPARK_ZIP_PATH] = zip_path
-    print("zip path set in gsq_preprocessor_test_setup: ", zip_path)
-
-    yield
-    # remove zip file
-    os.remove(zip_path)
-    # remove zip path from environment
-    os.environ.pop(SPARK_ZIP_PATH, None)
 
 
 @pytest.fixture(scope="module")
@@ -127,13 +92,13 @@ class TestGSQHistogram:
         expected_format = f"https://{valid_url}/openai/deployments/{model}?api-version={version}"
         assert formatted_url == expected_format
 
-    def test_gsq_apply_annotation(self, gsq_zip_test_setup,
+    def test_gsq_apply_annotation(self, code_zip_test_setup,
                                   gsq_preprocessor_test_setup):
         """Test apply_annotation method in GSQ component."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
         call_apply_annotation(",".join(metric_names))
 
-    def test_gsq_invalid_metrics(self, gsq_zip_test_setup,
+    def test_gsq_invalid_metrics(self, code_zip_test_setup,
                                  gsq_preprocessor_test_setup):
         """Test passing invalid metrics."""
         metric_names = ['some_invalid_metric_name', 'another_invalid_metric_name']
@@ -141,7 +106,7 @@ class TestGSQHistogram:
         with pytest.raises(InvalidInputError):
             call_apply_annotation(joined_metric_names)
 
-    def test_gsq_production_data_missing_required_cols(self, gsq_zip_test_setup,
+    def test_gsq_production_data_missing_required_cols(self, code_zip_test_setup,
                                                        gsq_preprocessor_test_setup):
         """Test passing production data missing required columns."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
@@ -156,7 +121,7 @@ class TestGSQHistogram:
             call_apply_annotation(
                 ",".join(metric_names), completion_column_name=missing_completion_col)
 
-    def test_gsq_with_same_column_name(self, gsq_zip_test_setup,
+    def test_gsq_with_same_column_name(self, code_zip_test_setup,
                                        gsq_preprocessor_test_setup):
         """Test passing same column name as in file for prompt."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
@@ -176,7 +141,7 @@ class TestGSQHistogram:
         # remove test folder
         shutil.rmtree(mltable_path_copy)
 
-    def test_gsq_with_added_prompt_column_name(self, gsq_zip_test_setup,
+    def test_gsq_with_added_prompt_column_name(self, code_zip_test_setup,
                                                gsq_preprocessor_test_setup):
         """Test dataset with extra prompt column, same as in requested dataset."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
@@ -195,7 +160,7 @@ class TestGSQHistogram:
         # remove test folder
         shutil.rmtree(mltable_path_copy)
 
-    def test_gsq_with_added_passthrough_columns(self, gsq_zip_test_setup,
+    def test_gsq_with_added_passthrough_columns(self, code_zip_test_setup,
                                                 gsq_preprocessor_test_setup):
         """Test dataset with extra passthrough columns added."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
@@ -221,7 +186,7 @@ class TestGSQHistogram:
         # remove test folder
         shutil.rmtree(mltable_path_copy)
 
-    def test_gsq_with_empty_dataset(self, gsq_zip_test_setup, gsq_preprocessor_test_setup):
+    def test_gsq_with_empty_dataset(self, code_zip_test_setup, gsq_preprocessor_test_setup):
         """Test passing empty dataset."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
         empty_mltable_path = write_empty_production_data()

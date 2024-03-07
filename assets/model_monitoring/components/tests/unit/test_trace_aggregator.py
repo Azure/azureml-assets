@@ -3,55 +3,17 @@
 
 """test class for Gen AI preprocessor."""
 
-from pyspark.sql import SparkSession
 from pyspark.sql.types import (
     StructField, StringType, TimestampType, StructType
 )
 import pytest
 import os
 import sys
-import string
-import random
-import time
-import zipfile
 from datetime import datetime
-from model_data_collector_preprocessor.trace_aggregator import (
+from src.model_data_collector_preprocessor.trace_aggregator import (
     aggregate_spans_into_traces,
 )
-import spark_mltable  # noqa, to enable spark.read.mltable
-from spark_mltable import SPARK_ZIP_PATH
-
-
-@pytest.fixture(scope="session")
-def genai_zip_test_setup():
-    # TODO: move this zip utility to shared conftest later.
-    # Check gsq tests and mdc tests for possible duplications.
-    """Zip files in module_path to src.zip."""
-    momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
-    module_path = os.path.join(momo_work_dir, "src")
-    # zip files in module_path to src.zip
-    s = string.ascii_lowercase + string.digits
-    rand_str = '_' + ''.join(random.sample(s, 5))
-    time_str = time.strftime("%Y%m%d-%H%M%S") + rand_str
-    zip_path = os.path.join(module_path, f"src_{time_str}.zip")
-
-    zf = zipfile.ZipFile(zip_path, "w")
-    for dirname, subdirs, files in os.walk(module_path):
-        for filename in files:
-            abs_filepath = os.path.join(dirname, filename)
-            rel_filepath = os.path.relpath(abs_filepath, start=module_path)
-            print("zipping file:", rel_filepath)
-            zf.write(abs_filepath, arcname=rel_filepath)
-    zf.close()
-    # add files to zip folder
-    os.environ[SPARK_ZIP_PATH] = zip_path
-    print("zip path set in genai_preprocessor_test_setup: ", zip_path)
-
-    yield
-    # remove zip file
-    os.remove(zip_path)
-    # remove zip path from environment
-    os.environ.pop(SPARK_ZIP_PATH, None)
+from src.shared_utilities.io_utils import init_spark
 
 
 @pytest.fixture(scope="module")
@@ -78,17 +40,6 @@ def genai_preprocessor_test_setup():
 @pytest.mark.unit
 class TestGenAISparkPreprocessor:
     """Test class for Gen AI Preprocessor."""
-
-    def _init_spark(self) -> SparkSession:
-        """Create spark session for tests."""
-        spark: SparkSession = SparkSession.builder.appName("test").getOrCreate()
-        sc = spark.sparkContext
-        # if SPARK_ZIP_PATH is set, add the zip file to the spark context
-        zip_path = os.environ.get(SPARK_ZIP_PATH, '')
-        print(f"The spark_zip in environment: {zip_path}")
-        if zip_path:
-            sc.addPyFile(zip_path)
-        return spark
 
     _preprocessed_log_schema = StructType([
         # TODO: The user_id and session_id may not be available in v1.
@@ -245,9 +196,9 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 6, 59, 0), "in", "out", _root_span_str_lookback],
     ]
 
-    def test_trace_aggregator_empty_root_span(self, genai_zip_test_setup, genai_preprocessor_test_setup):
+    def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
-        spark = self._init_spark()
+        spark = init_spark()
         start_time = datetime(2024, 2, 5, 0, 1, 0)
         end_time = datetime(2024, 2, 5, 0, 8, 0)
 
@@ -261,9 +212,7 @@ class TestGenAISparkPreprocessor:
             span_logs_no_root_with_data,
             self._preprocessed_log_schema)
 
-        trace_df = aggregate_spans_into_traces(
-            span_logs_no_root_with_data_df, True,
-            start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
+        trace_df = aggregate_spans_into_traces(span_logs_no_root_with_data_df, True, start_time, end_time)
         rows = trace_df.collect()
         assert trace_df.count() == 1
         assert rows[0]['trace_id'] == "01"
@@ -273,34 +222,33 @@ class TestGenAISparkPreprocessor:
             ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
         ]
         spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
-        no_root_traces = aggregate_spans_into_traces(
-            spans_no_root_df, True,
-            start_time.strftime("%Y%m%dT%H:%M:%S"), end_time.strftime("%Y%m%dT%H:%M:%S"))
+        no_root_traces = aggregate_spans_into_traces(spans_no_root_df, True, start_time, end_time)
         assert no_root_traces.isEmpty()
 
     @pytest.mark.parametrize(
         "span_input_logs, span_input_schema, expected_trace_logs, " +
         "expected_trace_schema, require_trace_data, data_window_start, data_window_end",
         [
-            # ([], _preprocessed_log_schema, [], _trace_log_schema, True,
-            #  datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
-            # (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema, True,
-            #  datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
-            # (_span_log_data_extra, _preprocessed_log_schema_extra, _trace_log_data_extra, _trace_log_schema, True,
-            #  datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
-            # (_span_log_data, _preprocessed_log_schema, [], _trace_log_schema, False,
-            #  datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
+            ([], _preprocessed_log_schema, [], _trace_log_schema, True,
+             datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
+            (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema, True,
+             datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
+            (_span_log_data_extra, _preprocessed_log_schema_extra, _trace_log_data_extra, _trace_log_schema, True,
+             datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
+            (_span_log_data, _preprocessed_log_schema, [], _trace_log_schema, False,
+             datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
             # Look back with extra span logs
             (_span_log_data_lookback, _preprocessed_log_schema, _trace_log_data_lookback, _trace_log_schema, True,
              datetime(2024, 2, 5, 6), datetime(2024, 2, 5, 7))
         ]
     )
     def test_trace_aggregator(
-            self, genai_zip_test_setup, genai_preprocessor_test_setup,
+            self, code_zip_test_setup, genai_preprocessor_test_setup,
             span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema,
             require_trace_data, data_window_start, data_window_end):
         """Test scenario where spans has real data."""
-        spark = self._init_spark()
+        spark = init_spark()
+
         # infer schema only when we have data.
         processed_spans_df = spark.createDataFrame(span_input_logs, span_input_schema)
         expected_traces_df = spark.createDataFrame(expected_trace_logs, expected_trace_schema)
@@ -314,8 +262,7 @@ class TestGenAISparkPreprocessor:
         expected_traces_df.printSchema()
 
         actual_trace_df = aggregate_spans_into_traces(
-            processed_spans_df, require_trace_data,
-            data_window_start.strftime("%Y%m%dT%H:%M:%S"), data_window_end.strftime("%Y%m%dT%H:%M:%S"))
+            processed_spans_df, require_trace_data, data_window_start, data_window_end)
 
         print("actual trace logs:")
         actual_trace_df.show()
