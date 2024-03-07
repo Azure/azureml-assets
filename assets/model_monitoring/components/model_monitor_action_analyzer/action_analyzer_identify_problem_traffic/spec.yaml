@@ -1,0 +1,89 @@
+$schema: http://azureml/sdk-2-0/SparkComponent.json
+type: spark
+
+name: action_analyzer_identify_problem_traffic
+display_name: Action Analyzer - Identify Problem Traffic 
+description: Separate bad queries into different groups.
+version: 0.0.1
+is_deterministic: True
+inputs:
+  signal_scored_data:
+    type: mltable
+    mode: direct
+    description: production data with metrics scores from monitoring signal
+  signal_output:
+    type: uri_folder
+    mode: direct
+    description: violated metrics names
+  signal_name:
+    type: string
+    optional: false
+    description: signal name for action
+  workspace_connection_arm_id:
+    type: string
+    optional: false
+    description: path to the workspace connection
+  model_deployment_name:
+    type: string
+    optional: false
+    description: model name, e.g., name of the deployment for Azure OpenAI
+  prompt_column_name:
+    type: string
+    optional: true
+    default: "prompt"
+    description: prompt column name
+  completion_column_name:
+    type: string
+    optional: true
+    default: "completion"
+    description: completion column name
+outputs:
+  data_with_groups:
+    type: mltable
+    mode: direct
+
+conf:
+  spark.driver.cores: 4
+  spark.driver.memory: 28g
+  spark.executor.cores: 4
+  spark.executor.memory: 28g
+  spark.executor.instances: 1
+  spark.dynamicAllocation.enabled: True
+  spark.dynamicAllocation.minExecutors: 1
+  spark.dynamicAllocation.maxExecutors: 4
+  spark.synapse.library.python.env: |
+    channels:
+      - defaults
+      - conda-forge
+    dependencies:
+      - python=3.10
+      - pip:
+          - azure-cli-core~=2.56.0
+          - azure-identity~=1.12.0
+          - azure-ai-ml~=1.13.0
+          - azure-keyvault-secrets==4.7.0
+          - tiktoken==0.4.0
+          - azureml-mlflow~=1.49.0
+          - mltable~=1.5.0
+          - azureml-fsspec
+          - fsspec~=2023.4.0
+          - protobuf==3.20.1
+          - azure-ai-generative==1.0.0b7
+          - azure-ai-resources==1.0.0b7
+          - openai~=1.11.1
+          - bertopic[flair]
+          - nbformat
+          - openAI
+code: ../../src
+
+entry:
+  file: ./action_analyzer/action_analyzer_identify_problem_traffic/run.py
+
+args: >-
+  --signal_scored_data ${{inputs.signal_scored_data}}
+  --signal_output ${{inputs.signal_output}}
+  --model_deployment_name ${{inputs.model_deployment_name}}
+  --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
+  $[[--prompt_column_name ${{inputs.prompt_column_name}}]]
+  $[[--completion_column_name ${{inputs.completion_column_name}}]]
+  --data_with_groups ${{outputs.data_with_groups}}
