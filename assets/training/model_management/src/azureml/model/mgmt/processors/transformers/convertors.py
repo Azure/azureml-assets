@@ -498,10 +498,10 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         if self._task == SupportedNLPTasks.TEXT_GENERATION.value:
             inputs = Schema([ColSpec(DataType.string)])
             outputs = Schema([ColSpec(DataType.string)])
-            params = ParamSchema([ParamSpec("top_p", "float", default=1.0),
-                                  ParamSpec("temperature", "float", default=0.0),
+            params = ParamSchema([ParamSpec("top_p", "float", default=0.8),
+                                  ParamSpec("temperature", "float", default=0.8),
                                   ParamSpec("max_new_tokens", "integer", default=100),
-                                  ParamSpec("do_sample", "boolean", default=False),
+                                  ParamSpec("do_sample", "boolean", default=True),
                                   ParamSpec("return_full_text", "boolean", default=True)])
             return ModelSignature(inputs=inputs, outputs=outputs, params=params)
 
