@@ -134,7 +134,7 @@ outputs:
     description: Output file path where few_shot_prompt data will be written.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/19
+environment: azureml://registries/azureml/environments/model-evaluation/versions/20
 command: >-
   python -m aml_benchmark.prompt_crafter.main 
   --test_data ${{inputs.test_data}}
