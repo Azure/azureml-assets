@@ -383,8 +383,10 @@ def _get_local_file_list(start_datetime: datetime, end_datetime: datetime, input
     if end_datetime.minute == 0 and end_datetime.second == 0:
         # if end_datetime is a whole hour, the last hour folder is not needed
         end_datetime -= timedelta(seconds=1)
-    cur_datetime = start_datetime
-    while cur_datetime <= end_datetime:
+
+    _end = end_datetime.replace(minute=59)
+    cur_datetime = start_datetime.replace(minute=0)
+    while cur_datetime <= _end:
         cur_folder = f"{root_folder}/{cur_datetime.strftime('%Y/%m/%d/%H')}"
         if os.path.isdir(cur_folder):
             for file in os.listdir(cur_folder):
