@@ -11,7 +11,7 @@ import pytest
 import os
 import sys
 from datetime import datetime
-from src.model_data_collector_preprocessor.trace_aggregator import (
+from model_data_collector_preprocessor.trace_aggregator import (
     aggregate_spans_into_traces,
 )
 import spark_mltable  # noqa, to enable spark.read.mltable
