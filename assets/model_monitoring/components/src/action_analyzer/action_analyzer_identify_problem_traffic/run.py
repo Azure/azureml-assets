@@ -174,23 +174,19 @@ def parse_debugging_info(root_span):
                 if not parent_id:
                     print("No look up span found, skip action analyzer.")
                     return None
-                # todo, change this function using utils
-                lookup_span = tree.get_span_tree_node_by_span_id(parent_id)
-                lookup_input = json.loads(lookup_span.input)
-                index_content = lookup_input["mlindex_content"]
+                index_span = tree.get_span_tree_node_by_span_id(parent_id)
+                index_input = json.loads(json.loads(index_span.attributes)["inputs"])
+                index_content = index_input['mlindex_content']
                 index_id = get_index_id(index_content)
-                if not index_id:
-                    print("No index id found, skip action analyzer.")
-                    return None
-                queries = lookup_input["queries"]
-                lookup_outputs = json.loads(lookup_span.output)
-                if isinstance(queries, str):
-                    text = []
-                    score = []
-                    for lookup_output in lookup_outputs:
-                        text.append(lookup_output["text"])
-                        score.append(float(lookup_output["score"]))
-                    spans_array.append((parent_id, index_content, index_id, queries, TEXT_SPLITTER.join(text), max(score)))  # noqa: E501
+                retrieval_info = json.loads(span.attributes)
+                query = retrieval_info["retrieval.query"]
+                retrieval_documents = json.loads(retrieval_info["retrieval.documents"])
+                text = []
+                score = []
+                for document in retrieval_documents:
+                    text.append(document["document.content"])
+                    score.append(float(document["document.score"]))
+                spans_array.append((parent_id, index_content, index_id, query, TEXT_SPLITTER.join(text), max(score)))
         return spans_array
     except KeyError as e:
         print("Required field not found: ", e)
