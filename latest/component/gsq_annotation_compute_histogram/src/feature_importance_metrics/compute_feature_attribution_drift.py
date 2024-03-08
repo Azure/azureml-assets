@@ -10,8 +10,14 @@ from sklearn.metrics import ndcg_score
 
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable
 from shared_utilities import constants
+from shared_utilities.momo_exceptions import InvalidInputError
 
 from feature_importance_metrics.feature_importance_utilities import convert_pandas_to_spark, log_time_and_message
+
+
+CORRELATION_ID = 'correlationid'
+COLUMN_MISMATCH_ERR = "Column names in baseline and production data do not match, diff: {diff}"
+FEATURE_MISMATCH_ERR = "Feature names in baseline and production data do not match, diff: {diff}"
 
 
 def parse_args():
@@ -137,27 +143,45 @@ def configure_data(data):
     return [df.sort_values(by=[constants.FEATURE_COLUMN]), num_rows]
 
 
-def drop_metadata_columns(baseline_data, production_data):
-    """Drop any columns from production data that are not in the baseline data.
+def drop_correlation_id_row(df):
+    """Drop the row with the correlationid feature name."""
+    df.drop(df.loc[df[constants.FEATURE_COLUMN] == CORRELATION_ID].index, inplace=True)
 
-    :param baseline_data: The baseline data meaning the data used to create the
-    model monitor
-    :type baseline_data: pandas.DataFrame
-    :param production_data: The production data meaning the most recent set of data
-    sent to the model monitor, the current set of data
-    :type production_data: pandas.DataFrame
-    :return: production data with removed columns
-    :rtype: pandas.DataFrame
-    """
-    log_time_and_message("Attempting to drop any target columns that do not appear in the baseline data")
-    baseline_data_features = baseline_data[constants.FEATURE_COLUMN].values
-    production_data_features = production_data[constants.FEATURE_COLUMN].values
-    for production_feature in production_data_features:
-        if production_feature not in baseline_data_features:
-            production_data = production_data.drop(
-                production_data[production_data.feature == production_feature].index, axis=0)
-            log_time_and_message(f"Dropped {production_feature} column in target dataset")
-    return production_data
+
+def check_column_diff(baseline, production, error_message):
+    """Check if the columns in the baseline and production data match."""
+    if baseline != production:
+        diff = baseline ^ production
+        error = error_message.format(diff=diff)
+        log_time_and_message(error)
+        raise InvalidInputError(error)
+
+
+def get_feature_columns(df):
+    """Get the feature columns from the dataframe."""
+    return set(df[constants.FEATURE_COLUMN].to_list())
+
+
+def validate_columns_match(baseline_df, production_df):
+    """Validate that the columns in the baseline and production data match."""
+    baseline_columns = set(baseline_df.columns)
+    production_columns = set(production_df.columns)
+    check_column_diff(baseline_columns, production_columns, COLUMN_MISMATCH_ERR)
+    validate_features_match(baseline_df, production_df)
+
+
+def validate_features_match(baseline_df, production_df):
+    """Validate that the feature columns in the baseline and production data match."""
+    baseline_features = get_feature_columns(baseline_df)
+    production_features = get_feature_columns(production_df)
+    # drop correlationid column from both base and prod data
+    if CORRELATION_ID in baseline_features:
+        drop_correlation_id_row(baseline_df)
+        baseline_features = get_feature_columns(baseline_df)
+    if CORRELATION_ID in production_features:
+        drop_correlation_id_row(production_df)
+        production_features = get_feature_columns(production_df)
+    check_column_diff(baseline_features, production_features, FEATURE_MISMATCH_ERR)
 
 
 def run(args):
@@ -166,10 +190,9 @@ def run(args):
         log_time_and_message("Reading in baseline data & target data")
         baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
         production_df = try_read_mltable_in_spark_with_error(args.production_data, "production_data")
-
         [baseline_explanations, baseline_row_count] = configure_data(baseline_df)
         [production_explanations, production_row_count] = configure_data(production_df)
-        production_explanations = drop_metadata_columns(baseline_explanations, production_explanations)
+        validate_columns_match(baseline_explanations, production_explanations)
         compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations,
                                           args.signal_metrics, baseline_row_count, production_row_count)
         log_time_and_message("Successfully executed the feature attribution component.")
