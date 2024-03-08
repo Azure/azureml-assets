@@ -37,8 +37,8 @@ COMPLETION = "completion"
 CONTEXT = "context"
 GROUND_TRUTH = "ground_truth"
 CORRELATION_ID = "correlationid"
-TRACE_ID = "traceid"
-ROOT_SPAN = "rootspan"
+TRACE_ID = "trace_id"
+ROOT_SPAN = "root_span"
 
 PASSTHROUGH_COLUMNS = [CORRELATION_ID, TRACE_ID, ROOT_SPAN]
 
