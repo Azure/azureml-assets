@@ -36,7 +36,8 @@ class OnlineEndpointModel:
             finetuned_subscription_id: Optional[str] = None,
             finetuned_resource_group: Optional[str] = None,
             finetuned_workspace: Optional[str] = None,
-            model_depend_step: Optional[str] = None
+            model_depend_step: Optional[str] = None,
+            finetuned_from_proxy_step: Optional[bool] = False
     ):
         """Init method."""
         if model is not None and model.startswith('azureml:'):
@@ -61,6 +62,7 @@ class OnlineEndpointModel:
         self._finetuned_resource_group = finetuned_resource_group
         self._finetuned_workspace = finetuned_workspace
         self._model_depend_step = model_depend_step
+        self._finetuned_from_proxy_step = finetuned_from_proxy_step
 
     @property
     def model_name(self) -> str:
@@ -114,6 +116,11 @@ class OnlineEndpointModel:
     def is_finetuned(self) -> bool:
         """Get the finetune flag."""
         return self._is_finetuned
+    
+    @property
+    def finetuned_from_proxy_step(self) -> bool:
+        """Get the finetune flag."""
+        return self._finetuned_from_proxy_step
 
     @property
     def source(self) -> Optional[str]:
