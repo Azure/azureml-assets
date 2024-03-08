@@ -16,7 +16,13 @@ from shared_utilities.io_utils import init_spark
 
 
 class MetricsProcessor:
+    """Metrics Preprocessor consists of all the function used to generate metrics
+    for token stats.
+    """
     def __init__(self):
+        """
+        initializes all the metrics that needs calculation
+        """
         self.total_prompt_count = 0
         self.total_completion_count = 0
         self.total_token_count = 0
@@ -28,6 +34,11 @@ class MetricsProcessor:
         self.total_requests = 0
 
     def process(self, df_traces: DataFrame):
+        """_summary_
+
+        Args:
+            df_traces (DataFrame): input aggregrated traces from genai processor
+        """
         df_traces = df_traces.select("root_span")
         all_spans = df_traces.toJSON().collect()
         root_input = ""
@@ -46,6 +57,11 @@ class MetricsProcessor:
         print(self.request_data)
 
     def metrics_generator(self):
+        """_summary_
+
+        Returns:
+            metrics_data_df (DataFrame): metrics dataframe 
+        """
         spark = init_spark()
         schema = StructType([
             StructField(SIGNAL_METRICS_METRIC_NAME, StringType(), True),
@@ -71,6 +87,11 @@ class MetricsProcessor:
         return metrics_data_df
 
     def get_latest_run(self):
+        """_summary_
+
+        Returns:
+           sample_data_df (DataFrame): returns input, output and tokens for current run
+        """
         spark = init_spark()
         schema = StructType([
             StructField("PromptCount", DoubleType(), True),
@@ -97,6 +118,14 @@ class MetricsProcessor:
             self.process_node(child_json_str, root_input, root_output)
 
     def handle_span_type(self, attributes: dict, span_type: str, root_input: str, root_output: str):
+        """_summary_
+
+        Args:
+            attributes (dict): attributes
+            span_type (str): LLM, Embedding, Tool, Flow
+            root_input (str): input from Flow
+            root_output (str): output from Flow
+        """
         completion_count = attributes.get("llm.token_count.completion", 0)
         prompt_count = attributes.get("llm.token_count.prompt", 0)
         total_count = attributes.get("llm.token_count.total", 0)
@@ -129,7 +158,8 @@ class MetricsProcessor:
         })
 
     def calculate_averages(self):
-        # Calculate the averages per request
+        """ Calculate the averages per request
+        """
         self.avg_prompt_count = self.total_prompt_count / self.total_requests if self.total_requests else 0
         self.avg_completion_count = self.total_completion_count / self.total_requests if self.total_requests else 0
         self.avg_total_count = self.total_token_count / self.total_requests if self.total_requests else 0
