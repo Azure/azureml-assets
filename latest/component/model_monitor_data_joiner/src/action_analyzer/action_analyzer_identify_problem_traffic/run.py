@@ -174,23 +174,19 @@ def parse_debugging_info(root_span):
                 if not parent_id:
                     print("No look up span found, skip action analyzer.")
                     return None
-                # todo, change this function using utils
-                lookup_span = tree.get_span_tree_node_by_span_id(parent_id)
-                lookup_input = json.loads(lookup_span.input)
-                index_content = lookup_input["mlindex_content"]
+                index_span = tree.get_span_tree_node_by_span_id(parent_id)
+                index_input = json.loads(json.loads(index_span.attributes)["inputs"])
+                index_content = index_input['mlindex_content']
                 index_id = get_index_id(index_content)
-                if not index_id:
-                    print("No index id found, skip action analyzer.")
-                    return None
-                queries = lookup_input["queries"]
-                lookup_outputs = json.loads(lookup_span.output)
-                if isinstance(queries, str):
-                    text = []
-                    score = []
-                    for lookup_output in lookup_outputs:
-                        text.append(lookup_output["text"])
-                        score.append(float(lookup_output["score"]))
-                    spans_array.append((parent_id, index_content, index_id, queries, TEXT_SPLITTER.join(text), max(score)))  # noqa: E501
+                retrieval_info = json.loads(span.attributes)
+                query = retrieval_info["retrieval.query"]
+                retrieval_documents = json.loads(retrieval_info["retrieval.documents"])
+                text = []
+                score = []
+                for document in retrieval_documents:
+                    text.append(document["document.content"])
+                    score.append(float(document["document.score"]))
+                spans_array.append((parent_id, index_content, index_id, query, TEXT_SPLITTER.join(text), max(score)))
         return spans_array
     except KeyError as e:
         print("Required field not found: ", e)
@@ -264,11 +260,13 @@ def run():
     parser.add_argument("--completion_column_name", type=str, default=COMPLETION_COLUMN)
     args = parser.parse_args()
 
-    violated_metrics = get_violated_metrics(args.signal_output, args.signal_name)
+    violated_metrics = get_violated_metrics(args.signal_output, f"signals/{args.signal_name}")
     if violated_metrics == []:
         print("No violated metrics. No action will be generated.")
         save_empty_dataframe(get_output_schema(), args.data_with_groups)
         return
+
+    print("Violated metrics found: ", violated_metrics)
 
     signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
     print("gsq output df")
@@ -295,7 +293,11 @@ def run():
                           .when((col(score_name) < METRICS_VIOLATION_THRESHOLD) & (col(GROUP_LIST_COLUMN) == ""), default_bad_group_name) # noqa
                           .when((col(score_name) < METRICS_VIOLATION_THRESHOLD) & (col(GROUP_LIST_COLUMN) != ""), concat(col(GROUP_LIST_COLUMN), lit(TEXT_SPLITTER), lit(default_bad_group_name)))  # noqa
                           .otherwise(col(GROUP_LIST_COLUMN)))  # noqa
+        # rename to root question column
+        df = df.withColumn(ROOT_QUESTION_COLUMN, col(PROMPT_COLUMN)).drop(PROMPT_COLUMN)
 
+        print("Start to do semantic grouping")
+        df.show()
         pdf = df.toPandas()
         bad_answers = pdf[pdf[score_name] < METRICS_VIOLATION_THRESHOLD]
         bad_samples = bad_answers.sample(n=min(ACTION_ANALYZER_SAMPLE_SIZE, len(bad_answers)))
