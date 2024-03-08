@@ -17,11 +17,10 @@ from shared_utilities.io_utils import init_spark
 
 class MetricsProcessor:
     """Metrics Preprocessor consists of all the function used to generate metrics for token stats."""
-    def __init__(self):
-        """
 
-        Initializes all the metrics that needs calculation.
-        """
+    def __init__(self):
+        """Initialize all the metrics that needs calculation."""
+
         self.total_prompt_count = 0
         self.total_completion_count = 0
         self.total_token_count = 0
@@ -33,10 +32,8 @@ class MetricsProcessor:
         self.total_requests = 0
 
     def process(self, df_traces: DataFrame):
-        """
-        Args:
-            df_traces (DataFrame): input aggregrated traces from genai processor.
-        """
+        """Args: df_traces (DataFrame): input aggregrated traces from genai processor."""
+
         df_traces = df_traces.select("root_span")
         all_spans = df_traces.toJSON().collect()
         root_input = ""
@@ -55,11 +52,8 @@ class MetricsProcessor:
         print(self.request_data)
 
     def metrics_generator(self):
-        """
+        """Return: metrics_data_df (DataFrame): metrics dataframe."""
 
-        Returns:
-        metrics_data_df (DataFrame): metrics dataframe.
-        """
         spark = init_spark()
         schema = StructType([
             StructField(SIGNAL_METRICS_METRIC_NAME, StringType(), True),
@@ -85,11 +79,8 @@ class MetricsProcessor:
         return metrics_data_df
 
     def get_latest_run(self):
-        """
+        """Return: sample_data_df (DataFrame): returns input, output and tokens for current run."""
 
-        Returns:
-        sample_data_df (DataFrame): returns input, output and tokens for current run.
-        """
         spark = init_spark()
         schema = StructType([
             StructField("PromptCount", DoubleType(), True),
@@ -106,7 +97,8 @@ class MetricsProcessor:
         return sample_data_df
 
     def process_node(self, node_json_str: str, root_input: str, root_output: str):
-        """Recursive function to iterate over children"""
+        """Recursive function to iterate over children."""
+
         node = SpanTreeNode.create_node_from_json_str(node_json_str)
         if node.span_row:
             attributes = json.loads(node.span_row.asDict()["attributes"])
@@ -119,12 +111,12 @@ class MetricsProcessor:
     def handle_span_type(self, attributes: dict, span_type: str, root_input: str, root_output: str):
         """
 
-        Args:
-            attributes (dict): attributes.
+            Args: attributes (dict): attributes.
             span_type (str): LLM, Embedding, Tool, Flow.
             root_input (str): input from Flow.
             root_output (str): output from Flow.
         """
+
         completion_count = attributes.get("llm.token_count.completion", 0)
         prompt_count = attributes.get("llm.token_count.prompt", 0)
         total_count = attributes.get("llm.token_count.total", 0)
@@ -157,7 +149,8 @@ class MetricsProcessor:
         })
 
     def calculate_averages(self):
-        """ Calculate the averages per request"""
+        """ Calculate the averages per request."""
+
         self.avg_prompt_count = self.total_prompt_count / self.total_requests if self.total_requests else 0
         self.avg_completion_count = self.total_completion_count / self.total_requests if self.total_requests else 0
         self.avg_total_count = self.total_token_count / self.total_requests if self.total_requests else 0
