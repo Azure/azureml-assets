@@ -30,6 +30,9 @@ def test_handle_batch_score_event(mock_run_context):
         "timestamp": datetime.now(),
         "output_row_count": 100,
     }
+    kwargs_summarize_endpoints = {
+        "minibatch_id": my_minibatch_id
+    }
 
     kwargs_with_end_time = kwargs.copy()
     kwargs_with_end_time["end_time"] = kwargs_with_end_time["timestamp"]
@@ -47,6 +50,7 @@ def test_handle_batch_score_event(mock_run_context):
         call(input_row_completed_event),
     ])
     minibatch_aggregator.summarize.assert_called_with(**kwargs_with_end_time)
+    minibatch_aggregator.summarize_endpoints.assert_called_with(**kwargs_summarize_endpoints)
     minibatch_aggregator.clear.assert_called_with(minibatch_id=my_minibatch_id)
 
     # Teardown
@@ -60,4 +64,5 @@ def test_handle_batch_score_event(mock_run_context):
     # Assert
     minibatch_aggregator.add.assert_not_called()
     minibatch_aggregator.summarize.assert_not_called()
+    minibatch_aggregator.summarize_endpoints.assert_not_called()
     minibatch_aggregator.clear.assert_not_called()

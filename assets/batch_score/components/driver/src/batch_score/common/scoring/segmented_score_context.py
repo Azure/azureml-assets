@@ -158,6 +158,8 @@ class SegmentedScoreContext:
                 final_usage["prompt_tokens"] = prompt_tokens
                 final_usage["completion_tokens"] = completion_tokens
 
+                final_result.reload()
+
     def __add_successful_result(self, result: ScoringResult):
         self.__segmented_results.append(result)
         response_choice = result.response_body["choices"][0]

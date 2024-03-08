@@ -15,7 +15,7 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_mdc_preprocessor_job(
-    ml_client: MLClient, get_component, experiment_name,
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name,
     extract_correlation_id, input_data, start_time, end_time
 ):
     mdc_preprocessor_component = get_component(COMPONENT_NAME_MDC_PREPROCESSOR)
@@ -44,8 +44,8 @@ def _submit_mdc_preprocessor_job(
         type='mltable', mode='direct'
     )
 
-    pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name, skip_validation=True
+    pipeline_job = submit_pipeline_job(
+        pipeline_job, experiment_name
     )
 
     # Wait until the job completes
@@ -67,11 +67,13 @@ class TestMDCPreprocessorE2E:
         ]
     )
     def test_mdc_preprocessor_successful(
-        self, ml_client: MLClient, get_component, test_suite_name, input_data, start_time, end_time
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name, input_data,
+        start_time, end_time
     ):
         """Test the happy path scenario for MDC preprocessor."""
         for extract_correlation_id in [True, False]:
             pipeline_job = _submit_mdc_preprocessor_job(
+                submit_pipeline_job,
                 ml_client,
                 get_component,
                 test_suite_name,
