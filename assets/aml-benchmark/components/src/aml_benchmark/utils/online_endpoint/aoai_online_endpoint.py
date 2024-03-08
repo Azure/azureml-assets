@@ -5,8 +5,11 @@
 
 
 from typing import Optional
+import os
 import time
-
+import json
+from requests.models import Response
+import requests
 from azureml._model_management._util import get_requests_session
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azure.ai.ml.entities import AccessKeyConfiguration, ApiKeyConfiguration
@@ -16,6 +19,7 @@ from ..exceptions import BenchmarkValidationException
 from ..logging import get_logger
 from .online_endpoint import OnlineEndpoint, ResourceState
 from .online_endpoint_model import OnlineEndpointModel
+from azure.identity import ManagedIdentityCredential
 
 
 logger = get_logger(__name__)
@@ -136,15 +140,20 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                 }
             }
         }
-        if self._model.is_finetuned:
-            payload['properties']['model']['source'] = self._model.source
-        else:
-            payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
-            payload['properties']["raiPolicyName"] = "Microsoft.Default"
+
+        if not self._model.finetuned_from_proxy_step:
+            if self._model.is_finetuned:
+                payload['properties']['model']['source'] = self._model.source
+            else:
+                payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
+                payload['properties']["raiPolicyName"] = "Microsoft.Default"
+        
+        logger.info(f"sending payload: {payload}, is finetuned by proxy step : {self._model.finetuned_from_proxy_step}")
+        
         resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
         self._raise_if_not_success(resp)
-        logger.info("Calling(PUT) {} returned {} with content {}.".format(
-            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
+        logger.info("Calling(PUT) {} returned {} with content {}. original request {}".format(
+            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp), resp.request))
         while self.deployment_state() == ResourceState.NOT_READY:
             logger.info("Deployment is not ready yet, waiting for 30 seconds...")
             time.sleep(30)
