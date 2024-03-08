@@ -300,10 +300,10 @@ class TestGenAISparkPreprocessor:
         end_time = datetime(2024, 2, 3, 5)
         spark = self._init_spark()
 
-        input_data = spark.createDataFrame(input_data, input_schema)
+        input_data_df = spark.createDataFrame(input_data, input_schema)
         expected_data_df = spark.createDataFrame(expected_data, expected_schema)
 
-        actual_data_df = _filter_df_by_time_window(input_data, start_time, end_time)
+        actual_data_df = _filter_df_by_time_window(input_data_df, start_time, end_time)
 
         assert_spark_dataframe_equal(actual_data_df, expected_data_df)
 
