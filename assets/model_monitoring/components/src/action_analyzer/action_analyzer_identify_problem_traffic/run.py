@@ -264,11 +264,13 @@ def run():
     parser.add_argument("--completion_column_name", type=str, default=COMPLETION_COLUMN)
     args = parser.parse_args()
 
-    violated_metrics = get_violated_metrics(args.signal_output, args.signal_name)
+    violated_metrics = get_violated_metrics(args.signal_output, f"signals/{args.signal_name}")
     if violated_metrics == []:
         print("No violated metrics. No action will be generated.")
         save_empty_dataframe(get_output_schema(), args.data_with_groups)
         return
+
+    print("Violated metrics found: ", violated_metrics)
 
     signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
     print("gsq output df")
@@ -295,7 +297,11 @@ def run():
                           .when((col(score_name) < METRICS_VIOLATION_THRESHOLD) & (col(GROUP_LIST_COLUMN) == ""), default_bad_group_name) # noqa
                           .when((col(score_name) < METRICS_VIOLATION_THRESHOLD) & (col(GROUP_LIST_COLUMN) != ""), concat(col(GROUP_LIST_COLUMN), lit(TEXT_SPLITTER), lit(default_bad_group_name)))  # noqa
                           .otherwise(col(GROUP_LIST_COLUMN)))  # noqa
+        # rename to root question column
+        df = df.withColumn(ROOT_QUESTION_COLUMN, col(PROMPT_COLUMN)).drop(PROMPT_COLUMN)
 
+        print("Start to do semantic grouping")
+        df.show()
         pdf = df.toPandas()
         bad_answers = pdf[pdf[score_name] < METRICS_VIOLATION_THRESHOLD]
         bad_samples = bad_answers.sample(n=min(ACTION_ANALYZER_SAMPLE_SIZE, len(bad_answers)))
