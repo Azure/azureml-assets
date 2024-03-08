@@ -40,8 +40,8 @@ class UploadComponent:
             train_data, validation_data = self._get_train_validation_split_data(train_file_path)
 
         logger.debug(f"uploading training file : {train_file_name} and validation file : {validation_file_name}")
-        train_metadata = self.upload_file(train_file_name, train_data)
-        validation_metadata = self.upload_file(validation_file_name, validation_data)
+        train_metadata = self._upload_file(train_file_name, train_data)
+        validation_metadata = self._upload_file(validation_file_name, validation_data)
         upload_files_output : Dict[str, Dict[str, Any]] = {"train_file_id" : train_metadata.id,
                                                            "validation_file_id" : validation_metadata.id}
         return upload_files_output
