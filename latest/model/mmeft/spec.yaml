@@ -42,14 +42,11 @@ tags:
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 4
+version: 5
 description: |
-  Multimodal Early Fusion Transformer, MMEFT, is a transformer-based model tailored for processing both structured and unstructured data.
+  __Multimodal Early Fusion Transformer (MMEFT)__ is a transformer-based model tailored for processing both structured and unstructured data.
 
-  It can be used for multi-class and multi-label multimodal classification tasks, and is capable of handling datasets with features from diverse modes, including categorical, numerical, image, and text.
-  The MMEFT architecture is composed of embedding, fusion, aggregation, and output layers. The embedding layer produces independent non-contextual embeddings for features of varying modes. Then, the fusion Layer integrates the non-contextual embeddings to yield contextual multimodal embeddings. The aggregation layer consolidates these contextual multimodal embeddings into a single multimodal embedding vector. Lastly, the output Layer, processes the final multimodal embedding to generate the model's prediction based on task for which it is used. 
-  MMEFT uses BertTokenizer for text data embeddings, and considers 'openai/clip-vit-base-patch32' model from Hugging Face for image data embeddings.
-  This model is designed to offer a comprehensive approach to multimodal data, ensuring accurate and efficient classification across varied datasets.
+  It can be used for multi-class and multi-label multimodal classification tasks, and is capable of handling datasets with features from diverse modes, including categorical, numerical, image, and text. MMEFT architecture is composed of embedding, fusion, aggregation, and output layers. The embedding layer produces independent non-contextual embeddings for features of varying modes. Then, the fusion Layer integrates the non-contextual embeddings to yield contextual multimodal embeddings. The aggregation layer consolidates these contextual multimodal embeddings into a single multimodal embedding vector. Lastly, the output Layer, processes the final multimodal embedding to generate the model's prediction based on task for which it is used. MMEFT uses _bert-base-uncased_ from HuggingFace for text data embeddings, _resnet-18_ from HuggingFace for image data embeddings, _Feature Tokenizer + Transformer (FT-Transofrmer)_ from <a href='https://arxiv.org/pdf/2106.11959.pdf' target='_blank'>Revisiting Deep Learning Models for Tabular Data</a> for tabular data embeddings. This model is designed to offer a comprehensive approach to multimodal data, ensuring accurate and efficient classification across varied datasets.
 
   __NOTE__: We highly recommend to finetune the model on your dataset before deploying.
 
