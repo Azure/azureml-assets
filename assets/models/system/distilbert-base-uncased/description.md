@@ -81,6 +81,14 @@ be fine-tuned on a downstream task.
 
 Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2.
 
+# Model Evaluation samples
+
+Task | Use case | Dataset | Python sample (Notebook) | CLI with YAML
+|--|--|--|--|--|
+Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a>|<a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
+
+# Inference Samples
+
 Inference type|Python sample (Notebook)
 |--|--|
 Real time|[sdk-example.ipynb](https://aka.ms/sdk-notebook-examples)

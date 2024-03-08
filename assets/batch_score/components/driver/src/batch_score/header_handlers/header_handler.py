@@ -54,7 +54,15 @@ class HeaderHandler(ABC):
         """Get the quota audience."""
         return self._quota_audience
 
-    def _get_user_agent(self) -> str:
+    def get_user_agent(self) -> str:
+        """Get the user agent string."""
+        if not self._batch_pool and not self._quota_audience:
+            return 'BatchScore:{}/Run:{}{}'.format(
+                self._component_version,
+                os.environ.get(constants.OS_ENVIRON_RUN_ID, "DNE"),
+                f"/{self._user_agent_segment}" if self._user_agent_segment else ""
+            )
+
         workload_id = ":".join(
             [x for x in [self._batch_pool, self._quota_audience, self._user_agent_segment] if x is not None])
 
