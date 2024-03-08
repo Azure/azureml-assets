@@ -211,7 +211,7 @@ class TestGenAISparkPreprocessor:
 
     def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
-        spark = init_spark()
+        spark = self._init_spark()
         start_time = datetime(2024, 2, 5, 0,)
         end_time = datetime(2024, 2, 5, 1)
 
@@ -260,7 +260,7 @@ class TestGenAISparkPreprocessor:
             span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema,
             require_trace_data, data_window_start, data_window_end):
         """Test scenario where spans has real data."""
-        spark = init_spark()
+        spark = self._init_spark()
 
         # infer schema only when we have data.
         processed_spans_df = spark.createDataFrame(span_input_logs, span_input_schema)
