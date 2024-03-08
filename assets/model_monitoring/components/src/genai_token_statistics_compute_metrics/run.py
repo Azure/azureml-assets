@@ -24,8 +24,8 @@ def run():
     token_df = try_read_mltable_in_spark_with_error(args.production_dataset, "production_dataset")
 
     processor = MetricsProcessor()
-    processor.process(token_df)   
-    metrics_df = processor.metrics_generator() 
+    processor.process(token_df)
+    metrics_df = processor.metrics_generator()
     save_spark_df_as_mltable(metrics_df, args.signal_metrics)
     sample_date = processor.get_latest_run()
     save_spark_df_as_mltable(sample_date, args.samples_index)

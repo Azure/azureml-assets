@@ -9,7 +9,7 @@ from azure.ai.ml.dsl import pipeline
 from azure.ai.ml.exceptions import JobException
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_MODEL_TOKEN_STATS_SIGNAL_MONITOR,
-    DATA_AGGREGATED_TRACE_DATA  
+    DATA_AGGREGATED_TRACE_DATA
 )
 
 
@@ -67,4 +67,3 @@ class TestGenAiTSModelMonitor:
         )
 
         assert pipeline_job.status == "Completed"
-

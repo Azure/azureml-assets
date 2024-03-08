@@ -133,4 +133,3 @@ class MetricsProcessor:
         self.avg_prompt_count = self.total_prompt_count / self.total_requests if self.total_requests else 0
         self.avg_completion_count = self.total_completion_count / self.total_requests if self.total_requests else 0
         self.avg_total_count = self.total_token_count / self.total_requests if self.total_requests else 0
-

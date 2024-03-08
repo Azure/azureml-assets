@@ -519,6 +519,7 @@ def publish_generation_safety_signal_monitor_component(
         ml_client.components.create_or_update(load_component(spec_path))
         print(f"Successfully published {component['name']}.")
 
+
 @pytest.fixture(scope="session", autouse=True)
 def publish_model_token_stats_model_monitor_component(
     main_worker_lock,
