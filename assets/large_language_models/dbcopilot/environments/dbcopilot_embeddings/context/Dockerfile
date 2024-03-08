@@ -52,14 +52,14 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     ## Install dbcopilot
     pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.17-py3-none-any.whl && \
     ## Install other packages
-    pip install cryptography==42.0.0 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1 && \
+    pip install cryptography==42.0.2 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1 && \
     \
     ## Other environment
     /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate azureml-envs/prompt-flow/runtime && \
-    pip install cryptography==42.0.0 && \
+    pip install cryptography==42.0.2 && \
     conda activate /opt/miniconda && \
-    pip install cryptography==42.0.0 && \
+    pip install cryptography==42.0.2 && \
     conda deactivate" && \
 
 # Install certificates and other utilities
