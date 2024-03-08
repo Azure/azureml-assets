@@ -14,8 +14,12 @@ import sys
 import json
 from datetime import datetime
 from model_data_collector_preprocessor.spark_run import (
-    _mdc_uri_folder_to_raw_spark_df, _extract_data_and_correlation_id, _mdc_uri_folder_to_preprocessed_spark_df,
+    _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string
+)
+from model_data_collector_preprocessor.mdc_utils import (
+    _mdc_uri_folder_to_raw_spark_df,
+    _extract_data_and_correlation_id,
 )
 from model_data_collector_preprocessor.store_url import StoreUrl
 from shared_utilities.momo_exceptions import DataNotFoundError

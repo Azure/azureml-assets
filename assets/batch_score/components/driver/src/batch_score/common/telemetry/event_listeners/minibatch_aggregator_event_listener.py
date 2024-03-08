@@ -49,5 +49,9 @@ def _handle_generate_minibatch_summary(
         end_time=timestamp,
         output_row_count=output_row_count,
     )
+    endpoint_health_events = _minibatch_aggregator.summarize_endpoints(minibatch_id=minibatch_id)
     _minibatch_aggregator.clear(minibatch_id=minibatch_id)
+
     emit_event(batch_score_event=summary_event)
+    for health_event in endpoint_health_events:
+        emit_event(batch_score_event=health_event)
