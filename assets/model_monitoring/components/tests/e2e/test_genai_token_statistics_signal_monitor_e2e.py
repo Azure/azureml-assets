@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""This file contains e2e tests for the data drift model monitor component."""
+"""This file contains e2e tests for the genai token statistics model monitor component."""
 
 import pytest
 from azure.ai.ml import MLClient, Output

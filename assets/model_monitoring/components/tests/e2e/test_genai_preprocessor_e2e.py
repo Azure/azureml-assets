@@ -63,7 +63,7 @@ class TestGenAIPreprocessorE2E:
         "input_data, start_time, end_time",
         [
             # traditional model
-            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-29T00:00:00Z")
+            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-08T00:00:00Z")
         ]
     )
     def test_mdc_preprocessor_successful(
