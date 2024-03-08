@@ -47,10 +47,10 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate $AZUREML_CONDA_ENVIRONMENT_PATH" && \
     python -m pip install --upgrade pip &&\
-    pip install opentelemetry-instrumentation-django==0.42b0 promptflow-image-bundle[azure]==0.2.0 && \
     pip install -r requirements.txt &&\
+    pip install promptflow-image-bundle[azure]==0.2.0 && \
     ## Install dbcopilot
-    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.16-py3-none-any.whl && \
+    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.17-py3-none-any.whl && \
     ## Install other packages
     pip install cryptography==42.0.0 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1 && \
     \
