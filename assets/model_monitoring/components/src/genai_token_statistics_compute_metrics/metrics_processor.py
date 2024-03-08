@@ -60,7 +60,7 @@ class MetricsProcessor:
         """_summary_
 
         Returns:
-            metrics_data_df (DataFrame): metrics dataframe 
+        metrics_data_df (DataFrame): metrics dataframe
         """
         spark = init_spark()
         schema = StructType([
