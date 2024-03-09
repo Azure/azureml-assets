@@ -1,0 +1,4 @@
+paths:
+- pattern: azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/TestingTeamProjectRG/workspaces/shrsha-eastus-test/datastores/workspaceblobstore/paths/azureml/e216ef81-d6c7-409e-b085-02684e6f8832/aggregated_trace_data/*.parquet
+transformations:
+- read_parquet
