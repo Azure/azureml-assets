@@ -64,7 +64,8 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
     if has_duplicated_columns(df):
         raise InvalidInputError(
             "Expanding the input and output columms resulted in duplicate columns."
-            " This scenario is unsupported as of right now please clean up the production data logs"
+            f" The dataframe's columns are: {df.columns}."
+            " This scenario is unsupported as of right now. Please clean up the production data logs"
             " so there are no duplicate fields in 'input' and 'output' columns."
         )
 
