@@ -10,48 +10,11 @@ from pyspark.sql.types import (
 import pytest
 import os
 import sys
-import string
-import random
-import time
-import zipfile
 from datetime import datetime
 from model_data_collector_preprocessor.trace_aggregator import (
     process_spans_into_aggregated_traces,
 )
-import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
-
-
-@pytest.fixture(scope="session")
-def genai_zip_test_setup():
-    # TODO: move this zip utility to shared conftest later.
-    # Check gsq tests and mdc tests for possible duplications.
-    """Zip files in module_path to src.zip."""
-    momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
-    module_path = os.path.join(momo_work_dir, "src")
-    # zip files in module_path to src.zip
-    s = string.ascii_lowercase + string.digits
-    rand_str = '_' + ''.join(random.sample(s, 5))
-    time_str = time.strftime("%Y%m%d-%H%M%S") + rand_str
-    zip_path = os.path.join(module_path, f"src_{time_str}.zip")
-
-    zf = zipfile.ZipFile(zip_path, "w")
-    for dirname, subdirs, files in os.walk(module_path):
-        for filename in files:
-            abs_filepath = os.path.join(dirname, filename)
-            rel_filepath = os.path.relpath(abs_filepath, start=module_path)
-            print("zipping file:", rel_filepath)
-            zf.write(abs_filepath, arcname=rel_filepath)
-    zf.close()
-    # add files to zip folder
-    os.environ[SPARK_ZIP_PATH] = zip_path
-    print("zip path set in genai_preprocessor_test_setup: ", zip_path)
-
-    yield
-    # remove zip file
-    os.remove(zip_path)
-    # remove zip path from environment
-    os.environ.pop(SPARK_ZIP_PATH, None)
 
 
 @pytest.fixture(scope="module")
@@ -245,7 +208,7 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 6, 59, 0), "in", "out", _root_span_str_lookback],
     ]
 
-    def test_trace_aggregator_empty_root_span(self, genai_zip_test_setup, genai_preprocessor_test_setup):
+    def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
         spark = self._init_spark()
 
@@ -291,7 +254,7 @@ class TestGenAISparkPreprocessor:
         ]
     )
     def test_trace_aggregator(
-            self, genai_zip_test_setup, genai_preprocessor_test_setup,
+            self, code_zip_test_setup, genai_preprocessor_test_setup,
             span_input_logs, span_input_schema, expected_trace_logs, expected_trace_schema,
             require_trace_data, data_window_start, data_window_end):
         """Test scenario where spans has real data."""
