@@ -4,9 +4,12 @@ type: pipeline
 name: model_monitor_action_analyzer
 display_name: Model Monitor - Action Analyzer
 description: Generate and output actions to the default datastore.
-version: 0.0.1
+version: 0.0.2
 is_deterministic: true
 inputs:
+  signal_output:
+    type: uri_folder
+    description: signal output with summarize file
   signal_scored_data:
     type: mltable
     description: production data with metrics scores from monitoring signal
@@ -14,9 +17,6 @@ inputs:
     type: string
     optional: False
     description: signal name for action
-  signal_output:
-    type: uri_folder
-    description: signal output with summarize file
   model_deployment_name:
     type: string
     optional: False
@@ -45,14 +45,14 @@ outputs:
 jobs:
   identify_problem_traffic:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.1
+    component: azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.2
     inputs:
-      signal_scored_data:
-        type: mltable
-        path: ${{parent.inputs.signal_scored_data}}
       signal_output: 
         type: uri_folder
         path: ${{parent.inputs.signal_output}}
+      signal_scored_data:
+        type: mltable
+        path: ${{parent.inputs.signal_scored_data}}
       signal_name: ${{parent.inputs.signal_name}}
       workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
@@ -68,7 +68,7 @@ jobs:
       type: aml_token
   metrics_calculation:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.1
+    component: azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.2
     inputs:
       data_with_groups:
         type: mltable
@@ -85,7 +85,7 @@ jobs:
       type: aml_token
   correlation_test:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.1
+    component: azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.2
     inputs:
       data_with_action_metric_score:
         type: mltable
@@ -100,7 +100,7 @@ jobs:
       type: aml_token
   output_actions:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.1
+    component: azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.2
     inputs:
       action_data:
         type: mltable

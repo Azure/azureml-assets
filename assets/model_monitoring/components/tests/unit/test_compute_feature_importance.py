@@ -11,7 +11,9 @@ from feature_importance_metrics.compute_feature_importance import (
     CONTINUOUS_ERR)
 from feature_importance_metrics.feature_importance_utilities import mark_categorical_column
 from feature_importance_metrics.compute_feature_attribution_drift import (
-    drop_metadata_columns, calculate_attribution_drift)
+    calculate_attribution_drift,
+    validate_columns_match,
+    FEATURE_MISMATCH_ERR)
 import pytest
 import pandas as pd
 from shared_utilities import constants
@@ -19,6 +21,7 @@ from shared_utilities.momo_exceptions import InvalidInputError
 
 
 CLASSIFICATION = constants.CLASSIFICATION
+FEATURE_COLUMN = constants.FEATURE_COLUMN
 
 
 @pytest.fixture
@@ -64,6 +67,16 @@ def get_large_data():
             "zipcode": [10001] * 10003,
             "location": ["Seattle"] * 10003
         })
+
+
+def get_test_df():
+    """Return test data as pandas dataframe."""
+    data = {
+        "feature": ["col1", "col2", "col3", ""],
+        "metric_name": ["FeatureImportance", "FeatureImportance", "FeatureImportance", "RowCount"],
+        "metric_value": [1.2, 0, .1, 3]
+    }
+    return pd.DataFrame(data)
 
 
 @pytest.mark.unit
@@ -121,23 +134,6 @@ class TestComputeFeatureImportanceMetrics:
         task_type = determine_task_type("Regression", "TRANSACTIONAMOUNTUSD", get_fraud_data, categorical_features)
         assert task_type == "regression"
 
-    def test_drop_metadata_columns(self):
-        """Test drop columns when baseline and production do not match."""
-        baseline_data = {
-            "feature": ["col1", "col2", "col3"],
-            "metric_name": ["FeatureImportance", "FeatureImportance", "FeatureImportance"],
-            "metric_value": [.1, .4, .5]
-        }
-        baseline_dataframe = pd.DataFrame(baseline_data)
-        production_data = {
-            "feature": ["col1", "col2", "col4"],
-            "metric_name": ["FeatureImportance", "FeatureImportance", "FeatureImportance"],
-            "metric_value": [.1, .4, .5],
-        }
-        production_dataframe = pd.DataFrame(production_data)
-        result = drop_metadata_columns(baseline_dataframe, production_dataframe)
-        assert result["feature"].equals(pd.Series(["col1", "col2"]))
-
     def test_calculated_attribution_no_drift(self):
         """Test calculating ndcg metric with no drift."""
         baseline_data = {
@@ -171,6 +167,32 @@ class TestComputeFeatureImportanceMetrics:
         production_dataframe = pd.DataFrame(production_data)
         drift = calculate_attribution_drift(baseline_dataframe, production_dataframe)
         assert drift == 0.5135443210660507
+
+    def test_throw_on_columns_mismatch(self):
+        """Test throwing on column names mismatch."""
+        baseline_dataframe = get_test_df()
+        production_dataframe = get_test_df().replace({"col3": "col4"})
+        # setting diff in expected to empty since order can change from run to run
+        expected_err = FEATURE_MISMATCH_ERR.format(diff="")
+        with pytest.raises(InvalidInputError, match=expected_err):
+            validate_columns_match(baseline_dataframe, production_dataframe)
+        with pytest.raises(InvalidInputError, match=expected_err):
+            validate_columns_match(baseline_dataframe, production_dataframe)
+
+    def test_pass_on_matching_columns(self):
+        """Test passing on column names matching."""
+        baseline_dataframe = get_test_df()
+        production_dataframe = get_test_df()
+        validate_columns_match(baseline_dataframe, production_dataframe)
+
+    def test_pass_on_matching_columns_with_correlationid(self):
+        """Test passing on column names matching ignoring correlationid."""
+        baseline_dataframe = get_test_df()
+        baseline_dataframe = baseline_dataframe.loc[baseline_dataframe[FEATURE_COLUMN] != "col3"]
+        production_dataframe = get_test_df()
+        production_dataframe = production_dataframe.replace({"col3": "correlationid"})
+        validate_columns_match(baseline_dataframe, production_dataframe)
+        validate_columns_match(production_dataframe, baseline_dataframe)
 
     @pytest.mark.parametrize("column_name", ["fake_column", "", None])
     def test_check_df_has_target_column_with_error_throw_exception(self, get_fraud_data, column_name):
