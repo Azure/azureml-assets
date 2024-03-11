@@ -71,13 +71,19 @@ class SpanTreeNode:
 
     @property
     def input(self) -> str:
-        """Get the span's input."""
-        return self.get_node_attribute("input")  # type: ignore
+        """Get the span's input from the attributes field."""
+        if self.attributes is not None:
+            attribute_dict: dict = json.loads(self.attributes)
+            return attribute_dict.get("inputs", None)
+        return None  # type: ignore
 
     @property
     def output(self) -> str:
-        """Get the span's output."""
-        return self.get_node_attribute("output")  # type: ignore
+        """Get the span's output from the attributes field."""
+        if self.attributes is not None:
+            attribute_dict: dict = json.loads(self.attributes)
+            return attribute_dict.get("output", None)
+        return None  # type: ignore
 
     @property
     def status(self) -> str:
@@ -101,7 +107,12 @@ class SpanTreeNode:
 
     @classmethod
     def create_node_from_dict(cls, span_node_dict: dict) -> "SpanTreeNode":
-        """Parse dict representation to create a single SpanTree node."""
+        """Parse dict representation to create a single SpanTree node.
+
+        NOTE: Do not call this function to deserialize/parse nodes individually. Instead use the
+        `root_span` json string with `SpanTree.create_tree_from_json_string(root_span_string)`
+        to deserialize all nodes in a tree.
+        """
         if span_node_dict is None or span_node_dict == {}:
             raise InvalidInputError(
                 "Can not create SpanTreeNode from empty root_span." +
