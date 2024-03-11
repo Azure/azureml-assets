@@ -5,10 +5,13 @@
 from azureml.telemetry.logging_handler import get_appinsights_log_handler
 from azureml.telemetry import INSTRUMENTATION_KEY
 from azureml.exceptions import AzureMLException
-from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 from azureml.metrics.common.exceptions import MetricsException
+from azureml.evaluate.mlflow.exceptions import AzureMLMLFlowUserException
+from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
+from azureml._common._error_definition.system_error import ClientError
+
 from constants import TelemetryConstants
-from error_definitions import ModelEvaluationInternalError
+from error_definitions import ModelEvaluationInternalError, ModelPredictionUserError, ComputeMetricsUserError
 from run_utils import TestRun
 
 from typing import Tuple, Union
@@ -243,7 +246,7 @@ def _get_error_details(
     error_type = constants.ExceptionTypes.Unclassified
     exception_target = default_target
 
-    if isinstance(exception, (AzureMLException, MetricsException)):
+    if isinstance(exception, AzureMLException):
         try:
             serialized_ex = json.loads(exception._serialize_json())
             error = serialized_ex.get(
@@ -346,9 +349,13 @@ def get_azureml_exception(exception_cls, error_cls, exception, target=None, wrap
         wrap_azureml_ex (_type_): _description_
         message_kwargs (_type_): _description_
     """
-    if not wrap_azureml_ex and isinstance(exception, (AzureMLException, MetricsException)):
+    if not wrap_azureml_ex and isinstance(exception, AzureMLException):
         azureml_exception = exception
     else:
+        if isinstance(exception, MetricsException) and isinstance(error_cls(), ClientError):
+            error_cls = ComputeMetricsUserError
+        elif isinstance(exception, AzureMLMLFlowUserException):
+            error_cls = ModelPredictionUserError
         azureml_error = AzureMLError.create(error_cls, target=target, **message_kwargs)
 
         tb_obj = None

@@ -12,6 +12,7 @@ import argparse
 import json
 import openai
 import glob
+from typing import Union
 
 from constants import TASK, ForecastingConfigContract, ArgumentLiterals
 from workspace_utils import (get_connection_by_id_v2,
@@ -49,6 +50,9 @@ from error_definitions import (
     ArgumentParsingError,
     BadEvaluationConfigFile,
     BadEvaluationConfigParam,
+    EmptyInputData,
+    FilteringDataError,
+    BadFeatureColumnData,
 )
 from exceptions import (
     DataValidationException,
@@ -740,15 +744,98 @@ def read_multiple_files(path):
     return iter([data])
 
 
-def prepare_data(data, task, label_column_name=None, _has_multiple_output=False, extra_y_test_cols=None):
+def _check_if_non_empty(val: Union[str, list, int]) -> bool:
+    # For the supported tasks val will be the following
+    # Single Label - int, str
+    # Multi Label - int, str
+    # Regression - str, float
+    # NER, POS, Chunking - list
+    # Summarization, Translation - str
+    # QnA - data validation is `skipped`
+    if val is None:
+        return False
+    if isinstance(val, (str, list)):
+        return len(val) != 0
+
+    return True
+
+
+def _clean_and_validate_dataset(data, keep_columns, batch_size=None):
+    """
+    Clean the data for irrelevant columns and null values.
+
+    Args:
+        data: Incoming Data
+        keep_columns: Columns to extract from data
+
+    Returns: Data
+
+    """
+    try:
+        logger.info("Filtering data columns from input columns.")
+        data = data[keep_columns]
+    except Exception as e:
+        message_kwargs = {
+            "column": "input_columns and label_column",
+            "keep_columns": str(keep_columns),
+            "data_columns": str(list(data.columns))
+        }
+        exception = get_azureml_exception(DataValidationException, BadFeatureColumnData, e, **message_kwargs)
+        log_traceback(exception, logger)
+        raise exception
+
+    # remove the null values
+    pre_filter_examples = len(data)
+    if pre_filter_examples == 0:
+        exception = get_azureml_exception(DataValidationException, EmptyInputData, None)
+        log_traceback(exception, logger)
+        raise exception
+
+    logger.info("Filtering rows with 'None' values")
+    logger.info(f"Number of examples before filter: {pre_filter_examples}")
+
+    # TODO support batched=True and handle processing multiple examples in lambda
+    try:
+        data['to_filter'] = data.apply(lambda x: all(_check_if_non_empty(x[col]) for col in keep_columns), axis=1)
+        data = data.loc[data['to_filter']]
+        data = data.drop('to_filter', axis=1)
+        post_filter_examples = len(data)
+    except Exception as e:
+        exception = get_azureml_exception(DataLoaderException, FilteringDataError, e, error=repr(e))
+        log_traceback(exception, logger)
+        raise exception
+
+    logger.info(f"Number of examples after postprocessing: {post_filter_examples}")
+
+    # logging
+    if pre_filter_examples == post_filter_examples:
+        logger.info("None of the examples are filtered")
+    else:
+        logger.info(
+            f"{pre_filter_examples - post_filter_examples} examples are discarded "
+            f"as atleast one of the columns in the data is empty"
+        )
+    if post_filter_examples == 0 and batch_size is None:
+        message = "Failed to prepare data with error: No examples left after filtering."
+        exception = get_azureml_exception(DataValidationException, EmptyInputData, None)
+        log_traceback(exception, logger, message)
+        raise exception
+
+    return data
+
+
+def prepare_data(data, task, all_cols, label_column_name=None,
+                 _has_multiple_output=False, extra_y_test_cols=None, batch_size=None):
     """Prepare data.
 
     Args:
         data (_type_): _description_
         task (_type_): _description_
+        all_cols
         label_column_name (_type_, optional): _description_. Defaults to None.
         _has_multiple_output (bool, optional): _description_. Defaults to False.
         extra_y_test_cols (_type_, optional): _description_. Defaults to None.
+        batch_size
 
     Raises:
         ModelEvaluationException: _description_
@@ -757,7 +844,12 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False,
     Returns:
         _type_: _description_
     """
+    data = _clean_and_validate_dataset(data, all_cols, batch_size)
+
     X_test, y_test = data, None
+    if len(X_test) == 0:
+        return X_test, y_test
+
     if extra_y_test_cols is not None and label_column_name is not None:
         # IF extra_y_test_cols is not None, label_column_name should also be not None;
         # extra_y_test_cols is accepted only for text-gen
@@ -800,7 +892,15 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False,
         if isinstance(y_test.iloc[0], dict):
             # Extracting only the first one for now
             # TODO: Fix this post PrP
-            y_test = y_test.apply(lambda x: x["text"][0] if len(x["text"]) > 0 else "")
+            key = "text"
+            try:
+                y_test = y_test.apply(lambda x: x[key][0] if len(x[key]) > 0 else "")
+            except KeyError as e:
+                message = f"Ground Truths dict for Question-answering should contain key [{key}]. " + \
+                          f"Found: {str(list(y_test.iloc[0].keys()))}."
+                exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=message)
+                log_traceback(exception, logger, message)
+                raise exception
         elif isinstance(y_test.iloc[0], list) or isinstance(y_test.iloc[0], np.ndarray):
             y_test = y_test.apply(lambda x: x[0])
         if not isinstance(y_test.iloc[0], str):
@@ -900,7 +1000,7 @@ def read_config_str(conf_str):
 def parse_input_ground_truth_col(col_name):
     """Parse input ground truth columns."""
     extra_cols = None
-    if col_name and len(col_name) == 0:
+    if col_name is not None and len(col_name) == 0:
         col_name = None
     if col_name is not None:
         col_name, extra_cols = col_name[0].strip(), col_name[1:]
@@ -920,11 +1020,18 @@ def get_column_names(args, data):
         label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
         extra_y_test_cols = None
         if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
-            input_column_names.append(ImageDataFrameParams.IMAGE_META_INFO)
+            input_column_names.extend([ImageDataFrameParams.IMAGE_META_INFO, ImageDataFrameParams.TEXT_PROMPT])
     else:
         # If input_column_names are not sent as argument we are retaining all columns
         label_column_name = args[ArgumentLiterals.LABEL_COLUMN_NAME]
-        label_column_name, extra_y_test_cols = parse_input_ground_truth_col(label_column_name)
+        if label_column_name is None:
+            label_column_name = []
+        extra_y_test_cols = args[ArgumentLiterals.CONFIG].get(ArgumentLiterals.EXTRA_Y_TEST_COLS, None)
+        if extra_y_test_cols is not None:
+            extra_y_test_cols = extra_y_test_cols.split(',')
+        else:
+            extra_y_test_cols = []
+        label_column_name, extra_y_test_cols = parse_input_ground_truth_col(label_column_name + extra_y_test_cols)
 
         input_column_names = args[ArgumentLiterals.INPUT_COLUMN_NAMES]
         if input_column_names is None or len(input_column_names) == 0:

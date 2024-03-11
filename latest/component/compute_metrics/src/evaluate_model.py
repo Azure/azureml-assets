@@ -36,7 +36,7 @@ from utils import (
     filter_pipeline_params,
     fetch_compute_metrics_args
 )
-from validation import _clean_and_validate_dataset, validate_model_prediction_args, validate_common_args, validate_Xy
+from validation import validate_model_prediction_args, validate_common_args, validate_Xy
 from task_factory.base import BasePredictor
 
 custom_dimensions.app_name = constants.TelemetryConstants.EVALUATE_MODEL_NAME
@@ -125,9 +125,8 @@ class EvaluateModel(BasePredictor):
         if label_column_name is not None:
             all_cols += [label_column_name]
         data = read_model_prediction_data(test_data, self.task, self.batch_size)
-        data = map(_clean_and_validate_dataset, data, repeat(all_cols),
-                   repeat(self.batch_size))
-        data = map(prepare_data, data, repeat(self.task), repeat(label_column_name), repeat(self._has_multiple_output))
+        data = map(prepare_data, data, repeat(self.task), repeat(all_cols), repeat(label_column_name),
+                   repeat(False), repeat(list()), repeat(self.batch_size))
         return data  # X_test, y_test
 
     def score(self, data, label_column_name):

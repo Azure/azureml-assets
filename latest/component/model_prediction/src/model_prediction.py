@@ -14,7 +14,7 @@ from itertools import repeat, chain
 from constants import ArgumentLiterals
 
 from exceptions import (
-    ModelValidationException,
+    ModelLoadingException,
     DataLoaderException,
     PredictException,
     DataValidationException,
@@ -22,7 +22,7 @@ from exceptions import (
 )
 from error_definitions import (
     ModelPredictionInternalError,
-    ModelPredictionValueError,
+    ModelPredictionUserError,
     BadModel,
     BadInputData,
     EmptyInputData,
@@ -41,7 +41,6 @@ from utils import (
     filter_pipeline_params,
 )
 from validation import (
-    _clean_and_validate_dataset,
     validate_model_prediction_args,
     validate_common_args,
     validate_and_get_columns,
@@ -100,7 +99,7 @@ class ModelPredictionRunner:
                 logger.info(
                     f"Model loaded, Device: {getattr(self.predictor.model, 'device', 'not present')}")
             except Exception as e:
-                exception = get_azureml_exception(ModelValidationException, BadModel, e, error=repr(e))
+                exception = get_azureml_exception(ModelLoadingException, BadModel, e, error=repr(e))
                 log_traceback(exception, logger)
                 raise exception
 
@@ -124,9 +123,8 @@ class ModelPredictionRunner:
             all_cols += self.extra_y_test_cols
 
         data = read_model_prediction_data(test_data, self.task, self.batch_size)
-        data = map(_clean_and_validate_dataset, data, repeat(all_cols), repeat(self.batch_size))
-        data = map(prepare_data, data, repeat(self.task), repeat(self.label_column_name),
-                   repeat(False), repeat(self.extra_y_test_cols))
+        data = map(prepare_data, data, repeat(self.task), repeat(all_cols), repeat(self.label_column_name),
+                   repeat(False), repeat(self.extra_y_test_cols), repeat(self.batch_size))
         return data  # X_test, y_test
 
     def load_tokenizer(self, token_counts_enabled):
@@ -169,33 +167,25 @@ class ModelPredictionRunner:
         enable_character_counts = self.config.get("char_count_per_sample", False)
         tokenizer = self.load_tokenizer(enable_token_counts)
 
-        for idx, (X_test, y_test_batch) in enumerate(data):
-            logger.info("batch: " + str(idx))
-            if len(X_test) == 0:
-                logger.info("No samples in batch. Skipping.")
-                continue
+        try:
+            for idx, (X_test, y_test_batch) in enumerate(data):
+                logger.info("batch: " + str(idx))
+                if len(X_test) == 0:
+                    logger.info("No samples in batch. Skipping.")
+                    continue
 
-            y_transformer = None
+                y_transformer = None
 
-            pred_probas_batch = None
-            pipeline_params = filter_pipeline_params(self.config, self.predictor.model_flavor)
-            torch_error_message = "Model prediction Failed.\nPossible Reason:\n" \
-                                  "1. Your input text exceeds max length of model.\n" \
-                                  "\t\tYou can either keep truncation=True in tokenizer while logging model.\n" \
-                                  "\t\tOr you can pass tokenizer_config in evaluation_config.\n" \
-                                  "2. Your tokenizer's vocab size doesn't match with model's vocab size.\n" \
-                                  "\t\tTo fix this check your model/tokenizer config.\n" \
-                                  "3. If it is Cuda Assertion Error, check your test data." \
-                                  "Whether that input can be passed directly to model or not."
+                pred_probas_batch = None
+                pipeline_params = filter_pipeline_params(self.config, self.predictor.model_flavor)
 
-            def add_to_predict_params_if_applicable(dict_to_add, predict_params):
-                if self.predictor.model_flavor != constants.MODEL_FLAVOR.TRANSFORMERS:
-                    predict_params = {**predict_params, **dict_to_add}
-                return predict_params
+                def add_to_predict_params_if_applicable(dict_to_add, predict_params):
+                    if self.predictor.model_flavor != constants.MODEL_FLAVOR.TRANSFORMERS:
+                        predict_params = {**predict_params, **dict_to_add}
+                    return predict_params
 
-            predict_params = add_to_predict_params_if_applicable(
-                {"y_transformer": y_transformer, "multilabel": self.multilabel}, {})
-            try:
+                predict_params = add_to_predict_params_if_applicable(
+                    {"y_transformer": y_transformer, "multilabel": self.multilabel}, {})
                 if self.task == constants.TASK.TRANSLATION:
                     source_lang = self.config.get("source_lang", None)
                     target_lang = self.config.get("target_lang", None)
@@ -331,18 +321,18 @@ class ModelPredictionRunner:
                     y_test["image_meta_info"] = X_test["image_meta_info"]
 
                 logger.info(f"Latency (ms) for this batch: {latency_ms}")
-            except ValueError as e:
-                exception = get_azureml_exception(PredictException, ModelPredictionValueError, e, error=repr(e))
+        except ValueError as e:
+            exception = get_azureml_exception(PredictException, ModelPredictionUserError, e, error=repr(e))
+            log_traceback(exception, logger)
+            raise exception
+        except Exception as e:
+            exception = get_azureml_exception(PredictException, ModelPredictionInternalError, e,
+                                              wrap_azureml_ex=False, error=repr(e))
+            if isinstance(e, (IndexError, RuntimeError)):
+                log_traceback(exception, logger, constants.ErrorStrings.TorchErrorMessage)
+            else:
                 log_traceback(exception, logger)
-                raise exception
-            except Exception as e:
-                exception = get_azureml_exception(PredictException, ModelPredictionInternalError, e,
-                                                  wrap_azureml_ex=False, error=repr(e))
-                if isinstance(e, (IndexError, RuntimeError)):
-                    log_traceback(exception, logger, torch_error_message)
-                else:
-                    log_traceback(exception, logger)
-                raise exception
+            raise exception
 
         if self.batch_size is not None and len(predictions) == 0:
             exception = get_azureml_exception(DataValidationException, EmptyInputData, None)

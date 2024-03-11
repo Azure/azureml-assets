@@ -21,7 +21,6 @@ from error_definitions import (
 from constants import (
     TASK,
     ForecastingConfigContract,
-    ForecastColumns,
     TextGenerationColumns,
     DataFrameParams,
     OpenAIConstants,
@@ -709,8 +708,8 @@ class ForecastingEvaluator(Evaluator):
             X_test=X_test,
             **kwargs
         )
-        X_test[ForecastColumns._ACTUAL_COLUMN_NAME] = y_test
-        X_test[ForecastColumns._FORECAST_COLUMN_NAME] = y_pred
+        # X_test[ForecastColumns._ACTUAL_COLUMN_NAME] = y_test
+        # X_test[ForecastColumns._FORECAST_COLUMN_NAME] = y_pred
         return metrics
 
 

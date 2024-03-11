@@ -193,8 +193,9 @@ def get_classification_dataset(
     for index in range(len(test_dataset_wrapper)):
         image_path = test_dataset_wrapper.get_image_full_path(index)
         if is_valid_image(image_path):
+            # sending image_paths instead of base64 encoded string as oss flavor doesnt take bytes as input.
             df = df.append({
-                ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
+                ImageDataFrameParams.IMAGE_COLUMN_NAME: image_path,
                 ImageDataFrameParams.LABEL_COLUMN_NAME: test_dataset_wrapper.label_at_index(index)
             }, ignore_index=True)
 
@@ -266,7 +267,8 @@ def get_object_detection_dataset(
             df = df.append({
                 ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
                 ImageDataFrameParams.LABEL_COLUMN_NAME: label,
-                ImageDataFrameParams.IMAGE_META_INFO: image_meta_info
+                ImageDataFrameParams.IMAGE_META_INFO: image_meta_info,
+                ImageDataFrameParams.TEXT_PROMPT: ". ".join(test_dataset.classes)
             }, ignore_index=True)
 
     logger.info(f"Total number of valid images: {counter}")

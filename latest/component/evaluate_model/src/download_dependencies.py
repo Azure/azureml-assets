@@ -9,7 +9,7 @@ from logging_utilities import (
     custom_dimensions, get_logger, log_traceback, swallow_all_exceptions, get_azureml_exception
 )
 from azureml.telemetry.activity import log_activity
-from error_definitions import DownloadDependenciesError
+from error_definitions import DownloadDependenciesError, InvalidModel
 from exceptions import ModelValidationException
 from validation import _validate_model
 from constants import ArgumentLiterals, TelemetryConstants
@@ -36,18 +36,23 @@ def main():
 
     _validate_model(args)
 
-    reqs_file = _get_model_dependencies(args[ArgumentLiterals.MLFLOW_MODEL], "pip")
-
-    ignore_deps = [
-        "mlflow",
-        "azureml_evaluate_mlflow",
-        "azureml-evaluate-mlflow",
-        "azureml_metrics",
-        "azureml-metrics"
-    ]
-    install_deps = []
     with log_activity(logger, TelemetryConstants.DOWNLOAD_MODEL_DEPENDENCIES,
                       custom_dimensions=custom_dims_dict):
+        try:
+            reqs_file = _get_model_dependencies(args[ArgumentLiterals.MLFLOW_MODEL], "pip")
+        except Exception as e:
+            exception = get_azureml_exception(ModelValidationException, InvalidModel, e)
+            log_traceback(exception, logger)
+            raise exception
+
+        ignore_deps = [
+            "mlflow",
+            "azureml_evaluate_mlflow",
+            "azureml-evaluate-mlflow",
+            "azureml_metrics",
+            "azureml-metrics"
+        ]
+        install_deps = []
         with open(reqs_file, "r") as f:
             for line in f.readlines():
                 if any(dep in line.strip() for dep in ignore_deps):

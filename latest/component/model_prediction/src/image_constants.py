@@ -28,6 +28,7 @@ class ImageDataFrameParams:
     LABEL_COLUMN_NAME = "label"
     IMAGE_META_INFO = "image_meta_info"
     PREDICTIONS = "predictions"
+    TEXT_PROMPT = "text_prompt"
 
 
 class ODISLiterals:

@@ -73,9 +73,11 @@ class FillMask(PredictWrapper):
         #     X_test = X_test[X_test.columns[0]].to_numpy()
         try:
             y_pred = self.model.predict(X_test, **kwargs)
-        except TypeError:
+        except TypeError as e:
+            logger.warning(f"TypeError exception raised. Reason: {e}")
             y_pred = self.model.predict(X_test)
-        except RuntimeError:
+        except RuntimeError as e:
+            logger.warning(f"RuntimeError exception raised. Reason: {e}")
             return self.handle_device_failure(X_test, **kwargs)
         y_pred = self.return_masked_text(X_test, y_pred)
         return y_pred
