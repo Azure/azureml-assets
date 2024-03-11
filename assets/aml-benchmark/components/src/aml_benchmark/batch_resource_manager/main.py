@@ -412,7 +412,7 @@ def main(
             with open(finetuned_model_metadata) as f:
                 model_metadata = json.load(f)
                 model = model_metadata["finetuned_model_id"]
-  
+
         online_model = OnlineEndpointModel(
             model, model_version, model_type, endpoint_name, is_finetuned_model,
             finetuned_subscription_id, finetuned_resource_group, finetuned_workspace,
