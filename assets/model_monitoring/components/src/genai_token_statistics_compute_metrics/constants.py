@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 INCLUDE_SPAN_TYPE = ["LLM", "Embedding"]
 
 # Constants for metric count
