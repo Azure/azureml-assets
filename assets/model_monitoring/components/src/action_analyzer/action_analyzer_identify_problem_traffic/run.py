@@ -276,6 +276,8 @@ def run():
                               .withColumn(GROUP_LIST_COLUMN, lit("")) \
                               .withColumn(VIOLATED_METRICS_COLUMN, lit(""))
 
+    # rename to root question column
+    df = df.withColumn(ROOT_QUESTION_COLUMN, col(PROMPT_COLUMN)).drop(PROMPT_COLUMN)
     # seperate bad groups with semantic topic
     for metrics in violated_metrics:
         print("======Current metrics=====")
@@ -293,8 +295,6 @@ def run():
                           .when((col(score_name) < METRICS_VIOLATION_THRESHOLD) & (col(GROUP_LIST_COLUMN) == ""), default_bad_group_name) # noqa
                           .when((col(score_name) < METRICS_VIOLATION_THRESHOLD) & (col(GROUP_LIST_COLUMN) != ""), concat(col(GROUP_LIST_COLUMN), lit(TEXT_SPLITTER), lit(default_bad_group_name)))  # noqa
                           .otherwise(col(GROUP_LIST_COLUMN)))  # noqa
-        # rename to root question column
-        df = df.withColumn(ROOT_QUESTION_COLUMN, col(PROMPT_COLUMN)).drop(PROMPT_COLUMN)
 
         print("Start to do semantic grouping")
         df.show()

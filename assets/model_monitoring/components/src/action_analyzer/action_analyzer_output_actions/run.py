@@ -21,6 +21,7 @@ from shared_utilities.constants import (
     INDEX_SCORE_COLUMN,
     INDEX_ID_COLUMN,
     INDEX_CONTENT_COLUMN,
+    INDEX_SCORE_LLM_COLUMN,
     INDEX_ACTION_TYPE,
     ACTION_DESCRIPTION,
     TEXT_SPLITTER,
@@ -99,7 +100,7 @@ def generate_samples(action_df, is_negative_sample):
     samples = []
     # sort the good samples by index score
     if not is_negative_sample:
-        action_df = action_df.sort([INDEX_SCORE_COLUMN], ascending=False)
+        action_df = action_df.sort([INDEX_SCORE_LLM_COLUMN], ascending=False)
     sample_data = action_df.rdd.collect()
     for i in range(len(sample_data)):
         if i >= MAX_SAMPLE_SIZE and not is_negative_sample:
@@ -108,7 +109,7 @@ def generate_samples(action_df, is_negative_sample):
             "Question": sample_data[i][ROOT_QUESTION_COLUMN],
             "Answer": sample_data[i][COMPLETION_COLUMN],
             "Topic": sample_data[i][TOPIC_LIST_COLUMN].replace(TEXT_SPLITTER, ","),
-            "LookupScore": sample_data[i][INDEX_SCORE_COLUMN],
+            "LookupScore": sample_data[i][INDEX_SCORE_LLM_COLUMN],
             "DebuggingInfo": sample_data[i][ROOT_SPAN_COLUMN]
         }
         if is_negative_sample:

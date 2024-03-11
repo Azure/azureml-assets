@@ -157,6 +157,7 @@ MEAN_THRESHOLD = 3
 INDEX_ACTION_TYPE = "Index Action"
 ACTION_DESCRIPTION = "Poor answers are caused by poor indexing, please update the doc index with id "
 MAX_SAMPLE_SIZE = 20
+DEFAULT_RETRIEVAL_SCORE = 0
 
 
 # util

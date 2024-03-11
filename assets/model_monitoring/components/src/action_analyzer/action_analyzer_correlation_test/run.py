@@ -11,6 +11,7 @@ from pyspark.sql.types import (
     StringType,
     FloatType
 )
+from pyspark.sql.functions import col
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     save_spark_df_as_mltable,
@@ -22,11 +23,13 @@ from shared_utilities.constants import (
     TEXT_SPLITTER,
     PROMPT_COLUMN,
     INDEX_SCORE_COLUMN,
+    INDEX_SCORE_LLM_COLUMN,
     INDEX_ID_COLUMN,
     BAD_GROUP_COLUMN,
     GOOD_GROUP_COLUMN,
     CONFIDENCE_SCORE_COLUMN,
-    GROUP_LIST_COLUMN
+    GROUP_LIST_COLUMN,
+    DEFAULT_RETRIEVAL_SCORE
 )
 import statistics
 from scipy.stats import mannwhitneyu
@@ -72,10 +75,10 @@ def generate_action_rows(pdf, index_set, group_set):
                 print(f"Skip {good_group_name}, only do t-test for bad group")
                 continue
             index_df = pdf[pdf[INDEX_ID_COLUMN] == index]
-            good_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][INDEX_SCORE_COLUMN]  # noqa: E501
-            bad_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][INDEX_SCORE_COLUMN]
-            good_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][[PROMPT_COLUMN, INDEX_SCORE_COLUMN]]  # noqa: E501
-            bad_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][[PROMPT_COLUMN, INDEX_SCORE_COLUMN]]  # noqa: E501
+            good_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][INDEX_SCORE_LLM_COLUMN]  # noqa: E501
+            bad_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][INDEX_SCORE_LLM_COLUMN]
+            good_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][[PROMPT_COLUMN, INDEX_SCORE_LLM_COLUMN]]  # noqa: E501
+            bad_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][[PROMPT_COLUMN, INDEX_SCORE_LLM_COLUMN]]  # noqa: E501
             print("good answer questions: ")
             print(good_answer_names)
             print("bad answer questions: ")
@@ -83,7 +86,7 @@ def generate_action_rows(pdf, index_set, group_set):
             t_stat, p_value = perform_ttest(good_answer_scores, bad_answer_scores)
             bad_mean = statistics.mean(bad_answer_scores)
             print("Mean value of bad group: ", bad_mean)
-            if t_stat > 0 and p_value < P_VALUE_THRESHOLD:
+            if t_stat > 0 and p_value < P_VALUE_THRESHOLD and bad_mean < 3.0:
                 print("Generating action for topic: ", topic)
                 # entry: [index_id, bad_group, good_group, confidence_score]
                 entry = [
@@ -108,7 +111,7 @@ def perform_ttest(good_answer_scores, bad_answer_scores):
     # Perform Fisher's Exact Test
     t_stat3, p_value3 = stats.fisher_exact(table)
     print(f"Fisher's Exact Tes odds_ratio: {t_stat3}, P-value: {p_value3}")
-    return t_stat1, p_value1
+    return t_stat2, p_value2
 
 
 def get_unique_group_and_index(data_with_action_metric_score_df):
@@ -144,6 +147,7 @@ def run():
     print(group_set)
     print("===All indexes===")
     print(index_set)
+    data_with_action_metric_score_df = data_with_action_metric_score_df.filter(col(INDEX_SCORE_LLM_COLUMN) > DEFAULT_RETRIEVAL_SCORE)
     pdf = data_with_action_metric_score_df.toPandas()
     print(pdf)
     action_rows = generate_action_rows(pdf, index_set, group_set)
