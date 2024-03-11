@@ -6,12 +6,12 @@
 from urllib.parse import urlparse
 import os
 import re
-from typing import Union
+from typing import Union, Tuple
 from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
 from azure.storage.filedatalake import FileSystemClient
-from azureml.core import Workspace, Run
+from azureml.core import Workspace, Run, Datastore
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -41,6 +41,24 @@ class StoreUrl:
         """
         scheme = "abfss" if (not self.is_local_path()) and self._is_secure() else "abfs"
         return self._get_url(scheme=scheme, store_type="dfs", relative_path=relative_path)
+
+    def get_azureml_url(self, relative_path: str = None) -> str:
+        """
+        Get azureml url for the store url.
+
+        :param relative_path: relative path to the base path
+        :return: azureml url
+        """
+        if self._datastore is None:
+            raise InvalidInputError(f"{self._base_url} is not an azureml url.")
+        url = (f"azureml://subscriptions/{self._datastore.workspace.subscription_id}/resourceGroups"
+               f"/{self._datastore.workspace.resource_group}/workspaces/{self._datastore.workspace.name}"
+               f"/datastores/{self._datastore.name}/paths")
+        if self.path:
+            url = f"{url}/{self.path}"
+        if relative_path:
+            url = f"{url}/{relative_path.lstrip('/')}"
+        return url
 
     def _get_url(self, scheme=None, store_type=None, relative_path=None) -> str:
         if not self.account_name:
@@ -131,9 +149,11 @@ class StoreUrl:
         """Check if the store url is a local path."""
         if not self._base_url:
             return False
-        return os.path.isdir(self._base_url) or os.path.isfile(self._base_url) or self._base_url.startswith("file://")\
-            or self._base_url.startswith("/") or self._base_url.startswith(".") \
-            or re.match(r"^[a-zA-Z]:[/\\]", self._base_url)
+        if os.path.isdir(self._base_url) or os.path.isfile(self._base_url) \
+                or re.match(r"^[a-zA-Z]:[/\\]", self._base_url):
+            return True
+        url = urlparse(self._base_url)
+        return url.scheme is None or url.scheme == "file" or url.scheme == ""
 
     def read_file_content(self, relative_path: str = None,
                           credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None) -> str:
@@ -207,7 +227,9 @@ class StoreUrl:
             else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
-                self._datastore = ws.datastores.get(datastore_name)
+                self._datastore = Datastore.get(ws, datastore_name)
+                if self._datastore is None:
+                    raise InvalidInputError(f"Datastore {datastore_name} not found in the workspace.")
                 datastore_type = self._datastore.datastore_type
                 if datastore_type not in ["AzureBlob", "AzureDataLakeGen2"]:
                     raise InvalidInputError("Only Azure Blob and Azure Data Lake Gen2 are supported, "
@@ -223,7 +245,7 @@ class StoreUrl:
             self.path = url.path.strip("/")
             self._datastore = None  # indicator of no credential
 
-    def _get_datastore_and_path_from_azureml_path(self) -> (str, str):
+    def _get_datastore_and_path_from_azureml_path(self) -> Tuple[str, str]:
         """Get datastore name and path from azureml path."""
         pattern = r"azureml://(subscriptions/([^/]+)/resource[gG]roups/([^/]+)/workspaces/([^/]+)/)?datastores/(?P<datastore_name>[^/]+)/paths/(?P<path>.+)"  # noqa: E501
         matches = re.match(pattern, self._base_url)

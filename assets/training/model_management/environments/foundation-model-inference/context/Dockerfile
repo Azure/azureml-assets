@@ -1,30 +1,40 @@
 FROM nvidia/cuda:12.1.0-devel-ubuntu20.04
 
-WORKDIR /
-
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Etc/UTC \
     DEBIAN_FRONTEND=noninteractive
-
-# Install Python 3.10 and pip
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
-RUN apt install python3.10-dev python3.10-distutils -y
-RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python
 RUN apt install git -y
 
-# Install pip for Python 3.10
+ENV MINICONDA_VERSION py310_23.10.0-1
+ENV PATH /opt/miniconda/bin:$PATH
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends wget runit && \
-    wget -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py' && \
-    python3.10 get-pip.py && \
-    rm get-pip.py
+    apt-get install -y --no-install-recommends wget runit
+RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
+    conda update --all -c conda-forge -y && \
+    conda clean -ay && \
+    rm -rf /opt/miniconda/pkgs && \
+    rm /tmp/miniconda.sh && \
+    find / -type d -name __pycache__ | xargs rm -rf
 
-# Set Python 3.10 as the default python and pip version
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 && \
-    update-alternatives --install /usr/bin/pip pip /usr/local/bin/pip3.10 1
+ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/default
 
-RUN pip3 install torch==2.1.1 --index-url https://download.pytorch.org/whl/cu121
+# Create conda environment with py310
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+    python=3.10 \
+    -c conda-forge 
+
+ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+
+ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
+ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
+
+WORKDIR /
+
+# Needed for megablocks
+RUN pip install torch~=2.1.2 --index-url https://download.pytorch.org/whl/cu121
 
 COPY . .
 
@@ -33,8 +43,7 @@ ARG torch_cuda_arch_list='7.0 7.5 8.0 8.6 8.9 9.0+PTX'
 ENV TORCH_CUDA_ARCH_LIST=${torch_cuda_arch_list}
 RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd6
 
-RUN pip3 install --no-cache-dir -e .
-RUN pip3 list    # show installed packages
+RUN pip install --no-cache-dir -e .
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

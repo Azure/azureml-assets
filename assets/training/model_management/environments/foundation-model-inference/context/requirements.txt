@@ -1,18 +1,20 @@
 deepspeed==0.12.5
 deepspeed-mii==0.1.3
-vllm==0.2.4
+vllm==0.2.7
 deepspeed-kernels==0.0.1.dev1698255861
 diffusers==0.23.0
 pandas~=2.1.4
-transformers~=4.36.0
+transformers~=4.38.0
 aiolimiter~=1.1.0
 azure-ai-contentsafety==1.0.0b1
 azure-ai-ml=={{latest-pypi-version}}
 azure-identity=={{latest-pypi-version}}
 azureml-ai-monitoring==0.1.0b4
-azureml-inference-server-http=={{latest-pypi-version}}
+# pydantic conflict resolution
+azureml-inference-server-http==0.7.7
 azureml-mlflow=={{latest-pypi-version}}
-cryptography~=41.0.7
+cryptography~=42.0.4
 certifi==2023.11.17
 requests~=2.31.0
 aiohttp~=3.9.1
+torch~=2.1.2

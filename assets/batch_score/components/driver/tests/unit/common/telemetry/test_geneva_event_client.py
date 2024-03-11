@@ -124,6 +124,8 @@ def test_generate_extension_fields_minibatch_completed(mock_import_module, make_
         'scoring_url': TEST_SCORING_URI,
         'batch_pool': 'test_pool',
         'quota_audience': 'test_audience',
+        'model_name': 'test_model_name',
+        'retry_count': '0',
 
         'total_prompt_tokens': '50',
         'total_completion_tokens': '1000',
@@ -181,4 +183,5 @@ def test_generate_extension_fields_minibatch_started(mock_import_module, make_ba
         'batch_pool': 'test_pool',
         'quota_audience': 'test_audience',
         'input_row_count': '10',
+        'retry_count': '0',
     }

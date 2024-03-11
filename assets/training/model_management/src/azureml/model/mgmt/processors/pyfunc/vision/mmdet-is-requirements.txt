@@ -9,3 +9,4 @@ accelerate==0.25.0
 albumentations==1.3.0
 scikit-image==0.19.3
 simplification==0.7.10
+fairscale==0.4.13

@@ -55,7 +55,7 @@ class EndpointDataPreparer:
                     raise BenchmarkUserException._with_error(
                         AzureMLError.create(
                             BenchmarkUserError,
-                            error_details=f"Column {column} doesn't exist. \
+                            error_details=f"Column {column} specified as additional_column doesn't exist. \
                                 Please check your data before submitting again.")
                         )
 
@@ -75,13 +75,16 @@ class EndpointDataPreparer:
                     output_payload_dict["input_data"]["input_string"]
                 ))
         if self._model.is_aoai_model():
-            if "messages" not in output_payload_dict:
-                errors.append(
-                    "`messages` should be presented in the payload json.")
-            elif not isinstance(output_payload_dict['messages'], list):
-                errors.append(
-                    "`messages` field in the payload should be a list."
-                )
+            if "prompt" in output_payload_dict:
+                if not isinstance(output_payload_dict["prompt"], str):
+                    errors.append("`prompt` should be of type string.")
+            elif "messages" in output_payload_dict:
+                if not isinstance(output_payload_dict['messages'], list):
+                    errors.append(
+                        "`messages` field in the payload should be a list."
+                    )
+            else:
+                errors.append("`messages` or `prompt` should be present in the payload json.")
         if self._model.is_vision_oss_model():
             if "input_data" not in output_payload_dict:
                 errors.append("`input_data` should be presented in the payload json.")
