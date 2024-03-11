@@ -2,15 +2,6 @@ FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:{{latest-ima
 
 USER root
 
-# Set the shared environment path
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/dbcopilot
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
-# Create conda environment
-COPY conda_dependencies.yaml .
-RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
-    rm conda_dependencies.yaml && \
-    conda clean -a -y
-
 # Install necessary tools
 RUN apt-get update && apt-get install -y \
     curl \
@@ -40,20 +31,36 @@ RUN ACCEPT_EULA=Y apt-get install -y msodbcsql18
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
 
-RUN python -m pip install --upgrade pip
-
+# Set the shared environment path
+ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/dbcopilot
+ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+# Copy the conda environment file
+COPY conda_dependencies.yaml .
 COPY ./requirements.txt ./
-RUN pip install opentelemetry-instrumentation-django==0.42b0 promptflow-image-bundle[azure]==0.2.0 && \
-    pip install -r requirements.txt
 
-## Install dbcopilot
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.16-py3-none-any.whl
-
-RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
+# Create conda environment
+RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
+    rm conda_dependencies.yaml && \
+    conda clean -a -y && \
+    \
+    ## dbcopilot environment
+    /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
+    conda activate $AZUREML_CONDA_ENVIRONMENT_PATH" && \
+    python -m pip install --upgrade pip &&\
+    pip install -r requirements.txt &&\
+    pip install promptflow-image-bundle[azure]==0.2.0 && \
+    ## Install dbcopilot
+    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.17-py3-none-any.whl && \
+    ## Install other packages
+    pip install cryptography==42.0.4 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1 && \
+    \
+    ## Other environment
+    /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate azureml-envs/prompt-flow/runtime && \
-    pip install cryptography==42.0.0 && \
+    pip install cryptography==42.0.4 && \
+    conda activate /opt/miniconda && \
+    pip install cryptography==42.0.4 && \
     conda deactivate" && \
-    pip install cryptography==42.0.0 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1
 
 # Install certificates and other utilities
 RUN set -eux; \
