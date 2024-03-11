@@ -72,7 +72,7 @@ class TestGenAISparkPreprocessor:
     ])
 
     _span_log_data = [
-        ['{"inputs":"in", "output":"out"}']+
+        ['{"inputs":"in", "output":"out"}'] +
         [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", None] +
         ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
         ['{"inputs":"in", "output":"out"}'] +

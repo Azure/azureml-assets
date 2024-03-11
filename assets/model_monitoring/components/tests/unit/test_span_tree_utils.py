@@ -310,7 +310,7 @@ class TestSpanTreeUtilities:
         assert expected_row.start_time == node.start_time
         assert expected_row.end_time == node.end_time
         assert expected_row.span_type == node.span_type
-        
+
         if expected_row.attributes is not None:
             attributes_dict = json.loads(expected_row.attributes)
             attributes_dict = {} if attributes_dict is None else attributes_dict
