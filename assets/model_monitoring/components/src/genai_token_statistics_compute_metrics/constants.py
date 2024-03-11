@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+
+"""This file contains constants for genai token statistics components."""
+
 INCLUDE_SPAN_TYPE = ["LLM", "Embedding"]
 
 # Constants for metric count
