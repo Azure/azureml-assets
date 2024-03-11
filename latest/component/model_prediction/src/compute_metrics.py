@@ -17,6 +17,7 @@ from exceptions import (
 from error_definitions import (
     ComputeMetricsInternalError,
     BadForecastData,
+    BadFeatureColumnData,
     InvalidGroundTruthColumnNameData,
     InvalidPredictionColumnNameData,
     BadInputData,
@@ -194,6 +195,15 @@ class ComputeMetricsRunner:
             ground_true_regressors = None
             self.rename_columns = {}
             if self.task == TASK.FORECASTING:
+                if self.ground_truths_column_name not in self.ground_truth.columns:
+                    message_kwargs = {
+                        "column": "input_columns", "keep_columns": str(self.ground_truths_column_name),
+                        "data_columns": str(list(self.ground_truth.columns))
+                    }
+                    exception = get_azureml_exception(DataValidationException, BadFeatureColumnData, None,
+                                                      **message_kwargs)
+                    log_traceback(exception, logger)
+                    raise exception
                 ground_truth = self.ground_truth.pop(self.ground_truths_column_name).values
                 ground_true_regressors = self.ground_truth
                 self.ground_truth = ground_truth
@@ -242,7 +252,7 @@ class ComputeMetricsRunner:
                 artifact_content = result.artifacts['forecast_time_series_id_distribution_table'].content
                 ts_id_table = pd.DataFrame(artifact_content['data'])
                 ts_id_table.rename(self.rename_columns, axis=1, inplace=True)
-                artifact_content['data'] = ts_id_table.to_dict(orient='recrds')
+                artifact_content['data'] = ts_id_table.to_dict(orient='records')
                 new_table = JsonEvaluationArtifact(
                     uri=result.artifacts['forecast_time_series_id_distribution_table'].uri,
                     content=artifact_content)
@@ -397,7 +407,7 @@ def run():
     parser = ArgumentParser()
     # Inputs
     parser.add_argument("--task", type=str, dest=ArgumentLiterals.TASK, choices=constants.ALL_TASKS)
-    parser.add_argument("--ground_truths", type=str, dest=ArgumentLiterals.GROUND_TRUTHS, required=True)
+    parser.add_argument("--ground_truths", type=str, dest=ArgumentLiterals.GROUND_TRUTHS, required=False)
     parser.add_argument("--ground_truths_column_name", type=lambda x: x.split(","),
                         dest=ArgumentLiterals.GROUND_TRUTHS_COLUMN_NAME, required=False, default=None)
     parser.add_argument("--predictions", type=str, dest=ArgumentLiterals.PREDICTIONS, required=True)
