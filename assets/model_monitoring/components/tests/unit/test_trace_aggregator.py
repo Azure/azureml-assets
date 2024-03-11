@@ -122,37 +122,37 @@ class TestGenAISparkPreprocessor:
         ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
-    _root_span_str_extra = '{"attributes": "{"inputs":"in", "output":"out"}", "context": "c", "c_resources' + \
+    _root_span_str_extra = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "context": "c", "c_resources' + \
         '": "{}", "end_time": "2024-02-' + \
         '05T00:08:00", "events": "[]", "framework": "FLOW", "input": "in", "links": "[]", "name": "name", "output"' + \
         ': "out", "parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "sta' + \
-        'tus": "OK", "trace_id": "01", "children": [{"attributes": "{"inputs":"in", "output":"out"}", "con' + \
+        'tus": "OK", "trace_id": "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "con' + \
         'text": "c", "c_resources": "{}"' + \
         ', "end_time": "2024-02-05T00:05:00", "events": "[]", "framework": "RAG", "input": "in", "links": "[]", "n' + \
         'ame": "name", "output": "out", "parent_id": "1", "span_id": "2", "span_type": "llm", "start_time": "2024' + \
-        '-02-05T00:02:00", "status": "OK", "trace_id": "01", "children": [{"attributes": "{"inputs":"in", "o' + \
-        'utput":"out"}", "context": "' + \
+        '-02-05T00:02:00", "status": "OK", "trace_id": "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\",' + \
+        ' \\"output\\":\\"out\\"}", "context": "' + \
         'c", "c_resources": "{}", "end_time": "2024-02-05T00:04:00", "events": "[]", "framework": "INTERNAL", "in' + \
         'put": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "2", "span_id": "3", "span_type' + \
         '": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": "01", "children": []}]}, {"at' + \
-        'tributes": "{"inputs":"in", "output":"out"}", "context": "c", "c_resources": "{}", "end_time": "' + \
+        'tributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "context": "c", "c_resources": "{}", "end_time": "' + \
         '2024-02-05T00:07:00", "events":' + \
         ' "[]", "framework": "LLM", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "' + \
         '1", "span_id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id":' + \
         ' "01", "children": []}]}'
 
-    _root_span_str = '{"attributes": "{"inputs":"in", "output":"out"}", "end_time": "2024-02-05T00:08:0' + \
+    _root_span_str = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T00:08:0' + \
         '0", "events": "[]", "framework": "FL' + \
         'OW", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id": "1",' + \
         ' "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01", "children"' + \
-        ': [{"attributes": "{"inputs":"in", "output":"out"}", "end_time": "2024-02-05T00:05:00", "event' + \
+        ': [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T00:05:00", "event' + \
         's": "[]", "framework": "RAG", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_i' + \
         'd": "1", "span_id": "2", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "tra' + \
-        'ce_id": "01", "children": [{"attributes": "{"inputs":"in", "output":"out"}", "end_time": "2024' + \
+        'ce_id": "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024' + \
         '-02-05T00:04:00", "events": "[]", "fr' + \
         'amework": "INTERNAL", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "2",' + \
         ' "span_id": "3", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": ' + \
-        '"01", "children": []}]}, {"attributes": "{"inputs":"in", "output":"out"}", "end_time": "2024-0' + \
+        '"01", "children": []}]}, {"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-0' + \
         '2-05T00:07:00", "events": "[]", "fram' + \
         'ework": "LLM", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "1", "span_' + \
         'id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01", "' + \
@@ -204,15 +204,15 @@ class TestGenAISparkPreprocessor:
         ["9", "8", "llm", datetime(2024, 2, 5, 7, 6, 0), "OK", "03"]
     ]
 
-    _root_span_str_lookback = '{"attributes": "{"inputs":"in", "output":"out"}", "end_time": "2024-02-05' + \
+    _root_span_str_lookback = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05' + \
         'T06:59:00", "events": "[]", "framewor' + \
         'k": "FLOW", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id"' + \
         ': "5", "span_type": "llm", "start_time": "2024-02-05T06:08:00", "status": "OK", "trace_id": "01", "chil' + \
-        'dren": [{"attributes": "{"inputs":"in", "output":"out"}", "end_time": "2024-02-05T05:58:00", "e' + \
+        'dren": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T05:58:00", "e' + \
         'vents": "[]", "framework": "LLM", "in' + \
         'put": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "5", "span_id": "4", "span_typ' + \
         'e": "llm", "start_time": "2024-02-05T06:05:00", "status": "OK", "trace_id": "01", "children": [{"attrib' + \
-        'utes": "{"inputs":"in", "output":"out"}", "end_time": "2024-02-05T05:59:00", "events": "[]", "f' + \
+        'utes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T05:59:00", "events": "[]", "f' + \
         'ramework": "INTERNAL", "input": "in",' + \
         ' "links": "[]", "name": "name", "output": "out", "parent_id": "4", "span_id": "3", "span_type": "llm", ' + \
         '"start_time": "2024-02-05T05:58:00", "status": "OK", "trace_id": "01", "children": []}]}]}'
