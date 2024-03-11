@@ -168,7 +168,7 @@ class MetricsProcessor:
             })
 
     def has_completion_count(self, span_type):
-        """Checks if model is completion type."""
+        """Check if model is completion type."""
         if span_type == "LLM":
             print("shreeya match")
             return True
