@@ -116,7 +116,7 @@ class OnlineEndpointModel:
     def is_finetuned(self) -> bool:
         """Get the finetune flag."""
         return self._is_finetuned
-    
+
     @property
     def is_aoai_finetuned_model(self) -> bool:
         """Get the finetune flag."""

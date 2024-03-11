@@ -405,14 +405,14 @@ def main(
                 if finetuned_resource_group else workspace.resource_group
             finetuned_subscription_id = finetuned_subscription_id \
                 if finetuned_subscription_id else workspace.subscription_id
-        
+
         # if model is finetuned from aoai finetune step then override model from finetuned_model_metadata
         is_aoai_finetuned_model = finetuned_model_metadata is not None
         if is_aoai_finetuned_model:
             with open(finetuned_model_metadata) as f:
                 model_metadata = json.load(f)
                 model = model_metadata["finetuned_model_id"]
-                
+  
         online_model = OnlineEndpointModel(
             model, model_version, model_type, endpoint_name, is_finetuned_model,
             finetuned_subscription_id, finetuned_resource_group, finetuned_workspace,
@@ -453,7 +453,8 @@ def main(
     elif delete_managed_deployment:
         if not deployment_metadata:
             logger.info("Delete deployment using input parameters.")
-            online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name, is_aoai_finetuned_model=is_aoai_finetuned_model)
+            online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name,
+                                               is_aoai_finetuned_model=is_aoai_finetuned_model)
             online_endpoint = OnlineEndpointFactory.get_online_endpoint(
                 endpoint_workspace,
                 endpoint_resource_group,

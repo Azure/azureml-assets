@@ -5,22 +5,15 @@
 
 
 from typing import Optional
-import os
 import time
-import json
-from requests.models import Response
-import requests
 from azureml._model_management._util import get_requests_session
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azure.ai.ml.entities import AccessKeyConfiguration, ApiKeyConfiguration
-
 from ..error_definitions import BenchmarkValidationError
 from ..exceptions import BenchmarkValidationException
 from ..logging import get_logger
 from .online_endpoint import OnlineEndpoint, ResourceState
 from .online_endpoint_model import OnlineEndpointModel
-from azure.identity import ManagedIdentityCredential
-
 
 logger = get_logger(__name__)
 
@@ -147,9 +140,9 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             else:
                 payload['properties']["versionUpgradeOption"] = "OnceNewDefaultVersionAvailable"
                 payload['properties']["raiPolicyName"] = "Microsoft.Default"
-        
-        logger.info(f"sending payload: {payload}, is model aoai finetuned : {self._model.is_aoai_finetuned_model}")
-        
+
+        logger.info(f"sending payload: {payload}, is model aoai finetuned: {self._model.is_aoai_finetuned_model}")
+
         resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
         self._raise_if_not_success(resp)
         logger.info("Calling(PUT) {} returned {} with content {}. original request {}".format(
