@@ -55,6 +55,7 @@ class EndpointDeployment(EndpointDeploymentBase):
         top_p: float = 0.0,
         knowledge_pieces: str = None,
         sku: str = "Standard_DS3_v2",
+        include_views: bool = False,
     ):
         """deploy_endpoint."""
         from utils.asset_utils import get_datastore_uri
@@ -83,6 +84,7 @@ class EndpointDeployment(EndpointDeploymentBase):
             temperature=temperature,
             top_p=top_p,
             knowledge_pieces=knowledge_pieces,
+            include_views=include_views,
         )
         logging.info(f"DBCopilotConfig: {config}")
         # mir_environment = get_full_env_path(self.mlclient_credential, mir_environment)
