@@ -1,4 +1,4 @@
-FROM acptdev.azurecr.io/test/public/aifx/acpt/stable-ubuntu2004-cu121-py310-torch212:latest
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch221:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 # Install pip dependencies
 COPY requirements.txt .
