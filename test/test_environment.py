@@ -14,12 +14,14 @@ package_finder = create_package_finder([PYPI_URL])
 
 
 def test_pin_packages_no_extras():
+    """Test pin packages without extras."""
     contents = "azureml-core=={{latest-pypi-version}}"
     expected = f"azureml-core=={get_latest_package_version('azureml-core', package_finder)}"
     assert pin_packages(contents) == expected
 
 
 def test_pin_packages_with_extras():
+    """Test pin packages with extras."""
     contents = "azureml-metrics[all]=={{latest-pypi-version}}"
     expected = f"azureml-metrics[all]=={get_latest_package_version('azureml-metrics', package_finder)}"
     assert pin_packages(contents) == expected
