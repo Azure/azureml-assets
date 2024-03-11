@@ -16,16 +16,15 @@ logger = get_logger(__name__)
 
 
 class UploadComponent:
-    """ Upload component to upload data to AOAI."""
+    """Upload component to upload data to AOAI."""
 
     def __init__(self, aoai_client: AzureOpenAI):
-        """ Upload component to upload data to AOAI."""
+        """Upload component to upload data to AOAI."""
         self.aoai_client = aoai_client
         self.split_ratio = 0.8
 
     def upload_files(self, train_file_path: str, validation_file_path: str = None):
-        """ Uploads training and validation files to azure openai """
-
+        """Uploads training and validation files to azure openai."""
         train_file_name = os.path.basename(train_file_path)
         validation_file_name = os.path.basename(validation_file_path)\
             if validation_file_path is not None else "validation_" + train_file_name
@@ -68,7 +67,7 @@ class UploadComponent:
         return train_data, validation_data
 
     def _check_upload_status(self, upload_file_metadata_dictionary: dict):
-        """ Check upload status."""
+        """Check upload status of data."""
         file_id = upload_file_metadata_dictionary["id"]
         filename = upload_file_metadata_dictionary["filename"]
         upload_file_status = upload_file_metadata_dictionary["status"]
@@ -90,8 +89,7 @@ class UploadComponent:
 
 
 def main():
-    """ Main function to upload data to AOAI."""
-
+    """Upload train and validation data to AOAI."""
     parser = argparse.ArgumentParser(description="Upload Component")
     parser.add_argument("--train_dataset", type=str)
     parser.add_argument("--validation_dataset", type=str)
