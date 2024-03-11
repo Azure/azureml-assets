@@ -71,7 +71,7 @@ class SpanTreeNode:
 
     @property
     def input(self) -> str:
-        """Get the span's input from the attributes field."""
+        """Get the span's input from the attributes field as json string."""
         if self.attributes is None:
             return None  # type: ignore
         attribute_dict: dict = json.loads(self.attributes)
@@ -81,7 +81,7 @@ class SpanTreeNode:
 
     @property
     def output(self) -> str:
-        """Get the span's output from the attributes field."""
+        """Get the span's output from the attributes field as json string."""
         if self.attributes is None:
             return None  # type: ignore
         attribute_dict: dict = json.loads(self.attributes)
