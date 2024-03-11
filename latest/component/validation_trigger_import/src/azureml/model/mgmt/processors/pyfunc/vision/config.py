@@ -33,6 +33,9 @@ class MMDetLiterals:
     AUGMENTATIONS_PATH = "augmentations_path"
     METAFILE_PATH = "model_metadata"
     CLASSES = "classes"
+    CUSTOM_ENTITIES = "custom_entities"
+    TEXT_PROMPT = "text_prompt"
+    LANGUAGE_MODEL = "language_model"
 
 
 class MLflowSchemaLiterals:
