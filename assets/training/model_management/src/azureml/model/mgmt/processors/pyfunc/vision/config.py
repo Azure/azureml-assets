@@ -57,8 +57,6 @@ class MLflowSchemaLiterals:
     TRAIN_LABEL_LIST = "train_label_list"
     WRAPPER = "images_model_wrapper"
     THRESHOLD = "threshold"
-    TEXT_PROMPT = "text_prompt"
-    CUSTOM_ENTTIES = "custom_entities"
 
 
 class ODLiterals:
