@@ -1,4 +1,5 @@
 FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:{{latest-image-tag}}
+WORKDIR /
 
 USER root
 
@@ -34,7 +35,7 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 # Copy the environment file
 COPY ./requirements.txt ./
 
-## dbcopilot environment
+# dbcopilot environment
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
     pip install --upgrade pip && \

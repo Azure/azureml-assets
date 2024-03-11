@@ -111,6 +111,10 @@ inputs:
     type: string
     optional: true
     description: "The list of knowledge pieces to be used for grounding."
+  include_views:
+    type: boolean
+    optional: true
+    description: "Whether to turn on views."
 outputs:
   grounding_index:
     type: uri_folder
@@ -284,6 +288,7 @@ jobs:
       top_p: ${{parent.inputs.top_p}}
       tools: ${{parent.inputs.tools}}
       knowledge_pieces: ${{parent.inputs.knowledge_pieces}}
+      include_views: ${{parent.inputs.include_views}}
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT: ${{parent.inputs.llm_connection}}

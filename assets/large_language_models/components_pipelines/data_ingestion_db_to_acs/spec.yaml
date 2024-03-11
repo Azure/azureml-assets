@@ -94,6 +94,10 @@ inputs:
     type: string
     optional: true
     description: 'The name of the tools for dbcopilot. Supported tools: "tsql", "python". Format: ["tsql", "python"]'
+  include_views:
+    type: boolean
+    optional: true
+    description: "Whether to turn on views."
 outputs:
   grounding_index:
     type: uri_folder
@@ -303,5 +307,7 @@ jobs:
         path: ${{parent.inputs.llm_config}}
       runtime:
         path: ${{parent.inputs.runtime}}
+      include_views:
+        path: ${{parent.inputs.include_views}}
     component: "azureml:llm_dbcopilot_create_promptflow:0.0.49"
     type: command

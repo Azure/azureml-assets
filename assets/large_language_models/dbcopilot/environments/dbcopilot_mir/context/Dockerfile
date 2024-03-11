@@ -17,18 +17,17 @@ RUN apt-get update \
 RUN NGINX_CONF=/etc/nginx/sites-enabled/app; \
     sed -i "$(grep "location /" $NGINX_CONF -n | cut -f1 -d:) a proxy_buffering off;" $NGINX_CONF
 
-# Update pip
-RUN python -m pip install --upgrade pip
-
-# Install necessary tools
+# Copy the environment file
 COPY ./requirements.txt ./
-RUN pip install -r requirements.txt
 
-# Install promptflow environment
-RUN pip install promptflow-image-bundle[azure]==0.2.0
-
-## Install dbcopilot
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.17-py3-none-any.whl
+# dbcopilot environment
+RUN python -m pip install --upgrade pip && \
+    # Install necessary tools
+    pip install -r requirements.txt && \
+    # Install promptflow environment
+    pip install promptflow-image-bundle[azure]==0.2.0 && \
+    ## Install dbcopilot
+    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.17-py3-none-any.whl
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
