@@ -24,7 +24,7 @@ class UploadComponent:
         self.split_ratio = 0.8
 
     def upload_files(self, train_file_path: str, validation_file_path: str = None):
-        """Uploads training and validation files to azure openai."""
+        """Upload training and validation files to azure openai."""
         train_file_name = os.path.basename(train_file_path)
         validation_file_name = os.path.basename(validation_file_path)\
             if validation_file_path is not None else "validation_" + train_file_name
