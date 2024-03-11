@@ -30,6 +30,7 @@ RUN pip install promptflow-image-bundle[azure]==0.2.0
 ## Install dbcopilot
 RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.17-py3-none-any.whl
 
+# Fix vunerabilities
 RUN pip install cryptography==42.0.5
 
 # For GUNICORN_CMD_ARGS, we need to set the timeout to be 0 so that the server will not timeout
