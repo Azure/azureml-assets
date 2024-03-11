@@ -124,7 +124,7 @@ DATA_ASSET_VALID_DATATYPE = 'azureml:mltable_validate_datatype_for_data_quality:
 DATA_ASSET_MODEL_PERFORMANCE_PRODUCTION_DATA = 'azureml:mltable_model_performance_production_data:1'
 
 DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS = (
-    "azureml:uri_folder_genai_raw_log_model_inputs:5"
+    "azureml:uri_folder_genai_raw_log_model_inputs:1"
 )
 
 # For token stats aggregated data as mltable input
