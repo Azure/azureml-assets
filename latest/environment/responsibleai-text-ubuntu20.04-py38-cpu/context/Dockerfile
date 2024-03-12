@@ -19,7 +19,7 @@ RUN conda remove cryptography
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # Install main azureml packages
-RUN pip install 'azureml-core==1.55.0.post1' \
+RUN pip install 'azureml-core==1.55.0.post2' \
                 'azureml-mlflow==1.55.0' \
                 'azureml-rai-utils==0.0.6'
 
