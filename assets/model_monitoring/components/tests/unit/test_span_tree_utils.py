@@ -2,15 +2,14 @@
 # Licensed under the MIT License.
 """This file contains unit tests for SpanTreeNode(Row Tree Utilities."""
 
-
+import json
+import pytest
+from datetime import datetime
 from pyspark.sql import Row
 from src.shared_utilities.span_tree_utils import (
     SpanTree,
     SpanTreeNode,
 )
-
-import pytest
-from datetime import datetime
 
 
 @pytest.mark.unit
@@ -290,15 +289,14 @@ class TestSpanTreeUtilities:
                 (Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
                      end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
                      attributes="{\"inputs\": \"null\"}", span_type="SpanKind.INTERNAL",
-                     input="{\"context\":\"...\", \"ground_truth\":\"...\"}", output="ex...",
-                     name="exampleName", framework="LLM")),
+                     input="{\"context\":\"...\", \"ground_truth\":\"...\"}", name="LLM", framework="LLM")),
                 (Row(span_id="00", parent_id="0", start_time=datetime(2024, 2, 12, 0, 5, 0),
                      end_time=datetime(2024, 2, 12, 0, 30, 0), trace_id="1", status="",
-                     attributes="{}", span_type="SpanKind.INTERNAL", input="{}", output="{}",
-                     name="", framework="")),
+                     attributes="{}", span_type="SpanKind.INTERNAL", name="", framework="")),
                 (Row(span_id=None, parent_id=None, start_time=None, end_time=None,
-                     trace_id=None, status=None, attributes=None, span_type=None, input=None,
-                     output=None, name=None, framework=None)),
+                     trace_id=None, status=None, attributes=None, span_type=None, name=None, framework=None)),
+                (Row(span_id=None, parent_id=None, start_time=None, end_time=None,
+                     trace_id=None, status=None, attributes="null", span_type=None, name=None, framework=None)),
             ]
     )
     def test_span_tree_node_other_properties(self, expected_row: Row):
@@ -312,8 +310,15 @@ class TestSpanTreeUtilities:
         assert expected_row.start_time == node.start_time
         assert expected_row.end_time == node.end_time
         assert expected_row.span_type == node.span_type
-        assert expected_row.input == node.input
-        assert expected_row.output == node.output
+
+        if expected_row.attributes is not None:
+            attributes_dict = json.loads(expected_row.attributes)
+            attributes_dict = {} if attributes_dict is None else attributes_dict
+            assert attributes_dict.get('inputs', None) == node.input
+            assert attributes_dict.get('output', None) == node.output
+        else:
+            assert node.input is None
+            assert node.output is None
         assert expected_row.name == node.name
         assert expected_row.framework == node.framework
         assert expected_row == node._span_row
@@ -361,6 +366,7 @@ class TestSpanTreeUtilities:
         assert node._span_row == expected_row
         assert node.children[0]._span_row == expected_children[0]._span_row
         assert node.children[1]._span_row == expected_children[1]._span_row
+        assert node._span_row_dict == json_dict
 
     @pytest.mark.parametrize(
             "expected_row, expected_children",

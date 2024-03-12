@@ -48,9 +48,11 @@ class Translator(PredictWrapper):
             kwargs["task_type"] = task_type
         try:
             y_pred = self.model.predict(X_test, **kwargs)
-        except TypeError:
+        except TypeError as e:
+            logger.warning(f"TypeError exception raised. Reason: {e}")
             y_pred = self.model.predict(X_test)
-        except RuntimeError:
+        except RuntimeError as e:
+            logger.warning(f"RuntimeError exception raised. Reason: {e}")
             return self.handle_device_failure(X_test, **kwargs)
 
         return y_pred
