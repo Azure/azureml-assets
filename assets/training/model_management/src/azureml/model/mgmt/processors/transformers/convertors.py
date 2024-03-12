@@ -29,9 +29,8 @@ from azureml.model.mgmt.utils.common_utils import (
     fetch_mlflow_acft_metadata
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from mlflow.models import ModelSignature, Model, infer_signature
+from mlflow.models import ModelSignature, Model
 from mlflow.types.schema import ColSpec, DataType, Schema, ParamSpec, ParamSchema
-from mlflow.transformers import generate_signature_output, get_default_conda_env
 from mlflow.utils.requirements_utils import _get_pinned_requirement
 from pathlib import Path
 from transformers import (
@@ -385,12 +384,20 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
 
     def get_model_signature(self):
         """Return model signature for vision models."""
-        return ModelSignature(
-            inputs=Schema(inputs=[ColSpec(name="image", type=DataType.binary)]),
-            outputs=Schema(
-                inputs=[ColSpec(name="probs", type=DataType.string), ColSpec(name="labels", type=DataType.string)]
-            ),
-        )
+        if self._model_flavor == "OSS":
+            return ModelSignature(
+                inputs=Schema(inputs=[ColSpec(type=DataType.string)]),
+                outputs=Schema(
+                    inputs=[ColSpec(name="label", type=DataType.string), ColSpec(name="score", type=DataType.float)]
+                ),
+            )
+        else:
+            return ModelSignature(
+                inputs=Schema(inputs=[ColSpec(name="image", type=DataType.binary)]),
+                outputs=Schema(
+                    inputs=[ColSpec(name="probs", type=DataType.string), ColSpec(name="labels", type=DataType.string)]
+                ),
+            )
 
     def save_as_mlflow(self):
         """Prepare vision models for save to MLflow."""
@@ -420,12 +427,8 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
                 task=self._task,
                 model=str(self._model_dir),
             )
-            image_path = str(Path(__file__).parent.parent / "common" / "test_image.jpg")
-            self._signatures = infer_signature(
-                image_path, generate_signature_output(vision_model, image_path),
-            )
             return super()._save(
-                conda_env=get_default_conda_env(vision_model.model)
+                conda_env=mlflow.transformers.get_default_conda_env(vision_model.model)
             )
         else:
             return super()._save(
