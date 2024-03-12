@@ -129,5 +129,5 @@ DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS = (
 
 # For token stats aggregated data as mltable input
 DATA_AGGREGATED_TRACE_DATA = (
-    "azureml:mltable_aggregrated_genai_preprocessor_output:1"
+    "azureml:mltable_aggregrated_genai_preprocessor_outputs:1"
 )
