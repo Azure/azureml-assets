@@ -98,6 +98,13 @@ class TestGSQHistogram:
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
         call_apply_annotation(",".join(metric_names))
 
+    def test_gsq_apply_annotation_all_valid(self, code_zip_test_setup,
+                                            gsq_preprocessor_test_setup):
+        """Test passing low threshold so that there is no violation table."""
+        metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
+        threshold_args = {threshold: 1 for threshold in THRESHOLD_PARAMS}
+        call_apply_annotation(",".join(metric_names), threshold_args=threshold_args)
+
     def test_gsq_invalid_metrics(self, code_zip_test_setup,
                                  gsq_preprocessor_test_setup):
         """Test passing invalid metrics."""
@@ -263,7 +270,8 @@ def get_test_path():
 def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
                           completion_column_name="answer",
                           context_column_name="context",
-                          mltable_path=None):
+                          mltable_path=None,
+                          threshold_args=None):
     """Call apply_annotation method in GSQ component."""
     if mltable_path is None:
         mltable_path = get_mltable_path()
@@ -271,7 +279,8 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     fuse_prefix = "file://"
     histogram_path = fuse_prefix + os.path.join(test_path, "histogram")
     samples_index_path = fuse_prefix + os.path.join(test_path, "samples_index")
-    threshold_args = {threshold: 5 for threshold in THRESHOLD_PARAMS}
+    if threshold_args is None:
+        threshold_args = {threshold: 5 for threshold in THRESHOLD_PARAMS}
     violations = {
         "groundedness": "groundedness_violations",
         "relevance": "relevance_violations",
