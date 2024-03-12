@@ -29,8 +29,9 @@ from azureml.model.mgmt.utils.common_utils import (
     fetch_mlflow_acft_metadata
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from mlflow.models import ModelSignature, Model
+from mlflow.models import ModelSignature, Model, infer_signature
 from mlflow.types.schema import ColSpec, DataType, Schema, ParamSpec, ParamSchema
+from mlflow.transformers import generate_signature_output, get_default_conda_env
 from mlflow.utils.requirements_utils import _get_pinned_requirement
 from pathlib import Path
 from transformers import (
@@ -190,7 +191,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
     def _save_in_oss_flavor(self, model, metadata, conda_env, code_paths, input_example, pip_requirements):
         # create a conda environment for OSS transformers Flavor
 
-        curated_conda_env = None
+        curated_conda_env = conda_env
         if not self._extra_pip_requirements and not pip_requirements:
             python_version = platform.python_version()
             pip_pkgs = self._get_curated_environment_pip_package_list()
@@ -414,10 +415,23 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
             package_with_version = _get_pinned_requirement(package_name)
             self._extra_pip_requirements.append(package_with_version)
 
-        return super()._save(
-            code_paths=[VisionMLflowConvertor.PREDICT_FILE_PATH, VisionMLflowConvertor.VISION_UTILS_FILE_PATH],
-            segregate=True,
-        )
+        if self._model_flavor == "OSS":
+            vision_model = transformers.pipeline(
+                task=self._task,
+                model=str(self._model_dir),
+            )
+            image_path = str(Path(__file__).parent.parent / "common" / "test_image.jpg")
+            self._signatures = infer_signature(
+                image_path, generate_signature_output(vision_model, image_path),
+            )
+            return super()._save(
+                conda_env=get_default_conda_env(vision_model.model)
+            )
+        else:
+            return super()._save(
+                code_paths=[VisionMLflowConvertor.PREDICT_FILE_PATH, VisionMLflowConvertor.VISION_UTILS_FILE_PATH],
+                segregate=True,
+            )
 
 
 class ASRMLflowConvertor(HFMLFLowConvertor):
