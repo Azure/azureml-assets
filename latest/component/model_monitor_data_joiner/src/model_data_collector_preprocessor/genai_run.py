@@ -30,8 +30,6 @@ def _get_important_field_mapping() -> dict:
         "span_type": "attributes.span_type",
         "status": "status.status_code",
         "framework": "attributes.framework",
-        "input": "attributes.inputs",
-        "output": "attributes.output",
     }
     return map
 

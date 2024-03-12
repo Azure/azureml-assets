@@ -22,6 +22,8 @@ def _aggregate_span_logs_to_trace_logs(grouped_row):
         return []
     else:
         output_dict = tree.root_span.to_dict(datetime_to_str=False)
+        output_dict['input'] = tree.root_span.input
+        output_dict['output'] = tree.root_span.output
         output_dict['root_span'] = tree.to_json_str()
         return [tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())]
 
