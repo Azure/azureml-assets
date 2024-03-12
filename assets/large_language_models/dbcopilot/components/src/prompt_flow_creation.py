@@ -49,6 +49,7 @@ class PromptFlowCreation(OBOComponentBase):
         example_embedding_uri: str = None,
         llm_config: str = None,
         runtime: str = None,
+        include_view: bool = False,
     ):
         """Create the prompt flow."""
         from utils.asset_utils import get_datastore_uri, parse_connection
@@ -112,6 +113,7 @@ class PromptFlowCreation(OBOComponentBase):
             flow_data['nodes'][0]['inputs'][
                 'chat_aoai_deployment_name'] = chat_aoai_deployment_name if chat_aoai_deployment_name else ""
             flow_data['nodes'][0]['inputs']['example_embedding_uri'] = example_embedding_uri
+            flow_data["nodes"][0]["inputs"]["include_view"] = include_view
 
         with open(self.FLOW_DAG, 'w', encoding="utf-8") as file:
             yaml.safe_dump(flow_data, file)
