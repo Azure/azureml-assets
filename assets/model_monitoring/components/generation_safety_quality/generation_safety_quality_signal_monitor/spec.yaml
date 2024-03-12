@@ -119,7 +119,7 @@ jobs:
       type: aml_token
   compute_histogram:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.14
+    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.15
     inputs:
       production_dataset:
         type: mltable
