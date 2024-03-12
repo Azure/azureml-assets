@@ -59,10 +59,8 @@ class TestGenAISparkPreprocessor:
         StructField('end_time', TimestampType(), False),
         StructField('events', StringType(), False),
         StructField('framework', StringType(), False),
-        StructField('input', StringType(), False),
         StructField('links', StringType(), False),
         StructField('name', StringType(), False),
-        StructField('output', StringType(), False),
         StructField('parent_id', StringType(), True),
         # StructField('session_id', StringType(), True),
         StructField('span_id', StringType(), False),
@@ -74,13 +72,17 @@ class TestGenAISparkPreprocessor:
     ])
 
     _span_log_data = [
-        ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", None] +
         ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-        ["{}", datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name", "1"] +
         ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
-        ["{}", datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "in", "[]", "name",  "out", "2"] +
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "[]", "name", "2"] +
         ["3", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
-        ["{}", datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "in", "[]", "name",  "out", "1"] +
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "1"] +
         ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
@@ -93,10 +95,8 @@ class TestGenAISparkPreprocessor:
         StructField('end_time', TimestampType(), False),
         StructField('events', StringType(), False),
         StructField('framework', StringType(), False),
-        StructField('input', StringType(), False),
         StructField('links', StringType(), False),
         StructField('name', StringType(), False),
-        StructField('output', StringType(), False),
         StructField('parent_id', StringType(), True),
         # StructField('session_id', StringType(), True),
         StructField('span_id', StringType(), False),
@@ -108,44 +108,48 @@ class TestGenAISparkPreprocessor:
     ])
 
     _span_log_data_extra = [
-        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
+        ['{"inputs":"in", "output":"out"}', "c", "{}"] +
+        [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", None] +
         ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
+        ['{"inputs":"in", "output":"out"}', "c", "{}"] +
+        [datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name", "1"] +
         ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
-        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "in", "[]", "name",  "out", "2"] +
+        ['{"inputs":"in", "output":"out"}', "c", "{}"] +
+        [datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "[]", "name", "2"] +
         ["3", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
-        ["resource", "c", "{}", datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "in", "[]", "name",  "out", "1"] +
+        ['{"inputs":"in", "output":"out"}', "c", "{}"] +
+        [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "1"] +
         ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
-    _root_span_str_extra = '{"attributes": "resource", "context": "c", "c_resources": "{}", "end_time": "2024-02-' + \
-        '05T00:08:00", "events": "[]", "framework": "FLOW", "input": "in", "links": "[]", "name": "name", "output"' + \
-        ': "out", "parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "sta' + \
-        'tus": "OK", "trace_id": "01", "children": [{"attributes": "resource", "context": "c", "c_resources": "{}"' + \
-        ', "end_time": "2024-02-05T00:05:00", "events": "[]", "framework": "RAG", "input": "in", "links": "[]", "n' + \
-        'ame": "name", "output": "out", "parent_id": "1", "span_id": "2", "span_type": "llm", "start_time": "2024' + \
-        '-02-05T00:02:00", "status": "OK", "trace_id": "01", "children": [{"attributes": "resource", "context": "' + \
-        'c", "c_resources": "{}", "end_time": "2024-02-05T00:04:00", "events": "[]", "framework": "INTERNAL", "in' + \
-        'put": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "2", "span_id": "3", "span_type' + \
-        '": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": "01", "children": []}]}, {"at' + \
-        'tributes": "resource", "context": "c", "c_resources": "{}", "end_time": "2024-02-05T00:07:00", "events":' + \
-        ' "[]", "framework": "LLM", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "' + \
-        '1", "span_id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id":' + \
-        ' "01", "children": []}]}'
+    _root_span_str_extra = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "context": "c", "c' + \
+        '_resour''ces": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FLOW", "links": "' + \
+        '[]", "name": "name", "parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T0' + \
+        '0:01:00", "status": "OK", "trace_id": "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"out' + \
+        'put\\":\\"out\\"}", "context": "c", "c_resources": "{}", "end_time": "2024-02-05T00:05:00", "events": "' + \
+        '[]", "framework": "RAG", "links": "[]", "name": "name", "parent_id": "1", "span_id": "2", "span_type": ' + \
+        '"llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "trace_id": "01", "children": [{"attributes' + \
+        '": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "context": "c", "c_resources": "{}", "end_time": ' + \
+        '"2024-02-05T00:04:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_' + \
+        'id": "2", "span_id": "3", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "tra' + \
+        'ce_id": "01", "children": []}]}, {"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "con' + \
+        'text": "c", "c_resources": "{}", "end_time": "2024-02-05T00:07:00", "events": "[]", "framework": "LLM",' + \
+        ' "links": "[]", "name": "name", "parent_id": "1", "span_id": "4", "span_type": "llm", "start_time": "20' + \
+        '24-02-05T00:06:00", "status": "OK", "trace_id": "01", "children": []}]}'
 
-    _root_span_str = '{"attributes": "{}", "end_time": "2024-02-05T00:08:00", "events": "[]", "framework": "FL' + \
-        'OW", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id": "1",' + \
-        ' "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01", "children"' + \
-        ': [{"attributes": "{}", "end_time": "2024-02-05T00:05:00", "event' + \
-        's": "[]", "framework": "RAG", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_i' + \
-        'd": "1", "span_id": "2", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "tra' + \
-        'ce_id": "01", "children": [{"attributes": "{}", "end_time": "2024-02-05T00:04:00", "events": "[]", "fr' + \
-        'amework": "INTERNAL", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "2",' + \
-        ' "span_id": "3", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": ' + \
-        '"01", "children": []}]}, {"attributes": "{}", "end_time": "2024-02-05T00:07:00", "events": "[]", "fram' + \
-        'ework": "LLM", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "1", "span_' + \
-        'id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01", "' + \
-        'children": []}]}'
+    _root_span_str = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T' + \
+        '00:08:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": null, "span' + \
+        '_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01", "' + \
+        'children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T0' + \
+        '0:05:00", "events": "[]", "framework": "RAG", "links": "[]", "name": "name", "parent_id": "1", "span_id' + \
+        '": "2", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "trace_id": "01", "chi' + \
+        'ldren": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T00:0' + \
+        '4:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_id": "2", "span_' + \
+        'id": "3", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": "01", "c' + \
+        'hildren": []}]}, {"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02' + \
+        '-05T00:07:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "1", "sp' + \
+        'an_id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01",' + \
+        ' "children": []}]}'
 
     _trace_log_data = [
             ["01", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
@@ -175,33 +179,34 @@ class TestGenAISparkPreprocessor:
     # trace 01 has child in hour before
     # trace 02
     _span_log_data_lookback = [
-        ["{}", datetime(2024, 2, 5, 5, 10), "[]", "FLOW", "in", "[]", "name",  "out", None] +
-        ["1", "llm", datetime(2024, 2, 5, 5, 15, 0), "OK", "00"],
-        ["{}", datetime(2024, 2, 5, 5, 59), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
-        ["2", "llm", datetime(2024, 2, 5, 5, 58, 0), "OK", "00"],
-        ["{}", datetime(2024, 2, 5, 5, 59, 0), "[]", "INTERNAL", "in", "[]", "name",  "out", "4"] +
-        ["3", "llm", datetime(2024, 2, 5, 5, 58, 0), "OK", "01"],
-        ["{}", datetime(2024, 2, 5, 5, 58, 0), "[]", "LLM", "in", "[]", "name",  "out", "5"] +
-        ["4", "llm", datetime(2024, 2, 5, 6, 5, 0), "OK", "01"],
-        ["{}", datetime(2024, 2, 5, 6, 59, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
-        ["5", "llm", datetime(2024, 2, 5, 6, 8, 0), "OK", "01"],
-        ["{}", datetime(2024, 2, 5, 6, 58, 0), "[]", "RAG", "in", "[]", "name",  "out", "6"] +
-        ["6", "llm", datetime(2024, 2, 5, 6, 50, 0), "OK", "02"],
-        ["{}", datetime(2024, 2, 5, 7, 4, 0), "[]", "INTERNAL", "in", "[]", "name",  "out", "8"] +
-        ["7", "llm", datetime(2024, 2, 5, 6, 59, 0), "OK", "03"],
-        ["{}", datetime(2024, 2, 5, 7, 7, 0), "[]", "LLM", "in", "[]", "name",  "out", "9"] +
-        ["8", "llm", datetime(2024, 2, 5, 7, 6, 0), "OK", "03"]
+        ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 5, 10), "[]", "FLOW", "[]", "name"] +
+        [None, "1", "llm", datetime(2024, 2, 5, 5, 15, 0), "OK", "00"],
+        ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 5, 59), "[]", "RAG", "[]", "name"] +
+        ["1", "2", "llm", datetime(2024, 2, 5, 5, 58, 0), "OK", "00"],
+        ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 5, 59, 0), "[]", "INTERNAL", "[]", "name"] +
+        ["4", "3", "llm", datetime(2024, 2, 5, 5, 58, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 5, 58, 0), "[]", "LLM", "[]", "name"] +
+        ["5", "4", "llm", datetime(2024, 2, 5, 6, 5, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 6, 59, 0), "[]", "FLOW", "[]", "name"] +
+        [None, "5", "llm", datetime(2024, 2, 5, 6, 8, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 6, 58, 0), "[]", "RAG", "[]", "name"] +
+        ["6", "6", "llm", datetime(2024, 2, 5, 6, 50, 0), "OK", "02"],
+        ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 7, 4, 0), "[]", "INTERNAL", "[]", "name"] +
+        ["8", "7", "llm", datetime(2024, 2, 5, 6, 59, 0), "OK", "03"],
+        ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 7, 7, 0), "[]", "LLM", "[]", "name"] +
+        ["9", "8", "llm", datetime(2024, 2, 5, 7, 6, 0), "OK", "03"]
     ]
 
-    _root_span_str_lookback = '{"attributes": "{}", "end_time": "2024-02-05T06:59:00", "events": "[]", "framewor' + \
-        'k": "FLOW", "input": "in", "links": "[]", "name": "name", "output": "out", "parent_id": null, "span_id"' + \
-        ': "5", "span_type": "llm", "start_time": "2024-02-05T06:08:00", "status": "OK", "trace_id": "01", "chil' + \
-        'dren": [{"attributes": "{}", "end_time": "2024-02-05T05:58:00", "events": "[]", "framework": "LLM", "in' + \
-        'put": "in", "links": "[]", "name": "name", "output": "out", "parent_id": "5", "span_id": "4", "span_typ' + \
-        'e": "llm", "start_time": "2024-02-05T06:05:00", "status": "OK", "trace_id": "01", "children": [{"attrib' + \
-        'utes": "{}", "end_time": "2024-02-05T05:59:00", "events": "[]", "framework": "INTERNAL", "input": "in",' + \
-        ' "links": "[]", "name": "name", "output": "out", "parent_id": "4", "span_id": "3", "span_type": "llm", ' + \
-        '"start_time": "2024-02-05T05:58:00", "status": "OK", "trace_id": "01", "children": []}]}]}'
+    _root_span_str_lookback = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "20' + \
+        '24-02-05T06:59:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": nu' + \
+        'll, "span_id": "5", "span_type": "llm", "start_time": "2024-02-05T06:08:00", "status": "OK", "trace_id"' + \
+        ': "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "202' + \
+        '4-02-05T05:58:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "5",' + \
+        ' "span_id": "4", "span_type": "llm", "start_time": "2024-02-05T06:05:00", "status": "OK", "trace_id": "' + \
+        '01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-0' + \
+        '2-05T05:59:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_id": "4' + \
+        '", "span_id": "3", "span_type": "llm", "start_time": "2024-02-05T05:58:00", "status": "OK", "trace_id":' + \
+        ' "01", "children": []}]}]}'
 
     _trace_log_data_lookback = [
             ["01", None, None, datetime(2024, 2, 5, 6, 8, 0)] +
@@ -213,10 +218,10 @@ class TestGenAISparkPreprocessor:
         spark = self._init_spark()
 
         span_logs_no_root_with_data = [
-            ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", None] +
-            ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-            ["{}", datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "in", "[]", "name",  "out", "1"] +
-            ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "02"],
+            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name"] +
+            [None, "1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name"] +
+            ["1", "2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "02"],
         ]
         span_logs_no_root_with_data_df = spark.createDataFrame(
             span_logs_no_root_with_data,
@@ -228,8 +233,8 @@ class TestGenAISparkPreprocessor:
         assert rows[0]['trace_id'] == "01"
 
         span_logs_no_root = [
-            ["{}", datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "in", "[]", "name",  "out", "1"] +
-            ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name",] +
+            ["1", "1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
         ]
         spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
         no_root_traces = process_spans_into_aggregated_traces(spans_no_root_df, True)
