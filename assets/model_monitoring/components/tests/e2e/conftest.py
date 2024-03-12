@@ -583,6 +583,7 @@ def register_components(
     publish_feature_attr_drift_signal_monitor_component,
     publish_generation_safety_signal_monitor_component,
     publish_model_performance_model_monitor_component,
+    publish_model_token_stats_model_monitor_component
 ):
     """Publish all model monitor components."""
     yield
