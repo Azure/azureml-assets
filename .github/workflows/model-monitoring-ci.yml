@@ -142,7 +142,7 @@ jobs:
 
       - name: Upload Partial durations
         uses: actions/upload-artifact@v3
-        if: always()
+        if: success()
         with:
           name: ${{ env.pytest_report_folder }}
           path: ${{ env.pytest_report_folder }}
