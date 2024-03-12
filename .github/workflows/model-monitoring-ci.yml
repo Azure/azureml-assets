@@ -157,7 +157,7 @@ jobs:
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
 
-      - name: Get durations from cache
+      - name: Get and store durations in cache
         uses: actions/cache@v2
         with:
           path: ${{ env.pytest_split_test_durations_file }}
