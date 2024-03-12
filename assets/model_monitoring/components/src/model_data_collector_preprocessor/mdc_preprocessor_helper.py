@@ -165,9 +165,6 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
         end_datetime = end_datetime.replace(tzinfo=start_datetime.tzinfo)
 
     store_url = store_url or StoreUrl(input_data)
-    if store_url.is_local_path():
-        # for local testing
-        return _get_local_file_list(start_datetime, end_datetime, store_url._base_url)
 
     if end_datetime.minute == 0 and end_datetime.second == 0:
         # if end_datetime is a whole hour, the last hour folder is not needed
