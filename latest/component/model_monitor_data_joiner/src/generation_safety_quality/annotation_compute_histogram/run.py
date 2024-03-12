@@ -718,7 +718,7 @@ def apply_annotation(
 
     print("showing annotations dataframe: ")
     annotations_df.show()
-
+    run_id = os.environ.get("AZUREML_RUN_ID")
     for metric_name_compact in compact_metric_names:
         # Run inference over input dataset
         print(f"Begin {metric_name_compact} processing.")
@@ -753,7 +753,6 @@ def apply_annotation(
                              .withColumnRenamed(COMPLETION, completion_column_name)
                              .withColumnRenamed(CONTEXT, context_column_name)
                              .withColumnRenamed(GROUND_TRUTH, ground_truth_column_name))
-            run_id = os.environ.get("AZUREML_RUN_ID")
             io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()])
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
@@ -787,16 +786,16 @@ def apply_annotation(
         ]
     )
 
-    # Save the annotations dataframe as output
-    io_utils.save_spark_df_as_mltable(annotations_df, evaluation)
     samples_index_rows.append({METRIC_NAME: "Evaluation",
                                GROUP: "",
                                GROUP_DIMENSION: "",
                                SAMPLES_NAME: "Evaluation",
                                ASSET: f"azureml_{run_id}_output_data_evaluation:1"})
-
     # Create a new DataFrame for the samples index data
     samples_df = spark.createDataFrame(samples_index_rows, metadata_schema)
+
+    # Save the samples and annotations dataframes as output
+    io_utils.save_spark_df_as_mltable(annotations_df, evaluation)
     io_utils.save_spark_df_as_mltable(samples_df, samples_index)
 
     # temporary workaround for pandas>2.0 until pyspark upgraded to 3.4.1, see issue:
