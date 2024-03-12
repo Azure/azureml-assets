@@ -16,7 +16,7 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_pytorch_2_1():
+def test_pytorch_2_2():
     """Tests a sample job using pytorch 2.0 as the environment."""
     this_dir = Path(__file__).parent
 
@@ -28,12 +28,12 @@ def test_pytorch_2_1():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "acpt-pytorch-2_0-cuda12_1-py3_10"
+    env_name = "acpt-pytorch-2.2-cuda12.1"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name=env_name,
-        description="Pytorch 2.1 environment created from a Docker context.",
+        description="Pytorch 2.2 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
@@ -59,7 +59,7 @@ def test_pytorch_2_1():
         compute=os.environ.get("gpu_v100_cluster"),
         display_name="bert-pretrain-GLUE",
         description="Pretrain the BERT model on the GLUE dataset.",
-        experiment_name="pytorch21_Cuda121_py310_Experiment",
+        experiment_name="pytorch22_Cuda121_py310_Experiment",
         distribution=PyTorchDistribution(process_count_per_instance=1),
         resources=JobResourceConfiguration(instance_count=2, shm_size='3100m'),
     )
