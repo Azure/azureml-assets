@@ -4,7 +4,7 @@ type: spark
 name: action_analyzer_correlation_test
 display_name: Action Analyzer - Correlation Test
 description: Perform correlation test on different groups to generate actions.
-version: 0.0.1
+version: 0.0.2
 is_deterministic: True
 inputs:
   data_with_action_metric_score:
@@ -30,13 +30,11 @@ conf:
     dependencies:
       - python=3.10
       - pip:
-          - azure-cli-core~=2.56.0
-          - azure-ai-ml~=1.13.0
-          - azure-ai-generative==1.0.0b7
-          - azure-ai-resources==1.0.0b7
-          - openai~=1.11.1
-          - json5==0.9.11
-          - mltable~=1.5.0
+        - azure-storage-file-datalake~=12.8.0
+        - azure-ai-ml~=1.13.0
+        - mltable~=1.3.0
+        - azureml-fsspec~=1.0.0
+        - fsspec~=2023.4.0
     name: momo-base-spark
 code: ../../src
 

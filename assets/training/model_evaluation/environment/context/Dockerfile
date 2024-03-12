@@ -19,6 +19,3 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
-
-# not able to install packages with extra requires in conda.yaml
-RUN pip install azureml-acft-common-components["image"]>=0.0.9

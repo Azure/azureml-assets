@@ -374,6 +374,7 @@ def deserialize_credential(credential_value: str) -> Union[str, AzureSasCredenti
     return None
 
 
+# Deprecate this utility. Seems StoreUrl can handle local files as well.
 def _get_local_file_list(start_datetime: datetime, end_datetime: datetime, input_data: str) -> List[str]:
     file_list = []
     root_folder = input_data.rstrip('/')

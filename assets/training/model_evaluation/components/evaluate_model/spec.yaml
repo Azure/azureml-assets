@@ -80,7 +80,7 @@ environment: azureml://registries/azureml/environments/model-evaluation/versions
 
 command: >-
   python download_dependencies.py
-  --mlflow-model '${{inputs.mlflow_model}}' ;
+  --mlflow-model '${{inputs.mlflow_model}}' &&
   python evaluate_model.py
   --task '${{inputs.task}}'
   --output '${{outputs.evaluation_result}}'

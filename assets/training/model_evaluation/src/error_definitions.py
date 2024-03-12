@@ -39,7 +39,7 @@ class ModelPredictionInternalError(ClientError):
         return ErrorStrings.GenericModelPredictionError
 
 
-class ModelPredictionValueError(UserError):
+class ModelPredictionUserError(UserError):
     """Model Prediction error."""
 
     @property
@@ -53,6 +53,19 @@ class ModelPredictionValueError(UserError):
 
 
 class ComputeMetricsInternalError(ClientError):
+    """Compute Metrics error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.GenericComputeMetricsError
+
+
+class ComputeMetricsUserError(UserError):
     """Compute Metrics error."""
 
     @property
@@ -108,7 +121,7 @@ class InvalidModel(BadArgument):
 
 
 @error_decorator(use_parent_error_code=True)
-class BadModel(BadData):
+class BadModel(ClientError):
     """Invalid Model Data error."""
 
     @property

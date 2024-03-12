@@ -3,6 +3,11 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.37 (2023-03-11)
+### 🐛 Bugs Fixed
+- [#2476](https://github.com/Azure/azureml-assets/pull/2476) Fix bug for extras with `latest-pypi-version`
+
+
 ## 1.16.36 (2023-03-05)
 ### 🐛 Bugs Fixed
 - [#2282](https://github.com/Azure/azureml-assets/pull/2282) Add support for optional dependencies with `latest-pypi-version`
