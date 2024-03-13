@@ -53,7 +53,7 @@ from shared_utilities.llm_utils import (
 
 
 def _post_process_results(output):
-    parsed_score_response = re.findall(f"\d+", output.split("# Result")[-1].strip())
+    parsed_score_response = re.findall(r'\d+', output.split("# Result")[-1].strip())
     if len(parsed_score_response) > 0:
         score = float(parsed_score_response[0].replace("'", "").strip())
     else:
