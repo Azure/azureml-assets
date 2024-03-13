@@ -129,7 +129,7 @@ class TestMEDSClient:
         """Test get application insights connection string."""
         # Arrange
         meds_client = MEDSClient(
-            token_provider=MagicMock(),
+            header_provider=MagicMock(),
             configuration=self._get_pool_configuration(quota_audience))
 
         async with aiohttp.ClientSession() as session:

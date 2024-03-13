@@ -97,6 +97,7 @@ def init():
 
     connection_string = asyncio.run(get_application_insights_connection_string(
         configuration=configuration,
+        metadata=metadata,
         token_provider=token_provider))
 
     setup_logger(configuration.stdout_log_level,
@@ -262,6 +263,7 @@ def check_all_tasks_processed() -> bool:
 
 async def get_application_insights_connection_string(
         configuration: Configuration,
+        metadata: Metadata,
         token_provider: TokenProvider) -> "str | None":
     """Get the application insights connection string.
 
@@ -280,7 +282,11 @@ async def get_application_insights_connection_string(
         return None
 
     lu.get_logger().info("Application Insights connection string not provided, looking up from MEDS.")
-    meds_client = MEDSClient(token_provider=token_provider, configuration=configuration)
+    header_provider = HeaderProviderFactory().get_header_provider_for_model_endpoint_discovery(
+        configuration=configuration,
+        metadata=metadata,
+        token_provider=token_provider)
+    meds_client = MEDSClient(header_provider=header_provider, configuration=configuration)
     async with aiohttp.ClientSession() as session:
         return await meds_client.get_application_insights_connection_string(session)
 

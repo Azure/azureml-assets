@@ -3,41 +3,32 @@
 
 """This file contains fixtures to mock scoring client."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
-from src.batch_score.batch_pool.scoring.scoring_client import ScoringClient
+from src.batch_score.batch_pool.scoring.pool_scoring_client import PoolScoringClient
 from src.batch_score.common.scoring.scoring_request import ScoringRequest
 from src.batch_score.common.scoring.scoring_result import ScoringResult
 
 
 @pytest.fixture()
-def make_scoring_client(make_completion_header_handler,
-                        make_quota_client,
-                        make_routing_client,
-                        make_tally_failed_request_handler):
+def make_pool_scoring_client(make_quota_client, make_routing_client):
     """Mock scoring client."""
-    def make(header_handler=make_completion_header_handler(),
-             quota_client=make_quota_client(),
-             routing_client=make_routing_client(),
-             scoring_url: str = None,
-             tally_handler=make_tally_failed_request_handler()):
-        client = ScoringClient(
-            header_provider=header_handler,
-            quota_client=quota_client,
-            routing_client=routing_client,
-            scoring_url=scoring_url,
-            tally_handler=tally_handler,
-        )
-        return client
+    def make(quota_client=None, routing_client=None):
+        return PoolScoringClient(
+            create_mir_scoring_client=lambda _: MagicMock(),
+            quota_client=quota_client or make_quota_client(),
+            routing_client=routing_client or make_routing_client())
     return make
 
 
 @pytest.fixture()
-def mock__score_once(monkeypatch, make_scoring_result):
+def mock_score(monkeypatch, make_scoring_result):
     """Mock score once."""
     state = {"raise_exception": None, "scoring_result": make_scoring_result()}
 
-    async def __score_once(self, session, scoring_request: ScoringRequest, timeout, worker_id):
+    async def score(self, session, scoring_request: ScoringRequest, timeout, worker_id):
         if state["raise_exception"]:
             # This delay ensures that the scoring duration (end - start) isn't zero.
             # Without this delay, the scoring duration of the request will never increase.
@@ -52,5 +43,5 @@ def mock__score_once(monkeypatch, make_scoring_result):
 
         return given_scoring_result
 
-    monkeypatch.setattr("src.batch_score.batch_pool.scoring.scoring_client.ScoringClient._score_once", __score_once)
+    monkeypatch.setattr("src.batch_score.batch_pool.scoring.pool_scoring_client.PoolScoringClient.score", score)
     return state

@@ -158,8 +158,9 @@ class RoutingClient(ClientSettingsProvider):
         return self.__last_refresh is None or \
             (self.__last_refresh + timedelta(seconds=self.__REFRESH_INTERVAL)) <= datetime.now(timezone.utc)
 
-    def increment(self, endpoint: str, request: ScoringRequest):
+    def increment(self, request: ScoringRequest):
         """Increment."""
+        endpoint = get_base_url(request.scoring_url)
         if endpoint not in self.__current_distribution_counts:
             self.__current_distribution_counts[endpoint] = 1
             self.__current_distribution_costs[endpoint] = request.estimated_cost
@@ -169,8 +170,9 @@ class RoutingClient(ClientSettingsProvider):
 
         self.__emit_request_concurrency(endpoint)
 
-    def decrement(self, endpoint: str, request: ScoringRequest):
+    def decrement(self, request: ScoringRequest):
         """Decrement."""
+        endpoint = get_base_url(request.scoring_url)
         self.__current_distribution_counts[endpoint] -= 1
         self.__current_distribution_costs[endpoint] -= request.estimated_cost
 

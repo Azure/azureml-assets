@@ -56,7 +56,10 @@ class MirHttpResponseHandler(HttpResponseHandler):
             model_response_reason=model_response_reason
         )
 
-        is_retriable = scoring_utils.is_retriable(retriable_type, scoring_request.retry_count + 1)
+        if retriable_type == scoring_utils.RetriableType.RETRY_UNTIL_MAX_RETRIES:
+            scoring_request.retry_count_for_limited_retries += 1
+
+        is_retriable = scoring_utils.is_retriable(retriable_type, scoring_request.retry_count_for_limited_retries)
 
         endpoint_base_url = get_base_url(scoring_request.scoring_url)
 

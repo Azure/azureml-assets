@@ -21,7 +21,7 @@ def test_get_headers():
         ],
         additional_headers={"header1": "value1"})
 
-    headers = multi_provider.get_headers(additional_headers={"header2": "value2"})
+    headers = multi_provider.get_headers(additional_headers='{"header2": "value2"}')
 
     assert headers == {
         "Content-Type": "application/json",

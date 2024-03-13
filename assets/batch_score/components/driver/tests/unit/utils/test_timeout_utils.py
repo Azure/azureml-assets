@@ -56,3 +56,16 @@ def test_get_retry_timeout_generator(env_var_overrides, expected_timeouts):
 
     # Assert
     assert timeouts == expected_timeouts
+
+
+def test_get_retry_timeout_generator_with_max_exponential_factor():
+    """Test get retry timeout generator with default values."""
+    # Arrange
+    timeout_generator = timeout_utils.get_retry_timeout_generator()
+
+    # Act
+    with mock.patch.dict(os.environ, {}):
+        timeouts = [next(timeout_generator) for _ in range(260)]
+
+    # Assert
+    assert max(timeouts) <= 1800

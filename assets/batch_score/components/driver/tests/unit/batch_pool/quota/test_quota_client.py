@@ -19,21 +19,16 @@ from tests.fixtures.client_response import FakeResponse
 
 
 @pytest.mark.asyncio
-async def test_quota_client(make_quota_client, make_completion_header_handler):
+async def test_quota_client(make_quota_client):
     """Test quota client."""
     batch_pool = "cool-pool"
 
     client_session = FakeClientSession()
-    token_provider = FakeTokenProvider()
-    header_handler = make_completion_header_handler(token_provider=token_provider,
-                                                    batch_pool=batch_pool,
-                                                    quota_audience="cool-audience")
     scoring_request = ScoringRequest('{"prompt":"There was a farmer who had a cow"}')
 
     scope = f"endpointPools:{batch_pool}:trafficGroups:batch"
 
     quota_client: QuotaClient = make_quota_client(
-        header_handler=header_handler,
         batch_pool=batch_pool,
         service_namespace="cool-namespace",
         quota_audience="cool-audience",
@@ -62,21 +57,16 @@ async def test_quota_client(make_quota_client, make_completion_header_handler):
     ({"x-ms-retry-after-ms": 750}, 0.75),
     ({"Retry-After": 123, "x-ms-retry-after-ms": 750}, 0.75),
 ])
-async def test_quota_client_throttle(make_quota_client, make_completion_header_handler, error_headers, retry_after):
+async def test_quota_client_throttle(make_quota_client, error_headers, retry_after):
     """Test quota client throttle case."""
     batch_pool = "cool-pool"
 
     client_session = FakeClientSession(throttle_lease=True, error_headers=error_headers)
-    token_provider = FakeTokenProvider()
-    header_handler = make_completion_header_handler(token_provider=token_provider,
-                                                    batch_pool=batch_pool,
-                                                    quota_audience="cool-audience")
     scoring_request = ScoringRequest('{"prompt":"There was a farmer who had a cow"}')
 
     scope = f"endpointPools:{batch_pool}:trafficGroups:batch"
 
     quota_client: QuotaClient = make_quota_client(
-        header_handler=header_handler,
         batch_pool=batch_pool,
         service_namespace="cool-namespace",
         quota_audience="cool-audience",
@@ -100,22 +90,17 @@ async def test_quota_client_throttle(make_quota_client, make_completion_header_h
     (["There was a farmer who had a cow", "and bingo was her name oh.", "B", "I", "N", "G", "O"],
      (8, 7, 1, 1, 1, 1, 1)),
 ])
-async def test_quota_client_embeddings(make_quota_client, make_completion_header_handler, input, expected_counts):
+async def test_quota_client_embeddings(make_quota_client, input, expected_counts):
     """Test quota client embeddings case."""
     batch_pool = "cool-pool"
 
     client_session = FakeClientSession(throttle_lease=True, error_headers={"Retry-After": 123})
-    token_provider = FakeTokenProvider()
-    header_handler = make_completion_header_handler(token_provider=token_provider,
-                                                    batch_pool=batch_pool,
-                                                    quota_audience="cool-audience")
     inputstring = json.dumps({"input": input})
     scoring_request = ScoringRequest(inputstring)
 
     scope = f"endpointPools:{batch_pool}:trafficGroups:batch"
 
     quota_client: QuotaClient = make_quota_client(
-        header_handler=header_handler,
         batch_pool=batch_pool,
         service_namespace="cool-namespace",
         quota_audience="cool-audience",
