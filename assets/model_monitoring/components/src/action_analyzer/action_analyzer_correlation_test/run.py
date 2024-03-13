@@ -22,7 +22,6 @@ from shared_utilities.constants import (
     P_VALUE_THRESHOLD,
     TEXT_SPLITTER,
     PROMPT_COLUMN,
-    INDEX_SCORE_COLUMN,
     INDEX_SCORE_LLM_COLUMN,
     INDEX_ID_COLUMN,
     BAD_GROUP_COLUMN,
@@ -147,7 +146,7 @@ def run():
     print(group_set)
     print("===All indexes===")
     print(index_set)
-    data_with_action_metric_score_df = data_with_action_metric_score_df.filter(col(INDEX_SCORE_LLM_COLUMN) > DEFAULT_RETRIEVAL_SCORE) # noqa: E501
+    data_with_action_metric_score_df = data_with_action_metric_score_df.filter(col(INDEX_SCORE_LLM_COLUMN) > DEFAULT_RETRIEVAL_SCORE)  # noqa: E501
     pdf = data_with_action_metric_score_df.toPandas()
     print(pdf)
     action_rows = generate_action_rows(pdf, index_set, group_set)

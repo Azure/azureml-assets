@@ -20,7 +20,6 @@ from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.constants import (
     INDEX_ID_COLUMN,
     INDEX_CONTENT_COLUMN,
-    INDEX_SCORE_COLUMN,
     INDEX_SCORE_LLM_COLUMN,
     INDEX_ACTION_TYPE,
     ACTION_DESCRIPTION,

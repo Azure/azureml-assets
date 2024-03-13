@@ -53,7 +53,7 @@ from shared_utilities.llm_utils import (
 
 
 def _post_process_results(output):
-    parsed_score_response = re.findall("\d+", output.split("# Result")[-1].strip())
+    parsed_score_response = re.findall("\d+", output.split("# Result")[-1].strip())  # noqa
     if len(parsed_score_response) > 0:
         score = float(parsed_score_response[0].replace("'", "").strip())
     else:
@@ -80,8 +80,7 @@ def _query_relevance_score(
 ) -> int:
 
     turns_list = [turns]
-    #prompts = [template.replace("{input_samples", f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1], 'context': turn[2]}, indent=4)}") for turn in turns_list]  # noqa: E501
-    prompts = [template.replace("{{ query }}", turn[0]).replace("{{ history }}", "").replace("{{ FullBody }}", turn[2]) for turn in turns_list]
+    prompts = [template.replace("{{ query }}", turn[0]).replace("{{ history }}", "").replace("{{ FullBody }}", turn[2]) for turn in turns_list]  # noqa: E501
 
     print("prompts:", prompts)
     ratings = []
@@ -115,8 +114,6 @@ def _query_relevance_score(
             print("response")
             response["response_time_sec"] = time_taken
             rating = _post_process_results(response["samples"][0])
-            #print(json.loads(response["samples"][0]).keys())
-            #rating = float(json.loads(response["samples"][0])["result"])
             print("===response===")
             print("rating=", rating, type(rating))
             ratings.append(rating)
@@ -159,7 +156,7 @@ def get_index_score(question,
     request_args = json.loads(request_args)
     context_array = text.split(TEXT_SPLITTER)
     context_json = {}
-    for i,context in enumerate(context_array):
+    for i, context in enumerate(context_array):
         context_json[f"Document {i}"] = context
     # get the max index score for all contexts
     with httpClient.client as session:
