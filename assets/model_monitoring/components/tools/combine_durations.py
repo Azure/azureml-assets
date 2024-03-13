@@ -16,11 +16,14 @@ def run():
     split_paths = Path(".").glob(f"{split_prefix}*/{durations_path.name}")
     try:
         previous_durations = json.loads(durations_path.read_text())
+        print("Successfully found previous durations file.")
     except FileNotFoundError:
         previous_durations = {}
+        print("Didn't find previous durations file.")
     new_durations = previous_durations.copy()
 
     for path in split_paths:
+        print(f"combining path: {path}")
         durations = json.loads(path.read_text())
         new_durations.update(
             {
