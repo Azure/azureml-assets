@@ -37,6 +37,9 @@ inputs:
     type: string
     default: "standard_e4s_v3"
     optional: True
+  aml_deployment_id:
+    type: string
+    description: azure ml deployment name
 outputs:
   action_output:
     type: uri_folder
@@ -108,8 +111,8 @@ jobs:
       data_with_action_metric_score:
         type: mltable
         path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
-      model_deployment_name: ${{parent.inputs.model_deployment_name}}
       signal_name: ${{parent.inputs.signal_name}}
+      aml_deployment_id: ${{parent.inputs.aml_deployment_id}}
     outputs:
       action_output:
         type: uri_folder

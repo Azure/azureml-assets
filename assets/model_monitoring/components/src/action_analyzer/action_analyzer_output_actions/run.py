@@ -18,9 +18,9 @@ import copy
 from mlflow import MlflowClient
 from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.constants import (
-    INDEX_SCORE_COLUMN,
     INDEX_ID_COLUMN,
     INDEX_CONTENT_COLUMN,
+    INDEX_SCORE_COLUMN,
     INDEX_SCORE_LLM_COLUMN,
     INDEX_ACTION_TYPE,
     ACTION_DESCRIPTION,
@@ -59,7 +59,12 @@ def get_index_set(df):
     return index_set
 
 
-def write_actions(action_bad_group_df, action_good_group_df, action_output_folder, model_deployment_name, signal_name):
+def is_index_asset(index_id):
+    """Check if index id is asset id"""
+    return index_id.startswith("azureml://")
+
+
+def write_actions(action_bad_group_df, action_good_group_df, action_output_folder, aml_deployment_id, signal_name):
     """Write the action summary and action detail files."""
     index_set = get_index_set(action_bad_group_df)
     local_path = str(uuid.uuid4())
@@ -79,12 +84,15 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
         }
         action_summary[action_id] = action
         action_detail = copy.deepcopy(action)
-        action_detail["DeploymentId"] = model_deployment_name
+        action_detail["DeploymentId"] = aml_deployment_id
         action_detail["RunId"] = os.environ.get("AZUREML_RUN_ID", None)
-        action_detail["IndexName"] = row[INDEX_ID_COLUMN]
         action_detail["IndexContent"] = row[INDEX_CONTENT_COLUMN]
         action_detail["PositiveSamples"] = generate_samples(action_good_group_df, False)
         action_detail["NegativeSamples"] = generate_samples(action_bad_group_df, True)
+        if is_index_asset(index_id):
+            action_detail["IndexAssetId"] = row[INDEX_ID_COLUMN]
+        else:
+            action_detail["IndexName"] = row[INDEX_ID_COLUMN]
         print("Writing action detail of action: ")
         print(action)
         write_to_file(action_detail, local_path, action_id)
@@ -134,7 +142,7 @@ def run():
     parser.add_argument("--action_data", type=str)
     parser.add_argument("--data_with_action_metric_score", type=str)
     parser.add_argument("--signal_name", type=str)
-    parser.add_argument("--model_deployment_name", type=str, required=True)
+    parser.add_argument("--aml_deployment_id", type=str)
     args = parser.parse_args()
 
     action_data_df = try_read_mltable_in_spark(
@@ -173,7 +181,7 @@ def run():
     write_actions(action_bad_group_df,
                   action_good_group_df,
                   args.action_output,
-                  args.model_deployment_name,
+                  args.aml_deployment_id,
                   args.signal_name)
 
 

@@ -76,7 +76,7 @@ def generate_action_rows(pdf, index_set, group_set):
                 continue
             index_df = pdf[pdf[INDEX_ID_COLUMN] == index]
             good_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][INDEX_SCORE_LLM_COLUMN]  # noqa: E501
-            bad_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][INDEX_SCORE_LLM_COLUMN]
+            bad_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][INDEX_SCORE_LLM_COLUMN]  # noqa: E501
             good_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][[PROMPT_COLUMN, INDEX_SCORE_LLM_COLUMN]]  # noqa: E501
             bad_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][[PROMPT_COLUMN, INDEX_SCORE_LLM_COLUMN]]  # noqa: E501
             print("good answer questions: ")
@@ -147,7 +147,7 @@ def run():
     print(group_set)
     print("===All indexes===")
     print(index_set)
-    data_with_action_metric_score_df = data_with_action_metric_score_df.filter(col(INDEX_SCORE_LLM_COLUMN) > DEFAULT_RETRIEVAL_SCORE)
+    data_with_action_metric_score_df = data_with_action_metric_score_df.filter(col(INDEX_SCORE_LLM_COLUMN) > DEFAULT_RETRIEVAL_SCORE) # noqa: E501
     pdf = data_with_action_metric_score_df.toPandas()
     print(pdf)
     action_rows = generate_action_rows(pdf, index_set, group_set)

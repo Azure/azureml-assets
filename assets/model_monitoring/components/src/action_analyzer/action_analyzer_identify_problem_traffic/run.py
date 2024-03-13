@@ -32,7 +32,8 @@ from shared_utilities.constants import (
     INDEX_CONTENT_COLUMN,
     INDEX_SCORE_COLUMN,
     INDEX_ID_COLUMN,
-    ROOT_SPAN_COLUMN
+    ROOT_SPAN_COLUMN,
+    GROUP_TOPIC_MIN_SAMPLE_SIZE
 )
 from shared_utilities.prompts import BERTOPIC_DEFAULT_PROMPT
 from shared_utilities.span_tree_utils import SpanTree
@@ -307,32 +308,34 @@ def run():
         good_samples = good_answers
 
         # add semantic groups for bad queries
-        print("add semantic groups for bad queries")
-        topics_dict = bertopic_get_topic(bad_samples[ROOT_QUESTION_COLUMN].tolist(),
-                                         args.workspace_connection_arm_id,
-                                         args.model_deployment_name)
+        if len(bad_samples) > GROUP_TOPIC_MIN_SAMPLE_SIZE:
+            print("add semantic groups for bad queries")
+            topics_dict = bertopic_get_topic(bad_samples[ROOT_QUESTION_COLUMN].tolist(),
+                                            args.workspace_connection_arm_id,
+                                            args.model_deployment_name)
 
-        topic_group_dict = {f"{metrics}_bad_group_{i}_{k}": (k, v) for i, (k, v) in enumerate(topics_dict.items())}
-        topic_group_columns = assign_topic_and_group(col(TOPIC_LIST_COLUMN),
-                                                     col(GROUP_LIST_COLUMN),
-                                                     col(ROOT_QUESTION_COLUMN),
-                                                     col(VIOLATED_METRICS_COLUMN),
-                                                     lit(metrics),
-                                                     lit(json.dumps(topic_group_dict)))
+            topic_group_dict = {f"{metrics}_bad_group_{i}_{k}": (k, v) for i, (k, v) in enumerate(topics_dict.items())}
+            topic_group_columns = assign_topic_and_group(col(TOPIC_LIST_COLUMN),
+                                                        col(GROUP_LIST_COLUMN),
+                                                        col(ROOT_QUESTION_COLUMN),
+                                                        col(VIOLATED_METRICS_COLUMN),
+                                                        lit(metrics),
+                                                        lit(json.dumps(topic_group_dict)))
 
-        df = df.withColumn(TOPIC_LIST_COLUMN, topic_group_columns[0])
-        df = df.withColumn(GROUP_LIST_COLUMN, topic_group_columns[1])
+            df = df.withColumn(TOPIC_LIST_COLUMN, topic_group_columns[0])
+            df = df.withColumn(GROUP_LIST_COLUMN, topic_group_columns[1])
 
         # add semantic groups for good queries
-        print("add semantic groups for good queries")
-        topics_dict = bertopic_get_topic(good_samples[ROOT_QUESTION_COLUMN].tolist(),
-                                         args.workspace_connection_arm_id,
-                                         args.model_deployment_name)
+        if len(good_samples) > GROUP_TOPIC_MIN_SAMPLE_SIZE:
+            print("add semantic groups for good queries")
+            topics_dict = bertopic_get_topic(good_samples[ROOT_QUESTION_COLUMN].tolist(),
+                                            args.workspace_connection_arm_id,
+                                            args.model_deployment_name)
 
-        df = df.withColumn(TOPIC_LIST_COLUMN, assign_good_topic(col(TOPIC_LIST_COLUMN),
-                                                                col(ROOT_QUESTION_COLUMN),
-                                                                col(score_name),
-                                                                lit(json.dumps(topics_dict))))
+            df = df.withColumn(TOPIC_LIST_COLUMN, assign_good_topic(col(TOPIC_LIST_COLUMN),
+                                                                    col(ROOT_QUESTION_COLUMN),
+                                                                    col(score_name),
+                                                                    lit(json.dumps(topics_dict))))
 
     sampled_df = df.filter(col(TOPIC_LIST_COLUMN) != "")
     sampled_df.show()
