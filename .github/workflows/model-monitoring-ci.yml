@@ -98,7 +98,7 @@ jobs:
           path: ./
 
       - name: Get durations from cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.pytest_split_test_durations_file }}
           # the key must never match, even when restarting workflows, as that
@@ -158,7 +158,7 @@ jobs:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
 
       - name: Get and store durations in cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.pytest_split_test_durations_file }}
           # key won't match during the first run for the given commit, but
