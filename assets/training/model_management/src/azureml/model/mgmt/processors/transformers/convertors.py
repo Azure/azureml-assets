@@ -395,7 +395,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         )
 
     def _robust_load_config(self, config) -> transformers.PretrainedConfig:
-        """ check and save if config has missing indices
+        """Check and save if config has missing indices.
 
         :param config: Config Object from transformers
         :type config: PretrainedConfig
@@ -428,7 +428,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
 
         config_load_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
         config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
-        config = self._robust_save_config(config)
+        config = self._robust_load_config(config)
         hf_conf[HF_CONF.TRAIN_LABEL_LIST.value] = list(config.id2label.values())
         extra_pip_requirements = ["torchvision"]
         if self._extra_pip_requirements is None:
