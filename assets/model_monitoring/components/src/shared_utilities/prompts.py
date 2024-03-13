@@ -44,11 +44,13 @@ RELEVANCE_TEMPLATE = """
     5 means either one of the document or combination of a few documents is ideal for answering the given question.
     Think through step by step:
     - Summarize each given document first
-    - Determine the underlying intent of the given question, when the question is ambiguous, refer to the given chat history
-    - Measure how suitable each document to the given question, list the document id and the corresponding relevance score.
+    - Determine the underlying intent of the given question, when the question is ambiguous, \
+    refer to the given chat history
+    - Measure how suitable each document to the given question, \
+    list the document id and the corresponding relevance score.
     - Summarize the overall relevance of given list of documents to the given question after # Overall Reason, \
     note that the answer to the question can soley from single document or a combination of multiple documents.
-    - Finally, output "# Result" followed by a score from 1 to 5. 
+    - Finally, output "# Result" followed by a score from 1 to 5.
 
     # Question
     {{ query }}
