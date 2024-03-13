@@ -31,7 +31,8 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
 # so we install pyarrow in extra step to avoid conflict
 RUN pip install 'pyarrow>=14.0.1'
 
-# To resolve vulnerability issue regarding crytography
+# To resolve vulnerability issue
+# regarding crytography (GHSA-3ww4-gg4f-jr7f)
 RUN pip install 'cryptography>=42.0.4'
 
 # Install huggingface evaluate package from source
