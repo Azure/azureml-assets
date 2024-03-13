@@ -59,7 +59,7 @@ def get_index_set(df):
 
 
 def is_index_asset(index_id):
-    """Check if index id is asset id"""
+    """Check if index id is asset id."""
     return index_id.startswith("azureml://")
 
 
