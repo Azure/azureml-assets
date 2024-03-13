@@ -53,18 +53,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 
-      - name: Get durations from cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.pytest_split_test_durations_file }}
-          # the key must never match, even when restarting workflows, as that
-          # will cause durations to get out of sync between groups, the
-          # combined durations will be loaded if available
-          key: test-durations-split-${{ github.run_id }}-${{ github.run_number}}-${{ matrix.group }}
-          restore-keys: |
-            test-durations-combined-${{ github.sha }}
-            test-durations-combined
-
       - name: Log in to Azure and create resources
         uses: ./.github/actions/create-azure-resources
         with:
@@ -109,6 +97,18 @@ jobs:
           name: ${{ env.pytest_component_version_folder }}
           path: ./
 
+      - name: Get durations from cache
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ env.pytest_split_test_durations_file }}
+          # the key must never match, even when restarting workflows, as that
+          # will cause durations to get out of sync between groups, the
+          # combined durations will be loaded if available
+          key: test-durations-split-${{ github.run_id }}-${{ github.run_number}}-${{ matrix.group }}
+          restore-keys: |
+            test-durations-combined-${{ github.sha }}
+            test-durations-combined
+
       - name: Use Python 3.8
         uses: actions/setup-python@v4
         with:
@@ -140,12 +140,12 @@ jobs:
           name: ${{ env.pytest_report_folder }}
           path: ${{ env.pytest_report_folder }}
 
-      - name: Upload Partial durations
+      - name: Upload partial durations
         uses: actions/upload-artifact@v3
         if: success()
         with:
-          name: ${{ env.pytest_report_folder }}
-          path: ${{ env.pytest_report_folder }}
+          name: split-${{ matrix.group }}
+          path: ${{ env.pytest_split_test_durations_file }}
 
   update_durations:
     name: Combine and update testcase durations
@@ -158,7 +158,7 @@ jobs:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
 
       - name: Get and store durations in cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ env.pytest_split_test_durations_file }}
           # key won't match during the first run for the given commit, but
