@@ -163,7 +163,7 @@ jobs:
           path: ${{ env.pytest_split_test_durations_file }}
           # key won't match during the first run for the given commit, but
           # restore-key will if there's a previous stored durations file, 
-          # so cache will both be loaded and stored
+          # so cache will both be loaded and stored.
           key: test-durations-combined-${{ github.sha }}
           restore-keys: test-durations-combined
 
