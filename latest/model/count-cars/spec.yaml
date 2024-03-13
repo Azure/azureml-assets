@@ -10,7 +10,7 @@ properties:
     Turbo with Vision to provide accurate vehicle counts.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 1
+version: 2
 description: |-
   The "Count Cars" is a model designed for accurately quantifying the number of specific vehicles – particularly red cars – in given images. Utilizing the advanced capabilities of Azure OpenAI GPT-4 Turbo with Vision, this system meticulously analyzes each image, identifies and counts red cars, outputting the results in a clear JSON format. The process involves aggregating the counts from multiple images to provide a cumulative total, offering a precise and efficient approach to vehicle analysis.
 
