@@ -56,3 +56,4 @@ args: >-
   --input_data ${{inputs.input_data}}
   --preprocessed_span_data ${{outputs.preprocessed_span_data}}
   --aggregated_trace_data ${{outputs.aggregated_trace_data}}
+  --require_trace_data ${{inputs.require_trace_data}}

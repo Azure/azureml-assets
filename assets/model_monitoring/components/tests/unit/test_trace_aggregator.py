@@ -12,7 +12,7 @@ import os
 import sys
 from datetime import datetime
 from model_data_collector_preprocessor.trace_aggregator import (
-    process_spans_into_aggregated_traces,
+    aggregate_spans_into_traces,
 )
 from spark_mltable import SPARK_ZIP_PATH
 
@@ -216,6 +216,8 @@ class TestGenAISparkPreprocessor:
     def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
         spark = self._init_spark()
+        start_time = datetime(2024, 2, 5, 0,)
+        end_time = datetime(2024, 2, 5, 1)
 
         span_logs_no_root_with_data = [
             ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name"] +
@@ -227,7 +229,7 @@ class TestGenAISparkPreprocessor:
             span_logs_no_root_with_data,
             self._preprocessed_log_schema)
 
-        trace_df = process_spans_into_aggregated_traces(span_logs_no_root_with_data_df, True)
+        trace_df = aggregate_spans_into_traces(span_logs_no_root_with_data_df, True, start_time, end_time)
         rows = trace_df.collect()
         assert trace_df.count() == 1
         assert rows[0]['trace_id'] == "01"
@@ -237,7 +239,7 @@ class TestGenAISparkPreprocessor:
             ["1", "1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
         ]
         spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
-        no_root_traces = process_spans_into_aggregated_traces(spans_no_root_df, True)
+        no_root_traces = aggregate_spans_into_traces(spans_no_root_df, True, start_time, end_time)
         assert no_root_traces.isEmpty()
 
     @pytest.mark.parametrize(
@@ -252,10 +254,9 @@ class TestGenAISparkPreprocessor:
              datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
             (_span_log_data, _preprocessed_log_schema, [], _trace_log_schema, False,
              datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
-            # TODO: uncomment when support 1-hour look back/forward
             # Look back with extra span logs
-            # (_span_log_data_lookback, _preprocessed_log_schema, _trace_log_data_lookback, _trace_log_schema, True,
-            #  datetime(2024, 2, 5, 6), datetime(2024, 2, 5, 7))
+            (_span_log_data_lookback, _preprocessed_log_schema, _trace_log_data_lookback, _trace_log_schema, True,
+             datetime(2024, 2, 5, 6), datetime(2024, 2, 5, 7))
         ]
     )
     def test_trace_aggregator(
@@ -264,6 +265,7 @@ class TestGenAISparkPreprocessor:
             require_trace_data, data_window_start, data_window_end):
         """Test scenario where spans has real data."""
         spark = self._init_spark()
+
         # infer schema only when we have data.
         processed_spans_df = spark.createDataFrame(span_input_logs, span_input_schema)
         expected_traces_df = spark.createDataFrame(expected_trace_logs, expected_trace_schema)
@@ -276,7 +278,8 @@ class TestGenAISparkPreprocessor:
         expected_traces_df.show()
         expected_traces_df.printSchema()
 
-        actual_trace_df = process_spans_into_aggregated_traces(processed_spans_df, require_trace_data)
+        actual_trace_df = aggregate_spans_into_traces(
+            processed_spans_df, require_trace_data, data_window_start, data_window_end)
 
         print("actual trace logs:")
         actual_trace_df.show()
