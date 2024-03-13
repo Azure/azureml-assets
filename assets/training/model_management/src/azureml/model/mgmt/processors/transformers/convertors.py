@@ -29,8 +29,9 @@ from azureml.model.mgmt.utils.common_utils import (
     fetch_mlflow_acft_metadata
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from mlflow.models import ModelSignature, Model
+from mlflow.models import ModelSignature, Model, infer_signature
 from mlflow.types.schema import ColSpec, DataType, Schema, ParamSpec, ParamSchema
+from mlflow.transformers import generate_signature_output, get_default_conda_env
 from mlflow.utils.requirements_utils import _get_pinned_requirement
 from pathlib import Path
 from transformers import (
@@ -215,7 +216,9 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         model_pipeline = transformers.pipeline(task=self._task, model=model,
                                                trust_remote_code=trust_remote_code_val)
-
+        if hasattr(self, "config"):
+            # Have to update the config as some vision models has problems in hf registry.
+            model_pipeline.model.config = self.config
         params = {
             "transformers_model": model_pipeline,
             "code_paths": code_paths,
@@ -384,20 +387,31 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
 
     def get_model_signature(self):
         """Return model signature for vision models."""
-        if self._model_flavor == "OSS":
-            return ModelSignature(
-                inputs=Schema(inputs=[ColSpec(type=DataType.string)]),
-                outputs=Schema(
-                    inputs=[ColSpec(name="label", type=DataType.string), ColSpec(name="score", type=DataType.float)]
-                ),
-            )
-        else:
-            return ModelSignature(
-                inputs=Schema(inputs=[ColSpec(name="image", type=DataType.binary)]),
-                outputs=Schema(
-                    inputs=[ColSpec(name="probs", type=DataType.string), ColSpec(name="labels", type=DataType.string)]
-                ),
-            )
+        return ModelSignature(
+            inputs=Schema(inputs=[ColSpec(name="image", type=DataType.binary)]),
+            outputs=Schema(
+                inputs=[ColSpec(name="probs", type=DataType.string), ColSpec(name="labels", type=DataType.string)]
+            ),
+        )
+
+    def _robust_load_config(self, config) -> transformers.PretrainedConfig:
+        """ check and save if config has missing indices
+
+        :param config: Config Object from transformers
+        :type config: PretrainedConfig
+        :return: Config Object
+        :rtype: PretrainedConfig
+        """
+        ids = list(config.id2label.keys())
+        ids.sort()
+        if max(ids) != len(ids)-1:
+            id2label = {}
+            for idx, id in enumerate(ids):
+                id2label[idx] = config.id2label[id]
+            config.id2label = id2label
+            self.config = config
+            logger.warning("config loaded with modified id2label as there are some missing keys.")
+        return config
 
     def save_as_mlflow(self):
         """Prepare vision models for save to MLflow."""
@@ -414,6 +428,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
 
         config_load_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
         config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
+        config = self._robust_save_config(config)
         hf_conf[HF_CONF.TRAIN_LABEL_LIST.value] = list(config.id2label.values())
         extra_pip_requirements = ["torchvision"]
         if self._extra_pip_requirements is None:
@@ -423,12 +438,14 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
             self._extra_pip_requirements.append(package_with_version)
 
         if self._model_flavor == "OSS":
-            vision_model = transformers.pipeline(
-                task=self._task,
-                model=str(self._model_dir),
+            vision_model = transformers.pipeline(task=self._task, model=str(self._model_dir))
+            vision_model.model.config = config
+            image_path = str(Path(__file__).parent.parent / "common" / "test_image.jpg")
+            self._signatures = infer_signature(
+                image_path, generate_signature_output(vision_model, image_path),
             )
             return super()._save(
-                conda_env=mlflow.transformers.get_default_conda_env(vision_model.model)
+                conda_env=get_default_conda_env(vision_model.model)
             )
         else:
             return super()._save(
