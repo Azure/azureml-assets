@@ -85,13 +85,13 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
         action_detail = copy.deepcopy(action)
         action_detail["DeploymentId"] = aml_deployment_id
         action_detail["RunId"] = os.environ.get("AZUREML_RUN_ID", None)
-        action_detail["IndexContent"] = row[INDEX_CONTENT_COLUMN]
-        action_detail["PositiveSamples"] = generate_samples(action_good_group_df, False)
-        action_detail["NegativeSamples"] = generate_samples(action_bad_group_df, True)
         if is_index_asset(index_id):
             action_detail["IndexAssetId"] = row[INDEX_ID_COLUMN]
         else:
             action_detail["IndexName"] = row[INDEX_ID_COLUMN]
+        action_detail["IndexContent"] = row[INDEX_CONTENT_COLUMN]
+        action_detail["PositiveSamples"] = generate_samples(action_good_group_df, False)
+        action_detail["NegativeSamples"] = generate_samples(action_bad_group_df, True)
         print("Writing action detail of action: ")
         print(action)
         write_to_file(action_detail, local_path, action_id)
