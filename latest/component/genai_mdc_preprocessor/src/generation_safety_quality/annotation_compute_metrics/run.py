@@ -183,7 +183,10 @@ def compute_metrics(histogram_df, threshold_args, metric_names):
                     metadata_schema,
                 )
             aggregated_metrics_df = aggregated_metrics_df.union(threshold_row)
-        if average_score_metric_name in input_metric_names:
+        # for now, compute average score if either average score or pass rate is requested
+        compute_average = average_score_metric_name in input_metric_names
+        compute_average = compute_average or full_pass_rate_metric_name in input_metric_names
+        if compute_average:
             average_metric_score = _calculate_average_metric_score(
                 histogram_df, full_per_instance_score_metric_name)
             metric_df = spark.createDataFrame(
