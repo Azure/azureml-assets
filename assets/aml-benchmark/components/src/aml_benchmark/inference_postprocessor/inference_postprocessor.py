@@ -175,28 +175,23 @@ class InferencePostprocessor(object):
             actual_df = pd.json_normalize(
                 read_jsonl_files(resolve_io_path(self.ground_truth_dataset))
             )
+            if not self.ground_truth_dataset and not self.additional_columns:
+                return actual_df
             if self.ground_truth_column_name:
                 result_df[self.ground_truth_column_name] = actual_df[
                     self.ground_truth_column_name
                 ]
             if self.additional_columns:
-                elements = self.additional_columns.split(",")
-                strips = [s.strip() for s in elements if s.strip()]
-                for column in strips:
-                    try:
-                        result_df[column] = actual_df[column]
-                    except KeyError:
-                        raise BenchmarkUserException._with_error(
+                columns = [col.strip() for col in self.additional_columns.split(',')]
+                try:
+                    result_df[columns] = actual_df[columns]
+                except KeyError as e:
+                    raise BenchmarkUserException._with_error(
                             AzureMLError.create(
                                 BenchmarkUserError,
-                                error_details=f"Column {column} doesn't exist.\
-                                    Please check your data before submitting again.")
+                                error_details=f"Error: {e}.Please check your data before submitting again.")
                             )
-            else:
-                result_df = actual_df
         return result_df
-
-    # def read_additional_dataset? Place holder.
 
     def apply_find_first(self, text: str) -> str:
         """Find and return first occurence of any candidate in the text."""

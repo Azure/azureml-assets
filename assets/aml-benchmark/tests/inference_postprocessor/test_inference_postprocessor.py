@@ -202,7 +202,7 @@ class TestInferencePostprocessorComponent:
             if ground_truth_dataset
             else None,
             ground_truth_column_name=ground_truth_column_name,
-            additional_columns=[additional_columns] if additional_columns else None,
+            additional_columns=additional_columns if additional_columns else None,
             separator=separator,
             regex_expr=regex_expr,
             remove_prefixes=remove_prefixes,
@@ -337,7 +337,7 @@ class TestInferencePostprocessorScript:
             ),
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, "\n\n",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question", "\n\n",
                 None, None, ".", "last", None, None, None, None,
             ),
             (
