@@ -11,11 +11,11 @@ import aiohttp
 from aiohttp import TraceConfig
 
 from ...batch_pool.routing.routing_client import RoutingClient
-from ...batch_pool.scoring.scoring_client import ScoringClient
 from ..configuration.client_settings import NullClientSettingsProvider
 from ..configuration.configuration import Configuration
 from ..post_processing.gatherer import Gatherer
 from ..post_processing.mini_batch_context import MiniBatchContext
+from ..scoring.scoring_client import ScoringClient
 from ..scoring.scoring_request import ScoringRequest
 from ..scoring.scoring_result import ScoringResult
 from ..telemetry import logging_utils as lu

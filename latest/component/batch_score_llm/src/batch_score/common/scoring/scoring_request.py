@@ -67,6 +67,7 @@ class ScoringRequest:
         self.mini_batch_context: MiniBatchContext = mini_batch_context
         self.request_history: list[ScoringAttempt] = []  # Stack
         self.retry_count: int = 0
+        self.retry_count_for_limited_retries: int = 0
         self.total_wait_time: int = 0
 
     # read-only

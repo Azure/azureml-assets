@@ -37,10 +37,11 @@ class HeaderProviderFactory:
                 user_agent_segment=configuration.user_agent_segment),
             XMsClientRequestIdHeaderProvider(),
         ]
+        endpoint_type = configuration.get_endpoint_type()
 
-        if configuration.get_endpoint_type() in [EndpointType.AOAI, EndpointType.Serverless]:
+        if endpoint_type in [EndpointType.AOAI, EndpointType.Serverless]:
             header_providers.append(AuthHeaderProvider(auth_provider))
-        elif configuration.get_endpoint_type() == EndpointType.MIR:
+        elif endpoint_type == EndpointType.MIR:
             header_providers.append(TrafficGroupHeaderProvider())
             if isinstance(auth_provider, WorkspaceConnectionAuthProvider):
                 header_providers.append(AuthHeaderProvider(auth_provider))
