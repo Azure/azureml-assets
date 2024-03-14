@@ -137,12 +137,14 @@ def test_handle_response_retriable_exception_throws_exception(exception_to_throw
     mock_emit_event.assert_called_with(batch_score_event=expected_request_completed_event)
 
 
-def test_handle_response_server_error_max_retries_reached(mock_run_context):
+@pytest.mark.parametrize('status_code', [(500), (502), (503), (504), (50)])
+def test_handle_response_server_error_max_retries_reached(status_code, mock_run_context):
     """Test handle response returns failure when retry count reaches max retries."""
     # Arrange
-    http_response = HttpScoringResponse(status=507)
+    http_response = HttpScoringResponse(status=status_code)
     scoring_request = _get_test_scoring_request()
-    scoring_request.retry_count = 3
+    scoring_request.retry_count = 10
+    scoring_request.retry_count_for_limited_retries = 3
     response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
     expected_request_completed_event = _get_expected_request_completed_event(
         response_handler,
@@ -179,7 +181,7 @@ failed_response_payload = r'{\n  "error": {\n    "message": "This model\'s maxim
                           r',\n    "param": null,\n    "code": null\n  }\n}\n'
 
 
-@pytest.mark.parametrize('status_code', [(408), (429), (500), (502), (503), (504)])
+@pytest.mark.parametrize('status_code', [(408), (429)])
 def test_handle_response_retriable_status_code_throws_exception(status_code, mock_run_context):
     """Test handle response retriable status code throws exception."""
     # Arrange
@@ -266,7 +268,7 @@ def _get_expected_request_completed_event(
         worker_id=test_worker_id,
         scoring_url=test_scoring_url,
         is_successful=True if http_response.status == 200 else False,
-        is_retriable=aoai_response_handler.is_retriable(http_response.status, scoring_request.retry_count + 1),
+        is_retriable=aoai_response_handler.is_retriable(http_response.status, scoring_request),
         response_code=http_response.status,
         model_response_code=model_response_code,
         prompt_tokens=prompt_tokens,
@@ -281,5 +283,6 @@ def _get_test_scoring_request() -> ScoringRequest:
     scoring_request.scoring_url = test_scoring_url
     scoring_request.segment_id = test_segment_count
     scoring_request.retry_count = 0
+    scoring_request.retry_count_for_limited_retries = 0
 
     return scoring_request

@@ -219,6 +219,7 @@ async def test_get_application_insights_connection_string(
         # Act
         connection_string = await main.get_application_insights_connection_string(
             configuration=configuration,
+            metadata=MagicMock(),
             token_provider=MagicMock())
 
     # Assert

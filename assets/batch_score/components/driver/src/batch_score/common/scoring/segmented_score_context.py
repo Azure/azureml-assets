@@ -7,10 +7,10 @@ import json
 
 import aiohttp
 
-from ...batch_pool.scoring.scoring_client import ScoringClient
 from ...utils.common import str2bool
 from ...utils.json_encoder_extensions import BatchComponentJSONEncoder
 from ..telemetry import logging_utils as lu
+from .scoring_client import ScoringClient
 from .scoring_request import ScoringRequest
 from .scoring_result import ScoringResult, ScoringResultStatus
 
@@ -49,7 +49,7 @@ class SegmentedScoreContext:
         """Get the processed segments count."""
         return len(self.__segmented_results)
 
-    async def score_next_once(
+    async def score_next_segment(
             self,
             scoring_client: ScoringClient,
             session: aiohttp.ClientSession,
@@ -61,7 +61,7 @@ class SegmentedScoreContext:
 
         next_scoring_request = self.__next_scoring_request
 
-        next_result = await scoring_client.score_once(
+        next_result = await scoring_client.score(
             session,
             next_scoring_request,
             timeout,
