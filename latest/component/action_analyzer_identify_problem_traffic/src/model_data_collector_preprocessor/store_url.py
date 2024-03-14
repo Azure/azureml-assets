@@ -12,6 +12,7 @@ from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
 from azure.storage.filedatalake import FileSystemClient
 from azureml.core import Workspace, Run, Datastore
+from azureml.exceptions import UserErrorException
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -227,8 +228,9 @@ class StoreUrl:
             else:  # azureml datastore url, long or short form
                 datastore_name, self.path = self._get_datastore_and_path_from_azureml_path()
                 ws = ws or Run.get_context().experiment.workspace
-                self._datastore = Datastore.get(ws, datastore_name)
-                if self._datastore is None:
+                try:
+                    self._datastore = Datastore.get(ws, datastore_name)
+                except UserErrorException:
                     raise InvalidInputError(f"Datastore {datastore_name} not found in the workspace.")
                 datastore_type = self._datastore.datastore_type
                 if datastore_type not in ["AzureBlob", "AzureDataLakeGen2"]:
