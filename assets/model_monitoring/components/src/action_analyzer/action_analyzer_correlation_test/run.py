@@ -99,7 +99,7 @@ def generate_action_rows(pdf, index_set, group_set):
 
 
 def perform_ttest(good_answer_scores, bad_answer_scores):
-    """Do the Welch's t-test."""
+    """Perform Mann-Whitney U test."""
     t_stat, p_value = stats.ttest_ind(good_answer_scores, bad_answer_scores)
     print(f"Normal t-test T-statistic: {t_stat}, P-value: {p_value}")
     t_stat1, p_value1 = stats.ttest_ind(good_answer_scores, bad_answer_scores, equal_var=False)
@@ -110,6 +110,7 @@ def perform_ttest(good_answer_scores, bad_answer_scores):
     # Perform Fisher's Exact Test
     t_stat3, p_value3 = stats.fisher_exact(table)
     print(f"Fisher's Exact Tes odds_ratio: {t_stat3}, P-value: {p_value3}")
+    # Use Mann-Whitney U test for correlation test
     return t_stat2, p_value2
 
 
