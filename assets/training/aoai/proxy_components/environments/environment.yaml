@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/oai-proxy-components
+  name: azureml/curated/aoai-proxy-components
   os: linux
   context:
     dir: context
