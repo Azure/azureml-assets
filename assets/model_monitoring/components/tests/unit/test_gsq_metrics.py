@@ -78,6 +78,18 @@ class TestGSQMetrics:
             else:
                 assert result_metric_value == expected_metric_value
 
+    def test_pass_rate_includes_average_scores(self,
+                                               code_zip_test_setup,
+                                               gsq_preprocessor_test_setup):
+        """Test average score included with AggregatedGroundednessPassRate."""
+        histogram_df = get_histogram_data()
+        spark = init_spark()
+        histogram_df = spark.createDataFrame(histogram_df)
+        metric_names = "AggregatedGroundednessPassRate"
+        result = call_compute_metrics(histogram_df, metric_names)
+        result_df = result.toPandas()
+        assert "AverageGroundednessScore" in result_df[METRIC_NAME_COLUMN].values
+
 
 def get_histogram_data():
     """Get histogram data for testing."""
