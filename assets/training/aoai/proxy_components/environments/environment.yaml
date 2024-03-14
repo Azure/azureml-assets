@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/distillation
+  name: azureml/curated/oai-proxy-components
   os: linux
   context:
     dir: context
