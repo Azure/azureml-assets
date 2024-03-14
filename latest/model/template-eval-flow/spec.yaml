@@ -9,7 +9,7 @@ properties:
   azureml.promptflow.description: Template Evaluation Flow
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 1
+version: 2
 description: |-
   The "Template Evaluation Flow" is a evaluate model to measure how well the output matches the expected criteria and goals.
 
