@@ -1,5 +1,5 @@
 image:
-  name: general-langchain-app-deployment
+  name: azureml/curated/general-langchain-app-deployment
   os: linux
   context:
     dir: context
