@@ -12,6 +12,7 @@ from ..common import constants
 BACKOFF_FACTOR_REQUEST_TIMEOUT = 2
 INITIAL_REQUEST_TIMEOUT = 10
 MAX_REQUEST_TIMEOUT = 30 * 60  # 30 minutes
+MAX_EXPONENTIAL_FACTOR = 256
 
 
 def get_retry_timeout_generator() -> Generator[float, None, None]:
@@ -22,8 +23,10 @@ def get_retry_timeout_generator() -> Generator[float, None, None]:
 
     i = 0
     while True:
-        yield min(initial_timeout * (backoff_factor ** i),
-                  max_timeout)
+        if (i in range(MAX_EXPONENTIAL_FACTOR)):
+            yield min(initial_timeout * (backoff_factor ** i), max_timeout)
+        else:
+            yield max_timeout
         i += 1
 
 
