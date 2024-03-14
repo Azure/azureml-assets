@@ -6,6 +6,7 @@
 import argparse
 import requests
 import json
+import re
 from pyspark.sql.functions import col, lit, udf
 from typing import Tuple
 from pyspark.sql.types import (
@@ -29,9 +30,10 @@ from shared_utilities.constants import (
     INDEX_CONTENT_COLUMN,
     INDEX_SCORE_COLUMN,
     INDEX_SCORE_LLM_COLUMN,
-    INDEX_ID_COLUMN
+    INDEX_ID_COLUMN,
+    DEFAULT_RETRIEVAL_SCORE
 )
-from shared_utilities.prompts import RETRIEVAL_DOCUMENT_RELEVANCE_TEMPLATE
+from shared_utilities.prompts import RELEVANCE_TEMPLATE
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     save_spark_df_as_mltable,
@@ -48,6 +50,17 @@ from shared_utilities.llm_utils import (
     _request_api,
     get_openai_request_args
 )
+
+
+def _post_process_results(output):
+    parsed_score_response = re.findall(r'\d+', output.split("# Result")[-1].strip())
+    if len(parsed_score_response) > 0:
+        score = float(parsed_score_response[0].replace("'", "").strip())
+    else:
+        # Result of score is not found in the output string
+        score = DEFAULT_RETRIEVAL_SCORE
+        print("Not able to parse the score from the output string, setting score to nan")
+    return score
 
 
 def _query_relevance_score(
@@ -67,7 +80,8 @@ def _query_relevance_score(
 ) -> int:
 
     turns_list = [turns]
-    prompts = [template.replace("{input_samples", f"\n{json.dumps({'prompt': turn[0], 'completion': turn[1], 'context': turn[2]}, indent=4)}") for turn in turns_list]  # noqa: E501
+    prompts = [template.replace("{{ query }}", turn[0]).replace("{{ history }}", "").replace("{{ FullBody }}", turn[2]) for turn in turns_list]  # noqa: E501
+
     print("prompts:", prompts)
     ratings = []
     for prompt in prompts:
@@ -97,11 +111,11 @@ def _query_relevance_score(
             )
 
             # Append time taken to the line
+            print("response")
             response["response_time_sec"] = time_taken
-            print(response["samples"][0])
-            rating = json.loads(response["samples"][0])["rating"]
-            # print("===response===")
-            # print("rating=", rating, type(rating))
+            rating = _post_process_results(response["samples"][0])
+            print("===response===")
+            print("rating=", rating, type(rating))
             ratings.append(rating)
         except Exception as e:  # noqa: B902
             response["finish_reason"] = ["error"]
@@ -110,7 +124,7 @@ def _query_relevance_score(
     return ratings[0]
 
 
-@udf(IntegerType())
+@udf(FloatType())
 def get_index_score(question,
                     answer,
                     text,
@@ -140,19 +154,20 @@ def get_index_score(question,
     )
 
     request_args = json.loads(request_args)
-    rating_out = -1
     context_array = text.split(TEXT_SPLITTER)
+    context_json = {}
+    for i, context in enumerate(context_array):
+        context_json[f"Document {i}"] = context
     # get the max index score for all contexts
     with httpClient.client as session:
-        for context in context_array:
-            rating = _query_relevance_score(
-                (question, answer, context),
-                RETRIEVAL_DOCUMENT_RELEVANCE_TEMPLATE,
-                session, azure_endpoint_url, token_manager,
-                **request_args,
-            )
-            rating_out = max(rating_out, rating)
-    return rating_out
+        rating = _query_relevance_score(
+            (question, answer, json.dumps(context_json)),
+            RELEVANCE_TEMPLATE,
+            session, azure_endpoint_url, token_manager,
+            **request_args,
+        )
+
+    return rating
 
 
 def get_output_schema() -> StructType:
@@ -205,7 +220,7 @@ def run():
         save_empty_dataframe(get_output_schema(), args.data_with_action_metric_score)
         return
 
-    idnex_score = get_index_score(col(PROMPT_COLUMN),
+    index_score = get_index_score(col(PROMPT_COLUMN),
                                   col(COMPLETION_COLUMN),
                                   col(CONTEXT_COLUMN),
                                   lit(args.workspace_connection_arm_id),
@@ -213,7 +228,7 @@ def run():
                                   lit(args.api_call_retry_max_count),
                                   lit(args.api_call_retry_backoff_factor),
                                   lit(json.dumps(request_args)))
-    data_with_metric_score_df = data_with_groups_df.withColumn(INDEX_SCORE_LLM_COLUMN, idnex_score)
+    data_with_metric_score_df = data_with_groups_df.withColumn(INDEX_SCORE_LLM_COLUMN, index_score)
 
     print("data_with_metric_score_df")
     data_with_metric_score_df.show()

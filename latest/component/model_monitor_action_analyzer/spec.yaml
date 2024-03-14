@@ -4,7 +4,7 @@ type: pipeline
 name: model_monitor_action_analyzer
 display_name: Model Monitor - Action Analyzer
 description: Generate and output actions to the default datastore.
-version: 0.0.2
+version: 0.0.3
 is_deterministic: true
 inputs:
   signal_output:
@@ -37,6 +37,9 @@ inputs:
     type: string
     default: "standard_e4s_v3"
     optional: true
+  aml_deployment_id:
+    type: string
+    description: azure ml deployment name
 outputs:
   action_output:
     type: uri_folder
@@ -45,7 +48,7 @@ outputs:
 jobs:
   identify_problem_traffic:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.2
+    component: azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.3
     inputs:
       signal_output:
         type: uri_folder
@@ -68,7 +71,7 @@ jobs:
       type: aml_token
   metrics_calculation:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.2
+    component: azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.3
     inputs:
       data_with_groups:
         type: mltable
@@ -85,7 +88,7 @@ jobs:
       type: aml_token
   correlation_test:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.2
+    component: azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.3
     inputs:
       data_with_action_metric_score:
         type: mltable
@@ -100,7 +103,7 @@ jobs:
       type: aml_token
   output_actions:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.2
+    component: azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.3
     inputs:
       action_data:
         type: mltable
@@ -108,8 +111,8 @@ jobs:
       data_with_action_metric_score:
         type: mltable
         path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
-      model_deployment_name: ${{parent.inputs.model_deployment_name}}
       signal_name: ${{parent.inputs.signal_name}}
+      aml_deployment_id: ${{parent.inputs.aml_deployment_id}}
     outputs:
       action_output:
         type: uri_folder
