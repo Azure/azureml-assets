@@ -11,6 +11,7 @@ from azure.storage.blob import ContainerClient, BlobServiceClient
 from azure.storage.blob._shared.authentication import SharedKeyCredentialPolicy
 from azure.storage.filedatalake import FileSystemClient
 from azureml.core import Datastore
+from azureml.exceptions import UserErrorException
 from model_data_collector_preprocessor.store_url import StoreUrl
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -200,7 +201,7 @@ class TestStoreUrl:
         """Test StoreUrl constructor, in case datastore not found ."""
         mock_ws = Mock()
 
-        with patch.object(Datastore, "get", return_value=None):
+        with patch.object(Datastore, "get", side_effect=UserErrorException("Datastore not found.")):
             with pytest.raises(InvalidInputError, match=r"Datastore my_datastore not found .*"):
                 _ = StoreUrl("azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws"
                              "/datastores/my_datastore/paths/path/to/folder",
