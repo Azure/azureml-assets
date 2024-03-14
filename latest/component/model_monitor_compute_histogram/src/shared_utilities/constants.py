@@ -151,12 +151,14 @@ RETRIEVAL_SPAN_TYPE = "Retrieval"
 TEXT_SPLITTER = "#<Splitter>#"
 
 ACTION_ANALYZER_SAMPLE_SIZE = 100
+GROUP_TOPIC_MIN_SAMPLE_SIZE = 10
 P_VALUE_THRESHOLD = 0.05
 MEAN_THRESHOLD = 3
 
 INDEX_ACTION_TYPE = "Index Action"
 ACTION_DESCRIPTION = "Poor answers are caused by poor indexing, please update the doc index with id "
 MAX_SAMPLE_SIZE = 20
+DEFAULT_RETRIEVAL_SCORE = 0
 
 
 # util
