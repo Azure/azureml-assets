@@ -4,7 +4,7 @@ type: spark
 name: action_analyzer_output_actions
 display_name: Action Analyzer - Output Actions
 description: Merge and output actions.
-version: 0.0.2
+version: 0.0.3
 is_deterministic: True
 inputs:
   action_data:
@@ -13,10 +13,9 @@ inputs:
   data_with_action_metric_score:
     type: mltable
     mode: direct
-  model_deployment_name:
-    type: string
-    optional: False
   signal_name:
+    type: string
+  aml_deployment_id:
     type: string
 outputs:
   action_output:
@@ -51,7 +50,7 @@ entry:
 
 args: >-
   --action_data ${{inputs.action_data}}
-  --model_deployment_name ${{inputs.model_deployment_name}}
   --data_with_action_metric_score ${{inputs.data_with_action_metric_score}}
   --signal_name ${{inputs.signal_name}}
+  --aml_deployment_id ${{inputs.aml_deployment_id}}
   --action_output ${{outputs.action_output}}
