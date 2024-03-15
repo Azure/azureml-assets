@@ -73,7 +73,7 @@ def generate_action_rows(pdf, index_set, group_set):
             if group == good_group_name:
                 print(f"Skip {good_group_name}, only do t-test for bad group")
                 continue
-            index_df = pdf[pdf[INDEX_ID_COLUMN] == index]
+            index_df = pdf[pdf[INDEX_ID_COLUMN] == index] #[fep] did we make it for the case where there are two indexes in the flow?in which job do we expand that one trace row into two retrieval rows?
             good_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][INDEX_SCORE_LLM_COLUMN]  # noqa: E501
             bad_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][INDEX_SCORE_LLM_COLUMN]  # noqa: E501
             good_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][[PROMPT_COLUMN, INDEX_SCORE_LLM_COLUMN]]  # noqa: E501

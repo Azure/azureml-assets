@@ -149,9 +149,9 @@ def get_index_id(index_content):
     index = index_payload['index']
     # if the asset id does not exist, use the index name
     if "self" in index:
-        index_id = index["self"].get("asset_id", None)
+        index_id = index["self"].get("asset_id", None) #[fep] is this a full asset id, e.g. sub/rg/ws/assets/version ?
     elif "index" in index:
-        index_id = index["index"]
+        index_id = index["index"] #[fep] there can be name collision. we should hash the index content to get a guid.
     else:
         index_id = None
     return index_id
@@ -187,13 +187,16 @@ def parse_debugging_info(root_span):
                 for document in retrieval_documents:
                     text.append(document["document.content"])
                     score.append(float(document["document.score"]))
-                spans_array.append((parent_id, index_content, index_id, query, TEXT_SPLITTER.join(text), max(score)))
+                #[fep] why do we use parent_id as the span_id?
+                spans_array.append((parent_id, index_content, index_id, query, TEXT_SPLITTER.join(text), max(score)))  #[fep] is the max(score) used later on?
         return spans_array
     except KeyError as e:
         print("Required field not found: ", e)
         return None
 
-
+#[fep] it will be hard to extend this function in the future. because the output schema is tie to index span too much
+# it is probably better to just explode the span without forcing a schema.
+# then in the later jobs (metric job and t-test job), apply filtering of span type + further processing, in the way that they can also be a bit more modulized. 
 def convert_to_span_level(df):
     """Convert the dataframe from trace level to span level."""
     debugging_details = parse_debugging_info(col(ROOT_SPAN_COLUMN))
@@ -304,6 +307,7 @@ def run():
         bad_samples = bad_answers.sample(n=min(ACTION_ANALYZER_SAMPLE_SIZE, len(bad_answers)))
         good_answers = pdf[pdf[score_name] == 5]
         # sample good samples to have same size as bad samples
+        #[fep] we must sample here. in real case, number of good samples will be way more than bad examples.
         # good_samples = good_answers.sample(n=min(N_SAMPLES, len(bad_answers)))
         good_samples = good_answers
 
@@ -315,6 +319,7 @@ def run():
                                              args.model_deployment_name)
 
             topic_group_dict = {f"{metrics}_bad_group_{i}_{k}": (k, v) for i, (k, v) in enumerate(topics_dict.items())}
+            # [fep] bad_samples is only a subset of the bad queries, so it is possible that some bad queries do not get a topic group?
             topic_group_columns = assign_topic_and_group(col(TOPIC_LIST_COLUMN),
                                                          col(GROUP_LIST_COLUMN),
                                                          col(ROOT_QUESTION_COLUMN),
@@ -326,6 +331,7 @@ def run():
             df = df.withColumn(GROUP_LIST_COLUMN, topic_group_columns[1])
 
         # add semantic groups for good queries
+        #[fep] why do we do semantic for good?
         if len(good_samples) > GROUP_TOPIC_MIN_SAMPLE_SIZE:
             print("add semantic groups for good queries")
             topics_dict = bertopic_get_topic(good_samples[ROOT_QUESTION_COLUMN].tolist(),
@@ -337,6 +343,7 @@ def run():
                                                                     col(score_name),
                                                                     lit(json.dumps(topics_dict))))
 
+    #[fep] this needs to be considered. not all the bad will get a topic, either due to the bad_sample < bad_queryies, or bert gets no cluster
     sampled_df = df.filter(col(TOPIC_LIST_COLUMN) != "")
     sampled_df.show()
     span_level_df = convert_to_span_level(sampled_df)
