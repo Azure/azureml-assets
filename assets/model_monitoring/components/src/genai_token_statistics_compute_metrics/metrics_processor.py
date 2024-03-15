@@ -168,6 +168,7 @@ class MetricsProcessor:
             })
 
     def get_value_from_attributes(self, attributes, keys):
+        """Get usage values from attributes."""
         for key in keys:
             if key in attributes:
                 return attributes.get(key)
