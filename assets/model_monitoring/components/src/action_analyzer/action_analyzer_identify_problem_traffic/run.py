@@ -89,10 +89,10 @@ def bertopic_get_topic(queries,
                          azure_endpoint=azure_endpoint_domain_name,
                          azure_deployment=model_deployment_name)
     representation_model = OpenAI(client, model=model_deployment_name, chat=True, prompt=BERTOPIC_DEFAULT_PROMPT)
-    topic_model = BERTopic(
-        min_topic_size=3,
+    topic_model = BERTopic( # [fep] is there way to also control the max number of clusters?
+        min_topic_size=3, #[fep] make it propotional to the query group size, e.g. 20%?
         top_n_words=5,
-        representation_model=representation_model
+        representation_model=representation_model  #[fep] maybe not use openAI here, but later after action merge? here keep the represntive docs
     )
     topics, probs = topic_model.fit_transform(queries)
 
