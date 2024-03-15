@@ -395,7 +395,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         )
 
     def _robust_load_config(self, config) -> transformers.PretrainedConfig:
-        """Check and save if config has missing indices.
+        """Check and modify if config has missing indices.
 
         :param config: Config Object from transformers
         :type config: PretrainedConfig
@@ -405,12 +405,13 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         ids = list(config.id2label.keys())
         ids.sort()
         if max(ids) != len(ids)-1:
+            missing_keys = set([x for x in range(max(ids))]).difference(set(ids))
             id2label = {}
             for idx, id in enumerate(ids):
                 id2label[idx] = config.id2label[id]
             config.id2label = id2label
             self.config = config
-            logger.warning("config loaded with modified id2label as there are some missing keys.")
+            logger.warning(f"config loaded with modified id2label as there are some missing keys : {missing_keys}.")
         return config
 
     def save_as_mlflow(self):
