@@ -62,7 +62,7 @@ def _post_process_results(output):
         print("Not able to parse the score from the output string, setting score to nan")
     return score
 
-
+#[fep] so we are not using the evlautoin SDK but just copy the prompt?
 def _query_relevance_score(
     turns: Tuple[str, str, str],
     template: str,
@@ -200,8 +200,8 @@ def run():
     parser.add_argument("--data_with_groups", type=str)
     parser.add_argument("--model_deployment_name", type=str, required=True)
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
-    parser.add_argument("--temperature", type=float, default=0.0)
-    parser.add_argument("--top_p", type=float, default=1.0)
+    parser.add_argument("--temperature", type=float, default=0.0) #[fep] this makes the model very deterministic . is that what we want?
+    parser.add_argument("--top_p", type=float, default=1.0)  #[fep] this makes the model very underministic. is that what we want?
     parser.add_argument("--num_samples", type=int, default=1)
     parser.add_argument("--frequency_penalty", type=float, default=0.0)
     parser.add_argument("--presence_penalty", type=float, default=0.0)
@@ -209,6 +209,7 @@ def run():
     parser.add_argument("--api_call_retry_backoff_factor", type=int, default=4)
     parser.add_argument("--api_call_retry_max_count", type=int, default=20)
     args = parser.parse_args()
+    #[fep] do we use any of the openai args, such as max_token in this code? 
     request_args = get_openai_request_args(args)
 
     data_with_groups_df = try_read_mltable_in_spark(
@@ -220,7 +221,7 @@ def run():
         save_empty_dataframe(get_output_schema(), args.data_with_action_metric_score)
         return
 
-    index_score = get_index_score(col(PROMPT_COLUMN),
+    index_score = get_index_score(col(PROMPT_COLUMN), 
                                   col(COMPLETION_COLUMN),
                                   col(CONTEXT_COLUMN),
                                   lit(args.workspace_connection_arm_id),
