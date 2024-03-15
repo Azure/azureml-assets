@@ -7,7 +7,7 @@ azureml-acft-multimodal-components=={{latest-pypi-version}}
 mltable=={{latest-pypi-version}}
 transformers==4.36.2
 peft==0.4.0
-deepspeed==0.9.5
+deepspeed==0.11.1
 optimum==1.16.1
 accelerate==0.25.0
 diffusers==0.24.0
