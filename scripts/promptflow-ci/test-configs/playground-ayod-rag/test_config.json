@@ -1,14 +1,21 @@
 {
   "nodes": [
     {
-      "name": "DetermineIntent",
+      "name": "rewriteIntent",
       "connection": "aoai_connection",
       "inputs": {
         "deployment_name": "gpt-35-turbo"
       }
     },
     {
-      "name": "DetermineReply",
+      "name": "querySearchResource",
+      "inputs": {
+        "mlindex_content": "embeddings:\r\n  kind: none\r\n  schema_version: '2'\r\nindex:\r\n  api_version: 2023-07-01-Preview\r\n  connection:\r\n    id: \/subscriptions\/96aede12-2f73-41cb-b983-6d11a904839b\/resourceGroups\/promptflow\/providers\/Microsoft.MachineLearningServices\/workspaces\/chjinche-pf-eus\/connections\/AzureAISearch\r\n  connection_type: workspace_connection\r\n  endpoint: https:\/\/cogsearch-embeddingstore.search.windows.net\r\n  engine: azure-sdk\r\n  field_mapping:\r\n    content: content\r\n    embedding: null\r\n    metadata: null\r\n  index: test-vector-index-acs-built-for-awesome-vector-search\r\n  kind: acs\r\n  semantic_configuration_name: default",
+        "query_type": "Semantic"
+      }
+    },
+    {
+      "name": "generateReply",
       "connection": "aoai_connection",
       "inputs": {
         "deployment_name": "gpt-35-turbo"
