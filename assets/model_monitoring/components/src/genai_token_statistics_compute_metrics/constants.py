@@ -16,7 +16,9 @@ AVG_COMPLETION_COUNT = "AvgCompletionCount"
 MODEL_COMPLETION_COUNT = "model_completion_count"
 
 # Constants for attribute keys
-COMPLETION_COUNT_KEY = "llm.token_count.completion"
-PROMPT_COUNT_KEY = "llm.token_count.prompt"
-TOTAL_COUNT_KEY = "     llm.token_count.total"
-MODEL_KEY = "llm.model"
+COMPLETION_COUNT_KEY = ["llm.token_count.completion", "llm.usage.completion_tokens"]
+PROMPT_COUNT_KEY = ["llm.token_count.prompt", "llm.usage.prompt_tokens", "embedding.token_count.prompt",
+                    "embedding.usage.prompt_tokens"]
+TOTAL_COUNT_KEY = ["llm.token_count.total", "embedding.token_count.total", "llm.usage.total_tokens",
+                   "embedding.usage.total_tokens"]
+MODEL_KEY = ["llm.model", "embedding.model", "llm.response.model", "embedding.response.model"]

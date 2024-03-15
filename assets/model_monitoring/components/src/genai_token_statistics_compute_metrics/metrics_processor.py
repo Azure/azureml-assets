@@ -134,10 +134,10 @@ class MetricsProcessor:
         root_input (str): input from Flow.
         root_output (str): output from Flow.
         """
-        completion_count = attributes.get(COMPLETION_COUNT_KEY, 0)
-        prompt_count = attributes.get(PROMPT_COUNT_KEY, 0)
-        total_count = attributes.get(TOTAL_COUNT_KEY, 0)
-        model = attributes.get(MODEL_KEY, None)
+        completion_count = self.get_value_from_attributes(attributes, COMPLETION_COUNT_KEY)
+        prompt_count = self.get_value_from_attributes(attributes, PROMPT_COUNT_KEY)
+        total_count = self.get_value_from_attributes(attributes, TOTAL_COUNT_KEY)
+        model = self.get_value_from_attributes(attributes, MODEL_KEY)
         if model is not None:
             # TODO:Convert this calculation to pyspark logic.
             self.total_prompt_count += prompt_count
@@ -167,10 +167,15 @@ class MetricsProcessor:
                 "output": root_output
             })
 
+    def get_value_from_attributes(self, attributes, keys):
+        for key in keys:
+            if key in attributes:
+                return attributes.get(key)
+        return 0
+
     def has_completion_count(self, span_type):
         """Check if model is completion type."""
         if span_type == "LLM":
-            print("shreeya match")
             return True
         return False
 
