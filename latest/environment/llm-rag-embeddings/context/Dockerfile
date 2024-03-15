@@ -101,13 +101,12 @@ RUN set -eux; \
 RUN python3 -m nltk.downloader punkt && \
     python3 -m nltk.downloader averaged_perceptron_tagger
 
-# Install tika server
 ENV TIKA_SERVER_JAR file:///tika-server.jar
 
-RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/3.0.0-BETA/tika-server-standard-3.0.0-BETA.jar'; \
-    downloadMd5='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/3.0.0-BETA/tika-server-standard-3.0.0-BETA.jar.md5'; \
+RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.9.1/tika-server-standard-2.9.1.jar'; \
+    downloadMd5='4a0e60c6698b85881a3ef28a68669ac5'; \
     wget --progress=dot:giga -O tika-server.jar "$downloadUrl"; \
-    wget -O tika-server.jar.md5 "$downloadMd5"; \
-    # Basic smoke test
     # tika-python looks for tika-server.jar.md5 file along with TIKA_SERVER_JAR
+    echo -n "$downloadMd5" > tika-server.jar.md5; \
+    # basic smoke test
     python -c 'from tika import parser; parser.from_file("/root/.bashrc")'
