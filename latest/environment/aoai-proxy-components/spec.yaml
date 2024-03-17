@@ -4,7 +4,7 @@ description: >-
   Environment used by proxy AOAI components
 
 name: "aoai-proxy-components"
-version: "1"
+version: "2"
 
 build:
   path: "context"
