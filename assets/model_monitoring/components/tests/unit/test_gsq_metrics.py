@@ -156,7 +156,12 @@ def get_expected_data():
         ['', 4.714285714285714, 'AverageRelevanceScore', '', ''],
         ['', 1.0, 'AggregatedCoherencePassRate', 0.7, ''],
         ['', '', 'AcceptableCoherenceScorePerInstance', 4, ''],
-        ['', 5.0, 'AverageCoherenceScore', '', '']
+        ['', 5.0, 'AverageCoherenceScore', '', ''],
+        ['', 0.0, 'CoherenceViolationCounts', '', ''],
+        ['', 0.0, 'FluencyViolationCounts', '', ''],
+        ['', 1.0, 'GroundednessViolationCounts', '', ''],
+        ['', 2.0, 'RelevanceViolationCounts', '', ''],
+        ['', 3.0, 'TotalViolationCounts', '', ''],
     ]
     return pd.DataFrame(data, columns=['group', 'metric_value', 'metric_name',
                                        'threshold_value', 'group_dimension'])
