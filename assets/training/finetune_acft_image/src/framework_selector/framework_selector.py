@@ -170,7 +170,6 @@ def framework_selector(task_type: str, model_name: Input(type="string", optional
     :return: True if model is supported by runtime image command component.
     :rtype: bool
     """
-
     set_logging_parameters(
         task_type="framework_selector-" + task_type,
         acft_custom_dimensions={
