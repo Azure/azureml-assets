@@ -23,6 +23,7 @@ class OnlineEndpointFactory:
             endpoint: Optional[str] = None,
             deployment_name: Optional[str] = None,
             sku: Optional[str] = None,
+            sku_name: Optional[str] = "Standard",
             location: Optional[str] = None,
             connections_name: Optional[str] = None,
             additional_deployment_env_vars: dict = {},
@@ -42,7 +43,8 @@ class OnlineEndpointFactory:
                 deployment_name,
                 sku,
                 location,
-                connections_name=connections_name
+                connections_name=connections_name,
+                sku_name=sku_name,
             )
         else:
             return OSSOnlineEndpoint(

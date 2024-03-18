@@ -55,6 +55,13 @@ inputs:
     type: string
     optional: True
     description: The sku for the deployment. Only needed for managed deployment.
+  deployment_sku_name:
+    type: string
+    optional: True
+    default: Standard
+    description: "The sku type for the deployment. Only needed for managed deployment.
+    defaults to Standard, but other options are P
+    "
   deployment_env:
     type: string
     optional: True
@@ -152,6 +159,7 @@ command: >-
   $[[--model ${{inputs.model}}]]
   $[[--model_version ${{inputs.model_version}}]]
   $[[--deployment_sku ${{inputs.deployment_sku}}]]
+  $[[--deployment_sku_name ${{inputs.deployment_sku_name}}]]
   $[[--endpoint_workspace ${{inputs.endpoint_workspace}}]]
   $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
   $[[--endpoint_subscription_id '${{inputs.endpoint_subscription_id}}']]
