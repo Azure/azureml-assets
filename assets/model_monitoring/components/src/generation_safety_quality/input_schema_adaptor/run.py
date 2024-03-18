@@ -15,10 +15,14 @@ from shared_utilities.io_utils import (
 from shared_utilities.momo_exceptions import InvalidInputError
 from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
 from shared_utilities.df_utils import has_duplicated_columns
-from shared_utilities.constants import GENAI_ROOT_SPAN_SCHEMA_COLUMN, GENAI_TRACE_ID_SCHEMA_COLUMN
-
-
-def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
+from shared_utilities.constants import (
+    GENAI_ROOT_SPAN_SCHEMA_COLUMN,
+    GENAI_TRACE_ID_SCHEMA_COLUMN,
+    GSQ_PROMPT_COLUMN,
+    GSQ_COMPLETION_COLUMN,
+    GSQ_CONTEXT_COLUMN,
+    GSQ_GROUND_TRUTH_COLUMN,
+)
     """Adapt the input dataframe schema to fit GSQ input schema."""
     df_field_names = df.schema.fieldNames()
 

@@ -118,6 +118,13 @@ AGGREGATED_FLUENCY_PASS_RATE_METRIC_NAME = "AggregatedFluencyPassRate"
 AGGREGATED_SIMILARITY_PASS_RATE_METRIC_NAME = "AggregatedSimilarityPassRate"
 AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME = "AggregatedRelevancePassRate"
 
+# Column names in gsq signal component
+GSQ_RATING_COLUMN = "rating"
+GSQ_PROMPT_COLUMN = "prompt"
+GSQ_COMPLETION_COLUMN = "completion"
+GSQ_CONTEXT_COLUMN = "context"
+GSQ_GROUND_TRUTH_COLUMN = "ground_truth"
+
 # model performance metric names
 ACCURACY_METRIC_NAME = "Accuracy"
 PERCISION_METRIC_NAME = "Precision"
