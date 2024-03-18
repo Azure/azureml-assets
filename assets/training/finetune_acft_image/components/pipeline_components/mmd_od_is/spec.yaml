@@ -508,4 +508,4 @@ jobs:
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
     outputs:
-      evaluation_result: ${{parent.outputs.evaluation_result}}
+      evaluation_result: '${{parent.outputs.evaluation_result}}'
