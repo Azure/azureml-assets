@@ -50,6 +50,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--deployment_name", type=str, help="deployment_name", default=None)
     parser.add_argument("--endpoint_name", type=str, help="endpoint_name", default=None)
     parser.add_argument("--deployment_sku", type=str, help="deployment_sku", default=None)
+    parser.add_argument("--deployment_sku_name", type=str, help="deployment_sku", default="Standard")
     parser.add_argument("--deployment_env", type=str, help="deployment_env", default=None)
     parser.add_argument("--model", type=str, help="model", default=None)
     parser.add_argument("--model_version", type=str, help="model_version", default=None)
@@ -372,6 +373,7 @@ def main(
     endpoint_location: str,
     deployment_name: str,
     deployment_sku: str,
+    deployment_sku_name: str,
     output_metadata_dir: str,
     deployment_metadata: str,
     deletion_model: bool,
@@ -516,6 +518,7 @@ if __name__ == "__main__":
         endpoint_location=args.endpoint_location,
         deployment_name=args.deployment_name,
         deployment_sku=args.deployment_sku,
+        deployment_sku_name=args.deployment_sku_name,
         output_metadata_dir=args.output_metadata,
         deployment_metadata=args.deployment_metadata,
         deletion_model=args.deletion_model,

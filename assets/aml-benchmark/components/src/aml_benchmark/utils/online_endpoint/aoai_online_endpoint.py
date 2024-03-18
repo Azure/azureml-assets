@@ -38,7 +38,8 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             sku: Optional[str] = None,
             location: Optional[str] = None,
             api_version: str = '2023-05-01',
-            connections_name: Optional[str] = None
+            connections_name: Optional[str] = None,
+            aoai_sku_name: str = 'Standard'
     ):
         """Init method."""
         # For AOAI endpoint, the account name is the same as the endpoint name.
@@ -56,6 +57,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         self._api_version = api_version
         self._location = location
         self._validate_settings()
+        self._sku_name = aoai_sku_name
 
     @property
     def scoring_url(self) -> str:
@@ -127,7 +129,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         payload = {
             "sku":
             {
-                "name": "Standard",
+                "name": {self._sku_name},
                 "capacity": self.sku
             },
             "properties":
