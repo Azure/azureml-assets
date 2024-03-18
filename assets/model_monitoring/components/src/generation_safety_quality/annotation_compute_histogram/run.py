@@ -25,22 +25,22 @@ from pyspark.sql.types import IntegerType, StructField, StructType, StringType
 from pyspark.sql.functions import col
 from shared_utilities import io_utils
 from shared_utilities.momo_exceptions import InvalidInputError
+from shared_utilities.constants import (
+    GENAI_ROOT_SPAN_SCHEMA_COLUMN,
+    GENAI_TRACE_ID_SCHEMA_COLUMN,
+    GSQ_PROMPT_COLUMN,
+    GSQ_COMPLETION_COLUMN,
+    GSQ_CONTEXT_COLUMN,
+    GSQ_GROUND_TRUTH_COLUMN,
+    MDC_CORRELATION_ID_COLUMN,
+)
 
 _logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.INFO)
 
 TEST_CONNECTION = "test_connection"
 
-RATING = "rating"
-PROMPT = "prompt"
-COMPLETION = "completion"
-CONTEXT = "context"
-GROUND_TRUTH = "ground_truth"
-CORRELATION_ID = "correlationid"
-TRACE_ID = "trace_id"
-ROOT_SPAN = "root_span"
-
-PASSTHROUGH_COLUMNS = [CORRELATION_ID, TRACE_ID, ROOT_SPAN]
+PASSTHROUGH_COLUMNS = [MDC_CORRELATION_ID_COLUMN, GENAI_ROOT_SPAN_SCHEMA_COLUMN, GENAI_TRACE_ID_SCHEMA_COLUMN]
 
 
 # ==================  HTTP Constants ==================
@@ -317,10 +317,10 @@ def run():
     parser.add_argument("--fluency_rating_threshold", type=int, default=4)
     parser.add_argument("--coherence_rating_threshold", type=int, default=4)
 
-    parser.add_argument("--prompt_column_name", type=str, default=PROMPT)
-    parser.add_argument("--completion_column_name", type=str, default=COMPLETION)
-    parser.add_argument("--context_column_name", type=str, default=CONTEXT)
-    parser.add_argument("--ground_truth_column_name", type=str, default=GROUND_TRUTH)
+    parser.add_argument("--prompt_column_name", type=str, default=GSQ_PROMPT_COLUMN)
+    parser.add_argument("--completion_column_name", type=str, default=GSQ_COMPLETION_COLUMN)
+    parser.add_argument("--context_column_name", type=str, default=GSQ_CONTEXT_COLUMN)
+    parser.add_argument("--ground_truth_column_name", type=str, default=GSQ_GROUND_TRUTH_COLUMN)
 
     parser.add_argument("--sample_rate", type=float, required=False, default=1.0)
     parser.add_argument(
@@ -510,13 +510,13 @@ def apply_annotation(
             f"{ground_truth_column_name}")
 
     columns_to_select = [prompt_column_name, completion_column_name]
-    renamed_columns = [PROMPT, COMPLETION]
+    renamed_columns = [GSQ_PROMPT_COLUMN, GSQ_COMPLETION_COLUMN]
     if context_column_name in production_df.columns:
         columns_to_select.append(context_column_name)
-        renamed_columns.append(CONTEXT)
+        renamed_columns.append(GSQ_CONTEXT_COLUMN)
     if ground_truth_column_name in production_df.columns:
         columns_to_select.append(ground_truth_column_name)
-        renamed_columns.append(GROUND_TRUTH)
+        renamed_columns.append(GSQ_GROUND_TRUTH_COLUMN)
     for passthrough_column in PASSTHROUGH_COLUMNS:
         if passthrough_column in production_df.columns:
             columns_to_select.append(passthrough_column)
@@ -526,10 +526,10 @@ def apply_annotation(
     production_df = production_df.select(columns_to_select)
 
     # rename columns to prompt, completion, context, ground truth to match metaprompt data
-    production_df = (production_df.withColumnRenamed(prompt_column_name, PROMPT)
-                     .withColumnRenamed(completion_column_name, COMPLETION)
-                     .withColumnRenamed(context_column_name, CONTEXT)
-                     .withColumnRenamed(ground_truth_column_name, GROUND_TRUTH))
+    production_df = (production_df.withColumnRenamed(prompt_column_name, GSQ_PROMPT_COLUMN)
+                     .withColumnRenamed(completion_column_name, GSQ_COMPLETION_COLUMN)
+                     .withColumnRenamed(context_column_name, GSQ_CONTEXT_COLUMN)
+                     .withColumnRenamed(ground_truth_column_name, GSQ_GROUND_TRUTH_COLUMN))
     production_df = production_df.select(renamed_columns)
     # Sampling
     production_df_sampled = production_df.sample(withReplacement=False, fraction=sample_rate)
@@ -619,8 +619,8 @@ def apply_annotation(
         compact_metric_names.append(metric_name_compact)
         column_name = COMPACT_METRIC_NAME_TO_COLUMN[metric_name_compact]
         metrics_list.append(column_name)
-    has_context = CONTEXT in production_df.columns
-    has_ground_truth = GROUND_TRUTH in production_df.columns
+    has_context = GSQ_CONTEXT_COLUMN in production_df.columns
+    has_ground_truth = GSQ_GROUND_TRUTH_COLUMN in production_df.columns
 
     def annotate_batch(iterator):
         for batch in iterator:
@@ -631,11 +631,11 @@ def apply_annotation(
             rows = []
             passthrough_cols = get_passthrough_cols(batch)
             for index, row in batch.iterrows():
-                qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
+                qca = {GSQ_PROMPT_COLUMN: row[GSQ_PROMPT_COLUMN], GSQ_COMPLETION_COLUMN: row[GSQ_COMPLETION_COLUMN]}
                 if has_context:
-                    qca[CONTEXT] = row[CONTEXT]
+                    qca[GSQ_CONTEXT_COLUMN] = row[GSQ_CONTEXT_COLUMN]
                 if has_ground_truth:
-                    qca[GROUND_TRUTH] = row[GROUND_TRUTH]
+                    qca[GSQ_GROUND_TRUTH_COLUMN] = row[GSQ_GROUND_TRUTH_COLUMN]
                 rows.append(qca)
 
             output_dir = tempfile.TemporaryDirectory()
@@ -644,10 +644,10 @@ def apply_annotation(
                 data=rows,
                 task_type="qa",
                 data_mapping={
-                    "question": PROMPT,
-                    "context": CONTEXT,
-                    "answer": COMPLETION,
-                    "ground_truth": GROUND_TRUTH
+                    "question": GSQ_PROMPT_COLUMN,
+                    "context": GSQ_CONTEXT_COLUMN,
+                    "answer": GSQ_COMPLETION_COLUMN,
+                    "ground_truth": GSQ_GROUND_TRUTH_COLUMN
                 },
                 model_config={
                     "api_version": api_version,
@@ -678,11 +678,11 @@ def apply_annotation(
             rows = []
             passthrough_cols = get_passthrough_cols(batch)
             for index, row in batch.iterrows():
-                qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
+                qca = {GSQ_PROMPT_COLUMN: row[GSQ_PROMPT_COLUMN], GSQ_COMPLETION_COLUMN: row[GSQ_COMPLETION_COLUMN]}
                 if has_context:
-                    qca[CONTEXT] = row[CONTEXT]
+                    qca[GSQ_CONTEXT_COLUMN] = row[GSQ_CONTEXT_COLUMN]
                 if has_ground_truth:
-                    qca[GROUND_TRUTH] = row[GROUND_TRUTH]
+                    qca[GSQ_GROUND_TRUTH_COLUMN] = row[GSQ_GROUND_TRUTH_COLUMN]
                 for metric_name_compact in compact_metric_names:
                     qca[metric_name_compact] = 1
                 rows.append(qca)
@@ -692,13 +692,13 @@ def apply_annotation(
             yield tabular_result
 
     schema_fields = [
-        StructField(PROMPT, StringType(), True)
+        StructField(GSQ_PROMPT_COLUMN, StringType(), True)
     ]
     if has_context:
-        schema_fields.append(StructField(CONTEXT, StringType(), True))
-    schema_fields.append(StructField(COMPLETION, StringType(), True))
+        schema_fields.append(StructField(GSQ_CONTEXT_COLUMN, StringType(), True))
+    schema_fields.append(StructField(GSQ_COMPLETION_COLUMN, StringType(), True))
     if has_ground_truth:
-        schema_fields.append(StructField(GROUND_TRUTH, StringType(), True))
+        schema_fields.append(StructField(GSQ_GROUND_TRUTH_COLUMN, StringType(), True))
     for passthrough_column in PASSTHROUGH_COLUMNS:
         if passthrough_column in production_df.columns:
             schema_fields.append(StructField(passthrough_column, StringType(), True))
@@ -749,10 +749,10 @@ def apply_annotation(
                 (col(metric_name_compact) < metric_threshold_value) & (col(metric_name_compact) != -1))
         if violations_df.count() > 0:
             # rename columns back to original names
-            violations_df = (violations_df.withColumnRenamed(PROMPT, prompt_column_name)
-                             .withColumnRenamed(COMPLETION, completion_column_name)
-                             .withColumnRenamed(CONTEXT, context_column_name)
-                             .withColumnRenamed(GROUND_TRUTH, ground_truth_column_name))
+            violations_df = (violations_df.withColumnRenamed(GSQ_PROMPT_COLUMN, prompt_column_name)
+                             .withColumnRenamed(GSQ_COMPLETION_COLUMN, completion_column_name)
+                             .withColumnRenamed(GSQ_CONTEXT_COLUMN, context_column_name)
+                             .withColumnRenamed(GSQ_GROUND_TRUTH_COLUMN, ground_truth_column_name))
             io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()])
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
