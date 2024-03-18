@@ -183,14 +183,24 @@ class InferencePostprocessor(object):
                 ]
             if self.additional_columns:
                 columns = [col.strip() for col in self.additional_columns.split(',')]
-                try:
-                    result_df[columns] = actual_df[columns]
-                except KeyError as e:
+                if '' in columns:
+                    logger.warning("Received a column name as '' in additional_fields. "
+                                   "Please check if extra comma is provided between two column names. "
+                                   "Dropping columns named as '' from additional_fields input.")
+                    columns = [col for col in columns if col]  # and col in actual_df.columns.tolist()]
+                missing_columns = [col for col in columns if col not in actual_df.columns.tolist()]
+                if len(missing_columns) > 0:
                     raise BenchmarkUserException._with_error(
-                            AzureMLError.create(
-                                BenchmarkUserError,
-                                error_details=f"Error: {e}.Please check your data before submitting again.")
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details=(
+                                f"The columns {missing_columns} provided in the additional_columns field is not found in "
+                                "the ground truth dataset. Please make sure that the all columns provided in this field is "
+                                "present in the groun_truth dataset."
                             )
+                        )
+                    )
+                result_df[columns] = actual_df[columns]
         return result_df
 
     def apply_find_first(self, text: str) -> str:

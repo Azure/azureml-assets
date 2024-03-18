@@ -315,7 +315,7 @@ class TestInferencePostprocessorScript:
         [
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question", None,
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "question ", None,
                 None, None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
                 None, None, None,
             ),
@@ -420,7 +420,7 @@ class TestInferencePostprocessorScript:
         if ground_truth_column_name is not None:
             argss.extend(["--ground_truth_column_name", ground_truth_column_name])
         if additional_columns is not None:
-            argss.extend(["--additional_columns", additional_columns])
+            argss.extend(["--additional_columns", f"'{additional_columns}'"])
         if template is not None:
             argss.extend(["--template", f"'{template}'"])
         if script_path is not None:
