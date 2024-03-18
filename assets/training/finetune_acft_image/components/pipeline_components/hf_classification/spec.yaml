@@ -88,13 +88,13 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: Final Image width after augmentation that is input to the network. Default value is -1 which means it would be overwritten by default image width in Hugging Face feature extractor. If either image_width or image_height is set to -1, default value would be used for both width and height.
+    description: Final image width after augmentation that is input to the network. Default value is -1 which means it would be overwritten by default image width in Hugging Face feature extractor. If either image_width or image_height is set to -1, default value would be used for both width and height.
 
   image_height:
     type: integer
     default: -1
     optional: true
-    description: Final Image height after augmentation that is input to the network. Default value is -1 which means it would be overwritten by default image height in Hugging Face feature extractor. If either image_width or image_height is set to -1, default value would be used for both width and height.
+    description: Final image height after augmentation that is input to the network. Default value is -1 which means it would be overwritten by default image height in Hugging Face feature extractor. If either image_width or image_height is set to -1, default value would be used for both width and height.
 
   task_name:
     type: string
@@ -214,7 +214,7 @@ inputs:
       - adafactor
       - adagrad
       - adamw_ort_fused
-    description: optimizer to be used while training. 'adamw_ort_fused' optimizer is only supported for ORT training. If left empty, will be chosen automatically based on the task type and model selected.
+    description: Optimizer to be used while training. 'adamw_ort_fused' optimizer is only supported for ORT training. If left empty, will be chosen automatically based on the task type and model selected.
 
   weight_decay:
     type: number
@@ -483,30 +483,30 @@ jobs:
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.19
-    compute: ${{parent.inputs.compute_model_evaluation}}
+    component: azureml:model_prediction:0.0.22
+    compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
-      task: ${{parent.inputs.task_name}}
+      task: '${{parent.inputs.task_name}}'
       label_column_name: '${{parent.inputs.label_column_name}}'
       input_column_names: '${{parent.inputs.input_column_names}}'
-      batch_size: ${{parent.inputs.test_batch_size}}
+      batch_size: '${{parent.inputs.test_batch_size}}'
       device: auto
-      evaluation_config: ${{parent.inputs.evaluation_config}}
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-      test_data: ${{parent.inputs.test_data}}
-      mlflow_model: ${{parent.jobs.image_classification_finetune.outputs.mlflow_model_folder}}
+      test_data: '${{parent.inputs.test_data}}'
+      mlflow_model: '${{parent.jobs.image_classification_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.19
-    compute: ${{parent.inputs.compute_model_evaluation}}
+    component: azureml:compute_metrics:0.0.22
+    compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
-      task: ${{parent.inputs.task_name}}
-      ground_truth: ${{parent.jobs.model_prediction.outputs.ground_truth}}
+      task: '${{parent.inputs.task_name}}'
+      ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
       ground_truth_column_name: '${{parent.inputs.label_column_name}}'
-      prediction: ${{parent.jobs.model_prediction.outputs.predictions}}
+      prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
       prediction_column_name: predictions
-      prediction_probabilities: ${{parent.jobs.model_prediction.outputs.prediction_probabilities}}
-      evaluation_config: ${{parent.inputs.evaluation_config}}
+      prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
     outputs:
       evaluation_result: ${{parent.outputs.evaluation_result}}
