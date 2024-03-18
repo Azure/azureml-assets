@@ -1,23 +1,26 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.3
+version: 0.0.4
 name: mmtracking_video_multi_object_tracking_pipeline
 display_name: Video Multi-Object Tracking MMTracking Pipeline
 description: Pipeline component for multi-object tracking using MMTracking models.
 
 is_deterministic: false
 
+settings:
+  continue_on_step_failure: false
+
 inputs:
   compute_model_import:
     type: string
     optional: false
-    description: Compute to be used for model_selector eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'.
+    description: compute to be used for model_selector eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   compute_finetune:
     type: string
     optional: false
-    description: Compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'.
+    description: compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'
 
   # ########################### Model Selector Component ########################### #
   # Model family
@@ -68,14 +71,14 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: Image width that is input to the network.
+    description: image width that is input to the network.
      Default is -1 which means it would be overwritten by image_scale in model config. 
 
   image_height:
     type: integer
     default: -1
     optional: true
-    description: Image height that is input to the network.
+    description: image height that is input to the network.
      Default is -1 which means it would be overwritten by image_scale in model config.
 
   task_name:
@@ -308,9 +311,22 @@ outputs:
     description: Output dir to save the finetune model as torch model.
 
 jobs:
+  finetune_common_validation:
+    type: command
+    component: azureml:finetune_common_validation:0.0.2
+    compute: ${{parent.inputs.compute_model_import}}
+    inputs:
+      mlflow_model_path: ${{parent.inputs.mlflow_model}}
+      train_mltable_path: ${{parent.inputs.training_data}}
+      validation_mltable_path: ${{parent.inputs.validation_data}}
+      compute_model_import: ${{parent.inputs.compute_model_import}}
+      compute_finetune: ${{parent.inputs.compute_finetune}}
+      task_name: ${{parent.inputs.task_name}}
+      user_column_names: image_url, label
+      task_specific_extra_params: '"model_family=${{parent.inputs.model_family}};model_name=${{parent.inputs.model_name}};metric_for_best_model=${{parent.inputs.metric_for_best_model}};number_of_epochs=${{parent.inputs.number_of_epochs}}"'
   model_selector:
     type: command
-    component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.2
+    component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.3
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
@@ -318,9 +334,10 @@ jobs:
       pytorch_model: ${{parent.inputs.pytorch_model}}
       mlflow_model: ${{parent.inputs.mlflow_model}}
       download_from_source: ${{parent.inputs.download_from_source}}
+      validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
   finetune:
     type: command
-    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.2
+    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.3
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'

@@ -480,15 +480,15 @@ def get_parser():
         choices=(
             "loss",
             # Classification - multiclass
-            metrics_constants.F1_MACRO,
-            metrics_constants.ACCURACY,
-            metrics_constants.PRECISION_MACRO,
-            metrics_constants.RECALL_MACRO,
+            metrics_constants.F1Macro,
+            metrics_constants.Accuracy,
+            metrics_constants.PrecisionMacro,
+            metrics_constants.RecallMacro,
             # Classification - multilabel
             metrics_constants.IOU,
-            metrics_constants.IOU_MACRO,
-            metrics_constants.IOU_MICRO,
-            metrics_constants.IOU_WEIGHTED,
+            metrics_constants.IOUMacro,
+            metrics_constants.IOUMicro,
+            metrics_constants.IOUWeighted,
             # Object detectaion and instance segmentation
             metrics_constants.MEAN_AVERAGE_PRECISION,
             metrics_constants.PRECISION,
@@ -748,8 +748,10 @@ def main():
         args.metric_greater_is_better = True
     args.load_best_model_at_end = True
     args.report_to = None
+    args.save_safetensors = False
     logger.info(f"metric_for_best_model - {args.metric_for_best_model}")
     logger.info(f"metric_greater_is_better - {args.metric_greater_is_better}")
+    logger.info(f"save_safetensors - {args.save_safetensors}")
 
     # setting arguments as needed for the core
     args.model_selector_output = args.model_path

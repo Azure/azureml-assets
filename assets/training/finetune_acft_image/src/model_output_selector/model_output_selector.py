@@ -14,11 +14,13 @@ from azureml.core.run import Run
 import argparse
 import shutil
 
-from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals, \
-    PROJECT_NAME, VERSION
+from azureml.acft.common_components import (
+    get_logger_app, set_logging_parameters, LoggingLiterals, PROJECT_NAME, VERSION
+)
 
-logger = get_logger_app("azureml.acft.common_components.scripts.components."
-                        "model_output_selector.model_output_selector")
+logger = get_logger_app(
+    "azureml.acft.common_components.scripts.components.model_output_selector.model_output_selector"
+)
 
 
 def get_common_parser():
