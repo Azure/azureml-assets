@@ -10,6 +10,7 @@ from azure.identity import DefaultAzureCredential
 from azure.mgmt.resource import ResourceManagementClient
 
 import json
+import sys
 
 # Although this in principle is to be used as a script,
 # it should also be usable inside an interactive notebook, for quick experimenting
@@ -24,6 +25,10 @@ except NameError:
 
 if _NOTEBOOK_MODE:
     print("Script running in notebook mode")
+
+def errprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 # %%
 
 credential = DefaultAzureCredential()
@@ -31,46 +36,61 @@ subscription_id = None
 resource_group_name = None
 account_name = None
 deployment_name = None
+region = None
 action = None
+
 if _NOTEBOOK_MODE:
     # edit here for the subscription id and resource group name
     # edit here for the subscription id and resource group name
-    subscription_id = "TBD replace here"
-    resource_group_name = "TBD replace here"
+    subscription_id = "381b38e9-9840-4719-a5a0-61d9585e1e91"
+    resource_group_name = "y_ccozianu_rg_westus2"
+    region = "swedencentral"
 else:
     # we will get the subscription id and resource group name
     # from the command line arguments
     import argparse
     parser = argparse.ArgumentParser(description='Utility to manage Azure OpenAI resources and their deployments')
     parser.add_argument('--subscription_id', required=True, type=str, help='Azure subscription id')
-    parser.add_argument('--resource_group_name', required=True, type=str, help='Azure resource group name')  
     
     subparsers = parser.add_subparsers(dest='action', help='Action to perform')
 
+    parser_quotas = subparsers.add_parser('list-quotas', help='Print AOAI quota available by region and model')
+    parser_quotas.add_argument('--region', required=True, type=str, help='Azure region')
+
     parser_list = subparsers.add_parser('list-connections', help='Print AOAI resources and their quota usage')
+    parser_list.add_argument('--resource_group_name', required=False, type=str, help='Azure resource group name')
 
     parser_delete = subparsers.add_parser('delete-deployment', help='Delete a particular deployment')
+    parser_delete.add_argument('--resource_group_name', required=True, type=str, help='Azure resource group name')
     parser_delete.add_argument('--account_name', required=True, type=str, help='AOAI account(endpoint) name')  
     parser_delete.add_argument('--deployment_name', required=True, type=str, help='AOAI deployment name')  
 
     args = parser.parse_args()
     action = args.action
     subscription_id = args.subscription_id
-    resource_group_name = args.resource_group_name
+    
     if (args.action == 'delete-deployment'):
+        resource_group_name = args.resource_group_name
         account_name = args.account_name
         deployment_name = args.deployment_name
+    elif (args.action == 'list-connections'):
+        resource_group_name = args.resource_group_name
+    elif (args.action == 'list-quotas'):
+        region = args.region
 
-print(f"action: {action} ", )
-print(f"subscription_id: {subscription_id}")
-print(f"resource_group_name: {resource_group_name}")
-print(f"account_name: {account_name}")
-print(f"deployment_name: {deployment_name}")
+errprint(f"action: {action} ", )
+errprint(f"subscription_id: {subscription_id}")
+errprint(f"resource_group_name: {resource_group_name}")
+errprint(f"account_name: {account_name}")
+errprint(f"deployment_name: {deployment_name}")
+
 
 
 
 resource_type = "Microsoft.CognitiveServices/accounts"  # example resource type
 account_kind = 'OpenAI'
+
+_api_version = '2023-05-01'
 
 # %%
 # define a function to list deployments for a OpenAi endpoint 0
@@ -93,13 +113,23 @@ def send_rest_request(url, method, headers, body):
         print(response.text)
         response.raise_for_status()
 
-def list_deployments(account_name):
-    uri = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.CognitiveServices/accounts/{account_name}/deployments?api-version=2023-05-01"
+def list_deployments(account_name, rg_name=resource_group_name):
+    uri = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{rg_name}/providers/Microsoft.CognitiveServices/accounts/{account_name}/deployments?api-version=2023-05-01"
     response = send_rest_request(uri, "GET", {}, "")
     # if it has "value property return that instead"
     if "keys" in dir(response) and "value" in response.keys():
         return response["value"]
     return response
+
+def list_quota(region):
+    quotas_uri = '/'.join( [
+        f"https://management.azure.com/subscriptions/{subscription_id}", 
+        'providers/Microsoft.CognitiveServices',
+        'locations', region, f'usages?api-version={_api_version}'
+    ])
+    return send_rest_request(quotas_uri, "GET", {}, "")
+
+
 
 def extract_essential(deployments):
     def trim_properties(properties):
@@ -118,7 +148,7 @@ def extract_essential(deployments):
 # %%
 # functions to suport deletions
 
-_api_version = '2023-05-01'
+
 def _aoai_deployment_url(account_name, deployment_name) -> str:
     """Aoai deployment url."""
     return 'https://management.azure.com/subscriptions/'\
@@ -133,50 +163,61 @@ def _do_delete(account_name, deployment_name):
         {},
         ""
     )
-    
+
+# extract the group name from the resource id
+def _resource_group_of_resource_id(resource_id: str):
+    return resource_id.split('/')[4]
+
 # %%
 if (action == 'list-connections'):
     print_details = True
 
     resource_client = ResourceManagementClient(credential, subscription_id=subscription_id)
-
-    resources = [ r for r in ( 
+    filter=f"resourceType eq '{resource_type}'"
+    if (resource_group_name is None):
+        resources = resource_client.resources.list(filter=filter)
+    else:
+        resources = [ r for r in  
             resource_client.resources.list_by_resource_group(
                 resource_group_name,
-                filter=f"resourceType eq '{resource_type}'"))
-        ]
+                filter=filter)]
     # retain  only kind == 'OpenAI'
     resources = [r for r in resources if r.kind == account_kind]
+    
     loaded_resources = [
         resource_client.resources.get_by_id(r.id, "2021-04-30") 
         for r in resources
         ]
     for r in loaded_resources:
-        if r.properties['provisioningState'] != 'Succeeded':
-            print(f"**** Resource {r.name} is not provisioned yet. Skipping.")
+        provisioned = r.properties['provisioningState'] == 'Succeeded'   
+        if not provisioned:
+            errprint(f"**** Skipping {r.name} -- as it has no deployment.")
             continue
         else:
-            print(r.name)
-        provisioned = r.properties['provisioningState'] == 'Succeeded'   
-
-        if (provisioned):
-            deployments = list_deployments(r.name)
+            errprint(f"DEBUG: {json.dumps(r.serialize(), indent=2)}")
+            rg_name = _resource_group_of_resource_id(r.id)
+            print(r.id)
+            deployments = list_deployments(r.name, rg_name=rg_name)
             if (deployments is not None and len(deployments) > 0):
-                print(f"OAI Studio URLs: ")
-                print(f" deployments URL - https://oai.azure.com/portal/{r.properties['internalId']}/deployment")
-                print(f" quota (at subscription level) - https://oai.azure.com/portal/{r.properties['internalId']}/quota")
-                print("~~~~~~~~ BEGIN deployments:")
+                errprint(f"OAI Studio URLs: ")
+                errprint(f" deployments URL - https://oai.azure.com/portal/{r.properties['internalId']}/deployment")
+                errprint(f" quota (at subscription level) - https://oai.azure.com/portal/{r.properties['internalId']}/quota")
+                errprint("~~~~~~~~ BEGIN deployments:")
                 print(json.dumps(extract_essential(deployments), indent=2))
-                print("~~~~~~~~ END deployments.")
-        else:
-            print(f"**** Skipping {r.name} -- as it has no deployment.")
+                errprint("~~~~~~~~ END deployments.")
+
+
     
-# %%    
-elif _NOTEBOOK_MODE:
-    print("Skipping list-connections cell because action is not list-connections and we are not running in notebook mode")    
 # %%
+if (action == 'list-quotas'):
+    print("Quotas for region: ", region)
+    print(json.dumps(list_quota(region), indent=2))
     
 # %%
 if (action == 'delete-deployment'):
-    print("Deleting deployment")
+    errprint("Deleting deployment")
     _do_delete(account_name, deployment_name)
+
+if (action == 'reallocate-deployment'):
+    errprint("Reallocating quota for deployment")
+    _do_reallocate(account_name, deployment_name)
