@@ -690,6 +690,14 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
                     setattr(args, key, value)
 
 
+def _set_hf_trainer_args_from_finetune_config(args: Namespace, finetune_config: Dict[str, Any]):
+    """Read :param `hf_trainer_args` from finetune config and set them to args."""
+    hf_trainer_args = finetune_config.get("hf_trainer_args", {})
+    for arg_name, arg_value in hf_trainer_args.items():
+        setattr(args, arg_name, arg_value)
+        logger.info(f"Setting {arg_name} to {arg_value}")
+
+
 def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
     """Validate the deepspeed zero3 config file.
 
@@ -964,6 +972,8 @@ def finetune(args: Namespace):
             if "lora_target_modules" in ft_config:
                 logger.info(f'Setting lora_target_modules to: {ft_config.get("lora_target_modules")}')
                 setattr(args, "lora_target_modules", ft_config.get("lora_target_modules"))
+            # Reading hf trainer args from finetune config
+            _set_hf_trainer_args_from_finetune_config(args, ft_config)
     else:
         logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
         setattr(args, "finetune_config", {})
