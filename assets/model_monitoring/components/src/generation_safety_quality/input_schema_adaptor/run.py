@@ -44,7 +44,7 @@ def check_row_has_gsq_schema(row: dict, expected_schema: list) -> list:
             entry.append(output_dict.get(column))
         else:
             entry.append(None)
-    return entry
+    return [tuple(entry)]
 
 
 def _adapt_input_data_schema(
