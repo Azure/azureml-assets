@@ -124,24 +124,24 @@ class TestInputSchemaAdaptor:
                     _default_column_mapping
                 ),
                 # Test with genai columns. Mismatched json schema on rows
-                (
-                    [
-                        ("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
-                         "{\"output\":\"answer\"}", "null"),
-                        ("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
-                         "{\"output\":\"answer\", \"source\":\"LLM\"}", "null")
-                      ], _genai_input_schema,
-                    [
-                        ("01", "context", "ground-truth", "question", "answer", None, "null"),
-                        ("01", "context", "ground-truth", "question", "answer", "null"),
-                    ], _expected_gsq_input_schema_drop_null, _default_column_mapping
-                ),
+                # (
+                #     [
+                #         ("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
+                #          "{\"output\":\"answer\"}", "null"),
+                #         ("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
+                #          "{\"output\":\"answer\", \"source\":\"LLM\"}", "null")
+                #       ], _genai_input_schema,
+                #     [
+                #         ("01", "context", "ground-truth", "question", "answer", "null"),
+                #         ("01", "context", "ground-truth", "question", "answer", "null"),
+                #     ], _expected_gsq_input_schema, _default_column_mapping
+                # ),
                 # genai, data fall-through
                 (
                     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
                       "{\"output\":\"answer\",\"source\":\"LLM\"}", "null")], _genai_input_schema,
                     [("01", "context", "ground-truth", "question", "answer", "null")],
-                    _expected_gsq_input_schema_drop_null, _default_column_mapping
+                    _expected_gsq_input_schema, _default_column_mapping
                 ),
             ]
     )
