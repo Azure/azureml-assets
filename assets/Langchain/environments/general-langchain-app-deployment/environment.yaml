@@ -10,3 +10,5 @@ image:
   publish:
     location: mcr
     visibility: public
+  tags:
+    Python: 3.11
