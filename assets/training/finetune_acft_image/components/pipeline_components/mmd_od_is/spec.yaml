@@ -482,7 +482,7 @@ jobs:
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.22
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.22
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
@@ -496,7 +496,7 @@ jobs:
       mlflow_model: '${{parent.jobs.image_od_is_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.22
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.22
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
