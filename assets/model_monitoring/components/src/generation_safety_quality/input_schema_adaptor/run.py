@@ -23,6 +23,12 @@ from shared_utilities.constants import (
     GSQ_CONTEXT_COLUMN,
     GSQ_GROUND_TRUTH_COLUMN,
 )
+def _adapt_input_data_schema(
+        df: DataFrame,
+        prompt_column_name,
+        completion_column_name,
+        context_column_name,
+        ground_truth_column_name) -> DataFrame:
     """Adapt the input dataframe schema to fit GSQ input schema."""
     df_field_names = df.schema.fieldNames()
 
@@ -86,11 +92,22 @@ def run():
     parser.add_argument("--production_dataset", type=str, required=True)
     parser.add_argument("--adapted_production_data", type=str, required=True)
 
+    parser.add_argument("--prompt_column_name", type=str, default=GSQ_PROMPT_COLUMN)
+    parser.add_argument("--completion_column_name", type=str, default=GSQ_COMPLETION_COLUMN)
+    parser.add_argument("--context_column_name", type=str, default=GSQ_CONTEXT_COLUMN)
+    parser.add_argument("--ground_truth_column_name", type=str, default=GSQ_GROUND_TRUTH_COLUMN)
+
     args = parser.parse_args()
 
     production_data_df = try_read_mltable_in_spark_with_error(args.production_dataset, "production_dataset")
 
-    adapted_df = _adapt_input_data_schema(production_data_df)
+    adapted_df = _adapt_input_data_schema(
+        production_data_df,
+        args.prompt_column_name,
+        args.completion_column_name,
+        args.context_column_name,
+        args.ground_truth_column_name,
+    )
 
     print("df adapted from production data:")
     adapted_df.show()
