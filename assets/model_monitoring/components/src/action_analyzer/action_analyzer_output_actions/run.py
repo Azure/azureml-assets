@@ -75,8 +75,9 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
     action_summary = {}
     for index_id in index_set:
         row = action_bad_group_df.filter(col(INDEX_ID_COLUMN) == index_id).collect()[0]
+        action_id = row[ACTION_ID_COLUMN]
         action = {
-            "ActionId": row[ACTION_ID_COLUMN],
+            "ActionId": action_id,
             "Type": INDEX_ACTION_TYPE,
             "Description": ACTION_DESCRIPTION + index_id,
             "ConfidenceScore": row["action_confidence_score"],
@@ -198,6 +199,7 @@ def run():
     print("Action generated, setting tag for pipeline run: ", root_run_id)
     client = MlflowClient()
     client.set_tag(root_run_id, "momo_action_analyzer_has_action", "true")
+
 
 if __name__ == "__main__":
     run()

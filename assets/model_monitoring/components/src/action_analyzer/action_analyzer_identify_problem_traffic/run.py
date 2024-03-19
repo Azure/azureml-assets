@@ -6,7 +6,7 @@
 import argparse
 import json
 import yaml
-from pyspark.sql.functions import col, lit, udf, when, concat, explode
+from pyspark.sql.functions import col, lit, udf, explode
 from pyspark.sql.types import (
     StructType,
     StructField,
@@ -129,7 +129,13 @@ def _append_value(string_input, value):
 
 
 @udf(returnType=ArrayType(StringType()))
-def assign_bad_topic_and_group(topic_list, group_list, question, violated_metrics, metrics, topics_dict, show_topic_name):
+def assign_bad_topic_and_group(topic_list,
+                               group_list,
+                               question,
+                               violated_metrics,
+                               metrics,
+                               topics_dict,
+                               show_topic_name):
     """Assign topic name and group name for bad queries."""
     topic_question = json.loads(topics_dict)
     for i, (topic, q_list) in enumerate(topic_question.items()):
@@ -171,7 +177,7 @@ def assign_default_group(group_list, query, metrics, good_queries, bad_queries):
 @udf(returnType=StringType())
 def assign_default_topic(topic_list, query_list, query):
     """Assign default topic if the sample size is too small."""
-    queries= json.loads(query_list)
+    queries = json.loads(query_list)
     if query in queries:
         topic_list = _append_value(topic_list, DEFAULT_TOPIC_NAME)
     return topic_list
@@ -224,7 +230,7 @@ def parse_debugging_info(root_span):
                 for document in retrieval_documents:
                     text.append(document["document.content"])
                     score.append(float(document["document.score"]))
-                spans_array.append((parent_id, index_content, index_id, query, TEXT_SPLITTER.join(text), max(score), retrieval_query_type, retrieval_top_k))  #noqa
+                spans_array.append((parent_id, index_content, index_id, query, TEXT_SPLITTER.join(text), max(score), retrieval_query_type, retrieval_top_k))  # noqa
         return spans_array
     except KeyError as e:
         print("Required field not found: ", e)
@@ -244,8 +250,10 @@ def convert_to_retrieval_span_df(df):
                                 .withColumn(PROMPT_COLUMN, col(f"debugging_details.{PROMPT_COLUMN}"))\
                                 .withColumn(CONTEXT_COLUMN, col(f"debugging_details.{CONTEXT_COLUMN}"))\
                                 .withColumn(INDEX_SCORE_COLUMN, col(f"debugging_details.{INDEX_SCORE_COLUMN}"))\
-                                .withColumn(RETRIEVAL_QUERY_TYPE_COLUMN, col(f"debugging_details.{RETRIEVAL_QUERY_TYPE_COLUMN}"))\
-                                .withColumn(RETRIEVAL_TOP_K_COLUMN, col(f"debugging_details.{RETRIEVAL_TOP_K_COLUMN}"))\
+                                .withColumn(RETRIEVAL_QUERY_TYPE_COLUMN,
+                                            col(f"debugging_details.{RETRIEVAL_QUERY_TYPE_COLUMN}")) \
+                                .withColumn(RETRIEVAL_TOP_K_COLUMN,
+                                            col(f"debugging_details.{RETRIEVAL_TOP_K_COLUMN}"))\
                                 .drop("debugging_details")
     return span_level_df
 
@@ -301,6 +309,7 @@ def run():
 
     # Skip action analyzer if no violated metrics
     violated_metrics = get_violated_metrics(args.signal_output, f"signals/{args.signal_name}")
+    violated_metrics = ["Coherence", "Fluency"]
     if violated_metrics == []:
         print("No violated metrics. No action will be generated.")
         save_empty_dataframe(get_output_schema(), args.data_with_groups)
@@ -308,7 +317,7 @@ def run():
 
     print("Violated metrics found: ", violated_metrics)
 
-    signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
+    signal_scored_data_df = try_read_mltable_in_spark("azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/yuachengtestrg/workspaces/ai-proj-eastus/datastores/workspaceblobstore/paths/azureml/5b3c73e9-8e67-47e2-a46e-5087b2288110/evaluation/", "signal_scored_data")
     print("gsq output df")
     signal_scored_data_df.show()
 
@@ -332,7 +341,6 @@ def run():
         df = df.withColumn(VIOLATED_METRICS_COLUMN,
                            assign_violated_metrics(col(VIOLATED_METRICS_COLUMN), col(score_name), lit(metrics)))
 
-        
         # Get the good and bad queries. Sample the good query in case the good query number is too large.
         pdf = df.toPandas()
         bad_answers = pdf[pdf[score_name] < METRICS_VIOLATION_THRESHOLD]
@@ -341,7 +349,6 @@ def run():
         bad_queries = bad_answers[ROOT_QUESTION_COLUMN].tolist()
         good_queries = good_samples[ROOT_QUESTION_COLUMN].tolist()
         print(f"Sample size for current metrics: {len(bad_queries)}")
-
 
         # Add default good group name and default bad group name for each query
         df = df.withColumn(GROUP_LIST_COLUMN, assign_default_group(col(GROUP_LIST_COLUMN),
@@ -353,7 +360,7 @@ def run():
         # For bad queries, add semantic topic and separate in different semantic groups
         if len(bad_queries) < GROUP_TOPIC_MIN_SAMPLE_SIZE:
             # Skip grouing if the sample size is too small
-            print(f"Bad sample size {len(bad_queries)} is less than {GROUP_TOPIC_MIN_SAMPLE_SIZE}. Skip grouping and set default topic.")
+            print(f"Bad sample size {len(bad_queries)} is less than {GROUP_TOPIC_MIN_SAMPLE_SIZE}. Skip grouping and set default topic.")  # noqa
             df = df.withColumn(TOPIC_LIST_COLUMN, assign_default_topic(col(TOPIC_LIST_COLUMN),
                                                                        lit(json.dumps(bad_queries)),
                                                                        col(ROOT_QUESTION_COLUMN)))
@@ -375,9 +382,9 @@ def run():
 
         # For good queries, only add semantic topic (no grouping)
         print("Add semantic topic for good queries")
-        if len(good_queries) < GROUP_TOPIC_MIN_SAMPLE_SIZE:
+        if len(good_queries) > GROUP_TOPIC_MIN_SAMPLE_SIZE:
             # Skip grouing if the sample size is too small
-            print(f"Good sample size {len(good_queries)} is less than {GROUP_TOPIC_MIN_SAMPLE_SIZE}. Skip grouping and set default topic.")
+            print(f"Good sample size {len(good_queries)} is less than {GROUP_TOPIC_MIN_SAMPLE_SIZE}. Skip grouping and set default topic.")  # noqa
             df = df.withColumn(TOPIC_LIST_COLUMN, assign_default_topic(col(TOPIC_LIST_COLUMN),
                                                                        lit(json.dumps(good_queries)),
                                                                        col(ROOT_QUESTION_COLUMN)))
