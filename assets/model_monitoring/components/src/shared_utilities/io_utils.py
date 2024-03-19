@@ -140,7 +140,7 @@ def _write_mltable_yaml(mltable_obj, dest_path):
         with open(source_path, "w") as yaml_file:
             yaml.dump(mltable_obj, yaml_file)
 
-        if_destination_exists = PyIfDestinationExists.MergeWithOverwrite
+        if_destination_exists = PyIfDestinationExists.MERGE_WITH_OVERWRITE
         dest_si = PyLocationInfo.from_uri(dest_path)
         source_uri = Path(source_path).as_uri()
         Copier.copy_uri(dest_si, source_uri, if_destination_exists,'')
