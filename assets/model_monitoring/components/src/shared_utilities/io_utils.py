@@ -130,8 +130,7 @@ def _write_mltable_yaml(mltable_obj, dest_path):
     try:
         import os
         import uuid
-        from pathlib import Path
-        from azureml.dataprep.rslex import Copier, PyLocationInfo, PyIfDestinationExists
+        from azureml.fsspec import AzureMachineLearningFileSystem
 
         folder_name = str(uuid.uuid4())
         folder_path = os.path.join(os.getcwd(), folder_name)
@@ -140,10 +139,13 @@ def _write_mltable_yaml(mltable_obj, dest_path):
         with open(source_path, "w") as yaml_file:
             yaml.dump(mltable_obj, yaml_file)
 
-        if_destination_exists = PyIfDestinationExists.MERGE_WITH_OVERWRITE
-        dest_si = PyLocationInfo.from_uri(dest_path)
-        source_uri = Path(source_path).as_uri()
-        Copier.copy_uri(dest_si, source_uri, if_destination_exists,'')
+        fs = AzureMachineLearningFileSystem(dest_path)
+        fs.upload(
+            lpath=source_path,
+            rpath=dest_path,
+            **{"overwrite": "MERGE_WITH_OVERWRITE"},
+            recursive=True,
+        )
         return True
     except Exception as e:
         print(f"Error writing mltable file: {e}")
