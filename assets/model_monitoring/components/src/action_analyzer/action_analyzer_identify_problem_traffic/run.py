@@ -382,7 +382,7 @@ def run():
 
         # For good queries, only add semantic topic (no grouping)
         print("Add semantic topic for good queries")
-        if len(good_queries) > GROUP_TOPIC_MIN_SAMPLE_SIZE:
+        if len(good_queries) < GROUP_TOPIC_MIN_SAMPLE_SIZE:
             # Skip grouing if the sample size is too small
             print(f"Good sample size {len(good_queries)} is less than {GROUP_TOPIC_MIN_SAMPLE_SIZE}. Skip grouping and set default topic.")  # noqa
             df = df.withColumn(TOPIC_LIST_COLUMN, assign_default_topic(col(TOPIC_LIST_COLUMN),
