@@ -158,21 +158,16 @@ def run():
         print("Empty action data, create an empty folder.")
         return
 
-    root_run_id = os.environ.get("AZUREML_ROOT_RUN_ID", None)
-    print("Action generated, setting tag for pipeline run: ", root_run_id)
-    client = MlflowClient()
-    client.set_tag(root_run_id, "momo_action_analyzer_has_action", "true")
-
     data_with_action_metric_score_df = try_read_mltable_in_spark(
         args.data_with_action_metric_score, "data_with_action_metric_score"
     )
 
     # get the group with highest confidence score
     w = Window.partitionBy(INDEX_ID_COLUMN)
-    max_conf_df = df.withColumn("max_confidence", max(CONFIDENCE_SCORE_COLUMN).over(w))\
-                 .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence'))\
-                 .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
-                 .select(INDEX_ID_COLUMN, "most_significant_group")
+    max_conf_df = action_data_df.withColumn("max_confidence", max(CONFIDENCE_SCORE_COLUMN).over(w))\
+                                .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence'))\
+                                .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
+                                .select(INDEX_ID_COLUMN, "most_significant_group")
 
     merged_action = action_data_df.groupby(INDEX_ID_COLUMN).agg(collect_set(BAD_GROUP_COLUMN).alias("action_bad_group_set"),  # noqa: E501
                                                                 collect_set(GOOD_GROUP_COLUMN).alias("action_good_group_set"),  # noqa: E501
@@ -198,6 +193,11 @@ def run():
                   args.aml_deployment_id,
                   args.signal_name)
 
+    # add action analyzer tag for the root run
+    root_run_id = os.environ.get("AZUREML_ROOT_RUN_ID", None)
+    print("Action generated, setting tag for pipeline run: ", root_run_id)
+    client = MlflowClient()
+    client.set_tag(root_run_id, "momo_action_analyzer_has_action", "true")
 
 if __name__ == "__main__":
     run()

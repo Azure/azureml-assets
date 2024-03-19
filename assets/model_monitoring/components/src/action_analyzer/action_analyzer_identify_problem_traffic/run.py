@@ -60,7 +60,6 @@ from bertopic.representation import OpenAI
 
 def get_output_schema() -> StructType:
     """Get Output Data Spark DataFrame Schema."""
-
     schema = StructType(
         [
             StructField(TRACE_ID_COLUMN, StringType(), True),
@@ -97,7 +96,7 @@ def bertopic_get_topic(queries,
                          azure_deployment=model_deployment_name)
     representation_model = OpenAI(client, model=model_deployment_name, chat=True, prompt=BERTOPIC_DEFAULT_PROMPT)
     topic_model = BERTopic(
-        min_topic_size=int(0.15*len(queries)),
+        min_topic_size=int(0.2*len(queries)),
         top_n_words=5,
         representation_model=representation_model
     )
@@ -167,6 +166,15 @@ def assign_default_group(group_list, query, metrics, good_queries, bad_queries):
         bad_group_name = f"{metrics}_bad_group_default_{DEFAULT_TOPIC_NAME}"
         group_list = _append_value(group_list, bad_group_name)
     return group_list
+
+
+@udf(returnType=StringType())
+def assign_default_topic(topic_list, query_list, query):
+    """Assign default topic if the sample size is too small."""
+    queries= json.loads(query_list)
+    if query in queries:
+        topic_list = _append_value(topic_list, DEFAULT_TOPIC_NAME)
+    return topic_list
 
 
 def get_index_id(index_content):
@@ -291,7 +299,6 @@ def run():
     parser.add_argument("--api_call_retry_max_count", type=int, default=10)
     args = parser.parse_args()
 
-    violated_metrics = ["Coherence", "Fluency"]
     # Skip action analyzer if no violated metrics
     violated_metrics = get_violated_metrics(args.signal_output, f"signals/{args.signal_name}")
     if violated_metrics == []:
