@@ -18,6 +18,7 @@ GROUP_DIMENSION_COLUMN = "group_dimension"
 METRIC_NAME_COLUMN = "metric_name"
 METRIC_VALUE_COLUMN = "metric_value"
 THRESHOLD_COLUMN = "threshold_value"
+TOTAL_VIOLATION_COUNTS = "TotalViolationCounts"
 
 THRESHOLD_PARAMS = [
     "groundedness_passrate_threshold",
@@ -31,18 +32,23 @@ ALL_METRIC_NAMES = [
     "AcceptableGroundednessScorePerInstance",
     "AggregatedGroundednessPassRate",
     "AverageGroundednessScore",
+    "GroundednessViolationCounts",
     "AcceptableCoherenceScorePerInstance",
     "AggregatedCoherencePassRate",
     "AverageCoherenceScore",
+    "CoherenceViolationCounts",
     "AcceptableFluencyScorePerInstance",
     "AggregatedFluencyPassRate",
     "AverageFluencyScore",
+    "FluencyViolationCounts",
     "AcceptableSimilarityScorePerInstance",
     "AggregatedSimilarityPassRate",
     "AverageSimilarityScore",
+    "SimilarityViolationCounts",
     "AcceptableRelevanceScorePerInstance",
     "AggregatedRelevancePassRate",
     "AverageRelevanceScore",
+    "RelevanceViolationCounts",
 ]
 
 
@@ -92,6 +98,24 @@ def _calculate_average_metric_score(df, metric_name):
     if sum_row_count != 0:
         average_metric_score = sum_metric_scores / sum_row_count
     return average_metric_score
+
+
+def _calculate_violation_counts(df, metric_name):
+    threshold = _get_per_instance_threshold(df, metric_name)
+    df_with_buckets = df.filter(
+        col(METRIC_NAME_COLUMN).contains(metric_name)
+    ).withColumn(
+        "bucket",
+        udf(lambda group: int(group), IntegerType())(
+            col(GROUP_COLUMN)
+        ),
+    )
+    violation_counts = (
+        df_with_buckets.filter(col("bucket") < int(threshold))
+        .select(sum(METRIC_VALUE_COLUMN))
+        .head()[0]
+    )
+    return violation_counts
 
 
 def run():
@@ -146,12 +170,15 @@ def compute_metrics(histogram_df, threshold_args, metric_names):
                 StructField(GROUP_DIMENSION_COLUMN, StringType(), True)
             ]
         )
+    total_violation_counts = 0
     for metric_name in compact_metric_names:
         passrate_threshold = threshold_args[f"{metric_name.lower()}_passrate_threshold"]
         full_pass_rate_metric_name = f"Aggregated{metric_name}PassRate"
         full_per_instance_score_metric_name = f"Acceptable{metric_name}ScorePerInstance"
         average_score_metric_name = f"Average{metric_name}Score"
-        if full_pass_rate_metric_name in input_metric_names:
+        violation_counts_metric_name = f"{metric_name}ViolationCounts"
+        compute_full_pass_rate_metric = full_pass_rate_metric_name in input_metric_names
+        if compute_full_pass_rate_metric:
             metric_df = spark.createDataFrame(
                     [
                         (
@@ -183,7 +210,10 @@ def compute_metrics(histogram_df, threshold_args, metric_names):
                     metadata_schema,
                 )
             aggregated_metrics_df = aggregated_metrics_df.union(threshold_row)
-        if average_score_metric_name in input_metric_names:
+        # for now, compute average score if either average score or pass rate is requested
+        compute_average = average_score_metric_name in input_metric_names
+        compute_average = compute_average or compute_full_pass_rate_metric
+        if compute_average:
             average_metric_score = _calculate_average_metric_score(
                 histogram_df, full_per_instance_score_metric_name)
             metric_df = spark.createDataFrame(
@@ -199,6 +229,37 @@ def compute_metrics(histogram_df, threshold_args, metric_names):
                     metadata_schema,
                 )
             aggregated_metrics_df = aggregated_metrics_df.union(metric_df)
+        compute_violation_counts = violation_counts_metric_name in input_metric_names
+        compute_violation_counts = compute_violation_counts or compute_full_pass_rate_metric
+        if compute_violation_counts:
+            violation_counts = _calculate_violation_counts(histogram_df, metric_name)
+            total_violation_counts += violation_counts
+            metric_df = spark.createDataFrame(
+                    [
+                        (
+                            "",
+                            violation_counts,
+                            violation_counts_metric_name,
+                            "",
+                            "",
+                        )
+                    ],
+                    metadata_schema,
+                )
+            aggregated_metrics_df = aggregated_metrics_df.union(metric_df)
+    metric_df = spark.createDataFrame(
+            [
+                (
+                    "",
+                    total_violation_counts,
+                    TOTAL_VIOLATION_COUNTS,
+                    "",
+                    "",
+                )
+            ],
+            metadata_schema,
+        )
+    aggregated_metrics_df = aggregated_metrics_df.union(metric_df)
     return aggregated_metrics_df
 
 

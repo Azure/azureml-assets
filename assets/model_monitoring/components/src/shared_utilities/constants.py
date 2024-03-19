@@ -125,6 +125,42 @@ RECALL_METRIC_NAME = "Recall"
 MEAN_ABSOLUTE_ERROR_METRIC_NAME = "MeanAbsoluteError"
 ROOT_MEAN_SQUARED_ERROR_METRIC_NAME = "RootMeanSquaredError"
 
+# action analyzer
+PROMPT_COLUMN = "prompt"
+COMPLETION_COLUMN = "completion"
+CONTEXT_COLUMN = "context"
+TRACE_ID_COLUMN = "trace_id"
+SPAN_ID_COLUMN = "span_id"
+ROOT_QUESTION_COLUMN = "root_question"
+TOPIC_LIST_COLUMN = "topic_list"
+GROUP_LIST_COLUMN = "group_list"
+VIOLATED_METRICS_COLUMN = "violated_metrics"
+INDEX_CONTENT_COLUMN = "index_content"
+INDEX_SCORE_COLUMN = "index_score"
+INDEX_SCORE_LLM_COLUMN = "index_score_llm"
+INDEX_ID_COLUMN = "index_id"
+ROOT_SPAN_COLUMN = "root_span"
+BAD_GROUP_COLUMN = "bad_group"
+GOOD_GROUP_COLUMN = "good_group"
+CONFIDENCE_SCORE_COLUMN = "confidence_score"
+ACTION_ID_COLUMN = "action_id"
+
+GSQ_METRICS_LIST = ["Fluency", "Coherence", "Groundedness", "Relevance", "Similarity"]
+METRICS_VIOLATION_THRESHOLD = 4
+RETRIEVAL_SPAN_TYPE = "Retrieval"
+TEXT_SPLITTER = "#<Splitter>#"
+
+ACTION_ANALYZER_SAMPLE_SIZE = 100
+GROUP_TOPIC_MIN_SAMPLE_SIZE = 10
+P_VALUE_THRESHOLD = 0.05
+MEAN_THRESHOLD = 3
+
+INDEX_ACTION_TYPE = "Index Action"
+ACTION_DESCRIPTION = "Poor answers are caused by poor indexing, please update the doc index with id "
+MAX_SAMPLE_SIZE = 20
+DEFAULT_RETRIEVAL_SCORE = 0
+
+
 # util
 MLFLOW_RUN_ID = "MLFLOW_RUN_ID"
 MAX_RETRY_COUNT = 3

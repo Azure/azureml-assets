@@ -6,10 +6,6 @@
 import os
 import sys
 import pytest
-import zipfile
-import time
-import random
-import string
 import pandas as pd
 from generation_safety_quality.annotation_compute_metrics.run import (
     compute_metrics,
@@ -19,41 +15,10 @@ from generation_safety_quality.annotation_compute_metrics.run import (
     METRIC_VALUE_COLUMN,
     THRESHOLD_PARAMS)
 import spark_mltable  # noqa, to enable spark.read.mltable
-from spark_mltable import SPARK_ZIP_PATH
 from shared_utilities.io_utils import init_spark
 
 
 SIMILARITY = "Similarity"
-
-
-@pytest.fixture(scope="session")
-def gsq_zip_test_setup():
-    """Zip files in module_path to src.zip."""
-    momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
-    module_path = os.path.join(momo_work_dir, "src")
-    # zip files in module_path to src.zip
-    s = string.ascii_lowercase + string.digits
-    rand_str = '_' + ''.join(random.sample(s, 5))
-    time_str = time.strftime("%Y%m%d-%H%M%S") + rand_str
-    zip_path = os.path.join(module_path, f"src_{time_str}.zip")
-
-    zf = zipfile.ZipFile(zip_path, "w")
-    for dirname, subdirs, files in os.walk(module_path):
-        for filename in files:
-            abs_filepath = os.path.join(dirname, filename)
-            rel_filepath = os.path.relpath(abs_filepath, start=module_path)
-            print("zipping file:", rel_filepath)
-            zf.write(abs_filepath, arcname=rel_filepath)
-    zf.close()
-    # add files to zip folder
-    os.environ[SPARK_ZIP_PATH] = zip_path
-    print("zip path set in gsq_zip_test_setup: ", zip_path)
-
-    yield
-    # remove zip file
-    os.remove(zip_path)
-    # remove zip path from environment
-    os.environ.pop(SPARK_ZIP_PATH, None)
 
 
 @pytest.fixture(scope="module")
@@ -84,7 +49,7 @@ def gsq_preprocessor_test_setup():
 class TestGSQMetrics:
     """Test class for GSQ compute metrics component and utilities."""
 
-    def test_gsq_compute_metrics(self, gsq_zip_test_setup, gsq_preprocessor_test_setup):
+    def test_gsq_compute_metrics(self, code_zip_test_setup, gsq_preprocessor_test_setup):
         """Test calling compute_metrics method on histogram table and validate result."""
         histogram_df = get_histogram_data()
         # convert to spark dataframe
@@ -112,6 +77,18 @@ class TestGSQMetrics:
                 assert abs(float(result_metric_value) - float(expected_metric_value)) < TOL
             else:
                 assert result_metric_value == expected_metric_value
+
+    def test_pass_rate_includes_average_scores(self,
+                                               code_zip_test_setup,
+                                               gsq_preprocessor_test_setup):
+        """Test average score included with AggregatedGroundednessPassRate."""
+        histogram_df = get_histogram_data()
+        spark = init_spark()
+        histogram_df = spark.createDataFrame(histogram_df)
+        metric_names = "AggregatedGroundednessPassRate"
+        result = call_compute_metrics(histogram_df, metric_names)
+        result_df = result.toPandas()
+        assert "AverageGroundednessScore" in result_df[METRIC_NAME_COLUMN].values
 
 
 def get_histogram_data():
@@ -179,7 +156,12 @@ def get_expected_data():
         ['', 4.714285714285714, 'AverageRelevanceScore', '', ''],
         ['', 1.0, 'AggregatedCoherencePassRate', 0.7, ''],
         ['', '', 'AcceptableCoherenceScorePerInstance', 4, ''],
-        ['', 5.0, 'AverageCoherenceScore', '', '']
+        ['', 5.0, 'AverageCoherenceScore', '', ''],
+        ['', 0.0, 'CoherenceViolationCounts', '', ''],
+        ['', 0.0, 'FluencyViolationCounts', '', ''],
+        ['', 1.0, 'GroundednessViolationCounts', '', ''],
+        ['', 2.0, 'RelevanceViolationCounts', '', ''],
+        ['', 3.0, 'TotalViolationCounts', '', ''],
     ]
     return pd.DataFrame(data, columns=['group', 'metric_value', 'metric_name',
                                        'threshold_value', 'group_dimension'])

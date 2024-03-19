@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/vision/stable-ubuntu2004-cu117-py38-torch1131:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py310-torch1131:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
 RUN apt-get -y update
@@ -18,6 +18,8 @@ RUN mim install mmdet==2.28.2
 
 # vulnerability fixes - this will be removed once we update to MMTracking's latest version
 RUN pip install scipy==1.10.1
-RUN pip install cryptography==42.0.2
+
+# It is recommended to upgrade to numpy version 1.23.5 to address the numpy.core.multiarray issue
+RUN pip install numpy==1.23.5
 
 # dummy number to change when needing to force rebuild without changing the definition: 1

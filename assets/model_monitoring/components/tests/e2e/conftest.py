@@ -11,7 +11,7 @@ import time
 
 from azure.ai.ml import MLClient, load_component
 from azure.ai.ml.constants import AssetTypes
-from azure.ai.ml.operations._run_history_constants import RunHistoryConstants
+from azure.ai.ml.operations._run_history_constants import RunHistoryConstants, JobStatus
 from azure.ai.ml.entities import Job, Data
 from azure.identity import AzureCliCredential
 import pytest
@@ -535,6 +535,46 @@ def publish_generation_safety_signal_monitor_component(
         print(f"Successfully published {component['name']}.")
 
 
+@pytest.fixture(scope="session", autouse=True)
+def publish_model_token_stats_model_monitor_component(
+    main_worker_lock,
+    publish_command_components,
+    model_monitoring_components,
+    components_directory,
+    root_temporary_directory,
+    asset_version,
+    ml_client,
+):
+    """Publish the data drift model monitor pipeline component to the test workspace."""
+    if not _is_main_worker(main_worker_lock):
+        return
+
+    print_header("Publishing Model Token Statistics Model Monitor")
+    out_directory = os.path.join(root_temporary_directory, "command_components")
+    os.makedirs(out_directory, exist_ok=True)
+
+    for component in model_monitoring_components:
+        if component["name"] != "genai_token_statistics_signal_monitor":
+            continue
+        print(f"Publishing {component['name']}..")
+        component["jobs"]["compute_metrics"][
+            "component"
+        ] = f"azureml:genai_token_statistics_compute_metrics:{asset_version}"
+        component["jobs"]["output_signal_metrics"][
+            "component"
+        ] = f"azureml:model_monitor_metric_outputter:{asset_version}"
+
+        component["version"] = asset_version
+
+        spec_path = os.path.join(
+            out_directory, f"{component['name']}-{generate_random_filename('yaml')}"
+        )
+
+        write_to_yaml(spec_path, component)
+        ml_client.components.create_or_update(load_component(spec_path))
+        print(f"Successfully published {component['name']}.")
+
+
 @pytest.fixture(scope="session", name="publish_components")
 def register_components(
     publish_data_quality_model_monitor_component,
@@ -543,6 +583,7 @@ def register_components(
     publish_feature_attr_drift_signal_monitor_component,
     publish_generation_safety_signal_monitor_component,
     publish_model_performance_model_monitor_component,
+    publish_model_token_stats_model_monitor_component
 ):
     """Publish all model monitor components."""
     yield
@@ -646,7 +687,7 @@ def cleanup_previous_e2e_tests(ml_client: MLClient, test_suite_name):
         pass
     else:
         for job in ml_client.jobs.list():
-            if job.status in RunHistoryConstants.TERMINAL_STATUSES:
+            if job.status in RunHistoryConstants.TERMINAL_STATUSES or job.status == JobStatus.FINALIZING:
                 continue
 
             if job.experiment_name == test_suite_name:

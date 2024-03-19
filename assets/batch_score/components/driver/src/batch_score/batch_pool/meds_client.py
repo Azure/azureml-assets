@@ -6,23 +6,17 @@
 import os
 from aiohttp import ClientSession
 
-from ..common.auth.token_provider import TokenProvider
 from ..common.configuration.configuration import Configuration
+from ..common.header_providers.header_provider import HeaderProvider
 from ..common.telemetry import logging_utils as lu
-from ..header_handlers.meds.meds_header_handler import MedsHeaderHandler
 
 
 class MEDSClient:
     """Client for Model Endpoint Discovery Service (MEDS)."""
 
-    def __init__(self, token_provider: TokenProvider, configuration: Configuration):
+    def __init__(self, header_provider: HeaderProvider, configuration: Configuration):
         """Initialize MEDSClient."""
-        self._header_handler = MedsHeaderHandler(
-            token_provider=token_provider,
-            user_agent_segment=configuration.user_agent_segment,
-            batch_pool=configuration.batch_pool,
-            quota_audience=configuration.quota_audience)
-
+        self._header_provider = header_provider
         self._quota_audience = configuration.quota_audience
 
         base_url = os.environ.get(
@@ -56,7 +50,7 @@ class MEDSClient:
 
     async def _get_client_settings(self, session: ClientSession) -> 'dict[str, str]':
         """Get client settings from MEDS."""
-        headers = self._header_handler.get_headers()
+        headers = self._header_provider.get_headers()
         async with session.post(url=self._url, headers=headers, json={"trafficGroup": 'batch'}) as response:
             if response.status != 200:
                 response_body = await response.text()

@@ -47,7 +47,7 @@ outputs:
     description: Path to the jsonl file where the sampled dataset will be saved.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/19
+environment: azureml://registries/azureml/environments/model-evaluation/versions/20
 command: >-
   python -m aml_benchmark.dataset_sampler.main 
   --dataset ${{inputs.dataset}} 
