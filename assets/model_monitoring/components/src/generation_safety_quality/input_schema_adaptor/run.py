@@ -4,16 +4,17 @@
 """Entry script for GSQ Input Schema Adaptor Spark Component."""
 
 import argparse
+import json
 
+from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import from_json
+from pyspark.sql.functions import from_json, max
 from shared_utilities.io_utils import (
     init_spark,
     save_spark_df_as_mltable,
     try_read_mltable_in_spark_with_error,
 )
 from shared_utilities.momo_exceptions import InvalidInputError
-from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
 from shared_utilities.df_utils import has_duplicated_columns
 from shared_utilities.constants import (
     GENAI_ROOT_SPAN_SCHEMA_COLUMN,
@@ -23,6 +24,29 @@ from shared_utilities.constants import (
     GSQ_CONTEXT_COLUMN,
     GSQ_GROUND_TRUTH_COLUMN,
 )
+
+
+def check_row_has_gsq_schema(row: dict, expected_schema: list) -> list:
+    """Check each dataframe row for expected schema value."""
+    input_dict: dict = json.loads(row.get("input", "null"))
+    output_dict: dict = json.loads(row.get("output", "null"))
+    if input_dict is None:
+        print(f"Row entry with trace id = {row.get('trace_id', '')} has no input field.")
+        input_dict = {}
+    if output_dict is None:
+        print(f"Row entry with trace id = {row.get('trace_id', '')} has no output field.")
+        output_dict = {}
+    entry = []
+    for column in expected_schema:
+        if column in input_dict:
+            entry.append(input_dict.get(column))
+        elif column in output_dict:
+            entry.append(output_dict.get(column))
+        else:
+            entry.append(None)
+    return entry
+
+
 def _adapt_input_data_schema(
         df: DataFrame,
         prompt_column_name,
@@ -42,34 +66,17 @@ def _adapt_input_data_schema(
 
     print("Adapting the GenAI production data to gsq input schema...")
     spark = init_spark()
-    try:
-        sampled_df_slice = df.sample(0.2)
-        if sampled_df_slice.count() == 0:
-            print(
-                "Not enough data resulting from production data and sample rate. "
-                "Using first 5 rows of production data instead."
-            )
-            sampled_df_slice = df.limit(5)
-        print("Sampled data used to get 'input'/'output' json schema:")
-        sampled_df_slice.show()
-        sampled_df_slice.printSchema()
+    columns_to_select = [
+        prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name,
+        GENAI_TRACE_ID_SCHEMA_COLUMN, GENAI_ROOT_SPAN_SCHEMA_COLUMN
+    ]
+    transormed_df = df.rdd.map(lambda x: x.asDict()).flatMap(lambda y: check_row_has_gsq_schema(y, columns_to_select)).toDF(columns_to_select)
 
-        input_schema = spark.read.json(sampled_df_slice.rdd.map(lambda row: row.input), mode="FAILFAST").schema
-        output_schema = spark.read.json(sampled_df_slice.rdd.map(lambda row: row.output), mode="FAILFAST").schema
-    except Exception as ex:
-        if "Malformed records are detected in schema inference. Parse Mode: FAILFAST." in str(ex):
-            raise InvalidInputError(
-                "Failed to parse the input/output column json string for the trace logs provided."
-                " The input/output columns in the inputted production data are not in a parseable"
-                " json string format. Please double-check the data columns are being passed or"
-                " stored correctly."
-            )
-        raise ex
-
-    df = df.withColumns({
-        'temp_input': from_json(df.input, input_schema),
-        'temp_output': from_json(df.output, output_schema),
-    }).select('trace_id', 'temp_input.*', 'temp_output.*', 'root_span')
+    columns_to_check = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
+    rows_with_data = transormed_df.select(*columns_to_check).agg(*[max(c).alias(c) for c in columns_to_check]).take(1)[0]
+    transformed_df = transormed_df.select(*[c for c in df.columns if rows_with_data[c] is not None])
+    transformed_df.show()
+    transformed_df.printSchema()
 
     if has_duplicated_columns(df):
         raise InvalidInputError(
