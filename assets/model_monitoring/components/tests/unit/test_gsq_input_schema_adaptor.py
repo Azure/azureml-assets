@@ -8,6 +8,7 @@ import pytest
 import sys
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
+from assets.model_monitoring.components.src.shared_utilities.io_utils import init_spark
 from src.generation_safety_quality.input_schema_adaptor.run import (
     _adapt_input_data_schema,
 )
@@ -35,6 +36,7 @@ def gsq_preprocessor_test_setup():
     os.chdir(original_work_dir)  # change working directory back to original
     os.environ["PYTHONPATH"] = old_python_path  # change python path back to original
 
+
 @pytest.mark.gsq_test
 @pytest.mark.unit
 class TestInputSchemaAdaptor:
@@ -42,7 +44,7 @@ class TestInputSchemaAdaptor:
 
     def _init_spark(self) -> SparkSession:
         """Create spark session for tests."""
-        spark: SparkSession = SparkSession.builder.appName("test").getOrCreate()
+        spark = init_spark()
         sc = spark.sparkContext
         # if SPARK_ZIP_PATH is set, add the zip file to the spark context
         zip_path = os.environ.get(SPARK_ZIP_PATH, '')
@@ -95,11 +97,18 @@ class TestInputSchemaAdaptor:
         ]
     )
 
+    _custom_column_mapping = {
+        "prompt_mapping": "input.prompt",
+        "completion_mapping": "output.output",
+        "context_mapping": "input.context",
+        "groundtruth_mapping": "input.groundtruth"
+    }
+
     _default_column_mapping = {
         "prompt_mapping": "prompt",
-        "completion_mapping": "output",
+        "completion_mapping": "completion",
         "context_mapping": "context",
-        "groundtruth_mapping": "groundtruth"
+        "groundtruth_mapping": "ground_truth"
     }
 
     @pytest.mark.parametrize(
@@ -114,14 +123,14 @@ class TestInputSchemaAdaptor:
                 (
                     [("01", "null", "null", "null")], _genai_input_schema,
                     [("01", "null")], _expected_gsq_input_schema_empty,
-                    _default_column_mapping
+                    _custom_column_mapping
                 ),
                 # Test with genai columns. Default column mapping
                 (
                     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
                       "{\"output\":\"answer\"}", "null")], _genai_input_schema,
                     [("01", "context", "ground-truth", "question", "answer", "null")], _expected_gsq_input_schema,
-                    _default_column_mapping
+                    _custom_column_mapping
                 ),
                 # Test with genai columns. Mismatched json schema on rows
                 # (
@@ -141,7 +150,7 @@ class TestInputSchemaAdaptor:
                     [("01", "{\"prompt\":\"question\",\"context\":\"context\",\"groundtruth\":\"ground-truth\"}",
                       "{\"output\":\"answer\",\"source\":\"LLM\"}", "null")], _genai_input_schema,
                     [("01", "context", "ground-truth", "question", "answer", "null")],
-                    _expected_gsq_input_schema, _default_column_mapping
+                    _expected_gsq_input_schema, _custom_column_mapping
                 ),
             ]
     )
