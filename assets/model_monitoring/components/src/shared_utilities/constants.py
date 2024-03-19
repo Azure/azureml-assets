@@ -144,13 +144,16 @@ BAD_GROUP_COLUMN = "bad_group"
 GOOD_GROUP_COLUMN = "good_group"
 CONFIDENCE_SCORE_COLUMN = "confidence_score"
 ACTION_ID_COLUMN = "action_id"
+RETRIEVAL_QUERY_TYPE_COLUMN = "retrieval_query_type"
+RETRIEVAL_TOP_K_COLUMN = "retrieval_top_k"
+DEFAULT_TOPIC_NAME = "disparate"
 
 GSQ_METRICS_LIST = ["Fluency", "Coherence", "Groundedness", "Relevance", "Similarity"]
+GOOD_METRICS_VALUE = 5
 METRICS_VIOLATION_THRESHOLD = 4
 RETRIEVAL_SPAN_TYPE = "Retrieval"
 TEXT_SPLITTER = "#<Splitter>#"
 
-ACTION_ANALYZER_SAMPLE_SIZE = 100
 GROUP_TOPIC_MIN_SAMPLE_SIZE = 10
 P_VALUE_THRESHOLD = 0.05
 MEAN_THRESHOLD = 3

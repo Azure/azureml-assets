@@ -53,12 +53,14 @@ def is_query_in_action_sample(group_list, action_sample_set):
     return len(group_set.intersection(action_sample_set)) > 0
 
 
-def get_index_set(df):
-    """Get the index set."""
+def get_action_metadata(df):
+    """Get the index set and violated metrics for action."""
     index_set = set()
+    violated_metrics = set()
     for data_row in df.collect():
         index_set.add(data_row[INDEX_ID_COLUMN])
-    return index_set
+        violated_metrics.update(data_row[VIOLATED_METRICS_COLUMN].split(TEXT_SPLITTER))
+    return index_set, violated_metrics
 
 
 def is_index_asset(index_id):
@@ -68,21 +70,18 @@ def is_index_asset(index_id):
 
 def write_actions(action_bad_group_df, action_good_group_df, action_output_folder, aml_deployment_id, signal_name):
     """Write the action summary and action detail files."""
-    index_set = get_index_set(action_bad_group_df)
+    index_set, violated_metrics = get_action_metadata(action_bad_group_df)
     local_path = str(uuid.uuid4())
     action_summary = {}
     for index_id in index_set:
         row = action_bad_group_df.filter(col(INDEX_ID_COLUMN) == index_id).collect()[0]
-        action_id = row[ACTION_ID_COLUMN]
-        confidence_score = row["action_confidence_score"]
-        query_intention = row["most_significant_group"].split("_")[-1]
         action = {
-            "ActionId": action_id,
+            "ActionId": row[ACTION_ID_COLUMN],
             "Type": INDEX_ACTION_TYPE,
             "Description": ACTION_DESCRIPTION + index_id,
-            "ConfidenceScore": confidence_score,
-            "ViolatedMetrics": signal_name,
-            "QueryIntention": query_intention,
+            "ConfidenceScore": row["action_confidence_score"],
+            "ViolatedMetrics": ", ".join(violated_metrics),
+            "QueryIntention": row["most_significant_group"].split("_")[-1],
             "CreationTime": str(datetime.datetime.now()),
             "FilePath": os.path.join(action_output_folder, f"actions/{action_id}.json")
         }
@@ -132,11 +131,11 @@ def generate_samples(action_df, is_negative_sample):
     return samples
 
 
-def write_to_file(payload: dict, local_output_directory: str, signal_name: str):
-    """Save the signal to a local directory."""
+def write_to_file(payload: dict, local_output_directory: str, file_name: str):
+    """Save the action files to a local directory."""
     os.makedirs(local_output_directory, exist_ok=True)
-    signal_file = os.path.join(local_output_directory, f"{signal_name}.json")
-    with open(signal_file, "w") as f:
+    action_file = os.path.join(local_output_directory, f"{file_name}.json")
+    with open(action_file, "w") as f:
         f.write(json.dumps(payload, indent=4, default=np_encoder))
 
 
