@@ -309,7 +309,6 @@ def run():
 
     # Skip action analyzer if no violated metrics
     violated_metrics = get_violated_metrics(args.signal_output, f"signals/{args.signal_name}")
-    violated_metrics = ["Coherence", "Fluency"]
     if violated_metrics == []:
         print("No violated metrics. No action will be generated.")
         save_empty_dataframe(get_output_schema(), args.data_with_groups)
