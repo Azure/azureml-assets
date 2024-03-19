@@ -4,8 +4,10 @@
 """This file contains utilities to read write data."""
 
 from enum import Enum
+import time
 import yaml
 import numpy as np
+from .constants import MAX_RETRY_COUNT
 from pyspark.sql import SparkSession, DataFrame
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
@@ -123,6 +125,29 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
         except InvalidInputError as iie:
             raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
 
+def _write_mltable(mltable_obj, dest_path):
+    try:
+        import os
+        import uuid
+        from pathlib import Path
+        from azureml.dataprep.rslex import Copier, PyLocationInfo, PyIfDestinationExists
+
+        folder_name = str(uuid.uuid4())
+        folder_path = os.path.join(os.getcwd(), folder_name)
+        os.makedirs(folder_path)
+        source_path = os.path.join(folder_path, "MLTable")
+        with open(source_path, "w") as yaml_file:
+            yaml.dump(mltable_obj, yaml_file)
+
+        if_destination_exists = PyIfDestinationExists.REPLACE
+        dest_si = PyLocationInfo.from_uri(dest_path)
+        source_uri = Path(source_path).as_uri()
+        Copier.copy_uri(dest_si, source_uri, if_destination_exists)
+        return True
+    except Exception as e:
+        print(f"Error writing mltable file: {e}")
+        return False
+
 
 def read_mltable_in_spark(mltable_path: str):
     """Read mltable in spark."""
@@ -133,9 +158,24 @@ def read_mltable_in_spark(mltable_path: str):
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
-    metrics_df.write.option("output_format", "parquet").option(
-        "overwrite", True
-    ).mltable(folder_path)
+    metrics_df.write.mode("overwrite").parquet(folder_path)
+
+    base_path = folder_path.rstrip('/')
+    output_path_pattern = base_path + "/*.parquet"
+
+    mltable_obj = {
+        'paths': [{'pattern': output_path_pattern}] ,
+        'transformations': [ 'read_parquet' ]
+    }
+
+    retries = 0
+    while retries < MAX_RETRY_COUNT:
+        if _write_mltable(mltable_obj, folder_path):
+            break
+        retries += 1
+        time.sleep(1)
+    if retries == MAX_RETRY_COUNT:
+        raise Exception("Failed to write mltable yaml file after multiple retries.")
 
 
 def np_encoder(object):
