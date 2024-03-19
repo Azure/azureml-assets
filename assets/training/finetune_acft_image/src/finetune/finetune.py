@@ -23,7 +23,7 @@ from azureml.acft.common_components.utils.error_handling.error_definitions impor
 from azureml.acft.common_components.utils.arg_utils import str2bool
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import swallow_all_exceptions
 
-from azureml.metrics import constants as metrics_constants
+from azureml.metrics.constants import Metric as metrics_constants
 
 from azureml.acft.image import VERSION, PROJECT_NAME
 from azureml.acft.image.components.common.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
