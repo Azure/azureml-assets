@@ -8,6 +8,7 @@ from pyspark.sql.types import (
     StringType,
     BooleanType
 )
+from pyspark.sql import Window
 from pyspark.sql.functions import collect_set, col, udf, mean
 from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder
 import os
@@ -34,7 +35,9 @@ from shared_utilities.constants import (
     ROOT_QUESTION_COLUMN,
     COMPLETION_COLUMN,
     ROOT_SPAN_COLUMN,
-    ACTION_ID_COLUMN
+    ACTION_ID_COLUMN,
+    RETRIEVAL_QUERY_TYPE_COLUMN,
+    RETRIEVAL_TOP_K_COLUMN
 )
 
 
@@ -72,14 +75,16 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
         row = action_bad_group_df.filter(col(INDEX_ID_COLUMN) == index_id).collect()[0]
         action_id = row[ACTION_ID_COLUMN]
         confidence_score = row["action_confidence_score"]
+        query_intention = row["most_significant_group"].split("_")[-1]
         action = {
             "ActionId": action_id,
             "Type": INDEX_ACTION_TYPE,
             "Description": ACTION_DESCRIPTION + index_id,
             "ConfidenceScore": confidence_score,
-            "Signal": signal_name,
+            "ViolatedMetrics": signal_name,
+            "QueryIntention": query_intention,
             "CreationTime": str(datetime.datetime.now()),
-            "RelativePath": os.path.join(action_output_folder, f"actions/{action_id}.json")
+            "FilePath": os.path.join(action_output_folder, f"actions/{action_id}.json")
         }
         action_summary[action_id] = action
         action_detail = copy.deepcopy(action)
@@ -115,9 +120,11 @@ def generate_samples(action_df, is_negative_sample):
         sample = {
             "Question": sample_data[i][ROOT_QUESTION_COLUMN],
             "Answer": sample_data[i][COMPLETION_COLUMN],
-            "Topic": sample_data[i][TOPIC_LIST_COLUMN].replace(TEXT_SPLITTER, ","),
+            "Topic": sample_data[i][TOPIC_LIST_COLUMN].replace(TEXT_SPLITTER, ",")[0],
             "LookupScore": sample_data[i][INDEX_SCORE_LLM_COLUMN],
-            "DebuggingInfo": sample_data[i][ROOT_SPAN_COLUMN]
+            "DebuggingInfo": sample_data[i][ROOT_SPAN_COLUMN],
+            "RetrievalQueryType": sample_data[i][RETRIEVAL_QUERY_TYPE_COLUMN],
+            "RetrievalTopK": sample_data[i][RETRIEVAL_TOP_K_COLUMN]
         }
         if is_negative_sample:
             sample["ViolatedMetrics"] = sample_data[i][VIOLATED_METRICS_COLUMN].replace(TEXT_SPLITTER, ",")
@@ -161,10 +168,19 @@ def run():
         args.data_with_action_metric_score, "data_with_action_metric_score"
     )
 
-    # todo remove the groupby logic by using pure python or pandas
+    # get the group with highest confidence score
+    w = Window.partitionBy(INDEX_ID_COLUMN)
+    max_conf_df = df.withColumn("max_confidence", max(CONFIDENCE_SCORE_COLUMN).over(w))\
+                 .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence'))\
+                 .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
+                 .select(INDEX_ID_COLUMN, "most_significant_group")
+
     merged_action = action_data_df.groupby(INDEX_ID_COLUMN).agg(collect_set(BAD_GROUP_COLUMN).alias("action_bad_group_set"),  # noqa: E501
                                                                 collect_set(GOOD_GROUP_COLUMN).alias("action_good_group_set"),  # noqa: E501
                                                                 mean(CONFIDENCE_SCORE_COLUMN).alias("action_confidence_score")).withColumn(ACTION_ID_COLUMN, _generate_guid())  # noqa: E501
+
+    # join the action data with all debugging info and highest confident group
+    merged_action = merged_action.join(max_conf_df, [INDEX_ID_COLUMN], "inner")
     action_with_group_df = data_with_action_metric_score_df.join(merged_action, [INDEX_ID_COLUMN], "inner")
 
     action_bad_group_df = action_with_group_df.filter(is_query_in_action_sample(col(GROUP_LIST_COLUMN),
