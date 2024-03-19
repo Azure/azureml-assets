@@ -125,7 +125,8 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
         except InvalidInputError as iie:
             raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
 
-def _write_mltable(mltable_obj, dest_path):
+
+def _write_mltable_yaml(mltable_obj, dest_path):
     try:
         import os
         import uuid
@@ -142,7 +143,7 @@ def _write_mltable(mltable_obj, dest_path):
         if_destination_exists = PyIfDestinationExists.REPLACE
         dest_si = PyLocationInfo.from_uri(dest_path)
         source_uri = Path(source_path).as_uri()
-        Copier.copy_uri(dest_si, source_uri, if_destination_exists)
+        Copier.copy_uri(dest_si, source_uri, if_destination_exists,'')
         return True
     except Exception as e:
         print(f"Error writing mltable file: {e}")
@@ -164,13 +165,13 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str):
     output_path_pattern = base_path + "/*.parquet"
 
     mltable_obj = {
-        'paths': [{'pattern': output_path_pattern}] ,
-        'transformations': [ 'read_parquet' ]
+        'paths': [{'pattern': output_path_pattern}],
+        'transformations': ['read_parquet']
     }
 
     retries = 0
     while retries < MAX_RETRY_COUNT:
-        if _write_mltable(mltable_obj, folder_path):
+        if _write_mltable_yaml(mltable_obj, folder_path):
             break
         retries += 1
         time.sleep(1)
