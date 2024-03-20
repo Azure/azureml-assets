@@ -11,6 +11,7 @@ from azure.storage.blob import ContainerClient, BlobServiceClient
 from azure.storage.blob._shared.authentication import SharedKeyCredentialPolicy
 from azure.storage.filedatalake import FileSystemClient
 from azureml.core import Datastore
+from azureml.exceptions import UserErrorException
 from model_data_collector_preprocessor.store_url import StoreUrl
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -200,7 +201,7 @@ class TestStoreUrl:
         """Test StoreUrl constructor, in case datastore not found ."""
         mock_ws = Mock()
 
-        with patch.object(Datastore, "get", return_value=None):
+        with patch.object(Datastore, "get", side_effect=UserErrorException("Datastore not found.")):
             with pytest.raises(InvalidInputError, match=r"Datastore my_datastore not found .*"):
                 _ = StoreUrl("azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws"
                              "/datastores/my_datastore/paths/path/to/folder",
@@ -243,6 +244,38 @@ class TestStoreUrl:
 
         assert store_url.path == expected_root_path
         assert store_url.get_abfs_url(relative_path) == expected_abfs_url
+
+    @pytest.mark.parametrize(
+        "path, is_local_path",
+        [
+            ("./path/to/folder", True),
+            ("../path/to/folder", True),
+            ("path/to/file.parquet", True),
+            ("/path/to/folder", True),
+            ("./my_data.csv", True),
+            ("my_data.csv", True),
+            ("C:/path/to/folder", True),
+            (r"D:\path\to\file.csv", True),
+            ("file:///path/to/folder", True),
+            ("file://path/to/data.parquet", True),
+            ("https://my_account.blob.core.windows.net/my_container/path/to/folder", False),
+            ("abfss://my_container@my_account.dfs.core.windows.net/path/to/folder", False),
+            ("azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore/paths/path/to/folder", False),  # noqa: E501
+            ("azureml://datastores/my_datastore/paths/path/to/data.parquet", False),
+        ]
+    )
+    def test_is_local_path(self, path, is_local_path):
+        """Test is_local_path()."""
+        mock_datastore = Mock(datastore_type="AzureBlob", protocol="https", endpoint="core.windows.net",
+                              account_name="my_account", container_name="my_container")
+        mock_datastore.name = "my_datastore"
+        mock_datastore.credential_type = "Sas"
+        mock_datastore.sas_token = "my_sas_token"
+        mock_ws = Mock()
+
+        with patch.object(Datastore, "get", return_value=mock_datastore):
+            store_url = StoreUrl(path, mock_ws)
+            assert store_url.is_local_path() == is_local_path
 
 
 def assert_credentials_are_equal(credential1, credential2):

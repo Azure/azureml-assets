@@ -33,11 +33,12 @@ class MirHttpResponseHandler(HttpResponseHandler):
 
     def handle_response(
             self,
-            http_response: HttpScoringResponse,
             scoring_request: ScoringRequest,
+            http_response: HttpScoringResponse,
+            x_ms_client_request_id: str,
             start: float,
             end: float,
-            scoring_url: str) -> ScoringResult:
+            worker_id: str) -> ScoringResult:
         """Handle the response from the model for the provided scoring request."""
         result: ScoringResult = None
         updated_http_response = self._update_http_response_for_exception(http_response)
@@ -55,9 +56,12 @@ class MirHttpResponseHandler(HttpResponseHandler):
             model_response_reason=model_response_reason
         )
 
-        is_retriable = scoring_utils.is_retriable(retriable_type, scoring_request.retry_count + 1)
+        if retriable_type == scoring_utils.RetriableType.RETRY_UNTIL_MAX_RETRIES:
+            scoring_request.retry_count_for_limited_retries += 1
 
-        endpoint_base_url = get_base_url(scoring_url)
+        is_retriable = scoring_utils.is_retriable(retriable_type, scoring_request.retry_count_for_limited_retries)
+
+        endpoint_base_url = get_base_url(scoring_request.scoring_url)
 
         scoring_request.request_history.append(ScoringAttempt(
             endpoint_base_url=endpoint_base_url,
@@ -70,7 +74,7 @@ class MirHttpResponseHandler(HttpResponseHandler):
             latency=(end-start) * 1000,
             request_internal_id=scoring_request.internal_id,
             client_request_id=updated_http_response.headers["x-ms-client-request-id"],
-            endpoint_uri=scoring_url,
+            endpoint_uri=scoring_request.scoring_url,
             status_code="0" if response_status is None else str(response_status),
             model_response_code="" if model_response_code is None else model_response_code,
             client_exception=updated_http_response.exception_type,
@@ -87,7 +91,10 @@ class MirHttpResponseHandler(HttpResponseHandler):
                 token_counts=scoring_request.estimated_token_counts,
                 mini_batch_context=scoring_request.mini_batch_context
             )
-            get_events_client().emit_tokens_generated(result.completion_tokens, result.prompt_tokens, scoring_url)
+            get_events_client().emit_tokens_generated(
+                result.completion_tokens,
+                result.prompt_tokens,
+                scoring_request.scoring_url)
         elif is_retriable:
             raise RetriableException(
                 status_code=response_status,

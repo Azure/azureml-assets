@@ -6,9 +6,6 @@
 import pytest
 
 from src.batch_score.common.common_enums import ApiType
-from src.batch_score.header_handlers.mir_and_batch_pool_header_handler_factory import (
-    MirAndBatchPoolHeaderHandlerFactory
-)
 from src.batch_score.common.auth.auth_provider import EndpointType
 from src.batch_score.common.configuration.configuration_parser import (
     ConfigurationParser,
@@ -56,56 +53,6 @@ def test_success_set_default_for_segment_large_requests(api_type, segment_large_
 
     # Assert
     assert configuration.segment_large_requests == segment_large_requests
-
-
-@pytest.mark.parametrize('request_path', [
-    "v1/engines/davinci/completions",
-    "v1/engines/davinci/chat/completions",
-    "v1/engines/davinci/embeddings",
-    "v1/rainbow"
-])
-@pytest.mark.parametrize('header, pool, expected_values', [
-    ("{}", "pool", {"azureml-collect-request": 'false', "azureml-inferencing-offer-name": 'azureml_vanilla'}),
-    ("{}", None, {}),
-    ('{"something":"else"}',
-     "pool",
-     {"azureml-collect-request": 'false', "something": "else", "azureml-inferencing-offer-name": 'azureml_vanilla'}),
-    ('{"something":"else"}', None, {"something": "else"}),
-    ('{"Azureml-collect-request":"False"}',
-     "pool",
-     {"Azureml-collect-request": "False", "azureml-inferencing-offer-name": 'azureml_vanilla'}),
-    ('{"Azureml-collect-request":"False"}', None, {"Azureml-collect-request": "False"}),
-    ('{"Azureml-collect-request": true}',
-     "pool",
-     {"Azureml-collect-request": True, "azureml-inferencing-offer-name": 'azureml_vanilla'}),
-    ('{"Azureml-collect-request": true}', None, {"Azureml-collect-request": True}),
-    ('{"Azureml-inferencing-Offer-naMe": "another_offering"}',
-     None,
-     {"Azureml-inferencing-Offer-naMe": "another_offering"}),
-    ('{"azureml-collect-request": "true","some":"else"}',
-     "pool",
-     {"azureml-collect-request": "true", "some": "else", "azureml-inferencing-offer-name": 'azureml_vanilla'}),
-    ('{"Azureml-inferencing-offer-name": "my_custom_offering","some":"else"}',
-     "pool",
-     {"azureml-collect-request": "false", "some": "else", "Azureml-inferencing-offer-name": 'my_custom_offering'})
-])
-def test_success_additional_header(make_metadata, header, pool, expected_values, request_path):
-    """Test success additional header."""
-    # TODO: headers with booleans fail during session.post.
-    #  Prevent users from providing additional_headers that json.loads with boolean values.
-    # Act
-    args = ["--additional_headers", header, "--request_path", request_path]
-    if pool:
-        args += ["--batch_pool", pool]
-
-    configuration = ConfigurationParser().parse_configuration(args)
-    header_handler = MirAndBatchPoolHeaderHandlerFactory().get_header_handler(configuration, make_metadata, None, None)
-
-    # Assert
-    for key, value in expected_values.items():
-        assert header_handler._additional_headers[key] == value
-    if "azureml-collect-request" not in expected_values.keys():
-        assert "azureml-collect-request" not in header_handler._additional_headers
 
 
 def test_success_batch_size_one():

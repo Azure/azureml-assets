@@ -17,6 +17,8 @@ import re
 
 import torch
 
+# set up transformers cache
+from azureml.acft.common_components.utils import transformer_utils  # noqa: F401 # Module imported but unused
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -30,7 +32,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
-from azureml.acft.accelerator.utils.run_utils import add_run_properties
+from azureml.acft.accelerator.utils.run_utils import add_run_properties, is_main_process
 from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError, ACFTSystemError
@@ -48,6 +50,7 @@ from azureml._common._error_definition.azureml_error import AzureMLError  # type
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
+
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
@@ -128,13 +131,7 @@ MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS = {
     Tasks.TEXT_GENERATION: {
         "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
-        "params": '[{"name": "top_p", "type": "float", "default": 1.0, \
-            "shape": null}, {"name": "temperature", "type": "float", \
-            "default": 0.8, "shape": null}, {"name": "max_new_tokens", \
-            "type": "integer", "default": 50, "shape": null}, {"name": \
-            "do_sample", "type": "boolean", "default": true, "shape": null}, \
-            {"name": "return_full_text", "type": "boolean", "default": true, \
-            "shape": null}]',
+        "params": '[{"name": "top_p", "type": "float", "default": 1.0, "shape": null}, {"name": "temperature", "type": "float", "default": 0.8, "shape": null}, {"name": "max_new_tokens", "type": "integer", "default": 50, "shape": null}, {"name": "do_sample", "type": "boolean", "default": true, "shape": null}, {"name": "return_full_text", "type": "boolean", "default": true, "shape": null}]',   # noqa: E501 # Length of line greater than 119 characters limit
     },
 }
 
@@ -506,14 +503,14 @@ def get_parser():
 
     parser.add_argument(
         "--pytorch_model_folder",
-        default="output",
+        default="pytorch_model_folder",
         type=str,
         help="Output dir to save the finetune model and other metadata",
     )
 
     parser.add_argument(
         "--mlflow_model_folder",
-        default="output",
+        default="mlflow_model_folder",
         type=str,
         help="Output dir to save the finetune model as mlflow model",
     )
@@ -693,6 +690,14 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
                     setattr(args, key, value)
 
 
+def _set_hf_trainer_args_from_finetune_config(args: Namespace, finetune_config: Dict[str, Any]):
+    """Read :param `hf_trainer_args` from finetune config and set them to args."""
+    hf_trainer_args = finetune_config.get("hf_trainer_args", {})
+    for arg_name, arg_value in hf_trainer_args.items():
+        setattr(args, arg_name, arg_value)
+        logger.info(f"Setting {arg_name} to {arg_value}")
+
+
 def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
     """Validate the deepspeed zero3 config file.
 
@@ -790,8 +795,13 @@ def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
     # load deepspeed config
     ds_config_json = get_deepspeed_config_json(args)
 
+    ds_stage = identify_deepspeed_stage(ds_config_json)
+    # set proper deespeeed stage in finetune args
+    # so that down stream components like model_converter can use proper values if to merge model or not
+    setattr(args, "deepspeed_stage", ds_stage)
+
     # add validations for deepspeed stage3
-    if do_validate and identify_deepspeed_stage(ds_config_json) == 3:
+    if do_validate and ds_stage == 3:
         # activate few deepspeed stage3 specific configurations
         enable_ds3_model_specific_args(args)
         # validate the ds config file
@@ -813,6 +823,16 @@ def enable_ds3_model_specific_args(args: Namespace):
     pass
 
 
+def set_16bit_precision(args: Namespace):
+    """Set fp16/bf16 in args based on cuda device support."""
+    if torch.cuda.is_bf16_supported():
+        args.bf16 = True
+        logger.info("Setting bfloat16 to True.")
+    else:
+        args.fp16 = True
+        logger.info("Setting float16 to True.")
+
+
 def set_flash_attention(args: Namespace):
     """Set Flash Attention related parameters."""
     flash_attention_load_model_kwargs = {}
@@ -823,7 +843,8 @@ def set_flash_attention(args: Namespace):
         # only Ampere or higher architecture supports Flash attention 2
         # Flash attention 2 is supported with 16-bit, 8-bit anf 4-bit
         if torch.cuda.is_available() and torch.cuda.is_bf16_supported() and args.precision in [16, 8, 4]:
-            flash_attention_load_model_kwargs.update({"use_flash_attention_2": True})
+            # `use_flash_attention_2=True` will be deprecated, use `attn_implementation="flash_attention_2"`
+            flash_attention_load_model_kwargs.update({"attn_implementation": "flash_attention_2"})
             setattr(args, "apply_flash_attention", True)
             setattr(args, "flash_attention_version", 2)
         # elif args.precision == 16:
@@ -841,6 +862,11 @@ def set_flash_attention(args: Namespace):
             setattr(args, "apply_flash_attention", False)
             setattr(args, "flash_attention_version", -1)
         if args.flash_attention_version != -1:
+            # Set 16-bit precision value in Quantization case for Flash Attention to work.
+            # Currently will fail with error `RuntimeError: FlashAttention only support fp16 and bf16 data type`.
+            # When fp16/bf16 is set the attention q,k,v layers are autocasted to respective precision from `uint8`.
+            if (args.finetune_in_4bit or args.finetune_in_8bit) and not (args.fp16 or args.bf16):
+                set_16bit_precision(args)
             # Flash attention is supported only when model is loaded in respective supported precision
             if args.bf16:
                 flash_attention_load_model_kwargs.update({"torch_dtype": torch.bfloat16})
@@ -961,6 +987,8 @@ def finetune(args: Namespace):
             if "lora_target_modules" in ft_config:
                 logger.info(f'Setting lora_target_modules to: {ft_config.get("lora_target_modules")}')
                 setattr(args, "lora_target_modules", ft_config.get("lora_target_modules"))
+            # Reading hf trainer args from finetune config
+            _set_hf_trainer_args_from_finetune_config(args, ft_config)
     else:
         logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
         setattr(args, "finetune_config", {})
@@ -994,6 +1022,9 @@ def finetune(args: Namespace):
                                 f"Adding mlflow model signature for task {args.task_name} - "
                                 f"{MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[mlflow_flavor][args.task_name]}"
                             )
+
+    # set `mlflow_flavor` in finetune args
+    setattr(args, "mlflow_flavor", mlflow_flavor)
 
     # remove mlflow_model_signature if empty
     if "mlflow_model_signature" in mlflow_ft_conf \
@@ -1071,12 +1102,7 @@ def finetune(args: Namespace):
     args.output_dir = args.pytorch_model_folder
     Path(args.output_dir).mkdir(exist_ok=True, parents=True)
     if args.precision == 16:
-        if torch.cuda.is_bf16_supported():
-            args.bf16 = True
-            logger.info("Setting bfloat16 to True.")
-        else:
-            args.fp16 = True
-            logger.info("Setting float16 to True.")
+        set_16bit_precision(args)
     args.finetune_in_8bit = bool(args.precision == 8)  # 8 bit finetune
     args.finetune_in_4bit = bool(args.precision == 4)  # 4 bit finetune
 
@@ -1128,11 +1154,16 @@ def finetune(args: Namespace):
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
 
-    # remove "azureml.base_image" metadata for icm mitigation.
-    # icm: https://portal.microsofticm.com/imp/v3/incidents/details/458481445/home
-    removed_base_image = metadata.pop("azureml.base_image", None)
-    logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
+    if args.task_name not in [Tasks.TEXT_GENERATION]:
+        removed_base_image = metadata.pop("azureml.base_image", None)
+        logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
                     base image value is {removed_base_image}.")
+    else:
+        logger.info(
+            "Adding inferencing base image {} for text generation \
+            task.".format(metadata.get("azureml.base_image", "Base image for inference does not exist"))
+        )
+
     args.model_metadata = update_acft_metadata(metadata=metadata,
                                                finetuning_task=args.task_name,
                                                base_model_asset_id=model_asset_id)
@@ -1142,6 +1173,14 @@ def finetune(args: Namespace):
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
+
+    # post-training execute any code on main-process only to avoid race conditions.
+    if is_main_process():
+        # copy conda file
+        conda_file_path = Path(args.model_selector_output, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
+        if conda_file_path.is_file():
+            shutil.copy(str(conda_file_path), args.output_dir)
+            logger.info(f"Copied {MLFlowHFFlavourConstants.CONDA_YAML_FILE} file to output dir.")
 
 
 def can_apply_ort(args: Namespace, logger):
@@ -1215,6 +1254,16 @@ def main():
             AutoModelForCausalLM.from_pretrained, trust_remote_code=True
         )
         logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA and Text Gen")
+
+    # XXX Hack to support loading best peft model after finetuning to ignore base model layers.
+    # This is needed for transformers==4.37.2 and is already fixed in transformers>=4.38.0.
+    # Currently transformers==4.38.1 has issues with multi-node training, hence not upgrading transformers further.
+    if getattr(args, "apply_lora", False) and getattr(args, "apply_deepspeed", False):
+        from functools import partialmethod
+        from deepspeed import DeepSpeedEngine
+
+        DeepSpeedEngine.load_checkpoint = partialmethod(DeepSpeedEngine.load_checkpoint, load_module_strict=False)
+        logger.info("Updated `DeepSpeedEngine.load_checkpoint` defaults to use `load_module_strict=False`.")
 
     finetune(args)
 

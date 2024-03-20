@@ -3,18 +3,18 @@ channels:
 - conda-forge
 - cerebis
 dependencies:
-- python=3.8
+- python=3.9
 - pip=21.3.1
-- numpy~=1.22.3
+- numpy~=1.23.5
 - libffi=3.3
 - pycocotools=2.0.4
 - shap=0.39.0
-- recordclass=0.14.3
-- llvmlite=0.36.0
+- llvmlite=0.39.1
 - setuptools=65.5.1
 - wheel=0.38.1
+- tbb=2021.1.1
 - pip:
-  - cryptography>=42.0.2
+  - cryptography>=42.0.5
   - pyarrow-hotfix>=0.5
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}

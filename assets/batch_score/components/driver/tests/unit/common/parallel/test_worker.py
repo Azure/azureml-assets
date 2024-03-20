@@ -54,7 +54,7 @@ async def test_successful_scoring_appends_result_no_segmentation(
     async def mock_score(*args, **kwargs):
         return scoring_result
 
-    monkeypatch.setattr("src.batch_score.batch_pool.scoring.scoring_client.ScoringClient.score_once", mock_score)
+    monkeypatch.setattr("src.batch_score.batch_pool.scoring.pool_scoring_client.PoolScoringClient.score", mock_score)
     with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
         with patch("src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext"
                    ".processed_segments_count", new_callable=PropertyMock) as mock_processed_segments_count:
@@ -108,7 +108,7 @@ async def test_successful_scoring_appends_result_with_segmentation(
         return scoring_result
 
     monkeypatch.setattr("src.batch_score.common.scoring.segmented_score_context"
-                        ".SegmentedScoreContext.score_next_once", mock_score)
+                        ".SegmentedScoreContext.score_next_segment", mock_score)
     with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
         with patch("src.batch_score.common.scoring.segmented_score_context"
                    ".SegmentedScoreContext.processed_segments_count",
@@ -178,15 +178,63 @@ async def test_request_exceeds_max_retry_time_interval_and_fails(
 
 
 @pytest.mark.asyncio
+async def test_request_indefinite_max_retry_time_interval(
+        monkeypatch,
+        make_worker,
+        make_scoring_result):
+    """Test request exceeds max retry time interval and fails."""
+    # 0 second maximum
+    max_retry_time_interval = 0
+    scoring_request = ScoringRequest(original_payload='{"fake": "payload"}')
+    scoring_request.scoring_url = TEST_SCORING_URL
+
+    queue_item = QueueItem(
+        scoring_request=scoring_request
+    )
+
+    # update duration to exceed timeout value of 1 second
+    # however large this value maybe, we won't stop
+    queue_item.scoring_request.scoring_duration = 1.1
+
+    queue = deque()
+    queue.append(queue_item)
+
+    async def mock_score(*args, **kwargs):
+        if mock_score.counter == 5:
+            return make_scoring_result(
+                request_obj={"prompt": "payload"},
+                response_body={"usage": {
+                        "prompt_tokens": TEST_PROMPT_TOKENS,
+                        "completion_tokens": TEST_COMPLETION_TOKENS,
+                        "total_tokens": TEST_PROMPT_TOKENS + TEST_COMPLETION_TOKENS}},
+                response_headers=CIMultiDictProxy(CIMultiDict([('ms-azureml-model-error-statuscode', '429')])),
+                num_retries=TEST_RETRY_COUNT
+            )
+        mock_score.counter += 1
+        raise Exception("Score Failed")
+    mock_score.counter = 0
+
+    monkeypatch.setattr("src.batch_score.batch_pool.scoring.pool_scoring_client.PoolScoringClient.score", mock_score)
+    worker = make_worker(
+        scoring_request_queue=queue,
+        max_retry_time_interval=max_retry_time_interval)
+
+    await worker.start()
+
+    assert (worker._Worker__request_metrics._RequestMetrics__df["response_code"].head(1)
+            == ScoringResultStatus.SUCCESS).all()
+
+
+@pytest.mark.asyncio
 async def test_model_429_does_not_contribute_to_request_total_wait_time(
         make_worker,
-        mock__score_once,
+        mock_score,
         mock_get_client_setting,
         mock_run_context):
     """Test model 429 does not contribute to request total wait time."""
-    mock__score_once['raise_exception'] = RetriableException(status_code=424,
-                                                             model_response_code='429',
-                                                             retry_after=0.01)
+    mock_score['raise_exception'] = RetriableException(status_code=424,
+                                                       model_response_code='429',
+                                                       retry_after=0.01)
     mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
 
     metrics = await _run_worker(make_worker)
@@ -200,11 +248,11 @@ async def test_quota_429_contributes_to_request_total_wait_time(
         mock_get_events_client,
         make_worker,
         mock_get_logger,
-        mock__score_once,
+        mock_score,
         mock_get_client_setting,
         mock_run_context):
     """Test quota 429 contributes to request total wait time."""
-    mock__score_once['raise_exception'] = QuotaUnavailableException(retry_after=0.01)
+    mock_score['raise_exception'] = QuotaUnavailableException(retry_after=0.01)
     mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
 
     metrics = await _run_worker(make_worker)
@@ -216,7 +264,7 @@ fixture_names = [
     'mock_get_events_client',
     'make_worker',
     'mock_get_logger',
-    'mock__score_once',
+    'mock_score',
     'mock_get_client_setting',
     'monkeypatch',
 ]
@@ -257,13 +305,13 @@ no_deployments_test_cases = [
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "mock_get_events_client, make_worker, mock_get_logger, mock__score_once, "
+    "mock_get_events_client, make_worker, mock_get_logger, mock_score, "
     "mock_get_client_setting, monkeypatch, env_vars, expected_wait_time",
     no_deployments_test_cases,
     indirect=['mock_get_events_client',
               'make_worker',
               'mock_get_logger',
-              'mock__score_once',
+              'mock_score',
               'mock_get_client_setting',
               'monkeypatch'],
 )
@@ -271,7 +319,7 @@ async def test_no_deployments_in_traffic_group(
         mock_get_events_client,
         make_worker,
         mock_get_logger,
-        mock__score_once,
+        mock_score,
         mock_get_client_setting,
         monkeypatch,
         env_vars,
@@ -284,7 +332,7 @@ async def test_no_deployments_in_traffic_group(
     if 'BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF' not in env_vars:
         monkeypatch.setattr(Worker, 'NO_DEPLOYMENTS_BACK_OFF', expected_wait_time)
 
-    mock__score_once['raise_exception'] = RetriableException(
+    mock_score['raise_exception'] = RetriableException(
         status_code=404,
         response_payload='Specified traffic group could not be found')
 
@@ -316,7 +364,7 @@ async def _run_worker(make_worker, segment_large_requests='disabled', scoring_re
     worker._Worker__count_only_quota_429s_toward_total_request_time = True
 
     # Disable quota client so we don't make quota requests during the unit test.
-    worker._Worker__scoring_client._ScoringClient__quota_client = None
+    worker._Worker__scoring_client._PoolScoringClient__quota_client = None
 
     _ = await worker.start()
 

@@ -3,6 +3,7 @@
 
 """Entry script for batch score component."""
 
+import aiohttp
 import asyncio
 import os
 import sys
@@ -11,13 +12,16 @@ import traceback
 
 import pandas as pd
 
+from .batch_pool.meds_client import MEDSClient
 from .batch_pool.routing.routing_client import RoutingClient
 from .common import constants
 from .common.auth.token_provider import TokenProvider
+from .common.common_enums import EndpointType
 from .common.configuration.configuration import Configuration
 from .common.configuration.metadata import Metadata
 from .common.configuration.configuration_parser_factory import ConfigurationParserFactory
 from .common.parallel import parallel_driver as parallel
+from .common.header_providers.header_provider_factory import HeaderProviderFactory
 from .common.post_processing.callback_factory import CallbackFactory
 from .common.post_processing.mini_batch_context import MiniBatchContext
 from .common.post_processing.result_utils import (
@@ -67,7 +71,6 @@ from .common.telemetry.trace_configs import (
     RequestRedirectTrace,
     ResponseChunkReceivedTrace,
 )
-from .header_handlers.meds.meds_header_handler import MedsHeaderHandler
 from .utils.common import convert_to_list, str2bool
 from .utils.json_encoder_extensions import setup_encoder
 
@@ -89,9 +92,18 @@ def init():
     setup_geneva_event_handlers()
     setup_job_log_event_handlers()
     setup_minibatch_aggregator_event_handlers()
+
+    token_provider = TokenProvider(token_file_path=configuration.token_file_path)
+
+    connection_string = asyncio.run(get_application_insights_connection_string(
+        configuration=configuration,
+        metadata=metadata,
+        token_provider=token_provider))
+
     setup_logger(configuration.stdout_log_level,
                  configuration.app_insights_log_level,
-                 configuration.app_insights_connection_string)
+                 connection_string,
+                 metadata.component_version)
 
     # Emit init started event
     init_started_event = BatchScoreInitStartedEvent()
@@ -101,8 +113,10 @@ def init():
 
     setup_encoder(configuration.ensure_ascii)
 
-    token_provider = TokenProvider(token_file_path=configuration.token_file_path)
-    routing_client = setup_routing_client(token_provider=token_provider)
+    routing_client = setup_routing_client(
+        configuration=configuration,
+        metadata=metadata,
+        token_provider=token_provider)
     scoring_client = ScoringClientFactory().setup_scoring_client(
         configuration=configuration,
         metadata=metadata,
@@ -247,6 +261,36 @@ def check_all_tasks_processed() -> bool:
     return par.check_all_tasks_processed()
 
 
+async def get_application_insights_connection_string(
+        configuration: Configuration,
+        metadata: Metadata,
+        token_provider: TokenProvider) -> "str | None":
+    """Get the application insights connection string.
+
+    A connection string provided in the configuration takes precendence.
+    If not provided, look it up from MEDS for the given audience.
+    """
+    connection_string = configuration.app_insights_connection_string
+
+    if connection_string:
+        lu.get_logger().info("Using the provided Application Insights connection string.")
+        return connection_string
+
+    if configuration.get_endpoint_type() != EndpointType.BatchPool:
+        lu.get_logger().info("Application Insights connection string not provided. "
+                             "Application Insights logging will be disabled.")
+        return None
+
+    lu.get_logger().info("Application Insights connection string not provided, looking up from MEDS.")
+    header_provider = HeaderProviderFactory().get_header_provider_for_model_endpoint_discovery(
+        configuration=configuration,
+        metadata=metadata,
+        token_provider=token_provider)
+    meds_client = MEDSClient(header_provider=header_provider, configuration=configuration)
+    async with aiohttp.ClientSession() as session:
+        return await meds_client.get_application_insights_connection_string(session)
+
+
 def get_finished_batch_result() -> "dict[str, dict[str, any]]":
     """Get result of finished mini batches. Used in async mode only."""
     global par
@@ -345,18 +389,20 @@ def setup_input_to_output_transformer() -> InputTransformer:
     return InputTransformer(modifiers=modifiers)
 
 
-def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
+def setup_routing_client(
+        configuration: Configuration,
+        metadata: Metadata,
+        token_provider: TokenProvider) -> RoutingClient:
     """Set up routing client."""
     routing_client: RoutingClient = None
     if configuration.batch_pool and configuration.service_namespace:
-        meds_header_handler = MedsHeaderHandler(
-            token_provider=token_provider,
-            user_agent_segment=configuration.user_agent_segment,
-            batch_pool=configuration.batch_pool,
-            quota_audience=configuration.quota_audience)
+        header_provider = HeaderProviderFactory().get_header_provider_for_model_endpoint_discovery(
+            configuration=configuration,
+            metadata=metadata,
+            token_provider=token_provider)
 
         routing_client = RoutingClient(
-            header_handler=meds_header_handler,
+            header_provider=header_provider,
             service_namespace=configuration.service_namespace,
             target_batch_pool=configuration.batch_pool,
             request_path=configuration.request_path,
@@ -389,5 +435,6 @@ def _emit_minibatch_started_event(mini_batch_context, configuration, input_data)
             batch_pool=configuration.batch_pool,
             quota_audience=configuration.quota_audience,
             input_row_count=input_data.shape[0],
+            retry_count=mini_batch_context.retry_count,
         )
     )

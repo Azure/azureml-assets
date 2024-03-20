@@ -4,7 +4,7 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.4.19
+version: 0.5.4
 is_deterministic: true
 inputs:
   monitor_name:
@@ -98,14 +98,32 @@ outputs:
   signal_output:
     type: uri_folder
     mode: direct
+  signal_scored_data:
+    type: mltable
+    mode: direct
 jobs:
-  compute_histogram:
+  input_schema_adaptor:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.12
+    component: azureml://registries/azureml/components/gsq_input_schema_adaptor/versions/0.0.6
     inputs:
       production_dataset:
         type: mltable
         path: ${{parent.inputs.production_data}}
+    outputs:
+      adapted_production_data:
+        type: mltable
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  compute_histogram:
+    type: spark
+    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.16
+    inputs:
+      production_dataset:
+        type: mltable
+        path: ${{parent.jobs.input_schema_adaptor.outputs.adapted_production_data}}
       metric_names: ${{parent.inputs.metric_names}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
       sample_rate: ${{parent.inputs.sample_rate}}
@@ -136,6 +154,7 @@ jobs:
         type: mltable
       evaluation:
         type: mltable
+        path: ${{parent.outputs.signal_scored_data}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
@@ -143,7 +162,7 @@ jobs:
       type: aml_token
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.7
+    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.10
     inputs:
       annotation_histogram:
         type: mltable
@@ -164,7 +183,7 @@ jobs:
       type: aml_token
   output_signal_metrics: 
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.16
+    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.19
     inputs:
       signal_metrics:
         type: mltable
@@ -186,7 +205,7 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.12
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.15
     inputs:
       signal_metrics:
         type: mltable

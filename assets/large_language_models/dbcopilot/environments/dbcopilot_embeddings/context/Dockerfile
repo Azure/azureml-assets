@@ -1,38 +1,56 @@
 FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:{{latest-image-tag}}
+WORKDIR /
 
 USER root
+
 # Install necessary tools
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
     unixodbc-dev \
-    # Upgrade libldap to the required version
+    openssl=1.1.1f-1ubuntu2.22 \
+    libssl1.1=1.1.1f-1ubuntu2.22 \
     libldap-2.4-2=2.4.49+dfsg-2ubuntu1.10 \
-    libldap-common=2.4.49+dfsg-2ubuntu1.10 && \
+    libldap-common=2.4.49+dfsg-2ubuntu1.10 \
+    libxml2=2.9.10+dfsg-5ubuntu0.20.04.7 \
+    less=551-1ubuntu0.2 \
+    login=1:4.8.1-1ubuntu5.20.04.5 \
+    passwd=1:4.8.1-1ubuntu5.20.04.5 \
+    uidmap=1:4.8.1-1ubuntu5.20.04.5 && \
     rm -rf /var/lib/apt/lists/*
 
-# Import the public repository GPG keys
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-
-# Register the Microsoft Ubuntu repository
-RUN curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-# Update the list of products
-RUN apt-get update
-
 # Install MS SQL ODBC Driver
-RUN ACCEPT_EULA=Y apt-get install -y msodbcsql18
+RUN apt-get update \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Default to UTF-8 file.encoding
 ENV LANG C.UTF-8
 
+# Set the shared environment path
+ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/prompt-flow/runtime/
+ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+
+# Copy the environment file
 COPY ./requirements.txt ./
-RUN pip install -r requirements.txt
 
-## Install dbcopilot
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.15-py3-none-any.whl
+# dbcopilot environment
+RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
+    conda activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
+    pip install --upgrade pip && \
+    pip install  -r requirements.txt && \
+    pip install  promptflow-vectordb==0.2.2 && \
+    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.18-py3-none-any.whl \
+    pip install  cryptography==42.0.5"
 
-RUN pip install cryptography==41.0.6 langchain==0.0.348 pyarrow==14.0.1 pymongo==4.6.1 promptflow-image-bundle[azure]==0.2.0
+# Fix vunerabilities
+RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
+    conda activate /opt/miniconda && \
+    pip install cryptography==42.0.5 && \
+    conda deactivate"
 
 # Install certificates and other utilities
 RUN set -eux; \

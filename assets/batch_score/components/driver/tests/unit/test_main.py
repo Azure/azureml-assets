@@ -13,6 +13,9 @@ from tests.fixtures.geneva_event_listener import mock_import
 with patch('importlib.import_module', side_effect=mock_import):
     import src.batch_score.main as main
 
+from src.batch_score.batch_pool.meds_client import MEDSClient
+from src.batch_score.common.common_enums import EndpointType
+from src.batch_score.common.configuration.configuration import Configuration
 from src.batch_score.common.telemetry.events import event_utils
 from src.batch_score.common.telemetry.trace_configs import (
     ConnectionCreateEndTrace,
@@ -175,6 +178,52 @@ def test_enqueue_exception_generate_minibatch_summary(mock_run_context):
         minibatch_id=1,
         output_row_count=0,
     )
+
+
+# Dummy Application Insights connection strings
+conn1 = ("InstrumentationKey=11111111-1111-1111-1111-111111111111;"
+         "IngestionEndpoint=https://centralus-1.in.applicationinsights.azure.com/;"
+         "LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/")
+conn2 = ("InstrumentationKey=22222222-2222-2222-2222-222222222222;"
+         "IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;"
+         "LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("from_configuration, endpoint_type, from_MEDS, expected", [
+    # When a connection string is present in the configuration, it is used.
+    (conn1, EndpointType.AOAI, None, conn1),
+    (conn1, EndpointType.BatchPool, None, conn1),
+    # When missing and the endpoint type is BatchPool, the value from MEDS is used.
+    (None, EndpointType.BatchPool, None, None),    # Missing in MEDS
+    (None, EndpointType.BatchPool, conn2, conn2),  # Present in MEDS
+    # When missing and the endpoint type is not BatchPool, None is returned without using MEDS.
+    (None, EndpointType.AOAI, None, None),
+    (None, EndpointType.AOAI, conn2, None),
+])
+async def test_get_application_insights_connection_string(
+        from_configuration,
+        endpoint_type,
+        from_MEDS,
+        expected):
+    """Test get application insights connection string."""
+    # Arrange
+    configuration = Configuration(
+        app_insights_connection_string=from_configuration,
+        batch_pool="batch_pool" if endpoint_type == EndpointType.BatchPool else None,
+        quota_audience="quota_audience" if endpoint_type == EndpointType.BatchPool else None,
+        service_namespace="service_namespace" if endpoint_type == EndpointType.BatchPool else None)
+    with patch.object(MEDSClient, "get_application_insights_connection_string") as mock_get_client_setting:
+        mock_get_client_setting.return_value = from_MEDS
+
+        # Act
+        connection_string = await main.get_application_insights_connection_string(
+            configuration=configuration,
+            metadata=MagicMock(),
+            token_provider=MagicMock())
+
+    # Assert
+    assert connection_string == expected
 
 
 def _setup_main(par_exception=None):

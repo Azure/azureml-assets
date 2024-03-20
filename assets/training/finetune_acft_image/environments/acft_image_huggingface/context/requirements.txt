@@ -1,7 +1,7 @@
-azureml-metrics[image]~=0.0.45
+azureml-metrics[image]~={{latest-pypi-version}}
 azureml-evaluate-mlflow=={{latest-pypi-version}}
 azureml-acft-accelerator=={{latest-pypi-version}}
-azureml-acft-common-components[image]~=0.0.45
+azureml-acft-common-components[image]~={{latest-pypi-version}}
 azureml-acft-image-components=={{latest-pypi-version}}
 azureml-core=={{latest-pypi-version}}
 azure-ai-ml==1.13.0
@@ -11,6 +11,5 @@ transformers==4.37.1
 accelerate==0.26.1
 optimum==1.16.2
 diffusers==0.24.0
-numpy==1.22.2
 certifi==2023.07.22
 setuptools==67.6.0
