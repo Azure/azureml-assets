@@ -130,7 +130,7 @@ def _write_mltable_yaml(mltable_obj, dest_path):
     try:
         content = yaml.dump(mltable_obj, default_flow_style=False)
         store_url = StoreUrl(dest_path)
-        store_url.write_file(content, 'MLTable', True, None)
+        store_url.write_file(content, 'MLTable', True)
         return True
     except Exception as e:
         print(f"Error writing mltable file: {e}")
@@ -157,13 +157,13 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str):
     }
 
     retries = 0
-    while retries < MAX_RETRY_COUNT:
+    while True:
         if _write_mltable_yaml(mltable_obj, folder_path):
             break
         retries += 1
+        if retries >= MAX_RETRY_COUNT:
+            raise Exception("Failed to write mltable yaml file after multiple retries.")
         time.sleep(1)
-    if retries == MAX_RETRY_COUNT:
-        raise Exception("Failed to write mltable yaml file after multiple retries.")
 
 
 def np_encoder(object):
