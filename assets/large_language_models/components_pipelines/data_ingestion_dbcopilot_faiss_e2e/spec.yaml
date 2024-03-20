@@ -130,6 +130,7 @@ jobs:
       max_text_length: ${{parent.inputs.max_text_length}}
       selected_tables: ${{parent.inputs.selected_tables}}
       column_settings: ${{parent.inputs.column_settings}}
+      include_views: ${{parent.inputs.include_views}}
     outputs:
       output_chunk_file:
         type: uri_folder
