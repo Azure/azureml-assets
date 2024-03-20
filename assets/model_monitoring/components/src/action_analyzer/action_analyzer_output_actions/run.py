@@ -120,14 +120,14 @@ def generate_samples(action_df, is_negative_sample):
         sample = {
             "Question": sample_data[i][ROOT_QUESTION_COLUMN],
             "Answer": sample_data[i][COMPLETION_COLUMN],
-            "Topic": sample_data[i][TOPIC_LIST_COLUMN].replace(TEXT_SPLITTER, ",")[0],
+            "Topic": (sample_data[i][TOPIC_LIST_COLUMN].split(TEXT_SPLITTER))[0],
             "LookupScore": sample_data[i][INDEX_SCORE_LLM_COLUMN],
             "DebuggingInfo": sample_data[i][ROOT_SPAN_COLUMN],
             "RetrievalQueryType": sample_data[i][RETRIEVAL_QUERY_TYPE_COLUMN],
             "RetrievalTopK": sample_data[i][RETRIEVAL_TOP_K_COLUMN]
         }
         if is_negative_sample:
-            sample["ViolatedMetrics"] = sample_data[i][VIOLATED_METRICS_COLUMN].replace(TEXT_SPLITTER, ",")
+            sample["ViolatedMetrics"] = sample_data[i][VIOLATED_METRICS_COLUMN].replace(TEXT_SPLITTER, ", ")
         samples.append(sample)
     return samples
 
