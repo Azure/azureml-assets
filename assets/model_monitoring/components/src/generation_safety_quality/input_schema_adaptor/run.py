@@ -119,11 +119,17 @@ def _adapt_input_data_schema(
 
     drop_rate = abs(transformed_df.count() - df.count()) / df.count()
     if drop_rate > 0.10 and drop_rate < 0.30:
-        print("first warning. Missing partial data.")
+        print(f"{drop_rate}% data missing all mapping columns, please check your log quality.")
     elif drop_rate > 0.30 and drop_rate < 0.67:
-        print("Second warning. Missing substantial amount of data.")
+        print(f"{drop_rate}% data missing all mapping columns. " +
+              "Most likely you haven't provided log_context when log for your customized tool. " +
+              "Please check your logging code")
     elif drop_rate > 0.67:
-        raise InvalidInputError("Job missing too much data.")
+        raise InvalidInputError(
+            f"Majority of the log missing all mapping columns (drop_rate = {drop_rate}), "
+            "please check if you the column mapping is correct. "
+            "If your are sure the mapping is correct, most likely log_context is not provided to logging function "
+            "for multiple customized tools used in the PF pipeline, please check logging code.")
 
     if has_duplicated_columns(df):
         raise InvalidInputError(
