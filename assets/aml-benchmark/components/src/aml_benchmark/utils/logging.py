@@ -3,18 +3,273 @@
 
 """Contains helper functions for logging."""
 
-from typing import Any, Dict
+from typing import Any, Dict, Union, Tuple
 from importlib.metadata import entry_points
-
 import logging
 import os
 import hashlib
-import mlflow
+import uuid
+import platform
+import re
+import json
+import traceback
+import sys
 
+import mlflow
+import azureml.mlflow as aml_mlflow
+import azureml.core
+from azureml.exceptions import AzureMLException
 from azureml.core import Run
+from azureml.core.run import _OfflineRun
+from azureml.telemetry.logging_handler import get_appinsights_log_handler
+from azureml.telemetry import INSTRUMENTATION_KEY
+
+from .constants import LoggerConfig, ExceptionTypes
 
 
 AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT = "aml_benchmark.azureml_benchmark_custom_logger"
+
+
+class DummyWorkspace:
+    """Dummy Workspace class for offline logging."""
+
+    def __init__(self):
+        """__init__."""
+        self.name = "local-ws"
+        self.subscription_id = ""
+        self.location = "local"
+        self.resource_group = ""
+
+    def get_mlflow_tracking_uri(self):
+        """Mlflow Tracking URI.
+
+        Returns:
+            _type_: _description_
+        """
+        return aml_mlflow.get_mlflow_tracking_uri()
+        # get_tracking_uri()
+
+
+class DummyExperiment:
+    """Dummy Experiment class for offline logging."""
+
+    def __init__(self):
+        """__init__."""
+        self.name = "offline_default_experiment"
+        self.id = "1"
+        self.workspace = DummyWorkspace()
+
+
+class RunDetails:
+    """Main class containing current Run's details."""
+
+    def __init__(self):
+        """__init__."""
+        self._run = Run.get_context()
+        if isinstance(self._run, _OfflineRun):
+            self._experiment = DummyExperiment()
+            self._workspace = self._experiment.workspace
+        else:
+            self._experiment = self._run.experiment
+            self._workspace = self._experiment.workspace
+
+    @property
+    def run(self):
+        """Azureml Run."""
+        return self._run
+
+    @property
+    def experiment(self):
+        """Azureml Experiment."""
+        return self._experiment
+
+    @property
+    def workspace(self):
+        """Azureml Workspace."""
+        return self._workspace
+
+    @property
+    def compute(self):
+        """Azureml compute instance."""
+        if not isinstance(self._run, _OfflineRun):
+            target_name = self._run.get_details()["target"]
+            try:
+                if self.workspace.compute_targets.get(target_name):
+                    return self.workspace.compute_targets[target_name].vm_size
+                else:
+                    return "serverless"
+            except Exception:
+                return "Unknown"
+        return "local"
+
+    @property
+    def region(self):
+        """Azure Region."""
+        return self._workspace.location
+
+    @property
+    def subscription(self):
+        """Azureml Subscription."""
+        return self._workspace.subscription_id
+
+    @property
+    def parent_run(self):
+        """Get Root run of the pipeline."""
+        cur_run = self._run
+        if isinstance(cur_run, _OfflineRun) or (cur_run.parent is None):
+            return self._run
+        if cur_run.parent is not None:
+            cur_run = cur_run.parent
+        return cur_run
+
+    @property
+    def root_run(self):
+        """Get Root run of the pipeline."""
+        cur_run = self._run
+        if isinstance(cur_run, _OfflineRun) or (cur_run.parent is None):
+            return self._run
+        while cur_run.parent is not None:
+            cur_run = cur_run.parent
+        return cur_run
+
+    @property
+    def root_attribute(self):
+        """Get Root attribute of the pipeline."""
+        cur_run = self._run
+        if isinstance(cur_run, _OfflineRun):
+            return cur_run.id
+        cur_attribute = self._run.id
+        run = self._run.parent
+        # update current run's root_attribute to the root run.
+        while run is not None:
+            cur_attribute = run.id
+            run = run.parent
+        return cur_attribute
+
+    def get_extra_run_info(self) -> Dict[str, str]:
+        """Get run details of the pipeline."""
+        if isinstance(self._run, _OfflineRun):
+            return {}
+        raw_json = self._run.get_details()
+        module_name = raw_json.get("properties", {}).get("azureml.moduleName", "")
+        module_id = raw_json.get("properties", {}).get("azureml.moduleid", "")
+        pipeline_type = raw_json.get("properties", {}).get("PipelineType", "")
+        source = raw_json.get("properties", {}).get("Source", "")
+        try:
+            location = os.environ.get("AZUREML_SERVICE_ENDPOINT")
+            location = re.compile("//(.*?)\\.").search(location).group(1)
+        except Exception:
+            location = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
+        return {
+            "moduleName": module_name,
+            "moduleId": module_id,
+            "pipeline_type": pipeline_type,
+            "source": source,
+            "location": location,
+        }
+
+
+class CustomDimensions:
+    """Custom Dimensions Class for App Insights."""
+
+    def __init__(
+        self,
+        run_details,
+        app_name=LoggerConfig.DEFAULT_MODULE_NAME,
+    ) -> None:
+        """Init Custom dimensions."""
+        self.app_name = app_name
+        self.common_core_version = azureml.core.__version__
+
+        # run_details
+        self.run_id = run_details.run.id
+        self.parent_run_id = run_details.parent_run.id
+        self.root_run_id = run_details.root_run.id
+        self.experiment_id = run_details.experiment.id
+        self.subscription_id = run_details.subscription
+        self.workspace_name = run_details.workspace.name
+        self.root_attribution = run_details.root_attribute
+        self.region = run_details.region
+        self.compute_target = run_details.compute
+
+        # component execution info
+        self.os_info = platform.system()
+
+        # additional info
+        run_info: Dict[str, str] = run_details.get_extra_run_info()
+        self.moduleName = run_info.get("moduleName", "")
+        self.moduleId = run_info.get("moduleId", "")
+        self.pipeline_type = run_info.get("pipeline_type", "")
+        self.source = run_info.get("source", "")
+        self.location = run_info.get("location", "")
+
+
+    def update_custom_dimensions(self, properties: dict):
+        """Add/update properties in custom dimensions."""
+        assert isinstance(properties, dict)
+        self.__dict__.update(properties)
+
+
+class AppInsightsPIIStrippingFormatter(logging.Formatter):
+    """Formatter for App Insights Logging."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Format incoming log record.
+
+        Args:
+            record (logging.LogRecord): _description_
+
+        Returns:
+            str: _description_
+        """
+        exception_tb = getattr(record, 'exception_tb_obj', None)
+        if exception_tb is None:
+            return super().format(record)
+
+        not_available_message = '[Not available]'
+        properties = getattr(record, 'properties', {})
+
+        message = properties.get('exception_message', LoggerConfig.NON_PII_MESSAGE)
+        traceback_msg = properties.get('exception_traceback', not_available_message)
+
+        record.message = record.msg = '\n'.join([
+            'Type: {}'.format(properties.get('error_type', ExceptionTypes.Unclassified)),
+            'Class: {}'.format(properties.get('exception_class', not_available_message)),
+            'Message: {}'.format(message),
+            'Traceback: {}'.format(traceback_msg),
+            'ExceptionTarget: {}'.format(properties.get('exception_target', not_available_message))
+        ])
+
+        # Update exception message and traceback in extra properties as well
+        properties['exception_message'] = message
+
+        return super().format(record)
+
+
+class AMLBenchmarkHandler(logging.StreamHandler):
+    """aml benchmark handler for stream handling."""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Emit logs to stream after adding custom dimensions."""
+        new_properties = getattr(record, "properties", {})
+        new_properties.update({'log_id': str(uuid.uuid4())})
+        custom_dims_dict = custom_dimensions.__dict__
+        cust_dim_copy = custom_dims_dict.copy()
+        cust_dim_copy.update(new_properties)
+        setattr(record, "properties", cust_dim_copy)
+        msg = self.format(record)
+        if record.levelname == "ERROR" and "AzureMLException" not in record.message:
+            setattr(
+                record,
+                "exception_tb_obj",
+                "non-azureml exception raised so scrubbing",
+            )
+        stream = self.stream
+        stream.write(msg)
+
+
+run_details = RunDetails()
+custom_dimensions = CustomDimensions(run_details=run_details)
 
 
 def log_mlflow_params(**kwargs: Any) -> None:
@@ -51,21 +306,54 @@ def log_mlflow_params(**kwargs: Any) -> None:
     mlflow.log_params(params)
 
 
-def get_logger(filename: str) -> logging.Logger:
+def get_logger(filename: str = LoggerConfig.DEFAULT_MODULE_NAME, level: str = LoggerConfig.VERBOSITY_LEVEL) -> logging.Logger:
     """
-    Create and configure a logger based on the provided filename.
+    Create and configure a logger based on the provided filename and level.
 
     This function creates a logger with the specified filename and configures it
-    by setting the logging level to INFO, adding a StreamHandler to the logger,
+    by setting the logging level to DEBUG, adding a StreamHandler to the logger,
     and specifying a specific log message format.
 
     :param filename: The name of the file associated with the logger.
+    :param level: Verbosity level for the logger.
     :return: The configured logger.
     """
     logger = logging.getLogger(filename)
-    logger.setLevel(logging.INFO)
-    stream_handler = logging.StreamHandler()
-    logger.addHandler(stream_handler)
+    numeric_log_level = getattr(logging, level.upper(), None)
+
+    # don't log twice i.e. root logger
+    logger.propagate = False
+    logger.setLevel(numeric_log_level)
+    handler_names = [handler.get_name() for handler in logger.handlers]
+    app_name = LoggerConfig.DEFAULT_MODULE_NAME
+    format_str = (
+        "[%(asctime)s - {} - {} - %(process)d - %(module)s - %(funcName)s - "
+        "%(lineno)s]: %(levelname)s - %(message)s \n"
+    )
+
+    if LoggerConfig.AML_BENCHMARK_HANDLER_NAME not in handler_names:
+        formatter = logging.Formatter(format_str.format(app_name, run_details.run.id))
+        stream_handler = AMLBenchmarkHandler()
+        stream_handler.setFormatter(formatter)
+        stream_handler.setLevel(numeric_log_level)
+        stream_handler.set_name(LoggerConfig.AML_BENCHMARK_HANDLER_NAME)
+        logger.addHandler(stream_handler)
+
+    if LoggerConfig.APPINSIGHT_HANDLER_NAME not in handler_names:
+        child_namespace = __name__
+        current_logger = logging.getLogger("azureml.telemetry").getChild(child_namespace)
+        current_logger.propagate = False
+        current_logger.setLevel(numeric_log_level)
+        appinsights_handler = get_appinsights_log_handler(
+            instrumentation_key=INSTRUMENTATION_KEY,
+            logger=current_logger, properties=vars(custom_dimensions)
+        )
+
+        formatter = AppInsightsPIIStrippingFormatter(fmt=format_str.format(app_name, run_details.run.id))
+        appinsights_handler.setFormatter(formatter)
+        appinsights_handler.setLevel(numeric_log_level)
+        appinsights_handler.set_name(LoggerConfig.APPINSIGHT_HANDLER_NAME)
+        logger.addHandler(appinsights_handler)
 
     try:
         for custom_logger in entry_points(group=AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT):
@@ -79,11 +367,116 @@ def get_logger(filename: str) -> logging.Logger:
                 handler = custom_logger.load()
                 logger.addHandler(handler())
 
-    formatter = logging.Formatter(
-        "[%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
-    )
-    stream_handler.setFormatter(formatter)
     return logger
+
+
+def _get_error_details(
+        exception: BaseException, logger: Union[logging.Logger, logging.LoggerAdapter]
+) -> Tuple[str, str, str]:
+    """
+    Extract the error details from the base exception.
+
+    For exceptions outside AzureML (e.g. Python errors), all properties are set as 'Unclassified'
+
+    :param exception: The exception from which to extract the error details
+    :param logger: The logger object to log to
+    :return: An error code, error type (i.e. UserError or SystemError) and exception's target
+    """
+    default_target = "Unspecified"
+    error_code = ExceptionTypes.Unclassified
+    error_type = ExceptionTypes.Unclassified
+    exception_target = default_target
+
+    if isinstance(exception, AzureMLException):
+        try:
+            serialized_ex = json.loads(exception._serialize_json())
+            error = serialized_ex.get(
+                "error", {"code": ExceptionTypes.Unclassified, "inner_error": {}, "target": default_target}
+            )
+
+            # This would be the complete hierarchy of the error
+            error_code = str(error.get("inner_error", ExceptionTypes.Unclassified))
+
+            # This is one of 'UserError' or 'SystemError'
+            error_type = error.get("code")
+
+            exception_target = error.get("target")
+            return error_code, error_type, exception_target
+        except Exception:
+            logger.warning(
+                "Failed to parse error details while logging traceback from exception of type {}".format(exception)
+            )
+
+    return error_code, error_type, exception_target
+
+
+def _log_traceback(exception: Union[AzureMLException, BaseException], logger, message=None):
+    """Log exceptions without PII in APP Insights and full tracebacks in logger.
+
+    Args:
+        exception (_type_): _description_
+        logger (_type_): _description_
+        message (_type_): _description_
+    """
+    exception_message = "No message available."
+    if hasattr(exception, "message"):
+        exception_message = exception.message
+    elif hasattr(exception, "exception_message"):
+        exception_message = exception.exception_message
+    message = exception_message if message is None else "\n".join([message, exception_message])
+    exception_class_name = exception.__class__.__name__
+
+    error_code, error_type, exception_target = _get_error_details(exception, logger)
+    # traceback_message = message
+    traceback_obj = exception.__traceback__ if hasattr(exception, "__traceback__") else None
+    if traceback_obj is None:
+        inner_exception = getattr(exception, "inner_exception", None)
+        if inner_exception and hasattr(inner_exception, "__traceback__"):
+            traceback_obj = inner_exception.__traceback__
+        else:
+            traceback_obj = sys.exc_info()[2]
+    traceback_not_available_msg = "Not available (exception was not raised but was returned directly)"
+    if traceback_obj is not None:
+        traceback_message = "\n".join(traceback.format_tb(traceback_obj))
+    else:
+        traceback_message = traceback_not_available_msg
+    logger_message = "\n".join([
+        "Type: {}".format(error_type),
+        "Code: {}".format(error_code),
+        "Class: {}".format(exception_class_name),
+        "Message: {}".format(message),
+        "Traceback: {}".format(traceback_message),
+        "ExceptionTarget: {}".format(exception_target)
+    ])
+
+    extra = {
+        "properties": {
+            "error_code": error_code,
+            "error_type": error_type,
+            "exception_class": exception_class_name,
+            "message": message,
+            "exception_traceback": traceback_message,
+            "exception_target": exception_target,
+        },
+        "exception_tb_obj": traceback_obj,
+    }
+
+    logger.error(logger_message, extra=extra)
+
+
+def log_traceback(exception: Union[AzureMLException, BaseException], logger, message=None):
+    """Log exceptions without PII in APP Insights and full tracebacks in logger. Calls _log_traceback.
+
+    Args:
+        exception (_type_): _description_
+        logger (_type_): _description_
+        message (_type_): _description_
+    """
+    try:
+        _log_traceback(exception, logger, message)
+    except Exception as traceback_exception:
+        logger.error("Failed to log exception during {} failure.".format(exception.__class__.__name__))
+        _log_traceback(traceback_exception, logger)
 
 
 logger = get_logger(__name__)

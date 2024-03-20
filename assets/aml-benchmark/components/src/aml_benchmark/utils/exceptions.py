@@ -3,18 +3,22 @@
 
 """Exceptions util."""
 
+import os
+import sys
 import time
 import logging
 import traceback
+import inspect
 from functools import wraps
 from typing import Callable, Any
 
 from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml._common._error_response._error_response_constants import ErrorCodes
-from azureml.core.run import Run
 
 from .error_definitions import BenchmarkSystemError
+from .logging import custom_dimensions, run_details, log_traceback
+from .constants import ROOT_RUN_PROPERTIES
 
 
 class BenchmarkException(AzureMLException):
@@ -72,7 +76,19 @@ def swallow_all_exceptions(logger: logging.Logger) -> Callable[..., Any]:
     def wrap(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            def get_calling_module_folder():
+                """Get the folder name of the main script called from the command line."""
+                main_script_path = inspect.stack()[-1].filename
+                main_folder_name = os.path.basename(os.path.dirname(main_script_path))
+                return main_folder_name
+
             try:
+                custom_dimensions.app_name = get_calling_module_folder()
+                root_run = run_details.root_run
+                try:
+                    root_run.add_properties(properties=ROOT_RUN_PROPERTIES)
+                except Exception:
+                    pass  # when already added by other child runs
                 return func(*args, **kwargs)
             except Exception as e:
                 if isinstance(e, AzureMLException):
@@ -86,12 +102,11 @@ def swallow_all_exceptions(logger: logging.Logger) -> Callable[..., Any]:
                         ),
                         inner_exception=e,
                     )
-                logger.error(azureml_exception.message)
+                log_traceback(azureml_exception, logger, azureml_exception.message)             
+                logger.info("Marking run as failed...")
                 for handler in logger.handlers:
                     handler.flush()
-                run = Run.get_context()
-                logger.info("Marking run as failed...")
-                run.fail(error_details=azureml_exception)
+                run_details.run.fail(error_details=azureml_exception)
                 raise
             finally:
                 time.sleep(30)  # Let telemetry logger flush its logs before terminating.
