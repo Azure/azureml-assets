@@ -823,6 +823,16 @@ def enable_ds3_model_specific_args(args: Namespace):
     pass
 
 
+def set_16bit_precision(args: Namespace):
+    """Set fp16/bf16 in args based on cuda device support."""
+    if torch.cuda.is_bf16_supported():
+        args.bf16 = True
+        logger.info("Setting bfloat16 to True.")
+    else:
+        args.fp16 = True
+        logger.info("Setting float16 to True.")
+
+
 def set_flash_attention(args: Namespace):
     """Set Flash Attention related parameters."""
     flash_attention_load_model_kwargs = {}
@@ -852,6 +862,11 @@ def set_flash_attention(args: Namespace):
             setattr(args, "apply_flash_attention", False)
             setattr(args, "flash_attention_version", -1)
         if args.flash_attention_version != -1:
+            # Set 16-bit precision value in Quantization case for Flash Attention to work.
+            # Currently will fail with error `RuntimeError: FlashAttention only support fp16 and bf16 data type`.
+            # When fp16/bf16 is set the attention q,k,v layers are autocasted to respective precision from `uint8`.
+            if (args.finetune_in_4bit or args.finetune_in_8bit) and not (args.fp16 or args.bf16):
+                set_16bit_precision(args)
             # Flash attention is supported only when model is loaded in respective supported precision
             if args.bf16:
                 flash_attention_load_model_kwargs.update({"torch_dtype": torch.bfloat16})
@@ -1087,12 +1102,7 @@ def finetune(args: Namespace):
     args.output_dir = args.pytorch_model_folder
     Path(args.output_dir).mkdir(exist_ok=True, parents=True)
     if args.precision == 16:
-        if torch.cuda.is_bf16_supported():
-            args.bf16 = True
-            logger.info("Setting bfloat16 to True.")
-        else:
-            args.fp16 = True
-            logger.info("Setting float16 to True.")
+        set_16bit_precision(args)
     args.finetune_in_8bit = bool(args.precision == 8)  # 8 bit finetune
     args.finetune_in_4bit = bool(args.precision == 4)  # 4 bit finetune
 
