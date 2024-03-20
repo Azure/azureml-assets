@@ -9,7 +9,7 @@ from pyspark.sql.types import (
     BooleanType
 )
 from pyspark.sql import Window
-from pyspark.sql.functions import collect_set, col, udf, mean
+from pyspark.sql.functions import collect_set, col, udf, mean, max
 from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder
 import os
 import json

@@ -96,7 +96,7 @@ def bertopic_get_topic(queries,
                          azure_deployment=model_deployment_name)
     representation_model = OpenAI(client, model=model_deployment_name, chat=True, prompt=BERTOPIC_DEFAULT_PROMPT)
     topic_model = BERTopic(
-        min_topic_size=int(0.2*len(queries)),
+        min_topic_size=round(0.15*len(queries)),
         top_n_words=5,
         representation_model=representation_model
     )
@@ -166,10 +166,10 @@ def assign_default_group(group_list, query, metrics, good_queries, bad_queries):
     good_query_list = json.loads(good_queries)
     bad_query_list = json.loads(bad_queries)
     if query in good_query_list:
-        good_group_name = f"{metrics}_good_group_{DEFAULT_TOPIC_NAME}"
+        good_group_name = f"{metrics}_good_group"
         group_list = _append_value(group_list, good_group_name)
     elif query in bad_query_list:
-        bad_group_name = f"{metrics}_bad_group_default_{DEFAULT_TOPIC_NAME}"
+        bad_group_name = f"{metrics}_bad_group_default_default"
         group_list = _append_value(group_list, bad_group_name)
     return group_list
 
