@@ -106,10 +106,10 @@ def _adapt_input_data_schema(
 
     broadcast_schema.destroy()
 
-    # drop rows with all None
+    # # drop rows with all None
     # transformed_df = transformed_df.dropna(how="all", subset=gsq_schema)
     # # drop columns with all None
-    # rows_with_data = transformed_df.select(*columns_to_select).agg(*[max(c).alias(c) for c in columns_to_select]).take(1)[0]
+    # rows_with_data = transformed_df.select(*gsq_schema).agg(*[max(c).alias(c) for c in gsq_schema]).take(1)[0]
     # transformed_df = transformed_df.select(*[c for c in df.columns if rows_with_data[c] is not None])
     # transformed_df.show()
     # transformed_df.printSchema()
