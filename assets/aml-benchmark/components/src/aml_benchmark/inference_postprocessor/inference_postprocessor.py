@@ -194,9 +194,9 @@ class InferencePostprocessor(object):
                         AzureMLError.create(
                             BenchmarkUserError,
                             error_details=(
-                                f"The columns {missing_columns} provided in the additional_columns field is not found in "
-                                "the ground truth dataset. Please make sure that the all columns provided in this field is "
-                                "present in the groun_truth dataset."
+                                f"The columns {missing_columns} provided in the additional_columns field is not "
+                                "found in the ground truth dataset. Please make sure that the all columns "
+                                "provided in this field is present in the groun_truth dataset."
                             )
                         )
                     )
