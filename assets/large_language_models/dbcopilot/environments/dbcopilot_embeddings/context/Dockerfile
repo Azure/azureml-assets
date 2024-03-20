@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
     libssl1.1=1.1.1f-1ubuntu2.22 \
     libldap-2.4-2=2.4.49+dfsg-2ubuntu1.10 \
     libldap-common=2.4.49+dfsg-2ubuntu1.10 \
+    libxml2=2.9.10+dfsg-5ubuntu0.20.04.7 \
+    less=551-1ubuntu0.2 \
     login=1:4.8.1-1ubuntu5.20.04.5 \
     passwd=1:4.8.1-1ubuntu5.20.04.5 \
     uidmap=1:4.8.1-1ubuntu5.20.04.5 && \
@@ -41,7 +43,7 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
     pip install  promptflow-vectordb==0.2.2 && \
-    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.17-py3-none-any.whl \
+    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.18-py3-none-any.whl \
     pip install  cryptography==42.0.5"
 
 # Fix vunerabilities
