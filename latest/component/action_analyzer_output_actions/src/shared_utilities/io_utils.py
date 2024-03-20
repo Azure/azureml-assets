@@ -4,13 +4,15 @@
 """This file contains utilities to read write data."""
 
 from enum import Enum
+import time
 import yaml
 import numpy as np
 from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql.types import StructType
+from .constants import MAX_RETRY_COUNT
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 from model_data_collector_preprocessor.store_url import StoreUrl  # TODO: move StoreUrl to share_utilities
-from pyspark.sql.types import StructType
 
 
 class NoDataApproach(Enum):
@@ -124,6 +126,17 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
             raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
 
 
+def _write_mltable_yaml(mltable_obj, dest_path):
+    try:
+        content = yaml.dump(mltable_obj, default_flow_style=False)
+        store_url = StoreUrl(dest_path)
+        store_url.write_file(content, 'MLTable', True)
+        return True
+    except Exception as e:
+        print(f"Error writing mltable file: {e}")
+        return False
+
+
 def read_mltable_in_spark(mltable_path: str):
     """Read mltable in spark."""
     _verify_mltable_paths(mltable_path)
@@ -133,9 +146,24 @@ def read_mltable_in_spark(mltable_path: str):
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
-    metrics_df.write.option("output_format", "parquet").option(
-        "overwrite", True
-    ).mltable(folder_path)
+    metrics_df.write.mode("overwrite").parquet(folder_path)
+
+    base_path = folder_path.rstrip('/')
+    output_path_pattern = base_path + "/*.parquet"
+
+    mltable_obj = {
+        'paths': [{'pattern': output_path_pattern}],
+        'transformations': ['read_parquet']
+    }
+
+    retries = 0
+    while True:
+        if _write_mltable_yaml(mltable_obj, folder_path):
+            break
+        retries += 1
+        if retries >= MAX_RETRY_COUNT:
+            raise Exception("Failed to write mltable yaml file after multiple retries.")
+        time.sleep(1)
 
 
 def np_encoder(object):
