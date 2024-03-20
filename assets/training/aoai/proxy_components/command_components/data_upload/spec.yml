@@ -1,0 +1,55 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: data_upload
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Data Upload
+description: Component to upload user's data from AzureML workspace to Azure OpenAI resource
+
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04
+  conda_file: ../../env/conda.yml
+
+code: ../../src
+
+inputs:
+  endpoint_name:
+    type: string
+    optional: False
+    description: The endpoint name or AOAI resource name.
+
+  endpoint_resource_group:
+    type: string
+    optional: True
+    description: Resource group for the AOAI resource.
+
+  endpoint_subscription:
+    type: string
+    optional: True
+    description: Subscription for the AOAI resource.
+
+  train_dataset:
+    type: uri_file
+    optional: False
+    description: jsonl source file/folder for training dataset.
+
+  validation_dataset:
+    type: uri_file
+    optional: True
+    description: source file/folder for validation dataset.
+
+outputs:
+  dataset_upload_output:
+    type: uri_file
+    description: Contains train and validation data upload output file in JSON/custom class format
+
+command: >-
+  python upload.py
+  --train_dataset ${{inputs.train_dataset}}
+  $[[--validation_dataset ${{inputs.validation_dataset}}]]
+  --dataset_upload_output ${{outputs.dataset_upload_output}}
+  --endpoint_name ${{inputs.endpoint_name}}
+  $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
+  $[[--endpoint_subscription ${{inputs.endpoint_subscription}}]]
