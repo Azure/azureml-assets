@@ -1,6 +1,6 @@
 azureml-metrics[video]~=0.0.46.post1
 azureml-evaluate-mlflow==0.0.46.post1
-azureml-acft-accelerator==0.0.46
+azureml-acft-accelerator==0.0.46.post1
 azureml-acft-common-components[image]~=0.0.46
 azureml-acft-image-components==0.0.46.post2
 azureml-core==1.55.0.post2

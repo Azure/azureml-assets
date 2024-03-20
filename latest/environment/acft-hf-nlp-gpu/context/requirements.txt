@@ -1,4 +1,4 @@
-azureml-acft-accelerator==0.0.46
+azureml-acft-accelerator==0.0.46.post1
 azureml_acft_common_components==0.0.46
 azureml-acft-contrib-hf-nlp==0.0.46
 azureml-evaluate-mlflow==0.0.46.post1
