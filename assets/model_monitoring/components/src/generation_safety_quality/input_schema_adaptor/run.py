@@ -117,7 +117,7 @@ def _adapt_input_data_schema(
     # transformed_df.show()
     # transformed_df.printSchema()
 
-    drop_rate = transformed_df.count() / df.count()
+    drop_rate = abs(transformed_df.count() - df.count()) / df.count()
     if drop_rate > 0.10 and drop_rate < 0.30:
         print("first warning. Missing partial data.")
     elif drop_rate > 0.30 and drop_rate < 0.67:
