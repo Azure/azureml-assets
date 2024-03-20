@@ -4,6 +4,7 @@
 """Entry script for GSQ Input Schema Adaptor Spark Component."""
 
 import argparse
+from copy import copy
 import json
 
 from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
@@ -96,10 +97,14 @@ def _adapt_input_data_schema(
     # transformed_df.printSchema()
 
     # UDF
+    spark = init_spark()
     gsq_schema = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
+    broadcast_schema = spark.sparkContext.broadcast(gsq_schema)
 
-    transformed_df = df.rdd.flatMap(lambda row: expand_json_to_gsq_schema(row, gsq_schema)).toDF()
+    transformed_df = df.rdd.flatMap(lambda row: expand_json_to_gsq_schema(row, broadcast_schema.value)).toDF()
     transformed_df.show()
+
+    broadcast_schema.destroy()
 
     # drop rows with all None
     # transformed_df = transformed_df.dropna(how="all", subset=gsq_schema)
