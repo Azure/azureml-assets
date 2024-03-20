@@ -453,6 +453,7 @@ def main(
     elif delete_managed_deployment:
         if not deployment_metadata:
             logger.info("Delete deployment using input parameters.")
+            is_aoai_finetuned_model = finetuned_model_metadata is not None
             online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name,
                                                is_aoai_finetuned_model=is_aoai_finetuned_model)
             online_endpoint = OnlineEndpointFactory.get_online_endpoint(
