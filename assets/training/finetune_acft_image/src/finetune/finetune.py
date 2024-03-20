@@ -693,6 +693,16 @@ def main():
             Setting label_smoothing_factor to 0.0 from {args.label_smoothing_factor}"
         logger.warning(msg)
 
+    # Dinov2 model doesn't support DS & ORT training with current ort version 1.16.0, so we are disabling it.
+    # Todo: Remove this block once ORT-training 1.17.3 is released.
+    Dinov2_Modelname = "facebook/dinov2-base-imagenet1k-1-layer"
+    if args.model_name == Dinov2_Modelname and (args.apply_deepspeed is True or args.apply_ort is True):
+        err_msg = f"apply_deepspeed or apply_ort is not yet supported for {Dinov2_Modelname}. " \
+            "Please disable ds and ort training."
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(ACFTUserError, pii_safe_message=err_msg)
+        )
+
     if args.task_name in [
         Tasks.MM_OBJECT_DETECTION,
         Tasks.MM_INSTANCE_SEGMENTATION,
