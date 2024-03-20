@@ -343,7 +343,7 @@ def get_logger(filename: str = LoggerConfig.DEFAULT_MODULE_NAME, level: str = Lo
         child_namespace = __name__
         current_logger = logging.getLogger("azureml.telemetry").getChild(child_namespace)
         current_logger.propagate = False
-        current_logger.setLevel(numeric_log_level)
+        current_logger.setLevel(logging.CRITICAL)
         appinsights_handler = get_appinsights_log_handler(
             instrumentation_key=INSTRUMENTATION_KEY,
             logger=current_logger, properties=vars(custom_dimensions)
