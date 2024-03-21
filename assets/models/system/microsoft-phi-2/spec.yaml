@@ -89,4 +89,4 @@ tags:
     precision: 16
     max_seq_length: 2048
   task: text-generation
-version: 15
+version: 14
