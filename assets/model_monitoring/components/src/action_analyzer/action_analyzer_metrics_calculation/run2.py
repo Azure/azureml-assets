@@ -16,6 +16,7 @@ from pyspark.sql.types import (
     IntegerType,
     FloatType
 )
+from shared_utilities.span_tree_utils import SpanTree
 from shared_utilities.constants import (
     TEXT_SPLITTER,
     PROMPT_COLUMN,
@@ -23,17 +24,17 @@ from shared_utilities.constants import (
     CONTEXT_COLUMN,
     TRACE_ID_COLUMN,
     SPAN_ID_COLUMN,
-    ROOT_QUESTION_COLUMN,
-    TOPIC_LIST_COLUMN,
-    GROUP_LIST_COLUMN,
-    VIOLATED_METRICS_COLUMN,
     INDEX_CONTENT_COLUMN,
     INDEX_SCORE_COLUMN,
-    INDEX_SCORE_LLM_COLUMN,
     INDEX_ID_COLUMN,
     DEFAULT_RETRIEVAL_SCORE,
     RETRIEVAL_QUERY_TYPE_COLUMN,
-    RETRIEVAL_TOP_K_COLUMN
+    RETRIEVAL_TOP_K_COLUMN,
+    ACTION_METRICS_COLUMN,
+    PROPERTIES_COLUMN,
+    TTEST_DATA_ID_COLUMN,
+    GROUP_COLUMN,
+    QUERY_INTENTION_COLUMN
 )
 from shared_utilities.prompts import RELEVANCE_TEMPLATE
 from shared_utilities.io_utils import (
@@ -52,10 +53,6 @@ from shared_utilities.llm_utils import (
     _request_api,
     get_openai_request_args
 )
-
-ACTION_METRICS_COLUMN = "action_metrics"
-PROPERTIES_COLUMN = "action_analyzer_properties"
-TTEST_DATA_ID_COLUMN = "ttest_data_id"
 
 def get_output_schema() -> StructType:
     """Get Output Data Spark DataFrame Schema."""
@@ -270,7 +267,8 @@ def parse_meta_data(df):
 
     df_exploded = df.withColumn("debugging_details", explode("debugging_info")).drop("debugging_info")
 
-    df_with_properties = df_exploded.withColumn(PROPERTIES_COLUMN, get_properties(col("debugging_details"))).drop("debugging_details")
+    df_with_properties = df_exploded.withColumn(PROPERTIES_COLUMN,
+                                                get_properties(col("debugging_details"))).drop("debugging_details")
     df_with_id = df_with_properties.withColumn(TTEST_DATA_ID_COLUMN, get_unique_id(col(PROPERTIES_COLUMN)))
     return df_with_id
 
@@ -293,7 +291,6 @@ def get_action_metrics_score(completion,
                            api_call_retry_max_count,
                            api_call_retry_backoff_factor,
                            json.loads(request_args))
-
 
 
 def run():
