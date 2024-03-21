@@ -303,21 +303,31 @@ class ChatPromptFactory(PromptFactory):
                                                Role.system.name)
             messages.extend(system_message)
 
-        prompt_pattern_to_use = self.prompt_pattern
+        prefix_messages = []
+        if self.prefix:
+            prefix_messages = self._parse_affix(affix=self.prefix)
+
+        # Parsing the prompt pattern
+        input_messages = self._parse_affix(affix=self.prompt_pattern)
 
         if self.few_shot_pool is not None and self.n_shots > 0:
             few_shot_messages = self._create_few_shots(row)
-            if self.prefix:
+            if len(prefix_messages) == 1 and len(few_shot_messages) > 1:
                 # Updating the very first few shot message with prefix
-                few_shot_messages[0]["content"] = self.prefix + few_shot_messages[0]["content"]
+                few_shot_messages[0]["content"] = prefix_messages[0]["content"] + few_shot_messages[0]["content"]
+            elif len(prefix_messages) > 1:
+                # If prefix is a lists of dictionaries
+                messages.extend(prefix_messages)
+
             messages.extend(few_shot_messages)
         else:
-            # With no few shot data and prefix is present, add prefix to the prompt pattern
-            if self.prefix:
-                prompt_pattern_to_use = self.prefix+self.prompt_pattern
-
-        # Adding the prompt pattern to the messages
-        input_messages = self._parse_affix(affix=prompt_pattern_to_use)
+            # With no few shot data and prefix present, add prefix to the prompt pattern
+            if len(prefix_messages) == 1:
+                # Updating the first few shot message with prefix
+                input_messages[0]["content"] = prefix_messages[0]["content"] + input_messages[0]["content"]
+            elif len(prefix_messages) > 1:
+                # If prefix is a lists of dictionaries
+                input_messages = prefix_messages + input_messages
 
         for input_message in input_messages:
             input_template = JINJA_ENV.from_string(input_message["content"])
