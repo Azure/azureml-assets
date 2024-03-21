@@ -294,7 +294,10 @@ def log_mlflow_params(**kwargs: Any) -> None:
     mlflow.log_params(params)
 
 
-def get_logger(filename: str = LoggerConfig.DEFAULT_MODULE_NAME, level: str = LoggerConfig.VERBOSITY_LEVEL) -> logging.Logger:
+def get_logger(
+    filename: str = LoggerConfig.DEFAULT_MODULE_NAME,
+    level: str = LoggerConfig.VERBOSITY_LEVEL
+) -> logging.Logger:
     """
     Create and configure a logger based on the provided filename and level.
 

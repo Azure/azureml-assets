@@ -4,10 +4,8 @@
 """Exceptions util."""
 
 import os
-import sys
 import time
 import logging
-import traceback
 import inspect
 from functools import wraps
 from typing import Callable, Any
