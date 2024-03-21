@@ -28,9 +28,9 @@ inputs:
     optional: false
     description: model name, e.g., name of the deployment for Azure OpenAI
   llm_summary_enabled:
-    type: boolean
+    type: string
     description: enable llm generated topic name to user
-    default: true
+    default: "true"
 outputs:
   data_with_groups:
     type: mltable

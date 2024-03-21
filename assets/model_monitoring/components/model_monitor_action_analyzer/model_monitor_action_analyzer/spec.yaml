@@ -41,9 +41,9 @@ inputs:
     type: string
     description: azure ml deployment name
   llm_summary_enabled:
-    type: boolean
+    type: string
     description: enable llm generated topic name to user
-    default: true
+    default: "true"
 outputs:
   action_output:
     type: uri_folder
