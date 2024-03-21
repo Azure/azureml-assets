@@ -10,43 +10,28 @@ from pyspark.sql.functions import col, lit, udf, explode, rand
 from pyspark.sql.types import (
     StructType,
     StructField,
-    StringType,
-    ArrayType,
-    FloatType,
-    IntegerType
+    StringType
 )
 from shared_utilities.constants import (
     GSQ_METRICS_LIST,
     METRICS_VIOLATION_THRESHOLD,
-    RETRIEVAL_SPAN_TYPE,
-    TEXT_SPLITTER,
     PROMPT_COLUMN,
     COMPLETION_COLUMN,
-    CONTEXT_COLUMN,
     TRACE_ID_COLUMN,
-    SPAN_ID_COLUMN,
-    ROOT_QUESTION_COLUMN,
-    TOPIC_LIST_COLUMN,
-    GROUP_LIST_COLUMN,
     VIOLATED_METRICS_COLUMN,
-    INDEX_CONTENT_COLUMN,
-    INDEX_SCORE_COLUMN,
-    INDEX_ID_COLUMN,
     ROOT_SPAN_COLUMN,
     GROUP_TOPIC_MIN_SAMPLE_SIZE,
-    RETRIEVAL_QUERY_TYPE_COLUMN,
-    RETRIEVAL_TOP_K_COLUMN,
     GOOD_METRICS_VALUE,
-    DEFAULT_TOPIC_NAME
+    DEFAULT_TOPIC_NAME,
+    GROUP_COLUMN,
+    QUERY_INTENTION_COLUMN
 )
 from shared_utilities.prompts import BERTOPIC_DEFAULT_PROMPT
-from shared_utilities.span_tree_utils import SpanTree
 from model_data_collector_preprocessor.store_url import StoreUrl
 
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     save_spark_df_as_mltable,
-    save_empty_dataframe,
     create_spark_df
 )
 from shared_utilities.llm_utils import (
@@ -57,9 +42,6 @@ from shared_utilities.llm_utils import (
 from bertopic import BERTopic
 from openai import AzureOpenAI
 from bertopic.representation import OpenAI
-
-GROUP_COLUMN = "group"
-QUERY_INTENTION_COLUMN = "query_intention"
 
 def get_output_schema() -> StructType:
     """Get Output Data Spark DataFrame Schema."""
