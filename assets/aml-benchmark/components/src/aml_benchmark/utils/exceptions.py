@@ -98,11 +98,10 @@ def swallow_all_exceptions(logger: logging.Logger) -> Callable[..., Any]:
                         AzureMLError.create(
                             BenchmarkSystemError,
                             error_details=str(e),
-                            traceback=traceback.format_exc(),
                         ),
                         inner_exception=e,
                     )
-                log_traceback(azureml_exception, logger, azureml_exception.message)             
+                log_traceback(azureml_exception, logger)
                 logger.info("Marking run as failed...")
                 for handler in logger.handlers:
                     handler.flush()

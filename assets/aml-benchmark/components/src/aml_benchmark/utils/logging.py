@@ -204,12 +204,6 @@ class CustomDimensions:
         self.location = run_info.get("location", "")
 
 
-    def update_custom_dimensions(self, properties: dict):
-        """Add/update properties in custom dimensions."""
-        assert isinstance(properties, dict)
-        self.__dict__.update(properties)
-
-
 class AppInsightsPIIStrippingFormatter(logging.Formatter):
     """Formatter for App Insights Logging."""
 
@@ -229,7 +223,7 @@ class AppInsightsPIIStrippingFormatter(logging.Formatter):
         not_available_message = '[Not available]'
         properties = getattr(record, 'properties', {})
 
-        message = properties.get('exception_message', LoggerConfig.NON_PII_MESSAGE)
+        message = properties.get('message', LoggerConfig.NON_PII_MESSAGE)
         traceback_msg = properties.get('exception_traceback', not_available_message)
 
         record.message = record.msg = '\n'.join([
@@ -258,12 +252,6 @@ class AMLBenchmarkHandler(logging.StreamHandler):
         cust_dim_copy.update(new_properties)
         setattr(record, "properties", cust_dim_copy)
         msg = self.format(record)
-        if record.levelname == "ERROR" and "AzureMLException" not in record.message:
-            setattr(
-                record,
-                "exception_tb_obj",
-                "non-azureml exception raised so scrubbing",
-            )
         stream = self.stream
         stream.write(msg)
 
