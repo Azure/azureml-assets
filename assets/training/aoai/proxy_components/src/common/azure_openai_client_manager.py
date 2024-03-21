@@ -40,11 +40,11 @@ class AzureOpenAIClientManager:
             self.endpoint_resource_group = workspace_resource_group
             if self.endpoint_resource_group is None:
                 raise Exception("endpoint_resource_group is None")
-        
+
     def _get_client_id(self) -> str:
         """Get the client id."""
         return os.environ.get(AzureOpenAIClientManager.ENV_CLIENT_ID_KEY, None)
-    
+
     def _get_workspace_subscription_id_resource_group(self) -> str:
         """Get current subscription id."""
         uri = os.environ.get(AzureOpenAIClientManager.MLFLOW_TRACKING_URI, None)
