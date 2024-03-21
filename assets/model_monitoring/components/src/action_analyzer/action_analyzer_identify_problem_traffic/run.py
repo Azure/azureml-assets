@@ -135,13 +135,13 @@ def assign_bad_topic_and_group(topic_list,
                                violated_metrics,
                                metrics,
                                topics_dict,
-                               show_topic_name):
+                               llm_summary_enabled):
     """Assign topic name and group name for bad queries."""
     topic_question = json.loads(topics_dict)
     for i, (topic, q_list) in enumerate(topic_question.items()):
         if question in q_list and (metrics in violated_metrics):
             # do not show the topic name when disabling the conf
-            topic = topic if show_topic_name == "true" else f"topic_{i}"
+            topic = topic if llm_summary_enabled else f"topic_{i}"
             group_name = f"{metrics}_bad_group_{i}_{topic}"
             topic_list = _append_value(topic_list, topic)
             group_list = _append_value(group_list, group_name)
@@ -149,13 +149,13 @@ def assign_bad_topic_and_group(topic_list,
 
 
 @udf(returnType=StringType())
-def assign_good_topic(topic_list, question, metrics_score, topics_dict, show_topic_name):
+def assign_good_topic(topic_list, question, metrics_score, topics_dict, llm_summary_enabled):
     """Assign topic name for good queries."""
     topic_question = json.loads(topics_dict)
     for i, (topic, q_list) in enumerate(topic_question.items()):
         if question in q_list and metrics_score == GOOD_METRICS_VALUE:
             # do not show the topic name when disabling the conf
-            topic = topic if show_topic_name == "true" else f"topic_{i}"
+            topic = topic if llm_summary_enabled else f"topic_{i}"
             topic_list = _append_value(topic_list, topic)
     return topic_list
 
@@ -296,7 +296,7 @@ def run():
     parser.add_argument("--signal_name", type=str)
     parser.add_argument("--model_deployment_name", type=str, required=True)
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
-    parser.add_argument("--show_topic_name", type=str)
+    parser.add_argument("--llm_summary_enabled", type=bool, default=True)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top_p", type=float, default=1.0)
     parser.add_argument("--num_samples", type=int, default=1)
@@ -306,6 +306,8 @@ def run():
     parser.add_argument("--api_call_retry_backoff_factor", type=int, default=4)
     parser.add_argument("--api_call_retry_max_count", type=int, default=10)
     args = parser.parse_args()
+
+    llm_summary_enabled = args.llm_summary_enabled.lower() == "true"
 
     # Skip action analyzer if no violated metrics
     violated_metrics = get_violated_metrics(args.signal_output, f"signals/{args.signal_name}")
@@ -375,7 +377,7 @@ def run():
                                                              col(VIOLATED_METRICS_COLUMN),
                                                              lit(metrics),
                                                              lit(json.dumps(topics_dict)),
-                                                             lit(args.show_topic_name))
+                                                             lit(llm_summary_enabled))
             df = df.withColumn(TOPIC_LIST_COLUMN, topic_group_columns[0])
             df = df.withColumn(GROUP_LIST_COLUMN, topic_group_columns[1])
 
@@ -396,7 +398,7 @@ def run():
                                                                     col(ROOT_QUESTION_COLUMN),
                                                                     col(score_name),
                                                                     lit(json.dumps(topics_dict)),
-                                                                    lit(args.show_topic_name)))
+                                                                    lit(llm_summary_enabled)))
 
     # Take the sampled df with assigned topic and group
     sampled_df = df.filter(col(TOPIC_LIST_COLUMN) != "")

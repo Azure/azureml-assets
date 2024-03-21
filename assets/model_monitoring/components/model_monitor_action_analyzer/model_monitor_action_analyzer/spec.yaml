@@ -40,10 +40,10 @@ inputs:
   aml_deployment_id:
     type: string
     description: azure ml deployment name
-  show_topic_name:
-    type: string
-    description: show topic name to user or not
-    default: "true"
+  llm_summary_enabled:
+    type: boolean
+    description: enable llm generated topic name to user
+    default: true
 outputs:
   action_output:
     type: uri_folder
@@ -63,7 +63,7 @@ jobs:
       signal_name: ${{parent.inputs.signal_name}}
       workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
-      show_topic_name: ${{parent.inputs.show_topic_name}}
+      llm_summary_enabled: ${{parent.inputs.llm_summary_enabled}}
     outputs:
       data_with_groups:
         type: mltable
