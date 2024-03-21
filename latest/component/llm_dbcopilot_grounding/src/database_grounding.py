@@ -35,6 +35,7 @@ class DataBaseGrounding(ComponentBase):
         max_text_length: int = None,
         selected_tables: str = None,
         column_settings: str = None,
+        include_views: bool = False,
     ):
         """Ground database tables and columns."""
         from utils.asset_utils import get_datastore_uri
@@ -63,6 +64,10 @@ class DataBaseGrounding(ComponentBase):
             db_executor_config.column_settings = json.loads(column_settings)
             if not isinstance(db_executor_config.column_settings, dict):
                 raise ValueError("column_settings must be a dict")
+        if include_views:
+            if db_executor_config.metadata is None:
+                db_executor_config.metadata = {}
+            db_executor_config.metadata["include_views"] = include_views
         datastore_uri = get_datastore_uri(self.workspace, asset_uri)
         db_provider_config = DBProviderServiceConfig(
             db_uri=datastore_uri,
