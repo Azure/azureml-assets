@@ -175,28 +175,33 @@ class InferencePostprocessor(object):
             actual_df = pd.json_normalize(
                 read_jsonl_files(resolve_io_path(self.ground_truth_dataset))
             )
+            if not self.ground_truth_dataset and not self.additional_columns:
+                return actual_df
             if self.ground_truth_column_name:
                 result_df[self.ground_truth_column_name] = actual_df[
                     self.ground_truth_column_name
                 ]
             if self.additional_columns:
-                elements = self.additional_columns.split(",")
-                strips = [s.strip() for s in elements if s.strip()]
-                for column in strips:
-                    try:
-                        result_df[column] = actual_df[column]
-                    except KeyError:
-                        raise BenchmarkUserException._with_error(
-                            AzureMLError.create(
-                                BenchmarkUserError,
-                                error_details=f"Column {column} doesn't exist.\
-                                    Please check your data before submitting again.")
+                columns = [col.strip() for col in self.additional_columns.split(',')]
+                if '' in columns:
+                    logger.warning("Received a column name as '' in additional_fields. "
+                                   "Please check if extra comma is provided between two column names. "
+                                   "Dropping columns named as '' from additional_fields input.")
+                    columns = [col for col in columns if col]  # and col in actual_df.columns.tolist()]
+                missing_columns = [col for col in columns if col not in actual_df.columns.tolist()]
+                if len(missing_columns) > 0:
+                    raise BenchmarkUserException._with_error(
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details=(
+                                f"The columns {missing_columns} provided in the additional_columns field is not "
+                                "found in the ground truth dataset. Please make sure that the all columns "
+                                "provided in this field is present in the groun_truth dataset."
                             )
-            else:
-                result_df = actual_df
+                        )
+                    )
+                result_df[columns] = actual_df[columns]
         return result_df
-
-    # def read_additional_dataset? Place holder.
 
     def apply_find_first(self, text: str) -> str:
         """Find and return first occurence of any candidate in the text."""
