@@ -79,7 +79,7 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
         action = {
             "ActionId": action_id,
             "Type": INDEX_ACTION_TYPE,
-            "Description": ACTION_DESCRIPTION + index_id,
+            "Description": ACTION_DESCRIPTION.replace("{index_id}", index_id),
             "ConfidenceScore": row["action_confidence_score"],
             "ViolatedMetrics": ", ".join(violated_metrics),
             "QueryIntention": row["most_significant_group"].split("_")[-1],
