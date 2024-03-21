@@ -1,2 +1,2 @@
-{"final_answer":"18","prediction":"26"}
-{"final_answer":"3","prediction":"3"}
+{"target_num":"1","prediction":"CONTRADICTION"}
+{"target_num":"2","prediction":"ENTAILMENT"}
