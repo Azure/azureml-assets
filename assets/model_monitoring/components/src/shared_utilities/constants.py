@@ -159,7 +159,7 @@ P_VALUE_THRESHOLD = 0.05
 MEAN_THRESHOLD = 3
 
 INDEX_ACTION_TYPE = "Index Action"
-ACTION_DESCRIPTION = "The application's response quality is low due to suboptimal index retrieval. Please update the index with ID '{index_id}' to address this issue."  #noqa
+ACTION_DESCRIPTION = "The application's response quality is low due to suboptimal index retrieval. Please update the index with ID '{index_id}' to address this issue."  # noqa
 MAX_SAMPLE_SIZE = 20
 DEFAULT_RETRIEVAL_SCORE = 0
 
