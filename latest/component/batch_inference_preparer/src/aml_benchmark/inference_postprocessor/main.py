@@ -199,11 +199,6 @@ def main(
         user_postprocessor=script_path,
         output_dataset=output_dataset,
     )
-    if additional_columns:
-        elements = additional_columns.split(",")
-        additional_columns_processed = [s.strip() for s in elements if s.strip()]
-    else:
-        additional_columns_processed = None
     processor.run()
     log_mlflow_params(
         prediction_dataset=prediction_dataset,
@@ -212,7 +207,7 @@ def main(
         ground_truth_column_name=ground_truth_column_name
         if ground_truth_column_name
         else None,
-        additional_columns=additional_columns_processed,
+        additional_columns=additional_columns if additional_columns else None,
         separator=separator if separator else None,
         find_first=find_first if find_first else None,
         regex_expr=regex_expr if regex_expr else None,
