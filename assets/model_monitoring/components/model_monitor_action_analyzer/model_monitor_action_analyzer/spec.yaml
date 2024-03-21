@@ -40,6 +40,10 @@ inputs:
   aml_deployment_id:
     type: string
     description: azure ml deployment name
+  llm_summary_enabled:
+    type: string
+    description: enable llm generated topic name to user
+    default: "true"
 outputs:
   action_output:
     type: uri_folder
@@ -59,10 +63,11 @@ jobs:
       signal_name: ${{parent.inputs.signal_name}}
       workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
-      prompt_column_name: ${{parent.inputs.prompt_column_name}}
-      completion_column_name: ${{parent.inputs.completion_column_name}}
+      llm_summary_enabled: ${{parent.inputs.llm_summary_enabled}}
     outputs:
       data_with_groups:
+        type: mltable
+      violated_metrics:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
@@ -76,6 +81,9 @@ jobs:
       data_with_groups:
         type: mltable
         path: ${{parent.jobs.identify_problem_traffic.outputs.data_with_groups}}
+      signal_scored_data:
+        type: mltable
+        path: ${{parent.inputs.signal_scored_data}}
       workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
     outputs:
