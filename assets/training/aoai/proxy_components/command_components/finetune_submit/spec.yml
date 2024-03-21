@@ -8,9 +8,7 @@ is_deterministic: True
 display_name: Submit AOAI FT Job
 description: Component to submit FT job to Azure OpenAI resource
 
-environment:
-  image: mcr.microsoft.com/azureml/curated/minimal-ubuntu20.04-py38-cuda11.6.2-gpu-inference:28
-  conda_file: ../../env/conda.yml
+environment: azureml://registries/azureml-1p-preview/environments/aoai-data-upload-finetune/versions/0.0.1
 
 code: ../../src
 

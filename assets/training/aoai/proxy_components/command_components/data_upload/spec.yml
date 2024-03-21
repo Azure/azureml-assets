@@ -8,9 +8,7 @@ is_deterministic: True
 display_name: Data Upload
 description: Component to upload user's data from AzureML workspace to Azure OpenAI resource
 
-environment:
-  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04
-  conda_file: ../../env/conda.yml
+environment: azureml://registries/azureml-1p-preview/environments/aoai-data-upload-finetune/versions/0.0.1
 
 code: ../../src
 
