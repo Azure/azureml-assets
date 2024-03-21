@@ -313,10 +313,10 @@ class ChatPromptFactory(PromptFactory):
         if self.few_shot_pool is not None and self.n_shots > 0:
             few_shot_messages = self._create_few_shots(row)
             if len(prefix_messages) == 1 and len(few_shot_messages) > 1:
-                # Updating the very first few shot message with prefix
+                # Updating the first few shot message with prefix
                 few_shot_messages[0]["content"] = prefix_messages[0]["content"] + few_shot_messages[0]["content"]
             elif len(prefix_messages) > 1:
-                # If prefix is a lists of dictionaries
+                # If prefix is a list of dictionaries
                 messages.extend(prefix_messages)
 
             messages.extend(few_shot_messages)
@@ -326,7 +326,7 @@ class ChatPromptFactory(PromptFactory):
                 # Updating the first few shot message with prefix
                 input_messages[0]["content"] = prefix_messages[0]["content"] + input_messages[0]["content"]
             elif len(prefix_messages) > 1:
-                # If prefix is a lists of dictionaries
+                # If prefix is a list of dictionaries
                 input_messages = prefix_messages + input_messages
 
         for input_message in input_messages:
