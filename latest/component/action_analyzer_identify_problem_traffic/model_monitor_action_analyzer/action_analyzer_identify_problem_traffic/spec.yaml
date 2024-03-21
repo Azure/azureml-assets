@@ -4,7 +4,7 @@ type: spark
 name: action_analyzer_identify_problem_traffic
 display_name: Action Analyzer - Identify Problem Traffic
 description: Separate bad queries into different groups.
-version: 0.0.4
+version: 0.0.5
 is_deterministic: true
 inputs:
   signal_output:
@@ -27,16 +27,10 @@ inputs:
     type: string
     optional: false
     description: model name, e.g., name of the deployment for Azure OpenAI
-  prompt_column_name:
+  llm_summary_enabled:
     type: string
-    optional: true
-    default: "prompt"
-    description: prompt column name
-  completion_column_name:
-    type: string
-    optional: true
-    default: "completion"
-    description: completion column name
+    description: enable llm generated topic name to user
+    default: "true"
 outputs:
   data_with_groups:
     type: mltable
@@ -77,6 +71,5 @@ args: >-
   --signal_name ${{inputs.signal_name}}
   --model_deployment_name ${{inputs.model_deployment_name}}
   --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
-  $[[--prompt_column_name ${{inputs.prompt_column_name}}]]
-  $[[--completion_column_name ${{inputs.completion_column_name}}]]
+  --llm_summary_enabled ${{inputs.llm_summary_enabled}}
   --data_with_groups ${{outputs.data_with_groups}}
