@@ -18,7 +18,7 @@ MODEL_COMPLETION_COUNT = "model_completion_count"
 # Constants for attribute keys
 COMPLETION_COUNT_KEYS = ["llm.token_count.completion", "llm.usage.completion_tokens"]
 PROMPT_COUNT_KEYS = ["embedding.usage.prompt_tokens", "llm.token_count.prompt",
-                    "llm.usage.prompt_tokens", "embedding.token_count.prompt"]
+                     "llm.usage.prompt_tokens", "embedding.token_count.prompt"]
 TOTAL_COUNT_KEYS = ["embedding.usage.total_tokens", "llm.token_count.total", "embedding.token_count.total",
-                   "llm.usage.total_tokens"]
+                    "llm.usage.total_tokens"]
 MODEL_KEYS = ["llm.response.model", "embedding.response.model", "llm.model", "embedding.model"]
