@@ -31,7 +31,9 @@ from shared_utilities.constants import (
     INDEX_SCORE_COLUMN,
     INDEX_SCORE_LLM_COLUMN,
     INDEX_ID_COLUMN,
-    DEFAULT_RETRIEVAL_SCORE
+    DEFAULT_RETRIEVAL_SCORE,
+    RETRIEVAL_QUERY_TYPE_COLUMN,
+    RETRIEVAL_TOP_K_COLUMN
 )
 from shared_utilities.prompts import RELEVANCE_TEMPLATE
 from shared_utilities.io_utils import (
@@ -186,7 +188,9 @@ def get_output_schema() -> StructType:
             StructField(INDEX_ID_COLUMN, StringType(), True),
             StructField(CONTEXT_COLUMN, StringType(), True),
             StructField(INDEX_SCORE_COLUMN, FloatType(), True),
-            StructField(INDEX_SCORE_LLM_COLUMN, IntegerType(), True),
+            StructField(RETRIEVAL_QUERY_TYPE_COLUMN, StringType(), True),
+            StructField(RETRIEVAL_TOP_K_COLUMN, IntegerType(), True),
+            StructField(INDEX_SCORE_LLM_COLUMN, IntegerType(), True)
         ]
     )
     return schema
