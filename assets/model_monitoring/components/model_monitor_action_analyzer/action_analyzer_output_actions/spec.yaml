@@ -4,7 +4,7 @@ type: spark
 name: action_analyzer_output_actions
 display_name: Action Analyzer - Output Actions
 description: Merge and output actions.
-version: 0.0.4
+version: 0.0.5
 is_deterministic: True
 inputs:
   action_data:
@@ -23,6 +23,7 @@ outputs:
     mode: direct
 
 conf:
+  spark.aml.internal.system.job: True
   spark.driver.cores: 4
   spark.driver.memory: 28g
   spark.executor.cores: 4

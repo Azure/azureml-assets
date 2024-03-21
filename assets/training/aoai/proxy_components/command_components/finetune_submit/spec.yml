@@ -1,0 +1,90 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: finetune_submit
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Submit AOAI FT Job
+description: Component to submit FT job to Azure OpenAI resource
+
+environment: azureml://registries/azureml-1p-preview/environments/aoai-data-upload-finetune/versions/0.0.1
+
+code: ../../src
+
+inputs:
+  endpoint_name:
+    type: string
+    optional: False
+    description: The endpoint name or AOAI resource name.
+
+  endpoint_resource_group:
+    type: string
+    optional: True
+    description: Resource group for the AOAI resource.
+
+  endpoint_subscription:
+    type: string
+    optional: True
+    description: Subscription for the AOAI resource.
+
+  model:
+    type: string
+    optional: False
+    default: gpt-35-turbo-0613
+    description: GPT model engine
+  
+  task_type:
+    type: string
+    optional: False
+    description: Dataset type - chat or completion
+    enum:
+    - chat
+    - completion
+  
+  registered_model_name:
+    type: string
+    optional: False
+    description: User-defined registered model name
+  
+  n_epochs:
+    type: integer
+    optional: False
+    default: -1
+    description: Number of training epochs. If set to -1, number of epochs will be determined dynamically based on the input data.
+  
+  batch_size:
+    type: integer
+    optional: False
+    default: -1
+    description: Global batch size. If set to -1, batch size will be determined dynamically based on the input data.
+  
+  learning_rate_multiplier:
+    type: number
+    optional: False
+    default: 1.0
+    description: The learning rate multiplier to use for training.
+
+  data_upload_output:
+    type: uri_file
+    optional: False
+    description: Contains data upload output file in JSON/custom class format
+
+outputs:
+  finetune_submit_output:
+    type: uri_file
+    description: Contains finetune submit output file in JSON/custom class format
+
+command: >-
+  python finetune_submit.py
+  --model ${{inputs.model}}
+  --task_type ${{inputs.task_type}}
+  --registered_model_name ${{inputs.registered_model_name}}
+  --n_epochs ${{inputs.n_epochs}}
+  --batch_size ${{inputs.batch_size}}
+  --learning_rate_multiplier ${{inputs.learning_rate_multiplier}}
+  --data_upload_output ${{inputs.data_upload_output}}
+  --finetune_submit_output ${{outputs.finetune_submit_output}}
+  --endpoint_name ${{inputs.endpoint_name}}
+  $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
+  $[[--endpoint_subscription ${{inputs.endpoint_subscription}}]]

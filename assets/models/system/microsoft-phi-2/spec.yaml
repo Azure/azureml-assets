@@ -84,9 +84,9 @@ tags:
     - ds_mii
   model_specific_defaults:
     apply_deepspeed: "true"
-    apply_lora: "false"
+    apply_lora: "true"
     apply_ort: "false"
     precision: 16
-    max_seq_length: 1024
+    max_seq_length: 2048
   task: text-generation
 version: 14
