@@ -10,6 +10,10 @@ inputs:
   data_with_groups:
     type: mltable
     mode: direct
+  signal_scored_data:
+    type: mltable
+    mode: direct
+    description: production data with metrics scores from monitoring signal
   model_deployment_name:
     type: string
     optional: False
@@ -47,10 +51,11 @@ conf:
 code: ../../src
 
 entry:
-  file: ./action_analyzer/action_analyzer_metrics_calculation/run.py
+  file: ./action_analyzer/action_analyzer_metrics_calculation/run2.py
 
 args: >-
   --data_with_groups ${{inputs.data_with_groups}}
+  --signal_scored_data ${{inputs.signal_scored_data}}
   --model_deployment_name ${{inputs.model_deployment_name}}
   --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
   --data_with_action_metric_score ${{outputs.data_with_action_metric_score}}
