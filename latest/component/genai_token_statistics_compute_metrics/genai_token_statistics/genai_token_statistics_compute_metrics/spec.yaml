@@ -24,6 +24,7 @@ entry:
   file: ./genai_token_statistics_compute_metrics/run.py
 conf:
   spark.hadoop.aml.enable_cache: "true"
+  spark.aml.internal.system.job: true
   spark.driver.cores: 4
   spark.driver.memory: 28g
   spark.executor.cores: 4
