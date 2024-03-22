@@ -173,7 +173,6 @@ def get_index_score(question,
         backoff_factor=api_call_retry_backoff_factor,
     )
 
-    request_args = json.loads(request_args)
     context_array = text.split(TEXT_SPLITTER)
     context_json = {}
     for i, context in enumerate(context_array):
