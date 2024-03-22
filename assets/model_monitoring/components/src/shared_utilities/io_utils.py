@@ -128,9 +128,24 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
 
 def _write_mltable_yaml(mltable_obj, dest_path):
     try:
-        content = yaml.dump(mltable_obj, default_flow_style=False)
-        store_url = StoreUrl(dest_path)
-        store_url.write_file(content, 'MLTable', True)
+        import os
+        import uuid
+        from azureml.fsspec import AzureMachineLearningFileSystem
+
+        folder_name = str(uuid.uuid4())
+        folder_path = os.path.join(os.getcwd(), folder_name)
+        os.makedirs(folder_path)
+        source_path = os.path.join(folder_path, "MLTable")
+        with open(source_path, "w") as yaml_file:
+            yaml.dump(mltable_obj, yaml_file)
+
+        fs = AzureMachineLearningFileSystem(dest_path)
+        fs.upload(
+            lpath=source_path,
+            rpath=dest_path,
+            **{"overwrite": "MERGE_WITH_OVERWRITE"},
+            recursive=True,
+        )
         return True
     except Exception as e:
         print(f"Error writing mltable file: {e}")
