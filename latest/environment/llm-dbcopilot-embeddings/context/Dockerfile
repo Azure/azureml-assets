@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:20240306.v5
+FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:20240313.v1
 WORKDIR /
 
 USER root
