@@ -155,6 +155,8 @@ def validate_and_prepare_pipeline_component(
 
         # Check if component's env exists
         final_version = util.apply_version_template(version, version_template)
+        if not registry:
+            logger.print(f"Component URI is a workspace URI. Using registry {registry_name}.")
         registry_name = registry or registry_name
         asset_details = None
         for ver in [version, final_version]:
@@ -165,7 +167,7 @@ def validate_and_prepare_pipeline_component(
 
         if not asset_details:
             logger.log_warning(
-                f"dependent component {name} with version {version} not found in registry {registry}"
+                f"dependent component {name} with version {version} not found in registry {registry_name}"
             )
             return False
 
@@ -386,6 +388,7 @@ def get_asset_details(
     registry_name: str,
 ) -> Dict:
     """Get asset details."""
+    logger.print(f"Getting asset details for {asset_type} {asset_name} {asset_version} in {registry_name}")
     cmd = [
         "az", "ml", asset_type, "show",
         "--name", asset_name,
