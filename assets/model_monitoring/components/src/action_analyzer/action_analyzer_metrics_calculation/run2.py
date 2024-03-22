@@ -7,14 +7,16 @@ import argparse
 import requests
 import json
 import re
-from pyspark.sql.functions import col, lit, udf
+import yaml
+from pyspark.sql.functions import col, lit, udf, explode
 from typing import Tuple
 from pyspark.sql.types import (
     StructType,
     StructField,
     StringType,
     IntegerType,
-    FloatType
+    FloatType,
+    ArrayType
 )
 from shared_utilities.span_tree_utils import SpanTree
 from shared_utilities.constants import (
@@ -23,18 +25,19 @@ from shared_utilities.constants import (
     COMPLETION_COLUMN,
     CONTEXT_COLUMN,
     TRACE_ID_COLUMN,
-    SPAN_ID_COLUMN,
     INDEX_CONTENT_COLUMN,
     INDEX_SCORE_COLUMN,
     INDEX_ID_COLUMN,
-    DEFAULT_RETRIEVAL_SCORE,
+    INVALID_METRICS_SCORE,
     RETRIEVAL_QUERY_TYPE_COLUMN,
     RETRIEVAL_TOP_K_COLUMN,
     ACTION_METRICS_COLUMN,
     PROPERTIES_COLUMN,
-    TTEST_DATA_ID_COLUMN,
+    TTEST_GROUP_ID_COLUMN,
     GROUP_COLUMN,
-    QUERY_INTENTION_COLUMN
+    QUERY_INTENTION_COLUMN,
+    RETRIEVAL_SPAN_TYPE,
+    ROOT_SPAN_COLUMN
 )
 from shared_utilities.prompts import RELEVANCE_TEMPLATE
 from shared_utilities.io_utils import (
@@ -54,12 +57,13 @@ from shared_utilities.llm_utils import (
     get_openai_request_args
 )
 
+
 def get_output_schema() -> StructType:
     """Get Output Data Spark DataFrame Schema."""
     schema = StructType(
         [
             StructField(TRACE_ID_COLUMN, StringType(), True),
-            StructField(TTEST_DATA_ID_COLUMN, StringType(), True),
+            StructField(TTEST_GROUP_ID_COLUMN, StringType(), True),
             StructField(GROUP_COLUMN, StringType(), True),
             StructField(QUERY_INTENTION_COLUMN, StringType(), True),
             StructField(ACTION_METRICS_COLUMN, FloatType(), True),
@@ -75,7 +79,7 @@ def _post_process_results(output):
         score = float(parsed_score_response[0].replace("'", "").strip())
     else:
         # Result of score is not found in the output string
-        score = DEFAULT_RETRIEVAL_SCORE
+        score = INVALID_METRICS_SCORE
         print("Not able to parse the score from the output string, setting score to nan")
     return score
 
@@ -269,7 +273,7 @@ def parse_meta_data(df):
 
     df_with_properties = df_exploded.withColumn(PROPERTIES_COLUMN,
                                                 get_properties(col("debugging_details"))).drop("debugging_details")
-    df_with_id = df_with_properties.withColumn(TTEST_DATA_ID_COLUMN, get_unique_id(col(PROPERTIES_COLUMN)))
+    df_with_id = df_with_properties.withColumn(TTEST_GROUP_ID_COLUMN, get_unique_id(col(PROPERTIES_COLUMN)))
     return df_with_id
 
 
@@ -322,13 +326,14 @@ def run():
         save_empty_dataframe(get_output_schema(), args.data_with_action_metric_score)
         return
 
-    signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
+    signal_scored_data_df = try_read_mltable_in_spark("azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/yuachengtestrg/workspaces/ai-proj-eastus/datastores/workspaceblobstore/paths/azureml/5b3c73e9-8e67-47e2-a46e-5087b2288110/evaluation/", "signal_scored_data")
 
-    df = data_with_groups_df.join(signal_scored_data_df, [INDEX_ID_COLUMN], "inner")
+    df = data_with_groups_df.join(signal_scored_data_df, [TRACE_ID_COLUMN], "inner")
 
     # getting the metadata for metrics calculation
-    df_with_meta_data = parse_meta_data(df)
-
+    df = parse_meta_data(df)
+    print("data with meta data")
+    df.show()
     # calculate the metrics score
     metrics_score = get_action_metrics_score(col(COMPLETION_COLUMN),
                                              col(PROPERTIES_COLUMN),
@@ -337,21 +342,21 @@ def run():
                                              lit(args.api_call_retry_max_count),
                                              lit(args.api_call_retry_backoff_factor),
                                              lit(json.dumps(request_args)))
-    data_with_action_metric_score = df_with_meta_data.withColumn(ACTION_METRICS_COLUMN, metrics_score)
-    
+    data_with_action_metric_score_df = df.withColumn(ACTION_METRICS_COLUMN, metrics_score)
+
+    data_with_action_metric_score_df = data_with_action_metric_score_df.select(TRACE_ID_COLUMN,
+                                                                               TTEST_GROUP_ID_COLUMN,
+                                                                               GROUP_COLUMN,
+                                                                               QUERY_INTENTION_COLUMN,
+                                                                               ACTION_METRICS_COLUMN,
+                                                                               PROPERTIES_COLUMN)
     # Output Schema:
-    # +--------+-------------+-----+---------------+--------------+----------+
-    # |trace_id|ttest_data_id|group|query_intention|action_metrics|properties|
-    # +--------+-------------+-----+---------------+--------------+----------+
-    data_with_action_metric_score = data_with_action_metric_score.select(TRACE_ID_COLUMN,
-                                                                         TTEST_DATA_ID_COLUMN,
-                                                                         GROUP_COLUMN,
-                                                                         QUERY_INTENTION_COLUMN,
-                                                                         ACTION_METRICS_COLUMN,
-                                                                         PROPERTIES_COLUMN)
-    print("data_with_metric_score_df")
-    data_with_metric_score_df.show()
-    save_spark_df_as_mltable(data_with_metric_score_df, args.data_with_action_metric_score)
+    # +--------+--------------+-----+---------------+--------------+----------+
+    # |trace_id|ttest_group_id|group|query_intention|action_metrics|properties|
+    # +--------+--------------+-----+---------------+--------------+----------+
+    print("data_with_action_metric_score")
+    data_with_action_metric_score_df.show()
+    save_spark_df_as_mltable(data_with_action_metric_score_df, args.data_with_action_metric_score)
 
 
 if __name__ == "__main__":

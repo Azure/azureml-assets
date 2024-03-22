@@ -5,8 +5,7 @@
 
 import argparse
 import json
-import yaml
-from pyspark.sql.functions import col, lit, udf, explode, rand
+from pyspark.sql.functions import col, lit, udf, rand
 from pyspark.sql.types import (
     StructType,
     StructField,
@@ -16,7 +15,6 @@ from shared_utilities.constants import (
     GSQ_METRICS_LIST,
     METRICS_VIOLATION_THRESHOLD,
     PROMPT_COLUMN,
-    COMPLETION_COLUMN,
     TRACE_ID_COLUMN,
     VIOLATED_METRICS_COLUMN,
     ROOT_SPAN_COLUMN,
@@ -24,7 +22,9 @@ from shared_utilities.constants import (
     GOOD_METRICS_VALUE,
     DEFAULT_TOPIC_NAME,
     GROUP_COLUMN,
-    QUERY_INTENTION_COLUMN
+    QUERY_INTENTION_COLUMN,
+    GOOD_GROUP_NAME,
+    BAD_GROUP_NAME
 )
 from shared_utilities.prompts import BERTOPIC_DEFAULT_PROMPT
 from model_data_collector_preprocessor.store_url import StoreUrl
@@ -42,6 +42,7 @@ from shared_utilities.llm_utils import (
 from bertopic import BERTopic
 from openai import AzureOpenAI
 from bertopic.representation import OpenAI
+
 
 def get_output_schema() -> StructType:
     """Get Output Data Spark DataFrame Schema."""
@@ -207,14 +208,14 @@ def run():
         score_name = metrics
 
         # Get the good and bad queries. Sample the good query in case the good query number is too large.
-        df_good = df.filter(col(metrics) == GOOD_METRICS_VALUE)
-        df_bad = df.filter(col(metrics) < METRICS_VIOLATION_THRESHOLD)
+        df_good = df.filter(col(score_name) == GOOD_METRICS_VALUE)
+        df_bad = df.filter(col(score_name) < METRICS_VIOLATION_THRESHOLD)
         df_good = df_good.orderBy(rand()).limit(df_bad.count())
         print(f"Sample size for current metrics: {df_bad.count()}")
 
         # assign good and bad group
-        good_group = f"{metrics}_good"
-        bad_group = f"{metrics}_bad"
+        good_group = GOOD_GROUP_NAME.replace("{metrics}", metrics)
+        bad_group = BAD_GROUP_NAME.replace("{metrics}", metrics)
         df_good = df_good.withColumn(GROUP_COLUMN, lit(good_group))
         df_bad = df_bad.withColumn(GROUP_COLUMN, lit(bad_group))
 
