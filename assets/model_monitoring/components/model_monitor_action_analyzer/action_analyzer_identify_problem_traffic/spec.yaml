@@ -32,10 +32,10 @@ inputs:
     description: enable llm generated topic name to user
     default: "true"
 outputs:
-  data_with_groups:
+  violated_metrics:
     type: mltable
     mode: direct
-  violated_metrics:
+  data_with_groups:
     type: mltable
     mode: direct
 
@@ -76,5 +76,5 @@ args: >-
   --model_deployment_name ${{inputs.model_deployment_name}}
   --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
   --llm_summary_enabled ${{inputs.llm_summary_enabled}}
-  --data_with_groups ${{outputs.data_with_groups}}
   --violated_metrics ${{outputs.violated_metrics}}
+  --data_with_groups ${{outputs.data_with_groups}}

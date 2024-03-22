@@ -7,10 +7,10 @@ description: Perform correlation test on different groups to generate actions.
 version: 0.0.5
 is_deterministic: True
 inputs:
-  data_with_action_metric_score:
+  violated_metrics:
     type: mltable
     mode: direct
-  violated_metrics:
+  data_with_action_metric_score:
     type: mltable
     mode: direct
 outputs:
@@ -45,6 +45,6 @@ entry:
   file: ./action_analyzer/action_analyzer_correlation_test/run2.py
 
 args: >-
-  --data_with_action_metric_score ${{inputs.data_with_action_metric_score}}
   --violated_metrics ${{inputs.violated_metrics}}
+  --data_with_action_metric_score ${{inputs.data_with_action_metric_score}}
   --action_data ${{outputs.action_data}}

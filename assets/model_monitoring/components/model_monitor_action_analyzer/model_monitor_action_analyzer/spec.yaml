@@ -65,9 +65,9 @@ jobs:
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
       llm_summary_enabled: ${{parent.inputs.llm_summary_enabled}}
     outputs:
-      data_with_groups:
-        type: mltable
       violated_metrics:
+        type: mltable
+      data_with_groups:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
@@ -98,12 +98,12 @@ jobs:
     type: spark
     component: azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.5
     inputs:
-      data_with_action_metric_score:
-        type: mltable
-        path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
       violated_metrics:
         type: mltable
         path: ${{parent.jobs.identify_problem_traffic.outputs.violated_metrics}}
+      data_with_action_metric_score:
+        type: mltable
+        path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
     outputs:
       action_data:
         type: mltable
