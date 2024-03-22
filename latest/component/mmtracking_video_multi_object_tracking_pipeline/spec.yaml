@@ -372,7 +372,7 @@ jobs:
       task_specific_extra_params: '"model_family=${{parent.inputs.model_family}};model_name=${{parent.inputs.model_name}};metric_for_best_model=${{parent.inputs.metric_for_best_model}};number_of_epochs=${{parent.inputs.number_of_epochs}}"'
   model_selector:
     type: command
-    component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.3test
+    component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.3
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
@@ -383,7 +383,7 @@ jobs:
       validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
   finetune:
     type: command
-    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.3test1
+    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.3
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
