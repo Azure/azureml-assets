@@ -337,7 +337,7 @@ jobs:
       validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
   finetune:
     type: command
-    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.3
+    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.4
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
