@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""AML run file."""
 import os
 import re
 from typing import Dict
