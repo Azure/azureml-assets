@@ -3,12 +3,16 @@
 
 """HFTransformers MLflow model convertors."""
 from typing import List
+import base64
+import io
 import transformers
 import platform
 import mlflow
+import numpy as np
 import os
 import yaml
 from abc import ABC, abstractmethod
+from PIL import Image
 from azureml.evaluate import mlflow as hf_mlflow
 from azureml.core.conda_dependencies import CondaDependencies
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
@@ -414,6 +418,19 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
             logger.warning(f"config loaded with modified id2label as there are some missing keys : {missing_keys}.")
         return config
 
+    def get_random_base64_decoded_image(self) -> str:
+        """ get random base64 decoded image
+
+        :return: base64 decoded image
+        :rtype: string
+        """
+        imarray = np.random.rand(100, 100, 3) * 255
+        buffered = io.BytesIO()
+        image = Image.fromarray(imarray.astype('uint8')).convert('RGB')
+        image.save(buffered, format="JPEG")
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        return img_str
+
     def save_as_mlflow(self):
         """Prepare vision models for save to MLflow."""
         hf_conf = self._hf_conf
@@ -441,9 +458,9 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         if self._model_flavor == "OSS":
             vision_model = transformers.pipeline(task=self._task, model=str(self._model_dir))
             vision_model.model.config = config
-            image_path = str(Path(__file__).parent.parent / "common" / "test_image.jpg")
+            image_str = self.get_random_base64_decoded_image()
             self._signatures = infer_signature(
-                image_path, generate_signature_output(vision_model, image_path),
+                image_str, generate_signature_output(vision_model, image_str),
             )
             return super()._save(
                 conda_env=get_default_conda_env(vision_model.model)
