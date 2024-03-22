@@ -5,7 +5,7 @@
 
 ## 1.16.38 (2024-03-11)
 ### 🐛 Bugs Fixed
-- [#2572](https://github.com/Azure/azureml-assets/pull/2572) Add additional logging for asset creation
+- [#2572](https://github.com/Azure/azureml-assets/pull/2572) Add additional logging for workspace asset URI
 
 ## 1.16.37 (2024-03-11)
 ### 🐛 Bugs Fixed
