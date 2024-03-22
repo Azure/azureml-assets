@@ -74,14 +74,7 @@ def swallow_all_exceptions(logger: logging.Logger) -> Callable[..., Any]:
     def wrap(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            def get_calling_module_folder():
-                """Get the folder name of the main script called from the command line."""
-                main_script_path = inspect.stack()[-1].filename
-                main_folder_name = os.path.basename(os.path.dirname(main_script_path))
-                return main_folder_name
-
             try:
-                custom_dimensions.app_name = get_calling_module_folder()
                 root_run = run_details.root_run
                 try:
                     root_run.add_properties(properties=ROOT_RUN_PROPERTIES)

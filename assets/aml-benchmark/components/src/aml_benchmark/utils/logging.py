@@ -154,7 +154,7 @@ class RunDetails:
         module_name = raw_json.get("properties", {}).get("azureml.moduleName", "")
         module_id = raw_json.get("properties", {}).get("azureml.moduleid", "")
         pipeline_type = raw_json.get("properties", {}).get("PipelineType", "")
-        source = raw_json.get("properties", {}).get("Source", "")
+        source = raw_json.get("properties", {}).get("runSource", "")
         try:
             location = os.environ.get("AZUREML_SERVICE_ENDPOINT")
             location = re.compile("//(.*?)\\.").search(location).group(1)
