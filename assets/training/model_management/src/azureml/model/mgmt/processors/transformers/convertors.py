@@ -419,7 +419,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         return config
 
     def get_random_base64_decoded_image(self) -> str:
-        """ get random base64 decoded image
+        """Get random base64 decoded image.
 
         :return: base64 decoded image
         :rtype: string
