@@ -101,6 +101,9 @@ jobs:
       data_with_action_metric_score:
         type: mltable
         path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
+      violated_metrics:
+        type: mltable
+        path: ${{parent.jobs.identify_problem_traffic.outputs.violated_metrics}}
     outputs:
       action_data:
         type: mltable

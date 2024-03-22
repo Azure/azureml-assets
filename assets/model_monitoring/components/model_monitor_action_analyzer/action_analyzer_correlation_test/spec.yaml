@@ -10,6 +10,9 @@ inputs:
   data_with_action_metric_score:
     type: mltable
     mode: direct
+  violated_metrics:
+    type: mltable
+    mode: direct
 outputs:
   action_data:
     type: mltable
@@ -39,8 +42,9 @@ conf:
 code: ../../src
 
 entry:
-  file: ./action_analyzer/action_analyzer_correlation_test/run.py
+  file: ./action_analyzer/action_analyzer_correlation_test/run2.py
 
 args: >-
   --data_with_action_metric_score ${{inputs.data_with_action_metric_score}}
+  --violated_metrics ${{inputs.violated_metrics}}
   --action_data ${{outputs.action_data}}
