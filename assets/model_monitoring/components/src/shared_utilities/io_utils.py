@@ -126,7 +126,7 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
             raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
 
 
-def _write_mltable_yaml(mltable_obj, dest_path, file_system = None):
+def _write_mltable_yaml(mltable_obj, dest_path, file_system=None):
     try:
         import os
         import uuid
@@ -159,7 +159,7 @@ def read_mltable_in_spark(mltable_path: str):
     return spark.read.mltable(mltable_path)
 
 
-def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system = None):
+def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
     """Save spark dataframe as mltable."""
     metrics_df.write.mode("overwrite").parquet(folder_path)
 

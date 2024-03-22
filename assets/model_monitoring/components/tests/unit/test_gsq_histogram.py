@@ -268,7 +268,7 @@ def get_test_path(root_path, name):
         path = os.path.join(root_path, name)
     else:
         path = os.path.abspath(os.path.join(os.getcwd(), name))
-    if(not os.path.exists(path)):
+    if (not os.path.exists(path)):
         os.mkdir(path)
     return path
 
@@ -300,9 +300,9 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     }
 
     for k, v in violations.items():
-        violations[k] = fuse_prefix + os.path.join(test_path, v)
+        violations[k] = fuse_prefix + get_test_path(test_path, v)
 
-    evaluation_path = fuse_prefix + os.path.join(test_path, EVALUATION)
+    evaluation_path = fuse_prefix + get_test_path(test_path, EVALUATION)
 
     apply_annotation(
         metric_names=metric_names,
