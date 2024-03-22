@@ -6,7 +6,7 @@ azure-identity~=1.12.0
 # assets/model_monitoring/components/src/model_data_collector_preprocessor/store_url.py
 azureml-core~=1.55.0
 fsspec~=2023.4.0
-azureml-fsspec~=1.0.0
+azureml-fsspec==1.2.0
 mltable~=1.5.0
 openai~=1.12.0
 pandas~=2.0.3
