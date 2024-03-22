@@ -111,7 +111,7 @@ class ImageMulticlassClassifier(TabularClassifier):
 
         if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
             y_pred = _convert_predictions(op_df)
-            labels = sorted([item["label"] for item in y_pred[0]])
+            labels = sorted(set([item["label"] for pred in y_pred for item in pred]))
             probs = [[0]*len(labels) for _ in range(len(y_pred))]
             for line_idx, pred in enumerate(y_pred):
                 for ele in pred:
@@ -186,7 +186,7 @@ class ImageMultilabelClassifier(TabularClassifier):
         op_df = super().predict(x_test, **kwargs)
         if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
             y_pred = _convert_predictions(op_df)
-            labels = sorted([item["label"] for item in y_pred[0]])
+            labels = sorted(set([item["label"] for pred in y_pred for item in pred]))
             pred_probs = [[0]*len(labels) for _ in range(len(y_pred))]
             for line_idx, pred in enumerate(y_pred):
                 for ele in pred:
