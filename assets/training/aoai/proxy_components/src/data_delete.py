@@ -71,7 +71,7 @@ class DeleteComponent:
 
 def main():
     """Delete train and validation data to AOAI."""
-    parser = argparse.ArgumentParser(description="Delte Component")
+    parser = argparse.ArgumentParser(description="Delete Component")
     parser.add_argument("--endpoint_name", type=str)
     parser.add_argument("--endpoint_resource_group", type=str)
     parser.add_argument("--endpoint_subscription", type=str)
