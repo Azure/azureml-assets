@@ -3,10 +3,8 @@
 
 """Exceptions util."""
 
-import os
 import time
 import logging
-import inspect
 from functools import wraps
 from typing import Callable, Any
 
@@ -15,7 +13,7 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml._common._error_response._error_response_constants import ErrorCodes
 
 from .error_definitions import BenchmarkSystemError
-from .logging import custom_dimensions, run_details, log_traceback
+from .logging import run_details, log_traceback
 from .constants import ROOT_RUN_PROPERTIES
 
 
