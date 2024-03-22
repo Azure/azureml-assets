@@ -13,10 +13,10 @@ from genai_token_statistics_compute_metrics.constants import (
     AVG_PROMPT_COUNT,
     AVG_COMPLETION_COUNT,
     MODEL_COMPLETION_COUNT,
-    COMPLETION_COUNT_KEY,
-    PROMPT_COUNT_KEY,
-    TOTAL_COUNT_KEY,
-    MODEL_KEY)
+    COMPLETION_COUNT_KEYS,
+    PROMPT_COUNT_KEYS,
+    TOTAL_COUNT_KEYS,
+    MODEL_KEYS)
 from pyspark.sql import DataFrame, Row
 from pyspark.sql.types import StructType, StringType, DoubleType, StructField
 from shared_utilities.span_tree_utils import SpanTreeNode, SpanTree
@@ -134,10 +134,10 @@ class MetricsProcessor:
         root_input (str): input from Flow.
         root_output (str): output from Flow.
         """
-        completion_count = attributes.get(COMPLETION_COUNT_KEY, 0)
-        prompt_count = attributes.get(PROMPT_COUNT_KEY, 0)
-        total_count = attributes.get(TOTAL_COUNT_KEY, 0)
-        model = attributes.get(MODEL_KEY, None)
+        completion_count = self.get_value_from_attributes(attributes, COMPLETION_COUNT_KEYS)
+        prompt_count = self.get_value_from_attributes(attributes, PROMPT_COUNT_KEYS)
+        total_count = self.get_value_from_attributes(attributes, TOTAL_COUNT_KEYS)
+        model = self.get_value_from_attributes(attributes, MODEL_KEYS)
         if model is not None:
             # TODO:Convert this calculation to pyspark logic.
             self.total_prompt_count += prompt_count
@@ -167,12 +167,16 @@ class MetricsProcessor:
                 "output": root_output
             })
 
+    def get_value_from_attributes(self, attributes, keys):
+        """Get usage values from attributes."""
+        for key in keys:
+            if key in attributes:
+                return attributes.get(key)
+        return 0
+
     def has_completion_count(self, span_type):
         """Check if model is completion type."""
-        if span_type == "LLM":
-            print("shreeya match")
-            return True
-        return False
+        return span_type == "LLM"
 
     def calculate_averages(self):
         """Calculate the averages per request."""
