@@ -126,7 +126,7 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
             raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
 
 
-def _write_mltable_yaml(mltable_obj, dest_path):
+def _write_mltable_yaml(mltable_obj, dest_path, file_system = None):
     try:
         import os
         import uuid
@@ -139,7 +139,7 @@ def _write_mltable_yaml(mltable_obj, dest_path):
         with open(source_path, "w") as yaml_file:
             yaml.dump(mltable_obj, yaml_file)
 
-        fs = AzureMachineLearningFileSystem(dest_path)
+        fs = file_system or AzureMachineLearningFileSystem(dest_path)
         fs.upload(
             lpath=source_path,
             rpath=dest_path,
@@ -159,7 +159,7 @@ def read_mltable_in_spark(mltable_path: str):
     return spark.read.mltable(mltable_path)
 
 
-def save_spark_df_as_mltable(metrics_df, folder_path: str):
+def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system = None):
     """Save spark dataframe as mltable."""
     metrics_df.write.mode("overwrite").parquet(folder_path)
 
@@ -173,7 +173,7 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str):
 
     retries = 0
     while True:
-        if _write_mltable_yaml(mltable_obj, folder_path):
+        if _write_mltable_yaml(mltable_obj, folder_path, file_system):
             break
         retries += 1
         if retries >= MAX_RETRY_COUNT:

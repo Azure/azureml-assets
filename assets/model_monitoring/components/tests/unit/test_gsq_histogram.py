@@ -185,7 +185,7 @@ class TestGSQHistogram:
         write_json_data(mltable_path_copy, json_data)
         call_apply_annotation(",".join(metric_names), mltable_path=mltable_path_copy)
         # assert that the passthrough columns are added to the output
-        test_path = get_test_path()
+        test_path = get_test_path(None, "test_output")
         eval_path = os.path.join(test_path, EVALUATION)
         evaluation_df = io_utils.try_read_mltable_in_spark_with_error(eval_path, EVALUATION)
         for col in [CORRELATION_ID, TRACE_ID, ROOT_SPAN]:
@@ -262,9 +262,15 @@ def get_mltable_path():
         "mltable_groundedness_preprocessed_target_small")
 
 
-def get_test_path():
+def get_test_path(root_path, name):
     """Get path to test output folder."""
-    return os.path.abspath(os.path.join(os.getcwd(), "test_output"))
+    if root_path:
+        path = os.path.join(root_path, name)
+    else:
+        path = os.path.abspath(os.path.join(os.getcwd(), name))
+    if(not os.path.exists(path)):
+        os.mkdir(path)
+    return path
 
 
 def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
@@ -275,10 +281,14 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     """Call apply_annotation method in GSQ component."""
     if mltable_path is None:
         mltable_path = get_mltable_path()
-    test_path = get_test_path()
+    test_path = get_test_path(None, "test_output")
     fuse_prefix = "file://"
-    histogram_path = fuse_prefix + os.path.join(test_path, "histogram")
-    samples_index_path = fuse_prefix + os.path.join(test_path, "samples_index")
+    histogram_path = get_test_path(test_path, "histogram")
+    sample_index_path = get_test_path(test_path, "samples_index")
+    histogram_file_path = fuse_prefix + histogram_path
+    samples_index_file_path = fuse_prefix + sample_index_path
+    import fsspec
+    fs = fsspec.filesystem("file")
     if threshold_args is None:
         threshold_args = {threshold: 5 for threshold in THRESHOLD_PARAMS}
     violations = {
@@ -297,7 +307,7 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     apply_annotation(
         metric_names=metric_names,
         production_dataset=mltable_path,
-        histogram=histogram_path,
+        histogram=histogram_file_path,
         model_deployment_name=GPT_4,
         workspace_connection_arm_id=TEST_CONNECTION,
         num_samples=1,
@@ -309,7 +319,8 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
         completion_column_name=completion_column_name,
         context_column_name=context_column_name,
         ground_truth_column_name=None,
-        samples_index=samples_index_path,
+        samples_index=samples_index_file_path,
         violations=violations,
-        evaluation=evaluation_path
+        evaluation=evaluation_path,
+        file_system=fs
     )

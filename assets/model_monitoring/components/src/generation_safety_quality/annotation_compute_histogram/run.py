@@ -473,7 +473,8 @@ def apply_annotation(
     ground_truth_column_name,
     samples_index,
     violations,
-    evaluation
+    evaluation,
+    file_system=None
 ):
     """Apply annotation to all samples in the production_dataset."""
     metric_names = process_metric_names(metric_names)
@@ -753,7 +754,7 @@ def apply_annotation(
                              .withColumnRenamed(COMPLETION, completion_column_name)
                              .withColumnRenamed(CONTEXT, context_column_name)
                              .withColumnRenamed(GROUND_TRUTH, ground_truth_column_name))
-            io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()])
+            io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()],file_system)
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
                                        GROUP_DIMENSION: "",
