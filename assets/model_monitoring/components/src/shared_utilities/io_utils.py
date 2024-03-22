@@ -4,9 +4,12 @@
 """This file contains utilities to read write data."""
 
 from enum import Enum
-import time
-import yaml
 import numpy as np
+import os
+import time
+import uuid
+import yaml
+from azureml.fsspec import AzureMachineLearningFileSystem
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType
 from .constants import MAX_RETRY_COUNT
@@ -128,10 +131,6 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
 
 def _write_mltable_yaml(mltable_obj, dest_path, file_system=None):
     try:
-        import os
-        import uuid
-        from azureml.fsspec import AzureMachineLearningFileSystem
-
         folder_name = str(uuid.uuid4())
         folder_path = os.path.join(os.getcwd(), folder_name)
         os.makedirs(folder_path)
@@ -144,7 +143,6 @@ def _write_mltable_yaml(mltable_obj, dest_path, file_system=None):
             lpath=source_path,
             rpath=dest_path,
             **{"overwrite": "MERGE_WITH_OVERWRITE"},
-            recursive=True,
         )
         return True
     except Exception as e:
