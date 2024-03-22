@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: translation_pipeline
-version: 0.0.39
+version: 0.0.40
 type: pipeline
 display_name: Translation Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for translation
@@ -728,6 +728,8 @@ jobs:
       batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.mlflow_model_folder}}'
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
+      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   compute_metrics:
     type: command
     component: azureml:compute_metrics:0.0.21
