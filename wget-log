@@ -1,6 +1,0 @@
---2024-02-19 05:36:23--  https://madhumaddihdon2456843134.blob.core.windows.net/azureml-blobstore-b4078513-81e3-4cc3-a3a7-158e26c41865/azureml/440b89f5-f2b4-4067-9d38-eb66bc840444/mlflow_model_folder/artifacts/grounding_dino_swin-t_pretrain_obj365_goldg_v3det_weights.pth?sv=2019-07-07
-Resolving madhumaddihdon2456843134.blob.core.windows.net (madhumaddihdon2456843134.blob.core.windows.net)... 20.60.59.69
-Connecting to madhumaddihdon2456843134.blob.core.windows.net (madhumaddihdon2456843134.blob.core.windows.net)|20.60.59.69|:443... connected.
-HTTP request sent, awaiting response... 409 Public access is not permitted on this storage account.
-2024-02-19 05:36:23 ERROR 409: Public access is not permitted on this storage account..
-
