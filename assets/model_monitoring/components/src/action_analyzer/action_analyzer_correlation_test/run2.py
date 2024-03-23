@@ -4,6 +4,7 @@
 """Entry script for Action Analyzer correlation test."""
 
 import argparse
+import json
 from scipy import stats
 from pyspark.sql.types import (
     StructType,
@@ -31,7 +32,8 @@ from shared_utilities.constants import (
     QUERY_INTENTION_COLUMN,
     TRACE_ID_LIST_COLUMN,
     GROUP_COLUMN,
-    PROPERTIES_COLUMN
+    PROPERTIES_COLUMN,
+    TRACE_ID_COLUMN
 )
 import statistics
 from scipy.stats import mannwhitneyu
