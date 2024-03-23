@@ -10,11 +10,12 @@ inputs:
   action_data:
     type: mltable
     mode: direct
+  violated_metrics:
+    type: mltable
+    mode: direct  
   data_with_action_metric_score:
     type: mltable
     mode: direct
-  signal_name:
-    type: string
   aml_deployment_id:
     type: string
 outputs:
@@ -47,11 +48,11 @@ conf:
 code: ../../src
 
 entry:
-  file: ./action_analyzer/action_analyzer_output_actions/run.py
+  file: ./action_analyzer/action_analyzer_output_actions/run2.py
 
 args: >-
   --action_data ${{inputs.action_data}}
+  --violated_metrics ${{inputs.violated_metrics}}
   --data_with_action_metric_score ${{inputs.data_with_action_metric_score}}
-  --signal_name ${{inputs.signal_name}}
   --aml_deployment_id ${{inputs.aml_deployment_id}}
   --action_output ${{outputs.action_output}}

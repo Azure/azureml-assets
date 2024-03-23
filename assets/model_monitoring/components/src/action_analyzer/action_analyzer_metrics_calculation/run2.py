@@ -37,7 +37,9 @@ from shared_utilities.constants import (
     GROUP_COLUMN,
     QUERY_INTENTION_COLUMN,
     RETRIEVAL_SPAN_TYPE,
-    ROOT_SPAN_COLUMN
+    ROOT_SPAN_COLUMN,
+    ROOT_PROMPT_COLUMN,
+    GSQ_METRICS_LIST
 )
 from shared_utilities.prompts import RELEVANCE_TEMPLATE
 from shared_utilities.io_utils import (
@@ -243,10 +245,13 @@ def parse_debugging_info(root_span):
 
 
 @udf(returnType=StringType())
-def get_properties(debugging_details):
+def get_properties(debugging_details, prompt, completion):
+    """Create properties for action metadata."""
     properties = {
         INDEX_ID_COLUMN: debugging_details[INDEX_ID_COLUMN],
         INDEX_CONTENT_COLUMN: debugging_details[INDEX_CONTENT_COLUMN],
+        ROOT_PROMPT_COLUMN: prompt,
+        COMPLETION_COLUMN: completion,
         PROMPT_COLUMN: debugging_details[PROMPT_COLUMN],
         CONTEXT_COLUMN: debugging_details[CONTEXT_COLUMN],
         INDEX_SCORE_COLUMN: debugging_details[INDEX_SCORE_COLUMN],
@@ -257,23 +262,36 @@ def get_properties(debugging_details):
 
 
 @udf(returnType=StringType())
-def get_unique_id(properties):
+def add_property(properties, key, value):
+    """Add property to properties."""
+    properties_dict = json.loads(properties)
+    properties_dict[key] = value
+    return json.dumps(properties_dict)
+
+
+@udf(returnType=StringType())
+def get_ttest_group_id(properties):
     return json.loads(properties).get(INDEX_ID_COLUMN, None)
 
 
 def parse_meta_data(df):
-    """Parse the meta data for calculating metrics score."""
+    """Parse the meta data for the action."""
     debugging_details = parse_debugging_info(col(ROOT_SPAN_COLUMN))
     if debugging_details is None:
         return df
     df = df.withColumn("debugging_info", debugging_details)
-
     df_exploded = df.withColumn("debugging_details", explode("debugging_info")).drop("debugging_info")
+    properties = get_properties(col("debugging_details"), col(PROMPT_COLUMN), col(COMPLETION_COLUMN))
+    df_with_properties = df_exploded.withColumn(PROPERTIES_COLUMN, properties).drop("debugging_details")
+    df_with_metadata = df_with_properties.withColumn(TTEST_GROUP_ID_COLUMN, get_ttest_group_id(col(PROPERTIES_COLUMN)))
 
-    df_with_properties = df_exploded.withColumn(PROPERTIES_COLUMN,
-                                                get_properties(col("debugging_details"))).drop("debugging_details")
-    df_with_id = df_with_properties.withColumn(TTEST_GROUP_ID_COLUMN, get_unique_id(col(PROPERTIES_COLUMN)))
-    return df_with_id
+    # Add all available GSQ metrics score and rootspan to properties
+    columms = df_with_metadata.schema.names
+    for metrics in GSQ_METRICS_LIST:
+        if metrics in columms:
+            df_with_metadata = df_with_metadata.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN), lit(metrics), col(metrics)))
+    df_with_metadata = df_with_metadata.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN), lit(ROOT_SPAN_COLUMN), col(ROOT_SPAN_COLUMN)))
+    return df_with_metadata
 
 
 @udf(FloatType())
