@@ -418,7 +418,7 @@ jobs:
     type: if_else
     true_block: ${{parent.jobs.image_instance_segmentation_runtime_component}}
     condition: ${{parent.jobs.framework_selector.outputs.output}}
-    false_block: ${{parent.jobs.mm_detection_model_import}}
+    false_block: ${{parent.jobs.finetune_common_validation}}
 
   output_selector:
     type: command

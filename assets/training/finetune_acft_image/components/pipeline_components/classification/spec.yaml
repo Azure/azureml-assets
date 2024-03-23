@@ -366,7 +366,7 @@ jobs:
     type: if_else
     true_block: ${{parent.jobs.image_classification_runtime_component}}
     condition: ${{parent.jobs.framework_selector.outputs.output}}
-    false_block: ${{parent.jobs.hugging_face_model_import}}
+    false_block: ${{parent.jobs.finetune_common_validation}}
 
   output_selector:
     type: command
