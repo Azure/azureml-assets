@@ -119,10 +119,12 @@ jobs:
       action_data:
         type: mltable
         path: ${{parent.jobs.correlation_test.outputs.action_data}}
+      violated_metrics:
+        type: mltable
+        path: ${{parent.jobs.identify_problem_traffic.outputs.violated_metrics}}
       data_with_action_metric_score:
         type: mltable
         path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
-      signal_name: ${{parent.inputs.signal_name}}
       aml_deployment_id: ${{parent.inputs.aml_deployment_id}}
     outputs:
       action_output:
