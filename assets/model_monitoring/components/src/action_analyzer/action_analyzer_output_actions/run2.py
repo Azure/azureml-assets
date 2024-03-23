@@ -8,7 +8,7 @@ from pyspark.sql.types import (
     StringType,
     BooleanType
 )
-from pyspark.sql.functions import collect_set, col, udf, mean, first
+from pyspark.sql.functions import collect_set, col, udf, mean, first, lit
 from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder, create_spark_df
 import os
 import json
@@ -44,9 +44,18 @@ from shared_utilities.constants import (
     DEFAULT_TOPIC_NAME,
     ACTION_QUERY_INTENTION_COLUMN,
     ACTION_ANALYZER_ACTION_TAG,
-    PROPERTIES_COLUMN
+    PROPERTIES_COLUMN,
+    TRACE_ID_COLUMN,
+    ACTION_METRICS_COLUMN,
+    ROOT_PROMPT_COLUMN
 )
 
+from pyspark.sql.types import (
+    StructType,
+    StructField,
+    StringType,
+    FloatType
+)
 
 def get_unique_values_by_column(df, column):
     """Get the unique set for a given column."""
@@ -158,14 +167,6 @@ def write_to_file(payload: dict, local_output_directory: str, file_name: str):
         f.write(json.dumps(payload, indent=4, default=np_encoder))
 
 
-def get_unique_values_by_column(df, column):
-    """Get the unique set for a given column."""
-    unique_values = set()
-    for data_row in df.collect():
-        unique_values.add(data_row[column])
-    return unique_values
-
-
 def merge_actions(action_df):
     """Merge actions with same t-test group id. Set the query intention using the group with most bad queries."""
     ttest_group_ids = get_unique_values_by_column(action_df, TTEST_GROUP_ID_COLUMN)
@@ -257,6 +258,7 @@ def run():
 
     # add action analyzer tag when action generated
     add_action_analyzer_tag()
+
 
 if __name__ == "__main__":
     run()
