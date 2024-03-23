@@ -4,11 +4,7 @@
 """Entry script for Action Analyzer output actions."""
 
 import argparse
-from pyspark.sql.types import (
-    StringType,
-    BooleanType
-)
-from pyspark.sql.functions import collect_set, col, udf, mean, first, lit
+from pyspark.sql.functions import collect_set, col, first, lit
 from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder, create_spark_df
 import os
 import json
@@ -18,20 +14,12 @@ import copy
 from mlflow import MlflowClient
 from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.constants import (
-    INDEX_ID_COLUMN,
     INDEX_CONTENT_COLUMN,
-    INDEX_SCORE_LLM_COLUMN,
     INDEX_ACTION_TYPE,
     ACTION_DESCRIPTION,
-    TEXT_SPLITTER,
     MAX_SAMPLE_SIZE,
-    BAD_GROUP_COLUMN,
-    GOOD_GROUP_COLUMN,
     CONFIDENCE_SCORE_COLUMN,
-    GROUP_LIST_COLUMN,
-    TOPIC_LIST_COLUMN,
     VIOLATED_METRICS_COLUMN,
-    ROOT_QUESTION_COLUMN,
     COMPLETION_COLUMN,
     ROOT_SPAN_COLUMN,
     ACTION_ID_COLUMN,
@@ -49,13 +37,13 @@ from shared_utilities.constants import (
     ACTION_METRICS_COLUMN,
     ROOT_PROMPT_COLUMN
 )
-
 from pyspark.sql.types import (
     StructType,
     StructField,
     StringType,
     FloatType
 )
+
 
 def get_unique_values_by_column(df, column):
     """Get the unique set for a given column."""
@@ -80,23 +68,23 @@ def write_actions(action_bad_group_df, action_good_group_df, violated_metrics, a
         action_bad_df = action_bad_group_df.filter(col(ACTION_ID_COLUMN) == action_id) \
                                            .groupby(TRACE_ID_COLUMN) \
                                            .agg(collect_set(GROUP_COLUMN).alias(GROUP_COLUMN),
-                                                 first(TTEST_GROUP_ID_COLUMN).alias(TTEST_GROUP_ID_COLUMN),
-                                                 first(QUERY_INTENTION_COLUMN).alias(QUERY_INTENTION_COLUMN),
-                                                 first(ACTION_METRICS_COLUMN).alias(ACTION_METRICS_COLUMN),
-                                                 first(PROPERTIES_COLUMN).alias(PROPERTIES_COLUMN),
-                                                 first(ACTION_ID_COLUMN).alias(ACTION_ID_COLUMN),
-                                                 first(ACTION_QUERY_INTENTION_COLUMN).alias(ACTION_QUERY_INTENTION_COLUMN),
-                                                 first(CONFIDENCE_SCORE_COLUMN).alias(CONFIDENCE_SCORE_COLUMN))
+                                                first(TTEST_GROUP_ID_COLUMN).alias(TTEST_GROUP_ID_COLUMN),
+                                                first(QUERY_INTENTION_COLUMN).alias(QUERY_INTENTION_COLUMN),
+                                                first(ACTION_METRICS_COLUMN).alias(ACTION_METRICS_COLUMN),
+                                                first(PROPERTIES_COLUMN).alias(PROPERTIES_COLUMN),
+                                                first(ACTION_ID_COLUMN).alias(ACTION_ID_COLUMN),
+                                                first(ACTION_QUERY_INTENTION_COLUMN).alias(ACTION_QUERY_INTENTION_COLUMN),
+                                                first(CONFIDENCE_SCORE_COLUMN).alias(CONFIDENCE_SCORE_COLUMN))
         action_good_df = action_good_group_df.filter(col(ACTION_ID_COLUMN) == action_id) \
-                                            .groupby(TRACE_ID_COLUMN) \
-                                                .agg(collect_set(GROUP_COLUMN).alias(GROUP_COLUMN),
-                                                    first(TTEST_GROUP_ID_COLUMN).alias(TTEST_GROUP_ID_COLUMN),
-                                                    first(QUERY_INTENTION_COLUMN).alias(QUERY_INTENTION_COLUMN),
-                                                    first(ACTION_METRICS_COLUMN).alias(ACTION_METRICS_COLUMN),
-                                                    first(PROPERTIES_COLUMN).alias(PROPERTIES_COLUMN),
-                                                    first(ACTION_ID_COLUMN).alias(ACTION_ID_COLUMN),
-                                                    first(ACTION_QUERY_INTENTION_COLUMN).alias(ACTION_QUERY_INTENTION_COLUMN),
-                                                    first(CONFIDENCE_SCORE_COLUMN).alias(CONFIDENCE_SCORE_COLUMN))
+                                             .groupby(TRACE_ID_COLUMN) \
+                                             .agg(collect_set(GROUP_COLUMN).alias(GROUP_COLUMN),
+                                                  first(TTEST_GROUP_ID_COLUMN).alias(TTEST_GROUP_ID_COLUMN),
+                                                  first(QUERY_INTENTION_COLUMN).alias(QUERY_INTENTION_COLUMN),
+                                                  first(ACTION_METRICS_COLUMN).alias(ACTION_METRICS_COLUMN),
+                                                  first(PROPERTIES_COLUMN).alias(PROPERTIES_COLUMN),
+                                                  first(ACTION_ID_COLUMN).alias(ACTION_ID_COLUMN),
+                                                  first(ACTION_QUERY_INTENTION_COLUMN).alias(ACTION_QUERY_INTENTION_COLUMN),
+                                                  first(CONFIDENCE_SCORE_COLUMN).alias(CONFIDENCE_SCORE_COLUMN))
 
         row = action_bad_df.filter(col(ACTION_ID_COLUMN) == action_id).collect()[0]
         index_id = row[TTEST_GROUP_ID_COLUMN]
