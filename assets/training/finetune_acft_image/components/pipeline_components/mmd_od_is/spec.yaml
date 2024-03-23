@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.12
+version: 0.0.13
 name: mmdetection_image_objectdetection_instancesegmentation_pipeline
 display_name: Image Object Detection and Instance Segmentation MMDetection Pipeline
 description: Pipeline component for image object detection and instance segmentation using MMDetection models.
@@ -414,6 +414,7 @@ jobs:
       evaluation_config: ${{parent.inputs.evaluation_config}}
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
       task_specific_extra_params: '"model_family=${{parent.inputs.model_family}};model_name=${{parent.inputs.model_name}};metric_for_best_model=${{parent.inputs.metric_for_best_model}};number_of_epochs=${{parent.inputs.number_of_epochs}}"'
+
   image_od_is_model_import:
     type: command
     component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.12
@@ -425,6 +426,7 @@ jobs:
       mlflow_model: ${{parent.inputs.mlflow_model}}
       download_from_source: ${{parent.inputs.download_from_source}}
       validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
+
   image_od_is_finetune:
     type: command
     component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.12
@@ -480,9 +482,10 @@ jobs:
     outputs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
+
   model_prediction:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.22
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.23
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
@@ -494,9 +497,10 @@ jobs:
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
       test_data: '${{parent.inputs.test_data}}'
       mlflow_model: '${{parent.jobs.image_od_is_finetune.outputs.mlflow_model_folder}}'
+
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.22
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.23
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'

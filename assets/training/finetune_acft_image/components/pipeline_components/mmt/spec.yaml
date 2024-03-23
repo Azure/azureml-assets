@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.5
+version: 0.0.6
 name: mmtracking_video_multi_object_tracking_pipeline
 display_name: Video Multi-Object Tracking MMTracking Pipeline
 description: Pipeline component for multi-object tracking using MMTracking models.
@@ -15,7 +15,7 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: Compute to be used for model_selector eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'.
+    description: Compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'.
 
   compute_finetune:
     type: string
@@ -324,7 +324,8 @@ jobs:
       task_name: ${{parent.inputs.task_name}}
       user_column_names: image_url, label
       task_specific_extra_params: '"model_family=${{parent.inputs.model_family}};model_name=${{parent.inputs.model_name}};metric_for_best_model=${{parent.inputs.metric_for_best_model}};number_of_epochs=${{parent.inputs.number_of_epochs}}"'
-  model_selector:
+
+  model_import:
     type: command
     component: azureml:mmtracking_video_multi_object_tracking_model_import:0.0.4
     compute: ${{parent.inputs.compute_model_import}}
@@ -335,6 +336,7 @@ jobs:
       mlflow_model: ${{parent.inputs.mlflow_model}}
       download_from_source: ${{parent.inputs.download_from_source}}
       validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
+
   finetune:
     type: command
     component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.4
@@ -343,7 +345,7 @@ jobs:
       shm_size: '16g'
     inputs:
       # Model path is same as what is output of model selector
-      model_path: ${{parent.jobs.model_selector.outputs.output_dir}}
+      model_path: ${{parent.jobs.model_import.outputs.output_dir}}
       training_data: ${{parent.inputs.training_data}}
       validation_data: ${{parent.inputs.validation_data}}
       image_width: ${{parent.inputs.image_width}}
