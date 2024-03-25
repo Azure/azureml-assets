@@ -11,7 +11,7 @@ from pyspark.sql.types import (
     StructField,
     StringType
 )
-from shared_utilities.constants import (
+from action_analyzer.constants import (
     GSQ_METRICS_LIST,
     METRICS_VIOLATION_THRESHOLD,
     PROMPT_COLUMN,
@@ -26,7 +26,7 @@ from shared_utilities.constants import (
     GOOD_GROUP_NAME,
     BAD_GROUP_NAME
 )
-from shared_utilities.prompts import BERTOPIC_DEFAULT_PROMPT
+from action_analyzer.prompts import BERTOPIC_DEFAULT_PROMPT
 from model_data_collector_preprocessor.store_url import StoreUrl
 
 from shared_utilities.io_utils import (
@@ -199,34 +199,43 @@ def run():
     # +--------+------+----------+---------+-------+------------------------+-----+---------------+
     # |trace_id|prompt|completion|Coherence|Fluency|...(other metrics score)|group|query_intention|
     # +--------+------+----------+---------+-------+------------------------+-----+---------------+
-    df = signal_scored_data_df.withColumn(GROUP_COLUMN, lit("")).withColumn(QUERY_INTENTION_COLUMN, lit("")).drop(ROOT_SPAN_COLUMN)
+    df = signal_scored_data_df.withColumn(GROUP_COLUMN, lit(""))
+                              .withColumn(QUERY_INTENTION_COLUMN, lit(""))
+                              .drop(ROOT_SPAN_COLUMN)
 
     for metrics in violated_metrics:
         print("======Current metrics=====")
         print(metrics)
         score_name = metrics
 
-        # Get the good and bad queries. Sample the good query in case the good query number is too large.
+        # Get the good and bad queries. 
+        # Sample the good queries as same number of bad queires in case the good query number is too large.
         df_good = df.filter(col(score_name) == GOOD_METRICS_VALUE)
         df_bad = df.filter(col(score_name) < METRICS_VIOLATION_THRESHOLD)
         df_good = df_good.orderBy(rand()).limit(df_bad.count())
         print(f"Sample size for current metrics: {df_bad.count()}")
 
-        # assign good and bad group
+        # assign the query group (good or bad).
         good_group = GOOD_GROUP_NAME.replace("{metrics}", metrics)
         bad_group = BAD_GROUP_NAME.replace("{metrics}", metrics)
         df_good = df_good.withColumn(GROUP_COLUMN, lit(good_group))
         df_bad = df_bad.withColumn(GROUP_COLUMN, lit(bad_group))
 
-        # Add query intention for good and bad group
-        df_good = add_query_intention(df_good, args.workspace_connection_arm_id, args.model_deployment_name, args.llm_summary_enabled)
-        df_bad = add_query_intention(df_bad, args.workspace_connection_arm_id, args.model_deployment_name, args.llm_summary_enabled)
+        # Add query intention for good and bad groups.
+        df_good = add_query_intention(df_good,
+                                      args.workspace_connection_arm_id,
+                                      args.model_deployment_name,
+                                      args.llm_summary_enabled)
+        df_bad = add_query_intention(df_bad,
+                                     args.workspace_connection_arm_id,
+                                     args.model_deployment_name,
+                                     args.llm_summary_enabled)
 
         print("bad df")
         df_bad.show()
         print("good df")
         df_good.show()
-        # append to output df
+        # append to output dataframe
         df_good = df_good.select(TRACE_ID_COLUMN, GROUP_COLUMN, QUERY_INTENTION_COLUMN)
         df_bad = df_bad.select(TRACE_ID_COLUMN, GROUP_COLUMN, QUERY_INTENTION_COLUMN)
         data_with_groups_df = data_with_groups_df.union(df_good).union(df_bad)
