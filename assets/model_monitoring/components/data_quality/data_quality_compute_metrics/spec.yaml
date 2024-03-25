@@ -4,7 +4,7 @@ type: spark
 name: data_quality_compute_metrics
 display_name:  Data Quality - Compute Metrics
 description: Compute data quality metrics leveraged by the data quality monitor.
-version: 0.3.15
+version: 0.3.16
 is_deterministic: true
 
 inputs:
@@ -38,6 +38,7 @@ code: ../../src/
 entry:
   file: ./data_quality_compute_metrics/run.py
 conf:
+  spark.aml.internal.system.job: True
   spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 4
   spark.driver.memory: 28g

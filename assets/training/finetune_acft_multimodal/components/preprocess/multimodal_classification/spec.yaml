@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.1
+version: 0.0.2
 name: multimodal_classification_datapreprocessing
 display_name: Multimodal Classification Data Preprocessing
 description: Component to preprocess data for multimodal classification task
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/acft-multimodal-gpu/versions/2
+environment: azureml://registries/azureml/environments/acft-multimodal-gpu/versions/15
 
 code: ../../../src/preprocess
 

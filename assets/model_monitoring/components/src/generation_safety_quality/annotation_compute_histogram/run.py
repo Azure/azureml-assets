@@ -473,7 +473,8 @@ def apply_annotation(
     ground_truth_column_name,
     samples_index,
     violations,
-    evaluation
+    evaluation,
+    file_system=None
 ):
     """Apply annotation to all samples in the production_dataset."""
     metric_names = process_metric_names(metric_names)
@@ -753,7 +754,7 @@ def apply_annotation(
                              .withColumnRenamed(GSQ_COMPLETION_COLUMN, completion_column_name)
                              .withColumnRenamed(GSQ_CONTEXT_COLUMN, context_column_name)
                              .withColumnRenamed(GSQ_GROUND_TRUTH_COLUMN, ground_truth_column_name))
-            io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()])
+            io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()], file_system)
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
                                        GROUP_DIMENSION: "",
@@ -795,15 +796,16 @@ def apply_annotation(
     samples_df = spark.createDataFrame(samples_index_rows, metadata_schema)
 
     # Save the samples and annotations dataframes as output
-    io_utils.save_spark_df_as_mltable(annotations_df, evaluation)
-    io_utils.save_spark_df_as_mltable(samples_df, samples_index)
+    io_utils.save_spark_df_as_mltable(annotations_df, evaluation, file_system)
+    io_utils.save_spark_df_as_mltable(samples_df, samples_index, file_system)
 
     # temporary workaround for pandas>2.0 until pyspark upgraded to 3.4.1, see issue:
     # https://stackoverflow.com/questions/76404811/attributeerror-dataframe-object-has-no-attribute-iteritems
     pd.DataFrame.iteritems = pd.DataFrame.items
     io_utils.save_spark_df_as_mltable(
         spark.createDataFrame(all_metrics_pdf),
-        histogram)
+        histogram,
+        file_system)
 
 
 if __name__ == "__main__":

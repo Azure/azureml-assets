@@ -163,7 +163,7 @@ class StoreUrl:
             return self._read_local_file_content(relative_path)
 
         container_client = self.get_container_client(credential)
-        full_path = f"{self.path}/{relative_path}" if relative_path else self.path
+        full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
         if isinstance(container_client, FileSystemClient):
             with container_client.get_file_client(full_path) as file_client:
                 return file_client.download_file().readall().decode()
@@ -171,11 +171,43 @@ class StoreUrl:
             with container_client.get_blob_client(full_path) as blob_client:
                 return blob_client.download_blob().readall().decode()
 
+    def write_file(self, file_content: Union[str, bytes], relative_path: str = None, overwrite: bool = False,
+                   credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None) -> dict:
+        """Upload file to the store."""
+        if self.is_local_path():
+            return {"bytes_written": self._write_local_file(file_content, relative_path)}
+
+        container_client = self.get_container_client(credential)
+        full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
+        if isinstance(container_client, FileSystemClient):
+            with container_client.get_file_client(full_path) as file_client:
+                return file_client.upload_data(file_content, overwrite)
+        else:
+            with container_client.get_blob_client(full_path) as blob_client:
+                return blob_client.upload_blob(file_content, overwrite=overwrite)
+
+    @staticmethod
+    def _normalize_local_path(local_path: str) -> str:
+        """Normalize local path."""
+        return local_path[7:] if local_path.startswith("file://") else local_path
+
     def _read_local_file_content(self, relative_path: str = None) -> str:
         """Read file content from local path."""
-        full_path = os.path.join(self._base_url, relative_path) if relative_path else self._base_url
+        base_url = StoreUrl._normalize_local_path(self._base_url)
+        full_path = os.path.join(base_url, relative_path) if relative_path else base_url
         with open(full_path) as f:
             return f.read()
+
+    def _write_local_file(self, file_content: Union[str, bytes], relative_path: str = None) -> int:
+        """Write file to local path."""
+        base_url = StoreUrl._normalize_local_path(self._base_url)
+        full_path = os.path.join(base_url, relative_path) if relative_path else base_url
+        # create folder if it does not exist
+        dir_path = os.path.dirname(full_path)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        with open(full_path, "w" if isinstance(file_content, str) else "wb") as f:
+            return f.write(file_content)
 
     def _is_local_folder_exists(self, relative_path: str = None) -> bool:
         full_path = os.path.join(self._base_url, relative_path) if relative_path else self._base_url
