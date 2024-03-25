@@ -31,6 +31,7 @@ from shared_utilities.constants import (
     GSQ_PROMPT_COLUMN,
     GSQ_COMPLETION_COLUMN,
     GSQ_CONTEXT_COLUMN,
+    GSQ_RATING_COLUMN
     GSQ_GROUND_TRUTH_COLUMN,
     MDC_CORRELATION_ID_COLUMN,
 )
@@ -729,15 +730,15 @@ def apply_annotation(
         metrics_df = filtered_annotations_df.groupBy(metric_name_compact).count()
         metrics_df.show()
         print("Finished annotating answers.")
-        metrics_pdf = metrics_df.withColumnRenamed(metric_name_compact, RATING).select("*").toPandas()
+        metrics_pdf = metrics_df.withColumnRenamed(metric_name_compact, GSQ_RATING_COLUMN).select("*").toPandas()
         print(metrics_pdf)
         ratings = metrics_pdf.rating.to_list()
         missing_ratings = set(range(MIN_RATING, MAX_RATING + 1)) - set(ratings)
         for r in missing_ratings:
-            metrics_pdf.loc[len(metrics_pdf)] = {RATING: r, COUNT: 0}
-        metrics_pdf[RATING] = metrics_pdf[RATING].map(lambda r: str(r))
+            metrics_pdf.loc[len(metrics_pdf)] = {GSQ_RATING_COLUMN: r, COUNT: 0}
+        metrics_pdf[GSQ_RATING_COLUMN] = metrics_pdf[GSQ_RATING_COLUMN].map(lambda r: str(r))
         # add metric_name, metric_value, group, and threshold values
-        metrics_pdf.rename(columns={RATING: GROUP, COUNT: METRIC_VALUE, }, inplace=True)
+        metrics_pdf.rename(columns={GSQ_RATING_COLUMN: GROUP, COUNT: METRIC_VALUE, }, inplace=True)
         metrics_pdf[METRIC_NAME] = f"Acceptable{metric_name_compact}ScorePerInstance"
         metric_threshold_value = str(threshold_args[f"{metric_name_compact.lower()}_rating_threshold"])
         metrics_pdf[THRESHOLD] = metric_threshold_value
