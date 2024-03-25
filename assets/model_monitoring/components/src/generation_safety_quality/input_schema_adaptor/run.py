@@ -4,8 +4,10 @@
 """Entry script for GSQ Input Schema Adaptor Spark Component."""
 
 import argparse
+import operator
 import json
 
+from functools import reduce
 from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
 from pyspark.sql import DataFrame, Row
 from pyspark.sql.types import StructType, StructField, StringType
@@ -33,6 +35,7 @@ def expand_json_to_gsq_schema(row, gsq_columns: list, passthrough_columns: list)
     output_json_data = json.loads(row.output)
     print(f"input: {input_json_data}")
     print(f"output: {output_json_data}")
+    combined_dict = {"input": input_json_data, "output": output_json_data}
     output_dict = {}
     # passthrough-columns
     for col in passthrough_columns:
@@ -41,12 +44,7 @@ def expand_json_to_gsq_schema(row, gsq_columns: list, passthrough_columns: list)
 
     for col in gsq_columns:
         col: str
-        if col in input_json_data:
-            output_dict[col] = input_json_data[col]
-        elif col in output_json_data:
-            output_dict[col] = output_json_data[col]
-        else:
-            output_dict[col] = None
+        output_dict[col] = reduce(operator.getitem, col.split('.'), combined_dict)
     return [Row(**output_dict)]
 
 
