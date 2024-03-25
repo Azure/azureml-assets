@@ -21,10 +21,10 @@ from generation_safety_quality.annotation_compute_histogram.run import (
     TEST_CONNECTION,
     THRESHOLD_PARAMS,
     ALL_METRIC_NAMES,
-    PROMPT,
-    CORRELATION_ID,
-    TRACE_ID,
-    ROOT_SPAN)
+    GSQ_PROMPT_COLUMN,
+    MDC_CORRELATION_ID_COLUMN,
+    GENAI_TRACE_ID_SCHEMA_COLUMN,
+    GENAI_ROOT_SPAN_SCHEMA_COLUMN)
 from shared_utilities import io_utils
 from shared_utilities.momo_exceptions import (
     DataNotFoundError, InvalidInputError)
@@ -140,11 +140,11 @@ class TestGSQHistogram:
         # modify the file data.jsonl in folder to have same column name as in file
         with open(os.path.join(mltable_path_copy, "data.jsonl"), "r", encoding="utf8") as file:
             data = file.read()
-        data = data.replace(f'"{QUESTION}":', f'"{PROMPT}":')
+        data = data.replace(f'"{QUESTION}":', f'"{GSQ_PROMPT_COLUMN}":')
         with open(os.path.join(mltable_path_copy, "data.jsonl"), "w", encoding="utf8") as file:
             file.write(data)
         call_apply_annotation(
-            ",".join(metric_names), prompt_column_name=PROMPT, mltable_path=mltable_path_copy)
+            ",".join(metric_names), prompt_column_name=GSQ_PROMPT_COLUMN, mltable_path=mltable_path_copy)
         # remove test folder
         shutil.rmtree(mltable_path_copy)
 
@@ -160,10 +160,10 @@ class TestGSQHistogram:
         # modify the file data.jsonl in folder to have same column name as in file
         json_data = read_json_data(mltable_path_copy)
         for row in json_data:
-            row[PROMPT] = row[QUESTION]
+            row[GSQ_PROMPT_COLUMN] = row[QUESTION]
         write_json_data(mltable_path_copy, json_data)
         call_apply_annotation(
-            ",".join(metric_names), prompt_column_name=PROMPT, mltable_path=mltable_path_copy)
+            ",".join(metric_names), prompt_column_name=GSQ_PROMPT_COLUMN, mltable_path=mltable_path_copy)
         # remove test folder
         shutil.rmtree(mltable_path_copy)
 
@@ -179,16 +179,16 @@ class TestGSQHistogram:
         # modify the file data.jsonl in folder to have additional columns added
         json_data = read_json_data(mltable_path_copy)
         for row in json_data:
-            row[CORRELATION_ID] = str(uuid.uuid4())
-            row[TRACE_ID] = str(uuid.uuid4())
-            row[ROOT_SPAN] = 'dummy rootspan'
+            row[MDC_CORRELATION_ID_COLUMN] = str(uuid.uuid4())
+            row[GENAI_TRACE_ID_SCHEMA_COLUMN] = str(uuid.uuid4())
+            row[GENAI_ROOT_SPAN_SCHEMA_COLUMN] = 'dummy rootspan'
         write_json_data(mltable_path_copy, json_data)
         call_apply_annotation(",".join(metric_names), mltable_path=mltable_path_copy)
         # assert that the passthrough columns are added to the output
         test_path = get_test_path(None, "test_output")
         eval_path = os.path.join(test_path, EVALUATION)
         evaluation_df = io_utils.try_read_mltable_in_spark_with_error(eval_path, EVALUATION)
-        for col in [CORRELATION_ID, TRACE_ID, ROOT_SPAN]:
+        for col in [MDC_CORRELATION_ID_COLUMN, GENAI_TRACE_ID_SCHEMA_COLUMN, GENAI_ROOT_SPAN_SCHEMA_COLUMN]:
             assert col in evaluation_df.columns
         # remove test folder
         shutil.rmtree(mltable_path_copy)
