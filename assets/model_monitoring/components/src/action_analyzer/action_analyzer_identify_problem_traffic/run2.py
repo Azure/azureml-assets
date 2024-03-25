@@ -208,7 +208,7 @@ def run():
         print(metrics)
         score_name = metrics
 
-        # Get the good and bad queries. 
+        # Get the good and bad queries.
         # Sample the good queries as same number of bad queires in case the good query number is too large.
         df_good = df.filter(col(score_name) == GOOD_METRICS_VALUE)
         df_bad = df.filter(col(score_name) < METRICS_VIOLATION_THRESHOLD)
