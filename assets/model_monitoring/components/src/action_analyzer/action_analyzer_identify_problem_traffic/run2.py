@@ -140,6 +140,7 @@ def get_violated_metrics(signal_out_url, signal_name):
 
 
 def add_query_intention(df, workspace_connection_arm_id, model_deployment_name, llm_summary_enabled):
+    """Add query intention for each query."""
     if df.count() < GROUP_TOPIC_MIN_SAMPLE_SIZE:
         # Skip grouing if the sample size is too small
         print(f"Sample size {df.count()} is less than {GROUP_TOPIC_MIN_SAMPLE_SIZE}. Skip grouping and set default topic.")  # noqa
