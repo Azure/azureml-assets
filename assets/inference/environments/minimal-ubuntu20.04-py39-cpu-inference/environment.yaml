@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/minimal-ubuntu20.04-py39-cpu-inference
+  name: azureml/curated/minimal-py39-inference
   os: linux
   context:
     dir: context
