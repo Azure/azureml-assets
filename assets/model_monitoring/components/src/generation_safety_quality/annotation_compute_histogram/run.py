@@ -28,11 +28,11 @@ from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities.constants import (
     GENAI_ROOT_SPAN_SCHEMA_COLUMN,
     GENAI_TRACE_ID_SCHEMA_COLUMN,
+    GSQ_GROUND_TRUTH_COLUMN,
     GSQ_PROMPT_COLUMN,
     GSQ_COMPLETION_COLUMN,
     GSQ_CONTEXT_COLUMN,
-    GSQ_RATING_COLUMN
-    GSQ_GROUND_TRUTH_COLUMN,
+    GSQ_RATING_COLUMN,
     MDC_CORRELATION_ID_COLUMN,
 )
 
