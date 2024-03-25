@@ -19,7 +19,7 @@ from pyspark.sql.types import (
     ArrayType
 )
 from shared_utilities.span_tree_utils import SpanTree
-from shared_utilities.constants import (
+from action_analyzer.constants import (
     TEXT_SPLITTER,
     PROMPT_COLUMN,
     COMPLETION_COLUMN,
@@ -41,7 +41,7 @@ from shared_utilities.constants import (
     ROOT_PROMPT_COLUMN,
     GSQ_METRICS_LIST
 )
-from shared_utilities.prompts import RELEVANCE_TEMPLATE
+from action_analyzer.prompts import RELEVANCE_TEMPLATE
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     save_spark_df_as_mltable,
@@ -245,20 +245,17 @@ def parse_debugging_info(root_span):
 
 
 @udf(returnType=StringType())
-def get_properties(debugging_details, prompt, completion):
+def add_debugging_info_to_properties(properties, debugging_details):
     """Create properties for action metadata."""
-    properties = {
-        INDEX_ID_COLUMN: debugging_details[INDEX_ID_COLUMN],
-        INDEX_CONTENT_COLUMN: debugging_details[INDEX_CONTENT_COLUMN],
-        ROOT_PROMPT_COLUMN: prompt,
-        COMPLETION_COLUMN: completion,
-        PROMPT_COLUMN: debugging_details[PROMPT_COLUMN],
-        CONTEXT_COLUMN: debugging_details[CONTEXT_COLUMN],
-        INDEX_SCORE_COLUMN: debugging_details[INDEX_SCORE_COLUMN],
-        RETRIEVAL_QUERY_TYPE_COLUMN: debugging_details[RETRIEVAL_QUERY_TYPE_COLUMN],
-        RETRIEVAL_TOP_K_COLUMN: debugging_details[RETRIEVAL_TOP_K_COLUMN]
-    }
-    return json.dumps(properties)
+    properties_dict = json.loads(properties)
+    properties_dict[INDEX_ID_COLUMN] = debugging_details[INDEX_ID_COLUMN]
+    properties_dict[INDEX_CONTENT_COLUMN] = debugging_details[INDEX_CONTENT_COLUMN]
+    properties_dict[PROMPT_COLUMN] = debugging_details[PROMPT_COLUMN]
+    properties_dict[CONTEXT_COLUMN] = debugging_details[CONTEXT_COLUMN]
+    properties_dict[INDEX_SCORE_COLUMN] = debugging_details[INDEX_SCORE_COLUMN]
+    properties_dict[RETRIEVAL_QUERY_TYPE_COLUMN] = debugging_details[RETRIEVAL_QUERY_TYPE_COLUMN]
+    properties_dict[RETRIEVAL_TOP_K_COLUMN] = debugging_details[RETRIEVAL_TOP_K_COLUMN]
+    return json.dumps(properties_dict)
 
 
 @udf(returnType=StringType())
@@ -271,26 +268,36 @@ def add_property(properties, key, value):
 
 @udf(returnType=StringType())
 def get_ttest_group_id(properties):
-    return json.loads(properties).get(INDEX_ID_COLUMN, None)
+    """Get t-test group id. For index type action, the id is index asset id."""
+    return json.loads(properties).get(INDEX_ID_COLUMN, "default_id")
 
 
 def parse_meta_data(df):
     """Parse the meta data for the action."""
-    debugging_details = parse_debugging_info(col(ROOT_SPAN_COLUMN))
-    if debugging_details is None:
-        return df
-    df = df.withColumn("debugging_info", debugging_details)
-    df_exploded = df.withColumn("debugging_details", explode("debugging_info")).drop("debugging_info")
-    properties = get_properties(col("debugging_details"), col(PROMPT_COLUMN), col(COMPLETION_COLUMN))
-    df_with_properties = df_exploded.withColumn(PROPERTIES_COLUMN, properties).drop("debugging_details")
-    df_with_metadata = df_with_properties.withColumn(TTEST_GROUP_ID_COLUMN, get_ttest_group_id(col(PROPERTIES_COLUMN)))
-
     # Add all available GSQ metrics score and rootspan to properties
-    columms = df_with_metadata.schema.names
+    columms = df.schema.names
     for metrics in GSQ_METRICS_LIST:
         if metrics in columms:
-            df_with_metadata = df_with_metadata.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN), lit(metrics), col(metrics)))
-    df_with_metadata = df_with_metadata.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN), lit(ROOT_SPAN_COLUMN), col(ROOT_SPAN_COLUMN)))
+            df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN), lit(metrics), col(metrics)))
+    df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN),
+                                                       lit(ROOT_PROMPT_COLUMN),
+                                                       col(ROOT_PROMPT_COLUMN)))
+    df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN),
+                                                       lit(COMPLETION_COLUMN),
+                                                       col(COMPLETION_COLUMN)))
+    df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN),
+                                                       lit(ROOT_SPAN_COLUMN),
+                                                       col(ROOT_SPAN_COLUMN)))
+
+    # parse the debugging info
+    debugging_info = parse_debugging_info(col(ROOT_SPAN_COLUMN))
+    if debugging_info:
+        df = df.withColumn("debugging_info", debugging_info)
+        df_exploded = df.withColumn("debugging_details", explode("debugging_info")).drop("debugging_info")
+        properties = add_debugging_info_to_properties(col(PROPERTIES_COLUMN), col("debugging_details"))
+        df_with_debugging = df_exploded.withColumn(PROPERTIES_COLUMN, properties).drop("debugging_details")
+        df_with_metadata = df_with_debugging.withColumn(TTEST_GROUP_ID_COLUMN,
+                                                        get_ttest_group_id(col(PROPERTIES_COLUMN)))
     return df_with_metadata
 
 
@@ -337,21 +344,21 @@ def run():
     data_with_groups_df = try_read_mltable_in_spark(
         args.data_with_groups, "data_with_groups"
     )
-
     if not data_with_groups_df or data_with_groups_df.isEmpty():
         print("No input data found, creating an empty dataframe.")
         save_empty_dataframe(get_output_schema(), args.data_with_action_metric_score)
         return
 
     signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
-
     df = data_with_groups_df.join(signal_scored_data_df, [TRACE_ID_COLUMN], "inner")
+    df = df.withColumn(TTEST_GROUP_ID_COLUMN, lit("")).withColumn(PROPERTIES_COLUMN, lit(json.dumps("{}")))
 
-    # getting the metadata for metrics calculation
+    # getting the metadata for metrics calculation and output action.
     df = parse_meta_data(df)
     print("data with meta data")
     df.show()
-    # calculate the metrics score
+
+    # calculate the metrics score.
     metrics_score = get_action_metrics_score(col(COMPLETION_COLUMN),
                                              col(PROPERTIES_COLUMN),
                                              lit(args.workspace_connection_arm_id),
@@ -361,6 +368,8 @@ def run():
                                              lit(json.dumps(request_args)))
     data_with_action_metric_score_df = df.withColumn(ACTION_METRICS_COLUMN, metrics_score)
 
+    # output data with action metrics score.
+    print("data_with_action_metric_score")
     data_with_action_metric_score_df = data_with_action_metric_score_df.select(TRACE_ID_COLUMN,
                                                                                TTEST_GROUP_ID_COLUMN,
                                                                                GROUP_COLUMN,
@@ -371,7 +380,6 @@ def run():
     # +--------+--------------+-----+---------------+--------------+----------+
     # |trace_id|ttest_group_id|group|query_intention|action_metrics|properties|
     # +--------+--------------+-----+---------------+--------------+----------+
-    print("data_with_action_metric_score")
     data_with_action_metric_score_df.show()
     save_spark_df_as_mltable(data_with_action_metric_score_df, args.data_with_action_metric_score)
 

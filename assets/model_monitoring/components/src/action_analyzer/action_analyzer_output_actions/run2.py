@@ -13,13 +13,16 @@ import datetime
 import copy
 from mlflow import MlflowClient
 from shared_utilities.amlfs import amlfs_upload
-from shared_utilities.constants import (
+from action_analyzer.utils import (
+    get_unique_values_by_column,
+    get_violated_metrics
+)
+from action_analyzer.constants import (
     INDEX_CONTENT_COLUMN,
     INDEX_ACTION_TYPE,
     ACTION_DESCRIPTION,
     MAX_SAMPLE_SIZE,
     CONFIDENCE_SCORE_COLUMN,
-    VIOLATED_METRICS_COLUMN,
     COMPLETION_COLUMN,
     ROOT_SPAN_COLUMN,
     ACTION_ID_COLUMN,
@@ -45,25 +48,21 @@ from pyspark.sql.types import (
 )
 
 
-def get_unique_values_by_column(df, column):
-    """Get the unique set for a given column."""
-    unique_values = set()
-    for data_row in df.collect():
-        unique_values.add(data_row[column])
-    return unique_values
-
-
 def is_index_asset(index_id):
     """Check if index id is asset id."""
     return index_id.startswith("azureml://")
 
 
-def write_actions(action_bad_group_df, action_good_group_df, violated_metrics, action_output_folder, aml_deployment_id):
+def write_actions(action_bad_group_df,
+                  action_good_group_df,
+                  violated_metrics,
+                  action_output_folder,
+                  aml_deployment_id):
     """Write the action summary and action detail files."""
-    action_set = get_unique_values_by_column(action_bad_group_df, ACTION_ID_COLUMN)
+    action_ids = get_unique_values_by_column(action_bad_group_df, ACTION_ID_COLUMN)
     local_path = str(uuid.uuid4())
     action_summary = {}
-    for action_id in action_set:
+    for action_id in action_ids:
         # The same trace id will have multiple rows for different metrics, so do a groupby
         action_bad_df = action_bad_group_df.filter(col(ACTION_ID_COLUMN) == action_id) \
                                            .groupby(TRACE_ID_COLUMN) \
@@ -73,7 +72,7 @@ def write_actions(action_bad_group_df, action_good_group_df, violated_metrics, a
                                                 first(ACTION_METRICS_COLUMN).alias(ACTION_METRICS_COLUMN),
                                                 first(PROPERTIES_COLUMN).alias(PROPERTIES_COLUMN),
                                                 first(ACTION_ID_COLUMN).alias(ACTION_ID_COLUMN),
-                                                first(ACTION_QUERY_INTENTION_COLUMN).alias(ACTION_QUERY_INTENTION_COLUMN),
+                                                first(ACTION_QUERY_INTENTION_COLUMN).alias(ACTION_QUERY_INTENTION_COLUMN),  # noqa: E501
                                                 first(CONFIDENCE_SCORE_COLUMN).alias(CONFIDENCE_SCORE_COLUMN))
         action_good_df = action_good_group_df.filter(col(ACTION_ID_COLUMN) == action_id) \
                                              .groupby(TRACE_ID_COLUMN) \
@@ -83,7 +82,7 @@ def write_actions(action_bad_group_df, action_good_group_df, violated_metrics, a
                                                   first(ACTION_METRICS_COLUMN).alias(ACTION_METRICS_COLUMN),
                                                   first(PROPERTIES_COLUMN).alias(PROPERTIES_COLUMN),
                                                   first(ACTION_ID_COLUMN).alias(ACTION_ID_COLUMN),
-                                                  first(ACTION_QUERY_INTENTION_COLUMN).alias(ACTION_QUERY_INTENTION_COLUMN),
+                                                  first(ACTION_QUERY_INTENTION_COLUMN).alias(ACTION_QUERY_INTENTION_COLUMN),  # noqa: E501
                                                   first(CONFIDENCE_SCORE_COLUMN).alias(CONFIDENCE_SCORE_COLUMN))
 
         row = action_bad_df.filter(col(ACTION_ID_COLUMN) == action_id).collect()[0]
@@ -175,7 +174,9 @@ def merge_actions(action_df):
             if max_group_count < len(trace_id_list):
                 max_group_count = len(trace_id_list)
                 max_group_topic = data_row[QUERY_INTENTION_COLUMN]
-        action = [str(uuid.uuid4()), ttest_group_id, ",".join(trace_id_set), max_group_topic, float(confidence_score/df.count())]
+        action_id = str(uuid.uuid4())
+        action_confidence = float(confidence_score/df.count())
+        action = [action_id, ttest_group_id, ",".join(trace_id_set), max_group_topic, action_confidence]
         actions.append(action)
     
     schema = StructType(
@@ -212,7 +213,6 @@ def run():
     action_data_df = try_read_mltable_in_spark(
         args.action_data, "action_data"
     )
-
     if not action_data_df or action_data_df.isEmpty():
         print("Empty action data, create an empty folder.")
         return
@@ -220,22 +220,20 @@ def run():
     data_with_action_metric_score_df = try_read_mltable_in_spark(
         args.data_with_action_metric_score, "data_with_action_metric_score"
     )
+    violated_metrics = get_violated_metrics(args.violated_metrics)
 
-    violated_metrics_df = try_read_mltable_in_spark(
-        args.violated_metrics, "violated_metrics"
-    )
-    violated_metrics = violated_metrics_df.select(VIOLATED_METRICS_COLUMN).rdd.flatMap(lambda x: x).collect()
-
+    # Merge the actions.
     merged_action_df = merge_actions(action_data_df)
-    # join to get action metadata
+    # Join to get action metadata.
     action_df = data_with_action_metric_score_df.join(merged_action_df, [TTEST_GROUP_ID_COLUMN], "inner")
 
-    action_bad_group_df = action_df.filter(col(TRACE_ID_LIST_COLUMN).contains(col(TRACE_ID_COLUMN)) & col(GROUP_COLUMN).contains(lit("bad")))
-    print("bad group")
+    # Get bad and good samples and write action files
+    action_bad_group_df = action_df.filter(col(TRACE_ID_LIST_COLUMN).contains(col(TRACE_ID_COLUMN))
+                                           & col(GROUP_COLUMN).contains(lit("bad")))
+    print("bad sample df")
     action_bad_group_df.show()
-
     action_good_group_df = action_df.filter(~col(TRACE_ID_LIST_COLUMN).contains(col(TRACE_ID_COLUMN)))
-    print("good group")
+    print("good sample df")
     action_good_group_df.show()
 
     write_actions(action_bad_group_df,
