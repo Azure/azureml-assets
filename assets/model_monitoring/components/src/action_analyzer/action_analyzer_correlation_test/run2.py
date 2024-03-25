@@ -46,7 +46,6 @@ import numpy as np
 
 
 def _count_values(arr):
-    """Helper function for Fisher's Exact Test."""
     below_3 = np.sum(arr < 3)
     at_least_3 = np.sum(arr >= 3)
     return np.array([below_3, at_least_3])
@@ -149,7 +148,7 @@ def perform_correlation_test(good_group_df,
 
 
 def perform_ttest(good_answer_scores, bad_answer_scores):
-    """ Perform Mann-Whitney U test."""
+    """Perform Mann-Whitney U test."""
     t_stat, p_value = stats.ttest_ind(good_answer_scores, bad_answer_scores)
     print(f"Normal t-test T-statistic: {t_stat}, P-value: {p_value}")
     t_stat1, p_value1 = stats.ttest_ind(good_answer_scores, bad_answer_scores, equal_var=False)

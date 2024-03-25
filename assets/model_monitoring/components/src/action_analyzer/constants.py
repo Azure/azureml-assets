@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-# action analyzer constants
+"""This file contains constants for action analyzer."""
+
 PROMPT_COLUMN = "prompt"
 COMPLETION_COLUMN = "completion"
 CONTEXT_COLUMN = "context"
