@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/rinna-japanese-gpt-neox-3-6b/1702975447/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
