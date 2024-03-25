@@ -178,7 +178,7 @@ def merge_actions(action_df):
         action_confidence = float(confidence_score/df.count())
         action = [action_id, ttest_group_id, ",".join(trace_id_set), max_group_topic, action_confidence]
         actions.append(action)
-    
+
     schema = StructType(
         [
             StructField(ACTION_ID_COLUMN, StringType(), True),

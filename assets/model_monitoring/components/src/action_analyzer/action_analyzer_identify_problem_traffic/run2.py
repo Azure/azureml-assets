@@ -199,8 +199,8 @@ def run():
     # +--------+------+----------+---------+-------+------------------------+-----+---------------+
     # |trace_id|prompt|completion|Coherence|Fluency|...(other metrics score)|group|query_intention|
     # +--------+------+----------+---------+-------+------------------------+-----+---------------+
-    df = signal_scored_data_df.withColumn(GROUP_COLUMN, lit(""))
-                              .withColumn(QUERY_INTENTION_COLUMN, lit(""))
+    df = signal_scored_data_df.withColumn(GROUP_COLUMN, lit("")) \
+                              .withColumn(QUERY_INTENTION_COLUMN, lit("")) \
                               .drop(ROOT_SPAN_COLUMN)
 
     for metrics in violated_metrics:
