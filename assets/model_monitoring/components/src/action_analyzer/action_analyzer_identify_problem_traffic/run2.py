@@ -182,7 +182,6 @@ def run():
     data_with_groups_df = create_spark_df([], get_output_schema())
     # Skip action analyzer if no violated metrics
     violated_metrics = get_violated_metrics(args.signal_output, f"signals/{args.signal_name}")
-    violated_metrics = ["Fluency", "Coherence"]
     if violated_metrics == []:
         print("No violated metrics. No action will be generated.")
         save_spark_df_as_mltable(data_with_groups_df, args.data_with_groups)
@@ -191,7 +190,7 @@ def run():
     print("Violated metrics found: ", violated_metrics)
     save_violated_metrics(violated_metrics, args.violated_metrics)
 
-    signal_scored_data_df = try_read_mltable_in_spark("azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/yuachengtestrg/workspaces/ai-proj-eastus/datastores/workspaceblobstore/paths/azureml/5b3c73e9-8e67-47e2-a46e-5087b2288110/evaluation/", "signal_scored_data")
+    signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
     print("gsq output df")
     signal_scored_data_df.show()
 

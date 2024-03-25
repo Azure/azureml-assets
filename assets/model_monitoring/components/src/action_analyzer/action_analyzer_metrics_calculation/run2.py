@@ -343,7 +343,7 @@ def run():
         save_empty_dataframe(get_output_schema(), args.data_with_action_metric_score)
         return
 
-    signal_scored_data_df = try_read_mltable_in_spark("azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/yuachengtestrg/workspaces/ai-proj-eastus/datastores/workspaceblobstore/paths/azureml/5b3c73e9-8e67-47e2-a46e-5087b2288110/evaluation/", "signal_scored_data")
+    signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
 
     df = data_with_groups_df.join(signal_scored_data_df, [TRACE_ID_COLUMN], "inner")
 
