@@ -146,18 +146,16 @@ def validate_and_prepare_pipeline_component(
             + f"registry: {registry}"
         )
 
-        if registry and registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
-            logger.log_warning(
+        if registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
+            logger.log_error(
                 f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
                 f"The URI for component '{name}' references registry '{registry}', "
                 "and publishing will fail if the release process does not have read access to it."
             )
+            return False
 
         # Check if component's env exists
         final_version = util.apply_version_template(version, version_template)
-        if not registry:
-            logger.print(f"Component URI is a workspace URI. Using registry {registry_name}.")
-        registry_name = registry or registry_name
         asset_details = None
         for ver in [version, final_version]:
             if (asset_details := get_asset_details(
@@ -167,7 +165,7 @@ def validate_and_prepare_pipeline_component(
 
         if not asset_details:
             logger.log_warning(
-                f"dependent component {name} with version {version} not found in registry {registry_name}"
+                f"dependent component {name} with version {version} not found in registry {registry}"
             )
             return False
 
@@ -409,11 +407,10 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
 
     :param asset_type: Valid values are component, environment and model
     :type asset_type: str
-    :param asset_uri: A workspace or registry asset URI to parse
+    :param asset_uri: A registry asset URI to parse
     :type asset_uri: str
     :return:
         A tuple with asset `name`, `version`, `label`, and `registry_name` in order.
-        `label` and `registry_name` will be None for workspace URI.
     :rtype: Tuple
     """
     REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(
@@ -422,9 +419,9 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
     if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
         asset_registry_name, asset_name, asset_version, asset_label = match.groups()
     elif (match := WORKSPACE_ASSET_PATTERN.match(asset_uri)) is not None:
-        asset_name, asset_version, asset_label = match.groups()
+        raise Exception(f"{asset_uri} is a workspace URI. Please use a registry URI instead.")
     else:
-        raise Exception(f"{asset_uri} doesn't match workspace or registry pattern.")
+        raise Exception(f"{asset_uri} doesn't match registry pattern.")
     return asset_name, asset_version, asset_label, asset_registry_name
 
 

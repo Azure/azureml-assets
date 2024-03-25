@@ -3,9 +3,9 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.16.38 (2024-03-22)
+## 1.16.38 (2024-03-25)
 ### 🐛 Bugs Fixed
-- [#2572](https://github.com/Azure/azureml-assets/pull/2572) Add additional logging for workspace asset URI
+- [#2572](https://github.com/Azure/azureml-assets/pull/2572) Enforce using registry asset URI for components
 
 ## 1.16.37 (2024-03-11)
 ### 🐛 Bugs Fixed
