@@ -33,7 +33,8 @@ from shared_utilities.constants import (
     TRACE_ID_LIST_COLUMN,
     GROUP_COLUMN,
     PROPERTIES_COLUMN,
-    TRACE_ID_COLUMN
+    TRACE_ID_COLUMN,
+    MEAN_THRESHOLD
 )
 import statistics
 from scipy.stats import mannwhitneyu
@@ -127,7 +128,7 @@ def perform_correlation_test(good_group_df,
     t_stat, p_value = perform_ttest(good_answer_scores, bad_answer_scores)
     bad_mean = statistics.mean(bad_answer_scores)
     print("Mean value of bad group: ", bad_mean)
-    if t_stat > 0 and p_value < P_VALUE_THRESHOLD and bad_mean < 3.0:
+    if t_stat > 0 and p_value < P_VALUE_THRESHOLD and bad_mean < MEAN_THRESHOLD:
         print("Generating action for group: ", query_intention)
         # entry: [ttest_group_id, trace_list, query_intention, confidence_score]
         trace_list = ",".join(bad_group_df.select(TRACE_ID_COLUMN).rdd.flatMap(lambda x: x).collect())
