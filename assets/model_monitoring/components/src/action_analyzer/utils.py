@@ -6,6 +6,7 @@
 from shared_utilities.io_utils import try_read_mltable_in_spark
 from action_analyzer.constants import VIOLATED_METRICS_COLUMN
 
+
 def get_unique_values_by_column(df, column):
     """Get the unique set for a given column."""
     unique_values = set()
