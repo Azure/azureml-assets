@@ -62,7 +62,7 @@ entry:
 args: >-
   --production_dataset ${{inputs.production_dataset}}
   --adapted_production_data ${{outputs.adapted_production_data}}
-  --prompt_column_name ${{inputs.prompt_column_name}}
-  --completion_column_name ${{inputs.completion_column_name}}
-  --context_column_name ${{inputs.context_column_name}}
-  --ground_truth_column_name ${{inputs.ground_truth_column_name}}
+  $[[--prompt_column_name ${{inputs.prompt_column_name}}]]
+  $[[--completion_column_name ${{inputs.completion_column_name}}]]
+  $[[--context_column_name ${{inputs.context_column_name}}]]
+  $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
