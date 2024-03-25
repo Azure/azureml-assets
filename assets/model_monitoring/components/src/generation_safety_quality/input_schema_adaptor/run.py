@@ -4,19 +4,19 @@
 """Entry script for GSQ Input Schema Adaptor Spark Component."""
 
 import argparse
-from copy import copy
 import json
 
 from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
 from pyspark.sql import DataFrame, Row
-from pyspark.sql.functions import from_json, max
+from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql.functions import max
 from shared_utilities.io_utils import (
     init_spark,
     save_spark_df_as_mltable,
     try_read_mltable_in_spark_with_error,
 )
 from shared_utilities.momo_exceptions import InvalidInputError
-from shared_utilities.df_utils import has_duplicated_columns, try_get_df_column
+from shared_utilities.df_utils import has_duplicated_columns
 from shared_utilities.constants import (
     GENAI_ROOT_SPAN_SCHEMA_COLUMN,
     GENAI_TRACE_ID_SCHEMA_COLUMN,
@@ -27,35 +27,20 @@ from shared_utilities.constants import (
 )
 
 
-# def check_row_has_gsq_schema(row: dict, expected_schema: list) -> list:
-#     """Check each dataframe row for expected schema value."""
-#     input_dict: dict = json.loads(row.get("input", "null"))
-#     output_dict: dict = json.loads(row.get("output", "null"))
-#     if input_dict is None:
-#         print(f"Row entry with trace id = {row.get('trace_id', '')} has no input field.")
-#         input_dict = {}
-#     if output_dict is None:
-#         print(f"Row entry with trace id = {row.get('trace_id', '')} has no output field.")
-#         output_dict = {}
-#     entry = []
-#     for column in expected_schema:
-#         if column in input_dict:
-#             entry.append(input_dict.get(column))
-#         elif column in output_dict:
-#             entry.append(output_dict.get(column))
-#         else:
-#             entry.append(None)
-#     return [tuple(entry)]
-
-
-def expand_json_to_gsq_schema(row, gsq_columns: list):
-    """Expand the json GSQ schema."""
+def expand_json_to_gsq_schema(row, gsq_columns: list, passthrough_columns: list):
+    """Expand the GSQ schema from json string column."""
     input_json_data = json.loads(row.input)
     output_json_data = json.loads(row.output)
     print(f"input: {input_json_data}")
     print(f"output: {output_json_data}")
     output_dict = {}
+    # passthrough-columns
+    for col in passthrough_columns:
+        if hasattr(row, col):
+            output_dict[col] = row[col]
+
     for col in gsq_columns:
+        col: str
         if col in input_json_data:
             output_dict[col] = input_json_data[col]
         elif col in output_json_data:
@@ -98,24 +83,30 @@ def _adapt_input_data_schema(
 
     # UDF
     spark = init_spark()
+    output_schema = StructType([
+        StructField(GENAI_TRACE_ID_SCHEMA_COLUMN, StringType(), True),
+        StructField(GENAI_ROOT_SPAN_SCHEMA_COLUMN, StringType(), True),
+        StructField(prompt_column_name, StringType(), True),
+        StructField(completion_column_name, StringType(), True),
+        StructField(context_column_name, StringType(), True),
+        StructField(ground_truth_column_name, StringType(), True),
+    ])
     gsq_schema = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
-    broadcast_schema = spark.sparkContext.broadcast(gsq_schema)
+    passthrough_columns = [GENAI_TRACE_ID_SCHEMA_COLUMN, GENAI_ROOT_SPAN_SCHEMA_COLUMN]
+    broadcast_gsq_schema = spark.sparkContext.broadcast(gsq_schema)
+    broadcast_passthrough_schema = spark.sparkContext.broadcast(passthrough_columns)
 
-    transformed_df = df.rdd.flatMap(lambda row: expand_json_to_gsq_schema(row, broadcast_schema.value)).toDF()
+    transformed_df = df.rdd.flatMap(lambda row: expand_json_to_gsq_schema(row, broadcast_gsq_schema.value, broadcast_passthrough_schema.value)).toDF(output_schema)
     transformed_df.show()
+    transformed_df.printSchema()
 
-    broadcast_schema.destroy()
-
-    # # drop rows with all None
-    # transformed_df = transformed_df.dropna(how="all", subset=gsq_schema)
-    # # drop columns with all None
-    # rows_with_data = transformed_df.select(*gsq_schema).agg(*[max(c).alias(c) for c in gsq_schema]).take(1)[0]
-    # transformed_df = transformed_df.select(*[c for c in df.columns if rows_with_data[c] is not None])
-    # transformed_df.show()
-    # transformed_df.printSchema()
-
-    # transformed_df.show()
-    # transformed_df.printSchema()
+    # drop rows with all None
+    transformed_df = transformed_df.dropna(how="all", subset=gsq_schema)
+    # drop columns with all None
+    rows_with_data = transformed_df.select(*transformed_df.columns).agg(*[max(c).alias(c) for c in transformed_df.columns]).take(1)[0]
+    transformed_df = transformed_df.select(*[c for c in transformed_df.columns if rows_with_data[c] is not None])
+    transformed_df.show()
+    transformed_df.printSchema()
 
     drop_rate = abs(transformed_df.count() - df.count()) / df.count()
     if drop_rate > 0.10 and drop_rate < 0.30:
