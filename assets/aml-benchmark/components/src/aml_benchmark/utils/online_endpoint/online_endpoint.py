@@ -29,6 +29,7 @@ from .online_endpoint_model import OnlineEndpointModel
 
 
 logger = get_logger(__name__)
+_MAX_RETRIES = 15
 
 
 class ResourceState(Enum):
@@ -170,7 +171,7 @@ class OnlineEndpoint:
             return json.loads(content)
         except Exception as err:
             logger.warning(f"Failed to get content from response {resp}: {err}")
-            return {}
+            raise err
 
     @property
     def _arm_base_subscription(self) -> str:
@@ -191,11 +192,17 @@ class OnlineEndpoint:
             self, call_method: Any, url: str, payload: Optional[dict] = None
     ) -> Response:
         should_retry = True
-        while should_retry:
+        retry_count = 0
+        while should_retry and retry_count <= _MAX_RETRIES:
+            retry_count += 1
             headers = self.get_resource_authorization_header()
+            if (retry_count > 1):
+                logger.info(f"Retry {retry_count} calling {call_method} on {url} with payload {payload}.")
             resp = ClientBase._execute_func(
                 call_method, url, params={}, headers=headers, json=payload
             )
+            if retry_count > 1:
+                logger.info(f"Response status code: {resp.status_code}, content: {resp.content}")
             if resp.status_code not in {409, 429}:
                 should_retry = False
             else:
