@@ -8,6 +8,6 @@ class BenchmarkErrorStrings:
     """Error strings for Benchmark errors."""
 
     INTERNAL_ERROR = (
-        "Encountered an internal Benchmarking error. Error Message: {error_details}. Traceback: {traceback}."
+        "Encountered an internal Benchmarking error. Error Message: {error_details}."
     )
     GENERIC_ERROR = "{error_details}"

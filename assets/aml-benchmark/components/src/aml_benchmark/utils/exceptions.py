@@ -5,16 +5,16 @@
 
 import time
 import logging
-import traceback
 from functools import wraps
 from typing import Callable, Any
 
 from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml._common._error_response._error_response_constants import ErrorCodes
-from azureml.core.run import Run
 
 from .error_definitions import BenchmarkSystemError
+from .logging import run_details, log_traceback
+from .constants import ROOT_RUN_PROPERTIES
 
 
 class BenchmarkException(AzureMLException):
@@ -73,6 +73,11 @@ def swallow_all_exceptions(logger: logging.Logger) -> Callable[..., Any]:
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
+                root_run = run_details.root_run
+                try:
+                    root_run.add_properties(properties=ROOT_RUN_PROPERTIES)
+                except Exception:
+                    pass  # when already added by other child runs
                 return func(*args, **kwargs)
             except Exception as e:
                 if isinstance(e, AzureMLException):
@@ -82,16 +87,14 @@ def swallow_all_exceptions(logger: logging.Logger) -> Callable[..., Any]:
                         AzureMLError.create(
                             BenchmarkSystemError,
                             error_details=str(e),
-                            traceback=traceback.format_exc(),
                         ),
                         inner_exception=e,
                     )
-                logger.error(azureml_exception.message)
+                log_traceback(azureml_exception, logger)
+                logger.info("Marking run as failed...")
                 for handler in logger.handlers:
                     handler.flush()
-                run = Run.get_context()
-                logger.info("Marking run as failed...")
-                run.fail(error_details=azureml_exception)
+                run_details.run.fail(error_details=azureml_exception)
                 raise
             finally:
                 time.sleep(30)  # Let telemetry logger flush its logs before terminating.
