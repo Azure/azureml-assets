@@ -44,7 +44,7 @@ def aggregate_spans_into_traces(
 
     print("Processing spans into aggregated traces...")
 
-    grouped_spans_df = enlarged_span_logs.groupBy('trace_id').agg(
+    grouped_spans_df = enlarged_span_logs.groupBy('request_id').agg(
         collect_list(
             struct(enlarged_span_logs.schema.fieldNames())
         ).alias('span_rows')
