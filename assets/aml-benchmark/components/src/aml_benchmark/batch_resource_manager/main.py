@@ -50,7 +50,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--deployment_name", type=str, help="deployment_name", default=None)
     parser.add_argument("--endpoint_name", type=str, help="endpoint_name", default=None)
     parser.add_argument("--deployment_sku", type=str, help="deployment_sku", default=None)
-    parser.add_argument("--deployment_sku_name", type=str, help="deployment_sku", default="Standard")
+    parser.add_argument("--deployment_sku_name", type=str, help="deployment_sku_name", default="Standard")
     parser.add_argument("--deployment_env", type=str, help="deployment_env", default=None)
     parser.add_argument("--model", type=str, help="model", default=None)
     parser.add_argument("--model_version", type=str, help="model_version", default=None)
@@ -210,7 +210,8 @@ def _online_endpoint_generator(
         do_quota_validation: bool,
         additional_deployment_env_vars: str,
         use_max_quota: bool,
-        deployment_env: str
+        deployment_env: str,
+        deployment_sku_name: str = "Standard"
 ) -> Generator[OnlineEndpoint, None, None]:
     if deployment_sku is None:
         deployment_sku = 1
@@ -231,7 +232,8 @@ def _online_endpoint_generator(
                 endpoint_name,
                 deployment_name,
                 deployment_sku,
-                region,
+                sku_name=deployment_sku_name,
+                location=region,
                 connections_name=connections_name,
                 additional_deployment_env_vars=json.loads(
                     additional_deployment_env_vars) if additional_deployment_env_vars else {},
@@ -276,7 +278,8 @@ def deploy_model_in_list_maybe(
         additional_deployment_env_vars: str,
         use_max_quota: bool,
         deployment_env: str,
-        redeploy_model: bool
+        redeploy_model: bool,
+        deployment_sku_name: str = "Standard"
 ) -> bool:
     """Deploy the model using different regions."""
     for online_endpoint in _online_endpoint_generator(
@@ -292,7 +295,8 @@ def deploy_model_in_list_maybe(
                 do_quota_validation,
                 additional_deployment_env_vars,
                 use_max_quota,
-                deployment_env
+                deployment_env,
+                deployment_sku_name=deployment_sku_name
     ):
         managed_endpoint = False
         try:
@@ -465,7 +469,8 @@ def main(
                 additional_deployment_env_vars,
                 use_max_quota,
                 deployment_env,
-                redeploy_model
+                redeploy_model,
+                deployment_sku_name=deployment_sku_name
             )
             if is_deployment_successful:
                 logger.info("Deployment is successful.")

@@ -129,7 +129,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         payload = {
             "sku":
             {
-                "name": {self._sku_name},
+                "name": f'"{self._sku_name}"',
                 "capacity": self.sku
             },
             "properties":
