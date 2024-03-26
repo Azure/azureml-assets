@@ -5,7 +5,6 @@
 import argparse
 from openai import AzureOpenAI
 from common.azure_openai_client_manager import AzureOpenAIClientManager
-from common.utils import save_json
 from common.logging import get_logger
 import json
 
@@ -25,8 +24,8 @@ class DeleteComponent:
         with open(data_upload_output) as f:
             data_upload_output = json.load(f)
 
-        training_file_id=data_upload_output['train_file_id']
-        validation_file_id=data_upload_output['validation_file_id']
+        training_file_id= data_upload_output['train_file_id']
+        validation_file_id= data_upload_output['validation_file_id']
 
         if training_file_id is not None:
             self.aoai_client.files.delete(file_id=training_file_id)
@@ -39,6 +38,7 @@ class DeleteComponent:
             logger.debug("validation file id: {} deleted".format(validation_file_id))
         else:
             logger.log("validation file not present")
+
 
 def main():
     """Delete train and validation data to AOAI."""
@@ -61,6 +61,7 @@ def main():
     except Exception as e:
         logger.error("Got exception while running delete data component. Ex: {}".format(e))
         raise e
+
 
 if __name__ == "__main__":
 
