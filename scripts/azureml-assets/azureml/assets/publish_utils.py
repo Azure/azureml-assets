@@ -153,7 +153,7 @@ def validate_and_prepare_pipeline_component(
                 "and publishing will fail if the release process does not have read access to it."
             )
             return False
-        
+
         # If workspace asset URI is used, use registry we're creating the component in
         registry = registry or registry_name
 
