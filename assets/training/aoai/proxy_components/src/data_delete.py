@@ -20,7 +20,6 @@ class DeleteComponent:
 
     def delete_files(self, data_upload_output):
         """Delete component to delete data from AOAI resource."""
-
         with open(data_upload_output) as f:
             data_upload_output = json.load(f)
 
