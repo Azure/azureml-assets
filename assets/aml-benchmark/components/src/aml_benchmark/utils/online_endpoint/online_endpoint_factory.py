@@ -44,7 +44,7 @@ class OnlineEndpointFactory:
                 sku,
                 location,
                 connections_name=connections_name,
-                sku_name=sku_name,
+                aoai_sku_name=sku_name,
             )
         else:
             return OSSOnlineEndpoint(

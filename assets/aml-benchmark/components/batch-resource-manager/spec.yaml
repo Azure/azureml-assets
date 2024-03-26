@@ -60,8 +60,7 @@ inputs:
     optional: True
     default: Standard
     description: "The sku type for the deployment. Only needed for managed deployment.
-    defaults to Standard, but other options are P
-    "
+    defaults to Standard, but other option is provisioned."
   deployment_env:
     type: string
     optional: True
