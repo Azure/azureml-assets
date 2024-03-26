@@ -281,7 +281,7 @@ def parse_meta_data(df):
             df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN), lit(metrics), col(metrics)))
     df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN),
                                                        lit(ROOT_PROMPT_COLUMN),
-                                                       col(ROOT_PROMPT_COLUMN)))
+                                                       col(PROMPT_COLUMN)))
     df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN),
                                                        lit(COMPLETION_COLUMN),
                                                        col(COMPLETION_COLUMN)))
@@ -291,13 +291,14 @@ def parse_meta_data(df):
 
     # parse the debugging info
     debugging_info = parse_debugging_info(col(ROOT_SPAN_COLUMN))
-    if debugging_info:
-        df = df.withColumn("debugging_info", debugging_info)
-        df_exploded = df.withColumn("debugging_details", explode("debugging_info")).drop("debugging_info")
-        properties = add_debugging_info_to_properties(col(PROPERTIES_COLUMN), col("debugging_details"))
-        df_with_debugging = df_exploded.withColumn(PROPERTIES_COLUMN, properties).drop("debugging_details")
-        df_with_metadata = df_with_debugging.withColumn(TTEST_GROUP_ID_COLUMN,
-                                                        get_ttest_group_id(col(PROPERTIES_COLUMN)))
+    if debugging_info is None:
+        return df
+    df = df.withColumn("debugging_info", debugging_info)
+    df_exploded = df.withColumn("debugging_details", explode("debugging_info")).drop("debugging_info")
+    properties = add_debugging_info_to_properties(col(PROPERTIES_COLUMN), col("debugging_details"))
+    df_with_debugging = df_exploded.withColumn(PROPERTIES_COLUMN, properties).drop("debugging_details")
+    df_with_metadata = df_with_debugging.withColumn(TTEST_GROUP_ID_COLUMN,
+                                                    get_ttest_group_id(col(PROPERTIES_COLUMN)))
     return df_with_metadata
 
 
@@ -351,7 +352,7 @@ def run():
 
     signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
     df = data_with_groups_df.join(signal_scored_data_df, [TRACE_ID_COLUMN], "inner")
-    df = df.withColumn(TTEST_GROUP_ID_COLUMN, lit("")).withColumn(PROPERTIES_COLUMN, lit(json.dumps("{}")))
+    df = df.withColumn(TTEST_GROUP_ID_COLUMN, lit("")).withColumn(PROPERTIES_COLUMN, lit(json.dumps({})))
 
     # getting the metadata for metrics calculation and output action.
     df = parse_meta_data(df)
