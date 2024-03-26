@@ -33,16 +33,9 @@ inputs:
     optional: False
     description: Contains data upload output file in JSON/custom class format
 
-outputs:
-  data_delete_output:
-    type: uri_file
-    description: Contains data delete output file in JSON/custom class format
-
-
 command: >-
   python data_delete.py
   --data_upload_output ${{inputs.data_upload_output}}
-  --data_delete_output ${{outputs.data_delete_output}}
   --endpoint_name ${{inputs.endpoint_name}}
   $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
   $[[--endpoint_subscription ${{inputs.endpoint_subscription}}]]
