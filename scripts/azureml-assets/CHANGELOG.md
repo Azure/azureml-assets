@@ -5,7 +5,7 @@
 
 ## 1.16.40 (2024-03-26)
 ### 🐛 Bugs Fixed
-- [#](https://github.com/Azure/azureml-assets/pull/) Revert enforcing registry asset URI for components
+- [#2585](https://github.com/Azure/azureml-assets/pull/2585) Revert enforcing registry asset URI for components
 
 ## 1.16.39 (2024-03-26)
 ### 🐛 Bugs Fixed
