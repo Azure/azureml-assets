@@ -1,0 +1,22 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  AzureML general environment to deploy and serve a Langchain app.
+
+name: "general-langchain-app-deployment"
+version: "1"
+
+build:
+  path: "{{image.context.dir}}"
+  dockerfile_path: "Dockerfile"
+
+inference_config:
+  scoring_route:
+    port: 8080
+    path: /
+  liveness_route:
+    port: 8080
+    path: /
+  readiness_route:
+    port: 8080
+    path: /
