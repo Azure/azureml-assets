@@ -169,11 +169,11 @@ def merge_actions(action_df):
             trace_id_list = data_row[TRACE_ID_LIST_COLUMN].split(",")
             trace_id_set.update(trace_id_list)
             # skip the default group, find the group with most bad queries
-            if data_row[QUERY_INTENTION_COLUMN] == "default":
+            if data_row[ACTION_QUERY_INTENTION_COLUMN] == "default":
                 continue
             if max_group_count < len(trace_id_list):
                 max_group_count = len(trace_id_list)
-                max_group_topic = data_row[QUERY_INTENTION_COLUMN]
+                max_group_topic = data_row[ACTION_QUERY_INTENTION_COLUMN]
         action_id = str(uuid.uuid4())
         action_confidence = float(confidence_score/df.count())
         action = [action_id, ttest_group_id, ",".join(trace_id_set), max_group_topic, action_confidence]
