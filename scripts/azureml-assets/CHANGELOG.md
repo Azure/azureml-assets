@@ -3,6 +3,9 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.39 (2024-03-26)
+### 🐛 Bugs Fixed
+- [#2584](https://github.com/Azure/azureml-assets/pull/2584) Fix empty create configs
 ## 1.16.38 (2024-03-25)
 ### 🐛 Bugs Fixed
 - [#2572](https://github.com/Azure/azureml-assets/pull/2572) Enforce using registry asset URI for components
