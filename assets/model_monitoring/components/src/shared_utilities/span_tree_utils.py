@@ -109,6 +109,11 @@ class SpanTreeNode:
         """Get the span's trace id."""
         return self.get_node_attribute("trace_id")  # type: ignore
 
+    @property
+    def request_id(self) -> str:
+        """Get the span's request id."""
+        return self.get_node_attribute("request_id")  # type: ignore
+
     @classmethod
     def create_node_from_dict(cls, span_node_dict: dict) -> "SpanTreeNode":
         """Parse dict representation to create a single SpanTree node.
@@ -183,7 +188,7 @@ class SpanTreeNode:
 
     def __repr__(self) -> str:
         """Get representation of SpanTreeNode."""
-        return f"SpanTreeNode(span_id: {self.span_id}, trace_id: {self.trace_id})"
+        return f"SpanTreeNode(span_id: {self.span_id}, request_id: {self.request_id}, trace_id: {self.trace_id})"
 
 
 class SpanTree:
@@ -213,7 +218,7 @@ class SpanTree:
         if self.root_span is None:
             print("The SpanTree is empty.")
             return
-        print(f"SpanTree for trace id = {self.root_span.trace_id}:")
+        print(f"SpanTree for request id = {self.root_span.request_id}:")
         self.root_span.show()
 
     def to_json_str(self) -> str:
