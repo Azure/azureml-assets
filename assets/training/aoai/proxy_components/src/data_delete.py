@@ -24,8 +24,8 @@ class DeleteComponent:
         with open(data_upload_output) as f:
             data_upload_output = json.load(f)
 
-        training_file_id= data_upload_output['train_file_id']
-        validation_file_id= data_upload_output['validation_file_id']
+        training_file_id = data_upload_output['train_file_id']
+        validation_file_id = data_upload_output['validation_file_id']
 
         if training_file_id is not None:
             self.aoai_client.files.delete(file_id=training_file_id)
