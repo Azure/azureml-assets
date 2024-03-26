@@ -2,14 +2,12 @@
 # Licensed under the MIT License.
 
 """data delete component."""
-from typing import Any, Dict
 import argparse
 from openai import AzureOpenAI
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.utils import save_json
 from common.logging import get_logger
 import json
-import os
 
 logger = get_logger(__name__)
 
@@ -35,7 +33,7 @@ class DeleteComponent:
             logger.debug("training file id: {} deleted".format(training_file_id))
         else:
             logger.log("training file not present")
-        
+
         if validation_file_id is not None:
             self.aoai_client.files.delete(file_id=validation_file_id)
             logger.debug("validation file id: {} deleted".format(validation_file_id))
@@ -55,11 +53,11 @@ def main():
         aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
                                                        endpoint_resource_group=args.endpoint_resource_group,
                                                        endpoint_subscription=args.endpoint_subscription)
-        
+
         delete_component = DeleteComponent(aoai_client_manager.get_azure_openai_client())
         logger.info("deleting training and validataion data from Azure OpenAI")
         delete_component.delete_files(args.data_upload_output)
-        
+
     except Exception as e:
         logger.error("Got exception while running delete data component. Ex: {}".format(e))
         raise e
