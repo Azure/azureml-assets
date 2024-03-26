@@ -149,8 +149,7 @@ def validate_and_prepare_pipeline_component(
         if registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
             logger.log_error(
                 f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
-                f"The URI for component '{name}' references registry '{registry}', "
-                "and publishing will fail if the release process does not have read access to it."
+                f"The URI for component '{name}' references registry '{registry}'."
             )
             return False
 
