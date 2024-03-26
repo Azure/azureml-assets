@@ -162,7 +162,7 @@ def validate_and_prepare_pipeline_component(
         asset_details = None
         for ver in [version, final_version]:
             if (asset_details := get_asset_details(
-                AssetType.COMPONENT.value, name, ver, registry_name
+                AssetType.COMPONENT.value, name, ver, registry
             )) is not None:
                 break
 
