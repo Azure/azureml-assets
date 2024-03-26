@@ -210,7 +210,7 @@ class DeploymentConfig:
         Returns:
             bool: True if the asset should be created.
         """
-        return any(n in {"*", asset_name} for n in self.create.get(asset_type, []))
+        return any(n in {"*", asset_name} for n in self.create.get(asset_type, [])) if self.create else []
 
 
 class TagsSchema(Schema):
