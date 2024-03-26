@@ -31,8 +31,12 @@ from shared_utilities.constants import (
 
 def expand_json_to_gsq_schema(row, gsq_columns: list, passthrough_columns: list):
     """Expand the GSQ schema from json string column."""
-    input_json_data = json.loads(row.input)
-    output_json_data = json.loads(row.output)
+    input_json_data = json.loads(row.input) if hasattr(row, "input") else {}
+    output_json_data = json.loads(row.output) if hasattr(row, "output") else {}
+    if input_json_data is None:
+        input_json_data = {}
+    if output_json_data is None:
+        output_json_data = {}
     print(f"input: {input_json_data}")
     print(f"output: {output_json_data}")
     combined_dict = {"input": input_json_data, "output": output_json_data}
@@ -66,20 +70,6 @@ def _adapt_input_data_schema(
         return df
 
     print("Adapting the GenAI production data to gsq input schema...")
-    # spark = init_spark()
-    # columns_to_select = [
-    #     prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name,
-    #     GENAI_TRACE_ID_SCHEMA_COLUMN, GENAI_ROOT_SPAN_SCHEMA_COLUMN
-    # ]
-    # transormed_df = df.rdd.map(lambda x: x.asDict()).flatMap(lambda y: check_row_has_gsq_schema(y, columns_to_select)).toDF(columns_to_select)
-
-    # columns_to_check = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
-    # rows_with_data = transormed_df.select(*columns_to_check).agg(*[max(c).alias(c) for c in columns_to_check]).take(1)[0]
-    # transformed_df = transormed_df.select(*[c for c in df.columns if rows_with_data[c] is not None])
-    # transformed_df.show()
-    # transformed_df.printSchema()
-
-    # UDF
     spark = init_spark()
     output_schema = StructType([
         StructField(GENAI_TRACE_ID_SCHEMA_COLUMN, StringType(), True),
@@ -100,6 +90,7 @@ def _adapt_input_data_schema(
 
     # drop rows with all None
     transformed_df = transformed_df.dropna(how="all", subset=gsq_schema)
+
     # drop columns with all None
     rows_with_data = transformed_df.select(*transformed_df.columns).agg(*[max(c).alias(c) for c in transformed_df.columns]).take(1)[0]
     transformed_df = transformed_df.select(*[c for c in transformed_df.columns if rows_with_data[c] is not None])
