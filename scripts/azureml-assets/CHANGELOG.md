@@ -5,7 +5,7 @@
 
 ## 1.16.41 (2024-03-27)
 ### 🐛 Bugs Fixed
-- [#](https://github.com/Azure/azureml-assets/pull/) Revert to not fail on workspace asset URI
+- [#2591](https://github.com/Azure/azureml-assets/pull/2591) Revert to not fail on workspace asset URI
 
 ## 1.16.40 (2024-03-26)
 ### 🐛 Bugs Fixed
