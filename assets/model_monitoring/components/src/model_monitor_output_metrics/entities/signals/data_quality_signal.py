@@ -111,10 +111,10 @@ class DataQualitySignal(Signal):
             )
             run_metric = {
                 "runId": run_id,
-                "targetValue": None if metric["baseline_metric_value"] is None
-                else float(metric["baseline_metric_value"]),
-                "baselineValue": None if metric["target_metric_value"] is None
+                "targetValue": None if metric["target_metric_value"] is None
                 else float(metric["target_metric_value"]),
+                "baselineValue": None if metric["baseline_metric_value"] is None
+                else float(metric["baseline_metric_value"]),
             }
             run_metric = add_value_if_present(
                 metric, "threshold_value", run_metric, "threshold"
@@ -131,8 +131,8 @@ class DataQualitySignal(Signal):
             # Add the feature metrics
             feature_metrics = {
                 "metricName": metric["metric_name"],
-                "targetValue": metric["baseline_metric_value"],
-                "baselineValue": metric["target_metric_value"],
+                "targetValue": metric["target_metric_value"],
+                "baselineValue": metric["baseline_metric_value"],
             }
             feature_metrics = add_value_if_present(
                 metric, "threshold_value", feature_metrics, "threshold"
