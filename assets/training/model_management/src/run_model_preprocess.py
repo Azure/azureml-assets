@@ -182,6 +182,11 @@ def run():
 
     # Copy license file to output model path
     if license_file_path:
+        # removing the default dumped license when user provides custom license file.
+        transformers_license_path = os.path.join(mlflow_model_output_dir, "LICENSE.txt")
+        if os.path.isfile(transformers_license_path):
+            os.remove(transformers_license_path)
+
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
     logger.info(f"listing output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
