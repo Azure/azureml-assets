@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.41 (2024-03-27)
+### 🐛 Bugs Fixed
+- [#2591](https://github.com/Azure/azureml-assets/pull/2591) Revert to not fail on workspace asset URI
+
 ## 1.16.40 (2024-03-26)
 ### 🐛 Bugs Fixed
 - [#2585](https://github.com/Azure/azureml-assets/pull/2585) Revert enforcing registry asset URI for components
