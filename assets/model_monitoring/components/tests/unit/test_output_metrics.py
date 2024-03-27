@@ -39,11 +39,11 @@ def _validate_data_drift_metrics(payload: dict, row: Row):
 
 
 def _validate_data_quality_metrics(payload: dict, row: Row):
-    assert(
+    assert (
         payload["metrics"]["features"][row["feature_name"]]["metrics"][0]["baselineValue"]
         == row["baseline_metric_value"]
     )
-    assert(
+    assert (
         payload["metrics"]["features"][row["feature_name"]]["metrics"][0]["targetValue"]
         == row["target_metric_value"]
     )
