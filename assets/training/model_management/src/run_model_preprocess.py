@@ -186,7 +186,7 @@ def run():
         transformers_license_path = os.path.join(mlflow_model_output_dir, "LICENSE.txt")
         if os.path.isfile(transformers_license_path):
             os.remove(transformers_license_path)
-        
+
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
     logger.info(f"listing output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
