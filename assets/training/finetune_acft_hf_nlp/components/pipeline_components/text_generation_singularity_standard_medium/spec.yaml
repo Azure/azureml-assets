@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_generation_pipeline_singularity_standard_medium
-version: 0.0.39
+version: 0.0.40
 type: pipeline
 display_name: Text Generation Pipeline Singularity Standard Medium
 description: Pipeline component for text generation
