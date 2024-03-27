@@ -146,20 +146,22 @@ def validate_and_prepare_pipeline_component(
             + f"registry: {registry}"
         )
 
-        if registry and registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
-            logger.log_warning(
+        if registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
+            logger.log_error(
                 f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
-                f"The URI for component '{name}' references registry '{registry}', "
-                "and publishing will fail if the release process does not have read access to it."
+                f"The URI for component '{name}' references registry '{registry}'."
             )
+            return False
+
+        # If workspace asset URI is used, use registry we're creating the component in
+        registry = registry or registry_name
 
         # Check if component's env exists
         final_version = util.apply_version_template(version, version_template)
-        registry_name = registry or registry_name
         asset_details = None
         for ver in [version, final_version]:
             if (asset_details := get_asset_details(
-                AssetType.COMPONENT.value, name, ver, registry_name
+                AssetType.COMPONENT.value, name, ver, registry
             )) is not None:
                 break
 
@@ -386,6 +388,7 @@ def get_asset_details(
     registry_name: str,
 ) -> Dict:
     """Get asset details."""
+    logger.print(f"Getting asset details for {asset_type} {asset_name} {asset_version} in {registry_name}")
     cmd = [
         "az", "ml", asset_type, "show",
         "--name", asset_name,

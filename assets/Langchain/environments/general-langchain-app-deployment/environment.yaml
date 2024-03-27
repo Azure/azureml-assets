@@ -1,12 +1,14 @@
 image:
-  name: azureml/curated/aoai-data-upload-finetune
+  name: azureml/curated/general-langchain-app-deployment
   os: linux
   context:
     dir: context
     dockerfile: Dockerfile
     template_files:
     - Dockerfile
-    - requirements.txt
+    - entrypoint.sh
   publish:
     location: mcr
     visibility: public
+  tags:
+    Python: 3.11
