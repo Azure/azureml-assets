@@ -66,7 +66,7 @@ class TestGenAISparkPreprocessor:
         StructField('parent_id', StringType(), True),
         StructField('start_time', TimestampType(), True),
         StructField('status', StringType(), True),
-        StructField('trace_id', StringType(), True),
+        StructField('request_id', StringType(), True),
         StructField('span_id', StringType(), True),
         StructField('span_type', StringType(), True),
         StructField('framework', StringType(), True),
@@ -77,23 +77,23 @@ class TestGenAISparkPreprocessor:
 
     _preprocessed_data = [
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"1\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
+        ["{\"span_id\":\"1\",\"request_id\":\"01\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 15, 2, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 15, 1, 0), "OK", "01", "1", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"2\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
+        ["{\"span_id\":\"2\",\"request_id\":\"01\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 15, 4, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 15, 3, 0), "OK", "01", "2", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"3\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        ["{\"span_id\":\"3\",\"request_id\":\"02\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 15, 6, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 15, 5, 0), "OK", "02", "3", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"4\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        ["{\"span_id\":\"4\",\"request_id\":\"02\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 15, 8, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 5, 15, 7, 0), "OK", "02", "4", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"5\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        ["{\"span_id\":\"5\",\"request_id\":\"02\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 5, 15, 12, 0), "[]", "[]", "name", "4"] +
         [datetime(2024, 2, 5, 15, 11, 0), "OK", "02", "5", "llm", "LLM"],
     ]
@@ -108,7 +108,7 @@ class TestGenAISparkPreprocessor:
         StructField('parent_id', StringType(), True),
         StructField('start_time', TimestampType(), True),
         StructField('status', StringType(), True),
-        StructField('trace_id', StringType(), True),
+        StructField('request_id', StringType(), True),
         StructField('span_id', StringType(), True),
         StructField('span_type', StringType(), True),
         StructField('framework', StringType(), True),
@@ -119,46 +119,46 @@ class TestGenAISparkPreprocessor:
 
     _preprocessed_data_no_inputs = [
         ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"1\",\"trace_id\":\"01\"}"] +
+        ["{\"span_id\":\"1\",\"request_id\":\"01\"}"] +
         [datetime(2024, 2, 7, 12, 2, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 7, 12, 1, 0), "OK", "01", "1", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"2\",\"trace_id\":\"01\"}"] +
+        ["{\"span_id\":\"2\",\"request_id\":\"01\"}"] +
         [datetime(2024, 2, 7, 12, 4, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 7, 12, 3, 0), "OK", "01", "2", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"3\",\"trace_id\":\"02\"}"] +
+        ["{\"span_id\":\"3\",\"request_id\":\"02\"}"] +
         [datetime(2024, 2, 7, 12, 6, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 7, 12, 5, 0), "OK", "02", "3", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"4\",\"trace_id\":\"02\"}"] +
+        ["{\"span_id\":\"4\",\"request_id\":\"02\"}"] +
         [datetime(2024, 2, 7, 12, 8, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 7, 12, 7, 0), "OK", "02", "4", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"5\",\"trace_id\":\"02\"}"] +
+        ["{\"span_id\":\"5\",\"request_id\":\"02\"}"] +
         [datetime(2024, 2, 7, 12, 12, 0), "[]", "[]", "name", "4"] +
         [datetime(2024, 2, 7, 12, 11, 0), "OK", "02", "5", "llm", "LLM"],
     ]
 
     _preprocessed_data_look_back = [
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"1\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
+        ["{\"span_id\":\"1\",\"request_id\":\"01\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 10, 15, 2, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 10, 15, 1, 0), "OK", "01", "1", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"2\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
+        ["{\"span_id\":\"2\",\"request_id\":\"01\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 10, 15, 4, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 10, 15, 3, 0), "OK", "01", "2", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"3\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        ["{\"span_id\":\"3\",\"request_id\":\"02\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 10, 15, 6, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 10, 15, 5, 0), "OK", "02", "3", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"4\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        ["{\"span_id\":\"4\",\"request_id\":\"02\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 10, 15, 12, 0), "[]", "[]", "name", "5"] +
         [datetime(2024, 2, 10, 15, 11, 0), "OK", "02", "4", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"span_id\":\"5\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
+        ["{\"span_id\":\"5\",\"request_id\":\"02\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 10, 16, 1, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 10, 15, 11, 0), "OK", "02", "5", "llm", "LLM"],
     ]
