@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/aoai-proxy-components
+  name: azureml/curated/aoai-data-upload-finetune
   os: linux
   context:
     dir: context
