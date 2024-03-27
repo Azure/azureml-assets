@@ -221,7 +221,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         model_pipeline = transformers.pipeline(task=self._task, model=model,
                                                trust_remote_code=trust_remote_code_val)
         if hasattr(self, "config"):
-            # Have to update the config as some vision models has problems in hf registry.
+            # Have to update the config as some vision models have problems in hf registry.
             model_pipeline.model.config = self.config
         params = {
             "transformers_model": model_pipeline,
