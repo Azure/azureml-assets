@@ -67,7 +67,7 @@ conf:
 code: ../../src
 
 entry:
-  file: ./action_analyzer/action_analyzer_identify_problem_traffic/run2.py
+  file: ./action_analyzer/action_analyzer_identify_problem_traffic/run.py
 
 args: >-
   --signal_scored_data ${{inputs.signal_scored_data}}

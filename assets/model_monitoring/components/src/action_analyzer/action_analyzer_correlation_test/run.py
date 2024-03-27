@@ -109,7 +109,7 @@ def generate_actions(df, violated_metrics):
                                                             actions_data,
                                                             query_intention)
         return actions_data
-    except Exception ex:
+    except Exception as ex:
         print("Exception when generating actions: ", ex)
         return []
 
