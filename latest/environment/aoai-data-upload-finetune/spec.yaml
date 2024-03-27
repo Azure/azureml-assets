@@ -3,8 +3,8 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: >-
   Environment used by proxy AOAI components
 
-name: "aoai-proxy-components"
-version: "2"
+name: "aoai-data-upload-finetune"
+version: "1"
 
 build:
   path: "context"
