@@ -46,6 +46,7 @@ def main():
     parser.add_argument("--endpoint_resource_group", type=str)
     parser.add_argument("--endpoint_subscription", type=str)
     parser.add_argument("--data_upload_output", type=str)
+    parser.add_argument("--wait_for_finetuning", type=str)
     args = parser.parse_args()
 
     try:

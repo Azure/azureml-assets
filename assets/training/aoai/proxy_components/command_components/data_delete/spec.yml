@@ -32,6 +32,11 @@ inputs:
     type: uri_file
     optional: False
     description: Contains data upload output file in JSON/custom class format
+  
+  wait_for_finetuning:
+    type: uri_file
+    optional: true
+    description: Contains finetune step output file in JSON/custom class format
 
 command: >-
   python data_delete.py
@@ -39,3 +44,4 @@ command: >-
   --endpoint_name ${{inputs.endpoint_name}}
   $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
   $[[--endpoint_subscription ${{inputs.endpoint_subscription}}]]
+  $[[--wait_for_finetuning ${{inputs.wait_for_finetuning}}]]
