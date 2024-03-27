@@ -3,12 +3,16 @@
 
 """HFTransformers MLflow model convertors."""
 from typing import List
+import base64
+import io
 import transformers
 import platform
 import mlflow
+import numpy as np
 import os
 import yaml
 from abc import ABC, abstractmethod
+from PIL import Image
 from azureml.evaluate import mlflow as hf_mlflow
 from azureml.core.conda_dependencies import CondaDependencies
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
@@ -29,8 +33,9 @@ from azureml.model.mgmt.utils.common_utils import (
     fetch_mlflow_acft_metadata
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from mlflow.models import ModelSignature, Model
+from mlflow.models import ModelSignature, Model, infer_signature
 from mlflow.types.schema import ColSpec, DataType, Schema, ParamSpec, ParamSchema
+from mlflow.transformers import generate_signature_output, get_default_conda_env
 from mlflow.utils.requirements_utils import _get_pinned_requirement
 from pathlib import Path
 from transformers import (
@@ -190,7 +195,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
     def _save_in_oss_flavor(self, model, metadata, conda_env, code_paths, input_example, pip_requirements):
         # create a conda environment for OSS transformers Flavor
 
-        curated_conda_env = None
+        curated_conda_env = conda_env
         if not self._extra_pip_requirements and not pip_requirements:
             python_version = platform.python_version()
             pip_pkgs = self._get_curated_environment_pip_package_list()
@@ -215,7 +220,9 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         model_pipeline = transformers.pipeline(task=self._task, model=model,
                                                trust_remote_code=trust_remote_code_val)
-
+        if hasattr(self, "config"):
+            # Have to update the config as some vision models have problems in hf registry.
+            model_pipeline.model.config = self.config
         params = {
             "transformers_model": model_pipeline,
             "code_paths": code_paths,
@@ -391,6 +398,39 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
             ),
         )
 
+    def _robust_load_config(self, config) -> transformers.PretrainedConfig:
+        """Check and modify if config has missing indices.
+
+        :param config: Config Object from transformers
+        :type config: PretrainedConfig
+        :return: Config Object
+        :rtype: PretrainedConfig
+        """
+        ids = list(config.id2label.keys())
+        ids.sort()
+        if max(ids) != len(ids)-1:
+            missing_keys = set([x for x in range(max(ids))]).difference(set(ids))
+            id2label = {}
+            for idx, id in enumerate(ids):
+                id2label[idx] = config.id2label[id]
+            config.id2label = id2label
+            self.config = config
+            logger.warning(f"config loaded with modified id2label as there are some missing keys : {missing_keys}.")
+        return config
+
+    def get_random_base64_decoded_image(self) -> str:
+        """Get random base64 decoded image.
+
+        :return: base64 decoded image
+        :rtype: string
+        """
+        imarray = np.random.rand(100, 100, 3) * 255
+        buffered = io.BytesIO()
+        image = Image.fromarray(imarray.astype('uint8')).convert('RGB')
+        image.save(buffered, format="JPEG")
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        return img_str
+
     def save_as_mlflow(self):
         """Prepare vision models for save to MLflow."""
         hf_conf = self._hf_conf
@@ -406,6 +446,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
 
         config_load_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
         config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
+        config = self._robust_load_config(config)
         hf_conf[HF_CONF.TRAIN_LABEL_LIST.value] = list(config.id2label.values())
         extra_pip_requirements = ["torchvision"]
         if self._extra_pip_requirements is None:
@@ -414,10 +455,21 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
             package_with_version = _get_pinned_requirement(package_name)
             self._extra_pip_requirements.append(package_with_version)
 
-        return super()._save(
-            code_paths=[VisionMLflowConvertor.PREDICT_FILE_PATH, VisionMLflowConvertor.VISION_UTILS_FILE_PATH],
-            segregate=True,
-        )
+        if self._model_flavor == "OSS":
+            vision_model = transformers.pipeline(task=self._task, model=str(self._model_dir))
+            vision_model.model.config = config
+            image_str = self.get_random_base64_decoded_image()
+            self._signatures = infer_signature(
+                image_str, generate_signature_output(vision_model, image_str),
+            )
+            return super()._save(
+                conda_env=get_default_conda_env(vision_model.model)
+            )
+        else:
+            return super()._save(
+                code_paths=[VisionMLflowConvertor.PREDICT_FILE_PATH, VisionMLflowConvertor.VISION_UTILS_FILE_PATH],
+                segregate=True,
+            )
 
 
 class ASRMLflowConvertor(HFMLFLowConvertor):
