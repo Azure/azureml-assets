@@ -42,8 +42,9 @@ try:
     from bertopic import BERTopic
     from openai import AzureOpenAI
     from bertopic.representation import OpenAI
-except:
+except Exception:
     print("Error while importing Bertopic")
+
 
 def get_output_schema() -> StructType:
     """Get Output Data Spark DataFrame Schema."""
@@ -77,14 +78,14 @@ def bertopic_get_topic(queries,
     """Group queries in semantic groups using Bertopic."""
     try:
         token_manager = _WorkspaceConnectionTokenManager(connection_name=workspace_connection_arm_id,
-                                                        auth_header=API_KEY)
+                                                         auth_header=API_KEY)
         azure_endpoint_domain_name = token_manager.get_endpoint_domain()
         azure_openai_api_version = token_manager.get_api_version()
         azure_openai_api_key = token_manager.get_token()
         client = AzureOpenAI(api_version=azure_openai_api_version,
-                            api_key=azure_openai_api_key,
-                            azure_endpoint=azure_endpoint_domain_name,
-                            azure_deployment=model_deployment_name)
+                             api_key=azure_openai_api_key,
+                             azure_endpoint=azure_endpoint_domain_name,
+                             azure_deployment=model_deployment_name)
         representation_model = OpenAI(client, model=model_deployment_name, chat=True, prompt=BERTOPIC_DEFAULT_PROMPT)
         topic_model = BERTopic(
             min_topic_size=round(0.15*len(queries)),
@@ -157,7 +158,7 @@ def add_query_intention(df, workspace_connection_arm_id, model_deployment_name, 
                                          workspace_connection_arm_id,
                                          model_deployment_name)
 
-        if topics_dict != None:
+        if topics_dict is not None:
             df = df.withColumn(QUERY_INTENTION_COLUMN, get_query_intention(col(PROMPT_COLUMN),
                                                                            lit(json.dumps(topics_dict)),
                                                                            lit(llm_summary_enabled)))
