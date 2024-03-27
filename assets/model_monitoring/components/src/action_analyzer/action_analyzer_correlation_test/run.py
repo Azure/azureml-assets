@@ -4,6 +4,7 @@
 """Entry script for Action Analyzer correlation test."""
 
 import argparse
+import json
 from scipy import stats
 from pyspark.sql.types import (
     StructType,
@@ -11,24 +12,33 @@ from pyspark.sql.types import (
     StringType,
     FloatType
 )
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, udf
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     save_spark_df_as_mltable,
     create_spark_df,
     save_empty_dataframe
 )
-from shared_utilities.constants import (
+from action_analyzer.constants import (
     P_VALUE_THRESHOLD,
-    TEXT_SPLITTER,
     PROMPT_COLUMN,
-    INDEX_SCORE_LLM_COLUMN,
-    INDEX_ID_COLUMN,
-    BAD_GROUP_COLUMN,
-    GOOD_GROUP_COLUMN,
     CONFIDENCE_SCORE_COLUMN,
-    GROUP_LIST_COLUMN,
-    DEFAULT_RETRIEVAL_SCORE
+    INVALID_METRICS_SCORE,
+    TTEST_GROUP_ID_COLUMN,
+    GOOD_GROUP_NAME,
+    BAD_GROUP_NAME,
+    ACTION_METRICS_COLUMN,
+    QUERY_INTENTION_COLUMN,
+    TRACE_ID_LIST_COLUMN,
+    GROUP_COLUMN,
+    PROPERTIES_COLUMN,
+    TRACE_ID_COLUMN,
+    MEAN_THRESHOLD,
+    ACTION_QUERY_INTENTION_COLUMN
+)
+from action_analyzer.utils import (
+    get_unique_values_by_column,
+    get_violated_metrics
 )
 import statistics
 from scipy.stats import mannwhitneyu
@@ -45,9 +55,9 @@ def get_output_schema() -> StructType:
     """Get Action Data Spark DataFrame Schema."""
     schema = StructType(
         [
-            StructField(INDEX_ID_COLUMN, StringType(), True),
-            StructField(BAD_GROUP_COLUMN, StringType(), True),
-            StructField(GOOD_GROUP_COLUMN, StringType(), True),
+            StructField(TTEST_GROUP_ID_COLUMN, StringType(), True),
+            StructField(TRACE_ID_LIST_COLUMN, StringType(), True),
+            StructField(ACTION_QUERY_INTENTION_COLUMN, StringType(), True),
             StructField(CONFIDENCE_SCORE_COLUMN, FloatType(), True)
         ]
     )
@@ -61,41 +71,84 @@ def save_action_data(action_rows, output_path):
     save_spark_df_as_mltable(df, output_path)
 
 
-def generate_action_rows(pdf, index_set, group_set):
-    """Generate the action data."""
-    actions_row = []
-    for index in index_set:
-        for group in group_set:
-            print("Group: ", group)
-            metrics = group.split("_")[0]
-            topic = group.split("_")[-1]
-            good_group_name = f"{metrics}_good_group"
-            if group == good_group_name:
-                print(f"Skip {good_group_name}, only do t-test for bad group")
-                continue
-            index_df = pdf[pdf[INDEX_ID_COLUMN] == index]
-            good_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][INDEX_SCORE_LLM_COLUMN]  # noqa: E501
-            bad_answer_scores = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][INDEX_SCORE_LLM_COLUMN]  # noqa: E501
-            good_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: good_group_name in x)][[PROMPT_COLUMN, INDEX_SCORE_LLM_COLUMN]]  # noqa: E501
-            bad_answer_names = index_df[index_df[GROUP_LIST_COLUMN].apply(lambda x: group in x)][[PROMPT_COLUMN, INDEX_SCORE_LLM_COLUMN]]  # noqa: E501
-            print("good answer questions: ")
-            print(good_answer_names)
-            print("bad answer questions: ")
-            print(bad_answer_names)
-            t_stat, p_value = perform_ttest(good_answer_scores, bad_answer_scores)
-            bad_mean = statistics.mean(bad_answer_scores)
-            print("Mean value of bad group: ", bad_mean)
-            if t_stat > 0 and p_value < P_VALUE_THRESHOLD and bad_mean < 3.0:
-                print("Generating action for topic: ", topic)
-                # entry: [index_id, bad_group, good_group, confidence_score]
-                entry = [
-                    index,
-                    group,
-                    good_group_name,
-                    float(1.0 - p_value)
-                ]
-                actions_row.append(entry)
-    return actions_row
+@udf(returnType=StringType())
+def get_debugging_column(action_metrics, properties):
+    """Get debugging information for t-test."""
+    properties_dict = json.loads(properties)
+    return f"{action_metrics} - {properties_dict[PROMPT_COLUMN]}"
+
+
+def generate_actions(df, violated_metrics):
+    """Perform correlation test to generate action data."""
+    try:
+        ttest_groups = get_unique_values_by_column(df, TTEST_GROUP_ID_COLUMN)
+        print("===All ttest groups===")
+        print(ttest_groups)
+        actions_data = []
+        for ttest_group_id in ttest_groups:
+            df_filtered = df.filter(col(TTEST_GROUP_ID_COLUMN) == ttest_group_id)
+            for metrics in violated_metrics:
+                print("\nMetrics: ", metrics)
+                good_group_name = GOOD_GROUP_NAME.replace("{metrics}", metrics)
+                bad_group_name = BAD_GROUP_NAME.replace("{metrics}", metrics)
+                good_group_df = df_filtered.filter(col(GROUP_COLUMN) == good_group_name)
+                bad_group_df = df_filtered.filter(col(GROUP_COLUMN) == bad_group_name)
+                # correlation test for default bad group
+                actions_data = perform_correlation_test(good_group_df,
+                                                        bad_group_df,
+                                                        ttest_group_id,
+                                                        actions_data,
+                                                        "default")
+                # correlation test for all bad subgroups
+                query_intention_groups = get_unique_values_by_column(bad_group_df, QUERY_INTENTION_COLUMN)
+                for query_intention in query_intention_groups:
+                    bad_subgroup_df = bad_group_df.filter(col(QUERY_INTENTION_COLUMN) == query_intention)
+                    actions_data = perform_correlation_test(good_group_df,
+                                                            bad_subgroup_df,
+                                                            ttest_group_id,
+                                                            actions_data,
+                                                            query_intention)
+        return actions_data
+    except Exception ex:
+        print("Exception when generating actions: ", ex)
+        return []
+
+
+def perform_correlation_test(good_group_df,
+                             bad_group_df,
+                             ttest_group_id,
+                             actions_data,
+                             query_intention):
+    """Pefrom correlation test for two groups of data."""
+    print("\nCorrelation test for topic: ", query_intention)
+    # This part is for debugging t-test purpose only.
+    print("good queries: ")
+    good_group_df = good_group_df.withColumn("Debugging",
+                                             get_debugging_column(col(ACTION_METRICS_COLUMN), col(PROPERTIES_COLUMN)))
+    print("\n".join(good_group_df.select("Debugging").rdd.flatMap(lambda x: x).collect()))
+    print("bad queries: ")
+    bad_group_df = bad_group_df.withColumn("Debugging",
+                                           get_debugging_column(col(ACTION_METRICS_COLUMN), col(PROPERTIES_COLUMN)))
+    print("\n".join(bad_group_df.select("Debugging").rdd.flatMap(lambda x: x).collect()))
+
+    good_answer_scores = good_group_df.select(ACTION_METRICS_COLUMN).rdd.flatMap(lambda x: x).collect()
+    bad_answer_scores = bad_group_df.select(ACTION_METRICS_COLUMN).rdd.flatMap(lambda x: x).collect()
+
+    t_stat, p_value = perform_ttest(good_answer_scores, bad_answer_scores)
+    bad_mean = statistics.mean(bad_answer_scores)
+    print("Mean value of bad group: ", bad_mean)
+    if t_stat > 0 and p_value < P_VALUE_THRESHOLD and bad_mean < MEAN_THRESHOLD:
+        print("Generating action for group: ", query_intention)
+        # entry: [ttest_group_id, trace_list, query_intention, confidence_score]
+        trace_list = ",".join(bad_group_df.select(TRACE_ID_COLUMN).rdd.flatMap(lambda x: x).collect())
+        entry = [
+            ttest_group_id,
+            trace_list,
+            query_intention,
+            float(1.0 - p_value)
+        ]
+        actions_data.append(entry)
+    return actions_data
 
 
 def perform_ttest(good_answer_scores, bad_answer_scores):
@@ -114,43 +167,35 @@ def perform_ttest(good_answer_scores, bad_answer_scores):
     return t_stat2, p_value2
 
 
-def get_unique_group_and_index(data_with_action_metric_score_df):
-    """Get the group set and index set."""
-    group_set = set()
-    index_set = set()
-    for score_data_row in data_with_action_metric_score_df.collect():
-        groups = score_data_row[GROUP_LIST_COLUMN].split(TEXT_SPLITTER)
-        group_set.update(groups)
-        index_set.add(score_data_row[INDEX_ID_COLUMN])
-    return group_set, index_set
-
-
 def run():
     """Correlation test."""
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--action_data", type=str)
+    parser.add_argument("--violated_metrics", type=str)
     parser.add_argument("--data_with_action_metric_score", type=str)
     args = parser.parse_args()
 
     data_with_action_metric_score_df = try_read_mltable_in_spark(
         args.data_with_action_metric_score, "data_with_action_metric_score"
     )
-
     if not data_with_action_metric_score_df or data_with_action_metric_score_df.isEmpty():
         print("Empty metrics score data")
         save_empty_dataframe(get_output_schema(), args.action_data)
         return
 
-    group_set, index_set = get_unique_group_and_index(data_with_action_metric_score_df)
-    print("===All groups===")
-    print(group_set)
-    print("===All indexes===")
-    print(index_set)
-    data_with_action_metric_score_df = data_with_action_metric_score_df.filter(col(INDEX_SCORE_LLM_COLUMN) > DEFAULT_RETRIEVAL_SCORE)  # noqa: E501
-    pdf = data_with_action_metric_score_df.toPandas()
-    print(pdf)
-    action_rows = generate_action_rows(pdf, index_set, group_set)
+    violated_metrics = get_violated_metrics(args.violated_metrics)
+
+    # filter out invalid metrics score
+    data_with_action_metric_score_df = data_with_action_metric_score_df.filter(col(ACTION_METRICS_COLUMN) > INVALID_METRICS_SCORE)  # noqa: E501
+
+    # generate actions
+    action_rows = generate_actions(data_with_action_metric_score_df, violated_metrics)
+
+    # Output Schema:
+    # +--------------+----------+---------------+----------------+
+    # |ttest_group_id|trace_list|query_intention|confidence_score|
+    # +--------------+----------+---------------+----------------+
     save_action_data(action_rows, args.action_data)
 
 

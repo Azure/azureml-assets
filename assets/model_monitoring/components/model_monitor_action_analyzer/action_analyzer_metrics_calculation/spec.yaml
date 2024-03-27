@@ -52,7 +52,7 @@ conf:
 code: ../../src
 
 entry:
-  file: ./action_analyzer/action_analyzer_metrics_calculation/run2.py
+  file: ./action_analyzer/action_analyzer_metrics_calculation/run.py
 
 args: >-
   --data_with_groups ${{inputs.data_with_groups}}

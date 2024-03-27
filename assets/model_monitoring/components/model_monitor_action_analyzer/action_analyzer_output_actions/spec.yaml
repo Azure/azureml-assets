@@ -48,7 +48,7 @@ conf:
 code: ../../src
 
 entry:
-  file: ./action_analyzer/action_analyzer_output_actions/run2.py
+  file: ./action_analyzer/action_analyzer_output_actions/run.py
 
 args: >-
   --action_data ${{inputs.action_data}}
