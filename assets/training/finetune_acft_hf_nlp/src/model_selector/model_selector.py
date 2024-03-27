@@ -21,11 +21,15 @@ from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, MLFlowHFFlavourConstants
 
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
+from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
+
+from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 from finetune_config import FinetuneConfig
 
@@ -43,7 +47,7 @@ MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
 class ModelSelectorConstants:
     """Model import constants."""
 
-    ASSET_ID_NOT_FOUND = "ASSET_ID_NOT_FOUND",
+    ASSET_ID_NOT_FOUND = "ASSET_ID_NOT_FOUND"
     MODEL_NAME_NOT_FOUND = "MODEL_NAME_NOT_FOUND"
 
 
@@ -85,6 +89,39 @@ def get_model_asset_id() -> str:
     except Exception as e:
         logger.info(f"Could not fetch the model asset id: {e}")
         return ModelSelectorConstants.ASSET_ID_NOT_FOUND
+
+
+def validate_huggingface_id(huggingface_id: str) -> None:
+    """Validate the huggingface_id using Hfapi. Raise exception if the huggingface id is invalid."""
+
+    from huggingface_hub import HfApi, ModelFilter
+    hf_api = HfApi()  # by default endpoint points to https://huggingface.co
+
+    try:
+        model_infos = [
+            info
+            for info in hf_api.list_models(filter=ModelFilter(model_name=huggingface_id))
+            if info.modelId == huggingface_id
+        ]
+    except ConnectionError:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "Passing huggingface ID is only valid with valid internet connection."
+                )
+            )
+        )
+
+    if not model_infos:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    f"Invalid hugggingface ID found: {huggingface_id}. Please fix it and try again."
+                )
+            )
+        )
 
 
 def get_parser():
@@ -161,6 +198,8 @@ def model_selector(args: Namespace) -> Dict[str, Any]:
     if args.huggingface_id is not None:
         # remove the spaces at either ends of hf id
         args.model_name = args.huggingface_id.strip()
+        # validate hf_id
+        validate_huggingface_id(args.model_name)
     else:
         # TODO Revist whether `model_id` is still relevant
         args.model_name = args.model_id
