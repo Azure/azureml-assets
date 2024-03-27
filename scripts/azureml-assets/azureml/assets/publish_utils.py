@@ -152,7 +152,7 @@ def validate_and_prepare_pipeline_component(
                 f"The URI for component '{name}' references registry '{registry}', "
                 "and publishing will fail if the release process does not have read access to it."
             )
-        
+
         # If workspace asset URI is used, use registry we're creating the component in
         if not registry:
             logger.print(f"Workspace asset URI was used, using component from registry {registry}")
