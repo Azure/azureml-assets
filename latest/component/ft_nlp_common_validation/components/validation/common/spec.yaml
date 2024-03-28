@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: ft_nlp_common_validation
-version: 0.0.37
+version: 0.0.38
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/45
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/46
 
 code: ../../../src/validation
 
@@ -138,6 +138,15 @@ inputs:
     type: integer
     optional: true
     description: Batch size per GPU/CPU for evaluation
+
+  auto_find_batch_size:
+    type: string
+    enum:
+    - "true"
+    - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will enable auto_find_batch_size for training
 
   learning_rate:
     type: number
