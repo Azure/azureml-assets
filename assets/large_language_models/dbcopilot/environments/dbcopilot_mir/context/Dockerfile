@@ -32,7 +32,7 @@ RUN python -m pip install --upgrade pip && \
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda/envs/amlenv && \
-    pip install cryptography==42.0.5 langchain==0.1.11 && \
+    pip install cryptography==42.0.5 langchain==0.0.348 && \
     conda deactivate"
 
 # For GUNICORN_CMD_ARGS, we need to set the timeout to be 0 so that the server will not timeout
