@@ -28,6 +28,7 @@ logger = get_logger_app("azureml.acft.contrib.hf.nlp.entry_point.finetune")
 COMPONENT_NAME = "run_finetune"
 _COMPONENTS_SCRIPTS_REL_PATH = Path("entry_point", "ftaas", "finetune")
 _ALLOWED_MAX_STRING_LENGTH = 128
+PEFT_ADAPTER_WEIGHTS_DIR = "peft_adapter_weights"
 
 
 @dataclass
@@ -313,9 +314,14 @@ def add_optional_input(cmd, input_name):
         cmd += ["--" + input_name, input_val]
 
 
-def _run_subprocess_cmd(cmd: List[str], component_name: str):
+def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str):
     """Run the subprocess command."""
     logger.info(f"Starting the command: {cmd}")
+    completion_file = Path(completion_files_folder, f"{component_name}.complete.txt")
+    if completion_file.exists():
+        logger.info(f"Skipping {component_name} as completion file exists: {completion_file}")
+        return
+
     # Not setting stdout and stderr will stream all the logs directly to stdout
     process = subprocess.Popen(cmd)
 
@@ -331,18 +337,60 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str):
             )
         )
     logger.info(f"{component_name} completed successfully")
+    Path(completion_files_folder).mkdir(parents=True, exist_ok=True)
+    Path(completion_file).touch()
+    logger.info(f"Created completion file: {completion_file}")
 
 
-def _initiate_run():
+def cleanup(completion_files_folder: str, model_selector_output: str,
+            preprocess_output: str, pytorch_model_folder: str, mlflow_model_folder: str):
+    """Clean up intermediate files/folders."""
+    logger.info("Cleaning up intermediate files/folders...")
+    try:
+        shutil.rmtree(completion_files_folder, ignore_errors=True)
+        shutil.rmtree(model_selector_output, ignore_errors=True)
+        shutil.rmtree(preprocess_output, ignore_errors=True)
+        shutil.rmtree(mlflow_model_folder, ignore_errors=True)
+        if os.path.exists(pytorch_model_folder):
+            for name in os.listdir(pytorch_model_folder):
+                if name != PEFT_ADAPTER_WEIGHTS_DIR:  # don't preserve anything except peft adapter weights
+                    path = os.path.join(pytorch_model_folder, name)
+                    if os.path.isfile(path):
+                        os.unlink(path)
+                    elif os.path.isdir(path):
+                        shutil.rmtree(path, ignore_errors=True)
+        logger.info("Cleanup of intermediate files/folders completed successfully")
+    except Exception as e:
+        logger.error(f"Cleanup of intermediate files/folders failed. Ignoring error: {e}")
+
+
+def initiate_run():
+    """Initiate the run."""
+    # intermediate folder preserves files/folders that are needed across singularity preemptions
+    intermediate_folder = decode_output_from_env_var("intermediate_folder")
+    completion_files_folder = os.path.join(intermediate_folder, "completion_files")
+    model_selector_output = os.path.join(intermediate_folder, "model_selector_output")
+    preprocess_output = os.path.join(intermediate_folder, "preprocess_output")
+    pytorch_model_folder = os.path.join(intermediate_folder, "pytorch_model_folder")
+    mlflow_model_folder = os.path.join(intermediate_folder, "mlflow_model_folder")
+
+    _initiate_run(completion_files_folder, model_selector_output,
+                  preprocess_output, pytorch_model_folder, mlflow_model_folder)
+    cleanup(completion_files_folder, model_selector_output,
+            preprocess_output, pytorch_model_folder, mlflow_model_folder)
+
+
+def _initiate_run(completion_files_folder: str, model_selector_output: str,
+                  preprocess_output: str, pytorch_model_folder: str, mlflow_model_folder: str):
     """Run the model selector, preprocess, finetune and registration script."""
     # model selector
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.model_selector",
         "--task_name", "TextGeneration",
         "--mlflow_model_path", decode_input_from_env_var("mlflow_model_path"),
-        "--output_dir", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "model_selector_output")
+        "--output_dir", model_selector_output
     ]
-    _run_subprocess_cmd(cmd, component_name="Model selector")
+    _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder)
 
     # preprocess
     cmd = [
@@ -354,9 +402,8 @@ def _initiate_run():
         "--max_seq_length", decode_param_from_env_var("max_seq_length"),
         "--train_file_path", os.path.join(decode_input_from_env_var("dataset_input") or "", "train_input.jsonl"),
         "--test_file_path", os.path.join(decode_input_from_env_var("dataset_input") or "", "train_input.jsonl"),
-        "--model_selector_output",
-        os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "model_selector_output"),
-        "--output_dir", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "preprocess_output")
+        "--model_selector_output", model_selector_output,
+        "--output_dir", preprocess_output
     ]
     # add optional param ground_truth_key
     add_optional_param(cmd, "ground_truth_key")
@@ -365,7 +412,7 @@ def _initiate_run():
     if os.path.isfile(validation_file_path):
         cmd += ["--validation_file_path", validation_file_path]
 
-    _run_subprocess_cmd(cmd, component_name="Preprocess")
+    _run_subprocess_cmd(cmd, component_name="preprocess", completion_files_folder=completion_files_folder)
 
     # finetune
     cmd = [
@@ -405,6 +452,8 @@ def _initiate_run():
         "--logging_steps", decode_param_from_env_var('logging_steps'),
         "--metric_for_best_model", decode_param_from_env_var('metric_for_best_model'),
         "--resume_from_checkpoint", decode_param_from_env_var('resume_from_checkpoint'),
+        "--save_strategy", decode_param_from_env_var('save_strategy'),
+        "--save_steps", decode_param_from_env_var('save_steps'),
         "--save_total_limit", decode_param_from_env_var('save_total_limit'),
         "--apply_early_stopping", decode_param_from_env_var('apply_early_stopping'),
         "--early_stopping_patience", decode_param_from_env_var('early_stopping_patience'),
@@ -412,48 +461,41 @@ def _initiate_run():
         "--apply_ort", decode_param_from_env_var('apply_ort'),
         "--apply_deepspeed", decode_param_from_env_var('apply_deepspeed'),
         "--deepspeed_stage", decode_param_from_env_var('deepspeed_stage'),
-        "--model_selector_output",
-        os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "model_selector_output"),
-        "--preprocess_output", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "preprocess_output"),
+        "--model_selector_output", model_selector_output,
+        "--preprocess_output", preprocess_output,
         "--system_properties", decode_param_from_env_var("system_properties"),
-        "--pytorch_model_folder", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "pytorch_model_folder"),
-        "--mlflow_model_folder", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "mlflow_model_folder"),
+        "--pytorch_model_folder", pytorch_model_folder,
+        "--mlflow_model_folder", mlflow_model_folder,
         "--output_model", decode_output_from_env_var('output_model')
     ]
-    _run_subprocess_cmd(cmd, component_name="Finetune")
+    _run_subprocess_cmd(cmd, component_name="finetune", completion_files_folder=completion_files_folder)
 
     # validate lora weights
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.validate_lora_weights",
-        "--mlflow_model_path", os.path.join(os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'], "mlflow_model_folder"),
-        "--lora_weights_path", os.path.join(
-            os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'],
-            "pytorch_model_folder",
-            "peft_adapter_weights"
-        ),
+        "--mlflow_model_path", decode_input_from_env_var("mlflow_model_path"),
+        "--lora_weights_path", os.path.join(pytorch_model_folder, PEFT_ADAPTER_WEIGHTS_DIR),
         "--tokenizer_path", os.path.join(decode_input_from_env_var("mlflow_model_path") or "", "data", "tokenizer")
     ]
-    _run_subprocess_cmd(cmd, component_name="Validate LoRA Weights")
+    _run_subprocess_cmd(cmd, component_name="validate_lora_weights", completion_files_folder=completion_files_folder)
 
     # model registration
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.register_model",
         "--task_name", "TextGeneration",
         "--finetune_args_path", os.path.join(
-            os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'],
-            "pytorch_model_folder",
+            pytorch_model_folder,
             "finetune_args.json"
         ),
         "--registration_details_folder", decode_output_from_env_var('output_model'),
         "--model_path", os.path.join(
-            os.environ['AZUREML_CR_DATA_CAPABILITY_PATH'],
-            "pytorch_model_folder",
-            "peft_adapter_weights"
+            pytorch_model_folder,
+            PEFT_ADAPTER_WEIGHTS_DIR
         ),
         "--convert_to_safetensors", "true",
     ]
     add_optional_param(cmd=cmd, component_param_name="registered_model_name", argparse_param_name="model_name")
-    _run_subprocess_cmd(cmd, component_name="Register Model")
+    _run_subprocess_cmd(cmd, component_name="register_model", completion_files_folder=completion_files_folder)
 
 
 @swallow_all_exceptions(time_delay=60)
@@ -466,7 +508,7 @@ def run():
     # _copy_components_scripts()
 
     # run the component script
-    _initiate_run()
+    initiate_run()
 
 
 if __name__ == "__main__":
