@@ -43,14 +43,14 @@ class FineTuneProxy:
         job_id = finetune_job.id
         status = finetune_job.status
 
-        # If the job isn't yet done, poll it every 10 seconds.
+        # If the job isn't yet done, poll it every 30 seconds.
         if status not in ["succeeded", "failed"]:
             logger.info(f'Job not in terminal status: {status}. Waiting.')
             while status not in ["succeeded", "failed"]:
-                time.sleep(10)
+                time.sleep(30)
                 finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(job_id)
                 status = finetune_job.status
-                print(f'Status: {status}')
+                logger.info(f"current status of finetune job : {status}, polling after 30 sec")
         else:
             logger.debug(f'Fine-tune job {job_id} finished with status: {status}')
 
@@ -91,7 +91,7 @@ def submit_finetune_job():
                                                      aoai_client_manager.endpoint_subscription)
         with open(args.data_upload_output) as f:
             data_upload_output = json.load(f)
-        logger("data_upload_output for finetuning model: {}".format(data_upload_output))
+        logger.debug(f"data_upload_output for finetuning model: {data_upload_output}")
         finetune_proxy = FineTuneProxy(aoai_client_manager.get_azure_openai_client())
         fientuned_model_id = finetune_proxy.submit_finetune_job(
             training_file_id=data_upload_output['train_file_id'],
