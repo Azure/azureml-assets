@@ -261,6 +261,8 @@ class InferencePostprocessor(object):
                     except SyntaxError:
                         # we matched with something that is not a number
                         pass
+        if self.kwargs.get("extract_number_strategy_default_value") is not None:
+            default = self.kwargs.get("extract_number_strategy_default_value")
         return default
 
     def _convert_to_unicode(self, text: str) -> str:
@@ -428,7 +430,7 @@ class InferencePostprocessor(object):
                 pred_list.append(curr_pred_list)
             else:
                 out_string = predicted if isinstance(predicted, str) else predicted[0]
-                pred_list.append(self.apply_generic_processor(out_string, row))
+                pred_list.append(self.apply_generic_processor(out_string, row) if out_string != '' else out_string)
         if isinstance(pred_list[0], list) and len(pred_list[0]) > 1:
             cols = [
                 f"{self.prediction_column_name}_{i+1}" for i in range(len(pred_list[0]))
