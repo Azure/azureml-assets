@@ -7,7 +7,6 @@ from azure.identity import ManagedIdentityCredential
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 from azure.mgmt.cognitiveservices.models import ApiKeys
 from openai import AzureOpenAI
-
 import os
 from typing import Optional
 from common.logging import get_logger

@@ -1,13 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: data_upload
-version: 0.0.2
+name: data_delete
+version: 0.0.1
 type: command
 
 is_deterministic: true
 
-display_name: Data Upload
-description: Component to upload user's data from AzureML workspace to Azure OpenAI
-  resource
+display_name: Data Delete
+description: Delete data file from Azure OpenAI resource
 
 environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/1
 
@@ -29,27 +28,20 @@ inputs:
     optional: true
     description: Subscription for the AOAI resource.
 
-  train_dataset:
+  data_upload_output:
     type: uri_file
     optional: false
-    description: jsonl source file/folder for training dataset.
+    description: Contains data upload output file in JSON/custom class format
 
-  validation_dataset:
+  wait_for_finetuning:
     type: uri_file
     optional: true
-    description: source file/folder for validation dataset.
-
-outputs:
-  dataset_upload_output:
-    type: uri_file
-    description: Contains train and validation data upload output file in JSON/custom
-      class format
+    description: Contains finetune step output file in JSON/custom class format
 
 command: >-
-  python upload.py
-  --train_dataset ${{inputs.train_dataset}}
-  $[[--validation_dataset ${{inputs.validation_dataset}}]]
-  --dataset_upload_output ${{outputs.dataset_upload_output}}
+  python data_delete.py
+  --data_upload_output ${{inputs.data_upload_output}}
   --endpoint_name ${{inputs.endpoint_name}}
   $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
   $[[--endpoint_subscription ${{inputs.endpoint_subscription}}]]
+  $[[--wait_for_finetuning ${{inputs.wait_for_finetuning}}]]
