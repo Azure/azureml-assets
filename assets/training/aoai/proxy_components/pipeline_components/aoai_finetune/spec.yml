@@ -75,7 +75,7 @@ outputs:
 jobs:
   data_upload:
     type: command
-    component: azureml://registries/azureml-1p-preview/components/data_upload/versions/0.0.1
+    component: azureml://registries/azureml-preview-test1/components/data_upload/versions/0.0.2
     inputs:
       train_dataset: ${{parent.inputs.train_dataset}}
       validation_dataset: ${{parent.inputs.validation_dataset}}
@@ -85,7 +85,7 @@ jobs:
 
   finetune_submit:
     type: command
-    component: azureml://registries/azureml-1p-preview/components/finetune_submit/versions/0.0.1
+    component: azureml://registries/azureml-preview-test1/components/finetune_submit/versions/0.0.2
     inputs:
       data_upload_output: ${{parent.jobs.data_upload.outputs.dataset_upload_output}}
       model: ${{parent.inputs.model}}
@@ -103,7 +103,7 @@ jobs:
   
   data_delete:
     type: command
-    component: 1efc3681-d1a4-4d73-a84d-20b254f1b496
+    component: azureml://registries/azureml-preview-test1/components/finetune_submit/versions/0.0.2
     inputs:
       endpoint_name: ${{parent.inputs.endpoint_name}}
       endpoint_resource_group: ${{parent.inputs.endpoint_resource_group}}
