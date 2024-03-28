@@ -313,7 +313,7 @@ jobs:
       compute_finetune: ${{parent.inputs.compute_finetune}}
       task_name: ${{parent.inputs.task_type}}
       user_column_names: image_url, label
-      task_specific_extra_params: '"model_family=${{parent.inputs.model_family}};model_name=${{parent.inputs.model_name}};metric_for_best_model=${{parent.inputs.metric_for_best_model}};number_of_epochs=${{parent.inputs.number_of_epochs}}"'
+      task_specific_extra_params: '"model_family=HuggingFaceImage;model_name=${{parent.inputs.model_name}};metric_for_best_model=${{parent.inputs.primary_metric}};number_of_epochs=${{parent.inputs.number_of_epochs}}"'
 
   hugging_face_model_import:
     type: command
