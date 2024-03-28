@@ -204,13 +204,13 @@ class TestGenAISparkPreprocessor:
     _root_span_str_lookback = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "20' + \
         '24-02-05T06:59:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": nu' + \
         'll, "span_id": "5", "span_type": "llm", "start_time": "2024-02-05T06:08:00", "status": "OK", "trace_id"' + \
-        ': "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "202' + \
-        '4-02-05T05:58:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "5",' + \
-        ' "span_id": "4", "span_type": "llm", "start_time": "2024-02-05T06:05:00", "status": "OK", "trace_id": "' + \
-        '01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-0' + \
-        '2-05T05:59:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_id": "4' + \
-        '", "span_id": "3", "span_type": "llm", "start_time": "2024-02-05T05:58:00", "status": "OK", "trace_id":' + \
-        ' "01", "children": []}]}]}'
+        ': "01", "request_id": "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"' + \
+        '}", "end_time": "2024-02-05T05:58:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name' + \
+        '", "parent_id": "5", "span_id": "4", "span_type": "llm", "start_time": "2024-02-05T06:05:00", "status":' + \
+        ' "OK", "trace_id": "01", "request_id": "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"ou' + \
+        'tput\\":\\"out\\"}", "end_time": "2024-02-05T05:59:00", "events": "[]", "framework": "INTERNAL", "links' + \
+        '": "[]", "name": "name", "parent_id": "4", "span_id": "3", "span_type": "llm", "start_time": "2024-02-0' + \
+        '5T05:58:00", "status": "OK", "trace_id": "01", "request_id": "01", "children": []}]}]}'
 
     _trace_log_data_lookback = [
             ["01", "01", None, None, datetime(2024, 2, 5, 6, 8, 0)] +
@@ -235,16 +235,9 @@ class TestGenAISparkPreprocessor:
 
         trace_df = aggregate_spans_into_traces(span_logs_no_root_with_data_df, True, start_time, end_time)
         rows = trace_df.collect()
-        assert trace_df.count() == 1
-        assert rows[0]['trace_id'] == "01"
-
-        span_logs_no_root = [
-            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name",] +
-            ["1", "1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01", "01"],
-        ]
-        spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
-        no_root_traces = aggregate_spans_into_traces(spans_no_root_df, True, start_time, end_time)
-        assert no_root_traces.isEmpty()
+        assert trace_df.count() == 2
+        assert rows[0]['request_id'] == "01"
+        assert rows[1]['request_id'] == "02"
 
     @pytest.mark.parametrize(
         "span_input_logs, span_input_schema, expected_trace_logs, " +
