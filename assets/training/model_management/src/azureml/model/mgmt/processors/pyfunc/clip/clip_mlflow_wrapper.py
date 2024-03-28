@@ -3,20 +3,21 @@
 
 """MLflow PythonModel wrapper class that loads the MLflow model, preprocess inputs and performs inference."""
 
-import mlflow
-from PIL import Image
-import pandas as pd
-import torch
-import tempfile
+import io
 
+import mlflow
+import pandas as pd
+
+from PIL import Image
 from transformers import AutoProcessor, AutoModelForZeroShotImageClassification
+
 from config import MLflowSchemaLiterals, MLflowLiterals, Tasks
-from typing import List, Tuple
+
 
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
     # model wrapper for save_model().
-    from vision_utils import create_temp_file, process_image_pandas_series, get_current_device
+    from vision_utils import process_image, get_current_device
 except ImportError:
     pass
 
@@ -74,13 +75,14 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns ["probs", "labels"]
         """
-        # Decode the base64 image column
-        decoded_images = input_data.loc[
-            :, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
-        ].apply(axis=1, func=process_image_pandas_series)
+        # Read all the input images.
+        pil_images = [
+            Image.open(io.BytesIO(process_image(image)))
+            for image in input_data[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
+        ]
 
         try:
-            # parse comma separated labels and remove leading and trailing whitespace
+            # Parse comma separated classes and remove leading and trailing whitespace.
             captions = map(
                 str.strip,
                 input_data[MLflowSchemaLiterals.INPUT_COLUMN_TEXT].iloc[0].split(',')
@@ -94,45 +96,20 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
                     "to contain a string with the comma-separated labels"
             )
 
-        with tempfile.TemporaryDirectory() as tmp_output_dir:
-            image_path_list = (
-                decoded_images.iloc[:, 0]
-                .map(lambda row: create_temp_file(row, tmp_output_dir)[0])
-                .tolist()
-            )
-            conf_scores = self.run_inference_batch(
-                image_path_list=image_path_list,
-                text_list=captions,
-            )
-
-        df_result = pd.DataFrame(
-            columns=[
-                MLflowSchemaLiterals.OUTPUT_COLUMN_PROBS,
-                MLflowSchemaLiterals.OUTPUT_COLUMN_LABELS,
-            ]
-        )
-
-        labels = [captions] * len(conf_scores)
-        df_result[MLflowSchemaLiterals.OUTPUT_COLUMN_PROBS], df_result[MLflowSchemaLiterals.OUTPUT_COLUMN_LABELS]\
-            = (conf_scores.tolist(), labels)
-        return df_result
-
-    def run_inference_batch(
-        self,
-        image_path_list: List,
-        text_list: List,
-    ) -> Tuple[torch.tensor]:
-        """Perform inference on batch of input images.
-
-        :param image_path_list: list of image paths for inferencing.
-        :type image_path_list: List
-        :return: Predicted probabilities
-        :rtype: Tuple of torch.tensor
-        """
-        image_list = [Image.open(img_path) for img_path in image_path_list]
-        inputs = self._processor(text=text_list, images=image_list, return_tensors="pt", padding=True)
+        # Preprocess the image and text data and move it to the device.
+        inputs = self._processor(text=captions, images=pil_images, return_tensors="pt", padding=True)
         inputs = inputs.to(self._device)
+
+        # Do inference and compute the class probabilities.
         outputs = self._model(**inputs)
         logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
         probs = logits_per_image.softmax(dim=1)  # we can take the softmax to get the label probabilities
-        return probs
+
+        # Covert to Pandas dataframe and return.
+        df_result = pd.DataFrame(
+            {
+                MLflowSchemaLiterals.OUTPUT_COLUMN_PROBS: probs.tolist(),
+                MLflowSchemaLiterals.OUTPUT_COLUMN_LABELS: [captions] * len(probs),
+            }
+        )
+        return df_result
