@@ -10,7 +10,7 @@ from openai import OpenAI
 from openai.types.fine_tuning.job_create_params import Hyperparameters
 from common import utils
 from common.azure_openai_client_manager import AzureOpenAIClientManager
-from common.logging import get_logger
+from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
 
 
 logger = get_logger(__name__)
@@ -82,13 +82,17 @@ def submit_finetune_job():
     print("args: {}".format(args))
 
     try:
-        client = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
+        aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
                                           endpoint_resource_group=args.endpoint_resource_group,
-                                          endpoint_subscription=args.endpoint_subscription).get_azure_openai_client()
+                                          endpoint_subscription=args.endpoint_subscription)
+        add_custom_dimenions_to_app_insights_handler(logger,
+                                                    aoai_client_manager.endpoint_name,
+                                                    aoai_client_manager.endpoint_resource_group,
+                                                    aoai_client_manager.endpoint_subscription)
         with open(args.data_upload_output) as f:
             data_upload_output = json.load(f)
         print("data_upload_output: {}".format(data_upload_output))
-        finetune_proxy = FineTuneProxy(client)
+        finetune_proxy = FineTuneProxy(aoai_client_manager.get_azure_openai_client())
         fientuned_model_id = finetune_proxy.submit_finetune_job(
             training_file_id=data_upload_output['train_file_id'],
             validation_file_id=data_upload_output['train_file_id'],

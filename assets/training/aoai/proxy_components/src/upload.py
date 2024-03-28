@@ -8,7 +8,7 @@ from io import BytesIO
 from openai import AzureOpenAI
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.utils import save_json
-from common.logging import get_logger
+from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
 import jsonlines
 import os
 
@@ -84,7 +84,7 @@ class UploadComponent:
         with jsonlines.open(train_file_path, mode='r') as file_reader:
             train_data_len = sum(1 for _ in file_reader)
         split_index = int(train_data_len * self.split_ratio)
-        logger.info(f"total length of train data: {train_data_len}, split_index: {split_index}")
+        logger.debug(f"total length of train data: {train_data_len}, split_index: {split_index}")
         return split_index
 
 
@@ -97,13 +97,17 @@ def main():
     parser.add_argument("--endpoint_name", type=str)
     parser.add_argument("--endpoint_resource_group", type=str)
     parser.add_argument("--endpoint_subscription", type=str)
-
     args = parser.parse_args()
 
     try:
         aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
                                                        endpoint_resource_group=args.endpoint_resource_group,
                                                        endpoint_subscription=args.endpoint_subscription)
+        add_custom_dimenions_to_app_insights_handler(logger,
+                                                     aoai_client_manager.endpoint_name,
+                                                     aoai_client_manager.endpoint_resource_group,
+                                                     aoai_client_manager.endpoint_subscription)
+        
         upload_component = UploadComponent(aoai_client_manager.get_azure_openai_client())
 
         dataset_upload_output = upload_component.upload_files(args.train_dataset, args.validation_dataset)
