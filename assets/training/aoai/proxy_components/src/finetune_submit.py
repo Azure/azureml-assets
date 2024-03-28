@@ -26,9 +26,9 @@ class FineTuneProxy:
     def submit_finetune_job(self, training_file_id, validation_file_id, model, registered_model,
                             n_epochs, batch_size, learning_rate_multiplier, suffix=None):
         """Submit fine-tune job to AOAI."""
-        logger.debug("Starting fine-tune job {} {} {} {} {} {} {}"
-              .format(model, training_file_id, validation_file_id, n_epochs,
-                      batch_size, learning_rate_multiplier, suffix))
+        logger.debug(f"Starting fine-tune job, model: {model}, n_epochs: {n_epochs},\
+                     batch_size: {batch_size}, learning_rate_multiplier: {learning_rate_multiplier},\
+                     training_file_id: {training_file_id}, validation_file_id: {validation_file_id}, suffix: {suffix}")
         hyperparameters: Hyperparameters = {
             "n_epochs": n_epochs if n_epochs else "auto",
             "batch_size": batch_size if batch_size else "auto",
