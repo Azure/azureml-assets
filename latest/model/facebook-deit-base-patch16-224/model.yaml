@@ -1,6 +1,6 @@
 path:
   container_name: finetuning-image-models
-  container_path: HuggingFace-mlflow/facebook-deit-base-patch16-224/fb2c78a/mlflow_model_folder
+  container_path: HuggingFace-mlflow/facebook-deit-base-patch16-224/1711510492/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
