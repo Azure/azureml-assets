@@ -10,7 +10,7 @@ from openai import OpenAI
 from openai.types.fine_tuning.job_create_params import Hyperparameters
 from common import utils
 from common.azure_openai_client_manager import AzureOpenAIClientManager
-from common.logging import get_logger
+from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
 
 
 logger = get_logger(__name__)
@@ -26,9 +26,9 @@ class FineTuneProxy:
     def submit_finetune_job(self, training_file_id, validation_file_id, model, registered_model,
                             n_epochs, batch_size, learning_rate_multiplier, suffix=None):
         """Submit fine-tune job to AOAI."""
-        print("Starting fine-tune job {} {} {} {} {} {} {}"
-              .format(model, training_file_id, validation_file_id, n_epochs,
-                      batch_size, learning_rate_multiplier, suffix))
+        logger.debug(f"Starting fine-tune job, model: {model}, n_epochs: {n_epochs},\
+                     batch_size: {batch_size}, learning_rate_multiplier: {learning_rate_multiplier},\
+                     training_file_id: {training_file_id}, validation_file_id: {validation_file_id}, suffix: {suffix}")
         hyperparameters: Hyperparameters = {
             "n_epochs": n_epochs if n_epochs else "auto",
             "batch_size": batch_size if batch_size else "auto",
@@ -43,16 +43,16 @@ class FineTuneProxy:
         job_id = finetune_job.id
         status = finetune_job.status
 
-        # If the job isn't yet done, poll it every 10 seconds.
+        # If the job isn't yet done, poll it every 30 seconds.
         if status not in ["succeeded", "failed"]:
-            print(f'Job not in terminal status: {status}. Waiting.')
+            logger.info(f'Job not in terminal status: {status}. Waiting.')
             while status not in ["succeeded", "failed"]:
-                time.sleep(10)
+                time.sleep(30)
                 finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(job_id)
                 status = finetune_job.status
-                print(f'Status: {status}')
+                logger.info(f"current status of finetune job : {status}, polling after 30 sec")
         else:
-            print(f'Fine-tune job {job_id} finished with status: {status}')
+            logger.debug(f'Fine-tune job {job_id} finished with status: {status}')
 
         if status != "succeeded":
             raise Exception("Component failed")
@@ -79,16 +79,20 @@ def submit_finetune_job():
     parser.add_argument("--endpoint_subscription", type=str)
 
     args = parser.parse_args()
-    print("args: {}".format(args))
+    logger.debug("args: {}".format(args))
 
     try:
-        client = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
-                                          endpoint_resource_group=args.endpoint_resource_group,
-                                          endpoint_subscription=args.endpoint_subscription).get_azure_openai_client()
+        aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
+                                                       endpoint_resource_group=args.endpoint_resource_group,
+                                                       endpoint_subscription=args.endpoint_subscription)
+        add_custom_dimenions_to_app_insights_handler(logger,
+                                                     aoai_client_manager.endpoint_name,
+                                                     aoai_client_manager.endpoint_resource_group,
+                                                     aoai_client_manager.endpoint_subscription)
         with open(args.data_upload_output) as f:
             data_upload_output = json.load(f)
-        print("data_upload_output: {}".format(data_upload_output))
-        finetune_proxy = FineTuneProxy(client)
+        logger.debug(f"data_upload_output for finetuning model: {data_upload_output}")
+        finetune_proxy = FineTuneProxy(aoai_client_manager.get_azure_openai_client())
         fientuned_model_id = finetune_proxy.submit_finetune_job(
             training_file_id=data_upload_output['train_file_id'],
             validation_file_id=data_upload_output['train_file_id'],
