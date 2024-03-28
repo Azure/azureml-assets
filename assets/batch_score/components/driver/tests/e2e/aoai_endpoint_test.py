@@ -13,16 +13,21 @@ from .util import _submit_job_and_monitor_till_completion, set_component
 # Common configuration
 cpu_compute_target = "cpu-cluster"
 source_dir = os.getcwd()
-gated_llm_pipeline_filepath = os.path.join(source_dir,
-                                           "driver", "tests", "e2e", "prs_pipeline_templates", "base_llm.yml")
+gated_llm_pipeline_filepath = os.path.join(
+    pytest.source_dir, "tests", "e2e", "prs_pipeline_templates", "base_llm.yml")
 
 JOB_NAME = "gated_batch_score_llm"  # Should be equivalent to base_llm.yml's job name
 YAML_COMPONENT = {"jobs": {JOB_NAME: {"component": None}}}  # Placeholder for component name set below.
 YAML_ENV_VARS = {"jobs": {JOB_NAME: {
-        "environment_variables": {
-            "BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG": "false",
-            "BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS": "True"
-        }
+    "environment_variables": {
+        "BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG": "false",
+        "BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS": "True"
+    }
+}}}
+YAML_ENV_VARS_INITIAL_REQUEST_TIMEOUT = {"jobs": {JOB_NAME: {
+    "environment_variables": {
+        "BATCH_SCORE_INITIAL_REQUEST_TIMEOUT": "20"
+    }
 }}}
 YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
     "inputs": {
@@ -31,12 +36,6 @@ YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
     },
     "error_threshold": 0,
     "mini_batch_error_threshold": 0
-}}}
-
-YAML_ENV_VARS_INITIAL_REQUEST_TIMEOUT = {"jobs": {JOB_NAME: {
-    "environment_variables": {
-        "BATCH_SCORE_INITIAL_REQUEST_TIMEOUT": "20",
-    }
 }}}
 
 
@@ -48,7 +47,7 @@ def _get_file_config_yaml(data_asset_path: str):
                 "inputs": {
                     "configuration_file": {
                         "path": data_asset_path,
-                        "type": "uri_file",
+                        "type": "uri_file"
                     }
                 }
             }
