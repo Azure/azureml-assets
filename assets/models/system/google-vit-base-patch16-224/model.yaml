@@ -1,6 +1,6 @@
 path:
   container_name: finetuning-image-models
-  container_path: HuggingFace-mlflow/google-vit-base-patch16-224/2ddc9d4/mlflow_model_folder
+  container_path: HuggingFace-mlflow/hf-Image-Classification/1711508510/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
