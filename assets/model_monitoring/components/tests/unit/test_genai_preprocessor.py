@@ -148,7 +148,7 @@ class TestGenAISparkPreprocessor:
         [datetime(2024, 2, 10, 15, 2, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 10, 15, 1, 0), "OK", "01", "01", "1", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
-        ["{\"request_id\":\"02\",\"span_id\":\"2\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
+        ["{\"request_id\":\"01\",\"span_id\":\"2\",\"trace_id\":\"01\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 10, 15, 4, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 10, 15, 3, 0), "OK", "01", "01", "2", "llm", "LLM"],
         ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
