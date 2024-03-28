@@ -58,6 +58,7 @@ def add_custom_dimenions_to_app_insights_handler(logger: logging.Logger,
                                                  endpoint_name,
                                                  endpoint_resource_group,
                                                  endpoint_subscription):
+    """Add custom dimensions to the logs emitted."""
     properties = {"endpoint_name": endpoint_name,
                   "endpoint_resource_group": endpoint_resource_group,
                   "endpoint_subscription": endpoint_subscription}
@@ -67,9 +68,7 @@ def add_custom_dimenions_to_app_insights_handler(logger: logging.Logger,
 
 
 def _appinsights_filter_processor(data, context) -> bool:
-    """
-    A process that will be added to TelemetryClient that will prevent any PII debug/info/warning from getting logged
-    """
+    """Add process to TelemetryClient to prevent any PII info getting logged."""
     # Do not log statements to be filtered
     if data.message is not None:
         data_message = data.message.lower()
