@@ -24,6 +24,11 @@
         "user_agent_identifier": {
             "type": "string",
             "description": "An identifier to be included in the User-Agent header for all outgoing requests."
+        },
+        "input_schema_version": {
+            "type": "integer",
+            "default": 1,
+            "description": "The version of input schema used in the input data - By default, this will be 1."
         }
     }
 }

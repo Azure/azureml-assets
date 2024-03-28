@@ -15,6 +15,8 @@ from .events.batch_score_minibatch_started_event import BatchScoreMinibatchStart
 from .events.batch_score_request_completed_event import BatchScoreRequestCompletedEvent
 from .events.batch_score_input_row_completed_event import BatchScoreInputRowCompletedEvent
 
+from . import logging_utils as lu
+
 
 class MinibatchAggregator:
     """Minibatch aggregator."""
@@ -80,6 +82,10 @@ class MinibatchAggregator:
         row_completed_timestamps = sorted(
             e.event_time.timestamp() for e in rows_completed_events) or [minibatch_start_time]
 
+        lu.get_logger().info(f"Minibatch {minibatch_id}: Successfully summarized "
+                             f"http_request_completed_events: {len(http_request_completed_events)}, "
+                             f"rows_completed_events: {len(rows_completed_events)}.")
+
         return BatchScoreMinibatchCompletedEvent(
             minibatch_id=minibatch_id,
             scoring_url=self._start_event_per_minibatch[minibatch_id].scoring_url,
@@ -127,6 +133,7 @@ class MinibatchAggregator:
         if not self._emit_endpoint_health_events:
             return []
 
+        processed_event_count = 0
         request_endpoint_map = self._http_request_completed_events_per_minibatch_per_endpoint
         http_request_completed_events_per_endpoint = request_endpoint_map[minibatch_id]
 
@@ -134,6 +141,7 @@ class MinibatchAggregator:
         for endpoint_uri, http_request_completed_events in http_request_completed_events_per_endpoint.items():
             http_request_durations_ms = [e.duration_ms for e in http_request_completed_events] or [0]
 
+            processed_event_count += len(http_request_completed_events)
             event = BatchScoreMinibatchEndpointHealthEvent(
                 minibatch_id=minibatch_id,
                 scoring_url=endpoint_uri,
@@ -157,13 +165,16 @@ class MinibatchAggregator:
             )
             endpoint_health_events.append(event)
 
+        lu.get_logger().info(f"Minibatch {minibatch_id}: Successfully summarized "
+                             f"http_request_completed_events: {processed_event_count}. ")
+
         return endpoint_health_events
 
     def _is_request_succeeded(self, event: BatchScoreEvent) -> bool:
-        return 200 <= abs(event.response_code) < 300
+        return event.response_code and 200 <= abs(event.response_code) < 300
 
     def _is_request_user_error(self, event: BatchScoreEvent) -> bool:
-        return 400 <= abs(event.response_code) < 500
+        return event.response_code and 400 <= abs(event.response_code) < 500
 
     def _is_request_system_error(self, event: BatchScoreEvent) -> bool:
-        return 500 <= abs(event.response_code) < 600
+        return event.response_code and 500 <= abs(event.response_code) < 600

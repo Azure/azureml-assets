@@ -88,6 +88,7 @@ class FileConfigurationValidator:
         instance["request_settings"].setdefault("headers", {})
         instance["request_settings"].setdefault("properties", {})
         instance["request_settings"].setdefault("timeout", 600)
+        instance["request_settings"].setdefault("input_schema_version", 1)
 
         # log_settings
         instance.setdefault("log_settings", {})
@@ -98,6 +99,7 @@ class FileConfigurationValidator:
         instance.setdefault("output_settings", {})
         instance["output_settings"].setdefault("ensure_ascii", False)
         instance["output_settings"].setdefault("save_partitioned_scoring_results", True)
+        instance["output_settings"].setdefault("split_output", False)
 
         return instance
 
