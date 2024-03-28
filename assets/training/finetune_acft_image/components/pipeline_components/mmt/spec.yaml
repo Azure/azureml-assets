@@ -8,9 +8,6 @@ description: Pipeline component for multi-object tracking using MMTracking model
 
 is_deterministic: false
 
-settings:
-  continue_on_step_failure: false
-
 inputs:
   compute_model_import:
     type: string

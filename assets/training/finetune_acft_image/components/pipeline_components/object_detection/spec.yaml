@@ -8,9 +8,6 @@ description: Pipeline component for image object detection.
 
 is_deterministic: false
 
-settings:
-  continue_on_step_failure: false
-
 inputs:
   # ------------------- Computes -------------------
   compute_model_import:
