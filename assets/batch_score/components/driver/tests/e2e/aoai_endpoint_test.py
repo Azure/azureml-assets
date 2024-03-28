@@ -33,11 +33,12 @@ YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
     "mini_batch_error_threshold": 0
 }}}
 
-YAML_ENV_VARS_INITIAL_REQUEST_TIMEOUT = {"jobs": { JOB_NAME: {
+YAML_ENV_VARS_INITIAL_REQUEST_TIMEOUT = {"jobs": {JOB_NAME: {
     "environment_variables": {
         "BATCH_SCORE_INITIAL_REQUEST_TIMEOUT": "20",
     }
 }}}
+
 
 # Scoring configuration
 def _get_file_config_yaml(data_asset_path: str):
