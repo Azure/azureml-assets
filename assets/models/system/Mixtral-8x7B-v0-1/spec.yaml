@@ -29,6 +29,7 @@ tags:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
   model_specific_defaults:
+    max_seq_length: 2048
     apply_lora: "true"
     apply_deepspeed: "true"
     deepspeed_stage: "3"
