@@ -35,7 +35,7 @@ DATA_WINDOW_OFFSET_MINUTES_AFTER = 2
 def _get_important_field_mapping() -> dict:
     """Map the span log schema names to the expected raw log schema column/field name."""
     map = {
-        # "trace_id": "context.trace_id",
+        "trace_id": "context.trace_id",
         #TODO: double-check with UX if we can promote request_Id and if so where request_id will be promoted from
         "request_id": "context.request_id",
         "span_id": "context.span_id",
