@@ -108,7 +108,7 @@ def test_output_handler_interface(
     with patch(
         "src.batch_score.main.SeparateFileOutputHandler",
         return_value=MagicMock()
-      ) as mock_separate_file_output_handler,\
+      ) as mock_separate_file_output_handler, \
         patch(
           "src.batch_score.main.SingleFileOutputHandler",
           return_value=MagicMock()
