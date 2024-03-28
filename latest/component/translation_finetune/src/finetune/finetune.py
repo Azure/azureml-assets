@@ -148,6 +148,7 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.GPT_NEOX,  # dolly
     HfModelTypes.FALCON,
     HfModelTypes.REFINEDWEBMODEL,  # falcon
+    HfModelTypes.MIXTRAL,
 ]
 
 
@@ -156,6 +157,7 @@ QLORA_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.REFINEDWEBMODEL,
     HfModelTypes.FALCON,
     REFINED_WEB,
+    HfModelTypes.MIXTRAL,
 ]
 
 
@@ -182,7 +184,8 @@ DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_TASK
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
-    MISTRAL
+    HfModelTypes.MISTRAL,
+    HfModelTypes.MIXTRAL,
 ]
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
@@ -192,13 +195,15 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTE
 FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
-    MISTRAL,
+    HfModelTypes.MISTRAL,
+    HfModelTypes.MIXTRAL,
 ]
 
 FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
-    MISTRAL,
+    HfModelTypes.MISTRAL,
+    HfModelTypes.MIXTRAL,
 ]
 
 
@@ -987,6 +992,10 @@ def finetune(args: Namespace):
             if "lora_target_modules" in ft_config:
                 logger.info(f'Setting lora_target_modules to: {ft_config.get("lora_target_modules")}')
                 setattr(args, "lora_target_modules", ft_config.get("lora_target_modules"))
+            # Read leaf modules for MoE models from finetune config
+            if "leaf_modules_of_moe_models" in ft_config:
+                logger.info(f'Setting leaf_modules_of_moe_models to: {ft_config.get("leaf_modules_of_moe_models")}')
+                setattr(args, "leaf_modules_of_moe_models", ft_config.get("leaf_modules_of_moe_models"))
             # Reading hf trainer args from finetune config
             _set_hf_trainer_args_from_finetune_config(args, ft_config)
     else:
