@@ -71,3 +71,19 @@ def get_retriable_type(
         return RetriableType.RETRY_UNTIL_MAX_RETRIES
 
     return RetriableType.NOT_RETRIABLE
+
+
+def get_prompt_tokens(response_body: any):
+    """Get prompt token count from http response."""
+    if not isinstance(response_body, dict):
+        return None
+
+    return response_body.get("usage", {}).get("prompt_tokens")
+
+
+def get_completion_tokens(response_body: any):
+    """Get completion token count from http response."""
+    if not isinstance(response_body, dict):
+        return None
+
+    return response_body.get("usage", {}).get("completion_tokens")
