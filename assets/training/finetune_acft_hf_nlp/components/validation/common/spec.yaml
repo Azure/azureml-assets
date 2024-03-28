@@ -126,6 +126,15 @@ inputs:
     optional: true
     description: Batch size per GPU/CPU for evaluation
 
+  auto_find_batch_size:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will enable auto_find_batch_size for training
+
   learning_rate:
     type: number
     optional: true

@@ -560,6 +560,7 @@ jobs:
       apply_lora: '${{parent.inputs.apply_lora}}'
       ignore_mismatched_sizes: '${{parent.inputs.ignore_mismatched_sizes}}'
       max_seq_length: '${{parent.inputs.max_seq_length}}'
+      auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
   text_generation_model_import:
     type: command
     component: azureml:text_generation_model_import:0.0.38
