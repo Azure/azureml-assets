@@ -54,7 +54,10 @@ def _add_application_insights_handler(logger: logging.Logger):
     logger.addHandler(appinsights_handler)
 
 
-def add_custom_dimenions_to_app_insights_handler(logger: logging.Logger,  endpoint_name, endpoint_resource_group, endpoint_subscription):
+def add_custom_dimenions_to_app_insights_handler(logger: logging.Logger,
+                                                 endpoint_name,
+                                                 endpoint_resource_group,
+                                                 endpoint_subscription):
     properties = {"endpoint_name": endpoint_name,
                   "endpoint_resource_group": endpoint_resource_group,
                   "endpoint_subscription": endpoint_subscription}

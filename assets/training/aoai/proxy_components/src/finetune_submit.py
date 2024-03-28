@@ -26,7 +26,7 @@ class FineTuneProxy:
     def submit_finetune_job(self, training_file_id, validation_file_id, model, registered_model,
                             n_epochs, batch_size, learning_rate_multiplier, suffix=None):
         """Submit fine-tune job to AOAI."""
-        print("Starting fine-tune job {} {} {} {} {} {} {}"
+        logger.debug("Starting fine-tune job {} {} {} {} {} {} {}"
               .format(model, training_file_id, validation_file_id, n_epochs,
                       batch_size, learning_rate_multiplier, suffix))
         hyperparameters: Hyperparameters = {
@@ -45,14 +45,14 @@ class FineTuneProxy:
 
         # If the job isn't yet done, poll it every 10 seconds.
         if status not in ["succeeded", "failed"]:
-            print(f'Job not in terminal status: {status}. Waiting.')
+            logger.info(f'Job not in terminal status: {status}. Waiting.')
             while status not in ["succeeded", "failed"]:
                 time.sleep(10)
                 finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(job_id)
                 status = finetune_job.status
                 print(f'Status: {status}')
         else:
-            print(f'Fine-tune job {job_id} finished with status: {status}')
+            logger.debug(f'Fine-tune job {job_id} finished with status: {status}')
 
         if status != "succeeded":
             raise Exception("Component failed")
@@ -79,7 +79,7 @@ def submit_finetune_job():
     parser.add_argument("--endpoint_subscription", type=str)
 
     args = parser.parse_args()
-    print("args: {}".format(args))
+    logger.debug("args: {}".format(args))
 
     try:
         aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
@@ -91,7 +91,7 @@ def submit_finetune_job():
                                                      aoai_client_manager.endpoint_subscription)
         with open(args.data_upload_output) as f:
             data_upload_output = json.load(f)
-        print("data_upload_output: {}".format(data_upload_output))
+        logger("data_upload_output for finetuning model: {}".format(data_upload_output))
         finetune_proxy = FineTuneProxy(aoai_client_manager.get_azure_openai_client())
         fientuned_model_id = finetune_proxy.submit_finetune_job(
             training_file_id=data_upload_output['train_file_id'],
