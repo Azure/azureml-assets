@@ -90,15 +90,16 @@ class DataDriftSignal(Signal):
         Returns:
         List[FeatureMetrics]: The feature-level metrics.
         """
+        if not metrics or len(metrics) == 0:
+            return []
+
         featureimportance_dictionary = {}
         if feature_importance is not None:
             for row in feature_importance:
                 featureimportance_dictionary[row[0]] = row[1]
 
-        if not metrics or len(metrics) == 0:
-            return []
-
         output = {}
+
         for metric in metrics:
             if not row_has_value(metric, "feature_name"):
                 continue
