@@ -401,6 +401,7 @@ jobs:
       model_family: 'MmDetectionImage'
       model_name: ${{parent.inputs.model_name}}
       download_from_source: ${{parent.inputs.download_from_source}}
+      validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
 
   mm_detection_finetune:
     type: command
