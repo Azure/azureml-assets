@@ -1,5 +1,5 @@
 name: llm_rag_crack_chunk_embed_index_and_register
-version: 0.0.16
+version: 0.0.17
 tags:
     Preview: ""
 
@@ -66,8 +66,7 @@ inputs:
     description: AzureML Connection ID for Custom Workspace Connection containing the `endpoint` key and `api_key` secret for an Azure AI Document Intelligence Service.
   embeddings_model:
     type: string
-    optional: False
-    default: hugging_face://model/sentence-transformers/all-mpnet-base-v2
+    optional: True
     description: The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2' or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'
   embeddings_connection_id:
     type: string
@@ -121,7 +120,7 @@ command: >-
   $[[--citation_url ${{inputs.citation_url}}]]
   $[[--citation_replacement_regex '${{inputs.citation_replacement_regex}}']]
   $[[--doc_intel_connection_id ${{inputs.doc_intel_connection_id}}]]
-  --embeddings_model ${{inputs.embeddings_model}}
+  $[[--embeddings_model ${{inputs.embeddings_model}}]]
   --embeddings_connection_id ${{inputs.embeddings_connection_id}}
   $[[--embeddings_container '${{inputs.embeddings_container}}']]
   --batch_size ${{inputs.batch_size}}
