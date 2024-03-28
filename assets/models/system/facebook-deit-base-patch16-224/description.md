@@ -55,13 +55,7 @@ Image Multi-label classification|Image Multi-label classification|[multilabel fr
 
 ```json
 {
-  "input_data": {
-    "columns": [
-      "image"
-    ],
-    "index": [0, 1],
-    "data": ["image1", "image2"]
-  }
+  "input_data": ["image1", "image2"]
 }
 ```
 
@@ -72,14 +66,26 @@ Note: "image1" and "image2" string should be in base64 format or publicly access
 
 ```json
 [
+  [
     {
-        "probs": [0.91, 0.09],
-        "labels": ["can", "carton"]
+      "label" : "can",
+      "score" : 0.91
     },
     {
-        "probs": [0.1, 0.9],
-        "labels": ["can", "carton"]
-    }
+      "label" : "carton",
+      "score" : 0.09
+    },
+  ],
+  [
+    {
+      "label" : "carton",
+      "score" : 0.9
+    },
+    {
+      "label" : "can",
+      "score" : 0.1
+    },
+  ]
 ]
 ```
 
