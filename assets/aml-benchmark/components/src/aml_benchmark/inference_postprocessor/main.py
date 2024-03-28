@@ -198,6 +198,7 @@ def main(
         template=template,
         user_postprocessor=script_path,
         output_dataset=output_dataset,
+        extract_number_strategy_default_value=""
     )
     processor.run()
     log_mlflow_params(
