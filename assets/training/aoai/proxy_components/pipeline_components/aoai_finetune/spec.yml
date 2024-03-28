@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
-name: aoai_finetune
+name: aoai_finetune_pipeline
 version: 0.0.1
 type: pipeline
 display_name: AOAI Proxy Finetune Pipeline
