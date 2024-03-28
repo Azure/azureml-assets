@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: OSS Text Generation Data Import
 description: FTaaS component to copy user training data to output
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/46
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/47
 
 inputs:
   # Inputs
