@@ -94,6 +94,40 @@ def test_get_return_value(mock_get_logger, dummy_return_data: "list[str]", outpu
     assert mock_get_logger.info.called
 
 
+@pytest.mark.parametrize("split_output, use_single_file_output_handler, use_separate_file_output_handler", [
+    (False, True, False),
+    (True, False, True)
+])
+def test_output_handler_interface(
+        split_output: bool,
+        use_single_file_output_handler: bool,
+        use_separate_file_output_handler: bool):
+    """Test output handler interface."""
+    input_data, mini_batch_context = _setup_main()
+
+    with patch(
+        "src.batch_score.main.SeparateFileOutputHandler",
+        return_value=MagicMock()
+      ) as mock_separate_file_output_handler, \
+        patch(
+          "src.batch_score.main.SingleFileOutputHandler",
+          return_value=MagicMock()
+      ) as mock_single_file_output_handler:
+
+        main.configuration.split_output = split_output
+        main.configuration.save_mini_batch_results = "enabled"
+        main.configuration.mini_batch_results_out_directory = "driver/tests/unit/unit_test_results/"
+        main.run(input_data=input_data, mini_batch_context=mini_batch_context)
+
+        assert mock_separate_file_output_handler.called == use_separate_file_output_handler
+        assert mock_single_file_output_handler.called == use_single_file_output_handler
+
+        assert mock_separate_file_output_handler.return_value.save_mini_batch_results.called == \
+            use_separate_file_output_handler
+        assert mock_single_file_output_handler.return_value.save_mini_batch_results.called == \
+            use_single_file_output_handler
+
+
 def test_run_emit_minibatch_started_event(mock_run_context):
     """Test emit minibatch started event."""
     # Arrange
@@ -234,6 +268,8 @@ def _setup_main(par_exception=None):
     configuration.batch_pool = "batch_pool"
     configuration.quota_audience = "quota_audience"
     main.configuration = configuration
+
+    main.input_handler = MagicMock()
 
     main.par = MagicMock()
     if par_exception is not None:

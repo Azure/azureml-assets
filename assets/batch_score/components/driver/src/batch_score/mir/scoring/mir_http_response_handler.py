@@ -20,8 +20,11 @@ from ...common.scoring.scoring_result import (
     ScoringResultStatus
 )
 from ...common.scoring.tally_failed_request_handler import TallyFailedRequestHandler
+from ...common.scoring.scoring_utils import get_prompt_tokens, get_completion_tokens
+from ...common.telemetry.events import event_utils
+from ...common.telemetry.events.batch_score_request_completed_event import BatchScoreRequestCompletedEvent
 from ...common.telemetry.logging_utils import get_events_client
-from ...utils.common import get_base_url
+from ...utils.common import get_base_url, get_mini_batch_id
 
 
 class MirHttpResponseHandler(HttpResponseHandler):
@@ -73,13 +76,30 @@ class MirHttpResponseHandler(HttpResponseHandler):
         get_events_client().emit_request_completed(
             latency=(end-start) * 1000,
             request_internal_id=scoring_request.internal_id,
-            client_request_id=updated_http_response.headers["x-ms-client-request-id"],
+            client_request_id=updated_http_response.headers.get("x-ms-client-request-id"),
             endpoint_uri=scoring_request.scoring_url,
             status_code="0" if response_status is None else str(response_status),
             model_response_code="" if model_response_code is None else model_response_code,
             client_exception=updated_http_response.exception_type,
             is_retriable=is_retriable
         )
+
+        request_completed_event = BatchScoreRequestCompletedEvent(
+            minibatch_id=get_mini_batch_id(scoring_request.mini_batch_context),
+            input_row_id=scoring_request.internal_id,
+            x_ms_client_request_id=x_ms_client_request_id,
+            worker_id=worker_id,
+            scoring_url=scoring_request.scoring_url,
+            is_successful=response_status == 200,
+            is_retriable=is_retriable,
+            response_code=response_status,
+            model_response_code=model_response_code,
+            prompt_tokens=get_prompt_tokens(response_payload),
+            completion_tokens=get_completion_tokens(response_payload),
+            duration_ms=(end - start) * 1000,
+            segmented_request_id=scoring_request.segment_id
+        )
+        event_utils.emit_event(batch_score_event=request_completed_event)
 
         if response_status == 200:
             result = self._create_scoring_result(
