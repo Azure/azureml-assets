@@ -1,0 +1,23 @@
+upstream gunicorn {
+    server 127.0.0.1:31311;
+}
+
+server {
+listen *:5001;
+    location / {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300;
+        proxy_connect_timeout 300;
+        proxy_send_timeout 300;
+        proxy_redirect off;
+        proxy_buffering off;
+        proxy_pass http://gunicorn;
+    }
+}
+
+  map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+  }

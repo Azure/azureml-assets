@@ -1,0 +1,14 @@
+--extra-index-url https://download.pytorch.org/whl/cu113
+grpcio=={{latest-pypi-version}}
+grpcio-tools=={{latest-pypi-version}}
+pydantic=={{latest-pypi-version}}
+asyncio=={{latest-pypi-version}}
+azureml-inference-server-http=={{latest-pypi-version}}
+torch==1.12.0
+transformers==4.21.2
+
+# TODO: remove once MII updated changes are pushed to pypi
+# 0.0.4 is pointing to an older change
+# https://pypi.org/project/deepspeed-mii
+git+https://github.com/microsoft/deepspeed.git@cc1054d9
+git+https://github.com/microsoft/DeepSpeed-MII.git@6116e98
