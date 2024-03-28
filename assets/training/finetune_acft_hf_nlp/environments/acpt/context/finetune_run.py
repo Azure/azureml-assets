@@ -30,6 +30,7 @@ _COMPONENTS_SCRIPTS_REL_PATH = Path("entry_point", "ftaas", "finetune")
 _ALLOWED_MAX_STRING_LENGTH = 128
 PEFT_ADAPTER_WEIGHTS_DIR = "peft_adapter_weights"
 
+
 @dataclass
 class ComponentInput:
     """Dataclass for Ftaas pipeline component inputs."""
