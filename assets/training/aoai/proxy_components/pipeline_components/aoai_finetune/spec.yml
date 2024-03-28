@@ -103,7 +103,7 @@ jobs:
   
   data_delete:
     type: command
-    component: azureml://registries/azureml-preview-test1/components/finetune_submit/versions/0.0.2
+    component: azureml://registries/azureml-preview-test1/components/data_delete/versions/0.0.2
     inputs:
       endpoint_name: ${{parent.inputs.endpoint_name}}
       endpoint_resource_group: ${{parent.inputs.endpoint_resource_group}}

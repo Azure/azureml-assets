@@ -16,6 +16,7 @@ LOGS_TO_BE_FILTERED_APPINSIGHTS = [
     '[logging_handler]'
 ]
 
+
 def get_logger(filename: str) -> logging.Logger:
     """
     Create and configure a logger based on the provided filename.
@@ -42,6 +43,7 @@ def get_logger(filename: str) -> logging.Logger:
     _add_application_insights_handler(logger)
     return logger
 
+
 def _add_application_insights_handler(logger: logging.Logger):
     appinsights_handler = get_appinsights_log_handler(INSTRUMENTATION_KEY, logger=logger)
     formatter = logging.Formatter("[%(module)s] - %(message)s")
@@ -51,11 +53,15 @@ def _add_application_insights_handler(logger: logging.Logger):
     appinsights_handler._default_client.add_telemetry_processor(_appinsights_filter_processor)
     logger.addHandler(appinsights_handler)
 
+
 def add_custom_dimenions_to_app_insights_handler(logger: logging.Logger,  endpoint_name, endpoint_resource_group, endpoint_subscription):
-    properties = { "endpoint_name" : endpoint_name, "endpoint_resource_group": endpoint_resource_group, "endpoint_subscription": endpoint_subscription }
+    properties = {"endpoint_name": endpoint_name,
+                  "endpoint_resource_group": endpoint_resource_group,
+                  "endpoint_subscription": endpoint_subscription}
     for handler in logger.handlers:
         if isinstance(handler, AppInsightsLoggingHandler):
             handler._default_client.context.properties.update(properties)
+
 
 def _appinsights_filter_processor(data, context) -> bool:
     """

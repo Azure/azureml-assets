@@ -53,9 +53,9 @@ def main():
         aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
                                                        endpoint_resource_group=args.endpoint_resource_group,
                                                        endpoint_subscription=args.endpoint_subscription)
-        add_custom_dimenions_to_app_insights_handler(logger, 
-                                                     aoai_client_manager.endpoint_name, 
-                                                     aoai_client_manager.endpoint_resource_group, 
+        add_custom_dimenions_to_app_insights_handler(logger,
+                                                     aoai_client_manager.endpoint_name,
+                                                     aoai_client_manager.endpoint_resource_group,
                                                      aoai_client_manager.endpoint_subscription)
         delete_component = DeleteComponent(aoai_client_manager.get_azure_openai_client())
         logger.info("deleting training and validataion data from Azure OpenAI")

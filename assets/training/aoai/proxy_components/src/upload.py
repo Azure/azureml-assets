@@ -107,7 +107,7 @@ def main():
                                                      aoai_client_manager.endpoint_name,
                                                      aoai_client_manager.endpoint_resource_group,
                                                      aoai_client_manager.endpoint_subscription)
-        
+
         upload_component = UploadComponent(aoai_client_manager.get_azure_openai_client())
 
         dataset_upload_output = upload_component.upload_files(args.train_dataset, args.validation_dataset)

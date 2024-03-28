@@ -83,12 +83,12 @@ def submit_finetune_job():
 
     try:
         aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
-                                          endpoint_resource_group=args.endpoint_resource_group,
-                                          endpoint_subscription=args.endpoint_subscription)
+                                                       endpoint_resource_group=args.endpoint_resource_group,
+                                                       endpoint_subscription=args.endpoint_subscription)
         add_custom_dimenions_to_app_insights_handler(logger,
-                                                    aoai_client_manager.endpoint_name,
-                                                    aoai_client_manager.endpoint_resource_group,
-                                                    aoai_client_manager.endpoint_subscription)
+                                                     aoai_client_manager.endpoint_name,
+                                                     aoai_client_manager.endpoint_resource_group,
+                                                     aoai_client_manager.endpoint_subscription)
         with open(args.data_upload_output) as f:
             data_upload_output = json.load(f)
         print("data_upload_output: {}".format(data_upload_output))
