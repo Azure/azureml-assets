@@ -80,6 +80,7 @@ class FineTuneProxy:
             values = values[values[col] != -1]
             for i, row in values.iterrows():
                 mlflow.log_metric(key=col, value=row[col], step=int(row.step))
+        logger.info("logged training metrics for finetuning job")
 
     def _log_events(self, job_id, last_event):
         job_events = self.aoai_client.fine_tuning.jobs.list_events(job_id).data
