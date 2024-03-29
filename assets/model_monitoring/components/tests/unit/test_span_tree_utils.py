@@ -119,13 +119,11 @@ class TestSpanTreeUtilities:
         tree_1.show()
         print()
 
-        assert tree_1.root_span is None
         assert tree_1._span_node_map == {span.span_id: span for span in spans_1}
-        # TODO: Uncomment if we ever want to handle scenarios like this differently.
         # root span should be 1.
-        # assert tree_1.root_span is not None
-        # assert tree_1.root_span == s1
-        # assert tree_1.root_span.children == []
+        assert tree_1.root_span is not None
+        assert tree_1.root_span == s1
+        assert tree_1.root_span.children == []
 
         # scenario 2 where root span "0" is outside our data_window. Visually denoted by the dashes
         #    0
@@ -139,14 +137,12 @@ class TestSpanTreeUtilities:
         tree_2.show()
         print()
 
-        assert tree_2.root_span is None
         assert tree_2._span_node_map == {span.span_id: span for span in spans_2}
-        # TODO: Uncomment if we ever want to handle scenarios like this differently.
         # root span should be 1.
-        # assert tree_2.root_span is not None
-        # assert tree_2.root_span == s1
-        # assert tree_2.root_span.children[0] == s2
-        # assert tree_2.root_span.children[1] == s3
+        assert tree_2.root_span is not None
+        assert tree_2.root_span == s1
+        assert tree_2.root_span.children[0] == s2
+        assert tree_2.root_span.children[1] == s3
 
         # scenario 3 where root span "0" is outside our data_window but have multiple spans pointing to it.
         #    0
