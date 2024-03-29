@@ -46,28 +46,34 @@ class FineTuneProxy:
         job_id = finetune_job.id
         status = finetune_job.status
 
+        terminal_statuses = ["succeeded", "failed", "cancelled"]
         # If the job isn't yet done, poll it every 60 seconds.
-        if status not in ["succeeded", "failed"]:
+        if status not in terminal_statuses:
             logger.info(f'Job not in terminal status: {status}. Waiting.')
             last_event = None
-            while status not in ["succeeded", "failed"]:
+            while status not in terminal_statuses:
                 time.sleep(60)
                 finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(job_id)
                 status = finetune_job.status
                 last_event = self._log_events(job_id, last_event)
 
-        if status != "succeeded":
+        if status == "failed":
             error = finetune_job.error
             logger.error(f"Fine tuning job: {job_id} failed with error: {error}")
             raise Exception(f"Fine tuning job: {job_id} failed with error: {error}")
 
-        finetuned_model_id = finetune_job.fine_tuned_model
-        logger.info(f'Fine-tune job: {job_id} finished successfully. model id: {finetuned_model_id}')
-        logger.info("fetching training metrics from Azure OpenAI")
-        self._log_metrics(job_id)
+        if status == "succeeded":
+            """metrics can be retrived only for successful finetune job"""
+            finetuned_model_id = finetune_job.fine_tuned_model
+            logger.info(f'Fine-tune job: {job_id} finished successfully. model id: {finetuned_model_id}')
+            logger.info("fetching training metrics from Azure OpenAI")
+            self._log_metrics(job_id)
+
+        logger.info(f"finetuning job reached termina state: {status}")
         return finetuned_model_id
 
     def _log_metrics(self, job_id):
+        """Fetch training metrics from azure open ai resource after finetuning is done and log them."""
         fine_tuning_job = self.aoai_client.fine_tuning.jobs.retrieve(job_id)
         result_file = fine_tuning_job.result_files[0]
         response = self.aoai_client.files.content(file_id=result_file)
@@ -83,6 +89,7 @@ class FineTuneProxy:
         logger.info("logged training metrics for finetuning job")
 
     def _log_events(self, job_id, last_event):
+        """Log events like training started, running nth epoch etc."""
         job_events = self.aoai_client.fine_tuning.jobs.list_events(job_id).data
         event_message_list = []
         for job_event in job_events:
