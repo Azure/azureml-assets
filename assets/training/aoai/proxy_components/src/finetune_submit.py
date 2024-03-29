@@ -68,8 +68,9 @@ class FineTuneProxy:
         return finetuned_model_id
 
     def _log_metrics(self, job_id):
-        result_files = self.aoai_client.fine_tuning.jobs.retrieve(job_id).result_files
-        response = self.aoai_client.files.content(file_id=result_files)
+        fine_tuning_job = self.aoai_client.fine_tuning.jobs.retrieve(job_id)
+        result_file = fine_tuning_job.result_files[0]
+        response = self.aoai_client.files.content(file_id=result_file)
         f = io.BytesIO(response.content)
         df = pd.read_csv(f)
 
