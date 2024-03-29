@@ -347,9 +347,6 @@ class TestDatasetPreprocessorScript:
         invalid_dataset_error_mssg = (
             "the following arguments are required: --dataset"
         )
-        invalid_jsonl_dataset_mssg = (
-            "No .jsonl files found in the given input dataset."
-        )
         invalid_preprocessor_logic_exception_mssg = (
            "Please provide the input to apply preprocessing logic either via template input or script_path."
         )
@@ -364,16 +361,6 @@ class TestDatasetPreprocessorScript:
         except RuntimeError as e:
             out_message = str(e)
             assert invalid_dataset_error_mssg in out_message
-
-        dummy_dataset_path = os.path.join(os.getcwd(), "input_dataset_path")
-        os.system(f"mkdir {dummy_dataset_path}")
-        try:
-            argss = " ".join(["--dataset", dummy_dataset_path])
-            cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
-            run_command(f"{cmd}")
-        except RuntimeError as e:
-            exception_message = str(e)
-            assert_exception_mssg(exception_message, invalid_jsonl_dataset_mssg)
 
         try:
             argss = " ".join(["--dataset", dataset])

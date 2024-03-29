@@ -115,14 +115,15 @@ def resolve_io_path(dataset: str) -> List[str]:
 
 def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
     """
-    Read `.jsonl` files and return a list of dictionaries.
-
-    Ignores files that do not have `.jsonl` extension. Raises exception if no `.jsonl` files
-    found or if any `.jsonl` file contains invalid JSON.
+    Read `.jsonl` files if extendion is jsonl else calls `read_files` function for files 
+    that do not endwith jsonl extension but the file content is of type json.
+    Return a list of dictionaries.
 
     :param file_paths: List of paths to .jsonl files.
     :return: List of dictionaries.
     """
+    if len(file_paths) == 1 and not file_paths[0].endswith(".jsonl"):
+        return read_files(file_paths)
     data_dicts = []
     for file_path in file_paths:
         if not file_path.endswith(".jsonl"):
@@ -206,3 +207,24 @@ def save_list_to_jsonl_if_path_provided(data: List[Any], path: Optional[str]):
     if path:
         df = pd.DataFrame(data)
         df.to_json(path, orient='records', lines=True)
+
+
+def read_files(file_paths: List[str]) -> List[Dict[str, Any]]:
+    """
+    Read uri_files and return a list of dictionaries.
+
+    :param file_paths: List of paths to uri files.
+    :return: List of dictionaries.
+    """
+    data_dicts = []
+    for file_path in file_paths:
+        with open(file_path, 'r') as file:
+            for i, line in enumerate(file):
+                try:
+                    data_dicts.append(json.loads(line))
+                except json.JSONDecodeError:
+                    mssg = f"Invalid JSON format in line {i + 1} of file '{file_path}'."
+                    raise DataFormatException._with_error(
+                        AzureMLError.create(DataFormatError, error_details=mssg)
+                    )
+    return data_dicts
