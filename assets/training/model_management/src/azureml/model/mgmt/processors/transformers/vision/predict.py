@@ -89,7 +89,7 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
         """
         images = [data["image"] for data in examples]
         return tokenizer(images, return_tensors="pt")
-    
+
     # TODO: use in-memory dataset throughout the code (eg instead of list of images).
 
     # TODO: change image height and width based on kwargs.
