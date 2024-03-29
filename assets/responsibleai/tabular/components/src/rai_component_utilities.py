@@ -38,6 +38,9 @@ assetid_re = re.compile(
 )
 data_type = "data_type"
 
+FORECASTING = "forecasting"
+
+
 _logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.INFO)
 
@@ -117,7 +120,10 @@ def load_mlflow_model(
     if use_model_dependency:
         if not use_separate_conda_env:
             try:
-                conda_file = mlflow.pyfunc.get_model_dependencies(model_uri, format="conda")
+                conda_file = mlflow.pyfunc.get_model_dependencies(
+                    model_uri,
+                    format="conda"
+                )
             except Exception as e:
                 raise UserConfigError(
                     "Failed to get model dependency from given model {}, error:\n{}".format(
@@ -126,11 +132,28 @@ def load_mlflow_model(
                 )
         try:
             if use_separate_conda_env:
+                tmp_model_path = "./mlflow_model"
+                if (not model_path and model_id):
+                    model_path = Model.get_model_path(model_name=model.name,
+                                                      version=model.version)
+                shutil.copytree(model_path, tmp_model_path)
+                model_uri = tmp_model_path
+
+                _logger.info("MODEL URI: {}".format(
+                    model_uri
+                ))
+
+                for root, _, files in os.walk(model_uri):
+                    for f in files:
+                        full_path = os.path.join(root, f)
+                        _logger.info("FILE: {}".format(
+                            full_path
+                        ))
+
                 conda_install_command = ["mlflow", "models", "prepare-env",
                                          "-m", model_uri,
                                          "--env-manager", "conda"]
             else:
-                # mlflow model input mount as read only. Conda need write access.
                 local_conda_dep = "./conda_dep.yaml"
                 shutil.copyfile(conda_file, local_conda_dep)
                 conda_prefix = str(Path(sys.executable).parents[1])
@@ -164,7 +187,7 @@ def load_mlflow_model(
             return model
 
         # Serve model from separate conda env using mlflow
-        mlflow_models_serve_logfile_name = "mlflow_models_serve.log"
+        mlflow_models_serve_logfile_name = "./logs/azureml/mlflow_models_serve.log"
         try:
             # run mlflow model server in background
             with open(mlflow_models_serve_logfile_name, "w") as logfile:
@@ -231,6 +254,7 @@ def load_mlflow_model(
             )
         _logger.info("Successfully started mlflow model server.")
         model = ServedModelWrapper(port=MLFLOW_MODEL_SERVER_PORT)
+        _logger.info("Successfully loaded model.")
         return model
     except Exception as e:
         raise UserConfigError(
@@ -464,6 +488,15 @@ def add_properties_to_gather_run(
             DashboardInfo.RAI_INSIGHTS_DASHBOARD_TITLE_KEY
         ],
     }
+
+    constructor_args = dashboard_info[
+        DashboardInfo.RAI_INSIGHTS_CONSTRUCTOR_ARGS_KEY
+    ]
+    if "task_type" in constructor_args:
+        if constructor_args["task_type"] == FORECASTING:
+            run_properties[
+                PropertyKeyValues.RAI_INSIGHTS_DATA_TYPE_KEY
+            ] = FORECASTING
 
     _logger.info("Appending tool present information")
     for k, v in tool_present_dict.items():

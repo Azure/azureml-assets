@@ -4,37 +4,42 @@
 """This file contains the definitions for timeout utils."""
 
 import os
-import aiohttp
+from typing import Generator
 
 from ..common import constants
 
 
-MINIMUM_SCORING_TIMEOUT = 10
+BACKOFF_FACTOR_REQUEST_TIMEOUT = 2
+INITIAL_REQUEST_TIMEOUT = 10
+MAX_REQUEST_TIMEOUT = 30 * 60  # 30 minutes
+MAX_EXPONENTIAL_FACTOR = 256
 
 
-def get_next_retry_timeout(timeout_generator):
-    """Get next retry timeout."""
-    try:
-        return next(timeout_generator)
-    except StopIteration:
-        # We may encounter this if there is no max_retry_time_interval configured to stop attempting to
-        # process the queue item when scoring duration continues to grow. In that case, the customer
-        # wants to allow the score to retry forever. Setting the timeout to None will default to use the
-        # aiohttp.ClientSession's timeout, which is set in `Conductor.__configure_session_timeout`
-        return None
+def get_retry_timeout_generator() -> Generator[float, None, None]:
+    """Get a Python generator that yields timeouts in seconds."""
+    backoff_factor = _get_backoff_factor_request_timeout()
+    initial_timeout = _get_initial_request_timeout()
+    max_timeout = _get_max_request_timeout()
 
-
-def get_retry_timeout_generator(default_timeout: aiohttp.ClientTimeout):
-    """Get a Python generator that yields aiohttp.ClientTimeout objects."""
-    for iteration in range(2, 10):
-        timeout = max(_get_initial_request_timeout(), int(2 ** iteration))
-        if timeout >= default_timeout.total:
-            break
+    i = 0
+    while True:
+        if (i in range(MAX_EXPONENTIAL_FACTOR)):
+            yield min(initial_timeout * (backoff_factor ** i), max_timeout)
         else:
-            yield aiohttp.ClientTimeout(timeout)
-    yield default_timeout
+            yield max_timeout
+        i += 1
+
+
+def _get_backoff_factor_request_timeout():
+    return float(os.environ.get(constants.BATCH_SCORE_BACKOFF_FACTOR_REQUEST_TIMEOUT_ENV_VAR)
+                 or BACKOFF_FACTOR_REQUEST_TIMEOUT)
 
 
 def _get_initial_request_timeout():
-    return int(os.environ.get(constants.BATCH_SCORE_INITIAL_REQUEST_TIMEOUT_ENV_VAR)
-               or MINIMUM_SCORING_TIMEOUT)
+    return float(os.environ.get(constants.BATCH_SCORE_INITIAL_REQUEST_TIMEOUT_ENV_VAR)
+                 or INITIAL_REQUEST_TIMEOUT)
+
+
+def _get_max_request_timeout():
+    return float(os.environ.get(constants.BATCH_SCORE_MAX_REQUEST_TIMEOUT_ENV_VAR)
+                 or MAX_REQUEST_TIMEOUT)

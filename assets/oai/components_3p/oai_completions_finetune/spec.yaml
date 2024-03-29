@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/PipelineComponent.json
 display_name: OpenAI Completions Finetune Pipeline
 name: openai_completions_finetune
-version: 0.2.1
+version: 0.2.2
 type: pipeline
 description: Finetune your own OAI model. Visit https://learn.microsoft.com/en-us/azure/cognitive-services/openai/ for more info.
 settings:
@@ -90,7 +90,7 @@ jobs:
     resources:
       properties:
         quota_enforcement_resource_id: ${{parent.inputs.quota_enforcement_resource_id}}
-    component: azureml://registries/azure-openai-preview/components/openai_completions_finetune/versions/0.3.3
+    component: azureml://registries/azure-openai-preview/components/openai_completions_finetune/versions/0.3.4
     inputs:
       model: ${{parent.inputs.model}}
       registered_model_name: ${{parent.inputs.registered_model_name}}

@@ -14,8 +14,10 @@ dependencies:
     - azureml-dataprep[pandas]>=4.12.0
     - mltable>=1.5.0
     - datasets
-    - ddt
+    - tqdm
+    - azure-core
     ## Test requirements
     - pytest
     - pytest-xdist
+    - ddt
 name: aml_benchmark

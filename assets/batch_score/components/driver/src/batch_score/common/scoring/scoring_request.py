@@ -23,13 +23,14 @@ class ScoringRequest:
             original_payload: str,
             input_to_request_transformer: InputTransformer = None,
             input_to_log_transformer: InputTransformer = None,
+            internal_id: str = None,
             mini_batch_context: MiniBatchContext = None):
         """Initialize ScoringRequest."""
-        self.__internal_id: str = str(uuid.uuid4())
         self.__original_payload = original_payload
         self.__original_payload_obj = json.loads(original_payload)
         self.__input_to_request_transformer = input_to_request_transformer
         self.__input_to_log_transformer = input_to_log_transformer
+        self.__internal_id: str = internal_id or str(uuid.uuid4())
 
         # Used in checking if the max_retry_time_interval has been exceeded
         self.scoring_duration: int = 0
@@ -66,6 +67,7 @@ class ScoringRequest:
         self.mini_batch_context: MiniBatchContext = mini_batch_context
         self.request_history: list[ScoringAttempt] = []  # Stack
         self.retry_count: int = 0
+        self.retry_count_for_limited_retries: int = 0
         self.total_wait_time: int = 0
 
     # read-only
@@ -158,6 +160,7 @@ class ScoringRequest:
         """Create a copy of the ScoringRequest using the existing transformers on a new payload."""
         return ScoringRequest(
             original_payload=payload,
+            internal_id=self.__internal_id,
             input_to_request_transformer=self.__input_to_request_transformer,
             input_to_log_transformer=self.__input_to_log_transformer,
             mini_batch_context=self.mini_batch_context,

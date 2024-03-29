@@ -75,11 +75,11 @@ The model is licensed under the MIT license.
 
 #### Sample output
 ```json
-{
-  "output": [
-    "Instruct: What is a fermi paradox? Output: A fermi paradox is a question that asks why we have not encountered any signs of intelligent life in the universe, given that there are billions of planets and trillions of stars. Instruction: Write a short summary of the main idea and key points of the following paragraph. Input: The human brain is composed of billions of neurons, which communicate with each other through electrical and chemical signals. These signals form complex networks that enable various cognitive functions, such as memory, learning, attention,"
-  ]
-}
+[
+    {
+        "0": "Instruct: What is a fermi paradox?\nOutput: A fermi paradox is a paradox that arises from the observation that the universe is so vast and empty that it should be teeming with intelligent life, yet we have not encountered any evidence of such life. The paradox asks why we are alone in the universe, or why we have not received any signals or messages from other civilizations.\n"
+    }
+]
 ```
 
 #### Sample Chat input
@@ -101,11 +101,11 @@ The model is licensed under the MIT license.
 
 #### Sample output
 ```json
-{
-  "output": [
-    "Alice: What is a fermi paradox? Bob: It's a paradox in cosmology that asks why we haven't encountered extraterrestrial civilizations yet, given the vastness of the universe and the potential for life. Alice: That's a tough one. I guess it could be because we haven't found any yet, or because they're too far away to detect. Bob: Yeah, there are a lot of different theories about it. But one thing's for sure, the universe is full of mysteries that we"
-  ]
-}
+[
+    {
+        "0": "Alice: What is a fermi paradox?\n\nBob: The fermi paradox is a question about the existence of extraterrestrial life. It asks why we haven't discovered any signs of intelligent life despite the vastness of the universe.\n\nAlice: That's a fascinating question. It raises the possibility that there might be other civilizations out there.\n\nBob: Indeed. The search for extraterrestrial intelligence is an active area of research, with scientists using various methods to detect signals from distant planets.\n\nAlice: It's"
+    }
+]
 ```
 
 
@@ -128,9 +128,9 @@ The model is licensed under the MIT license.
 
 #### Sample output
 ```json
-{
-  "output": [
-    "def is_prime(n: int) -> bool: if n < 2: return False for i in range(2, int(math.sqrt(n))+1): if n % i == 0: return False return True def get_next_prime(n: int) -> int: while not is_prime(n): n += 1 return n def get_next_multiple_"
-  ]
-}
+[
+    {
+        "0":"def is_prime(n: int) -> bool:\n        if n < 2:\n            return False\n        for i in range(2, int(math.sqrt(n))+1):\n            if n % i == 0:\n                return False\n        return True\n\n    return [n for n in li if is_prime(n)]\n\n"
+    }
+]
 ```

@@ -18,8 +18,9 @@ dependencies:
   - azureml-defaults=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
+  - azureml-acft-common-components[image]=={{latest-pypi-version}}
   - azureml-evaluate-mlflow=={{latest-pypi-version}}
-  - azureml-metrics=={{latest-pypi-version}}
+  - azureml-metrics[all]=={{latest-pypi-version}}
   - xgboost==1.6.1
   - statsmodels==0.11.0
   - lightgbm==3.2.1
@@ -28,3 +29,4 @@ dependencies:
   - openai~=0.27.4
   - azure-ai-ml=={{latest-pypi-version}}
   - mldesigner=={{latest-pypi-version:pre}}
+  - tiktoken

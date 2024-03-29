@@ -19,14 +19,14 @@ from src.batch_score.common.scoring.scoring_result import (
 
 
 @pytest.fixture
-def make_conductor(make_routing_client, make_scoring_client):
+def make_conductor(make_routing_client, make_pool_scoring_client):
     """Make a mock conductor."""
     async_mode_outer = False
     conductor = None
 
     def make(loop=asyncio.get_event_loop(),
              routing_client=None,
-             scoring_client=make_scoring_client(),
+             scoring_client=make_pool_scoring_client(),
              segment_large_requests="disabled",
              segment_max_token_size=None,
              initial_worker_count=1,

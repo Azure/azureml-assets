@@ -3,17 +3,13 @@
 
 """Common utilities."""
 
-import collections.abc
 import json
 from argparse import ArgumentParser
 from urllib.parse import urlparse
 
-import numpy
-import pandas as pd
-
 from ..common.scoring.scoring_result import ScoringResult
 from . import embeddings_utils as embeddings
-from .json_encoder_extensions import BatchComponentJSONEncoder, NumpyArrayEncoder
+from .json_encoder_extensions import BatchComponentJSONEncoder
 
 
 def get_base_url(url: str) -> str:
@@ -70,62 +66,11 @@ def convert_result_list(results: "list[ScoringResult]", batch_size_per_request: 
     return list(map(__stringify_output, output_list))
 
 
-def convert_to_list(
-        data: pd.DataFrame,
-        additional_properties: str = None,
-        batch_size_per_request: int = 1) -> "list[str]":
-    """Convert the input panda data frame to a list of payload strings."""
-    columns = data.keys()
-    payloads = []
-    additional_properties_list = None
-
-    # Per https://platform.openai.com/docs/api-reference/
-    int_forceable_properties = [
-        "max_tokens",
-        "n",
-        "logprobs",
-        "best_of",
-        "n_epochs",
-        "batch_size",
-        "classification_n_classes"]
-
-    if additional_properties is not None:
-        additional_properties_list = json.loads(additional_properties)
-
-    if batch_size_per_request > 1:
-        batched_payloads = embeddings._convert_to_list_of_input_batches(data, batch_size_per_request)
-        payloads.extend(batched_payloads)
-    else:
-        for row in data.values.tolist():
-            payload_obj: dict[str, any] = {}
-            for indx, col in enumerate(columns):
-                payload_val = row[indx]
-                if isinstance(payload_val, collections.abc.Sequence) or isinstance(payload_val, numpy.ndarray) or \
-                        not pd.isnull(payload_val):
-                    if col in int_forceable_properties:
-                        payload_val = int(payload_val)
-                    payload_obj[col] = payload_val
-            payloads.append(payload_obj)
-
-    for idx, payload in enumerate(payloads):
-        # Payloads are mutable. Update them with additional properties and put them back in the list as strings.
-        __add_properties_to_payload_object(payload, additional_properties_list)
-        payloads[idx] = __stringify_payload(payload)
-
-    return payloads
-
-
-def __add_properties_to_payload_object(
-        payload_obj: dict,
-        additional_properties_list: dict):
-    if additional_properties_list is not None:
-        for key, value in additional_properties_list.items():
-            payload_obj[key] = value
+def get_mini_batch_id(mini_batch_context: any):
+    """Get mini batch id from mini batch context."""
+    if mini_batch_context:
+        return mini_batch_context.mini_batch_id
 
 
 def __stringify_output(payload_obj: dict) -> str:
     return json.dumps(payload_obj, cls=BatchComponentJSONEncoder)
-
-
-def __stringify_payload(payload_obj: dict) -> str:
-    return json.dumps(payload_obj, cls=NumpyArrayEncoder)
