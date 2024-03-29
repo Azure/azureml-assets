@@ -218,7 +218,7 @@ class SpanTree:
         if self.root_span is None:
             print("The SpanTree is empty.")
             return
-        print(f"SpanTree for request id = {self.root_span.request_id}:")
+        print(f"SpanTree for trace id = {self.root_span.trace_id}, request id = {self.root_span.request_id}:")
         self.root_span.show()
 
     def to_json_str(self) -> str:
