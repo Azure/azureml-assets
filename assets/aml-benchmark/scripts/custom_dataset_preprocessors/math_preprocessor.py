@@ -8,7 +8,6 @@
 from typing import Any, Dict, List, Union
 import argparse
 import json
-import logging as logger
 import pandas as pd
 
 
@@ -22,8 +21,7 @@ def _parse_args():
 
 
 def _read_input_file(file_path: str) -> List[Dict[str, Any]]:
-    """Read files that have content in the json format and 
-    return a list of dictionaries.
+    """Read files that have content in the json format and return a list of dictionaries.
 
     :param file_paths: Path to .jsonl file.
     :return: List of dictionaries.

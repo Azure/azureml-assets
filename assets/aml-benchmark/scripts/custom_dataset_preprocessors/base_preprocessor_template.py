@@ -21,8 +21,7 @@ def _parse_args():
 
 
 def _read_input_file(file_path: str) -> List[Dict[str, Any]]:
-    """Read files that have content in the json format and 
-    return a list of dictionaries.
+    """Read files that have content in the json format and return a list of dictionaries.
 
     :param file_paths: Path to input file.
     :return: List of dictionaries.

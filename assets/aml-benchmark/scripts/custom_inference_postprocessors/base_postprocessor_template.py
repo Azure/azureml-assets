@@ -8,7 +8,6 @@
 from typing import Any, Dict, List, Union
 import argparse
 import json
-import logging as logger
 import pandas as pd
 
 

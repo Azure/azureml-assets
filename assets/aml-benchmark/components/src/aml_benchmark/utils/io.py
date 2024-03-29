@@ -115,7 +115,7 @@ def resolve_io_path(dataset: str) -> List[str]:
 
 def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
     """
-    Read `.jsonl` files if extendion is jsonl else calls `read_files` function for files 
+    Read `.jsonl` files if extendion is jsonl else calls `read_files` function for files
     that do not endwith jsonl extension but the file content is of type json.
     Return a list of dictionaries.
 

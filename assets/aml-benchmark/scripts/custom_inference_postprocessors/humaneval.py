@@ -7,7 +7,6 @@ import re
 import json
 import codecs
 import argparse
-import logging as logger
 import pandas as pd
 import sys
 from io import StringIO
