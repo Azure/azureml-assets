@@ -69,7 +69,7 @@ class FineTuneProxy:
             logger.info("fetching training metrics from Azure OpenAI")
             self._log_metrics(job_id)
 
-        logger.info(f"finetuning job reached termina state: {status}")
+        logger.info(f"finetuning job reached terminal state: {status}")
         return finetuned_model_id
 
     def _log_metrics(self, job_id):
