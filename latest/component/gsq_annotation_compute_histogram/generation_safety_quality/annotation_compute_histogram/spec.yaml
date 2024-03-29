@@ -124,8 +124,11 @@ conf:
           - promptflow[azure]~=1.4.1
           - promptflow-tools~=1.1.0
           - keyrings.alt~=5.0.0
+          - azureml-mlflow~=1.55.0
+          - mlflow~=2.11.1
           - azureml-fsspec~=1.2.0
           - fsspec~=2023.4.0
+          - pyopenssl<23.0.0
     name: momo-base-spark
 code: ../../src
 entry:

@@ -16,6 +16,8 @@ import os
 import re
 import tempfile
 import traceback
+import mlflow
+import socket
 
 import pandas as pd
 import requests
@@ -162,6 +164,8 @@ THRESHOLD = "threshold_value"
 PRODUCTION_ROW_COUNT = "production_data"
 REFERENCE_ROW_COUNT = "reference_data"
 
+DEFAULT_PROMPTFLOW_PATH = "/home/trusted-service-user/.promptflow/"
+
 
 def _check_and_format_azure_endpoint_url(
     url_pattern, domain_pattern_re, domain, api_version, model
@@ -183,6 +187,40 @@ def _check_and_format_azure_endpoint_url(
     return url
 
 
+def get_aad_credential():
+    """Get AzureMLOnBehalfOfCredential."""
+    return AzureMLOnBehalfOfCredential(
+        AZUREML_SYNAPSE_CLUSTER_IDENTIFIER=os.environ[
+            "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER"
+        ],
+        AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT=os.environ[
+            "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT"
+        ],
+        AZUREML_RUN_ID=os.environ["AZUREML_RUN_ID"],
+        AZUREML_RUN_TOKEN_EXPIRY=os.environ["AZUREML_RUN_TOKEN_EXPIRY"],
+    )
+
+
+def get_ml_client(connection_name, subscription_id, resource_group_name, workspace_name, use_aad=False):
+    """Get MLClient handler with necessary authentication."""
+    get_aad_credential()
+
+    try:
+        from azureml.dataprep.api._aml_auth._azureml_token_authentication import AzureMLTokenAuthentication
+        from azure.ai.ml import MLClient
+        credential = AzureMLTokenAuthentication._initialize_aml_token_auth()
+        ml_client = MLClient(
+            credential=credential,
+            subscription_id=subscription_id,
+            resource_group_name=resource_group_name,
+            workspace_name=workspace_name
+        )
+    except Exception:
+        tb = traceback.format_exc()
+        raise Exception(f"Error encountered while attempting to setup MLClient auth: {tb}")
+    return ml_client
+
+
 class _WorkspaceConnectionTokenManager(object):
     def __init__(
         self,
@@ -191,29 +229,19 @@ class _WorkspaceConnectionTokenManager(object):
         auth_header,
         **kwargs,
     ):
-        self.credential = self.get_aad_credential()
+        uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)",  # noqa: E501
+                             connection_name, flags=re.IGNORECASE)
+
+        subscription_id = uri_match.group(1)
+        resource_group_name = uri_match.group(2)
+        workspace_name = uri_match.group(3)
+        ml_client = get_ml_client(connection_name, subscription_id,
+                                  resource_group_name, workspace_name)
         self.token = None
         self.auth_header = auth_header
 
         try:
-            from azureml.dataprep.api._aml_auth._azureml_token_authentication import AzureMLTokenAuthentication
-            from azure.ai.ml import MLClient
             from azure.ai.ml.entities import WorkspaceConnection
-
-            self._credential = AzureMLTokenAuthentication._initialize_aml_token_auth()
-
-            uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)",  # noqa: E501
-                                 connection_name, flags=re.IGNORECASE)
-
-            subscription_id = uri_match.group(1)
-            resource_group_name = uri_match.group(2)
-            workspace_name = uri_match.group(3)
-            ml_client = MLClient(
-                credential=self._credential,
-                subscription_id=subscription_id,
-                resource_group_name=resource_group_name,
-                workspace_name=workspace_name
-            )
             if os.environ.get("AZUREML_RUN_ID", None) is not None:
                 # In AzureML Run context, we need to use workspaces internal endpoint that will accept
                 # AzureMLToken auth.
@@ -249,19 +277,7 @@ class _WorkspaceConnectionTokenManager(object):
                 raise Exception("Unable to retrieve the token to establish a Workspace Connection")
         except Exception:
             tb = traceback.format_exc()
-            raise Exception(f"Error encountered while attempting to authentication token: {tb}")
-
-    def get_aad_credential(self):
-        return AzureMLOnBehalfOfCredential(
-            AZUREML_SYNAPSE_CLUSTER_IDENTIFIER=os.environ[
-                "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER"
-            ],
-            AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT=os.environ[
-                "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT"
-            ],
-            AZUREML_RUN_ID=os.environ["AZUREML_RUN_ID"],
-            AZUREML_RUN_TOKEN_EXPIRY=os.environ["AZUREML_RUN_TOKEN_EXPIRY"],
-        )
+            raise Exception(f"Error encountered while getting connection info: {tb}")
 
     def get_api_version(self):
         return self.api_version
@@ -549,6 +565,7 @@ def apply_annotation(
     spark_conf_vars = {
         "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",  # noqa: E501
         "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",
+        "TID": "spark.synapse.workspace.tenantId"
     }
     for env_key, conf_key in spark_conf_vars.items():
         value = spark_conf.get(conf_key)
@@ -563,6 +580,7 @@ def apply_annotation(
             "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER",
             "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT",
             "AZUREML_RUN_ID",
+            "AZUREML_RUN_TOKEN",
             "AZUREML_RUN_TOKEN_EXPIRY",
             "AZUREML_OBO_SERVICE_ENDPOINT",
             "AZUREML_OBO_CANARY_TOKEN",
@@ -570,8 +588,14 @@ def apply_annotation(
             "AZUREML_ARM_RESOURCEGROUP",
             "AZUREML_ARM_WORKSPACE_NAME",
             "AZUREML_ARM_PROJECT_NAME",
+            "MLFLOW_DISABLE_ENV_MANAGER_CONDA_WARNING",
+            "MLFLOW_EXPERIMENT_ID",
+            "MLFLOW_EXPERIMENT_NAME",
+            "MLFLOW_RUN_ID",
+            "MLFLOW_TRACKING_TOKEN",
+            "MLFLOW_TRACKING_URI",
             "OID",
-            "TID",
+            "TID"
         ]
     }
     is_test_connection = False
@@ -623,12 +647,15 @@ def apply_annotation(
     has_context = CONTEXT in production_df.columns
     has_ground_truth = GROUND_TRUTH in production_df.columns
 
+    # get tracking uri
+    tracking_uri = mlflow.get_tracking_uri()
+    run_id = os.environ.get("AZUREML_RUN_ID")
+
     def annotate_batch(iterator):
         for batch in iterator:
             # add environment variables on executors
             for env_var_key, env_var_value in driver_env_vars.items():
                 os.environ[env_var_key] = env_var_value
-
             rows = []
             passthrough_cols = get_passthrough_cols(batch)
             for index, row in batch.iterrows():
@@ -638,6 +665,10 @@ def apply_annotation(
                 if has_ground_truth:
                     qca[GROUND_TRUTH] = row[GROUND_TRUTH]
                 rows.append(qca)
+
+            if not os.path.exists(DEFAULT_PROMPTFLOW_PATH):
+                os.makedirs(DEFAULT_PROMPTFLOW_PATH, exist_ok=True)
+            mlflow.set_tracking_uri(tracking_uri)
 
             output_dir = tempfile.TemporaryDirectory()
             evaluate(
@@ -671,6 +702,11 @@ def apply_annotation(
                 tabular_result.rename(
                     columns={column_name: COLUMN_TO_COMPACT_METRIC_NAME[column_name]},
                     inplace=True)
+            # add promptflow debug logs
+            hostname = socket.gethostname()
+            artifact_path = f"worker_promptflow/{hostname}"
+            client = mlflow.tracking.MlflowClient()
+            client.log_artifacts(run_id, DEFAULT_PROMPTFLOW_PATH, artifact_path=artifact_path)
             yield tabular_result
 
     # used for testing without using openai connection
@@ -719,7 +755,7 @@ def apply_annotation(
 
     print("showing annotations dataframe: ")
     annotations_df.show()
-    run_id = os.environ.get("AZUREML_RUN_ID")
+
     for metric_name_compact in compact_metric_names:
         # Run inference over input dataset
         print(f"Begin {metric_name_compact} processing.")
