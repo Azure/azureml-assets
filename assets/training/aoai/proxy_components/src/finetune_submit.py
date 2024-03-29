@@ -11,6 +11,9 @@ from openai.types.fine_tuning.job_create_params import Hyperparameters
 from common import utils
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
+import mlflow
+import io
+import pandas as pd
 
 
 logger = get_logger(__name__)
@@ -43,24 +46,54 @@ class FineTuneProxy:
         job_id = finetune_job.id
         status = finetune_job.status
 
-        # If the job isn't yet done, poll it every 30 seconds.
+        # If the job isn't yet done, poll it every 60 seconds.
         if status not in ["succeeded", "failed"]:
             logger.info(f'Job not in terminal status: {status}. Waiting.')
+            last_event = None
             while status not in ["succeeded", "failed"]:
-                time.sleep(30)
+                time.sleep(60)
                 finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(job_id)
                 status = finetune_job.status
-                logger.info(f"current status of finetune job : {status}, polling after 30 sec")
-        else:
-            logger.debug(f'Fine-tune job {job_id} finished with status: {status}')
+                last_event = self._log_events(job_id, last_event)
 
         if status != "succeeded":
-            raise Exception("Component failed")
-        else:
-            finetuned_model_id = finetune_job.fine_tuned_model
-            logger.info(f'Fine-tune job {job_id} finished with \
-                        status: {status}. model id: {finetuned_model_id}')
-            return finetuned_model_id
+            error = finetune_job.error
+            logger.error(f"Fine tuning job: {job_id} failed with error: {error}")
+            raise Exception(f"Fine tuning job: {job_id} failed with error: {error}")
+
+        finetuned_model_id = finetune_job.fine_tuned_model
+        logger.info(f'Fine-tune job: {job_id} finished successfully. model id: {finetuned_model_id}')
+        logger.info("fetching training metrics from Azure OpenAI")
+        self._log_metrics(job_id)
+        return finetuned_model_id
+        
+    def _log_metrics(self, job_id):
+        result_files = self.aoai_client.fine_tuning.jobs.retrieve(job_id).result_files
+        response = self.aoai_client.files.content(file_id=result_files)
+        f = io.BytesIO(response.content)
+        df = pd.read_csv(f)
+
+        for col in df.columns[1:]:
+            values = df[['step', col]].dropna()
+            # drop all rows with -1 as a value
+            values = values[values[col] != -1]
+            for i, row in values.iterrows():
+                mlflow.log_metric(key=col, value=row[col], step=int(row.step))
+
+    def _log_events(self, job_id, last_event):
+        job_events = self.aoai_client.fine_tuning.jobs.list_events(job_id).data
+        event_message_list = []
+        for job_event in job_events:
+            if last_event == job_event.message:
+                break
+            event_message_list.append(job_event.message)
+        
+        if len(event_message_list) > 0:
+            last_event = event_message_list[0]
+            event_message_list.reverse()
+            for event_message in event_message_list:
+                logger.debug(event_message)
+        return last_event
 
 
 def submit_finetune_job():
@@ -95,7 +128,7 @@ def submit_finetune_job():
         finetune_proxy = FineTuneProxy(aoai_client_manager.get_azure_openai_client())
         fientuned_model_id = finetune_proxy.submit_finetune_job(
             training_file_id=data_upload_output['train_file_id'],
-            validation_file_id=data_upload_output['train_file_id'],
+            validation_file_id=data_upload_output['validation_file_id'],
             model=args.model,
             registered_model=args.registered_model_name,
             n_epochs=args.n_epochs,
