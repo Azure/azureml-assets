@@ -28,10 +28,10 @@ from action_analyzer.constants import (
     INDEX_CONTENT_COLUMN,
     INDEX_SCORE_COLUMN,
     INDEX_ID_COLUMN,
-    INVALID_METRICS_SCORE,
+    INVALID_METRIC_SCORE,
     RETRIEVAL_QUERY_TYPE_COLUMN,
     RETRIEVAL_TOP_K_COLUMN,
-    ACTION_METRICS_COLUMN,
+    ACTION_METRIC_COLUMN,
     PROPERTIES_COLUMN,
     TTEST_GROUP_ID_COLUMN,
     GROUP_COLUMN,
@@ -39,7 +39,9 @@ from action_analyzer.constants import (
     RETRIEVAL_SPAN_TYPE,
     ROOT_SPAN_COLUMN,
     ROOT_PROMPT_COLUMN,
-    GSQ_METRICS_LIST
+    GSQ_METRICS_LIST,
+    API_CALL_RETRY_BACKOFF_FACTOR,
+    API_CALL_RETRY_MAX_COUNT
 )
 from action_analyzer.prompts import RELEVANCE_TEMPLATE
 from shared_utilities.io_utils import (
@@ -68,7 +70,7 @@ def get_output_schema() -> StructType:
             StructField(TTEST_GROUP_ID_COLUMN, StringType(), True),
             StructField(GROUP_COLUMN, StringType(), True),
             StructField(QUERY_INTENTION_COLUMN, StringType(), True),
-            StructField(ACTION_METRICS_COLUMN, FloatType(), True),
+            StructField(ACTION_METRIC_COLUMN, FloatType(), True),
             StructField(PROPERTIES_COLUMN, StringType(), True)
         ]
     )
@@ -81,7 +83,7 @@ def _post_process_results(output):
         score = float(parsed_score_response[0].replace("'", "").strip())
     else:
         # Result of score is not found in the output string
-        score = INVALID_METRICS_SCORE
+        score = INVALID_METRIC_SCORE
         print("Not able to parse the score from the output string, setting score to nan")
     return score
 
@@ -191,7 +193,7 @@ def get_index_score(question,
         return rating
     except Exception as ex:
         print("Exception when getting the index score.", ex)
-        return INVALID_METRICS_SCORE
+        return INVALID_METRIC_SCORE
 
 
 def get_index_id(index_content):
@@ -277,11 +279,11 @@ def get_ttest_group_id(properties):
 
 def parse_meta_data(df):
     """Parse the meta data for the action."""
-    # Add all available GSQ metrics score and rootspan to properties
+    # Add all available GSQ metric scores and rootspan to properties
     columms = df.schema.names
-    for metrics in GSQ_METRICS_LIST:
-        if metrics in columms:
-            df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN), lit(metrics), col(metrics)))
+    for metric in GSQ_METRICS_LIST:
+        if metric in columms:
+            df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN), lit(metric), col(metric)))
     df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN),
                                                        lit(ROOT_PROMPT_COLUMN),
                                                        col(PROMPT_COLUMN)))
@@ -306,14 +308,14 @@ def parse_meta_data(df):
 
 
 @udf(FloatType())
-def get_action_metrics_score(completion,
+def get_action_metric_score(completion,
                              properties,
                              workspace_connection_arm_id,
                              model_deployment_name,
                              api_call_retry_max_count,
                              api_call_retry_backoff_factor,
                              request_args):
-    """Calculate metrics score for action."""
+    """Calculate metric score for action."""
     properties_dict = json.loads(properties)
     return get_index_score(properties_dict[PROMPT_COLUMN],
                            completion,
@@ -334,16 +336,8 @@ def run():
     parser.add_argument("--signal_scored_data", type=str)
     parser.add_argument("--model_deployment_name", type=str, required=True)
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
-    parser.add_argument("--temperature", type=float, default=0.0)
-    parser.add_argument("--top_p", type=float, default=1.0)
-    parser.add_argument("--num_samples", type=int, default=1)
-    parser.add_argument("--frequency_penalty", type=float, default=0.0)
-    parser.add_argument("--presence_penalty", type=float, default=0.0)
-    parser.add_argument("--stop", type=str, default=None)
-    parser.add_argument("--api_call_retry_backoff_factor", type=int, default=4)
-    parser.add_argument("--api_call_retry_max_count", type=int, default=20)
     args = parser.parse_args()
-    request_args = get_openai_request_args(args)
+    request_args = get_openai_request_args(args.model_deployment_name)
 
     data_with_groups_df = try_read_mltable_in_spark(
         args.data_with_groups, "data_with_groups"
@@ -363,14 +357,14 @@ def run():
     df.show()
 
     # calculate the metrics score.
-    metrics_score = get_action_metrics_score(col(COMPLETION_COLUMN),
+    metrics_score = get_action_metric_score(col(COMPLETION_COLUMN),
                                              col(PROPERTIES_COLUMN),
                                              lit(args.workspace_connection_arm_id),
                                              lit(args.model_deployment_name),
-                                             lit(args.api_call_retry_max_count),
-                                             lit(args.api_call_retry_backoff_factor),
+                                             lit(API_CALL_RETRY_MAX_COUNT),
+                                             lit(API_CALL_RETRY_BACKOFF_FACTOR),
                                              lit(json.dumps(request_args)))
-    data_with_action_metric_score_df = df.withColumn(ACTION_METRICS_COLUMN, metrics_score)
+    data_with_action_metric_score_df = df.withColumn(ACTION_METRIC_COLUMN, metrics_score)
 
     # output data with action metrics score.
     print("data_with_action_metric_score")
@@ -378,11 +372,11 @@ def run():
                                                                                TTEST_GROUP_ID_COLUMN,
                                                                                GROUP_COLUMN,
                                                                                QUERY_INTENTION_COLUMN,
-                                                                               ACTION_METRICS_COLUMN,
+                                                                               ACTION_METRIC_COLUMN,
                                                                                PROPERTIES_COLUMN)
     # Output Schema:
     # +--------+--------------+-----+---------------+--------------+----------+
-    # |trace_id|ttest_group_id|group|query_intention|action_metrics|properties|
+    # |trace_id|ttest_group_id|group|query_intention|action_metric|properties|
     # +--------+--------------+-----+---------------+--------------+----------+
     data_with_action_metric_score_df.show()
     save_spark_df_as_mltable(data_with_action_metric_score_df, args.data_with_action_metric_score)

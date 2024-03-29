@@ -17,24 +17,15 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 
-# Parameters to OpenAI API requests
-OPENAI_REQUEST_PARAMS = [
-    "messages",  # prompt is only a param with the completions API
-    "max_tokens",
-    "temperature",
-    "top_p",
-    "n",
-    "stream",
-    "stop",
-    "presence_penalty",
-    "frequency_penalty",
-    "model",
-    "num_samples",
-]
-
 AUTHORIZATION = "Authorization"
 BEARER = "Bearer"
 API_KEY = "api-key"
+TEMPERATURE_VALUE = 0.0
+TOP_P_VALUE = 1.0
+NUM_SAMPLES_VALUE = 1
+FREQUENCY_PENALTY_VALUE = 0.0
+PRESENCE_PENALTY_VALUE = 0.0
+STOP_VALUE = None
 
 # Timeout per each request: 5min
 HTTP_REQUEST_TIMEOUT = 300
@@ -395,10 +386,15 @@ def _check_and_format_azure_endpoint_url(url_pattern, domain_pattern_re, domain,
     return url
 
 
-def get_openai_request_args(args):
+def get_openai_request_args(model_deployment_name):
     """Get openai request parameters."""
     request_args = {
-        arg: getattr(args, arg) for arg in OPENAI_REQUEST_PARAMS if hasattr(args, arg)
+        "temperature": TEMPERATURE_VALUE,
+        "top_p": TOP_P_VALUE,
+        "num_samples": NUM_SAMPLES_VALUE,
+        "frequency_penalty": FREQUENCY_PENALTY_VALUE,
+        "presence_penalty": PRESENCE_PENALTY_VALUE,
+        "model": model_deployment_name
     }
-    request_args["model"] = args.model_deployment_name
+    request_args["model"] = model_deployment_name
     return request_args

@@ -13,13 +13,13 @@ from pyspark.sql.types import (
 )
 from action_analyzer.constants import (
     GSQ_METRICS_LIST,
-    METRICS_VIOLATION_THRESHOLD,
     PROMPT_COLUMN,
     TRACE_ID_COLUMN,
     VIOLATED_METRICS_COLUMN,
     ROOT_SPAN_COLUMN,
     GROUP_TOPIC_MIN_SAMPLE_SIZE,
-    GOOD_METRICS_VALUE,
+    GOOD_METRIC_THRESHOLD,
+    BAD_METRIC_THRESHOLD,
     DEFAULT_TOPIC_NAME,
     GROUP_COLUMN,
     QUERY_INTENTION_COLUMN,
@@ -66,8 +66,8 @@ def save_violated_metrics(violated_metrics, output_path):
         ]
     )
     data = []
-    for metrics in violated_metrics:
-        data.append([metrics])
+    for metric in violated_metrics:
+        data.append([metric])
     df = create_spark_df(data, schema)
     save_spark_df_as_mltable(df, output_path)
 
@@ -133,12 +133,12 @@ def get_violated_metrics(signal_out_url, signal_name):
         gsq_output = store_url.read_file_content(f"{signal_name}.json")
         gsq_output_json = json.loads(gsq_output)
         metrics_dict = gsq_output_json["metrics"]
-        for metrics in GSQ_METRICS_LIST:
-            pass_rate_metrics = f"Aggregated{metrics}PassRate"
+        for metric in GSQ_METRICS_LIST:
+            pass_rate_metrics = f"Aggregated{metric}PassRate"
             if pass_rate_metrics in metrics_dict:
                 if metrics_dict[pass_rate_metrics]["value"] < metrics_dict[pass_rate_metrics]["threshold"]:
-                    print(f"Metrics {metrics} violated.")
-                    violated_metrics.append(metrics)
+                    print(f"Metrics {metric} violated.")
+                    violated_metrics.append(metric)
         return violated_metrics
     except Exception as e:
         print("Exception while getting the violated metrics.", e)
@@ -180,14 +180,6 @@ def run():
     parser.add_argument("--model_deployment_name", type=str, required=True)
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
     parser.add_argument("--llm_summary_enabled", type=str)
-    parser.add_argument("--temperature", type=float, default=0.0)
-    parser.add_argument("--top_p", type=float, default=1.0)
-    parser.add_argument("--num_samples", type=int, default=1)
-    parser.add_argument("--frequency_penalty", type=float, default=0.0)
-    parser.add_argument("--presence_penalty", type=float, default=0.0)
-    parser.add_argument("--stop", type=str, default=None)
-    parser.add_argument("--api_call_retry_backoff_factor", type=int, default=4)
-    parser.add_argument("--api_call_retry_max_count", type=int, default=10)
     args = parser.parse_args()
 
     data_with_groups_df = create_spark_df([], get_output_schema())
@@ -208,27 +200,26 @@ def run():
     # Add group and query_intention
     # Schema:
     # +--------+------+----------+---------+-------+------------------------+-----+---------------+
-    # |trace_id|prompt|completion|Coherence|Fluency|...(other metrics score)|group|query_intention|
+    # |trace_id|prompt|completion|Coherence|Fluency|...(other metric score)|group|query_intention|
     # +--------+------+----------+---------+-------+------------------------+-----+---------------+
     df = signal_scored_data_df.withColumn(GROUP_COLUMN, lit("")) \
                               .withColumn(QUERY_INTENTION_COLUMN, lit("")) \
                               .drop(ROOT_SPAN_COLUMN)
 
-    for metrics in violated_metrics:
+    for metric in violated_metrics:
         print("======Current metrics=====")
-        print(metrics)
-        score_name = metrics
+        print(metric)
 
         # Get the good and bad queries.
         # Sample the good queries as same number of bad queires in case the good query number is too large.
-        df_good = df.filter(col(score_name) == GOOD_METRICS_VALUE)
-        df_bad = df.filter(col(score_name) < METRICS_VIOLATION_THRESHOLD)
+        df_good = df.filter(col(metric) >= GOOD_METRIC_THRESHOLD)
+        df_bad = df.filter(col(metric) < BAD_METRIC_THRESHOLD)
         df_good = df_good.orderBy(rand()).limit(df_bad.count())
-        print(f"Sample size for current metrics: {df_bad.count()}")
+        print(f"Sample size for current metric: {df_bad.count()}")
 
         # assign the query group (good or bad).
-        good_group = GOOD_GROUP_NAME.replace("{metrics}", metrics)
-        bad_group = BAD_GROUP_NAME.replace("{metrics}", metrics)
+        good_group = GOOD_GROUP_NAME.replace("{metric}", metric)
+        bad_group = BAD_GROUP_NAME.replace("{metric}", metric)
         df_good = df_good.withColumn(GROUP_COLUMN, lit(good_group))
         df_bad = df_bad.withColumn(GROUP_COLUMN, lit(bad_group))
 

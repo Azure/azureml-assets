@@ -23,11 +23,11 @@ from action_analyzer.constants import (
     P_VALUE_THRESHOLD,
     PROMPT_COLUMN,
     CONFIDENCE_SCORE_COLUMN,
-    INVALID_METRICS_SCORE,
+    INVALID_METRIC_SCORE,
     TTEST_GROUP_ID_COLUMN,
     GOOD_GROUP_NAME,
     BAD_GROUP_NAME,
-    ACTION_METRICS_COLUMN,
+    ACTION_METRIC_COLUMN,
     QUERY_INTENTION_COLUMN,
     TRACE_ID_LIST_COLUMN,
     GROUP_COLUMN,
@@ -72,10 +72,10 @@ def save_action_data(action_rows, output_path):
 
 
 @udf(returnType=StringType())
-def get_debugging_column(action_metrics, properties):
+def get_debugging_column(action_metric, properties):
     """Get debugging information for t-test."""
     properties_dict = json.loads(properties)
-    return f"{action_metrics} - {properties_dict[PROMPT_COLUMN]}"
+    return f"{action_metric} - {properties_dict[PROMPT_COLUMN]}"
 
 
 def generate_actions(df, violated_metrics):
@@ -87,10 +87,10 @@ def generate_actions(df, violated_metrics):
         actions_data = []
         for ttest_group_id in ttest_groups:
             df_filtered = df.filter(col(TTEST_GROUP_ID_COLUMN) == ttest_group_id)
-            for metrics in violated_metrics:
-                print("\nMetrics: ", metrics)
-                good_group_name = GOOD_GROUP_NAME.replace("{metrics}", metrics)
-                bad_group_name = BAD_GROUP_NAME.replace("{metrics}", metrics)
+            for metric in violated_metrics:
+                print("\nMetrics: ", metric)
+                good_group_name = GOOD_GROUP_NAME.replace("{metric}", metric)
+                bad_group_name = BAD_GROUP_NAME.replace("{metric}", metric)
                 good_group_df = df_filtered.filter(col(GROUP_COLUMN) == good_group_name)
                 bad_group_df = df_filtered.filter(col(GROUP_COLUMN) == bad_group_name)
                 # correlation test for default bad group
@@ -124,15 +124,15 @@ def perform_correlation_test(good_group_df,
     # This part is for debugging t-test purpose only.
     print("good queries: ")
     good_group_df = good_group_df.withColumn("Debugging",
-                                             get_debugging_column(col(ACTION_METRICS_COLUMN), col(PROPERTIES_COLUMN)))
+                                             get_debugging_column(col(ACTION_METRIC_COLUMN), col(PROPERTIES_COLUMN)))
     print("\n".join(good_group_df.select("Debugging").rdd.flatMap(lambda x: x).collect()))
     print("bad queries: ")
     bad_group_df = bad_group_df.withColumn("Debugging",
-                                           get_debugging_column(col(ACTION_METRICS_COLUMN), col(PROPERTIES_COLUMN)))
+                                           get_debugging_column(col(ACTION_METRIC_COLUMN), col(PROPERTIES_COLUMN)))
     print("\n".join(bad_group_df.select("Debugging").rdd.flatMap(lambda x: x).collect()))
 
-    good_answer_scores = good_group_df.select(ACTION_METRICS_COLUMN).rdd.flatMap(lambda x: x).collect()
-    bad_answer_scores = bad_group_df.select(ACTION_METRICS_COLUMN).rdd.flatMap(lambda x: x).collect()
+    good_answer_scores = good_group_df.select(ACTION_METRIC_COLUMN).rdd.flatMap(lambda x: x).collect()
+    bad_answer_scores = bad_group_df.select(ACTION_METRIC_COLUMN).rdd.flatMap(lambda x: x).collect()
 
     t_stat, p_value = perform_ttest(good_answer_scores, bad_answer_scores)
     bad_mean = statistics.mean(bad_answer_scores)
@@ -180,14 +180,14 @@ def run():
         args.data_with_action_metric_score, "data_with_action_metric_score"
     )
     if not data_with_action_metric_score_df or data_with_action_metric_score_df.isEmpty():
-        print("Empty metrics score data")
+        print("Empty metric score data")
         save_empty_dataframe(get_output_schema(), args.action_data)
         return
 
     violated_metrics = get_violated_metrics(args.violated_metrics)
 
-    # filter out invalid metrics score
-    data_with_action_metric_score_df = data_with_action_metric_score_df.filter(col(ACTION_METRICS_COLUMN) > INVALID_METRICS_SCORE)  # noqa: E501
+    # filter out invalid metric score
+    data_with_action_metric_score_df = data_with_action_metric_score_df.filter(col(ACTION_METRIC_COLUMN) > INVALID_METRIC_SCORE)  # noqa: E501
 
     # generate actions
     action_rows = generate_actions(data_with_action_metric_score_df, violated_metrics)

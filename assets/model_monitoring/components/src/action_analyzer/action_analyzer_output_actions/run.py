@@ -37,7 +37,7 @@ from action_analyzer.constants import (
     ACTION_ANALYZER_ACTION_TAG,
     PROPERTIES_COLUMN,
     TRACE_ID_COLUMN,
-    ACTION_METRICS_COLUMN,
+    ACTION_METRIC_COLUMN,
     ROOT_PROMPT_COLUMN
 )
 from pyspark.sql.types import (
@@ -69,7 +69,7 @@ def write_actions(action_bad_group_df,
                                            .agg(collect_set(GROUP_COLUMN).alias(GROUP_COLUMN),
                                                 first(TTEST_GROUP_ID_COLUMN).alias(TTEST_GROUP_ID_COLUMN),
                                                 first(QUERY_INTENTION_COLUMN).alias(QUERY_INTENTION_COLUMN),
-                                                first(ACTION_METRICS_COLUMN).alias(ACTION_METRICS_COLUMN),
+                                                first(ACTION_METRIC_COLUMN).alias(ACTION_METRIC_COLUMN),
                                                 first(PROPERTIES_COLUMN).alias(PROPERTIES_COLUMN),
                                                 first(ACTION_ID_COLUMN).alias(ACTION_ID_COLUMN),
                                                 first(ACTION_QUERY_INTENTION_COLUMN).alias(ACTION_QUERY_INTENTION_COLUMN),  # noqa: E501
@@ -79,7 +79,7 @@ def write_actions(action_bad_group_df,
                                              .agg(collect_set(GROUP_COLUMN).alias(GROUP_COLUMN),
                                                   first(TTEST_GROUP_ID_COLUMN).alias(TTEST_GROUP_ID_COLUMN),
                                                   first(QUERY_INTENTION_COLUMN).alias(QUERY_INTENTION_COLUMN),
-                                                  first(ACTION_METRICS_COLUMN).alias(ACTION_METRICS_COLUMN),
+                                                  first(ACTION_METRIC_COLUMN).alias(ACTION_METRIC_COLUMN),
                                                   first(PROPERTIES_COLUMN).alias(PROPERTIES_COLUMN),
                                                   first(ACTION_ID_COLUMN).alias(ACTION_ID_COLUMN),
                                                   first(ACTION_QUERY_INTENTION_COLUMN).alias(ACTION_QUERY_INTENTION_COLUMN),  # noqa: E501
@@ -123,7 +123,7 @@ def generate_samples(action_df, is_negative_sample):
     samples = []
     # sort the good samples by index score
     if not is_negative_sample:
-        action_df = action_df.sort([ACTION_METRICS_COLUMN], ascending=False)
+        action_df = action_df.sort([ACTION_METRIC_COLUMN], ascending=False)
     sample_data = action_df.rdd.collect()
     for i in range(len(sample_data)):
         if i >= MAX_SAMPLE_SIZE and not is_negative_sample:
@@ -133,15 +133,14 @@ def generate_samples(action_df, is_negative_sample):
             "Question": properties_dict[ROOT_PROMPT_COLUMN],
             "Answer": properties_dict[COMPLETION_COLUMN],
             "Topic": sample_data[i][QUERY_INTENTION_COLUMN],
-            "LookupScore": sample_data[i][ACTION_METRICS_COLUMN],
+            "LookupScore": sample_data[i][ACTION_METRIC_COLUMN],
             "DebuggingInfo": properties_dict[ROOT_SPAN_COLUMN],
             "RetrievalQueryType": properties_dict[RETRIEVAL_QUERY_TYPE_COLUMN],
             "RetrievalTopK": properties_dict[RETRIEVAL_TOP_K_COLUMN]
         }
         if is_negative_sample:
-            # now only select one violated metrics. Todo: get the full violated list
-            metrics_name = [group.replace("_bad", "") for group in sample_data[i][GROUP_COLUMN]]
-            sample["ViolatedMetrics"] = ", ".join(metrics_name)
+            metric_names = [group.replace("_bad", "") for group in sample_data[i][GROUP_COLUMN]]
+            sample["ViolatedMetrics"] = ", ".join(metric_names)
         samples.append(sample)
     return samples
 
