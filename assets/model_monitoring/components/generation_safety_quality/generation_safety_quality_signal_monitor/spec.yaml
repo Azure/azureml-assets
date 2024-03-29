@@ -4,7 +4,7 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.5.5
+version: 0.5.6
 is_deterministic: true
 inputs:
   monitor_name:
@@ -61,6 +61,11 @@ inputs:
     type: integer
     optional: true
     default: 4
+  thresholds:
+    type: string
+    optional: true
+    default: ""
+    description: a comma-separated dictionary of threshold:value for each metric
   groundedness_passrate_threshold:
     type: number
     optional: true
@@ -162,12 +167,13 @@ jobs:
       type: aml_token
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.11
+    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.12
     inputs:
       annotation_histogram:
         type: mltable
         path: ${{parent.jobs.compute_histogram.outputs.histogram}}
       metric_names: ${{parent.inputs.metric_names}}
+      thresholds: ${{parent.inputs.thresholds}}
       groundedness_passrate_threshold: ${{parent.inputs.groundedness_passrate_threshold}}
       similarity_passrate_threshold: ${{parent.inputs.similarity_passrate_threshold}}
       relevance_passrate_threshold: ${{parent.inputs.relevance_passrate_threshold}}
