@@ -67,15 +67,14 @@ class FineTuneProxy:
             finetuned_model_id = finetune_job.fine_tuned_model
             logger.info(f'Fine-tune job: {job_id} finished successfully. model id: {finetuned_model_id}')
             logger.info("fetching training metrics from Azure OpenAI")
-            self._log_metrics(job_id)
+            self._log_metrics(finetune_job)
 
         logger.info(f"finetuning job reached terminal state: {status}")
         return finetuned_model_id
 
-    def _log_metrics(self, job_id):
+    def _log_metrics(self, finetune_job):
         """Fetch training metrics from azure open ai resource after finetuning is done and log them."""
-        fine_tuning_job = self.aoai_client.fine_tuning.jobs.retrieve(job_id)
-        result_file = fine_tuning_job.result_files[0]
+        result_file = finetune_job.result_files[0]
         response = self.aoai_client.files.content(file_id=result_file)
         f = io.BytesIO(response.content)
         df = pd.read_csv(f)
