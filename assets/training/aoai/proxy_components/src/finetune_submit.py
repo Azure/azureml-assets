@@ -66,7 +66,7 @@ class FineTuneProxy:
         logger.info("fetching training metrics from Azure OpenAI")
         self._log_metrics(job_id)
         return finetuned_model_id
-        
+
     def _log_metrics(self, job_id):
         result_files = self.aoai_client.fine_tuning.jobs.retrieve(job_id).result_files
         response = self.aoai_client.files.content(file_id=result_files)
@@ -87,7 +87,7 @@ class FineTuneProxy:
             if last_event == job_event.message:
                 break
             event_message_list.append(job_event.message)
-        
+
         if len(event_message_list) > 0:
             last_event = event_message_list[0]
             event_message_list.reverse()

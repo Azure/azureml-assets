@@ -11,6 +11,7 @@ from azureml.telemetry.logging_handler import get_appinsights_log_handler, AppIn
 
 AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT = "azureml-benchmark-custom-logger"
 
+
 def get_logger(filename: str) -> logging.Logger:
     """
     Create and configure a logger based on the provided filename.
