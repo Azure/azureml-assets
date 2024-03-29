@@ -309,12 +309,12 @@ def parse_meta_data(df):
 
 @udf(FloatType())
 def get_action_metric_score(completion,
-                             properties,
-                             workspace_connection_arm_id,
-                             model_deployment_name,
-                             api_call_retry_max_count,
-                             api_call_retry_backoff_factor,
-                             request_args):
+                            properties,
+                            workspace_connection_arm_id,
+                            model_deployment_name,
+                            api_call_retry_max_count,
+                            api_call_retry_backoff_factor,
+                            request_args):
     """Calculate metric score for action."""
     properties_dict = json.loads(properties)
     return get_index_score(properties_dict[PROMPT_COLUMN],
@@ -358,12 +358,12 @@ def run():
 
     # calculate the metrics score.
     metrics_score = get_action_metric_score(col(COMPLETION_COLUMN),
-                                             col(PROPERTIES_COLUMN),
-                                             lit(args.workspace_connection_arm_id),
-                                             lit(args.model_deployment_name),
-                                             lit(API_CALL_RETRY_MAX_COUNT),
-                                             lit(API_CALL_RETRY_BACKOFF_FACTOR),
-                                             lit(json.dumps(request_args)))
+                                            col(PROPERTIES_COLUMN),
+                                            lit(args.workspace_connection_arm_id),
+                                            lit(args.model_deployment_name),
+                                            lit(API_CALL_RETRY_MAX_COUNT),
+                                            lit(API_CALL_RETRY_BACKOFF_FACTOR),
+                                            lit(json.dumps(request_args)))
     data_with_action_metric_score_df = df.withColumn(ACTION_METRIC_COLUMN, metrics_score)
 
     # output data with action metrics score.

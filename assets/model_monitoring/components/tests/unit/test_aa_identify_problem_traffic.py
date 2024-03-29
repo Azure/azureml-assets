@@ -5,13 +5,11 @@
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import (
-    StructField, StringType, TimestampType, StructType
+    StructField, StringType, StructType
 )
 import pytest
 import os
-import sys
 import json
-from datetime import datetime
 from src.action_analyzer.action_analyzer_identify_problem_traffic.run import (
     add_query_intention,
     get_violated_metrics,
@@ -23,9 +21,7 @@ from src.action_analyzer.constants import (
     DEFAULT_TOPIC_NAME
 )
 from pyspark.sql.functions import col, lit
-from src.model_data_collector_preprocessor.store_url import StoreUrl
 import spark_mltable  # noqa, to enable spark.read.mltable
-from spark_mltable import SPARK_ZIP_PATH
 
 
 @pytest.mark.unit
@@ -113,8 +109,8 @@ class TestActionAnalyzerIdentifyProblemTraffic:
         data_df = spark.createDataFrame(data, schema=data_schema)
 
         query_intention_df = data_df.withColumn(QUERY_INTENTION_COLUMN, get_query_intention(col(PROMPT_COLUMN),
-                                                                            lit(json.dumps(topics_dict)),
-                                                                            lit(llm_summary_enabled)))
+                                                                                            lit(json.dumps(topics_dict)),
+                                                                                            lit(llm_summary_enabled)))
         query_intentions = query_intention_df.collect()
         query_intention_0 = query_intentions[0]
         query_intention_3 = query_intentions[3]
@@ -127,5 +123,3 @@ class TestActionAnalyzerIdentifyProblemTraffic:
             assert query_intention_0[QUERY_INTENTION_COLUMN] == "topic_0"
             assert query_intention_3[QUERY_INTENTION_COLUMN] == "topic_1"
             assert query_intention_6[QUERY_INTENTION_COLUMN] == DEFAULT_TOPIC_NAME
-
-            
