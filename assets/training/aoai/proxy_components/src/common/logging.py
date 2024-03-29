@@ -62,6 +62,7 @@ def add_custom_dimenions_to_app_insights_handler(logger: logging.Logger,
 
 
 class NoLoggingHandlerFilter(logging.Filter):
+    """Filter out logs from logging handler."""
     def filter(self, record):
-        """filter out logs from logging handler"""
+        """Filter out logs from logging handler."""
         return not record.module == "logging_handler"
