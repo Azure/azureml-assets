@@ -4,7 +4,7 @@ type: spark
 name: gsq_annotation_compute_metrics
 display_name: Annotation - Compute Metrics
 description: Compute annotation metrics given a deployment's model data input.
-version: 0.4.11
+version: 0.4.12
 is_deterministic: true
 inputs:
   annotation_histogram:
@@ -14,6 +14,11 @@ inputs:
     type: string
     description: a comma-separated list of metric names to compute
     optional: false
+  thresholds:
+    type: string
+    optional: true
+    default: ""
+    description: a comma-separated dictionary of threshold:value for each metric
   groundedness_passrate_threshold:
     type: number
     optional: true
@@ -85,6 +90,7 @@ entry:
 args: >-
   --annotation_histogram ${{inputs.annotation_histogram}}
   --metric_names ${{inputs.metric_names}}
+  $[[--thresholds ${{inputs.thresholds}}]]
   $[[--groundedness_passrate_threshold ${{inputs.groundedness_passrate_threshold}}]]
   $[[--relevance_passrate_threshold ${{inputs.relevance_passrate_threshold}}]]
   $[[--similarity_passrate_threshold ${{inputs.similarity_passrate_threshold}}]]

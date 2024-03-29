@@ -18,7 +18,9 @@ GROUP_DIMENSION_COLUMN = "group_dimension"
 METRIC_NAME_COLUMN = "metric_name"
 METRIC_VALUE_COLUMN = "metric_value"
 THRESHOLD_COLUMN = "threshold_value"
-TOTAL_VIOLATION_COUNTS = "TotalViolationCounts"
+TOTAL_PASS_RATE_VIOLATION_COUNTS = "TotalPassRateViolationCounts"
+TOTAL_AVERAGE_SCORE_VIOLATION_COUNTS = "TotalAverageScoreViolationCounts"
+DEFAULT_AVERAGE_THRESHOLD = 4.0
 
 THRESHOLD_PARAMS = [
     "groundedness_passrate_threshold",
@@ -32,23 +34,28 @@ ALL_METRIC_NAMES = [
     "AcceptableGroundednessScorePerInstance",
     "AggregatedGroundednessPassRate",
     "AverageGroundednessScore",
-    "GroundednessViolationCounts",
+    "GroundednessPassRateViolationCounts",
+    "GroundednessAvergaeScoreViolationCounts",
     "AcceptableCoherenceScorePerInstance",
     "AggregatedCoherencePassRate",
     "AverageCoherenceScore",
-    "CoherenceViolationCounts",
+    "CoherencePassRateViolationCounts",
+    "CoherenceAverageScoreViolationCounts",
     "AcceptableFluencyScorePerInstance",
     "AggregatedFluencyPassRate",
     "AverageFluencyScore",
-    "FluencyViolationCounts",
+    "FluencyPassRateViolationCounts",
+    "FluencyAverageScoreViolationCounts",
     "AcceptableSimilarityScorePerInstance",
     "AggregatedSimilarityPassRate",
     "AverageSimilarityScore",
-    "SimilarityViolationCounts",
+    "SimilarityPassRateViolationCounts",
+    "SimilarityAverageScoreViolationCounts",
     "AcceptableRelevanceScorePerInstance",
     "AggregatedRelevancePassRate",
     "AverageRelevanceScore",
-    "RelevanceViolationCounts",
+    "RelevancePassRateViolationCounts",
+    "RelevanceAverageScoreViolationCounts",
 ]
 
 
@@ -126,6 +133,7 @@ def run():
     parser.add_argument("--annotation_histogram", type=str)
     parser.add_argument("--signal_metrics", type=str)
 
+    parser.add_argument("--thresholds", type=str, default="")
     parser.add_argument("--groundedness_passrate_threshold", type=float, default=0.7)
     parser.add_argument("--similarity_passrate_threshold", type=float, default=0.7)
     parser.add_argument("--relevance_passrate_threshold", type=float, default=0.7)
@@ -137,6 +145,13 @@ def run():
     threshold_args = {
         arg: getattr(args, arg) for arg in THRESHOLD_PARAMS if hasattr(args, arg)
     }
+    # get the threshold name and value from arg with format
+    # "average_coherence_threshold:0.7,average_fluency_threshold:0.7" as dictionary
+    for threshold in args.thresholds.split(","):
+        threshold_pair = threshold.split(":")
+        if len(threshold_pair) == 2:
+            threshold_name, threshold_value = threshold_pair
+            threshold_args[threshold_name] = float(threshold_value)
     metric_names = args.metric_names
     aggregated_metrics_df = compute_metrics(histogram_df, threshold_args, metric_names)
     save_spark_df_as_mltable(aggregated_metrics_df, args.signal_metrics)
@@ -170,13 +185,20 @@ def compute_metrics(histogram_df, threshold_args, metric_names):
                 StructField(GROUP_DIMENSION_COLUMN, StringType(), True)
             ]
         )
-    total_violation_counts = 0
+    total_pr_violation_counts = 0
+    total_avg_violation_counts = 0
     for metric_name in compact_metric_names:
         passrate_threshold = threshold_args[f"{metric_name.lower()}_passrate_threshold"]
         full_pass_rate_metric_name = f"Aggregated{metric_name}PassRate"
         full_per_instance_score_metric_name = f"Acceptable{metric_name}ScorePerInstance"
         average_score_metric_name = f"Average{metric_name}Score"
-        violation_counts_metric_name = f"{metric_name}ViolationCounts"
+        average_threshold_name = f"average_{metric_name.lower()}_threshold"
+        if average_threshold_name in threshold_args:
+            average_threshold = threshold_args[average_threshold_name]
+        else:
+            average_threshold = DEFAULT_AVERAGE_THRESHOLD
+        passrate_violation_counts_metric_name = f"{metric_name}PassRateViolationCounts"
+        avg_violation_counts_metric_name = f"{metric_name}AverageScoreViolationCounts"
         compute_full_pass_rate_metric = full_pass_rate_metric_name in input_metric_names
         if compute_full_pass_rate_metric:
             metric_df = spark.createDataFrame(
@@ -222,6 +244,24 @@ def compute_metrics(histogram_df, threshold_args, metric_names):
                             "",
                             average_metric_score,
                             average_score_metric_name,
+                            str(average_threshold),
+                            "",
+                        )
+                    ],
+                    metadata_schema,
+                )
+            aggregated_metrics_df = aggregated_metrics_df.union(metric_df)
+        compute_pr_violation_counts = passrate_violation_counts_metric_name in input_metric_names
+        compute_pr_violation_counts = compute_pr_violation_counts or compute_full_pass_rate_metric
+        if compute_pr_violation_counts:
+            violation_counts = _calculate_violation_counts(histogram_df, metric_name)
+            total_pr_violation_counts += violation_counts
+            metric_df = spark.createDataFrame(
+                    [
+                        (
+                            "",
+                            violation_counts,
+                            passrate_violation_counts_metric_name,
                             "",
                             "",
                         )
@@ -229,17 +269,17 @@ def compute_metrics(histogram_df, threshold_args, metric_names):
                     metadata_schema,
                 )
             aggregated_metrics_df = aggregated_metrics_df.union(metric_df)
-        compute_violation_counts = violation_counts_metric_name in input_metric_names
-        compute_violation_counts = compute_violation_counts or compute_full_pass_rate_metric
-        if compute_violation_counts:
-            violation_counts = _calculate_violation_counts(histogram_df, metric_name)
-            total_violation_counts += violation_counts
+        compute_avg_violation_counts = avg_violation_counts_metric_name in input_metric_names
+        compute_avg_violation_counts = compute_avg_violation_counts or compute_average
+        if compute_avg_violation_counts:
+            violation_counts = 1 if average_metric_score < average_threshold else 0
+            total_avg_violation_counts += violation_counts
             metric_df = spark.createDataFrame(
                     [
                         (
                             "",
                             violation_counts,
-                            violation_counts_metric_name,
+                            avg_violation_counts_metric_name,
                             "",
                             "",
                         )
@@ -251,8 +291,15 @@ def compute_metrics(histogram_df, threshold_args, metric_names):
             [
                 (
                     "",
-                    total_violation_counts,
-                    TOTAL_VIOLATION_COUNTS,
+                    total_pr_violation_counts,
+                    TOTAL_PASS_RATE_VIOLATION_COUNTS,
+                    "",
+                    "",
+                ),
+                (
+                    "",
+                    total_avg_violation_counts,
+                    TOTAL_AVERAGE_SCORE_VIOLATION_COUNTS,
                     "",
                     "",
                 )
