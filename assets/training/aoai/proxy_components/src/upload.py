@@ -33,8 +33,8 @@ class UploadComponent:
             train_data = open(train_file_path, "rb")
             validation_data = open(validation_file_path, "rb")
         else:
-            logger.debug(f"validation data not provided,\
-                        splitting train data in ratio : {self.split_ratio} to create validation data")
+            logger.debug(f"validation data not provided,
+                         splitting train data in ratio : {self.split_ratio} to create validation data")
             train_data, validation_data = self._get_train_validation_split_data(train_file_path)
 
         logger.debug(f"uploading training file : {train_file_name} and validation file : {validation_file_name}")

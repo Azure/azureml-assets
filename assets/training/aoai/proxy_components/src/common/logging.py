@@ -11,12 +11,6 @@ from azureml.telemetry.logging_handler import get_appinsights_log_handler, AppIn
 
 AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT = "azureml-benchmark-custom-logger"
 
-# Logs with following string in them will not be sent to appinsights
-LOGS_TO_BE_FILTERED_APPINSIGHTS = [
-    '[logging_handler]'
-]
-
-
 def get_logger(filename: str) -> logging.Logger:
     """
     Create and configure a logger based on the provided filename.
@@ -41,6 +35,7 @@ def get_logger(filename: str) -> logging.Logger:
     )
     stream_handler.setFormatter(formatter)
     _add_application_insights_handler(logger)
+    logger.addFilter(NoLoggingHandlerFilter())
     return logger
 
 
@@ -49,8 +44,6 @@ def _add_application_insights_handler(logger: logging.Logger):
     formatter = logging.Formatter("[%(module)s] - %(message)s")
     appinsights_handler.setFormatter(formatter)
     appinsights_handler.setLevel(logging.DEBUG)
-    appinsights_handler._synchronous_client.add_telemetry_processor(_appinsights_filter_processor)
-    appinsights_handler._default_client.add_telemetry_processor(_appinsights_filter_processor)
     logger.addHandler(appinsights_handler)
 
 
@@ -67,12 +60,7 @@ def add_custom_dimenions_to_app_insights_handler(logger: logging.Logger,
             handler._default_client.context.properties.update(properties)
 
 
-def _appinsights_filter_processor(data, context) -> bool:
-    """Add process to TelemetryClient to prevent any PII info getting logged."""
-    # Do not log statements to be filtered
-    if data.message is not None:
-        data_message = data.message.lower()
-        # Loop through all the preset strings and check if the current log contains any one of those strings
-        if any([filter_str.lower() in data_message for filter_str in LOGS_TO_BE_FILTERED_APPINSIGHTS]):
-            return False
-    return True
+class NoLoggingHandlerFilter(logging.Filter):
+    def filter(self, record):
+        """filter out logs from logging handler"""
+        return not record.module == "logging_handler"
