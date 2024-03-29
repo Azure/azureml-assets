@@ -57,6 +57,7 @@ def main():
                                                      aoai_client_manager.endpoint_name,
                                                      aoai_client_manager.endpoint_resource_group,
                                                      aoai_client_manager.endpoint_subscription)
+        logger.info("Starting data delete component")
         delete_component = DeleteComponent(aoai_client_manager.get_azure_openai_client())
         logger.info("deleting training and validataion data from Azure OpenAI")
         delete_component.delete_files(args.data_upload_output)

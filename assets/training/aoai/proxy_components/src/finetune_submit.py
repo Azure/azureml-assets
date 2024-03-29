@@ -124,6 +124,7 @@ def submit_finetune_job():
                                                      aoai_client_manager.endpoint_name,
                                                      aoai_client_manager.endpoint_resource_group,
                                                      aoai_client_manager.endpoint_subscription)
+        logger.info("Starting finetune submit component")
         with open(args.data_upload_output) as f:
             data_upload_output = json.load(f)
         logger.debug(f"data_upload_output for finetuning model: {data_upload_output}")

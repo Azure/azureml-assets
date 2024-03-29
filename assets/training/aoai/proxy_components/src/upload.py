@@ -107,6 +107,7 @@ def main():
                                                      aoai_client_manager.endpoint_name,
                                                      aoai_client_manager.endpoint_resource_group,
                                                      aoai_client_manager.endpoint_subscription)
+        logger.info("Starting upload data component")
 
         upload_component = UploadComponent(aoai_client_manager.get_azure_openai_client())
 
