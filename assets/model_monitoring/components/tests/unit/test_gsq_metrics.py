@@ -157,11 +157,16 @@ def get_expected_data():
         ['', 1.0, 'AggregatedCoherencePassRate', 0.7, ''],
         ['', '', 'AcceptableCoherenceScorePerInstance', 4, ''],
         ['', 5.0, 'AverageCoherenceScore', '', ''],
-        ['', 0.0, 'CoherenceViolationCounts', '', ''],
-        ['', 0.0, 'FluencyViolationCounts', '', ''],
-        ['', 1.0, 'GroundednessViolationCounts', '', ''],
-        ['', 2.0, 'RelevanceViolationCounts', '', ''],
-        ['', 3.0, 'TotalViolationCounts', '', ''],
+        ['', 0.0, 'CoherencePassRateViolationCounts', '', ''],
+        ['', 0.0, 'CoherenceAverageScoreViolationCounts', '', ''],
+        ['', 0.0, 'FluencyPassRateViolationCounts', '', ''],
+        ['', 0.0, 'FluencyAverageScoreViolationCounts', '', ''],
+        ['', 1.0, 'GroundednessPassRateViolationCounts', '', ''],
+        ['', 0.0, 'GroundednessAverageScoreViolationCounts', '', ''],
+        ['', 2.0, 'RelevancePassRateViolationCounts', '', ''],
+        ['', 0.0, 'RelevanceAverageScoreViolationCounts', '', ''],
+        ['', 3.0, 'TotalPassRateViolationCounts', '', ''],
+        ['', 0, 'TotalAverageScoreViolationCounts', '', ''],
     ]
     return pd.DataFrame(data, columns=['group', 'metric_value', 'metric_name',
                                        'threshold_value', 'group_dimension'])
@@ -170,4 +175,7 @@ def get_expected_data():
 def call_compute_metrics(histogram_df, metric_names):
     """Call compute_metrics method in GSQ component."""
     threshold_args = {threshold_name: 0.7 for threshold_name in THRESHOLD_PARAMS}
+    for metric in ALL_METRIC_NAMES:
+        if 'AverageScore' in metric:
+            threshold_args[metric] = 4.0
     return compute_metrics(histogram_df, threshold_args, metric_names)
