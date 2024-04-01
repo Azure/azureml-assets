@@ -9,7 +9,12 @@ from functools import wraps
 from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 from azureml._common._error_definition.system_error import ClientError  # type: ignore
-from azureml._common._error_definition.user_error import ArgumentInvalid, Authentication, NotSupported, ConnectionFailure  # type: ignore
+from azureml._common._error_definition.user_error import  ( 
+    ArgumentInvalid, 
+    Authentication, 
+    NotSupported, 
+    ConnectionFailure
+)  # type: ignore
 
 from azureml.core.run import Run  # type: ignore
 from azureml.automl.core._run import run_lifecycle_utilities
