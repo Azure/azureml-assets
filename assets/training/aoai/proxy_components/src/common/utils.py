@@ -7,7 +7,6 @@ import json
 import yaml
 
 
-
 def save_yaml(content, filename):
     """Save yaml file with given content and filename."""
     with open(filename, encoding='utf-8', mode='w') as fh:

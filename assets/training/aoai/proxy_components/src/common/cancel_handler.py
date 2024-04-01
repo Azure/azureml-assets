@@ -29,5 +29,3 @@ class CancelHandler:
         add_custom_dimenions_to_app_insights_handler(logger, component)
         logger.info("registering cancel handler")
         return CancelHandler(component)
-
-    
