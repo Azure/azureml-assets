@@ -344,7 +344,7 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
 
 def cleanup(completion_files_folder: str, model_selector_output: str,
             preprocess_output: str, pytorch_model_folder: str, mlflow_model_folder: str):
-    """Clean up intermediate files/folders."""
+    """Cleanup intermediate files and folders that are not needed after successful run completion."""
     logger.info("Cleaning up intermediate files/folders...")
     try:
         shutil.rmtree(completion_files_folder, ignore_errors=True)
@@ -365,7 +365,7 @@ def cleanup(completion_files_folder: str, model_selector_output: str,
 
 
 def initiate_run():
-    """Initiate the run."""
+    """Run the model selector, preprocess, finetune and registration script. Cleanup after that."""
     # intermediate folder preserves files/folders that are needed across singularity preemptions
     intermediate_folder = decode_output_from_env_var("intermediate_folder")
     completion_files_folder = os.path.join(intermediate_folder, "completion_files")
