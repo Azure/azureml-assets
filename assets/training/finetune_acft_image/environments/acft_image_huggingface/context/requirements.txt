@@ -12,3 +12,4 @@ optimum==1.17.1
 diffusers==0.24.0
 certifi==2023.07.22
 setuptools==67.6.0
+mlflow==2.10.0
