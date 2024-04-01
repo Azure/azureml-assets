@@ -8,6 +8,7 @@ import sys
 from importlib.metadata import entry_points
 from azureml.telemetry import INSTRUMENTATION_KEY
 from azureml.telemetry.logging_handler import get_appinsights_log_handler, AppInsightsLoggingHandler
+from proxy_components import AzureOpenAIProxyComponents
 
 AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT = "azureml-benchmark-custom-logger"
 
@@ -44,18 +45,14 @@ def _add_application_insights_handler(logger: logging.Logger):
     appinsights_handler = get_appinsights_log_handler(INSTRUMENTATION_KEY, logger=logger)
     formatter = logging.Formatter("[%(module)s] - %(message)s")
     appinsights_handler.setFormatter(formatter)
-    appinsights_handler.setLevel(logging.DEBUG)
     logger.addHandler(appinsights_handler)
 
 
-def add_custom_dimenions_to_app_insights_handler(logger: logging.Logger,
-                                                 endpoint_name,
-                                                 endpoint_resource_group,
-                                                 endpoint_subscription):
+def add_custom_dimenions_to_app_insights_handler(logger: logging.Logger, component: AzureOpenAIProxyComponents):
     """Add custom dimensions to the logs emitted."""
-    properties = {"endpoint_name": endpoint_name,
-                  "endpoint_resource_group": endpoint_resource_group,
-                  "endpoint_subscription": endpoint_subscription}
+    properties = {"endpoint_name": component.endpoint_name,
+                  "endpoint_resource_group": component.endpoint_resource_group,
+                  "endpoint_subscription": component.endpoint_subscription}
     for handler in logger.handlers:
         if isinstance(handler, AppInsightsLoggingHandler):
             handler._default_client.context.properties.update(properties)
