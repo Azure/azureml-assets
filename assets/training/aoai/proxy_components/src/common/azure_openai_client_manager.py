@@ -84,3 +84,4 @@ class AzureOpenAIClientManager:
             return AzureOpenAI(azure_endpoint=self.get_endpoint_from_cognitive_service_account(client),
                                api_key=self.get_key_from_cognitive_service_account(client),
                                api_version=AzureOpenAIClientManager.api_version)
+
