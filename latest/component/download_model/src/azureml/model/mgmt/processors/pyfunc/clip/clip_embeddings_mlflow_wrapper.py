@@ -3,15 +3,15 @@
 
 """MLflow PythonModel wrapper class that loads the MLflow model, preprocess inputs and performs inference."""
 
+import io
+
 import mlflow
-from PIL import Image
 import pandas as pd
-import torch
-import tempfile
+
+from PIL import Image
 
 from clip_mlflow_wrapper import CLIPMLFlowModelWrapper
 from config import MLflowSchemaLiterals, Tasks
-from typing import List, Tuple
 
 
 class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
@@ -45,57 +45,24 @@ class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
         :rtype: Pandas DataFrame with columns "image_features" and/or "text_features"
         """
         # import in predict() since vision_utils.py is added during model export
-        from vision_utils import create_temp_file, process_image_pandas_series
+        from vision_utils import process_image
         has_images, has_text = CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_data)
 
         if has_images:
-            # Decode the base64 image column
-            decoded_images = input_data.loc[
-                :, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
-            ].apply(axis=1, func=process_image_pandas_series)
+            # Read all the input images.
+            image_list = [
+                Image.open(io.BytesIO(process_image(image)))
+                for image in input_data[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
+            ]
+        else:
+            image_list = None
 
         if has_text:
             text_list = input_data[MLflowSchemaLiterals.INPUT_COLUMN_TEXT].tolist()
         else:
             text_list = None
 
-        with tempfile.TemporaryDirectory() as tmp_output_dir:
-            if has_images:
-                image_path_list = (
-                    decoded_images.iloc[:, 0]
-                    .map(lambda row: create_temp_file(row, tmp_output_dir)[0])
-                    .tolist()
-                )
-            else:
-                image_path_list = None
-            image_features, text_features = self.run_inference_batch(
-                image_path_list=image_path_list,
-                text_list=text_list,
-            )
-
-        df_result = pd.DataFrame()
-
-        if image_features is not None:
-            df_result[MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE_FEATURES] = image_features.tolist()
-        if text_features is not None:
-            df_result[MLflowSchemaLiterals.OUTPUT_COLUMN_TEXT_FEATURES] = text_features.tolist()
-        return df_result
-
-    def run_inference_batch(
-        self,
-        image_path_list: List,
-        text_list: List,
-    ) -> Tuple[torch.tensor]:
-        """Perform inference on batch of input images.
-
-        :type image_path_list: List[str]
-        :param text_list: list of text strings for inferencing
-        :type text_list: List[str]
-        :return: image features and text features
-        :rtype: Tuple where each value is either torch.tensor of size (#inputs, 512) or None
-        """
-        if image_path_list:
-            image_list = [Image.open(img_path) for img_path in image_path_list]
+        if image_list:
             inputs = self._processor(text=None, images=image_list, return_tensors="pt", padding=True)
             inputs = inputs.to(self._device)
             image_features = self._model.get_image_features(**inputs)
@@ -109,7 +76,13 @@ class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
         else:
             text_features = None
 
-        return image_features, text_features
+        df_result = pd.DataFrame()
+
+        if image_features is not None:
+            df_result[MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE_FEATURES] = image_features.tolist()
+        if text_features is not None:
+            df_result[MLflowSchemaLiterals.OUTPUT_COLUMN_TEXT_FEATURES] = text_features.tolist()
+        return df_result
 
     @staticmethod
     def validate_input(input_data):
