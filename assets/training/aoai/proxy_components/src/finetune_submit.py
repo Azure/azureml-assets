@@ -11,7 +11,7 @@ from common import utils
 from common.cancel_handler import CancelHandler
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
-from assets.training.aoai.proxy_components.src.proxy_component import AzureOpenAIProxyComponent
+from proxy_component import AzureOpenAIProxyComponent
 import mlflow
 import io
 import pandas as pd
@@ -67,7 +67,7 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
             raise Exception(f"Fine tuning job: {self.job_id} failed with error: {error}")
 
         elif status == "cancelled":
-            logger.info(f"finetune job: {sel} got cancelled")
+            logger.info(f"finetune job: {self.job_id} got cancelled")
             return None
 
         """metrics can be retrived only for successful finetune job"""
@@ -137,7 +137,7 @@ def submit_finetune_job():
                                                        endpoint_subscription=args.endpoint_subscription)
         finetune_component = FineTuneComponent(aoai_client_manager)
         add_custom_dimenions_to_app_insights_handler(logger, finetune_component)
-        cancel_handler = CancelHandler.register_cancel_handler(finetune_component)
+        CancelHandler.register_cancel_handler(finetune_component)
 
         logger.info("Starting finetune submit component")
 

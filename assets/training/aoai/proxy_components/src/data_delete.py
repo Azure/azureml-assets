@@ -5,7 +5,7 @@
 import argparse
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
-from assets.training.aoai.proxy_components.src.proxy_component import AzureOpenAIProxyComponent
+from proxy_component import AzureOpenAIProxyComponent
 import json
 
 logger = get_logger(__name__)
