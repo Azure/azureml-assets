@@ -5,25 +5,24 @@
 from typing import Any, Dict
 import argparse
 from io import BytesIO
-from openai import AzureOpenAI
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.utils import save_json
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
-from proxy_components import AzureOpenAIProxyComponents
+from assets.training.aoai.proxy_components.src.proxy_component import AzureOpenAIProxyComponent
 import jsonlines
 import os
 
 logger = get_logger(__name__)
 
 
-class UploadComponent(AzureOpenAIProxyComponents):
+class UploadComponent(AzureOpenAIProxyComponent):
     """Upload component to upload data to AOAI."""
 
     def __init__(self, aoai_client_manager: AzureOpenAIClientManager):
         """Upload component to upload data to AOAI."""
         super().__init__(aoai_client_manager.endpoint_name,
-                        aoai_client_manager.endpoint_resource_group,
-                        aoai_client_manager.endpoint_subscription)
+                         aoai_client_manager.endpoint_resource_group,
+                         aoai_client_manager.endpoint_subscription)
         self.aoai_client = aoai_client_manager.get_azure_openai_client()
         self.split_ratio = 0.8
 

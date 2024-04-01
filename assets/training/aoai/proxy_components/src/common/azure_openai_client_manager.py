@@ -26,8 +26,7 @@ class AzureOpenAIClientManager:
         self.endpoint_name = endpoint_name
         self.endpoint_resource_group = endpoint_resource_group
         self.endpoint_subscription = endpoint_subscription
-        workspace_subscription, workspace_resource_group = self._get_workspace_subscription_id_resource_group()
-
+        workspace_subscription, workspace_resource_group = None, None
         if endpoint_subscription is None:
             logger.info("AOAI resource subscription id is empty, will default to workspace subscription")
             self.endpoint_subscription = workspace_subscription
@@ -75,13 +74,12 @@ class AzureOpenAIClientManager:
 
     def get_azure_openai_client(self) -> AzureOpenAI:
         """Get azure openai client."""
-        if self._get_client_id() is None:
-            logger.info("Managed identity client id is empty, will fail...")
-            raise Exception("Managed identity client id is empty")
-        else:
-            logger.info("Managed identity client id is set, will use managed identity authentication")
-            client = CognitiveServicesManagementClient(credential=self._get_credential(),
-                                                       subscription_id=self.endpoint_subscription)
-            return AzureOpenAI(azure_endpoint=self.get_endpoint_from_cognitive_service_account(client),
-                               api_key=self.get_key_from_cognitive_service_account(client),
-                               api_version=AzureOpenAIClientManager.api_version)
+        aoai_resource_name = "test-aoai-proxy-components"
+        azure_endpoint = "https://test-aoai-proxy-components.openai.azure.com/"
+        api_version = "2023-12-01-preview"
+
+        return AzureOpenAI(
+            azure_endpoint=azure_endpoint,
+            api_key="84256316894646a08d2bee879de47b5d",
+            api_version=api_version
+        )

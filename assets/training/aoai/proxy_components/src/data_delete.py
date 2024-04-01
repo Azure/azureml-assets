@@ -3,16 +3,15 @@
 
 """data delete component."""
 import argparse
-from openai import AzureOpenAI
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
-from proxy_components import AzureOpenAIProxyComponents
+from assets.training.aoai.proxy_components.src.proxy_component import AzureOpenAIProxyComponent
 import json
 
 logger = get_logger(__name__)
 
 
-class DeleteComponent(AzureOpenAIProxyComponents):
+class DeleteComponent(AzureOpenAIProxyComponent):
     """Delete component to delete data from AOAI resource."""
 
     def __init__(self, aoai_client_manager: AzureOpenAIClientManager):

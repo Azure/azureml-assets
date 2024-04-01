@@ -6,20 +6,20 @@
 import argparse
 import time
 import json
-from openai import OpenAI
 from openai.types.fine_tuning.job_create_params import Hyperparameters
 from common import utils
 from common.cancel_handler import CancelHandler
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
-from proxy_components import AzureOpenAIProxyComponents
+from assets.training.aoai.proxy_components.src.proxy_component import AzureOpenAIProxyComponent
 import mlflow
 import io
 import pandas as pd
 
 logger = get_logger(__name__)
 
-class FineTuneComponent(AzureOpenAIProxyComponents):
+
+class FineTuneComponent(AzureOpenAIProxyComponent):
     """Fine-tune proxy class to submit fine-tune job to AOAI."""
 
     def __init__(self, aoai_client_manager: AzureOpenAIClientManager):
@@ -46,7 +46,7 @@ class FineTuneComponent(AzureOpenAIProxyComponents):
             validation_file=validation_file_id,
             hyperparameters=hyperparameters,
             suffix=suffix)
-        job_id = finetune_job.id
+        self.job_id = finetune_job.id
         status = finetune_job.status
 
         terminal_statuses = ["succeeded", "failed", "cancelled"]
@@ -57,22 +57,22 @@ class FineTuneComponent(AzureOpenAIProxyComponents):
             while status not in terminal_statuses:
                 time.sleep(10)
 
-                finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(job_id)
+                finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(self.job_id)
                 status = finetune_job.status
-                last_event = self._log_events(job_id, last_event)
+                last_event = self._log_events(last_event)
 
         if status == "failed":
             error = finetune_job.error
-            logger.error(f"Fine tuning job: {job_id} failed with error: {error}")
-            raise Exception(f"Fine tuning job: {job_id} failed with error: {error}")
+            logger.error(f"Fine tuning job: {self.job_id} failed with error: {error}")
+            raise Exception(f"Fine tuning job: {self.job_id} failed with error: {error}")
 
         elif status == "cancelled":
-            logger.info(f"finetune job got cancelled")
+            logger.info(f"finetune job: {sel} got cancelled")
             return None
 
         """metrics can be retrived only for successful finetune job"""
         finetuned_model_id = finetune_job.fine_tuned_model
-        logger.info(f'Fine-tune job: {job_id} finished successfully. model id: {finetuned_model_id}')
+        logger.info(f'Fine-tune job: {self.job_id} finished successfully. model id: {finetuned_model_id}')
         logger.info("fetching training metrics from Azure OpenAI")
         self._log_metrics(finetune_job)
         return finetuned_model_id
@@ -96,9 +96,9 @@ class FineTuneComponent(AzureOpenAIProxyComponents):
                 mlflow.log_metric(key=col, value=row[col], step=int(row.step))
         logger.info("logged training metrics for finetuning job")
 
-    def _log_events(self, job_id, last_event):
+    def _log_events(self, last_event):
         """Log events like training started, running nth epoch etc."""
-        job_events = self.aoai_client.fine_tuning.jobs.list_events(job_id).data
+        job_events = self.aoai_client.fine_tuning.jobs.list_events(self.job_id).data
         event_message_list = []
         for job_event in job_events:
             if last_event == job_event.message:
@@ -137,8 +137,8 @@ def submit_finetune_job():
                                                        endpoint_subscription=args.endpoint_subscription)
         finetune_component = FineTuneComponent(aoai_client_manager)
         add_custom_dimenions_to_app_insights_handler(logger, finetune_component)
-        CancelHandler.register_cancel_handler(finetune_component)
-        
+        cancel_handler = CancelHandler.register_cancel_handler(finetune_component)
+
         logger.info("Starting finetune submit component")
 
         with open(args.data_upload_output) as f:

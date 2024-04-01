@@ -4,9 +4,10 @@
 """Cancel handler class."""
 
 import signal
-from proxy_components import AzureOpenAIProxyComponents
+from assets.training.aoai.proxy_components.src.proxy_component import AzureOpenAIProxyComponents
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
 logger = get_logger(__name__)
+
 
 class CancelHandler:
     """Cancel handler."""
@@ -22,9 +23,10 @@ class CancelHandler:
             logger.info("calling cancel job for the component")
             self.component.cancel_job()
         logger.warning("component is none for the cancel handler")
-    
+
     def register_cancel_handler(component: AzureOpenAIProxyComponents):
         add_custom_dimenions_to_app_insights_handler(logger, component)
         logger.info("registering cancel handler")
-        CancelHandler(component)
+        return CancelHandler(component)
+
     
