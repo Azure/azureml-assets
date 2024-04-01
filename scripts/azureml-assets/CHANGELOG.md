@@ -3,19 +3,47 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.16.34 (2023-01-29)
+## 1.16.41 (2024-03-27)
+### 🐛 Bugs Fixed
+- [#2591](https://github.com/Azure/azureml-assets/pull/2591) Revert to not fail on workspace asset URI
+
+## 1.16.40 (2024-03-26)
+### 🐛 Bugs Fixed
+- [#2585](https://github.com/Azure/azureml-assets/pull/2585) Revert enforcing registry asset URI for components
+
+## 1.16.39 (2024-03-26)
+### 🐛 Bugs Fixed
+- [#2584](https://github.com/Azure/azureml-assets/pull/2584) Fix empty create configs
+
+## 1.16.38 (2024-03-25)
+### 🐛 Bugs Fixed
+- [#2572](https://github.com/Azure/azureml-assets/pull/2572) Enforce using registry asset URI for components
+
+## 1.16.37 (2024-03-11)
+### 🐛 Bugs Fixed
+- [#2476](https://github.com/Azure/azureml-assets/pull/2476) Fix bug for extras with `latest-pypi-version`
+
+## 1.16.36 (2024-03-05)
+### 🐛 Bugs Fixed
+- [#2282](https://github.com/Azure/azureml-assets/pull/2282) Add support for optional dependencies with `latest-pypi-version`
+
+## 1.16.35 (2024-02-28)
+### 🐛 Bugs Fixed
+- [#2407](https://github.com/Azure/azureml-assets/pull/2407) Surface properties in the spec configuration 
+
+## 1.16.34 (2024-01-29)
 ### 🐛 Bugs Fixed
 - [#2196](https://github.com/Azure/azureml-assets/pull/2196) Allow evaluation results to have names similar to models 
 
-## 1.16.33 (2023-01-22)
+## 1.16.33 (2024-01-22)
 ### 🐛 Bugs Fixed
 - [#2161](https://github.com/Azure/azureml-assets/pull/2161) Fix credential not found issue for asset validation 
 
-## 1.16.32 (2023-01-19)
+## 1.16.32 (2024-01-19)
 ### 🐛 Bugs Fixed
 - [#2155](https://github.com/Azure/azureml-assets/pull/2155) Fix no-op model metadata update
 
-## 1.16.31 (2023-01-19)
+## 1.16.31 (2024-01-19)
 ### 🚀 New Features
 - [#2078](https://github.com/Azure/azureml-assets/pull/2078) Model spec minimum SKU validation
 

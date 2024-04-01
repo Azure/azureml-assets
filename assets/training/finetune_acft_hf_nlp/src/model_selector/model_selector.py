@@ -12,16 +12,24 @@ import yaml
 import logging
 from typing import Optional, Dict, Any
 
+from transformers.utils import GENERATION_CONFIG_NAME
+
+from azureml.acft.accelerator.utils.code_utils import update_json_file_and_overwrite
+
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, MLFlowHFFlavourConstants
 
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
+from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
+
+from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 from finetune_config import FinetuneConfig
 
@@ -39,7 +47,7 @@ MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
 class ModelSelectorConstants:
     """Model import constants."""
 
-    ASSET_ID_NOT_FOUND = "ASSET_ID_NOT_FOUND",
+    ASSET_ID_NOT_FOUND = "ASSET_ID_NOT_FOUND"
     MODEL_NAME_NOT_FOUND = "MODEL_NAME_NOT_FOUND"
 
 
@@ -81,6 +89,38 @@ def get_model_asset_id() -> str:
     except Exception as e:
         logger.info(f"Could not fetch the model asset id: {e}")
         return ModelSelectorConstants.ASSET_ID_NOT_FOUND
+
+
+def validate_huggingface_id(huggingface_id: str) -> None:
+    """Validate the huggingface_id using Hfapi. Raise exception if the huggingface id is invalid."""
+    from huggingface_hub import HfApi, ModelFilter
+    hf_api = HfApi()  # by default endpoint points to https://huggingface.co
+
+    try:
+        model_infos = [
+            info
+            for info in hf_api.list_models(filter=ModelFilter(model_name=huggingface_id))
+            if info.modelId == huggingface_id
+        ]
+    except ConnectionError:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "Passing huggingface ID is only valid with valid internet connection."
+                )
+            )
+        )
+
+    if not model_infos:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    f"Invalid hugggingface ID found: {huggingface_id}. Please fix it and try again."
+                )
+            )
+        )
 
 
 def get_parser():
@@ -157,6 +197,8 @@ def model_selector(args: Namespace) -> Dict[str, Any]:
     if args.huggingface_id is not None:
         # remove the spaces at either ends of hf id
         args.model_name = args.huggingface_id.strip()
+        # validate hf_id
+        validate_huggingface_id(args.model_name)
     else:
         # TODO Revist whether `model_id` is still relevant
         args.model_name = args.model_id
@@ -230,6 +272,7 @@ def read_base_model_finetune_config(mlflow_model_path: str, task_name: str) -> D
                                 generator_config = mlflow_data["flavors"][key]["generator_config"]
                                 mlflow_ftconf_data_temp = {
                                         "load_config_kwargs": copy.deepcopy(generator_config),
+                                        "update_generator_config": copy.deepcopy(generator_config),
                                         "mlflow_ft_conf": {
                                             "mlflow_hftransformers_misc_conf": {
                                                 "generator_config": copy.deepcopy(generator_config),
@@ -307,6 +350,25 @@ def main():
         ),
         finetune_config
     )
+
+    # Copy Mlmodel generator config so that FTed model also uses same generator config while evaluation.
+    # (Settings like `max_new_tokens` can help us reduce inference time.)
+    # We are updating generation_config.json so that no conflicts will be present between
+    # model's config and model's generator_config. (If there is conflict we get warning in logs
+    # and from transformers>=4.41.0 exceptions will be raised if `_from_model_config` key is present.)
+    if "update_generator_config" in updated_finetune_config:
+        generator_config = updated_finetune_config.pop("update_generator_config")
+        base_model_generation_config_file = Path(
+            args.output_dir, model_selector_args["model_name"], GENERATION_CONFIG_NAME
+        )
+        if base_model_generation_config_file.is_file():
+            update_json_file_and_overwrite(str(base_model_generation_config_file), generator_config)
+            logger.info(f"Updated {GENERATION_CONFIG_NAME} with {generator_config}")
+        else:
+            logger.info(f"Could not update {GENERATION_CONFIG_NAME} as not present.")
+    else:
+        logger.info(f"{MLFlowHFFlavourConstants.MISC_CONFIG_FILE} does not have any generation config parameters.")
+
     logger.info(f"Updated finetune config with base model config: {updated_finetune_config}")
     # save FT config
     with open(str(Path(args.output_dir, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)), "w") as rptr:
@@ -318,7 +380,13 @@ def main():
         mlflow_config_file = Path(args.mlflow_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
         if mlflow_config_file.is_file():
             shutil.copy(str(mlflow_config_file), args.output_dir)
-            logger.info("Copied MLmodel file to output dir")
+            logger.info(f"Copied {MLFlowHFFlavourConstants.MISC_CONFIG_FILE} file to output dir.")
+
+        # copy conda file
+        conda_file_path = Path(args.mlflow_model_path, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
+        if conda_file_path.is_file():
+            shutil.copy(str(conda_file_path), args.output_dir)
+            logger.info(f"Copied {MLFlowHFFlavourConstants.CONDA_YAML_FILE} file to output dir.")
 
 
 if __name__ == "__main__":

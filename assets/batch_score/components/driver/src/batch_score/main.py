@@ -3,6 +3,7 @@
 
 """Entry script for batch score component."""
 
+import aiohttp
 import asyncio
 import os
 import sys
@@ -11,18 +12,24 @@ import traceback
 
 import pandas as pd
 
+from .batch_pool.meds_client import MEDSClient
 from .batch_pool.routing.routing_client import RoutingClient
 from .common import constants
 from .common.auth.token_provider import TokenProvider
+from .common.common_enums import EndpointType
 from .common.configuration.configuration import Configuration
 from .common.configuration.metadata import Metadata
 from .common.configuration.configuration_parser_factory import ConfigurationParserFactory
 from .common.parallel import parallel_driver as parallel
+from .common.header_providers.header_provider_factory import HeaderProviderFactory
 from .common.post_processing.callback_factory import CallbackFactory
 from .common.post_processing.mini_batch_context import MiniBatchContext
 from .common.post_processing.result_utils import (
     get_return_value,
-    save_mini_batch_results,
+)
+from .common.post_processing.output_handler import (
+    SingleFileOutputHandler,
+    SeparateFileOutputHandler,
 )
 from .common.request_modification.input_transformer import InputTransformer
 from .common.request_modification.modifiers.prompt_redaction_modifier import (
@@ -67,31 +74,51 @@ from .common.telemetry.trace_configs import (
     RequestRedirectTrace,
     ResponseChunkReceivedTrace,
 )
-from .header_handlers.meds.meds_header_handler import MedsHeaderHandler
-from .utils.common import convert_to_list, str2bool
+from .utils.common import str2bool
+from .utils.input_handler import InputHandler
+from .utils.v1_input_schema_handler import V1InputSchemaHandler
+from .utils.v2_input_schema_handler import V2InputSchemaHandler
 from .utils.json_encoder_extensions import setup_encoder
 
 par: parallel.Parallel = None
 configuration: Configuration = None
+input_handler: InputHandler = None
 
 
 def init():
     """Init function of the component."""
     global par
     global configuration
+    global input_handler
 
     start = time.time()
     parser = ConfigurationParserFactory().get_parser()
     configuration = parser.parse_configuration()
     metadata = Metadata.extract_component_name_and_version()
 
+    if configuration.input_schema_version == 1:
+        input_handler = V1InputSchemaHandler()
+    elif configuration.input_schema_version == 2:
+        input_handler = V2InputSchemaHandler()
+    else:
+        raise ValueError(f"Invalid input_schema_version: {configuration.input_schema_version}")
+
     event_utils.setup_context_vars(configuration, metadata)
     setup_geneva_event_handlers()
     setup_job_log_event_handlers()
     setup_minibatch_aggregator_event_handlers()
+
+    token_provider = TokenProvider(token_file_path=configuration.token_file_path)
+
+    connection_string = asyncio.run(get_application_insights_connection_string(
+        configuration=configuration,
+        metadata=metadata,
+        token_provider=token_provider))
+
     setup_logger(configuration.stdout_log_level,
                  configuration.app_insights_log_level,
-                 configuration.app_insights_connection_string)
+                 connection_string,
+                 metadata.component_version)
 
     # Emit init started event
     init_started_event = BatchScoreInitStartedEvent()
@@ -101,8 +128,10 @@ def init():
 
     setup_encoder(configuration.ensure_ascii)
 
-    token_provider = TokenProvider(token_file_path=configuration.token_file_path)
-    routing_client = setup_routing_client(token_provider=token_provider)
+    routing_client = setup_routing_client(
+        configuration=configuration,
+        metadata=metadata,
+        token_provider=token_provider)
     scoring_client = ScoringClientFactory().setup_scoring_client(
         configuration=configuration,
         metadata=metadata,
@@ -160,18 +189,32 @@ def run(input_data: pd.DataFrame, mini_batch_context):
 
     ret = []
 
-    data_list = convert_to_list(input_data,
-                                additional_properties=configuration.additional_properties,
-                                batch_size_per_request=configuration.batch_size_per_request)
+    data_list = input_handler.convert_input_to_requests(
+        input_data,
+        additional_properties=configuration.additional_properties,
+        batch_size_per_request=configuration.batch_size_per_request
+    )
+    mini_batch_context = MiniBatchContext(mini_batch_context, len(data_list))
 
     get_events_client().emit_mini_batch_started(input_row_count=len(data_list))
 
     try:
-        ret = par.run(data_list)
+        ret = par.run(data_list, mini_batch_context)
+
+        if (configuration.split_output):
+            output_handler = SeparateFileOutputHandler()
+            lu.get_logger().info("Saving successful results and errors to separate files")
+        else:
+            output_handler = SingleFileOutputHandler()
+            lu.get_logger().info("Saving results to single file")
 
         if configuration.save_mini_batch_results == "enabled":
             lu.get_logger().info("save_mini_batch_results is enabled")
-            save_mini_batch_results(ret, configuration.mini_batch_results_out_directory, mini_batch_context)
+            output_handler.save_mini_batch_results(
+                ret,
+                configuration.mini_batch_results_out_directory,
+                mini_batch_context.raw_mini_batch_context
+            )
         else:
             lu.get_logger().info("save_mini_batch_results is disabled")
 
@@ -189,7 +232,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
         )
     finally:
         event_utils.generate_minibatch_summary(
-            minibatch_id=mini_batch_context.minibatch_index,
+            minibatch_id=mini_batch_context.mini_batch_id,
             output_row_count=len(ret),
         )
         lu.get_logger().info(f"Completed data subset, length {input_data.shape[0]}.")
@@ -209,7 +252,7 @@ def enqueue(input_data: pd.DataFrame, mini_batch_context):
 
     set_mini_batch_id(mini_batch_id)
 
-    data_list = convert_to_list(
+    data_list = input_handler.convert_input_to_requests(
         input_data,
         additional_properties=configuration.additional_properties,
         batch_size_per_request=configuration.batch_size_per_request)
@@ -245,6 +288,36 @@ def check_all_tasks_processed() -> bool:
 
     lu.get_logger().debug("check_all_tasks_processed")
     return par.check_all_tasks_processed()
+
+
+async def get_application_insights_connection_string(
+        configuration: Configuration,
+        metadata: Metadata,
+        token_provider: TokenProvider) -> "str | None":
+    """Get the application insights connection string.
+
+    A connection string provided in the configuration takes precendence.
+    If not provided, look it up from MEDS for the given audience.
+    """
+    connection_string = configuration.app_insights_connection_string
+
+    if connection_string:
+        lu.get_logger().info("Using the provided Application Insights connection string.")
+        return connection_string
+
+    if configuration.get_endpoint_type() != EndpointType.BatchPool:
+        lu.get_logger().info("Application Insights connection string not provided. "
+                             "Application Insights logging will be disabled.")
+        return None
+
+    lu.get_logger().info("Application Insights connection string not provided, looking up from MEDS.")
+    header_provider = HeaderProviderFactory().get_header_provider_for_model_endpoint_discovery(
+        configuration=configuration,
+        metadata=metadata,
+        token_provider=token_provider)
+    meds_client = MEDSClient(header_provider=header_provider, configuration=configuration)
+    async with aiohttp.ClientSession() as session:
+        return await meds_client.get_application_insights_connection_string(session)
 
 
 def get_finished_batch_result() -> "dict[str, dict[str, any]]":
@@ -345,18 +418,20 @@ def setup_input_to_output_transformer() -> InputTransformer:
     return InputTransformer(modifiers=modifiers)
 
 
-def setup_routing_client(token_provider: TokenProvider) -> RoutingClient:
+def setup_routing_client(
+        configuration: Configuration,
+        metadata: Metadata,
+        token_provider: TokenProvider) -> RoutingClient:
     """Set up routing client."""
     routing_client: RoutingClient = None
     if configuration.batch_pool and configuration.service_namespace:
-        meds_header_handler = MedsHeaderHandler(
-            token_provider=token_provider,
-            user_agent_segment=configuration.user_agent_segment,
-            batch_pool=configuration.batch_pool,
-            quota_audience=configuration.quota_audience)
+        header_provider = HeaderProviderFactory().get_header_provider_for_model_endpoint_discovery(
+            configuration=configuration,
+            metadata=metadata,
+            token_provider=token_provider)
 
         routing_client = RoutingClient(
-            header_handler=meds_header_handler,
+            header_provider=header_provider,
             service_namespace=configuration.service_namespace,
             target_batch_pool=configuration.batch_pool,
             request_path=configuration.request_path,
@@ -389,5 +464,6 @@ def _emit_minibatch_started_event(mini_batch_context, configuration, input_data)
             batch_pool=configuration.batch_pool,
             quota_audience=configuration.quota_audience,
             input_row_count=input_data.shape[0],
+            retry_count=mini_batch_context.retry_count,
         )
     )

@@ -1,0 +1,7 @@
+[
+  {
+      "image_1": {"data:image/png;path": "cars1.jpg"},
+      "image_2": {"data:image/png;path": "cars2.jpg"},
+      "system_message": "You are an AI assistant. You task is to check the number of red cars in the image. Reply in plain json, with key \"red cars\", and possible values of number of red cars."
+  }
+]

@@ -64,10 +64,26 @@ def get_retriable_type(
         if model_response_code == "429":
             return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT
 
-        if model_response_code == "" and model_response_reason in ["model_not_ready", "too_few_model_instance"]:
+        if model_response_reason in ["model_not_ready", "too_few_model_instance"]:
             return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT
 
     if response_status >= 500:
         return RetriableType.RETRY_UNTIL_MAX_RETRIES
 
     return RetriableType.NOT_RETRIABLE
+
+
+def get_prompt_tokens(response_body: any):
+    """Get prompt token count from http response."""
+    if not isinstance(response_body, dict):
+        return None
+
+    return response_body.get("usage", {}).get("prompt_tokens")
+
+
+def get_completion_tokens(response_body: any):
+    """Get completion token count from http response."""
+    if not isinstance(response_body, dict):
+        return None
+
+    return response_body.get("usage", {}).get("completion_tokens")

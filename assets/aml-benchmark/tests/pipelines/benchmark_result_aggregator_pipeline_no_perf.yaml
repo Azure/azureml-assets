@@ -57,7 +57,7 @@ jobs:
         type: uri_folder
   aggregator:
     type: command
-    component: ../../components/benchmark-result-aggregator/spec.yaml
+    component: ../../components/benchmark_result_aggregator/spec.yaml
     limits:
       timeout: 900
     inputs:

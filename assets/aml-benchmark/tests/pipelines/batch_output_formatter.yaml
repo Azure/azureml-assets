@@ -26,11 +26,20 @@ outputs:
   ground_truth:
     type: uri_file
     path: azureml://datastores/${{default_datastore}}/paths/${{name}}/ground_truth.jsonl
+  successful_requests:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/successful_requests.jsonl
+  failed_requests:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/failed_requests.jsonl
+  unsafe_content_blocked_requests:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/unsafe_content_blocked_requests.jsonl
 
 jobs:
   run_batch_output_formatter:
     type: command
-    component: ../../components/batch-output-formatter/spec.yaml
+    component: ../../components/batch_output_formatter/spec.yaml
     limits: 
       timeout: 900
     inputs:
@@ -44,3 +53,6 @@ jobs:
       predictions: ${{parent.outputs.predictions}}
       performance_metadata: ${{parent.outputs.performance_metadata}}
       ground_truth: ${{parent.outputs.ground_truth}}
+      successful_requests: ${{parent.outputs.successful_requests}}
+      failed_requests: ${{parent.outputs.failed_requests}}
+      unsafe_content_blocked_requests: ${{parent.outputs.unsafe_content_blocked_requests}}

@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_text_generation_finetune
-version: 0.0.8
+version: 0.0.10
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: OSS Text Generation Finetune
 description: FTaaS component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/37
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/47
 
 inputs:
   mlflow_model_path:
@@ -202,7 +202,7 @@ inputs:
   ignore_mismatched_sizes:
     type: string
     optional: True
-    default: "true"
+    default: "false"
     description: Whether or not to raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model
     enum:
     - "true"
@@ -258,6 +258,20 @@ inputs:
     enum:
     - "true"
     - "false"
+  save_strategy:
+    type: string
+    optional: True
+    default: evaluation_strategy
+    description: The checkpoint save strategy to adopt during training
+    enum:
+    - evaluation_strategy
+    - epoch
+    - steps
+  save_steps:
+    type: integer
+    optional: True
+    default: 100
+    description: Number of update steps between two checkpoint saves if save_strategy='steps'
   save_total_limit:
     type: integer
     optional: True
@@ -317,6 +331,10 @@ outputs:
   output_model:
     type: uri_folder
     description: Output dir to save the finetuned lora weights
+    mode: rw_mount
+  intermediate_folder:
+    type: uri_folder
+    description: Folder to store intermediate outputs like model selector output, preprocess output, checkpoints, etc. to preserve them across Singularity preemptions.
     mode: rw_mount
 
 command: >-

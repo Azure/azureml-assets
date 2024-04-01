@@ -101,6 +101,10 @@ def parse_args() -> argparse.Namespace:
         default=False, type=str2bool,
         help="Flag on if this is a finetuned model.",
     )
+    parser.add_argument(
+        "--finetuned_model_metadata", default=None, type=str,
+        help="Directory contains finetuned_model_metadata.",
+    )
     parser.add_argument("--deployment_retries", default=5, type=int, help="Number of retries for deployment.")
     parser.add_argument(
         "--deployment_retry_interval_seconds", default=600, type=int, help="Retry interval for deployment.")
@@ -391,7 +395,7 @@ def main(
     deployment_retry_interval_seconds: int,
     wait_finetuned_step: bool,
     finetuned_step_name: str,
-    finetuned_start_timeout_seconds: int
+    finetuned_model_metadata: str
 ) -> None:
     """
     Entry function of the script.
@@ -437,10 +441,18 @@ def main(
                 if finetuned_resource_group else workspace.resource_group
             finetuned_subscription_id = finetuned_subscription_id \
                 if finetuned_subscription_id else workspace.subscription_id
+
+        # if model is finetuned from aoai finetune step then override model from finetuned_model_metadata
+        is_aoai_finetuned_model = finetuned_model_metadata is not None
+        if is_aoai_finetuned_model:
+            with open(finetuned_model_metadata) as f:
+                model_metadata = json.load(f)
+                model = model_metadata["finetuned_model_id"]
+
         online_model = OnlineEndpointModel(
             model, model_version, model_type, endpoint_name, is_finetuned_model,
             finetuned_subscription_id, finetuned_resource_group, finetuned_workspace,
-            finetuned_step_name
+            finetuned_step_name, is_aoai_finetuned_model
         )
         is_deployment_successful = False
         if deployment_retries <= 0:
@@ -481,7 +493,9 @@ def main(
     elif delete_managed_deployment:
         if not deployment_metadata:
             logger.info("Delete deployment using input parameters.")
-            online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name)
+            is_aoai_finetuned_model = finetuned_model_metadata is not None
+            online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name,
+                                               is_aoai_finetuned_model=is_aoai_finetuned_model)
             online_endpoint = OnlineEndpointFactory.get_online_endpoint(
                 endpoint_workspace,
                 endpoint_resource_group,
@@ -506,34 +520,34 @@ def main(
 if __name__ == "__main__":
     args = parse_args()
     main(
-        model=args.model,
-        model_version=args.model_version,
-        model_type=args.model_type,
-        endpoint_name=args.endpoint_name,
-        endpoint_workspace=args.endpoint_workspace,
-        endpoint_resource_group=args.endpoint_resource_group,
-        endpoint_subscription_id=args.endpoint_subscription_id,
-        endpoint_location=args.endpoint_location,
-        deployment_name=args.deployment_name,
-        deployment_sku=args.deployment_sku,
-        output_metadata_dir=args.output_metadata,
-        deployment_metadata=args.deployment_metadata,
-        deletion_model=args.deletion_model,
-        connections_name=args.connections_name,
-        additional_deployment_env_vars=args.additional_deployment_env_vars,
-        do_quota_validation=args.do_quota_validation,
-        use_max_quota=args.use_max_quota,
-        redeploy_model=args.redeploy_model,
-        deployment_env=args.deployment_env,
-        cli_file=args.cli_file,
-        is_finetuned_model=args.is_finetuned_model,
-        finetuned_subscription_id=args.finetuned_subscription_id,
-        finetuned_resource_group=args.finetuned_resource_group,
-        finetuned_workspace=args.finetuned_workspace,
-        delete_managed_deployment=args.delete_managed_deployment,
-        deployment_retries=args.deployment_retries,
-        deployment_retry_interval_seconds=args.deployment_retry_interval_seconds,
-        wait_finetuned_step=args.wait_finetuned_step,
-        finetuned_step_name=args.finetuned_step_name,
-        finetuned_start_timeout_seconds=args.finetuned_start_timeout_seconds
+        args.model,
+        args.model_version,
+        args.model_type,
+        args.endpoint_name,
+        args.endpoint_workspace,
+        args.endpoint_resource_group,
+        args.endpoint_subscription_id,
+        args.endpoint_location,
+        args.deployment_name,
+        args.deployment_sku,
+        args.output_metadata,
+        args.deployment_metadata,
+        args.deletion_model,
+        args.connections_name,
+        args.additional_deployment_env_vars,
+        args.do_quota_validation,
+        args.use_max_quota,
+        args.redeploy_model,
+        args.deployment_env,
+        args.cli_file,
+        args.is_finetuned_model,
+        args.finetuned_subscription_id,
+        args.finetuned_resource_group,
+        args.finetuned_workspace,
+        args.delete_managed_deployment,
+        args.deployment_retries,
+        args.deployment_retry_interval_seconds,
+        args.wait_finetuned_step,
+        args.finetuned_step_name,
+        args.finetuned_model_metadata
     )

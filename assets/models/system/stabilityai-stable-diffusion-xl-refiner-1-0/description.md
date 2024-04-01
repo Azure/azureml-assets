@@ -14,8 +14,7 @@ The model is intended for research purposes only. Possible research areas and ta
 
 # Evaluation Results
 
-![comparison](https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/blob/main/comparison.png)
-The chart above evaluates user preference for SDXL (with and without refinement) over SDXL 0.9 and Stable Diffusion 1.5 and 2.1. The SDXL base model performs significantly better than the previous variants, and the model combined with the refinement module achieves the best overall performance.
+This <a href="https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/blob/main/comparison.png" target="_blank">chart</a> evaluates user preference for SDXL (with and without refinement) over SDXL 0.9 and Stable Diffusion 1.5 and 2.1. The SDXL base model performs significantly better than the previous variants, and the model combined with the refinement module achieves the best overall performance.
 
 # Limitations and Biases
 
@@ -34,6 +33,10 @@ While the capabilities of image generation models are impressive, they can also 
 ## Out-of-Scope Use
 
 The model was not trained to be factual or true representations of people or events, and therefore using the model to generate such content is out-of-scope for the abilities of this model.
+
+# License
+
+CreativeML Open RAIL++-M License
 
 # Inference Samples
 

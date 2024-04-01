@@ -3,7 +3,9 @@
 
 """This file contains unit tests for callback factory."""
 
-from unittest.mock import patch
+import pytest
+
+from unittest.mock import patch, MagicMock
 
 from src.batch_score.common.configuration.configuration import Configuration
 from src.batch_score.common.post_processing.callback_factory import CallbackFactory
@@ -87,6 +89,54 @@ def test_generate_callback_exception_with_mini_batch_id(mock_get_logger,
     )
 
 
+@pytest.mark.parametrize("split_output, use_single_file_output_handler, use_separate_file_output_handler", [
+    (False, True, False),
+    (True, False, True)
+])
+def test_output_handler(
+        split_output,
+        use_single_file_output_handler,
+        use_separate_file_output_handler,
+        make_input_transformer,
+        make_scoring_result):
+    """Test output handler."""
+    mock_input_to_output_transformer = make_input_transformer(modifiers=[FakeInputOutputModifier()])
+
+    mini_batch_context = MiniBatchContext(
+        raw_mini_batch_context=TestMiniBatchContext(minibatch_index=1),
+        target_result_len=2)
+
+    scoring_result = make_scoring_result(request_obj=get_test_request_obj())
+    gathered_result: list[ScoringResult] = [scoring_result.copy(), scoring_result.copy()]
+
+    test_configuration = _get_test_configuration_for_output_handler(split_output)
+
+    callback_factory = CallbackFactory(
+        configuration=test_configuration,
+        input_to_output_transformer=mock_input_to_output_transformer)
+
+    with patch(
+        "src.batch_score.common.post_processing.callback_factory.SeparateFileOutputHandler",
+        return_value=MagicMock()
+      ) as mock_separate_file_output_handler, \
+        patch(
+            "src.batch_score.common.post_processing.callback_factory.SingleFileOutputHandler",
+            return_value=MagicMock()
+          ) as mock_single_file_output_handler:
+
+        callbacks = callback_factory.generate_callback()
+
+        _ = callbacks(gathered_result, mini_batch_context)
+
+        assert mock_separate_file_output_handler.called == use_separate_file_output_handler
+        assert mock_single_file_output_handler.called == use_single_file_output_handler
+
+        assert mock_separate_file_output_handler.return_value.save_mini_batch_results.called == \
+            use_separate_file_output_handler
+        assert mock_single_file_output_handler.return_value.save_mini_batch_results.called == \
+            use_single_file_output_handler
+
+
 def __get_exception_with_traceback():
     try:
         1/0
@@ -100,4 +150,14 @@ def _get_test_configuration() -> Configuration:
         mini_batch_results_out_directory="test_mini_batch_results_out_directory",
         output_behavior="summary_only",
         save_mini_batch_results="disabled",
+    )
+
+
+def _get_test_configuration_for_output_handler(split_output: bool) -> Configuration:
+    return Configuration(
+        batch_size_per_request=1,
+        mini_batch_results_out_directory="test_mini_batch_results_out_directory",
+        output_behavior="summary_only",
+        split_output=split_output,
+        save_mini_batch_results="enabled",
     )

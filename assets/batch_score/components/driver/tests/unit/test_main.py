@@ -13,6 +13,9 @@ from tests.fixtures.geneva_event_listener import mock_import
 with patch('importlib.import_module', side_effect=mock_import):
     import src.batch_score.main as main
 
+from src.batch_score.batch_pool.meds_client import MEDSClient
+from src.batch_score.common.common_enums import EndpointType
+from src.batch_score.common.configuration.configuration import Configuration
 from src.batch_score.common.telemetry.events import event_utils
 from src.batch_score.common.telemetry.trace_configs import (
     ConnectionCreateEndTrace,
@@ -89,6 +92,40 @@ def test_get_return_value(mock_get_logger, dummy_return_data: "list[str]", outpu
         assert actual_result == dummy_return_data
 
     assert mock_get_logger.info.called
+
+
+@pytest.mark.parametrize("split_output, use_single_file_output_handler, use_separate_file_output_handler", [
+    (False, True, False),
+    (True, False, True)
+])
+def test_output_handler_interface(
+        split_output: bool,
+        use_single_file_output_handler: bool,
+        use_separate_file_output_handler: bool):
+    """Test output handler interface."""
+    input_data, mini_batch_context = _setup_main()
+
+    with patch(
+        "src.batch_score.main.SeparateFileOutputHandler",
+        return_value=MagicMock()
+      ) as mock_separate_file_output_handler, \
+        patch(
+          "src.batch_score.main.SingleFileOutputHandler",
+          return_value=MagicMock()
+      ) as mock_single_file_output_handler:
+
+        main.configuration.split_output = split_output
+        main.configuration.save_mini_batch_results = "enabled"
+        main.configuration.mini_batch_results_out_directory = "driver/tests/unit/unit_test_results/"
+        main.run(input_data=input_data, mini_batch_context=mini_batch_context)
+
+        assert mock_separate_file_output_handler.called == use_separate_file_output_handler
+        assert mock_single_file_output_handler.called == use_single_file_output_handler
+
+        assert mock_separate_file_output_handler.return_value.save_mini_batch_results.called == \
+            use_separate_file_output_handler
+        assert mock_single_file_output_handler.return_value.save_mini_batch_results.called == \
+            use_single_file_output_handler
 
 
 def test_run_emit_minibatch_started_event(mock_run_context):
@@ -177,6 +214,52 @@ def test_enqueue_exception_generate_minibatch_summary(mock_run_context):
     )
 
 
+# Dummy Application Insights connection strings
+conn1 = ("InstrumentationKey=11111111-1111-1111-1111-111111111111;"
+         "IngestionEndpoint=https://centralus-1.in.applicationinsights.azure.com/;"
+         "LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/")
+conn2 = ("InstrumentationKey=22222222-2222-2222-2222-222222222222;"
+         "IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;"
+         "LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("from_configuration, endpoint_type, from_MEDS, expected", [
+    # When a connection string is present in the configuration, it is used.
+    (conn1, EndpointType.AOAI, None, conn1),
+    (conn1, EndpointType.BatchPool, None, conn1),
+    # When missing and the endpoint type is BatchPool, the value from MEDS is used.
+    (None, EndpointType.BatchPool, None, None),    # Missing in MEDS
+    (None, EndpointType.BatchPool, conn2, conn2),  # Present in MEDS
+    # When missing and the endpoint type is not BatchPool, None is returned without using MEDS.
+    (None, EndpointType.AOAI, None, None),
+    (None, EndpointType.AOAI, conn2, None),
+])
+async def test_get_application_insights_connection_string(
+        from_configuration,
+        endpoint_type,
+        from_MEDS,
+        expected):
+    """Test get application insights connection string."""
+    # Arrange
+    configuration = Configuration(
+        app_insights_connection_string=from_configuration,
+        batch_pool="batch_pool" if endpoint_type == EndpointType.BatchPool else None,
+        quota_audience="quota_audience" if endpoint_type == EndpointType.BatchPool else None,
+        service_namespace="service_namespace" if endpoint_type == EndpointType.BatchPool else None)
+    with patch.object(MEDSClient, "get_application_insights_connection_string") as mock_get_client_setting:
+        mock_get_client_setting.return_value = from_MEDS
+
+        # Act
+        connection_string = await main.get_application_insights_connection_string(
+            configuration=configuration,
+            metadata=MagicMock(),
+            token_provider=MagicMock())
+
+    # Assert
+    assert connection_string == expected
+
+
 def _setup_main(par_exception=None):
     configuration = MagicMock()
     configuration.additional_properties = None
@@ -185,6 +268,8 @@ def _setup_main(par_exception=None):
     configuration.batch_pool = "batch_pool"
     configuration.quota_audience = "quota_audience"
     main.configuration = configuration
+
+    main.input_handler = MagicMock()
 
     main.par = MagicMock()
     if par_exception is not None:

@@ -6,7 +6,8 @@
 import pytest
 from shared_utilities.io_utils import _verify_mltable_paths
 from shared_utilities.momo_exceptions import InvalidInputError
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+from azureml.core import Datastore
 
 
 @pytest.mark.unit
@@ -41,7 +42,8 @@ class TestIOUtils:
                 {"file": "azureml://datastores/my_datastore/paths/path/to/data.parquet"},
                 {"folder": "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore/paths/path/to/folder"},  # noqa: E501
                 {"pattern": "azureml://datastores/my_datastore/paths/path/to/folder/**/*.jsonl"},
-                {"pattern": "./path/to/folder/*.csv"}
+                {"pattern": "./path/to/folder/*.csv"},
+                {"file": "baseline_data.csv"},
             ]
         }
         mock_datastore = Mock(datastore_type="AzureBlob", protocol="https", endpoint="core.windows.net",
@@ -49,9 +51,10 @@ class TestIOUtils:
         mock_datastore.name = "my_datastore"
         mock_datastore.credential_type = "Sas"
         mock_datastore.sas_token = "my_sas_token"
-        mock_ws = Mock(datastores={"my_datastore": mock_datastore})
+        mock_ws = Mock()
 
-        _verify_mltable_paths("foo_path", mock_ws, mltable_dict)
+        with patch.object(Datastore, "get", return_value=mock_datastore):
+            _verify_mltable_paths("foo_path", mock_ws, mltable_dict)
 
     @pytest.mark.parametrize(
         "mltable_path, datastore_type",
@@ -69,11 +72,11 @@ class TestIOUtils:
         mock_datastore.name = "my_datastore"
         mock_datastore.tenant_id = None
         mock_datastore.credential_type = "None"
-        mock_ws = Mock(datastores={"my_datastore": mock_datastore})
+        mock_ws = Mock()
         mltable_dict = {
             "type": "mltable",
             "paths": [mltable_path]
         }
 
-        with pytest.raises(InvalidInputError):
+        with patch.object(Datastore, "get", return_value=mock_datastore), pytest.raises(InvalidInputError):
             _verify_mltable_paths("foo_path", mock_ws, mltable_dict)

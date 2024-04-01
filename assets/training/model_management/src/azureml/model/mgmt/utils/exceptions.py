@@ -9,6 +9,15 @@ from functools import wraps
 from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 from azureml._common._error_definition.system_error import ClientError  # type: ignore
+from azureml._common._error_definition.user_error import (
+    ArgumentInvalid,
+    Authentication,
+    NotSupported,
+    ConnectionFailure
+)  # type: ignore
+
+from azureml.core.run import Run  # type: ignore
+from azureml.automl.core._run import run_lifecycle_utilities
 
 
 class ModelImportErrorStrings:
@@ -75,7 +84,7 @@ class ModelImportError(ClientError):
         return ModelImportErrorStrings.LOG_UNSAFE_GENERIC_ERROR
 
 
-class GITCloneError(ClientError):
+class GITCloneError(ConnectionFailure):
     """GIT clone error."""
 
     @property
@@ -84,7 +93,7 @@ class GITCloneError(ClientError):
         return ModelImportErrorStrings.GIT_CLONE_ERROR
 
 
-class GITConfigError(ClientError):
+class GITConfigError(ArgumentInvalid):
     """GIT configuration error."""
 
     @property
@@ -102,7 +111,7 @@ class BlobStorageDownloadError(ClientError):
         return ModelImportErrorStrings.BLOBSTORAGE_DOWNLOAD_ERROR
 
 
-class InvalidHuggingfaceModelIDError(ClientError):
+class InvalidHuggingfaceModelIDError(ArgumentInvalid):
     """Invalid Huggingface model ID error."""
 
     @property
@@ -111,7 +120,7 @@ class InvalidHuggingfaceModelIDError(ClientError):
         return ModelImportErrorStrings.INVALID_HUGGING_FACE_MODEL_ID
 
 
-class HuggingFaceErrorInFetchingModelInfo(ClientError):
+class HuggingFaceErrorInFetchingModelInfo(ConnectionFailure):
     """Error in fetching model info."""
 
     @property
@@ -120,7 +129,7 @@ class HuggingFaceErrorInFetchingModelInfo(ClientError):
         return ModelImportErrorStrings.ERROR_FETCHING_HUGGING_FACE_MODEL_INFO
 
 
-class NonMsiAttachedComputeError(ClientError):
+class NonMsiAttachedComputeError(ArgumentInvalid):
     """Internal Import Model Generic Error."""
 
     @property
@@ -129,7 +138,7 @@ class NonMsiAttachedComputeError(ClientError):
         return ModelImportErrorStrings.NON_MSI_ATTACHED_COMPUTE_ERROR
 
 
-class UserIdentityMissingError(ClientError):
+class UserIdentityMissingError(ArgumentInvalid):
     """Internal Import Model Generic Error."""
 
     @property
@@ -138,7 +147,7 @@ class UserIdentityMissingError(ClientError):
         return ModelImportErrorStrings.USER_IDENTITY_MISSING_ERROR
 
 
-class VMNotSufficientForOperation(ClientError):
+class VMNotSufficientForOperation(ArgumentInvalid):
     """Error when VM is not sufficient for an operation."""
 
     @property
@@ -156,7 +165,7 @@ class GenericRunCMDError(ClientError):
         return ModelImportErrorStrings.CMD_EXECUTION_ERROR
 
 
-class ModelAlreadyExists(ClientError):
+class ModelAlreadyExists(ArgumentInvalid):
     """Error when Model already exists in registry."""
 
     @property
@@ -165,7 +174,7 @@ class ModelAlreadyExists(ClientError):
         return ModelImportErrorStrings.MODEL_ALREADY_EXISTS
 
 
-class UnsupportedTaskType(ClientError):
+class UnsupportedTaskType(NotSupported):
     """Error when Unsupported task type is provided."""
 
     @property
@@ -174,7 +183,7 @@ class UnsupportedTaskType(ClientError):
         return ModelImportErrorStrings.UNSUPPORTED_TASK_TYPE
 
 
-class HFAuthenticationError(ClientError):
+class HFAuthenticationError(Authentication):
     """Error when failed to authenticate user with token provided."""
 
     @property
@@ -207,6 +216,11 @@ def swallow_all_exceptions(logger: logging.Logger):
                 logger.error("Exception {} when calling {}".format(azureml_exception, func.__name__))
                 for handler in logger.handlers:
                     handler.flush()
+
+                # fail the run
+                run = Run.get_context()
+                run_lifecycle_utilities.fail_run(run, azureml_exception, is_aml_compute=True)
+
                 raise azureml_exception
             finally:
                 time.sleep(60)  # Let telemetry logger flush its logs before terminating.

@@ -6,6 +6,7 @@
 import asyncio
 import os
 import random
+import sys
 from datetime import datetime, timedelta, timezone
 
 import aiohttp
@@ -17,9 +18,9 @@ from ...common.configuration.client_settings import (
     ClientSettingsProvider,
 )
 from ...common.scoring.scoring_request import ScoringRequest
+from ...common.header_providers.header_provider import HeaderProvider
 from ...common.telemetry import logging_utils as lu
 from ...common.telemetry.logging_utils import get_events_client
-from ...header_handlers.meds.meds_header_handler import MedsHeaderHandler
 from ...utils.common import get_base_url
 
 
@@ -38,7 +39,7 @@ class RoutingClient(ClientSettingsProvider):
             self,
             service_namespace: str,
             target_batch_pool: str,
-            header_handler: MedsHeaderHandler,
+            header_provider: HeaderProvider,
             request_path: str):
         """Initialize RoutingClient."""
         self.__BASE_URL = os.environ.get(
@@ -51,7 +52,7 @@ class RoutingClient(ClientSettingsProvider):
         self.__service_namespace: str = service_namespace
         self.target_batch_pool: str = target_batch_pool
         self.__request_path = request_path
-        self.__header_handler = header_handler
+        self.__header_provider = header_provider
 
         self.__quota_scope: str = None
         self.__last_refresh: float = None
@@ -84,7 +85,7 @@ class RoutingClient(ClientSettingsProvider):
                                       .format(self.__LIST_ROUTES_URL))
                 request = {"trafficGroup": constants.TRAFFIC_GROUP}
                 async with session.post(url=self.__LIST_ROUTES_URL,
-                                        headers=self.__header_handler.get_headers(),
+                                        headers=self.__header_provider.get_headers(),
                                         json=request) as response:
                     response_status = response.status
                     if response_status == 200:
@@ -101,6 +102,15 @@ class RoutingClient(ClientSettingsProvider):
                             lu.get_logger().warning("No client settings returned by Model Endpoint Discovery Service.")
 
                         lu.get_logger().debug("RoutingClient: Successfully updated routing pools")
+                    elif response_status == 403:
+                        message = (
+                            "Routing Client: The client is not authorized to list endpoints for the endpoint pool "
+                            f"'{self.target_batch_pool}' in the service namespace '{self.__service_namespace}'. "
+                            "This happens when the client identity has not been allowlisted on the endpoints in the "
+                            "pool. Allowlist the client identity on the endpoints in the pool and try again."
+                        )
+                        lu.get_logger().error(message)
+                        sys.exit(message)  # This is a fatal error, so we exit the process.
                     else:
                         lu.get_logger().error("RoutingClient: Failed to update routing pools")
             except asyncio.TimeoutError:
@@ -148,8 +158,9 @@ class RoutingClient(ClientSettingsProvider):
         return self.__last_refresh is None or \
             (self.__last_refresh + timedelta(seconds=self.__REFRESH_INTERVAL)) <= datetime.now(timezone.utc)
 
-    def increment(self, endpoint: str, request: ScoringRequest):
+    def increment(self, request: ScoringRequest):
         """Increment."""
+        endpoint = get_base_url(request.scoring_url)
         if endpoint not in self.__current_distribution_counts:
             self.__current_distribution_counts[endpoint] = 1
             self.__current_distribution_costs[endpoint] = request.estimated_cost
@@ -159,8 +170,9 @@ class RoutingClient(ClientSettingsProvider):
 
         self.__emit_request_concurrency(endpoint)
 
-    def decrement(self, endpoint: str, request: ScoringRequest):
+    def decrement(self, request: ScoringRequest):
         """Decrement."""
+        endpoint = get_base_url(request.scoring_url)
         self.__current_distribution_counts[endpoint] -= 1
         self.__current_distribution_costs[endpoint] -= request.estimated_cost
 
@@ -275,6 +287,9 @@ class RoutingClient(ClientSettingsProvider):
         except Exception as e:
             lu.get_logger().error(f"RoutingClient: Failed to refresh Routing Client pool routes: {e}")
             future.set_result(False)
+        except SystemExit as e:
+            lu.get_logger().error(f"RoutingClient: Encountered SystemExit when refreshing pool routes: {e}")
+            future.set_exception(e)
 
     def __set_routing_configs(self, pool_routes: "list[any]"):
         if len(pool_routes) == 0:

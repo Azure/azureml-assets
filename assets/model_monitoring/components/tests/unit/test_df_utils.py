@@ -6,10 +6,14 @@ from pyspark.sql.types import (
     DoubleType,
     FloatType,
     StructField,
-    StructType)
-from pyspark.sql import SparkSession
+    StructType,
+    StringType,
+    BooleanType,
+)
+from pyspark.sql import SparkSession, DataFrame
 from src.shared_utilities.df_utils import (
     get_common_columns,
+    has_duplicated_columns,
     try_get_common_columns_with_error,
     try_get_common_columns,
     get_feature_type_override_map,
@@ -18,7 +22,8 @@ from src.shared_utilities.df_utils import (
     get_numerical_cols_with_df_with_override,
     get_categorical_cols_with_df_with_override,
     get_numerical_and_categorical_cols,
-    modify_categorical_columns
+    modify_categorical_columns,
+    try_get_df_column,
 )
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp
@@ -34,7 +39,7 @@ class TestDFUtils:
     def test_get_common_columns(self):
         """Test get common columns."""
         # Test with two empty dataframes
-        spark = SparkSession.builder.appName("test").getOrCreate()
+        spark = self.init_spark()
         emp_RDD = spark.sparkContext.emptyRDD()
         # Create empty schema
         columns = StructType([])
@@ -364,7 +369,7 @@ class TestDFUtils:
         modified_categorical_columns = modify_categorical_columns(df_with_timestamp, categorical_columns)
         assert expected_categorical_columns == modified_categorical_columns
 
-    def init_spark(self):
+    def init_spark(self) -> SparkSession:
         """Get or create spark session."""
         spark = SparkSession.builder.appName("test").getOrCreate()
         return spark
@@ -372,7 +377,7 @@ class TestDFUtils:
     def test_try_get_common_columns_error(self):
         """Test scenarios for common_columns with error."""
         # Test with two empty dataframes
-        spark = SparkSession.builder.appName("test").getOrCreate()
+        spark = self.init_spark()
         emp_RDD = spark.sparkContext.emptyRDD()
         # Create empty schema
         columns = StructType([])
@@ -414,7 +419,7 @@ class TestDFUtils:
     def test_try_get_common_columns_ignore(self):
         """Test scenarios for common columns with ignore."""
         # Test with two empty dataframes
-        spark = SparkSession.builder.appName("test").getOrCreate()
+        spark = self.init_spark()
         emp_RDD = spark.sparkContext.emptyRDD()
         # Create empty schema
         columns = StructType([])
@@ -448,3 +453,59 @@ class TestDFUtils:
         production_df = create_pyspark_dataframe([(1, "c", 30), (2, "d", 40)],
                                                  ["id", "name", "age"])
         assert try_get_common_columns(baseline_df, production_df) == {"name": "string", "age": "bigint"}
+
+    def test_try_get_df_column(self):
+        """Test scenarios for try_get_df_column()."""
+        spark = self.init_spark()
+
+        empty_data = []
+        columns = StructType([])
+        empty_df = spark.createDataFrame(empty_data, columns)
+        assert try_get_df_column(empty_df, 'random') is None
+
+        mixed_data_df = create_pyspark_dataframe(
+            [(1.0, "a", 10), (2.0, "b", 20)],
+            ["id", "name", "age"]
+        )
+        retrieved_col = try_get_df_column(mixed_data_df, 'id')
+        assert retrieved_col is not None
+        assert_spark_dataframe_equal(mixed_data_df.select(retrieved_col), mixed_data_df.select('id'))
+
+    @pytest.mark.parametrize(
+            "input_data, input_data_columns, expected_output",
+            [
+                ([], StructType([]), False),
+                (
+                    [(1.0, "b", False)],
+                    StructType(
+                        [
+                            StructField("input", FloatType(), True),
+                            StructField("number", StringType(), True),
+                            StructField("input", BooleanType(), True)
+                        ]),
+                    True,
+                ),
+                (
+                    [(False, 1.0, "a")],
+                    StructType(
+                        [
+                            StructField("input", BooleanType(), True),
+                            StructField("label", FloatType(), True),
+                            StructField("number", StringType(), True),
+                        ]),
+                    False,
+                )
+            ]
+    )
+    def test_has_duplicate_columns(self, input_data: list, input_data_columns: list, expected_output: bool):
+        """Test scenarios for has_duplicate_columns()."""
+        spark = self.init_spark()
+        empty_df = spark.createDataFrame(input_data, input_data_columns)
+        assert has_duplicated_columns(empty_df) == expected_output
+
+
+def assert_spark_dataframe_equal(actual_df: DataFrame, expected_df: DataFrame):
+    """Assert two spark dataframes are equal."""
+    assert actual_df.schema == expected_df.schema
+    assert actual_df.count() == expected_df.count()
+    assert actual_df.collect() == expected_df.collect()

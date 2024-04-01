@@ -6,7 +6,6 @@
 from argparse import Namespace
 from dataclasses import dataclass, field
 
-from ...batch_pool.routing.routing_client import RoutingClient
 from .. import constants
 from ..common_enums import EndpointType, ApiType, AuthenticationType
 from ..telemetry import logging_utils as lu
@@ -32,6 +31,7 @@ class Configuration(Namespace):
     ensure_ascii: bool = field(init=True, default=None)
     image_input_folder: str = field(init=True, default=None)
     initial_worker_count: int = field(init=True, default=None)
+    input_schema_version: int = field(init=True, default=1)
     max_retry_time_interval: int = field(init=True, default=None)
     max_worker_count: int = field(init=True, default=None)
     mini_batch_results_out_directory: str = field(init=True, default=None)
@@ -45,6 +45,7 @@ class Configuration(Namespace):
     segment_large_requests: str = field(init=True, default=None)
     segment_max_token_size: int = field(init=True, default=None)
     service_namespace: str = field(init=True, default=None)
+    split_output: bool = field(init=True, default=False)
     stdout_log_level: str = field(init=True, default="debug")
     tally_exclusions: str = field(init=True, default=None)
     tally_failed_requests: bool = field(init=True, default=None)
@@ -135,10 +136,9 @@ class Configuration(Namespace):
             )
         )
 
-    def is_sahara(self, routing_client: RoutingClient) -> bool:
+    def is_sahara(self) -> bool:
         """Check if the target endpoint is for sahara models."""
-        return routing_client and routing_client.target_batch_pool and \
-            routing_client.target_batch_pool.lower() == "sahara-global"
+        return self.batch_pool and self.batch_pool.lower() == "sahara-global"
 
     def is_vesta(self) -> bool:
         """Check if the target endpoint is for vesta models."""
@@ -181,7 +181,7 @@ class Configuration(Namespace):
             return EndpointType.AOAI
         elif self.is_serverless_endpoint():
             return EndpointType.Serverless
-        elif self.batch_pool:
+        elif self.batch_pool and self.quota_audience and self.service_namespace:
             return EndpointType.BatchPool
         else:
             return EndpointType.MIR
