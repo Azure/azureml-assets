@@ -109,7 +109,7 @@ class TestActionAnalyzerIdentifyProblemTraffic:
         data_df = spark.createDataFrame(data, schema=data_schema)
 
         query_intention_df = data_df.withColumn(QUERY_INTENTION_COLUMN, get_query_intention(col(PROMPT_COLUMN),
-                                                                                            lit(json.dumps(topics_dict)),
+                                                                                            lit(json.dumps(topics_dict)),  # noqa
                                                                                             lit(llm_summary_enabled)))
         query_intentions = query_intention_df.collect()
         query_intention_0 = query_intentions[0]
