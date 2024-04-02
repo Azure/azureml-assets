@@ -6,22 +6,25 @@
 import argparse
 import time
 import json
-from openai import OpenAI
 from openai.types.fine_tuning.job_create_params import Hyperparameters
 from common import utils
+from common.cancel_handler import CancelHandler
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
-
+from proxy_component import AzureOpenAIProxyComponent
 
 logger = get_logger(__name__)
 
 
-class FineTuneProxy:
+class FineTuneComponent(AzureOpenAIProxyComponent):
     """Fine-tune proxy class to submit fine-tune job to AOAI."""
 
-    def __init__(self, aoai_client):
+    def __init__(self, aoai_client_manager: AzureOpenAIClientManager):
         """Fine-tune proxy class constructor."""
-        self.aoai_client: OpenAI = aoai_client
+        super().__init__(aoai_client_manager.endpoint_name,
+                         aoai_client_manager.endpoint_resource_group,
+                         aoai_client_manager.endpoint_subscription)
+        self.aoai_client = aoai_client_manager.get_azure_openai_client()
 
     def submit_finetune_job(self, training_file_id, validation_file_id, model, registered_model,
                             n_epochs, batch_size, learning_rate_multiplier, suffix=None):
@@ -85,28 +88,30 @@ def submit_finetune_job():
         aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
                                                        endpoint_resource_group=args.endpoint_resource_group,
                                                        endpoint_subscription=args.endpoint_subscription)
-        add_custom_dimenions_to_app_insights_handler(logger,
-                                                     aoai_client_manager.endpoint_name,
-                                                     aoai_client_manager.endpoint_resource_group,
-                                                     aoai_client_manager.endpoint_subscription)
+        finetune_component = FineTuneComponent(aoai_client_manager)
+        add_custom_dimenions_to_app_insights_handler(logger, finetune_component)
+        CancelHandler.register_cancel_handler(finetune_component)
+
+        logger.info("Starting finetune submit component")
+
         with open(args.data_upload_output) as f:
             data_upload_output = json.load(f)
         logger.debug(f"data_upload_output for finetuning model: {data_upload_output}")
-        finetune_proxy = FineTuneProxy(aoai_client_manager.get_azure_openai_client())
-        fientuned_model_id = finetune_proxy.submit_finetune_job(
+
+        finetuned_model_id = finetune_component.submit_finetune_job(
             training_file_id=data_upload_output['train_file_id'],
-            validation_file_id=data_upload_output['train_file_id'],
+            validation_file_id=data_upload_output['validation_file_id'],
             model=args.model,
             registered_model=args.registered_model_name,
             n_epochs=args.n_epochs,
             batch_size=args.batch_size,
             learning_rate_multiplier=args.learning_rate_multiplier)
 
-        utils.save_json({"finetuned_model_id": fientuned_model_id}, args.finetune_submit_output)
+        utils.save_json({"finetuned_model_id": finetuned_model_id}, args.finetune_submit_output)
+        logger.info("Completed finetune submit component")
 
     except Exception as e:
-        logger.error("Got exception while running Finetune submit component. Ex: {}".format(e))
-        print("Failed finetune - {}".format(e))
+        logger.error("Got exception while running finetune submit component. Ex: {}".format(e))
         raise e
 
 

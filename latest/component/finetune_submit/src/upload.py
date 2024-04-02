@@ -5,22 +5,25 @@
 from typing import Any, Dict
 import argparse
 from io import BytesIO
-from openai import AzureOpenAI
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.utils import save_json
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
+from proxy_component import AzureOpenAIProxyComponent
 import jsonlines
 import os
 
 logger = get_logger(__name__)
 
 
-class UploadComponent:
+class UploadComponent(AzureOpenAIProxyComponent):
     """Upload component to upload data to AOAI."""
 
-    def __init__(self, aoai_client: AzureOpenAI):
+    def __init__(self, aoai_client_manager: AzureOpenAIClientManager):
         """Upload component to upload data to AOAI."""
-        self.aoai_client = aoai_client
+        super().__init__(aoai_client_manager.endpoint_name,
+                         aoai_client_manager.endpoint_resource_group,
+                         aoai_client_manager.endpoint_subscription)
+        self.aoai_client = aoai_client_manager.get_azure_openai_client()
         self.split_ratio = 0.8
 
     def upload_files(self, train_file_path: str, validation_file_path: str = None):
@@ -34,7 +37,7 @@ class UploadComponent:
             validation_data = open(validation_file_path, "rb")
         else:
             logger.debug(f"validation data not provided,\
-                        splitting train data in ratio : {self.split_ratio} to create validation data")
+                         splitting train data in ratio : {self.split_ratio} to create validation data")
             train_data, validation_data = self._get_train_validation_split_data(train_file_path)
 
         logger.debug(f"uploading training file : {train_file_name} and validation file : {validation_file_name}")
@@ -103,19 +106,16 @@ def main():
         aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
                                                        endpoint_resource_group=args.endpoint_resource_group,
                                                        endpoint_subscription=args.endpoint_subscription)
-        add_custom_dimenions_to_app_insights_handler(logger,
-                                                     aoai_client_manager.endpoint_name,
-                                                     aoai_client_manager.endpoint_resource_group,
-                                                     aoai_client_manager.endpoint_subscription)
+        upload_component = UploadComponent(aoai_client_manager)
+        add_custom_dimenions_to_app_insights_handler(logger, upload_component)
 
-        upload_component = UploadComponent(aoai_client_manager.get_azure_openai_client())
-
+        logger.info("Starting data upload component, uploading training and validation data to Azure OpenAI")
         dataset_upload_output = upload_component.upload_files(args.train_dataset, args.validation_dataset)
         save_json(dataset_upload_output, args.dataset_upload_output)
-        logger.info("uploaded train and validation data")
+        logger.info("Completed data upload component")
 
     except Exception as e:
-        logger.error("Got exception while running Upload data component. Ex: {}".format(e))
+        logger.error("Got exception while running data upload component. Ex: {}".format(e))
         raise e
 
 
