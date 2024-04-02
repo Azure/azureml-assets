@@ -1,6 +1,6 @@
 type: evaluationresult
 name: openbookqa_mistral_7b_instruct_v01_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: openbookqa_mistral_7b_instruct_v01_question_answering
 description: mistralai-mistral-7b-instruct-v01 run for openbookqa dataset
 dataset_family: openbookqa
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.664
-
-path: ./job_files
 
 
 properties:
