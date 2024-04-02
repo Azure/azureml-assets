@@ -128,7 +128,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             output = self._pipe(text_prompt)
             img = output.images[0]
             nsfw_content = output.nsfw_content_detected[0] if output.nsfw_content_detected else None
-            generated_images.append(save_image(self.batch_output_folder, img))
+            generated_images.append(save_image(self.batch_output_folder, img, DatatypeLiterals.IMAGE_FORMAT))
             nsfw_content_detected.append(nsfw_content)
 
         df = pd.DataFrame(
