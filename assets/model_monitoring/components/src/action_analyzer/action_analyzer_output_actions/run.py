@@ -37,7 +37,8 @@ from shared_utilities.constants import (
     ROOT_SPAN_COLUMN,
     ACTION_ID_COLUMN,
     RETRIEVAL_QUERY_TYPE_COLUMN,
-    RETRIEVAL_TOP_K_COLUMN
+    RETRIEVAL_TOP_K_COLUMN,
+    PROMPT_FLOW_INPUT_COLUMN
 )
 
 
@@ -124,7 +125,8 @@ def generate_samples(action_df, is_negative_sample):
             "LookupScore": sample_data[i][INDEX_SCORE_LLM_COLUMN],
             "DebuggingInfo": sample_data[i][ROOT_SPAN_COLUMN],
             "RetrievalQueryType": sample_data[i][RETRIEVAL_QUERY_TYPE_COLUMN],
-            "RetrievalTopK": sample_data[i][RETRIEVAL_TOP_K_COLUMN]
+            "RetrievalTopK": sample_data[i][RETRIEVAL_TOP_K_COLUMN],
+            "PromptFlowInput": sample_data[i][PROMPT_FLOW_INPUT_COLUMN]
         }
         if is_negative_sample:
             sample["ViolatedMetrics"] = sample_data[i][VIOLATED_METRICS_COLUMN].replace(TEXT_SPLITTER, ", ")
