@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_mc1_mistral_7b_instruct_v01_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: truthfulqa_mc1_mistral_7b_instruct_v01_question_answering
 description: mistralai-mistral-7b-instruct-v01 run for truthfulqa mc1 dataset
 dataset_family: truthfulqa
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.43
-
-path: ./job_files
 
 
 properties:

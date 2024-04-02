@@ -1,6 +1,6 @@
 type: evaluationresult
 name: hellaswag_mistral_large_question_answering
-version: 1.0.0
+version: 2.02.04
 display_name: hellaswag_mistral_large_question_answering
 description: mistral-large run for hellaswag dataset
 dataset_family: hellaswag

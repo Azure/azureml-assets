@@ -1,6 +1,6 @@
 type: evaluationresult
 name: winogrande_gpt_35_turbo_0301_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: winogrande_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for winogrande dataset
 dataset_family: winogrande
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.724
-
-path: ./job_files
 
 
 properties:

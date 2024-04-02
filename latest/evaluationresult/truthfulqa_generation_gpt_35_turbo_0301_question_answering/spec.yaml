@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation_gpt_35_turbo_0301_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: truthfulqa_generation_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for truthfulqa generation dataset
 dataset_family: truthfulqa
@@ -22,8 +22,6 @@ metrics:
   coherence: 4.829
   fluency: 4.913
   GPTSimilarity: 3.528
-
-path: ./job_files
 
 
 properties:

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_other_mistral_7b_instruct_v01_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: mmlu_other_mistral_7b_instruct_v01_question_answering
 description: mistralai-mistral-7b-instruct-v01 run for mmlu_other dataset
 dataset_family: mmlu
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.597
-
-path: ./job_files
 
 
 properties:

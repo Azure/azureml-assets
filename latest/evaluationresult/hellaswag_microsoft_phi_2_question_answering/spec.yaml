@@ -1,6 +1,6 @@
 type: evaluationresult
 name: hellaswag_microsoft_phi_2_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: hellaswag_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for hellaswag dataset
 dataset_family: hellaswag
@@ -19,14 +19,12 @@ tags:
   accuracy_metric_name: exact_match
 
 metrics:
-  accuracy: 0.5199
-
-path: ./job_files
+  accuracy: 0.407389
 
 
 properties:
   n_shot: 5
-  evaluation_sampling_ratio: 0.1
+  evaluation_sampling_ratio: 1.0
   evaluation_split: "validation"
-  fewshot_sampling_ratio: 0.1
+  fewshot_sampling_ratio: 1.0
   fewshot_split: "train"

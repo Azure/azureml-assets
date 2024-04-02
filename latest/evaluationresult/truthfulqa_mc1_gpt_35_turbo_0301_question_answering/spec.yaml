@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_mc1_gpt_35_turbo_0301_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: truthfulqa_mc1_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for truthfulqa mc1 dataset
 dataset_family: truthfulqa
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.682
-
-path: ./job_files
 
 
 properties:

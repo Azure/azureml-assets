@@ -1,9 +1,9 @@
 type: evaluationresult
 name: mmlu_humanities_mistral_large_question_answering
-version: 1.0.0
+version: 2.02.04
 display_name: mmlu_humanities_mistral_large_question_answering
 description: mistral-large run for mmlu_humanities dataset
-dataset_family: mmlu_humanities
+dataset_family: mmlu
 dataset_name: mmlu_humanities
 
 model_name: mistral-large

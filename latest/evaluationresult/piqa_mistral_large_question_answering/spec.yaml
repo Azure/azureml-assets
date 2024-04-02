@@ -1,6 +1,6 @@
 type: evaluationresult
 name: piqa_mistral_large_question_answering
-version: 1.0.0
+version: 2.02.04
 display_name: piqa_mistral_large_question_answering
 description: mistral-large run for piqa dataset
 dataset_family: piqa

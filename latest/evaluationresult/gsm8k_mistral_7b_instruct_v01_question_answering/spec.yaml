@@ -1,6 +1,6 @@
 type: evaluationresult
 name: gsm8k_mistral_7b_instruct_v01_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: gsm8k_mistral_7b_instruct_v01_question_answering
 description: mistralai-mistral-7b-instruct-v01 run for gsm8k dataset
 dataset_family: gsm8k
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.424
-
-path: ./job_files
 
 
 properties:
