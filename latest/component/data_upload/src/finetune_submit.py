@@ -12,6 +12,10 @@ from common.cancel_handler import CancelHandler
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
 from proxy_component import AzureOpenAIProxyComponent
+import mlflow
+import io
+import pandas as pd
+
 
 logger = get_logger(__name__)
 
@@ -25,6 +29,7 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
                          aoai_client_manager.endpoint_resource_group,
                          aoai_client_manager.endpoint_subscription)
         self.aoai_client = aoai_client_manager.get_azure_openai_client()
+        self.job_id = None
 
     def submit_finetune_job(self, training_file_id, validation_file_id, model, registered_model,
                             n_epochs, batch_size, learning_rate_multiplier, suffix=None):
@@ -43,27 +48,90 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
             validation_file=validation_file_id,
             hyperparameters=hyperparameters,
             suffix=suffix)
-        job_id = finetune_job.id
+        self.job_id = finetune_job.id
         status = finetune_job.status
 
-        # If the job isn't yet done, poll it every 30 seconds.
-        if status not in ["succeeded", "failed"]:
-            logger.info(f'Job not in terminal status: {status}. Waiting.')
-            while status not in ["succeeded", "failed"]:
-                time.sleep(30)
-                finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(job_id)
-                status = finetune_job.status
-                logger.info(f"current status of finetune job : {status}, polling after 30 sec")
-        else:
-            logger.debug(f'Fine-tune job {job_id} finished with status: {status}')
+        logger.debug(f"started finetuning job in Azure OpenAI resource. Job id: {self.job_id}")
 
-        if status != "succeeded":
-            raise Exception("Component failed")
-        else:
-            finetuned_model_id = finetune_job.fine_tuned_model
-            logger.info(f'Fine-tune job {job_id} finished with \
-                        status: {status}. model id: {finetuned_model_id}')
-            return finetuned_model_id
+        terminal_statuses = ["succeeded", "failed", "cancelled"]
+
+        """
+        status of finetuning job can be one of the following:
+        terminal statuses : "succeeded", "failed", "cancelled"
+        non-terminal statuses: "validating_files", "queued", "running"
+        until job reaches terminal state, poll status after every 60 seconds
+        """
+        if status not in terminal_statuses:
+            logger.info(f'Job not in terminal status: {status}. Waiting.')
+            last_event = None
+            while status not in terminal_statuses:
+                time.sleep(60)
+                finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(self.job_id)
+                status = finetune_job.status
+                logger.info(f"Finetuning job status : {status}")
+                last_event = self._log_events(last_event)
+
+        if status == "failed":
+            error = finetune_job.error
+            logger.error(f"Fine tuning job: {self.job_id} failed with error: {error}")
+            raise Exception(f"Fine tuning job: {self.job_id} failed with error: {error}")
+
+        elif status == "cancelled":
+            logger.info(f"finetune job: {self.job_id} got cancelled")
+            return None
+
+        """metrics can be retrived only for successful finetune job"""
+        finetuned_model_id = finetune_job.fine_tuned_model
+        logger.info(f'Fine-tune job: {self.job_id} finished successfully. model id: {finetuned_model_id}')
+        logger.info("fetching training metrics from Azure OpenAI")
+        self._log_metrics(finetune_job)
+        return finetuned_model_id
+
+    def cancel_job(self):
+        """Cancel finetuning job in Azure OpenAI resource."""
+        logger.debug(f"job cancellation has been triggered, cancelling finetuning job: {self.job_id}")
+        if self.job_id is None:
+            logger.debug("Job id is None, Job has not started. Not starting now as cancellation is triggered")
+            exit()
+        return self.aoai_client.fine_tuning.jobs.cancel(self.job_id)
+
+    def _log_metrics(self, finetune_job):
+        """Fetch training metrics from azure open ai resource after finetuning is done and log them."""
+        result_file = finetune_job.result_files[0]
+        if result_file is None:
+            logger.warning("result file for the finetuning job not present, cannot log training metrics")
+            return
+
+        response = self.aoai_client.files.content(file_id=result_file)
+        if response is None or response.content is None:
+            logger.warning("content not present in result file for the job, cannot log training metrics")
+            return
+        f = io.BytesIO(response.content)
+        df = pd.read_csv(f)
+
+        for col in df.columns[1:]:
+            values = df[['step', col]].dropna()
+            # drop all rows with -1 as a value
+            values = values[values[col] != -1]
+            for i, row in values.iterrows():
+                mlflow.log_metric(key=col, value=row[col], step=int(row.step))
+        logger.info("logged training metrics for finetuning job")
+
+    def _log_events(self, last_event):
+        """Log events like training started, running nth epoch etc."""
+        job_events = self.aoai_client.fine_tuning.jobs.list_events(self.job_id).data
+        event_message_list = []
+        for job_event in job_events:
+            if last_event == job_event.message:
+                break
+            event_message_list.append(job_event.message)
+
+        if len(event_message_list) > 0:
+            last_event = event_message_list[0]
+            event_message_list.reverse()
+            for event_message in event_message_list:
+                logger.debug(event_message)
+        return last_event
 
 
 def submit_finetune_job():
@@ -110,6 +178,8 @@ def submit_finetune_job():
         utils.save_json({"finetuned_model_id": finetuned_model_id}, args.finetune_submit_output)
         logger.info("Completed finetune submit component")
 
+    except SystemExit:
+        logger.warning("Exiting finetuning job")
     except Exception as e:
         logger.error("Got exception while running finetune submit component. Ex: {}".format(e))
         raise e
