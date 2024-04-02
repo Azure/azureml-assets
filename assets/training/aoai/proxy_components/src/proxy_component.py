@@ -3,6 +3,7 @@
 
 """Proxy component base class constructor."""
 
+
 class AzureOpenAIProxyComponent:
     """Proxy component base class."""
 
