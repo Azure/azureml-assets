@@ -38,7 +38,8 @@ from action_analyzer.constants import (
     PROPERTIES_COLUMN,
     TRACE_ID_COLUMN,
     ACTION_METRIC_COLUMN,
-    ROOT_PROMPT_COLUMN
+    ROOT_PROMPT_COLUMN,
+    PROMPT_FLOW_INPUT_COLUMN
 )
 from pyspark.sql.types import (
     StructType,
@@ -136,7 +137,8 @@ def generate_samples(action_df, is_negative_sample):
             "LookupScore": sample_data[i][ACTION_METRIC_COLUMN],
             "DebuggingInfo": properties_dict[ROOT_SPAN_COLUMN],
             "RetrievalQueryType": properties_dict[RETRIEVAL_QUERY_TYPE_COLUMN],
-            "RetrievalTopK": properties_dict[RETRIEVAL_TOP_K_COLUMN]
+            "RetrievalTopK": properties_dict[RETRIEVAL_TOP_K_COLUMN],
+            "PromptFlowInput": properties_dict[PROMPT_FLOW_INPUT_COLUMN]
         }
         if is_negative_sample:
             metric_names = [group.replace("_bad", "") for group in sample_data[i][GROUP_COLUMN]]

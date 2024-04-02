@@ -41,7 +41,8 @@ from action_analyzer.constants import (
     ROOT_PROMPT_COLUMN,
     GSQ_METRICS_LIST,
     API_CALL_RETRY_BACKOFF_FACTOR,
-    API_CALL_RETRY_MAX_COUNT
+    API_CALL_RETRY_MAX_COUNT,
+    PROMPT_FLOW_INPUT_COLUMN
 )
 from action_analyzer.prompts import RELEVANCE_TEMPLATE
 from shared_utilities.io_utils import (
@@ -216,12 +217,14 @@ def get_index_id(index_content):
     StructField(CONTEXT_COLUMN, StringType()),
     StructField(INDEX_SCORE_COLUMN, FloatType()),
     StructField(RETRIEVAL_QUERY_TYPE_COLUMN, StringType()),
-    StructField(RETRIEVAL_TOP_K_COLUMN, IntegerType())])))
+    StructField(RETRIEVAL_TOP_K_COLUMN, IntegerType()),
+    StructField(PROMPT_FLOW_INPUT_COLUMN, StringType())])))
 def parse_debugging_info(root_span):
     """Parse the span tree to get debugging info."""
     try:
         tree = SpanTree.create_tree_from_json_string(root_span)
         spans_array = []
+        prompt_flow_input = tree.root_span.input
         for span in tree:
             if span.span_type == RETRIEVAL_SPAN_TYPE:
                 parent_id = span.parent_id
@@ -242,7 +245,7 @@ def parse_debugging_info(root_span):
                 for document in retrieval_documents:
                     text.append(document["document.content"])
                     score.append(float(document["document.score"]))
-                spans_array.append((index_content, index_id, query, TEXT_SPLITTER.join(text), max(score), retrieval_query_type, retrieval_top_k))  # noqa
+                spans_array.append((index_content, index_id, query, TEXT_SPLITTER.join(text), max(score), retrieval_query_type, retrieval_top_k, prompt_flow_input))  # noqa
         return spans_array
     except Exception as e:
         print("Exception when parsing the debugging info", e)
@@ -260,6 +263,7 @@ def add_debugging_info_to_properties(properties, debugging_details):
     properties_dict[INDEX_SCORE_COLUMN] = debugging_details[INDEX_SCORE_COLUMN]
     properties_dict[RETRIEVAL_QUERY_TYPE_COLUMN] = debugging_details[RETRIEVAL_QUERY_TYPE_COLUMN]
     properties_dict[RETRIEVAL_TOP_K_COLUMN] = debugging_details[RETRIEVAL_TOP_K_COLUMN]
+    properties_dict[PROMPT_FLOW_INPUT_COLUMN] = debugging_details[PROMPT_FLOW_INPUT_COLUMN]
     return json.dumps(properties_dict)
 
 
@@ -284,6 +288,7 @@ def parse_meta_data(df):
     for metric in GSQ_METRICS_LIST:
         if metric in columms:
             df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN), lit(metric), col(metric)))
+
     df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN),
                                                        lit(ROOT_PROMPT_COLUMN),
                                                        col(PROMPT_COLUMN)))
@@ -293,7 +298,6 @@ def parse_meta_data(df):
     df = df.withColumn(PROPERTIES_COLUMN, add_property(col(PROPERTIES_COLUMN),
                                                        lit(ROOT_SPAN_COLUMN),
                                                        col(ROOT_SPAN_COLUMN)))
-
     # parse the debugging info
     debugging_info = parse_debugging_info(col(ROOT_SPAN_COLUMN))
     if debugging_info is None:
