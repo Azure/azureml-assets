@@ -1,6 +1,6 @@
 type: evaluationresult
 name: piqa_microsoft_phi_2_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: piqa_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for piqa dataset
 dataset_family: piqa
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.609
-
-path: ./job_files
 
 
 properties:
