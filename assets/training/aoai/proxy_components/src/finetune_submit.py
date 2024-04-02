@@ -55,7 +55,7 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         terminal_statuses = ["succeeded", "failed", "cancelled"]
 
         """
-        status of finetuning job can be one of the following: 
+        status of finetuning job can be one of the following:
         terminal statuses : "succeeded", "failed", "cancelled"
         non-terminal statuses: "validating_files", "queued", "running"
         until job reaches terminal state, poll status after every 60 seconds
@@ -90,19 +90,21 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         """Cancel finetuning job in Azure OpenAI resource."""
         logger.debug(f"job cancellation has been triggered, cancelling finetuning job: {self.job_id}")
         if self.job_id is None:
-            logger.debug("Job id is None, finetuning job has not started. Not starting now as cancellation is triggered")
+            logger.debug("Job id is None, Job has not started. Not starting now as cancellation is triggered")
             exit()
         return self.aoai_client.fine_tuning.jobs.cancel(self.job_id)
 
     def _log_metrics(self, finetune_job):
         """Fetch training metrics from azure open ai resource after finetuning is done and log them."""
         result_file = finetune_job.result_files[0]
-
         if result_file is None:
             logger.warning("result file for the finetuning job not present, cannot log training metrics")
             return
 
         response = self.aoai_client.files.content(file_id=result_file)
+        if response is None or response.content is None:
+            logger.warning("content not present in result file for the job, cannot log training metrics")
+            return
         f = io.BytesIO(response.content)
         df = pd.read_csv(f)
 
