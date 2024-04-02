@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Proxy component base class constructor."""
+
 class AzureOpenAIProxyComponent:
     """Proxy component base class."""
 
