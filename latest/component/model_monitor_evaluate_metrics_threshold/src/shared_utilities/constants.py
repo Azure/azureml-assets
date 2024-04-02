@@ -147,6 +147,7 @@ ACTION_ID_COLUMN = "action_id"
 RETRIEVAL_QUERY_TYPE_COLUMN = "retrieval_query_type"
 RETRIEVAL_TOP_K_COLUMN = "retrieval_top_k"
 DEFAULT_TOPIC_NAME = "disparate"
+PROMPT_FLOW_INPUT_COLUMN = "prompt_flow_input"
 
 GSQ_METRICS_LIST = ["Fluency", "Coherence", "Groundedness", "Relevance", "Similarity"]
 GOOD_METRICS_VALUE = 5
