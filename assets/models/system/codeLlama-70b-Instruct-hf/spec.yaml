@@ -25,5 +25,5 @@ tags:
   license: llama2
   author: meta
   training_datasets: Publicly available sources
-  huggingface_model_id: codellama/CodeLlama-70b-Instruct-hfss
+  huggingface_model_id: codellama/CodeLlama-70b-Instruct-hf
 version: 1
