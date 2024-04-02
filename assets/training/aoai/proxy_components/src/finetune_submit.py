@@ -50,16 +50,24 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         self.job_id = finetune_job.id
         status = finetune_job.status
 
+        logger.debug(f"started finetuning job in Azure OpenAI resource. Job id: {self.job_id}")
+
         terminal_statuses = ["succeeded", "failed", "cancelled"]
-        # If the job isn't yet done, poll it every 60 seconds.
+
+        """
+        status of finetuning job can be one of the following: 
+        terminal statuses : "succeeded", "failed", "cancelled"
+        non-terminal statuses: "validating_files", "queued", "running"
+        until job reaches terminal state, poll status after every 60 seconds
+        """
         if status not in terminal_statuses:
             logger.info(f'Job not in terminal status: {status}. Waiting.')
             last_event = None
             while status not in terminal_statuses:
-                time.sleep(10)
-
+                time.sleep(60)
                 finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(self.job_id)
                 status = finetune_job.status
+                logger.info(f"Finetuning job status : {status}")
                 last_event = self._log_events(last_event)
 
         if status == "failed":
@@ -80,12 +88,20 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
 
     def cancel_job(self):
         """Cancel finetuning job in Azure OpenAI resource."""
-        logger.debug("job cancellation has been triggered, cancelling finetuning job")
+        logger.debug(f"job cancellation has been triggered, cancelling finetuning job: {self.job_id}")
+        if self.job_id is None:
+            logger.debug("Job id is None, finetuning job has not started. Not starting now as cancellation is triggered")
+            exit()
         return self.aoai_client.fine_tuning.jobs.cancel(self.job_id)
 
     def _log_metrics(self, finetune_job):
         """Fetch training metrics from azure open ai resource after finetuning is done and log them."""
         result_file = finetune_job.result_files[0]
+
+        if result_file is None:
+            logger.warning("result file for the finetuning job not present, cannot log training metrics")
+            return
+
         response = self.aoai_client.files.content(file_id=result_file)
         f = io.BytesIO(response.content)
         df = pd.read_csv(f)
@@ -159,6 +175,8 @@ def submit_finetune_job():
         utils.save_json({"finetuned_model_id": finetuned_model_id}, args.finetune_submit_output)
         logger.info("Completed finetune submit component")
 
+    except SystemExit:
+        logger.warning("Exiting finetuning job")
     except Exception as e:
         logger.error("Got exception while running finetune submit component. Ex: {}".format(e))
         raise e
