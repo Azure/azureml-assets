@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_mistral_large_question_answering
-version: 1.0.0
+version: 2.02.04
 display_name: social_iqa_mistral_large_question_answering
 description: mistral-large run for social_iqa dataset
 dataset_family: social_iqa
