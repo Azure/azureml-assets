@@ -4,26 +4,25 @@ path: ./
 properties:
   SharedComputeCapacityEnabled: true
   SHA: 79467981bab591dd6860707ed517d1186fbcfc1e
+  languages: 
+  evaluation-min-sku-spec: 40|8|672|2900
+  evaluation-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   inference-min-sku-spec: 40|8|672|2900
   inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
-  evaluation-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
-  evaluation-min-sku-spec: 40|8|672|2900
-  languages: EN
+  
 tags:
-  Featured: ''
   Preview: ''
-  inference_compute_allow_list:
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
+  huggingface_model_id: codellama/CodeLlama-70b-Python-hf
+  license: llama2
+  task: text-generation
+  SharedComputeCapacityEnabled: ''
+  author: meta
   evaluation_compute_allow_list:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
-  SharedComputeCapacityEnabled: ''
-  task: text-generation
-  license: llama2
-  author: meta
-  training_datasets: Publicly available sources
-  huggingface_model_id: codellama/CodeLlama-70b-Python-hf
+  inference_compute_allow_list:
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_ND96amsr_A100_v4
 version: 1
