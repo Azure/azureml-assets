@@ -11,6 +11,7 @@ logger = get_logger(__name__)
 
 class CancelHandler:
     """Cancel handler."""
+
     def __init__(self, component: AzureOpenAIProxyComponent):
         """Create CancelHandler class."""
         self.component = component
@@ -26,6 +27,7 @@ class CancelHandler:
             logger.warning("component is none for the cancel handler")
 
     def register_cancel_handler(component: AzureOpenAIProxyComponent):
+        """ Register component cancel job method."""
         add_custom_dimenions_to_app_insights_handler(logger, component)
         logger.info("registering cancel handler")
         return CancelHandler(component)

@@ -78,6 +78,7 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         return finetuned_model_id
 
     def cancel_job(self):
+        """Cancel finetuning job in Azure OpenAI resource."""
         logger.debug("job cancellation has been triggered, cancelling finetuning job")
         return self.aoai_client.fine_tuning.jobs.cancel(self.job_id)
 
