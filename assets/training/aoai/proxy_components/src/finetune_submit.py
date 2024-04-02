@@ -29,6 +29,7 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
                          aoai_client_manager.endpoint_resource_group,
                          aoai_client_manager.endpoint_subscription)
         self.aoai_client = aoai_client_manager.get_azure_openai_client()
+        self.job_id = None
 
     def submit_finetune_job(self, training_file_id, validation_file_id, model, registered_model,
                             n_epochs, batch_size, learning_rate_multiplier, suffix=None):
