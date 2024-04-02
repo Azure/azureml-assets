@@ -1,6 +1,6 @@
 type: evaluationresult
 name: openbookqa_llama_2_13b_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: openbookqa_llama_2_13b_question_answering
 description: llama-2-13b run for openbookqa dataset
 dataset_family: openbookqa
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.664
-
-path: ./job_files
 
 
 properties:

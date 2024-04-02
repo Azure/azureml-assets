@@ -1,9 +1,9 @@
 type: evaluationresult
 name: mmlu_other_mistral_large_question_answering
-version: 1.0.0
+version: 2.02.04
 display_name: mmlu_other_mistral_large_question_answering
 description: mistral-large run for mmlu_other dataset
-dataset_family: mmlu_other
+dataset_family: mmlu
 dataset_name: mmlu_other
 
 model_name: mistral-large
