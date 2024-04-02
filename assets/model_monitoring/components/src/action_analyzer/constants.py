@@ -28,6 +28,7 @@ TTEST_GROUP_ID_COLUMN = "ttest_group_id"
 TRACE_ID_LIST_COLUMN = "trace_id_list"
 ACTION_QUERY_INTENTION_COLUMN = "action_query_intention"
 ACTION_ANALYZER_ACTION_TAG = "momo_action_analyzer_has_action"
+PROMPT_FLOW_INPUT_COLUMN = "prompt_flow_input"
 
 GSQ_METRICS_LIST = ["Fluency", "Coherence", "Groundedness", "Relevance", "Similarity"]
 GOOD_METRIC_THRESHOLD = 5
