@@ -1,0 +1,30 @@
+type: evaluationresult
+name: winogrande_mistralai-Mixtral-8x7B-Instruct-v01_question_answering
+version: 2.02.04
+display_name: winogrande_mistralai-Mixtral-8x7B-Instruct-v01_question_answering
+description: mistralai-Mixtral-8x7B-Instruct-v01 run for winogrande dataset
+dataset_family: winogrande
+dataset_name: winogrande
+
+model_name: mistralai-Mixtral-8x7B-Instruct-v01
+model_version: "2"
+model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-Instruct-v01/versions/2
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-Instruct-v01/versions/2
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.667719
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"

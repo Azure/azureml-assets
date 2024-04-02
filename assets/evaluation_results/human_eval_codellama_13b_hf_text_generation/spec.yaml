@@ -1,6 +1,6 @@
 type: evaluationresult
 name: human_eval_codellama_13b_hf_text_generation
-version: 1.0.2
+version: 2.02.04
 display_name: human_eval_codellama_13b_hf_text_generation
 description: codellama-13b-hf run for human_eval dataset
 dataset_family: human_eval
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.335
-
-path: ./job_files
 
 
 properties:
