@@ -115,9 +115,8 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
 
     def predict_batch(self, text_prompts):
         """
-        Predict method text-to-image task for batch endpoint.
-        For batch we are try to do prediction in a loop instead of sending complete list at once.
-        Sending a big list of text prompts at once might lead to out of memory related errors.
+        Perform batch inference on the input data.
+
         :param text_prompts: A list of text prompts for which we need to generate images.
         :type text_prompts: list
         :return: Pandas dataframe having generated images and NSFW flag. Images in form of base64 string.
