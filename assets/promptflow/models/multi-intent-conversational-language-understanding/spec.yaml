@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: multi-intent-conversational-language-understanding
+path: ./
+properties:
+  is-promptflow: true
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: standard
+  azureml.promptflow.name: Multi-Intent Conversational Language Understanding
+  azureml.promptflow.description: Use Azure AI Language to analyze & understand intents within conversations.
+  inference-min-sku-spec: 2|0|14|28
+  inference-recommended-sku: Standard_DS3_v2
+version: 1

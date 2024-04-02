@@ -1,0 +1,17 @@
+{
+    "nodes": [
+      {
+        "name": "LLM_Rewrite",
+        "connection": "azure_openai",
+        "inputs": {
+          "deployment_name": "gpt-4"
+        }
+      },
+      {
+        "name": "Conversational_Language_Understanding",
+        "inputs": {
+            "deployment_name": "adv"
+        }
+      }
+    ]
+  }
