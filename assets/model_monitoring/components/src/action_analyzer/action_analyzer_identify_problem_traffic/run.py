@@ -257,6 +257,8 @@ def convert_to_retrieval_span_df(df):
                                             col(f"debugging_details.{RETRIEVAL_QUERY_TYPE_COLUMN}")) \
                                 .withColumn(RETRIEVAL_TOP_K_COLUMN,
                                             col(f"debugging_details.{RETRIEVAL_TOP_K_COLUMN}"))\
+                                .withColumn(PROMPT_FLOW_INPUT_COLUMN,
+                                            col(f"debugging_details.{PROMPT_FLOW_INPUT_COLUMN}"))\
                                 .drop("debugging_details")
     return span_level_df
 
