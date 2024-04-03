@@ -38,6 +38,6 @@ def test_yanked_version_exclusion():
     """ Test latest-pypi-version to exclude yanked versions"""
     package_names = ["azureml-core", "azureml-acft-image-components", "azureml-metrics"]
     for package_name in package_names:
-        expected = get_latest_version_from_pypi(package_name)
-        actual = get_latest_package_version(package_name, package_finder)
+        expected = f"{package_name}=={get_latest_version_from_pypi(package_name)}"
+        actual = f"{package_name}=={get_latest_package_version(package_name, package_finder)}"
         assert expected == actual
