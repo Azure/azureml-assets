@@ -29,14 +29,14 @@ def test_pin_packages_with_extras():
 
 
 def get_latest_version_from_pypi(package_name):
-    """ Get latest package version from pypi"""
+    """Get latest package version from pypi."""
     url = f"https://pypi.org/pypi/{package_name}/json"
     latest_version = requests.get(url).json()["info"]["version"]
     return latest_version
 
 
 def test_yanked_version_exclusion():
-    """ Test latest-pypi-version to exclude yanked versions"""
+    """Test latest-pypi-version to exclude yanked versions."""
     package_names = ["azureml-core", "azureml-acft-image-components", "azureml-metrics"]
     for package_name in package_names:
         expected = f"{package_name}=={get_latest_version_from_pypi(package_name)}"
