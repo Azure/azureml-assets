@@ -56,11 +56,7 @@ make the model finely respect guardrails, allowing for deployment in environment
 
 ### **Sample output**
 ```json
-[
-  {
-    "0": " 'Paris is known for its rich history, art, culture, and cuisine. Here are some must-visit places:\n\n1. Eiffel Tower: An iconic landmark and a symbol of Paris, it offers stunning views of the city.\n2. Louvre Museum: Home to thousands of works of art, including the Mona Lisa.\n3. Notre-Dame Cathedral: A stunning Gothic cathedral with beautiful architecture and intricate details.\n4. Montmartre: A hill with a beautiful view of Paris, famous for its artists, cabarets, and the Sacré-Cœur Basilica.\n5. Musée d'Orsay: A museum housing mainly French art from the Impressionist and Post-Impressionist periods.\n6. Seine River: Take a boat ride to enjoy the scenic beauty of Paris from the river.\n7. Champs-Élysées: A",
-    "1": "\n\n{'role': 'assistant', 'content': \"I'd be happy to help you plan a trip to Paris! Based on your interests, here are some suggestions for things to do and see:\\n\\nIf you're interested in art, I would recommend visiting the Louvre Museum, Musée d'Orsay, and the Centre Pompidou. These museums offer a wide range of art from different periods and styles.\\n\\nIf you're interested in history, you might want to visit the Palace of Versailles, the Sainte-Chapelle, and the Arc de Triomphe. These sites offer a glimpse into France's rich history and cultural heritage.\\n\\nIf you're looking for a more relaxed experience, you could take a boat tour along the Seine River, or spend an afternoon in one of Paris' many beautiful parks, such as the Luxembourg Gardens or the Jardin des Tuileries",
-    "2": "\n\n'I'd be happy to help answer questions about a specific topic or number, but I need more context to understand what you mean by \"#1\". Could you please provide some additional information or clarify your question?'"
-  }
-]
+{
+  "output": " The Eiffel Tower is an iconic landmark of Paris and is considered a symbol of French culture and a must-see attraction for visitors from around the world. Here are some reasons why the Eiffel Tower is so great:\n\n1. Architectural Masterpiece: The Eiffel Tower is an engineering marvel and a stunning example of late 19th-century design. It was the tallest man-made structure in the world when it was completed in 1889 and remains an impressive feat of engineering to this day.\n2. Stunning Views: The Eiffel Tower offers breathtaking views of Paris and the surrounding area. Visitors can take the elevator or stairs to the top for a panoramic view of the city.\n3. Romantic Atmosphere: The Eiffel Tower is often associated with romance and is a popular destination for couples. It is particularly beautiful at night when it is illuminated and the"
+}
 ```
