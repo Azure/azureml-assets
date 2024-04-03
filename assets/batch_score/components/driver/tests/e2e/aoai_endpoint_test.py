@@ -56,6 +56,7 @@ def _get_file_config_yaml(data_asset_path: str):
 
 
 YAML_AOAI_COMPLETION_FILE_CONFIG = _get_file_config_yaml("azureml:aoai_completion_configuration:5")
+YAML_AOAI_SPLIT_OUTPUT_COMPLETION_FILE_CONFIG = _get_file_config_yaml("azureml:test_split_output_configuration:3")
 YAML_AOAI_CHAT_COMPLETION_FILE_CONFIG = _get_file_config_yaml("azureml:aoai_chat_completion_configuration:5")
 YAML_AOAI_EMBEDDING_FILE_CONFIG = _get_file_config_yaml("azureml:aoai_embedding_configuration:5")
 
@@ -90,6 +91,25 @@ def test_gated_aoai_batch_score_completion(llm_batch_score_yml_component):
         YAML_AOAI_COMPLETION_FILE_CONFIG,
         YAML_ENV_VARS,
         YAML_DISALLOW_FAILED_REQUESTS,
+        display_name)
+    _submit_job_and_monitor_till_completion(
+        ml_client=pytest.ml_client,
+        pipeline_filepath=gated_llm_pipeline_filepath,
+        yaml_overrides=[yaml_update])
+
+
+@pytest.mark.smoke
+@pytest.mark.e2e
+@pytest.mark.timeout(20 * 60)
+def test_split_output_gated_aoai_batch_score_completion(llm_batch_score_yml_component):
+    """Test gate for AOAI batch score completion model."""
+    set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
+    display_name = {"display_name": "llm_aoai_completion_smoke"}
+    yaml_update = deep_update(
+        YAML_COMPONENT,
+        YAML_AOAI_COMPLETION_TEST_DATA_ASSET,
+        YAML_AOAI_SPLIT_OUTPUT_COMPLETION_FILE_CONFIG,
+        YAML_ENV_VARS,
         display_name)
     _submit_job_and_monitor_till_completion(
         ml_client=pytest.ml_client,

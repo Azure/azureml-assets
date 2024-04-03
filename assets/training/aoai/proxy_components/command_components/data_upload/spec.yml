@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: data_upload
-version: 0.0.1
+version: 0.0.3
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Data Upload
 description: Component to upload user's data from AzureML workspace to Azure OpenAI resource
 
-environment: azureml://registries/azureml-1p-preview/environments/aoai-data-upload-finetune/versions/0.0.1
+environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/1
 
 code: ../../src
 

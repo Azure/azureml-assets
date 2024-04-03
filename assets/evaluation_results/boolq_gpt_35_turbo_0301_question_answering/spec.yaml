@@ -1,6 +1,6 @@
 type: evaluationresult
 name: boolq_gpt_35_turbo_0301_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: boolq_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for boolq dataset
 dataset_family: boolq
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.867
-
-path: ./job_files
 
 
 properties:

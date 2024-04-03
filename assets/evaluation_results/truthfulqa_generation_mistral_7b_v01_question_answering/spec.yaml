@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation_mistral_7b_v01_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: truthfulqa_generation_mistral_7b_v01_question_answering
 description: mistralai-mistral-7b-v01 run for truthfulqa generation dataset
 dataset_family: truthfulqa
@@ -22,8 +22,6 @@ metrics:
   coherence: 3.51
   fluency: 3.94
   GPTSimilarity: 2.273
-
-path: ./job_files
 
 
 properties:

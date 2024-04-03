@@ -15,12 +15,13 @@ from .mini_batch_context import MiniBatchContext
 from .result_utils import (
     apply_input_transformer,
     get_return_value,
-    save_mini_batch_results,
 )
+from .output_handler import SingleFileOutputHandler, SeparateFileOutputHandler
 
 
 def add_callback(callback, cur):
     """Append a callback to a list."""
+
     def wrapper(scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
         scoring_results = callback(scoring_results, mini_batch_context)
         return cur(scoring_results, mini_batch_context)
@@ -63,10 +64,17 @@ class CallbackFactory:
             if mini_batch_context.exception is None:
                 if self._configuration.save_mini_batch_results == "enabled":
                     lu.get_logger().info("save_mini_batch_results is enabled")
-                    save_mini_batch_results(
+                    if (self._configuration.split_output):
+                        output_handler = SeparateFileOutputHandler()
+                        lu.get_logger().info("Saving successful results and errors to separate files")
+                    else:
+                        output_handler = SingleFileOutputHandler()
+                        lu.get_logger().info("Saving results to single file")
+                    output_handler.save_mini_batch_results(
                         scoring_results,
                         self._configuration.mini_batch_results_out_directory,
-                        mini_batch_context.raw_mini_batch_context)
+                        mini_batch_context.raw_mini_batch_context
+                    )
                 else:
                     lu.get_logger().info("save_mini_batch_results is disabled")
 

@@ -7,7 +7,6 @@ from azure.identity import ManagedIdentityCredential
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 from azure.mgmt.cognitiveservices.models import ApiKeys
 from openai import AzureOpenAI
-
 import os
 from typing import Optional
 from common.logging import get_logger
@@ -28,7 +27,6 @@ class AzureOpenAIClientManager:
         self.endpoint_resource_group = endpoint_resource_group
         self.endpoint_subscription = endpoint_subscription
         workspace_subscription, workspace_resource_group = self._get_workspace_subscription_id_resource_group()
-
         if endpoint_subscription is None:
             logger.info("AOAI resource subscription id is empty, will default to workspace subscription")
             self.endpoint_subscription = workspace_subscription

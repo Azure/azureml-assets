@@ -26,7 +26,10 @@ from .common.post_processing.callback_factory import CallbackFactory
 from .common.post_processing.mini_batch_context import MiniBatchContext
 from .common.post_processing.result_utils import (
     get_return_value,
-    save_mini_batch_results,
+)
+from .common.post_processing.output_handler import (
+    SingleFileOutputHandler,
+    SeparateFileOutputHandler,
 )
 from .common.request_modification.input_transformer import InputTransformer
 from .common.request_modification.modifiers.prompt_redaction_modifier import (
@@ -71,22 +74,34 @@ from .common.telemetry.trace_configs import (
     RequestRedirectTrace,
     ResponseChunkReceivedTrace,
 )
-from .utils.common import convert_to_list, str2bool
+from .utils.common import str2bool
+from .utils.input_handler import InputHandler
+from .utils.v1_input_schema_handler import V1InputSchemaHandler
+from .utils.v2_input_schema_handler import V2InputSchemaHandler
 from .utils.json_encoder_extensions import setup_encoder
 
 par: parallel.Parallel = None
 configuration: Configuration = None
+input_handler: InputHandler = None
 
 
 def init():
     """Init function of the component."""
     global par
     global configuration
+    global input_handler
 
     start = time.time()
     parser = ConfigurationParserFactory().get_parser()
     configuration = parser.parse_configuration()
     metadata = Metadata.extract_component_name_and_version()
+
+    if configuration.input_schema_version == 1:
+        input_handler = V1InputSchemaHandler()
+    elif configuration.input_schema_version == 2:
+        input_handler = V2InputSchemaHandler()
+    else:
+        raise ValueError(f"Invalid input_schema_version: {configuration.input_schema_version}")
 
     event_utils.setup_context_vars(configuration, metadata)
     setup_geneva_event_handlers()
@@ -174,18 +189,32 @@ def run(input_data: pd.DataFrame, mini_batch_context):
 
     ret = []
 
-    data_list = convert_to_list(input_data,
-                                additional_properties=configuration.additional_properties,
-                                batch_size_per_request=configuration.batch_size_per_request)
+    data_list = input_handler.convert_input_to_requests(
+        input_data,
+        additional_properties=configuration.additional_properties,
+        batch_size_per_request=configuration.batch_size_per_request
+    )
+    mini_batch_context = MiniBatchContext(mini_batch_context, len(data_list))
 
     get_events_client().emit_mini_batch_started(input_row_count=len(data_list))
 
     try:
-        ret = par.run(data_list)
+        ret = par.run(data_list, mini_batch_context)
+
+        if (configuration.split_output):
+            output_handler = SeparateFileOutputHandler()
+            lu.get_logger().info("Saving successful results and errors to separate files")
+        else:
+            output_handler = SingleFileOutputHandler()
+            lu.get_logger().info("Saving results to single file")
 
         if configuration.save_mini_batch_results == "enabled":
             lu.get_logger().info("save_mini_batch_results is enabled")
-            save_mini_batch_results(ret, configuration.mini_batch_results_out_directory, mini_batch_context)
+            output_handler.save_mini_batch_results(
+                ret,
+                configuration.mini_batch_results_out_directory,
+                mini_batch_context.raw_mini_batch_context
+            )
         else:
             lu.get_logger().info("save_mini_batch_results is disabled")
 
@@ -203,7 +232,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
         )
     finally:
         event_utils.generate_minibatch_summary(
-            minibatch_id=mini_batch_context.minibatch_index,
+            minibatch_id=mini_batch_context.mini_batch_id,
             output_row_count=len(ret),
         )
         lu.get_logger().info(f"Completed data subset, length {input_data.shape[0]}.")
@@ -223,7 +252,7 @@ def enqueue(input_data: pd.DataFrame, mini_batch_context):
 
     set_mini_batch_id(mini_batch_id)
 
-    data_list = convert_to_list(
+    data_list = input_handler.convert_input_to_requests(
         input_data,
         additional_properties=configuration.additional_properties,
         batch_size_per_request=configuration.batch_size_per_request)
