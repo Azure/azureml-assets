@@ -27,6 +27,7 @@ def test_pin_packages_with_extras():
     expected = f"azureml-metrics[all]=={get_latest_package_version('azureml-metrics', package_finder)}"
     assert pin_packages(contents) == expected
 
+
 def get_latest_version_from_pypi(package_name):
     """ Get latest package version from pypi"""
     url = f"https://pypi.org/pypi/{package_name}/json"
