@@ -44,7 +44,14 @@ def aggregate_spans_into_traces(
 
     print("Processing spans into aggregated traces...")
 
-    grouped_spans_df = enlarged_span_logs.groupBy('request_id').agg(
+    # TODO: change this conditional to check against real schema once we know what the new log schema will be
+    if "request_id" in enlarged_span_logs.columns:
+        print("Found 'request_id' in schema, most likely PromptFlow raw logs. Grouping by 'request_id'...")
+        enlarged_span_logs = enlarged_span_logs.drop('trace_id').withColumn('trace_id', enlarged_span_logs.request_id)
+    else:
+        print("Found no 'request_id' in schema. Skip promoting as 'trace_id'.")
+
+    grouped_spans_df = enlarged_span_logs.groupBy('trace_id').agg(
         collect_list(
             struct(enlarged_span_logs.schema.fieldNames())
         ).alias('span_rows')
