@@ -14,3 +14,6 @@ os_type: linux
 
 tags:
   Preview: ""
+  transformer_version: 4.38.2
+  task: text-generation
+
