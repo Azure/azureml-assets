@@ -346,6 +346,17 @@ class TestInferencePostprocessorScript:
                 None, None, None, "first", None, None,
                 '{"0":"NEUTRAL", "1":"CONTRADICTION", "2":"ENTAILMENT"}', None,
             ),
+            (
+                "gsm8k_empty_prediction", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, "\n\n",
+                None, None, ".", "last", None, None, None, None,
+            ),
+            (
+                "gsm8k_no_regex_found", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, "\n\n",
+                None, None, ".", "last", None, None, None, None,
+            ),
+
         ],
     )
     def test_inference_postprocessor_as_script(
@@ -695,7 +706,7 @@ class TestInferencePostprocessorScript:
         [
             (["foo123"], ["123"]),
             (["foo123", "456foo123"], ["123", "456"]),
-            (["bar", "foo456", "", "foo"], ["0", "456", "0", "0"]),
+            (["bar", "foo456", "", "foo"], ["", "456", "", ""]),
             (["4foo3"], ["4"]),
             (["-4foo3"], ["-4"]),
             (["foo-123"], ["-123"]),
@@ -719,7 +730,7 @@ class TestInferencePostprocessorScript:
             (["654,"], ["654"]),
             ([" 654"], ["654"]),
             (["654 "], ["654"]),
-            ([".."], ["0"]),
+            ([".."], [""]),
         ],
     )
     def test_apply_extract_number(
@@ -733,6 +744,7 @@ class TestInferencePostprocessorScript:
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
             prediction_column_name="prediction",
             extract_number="first",
+            extract_number_strategy_default_value=""
         )
         output = []
         for input in mock_completion_list:
@@ -746,8 +758,8 @@ class TestInferencePostprocessorScript:
             (["foo123", "456foo123"], ["123", "123"]),
             (
                 ["bar", "123foo456", "", "foo"],
-                ["0", "456", "0", "0"],
-            ),  # 0 is the default value
+                ["", "456", "", ""],
+            ),  # in 3P postinference processor, '' is the default value in case no match found
             (["4foo3"], ["3"]),
             (["42"], ["42"]),
             (["42foo"], ["42"]),
@@ -768,7 +780,7 @@ class TestInferencePostprocessorScript:
             (["654,"], ["654"]),
             ([" 654"], ["654"]),
             (["654 "], ["654"]),
-            ([".."], ["0"]),
+            ([".."], [""]),
         ],
     )
     def test_apply_extract_number_last(
@@ -784,6 +796,7 @@ class TestInferencePostprocessorScript:
             prediction_dataset=Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
             prediction_column_name="prediction",
             extract_number="last",
+            extract_number_strategy_default_value=""
         )
         output = []
         for input in mock_completion_list:

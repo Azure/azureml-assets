@@ -18,8 +18,10 @@ from ...common.scoring.scoring_result import (
     ScoringResultStatus,
 )
 from ...common.scoring.tally_failed_request_handler import TallyFailedRequestHandler
+from ...common.scoring.scoring_utils import get_prompt_tokens, get_completion_tokens
 from ...common.telemetry.events import event_utils
 from ...common.telemetry.events.batch_score_request_completed_event import BatchScoreRequestCompletedEvent
+from ...utils.common import get_mini_batch_id
 
 
 class AoaiHttpResponseHandler(HttpResponseHandler):
@@ -143,22 +145,6 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             start: float,
             end: float,
             worker_id: str) -> None:
-
-        def get_prompt_tokens(response_body: any):
-            if not isinstance(response_body, dict):
-                return None
-
-            return response_body.get("usage", {}).get("prompt_tokens")
-
-        def get_completion_tokens(response_body: any):
-            if not isinstance(response_body, dict):
-                return None
-
-            return response_body.get("usage", {}).get("completion_tokens")
-
-        def get_mini_batch_id(mini_batch_context: any):
-            if mini_batch_context:
-                return mini_batch_context.mini_batch_id
 
         def get_model_name(response_body: any):
             if not isinstance(response_body, dict):

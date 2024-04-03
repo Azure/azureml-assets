@@ -514,7 +514,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.37
+    component: azureml:ft_nlp_common_validation:0.0.38
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -548,9 +548,10 @@ jobs:
       apply_lora: '${{parent.inputs.apply_lora}}'
       ignore_mismatched_sizes: '${{parent.inputs.ignore_mismatched_sizes}}'
       max_seq_length: '${{parent.inputs.max_seq_length}}'
+      auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
   text_classification_model_import:
     type: command
-    component: azureml:text_classification_model_import:0.0.37
+    component: azureml:text_classification_model_import:0.0.38
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -561,7 +562,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   text_classification_datapreprocess:
     type: command
-    component: azureml:text_classification_datapreprocess:0.0.37
+    component: azureml:text_classification_datapreprocess:0.0.38
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -582,7 +583,7 @@ jobs:
       model_selector_output: '${{parent.jobs.text_classification_model_import.outputs.output_dir}}'
   text_classification_finetune:
     type: command
-    component: azureml:text_classification_finetune:0.0.37
+    component: azureml:text_classification_finetune:0.0.38
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -639,7 +640,7 @@ jobs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.37
+    component: azureml:ft_nlp_model_converter:0.0.38
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'

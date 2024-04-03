@@ -139,22 +139,24 @@ def validate_and_prepare_pipeline_component(
             return False
 
         logger.print(
-            "component details:\n"
+            "Parsed component asset URI details:\n"
             + f"name: {name}\n"
             + f"version: {version}\n"
             + f"label: {label}\n"
             + f"registry: {registry}"
         )
 
-        if registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
-            logger.log_error(
+        if registry and registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
+            logger.log_warning(
                 f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
-                f"The URI for component '{name}' references registry '{registry}'."
+                f"The URI for component '{name}' references registry '{registry}', "
+                "and publishing will fail if the release process does not have read access to it."
             )
-            return False
 
         # If workspace asset URI is used, use registry we're creating the component in
-        registry = registry or registry_name
+        if not registry:
+            logger.print(f"Workspace asset URI was used, using component from registry {registry}")
+            registry = registry_name
 
         # Check if component's env exists
         final_version = util.apply_version_template(version, version_template)
