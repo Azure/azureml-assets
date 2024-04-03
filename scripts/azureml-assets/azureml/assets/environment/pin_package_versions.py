@@ -35,7 +35,7 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
             search_scope=SearchScope([], index_urls, False),
         )
     selection_prefs = SelectionPreferences(
-        allow_yanked=True,
+        allow_yanked=False,
         ignore_requires_python=True,
     )
     try:

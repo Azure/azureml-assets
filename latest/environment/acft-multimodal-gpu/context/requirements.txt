@@ -1,8 +1,8 @@
-azureml-acft-accelerator==47.0.0
-azureml-evaluate-mlflow==47.0.0
-azureml-acft-common-components==47.0.0
-azureml-acft-contrib-hf-nlp==47.0.0
-azureml-acft-multimodal-components==47.0.0
+azureml-acft-accelerator==0.0.48
+azureml-evaluate-mlflow==0.0.48
+azureml-acft-common-components==0.0.48
+azureml-acft-contrib-hf-nlp==0.0.48
+azureml-acft-multimodal-components==0.0.48
 # needed by multimodal
 mltable==1.5.0
 transformers==4.36.2
