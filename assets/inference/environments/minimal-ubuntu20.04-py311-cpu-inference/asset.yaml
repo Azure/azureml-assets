@@ -1,4 +1,4 @@
-name: minimal-ubuntu20.04-py311-cpu-inference
+name: minimal-py311-inference
 version: auto
 type: environment
 spec: spec.yaml
