@@ -39,7 +39,8 @@ def _replace_trace_with_request_id(row: Row):
         if attributes_dict is not None and 'request_id' in attributes_dict \
                 and attributes_dict.get('request_id', None) is not None:
             output_dict['trace_id'] = attributes_dict.get('request_id')
-    return [Row(**output_dict)]
+            return Row(**output_dict)
+    return row
 
 
 def aggregate_spans_into_traces(
@@ -58,7 +59,7 @@ def aggregate_spans_into_traces(
 
     # for PromptFlow we need to replace the trace_id values with request_id in order to handle edge cases
     # where PF has same trace_id but multiple LLM requests
-    enlarged_span_logs = enlarged_span_logs.rdd.flatMap(_replace_trace_with_request_id).toDF(enlarged_span_logs.schema)
+    enlarged_span_logs = enlarged_span_logs.rdd.map(_replace_trace_with_request_id).toDF(enlarged_span_logs.schema)
 
     grouped_spans_df = enlarged_span_logs.groupBy('trace_id').agg(
         collect_list(
