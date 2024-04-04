@@ -1,4 +1,4 @@
-name: minimal-py39-inference
+name: minimal-ubuntu20.04-py39-cpu-inference
 version: auto
 type: environment
 spec: spec.yaml
