@@ -14,7 +14,7 @@ from azure.core.credentials import AzureSasCredential
 from azure.identity import ClientSecretCredential
 from azure.storage.blob import BlobServiceClient, ContainerClient, ContainerSasPermissions, generate_container_sas
 from pyspark.sql import SparkSession
-from model_data_collector_preprocessor.store_url import StoreUrl
+from shared_utilities.store_url import StoreUrl
 from shared_utilities.momo_exceptions import InvalidInputError
 
 

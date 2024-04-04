@@ -12,7 +12,7 @@ from azure.storage.blob._shared.authentication import SharedKeyCredentialPolicy
 from azure.storage.filedatalake import FileSystemClient
 from azureml.core import Datastore
 from azureml.exceptions import UserErrorException
-from model_data_collector_preprocessor.store_url import StoreUrl
+from shared_utilities.store_url import StoreUrl
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
