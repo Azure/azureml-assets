@@ -213,6 +213,54 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 6, 59, 0), "in", "out", _root_span_str_lookback],
     ]
 
+    _span_log_data_request_id = [
+        ['{"inputs":"in", "output":"out", "request_id":"0x01"}'] +
+        [datetime(2024, 2, 5, 9, 30), "[]", "FLOW", "[]", "name"] +
+        [None, "1", "llm", datetime(2024, 2, 5, 9, 15), "OK", "00"],
+        ['{"inputs":"in", "output":"out", "request_id":"0x02"}'] +
+        [datetime(2024, 2, 5, 9, 55), "[]", "RAG", "[]", "name"] +
+        [None, "2", "llm", datetime(2024, 2, 5, 9, 6), "OK", "00"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 9, 59), "[]", "INTERNAL", "[]", "name"] +
+        ["4", "3", "llm", datetime(2024, 2, 5, 9, 58), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 9, 58), "[]", "LLM", "[]", "name"] +
+        ["5", "4", "llm", datetime(2024, 2, 5, 9, 5), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 9, 59), "[]", "FLOW", "[]", "name"] +
+        [None, "5", "llm", datetime(2024, 2, 5, 9, 8), "OK", "01"],
+    ]
+
+    _root_span_str_request_0x01 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\", \\"request_id' + \
+        '\\":\\"0x01\\"}", "end_time": "2024-02-05T09:30:00", "events": "[]", "framework": "FLOW", "links": "[]"' + \
+        ', "name": "name", "parent_id": null, "span_id": "1", "span_type": "llm", "start_time": "2024-02-05T09:1' + \
+        '5:00", "status": "OK", "trace_id": "0x01", "children": []}'
+
+    _root_span_str_request_0x02 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\", \\"request_id' + \
+        '\\":\\"0x02\\"}", "end_time": "2024-02-05T09:55:00", "events": "[]", "framework": "RAG", "links": "[]",' + \
+        ' "name": "name", "parent_id": null, "span_id": "2", "span_type": "llm", "start_time": "2024-02-05T09:06' + \
+        ':00", "status": "OK", "trace_id": "0x02", "children": []}'
+
+    _root_span_str_request_01 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "' + \
+        '2024-02-05T09:59:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": ' + \
+        'null, "span_id": "5", "span_type": "llm", "start_time": "2024-02-05T09:08:00", "status": "OK", "trace_i' + \
+        'd": "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2' + \
+        '024-02-05T09:58:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "5' + \
+        '", "span_id": "4", "span_type": "llm", "start_time": "2024-02-05T09:05:00", "status": "OK", "trace_id":' + \
+        ' "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024' + \
+        '-02-05T09:59:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_id": ' + \
+        '"4", "span_id": "3", "span_type": "llm", "start_time": "2024-02-05T09:58:00", "status": "OK", "trace_id' + \
+        '": "01", "children": []}]}]}'
+
+    _trace_log_data_request_id = [
+            ["0x01", None, None, datetime(2024, 2, 5, 9, 15)] +
+            [datetime(2024, 2, 5, 9, 30), "in", "out", _root_span_str_request_0x01],
+            ["0x02", None, None, datetime(2024, 2, 5, 9, 6)] +
+            [datetime(2024, 2, 5, 9, 55), "in", "out", _root_span_str_request_0x02],
+            ["01", None, None, datetime(2024, 2, 5, 9, 8)] +
+            [datetime(2024, 2, 5, 9, 59), "in", "out", _root_span_str_request_01],
+    ]
+
     def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
         spark = self._init_spark()
@@ -256,7 +304,10 @@ class TestGenAISparkPreprocessor:
              datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
             # Look back with extra span logs
             (_span_log_data_lookback, _preprocessed_log_schema, _trace_log_data_lookback, _trace_log_schema, True,
-             datetime(2024, 2, 5, 6), datetime(2024, 2, 5, 7))
+             datetime(2024, 2, 5, 6), datetime(2024, 2, 5, 7)),
+            # request_id data
+            (_span_log_data_request_id, _preprocessed_log_schema, _trace_log_data_request_id, _trace_log_schema, True,
+             datetime(2024, 2, 5, 9), datetime(2024, 2, 5, 10))
         ]
     )
     def test_trace_aggregator(
