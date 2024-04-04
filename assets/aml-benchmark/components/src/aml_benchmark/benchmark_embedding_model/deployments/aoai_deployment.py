@@ -6,7 +6,7 @@
 from openai import AzureOpenAI
 
 from .oai_deployment import OAIDeployment
-from ..utils.helper import Constants
+from ...utils.constants import Constants
 
 
 class AOAIDeployment(OAIDeployment):

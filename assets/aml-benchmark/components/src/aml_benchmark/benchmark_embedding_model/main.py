@@ -47,14 +47,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--connections_name",
         type=str,
-        required=False,
-        help=(
-            "Used for authenticating endpoint. Only applicable for AOAI if environment variables ain't "
-            "specified. For OAI, this will be ignored. Following environment variable can be used "
-            "instead of connections_name for authentication: api_key, api_version, endpoint_url. "
-            "Only specify those which are applicable."
-        ),
-        default=None
+        required=True,
+        help="Used for authenticating endpoint."
     )
     parser.add_argument(
         "--tasks",
@@ -174,8 +168,8 @@ def main(
     output_dir: str,
     deployment_type: str,
     deployment_name: str,
+    connections_name: str,
     endpoint_url: Optional[str] = None,
-    connections_name: Optional[str] = None,
     tasks: Optional[str] = None,
     task_types: Optional[str] = None,
     task_langs: Optional[str] = None,
@@ -188,13 +182,10 @@ def main(
     Either `tasks` or `task_types` or `task_langs` or `preset` must be supplied.
 
     :param output_dir: Directory where the benchmark result will be saved.
-    :param deployment_name: For AOAI, the deployment name. For OAI, the model name.
     :param deployment_type: Choose from one of the deployment types: `AOAI`, `OAI`.
+    :param deployment_name: For AOAI, the deployment name. For OAI, the model name.
+    :param connections_name: Used for authenticating endpoint.
     :param endpoint_url: For AOAI, the endpoint_url. For OAI, this will be ignored.
-    :param connections_name: Used for authenticating endpoint. Only applicable for AOAI if environment variables 
-        ain't specified. For OAI, this will be ignored. Following environment variable can be used instead of 
-        connections_name for authentication: api_key, api_version, endpoint_url. Only specify those which are 
-        applicable.
     :param tasks: Comma separated string denoting the tasks to benchmark the model on.
     :param task_types: Comma separated string denoting the task type to benchmark the model on. Choose from the
         following task types: classification, clustering, pair_classification, reranking, retrieval, sts, 

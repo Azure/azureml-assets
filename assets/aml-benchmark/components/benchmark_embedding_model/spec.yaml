@@ -24,12 +24,8 @@ inputs:
     description: For AOAI, the deployment name. For OAI, the model name. 
   connections_name:
     type: string
-    optional: True
-    description: >-
-      Used for authenticating endpoint. Only applicable for AOAI if environment variables ain't
-      specified. For OAI, this will be ignored. Following environment variable can be used
-      instead of connections_name for authentication: api_key, api_version, endpoint_url.
-      Only specify those which are applicable.
+    optional: False
+    description: Used for authenticating endpoint.
   tasks:
     type: string
     optional: True
@@ -74,7 +70,7 @@ command: >-
   $[[--endpoint_url ${{inputs.endpoint_url}}]]
   --deployment_type ${{inputs.deployment_type}}
   --deployment_name ${{inputs.deployment_name}}
-  $[[--connections_name '${{inputs.connections_name}}']]
+  --connections_name '${{inputs.connections_name}}'
   $[[--tasks '${{inputs.tasks}}']]
   $[[--task_types '${{inputs.task_types}}']]
   $[[--task_langs '${{inputs.task_langs}}']]
