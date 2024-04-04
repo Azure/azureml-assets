@@ -1,0 +1,14 @@
+name: minimal
+channels:
+- anaconda
+- conda-forge
+dependencies:
+- python=3.9.13
+- pip=22.1.2
+- pip:
+  - azureml-inference-server-http=={{latest-pypi-version}}
+  # vulnerabilities
+  - cryptography>=41.0.3
+  - requests>=2.31.0
+  - certifi>=2023.07.22
+  - wheel>=0.38.1
