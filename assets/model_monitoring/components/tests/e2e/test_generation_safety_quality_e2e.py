@@ -108,9 +108,9 @@ class TestGenerationSafetyQualityModelMonitor:
             test_suite_name,
             DATA_ASSET_TRACE_LOGS_DATA_WITH_CONTEXT,
             {
-                "prompt_column_name": "question",
-                "completion_column_name": "output",
-                "context_column_name": "context",
+                "prompt_column_name": "input.question",
+                "completion_column_name": "output.output",
+                "context_column_name": "input.context",
             }
         )
 

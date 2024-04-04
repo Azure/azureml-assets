@@ -4,21 +4,60 @@
 """Entry script for GSQ Input Schema Adaptor Spark Component."""
 
 import argparse
+import operator
+import json
 
-from pyspark.sql import DataFrame
-from pyspark.sql.functions import from_json
+from functools import reduce
+from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
+from pyspark.sql import DataFrame, Row
+from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql.functions import max
 from shared_utilities.io_utils import (
     init_spark,
     save_spark_df_as_mltable,
     try_read_mltable_in_spark_with_error,
 )
 from shared_utilities.momo_exceptions import InvalidInputError
-from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
 from shared_utilities.df_utils import has_duplicated_columns
-from shared_utilities.constants import GENAI_ROOT_SPAN_SCHEMA_COLUMN, GENAI_TRACE_ID_SCHEMA_COLUMN
+from shared_utilities.constants import (
+    GENAI_ROOT_SPAN_SCHEMA_COLUMN,
+    GENAI_TRACE_ID_SCHEMA_COLUMN,
+    GSQ_PROMPT_COLUMN,
+    GSQ_COMPLETION_COLUMN,
+    GSQ_CONTEXT_COLUMN,
+    GSQ_GROUND_TRUTH_COLUMN,
+)
 
 
-def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
+def expand_json_to_gsq_schema(row, gsq_columns: list, passthrough_columns: list):
+    """Expand the GSQ schema from json string column."""
+    input_json_data = json.loads(row.input) if hasattr(row, "input") else {}
+    output_json_data = json.loads(row.output) if hasattr(row, "output") else {}
+    if input_json_data is None:
+        input_json_data = {}
+    if output_json_data is None:
+        output_json_data = {}
+    print(f"input: {input_json_data}")
+    print(f"output: {output_json_data}")
+    combined_dict = {"input": input_json_data, "output": output_json_data}
+    output_dict = {}
+    # passthrough-columns
+    for col in passthrough_columns:
+        if hasattr(row, col):
+            output_dict[col] = row[col]
+
+    for col in gsq_columns:
+        col: str
+        output_dict[col] = reduce(operator.getitem, col.split('.'), combined_dict)
+    return [Row(**output_dict)]
+
+
+def _adapt_input_data_schema(
+        df: DataFrame,
+        prompt_column_name,
+        completion_column_name,
+        context_column_name,
+        ground_truth_column_name) -> DataFrame:
     """Adapt the input dataframe schema to fit GSQ input schema."""
     df_field_names = df.schema.fieldNames()
 
@@ -32,47 +71,58 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
 
     print("Adapting the GenAI production data to gsq input schema...")
     spark = init_spark()
-    try:
-        sampled_df_slice = df.sample(0.2)
-        if sampled_df_slice.count() == 0:
-            print(
-                "Not enough data resulting from production data and sample rate. "
-                "Using first 5 rows of production data instead."
-            )
-            sampled_df_slice = df.limit(5)
-        print("Sampled data used to get 'input'/'output' json schema:")
-        sampled_df_slice.show()
-        sampled_df_slice.printSchema()
+    output_schema = StructType([
+        StructField(GENAI_TRACE_ID_SCHEMA_COLUMN, StringType(), True),
+        StructField(GENAI_ROOT_SPAN_SCHEMA_COLUMN, StringType(), True),
+        StructField(prompt_column_name, StringType(), True),
+        StructField(completion_column_name, StringType(), True),
+        StructField(context_column_name, StringType(), True),
+        StructField(ground_truth_column_name, StringType(), True),
+    ])
+    gsq_schema = [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]
+    passthrough_columns = [GENAI_TRACE_ID_SCHEMA_COLUMN, GENAI_ROOT_SPAN_SCHEMA_COLUMN]
+    broadcast_gsq_schema = spark.sparkContext.broadcast(gsq_schema)
+    broadcast_passthrough_schema = spark.sparkContext.broadcast(passthrough_columns)
 
-        input_schema = spark.read.json(sampled_df_slice.rdd.map(lambda row: row.input), mode="FAILFAST").schema
-        output_schema = spark.read.json(sampled_df_slice.rdd.map(lambda row: row.output), mode="FAILFAST").schema
-    except Exception as ex:
-        if "Malformed records are detected in schema inference. Parse Mode: FAILFAST." in str(ex):
-            raise InvalidInputError(
-                "Failed to parse the input/output column json string for the trace logs provided."
-                " The input/output columns in the inputted production data are not in a parseable"
-                " json string format. Please double-check the data columns are being passed or"
-                " stored correctly."
-            )
-        raise ex
+    transformed_df = df.rdd.flatMap(lambda row: expand_json_to_gsq_schema(row, broadcast_gsq_schema.value, broadcast_passthrough_schema.value)).toDF(output_schema)
+    transformed_df.show()
+    transformed_df.printSchema()
 
-    df = df.withColumns({
-        'temp_input': from_json(df.input, input_schema),
-        'temp_output': from_json(df.output, output_schema),
-    }).select('trace_id', 'temp_input.*', 'temp_output.*', 'root_span')
+    # drop rows with all None
+    transformed_df = transformed_df.dropna(how="all", subset=gsq_schema)
+
+    # drop columns with all None
+    rows_with_data = transformed_df.select(*transformed_df.columns).agg(*[max(c).alias(c) for c in transformed_df.columns]).take(1)[0]
+    transformed_df = transformed_df.select(*[c for c in transformed_df.columns if rows_with_data[c] is not None])
+    transformed_df.show()
+    transformed_df.printSchema()
+
+    drop_rate = abs(transformed_df.count() - df.count()) / df.count()
+    if drop_rate > 0.10 and drop_rate < 0.30:
+        print(f"{drop_rate}% data missing all mapping columns, please check your log quality.")
+    elif drop_rate > 0.30 and drop_rate < 0.67:
+        print(f"{drop_rate}% data missing all mapping columns. " +
+              "Most likely you haven't provided log_context when log for your customized tool. " +
+              "Please check your logging code")
+    elif drop_rate > 0.67:
+        raise InvalidInputError(
+            f"Majority of the log missing all mapping columns (drop_rate = {drop_rate}), "
+            "please check if you the column mapping is correct. "
+            "If your are sure the mapping is correct, most likely log_context is not provided to logging function "
+            "for multiple customized tools used in the PF pipeline, please check logging code.")
 
     if has_duplicated_columns(df):
         raise InvalidInputError(
             "Expanding the input and output columms resulted in duplicate columns."
-            f" The dataframe's columns are: {df.columns}."
+            f" The dataframe's columns are: {transformed_df.columns}."
             " This scenario is unsupported as of right now. Please clean up the production data logs"
             " so there are no duplicate fields in 'input' and 'output' columns."
         )
 
     # flatten unpacked json columns to json_string if necessary
-    df = _convert_complex_columns_to_json_string(df)
+    transformed_df = _convert_complex_columns_to_json_string(transformed_df)
 
-    return df
+    return transformed_df
 
 
 def run():
@@ -82,11 +132,22 @@ def run():
     parser.add_argument("--production_dataset", type=str, required=True)
     parser.add_argument("--adapted_production_data", type=str, required=True)
 
+    parser.add_argument("--prompt_column_name", type=str, default=GSQ_PROMPT_COLUMN)
+    parser.add_argument("--completion_column_name", type=str, default=GSQ_COMPLETION_COLUMN)
+    parser.add_argument("--context_column_name", type=str, default=GSQ_CONTEXT_COLUMN)
+    parser.add_argument("--ground_truth_column_name", type=str, default=GSQ_GROUND_TRUTH_COLUMN)
+
     args = parser.parse_args()
 
     production_data_df = try_read_mltable_in_spark_with_error(args.production_dataset, "production_dataset")
 
-    adapted_df = _adapt_input_data_schema(production_data_df)
+    adapted_df = _adapt_input_data_schema(
+        production_data_df,
+        args.prompt_column_name,
+        args.completion_column_name,
+        args.context_column_name,
+        args.ground_truth_column_name,
+    )
 
     print("df adapted from production data:")
     adapted_df.show()
