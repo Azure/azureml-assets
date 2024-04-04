@@ -240,7 +240,7 @@ class TestGenAISparkPreprocessor:
         '\\":\\"0x02\\"}", "end_time": "2024-02-05T09:55:00", "events": "[]", "framework": "RAG", "links": "[]",' + \
         ' "name": "name", "parent_id": null, "span_id": "2", "span_type": "llm", "start_time": "2024-02-05T09:06' + \
         ':00", "status": "OK", "trace_id": "0x02", "children": []}'
-    
+
     _root_span_str_request_01 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "' + \
         '2024-02-05T09:59:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": ' + \
         'null, "span_id": "5", "span_type": "llm", "start_time": "2024-02-05T09:08:00", "status": "OK", "trace_i' + \

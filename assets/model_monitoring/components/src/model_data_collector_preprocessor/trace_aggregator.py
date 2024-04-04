@@ -36,7 +36,8 @@ def _replace_trace_with_request_id(row: Row):
     output_dict: dict = row.asDict()
     if 'attributes' in output_dict:
         attributes_dict: dict = json.loads(output_dict['attributes'])
-        if attributes_dict is not None and 'request_id' in attributes_dict and attributes_dict.get('request_id', None) is not None:
+        if attributes_dict is not None and 'request_id' in attributes_dict \
+            and attributes_dict.get('request_id', None) is not None:
             output_dict['trace_id'] = attributes_dict.get('request_id')
     return [Row(**output_dict)]
 
