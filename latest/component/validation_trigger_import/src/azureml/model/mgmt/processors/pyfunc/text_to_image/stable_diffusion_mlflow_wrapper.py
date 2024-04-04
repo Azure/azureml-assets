@@ -17,7 +17,7 @@ from config import (
     MLflowSchemaLiterals, Tasks, MLflowLiterals,
     BatchConstants, DatatypeLiterals,
     SupportedTextToImageModelFamily)
-from vision_utils import image_to_base64
+from vision_utils import image_to_base64, save_image
 
 
 class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -91,7 +91,9 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :rtype: pd.DataFrame
         """
         text_prompts = input_data[MLflowSchemaLiterals.INPUT_COLUMN_PROMPT].tolist()
-
+        if self.batch_output_folder:
+            # Batch endpoint
+            return self.predict_batch(text_prompts)
         output = self._pipe(text_prompts)
         generated_images = []
         for img in output.images:
@@ -106,6 +108,34 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
                 MLflowSchemaLiterals.INPUT_COLUMN_PROMPT: text_prompts,
                 MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE: generated_images,
                 MLflowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG: nsfw_content,
+            }
+        )
+
+        return df
+
+    def predict_batch(self, text_prompts):
+        """
+        Perform batch inference on the input data.
+
+        :param text_prompts: A list of text prompts for which we need to generate images.
+        :type text_prompts: list
+        :return: Pandas dataframe having generated images and NSFW flag. Images in form of base64 string.
+        :rtype: pandas.DataFrame
+        """
+        generated_images = []
+        nsfw_content_detected = []
+        for text_prompt in text_prompts:
+            output = self._pipe(text_prompt)
+            img = output.images[0]
+            nsfw_content = output.nsfw_content_detected[0] if output.nsfw_content_detected else None
+            generated_images.append(save_image(self.batch_output_folder, img, DatatypeLiterals.IMAGE_FORMAT))
+            nsfw_content_detected.append(nsfw_content)
+
+        df = pd.DataFrame(
+            {
+                MLflowSchemaLiterals.INPUT_COLUMN_PROMPT: text_prompts,
+                MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE: generated_images,
+                MLflowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG: nsfw_content_detected,
             }
         )
 
