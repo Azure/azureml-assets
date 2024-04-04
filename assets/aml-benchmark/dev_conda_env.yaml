@@ -16,6 +16,8 @@ dependencies:
     - datasets
     - tqdm
     - azure-core
+    - mteb
+    - openai
     ## Test requirements
     - pytest
     - pytest-xdist

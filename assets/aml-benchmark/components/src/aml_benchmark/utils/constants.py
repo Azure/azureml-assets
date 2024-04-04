@@ -4,6 +4,19 @@
 """Constants for Benchmarking."""
 from enum import Enum
 
+from httpx import Timeout
+
+
+class Constants:
+    """Constants for benchmarking."""
+
+    MAX_RETRIES = 5
+    MAX_RETRIES_OAI = 1
+    BASE_DELAY = 60
+    MAX_DELAY = 600
+    MAX_TIMEOUT_SEC = 180
+    DEFAULT_HTTPX_TIMEOUT = Timeout(timeout=600.0, connect=120.0)
+
 
 class AuthenticationType(Enum):
     """Authentication Type enum for endpoints."""
@@ -23,7 +36,7 @@ class ModelType(Enum):
 AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST = [
     "openai.azure.com",
     "api.cognitive.microsoft.com",
-    "cognitiveservices.azure.com"
+    "cognitiveservices.azure.com",
 ]
 MIR_ENDPOINT_DOMAIN_SUFFIX_LIST = ["inference.ml.azure.com"]
 SERVERLESS_ENDPOINT_DOMAIN_SUFFIX_LIST = ["inference.ai.azure.com"]
@@ -31,7 +44,7 @@ SERVERLESS_ENDPOINT_DOMAIN_SUFFIX_LIST = ["inference.ai.azure.com"]
 _URL_TYPES_MAPPING = {
     "azure_openai": AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST,
     "azureml_online_endpoint": MIR_ENDPOINT_DOMAIN_SUFFIX_LIST,
-    "azureml_serverless_endpoint": SERVERLESS_ENDPOINT_DOMAIN_SUFFIX_LIST
+    "azureml_serverless_endpoint": SERVERLESS_ENDPOINT_DOMAIN_SUFFIX_LIST,
 }
 _DEFAULT_URL_TYPE = "azureml_online_endpoint"
 

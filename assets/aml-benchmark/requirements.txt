@@ -9,6 +9,8 @@ mltable>=1.5.0
 datasets
 tqdm
 azure-core
+mteb
+openai
 pytest
 pytest-xdist
 ddt
