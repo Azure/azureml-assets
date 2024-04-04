@@ -240,6 +240,17 @@ class TestGenAISparkPreprocessor:
         '\\":\\"0x02\\"}", "end_time": "2024-02-05T09:55:00", "events": "[]", "framework": "RAG", "links": "[]",' + \
         ' "name": "name", "parent_id": null, "span_id": "2", "span_type": "llm", "start_time": "2024-02-05T09:06' + \
         ':00", "status": "OK", "trace_id": "0x02", "children": []}'
+    
+    _root_span_str_request_01 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "' + \
+        '2024-02-05T09:59:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": ' + \
+        'null, "span_id": "5", "span_type": "llm", "start_time": "2024-02-05T09:08:00", "status": "OK", "trace_i' + \
+        'd": "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2' + \
+        '024-02-05T09:58:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "5' + \
+        '", "span_id": "4", "span_type": "llm", "start_time": "2024-02-05T09:05:00", "status": "OK", "trace_id":' + \
+        ' "01", "children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024' + \
+        '-02-05T09:59:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_id": ' + \
+        '"4", "span_id": "3", "span_type": "llm", "start_time": "2024-02-05T09:58:00", "status": "OK", "trace_id' + \
+        '": "01", "children": []}]}]}'
 
     _trace_log_data_request_id = [
             ["0x01", None, None, datetime(2024, 2, 5, 9, 15)] +
@@ -247,7 +258,7 @@ class TestGenAISparkPreprocessor:
             ["0x02", None, None, datetime(2024, 2, 5, 9, 6)] +
             [datetime(2024, 2, 5, 9, 55), "in", "out", _root_span_str_request_0x02],
             ["01", None, None, datetime(2024, 2, 5, 9, 8)] +
-            [datetime(2024, 2, 5, 9, 59), "in", "out", _root_span_str_lookback],
+            [datetime(2024, 2, 5, 9, 59), "in", "out", _root_span_str_request_01],
     ]
 
     def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
