@@ -10,7 +10,7 @@ from model_data_collector_preprocessor.mdc_utils import (
     _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string,
 )
-from model_data_collector_preprocessor.store_url import StoreUrl
+from shared_utilities.store_url import StoreUrl
 
 
 def mdc_preprocessor(

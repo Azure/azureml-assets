@@ -19,9 +19,8 @@ from shared_utilities.constants import (
 from model_data_collector_preprocessor.mdc_preprocessor_helper import (
     get_file_list, set_data_access_config, serialize_credential, copy_appendblob_to_blockblob
 )
-from model_data_collector_preprocessor.store_url import StoreUrl
+from shared_utilities.store_url import StoreUrl
 from model_data_collector_preprocessor.mdc_preprocessor_helper import deserialize_credential
-# from store_url import StoreUrl
 
 
 def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: datetime, store_url: StoreUrl,

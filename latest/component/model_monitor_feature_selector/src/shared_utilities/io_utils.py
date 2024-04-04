@@ -15,7 +15,7 @@ from pyspark.sql.types import StructType
 from .constants import MAX_RETRY_COUNT
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
-from model_data_collector_preprocessor.store_url import StoreUrl  # TODO: move StoreUrl to share_utilities
+from shared_utilities.store_url import StoreUrl
 
 
 class NoDataApproach(Enum):
