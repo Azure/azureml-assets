@@ -42,7 +42,7 @@ from shared_utilities.constants import (
 )
 from shared_utilities.prompts import BERTOPIC_DEFAULT_PROMPT
 from shared_utilities.span_tree_utils import SpanTree
-from model_data_collector_preprocessor.store_url import StoreUrl
+from shared_utilities.store_url import StoreUrl
 
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
