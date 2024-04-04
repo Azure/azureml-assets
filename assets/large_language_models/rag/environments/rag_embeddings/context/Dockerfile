@@ -103,6 +103,7 @@ RUN python3 -m nltk.downloader punkt && \
 
 ENV TIKA_SERVER_JAR file:///tika-server.jar
 
+# Install tika server
 RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.9.2/tika-server-standard-2.9.2.jar'; \
     downloadMd5='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.9.2/tika-server-standard-2.9.2.jar.md5'; \
     wget --progress=dot:giga -O tika-server.jar "$downloadUrl"; \
