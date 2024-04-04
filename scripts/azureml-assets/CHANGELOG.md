@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.42 (2024-04-03)
+### 🐛 Bugs Fixed
+- [#2591](https://github.com/Azure/azureml-assets/pull/2637) Exclude yanked version for `latest-pypi-version`
+
 ## 1.16.41 (2024-03-27)
 ### 🐛 Bugs Fixed
 - [#2591](https://github.com/Azure/azureml-assets/pull/2591) Revert to not fail on workspace asset URI
