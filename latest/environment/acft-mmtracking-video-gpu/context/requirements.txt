@@ -1,5 +1,4 @@
 azureml-metrics[video]~=0.0.48
-azureml-evaluate-mlflow==0.0.48
 azureml-acft-accelerator==0.0.48
 azureml-acft-common-components[image]~=0.0.48
 azureml-acft-image-components==0.0.48
