@@ -175,7 +175,7 @@ def run():
 
     merged_action = action_data_df.groupby(INDEX_ID_COLUMN).agg(collect_set(BAD_GROUP_COLUMN).alias("action_bad_group_set"),  # noqa: E501
                                                                 collect_set(GOOD_GROUP_COLUMN).alias("action_good_group_set"),  # noqa: E501
-                                                                mean(CONFIDENCE_SCORE_COLUMN).alias("action_confidence_score")).withColumn(ACTION_ID_COLUMN, _generate_guid())  # noqa: E501
+                                                                max(CONFIDENCE_SCORE_COLUMN).alias("action_confidence_score")).withColumn(ACTION_ID_COLUMN, _generate_guid())  # noqa: E501
 
     # join the action data with all debugging info and highest confident group
     merged_action = merged_action.join(max_conf_df, [INDEX_ID_COLUMN], "inner")
