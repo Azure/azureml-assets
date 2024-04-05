@@ -9,7 +9,7 @@ from pyspark.sql.types import (
     BooleanType
 )
 from pyspark.sql import Window
-from pyspark.sql.functions import collect_set, col, udf, mean, max
+from pyspark.sql.functions import collect_set, col, udf, max
 from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder
 import os
 import json
@@ -187,7 +187,7 @@ def run():
     action_bad_group_df.show()
 
     action_good_group_df = action_with_group_df.filter(is_query_in_action_sample(col(GROUP_LIST_COLUMN),
-                                                                                 col("action_good_group_set")) 
+                                                                                 col("action_good_group_set"))
                                                        & ~col(GROUP_LIST_COLUMN).contains("_bad_group"))
     print("good group")
     action_good_group_df.show()
