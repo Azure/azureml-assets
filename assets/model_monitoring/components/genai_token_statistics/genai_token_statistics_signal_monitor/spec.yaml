@@ -4,7 +4,7 @@ type: pipeline
 name: genai_token_statistics_signal_monitor
 display_name: GenAI Token Statistics - Signal Monitor
 description: Computes the token and cost metrics over LLM outputs.
-version: 0.0.2
+version: 0.0.3
 is_deterministic: true
 inputs:
   monitor_name:
