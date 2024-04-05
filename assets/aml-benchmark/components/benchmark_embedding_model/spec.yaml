@@ -10,7 +10,7 @@ inputs:
   endpoint_url:
     type: string
     optional: True
-    description: For AOAI, the endpoint_url. For OAI, this will be ignored.
+    description: For AOAI, the base endpoint url. For OAI, this will be ignored.
   deployment_type:
     type: string
     optional: False
@@ -74,6 +74,6 @@ command: >-
   $[[--tasks '${{inputs.tasks}}']]
   $[[--task_types '${{inputs.task_types}}']]
   $[[--task_langs '${{inputs.task_langs}}']]
-  $[[--preset '${{inputs.preset}}']]
+  --preset ${{inputs.preset}}
   $[[--batch_size ${{inputs.batch_size}}]]
   --output_dir ${{outputs.result}}

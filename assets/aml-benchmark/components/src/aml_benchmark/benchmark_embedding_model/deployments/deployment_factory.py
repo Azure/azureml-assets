@@ -48,7 +48,7 @@ class DeploymentFactory:
                 api_key=_api_key,
             )
         else:
-            mssg = "Unknown deployment type. Choose from one of the deployment types: `AOAI`, `OAI`, `OSS`."
+            mssg = f"Unknown deployment type. Allowed deployment types: {[member.value for member in DeploymentType]}"
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )

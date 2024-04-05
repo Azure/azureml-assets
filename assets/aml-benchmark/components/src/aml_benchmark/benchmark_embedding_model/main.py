@@ -28,7 +28,7 @@ def parse_args() -> argparse.Namespace:
         "--endpoint_url",
         type=str,
         required=False,
-        help="For AOAI, the endpoint_url. For OAI, this will be ignored.",
+        help="For AOAI, the base endpoint url. For OAI, this will be ignored.",
         default=None,
     )
     parser.add_argument(
@@ -108,7 +108,7 @@ def _validate_args(
     task_types: Optional[str] = None,
     task_langs: Optional[str] = None,
     preset: Optional[str] = None,
-) -> Tuple[Optional[List[str]], Optional[List[str]], Optional[List[str]]]:
+) -> Tuple[Optional[List[str]], Optional[List[str]], Optional[List[str]], Optional[str]]:
     """
     Validate arguments.
     
@@ -117,7 +117,7 @@ def _validate_args(
     :param task_types: Comma separated string denoting the task type to benchmark the model on.
     :param task_langs: Comma separated string denoting the task languages to benchmark the model on.
     :param preset: Choose from one of the presets for benchmarking: `None` or `mteb_main_en`.
-    :return: Tuple of tasks, task_types, task_langs.
+    :return: Tuple of tasks, task_types, task_langs, preset.
     """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -134,7 +134,13 @@ def _validate_args(
             tasks = MTEB_MAIN_EN
             task_langs = ["en"]
             task_types = None
+        else:
+            mssg = f"Invalid preset provided: {preset}. Valid presets: {[member.value for member in Preset]}."
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
     else:
+        preset = None
         if tasks and task_types:
             logger.warning("Both `tasks` and `task_types` are provided. `task_types` will be ignored.")
             task_types = None
@@ -160,7 +166,7 @@ def _validate_args(
         if task_langs:
             task_langs = [lang.strip() for lang in task_langs.split(",")]
     
-    return tasks, task_types, task_langs
+    return tasks, task_types, task_langs, preset
 
 
 @swallow_all_exceptions(logger)
@@ -185,7 +191,7 @@ def main(
     :param deployment_type: Choose from one of the deployment types: `AOAI`, `OAI`.
     :param deployment_name: For AOAI, the deployment name. For OAI, the model name.
     :param connections_name: Used for authenticating endpoint.
-    :param endpoint_url: For AOAI, the endpoint_url. For OAI, this will be ignored.
+    :param endpoint_url: For AOAI, the base endpoint url. For OAI, this will be ignored.
     :param tasks: Comma separated string denoting the tasks to benchmark the model on.
     :param task_types: Comma separated string denoting the task type to benchmark the model on. Choose from the
         following task types: classification, clustering, pair_classification, reranking, retrieval, sts, 
@@ -197,7 +203,7 @@ def main(
     :return: None
     """
     # Argument Validation
-    validated_tasks, validated_task_types, validated_task_langs = _validate_args(
+    validated_tasks, validated_task_types, validated_task_langs, preset = _validate_args(
         output_dir=output_dir,
         tasks=tasks,
         task_types=task_types,
@@ -224,9 +230,9 @@ def main(
 
     # Log params 
     log_mlflow_params(
-        tasks=validated_tasks,
-        task_types=validated_task_types,
-        task_langs=validated_task_langs,
+        tasks=",".join(validated_tasks) if validated_tasks and not preset else None,
+        task_types=",".join(validated_task_types) if validated_task_types and not preset else None,
+        task_langs=",".join(validated_task_langs) if validated_task_langs and not preset else None,
         preset=preset,
         batch_size=batch_size,
     )
