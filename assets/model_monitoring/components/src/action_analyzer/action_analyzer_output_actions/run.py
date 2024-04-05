@@ -165,9 +165,10 @@ def run():
         args.data_with_action_metric_score, "data_with_action_metric_score"
     )
 
-    # get the group with highest confidence score
+    # get the group with highest confidence score (except the default group)
     w = Window.partitionBy(INDEX_ID_COLUMN)
-    max_conf_df = action_data_df.withColumn("max_confidence", max(CONFIDENCE_SCORE_COLUMN).over(w))\
+    max_conf_df = action_data_df.filter(~col(BAD_GROUP_COLUMN).endswith("_default"))\
+                                .withColumn("max_confidence", max(CONFIDENCE_SCORE_COLUMN).over(w))\
                                 .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence'))\
                                 .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
                                 .select(INDEX_ID_COLUMN, "most_significant_group")
@@ -186,7 +187,8 @@ def run():
     action_bad_group_df.show()
 
     action_good_group_df = action_with_group_df.filter(is_query_in_action_sample(col(GROUP_LIST_COLUMN),
-                                                                                 col("action_good_group_set")))
+                                                                                 col("action_good_group_set")) 
+                                                       & ~col(GROUP_LIST_COLUMN).contains("_bad_group"))
     print("good group")
     action_good_group_df.show()
 
