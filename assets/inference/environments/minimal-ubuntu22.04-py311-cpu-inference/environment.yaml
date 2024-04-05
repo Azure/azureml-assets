@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/minimal-py39-inference
+  name: azureml/curated/minimal-py311-inference
   os: linux
   context:
     dir: context

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the minimal 20.04 py39 cpu environment."""
+"""Tests running a sample job in the minimal 22.04 py311 cpu environment."""
 import os
 import time
 from pathlib import Path
@@ -17,7 +17,7 @@ STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
 def test_minimal_cpu_inference():
-    """Tests a sample job using minimal 20.04 py39 cpu as the environment."""
+    """Tests a sample job using minimal 22.04 py311 cpu as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -33,7 +33,7 @@ def test_minimal_cpu_inference():
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name="minimal_cpu_inference",
-        description="minimal 20.04 py39 cpu inference environment created from a Docker context.",
+        description="minimal 22.04 py311 cpu inference environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
@@ -47,7 +47,7 @@ def test_minimal_cpu_inference():
         environment=f"{env_name}@latest",
         compute=os.environ.get("cpu_cluster"),
         display_name="minimal-cpu-inference-example",
-        description="A test run of the minimal 20.04 py39 cpu inference curated environment",
+        description="A test run of the minimal 22.04 py311 cpu inference curated environment",
         experiment_name="minimalCPUInferenceExperiment"
     )
 

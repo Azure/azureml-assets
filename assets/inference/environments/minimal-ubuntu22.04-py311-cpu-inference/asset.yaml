@@ -1,4 +1,4 @@
-name: minimal-py39-inference
+name: minimal-py311-inference
 
 version: auto
 type: environment
