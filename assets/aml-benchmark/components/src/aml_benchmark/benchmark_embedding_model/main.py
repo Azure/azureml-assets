@@ -242,6 +242,7 @@ if __name__ == "__main__":
     args = parse_args()
     main(
         endpoint_url=args.endpoint_url,
+        deployment_type=args.deployment_type,
         deployment_name=args.deployment_name,
         connections_name=args.connections_name,
         tasks=args.tasks,
