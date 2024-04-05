@@ -6,7 +6,7 @@
 import argparse
 import os
 
-from pyspark.sql.types import IntegerType, StructField, StructType, StringType
+from pyspark.sql.types import StructField, StructType, StringType
 from genai_token_statistics_compute_metrics.metrics_processor import MetricsProcessor
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark_with_error,
