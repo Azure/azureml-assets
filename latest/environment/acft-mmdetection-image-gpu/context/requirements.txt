@@ -1,4 +1,4 @@
-azureml-metrics[image]~=0.0.48
+azureml-metrics[image]~=0.0.48.post2
 azureml-acft-accelerator==0.0.48.post1
 azureml-acft-common-components[image]~=0.0.48.post1
 azureml-acft-image-components==0.0.48.post1

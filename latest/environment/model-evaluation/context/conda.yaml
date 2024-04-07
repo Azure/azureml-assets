@@ -20,7 +20,7 @@ dependencies:
   - azureml-telemetry==1.55.0
   - azureml-acft-common-components[image]==0.0.48.post1
   - azureml-evaluate-mlflow==0.0.48
-  - azureml-metrics[all]==0.0.48
+  - azureml-metrics[all]==0.0.48.post2
   - xgboost==1.6.1
   - statsmodels==0.11.0
   - lightgbm==3.2.1
