@@ -4,7 +4,7 @@ type: command
 name: benchmark_embedding_model
 display_name: Benchmark Embedding Model
 description: Component for benchmarking an embedding model via MTEB.
-version: 0.0.0.1
+version: 0.0.1
 
 inputs:
   endpoint_url:
@@ -36,7 +36,7 @@ inputs:
     description: >-
       Comma separated string denoting the task type to benchmark the model on. Choose from
       the following task types: BitextMining, Classification, Clustering, PairClassification, Reranking,
-      Retrieval, STS, Summarization
+      Retrieval, STS, Summarization.
   task_langs:
     type: string
     optional: True
@@ -59,9 +59,9 @@ inputs:
     min: 1
 
 outputs:
-  result:
+  metrics:
     type: uri_folder
-    description: Directory where the benchmark result will be saved.
+    description: Directory where the benchmark metrics will be saved.
 
 code: ../src
 environment: azureml://registries/azureml-preview-test1/environments/benchmark-embedding-model/versions/0.1
@@ -76,4 +76,4 @@ command: >-
   $[[--task_langs '${{inputs.task_langs}}']]
   --preset ${{inputs.preset}}
   $[[--batch_size ${{inputs.batch_size}}]]
-  --output_dir ${{outputs.result}}
+  --output_metrics_dir ${{outputs.metrics}}

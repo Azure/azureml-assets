@@ -52,5 +52,3 @@ class DeploymentFactory:
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
-        
-        

@@ -94,7 +94,7 @@ def parse_args() -> argparse.Namespace:
         default=32,
     )
     parser.add_argument(
-        "--output_dir", type=str, required=True, help="Directory where the benchmark result will be saved."
+        "--output_metrics_dir", type=str, required=True, help="Directory where the benchmark metrics will be saved."
     )
 
     args, _ = parser.parse_known_args()
@@ -103,7 +103,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def _validate_args(
-    output_dir: str,
+    output_metrics_dir: str,
     tasks: Optional[str] = None,
     task_types: Optional[str] = None,
     task_langs: Optional[str] = None,
@@ -111,16 +111,16 @@ def _validate_args(
 ) -> Tuple[Optional[List[str]], Optional[List[str]], Optional[List[str]], Optional[str]]:
     """
     Validate arguments.
-    
-    :param output_dir: Directory where the benchmark result will be saved.
+
+    :param output_metrics_dir: Directory where the benchmark metrics will be saved.
     :param tasks: Comma separated string denoting the tasks to benchmark the model on.
     :param task_types: Comma separated string denoting the task type to benchmark the model on.
     :param task_langs: Comma separated string denoting the task languages to benchmark the model on.
     :param preset: Choose from one of the presets for benchmarking: `None` or `mteb_main_en`.
     :return: Tuple of tasks, task_types, task_langs, preset.
     """
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if not os.path.exists(output_metrics_dir):
+        os.makedirs(output_metrics_dir)
 
     if not tasks and not task_types and not task_langs and not preset:
         mssg = "Either `tasks` or `task_types` or `task_langs` or `preset` must be supplied."
@@ -165,13 +165,13 @@ def _validate_args(
 
         if task_langs:
             task_langs = [lang.strip() for lang in task_langs.split(",")]
-    
+
     return tasks, task_types, task_langs, preset
 
 
 @swallow_all_exceptions(logger)
 def main(
-    output_dir: str,
+    output_metrics_dir: str,
     deployment_type: str,
     deployment_name: str,
     connections_name: str,
@@ -187,14 +187,14 @@ def main(
 
     Either `tasks` or `task_types` or `task_langs` or `preset` must be supplied.
 
-    :param output_dir: Directory where the benchmark result will be saved.
+    :param output_metrics_dir: Directory where the benchmark metrics will be saved.
     :param deployment_type: Choose from one of the deployment types: `AOAI`, `OAI`.
     :param deployment_name: For AOAI, the deployment name. For OAI, the model name.
     :param connections_name: Used for authenticating endpoint.
     :param endpoint_url: For AOAI, the base endpoint url. For OAI, this will be ignored.
     :param tasks: Comma separated string denoting the tasks to benchmark the model on.
     :param task_types: Comma separated string denoting the task type to benchmark the model on. Choose from the
-        following task types: classification, clustering, pair_classification, reranking, retrieval, sts, 
+        following task types: classification, clustering, pair_classification, reranking, retrieval, sts,
         summarization, all.
     :param task_langs: Comma separated string denoting the task languages to benchmark the model on.
     :param preset: Choose from one of the presets for benchmarking: `None` or `mteb_main_en`. Default is `None`.
@@ -204,7 +204,7 @@ def main(
     """
     # Argument Validation
     validated_tasks, validated_task_types, validated_task_langs, preset = _validate_args(
-        output_dir=output_dir,
+        output_metrics_dir=output_metrics_dir,
         tasks=tasks,
         task_types=task_types,
         task_langs=task_langs,
@@ -225,10 +225,10 @@ def main(
         batch_size=batch_size,
     )
     logger.info("==========Benchmark started.==========")
-    evaluation.run(model=deployment, verbosity=2, output_folder=output_dir)
+    evaluation.run(model=deployment, verbosity=2, output_folder=output_metrics_dir)
     logger.info("==========Benchmark completed.==========")
 
-    # Log params 
+    # Log params
     log_mlflow_params(
         tasks=",".join(validated_tasks) if validated_tasks and not preset else None,
         task_types=",".join(validated_task_types) if validated_task_types and not preset else None,
@@ -250,5 +250,5 @@ if __name__ == "__main__":
         task_langs=args.task_langs,
         preset=args.preset,
         batch_size=args.batch_size,
-        output_dir=args.output_dir,
+        output_metrics_dir=args.output_metrics_dir,
     )
