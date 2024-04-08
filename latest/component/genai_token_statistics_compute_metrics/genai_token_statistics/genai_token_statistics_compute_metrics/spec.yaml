@@ -18,6 +18,9 @@ outputs:
   samples_index:
     type: mltable
     mode: direct
+  token_count:
+    type: mltable
+    mode: direct
 
 code: ../../src/
 entry:
@@ -35,7 +38,7 @@ conf:
   spark.dynamicAllocation.maxExecutors: 4
   spark.synapse.library.python.env: |
     channels:
-      - default
+      - defaults
     dependencies:
       - python=3.8
       - pip:
@@ -48,3 +51,4 @@ args: >-
   --production_dataset ${{inputs.production_dataset}}
   --signal_metrics ${{outputs.signal_metrics}}
   --samples_index ${{outputs.samples_index}}
+  --token_count ${{outputs.token_count}}
