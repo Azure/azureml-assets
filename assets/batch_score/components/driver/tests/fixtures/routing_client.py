@@ -5,22 +5,22 @@
 
 import aiohttp
 import pytest
+from unittest.mock import MagicMock
 
 from src.batch_score.batch_pool.routing.routing_client import RoutingClient
 
 
 @pytest.fixture
-def make_routing_client(make_completion_header_handler):
+def make_routing_client():
     """Mock routing client."""
     def make(service_namespace: str = None,
              target_batch_pool: str = None,
-             header_handler=make_completion_header_handler(),
              request_path: str = None):
         """Make a mock routing client."""
         return RoutingClient(
             service_namespace=service_namespace,
             target_batch_pool=target_batch_pool,
-            header_provider=header_handler,
+            header_provider=MagicMock(),
             request_path=request_path
         )
 

@@ -8,7 +8,7 @@ import json
 from ...aoai.scoring.aoai_scoring_client import AoaiScoringClient
 from ...batch_pool.quota.quota_client import QuotaClient
 from ...batch_pool.routing.routing_client import RoutingClient
-from ...batch_pool.scoring.scoring_client import ScoringClient
+from ...batch_pool.scoring.pool_scoring_client import PoolScoringClient
 
 from ...common.auth.auth_provider_factory import AuthProviderFactory
 from ...common.auth.token_provider import TokenProvider
@@ -17,15 +17,13 @@ from ...common.configuration.configuration import Configuration
 from ...common.configuration.metadata import Metadata
 from ...common.header_providers.header_provider import HeaderProvider
 from ...common.header_providers.header_provider_factory import HeaderProviderFactory
+from ...common.scoring.scoring_client import ScoringClient
 from ...common.scoring.tally_failed_request_handler import TallyFailedRequestHandler
 from ...common.telemetry.logging_utils import (
     get_logger,
     set_batch_pool,
     set_quota_audience,
 )
-
-from ...header_handlers.mir_and_batch_pool_header_handler_factory import MirAndBatchPoolHeaderHandlerFactory
-from ...header_handlers.mir_endpoint_v2_header_handler import MIREndpointV2HeaderHandler
 
 from ...mir.scoring.mir_scoring_client import MirScoringClient
 
@@ -39,7 +37,7 @@ class ScoringClientFactory:
         metadata: Metadata,
         token_provider: TokenProvider,
         routing_client: RoutingClient,
-    ) -> "AoaiScoringClient | MirScoringClient | ScoringClient":
+    ) -> ScoringClient:
         """Get the scoring client for the given configuration."""
         auth_provider = AuthProviderFactory().get_auth_provider(configuration)
         additional_headers = self._get_additional_headers(configuration)
@@ -49,17 +47,17 @@ class ScoringClientFactory:
             metadata=metadata,
             token_provider=token_provider,
             additional_headers=additional_headers)
-
         tally_handler = _setup_tally_handler(configuration)
+        endpoint_type = configuration.get_endpoint_type()
 
-        if (configuration.is_aoai_endpoint() or configuration.is_serverless_endpoint()):
+        if endpoint_type in [EndpointType.AOAI, EndpointType.Serverless]:
             get_logger().info("Using LLM scoring client.")
             return _setup_aoai_scoring_client(
                 configuration=configuration,
                 header_provider=header_provider,
                 tally_handler=tally_handler)
 
-        if configuration.get_endpoint_type() == EndpointType.BatchPool:
+        if endpoint_type == EndpointType.BatchPool:
             get_logger().info("Using batch pool scoring client.")
             return _setup_pool_scoring_client(
                 configuration=configuration,
@@ -94,7 +92,7 @@ class ScoringClientFactory:
 def _setup_aoai_scoring_client(
         configuration: Configuration,
         header_provider: HeaderProvider,
-        tally_handler: TallyFailedRequestHandler) -> AoaiScoringClient:
+        tally_handler: TallyFailedRequestHandler) -> ScoringClient:
     """Create an instance of an AOAI scoring client."""
     scoring_client = AoaiScoringClient(
         header_provider=header_provider,
@@ -134,29 +132,17 @@ def _setup_pool_scoring_client(
 
     The client scores against a pool of MIR endpoints.
     """
-    quota_client = _setup_quota_client(configuration, token_provider)
+    def create_mir_scoring_client(scoring_url: str) -> MirScoringClient:
+        return MirScoringClient(
+            header_provider=header_provider,
+            configuration=configuration,
+            tally_handler=tally_handler,
+            scoring_url=scoring_url)
 
-    return ScoringClient(
-        header_provider=header_provider,
-        quota_client=quota_client,
-        routing_client=routing_client,
-        scoring_url=configuration.scoring_url,
-        tally_handler=tally_handler)
-
-
-def _setup_header_handler(configuration, metadata, token_provider, connection_name):
-    """Get the auth token from workspace connection and add that to the header.
-
-    Additionally, add the 'Content-Type' header. The presence of workspace connection also
-    signifies that this can be any MIR endpoint, so this will not add OAI specific headers.
-    """
-    if connection_name is not None:
-        return MIREndpointV2HeaderHandler(connection_name, configuration.additional_headers)
-
-    return MirAndBatchPoolHeaderHandlerFactory().get_header_handler(
-        configuration=configuration,
-        metadata=metadata,
-        token_provider=token_provider)
+    return PoolScoringClient(
+        create_mir_scoring_client=create_mir_scoring_client,
+        quota_client=_setup_quota_client(configuration, token_provider),
+        routing_client=routing_client)
 
 
 def _setup_quota_client(configuration, token_provider):

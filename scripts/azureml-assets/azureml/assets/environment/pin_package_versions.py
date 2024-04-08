@@ -16,7 +16,7 @@ from typing import List
 from azureml.assets.util import logger
 
 # Handles {{latest-pypi-version}} and {{latest-pypi-version:flags}}
-LATEST_PYPI_VERSION = re.compile(r"([^\"'\s]+?)(?:\[.+\])?([=~]=)\{\{latest-pypi-version(?::(.+))?\}\}")
+LATEST_PYPI_VERSION = re.compile(r"([^\"'\s]+?)(?:(\[.+\]))?([=~]=)\{\{latest-pypi-version(?::(.+))?\}\}")
 LATEST_PYPY_VERSION_FLAGS_PRE = "pre"
 PYPI_URL = "https://pypi.org/simple"
 
@@ -35,7 +35,7 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
             search_scope=SearchScope([], index_urls, False),
         )
     selection_prefs = SelectionPreferences(
-        allow_yanked=True,
+        allow_yanked=False,
         ignore_requires_python=True,
     )
     try:
@@ -101,14 +101,15 @@ def pin_packages(contents: str) -> str:
         if not match:
             break
         package = match.group(1)
-        selector = match.group(2)
-        flags = match.group(3)
+        extras = match.group(2) or ""
+        selector = match.group(3)
+        flags = match.group(4)
         include_pre = True if flags is not None and LATEST_PYPY_VERSION_FLAGS_PRE in flags else False
 
         logger.log_debug(f"Looking up latest version of {package}")
         version = get_latest_package_version(package, package_finder, include_pre)
         logger.log_debug(f"Latest version of {package} is {version}")
-        contents = contents[:match.start()] + f"{package}{selector}{version}" + contents[match.end():]
+        contents = contents[:match.start()] + f"{package}{extras}{selector}{version}" + contents[match.end():]
 
     return contents
 

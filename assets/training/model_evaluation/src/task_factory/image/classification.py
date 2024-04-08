@@ -8,6 +8,7 @@ import pandas as pd
 
 from typing import Dict, List, Union
 
+from constants import MODEL_FLAVOR
 from task_factory.tabular.classification import TabularClassifier
 from exceptions import ScoringException
 from logging_utilities import get_logger
@@ -75,10 +76,13 @@ class ImageMulticlassClassifier(TabularClassifier):
         if not self.is_hf:
             return op_df
 
-        probs, labels = _convert_predictions(op_df["probs"]), _convert_predictions(op_df["labels"])
+        if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
+            predicted_labels = [item["label"] for item in op_df[0]]
+        else:
+            probs, labels = _convert_predictions(op_df["probs"]), _convert_predictions(op_df["labels"])
+            label_indexes = [np.argmax(np.array(prob)) for prob in probs]
+            predicted_labels = [label_list[index] for index, label_list in zip(label_indexes, labels)]
 
-        label_indexes = [np.argmax(np.array(prob)) for prob in probs]
-        predicted_labels = [label_list[index] for index, label_list in zip(label_indexes, labels)]
         y_pred = _convert_predictions(predicted_labels)
         return y_pred
 
@@ -104,7 +108,16 @@ class ImageMulticlassClassifier(TabularClassifier):
             return None
 
         op_df = super().predict(x_test, **kwargs)
-        probs = _convert_predictions(op_df["probs"])
+
+        if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
+            y_pred = _convert_predictions(op_df)
+            labels = sorted(set([item["label"] for pred in y_pred for item in pred]))
+            probs = [[0]*len(labels) for _ in range(len(y_pred))]
+            for line_idx, pred in enumerate(y_pred):
+                for ele in pred:
+                    probs[line_idx][labels.index(ele["label"])] = ele["score"]
+        else:
+            probs = _convert_predictions(op_df)
         # return a list of dictionary
         return [{str(i): prob_instance for i, prob_instance in enumerate(prob_instance)} for prob_instance in probs]
 
@@ -132,18 +145,22 @@ class ImageMultilabelClassifier(TabularClassifier):
                 raise ScoringException(ML_OUTPUT_SIGNATURE_ERROR_MESSAGE) from ex
         if not self.is_hf:
             return y_pred
-
-        pred_probs, pred_labels = _convert_predictions(y_pred["probs"]), _convert_predictions(y_pred["labels"])
         threshold = kwargs.get("threshold", 0.5)
+        if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
+            y_pred = _convert_predictions(y_pred)
+            predicted_labels = [[item["label"] for item in pred if item["score"] > threshold] for pred in y_pred]
+        else:
+            pred_probs, pred_labels = _convert_predictions(y_pred["probs"]), _convert_predictions(y_pred["labels"])
 
-        predicted_labels = []
-        for probs, labels in zip(pred_probs, pred_labels):
-            # Iterate through each image's predicted probabilities.
-            image_labels = []
-            for index, prob in enumerate(probs):
-                if prob >= threshold:
-                    image_labels.append(labels[index])
-            predicted_labels.append(image_labels)
+            predicted_labels = []
+            for probs, labels in zip(pred_probs, pred_labels):
+                # Iterate through each image's predicted probabilities.
+                image_labels = []
+                for index, prob in enumerate(probs):
+                    if prob >= threshold:
+                        image_labels.append(labels[index])
+                predicted_labels.append(image_labels)
+
         return predicted_labels
 
     def predict_proba(self, x_test, **kwargs) -> List[Dict[str, float]]:
@@ -167,7 +184,15 @@ class ImageMultilabelClassifier(TabularClassifier):
             return None
 
         op_df = super().predict(x_test, **kwargs)
-        pred_probs = _convert_predictions(op_df["probs"])
+        if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
+            y_pred = _convert_predictions(op_df)
+            labels = sorted(set([item["label"] for pred in y_pred for item in pred]))
+            pred_probs = [[0]*len(labels) for _ in range(len(y_pred))]
+            for line_idx, pred in enumerate(y_pred):
+                for ele in pred:
+                    pred_probs[line_idx][labels.index(ele["label"])] = ele["score"]
+        else:
+            pred_probs = _convert_predictions(op_df["probs"])
 
         # return a list of dictionary
         pred_probs_in_dict = [

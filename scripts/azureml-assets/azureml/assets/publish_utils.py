@@ -139,7 +139,7 @@ def validate_and_prepare_pipeline_component(
             return False
 
         logger.print(
-            "component details:\n"
+            "Parsed component asset URI details:\n"
             + f"name: {name}\n"
             + f"version: {version}\n"
             + f"label: {label}\n"
@@ -153,13 +153,17 @@ def validate_and_prepare_pipeline_component(
                 "and publishing will fail if the release process does not have read access to it."
             )
 
+        # If workspace asset URI is used, use registry we're creating the component in
+        if not registry:
+            logger.print(f"Workspace asset URI was used, using component from registry {registry}")
+            registry = registry_name
+
         # Check if component's env exists
         final_version = util.apply_version_template(version, version_template)
-        registry_name = registry or registry_name
         asset_details = None
         for ver in [version, final_version]:
             if (asset_details := get_asset_details(
-                AssetType.COMPONENT.value, name, ver, registry_name
+                AssetType.COMPONENT.value, name, ver, registry
             )) is not None:
                 break
 
@@ -386,6 +390,7 @@ def get_asset_details(
     registry_name: str,
 ) -> Dict:
     """Get asset details."""
+    logger.print(f"Getting asset details for {asset_type} {asset_name} {asset_version} in {registry_name}")
     cmd = [
         "az", "ml", asset_type, "show",
         "--name", asset_name,

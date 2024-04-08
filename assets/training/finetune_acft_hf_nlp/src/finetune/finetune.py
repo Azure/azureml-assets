@@ -148,6 +148,7 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.GPT_NEOX,  # dolly
     HfModelTypes.FALCON,
     HfModelTypes.REFINEDWEBMODEL,  # falcon
+    HfModelTypes.MIXTRAL,
 ]
 
 
@@ -156,6 +157,7 @@ QLORA_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.REFINEDWEBMODEL,
     HfModelTypes.FALCON,
     REFINED_WEB,
+    HfModelTypes.MIXTRAL,
 ]
 
 
@@ -182,7 +184,8 @@ DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_TASK
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
-    MISTRAL
+    HfModelTypes.MISTRAL,
+    HfModelTypes.MIXTRAL,
 ]
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
@@ -192,13 +195,15 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTE
 FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
-    MISTRAL,
+    HfModelTypes.MISTRAL,
+    HfModelTypes.MIXTRAL,
 ]
 
 FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
-    MISTRAL,
+    HfModelTypes.MISTRAL,
+    HfModelTypes.MIXTRAL,
 ]
 
 
@@ -690,6 +695,14 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
                     setattr(args, key, value)
 
 
+def _set_hf_trainer_args_from_finetune_config(args: Namespace, finetune_config: Dict[str, Any]):
+    """Read :param `hf_trainer_args` from finetune config and set them to args."""
+    hf_trainer_args = finetune_config.get("hf_trainer_args", {})
+    for arg_name, arg_value in hf_trainer_args.items():
+        setattr(args, arg_name, arg_value)
+        logger.info(f"Setting {arg_name} to {arg_value}")
+
+
 def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
     """Validate the deepspeed zero3 config file.
 
@@ -815,6 +828,16 @@ def enable_ds3_model_specific_args(args: Namespace):
     pass
 
 
+def set_16bit_precision(args: Namespace):
+    """Set fp16/bf16 in args based on cuda device support."""
+    if torch.cuda.is_bf16_supported():
+        args.bf16 = True
+        logger.info("Setting bfloat16 to True.")
+    else:
+        args.fp16 = True
+        logger.info("Setting float16 to True.")
+
+
 def set_flash_attention(args: Namespace):
     """Set Flash Attention related parameters."""
     flash_attention_load_model_kwargs = {}
@@ -844,6 +867,11 @@ def set_flash_attention(args: Namespace):
             setattr(args, "apply_flash_attention", False)
             setattr(args, "flash_attention_version", -1)
         if args.flash_attention_version != -1:
+            # Set 16-bit precision value in Quantization case for Flash Attention to work.
+            # Currently will fail with error `RuntimeError: FlashAttention only support fp16 and bf16 data type`.
+            # When fp16/bf16 is set the attention q,k,v layers are autocasted to respective precision from `uint8`.
+            if (args.finetune_in_4bit or args.finetune_in_8bit) and not (args.fp16 or args.bf16):
+                set_16bit_precision(args)
             # Flash attention is supported only when model is loaded in respective supported precision
             if args.bf16:
                 flash_attention_load_model_kwargs.update({"torch_dtype": torch.bfloat16})
@@ -964,6 +992,12 @@ def finetune(args: Namespace):
             if "lora_target_modules" in ft_config:
                 logger.info(f'Setting lora_target_modules to: {ft_config.get("lora_target_modules")}')
                 setattr(args, "lora_target_modules", ft_config.get("lora_target_modules"))
+            # Read leaf modules for MoE models from finetune config
+            if "leaf_modules_of_moe_models" in ft_config:
+                logger.info(f'Setting leaf_modules_of_moe_models to: {ft_config.get("leaf_modules_of_moe_models")}')
+                setattr(args, "leaf_modules_of_moe_models", ft_config.get("leaf_modules_of_moe_models"))
+            # Reading hf trainer args from finetune config
+            _set_hf_trainer_args_from_finetune_config(args, ft_config)
     else:
         logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
         setattr(args, "finetune_config", {})
@@ -1077,12 +1111,7 @@ def finetune(args: Namespace):
     args.output_dir = args.pytorch_model_folder
     Path(args.output_dir).mkdir(exist_ok=True, parents=True)
     if args.precision == 16:
-        if torch.cuda.is_bf16_supported():
-            args.bf16 = True
-            logger.info("Setting bfloat16 to True.")
-        else:
-            args.fp16 = True
-            logger.info("Setting float16 to True.")
+        set_16bit_precision(args)
     args.finetune_in_8bit = bool(args.precision == 8)  # 8 bit finetune
     args.finetune_in_4bit = bool(args.precision == 4)  # 4 bit finetune
 

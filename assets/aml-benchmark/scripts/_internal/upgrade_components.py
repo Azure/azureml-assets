@@ -27,6 +27,7 @@ AML_BENCH_DIR = os.path.dirname(
 )
 REG_ML_CLIENT = MLClient(credential=DefaultAzureCredential(), registry_name="azureml")
 AVOID_COMPONENT_FOLDERS = {"batch_resource_manager", "batch_benchmark_inference_claude"}
+FIRST_VERSION = "0.0.1"
 
 
 def _get_all_components_spec() -> List[str]:
@@ -59,6 +60,14 @@ def _get_bumped_version(version: str, increment: bool = True) -> str:
     return ".".join(map(str, version_arr))
 
 
+def _is_aml_benchmark_owner(component_name: str) -> bool:
+    """Check if the component is owned by aml-benchmark."""
+    for _, dirs, _ in os.walk(os.path.join(AML_BENCH_DIR, "components")):
+        if component_name in dirs:
+            return True
+    return False
+
+
 def _get_asset_latest_version(
     asset_name: str,
     asset_type: Union[AzureMLResourceType.COMPONENT, AzureMLResourceType.ENVIRONMENT],
@@ -84,8 +93,12 @@ def __replace_pipeline_comp_job_version(match: re.Match) -> str:
     )
     if latest_version is None:
         new_version = match.group(2)
+        new_version = new_version if new_version is not None else FIRST_VERSION
     else:
-        new_version = _get_bumped_version(latest_version)
+        if _is_aml_benchmark_owner(component_name):
+            new_version = _get_bumped_version(latest_version)
+        else:
+            new_version = latest_version
     return f"component: {component_name_with_registry}:{new_version}"
 
 
@@ -127,7 +140,7 @@ def _upgrade_component_env(spec: Dict[str, Any], spec_str: str, env_version: str
 
     elif type == NodeType.PIPELINE:
         spec_str = re.sub(
-            pattern=r"component: (\S+:\S+):(\d+\.\d+\.\d+)",
+            pattern=r"component: ([^:@\s]+:[^:@\s]+)(?::(\d+\.\d+\.\d+)|@latest)?",
             repl=__replace_pipeline_comp_job_version,
             string=spec_str,
         )
@@ -162,7 +175,7 @@ def _upgrade_component(
             asset_type=AzureMLResourceType.COMPONENT,
         )
         if latest_version is None:
-            new_version = spec["version"]
+            new_version = FIRST_VERSION
         else:
             new_version = _get_bumped_version(latest_version)
         spec["version"] = new_version
@@ -179,6 +192,21 @@ def _upgrade_component(
         is_error = True
         error = str(e)
     return is_error, error, component_path, name
+
+
+def _upgrade_sdk_version() -> None:
+    """Upgrade SDK version."""
+    sdk_setup_path = os.path.join(AML_BENCH_DIR, "components", "src", "setup.py")
+    with open(sdk_setup_path, "r") as file:
+        setup_str = file.read()
+    curr_version = re.search(pattern=r"version=\"\d+\.\d+\"", string=setup_str).group().split('"')[1]
+    setup_str = re.sub(
+        pattern=r"version=\"\d+\.\d+\"",
+        repl=f"version=\"{_get_bumped_version(curr_version)}\"",
+        string=setup_str
+    )
+    with open(sdk_setup_path, "w") as file:
+        file.write(setup_str)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -222,6 +250,9 @@ def main(env_version: str = "latest") -> None:
                 total=len(components),
             )
         )
+
+    # upgrade SDK version from existing version to the bumped version
+    _upgrade_sdk_version()
 
     # check for errors
     error_count = 0

@@ -35,6 +35,7 @@ class ArgumentLiterals:
     CONFIG_STR = "config_str"
     CONFIG = "config"
 
+    EXTRA_Y_TEST_COLS = "extra_y_test_cols"
     GROUND_TRUTHS = "ground_truths"
     GROUND_TRUTHS_COLUMN_NAME = "ground_truths_column_name"
     PREDICTIONS = "predictions"
@@ -201,7 +202,7 @@ class TelemetryConstants:
     """Telemetry Constants."""
 
     COMPONENT_NAME = "model_evaluation"
-    COMPONENT_DEFAULT_VERSION = "0.0.21"
+    COMPONENT_DEFAULT_VERSION = "0.0.23"
 
     INITIALISING_RUNNER = "initialising_runner"
     VALIDATION_NAME = "argument_validation"
@@ -235,6 +236,7 @@ class ExceptionLiterals:
     DATA_LOADING_TARGET = "AzureML Model Evaluation Data Loading"
     ARGS_TARGET = "AzureML Model Evaluation Arguments Validation"
     MODEL_LOADER_TARGET = "AzureML Model Evaluation Model Loading"
+    MODEL_VALIDATION_TARGET = "AzureML Model Evaluation Model Validation"
     DATA_SAVING_TARGET = "AzureML Model Evaluation Data Saving"
 
 
@@ -299,6 +301,15 @@ class ErrorStrings:
     # Logging Related
     MetricLoggingError = "Failed to log metric {metric_name} due to [{error}]"
     SavingOutputError = "Failed to save output due to [{error}]"
+
+    TorchErrorMessage = "Model prediction Failed.\nPossible Reason:\n" \
+                        "1. Your input text exceeds max length of model.\n" \
+                        "\t\tYou can either keep truncation=True in tokenizer while logging model.\n" \
+                        "\t\tOr you can pass tokenizer_config in evaluation_config.\n" \
+                        "2. Your tokenizer's vocab size doesn't match with model's vocab size.\n" \
+                        "\t\tTo fix this check your model/tokenizer config.\n" \
+                        "3. If it is Cuda Assertion Error, check your test data." \
+                        "Whether that input can be passed directly to model or not."
 
 
 class ForecastingConfigContract:

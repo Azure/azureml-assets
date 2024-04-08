@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
 name: feature_attribution_drift_compute_metrics
-version: 0.3.11
+version: 0.3.14
 display_name: Feature Attribution Drift - Compute Metrics
 is_deterministic: true
 description: Feature attribution drift using model monitoring.
@@ -25,7 +25,6 @@ outputs:
     mode: direct
 
 conf:
-  spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 4
   spark.driver.memory: 28g
   spark.executor.cores: 4
@@ -34,6 +33,7 @@ conf:
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4
+  spark.aml.internal.system.job: True
   spark.synapse.library.python.env: |
     channels:
     - defaults

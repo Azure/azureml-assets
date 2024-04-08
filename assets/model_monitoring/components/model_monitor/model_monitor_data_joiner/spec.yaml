@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_data_joiner
 display_name: Model Monitor - Data Joiner
 description: Joins two data assets on the given columns for model monitor.
-version: 0.3.10
+version: 0.3.13
 is_deterministic: true
 
 code: ../../src/
@@ -36,6 +36,7 @@ conf:
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4
+  spark.aml.internal.system.job: True
   spark.synapse.library.python.env: |
     channels:
       - defaults

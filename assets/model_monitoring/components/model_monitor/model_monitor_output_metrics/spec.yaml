@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_output_metrics
 display_name: Model Monitor - Output Metrics
 description: Output the computed model monitor metrics to the default datastore.
-version: 0.3.14
+version: 0.3.17
 is_deterministic: true
 
 code: ../../src/
@@ -49,6 +49,7 @@ conf:
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4
+  spark.aml.internal.system.job: True
   spark.synapse.library.python.env: |
     channels:
       - defaults

@@ -8,10 +8,6 @@ import os
 import sys
 import shutil
 import pytest
-import zipfile
-import time
-import random
-import string
 import uuid
 import pandas as pd
 import pyarrow as pa
@@ -33,41 +29,10 @@ from shared_utilities import io_utils
 from shared_utilities.momo_exceptions import (
     DataNotFoundError, InvalidInputError)
 import spark_mltable  # noqa, to enable spark.read.mltable
-from spark_mltable import SPARK_ZIP_PATH
 
 
 QUESTION = 'question'
 EVALUATION = 'evaluation'
-
-
-@pytest.fixture(scope="session")
-def gsq_zip_test_setup():
-    """Zip files in module_path to src.zip."""
-    momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
-    module_path = os.path.join(momo_work_dir, "src")
-    # zip files in module_path to src.zip
-    s = string.ascii_lowercase + string.digits
-    rand_str = '_' + ''.join(random.sample(s, 5))
-    time_str = time.strftime("%Y%m%d-%H%M%S") + rand_str
-    zip_path = os.path.join(module_path, f"src_{time_str}.zip")
-
-    zf = zipfile.ZipFile(zip_path, "w")
-    for dirname, subdirs, files in os.walk(module_path):
-        for filename in files:
-            abs_filepath = os.path.join(dirname, filename)
-            rel_filepath = os.path.relpath(abs_filepath, start=module_path)
-            print("zipping file:", rel_filepath)
-            zf.write(abs_filepath, arcname=rel_filepath)
-    zf.close()
-    # add files to zip folder
-    os.environ[SPARK_ZIP_PATH] = zip_path
-    print("zip path set in gsq_preprocessor_test_setup: ", zip_path)
-
-    yield
-    # remove zip file
-    os.remove(zip_path)
-    # remove zip path from environment
-    os.environ.pop(SPARK_ZIP_PATH, None)
 
 
 @pytest.fixture(scope="module")
@@ -127,13 +92,20 @@ class TestGSQHistogram:
         expected_format = f"https://{valid_url}/openai/deployments/{model}?api-version={version}"
         assert formatted_url == expected_format
 
-    def test_gsq_apply_annotation(self, gsq_zip_test_setup,
+    def test_gsq_apply_annotation(self, code_zip_test_setup,
                                   gsq_preprocessor_test_setup):
         """Test apply_annotation method in GSQ component."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
         call_apply_annotation(",".join(metric_names))
 
-    def test_gsq_invalid_metrics(self, gsq_zip_test_setup,
+    def test_gsq_apply_annotation_all_valid(self, code_zip_test_setup,
+                                            gsq_preprocessor_test_setup):
+        """Test passing low threshold so that there is no violation table."""
+        metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
+        threshold_args = {threshold: 1 for threshold in THRESHOLD_PARAMS}
+        call_apply_annotation(",".join(metric_names), threshold_args=threshold_args)
+
+    def test_gsq_invalid_metrics(self, code_zip_test_setup,
                                  gsq_preprocessor_test_setup):
         """Test passing invalid metrics."""
         metric_names = ['some_invalid_metric_name', 'another_invalid_metric_name']
@@ -141,7 +113,7 @@ class TestGSQHistogram:
         with pytest.raises(InvalidInputError):
             call_apply_annotation(joined_metric_names)
 
-    def test_gsq_production_data_missing_required_cols(self, gsq_zip_test_setup,
+    def test_gsq_production_data_missing_required_cols(self, code_zip_test_setup,
                                                        gsq_preprocessor_test_setup):
         """Test passing production data missing required columns."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
@@ -156,7 +128,7 @@ class TestGSQHistogram:
             call_apply_annotation(
                 ",".join(metric_names), completion_column_name=missing_completion_col)
 
-    def test_gsq_with_same_column_name(self, gsq_zip_test_setup,
+    def test_gsq_with_same_column_name(self, code_zip_test_setup,
                                        gsq_preprocessor_test_setup):
         """Test passing same column name as in file for prompt."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
@@ -176,7 +148,7 @@ class TestGSQHistogram:
         # remove test folder
         shutil.rmtree(mltable_path_copy)
 
-    def test_gsq_with_added_prompt_column_name(self, gsq_zip_test_setup,
+    def test_gsq_with_added_prompt_column_name(self, code_zip_test_setup,
                                                gsq_preprocessor_test_setup):
         """Test dataset with extra prompt column, same as in requested dataset."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
@@ -195,7 +167,7 @@ class TestGSQHistogram:
         # remove test folder
         shutil.rmtree(mltable_path_copy)
 
-    def test_gsq_with_added_passthrough_columns(self, gsq_zip_test_setup,
+    def test_gsq_with_added_passthrough_columns(self, code_zip_test_setup,
                                                 gsq_preprocessor_test_setup):
         """Test dataset with extra passthrough columns added."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
@@ -213,7 +185,7 @@ class TestGSQHistogram:
         write_json_data(mltable_path_copy, json_data)
         call_apply_annotation(",".join(metric_names), mltable_path=mltable_path_copy)
         # assert that the passthrough columns are added to the output
-        test_path = get_test_path()
+        test_path = get_test_path(None, "test_output")
         eval_path = os.path.join(test_path, EVALUATION)
         evaluation_df = io_utils.try_read_mltable_in_spark_with_error(eval_path, EVALUATION)
         for col in [CORRELATION_ID, TRACE_ID, ROOT_SPAN]:
@@ -221,7 +193,7 @@ class TestGSQHistogram:
         # remove test folder
         shutil.rmtree(mltable_path_copy)
 
-    def test_gsq_with_empty_dataset(self, gsq_zip_test_setup, gsq_preprocessor_test_setup):
+    def test_gsq_with_empty_dataset(self, code_zip_test_setup, gsq_preprocessor_test_setup):
         """Test passing empty dataset."""
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
         empty_mltable_path = write_empty_production_data()
@@ -290,23 +262,35 @@ def get_mltable_path():
         "mltable_groundedness_preprocessed_target_small")
 
 
-def get_test_path():
+def get_test_path(root_path, name):
     """Get path to test output folder."""
-    return os.path.abspath(os.path.join(os.getcwd(), "test_output"))
+    if root_path:
+        path = os.path.join(root_path, name)
+    else:
+        path = os.path.abspath(os.path.join(os.getcwd(), name))
+    if (not os.path.exists(path)):
+        os.mkdir(path)
+    return path
 
 
 def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
                           completion_column_name="answer",
                           context_column_name="context",
-                          mltable_path=None):
+                          mltable_path=None,
+                          threshold_args=None):
     """Call apply_annotation method in GSQ component."""
     if mltable_path is None:
         mltable_path = get_mltable_path()
-    test_path = get_test_path()
+    test_path = get_test_path(None, "test_output")
     fuse_prefix = "file://"
-    histogram_path = fuse_prefix + os.path.join(test_path, "histogram")
-    samples_index_path = fuse_prefix + os.path.join(test_path, "samples_index")
-    threshold_args = {threshold: 5 for threshold in THRESHOLD_PARAMS}
+    histogram_path = get_test_path(test_path, "histogram")
+    sample_index_path = get_test_path(test_path, "samples_index")
+    histogram_file_path = fuse_prefix + histogram_path
+    samples_index_file_path = fuse_prefix + sample_index_path
+    import fsspec
+    fs = fsspec.filesystem("file")
+    if threshold_args is None:
+        threshold_args = {threshold: 5 for threshold in THRESHOLD_PARAMS}
     violations = {
         "groundedness": "groundedness_violations",
         "relevance": "relevance_violations",
@@ -316,14 +300,14 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     }
 
     for k, v in violations.items():
-        violations[k] = fuse_prefix + os.path.join(test_path, v)
+        violations[k] = fuse_prefix + get_test_path(test_path, v)
 
-    evaluation_path = fuse_prefix + os.path.join(test_path, EVALUATION)
+    evaluation_path = fuse_prefix + get_test_path(test_path, EVALUATION)
 
     apply_annotation(
         metric_names=metric_names,
         production_dataset=mltable_path,
-        histogram=histogram_path,
+        histogram=histogram_file_path,
         model_deployment_name=GPT_4,
         workspace_connection_arm_id=TEST_CONNECTION,
         num_samples=1,
@@ -335,7 +319,8 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
         completion_column_name=completion_column_name,
         context_column_name=context_column_name,
         ground_truth_column_name=None,
-        samples_index=samples_index_path,
+        samples_index=samples_index_file_path,
         violations=violations,
-        evaluation=evaluation_path
+        evaluation=evaluation_path,
+        file_system=fs
     )

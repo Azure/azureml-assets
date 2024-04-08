@@ -1,9 +1,9 @@
 type: evaluationresult
 name: mmlu_social_sciences_mistral_large_question_answering
-version: 1.0.0
+version: 2.02.04
 display_name: mmlu_social_sciences_mistral_large_question_answering
 description: mistral-large run for mmlu_social_sciences dataset
-dataset_family: mmlu_social_sciences
+dataset_family: mmlu
 dataset_name: mmlu_social_sciences
 
 model_name: mistral-large

@@ -3,7 +3,7 @@ name: model_prediction
 display_name: Model Prediction
 description: Generate predictions on a given mlflow model for supported tasks.
 
-version: 0.0.21
+version: 0.0.23
 type: command
 tags:
   type: evaluation
@@ -81,11 +81,11 @@ outputs:
 
 is_deterministic: True
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/16
+environment: azureml://registries/azureml/environments/model-evaluation/versions/21
 
 command: >-
   python download_dependencies.py
-  --mlflow-model '${{inputs.mlflow_model}}' ;
+  --mlflow-model '${{inputs.mlflow_model}}' &&
   python model_prediction.py
   --data '${{inputs.test_data}}'
   --task '${{inputs.task}}'

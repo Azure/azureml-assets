@@ -3,21 +3,25 @@
 
 """MLflow PythonModel wrapper class that loads the MLflow model, preprocess inputs and performs inference."""
 
+import io
+import logging
 import subprocess
 import sys
-import tempfile
 from typing import Any, Dict, List, Tuple
 
 import mlflow
 import numpy as np
 import pandas as pd
 import torch
+from PIL import Image
 from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, ODLiterals, ISLiterals
+
+logger = logging.getLogger(__name__)
 
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
     # model wrapper for save_model().
-    from vision_utils import create_temp_file, process_image_pandas_series
+    from vision_utils import process_image
 except ImportError:
     pass
 
@@ -69,11 +73,13 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         self._inference_detector = None
         self._task_type = task_type
 
-    def _post_process_model_results(self, batch_results: List) -> List[Dict[str, Any]]:
+    def _post_process_model_results(self, batch_results: List, classes: List) -> List[Dict[str, Any]]:
         """Convert model results to OD or IS output format.
 
         :param batch_results: List of model results for images in batch.
         :type batch_results: List
+        :param classes: list of class names
+        :type classes: List
         :return: List of predictions for images in batch.
         If task type is OD, each prediction is a dict of bbox, labels and classes.
         If task type is IS, each prediction is a dict of bbox, labels, classes and polygons.
@@ -100,7 +106,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                         ODLiterals.BOTTOM_X: float(bboxes[i][2]) / image_width,
                         ODLiterals.BOTTOM_Y: float(bboxes[i][3]) / image_height,
                     },
-                    ODLiterals.LABEL: self.classes[labels[i]],
+                    ODLiterals.LABEL: classes[labels[i]],
                     ODLiterals.SCORE: float(scores[i]),
                 }
                 if masks is not None:
@@ -118,12 +124,11 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        print("Inside load_context()")
+        logger.info("Inside load_context()")
 
         if self._task_type in [Tasks.MM_OBJECT_DETECTION.value, Tasks.MM_INSTANCE_SEGMENTATION.value]:
             # Install mmcv and mmdet using mim, with pip installation is not working
-            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmcv==2.0.1"])
-            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==3.1.0"])
+            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==3.3.0"])
             # mmdet installs opencv-python but it results in error while importing libGL.so.1. So, we
             # need to re-install headless version of opencv-python.
             subprocess.check_call(
@@ -142,16 +147,19 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
                 _config = Config.fromfile(model_config_path)
                 self._model = init_detector(_config, model_weights_path, device=_map_location)
-                self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES]
-
-                print("Model loaded successfully")
+                self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES] \
+                    if MMDetLiterals.CLASSES in self._model.dataset_meta else []
+                self.language_model = hasattr(self._model, MMDetLiterals.LANGUAGE_MODEL)
+                logger.info(f"length of classes: {len(self.classes)}")
+                logger.info("Model loaded successfully")
             except Exception:
-                print("Failed to load the the model.")
+                logger.info("Failed to load the the model.")
                 raise
         else:
             raise ValueError(f"invalid task type {self._task_type}")
 
-    def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
+    def predict(self, context: mlflow.pyfunc.PythonModelContext,
+                input_data: pd.DataFrame, params: Dict = {}) -> pd.DataFrame:
         """Perform inference on the input data.
 
         :param context: MLflow context containing artifacts that the model can use for inference
@@ -159,20 +167,31 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         :param input_data: Input images for prediction
         :type input_data: Pandas DataFrame with a first column name ["image"] of images where each
         image is in base64 String format.
+        :param params: Dict of parameters
+        :type params: Dictionary
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns ["boxes"] for object detection
         """
-        # process the images in image column
-        processed_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
-            axis=1, func=process_image_pandas_series
-        )
+        # Read all the input images.
+        np_images = [
+            np.array(Image.open(io.BytesIO(process_image(image))))
+            for image in input_data[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
+        ]
 
-        with tempfile.TemporaryDirectory() as tmp_output_dir:
-            image_path_list = (
-                processed_images.iloc[:, 0].map(lambda row: create_temp_file(row, tmp_output_dir)[0]).tolist()
-            )
+        if not params:
+            params = {}
+        text_prompt = params.get(MMDetLiterals.TEXT_PROMPT, None)
+        custom_entities = params.get(MMDetLiterals.CUSTOM_ENTITIES, True)
+        if not text_prompt and self.language_model:
+            raise ValueError("text prompt not sent. please send text_prompt for Launguage models")
+        classes = text_prompt.split(". ") if self.language_model else self.classes
 
-            results = self._inference_detector(imgs=image_path_list, model=self._model)
+        # Note: unlike HuggingFace, mmdetection does not support doing inference on a dataset, so
+        # passing images directly.
+        results = self._inference_detector(imgs=np_images,
+                                           model=self._model,
+                                           text_prompt=text_prompt,
+                                           custom_entities=custom_entities)
 
-            predictions = self._post_process_model_results(results)
-            return pd.DataFrame(predictions)
+        predictions = self._post_process_model_results(results, classes)
+        return pd.DataFrame(predictions)

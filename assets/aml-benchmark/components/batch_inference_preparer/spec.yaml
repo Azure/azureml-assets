@@ -65,7 +65,7 @@ outputs:
     description: Path to the folder where the ground truth metadata will be stored.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/19
+environment: azureml://registries/azureml/environments/model-evaluation/versions/20
 command: >-
   python -m aml_benchmark.batch_inference_preparer.main
   --batch_input_pattern '${{inputs.batch_input_pattern}}'

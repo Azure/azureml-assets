@@ -1,6 +1,6 @@
 type: evaluationresult
 name: gsm8k_microsoft_phi_2_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: gsm8k_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for gsm8k dataset
 dataset_family: gsm8k
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.617
-
-path: ./job_files
 
 
 properties:

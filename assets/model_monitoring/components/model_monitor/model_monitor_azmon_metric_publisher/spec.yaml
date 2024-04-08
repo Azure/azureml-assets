@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_azmon_metric_publisher
 display_name: Model Monitor - Azure Monitor Metric Publisher
 description: Azure Monitor Publisher for the computed model monitor metrics.
-version: 0.3.14
+version: 0.3.17
 is_deterministic: true
 
 code: ../../src/
@@ -40,6 +40,7 @@ conf:
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4
+  spark.aml.internal.system.job: True
   spark.synapse.library.python.env: |
     channels:
       - defaults
