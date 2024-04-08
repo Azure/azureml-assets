@@ -1,0 +1,13 @@
+image:
+  name: azureml/curated/minimal-py311-inference-quickstart
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml
+    - entrypoint.sh
+  publish:
+    location: mcr
+    visibility: public
