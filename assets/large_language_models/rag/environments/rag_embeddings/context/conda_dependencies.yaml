@@ -36,7 +36,7 @@ dependencies:
   - markdown
   - mlflow>=2.6.0
   - mlflow-skinny==2.3.2
-  - msal~=1.22.0
+  - msal~=1.24.0
   - msrest>=0.6.18
   - nltk==3.8.1
   - openai>=0.27.4
