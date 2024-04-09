@@ -13,6 +13,7 @@ import numpy as np
 import uuid
 import datetime
 import copy
+import requests
 
 from pyspark.sql.functions import col, lit, udf, explode
 from pyspark.sql.types import (
@@ -42,6 +43,7 @@ from shared_utilities.constants import (
     INDEX_CONTENT_COLUMN,
     INDEX_SCORE_COLUMN,
     INDEX_ID_COLUMN,
+    INDEX_SCORE_LLM_COLUMN,
     ROOT_SPAN_COLUMN,
     GROUP_TOPIC_MIN_SAMPLE_SIZE,
     RETRIEVAL_QUERY_TYPE_COLUMN,
@@ -54,21 +56,28 @@ from shared_utilities.constants import (
     MODIFIED_PROMPT_COLUMN,
     QUERY_INTENTION_COLUMN,
     API_CALL_RETRY_BACKOFF_FACTOR,
-    API_CALL_RETRY_MAX_COUNT
+    API_CALL_RETRY_MAX_COUNT,
+    ACTION_DESCRIPTION,
+    MAX_SAMPLE_SIZE,
+    INDEX_SCORE_LLM_COLUMN,
+    DEFAULT_RETRIEVAL_SCORE,
+    P_VALUE_THRESHOLD
 )
 from shared_utilities.prompts import BERTOPIC_DEFAULT_PROMPT, RELEVANCE_TEMPLATE, RELEVANCE_METRIC_TEMPLATE
 from shared_utilities.span_tree_utils import SpanTree
-from shared_utilities.store_url import StoreUrl
 
 from shared_utilities.io_utils import (
-    try_read_mltable_in_spark,
-    save_spark_df_as_mltable,
-    save_empty_dataframe,
     np_encoder
 )
 from shared_utilities.llm_utils import (
     API_KEY,
+    AZURE_OPENAI_API_COMPLETION_URL_PATTERN,
+    AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
+    _APITokenManager,
     _WorkspaceConnectionTokenManager,
+    _HTTPClientWithRetry,
+    _check_and_format_azure_endpoint_url,
+    _request_api,
     get_llm_request_args
 )
 
@@ -76,6 +85,7 @@ from bertopic import BERTopic
 from openai import AzureOpenAI
 from bertopic.representation import OpenAI
 from typing import Tuple
+
 
 class Action:
     """Action class."""
@@ -300,6 +310,12 @@ def bertopic_get_topic(queries,
 def get_query_topic(row, good_topics_dict, bad_topics_dict, llm_summary_enabled):
     """Get the query topic."""
     idx = 0
+    if len(good_topics_dict) == 0 and row[DOCUMENT_RELEVANCE_SCORE_COLUMN] >= GOOD_METRICS_VALUE:
+        return DEFAULT_TOPIC_NAME
+    
+    if len(bad_topics_dict) == 0 and row[DOCUMENT_RELEVANCE_SCORE_COLUMN] < METRICS_VIOLATION_THRESHOLD:
+        return DEFAULT_TOPIC_NAME
+
     for topic, q_list in bad_topics_dict.items():
         if row[MODIFIED_PROMPT_COLUMN] in q_list:
             # do not show the topic name when disabling the conf
@@ -387,13 +403,21 @@ def group_queries(df, workspace_connection_arm_id, model_deployment_name, llm_su
     bad_queries = bad_queries_df[MODIFIED_PROMPT_COLUMN].tolist()
     good_queries = good_samples_df[MODIFIED_PROMPT_COLUMN].tolist()
 
-    bad_topics_dict = bertopic_get_topic(bad_queries,
-                                         workspace_connection_arm_id,
-                                         model_deployment_name)
-
-    good_topics_dict = bertopic_get_topic(good_queries,
-                                          workspace_connection_arm_id,
-                                          model_deployment_name)
+    if len(bad_queries) < GROUP_TOPIC_MIN_SAMPLE_SIZE:
+        # Skip grouing if the sample size is too small
+        print(f"Bad sample size {len(bad_queries)} is less than {GROUP_TOPIC_MIN_SAMPLE_SIZE}. Skip grouping and set default topic.")  # noqa
+        bad_topics_dict = {}
+    else:
+        bad_topics_dict = bertopic_get_topic(bad_queries,
+                                              workspace_connection_arm_id,
+                                              model_deployment_name)
+    if len(good_queries) < GROUP_TOPIC_MIN_SAMPLE_SIZE:
+        # Skip grouing if the sample size is too small
+        good_topics_dict = {}
+    else:
+        good_topics_dict = bertopic_get_topic(good_queries,
+                                              workspace_connection_arm_id,
+                                              model_deployment_name)
     df[QUERY_INTENTION_COLUMN] = df.apply(get_query_topic, axis=1, args=(good_topics_dict, bad_topics_dict, llm_summary_enabled,))
     return df.dropna()
 
@@ -419,6 +443,7 @@ def peform_correlation_test(bad_answer_group, good_answer_group, query_intention
         print("Generating action.")
         # entry: [query_intention, bad_group, good_group, confidence_score]
         return Action("Index Action", bad_answer_group[SPAN_ID_COLUMN].tolist(), query_intention, float(1.0 - p_value))
+    return None
 
 
 def merge_actions(action_1, action_2):
@@ -437,7 +462,7 @@ def merge_actions(action_1, action_2):
         confidence_score = action_2.confidence_score
         query_intention = action_2.query_intention if action_2.query_intention != "default" else action_1.query_intention
     return Action("Index Action", query_ids, query_intention, confidence_score)
-    
+
 
 def generate_action(df, index_set):
     """Generate the action data."""
@@ -447,11 +472,13 @@ def generate_action(df, index_set):
         index_df = df[df[INDEX_ID_COLUMN] == index]
         bad_answer_df = index_df[index_df[DOCUMENT_RELEVANCE_SCORE_COLUMN] < METRICS_VIOLATION_THRESHOLD]
         good_answer_df = index_df[index_df[DOCUMENT_RELEVANCE_SCORE_COLUMN] >= GOOD_METRICS_VALUE]
+        action = peform_correlation_test(bad_answer_df, good_answer_df, query_intention)
+        if action:
+            actions[index] = action
         query_intention_set = bad_answer_df[QUERY_INTENTION_COLUMN].unique()
         for query_intention in query_intention_set:
             bad_answer_group = bad_answer_df[bad_answer_df[QUERY_INTENTION_COLUMN] == query_intention]
             print("query:", query_intention)
-            #print(bad_answer_group)
             action = peform_correlation_test(bad_answer_group, good_answer_df, query_intention)
             if index not in actions:
                 actions[index] = action
@@ -546,7 +573,7 @@ def add_action_tag_to_run():
 
 
 def relevance_action_detector(df,
-                              workspace_connection_id,
+                              workspace_connection_arm_id,
                               model_deployment_name,
                               llm_summary_enabled,
                               action_output_folder,
@@ -556,7 +583,12 @@ def relevance_action_detector(df,
 
     # Expand to span level and get document relevance score
     df = expand_debugging_info(df)
-    df[DOCUMENT_RELEVANCE_SCORE_COLUMN] = df.apply(get_llm_score, axis=1, args=(workspace_connection_arm_id, model_deployment_name, API_CALL_RETRY_MAX_COUNT, API_CALL_RETRY_BACKOFF_FACTOR, request_args, DOCUMENT_RELEVANCE_SCORE_COLUMN, ))
+    df[DOCUMENT_RELEVANCE_SCORE_COLUMN] = df.apply(get_llm_score, axis=1, args=(workspace_connection_arm_id,
+                                                                                model_deployment_name,
+                                                                                API_CALL_RETRY_MAX_COUNT,
+                                                                                API_CALL_RETRY_BACKOFF_FACTOR,
+                                                                                request_args,
+                                                                                DOCUMENT_RELEVANCE_SCORE_COLUMN, ))
     print("Data with document relevance score.")
     print(df)
 
@@ -566,7 +598,12 @@ def relevance_action_detector(df,
     print(df)
 
     # get index score
-    df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_llm_score, axis=1, args=(workspace_connection_arm_id, model_deployment_name, API_CALL_RETRY_MAX_COUNT, API_CALL_RETRY_BACKOFF_FACTOR, request_args, INDEX_SCORE_LLM_COLUMN, ))
+    df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_llm_score, axis=1, args=(workspace_connection_arm_id,
+                                                                       model_deployment_name,
+                                                                       API_CALL_RETRY_MAX_COUNT,
+                                                                       API_CALL_RETRY_BACKOFF_FACTOR,
+                                                                       request_args,
+                                                                       INDEX_SCORE_LLM_COLUMN, ))
     print("Data with retrieval score.")
     print(df)
 
@@ -582,10 +619,3 @@ def relevance_action_detector(df,
     write_actions(df, actions, action_output_folder, aml_deployment_id)
 
     add_action_tag_to_run()
-
-
-
-
-
-
-
