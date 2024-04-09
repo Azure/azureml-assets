@@ -3,43 +3,27 @@
 
 """Entry script for Action Analyzer identify problem traffic."""
 
-import argparse
+import os
+import re
 import json
 import yaml
 from scipy import stats
 import statistics
 from scipy.stats import mannwhitneyu
-import numpy as np
 import uuid
 import datetime
 import copy
 import requests
 
-from pyspark.sql.functions import col, lit, udf, explode
-from pyspark.sql.types import (
-    StructType,
-    StructField,
-    StringType,
-    ArrayType,
-    FloatType,
-    IntegerType
-)
 from mlflow import MlflowClient
 from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.constants import (
-    GSQ_METRICS_LIST,
     METRICS_VIOLATION_THRESHOLD,
     RETRIEVAL_SPAN_TYPE,
     TEXT_SPLITTER,
     PROMPT_COLUMN,
     COMPLETION_COLUMN,
-    CONTEXT_COLUMN,
-    TRACE_ID_COLUMN,
     SPAN_ID_COLUMN,
-    ROOT_QUESTION_COLUMN,
-    TOPIC_LIST_COLUMN,
-    GROUP_LIST_COLUMN,
-    VIOLATED_METRICS_COLUMN,
     INDEX_CONTENT_COLUMN,
     INDEX_SCORE_COLUMN,
     INDEX_ID_COLUMN,
@@ -59,7 +43,6 @@ from shared_utilities.constants import (
     API_CALL_RETRY_MAX_COUNT,
     ACTION_DESCRIPTION,
     MAX_SAMPLE_SIZE,
-    INDEX_SCORE_LLM_COLUMN,
     DEFAULT_RETRIEVAL_SCORE,
     P_VALUE_THRESHOLD
 )
@@ -472,7 +455,7 @@ def generate_action(df, index_set):
         index_df = df[df[INDEX_ID_COLUMN] == index]
         bad_answer_df = index_df[index_df[DOCUMENT_RELEVANCE_SCORE_COLUMN] < METRICS_VIOLATION_THRESHOLD]
         good_answer_df = index_df[index_df[DOCUMENT_RELEVANCE_SCORE_COLUMN] >= GOOD_METRICS_VALUE]
-        action = peform_correlation_test(bad_answer_df, good_answer_df, query_intention)
+        action = peform_correlation_test(bad_answer_df, good_answer_df, "default")
         if action:
             actions[index] = action
         query_intention_set = bad_answer_df[QUERY_INTENTION_COLUMN].unique()
