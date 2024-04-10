@@ -220,14 +220,13 @@ def parse_debugging_info(root_span):
                     print("No look up span found, skip action analyzer.")
                     return None
                 index_span = tree.get_span_tree_node_by_span_id(parent_id)
-                index_input = json.loads(json.loads(index_span.attributes)["inputs"])
+                index_input = json.loads(index_span.input)
                 index_content = index_input['mlindex_content']
                 retrieval_query_type = index_input["query_type"]
                 retrieval_top_k = index_input["top_k"]
                 index_id = get_index_id(index_content)
-                retrieval_info = json.loads(span.attributes)
-                query = retrieval_info["retrieval.query"]
-                retrieval_documents = json.loads(retrieval_info["retrieval.documents"])
+                query = json.loads(span.retrieval_query)
+                retrieval_documents = json.loads(span.retrieval_document)
                 text = []
                 score = []
                 for document in retrieval_documents:
