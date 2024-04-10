@@ -74,7 +74,7 @@ class Action:
     """Action class."""
 
     def __init__(self, action_type, query_ids, query_intention, confidence_score):
-        """create an action."""
+        """Create an action."""
         self.action_type = action_type
         self.query_ids = query_ids
         self.query_intention = query_intention
