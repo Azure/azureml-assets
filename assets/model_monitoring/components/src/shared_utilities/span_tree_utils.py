@@ -75,11 +75,11 @@ class SpanTreeNode:
     def attributes(self) -> str:
         """Get the span's attributes."""
         return self.get_node_attribute("attributes")  # type: ignore
-    
+
     @property
     def events(self) -> str:
         """Get the span's attributes."""
-        return self.get_node_attribute("events")  # type: ignore   
+        return self.get_node_attribute("events")  # type: ignore
 
     @property
     def input(self) -> str:
@@ -90,7 +90,8 @@ class SpanTreeNode:
             events_array: list = json.loads(self.events)
             if len(events_array) == 0:
                 return self.input_from_attributes()
-            input_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_INPUT_KEY, events_array))
+            input_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_INPUT_KEY,
+                                    events_array))
             if input_event is not None and len(input_event) > 0:
                 if input_event[0].get("attributes", None) is None:
                     return None
@@ -117,7 +118,8 @@ class SpanTreeNode:
             events_array: list = json.loads(self.events)
             if len(events_array) == 0:
                 return self.output_from_attribute()
-            output_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_OUTPUT_KEY, events_array))
+            output_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_OUTPUT_KEY,
+                                       events_array))
             if output_event is not None and len(output_event) > 0:
                 if output_event[0].get("attributes", None) is None:
                     return None
@@ -133,7 +135,7 @@ class SpanTreeNode:
         if attribute_dict is None:
             return None
         return attribute_dict.get("output", None)
-    
+
     @property
     def retrieval_query(self) -> str:
         """Get promptflow.retrieval.query for retrieval span. """
@@ -144,7 +146,9 @@ class SpanTreeNode:
         events_array: list = json.loads(self.events)
         if len(events_array) == 0:
             return self.retrieval_query_from_attributes()
-        retrieval_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY, events_array))
+        retrieval_event = list(filter(lambda event: event.get("name", None) ==
+                                      APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY,
+                                      events_array))
         if retrieval_event and len(retrieval_event) > 0:
             if retrieval_event[0].get("attributes", None) is None:
                 return None
@@ -162,7 +166,9 @@ class SpanTreeNode:
         events_array: list = json.loads(self.events)
         if len(events_array) == 0:
             return self.retrieval_document_from_attributes()
-        retrieval_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY, events_array))
+        retrieval_event = list(filter(lambda event: event.get("name", None) ==
+                                      APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY,
+                                      events_array))
         if retrieval_event and len(retrieval_event) > 0:
             if retrieval_event[0].get("attributes", None) is None:
                 return None
