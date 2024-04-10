@@ -357,7 +357,7 @@ def run():
         # Add default good group name and default bad group name for each query
         df = df.withColumn(GROUP_LIST_COLUMN, assign_default_group(col(GROUP_LIST_COLUMN),
                                                                    col(ROOT_QUESTION_COLUMN),
-                                                                   col(VIOLATED_METRICS_COLUMN), 
+                                                                   col(VIOLATED_METRICS_COLUMN),
                                                                    lit(metrics),
                                                                    lit(json.dumps(good_queries)),
                                                                    lit(json.dumps(bad_queries))))
