@@ -279,14 +279,17 @@ class TestGenAISparkPreprocessor:
 
         trace_df = aggregate_spans_into_traces(span_logs_no_root_with_data_df, True, start_time, end_time)
         rows = trace_df.collect()
-        assert trace_df.count() == 1
+        assert trace_df.count() == 2
         assert rows[0]['trace_id'] == "01"
+        assert rows[1]['trace_id'] == "02"
 
-        span_logs_no_root = [
-            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name",] +
-            ["1", "1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+        span_logs_no_root_forest = [
+            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name"] +
+            ["1", "1", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
+            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name"] +
+            ["1", "2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
         ]
-        spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
+        spans_no_root_df = spark.createDataFrame(span_logs_no_root_forest, self._preprocessed_log_schema)
         no_root_traces = aggregate_spans_into_traces(spans_no_root_df, True, start_time, end_time)
         assert no_root_traces.isEmpty()
 
