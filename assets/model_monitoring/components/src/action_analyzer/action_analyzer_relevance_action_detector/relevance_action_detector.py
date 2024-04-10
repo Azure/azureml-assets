@@ -399,7 +399,7 @@ def group_queries(df, workspace_connection_arm_id, model_deployment_name, llm_su
         good_topics_dict = bertopic_get_topic(good_queries,
                                               workspace_connection_arm_id,
                                               model_deployment_name)
-    df[QUERY_INTENTION_COLUMN] = df.apply(get_query_topic, axis=1, args=(good_topics_dict, bad_topics_dict, llm_summary_enabled,))
+    df[QUERY_INTENTION_COLUMN] = df.apply(get_query_topic, axis=1, args=(good_topics_dict, bad_topics_dict, llm_summary_enabled,))  # noqa
     return df.dropna()
 
 
