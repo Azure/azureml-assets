@@ -4,7 +4,11 @@
 """Entry script for Relevance Action Detector."""
 
 import argparse
-from action_analyzer.action_analyzer_relevance_action_detector.relevance_action_detector import relevance_action_detector
+from action_analyzer.action_analyzer_relevance_action_detector.relevance_action_detector import (
+    relevance_action_detector
+)
+from shared_utilities.io_utils import try_read_mltable_in_spark
+
 
 def run():
     """Relevance action detector."""
@@ -24,7 +28,13 @@ def run():
 
     df_pandas = signal_scored_data_df.toPandas()
 
-    relevance_action_detector(df_pandas, args.workspace_connection_arm_id, args.model_deployment_name, args.llm_summary_enabled, args.action_output, args.llm_summary_enabled)
+    relevance_action_detector(df_pandas,
+                              args.workspace_connection_arm_id,
+                              args.model_deployment_name,
+                              args.llm_summary_enabled,
+                              args.action_output,
+                              args.llm_summary_enabled)
+
 
 if __name__ == "__main__":
     run()
