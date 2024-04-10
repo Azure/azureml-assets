@@ -68,27 +68,65 @@ class SpanTreeNode:
     def attributes(self) -> str:
         """Get the span's attributes."""
         return self.get_node_attribute("attributes")  # type: ignore
+    
+    @property
+    def events(self) -> str:
+        """Get the span's attributes."""
+        return self.get_node_attribute("events")  # type: ignore   
 
     @property
     def input(self) -> str:
-        """Get the span's input from the attributes field as json string."""
-        if self.attributes is None:
-            return None  # type: ignore
-        attribute_dict: dict = json.loads(self.attributes)
-        if attribute_dict is None:
-            return None  # type: ignore
-        return attribute_dict.get("inputs", None)
+        """Get the span's input from the events payload field as json string."""
+        if self.events is None:
+            if self.attributes != None:
+                # fallback to attribute field
+                print("self.attributes is not None")
+                attribute_dict: dict = json.loads(self.attributes)
+                print("============")
+                print(attribute_dict)
+                print("++++")
+                print(self.attributes)
+                return attribute_dict.get("inputs", None)
+            else:
+                return None
+        else:
+            events_array: list = json.loads(self.events)
+            input_event = list(filter(lambda event: event.name == "promptflow.function.inputs", events_array))
+            if input_event.count > 0:
+                return input_event[0].attributes.payload
+            else:
+                return None
 
     @property
     def output(self) -> str:
-        """Get the span's output from the attributes field as json string."""
-        if self.attributes is None:
-            return None  # type: ignore
-        attribute_dict: dict = json.loads(self.attributes)
-        if attribute_dict is None:
-            return None  # type: ignore
-        return attribute_dict.get("output", None)
-
+        """Get the span's output from the events payload field as json string."""
+        if self.events is None:
+            if self.attributes is None:
+                return None  # type: ignore
+            else:
+                # fallback to attribute field
+                attribute_dict: dict = json.loads(self.attributes)
+                return attribute_dict.get("output", None)
+        else:
+            events_array: list = json.loads(self.events)
+            input_event = list(filter(lambda event: event.name == "promptflow.function.output", events_array))
+            if input_event.count > 0:
+                return input_event[0].attributes.payload
+            else:
+                return None
+    
+    @property
+    def query(self) -> str:
+        """Get promptflow.retrieval.query for retrieval span """
+        if self.span_type == "Retrival":
+            retrival_event = list(filter(lambda event: event.name == "promptflow.retrieval.query", events_array))
+            if retrival_event.count > 0:
+                return retrival_event[0].attributes.payload
+            else:
+                return None
+        else:
+            return None
+        
     @property
     def status(self) -> str:
         """Get the span's status."""
