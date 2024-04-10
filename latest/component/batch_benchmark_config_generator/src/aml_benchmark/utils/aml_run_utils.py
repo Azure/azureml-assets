@@ -10,9 +10,9 @@ import re
 import mlflow
 from mlflow.entities import Run as MLFlowRun
 from azureml.core import Run
-from aml_benchmark.utils.logging import get_logger
-
 from azureml._common._error_definition.azureml_error import AzureMLError
+
+from .logging import get_logger
 from .exceptions import BenchmarkValidationException
 from .error_definitions import BenchmarkValidationError
 
