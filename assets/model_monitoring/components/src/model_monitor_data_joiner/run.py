@@ -40,11 +40,7 @@ def join_data(
     _validate_join_column_in_input_data(right_input_data_df, right_join_column, "right_input_data")
 
     # Join the data
-    if left_join_column == # `right_join_column` is a parameter that specifies the column in the right
-    # input data that will be used for joining the data with the left input
-    # data. It is used in the `join_data` function to perform the join
-    # operation based on this specified column in both input dataframes.
-    right_join_column:
+    if left_join_column == right_join_column:
         joined_data_df = left_input_data_df.join(
             right_input_data_df,
             left_input_data_df[left_join_column] == right_input_data_df[right_join_column],
@@ -79,7 +75,7 @@ def run():
     # Load data
     left_input_data_df = try_read_mltable_in_spark_with_error(args.left_input_data, "left_input_data")
     right_input_data_df = try_read_mltable_in_spark_with_error(args.right_input_data, "right_input_data")
-    
+
     joined_data_df = join_data(
         left_input_data_df,
         args.left_join_column,
@@ -88,10 +84,11 @@ def run():
     )
 
     duplicate_column_names = joined_data_df.columns[joined_data_df.columns.duplicated()]
+
     # Check if there are any duplicate column names
     if duplicate_column_names.size > 0:
         raise Exception(f"Duplicate column names found: {duplicate_column_names.tolist()}")
-    
+
     # Write the joined data.
     save_spark_df_as_mltable(joined_data_df, args.joined_data)
     print('Successfully executed data joiner component.')
