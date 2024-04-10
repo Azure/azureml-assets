@@ -172,7 +172,7 @@ class _AzureMLHoboSparkOnBehalfOfCredential(object):
             "x-ms-cluster-identifier": self.cluster_identifier,
         }
 
-        #print("Attempting to get token from AzureML OBO service.")
+        # print("Attempting to get token from AzureML OBO service.")
         try:
             response = _send_request(request_url, request_body, headers)
             if response:
@@ -273,14 +273,14 @@ class _WorkspaceConnectionTokenManager(_APITokenManager):
                 # In AzureML Run context, we need to use workspaces internal endpoint that will accept
                 # AzureMLToken auth.
                 ml_client.connections._operation._client._base_url = f"{os.environ.get('AZUREML_SERVICE_ENDPOINT')}/rp/workspaces"  # noqa: E501
-                #print(f"Using ml_client base_url: {ml_client.connections._operation._client._base_url}")
+                # print(f"Using ml_client base_url: {ml_client.connections._operation._client._base_url}")
                 list_secrets_response = ml_client.connections._operation.list_secrets(
                     connection_name=uri_match.group(4),
                     resource_group_name=ml_client.resource_group_name,
                     workspace_name=ml_client.workspace_name,
                 )
                 connection = WorkspaceConnection._from_rest_object(list_secrets_response)
-                #print(f"Retrieved Workspace Connection: {connection.id}")
+                # print(f"Retrieved Workspace Connection: {connection.id}")
 
                 if connection.type != "azure_open_ai":
                     raise Exception(f"Received unexpected endpoint type {connection.type}"
@@ -334,7 +334,7 @@ def _request_api(session,
         "Content-Type": "application/json",
     }
 
-    #print(f"Using {token_manager.auth_header} authentication")
+    # print(f"Using {token_manager.auth_header} authentication")
     if token_manager.auth_header == BEARER:
         headers[AUTHORIZATION] = f"{BEARER} {token}"
     elif token_manager.auth_header == API_KEY:
@@ -343,10 +343,10 @@ def _request_api(session,
     time_start = time.time()
 
     # print headers without disclosing token
-    headers_output = {
-        h: (headers[h] if h not in [AUTHORIZATION] else "*" * len(headers[h]))
-        for h in headers
-    }
+    # headers_output = {
+    #     h: (headers[h] if h not in [AUTHORIZATION] else "*" * len(headers[h]))
+    #     for h in headers
+    # }
     # print(
     #     f"Sending request \n    to endpoint: {endpoint_url}"
     #     f"\n    with headers: {headers_output}"
