@@ -439,12 +439,10 @@ def merge_actions(action_1, action_2):
     confidence_score = 0
     if action_1.confidence_score > action_2.confidence_score:
         confidence_score = action_1.confidence_score
-        query_intention = action_1.query_intention if action_1.query_intention != "default"
-                                                   else action_2.query_intention
+        query_intention = action_1.query_intention if action_1.query_intention != "default" else action_2.query_intention  # noqa
     else:
         confidence_score = action_2.confidence_score
-        query_intention = action_2.query_intention if action_2.query_intention != "default"
-                                                   else action_1.query_intention
+        query_intention = action_2.query_intention if action_2.query_intention != "default" else action_1.query_intention  # noqa
     return Action("Index Action", query_ids, query_intention, confidence_score)
 
 
