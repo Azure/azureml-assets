@@ -671,26 +671,39 @@ def apply_annotation(
             mlflow.set_tracking_uri(tracking_uri)
 
             output_dir = tempfile.TemporaryDirectory()
-            evaluate(
-                evaluation_name="gsq-evaluation",
-                data=rows,
-                task_type="qa",
-                data_mapping={
-                    "question": PROMPT,
-                    "context": CONTEXT,
-                    "answer": COMPLETION,
-                    "ground_truth": GROUND_TRUTH
-                },
-                model_config={
-                    "api_version": api_version,
-                    "api_base": api_base,
-                    "api_type": AZURE,
-                    "api_key": api_key,
-                    "deployment_id": model_type
-                },
-                metrics_list=metrics_list,
-                output_path=output_dir.name
-            )
+            evaluation_name = "gsq-evaluation"
+            run_name = evaluation_name + "-child-run"
+            # get existing run
+            with mlflow.start_run():
+                # create child run
+                with mlflow.start_run(nested=mlflow.active_run(), run_name=run_name) as run:
+                    evaluate(
+                        evaluation_name=evaluation_name,
+                        data=rows,
+                        task_type="qa",
+                        data_mapping={
+                            "question": PROMPT,
+                            "context": CONTEXT,
+                            "answer": COMPLETION,
+                            "ground_truth": GROUND_TRUTH
+                        },
+                        model_config={
+                            "api_version": api_version,
+                            "api_base": api_base,
+                            "api_type": AZURE,
+                            "api_key": api_key,
+                            "deployment_id": model_type
+                        },
+                        metrics_list=metrics_list,
+                        output_path=output_dir.name
+                    )
+                    child_run_id = run.info.run_id
+                    # add promptflow debug logs to run
+                    hostname = socket.gethostname()
+                    artifact_path = f"worker_promptflow/{hostname}"
+                    client = mlflow.tracking.MlflowClient()
+                    client.log_artifacts(
+                        child_run_id, DEFAULT_PROMPTFLOW_PATH, artifact_path=artifact_path)
             tabular_result = pd.read_json(os.path.join(output_dir.name, "eval_results.jsonl"), lines=True)
             for passthrough_column, passthrough_values in passthrough_cols.items():
                 tabular_result[passthrough_column] = passthrough_values
@@ -702,11 +715,6 @@ def apply_annotation(
                 tabular_result.rename(
                     columns={column_name: COLUMN_TO_COMPACT_METRIC_NAME[column_name]},
                     inplace=True)
-            # add promptflow debug logs
-            hostname = socket.gethostname()
-            artifact_path = f"worker_promptflow/{hostname}"
-            client = mlflow.tracking.MlflowClient()
-            client.log_artifacts(run_id, DEFAULT_PROMPTFLOW_PATH, artifact_path=artifact_path)
             yield tabular_result
 
     # used for testing without using openai connection
