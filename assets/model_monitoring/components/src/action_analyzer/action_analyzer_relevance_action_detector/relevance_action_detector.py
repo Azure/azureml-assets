@@ -72,7 +72,9 @@ from typing import Tuple
 
 class Action:
     """Action class."""
+
     def __init__(self, action_type, query_ids, query_intention, confidence_score):
+        """Constructor of the class."""
         self.action_type = action_type
         self.query_ids = query_ids
         self.query_intention = query_intention
@@ -360,7 +362,7 @@ def parse_debugging_info(root_span):
 
 
 def expand_debugging_info(df):
-    """Parse the debugging info and expand to span level"""
+    """Parse the debugging info and expand to span level."""
     df['debugging_info'] = df[ROOT_SPAN_COLUMN].apply(parse_debugging_info)
     df = df.explode('debugging_info')
     df[SPAN_ID_COLUMN] = df['debugging_info'].apply(lambda x: x[0])
