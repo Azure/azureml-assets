@@ -83,6 +83,8 @@ class AppInsightsPIIStrippingFormatter(logging.Formatter):
         properties = getattr(record, 'properties', {})
 
         message = properties.get('message', LoggerConfig.NON_PII_MESSAGE)
+        # TODO: Update the logic later. Right now, prevent logging error message
+        message = LoggerConfig.NON_PII_MESSAGE
         traceback_msg = properties.get('exception_traceback', not_available_message)
 
         record.message = record.msg = '\n'.join([
