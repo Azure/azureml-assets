@@ -162,16 +162,16 @@ def assign_good_topic(topic_list, question, metrics_score, topics_dict, llm_summ
 
 
 @udf(returnType=StringType())
-def assign_default_group(group_list, query, metrics, good_queries, bad_queries):
+def assign_default_group(group_list, query, violated_metrics, metrics, good_queries, bad_queries):
     """Assign default group for good and bad queries."""
     good_query_list = json.loads(good_queries)
     bad_query_list = json.loads(bad_queries)
-    if query in good_query_list:
-        good_group_name = f"{metrics}_good_group"
-        group_list = _append_value(group_list, good_group_name)
-    elif query in bad_query_list:
+    if query in bad_query_list and (metrics in violated_metrics):
         bad_group_name = f"{metrics}_bad_group_default_default"
         group_list = _append_value(group_list, bad_group_name)
+    elif query in good_query_list:
+        good_group_name = f"{metrics}_good_group"
+        group_list = _append_value(group_list, good_group_name)
     return group_list
 
 
@@ -357,6 +357,7 @@ def run():
         # Add default good group name and default bad group name for each query
         df = df.withColumn(GROUP_LIST_COLUMN, assign_default_group(col(GROUP_LIST_COLUMN),
                                                                    col(ROOT_QUESTION_COLUMN),
+                                                                   col(VIOLATED_METRICS_COLUMN), 
                                                                    lit(metrics),
                                                                    lit(json.dumps(good_queries)),
                                                                    lit(json.dumps(bad_queries))))
