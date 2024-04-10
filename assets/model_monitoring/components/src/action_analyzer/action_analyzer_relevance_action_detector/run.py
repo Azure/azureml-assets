@@ -22,7 +22,7 @@ def run():
     parser.add_argument("--llm_summary_enabled", type=str)
     args = parser.parse_args()
 
-    signal_scored_data_df = try_read_mltable_in_spark("azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/yuachengtestrg/workspaces/ai-proj-eastus/datastores/workspaceblobstore/paths/azureml/fd174990-a0e4-4447-a553-387391889682/evaluation/", "signal_scored_data")
+    signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
     print("gsq output df")
     signal_scored_data_df.show()
 
