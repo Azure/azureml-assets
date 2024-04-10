@@ -295,7 +295,6 @@ def get_query_topic(row, good_topics_dict, bad_topics_dict, llm_summary_enabled)
     idx = 0
     if len(good_topics_dict) == 0 and row[DOCUMENT_RELEVANCE_SCORE_COLUMN] >= GOOD_METRICS_VALUE:
         return DEFAULT_TOPIC_NAME
-    
     if len(bad_topics_dict) == 0 and row[DOCUMENT_RELEVANCE_SCORE_COLUMN] < METRICS_VIOLATION_THRESHOLD:
         return DEFAULT_TOPIC_NAME
 
@@ -304,14 +303,13 @@ def get_query_topic(row, good_topics_dict, bad_topics_dict, llm_summary_enabled)
             # do not show the topic name when disabling the conf
             topic = topic if llm_summary_enabled == "true" else f"topic_{idx}"
             return topic
-        idx+=1
-    
+        idx += 1
     for topic, q_list in good_topics_dict.items():
         if row[MODIFIED_PROMPT_COLUMN] in q_list:
             # do not show the topic name when disabling the conf
             topic = topic if llm_summary_enabled == "true" else f"topic_{idx}"
             return topic
-        idx+=1
+        idx += 1
     return None
 
 
@@ -392,8 +390,8 @@ def group_queries(df, workspace_connection_arm_id, model_deployment_name, llm_su
         bad_topics_dict = {}
     else:
         bad_topics_dict = bertopic_get_topic(bad_queries,
-                                              workspace_connection_arm_id,
-                                              model_deployment_name)
+                                             workspace_connection_arm_id,
+                                             model_deployment_name)
     if len(good_queries) < GROUP_TOPIC_MIN_SAMPLE_SIZE:
         # Skip grouing if the sample size is too small
         good_topics_dict = {}
@@ -419,7 +417,8 @@ def perform_ttest(good_answer_scores, bad_answer_scores):
 
 def peform_correlation_test(bad_answer_group, good_answer_group, query_intention):
     """Perform correlation test."""
-    t_stat, p_value = perform_ttest(good_answer_group[INDEX_SCORE_LLM_COLUMN], bad_answer_group[INDEX_SCORE_LLM_COLUMN])
+    t_stat, p_value = perform_ttest(good_answer_group[INDEX_SCORE_LLM_COLUMN],
+                                    bad_answer_group[INDEX_SCORE_LLM_COLUMN])
     bad_mean = statistics.mean(bad_answer_group[INDEX_SCORE_LLM_COLUMN])
     print("Mean value of bad group: ", bad_mean)
     if t_stat > 0 and p_value < P_VALUE_THRESHOLD and bad_mean < 3.0:
@@ -440,10 +439,12 @@ def merge_actions(action_1, action_2):
     confidence_score = 0
     if action_1.confidence_score > action_2.confidence_score:
         confidence_score = action_1.confidence_score
-        query_intention = action_1.query_intention if action_1.query_intention != "default" else action_2.query_intention
+        query_intention = action_1.query_intention if action_1.query_intention != "default"
+                                                   else action_2.query_intention
     else:
         confidence_score = action_2.confidence_score
-        query_intention = action_2.query_intention if action_2.query_intention != "default" else action_1.query_intention
+        query_intention = action_2.query_intention if action_2.query_intention != "default"
+                                                   else action_1.query_intention
     return Action("Index Action", query_ids, query_intention, confidence_score)
 
 
@@ -514,7 +515,8 @@ def write_actions(df, actions, action_output_folder, aml_deployment_id):
     action_summary = {}
     for index_id, action in actions.items():
         action_bad_df = df[(df[INDEX_ID_COLUMN] == index_id) & (df[SPAN_ID_COLUMN].isin(action.query_ids))]
-        action_good_df = df[(df[INDEX_ID_COLUMN] == index_id) & (df[DOCUMENT_RELEVANCE_SCORE_COLUMN] >= GOOD_METRICS_VALUE)]
+        action_good_df = df[(df[INDEX_ID_COLUMN] == index_id) &
+                            (df[DOCUMENT_RELEVANCE_SCORE_COLUMN] >= GOOD_METRICS_VALUE)]
         action_id = str(uuid.uuid4())
         action = {
             "ActionId": action_id,
@@ -571,7 +573,7 @@ def relevance_action_detector(df,
                                                                                 API_CALL_RETRY_MAX_COUNT,
                                                                                 API_CALL_RETRY_BACKOFF_FACTOR,
                                                                                 request_args,
-                                                                                DOCUMENT_RELEVANCE_SCORE_COLUMN, ))
+                                                                                DOCUMENT_RELEVANCE_SCORE_COLUMN,))
     print("Data with document relevance score.")
     print(df)
 
@@ -586,7 +588,7 @@ def relevance_action_detector(df,
                                                                        API_CALL_RETRY_MAX_COUNT,
                                                                        API_CALL_RETRY_BACKOFF_FACTOR,
                                                                        request_args,
-                                                                       INDEX_SCORE_LLM_COLUMN, ))
+                                                                       INDEX_SCORE_LLM_COLUMN,))
     print("Data with retrieval score.")
     print(df)
 
