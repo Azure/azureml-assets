@@ -78,21 +78,17 @@ class SpanTreeNode:
     def input(self) -> str:
         """Get the span's input from the events payload field as json string."""
         if self.events is None:
-            if self.attributes != None:
-                # fallback to attribute field
-                print("self.attributes is not None")
-                attribute_dict: dict = json.loads(self.attributes)
-                print("============")
-                print(attribute_dict)
-                print("++++")
-                print(self.attributes)
-                return attribute_dict.get("inputs", None)
-            else:
+            if self.attributes is None:
                 return None
+            # fallback to attribute field
+            attribute_dict: dict = json.loads(self.attributes)
+            if attribute_dict is None:
+                return None
+            return attribute_dict.get("inputs", None)
         else:
             events_array: list = json.loads(self.events)
             input_event = list(filter(lambda event: event.name == "promptflow.function.inputs", events_array))
-            if input_event.count > 0:
+            if input_event is not None and input_event.count > 0:
                 return input_event[0].attributes.payload
             else:
                 return None
@@ -103,15 +99,16 @@ class SpanTreeNode:
         if self.events is None:
             if self.attributes is None:
                 return None  # type: ignore
-            else:
-                # fallback to attribute field
-                attribute_dict: dict = json.loads(self.attributes)
-                return attribute_dict.get("output", None)
+            # fallback to attribute field
+            attribute_dict: dict = json.loads(self.attributes)
+            if attribute_dict is None:
+                return None           
+            return attribute_dict.get("output", None)
         else:
             events_array: list = json.loads(self.events)
-            input_event = list(filter(lambda event: event.name == "promptflow.function.output", events_array))
-            if input_event.count > 0:
-                return input_event[0].attributes.payload
+            output_event = list(filter(lambda event: event.name == "promptflow.function.output", events_array))
+            if output_event is not None and output_event.count > 0:
+                return output_event[0].attributes.payload
             else:
                 return None
     
