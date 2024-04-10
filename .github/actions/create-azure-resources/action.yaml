@@ -31,10 +31,3 @@ runs:
     - name: Create additional environment variables
       shell: bash
       run: echo "subscription_id=${{ inputs.subscription-id }}" >> $GITHUB_ENV
-
-    - name: Acquire access tokens
-      uses: azure/cli@v2
-      with:
-        inlineScript: |
-          echo "Current time: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-          az account get-access-token --scope https://management.azure.com/.default
