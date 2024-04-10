@@ -15,7 +15,8 @@ from shared_utilities.constants import (
     APP_TRACES_EVENT_LOG_INPUT_KEY,
     APP_TRACES_EVENT_LOG_OUTPUT_KEY,
     APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY,
-    APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY
+    APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY,
+    RETRIEVAL_SPAN_TYPE
 )
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -83,16 +84,12 @@ class SpanTreeNode:
     @property
     def input(self) -> str:
         """Get the span's input from the events payload field as json string."""
-        if self.events is None:
-            if self.attributes is None:
-                return None
-            # fallback to attribute field
-            attribute_dict: dict = json.loads(self.attributes)
-            if attribute_dict is None:
-                return None
-            return attribute_dict.get("inputs", None)
+        if self.events is None or len(self.events) == 0:
+            return self.input_from_attributes()
         else:
             events_array: list = json.loads(self.events)
+            if len(events_array) == 0:
+                return self.input_from_attributes()
             input_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_INPUT_KEY, events_array))
             if input_event is not None and len(input_event) > 0:
                 if input_event[0].get("attributes", None) is None:
@@ -101,19 +98,25 @@ class SpanTreeNode:
             else:
                 return None
 
+    def input_from_attributes(self) -> str:
+        """Get input from attributes."""
+        if self.attributes is None:
+
+            return None  # type: ignore
+        attribute_dict: dict = json.loads(self.attributes)
+        if attribute_dict is None:
+            return None
+        return attribute_dict.get("inputs", None)
+
     @property
     def output(self) -> str:
         """Get the span's output from the events payload field as json string."""
-        if self.events is None:
-            if self.attributes is None:
-                return None  # type: ignore
-            # fallback to attribute field
-            attribute_dict: dict = json.loads(self.attributes)
-            if attribute_dict is None:
-                return None
-            return attribute_dict.get("output", None)
+        if self.events is None or len(self.events) == 0:
+            return self.output_from_attribute()
         else:
             events_array: list = json.loads(self.events)
+            if len(events_array) == 0:
+                return self.output_from_attribute()
             output_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_OUTPUT_KEY, events_array))
             if output_event is not None and len(output_event) > 0:
                 if output_event[0].get("attributes", None) is None:
@@ -121,22 +124,70 @@ class SpanTreeNode:
                 return output_event[0].get("attributes", None).get("payload", None)
             else:
                 return None
+
+    def output_from_attribute(self) -> str:
+        """Get output from attributes."""
+        if self.attributes is None:
+            return None  # type: ignore
+        attribute_dict: dict = json.loads(self.attributes)
+        if attribute_dict is None:
+            return None
+        return attribute_dict.get("output", None)
     
     @property
-    def query(self) -> str:
-        """Get promptflow.retrieval.query for retrieval span """
+    def retrieval_query(self) -> str:
+        """Get promptflow.retrieval.query for retrieval span. """
+        if self.span_type != RETRIEVAL_SPAN_TYPE:
+            return None
+        if self.events is None or len(self.events) == 0:
+            return self.retrieval_query_from_attributes()
         events_array: list = json.loads(self.events)
-        if self.span_type == "Retrival":
-            retrival_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY, events_array))
-            if retrival_event and len(retrival_event) > 0:
-                if retrival_event[0].get("attributes", None) is None:
-                    return None
-                return retrival_event[0].get("attributes", None).get("payload", None)
-            else:
+        if len(events_array) == 0:
+            return self.retrieval_query_from_attributes()
+        retrieval_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY, events_array))
+        if retrieval_event and len(retrieval_event) > 0:
+            if retrieval_event[0].get("attributes", None) is None:
                 return None
+            return retrieval_event[0].get("attributes", None).get("payload", None)
         else:
             return None
         
+    @property
+    def retrieval_document(self) -> str:
+        """Get promptflow.retrieval.document for retrieval span. """
+        if self.span_type != RETRIEVAL_SPAN_TYPE:
+            return None
+        if self.events is None or len(self.events) == 0:
+            return self.retrieval_document_from_attributes()
+        events_array: list = json.loads(self.events)
+        if len(events_array) == 0:
+            return self.retrieval_document_from_attributes()
+        retrieval_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY, events_array))
+        if retrieval_event and len(retrieval_event) > 0:
+            if retrieval_event[0].get("attributes", None) is None:
+                return None
+            return retrieval_event[0].get("attributes", None).get("payload", None)
+        else:
+            return None
+
+    def retrieval_query_from_attributes(self) -> str:
+        """Get retrieval query from attributes."""
+        if self.attributes is None:
+            return None
+        attribute_dict: dict = json.loads(self.attributes)
+        if attribute_dict is None:
+            return None
+        return attribute_dict.get("retrieval.query", None)
+
+    def retrieval_document_from_attributes(self) -> str:
+        """Get retrieval document from attributes."""
+        if self.attributes is None:
+            return None
+        attribute_dict: dict = json.loads(self.attributes)
+        if attribute_dict is None:
+            return None
+        return attribute_dict.get("retrieval.documents", None)
+
     @property
     def status(self) -> str:
         """Get the span's status."""
@@ -216,7 +267,7 @@ class SpanTreeNode:
             child_subtree_dicts.append(subtree_dict)
 
         output_dict['children'] = child_subtree_dicts
-        return output_dict
+        return output_dict    
 
     def __iter__(self) -> Iterator["SpanTreeNode"]:
         """Iterate over current span and child spans."""

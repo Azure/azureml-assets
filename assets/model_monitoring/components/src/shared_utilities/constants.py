@@ -167,7 +167,7 @@ DEFAULT_RETRIEVAL_SCORE = 0
 APP_TRACES_EVENT_LOG_INPUT_KEY = "promptflow.function.inputs"
 APP_TRACES_EVENT_LOG_OUTPUT_KEY = "promptflow.function.output"
 APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY = "promptflow.retrieval.query"
-APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY = "promptflow.retrieval.query"
+APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY = "promptflow.retrieval.documents"
 
 # util
 MLFLOW_RUN_ID = "MLFLOW_RUN_ID"

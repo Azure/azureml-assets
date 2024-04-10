@@ -16,7 +16,7 @@ from src.shared_utilities.span_tree_utils import (
 class TestSpanTreeUtilities:
     """Test class for span Row Tree Utilities."""
 
-    def _span_tree_construct_and_to_json(self):
+    def test_span_tree_construct_and_to_json(self):
         """Test basic scenario to construct span tree with ascending time order and convert to json."""
         # The data end, start times in easy to read format:
         # s0 = 0, 100
@@ -62,7 +62,7 @@ class TestSpanTreeUtilities:
         for actual_span, expected_span_id in zip(json_tree, expected_span_id_order):
             assert expected_span_id == actual_span.span_id
 
-    def _span_tree_construct_no_root_span(self):
+    def test_span_tree_construct_no_root_span(self):
         """Test various scenarios where we span log data with no root_span for various reason."""
         s0 = SpanTreeNode(
             Row(trace_id="01", span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 9, 0, 0),
@@ -192,7 +192,7 @@ class TestSpanTreeUtilities:
         # assert tree_4.root_span.children[0] == s2
         # assert tree_4.root_span.children[1] == s4
 
-    def _span_tree_from_json_string(self):
+    def test_span_tree_from_json_string(self):
         """Test scenario to construct span tree from json string."""
         json_string = ""
         try:
@@ -241,7 +241,7 @@ class TestSpanTreeUtilities:
         assert datetime(2024, 2, 5, 0, 6, 0) == third_child.start_time
         assert 0 == len(third_child.children)
 
-    def _span_tree_node_children(self):
+    def test_span_tree_node_children(self):
         """Test scenarios for inserting child span tree nodes."""
         node10 = SpanTreeNode(Row(end_time=datetime(2024, 2, 12, 0, 10)))
         node20 = SpanTreeNode(Row(end_time=datetime(2024, 2, 12, 0, 20)))
@@ -277,7 +277,7 @@ class TestSpanTreeUtilities:
             ]
 
     )
-    def _span_tree_node_children_property(self, expected_children_arrays: list):
+    def test_span_tree_node_children_property(self, expected_children_arrays: list):
         """Test scenarios for setting and getting span tree node children."""
         node = SpanTreeNode(Row())
         node.children = expected_children_arrays
@@ -299,7 +299,7 @@ class TestSpanTreeUtilities:
                      trace_id=None, status=None, attributes="null", span_type=None, name=None, framework=None)),
             ]
     )
-    def _span_tree_node_other_properties(self, expected_row: Row):
+    def test_span_tree_node_other_properties(self, expected_row: Row):
         """Test scenarios for getting the other tree node properties."""
         node = SpanTreeNode(expected_row)
         assert expected_row.span_id == node.span_id
@@ -323,7 +323,7 @@ class TestSpanTreeUtilities:
         assert expected_row.framework == node.framework
         assert expected_row == node._span_row
 
-    def _span_tree_node_create_from_dict(self):
+    def test_span_tree_node_create_from_dict(self):
         """Test scenario for creating new node from json string."""
         json_dict = {}
         try:
@@ -398,7 +398,7 @@ class TestSpanTreeUtilities:
                 )
             ]
     )
-    def _span_tree_node_to_dict(self, expected_row: Row, expected_children):
+    def test_span_tree_node_to_dict(self, expected_row: Row, expected_children):
         """Test scenario for to_dict() of SpanTreeNode."""
         node = SpanTreeNode(expected_row)
         node.children = expected_children
@@ -417,7 +417,7 @@ class TestSpanTreeUtilities:
                 else:
                     assert actual_dict[keyname] == node._span_row[keyname]
 
-    def _span_tree_get_span_by_span_id(self):
+    def test_span_tree_get_span_by_span_id(self):
         """Test scenarios for get_span_by_id()."""
         s0 = SpanTreeNode(
             Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
@@ -451,17 +451,9 @@ class TestSpanTreeUtilities:
             [
                 (Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
                      end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
-                     attributes="{\"inputs\":\"{\\n  \\\"model\\\": \\\"gpt-4-0405\\\",\\n  \\\"messages\\\":" \
-                       "[\\n    {\\n      \\\"role\\\": \\\"system\\\",\\n      \\\"content\\\": \\\"You are a help" 
-                       "ful assistant.\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"user\\\",\\n      \\\"content\\\": "\
-                       "\\\"hello\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"assistant\\\",\\n      \\\"content\\\": "\
-                        "\\\"Hello! How can I assist you today?\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"user\\\",\\n "\
-                        "     \\\"content\\\": \\\"what can you do?\\\"\\n    }\\n  ],\\n  \\\"temperature\\\": 0.7,\\n  "\
-                        "\\\"top_p\\\": 1.0,\\n  \\\"n\\\": 1,\\n  \\\"stream\\\": false,\\n  \\\"presence_penalty\\\": 0.0,\\n "\
-                        " \\\"frequency_penalty\\\": 0.0,\\n  \\\"user\\\": \\\"\\\",\\n  \\\"max_tokens\\\": 256\\n}\"}",
-                     events="[{\"name\":\"promptflow.function.inputs\",\"timestamp\":\"2024-04-09T01:42:23.587010Z\","\
-                        "\"attributes\":{\"payload\":\"{\\n  \\\"model\\\": \\\"gpt-4-0405\\\"\\n  }\"}}]"),
-                 "{\n  \"model\": \"gpt-4-0405\"\n  }",
+                     attributes=None,
+                     events=None),
+                 None,
                  None),
                  (Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
                      end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
@@ -547,12 +539,38 @@ class TestSpanTreeUtilities:
                  "        },\n        \"violence\": {\n          \"filtered\": false,\n          \"severity\": \"safe\"\n        }\n      }\n    }\n  ]\n}"),
                 (Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
                      end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
-                     attributes=None,
-                     events=None),
-                 None,
-                 None)
-            ]
-    )
+                     attributes="{\"inputs\":\"{\\n  \\\"model\\\": \\\"gpt-4-0405\\\",\\n  \\\"messages\\\":" \
+                       "[\\n    {\\n      \\\"role\\\": \\\"system\\\",\\n      \\\"content\\\": \\\"You are a help" 
+                       "ful assistant.\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"user\\\",\\n      \\\"content\\\": "\
+                       "\\\"hello\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"assistant\\\",\\n      \\\"content\\\": "\
+                        "\\\"Hello! How can I assist you today?\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"user\\\",\\n "\
+                        "     \\\"content\\\": \\\"what can you do?\\\"\\n    }\\n  ],\\n  \\\"temperature\\\": 0.7,\\n  "\
+                        "\\\"top_p\\\": 1.0,\\n  \\\"n\\\": 1,\\n  \\\"stream\\\": false,\\n  \\\"presence_penalty\\\": 0.0,\\n "\
+                        " \\\"frequency_penalty\\\": 0.0,\\n  \\\"user\\\": \\\"\\\",\\n  \\\"max_tokens\\\": 256\\n}\"}",
+                     events="[]"),
+                 "{\n  \"model\": \"gpt-4-0405\",\n  \"messages\":[\n    {\n      \"role\": \"system\",\n      "\
+                 "\"content\": \"You are a helpful assistant.\"\n    },\n    {\n      \"role\": \"user\",\n      "\
+                 "\"content\": \"hello\"\n    },\n    {\n      \"role\": \"assistant\",\n      \"content\": "\
+                 "\"Hello! How can I assist you today?\"\n    },\n    {\n      \"role\": \"user\",\n      "\
+                 "\"content\": \"what can you do?\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"top_p\": 1.0,\n  "\
+                 "\"n\": 1,\n  \"stream\": false,\n  \"presence_penalty\": 0.0,\n  \"frequency_penalty\": 0.0,\n  "\
+                 "\"user\": \"\",\n  \"max_tokens\": 256\n}",
+                 None),
+                (Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
+                     end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
+                     attributes="{\"inputs\":\"{\\n  \\\"model\\\": \\\"gpt-4-0405\\\",\\n  \\\"messages\\\":" \
+                       "[\\n    {\\n      \\\"role\\\": \\\"system\\\",\\n      \\\"content\\\": \\\"You are a help" 
+                       "ful assistant.\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"user\\\",\\n      \\\"content\\\": "\
+                       "\\\"hello\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"assistant\\\",\\n      \\\"content\\\": "\
+                        "\\\"Hello! How can I assist you today?\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"user\\\",\\n "\
+                        "     \\\"content\\\": \\\"what can you do?\\\"\\n    }\\n  ],\\n  \\\"temperature\\\": 0.7,\\n  "\
+                        "\\\"top_p\\\": 1.0,\\n  \\\"n\\\": 1,\\n  \\\"stream\\\": false,\\n  \\\"presence_penalty\\\": 0.0,\\n "\
+                        " \\\"frequency_penalty\\\": 0.0,\\n  \\\"user\\\": \\\"\\\",\\n  \\\"max_tokens\\\": 256\\n}\"}",
+                     events="[{\"name\":\"promptflow.function.inputs\",\"timestamp\":\"2024-04-09T01:42:23.587010Z\","\
+                        "\"attributes\":{\"payload\":\"{\\n  \\\"model\\\": \\\"gpt-4-0405\\\"\\n  }\"}}]"),
+                 "{\n  \"model\": \"gpt-4-0405\"\n  }",
+                 None),
+                ])
     def test_span_tree_node_input_output_properties(self, row: Row, inputs, output):
         """Test scenarios for getting the input and output tree node properties."""
         node = SpanTreeNode(row)
