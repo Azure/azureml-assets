@@ -11,6 +11,12 @@ from typing import Dict, Iterator, List, Optional
 from pyspark.sql import Row
 from copy import copy
 
+from shared_utilities.constants import (
+    APP_TRACES_EVENT_LOG_INPUT_KEY,
+    APP_TRACES_EVENT_LOG_OUTPUT_KEY,
+    APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY,
+    APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY
+)
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -87,9 +93,11 @@ class SpanTreeNode:
             return attribute_dict.get("inputs", None)
         else:
             events_array: list = json.loads(self.events)
-            input_event = list(filter(lambda event: event.name == "promptflow.function.inputs", events_array))
-            if input_event is not None and input_event.count > 0:
-                return input_event[0].attributes.payload
+            input_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_INPUT_KEY, events_array))
+            if input_event is not None and len(input_event) > 0:
+                if input_event[0].get("attributes", None) is None:
+                    return None
+                return input_event[0].get("attributes", None).get("payload", None)
             else:
                 return None
 
@@ -102,23 +110,28 @@ class SpanTreeNode:
             # fallback to attribute field
             attribute_dict: dict = json.loads(self.attributes)
             if attribute_dict is None:
-                return None           
+                return None
             return attribute_dict.get("output", None)
         else:
             events_array: list = json.loads(self.events)
-            output_event = list(filter(lambda event: event.name == "promptflow.function.output", events_array))
-            if output_event is not None and output_event.count > 0:
-                return output_event[0].attributes.payload
+            output_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_OUTPUT_KEY, events_array))
+            if output_event is not None and len(output_event) > 0:
+                if output_event[0].get("attributes", None) is None:
+                    return None
+                return output_event[0].get("attributes", None).get("payload", None)
             else:
                 return None
     
     @property
     def query(self) -> str:
         """Get promptflow.retrieval.query for retrieval span """
+        events_array: list = json.loads(self.events)
         if self.span_type == "Retrival":
-            retrival_event = list(filter(lambda event: event.name == "promptflow.retrieval.query", events_array))
-            if retrival_event.count > 0:
-                return retrival_event[0].attributes.payload
+            retrival_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY, events_array))
+            if retrival_event and len(retrival_event) > 0:
+                if retrival_event[0].get("attributes", None) is None:
+                    return None
+                return retrival_event[0].get("attributes", None).get("payload", None)
             else:
                 return None
         else:
