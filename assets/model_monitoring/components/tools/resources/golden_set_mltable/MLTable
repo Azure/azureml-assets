@@ -1,4 +1,0 @@
-paths:
-- pattern: ./*.parquet
-transformations:
-- read_parquet
