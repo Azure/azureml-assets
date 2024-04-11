@@ -656,7 +656,7 @@ class TestSpanTreeUtilities:
             "row,retrieval_query,retrieval_document",
             [
                 (
-                    Row(span_id="0", 
+                    Row(span_id="0",
                         parent_id=None,
                         start_time=datetime(2024, 2, 12, 0, 0, 1),
                         end_time=datetime(2024, 2, 12, 1, 40, 0),
@@ -718,7 +718,7 @@ class TestSpanTreeUtilities:
                     Row(span_id="0",
                         parent_id=None,
                         start_time=datetime(2024, 2, 12, 0, 0, 1),
-                        end_time=datetime(2024, 2, 12, 1, 40, 0), 
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
                         trace_id="1",
                         status="OK",
                         attributes=None,
@@ -734,19 +734,19 @@ class TestSpanTreeUtilities:
                         span_type="Embedding",
                         attributes="{\"span_type\": \"Embedding\"}",
                         events="[        {\n          \"name\": \"promptflow.function.inputs\",\n "
-                            "         \"timestamp\": \"2024-04-10T15:25:48.909821Z\",\n        "
-                            "  \"attributes\": {\n            \"payload\": \"{\\n  \\\"input\\\": [\\n"
-                            "    [\\n      4438,\\n      527,\\n      499,\\n      3815,\\n      30\\n "
-                            "   ]\\n  ],\\n  \\\"model\\\": \\\"text-embedding-ada-002\\\"\\n}\"\n      "
-                            "    }\n        },\n        {\n          \"name\": \"promptflow.embedding.embeddings\","
-                            "\n          \"timestamp\": \"2024-04-10T15:25:49.146844Z\",\n          "
-                            "\"attributes\": {\n            \"payload\": \"[\\n  {\\n    "
-                            "\\\"embedding.vector\\\": \\\"\\u003c1536 dimensional vector\\u003e\\\",\\n    "
-                            "\\\"embedding.text\\\": \\\"\\u003c5 dimensional token\\u003e\\\"\\n  }\\n]\"\n"
-                            "}\n        }]"),
+                        "         \"timestamp\": \"2024-04-10T15:25:48.909821Z\",\n        "
+                        "  \"attributes\": {\n            \"payload\": \"{\\n  \\\"input\\\": [\\n"
+                        "    [\\n      4438,\\n      527,\\n      499,\\n      3815,\\n      30\\n "
+                        "   ]\\n  ],\\n  \\\"model\\\": \\\"text-embedding-ada-002\\\"\\n}\"\n      "
+                        "    }\n        },\n        {\n          \"name\": \"promptflow.embedding.embeddings\","
+                        "\n          \"timestamp\": \"2024-04-10T15:25:49.146844Z\",\n          "
+                        "\"attributes\": {\n            \"payload\": \"[\\n  {\\n    "
+                        "\\\"embedding.vector\\\": \\\"\\u003c1536 dimensional vector\\u003e\\\",\\n    "
+                        "\\\"embedding.text\\\": \\\"\\u003c5 dimensional token\\u003e\\\"\\n  }\\n]\"\n"
+                        "}\n        }]"),
                     "[\n  {\n    \"embedding.vector\": \"\u003c1536 dimensional vector\u003e\",\n    "
                     "\"embedding.text\": \"\u003c5 dimensional token\u003e\"\n  }\n]"),
-                 (
+                (
                     Row(span_id="0",
                         parent_id=None,
                         start_time=datetime(2024, 2, 12, 0, 0, 1),
