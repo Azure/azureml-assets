@@ -93,7 +93,7 @@ class SpanTreeNode:
             if len(events_array) == 0:
                 return self.input_from_attributes()
             input_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_INPUT_KEY,
-                                     events_array))
+                                      events_array))
             if input_event is not None and len(input_event) > 0:
                 if input_event[0].get("attributes", None) is None:
                     return None

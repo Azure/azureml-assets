@@ -562,7 +562,7 @@ class TestSpanTreeUtilities:
                     "I can offer guidance on using software, "
                     "troubleshooting basic tech issues, or understanding tech concepts."
                     "\\n5. **Entertainment and Recommendations**: "
-                    "I can suggest books, movies, music, or games based on your "\
+                    "I can suggest books, movies, music, or games based on your "
                     "preferences.\\n6. **Travel and Geography**: "
                     "I can provide information on countries, cultures, travel tips, "
                     "and help plan trips.\\n7. **Writing and Editing**: "
@@ -600,7 +600,7 @@ class TestSpanTreeUtilities:
                 (
                     Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
                         end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
-                        attributes="{\"inputs\":\"{\\n  \\\"model\\\": \\\"gpt-4-0405\\\",\\n  \\\"messages\\\":" 
+                        attributes="{\"inputs\":\"{\\n  \\\"model\\\": \\\"gpt-4-0405\\\",\\n  \\\"messages\\\":"
                         "[\\n    {\\n      \\\"role\\\": \\\"system\\\",\\n      \\\"content\\\": \\\"You are a help"
                         "ful assistant.\\\"\\n    },\\n    {\\n      \\\"role\\\": "
                         "\\\"user\\\",\\n      \\\"content\\\": "
@@ -655,53 +655,56 @@ class TestSpanTreeUtilities:
     @pytest.mark.parametrize(
             "row,retrieval_query,retrieval_document",
             [
-                (Row(span_id="0", 
-                    parent_id=None, 
-                    start_time=datetime(2024, 2, 12, 0, 0, 1),
-                    end_time=datetime(2024, 2, 12, 1, 40, 0), 
-                    trace_id="1", 
-                    status="OK",
-                    span_type="Retrieval",
-                    attributes=None,
-                    events=None),
-                None,
-                None),
-                (Row(span_id="0",
-                     parent_id=None,
-                     start_time=datetime(2024, 2, 12, 0, 0, 1),
-                     end_time=datetime(2024, 2, 12, 1, 40, 0),
-                     trace_id="1",
-                     status="OK",
-                     span_type="Retrieval",
-                     attributes="{\"span_type\":\"Retrieval\",\"retrieval.query\":"
-                     "\"Can you provide information about AML?\",\"retrieval.documents\":"
-                     "\"[{\\\"document.content\\\": \\\"# Monitoring Azure Machine "
-                     "Learning data reference\\\"}]\"}",
-                     events=""),
-                "Can you provide information about AML?",
-                "[{\"document.content\": \"# Monitoring Azure Machine Learning data reference\"}]"),
-                (Row(span_id="0",
-                     parent_id=None,
-                     start_time=datetime(2024, 2, 12, 0, 0, 1),
-                     end_time=datetime(2024, 2, 12, 1, 40, 0),
-                     trace_id="1",
-                     status="OK",
-                     span_type="Retrieval",
-                     attributes="{\"span_type\":\"Retrieval\",\"retrieval.query\":"
-                     "\"Can you provide information about AML?\","
-                     "\"retrieval.documents\":\"[{\\\"document.content\\\": "
-                     "\\\"# Monitoring Azure Machine Learning data reference\\\"}]\"}",
-                     events="[\n  {\"name\":\"promptflow.retrieval.query\",\n  "
-                     "\"timestamp\":\"2024-04-10T15:26:11.410541Z\",\n"
-                     "  \"attributes\":{\"payload\":\"Can you provide information about AML?\"}},\n  "
-                     "{\"name\":\"promptflow.retrieval.documents\",\n  "
-                     "\"timestamp\":\"2024-04-10T15:26:18.429217Z\",\n  "
-                     "\"attributes\":{\"payload\":\"[{\\\"document.content\\\": "
-                     "\\\"# Monitoring Azure Machine Learning data "
-                     "reference\\\"}]\"}}\n  ]"),
-                "Can you provide information about AML?",
-                "[{\"document.content\": \"# Monitoring Azure Machine Learning data reference\"}]"),                
-                ])
+                (   
+                    Row(span_id="0", 
+                        parent_id=None, 
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0), 
+                        trace_id="1", 
+                        status="OK",
+                        span_type="Retrieval",
+                        attributes=None,
+                        events=None),
+                    None,
+                    None),
+                (
+                    Row(span_id="0",
+                        parent_id=None,
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
+                        status="OK",
+                        span_type="Retrieval",
+                        attributes="{\"span_type\":\"Retrieval\",\"retrieval.query\":"
+                        "\"Can you provide information about AML?\",\"retrieval.documents\":"
+                        "\"[{\\\"document.content\\\": \\\"# Monitoring Azure Machine "
+                        "Learning data reference\\\"}]\"}",
+                        events=""),
+                    "Can you provide information about AML?",
+                    "[{\"document.content\": \"# Monitoring Azure Machine Learning data reference\"}]"),
+                (
+                    Row(span_id="0",
+                        parent_id=None,
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
+                        status="OK",
+                        span_type="Retrieval",
+                        attributes="{\"span_type\":\"Retrieval\",\"retrieval.query\":"
+                        "\"Can you provide information about AML?\","
+                        "\"retrieval.documents\":\"[{\\\"document.content\\\": "
+                        "\\\"# Monitoring Azure Machine Learning data reference\\\"}]\"}",
+                        events="[\n  {\"name\":\"promptflow.retrieval.query\",\n  "
+                        "\"timestamp\":\"2024-04-10T15:26:11.410541Z\",\n"
+                        "  \"attributes\":{\"payload\":\"Can you provide information about AML?\"}},\n  "
+                        "{\"name\":\"promptflow.retrieval.documents\",\n  "
+                        "\"timestamp\":\"2024-04-10T15:26:18.429217Z\",\n  "
+                        "\"attributes\":{\"payload\":\"[{\\\"document.content\\\": "
+                        "\\\"# Monitoring Azure Machine Learning data "
+                        "reference\\\"}]\"}}\n  ]"),
+                    "Can you provide information about AML?",
+                    "[{\"document.content\": \"# Monitoring Azure Machine Learning data reference\"}]"),                
+            ])
     def test_span_tree_node_retrieval_properties(self, row: Row, retrieval_query, retrieval_document):
         """Test scenarios for getting the input and output tree node properties."""
         node = SpanTreeNode(row)
@@ -711,24 +714,26 @@ class TestSpanTreeUtilities:
     @pytest.mark.parametrize(
             "row,embeddings",
             [
-                (Row(span_id="0", 
-                    parent_id=None, 
-                    start_time=datetime(2024, 2, 12, 0, 0, 1),
-                    end_time=datetime(2024, 2, 12, 1, 40, 0), 
-                    trace_id="1", 
-                    status="OK",
-                    attributes=None,
-                    events=None),
-                None),
-                (Row(span_id="0",
-                     parent_id=None,
-                     start_time=datetime(2024, 2, 12, 0, 0, 1),
-                     end_time=datetime(2024, 2, 12, 1, 40, 0),
-                     trace_id="1",
-                     status="OK",
-                     span_type="Embedding",
-                     attributes="{\"span_type\": \"Embedding\"}",
-                     events="[        {\n          \"name\": \"promptflow.function.inputs\",\n "
+                (
+                    Row(span_id="0", 
+                        parent_id=None, 
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0), 
+                        trace_id="1", 
+                        status="OK",
+                        attributes=None,
+                        events=None),
+                    None),
+                (
+                    Row(span_id="0",
+                        parent_id=None,
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
+                        status="OK",
+                        span_type="Embedding",
+                        attributes="{\"span_type\": \"Embedding\"}",
+                        events="[        {\n          \"name\": \"promptflow.function.inputs\",\n "
                             "         \"timestamp\": \"2024-04-10T15:25:48.909821Z\",\n        "
                             "  \"attributes\": {\n            \"payload\": \"{\\n  \\\"input\\\": [\\n"
                             "    [\\n      4438,\\n      527,\\n      499,\\n      3815,\\n      30\\n "
@@ -739,23 +744,24 @@ class TestSpanTreeUtilities:
                             "\\\"embedding.vector\\\": \\\"\\u003c1536 dimensional vector\\u003e\\\",\\n    "
                             "\\\"embedding.text\\\": \\\"\\u003c5 dimensional token\\u003e\\\"\\n  }\\n]\"\n"
                             "}\n        }]"),
-                "[\n  {\n    \"embedding.vector\": \"\u003c1536 dimensional vector\u003e\",\n    "
-                "\"embedding.text\": \"\u003c5 dimensional token\u003e\"\n  }\n]"),
-                 (Row(span_id="0",
-                     parent_id=None,
-                     start_time=datetime(2024, 2, 12, 0, 0, 1),
-                     end_time=datetime(2024, 2, 12, 1, 40, 0),
-                     trace_id="1",
-                     status="OK",
-                     span_type="Embedding",
-                     attributes="{\"span_type\": \"Embedding\",\"embedding.embeddings\": \"[\\n  "
-                     "{\\n    \\\"embedding.vector\\\": \\\"\\u003c1536 dimensional vector\\u003e\\\",\\n"
-                     "    \\\"embedding.text\\\": \\\"\\u003c5 dimensional token\\u003e\\\"\\n  }\\n]\"}",
-                     events="[]"),
-                "[\n  {\n    \"embedding.vector\": \"\u003c1536 dimensional vector\u003e\",\n    "
-                "\"embedding.text\": \"\u003c5 dimensional token\u003e\"\n  }\n]")
-                ])
-    def test_span_tree_node_retrieval_properties(self, row: Row, embeddings):
+                    "[\n  {\n    \"embedding.vector\": \"\u003c1536 dimensional vector\u003e\",\n    "
+                    "\"embedding.text\": \"\u003c5 dimensional token\u003e\"\n  }\n]"),
+                 (
+                    Row(span_id="0",
+                        parent_id=None,
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
+                        status="OK",
+                        span_type="Embedding",
+                        attributes="{\"span_type\": \"Embedding\",\"embedding.embeddings\": \"[\\n  "
+                        "{\\n    \\\"embedding.vector\\\": \\\"\\u003c1536 dimensional vector\\u003e\\\",\\n"
+                        "    \\\"embedding.text\\\": \\\"\\u003c5 dimensional token\\u003e\\\"\\n  }\\n]\"}",
+                        events="[]"),
+                    "[\n  {\n    \"embedding.vector\": \"\u003c1536 dimensional vector\u003e\",\n    "
+                    "\"embedding.text\": \"\u003c5 dimensional token\u003e\"\n  }\n]")
+            ])
+    def test_span_tree_node_embedding_properties(self, row: Row, embeddings):
         """Test scenarios for getting the input and output tree node properties."""
         node = SpanTreeNode(row)
         assert node.embeddings == embeddings
