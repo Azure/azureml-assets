@@ -138,11 +138,21 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
-      
-      - name: Test asset
+
+      - name: Fetch OID token every 4 mins
         run: |
-          az account get-access-token --resource https://management.azure.com
-          python -u $scripts_test_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $scripts_test_dir/requirements.txt -r $GITHUB_WORKSPACE/$pytest_reports
+          while true; do
+            token_request=$ACTIONS_ID_TOKEN_REQUEST_TOKEN
+            token_uri=$ACTIONS_ID_TOKEN_REQUEST_URL
+            token=$(curl -H "Authorization: bearer $token_request" "${token_uri}&audience=api://AzureADTokenExchange" | jq .value -r)
+            az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -t ${{ secrets.AZURE_TENANT_ID }} --federated-token $token --output none
+
+            # Sleep for 4 minutes
+            sleep 240
+          done &
+
+      - name: Test asset
+        run: python -u $scripts_test_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $scripts_test_dir/requirements.txt -r $GITHUB_WORKSPACE/$pytest_reports
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
