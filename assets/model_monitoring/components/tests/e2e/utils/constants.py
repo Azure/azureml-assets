@@ -17,6 +17,7 @@ COMPONENT_NAME_DATA_JOINER = "model_monitor_data_joiner"
 COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR = 'generation_safety_quality_signal_monitor'
 COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR = "model_performance_signal_monitor"
 COMPONENT_NAME_MODEL_TOKEN_STATS_SIGNAL_MONITOR = "genai_token_statistics_signal_monitor"
+COMPONENT_NAME_ACTION_ANALYZER = "model_monitor_action_analyzer"
 
 # MDC-generated target dataset of an iris model. The data contains drift.
 # Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
