@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  AzureML minimal/Ubuntu 22.04/Python 3.11 cpu quickstart environment.
+  AzureML minimal Python 3.11 app quickstart environment.
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"

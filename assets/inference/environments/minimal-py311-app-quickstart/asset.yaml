@@ -1,4 +1,4 @@
-name: minimal-ubuntu22.04-py311-cpu-app-quickstart
+name: minimal-py311-app-quickstart
 
 version: auto
 type: environment

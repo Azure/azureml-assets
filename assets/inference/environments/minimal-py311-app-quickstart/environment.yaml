@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/minimal-ubuntu22.04-py311-cpu-app-quickstart
+  name: azureml/curated/minimal-py311-app-quickstart
   os: linux
   context:
     dir: context
