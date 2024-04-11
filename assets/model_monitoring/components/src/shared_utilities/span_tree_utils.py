@@ -12,10 +12,12 @@ from pyspark.sql import Row
 from copy import copy
 
 from shared_utilities.constants import (
+    APP_TRACES_EVENT_LOG_EMBEDDINGS_KEY,
     APP_TRACES_EVENT_LOG_INPUT_KEY,
     APP_TRACES_EVENT_LOG_OUTPUT_KEY,
     APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY,
     APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY,
+    EMBEDDING_SPAN_TYPE,
     RETRIEVAL_SPAN_TYPE
 )
 from shared_utilities.momo_exceptions import InvalidInputError
@@ -193,6 +195,38 @@ class SpanTreeNode:
         if attribute_dict is None:
             return None
         return attribute_dict.get("retrieval.documents", None)
+
+    @property
+    def embeddings(self) -> str:
+        """Get promptflow.embedding.embeddings for retrieval span. """
+        if self.span_type != EMBEDDING_SPAN_TYPE:
+            print("not span type ", self.span_type)
+            return None
+        if self.events is None or len(self.events) == 0:
+            print("get embedding from attributes 1")
+            return self.embeddings_from_attributes()
+        events_array: list = json.loads(self.events)
+        if len(events_array) == 0:
+            print("get embedding from attributes 2")
+            return self.embeddings_from_attributes()
+        embeddings_event = list(filter(lambda event: event.get("name", None) ==
+                                      APP_TRACES_EVENT_LOG_EMBEDDINGS_KEY,
+                                      events_array))
+        if embeddings_event and len(embeddings_event) > 0:
+            if embeddings_event[0].get("attributes", None) is None:
+                return None
+            return embeddings_event[0].get("attributes", None).get("payload", None)
+        else:
+            return None
+
+    def embeddings_from_attributes(self) -> str:
+        """Get embeddings from attributes."""
+        if self.attributes is None:
+            return None
+        attribute_dict: dict = json.loads(self.attributes)
+        if attribute_dict is None:
+            return None
+        return attribute_dict.get("embedding.embeddings", None)
 
     @property
     def status(self) -> str:

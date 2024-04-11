@@ -225,7 +225,7 @@ def parse_debugging_info(root_span):
                 retrieval_query_type = index_input["query_type"]
                 retrieval_top_k = index_input["top_k"]
                 index_id = get_index_id(index_content)
-                query = json.loads(span.retrieval_query)
+                query = span.retrieval_query
                 retrieval_documents = json.loads(span.retrieval_document)
                 text = []
                 score = []

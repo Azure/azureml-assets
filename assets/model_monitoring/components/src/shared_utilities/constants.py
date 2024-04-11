@@ -153,6 +153,7 @@ GSQ_METRICS_LIST = ["Fluency", "Coherence", "Groundedness", "Relevance", "Simila
 GOOD_METRICS_VALUE = 5
 METRICS_VIOLATION_THRESHOLD = 4
 RETRIEVAL_SPAN_TYPE = "Retrieval"
+EMBEDDING_SPAN_TYPE = "Embedding"
 TEXT_SPLITTER = "#<Splitter>#"
 
 GROUP_TOPIC_MIN_SAMPLE_SIZE = 10
@@ -168,6 +169,7 @@ APP_TRACES_EVENT_LOG_INPUT_KEY = "promptflow.function.inputs"
 APP_TRACES_EVENT_LOG_OUTPUT_KEY = "promptflow.function.output"
 APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY = "promptflow.retrieval.query"
 APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY = "promptflow.retrieval.documents"
+APP_TRACES_EVENT_LOG_EMBEDDINGS_KEY = "promptflow.embedding.embeddings"
 
 # util
 MLFLOW_RUN_ID = "MLFLOW_RUN_ID"
