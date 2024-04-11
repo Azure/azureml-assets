@@ -93,7 +93,7 @@ class SpanTreeNode:
             if len(events_array) == 0:
                 return self.input_from_attributes()
             input_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_INPUT_KEY,
-                                    events_array))
+                                     events_array))
             if input_event is not None and len(input_event) > 0:
                 if input_event[0].get("attributes", None) is None:
                     return None
@@ -157,7 +157,7 @@ class SpanTreeNode:
             return retrieval_event[0].get("attributes", None).get("payload", None)
         else:
             return None
-        
+
     @property
     def retrieval_document(self) -> str:
         """Get promptflow.retrieval.document for retrieval span. """
@@ -210,8 +210,8 @@ class SpanTreeNode:
             print("get embedding from attributes 2")
             return self.embeddings_from_attributes()
         embeddings_event = list(filter(lambda event: event.get("name", None) ==
-                                      APP_TRACES_EVENT_LOG_EMBEDDINGS_KEY,
-                                      events_array))
+                                       APP_TRACES_EVENT_LOG_EMBEDDINGS_KEY,
+                                       events_array))
         if embeddings_event and len(embeddings_event) > 0:
             if embeddings_event[0].get("attributes", None) is None:
                 return None
@@ -307,7 +307,7 @@ class SpanTreeNode:
             child_subtree_dicts.append(subtree_dict)
 
         output_dict['children'] = child_subtree_dicts
-        return output_dict    
+        return output_dict
 
     def __iter__(self) -> Iterator["SpanTreeNode"]:
         """Iterate over current span and child spans."""
