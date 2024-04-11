@@ -679,7 +679,7 @@ class TestSpanTreeUtilities:
                         "Learning data reference\\\"}]\"}",
                         events=""),
                     "Can you provide information about AML?",
-                    [{"document.content" : "# Monitoring Azure Machine Learning data reference"}]),
+                    [{"document.content": "# Monitoring Azure Machine Learning data reference"}]),
                 (
                     Row(span_id="0",
                         parent_id=None,
@@ -701,9 +701,9 @@ class TestSpanTreeUtilities:
                         "\\\"# Monitoring Azure Machine Learning data "
                         "reference\\\"}]\"}}\n  ]"),
                     "Can you provide information about AML?",
-                    [{"document.content" : "# Monitoring Azure Machine Learning data reference"}])
+                    [{"document.content": "# Monitoring Azure Machine Learning data reference"}])
             ])
-    def test_span_tree_node_retrieval_properties(self, row: Row, retrieval_query, retrieval_documents:list):
+    def test_span_tree_node_retrieval_properties(self, row: Row, retrieval_query, retrieval_documents: list):
         """Test scenarios for getting the input and output tree node properties."""
         node = SpanTreeNode(row)
         assert node.retrieval_query == retrieval_query
