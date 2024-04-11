@@ -655,12 +655,12 @@ class TestSpanTreeUtilities:
     @pytest.mark.parametrize(
             "row,retrieval_query,retrieval_document",
             [
-                (   
+                (
                     Row(span_id="0", 
-                        parent_id=None, 
+                        parent_id=None,
                         start_time=datetime(2024, 2, 12, 0, 0, 1),
-                        end_time=datetime(2024, 2, 12, 1, 40, 0), 
-                        trace_id="1", 
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
                         status="OK",
                         span_type="Retrieval",
                         attributes=None,
@@ -703,7 +703,7 @@ class TestSpanTreeUtilities:
                         "\\\"# Monitoring Azure Machine Learning data "
                         "reference\\\"}]\"}}\n  ]"),
                     "Can you provide information about AML?",
-                    "[{\"document.content\": \"# Monitoring Azure Machine Learning data reference\"}]"),                
+                    "[{\"document.content\": \"# Monitoring Azure Machine Learning data reference\"}]"),
             ])
     def test_span_tree_node_retrieval_properties(self, row: Row, retrieval_query, retrieval_document):
         """Test scenarios for getting the input and output tree node properties."""
@@ -715,11 +715,11 @@ class TestSpanTreeUtilities:
             "row,embeddings",
             [
                 (
-                    Row(span_id="0", 
-                        parent_id=None, 
+                    Row(span_id="0",
+                        parent_id=None,
                         start_time=datetime(2024, 2, 12, 0, 0, 1),
                         end_time=datetime(2024, 2, 12, 1, 40, 0), 
-                        trace_id="1", 
+                        trace_id="1",
                         status="OK",
                         attributes=None,
                         events=None),
