@@ -1,18 +1,21 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 """
-Create customer environments with given Dockerfile and/or wheel packages.
+Create a custom environments with given Dockerfile and/or wheel packages.
 
-Two use scenarios:
+Two user scenarios:
+
 1. Using your own Dockerfile
-python create_custom_env.py [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME] [-d DOCKER_DIR] [-n CUSTOM_ENVIRONMENT_NAME]
+    python create_custom_env.py [-d DOCKER_DIR] [-n CUSTOM_ENVIRONMENT_NAME] \
+        [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME] 
 
-2. Adding wheel packages under package directory. BTW. build wheel file "python setup.py bdist_wheel"
-python create_custom_env.py [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME] [-p PACKAGE_DIR] [-n CUSTOM_ENVIRONMENT_NAME]
+2. Adding wheel packages from a package directory. BTW. build wheel file "python setup.py bdist_wheel"
+    python create_custom_env.py  [-p PACKAGE_DIR] [-n CUSTOM_ENVIRONMENT_NAME] \
+        [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME]
 
 Note:
-If none of DOCKER_DIR and PACKAGE_DIR is provided, the script will fail.
-If Dockerfile is not provided, the script will create a default Dockerfile with base image from BASE_ENVIRONMENT.
+    If none of DOCKER_DIR and PACKAGE_DIR is provided, the script will fail.
+    If Dockerfile is not provided, the script will create a default Dockerfile with base image from BASE_ENVIRONMENT.
 """
 
 import argparse
@@ -71,9 +74,7 @@ def main(
         if not (staging_dir / "Dockerfile").exists():
             # Create Dockerfile if not provided
             with open(staging_dir / "Dockerfile", "w") as f:
-                f.write(
-                    f"FROM {BASE_ENVIRONMENT}:latest AS base\n"
-                )
+                f.write(f"FROM {BASE_ENVIRONMENT}:latest AS base\n")
 
         # Find all .whl files and copy them into staging_dir / "wheels" directory
         wheel_dir = staging_dir / "wheels"
