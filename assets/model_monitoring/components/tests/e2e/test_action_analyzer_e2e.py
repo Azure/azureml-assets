@@ -33,7 +33,7 @@ def _submit_action_analyzer_job(ml_client, get_component, signal_scored_data, si
     pipeline_job.outputs.action_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name="action_analyzer_e2e_test_0401", skip_validation=True
+        pipeline_job, experiment_name="action_analyzer_e2e_test", skip_validation=True
     )
 
     # Wait until the job completes
