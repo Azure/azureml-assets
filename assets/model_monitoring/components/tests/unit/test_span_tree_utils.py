@@ -588,7 +588,7 @@ class TestSpanTreeUtilities:
                     "  \"model\": \"gpt-4\",\n  \"object\": \"chat.completion\",\n  "
                     "\"system_fingerprint\": \"fp_2f57f81c11\",\n  \"usage\": "
                     "{\n    \"completion_tokens\": 256,\n    \"prompt_tokens\": 40,\n    "
-                    "\"total_tokens\": 296\n  },\n  \"prompt_filter_results\":"\
+                    "\"total_tokens\": 296\n  },\n  \"prompt_filter_results\":"
                     " [\n    {\n      \"prompt_index\": 0,\n      \"content_filter_results\": {\n        "
                     "\"hate\": {\n          \"filtered\": false,\n"
                     "          \"severity\": \"safe\"\n        },\n        \"self_harm\": {\n          "
