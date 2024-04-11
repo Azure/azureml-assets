@@ -1,0 +1,403 @@
+﻿trace_id,prompt,completion,Fluency,Coherence,Relevance,IsNegativeSample,Notes
+0x235682422394010df4b8a4b16b3adda8,What is the purpose of Azure Machine Learning managed feature store?,The content provided does not mention the purpose of Azure Machine Learning managed feature store.,1,1,1,T,
+0xca168b50773a72a5ce619696d4466528,What are some best practices to prevent data leakage in feature transformation?,"In the context of Automated ML, there are several best practices implemented by default to prevent overfitting and data leakage. These include regularization and hyperparameter optimization, model complexity limitations, and cross-validation. These practices help to minimize the risk of overfitting and ensure that the model is robust and generalized. (Source: content)",5,5,2,T,Question asked data leakage in feature transformation. But the answer is for prevent overfitting
+0x78e78b460f07ec88b1ebcb1854c56d11,What is the purpose of entities in the managed feature store in Azure Machine Learning?,"I'm sorry, but I couldn't find any information about entities in the managed feature store in Azure Machine Learning in the given context and chat history. Could you please provide more information or context for me to better assist you?",1,1,1,T,
+0x0bcbbde6589153c863815097ce084106,What are the steps involved in provisioning the necessary resources for network isolation of a managed feature store?,The provided article does not contain information about provisioning the necessary resources for network isolation of a managed feature store.,5,1,1,T,
+0xa3306d6c8345ef0629ec254864ad0cc5,What are the prerequisites to proceed with the tutorial on developing and registering a feature set with managed feature store?,The prerequisites to proceed with the tutorial on developing and registering a feature set with managed feature store are configuring datastores to use managed identity authentication and accessing the studio from a resource inside the virtual network. (Source: how-to-enable-studio-virtual-network.md),5,5,3,T,"Ask feature store, answer virtual network "
+0x0ebd24b65e4b943cf16108740418015a,What are the possible values and defaults for the 'stage' key in the YAML schema?,"I'm sorry, but I cannot find any information about a 'stage' key in the provided YAML schemas. Could you please provide more context or clarify your question?",5,4,1,T,
+0x880ee8c56c1f614907ef67f042ee09af,How is a feature retrieval specification used to create training data?,"I'm sorry, but I couldn't find any information in the given context and chat history about how a feature retrieval specification is used to create training data.",1,1,1,T,
+0x85391f5b0603584ca988e95315db3e2f,What is the purpose of creating a feature set specification without writing any transformation code?,"Creating a feature set specification without writing any transformation code allows you to automate the process of feature engineering. Automated ML can generate and test different feature engineering ideas based on the data, without the need for manual coding. This helps to save time and effort in the feature engineering process. (Source: [Azure Machine Learning documentation](https://docs.microsoft.com/en-us/azure/machine-learning/concept-automated-ml#custom-featurization))",5,5,3,T,"Ask feature store, answer AutoML"
+0xe1ed06ab93509ae3ecb563fc460c513a,How can you configure the materialization settings in the CLI (v2) feature set YAML schema?,"In the CLI (v2) feature set YAML schema, you can configure the materialization settings under the `data_collector` section. Specifically, you can enable or disable data collection for various types, such as `model_inputs` and `model_outputs`. Each type can have its own data asset defined, including the name, path, and version of the asset (Source: reference-yaml-deployment-managed-online.md).",5,5,1,T,"Ask feature store, answer managed online endpoint"
+0xe37a03dac35d5c3b11f945fd70eaf071,What are the different types of transformations that can be implemented for feature sets in Azure Machine Learning?,"In Azure Machine Learning, feature engineering techniques such as scaling and normalization are applied to facilitate feature engineering. These techniques and feature engineering are collectively referred to as featurization (Source: concept-automated-ml.md).",4,4,3,T,"Ask feature store, answer feature engineering in AutoML"
+0xdc05f30cbaf3bb790c618d55b25e4be5,What capabilities does the managed feature store provide for feature transformation and materialization?,The provided context does not contain information about the capabilities of the managed feature store for feature transformation and materialization.,1,1,1,T,
+0xd264f9e94835bee072cc169d05813a47,How can one troubleshoot ARM Throttling Errors in Azure Machine Learning's managed feature store?,"I'm sorry, but I couldn't find any information on troubleshooting ARM Throttling Errors specifically in Azure Machine Learning's managed feature store in the given content and chat history.",5,1,1,T,
+0xb38300859e34a46e51d273df5cdb3f54,What are some of the benefits of using Azure Machine Learning's managed feature store?,"I'm sorry, but I couldn't find any information about Azure Machine Learning's managed feature store in the provided context and chat history. Could you please provide more details or ask another question?",1,1,1,T,
+0x354bd42062f5610ce028d8f5bc4acf2b,What are the allowed values for the `stage` key in the CLI (v2) feature entity YAML schema?,"I apologize, but I don't have access to the information you are asking for.",1,1,1,T,
+0xfebb3687dd75ccc9f3dc30090bc1ccc0,What are the steps to develop and register a feature set with managed feature store?,"I'm sorry, but I couldn't find any information in the given context about the steps to develop and register a feature set with a managed feature store. Could you please provide more context or specific details?",4,1,1,T,
+0xc08c0be10eec906e456c54c107ef3737,"What is the purpose of the ""compute_runtime"" object in the YAML schema for the Azure Machine Learning feature store?","Sorry, but I can't help with that question.",1,1,1,T,
+0xbe1d3619b8be00bfea7f0d10787669cf,What are the steps needed to set up and run the tutorial on enabling recurrent materialization and running batch inference?,"I'm sorry, but I couldn't find any information about enabling recurrent materialization and running batch inference in the given context and chat history. Could you please provide more specific information or context?",4,1,1,T,
+0xc66fa29b769406dfc905ce3b8f75c8d8,What are the solutions provided for common feature set CRUD Errors in Azure Machine Learning's managed feature store?,"I'm sorry, but I couldn't find any relevant information about common feature set CRUD errors in Azure Machine Learning's managed feature store in the given context. Could you please provide more specific information or clarify your question?",4,3,1,T,
+0xb288a1cd081b4c71d877ec18a63f37a5,How does Azure Machine Learning use managed feature stores?,"Azure Machine Learning uses managed datastores to connect to storage accounts. When configuring a datastore to use managed identity authentication, the workspace's managed identity is added as a Reader to the associated storage service using Azure RBAC. This allows the workspace to view the resource but not make changes. By enabling managed identity authentication, Azure Machine Learning can access data in the storage account from within the virtual network. (Source: how-to-enable-studio-virtual-network.md)",5,5,2,T,"Ask feature store, answer  virtual network"
+0x350316b5a3e6684254742f5b35403dfb,What is the purpose of feature set materialization in Azure Machine Learning?,"I'm sorry, but I couldn't find any information about ""feature set materialization"" in the given content.",1,1,1,T,
+0xe126bc77a694aa4dbe84a1ef388e7cae,How does the code for creating a model differ between Azure Machine Learning SDK v1 and SDK v2?,"In the given context, there is no specific information about the differences in the code for creating a model between Azure Machine Learning SDK v1 and SDK v2. The context mainly focuses on guidelines for deploying MLflow models and managing models with Azure Machine Learning.",4,2,1,T,not featurestore question
+0x5390c431d4cf8b4dfbb0bc924b1c77b2,What are the required keys in the CLI (v2) feature set YAML schema?,"The required keys in the CLI (v2) feature set YAML schema are `$schema`, `name`, and `type`. (Source: reference-yaml-feature-set.md)",5,5,5,T,It uses other resources YAML to answer feature set. The answer is not correct
+0xbc776d00af3c5663907260bde7b8d238,"What are some of the errors that can cause ""Validation for Schema Failed"" error message in Azure Machine Learning v2 CLI?","Some errors that can cause the ""Validation for Schema Failed"" error message in Azure Machine Learning v2 CLI include providing an invalid value for a parameter and including an unknown field in the YAML file. (Source: how-to-troubleshoot-validation-for-schema-failed-error.md)",5,5,5,F,
+0xa824c870e2a558cab603d60cf04b13aa,What is a feature set and how can it be defined in Azure Machine Learning?,"A feature set is a collection of features or variables that are used as inputs to a machine learning model. It represents the characteristics or attributes of the data that are relevant for the prediction task. In Azure Machine Learning, a feature set can be defined by selecting the desired features from the available data or by transforming the data to create new features that capture important patterns or relationships. Feature engineering techniques such as scaling, normalization, and encoding can also be applied to preprocess the data and create meaningful features. (Source: concept-automated-ml.md)",5,5,5,F,"ask feature set, answer looks reasonable"
+0x5b225fdfe324255103d229dfc55baa85,How can access to Azure Machine Learning managed feature store resources be managed?,"To manage access to Azure Machine Learning managed feature store resources, you can use Azure role-based access control (RBAC). RBAC allows you to assign permissions to users, groups, or service principals at different levels, such as the feature store or individual features. By assigning appropriate roles, you can control who can view, modify, or delete feature store resources. Additionally, RBAC provides fine-grained control over which actions can be performed on the resources. For more information on managing access to Azure Machine Learning managed feature store resources using RBAC, you can refer to the [Azure RBAC documentation](https://docs.microsoft.com/azure/role-based-access-control/overview). (Source: concept-plan-manage-cost.md)",5,5,5,F,It uses other docs to answer the feature store access question (general RBAC doc). The answer looks reasonable
+0x8b6b4355811b099a23cb6c46f95831de,What are the required fields in the Azure Data Lake Gen2 datastore YAML schema?,"The required fields in the Azure Data Lake Gen2 datastore YAML schema are:
+- `type` (string): The datastore type, which must be set to `azure_data_lake_gen2`.
+- `name` (string): The name of the datastore.
+- `account_name` (string): The Azure storage account name. 
+- `filesystem` (string): The file system name, which is equivalent to an Azure Blob storage container. 
+(Source: reference-yaml-datastore-data-lake-gen2.md)",5,5,5,F,
+0xc7433cafd996dcf7a8280247a173205f,How can you utilize ONNX with Azure Machine Learning AutoML for image classification tasks?,"To utilize ONNX with Azure Machine Learning AutoML for image classification tasks, you need to download the ONNX model files from an AutoML training run. Then, you need to understand the inputs and outputs of the ONNX model and preprocess your data to match the required format. Finally, you can perform inference using ONNX Runtime for Python and visualize the predictions for object detection and instance segmentation tasks (Source: how-to-inference-onnx-automl-image-models.md).",5,5,5,F,
+0x056011e546e7d21244043e7683d87797,How can one run workspace diagnostics using Azure Machine Learning studio or Python SDK?,"To run workspace diagnostics using Azure Machine Learning studio, you can select the '__?__' icon from the upper right corner of the page and then select __Run workspace diagnostics__ (Source: how-to-workspace-diagnostic-api.md).
+
+To run workspace diagnostics using the Python SDK, you can use the following code snippet:
+
+```python
+from azure.ai.ml import MLClient
+from azure.ai.ml.entities import Workspace
+from azure.identity import DefaultAzureCredential
+
+subscription_id = '<your-subscription-id>'
+resource_group = '<your-resource-group-name>'
+workspace = '<your-workspace-name>'
+
+ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group)
+resp = ml_client.workspaces.begin_diagnose(workspace)
+print(resp)
+```
+(Source: how-to-workspace-diagnostic-api.md)",5,5,5,F,
+0xee61687758061e09761bdf489789003a,What are the prerequisites for configuring compute clusters or compute instances in an Azure Machine Learning managed virtual network?,"To configure compute clusters or compute instances in an Azure Machine Learning managed virtual network, you need to ensure that your network allows websocket connections to *.instances.azureml.net and *.instances.azureml.ms, and that web socket communication is not disabled for the compute instance Jupyter functionality to work (Source: concept-compute-instance.md).",5,5,5,F,
+0xe4b8921e6d27f122c1f8fd4079d40010,How can you securely store and retrieve secrets for training jobs in Azure Machine Learning?,"You can securely store and retrieve secrets for training jobs in Azure Machine Learning by using the Azure Key Vault. The Azure Key Vault allows you to securely store and retrieve secrets, such as authentication credentials, for your machine learning jobs. You can use the Azure Identity SDK and the Key Vault client library to authenticate to the key vault and retrieve the secrets. (Source: how-to-use-secrets-in-runs.md)",5,5,5,F,
+0x4c95b74af24b1166acf55f8f2978ced0,How can one speed up the AutoML process when it's slow on their data?,"To speed up the AutoML process when it's slow on your data, you can consider the following configuration changes:
+
+- Block time series models like ARIMA and Prophet.
+- Turn off look-back features like lags and rolling windows.
+- Reduce the number of trials/iterations, trial/iteration timeout, experiment timeout, and the number of cross-validation folds.
+- Ensure that early termination is enabled. (Source: how-to-automl-forecasting-faq.md)",5,5,5,F,
+0xf6832d77684dc1863a87f41ac3a43327,What steps should be taken to configure compute resources without using a public IP address in a managed virtual network?,"To configure compute resources without using a public IP address in a managed virtual network, you can follow these steps:
+
+1. Use the Azure CLI or Python SDK to create a compute cluster or compute instance.
+    - For the Azure CLI command, use the `--set enable_node_public_ip=False` option.
+    - For the Python SDK example, set the `enable_node_public_ip` parameter to `False`.
+2. In Azure Machine Learning Studio, select your workspace, go to the Compute page, and select ""+ New"" to create a compute instance or compute cluster.
+    - For a compute cluster, select the ""Advanced Settings"" page and choose the ""No Public IP"" option.
+    - For a compute instance, select the ""Security"" page and choose the ""No Public IP"" option.
+3. Continue with the creation of the compute resource.
+
+(Source: [how-to-managed-network-compute.md](how-to-managed-network-compute.md))",5,5,5,F,
+0xd241b0167edf37c96056a119e4bd8652,How can you secure a managed online endpoint using network isolation in Azure Machine Learning?,"To secure a managed online endpoint using network isolation in Azure Machine Learning, you can use private endpoints. Private endpoints allow you to secure inbound communication to the managed online endpoint from a client's virtual network. They also enable outbound communication from deployments to services through private endpoints of a workspace-managed virtual network. By configuring private endpoints and using a workspace-managed virtual network, you can achieve network isolation for your managed online endpoint. (Source: concept-secure-online-endpoint.md, concept-secure-online-endpoint.md)",5,5,5,F,
+0xb9ad55253033e6d0c4e861edffef28e5,What are the benefits and features of using an Azure Machine Learning datastore?,"The benefits of using an Azure Machine Learning datastore include: 
+1. Access to different types of storage resources like Blob, Files, and ADLS through a common API. 
+2. Easier discovery of useful datastores in team operations. 
+3. Secure connection information, eliminating the need to place sensitive information in scripts. 
+4. Support for credential-based authentication with service principal, shared access signature (SAS) token, or account key. 
+5. Support for identity-based authentication using Microsoft Entera identity or managed identity (Source: concept-data.md).",5,5,5,F,
+0xa7ab162df4a62d9ff24fd0f9f73b6fad,Which models are supported by the Responsible AI component in Azure Machine Learning?,"The Responsible AI component in Azure Machine Learning supports various models. It provides capabilities for fairness assessment, error analysis, model interpretability, counterfactual what-if analysis, and causal inference. These capabilities can be used to assess model fairness, understand model behavior, generate human-understandable descriptions of model predictions, and simulate feature changes and perturbations. (Source: concept-responsible-ai.md)",5,5,5,F,
+0x1194713358e08549306011d1c42143de,What is the purpose of the `$schema` key in the CLI (v2) Spark job YAML schema?,"The purpose of the `$schema` key in the CLI (v2) Spark job YAML schema is to specify the YAML schema. When using the Azure Machine Learning VS Code extension to author the YAML file, including `$schema` at the top of the file enables the user to invoke schema and resource completions. (Source: reference-yaml-job-spark.md)",5,5,5,F,
+0xb87f690c51d99d8b07ae299e4333bc84,What is the purpose of an Azure Machine Learning managed feature store and how does it work in the machine learning lifecycle?,"The purpose of an Azure Machine Learning managed feature store is to provide a central repository to store, share, and manage features (also known as variables or attributes) used in machine learning models. It helps to improve collaboration and consistency across a team or organization by allowing data scientists and engineers to access and reuse features easily. In the machine learning lifecycle, the feature store is used during the training phase to store and retrieve features for model training and evaluation. It can also be used during the deployment phase to feed features into production models. (Source: overview-what-is-azure-machine-learning.md)",5,5,5,F,"feature store question, answer looks good"
+0x5c06a53669d4aa0f4308d731a975e6dc,How can open source models not included in the model catalog be imported into your Azure Machine Learning workspace?,"To import open source models that are not included in the model catalog into your Azure Machine Learning workspace, you can use the Model Import Notebook. The Model Import Notebook allows you to import models from Hugging Face, an open-source library for natural language processing (NLP), into your workspace. You can import models for tasks such as fill-mask, token-classification, question-answering, summarization, text-generation, text-classification, translation, image-classification, and text-to-image. It is important to note that models from Hugging Face are subject to third-party license terms, so you should comply with the model's license terms. The Model Import Notebook can be found in the azureml-examples git repo. (Source: how-to-use-foundation-models.md)",5,5,5,F,
+0xef928b6e940b4be3471a845a5e5a0632,What are the methods to log images with MLflow?,"There are two methods to log images with MLflow:
+
+1. Log numpy metrics or PIL image objects: You can log images by using the `mlflow.log_image(img, ""figure.png"")` method. The `img` parameter should be an instance of `numpy.ndarray` or `PIL.Image.Image`, and ""figure.png"" is the name of the artifact that will be generated inside the run. It doesn't have to be an existing file. (Source: [Logging curves or list of values](#logging-curves-or-list-of-values))
+
+2. Log matlotlib plot or image file: You can log images by using the `mlflow.log_figure(fig, ""figure.png"")` method. ""figure.png"" is the name of the artifact that will be generated inside the run. It doesn't have to be an existing file. (Source: [Logging curves or list of values](#logging-curves-or-list-of-values))",5,5,5,F,
+0xdf205368005d4533e6a1256e0074cd5a,What NLP tasks does Automated ML support in Azure Machine Learning?,"Automated ML in Azure Machine Learning supports the following NLP tasks:
+1. Multi-class text classification: This task involves predicting the correct class for each sample, where there are multiple possible classes and each sample is classified as exactly one class. An example is classifying a movie script as ""Comedy"" or ""Romantic"".
+2. Multi-label text classification: This task involves predicting all the classes for each sample, where there are multiple possible classes and each sample can be assigned any number of classes. An example is classifying a movie script as ""Comedy"" or ""Romantic"" or both.
+3. Named Entity Recognition (NER): This task involves predicting the tags for all the tokens in sequences, where there are multiple possible tags for tokens. An example is extracting domain-specific entities from unstructured text, such as contracts or financial documents. (Source: concept-automated-ml.md)",5,5,5,F,
+0x480a217e48e84673d07f32331f533f43,How can a user manage Virtual Machines attached to an Azure Machine Learning workspace?,"The user can manage virtual machines attached to an Azure Machine Learning workspace through the Azure portal, Azure Machine Learning studio, the Azure Machine Learning SDK for Python, the Azure Machine Learning CLI, or the Azure Machine Learning VS Code Extension. They can create and manage compute resources, including compute instances, in any of these interfaces (Source: concept-workspace.md).",5,5,5,F,
+0xf59155659adefebf39d39b9688faee23,What are the prerequisites for deploying model packages to online endpoints in Azure Machine Learning?,"The prerequisites for deploying model packages to online endpoints in Azure Machine Learning are to train a machine learning model and collect all the dependencies required for the model to run successfully. These dependencies include a base image or environment, a list of Python packages and dependencies, extra assets for inference, software required for the inference server, and an inference routine if needed. (Source: [Model packages for deployment (preview)](https://docs.microsoft.com/azure/machine-learning/how-to-create-register-package-deploy?tabs=python))",5,5,5,F,
+0x000ede40aa22e6921fe3fe739192fdf5,What are the benefits of converting a custom ML model into an MLflow format with Azure Machine Learning?,"Converting a custom ML model into MLflow format with Azure Machine Learning provides several benefits, including:
+
+1. No code deployment: MLflow models can be deployed without the need for writing additional code for deployment (Source: [Convert custom ML models to MLflow formatted models](how-to-convert-custom-model-to-mlflow.md)).
+2. Portability as an open-source standard format: MLflow models are stored in a standardized format, making them portable and easily shareable across different platforms and frameworks (Source: [Convert custom ML models to MLflow formatted models](how-to-convert-custom-model-to-mlflow.md)).
+3. Ability to deploy both locally and on the cloud: MLflow models can be deployed locally or on cloud platforms, providing flexibility in deployment options (Source: [Convert custom ML models to MLflow formatted models](how-to-convert-custom-model-to-mlflow.md)).
+
+These benefits enable easier model deployment and management, making it more convenient for using ML models in real-world applications.",5,5,5,F,
+0x781ae2dcdf80a77d34d26d32bd28c005,What are the steps to preprocess your data for an ONNX model?,"To preprocess your data for an ONNX model, you can follow these steps:
+
+1. Define the model data schema: Your model expects input and output data in a specific format. You can define the format of your data using classes in ML.NET. You can also use tools like Netron to inspect your ONNX model and determine the input and output schema.
+
+2. Initialize MLContext: Create a new instance of `MLContext` in the `Main` method of your `Program` class. `MLContext` is a starting point for all ML.NET operations and allows you to create a new ML.NET environment that can be shared across the model lifecycle.
+
+3. Add a reference to your ONNX model file in your application: Copy your ONNX model to your application's root directory and add the following content to the `AutoMLONNXConsoleApp.csproj` file:
+
+```xml
+<ItemGroup>
+    <None Include=""automl-model.onnx"">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
+```
+
+4. Define the model input schema: Create a new class called `OnnxInput` inside the `Program.cs` file, with properties that match the input features of your ONNX model.
+
+5. Load the ONNX model: Use the `InferenceSession` class from the `onnxruntime` package to load the ONNX model file and create an instance of the `InferenceSession` class.
+
+(Source: how-to-use-automl-onnx-model-dotnet.md)",5,5,5,F,
+0xa2d39b160dfc69943b197df5c55b4685,How can you adapt an existing R script to run as a job in Azure Machine Learning?,"To adapt an existing R script to run as a job in Azure Machine Learning, you can follow these steps:
+
+1. Remove any interactive inputs or outputs from the script to ensure it can run unattended.
+2. Pass any required input parameters to the script via the `Rscript` call.
+3. Use the `optparse` package in your R script to parse the inputs and perform type conversions.
+4. Source the `azureml_utils.R` helper script in the same working directory of the R script to enable communication with the MLflow server and use logging functions.
+5. Read data files as local files within the running container, as Azure Machine Learning mounts the specified data on the container.
+
+(Source: how-to-r-modify-script-for-production.md)",5,5,5,F,
+0x56cb6c58a72f7934caaefe86b4044db8,What are the types of data sources supported in the CLI (v2) feature set specification YAML schema?,"The types of data sources supported in the CLI (v2) feature set specification YAML schema include `uri_file` for data that points to a single file source, and `uri_folder` for data that points to a folder source. (Source: reference-yaml-data.md)",5,5,5,F,"feature store question, use other docs to answer, answer looks good"
+0x238d8834e3046eb0faee3aa90b68187e,What steps are required to authenticate your Git account with SSH in Azure Machine Learning?,"To authenticate your Git account with SSH in Azure Machine Learning, you need to generate a new SSH key, add the public key to your Git account, and then clone the Git repository using SSH. Here are the steps:
+
+1. Generate a new SSH key by opening the terminal in the Azure Machine Learning Notebook tab and running the following command:
+   ```
+   ssh-keygen -t rsa -b 4096 -C ""your_email@example.com""
+   ```
+
+2. Add the public key to your Git account by copying the contents of your public key file (usually `~/.ssh/id_rsa.pub`) and following the instructions for your preferred Git service:
+   - [GitHub](https://docs.github.com/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account)
+   - [GitLab](https://docs.gitlab.com/ee/user/ssh.html#add-an-ssh-key-to-your-gitlab-account)
+   - [Azure DevOps](/azure/devops/repos/git/use-ssh-keys-to-authenticate#step-2--add-the-public-key-to-azure-devops-servicestfs)
+   - [BitBucket](https://support.atlassian.com/bitbucket-cloud/docs/set-up-an-ssh-key/#SetupanSSHkey-ssh2)
+
+3. Clone the Git repository using SSH by copying the SSH Git clone URL from the Git repo and running the `git clone` command with the URL. For example:
+   ```
+   git clone git@example.com:GitUser/your-repo.git
+   ```
+
+(Source: concept-train-model-git-integration.md)",5,5,5,F,
+0xf2acb968c3e8d493356f200f2cde85c4,What are some limitations to consider when creating compute clusters in Azure Machine Learning?,"When creating compute clusters in Azure Machine Learning, there are a few limitations to consider. 
+
+1. **Quota limits**: AmlCompute has a quota configuration that limits the number of resources available in your subscription. The quota varies by VM family and region, and can be increased if needed. (Source: how-to-manage-quotas.md)
+2. **Resource limits**: There are certain resource limits set for compute clusters, such as the maximum number of nodes, the maximum job lifetime, and the number of parameter servers per node. These limits may affect the scalability and duration of your training runs. (Source: how-to-manage-quotas.md)
+3. **Communication-enabled pools**: If you set up a compute cluster as a communication-enabled pool, there are limitations on the number of nodes that can be included in the cluster. The limit varies depending on whether the cluster is on an RDMA-enabled VM family or not. (Source: how-to-manage-quotas.md)
+
+It's important to be aware of these limitations and plan your compute clusters accordingly to avoid any unexpected issues.",5,5,5,F,
+0x30ab072f326303a4bdc35bc35f98778d,What types of assets can be searched for in Azure Machine Learning?,"In Azure Machine Learning, you can search for several types of assets, including jobs, models, components, environments, and data. (Source: how-to-search-assets.md)",5,5,5,F,
+0x60316a1fe932bfd50b683f8f841d9722,How does the tiling feature in Azure's AutoML aid in detecting small objects in high-resolution images?,"The tiling feature in Azure's AutoML helps in detecting small objects in high-resolution images by dividing the image into a grid of overlapping tiles (Source: how-to-use-automl-small-object-detect.md). Each tile is cropped from the original image and resized before being passed through the model. By using tiling, any objects that fall on the tile border are included completely in one of the tiles, improving the model's capability to detect smaller objects (Source: how-to-use-automl-small-object-detect.md).",5,5,5,F,
+0xa92594a1ab3eed00d6695c6930359f24,How can you configure data access to allow Fabric and Azure Machine Learning to read and write the same data without having to copy it?,"To configure data access to allow Fabric and Azure Machine Learning to read and write the same data without having to copy it, you can take advantage of OneLake shortcuts and Azure Machine Learning datastores. By pointing a OneLake shortcut and a datastore to the same storage account, you can ensure that both Fabric and Azure Machine Learning read from and write to the same underlying data. (Source: how-to-use-batch-fabric.md)",5,5,5,F,
+0x21182b1016cac1e33b543d8036980567,How can a pipeline be deployed as a batch endpoint in Azure Machine Learning?,"To deploy a pipeline as a batch endpoint in Azure Machine Learning, you first need to convert your pipeline into a pipeline component. Then, you can deploy the pipeline component as a batch endpoint. You can also deploy your pipeline job as a batch endpoint, and Azure Machine Learning will automatically create the pipeline component for you. (Source: how-to-deploy-pipeline-component-as-batch-endpoint.md)",5,5,5,F,
+0x69dc0bfd5e2d3f5b9a06bd2088752a61,What is the typical workflow for using R with Azure Machine Learning?,"The typical workflow for using R with Azure Machine Learning involves developing R scripts interactively using Jupyter Notebooks, adapting the script to run as a production job, submitting remote asynchronous R jobs, registering the model using Azure Machine Learning studio, and deploying registered R models to managed online endpoints for real-time inferencing or scoring. (Source: how-to-r-overview-r-capabilities.md)",5,5,5,F,
+0xada1a0a121855d65ab1e2a900be7062d,What types of metrics and charts does Azure Machine Learning provide for model evaluation?,"Azure Machine Learning provides various metrics and charts for model evaluation, including confusion matrix, receiver operating characteristic (ROC) curve, precision-recall (PR) curve, lift curve, cumulative gains curve, and calibration curve. These metrics and charts help measure the performance of classification models. (Source: how-to-understand-automated-ml.md)",5,5,5,F,
+0xf7014d250ef1120d8240f57a5dfa48d4,What are the hyperparameters that can be used for image classification tasks in automated ML for computer vision?,"The hyperparameters that can be used for image classification tasks in automated ML for computer vision are:
+
+- `number_of_epochs`: Number of training epochs. Default is 15, except for `yolov5` where the default is 30.
+- `training_batch_size`: Training batch size. Default varies based on the task, but the value for multi-class/multi-label is 78, except for *vit-variants* where it can vary. For object detection, the default is 2, except for `yolov5` where the default is 16. For instance segmentation, the default is 2.
+- `validation_batch_size`: Validation batch size. Default varies based on the task, but the value for multi-class/multi-label is 78, except for *vit-variants* where it can vary. For object detection, the default is 1, except for `yolov5` where the default is 16. For instance segmentation, the default is 1.
+- `gradient_accumulation_step`: Number of gradient accumulation steps. Default is 1.
+- `early_stopping`: Enable early stopping logic during training. Default is 1.
+- `early_stopping_patience`: Minimum number of epochs or validation evaluations with no primary metric improvement before the run is stopped. Default is 5.
+- `early_stopping_delay`: Minimum number of epochs or validation evaluations to wait before primary metric improvement is tracked for early stopping. Default is 5.
+- `learning_rate`: Initial learning rate. Default varies based on the task and model, but values for multi-class, multi-label, object detection, and instance segmentation are provided.
+- `learning_rate_scheduler`: Type of learning rate scheduler. Must be `warmup_cosine` or `step`. Default is `warmup_cosine`.
+- `step_lr_gamma`: Value of gamma when learning rate scheduler is `step`. Default is 0.5.
+- `step_lr_step_size`: Value of step size when learning rate scheduler is `step`. Default is 5.
+- `warmup_cosine_lr_cycles`: Value of cosine cycles when learning rate scheduler is `warmup_cosine`. Default is 0.45.
+- `warmup_cosine_lr_warmup_epochs`: Value of warmup epochs when learning rate scheduler is `warmup_cosine`. Default is 2.
+- `optimizer`: Type of optimizer. Must be `sgd`, `adam`, or `adamw`. Default is `sgd`.
+- `momentum`: Value of momentum when optimizer is `sgd`. Default is 0.9.",5,5,5,F,
+0xc3be69061c0262a5c0204afd83cd6cda,How can instance types be utilized for efficient utilization of compute resources in Azure Machine Learning?,"Instance types in Azure Machine Learning allow targeting specific types of compute nodes for training and inference workloads. They can be used to specify which node a pod should run on in Kubernetes clusters, and to set compute resources (CPU, memory, and NVIDIA GPU) for the pod. By creating and managing instance types, users can ensure efficient utilization of compute resources in Azure Machine Learning.(Source: how-to-manage-kubernetes-instance-types.md)",5,5,5,F,
+0xbd8a9132f6b9d391e7a870b74a82b950,What are the key components of the CLI (v2) pipeline component YAML schema in Azure Machine Learning?,"The key components of the CLI (v2) pipeline component YAML schema in Azure Machine Learning are:
+
+1. `$schema`: The YAML schema. It enables you to invoke schema and resource completions when authoring the YAML file using the Azure Machine Learning VS Code extension.
+2. `type`: The type of component.
+3. `name`: The name of the component.
+4. `version`: The version of the component. It can be auto-generated if omitted.
+5. `display_name`: The display name of the component in the studio UI.
+6. `description`: The description of the component.
+7. `tags`: A dictionary of tags for the component.
+8. `jobs`: A dictionary of individual jobs to run as steps within the pipeline.
+9. `inputs`: A dictionary of inputs to the pipeline job.
+10. `outputs`: A dictionary of output configurations of the pipeline job.
+
+(Source: reference-yaml-component-pipeline.md)",5,5,5,F,
+0xc6e152615002fbae0d8b4c68d986dbf0,What are the common issues that can occur during batch endpoint development and consumption in Azure Machine Learning and how can they be solved?,"Common issues that can occur during batch endpoint development and consumption in Azure Machine Learning include:
+
+1. **Job failures**: Batch inference jobs may fail due to various reasons such as compute resource issues, network connectivity problems, or errors in the scoring script. To solve this, you can check the job logs for error messages, inspect the job status to identify the cause of the failure, and make necessary changes to the deployment or scoring script.
+
+2. **Data access errors**: If the batch endpoint is unable to access the input data from the specified storage account or data asset, it may result in data access errors. You can troubleshoot this issue by ensuring that the necessary permissions are granted to the endpoint, verifying the correct configuration of data sources, and checking the availability of the data in the specified location.
+
+3. **Performance issues**: Batch endpoints may encounter performance issues if the deployed model or pipeline components are resource-intensive or if the cluster configuration is not optimized. To address this, you can consider using low-priority VMs, adjusting compute resource settings, optimizing the scoring script, or scaling up the compute resources based on the workload.
+
+4. **Security and authentication**: Batch endpoints require proper security and authentication mechanisms to ensure the protection of data and resources. If there are issues related to authentication, you can review the authentication settings, ensure that the correct authentication method is used (e.g., user principal or service principal), and validate the credentials being used.
+
+5. **Scaling and resource management**: Managing the scaling and resource utilization of batch endpoints can be challenging. You can optimize resource consumption by using scaling compute to zero when idle, configuring autoscaling based on job count, and organizing endpoints and deployments to efficiently utilize compute resources.
+
+To address these common issues, it is recommended to consult the Azure Machine Learning documentation, review the error logs and status messages, and leverage the available troubleshooting and monitoring tools provided by Azure Machine Learning.(Source: https://docs.microsoft.com/en-us/azure/machine-learning/how-to-troubleshoot-endpoints-batch)",5,5,5,F,
+0x24da3837413132347e667032bf684a48,How can you configure a custom DNS server to work with an Azure Machine Learning workspace and private endpoint?,"To configure a custom DNS server to work with an Azure Machine Learning workspace and private endpoint, you need to follow these steps:
+
+1. Create two Private DNS Zones rooted at the following domains: `privatelink.api.azureml.ms` and `privatelink.notebooks.azure.net` for Azure Public regions, `privatelink.api.ml.azure.cn` and `privatelink.notebooks.chinacloudapi.cn` for Microsoft Azure operated by 21Vianet regions, and `privatelink.api.ml.azure.us` and `privatelink.notebooks.usgovcloudapi.net` for Azure US Government regions.
+
+2. Link the Private DNS Zones to the DNS Server Virtual Network that contains the custom DNS server.
+
+3. Create a private endpoint to the Azure Machine Learning workspace, targeting both Private DNS Zones created in step 1.
+
+4. Create a conditional forwarder in the DNS Server to forward DNS queries to the Azure DNS Virtual Server IP address for the following zones: `api.azureml.ms`, `notebooks.azure.net`, `instances.azureml.ms`, and `aznbcontent.net` for Azure Public regions; `api.ml.azure.cn`, `notebooks.chinacloudapi.cn`, `instances.azureml.cn`, and `aznbcontent.net` for Microsoft Azure operated by 21Vianet regions; `api.ml.azure.us`, `notebooks.usgovcloudapi.net`, `instances.azureml.us`, and `aznbcontent.net` for Azure US Government regions.
+
+5. Create a conditional forwarder in the On-premises DNS Server to forward queries to the DNS Server in the DNS Server Virtual Network for the same zones mentioned in step 4.
+
+6. The On-premises DNS Server will recursively resolve the workspace domain by sending the DNS queries to the DNS Server in the DNS Server Virtual Network.
+
+Please note that the configuration steps for the DNS Server are not included here, as there are many DNS solutions available that can be used as a custom DNS Server. Refer to the documentation for your DNS solution for instructions on how to configure conditional forwarding. (Source: how-to-custom-dns.md)",5,5,5,F,
+0xed79ed2ed65750f1b39ea672c66641f4,How can experiments and runs in Azure Machine Learning be queried and compared using MLflow?,"Experiments and runs in Azure Machine Learning can be queried and compared using MLflow. MLflow allows you to create, query, delete, and search for experiments in a workspace. You can also query, delete, and search for runs in a workspace. Additionally, you can track and retrieve metrics, parameters, artifacts, and models from runs (Source: Query & compare experiments and runs with MLflow).",5,5,5,F,
+0x1b541b42b68dbf4cd9e7a1b93a33f8be,What are some of the in-built pipeline components provided by Azure Machine Learning for constructing RAG pipelines?,"Azure Machine Learning provides several in-built pipeline components for data chunking, embeddings generation, test data creation, automatic prompt generation, and prompt evaluation (Source: ""Use Azure Machine Learning pipelines with no code to construct RAG pipelines (preview)"").",5,5,3,F,"Find the correct doc, but relevance score is low"
+0x3ced729bbff62d85659d00eed2744320,What are the prerequisites for securely integrating Azure Machine Learning and Azure Synapse?,"The prerequisites for securely integrating Azure Machine Learning and Azure Synapse are: an Azure subscription, an Azure Machine Learning workspace with a private endpoint connection to a virtual network, and an Azure Synapse workspace in a managed virtual network with a managed private endpoint. These workspaces should also have dependencies like Azure Storage Account, Azure Key Vault, and Azure Container Registry, which should also have a private endpoint connection to the virtual network. (Source: Content)",5,5,5,F,
+0xe550f423acd028fe390939f39f47dcd6,How does the network traffic flow change when an Azure Machine Learning workspace and associated resources are secured in an Azure Virtual Network?,"When an Azure Machine Learning workspace and associated resources are secured in an Azure Virtual Network, the network traffic flow changes. The virtual network provides network isolation for the workspace and managed compute resources. It allows you to secure communication with other Azure services using private endpoints and restrict outbound communications. Additionally, you may need to configure network security groups, user-defined routing, or a firewall to further restrict outbound communication. (Source: how-to-network-security-overview.md)",5,5,5,F,
+0x061e9c4e57040867a00d986583f2b68f,How can you create and manage an Azure Machine Learning workspace using Azure PowerShell?,"To create and manage an Azure Machine Learning workspace using Azure PowerShell, you can use the `New-AzMLWorkspace` cmdlet. This cmdlet allows you to create a workspace and configure it to use the required Azure resources such as Application Insights, Azure Key Vault, and Azure Storage Account (Source: how-to-manage-workspace-powershell.md). Once the workspace is created, you can use the `Get-AzMLWorkspace` cmdlet to retrieve information about the workspace, and the `Remove-AzMLWorkspace` cmdlet to delete the workspace when it is no longer needed (Source: how-to-manage-workspace-powershell.md).",5,5,5,F,
+0xc7026fd7044df9abd663b35024088612,What are the advantages of logging models instead of artifacts in MLflow?,"Logging models instead of artifacts in MLflow has several advantages:
+
+1. Models can be directly loaded for inference using `mlflow.<flavor>.load_model` and can use the `predict` function. This makes it easier to use the logged models for making predictions. (Source: how-to-log-mlflow-models.md)
+2. Models can be used as inputs directly in pipelines. This allows for seamless integration and chaining of multiple models or stages in a pipeline. (Source: how-to-log-mlflow-models.md)
+3. Models can be deployed without indicating a scoring script or an environment. This simplifies the process of deploying MLflow models and makes it easier to deploy models to production. (Source: how-to-log-mlflow-models.md)
+4. Swagger is enabled in deployed endpoints automatically, and the Test feature can be used in Azure Machine Learning studio. This makes it easier to test and interact with the deployed models. (Source: how-to-log-mlflow-models.md)
+5. The Responsible AI dashboard can be used with logged models. This allows for monitoring and understanding the behavior of the models in terms of fairness, ethics, and explainability. (Source: how-to-log-mlflow-models.md)",5,5,5,F,
+0xf21f37a8b3d622d4fcfb4dd2c5ef4a24,How can the performance of models deployed to production on Azure Machine Learning be monitored?,"The performance of models deployed to production on Azure Machine Learning can be monitored by implementing model monitoring. Model monitoring tracks the performance of the model in production and helps understand it from both data science and operational perspectives. It acquires monitoring signals through data analysis on streamed production inference data and reference data, and sets thresholds for metrics to receive alerts about model or data anomalies. Azure Machine Learning provides built-in monitoring signals such as data drift, prediction drift, data quality, and feature attribution drift, and allows users to define custom monitoring signals if needed. Monitoring can be set up for various model tasks, and the reference data can be recent past production data or training data. Model monitoring in Azure Machine Learning can be enabled by enabling production inference data collection and setting up the monitoring using SDK/CLI 2.0 or the studio UI. Users can view and analyze the monitoring results in the Azure Machine Learning workspace. It is recommended to start model monitoring as soon as the model is deployed to production. (Source: concept-model-monitoring.md)",5,5,5,F,
+0x104550fdf9b678b1b58d03860d3a2388,What are the functions of the counterfactual analysis and what-if component of the Responsible AI dashboard?,"The counterfactual analysis and what-if component of the Responsible AI dashboard has two functions: 
+1. It can generate a set of examples with minimal changes to a particular data point such that they change the model's prediction. This helps in understanding how the model reacts to feature changes and in disentangling the impact of correlated features.
+2. It enables users to generate their own what-if perturbations to understand how the model reacts to feature changes. This allows users to explore different scenarios and see how the model's predictions change based on different inputs. (Source: concept-counterfactual-analysis.md)",5,5,5,F,
+0xb090df2196d95c925cc59985d303d27c,What types of identities can be used for data accessing in a Spark job according to the CLI (v2) Spark job YAML schema?,"According to the YAML schema for CLI (v2) Spark jobs, you can use either a user identity or a managed identity for data accessing in a Spark job. (Source: apache-spark-environment-configuration.md)",5,5,5,F,
+0xcdf5476cca8cb233b875fe1aa7142d25,How can one deploy a model with NVIDIA Triton Inference Server in Azure Machine Learning?,"You can deploy a model with NVIDIA Triton Inference Server in Azure Machine Learning by following these steps:
+
+1. Install the required Python packages for scoring, including Numpy, Triton Inference Server Client, Pillow, and Gevent.
+2. Ensure you have access to NCv3-series VMs for your Azure subscription.
+3. Set up the model repository structure and store your model in the ONNX format.
+4. Use the Azure CLI, Python SDK v2, or Azure Machine Learning Studio to create the endpoint deployment.
+5. Once the deployment is complete, update the traffic value to 100%.
+
+For more detailed instructions and code examples, you can refer to [this document](https://aka.ms/nvidia-triton-docs) in the Azure Machine Learning documentation. (Source: how-to-deploy-with-triton.md)",5,5,5,F,
+0xc0968f85c0f05506daa12ad1c6af441b,What is the process to run a training experiment as described in this tutorial?,"To run a training experiment as described in the tutorial, you need to follow these steps:
+1. Select the desired configurations for frequency and forecast horizon.
+2. View and configure additional settings for better control of the training job and specify settings for the forecast.
+3. Save the configuration.
+4. Proceed to the next step, which is the validation and testing stage, where you can select the validation type and number of cross-validations.
+5. Finally, click on the ""Finish"" button to run the experiment. The job details screen will open and you can monitor the progress of the experiment. (Source: tutorial-automated-ml-forecast.md)",5,5,5,F,
+0xee693964d229ca826fc02854f5364453,What are the steps involved in creating and testing a training pipeline using Azure Machine Learning?,"The steps involved in creating and testing a training pipeline using Azure Machine Learning are:
+
+1. Prepare Data: This step involves merging and filtering multiple datasets and preparing the training, validation, and evaluation datasets.
+
+2. Train Model: In this step, a machine learning model (such as a Linear Regressor) is trained using the training dataset.
+
+3. Evaluate Model: The trained model is used to predict outcomes on the test dataset and evaluate its performance. This step compares the model's performance with previously deployed models to decide whether to promote the model to production.
+
+4. Register Model: If the model performs well, it is registered in the Azure Machine Learning workspace for further use and deployment.
+
+These steps are part of a sample end-to-end machine learning pipeline that predicts taxi fares in NYC. Each step is implemented as a separate component that can be versioned and reused with different inputs and outputs. (Source: concept-ml-pipelines.md)",5,5,5,F,
+0x97ca8ec548c1df8b0aa671e5ea83b9a3,What is the process for registering models in the registry with MLflow?,"To register models in the registry with MLflow, you can use the following methods:
+
+1. **Creating models from an existing run**: If you have an MLflow model logged inside of a run and you want to register it in a registry, use the run ID and the path where the model was logged. You can use the `mlflow.register_model(f""runs:/{run_id}/{artifact_path}"", model_name)` method to register the model (Source: how-to-manage-models-mlflow.md).
+
+2. **Creating models from assets**: If you have a folder with an MLflow model, you can register it directly in the registry. You can use the URI schema `file://path/to/model` to register MLflow models stored in the local file system. After creating the model, you can register it in the registry using the `mlflow.register_model(f""file://{model_local_path}"", ""local-model-test"")` method (Source: how-to-manage-models-mlflow.md).
+
+Note that models can only be registered to the registry in the same workspace where the run was tracked, and cross-workspace operations are not supported in Azure Machine Learning (Source: how-to-manage-models-mlflow.md).",5,5,5,F,
+0xb83b8c89fc173d4332af5348e49adc5b,How can one retrieve a service principal authentication token for managing Azure Machine Learning resources using REST APIs?,"To retrieve a service principal authentication token for managing Azure Machine Learning resources using REST APIs, you can follow these steps:
+
+1. Open a terminal window.
+2. Use the `curl` command with the appropriate parameters to send a POST request to the token endpoint of the Azure Active Directory authentication service (https://login.microsoftonline.com/<YOUR-TENANT-ID>/oauth2/token).
+3. Include the required parameters in the request body, such as `grant_type=client_credentials`, `resource=https%3A%2F%2Fmanagement.azure.com%2F`, `client_id=<YOUR-CLIENT-ID>`, and `client_secret=<YOUR-CLIENT-SECRET>`.
+4. Execute the command.
+
+The response will include an access token that can be used for authentication when making REST API requests to manage Azure Machine Learning resources. The access token will be valid for one hour.
+
+Please note that you need the tenant ID, client ID, and client secret for this process, which can be obtained by creating a service principal in your Azure Machine Learning workspace. (Source: how-to-manage-rest.md)",5,5,5,F,
+0x1a0ada35abf6a284420e86a92ee13f81,How can a workspace be loaded or connected using parameters in Azure Machine Learning SDK v1 and SDK v2?,"To load or connect to a workspace using parameters in Azure Machine Learning SDK v1 and SDK v2, you can use the `Workspace.from_config()` method. This method loads the workspace information from the Azure Machine Learning configuration file. You can pass the file path as a parameter to the `from_config()` method. This allows you to programmatically connect to a workspace without hard-coding the workspace details in your code. (Source: concept-workspace.md)",5,5,5,F,
+0x992909884b5eee34186742093b5c4663,How can a pipeline be operationalized to perform batch scoring with preprocessing in Azure Machine Learning?,"To operationalize a pipeline for batch scoring with preprocessing in Azure Machine Learning, you can follow these steps:
+1. Create a pipeline that reuses existing components from the workspace.
+2. Deploy the pipeline to an endpoint.
+3. Consume predictions generated by the pipeline.
+
+First, you need to create an environment that includes the necessary libraries for the pipeline's components. This environment can be defined using a YAML file.
+
+Next, you can create a compute cluster on which the batch deployment will run. This cluster can be created using Azure Machine Learning SDK or through the Azure CLI.
+
+Afterwards, you need to register the components, models, and transformations that you will use to build your inference pipeline. This can be done using the `register` method of the respective assets.
+
+Finally, you can build and test the pipeline to ensure that it is working as expected. Once you are satisfied with the pipeline, you can deploy it to an endpoint.
+
+To consume predictions generated by the pipeline, you can access the job output, download the results, and read the scored data using the provided code examples in the documentation. The output contains the predictions as well as the preprocessed data that was provided to the scoring component.
+
+Remember to clean up the resources once you are done by deleting the associated endpoints, deployments, and compute clusters.
+
+(Source: how-to-use-batch-scoring-pipeline.md)",5,5,5,F,
+0x39499bb47148a1b5e506f8191993324a,What are the different types of monitoring signals described in the documentation?,"The different types of monitoring signals described in the documentation for model monitoring with Azure Machine Learning are data drift, prediction drift, data quality, and feature attribution drift. (Source: concept-model-monitoring.md)",5,5,5,F,
+0x25edc3e978e8de799543d3a243dbb7f6,What are some of the common data access error codes and their meanings in Azure Machine Learning?,"Some common data access error codes in Azure Machine Learning include:
+- ScriptExecution.DatabaseConnection.NotFound: The database or server defined in the datastore cannot be found or no longer exists.
+- ScriptExecution.DatabaseConnection.Authentication: The authentication failed while trying to connect to the database.
+- ScriptExecution.DatabaseConnection.Authentication.AzureIdentityAccessTokenResolution.InvalidResource: The server under the subscription and resource group couldn't be found.
+- ScriptExecution.DatabaseConnection.Authentication.AzureIdentityAccessTokenResolution.FirewallSettingsResolutionFailure: The identity doesn't have permission to read the target server firewall settings.
+- ScriptExecution.DatabaseQuery.TimeoutExpired: The executed SQL query took too long and timed out.
+- ScriptExecution.StreamAccess.Authentication: The authentication failed while trying to connect to the storage account.
+- ScriptExecution.StreamAccess.Authentication.AzureIdentityAccessTokenResolution.FirewallSettingsResolutionFailure: The identity doesn't have permission to read firewall settings of the target storage account. (Source: how-to-troubleshoot-data-access.md)",5,5,5,F,
+0xdafd3aaa8fd71953cde7b12c49ba5ce9,How can Azure Arc-enabled Kubernetes clusters (KubernetesCompute) be managed in an Azure Machine Learning workspace?,"To manage Azure Arc-enabled Kubernetes clusters (KubernetesCompute) in an Azure Machine Learning workspace, you must first deploy the Azure Machine Learning extension on the AKS or Arc Kubernetes cluster. The Azure Machine Learning extension is built on the cluster extension for AKS and cluster extension for Arc Kubernetes. You can manage the lifecycle of the Azure Machine Learning extension using Azure CLI's k8s-extension command. Once the extension is deployed, you can then use the Azure Machine Learning workspace to create and manage resources on the Azure Arc-enabled Kubernetes cluster. (Source: how-to-deploy-kubernetes-extension.md)",5,5,5,F,
+0xfbcc0817c54c2e7934e8f74e07689ab0,How can you use Azure Machine Learning managed feature store to integrate all phases of the machine learning lifecycle?,"The Azure Machine Learning managed feature store can be used to integrate all phases of the machine learning lifecycle by providing a centralized repository for managing and serving features. It allows you to define, store, discover, and share features across your organization. You can use the feature store to ingest, transform, and serve features for training and inference, ensuring consistency and reproducibility throughout the machine learning pipeline. Additionally, it supports features like versioning, lineage, and metadata management, making it easier to track and manage the lifecycle of features. (Source: overview-what-is-azure-machine-learning.md)",5,5,5,F,"feature store question, answer looks good"
+0x10bdb476e6e60c6583f71d270195e2b5,How can one lower the cost of a compute cluster in Azure Machine Learning?,"To lower the cost of a compute cluster in Azure Machine Learning, you can take the following steps:
+
+1. Configure your training clusters for autoscaling. This allows the cluster to dynamically scale based on your workload, reducing costs by only using what you need. You can also adjust the idle time before scale down to save costs.
+
+2. Set quotas on your subscription and workspaces. AmlCompute comes with a quota configuration that can control the amount of compute resources available in your subscription.
+
+3. Use low-priority virtual machines (VM) if applicable. These VMs are offered at a lower price but can be reclaimed by Azure if needed.
+
+4. Schedule compute instances to shut down and start up automatically. This ensures that compute resources are only active when needed, reducing costs.
+
+5. Consider using an Azure Reserved VM Instance, which provides savings by committing to a one- or three-year term for compute resources.
+
+(Source: how-to-manage-optimize-cost.md)",5,5,5,F,
+0x20bb1f788888fbbbe193344002350970,What are some common issues encountered when creating and updating a feature store in Azure Machine Learning?,"Some common issues encountered when creating and updating a feature store in Azure Machine Learning include connectivity issues, access permission errors, and compatibility issues with the Azure resources being used. It is also important to ensure that the necessary dependencies and prerequisites are met before creating or updating a feature store. (Source: Azure Machine Learning documentation)",5,5,5,F,It uses other docs to answer the feature store issue. The answer looks reasonable
+0x71947f65fbd9b15ec480a713c7490190,What are the potential issues and solutions when generating horizon dependent lag features in AutoML for time series forecasting?,"The generation of horizon-dependent lag features in AutoML for time series forecasting can lead to an increase in dataset size, potentially causing out-of-memory errors on smaller compute nodes or when the dataset size is already large. This can be addressed by following the solutions provided in the [frequently asked questions](./how-to-automl-forecasting-faq.md#how-do-i-fix-an-out-of-memory-error) article. (Source: concept-automl-forecasting-lags.md)",5,5,5,F,
+0x7520228df6743e63c9669fbcd17b90ad,What are the limitations when securing Azure Machine Learning workspace resources and a compute environment using Azure Kubernetes Service?,"The limitations when securing Azure Machine Learning workspace resources and a compute environment using Azure Kubernetes Service are as follows: the workspace and default storage account must be in the same VNet, however, subnets within the same VNet are allowed. It is recommended that the Azure Key Vault and Azure Container Registry for the workspace are also in the same VNet, but they can also be in a peered VNet. (Source: how-to-secure-inferencing-vnet.md)",5,5,5,F,
+0xa44b47247647f42bc0e1e792cecd0c70,How can one enable automatic logging with Azure Machine Learning and MLflow?,"To enable automatic logging with Azure Machine Learning and MLflow, you can insert the following code before your training code: `mlflow.autolog()`. This will automatically log metrics, parameters, and files during your training process (Source: [how-to-log-view-metrics.md](https://docs.microsoft.com/en-us/azure/machine-learning/how-to-use-mlflow-cli-runs#log-metrics-parameters-and-files-with-mlflow)).",5,5,5,F,
+0xab2c6a98be2b74dfe8f2e71ef5a808e2,What capabilities does Azure Machine Learning offer for tracking with MLflow?,"Azure Machine Learning offers the capability to track machine learning experiments and models using MLflow. It can be used to log metrics and store artifacts from your experiments, providing a centralized, secure, and scalable location to store training metrics and models. You can connect MLflow to Azure Machine Learning workspaces, even when running locally or on a different cloud. This allows you to track and log experiments and models with MLflow in Azure Machine Learning, Azure Databricks, and Azure Synapse Analytics. Additionally, example notebooks are available to demonstrate how to track and log experiments using MLflow in different scenarios. (Source: concept-mlflow.md)",5,5,5,F,
+0x2435732ad86be2c35983835e20e07098,What configurations are supported for Azure Container for PyTorch (ACPT)?,"The following configurations are supported for Azure Container for PyTorch (ACPT):
+- acpt-pytorch-2.0-cuda11.7: Ubuntu 20.04, cu117, Python 3.8, PyTorch 2.0.1, ONNX Runtime Training (ORT) 1.15.1, DeepSpeed 0.9.5, torch-ort 1.15.0, Nebula 0.16.5.
+- acpt-pytorch-1.13-cuda11.7: Ubuntu 20.04, cu117, Python 3.8, PyTorch 1.13.1, ONNX Runtime Training (ORT) 1.15.1, DeepSpeed 0.9.5, torch-ort 1.15.0, Nebula 0.16.5. 
+(Source: resource-azure-container-for-pytorch.md)",5,5,1,F,
+0x983a93127b689232287cfff2372940da,How can you use the ONNX model in a .NET application to make predictions?,"To use an ONNX model in a .NET application to make predictions, you need to follow these steps:
+
+1. Add a reference to your ONNX model file in your application by copying it to the build output directory.
+2. Initialize the MLContext by creating a new instance of the `MLContext` class.
+3. Define the model data schema using classes. You can inspect the ONNX model using tools like Netron to determine the input and output schema.
+4. Create a class for the model input schema.
+5. Use the `MLContext` instance to make predictions with the ONNX model.
+
+(Source: [how-to-use-automl-onnx-model-dotnet.md](https://github.com/Azure/azureml-examples/blob/main/how-to-use-automl-onnx-model-dotnet.md))",5,5,5,F,
+0x5154617bc35e50fcd372c85831974b22,What are the benefits of using online endpoints for real-time inference in Azure Machine Learning?,"Online endpoints in Azure Machine Learning provide several benefits for real-time inference. They allow you to operationalize models for real-time inference in synchronous low-latency requests. They are recommended when you have low-latency requirements, your model can answer the request in a relatively short amount of time, your model's inputs fit on the HTTP payload of the request, and you need to scale up in terms of the number of requests. Additionally, Azure Machine Learning provides managed online endpoints that take care of serving, scaling, securing, and monitoring your models, freeing you from the overhead of setting up and managing the underlying infrastructure (Source: concept-endpoints-online.md).",5,5,5,F,
+0x4784aa4ec707898d80e92a8817ced6ab,How can you use Azure Machine Learning SDK to scale out a TensorFlow training job?,"You can use the Azure Machine Learning SDK to scale out a TensorFlow training job by leveraging elastic cloud compute resources. Azure Machine Learning allows you to build, deploy, version, and monitor TensorFlow models at scale (Source: how-to-train-tensorflow.md).",5,5,5,F,
+0x1cbba65b74e7bd581309cad4c58f91c0,What are some of the benefits of using compute targets in Azure Machine Learning?,"Using compute targets in Azure Machine Learning offers several benefits. Firstly, it allows you to designate a specific compute resource or environment where you can run your training script or host your service deployment. This can be your local machine or a cloud-based compute resource. Secondly, compute targets enable you to easily change your compute environment without modifying your code. This flexibility is especially useful when scaling up to larger data sets or performing distributed training. Additionally, compute targets in Azure Machine Learning are shared by users of the workspace, making it a collaborative resource. (Source: [Azure Machine Learning Documentation](https://docs.microsoft.com/en-us/azure/machine-learning/concept-compute-target))",5,5,5,F,
+0x8df5bde7d58a7cebb83e87c2dd6da4cb,How are components structured and used in the context of a machine learning pipeline in Azure Machine Learning?,"Components in Azure Machine Learning are self-contained pieces of code that perform specific steps in a machine learning pipeline. They are analogous to functions, with a name, parameters, input, and output. Components are designed to split a complete machine learning task into a multi-step workflow, allowing different team members to work on specific steps independently. Components have well-defined interfaces, making it easy to connect and build steps in a pipeline. They can be shared and reused across pipelines, workspaces, and subscriptions, and they are versioned, allowing component producers to improve and publish new versions. Components are also unit testable, as they are self-contained pieces of code. Components are the building blocks of a machine learning pipeline, which is the workflow for a full machine learning task. Each step in the pipeline is represented by a component, and the steps are connected in the pipeline by specifying input and output definitions for each component. (Source: concept-azure-machine-learning-v2.md, concept-component.md)",5,5,5,F,
+0x683deb86252326cefd19911a1e6a48dd,What are the different data types and their respective uses in Azure Machine Learning?,"The different data types in Azure Machine Learning are file, folder, and data table. These data types are used for various purposes such as reading and writing a single file, reading and writing a folder of parquet/CSV files, and working with deep learning tasks involving images, text, audio, and video files located in a folder. (Source: concept-data.md)",4,5,4,F,
+0x49a2efe782feff0dfe4d4cedc59f0160,What are some steps one can take to improve the accuracy of their AutoML model?,"To improve the accuracy of your AutoML model, you can take the following steps:
+
+1. Configure AutoML appropriately for your data.
+2. Refer to the forecasting recipes notebook for step-by-step guides on building and improving forecast models.
+3. Evaluate the model by using back tests over several forecasting cycles.
+4. Consider aggregating noisy data to increase the signal-to-noise ratio.
+5. Add new features that can help predict the target.
+6. Compare validation and test metric values to determine if the selected model is underfitting or overfitting the data.
+
+(Source: Content)",5,5,5,F,
+0xa01f67777e0c90a42ac2fcd5ca1cd464,What are the steps to create a vector index using Azure Machine Learning Studio?,"To create a vector index using Azure Machine Learning Studio, you can follow these steps:
+
+1. Select **Prompt flow** on the left menu.
+2. Select the **Vector Index** tab.
+3. Select **Create**.
+4. Provide a name for your vector index.
+5. Select your data source type.
+6. Provide the location details of your source.
+7. Select **Next**.
+8. Review the details of your vector index.
+9. Select the **Create** button. (Source: how-to-create-vector-index.md)",5,5,5,F,
+0x0cb1a55fb1f6b2e6ac9e60f0f26c0e03,What role does a feature retrieval specification play in online and batch inference in Azure Machine Learning?,"A feature retrieval specification plays a role in online and batch inference in Azure Machine Learning by defining the input features required for model inference. It specifies the data that needs to be provided to the model in order to generate predictions. This specification is used to format the input data for online or batch inference, depending on the endpoint type. (Source: None)",5,5,5,F,"Ask feature retrieval, the answer looks reasonable"
+0x406d027197b198ea1d3f60e1783d2d8b,"What are the steps to build, submit, and register a machine learning pipeline using the Azure Machine Learning SDK v2?","To build, submit, and register a machine learning pipeline using the Azure Machine Learning SDK v2, you can follow these steps:
+
+1. Define your pipeline using the Azure Machine Learning SDK v2. This involves creating separate components to represent each step of your machine learning task.
+2. Create an Experiment in Azure Machine Learning to run your pipeline.
+3. Build and submit your pipeline to the experiment using the `submit()` method.
+4. Monitor the progress of your pipeline run.
+5. Register the completed pipeline as a reusable entity in Azure Machine Learning.
+
+These steps allow you to define, execute, and manage machine learning pipelines using the Azure Machine Learning SDK v2. (Source: [how-to-create-component-pipeline-python.md](./how-to-create-component-pipeline-python.md))",5,5,5,F,
+0x770a5cec08da36ad9456a746f2e53037,What are the steps to create a compute instance in Azure Machine Learning?,"To create a compute instance in Azure Machine Learning, you can follow these steps:
+
+1. Sign in to Azure Machine Learning studio.
+2. Select **Notebooks** in the left navigation menu.
+3. Click on **Create compute** in the middle of the page.
+4. Fill out the required information, such as the compute name, virtual machine type (CPU or GPU), and virtual machine size.
+5. Review the information and select **Review + Create**.
+6. Optionally, configure advanced settings for the compute instance, such as scheduling and security.
+7. Select **Create** to create the compute instance (Source: [quickstart-create-resources.md](https://docs.microsoft.com/azure/machine-learning/tutorial-quickstart-create-resources)).",5,5,5,F,
+0x0ed85ec853314ab5595fb0747359a505,What are the different statuses a data interval can have during the materialization process?,"The different statuses a data interval can have during the materialization process are ""Preparing"", ""Inqueue"", ""Running"", and ""Finalizing"". (Source: how-to-debug-pipeline-performance.md)",5,5,5,F,
+0x025a1b6d1ff4d73de4e6a25e37674705,How does one reference an Azure Machine Learning asset in a YAML file configuration?,"To reference an Azure Machine Learning asset in a YAML file configuration, you can use either the shorthand syntax or the longhand syntax. 
+
+For referencing an explicit version of an asset, you can use the shorthand syntax `azureml:<asset_name>:<asset_version>` or the longhand syntax, which includes the Azure Resource Manager (ARM) resource ID of the asset: 
+
+```
+azureml:/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.MachineLearningServices/workspaces/<workspace-name>/environments/<environment-name>/versions/<environment-version>
+```
+
+If you want to reference the latest version of an asset, you can use the syntax `azureml:<asset_name>@latest`. Azure Machine Learning will resolve the reference to the latest version of the asset in the workspace.
+
+
+
+(Source: [CLI (v2) core YAML syntax](reference-yaml-core-syntax.md))",5,5,5,F,
+0x3f58049ad1608e01c96e002c7ce9c9f0,How does Azure Machine Learning handle no-code-deployment of MLflow models?,"When deploying MLflow models to Azure Machine Learning using no-code deployment, you don't have to provide a scoring script or an environment for deployment as they're automatically generated for you. Azure Machine Learning ensures that all the package dependencies indicated in the MLflow model are satisfied and provides a curated environment that includes the required packages for inference, including `mlflow-skinny` and a scoring script to perform inference (Source: Guidelines for deploying MLflow models).",5,5,5,F,
