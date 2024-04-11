@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Tool to run statistic for generated actions."""
+
 import os
 import json
 import pandas as pd
@@ -20,6 +22,7 @@ def _get_sample_queries(samples):
 
 
 def action_statistic_check(action_path, debugging):
+    """Statistic check for action."""
     folder = os.path.abspath(os.path.dirname(__file__))
     golden_df = pd.read_csv(os.path.join(folder, "resources/golden_set.csv"))
     golden_set_bad_queries = golden_df[golden_df["IsNegativeSample"] == "T"]["prompt"].to_list()
