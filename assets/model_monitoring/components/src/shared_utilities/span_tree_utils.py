@@ -140,7 +140,7 @@ class SpanTreeNode:
 
     @property
     def retrieval_query(self) -> str:
-        """Get promptflow.retrieval.query for retrieval span. """
+        """Get promptflow.retrieval.query for retrieval span."""
         if self.span_type != RETRIEVAL_SPAN_TYPE:
             return None
         if self.events is None or len(self.events) == 0:
@@ -160,7 +160,7 @@ class SpanTreeNode:
 
     @property
     def retrieval_document(self) -> str:
-        """Get promptflow.retrieval.document for retrieval span. """
+        """Get promptflow.retrieval.document for retrieval span."""
         if self.span_type != RETRIEVAL_SPAN_TYPE:
             return None
         if self.events is None or len(self.events) == 0:
@@ -198,7 +198,7 @@ class SpanTreeNode:
 
     @property
     def embeddings(self) -> str:
-        """Get promptflow.embedding.embeddings for retrieval span. """
+        """Get promptflow.embedding.embeddings for retrieval span."""
         if self.span_type != EMBEDDING_SPAN_TYPE:
             print("not span type ", self.span_type)
             return None
