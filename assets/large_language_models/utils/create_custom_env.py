@@ -9,6 +9,10 @@ python create_custom_env.py [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPA
 
 2. Adding wheel packages under package directory. BTW. build wheel file "python setup.py bdist_wheel"
 python create_custom_env.py [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME] [-p PACKAGE_DIR] [-n CUSTOM_ENVIRONMENT_NAME]
+
+Note:
+If none of DOCKER_DIR and PACKAGE_DIR is provided, the script will fail.
+If Dockerfile is not provided, the script will create a default Dockerfile with base image from BASE_ENVIRONMENT.
 """
 
 import argparse
@@ -33,8 +37,7 @@ WORKSPACE_NAME = "rag-release-validation-ws"
 
 CUSTOM_ENVIRONMENT_NAME = "custom-llm-embedding-env"
 
-PROD_REGISTRY_NAME = "azureml"
-PROD_ENVIRONMENT_NAME = "llm-rag-embeddings"
+BASE_ENVIRONMENT = "mcr.microsoft.com/azureml/curated/llm-rag-embeddings"
 
 
 def main(
@@ -56,36 +59,40 @@ def main(
 
     # Create temp directory
     with tempfile.TemporaryDirectory() as temp_dir:
-        staging_dir = Path(temp_dir)
+        staging_dir = Path(temp_dir) / "staging"
         print(f"Temp directory: {staging_dir}")
 
         # copy Dockerfile to temp directory
         if docker_dir is not None:
-            shutil.copy(docker_dir, staging_dir)
+            shutil.copytree(docker_dir, staging_dir)
+
+        staging_dir.mkdir(parents=True, exist_ok=True)
 
         if not (staging_dir / "Dockerfile").exists():
             # Create Dockerfile if not provided
             with open(staging_dir / "Dockerfile", "w") as f:
                 f.write(
-                    f"FROM mcr.microsoft.com/{PROD_REGISTRY_NAME}/curated/{PROD_ENVIRONMENT_NAME}@latest AS base\n"
+                    f"FROM {BASE_ENVIRONMENT}:latest AS base\n"
                 )
 
         # Find all .whl files and copy them into staging_dir / "wheels" directory
         wheel_dir = staging_dir / "wheels"
+        wheel_dir.mkdir(parents=True, exist_ok=True)
+
         if package_dir is not None:
+            package_dir = Path(package_dir)
             for wheel in package_dir.glob("*.whl"):
-                shutil.copy(wheel, wheel_dir)
+                shutil.copy(wheel, wheel_dir / wheel.name)
 
         # Adding wheel packages to Dockerfile
-        if package_dir is not None:
-            with open(f"{staging_dir}/Dockerfile", "a") as f:
-                for wheel in wheel_dir.glob("*.whl"):
-                    f.write(f"COPY ./wheels/{wheel.name} /wheels/\n")
-                f.write("\nRUN pip install --force-reinstall /wheels/*.whl\n")
+        with open(f"{staging_dir}/Dockerfile", "a") as f:
+            for wheel in wheel_dir.glob("*.whl"):
+                f.write(f"\nCOPY ./wheels/{wheel.name} /wheels/\n")
+            f.write("\nRUN pip install --force-reinstall /wheels/*.whl\n")
 
         env = Environment(
             name=environment_name,
-            description="Custom environment.",
+            description="Custom environment created by create_custom_env.py",
             build=BuildContext(path=staging_dir, dockerfile_path="Dockerfile"),
             version="1",
         )
@@ -171,6 +178,7 @@ if __name__ == "__main__":
         args.subscription_id,
         args.resource_group,
         args.workspace_name,
-        args.staging_dir,
+        args.docker_dir,
+        args.package_dir,
         args.environment_name,
     )
