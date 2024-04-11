@@ -651,7 +651,7 @@ class TestSpanTreeUtilities:
         assert node.output == output
 
     @pytest.mark.parametrize(
-            "row,retrieval_query,retrieval_document",
+            "row,retrieval_query,retrieval_documents",
             [
                 (
                     Row(span_id="0",
@@ -679,7 +679,7 @@ class TestSpanTreeUtilities:
                         "Learning data reference\\\"}]\"}",
                         events=""),
                     "Can you provide information about AML?",
-                    "[{\"document.content\": \"# Monitoring Azure Machine Learning data reference\"}]"),
+                    [{"document.content" : "# Monitoring Azure Machine Learning data reference"}]),
                 (
                     Row(span_id="0",
                         parent_id=None,
@@ -701,13 +701,13 @@ class TestSpanTreeUtilities:
                         "\\\"# Monitoring Azure Machine Learning data "
                         "reference\\\"}]\"}}\n  ]"),
                     "Can you provide information about AML?",
-                    "[{\"document.content\": \"# Monitoring Azure Machine Learning data reference\"}]"),
+                    [{"document.content" : "# Monitoring Azure Machine Learning data reference"}])
             ])
-    def test_span_tree_node_retrieval_properties(self, row: Row, retrieval_query, retrieval_document):
+    def test_span_tree_node_retrieval_properties(self, row: Row, retrieval_query, retrieval_documents:list):
         """Test scenarios for getting the input and output tree node properties."""
         node = SpanTreeNode(row)
         assert node.retrieval_query == retrieval_query
-        assert node.retrieval_document == retrieval_document
+        assert node.retrieval_documents == retrieval_documents
 
     @pytest.mark.parametrize(
             "row,embeddings",

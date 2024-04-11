@@ -12,11 +12,11 @@ from pyspark.sql import Row
 from copy import copy
 
 from shared_utilities.constants import (
-    APP_TRACES_EVENT_LOG_EMBEDDINGS_KEY,
-    APP_TRACES_EVENT_LOG_INPUT_KEY,
-    APP_TRACES_EVENT_LOG_OUTPUT_KEY,
-    APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY,
-    APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY,
+    APP_TRACES_EMBEDDINGS_EVENT_NAME,
+    APP_TRACES_INPUTS_EVENT_NAME,
+    APP_TRACES_OUTPUT_EVENT_NAME,
+    APP_TRACES_RETRIEVAL_QUERY_EVENT_NAME,
+    APP_TRACES_RETRIEVAL_DOCUMENT_EVENT_NAME,
     EMBEDDING_SPAN_TYPE,
     RETRIEVAL_SPAN_TYPE
 )
@@ -92,19 +92,18 @@ class SpanTreeNode:
             events_array: list = json.loads(self.events)
             if len(events_array) == 0:
                 return self.input_from_attributes()
-            input_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_INPUT_KEY,
+            input_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_INPUTS_EVENT_NAME,
                                       events_array))
             if input_event is not None and len(input_event) > 0:
                 if input_event[0].get("attributes", None) is None:
                     return None
                 return input_event[0].get("attributes", None).get("payload", None)
             else:
-                return None
+                return self.input_from_attributes()
 
     def input_from_attributes(self) -> str:
         """Get input from attributes."""
         if self.attributes is None:
-
             return None  # type: ignore
         attribute_dict: dict = json.loads(self.attributes)
         if attribute_dict is None:
@@ -120,14 +119,14 @@ class SpanTreeNode:
             events_array: list = json.loads(self.events)
             if len(events_array) == 0:
                 return self.output_from_attribute()
-            output_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_EVENT_LOG_OUTPUT_KEY,
+            output_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_OUTPUT_EVENT_NAME,
                                        events_array))
             if output_event is not None and len(output_event) > 0:
                 if output_event[0].get("attributes", None) is None:
                     return None
                 return output_event[0].get("attributes", None).get("payload", None)
             else:
-                return None
+                return self.output_from_attribute()
 
     def output_from_attribute(self) -> str:
         """Get output from attributes."""
@@ -149,34 +148,36 @@ class SpanTreeNode:
         if len(events_array) == 0:
             return self.retrieval_query_from_attributes()
         retrieval_event = list(filter(lambda event: event.get("name", None) ==
-                                      APP_TRACES_EVENT_LOG_RETRIEVAL_QUERY_KEY,
+                                      APP_TRACES_RETRIEVAL_QUERY_EVENT_NAME,
                                       events_array))
         if retrieval_event and len(retrieval_event) > 0:
             if retrieval_event[0].get("attributes", None) is None:
                 return None
             return retrieval_event[0].get("attributes", None).get("payload", None)
         else:
-            return None
+            return self.retrieval_query_from_attributes()
 
     @property
-    def retrieval_document(self) -> str:
+    def retrieval_documents(self) -> list:
         """Get promptflow.retrieval.document for retrieval span."""
         if self.span_type != RETRIEVAL_SPAN_TYPE:
             return None
         if self.events is None or len(self.events) == 0:
-            return self.retrieval_document_from_attributes()
+            return self.retrieval_documents_from_attributes()
         events_array: list = json.loads(self.events)
         if len(events_array) == 0:
-            return self.retrieval_document_from_attributes()
+            return self.retrieval_documents_from_attributes()
         retrieval_event = list(filter(lambda event: event.get("name", None) ==
-                                      APP_TRACES_EVENT_LOG_RETRIEVAL_DOCUMENT_KEY,
+                                      APP_TRACES_RETRIEVAL_DOCUMENT_EVENT_NAME,
                                       events_array))
         if retrieval_event and len(retrieval_event) > 0:
             if retrieval_event[0].get("attributes", None) is None:
                 return None
-            return retrieval_event[0].get("attributes", None).get("payload", None)
+            if retrieval_event[0].get("attributes", None).get("payload") is None:
+                return None
+            return json.loads(retrieval_event[0].get("attributes", None).get("payload"))
         else:
-            return None
+            return self.retrieval_documents_from_attributes()
 
     def retrieval_query_from_attributes(self) -> str:
         """Get retrieval query from attributes."""
@@ -187,37 +188,36 @@ class SpanTreeNode:
             return None
         return attribute_dict.get("retrieval.query", None)
 
-    def retrieval_document_from_attributes(self) -> str:
+    def retrieval_documents_from_attributes(self) -> list:
         """Get retrieval document from attributes."""
         if self.attributes is None:
             return None
         attribute_dict: dict = json.loads(self.attributes)
         if attribute_dict is None:
             return None
-        return attribute_dict.get("retrieval.documents", None)
+        if attribute_dict.get("retrieval.documents") is None:
+            return None
+        return json.loads(attribute_dict.get("retrieval.documents"))
 
     @property
     def embeddings(self) -> str:
         """Get promptflow.embedding.embeddings for retrieval span."""
         if self.span_type != EMBEDDING_SPAN_TYPE:
-            print("not span type ", self.span_type)
             return None
         if self.events is None or len(self.events) == 0:
-            print("get embedding from attributes 1")
             return self.embeddings_from_attributes()
         events_array: list = json.loads(self.events)
         if len(events_array) == 0:
-            print("get embedding from attributes 2")
             return self.embeddings_from_attributes()
         embeddings_event = list(filter(lambda event: event.get("name", None) ==
-                                       APP_TRACES_EVENT_LOG_EMBEDDINGS_KEY,
+                                       APP_TRACES_EMBEDDINGS_EVENT_NAME,
                                        events_array))
         if embeddings_event and len(embeddings_event) > 0:
             if embeddings_event[0].get("attributes", None) is None:
                 return None
             return embeddings_event[0].get("attributes", None).get("payload", None)
         else:
-            return None
+            return self.embeddings_from_attributes()
 
     def embeddings_from_attributes(self) -> str:
         """Get embeddings from attributes."""
