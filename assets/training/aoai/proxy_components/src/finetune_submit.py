@@ -73,7 +73,7 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
                 last_event = self._log_events(last_event)
 
                 if finetune_job.result_files is not None:
-                    last_metric_logged  =self._log_metrics(finetune_job, last_metric_logged)
+                    last_metric_logged = self._log_metrics(finetune_job, last_metric_logged)
 
         if status == "failed":
             error = finetune_job.error
