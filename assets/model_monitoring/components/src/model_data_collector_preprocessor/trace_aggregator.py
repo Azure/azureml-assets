@@ -23,10 +23,9 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
     tree = SpanTree(span_list)
     if tree.root_span is None:
         seperated_trace_entries = []
-        trace_idx = 0
-        for root_span in tree.possible_root_spans:
+
+        for (root_span, trace_idx) in zip(tree.possible_root_spans, range(len(tree.possible_root_spans))):
             root_span.trace_id = f"{root_span.trace_id}_{trace_idx}"
-            trace_idx += 1
 
             output_dict = root_span.to_dict(datetime_to_str=False)
             output_dict['input'] = root_span.input
