@@ -144,22 +144,15 @@ jobs:
           while true; do
             token_request=$ACTIONS_ID_TOKEN_REQUEST_TOKEN
             token_uri=$ACTIONS_ID_TOKEN_REQUEST_URL
-            token_response=$(curl -H "Authorization: bearer $token_request" "${token_uri}&audience=api://AzureADTokenExchange")
-            token=$(echo $token_response | jq .value -r)
-            expires_on=$(echo $token_response | jq .expiresOn -r)
-
-            # Calculate sleep time
-            current_time=$(date -u +%s)
-            expires_on=$(date -d "$expires_on" +%s)
-            sleep_time=$((expires_on - current_time - 30))
-
-            # Log token expiration time and current time
-            echo "Token will expire at: $expires_on, Current time: $current_time"
-
-            az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -t ${{ secrets.AZURE_TENANT_ID }} --federated-token $token --output none
-
-            # Sleep until 30 seconds before token expires
-            sleep $sleep_time
+            token=$(curl -H "Authorization: bearer $token_request" "${token_uri}&audience=api://AzureADTokenExchange" | jq .value -r)
+            login_output=$(az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -t ${{ secrets.AZURE_TENANT_ID }} --federated-token $token --output json)
+            expiration_time=$(echo $login_output | jq .expires_on -r)
+            expiration_time_formatted=$(date -u -d @$expiration_time +"%Y-%m-%dT%H:%M:%SZ")
+            current_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            echo "Token expires at: $expiration_time_formatted, Current time: $current_time"
+            sleep_timer=$((expiration_time - $(date +%s) - 30))
+            echo "Sleeping for $sleep_timer seconds"
+            sleep $sleep_timer
           done &
 
       - name: Test asset
