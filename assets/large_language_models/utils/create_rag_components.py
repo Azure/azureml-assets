@@ -18,7 +18,6 @@ import argparse
 import shutil
 import tempfile
 from pathlib import Path
-from typing import List, Union
 
 import yaml
 from azure.ai.ml import MLClient, load_component
@@ -125,11 +124,15 @@ def main(
         # Create or update the components
         for component_spec in component_root.glob("**/spec.yaml"):
             try:
-                component = ml_client.components.create_or_update(load_component(component_spec))
+                component = ml_client.components.create_or_update(
+                    load_component(component_spec)
+                )
             except Exception as e:
                 print(f"Failed to create component from {component_spec}. Error: {e}")
                 continue
-            print(f"Component {component.name}:{component.version} created successfully .")
+            print(
+                f"Component {component.name}:{component.version} created successfully ."
+            )
 
         print("Done.")
 
