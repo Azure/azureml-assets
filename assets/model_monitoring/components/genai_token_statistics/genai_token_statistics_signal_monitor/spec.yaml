@@ -40,6 +40,8 @@ jobs:
         type: mltable
       samples_index:
         type: mltable
+      token_count:
+        type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
