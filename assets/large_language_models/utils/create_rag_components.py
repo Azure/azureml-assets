@@ -45,7 +45,7 @@ def main(
     environment_string: str,
     component_version: str = None,
 ) -> None:
-    """Main function to create RAG components pointing to a custom environment."""
+    """Create or update RAG components using a custom environment."""
     credential = ChainedTokenCredential(AzureCliCredential(), DeviceCodeCredential())
 
     ml_client = MLClient(
