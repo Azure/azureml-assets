@@ -77,9 +77,9 @@ command: >-
   --model ${{inputs.model}}
   --task_type ${{inputs.task_type}}
   --registered_model_name ${{inputs.registered_model_name}}
-  --n_epochs ${{inputs.n_epochs}}
-  --batch_size ${{inputs.batch_size}}
-  --learning_rate_multiplier ${{inputs.learning_rate_multiplier}}
+  $[[--n_epochs ${{inputs.n_epochs}}]]
+  $[[--batch_size ${{inputs.batch_size}}]]
+  $[[--learning_rate_multiplier ${{inputs.learning_rate_multiplier}}]]
   --data_upload_output ${{inputs.data_upload_output}}
   --finetune_submit_output ${{outputs.finetune_submit_output}}
   --endpoint_name ${{inputs.endpoint_name}}
