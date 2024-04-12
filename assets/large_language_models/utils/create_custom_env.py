@@ -11,8 +11,8 @@ Used in two user scenarios:
 
     i.e.
     python create_custom_env.py -p "C:/temp/private-embedding-env/wheels" -n private-embedding-env
-    
-2. Using your own Dockerfile
+ 
+ 2. Using your own Dockerfile
     python create_custom_env.py [-d DOCKER_DIR] [-n CUSTOM_ENVIRONMENT_NAME] \
         [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME]
 
