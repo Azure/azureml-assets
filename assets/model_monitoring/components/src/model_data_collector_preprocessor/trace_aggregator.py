@@ -22,6 +22,8 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
     span_list = [SpanTreeNode(row) for row in grouped_row.span_rows]
     tree = SpanTree(span_list)
     if tree.root_span is None:
+        # until we replace trace_id with request_id for PF logs we will have multiple root_span for each
+        # trace_id and so we have to split them up manually.
         seperated_trace_entries = []
 
         for (root_span, trace_idx) in zip(tree.possible_root_spans, range(len(tree.possible_root_spans))):
