@@ -310,8 +310,8 @@ class TestGenAISparkPreprocessor:
              datetime(2024, 2, 5, 6), datetime(2024, 2, 5, 7)),
             # request_id data
             # TODO: uncomment when we want to test replacing trace_id with request_id
-            # (_span_log_data_request_id, _preprocessed_log_schema, _trace_log_data_request_id, _trace_log_schema, True,
-            #  datetime(2024, 2, 5, 9), datetime(2024, 2, 5, 10))
+            # (_span_log_data_request_id, _preprocessed_log_schema, _trace_log_data_request_id, _trace_log_schema,
+            #  True, datetime(2024, 2, 5, 9), datetime(2024, 2, 5, 10))
         ]
     )
     def test_trace_aggregator(
