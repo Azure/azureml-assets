@@ -11,7 +11,7 @@ Used in two user scenarios:
 
     i.e.
     python create_custom_env.py -p "C:/temp/private-embedding-env/wheels" -n private-embedding-env
- 
+
  2. Using your own Dockerfile
     python create_custom_env.py [-d DOCKER_DIR] [-n CUSTOM_ENVIRONMENT_NAME] \
         [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME]
@@ -34,7 +34,6 @@ from azure.identity import (
     ChainedTokenCredential,
     DeviceCodeCredential,
 )
-
 
 # Default values
 SUBSCRIPTION_ID = "f375b912-331c-4fc5-8e9f-2d7205e3e036"
