@@ -1123,9 +1123,14 @@ def finetune(args: Namespace):
 
     if args.finetune_in_8bit or args.finetune_in_4bit:
         if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:
-            raise ValueError(
-                f"Looks like quantized finetune is enabled for model family: {args.model_type} which is not supported")
-        logger.info("Enabling QLoRA finetuning")
+            raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            f"Quantized finetune is not supported for model family: {args.model_type}."
+                        )
+                    )
+                )
         if not args.apply_lora:
             logger.info("Lora is not enabled. Setting it to true.")
             setattr(args, "apply_lora", True)
