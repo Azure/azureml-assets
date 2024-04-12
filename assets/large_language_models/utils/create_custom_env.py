@@ -53,6 +53,7 @@ def main(
     package_dir: Path,
     environment_name: str,
 ) -> None:
+    """Create a custom environment with given Dockerfile and/or wheel packages."""
     credential = ChainedTokenCredential(AzureCliCredential(), DeviceCodeCredential())
 
     ml_client = MLClient(
