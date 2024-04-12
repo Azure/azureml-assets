@@ -60,7 +60,7 @@ jobs:
           tenant_id: ${{ secrets.AZURE_TENANT_ID }}
           subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         if: env.client_id != '' && env.tenant_id != ''
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: ${{ env.client_id }}
           tenant-id: ${{ env.tenant_id }}
