@@ -2,4 +2,5 @@ name: acft-hf-nlp-finetune-ipp
 version: auto
 type: environment
 spec: spec.yaml
+extra_config: environment.yaml
 categories: ["MaaS", "Finetuning", "IPP"]
