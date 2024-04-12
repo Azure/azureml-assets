@@ -93,6 +93,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.8'
+
+      - name: Install dependencies
+        run: pip install -r ${{ env.testsRootPath }}/requirements.txt
+
       - name: Log in to Azure and create resources
         uses: ./.github/actions/create-azure-resources
         with:
@@ -100,9 +104,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
-
-      - name: Install dependencies
-        run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 
       - name: Test asset
         run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/group_${{ matrix.group }}_${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8 -m "not gsq_test" --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_histogram.py --ignore ${{ env.momoComponentsRootPath }}/tests/unit/test_gsq_metrics.py --splits 6 --group ${{ matrix.group }}
