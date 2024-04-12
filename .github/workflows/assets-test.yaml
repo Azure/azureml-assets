@@ -139,7 +139,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
 
-      - name: Fetch OID token every 4 mins
+      - name: Refresh login every 4 minutes (background process)
         run: |
           while true; do
             token_request=$ACTIONS_ID_TOKEN_REQUEST_TOKEN
