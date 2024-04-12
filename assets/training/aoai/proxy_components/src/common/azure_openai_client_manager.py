@@ -47,7 +47,7 @@ class AzureOpenAIClientManager:
         """Get current subscription id."""
         uri = os.environ.get(AzureOpenAIClientManager.MLFLOW_TRACKING_URI, None)
         if uri is None:
-            return None
+            return None, None
         uri_segments = uri.split("/")
         subscription_id = uri_segments[uri_segments.index("subscriptions") + 1]
         resource_group = uri_segments[uri_segments.index("resourceGroups") + 1]

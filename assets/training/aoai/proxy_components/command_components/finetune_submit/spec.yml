@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: finetune_submit
-version: 0.0.3
+version: 0.0.4
 type: command
 
 is_deterministic: True
@@ -50,7 +50,7 @@ inputs:
   n_epochs:
     type: integer
     optional: False
-    default: -1
+    default: 1
     description: Number of training epochs. If set to -1, number of epochs will be determined dynamically based on the input data.
   
   batch_size:
@@ -62,7 +62,7 @@ inputs:
   learning_rate_multiplier:
     type: number
     optional: False
-    default: 1.0
+    default: -1.0
     description: The learning rate multiplier to use for training.
 
   data_upload_output:
