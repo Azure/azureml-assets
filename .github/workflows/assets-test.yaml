@@ -139,16 +139,27 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
 
-      - name: Fetch OID token every 4 mins
+      - name: Refresh login every 4 minutes (background process)
         run: |
           while true; do
             token_request=$ACTIONS_ID_TOKEN_REQUEST_TOKEN
             token_uri=$ACTIONS_ID_TOKEN_REQUEST_URL
-            token=$(curl -H "Authorization: bearer $token_request" "${token_uri}&audience=api://AzureADTokenExchange" | jq .value -r)
+            token_response=$(curl -H "Authorization: bearer $token_request" "${token_uri}&audience=api://AzureADTokenExchange")
+            token=$(echo $token_response | jq .value -r)
+            expires_on=$(echo $token_response | jq .expiresOn -r)
+
+            # Calculate sleep time
+            current_time=$(date -u +%s)
+            expires_on=$(date -d "$expires_on" +%s)
+            sleep_time=$((expires_on - current_time - 30))
+
+            # Log token expiration time and current time
+            echo "Token will expire at: $expires_on, Current time: $current_time"
+
             az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -t ${{ secrets.AZURE_TENANT_ID }} --federated-token $token --output none
 
-            # Sleep for 4 minutes
-            sleep 240
+            # Sleep until 30 seconds before token expires
+            sleep $sleep_time
           done &
 
       - name: Test asset
