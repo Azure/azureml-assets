@@ -18,11 +18,12 @@ runs:
   using: composite
   steps:
     - name: Log in to Azure
-      uses: azure/login@v1
+      uses: azure/login@v2
       with:
         client-id: ${{ inputs.client-id }}
         tenant-id: ${{ inputs.tenant-id }}
         subscription-id: ${{ inputs.subscription-id }}
+        enable-AzPSSession: true
 
     - name: Create Azure resources
       shell: bash
