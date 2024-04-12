@@ -49,20 +49,17 @@ inputs:
   
   n_epochs:
     type: integer
-    optional: False
-    default: 1
+    optional: True
     description: Number of training epochs. If set to -1, number of epochs will be determined dynamically based on the input data.
   
   batch_size:
     type: integer
-    optional: False
-    default: -1
+    optional: True
     description: Global batch size. If set to -1, batch size will be determined dynamically based on the input data.
   
   learning_rate_multiplier:
     type: number
-    optional: False
-    default: -1.0
+    optional: True
     description: The learning rate multiplier to use for training.
 
   data_upload_output:

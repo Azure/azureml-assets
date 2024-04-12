@@ -37,11 +37,23 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         logger.debug(f"Starting fine-tune job, model: {model}, n_epochs: {n_epochs},\
                      batch_size: {batch_size}, learning_rate_multiplier: {learning_rate_multiplier},\
                      training_file_id: {training_file_id}, validation_file_id: {validation_file_id}, suffix: {suffix}")
-        hyperparameters: Hyperparameters = {
-            "n_epochs": n_epochs if n_epochs != -1 else "auto",
-            "batch_size": batch_size if batch_size != -1 else "auto",
-            "learning_rate_multiplier": learning_rate_multiplier if learning_rate_multiplier != -1 else "auto"
-        }
+        hyperparameters: Hyperparameters = {}
+
+        if n_epochs:
+            hyperparameters["n_epochs"] = n_epochs
+        else:
+            logger.info("num epochs not passed, it will be determined dynamically")
+
+        if batch_size:
+            hyperparameters["batch_size"] = batch_size
+        else:
+            logger.info("batch size not passed, it will be determined dynamically")
+
+        if learning_rate_multiplier:
+            hyperparameters["learning_rate_multiplier"] = learning_rate_multiplier
+        else:
+            logger.info("learning rate multiplier not passed, it will be determined dynamically")
+
         finetune_job = self.aoai_client.fine_tuning.jobs.create(
             model=model,
             training_file=training_file_id,
@@ -87,8 +99,6 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         """metrics can be retrived only for successful finetune job"""
         finetuned_model_id = finetune_job.fine_tuned_model
         logger.info(f'Fine-tune job: {self.job_id} finished successfully. model id: {finetuned_model_id}')
-        logger.info("fetching training metrics from Azure OpenAI")
-        self._log_metrics(finetune_job)
         return finetuned_model_id
 
     def cancel_job(self):
