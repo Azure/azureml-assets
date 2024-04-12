@@ -144,7 +144,8 @@ jobs:
           while true; do
             token_request=$ACTIONS_ID_TOKEN_REQUEST_TOKEN
             token_uri=$ACTIONS_ID_TOKEN_REQUEST_URL
-            token=$(curl -H "Authorization: bearer $token_request" "${token_uri}&audience=api://AzureADTokenExchange" | jq .value -r)
+            token=$(curl -H "Authorization: bearer $token_request" "${token_uri}&audience=api://AzureADTokenExchange")
+            echo "Token: $token"
             login_output=$(az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -t ${{ secrets.AZURE_TENANT_ID }} --federated-token $token --output json)
             expiration_time=$(echo $login_output | jq '.[] | select(.expires_on) | .expires_on' -r)
             expiration_time_formatted=$(date -u -d @$expiration_time +"%Y-%m-%dT%H:%M:%SZ")
