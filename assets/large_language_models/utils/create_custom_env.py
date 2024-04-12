@@ -3,14 +3,17 @@
 """
 Create a custom environments with given Dockerfile and/or wheel packages.
 
-Two user scenarios:
+Used in two user scenarios:
 
-1. Using your own Dockerfile
-    python create_custom_env.py [-d DOCKER_DIR] [-n CUSTOM_ENVIRONMENT_NAME] \
-        [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME] 
-
-2. Adding wheel packages from a package directory. BTW. build wheel file "python setup.py bdist_wheel"
+1. Adding wheel packages from a package directory. BTW. build wheel file "python setup.py bdist_wheel"
     python create_custom_env.py  [-p PACKAGE_DIR] [-n CUSTOM_ENVIRONMENT_NAME] \
+        [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME]
+
+    i.e.
+    python create_custom_env.py -p "C:/temp/private-embedding-env/wheels" -n private-embedding-env
+    
+2. Using your own Dockerfile
+    python create_custom_env.py [-d DOCKER_DIR] [-n CUSTOM_ENVIRONMENT_NAME] \
         [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME]
 
 Note:
