@@ -59,7 +59,9 @@ def aggregate_spans_into_traces(
 
     # for PromptFlow we need to replace the trace_id values with request_id in order to handle edge cases
     # where PF has same trace_id but multiple LLM requests
-    enlarged_span_logs = enlarged_span_logs.rdd.map(_replace_trace_with_request_id).toDF(enlarged_span_logs.schema)
+    # TODO: Prompt flow team doesn't guarantee that all spans will have request_id due to a backlog of work.
+    # Uncomment the code below when we get a guarantee from them
+    # enlarged_span_logs = enlarged_span_logs.rdd.map(_replace_trace_with_request_id).toDF(enlarged_span_logs.schema)
 
     grouped_spans_df = enlarged_span_logs.groupBy('trace_id').agg(
         collect_list(
