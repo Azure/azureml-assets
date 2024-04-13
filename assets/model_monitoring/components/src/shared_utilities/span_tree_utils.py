@@ -260,6 +260,7 @@ class SpanTree:
             parent_id = span.parent_id
             if parent_id is None:
                 root_span = span
+                self._possible_root_spans.append(root_span)
             else:
                 parent_span = self.get_span_tree_node_by_span_id(parent_id)
                 if parent_span is not None:
@@ -272,13 +273,24 @@ class SpanTree:
         # if root_span is None and we only have one possible root_span then we consider it the root_span
         # else means we have multiple possible root_span nodes and we don't support forest structures for SpanTree
         #     OR somehow we didn't find any possible root spans (is not probable? maybe impossible?)
+        number_of_root_spans = len(self.possible_root_spans)
         if root_span is None:
-            if len(self.possible_root_spans) == 1:
+            if number_of_root_spans == 1:
                 root_span = self.possible_root_spans[0]
             else:
                 print(
                     "Either found too many possible root_spans or did not find any, "
                     f"possible root spans found: {self.possible_root_spans}. Available spans: {self._span_node_map}")
+        # If we have a root_span but the possible_root_spans list size is not equal to 1 then
+        # we have a weird situation which might be where there are multiple root spans 
+        # and some have the parent_id as null so we think we find a root_span but it's incorrect.
+        else:
+            if number_of_root_spans != 1:
+                print(
+                    f" The root_span = {root_span} has its parent_id = null,"
+                    " but there were other spans which were identified as possible root spans."
+                    " Please debug your data carefully to figure out the issue.")
+                root_span = None
         return root_span
 
     def __iter__(self) -> Iterator[SpanTreeNode]:
