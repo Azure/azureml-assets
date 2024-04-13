@@ -5,10 +5,14 @@
 
 from typing import List
 
-from .deployment import Deployment
+from azureml._common._error_definition.azureml_error import AzureMLError
+
+from .abstract_deployment import AbstractDeployment
+from ...utils.exceptions import BenchmarkValidationException
+from ...utils.error_definitions import BenchmarkValidationError
 
 
-class OSSDeployment(Deployment):
+class OSSDeployment(AbstractDeployment):
     """Class for OSS Deployment."""
 
     def __init__(
@@ -28,7 +32,10 @@ class OSSDeployment(Deployment):
         :param text: List of text to get embeddings for.
         :return: List of embeddings.
         """
-        raise NotImplementedError("oss deployment not supported at the moment.")
+        mssg = "oss deployment not supported at the moment."
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+        )
 
     def get_batch_size(self, longest_sentence: str, intital_batch_size: int) -> int:
         """
@@ -38,5 +45,7 @@ class OSSDeployment(Deployment):
         :param intital_batch_size: Initial batch size.
         :return: Batch size that fits the model context length.
         """
-        raise NotImplementedError("oss deployment not supported at the moment.")
-
+        mssg = "oss deployment not supported at the moment."
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+        )

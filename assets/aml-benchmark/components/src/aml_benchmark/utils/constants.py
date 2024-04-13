@@ -10,12 +10,15 @@ from httpx import Timeout
 class Constants:
     """Constants for benchmarking."""
 
-    MAX_RETRIES = 5
+    MAX_RETRIES = 7
     MAX_RETRIES_OAI = 1
-    BASE_DELAY = 60
+    BASE_DELAY = 10
     MAX_DELAY = 600
+    MAX_THREADS = 20
+    BACKOFF_FACTOR = 2
     MAX_TIMEOUT_SEC = 180
     DEFAULT_HTTPX_TIMEOUT = Timeout(timeout=600.0, connect=120.0)
+    RETRIABLE_STATUS_CODES = {413, 429, 500, 502, 503, 504}
 
 
 class AuthenticationType(Enum):

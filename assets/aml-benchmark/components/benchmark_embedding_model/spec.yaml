@@ -49,14 +49,6 @@ inputs:
       - None
       - mteb_main_en
     default: None
-  batch_size:
-    type: integer
-    optional: True
-    description: >-
-      Number of texts to send in a single batch. Defaults to 32. Will be automatically reduced
-      if the batch does not fit in the model context.
-    default: 32
-    min: 1
 
 outputs:
   metrics:
@@ -75,5 +67,4 @@ command: >-
   $[[--task_types '${{inputs.task_types}}']]
   $[[--task_langs '${{inputs.task_langs}}']]
   --preset ${{inputs.preset}}
-  $[[--batch_size ${{inputs.batch_size}}]]
   --output_metrics_dir ${{outputs.metrics}}

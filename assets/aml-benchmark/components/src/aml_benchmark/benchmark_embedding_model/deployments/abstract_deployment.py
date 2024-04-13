@@ -8,9 +8,13 @@ from typing import List, Any, Dict
 
 import numpy as np
 from tqdm.autonotebook import trange
+from azureml._common._error_definition.azureml_error import AzureMLError
+
+from ...utils.exceptions import BenchmarkValidationException
+from ...utils.error_definitions import BenchmarkValidationError
 
 
-class Deployment(ABC):
+class AbstractDeployment(ABC):
     """Abstract class for deployment."""
 
     def __init__(self):
@@ -24,8 +28,9 @@ class Deployment(ABC):
         :param text: List of text to get embeddings for.
         :return: List of embeddings.
         """
-        raise NotImplementedError(
-            "get_embeddings method must be implemented in the derived class."
+        mssg = "`get_embeddings` method must be implemented in the derived class."
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
     @abstractmethod
@@ -37,8 +42,9 @@ class Deployment(ABC):
         :param intital_batch_size: Initial batch size.
         :return: Batch size that fits the model context length.
         """
-        raise NotImplementedError(
-            "get_batch_size method must be implemented in the derived class."
+        mssg = "`get_batch_size` method must be implemented in the derived class."
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
     @staticmethod

@@ -157,7 +157,9 @@ def _validate_args(
                 else:
                     logger.warning(f"Ignoring invalid task type: {task_type}.")
             if not _validated_task_types:
-                mssg = f"None of the provided task types are valid: Provided: {task_types}. Valid: {TASK_TYPE.__args__}."
+                mssg = (
+                    f"None of the provided task types are valid: Provided: {task_types}. Valid: {TASK_TYPE.__args__}."
+                )
                 raise BenchmarkValidationException._with_error(
                     AzureMLError.create(BenchmarkValidationError, error_details=mssg)
                 )

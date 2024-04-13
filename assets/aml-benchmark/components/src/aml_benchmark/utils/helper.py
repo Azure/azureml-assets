@@ -12,9 +12,12 @@ from typing import Callable, Tuple, Optional
 
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 from .logging import get_logger
 from .constants import Constants
+from .exceptions import BenchmarkUserException
+from .error_definitions import BenchmarkUserError
 
 
 logger = get_logger(__name__)
@@ -24,6 +27,7 @@ def exponential_backoff(
     max_retries: int = Constants.MAX_RETRIES,
     base_delay: int = Constants.BASE_DELAY,
     max_delay: int = Constants.MAX_DELAY,
+    backoff_factor: int = Constants.BACKOFF_FACTOR,
 ) -> Callable:
     """
     Decorator that implements exponential backoff for retrying a function.
@@ -49,17 +53,22 @@ def exponential_backoff(
                     return func(*args, **kwargs)
                 except Exception as e:
                     tock = time.time()
+                    status_code = getattr(e, "status_code", None)
+                    if not status_code and getattr(e, "response", None):
+                        status_code = getattr(e.response, "status_code", None)
+                    if status_code not in Constants.RETRIABLE_STATUS_CODES:
+                        raise
                     retries += 1
                     if retries < max_retries:
                         backoff_delay = min(delay, max_delay)
                         logger.info(
                             (
-                                f"Retrying method `{func.__name__}` after {backoff_delay} seconds. "
-                                f"Time spent: {tock - tick} sec. Error details: {e}"
+                                f"Retrying method `{func.__name__}` after {backoff_delay} sec. "
+                                f"Time spent: {round(tock - tick)} sec. Error details: {e}"
                             )
                         )
                         time.sleep(backoff_delay)
-                        delay *= 3
+                        delay *= backoff_factor
                     else:
                         raise
 
@@ -90,14 +99,13 @@ def _get_retry_policy(num_retry: int = 3) -> Retry:
     :return: Returns the msrest or requests REST client retry policy.
     :rtype: urllib3.Retry
     """
-    status_forcelist = [413, 429, 500, 502, 503, 504]
     backoff_factor = 0.4
     retry_policy = Retry(
         total=num_retry,
         read=num_retry,
         connect=num_retry,
         backoff_factor=backoff_factor,
-        status_forcelist=status_forcelist,
+        status_forcelist=Constants.RETRIABLE_STATUS_CODES,
         # By default this is True. We set it to false to get the full error trace, including url and
         # status code of the last retry. Otherwise, the error message is too many 500 error responses',
         # which is not useful.
@@ -108,11 +116,15 @@ def _get_retry_policy(num_retry: int = 3) -> Retry:
 
 def _send_post_request(url: str, headers: dict, payload: dict):
     """Send a POST request."""
-    with _create_session_with_retry() as session:
-        response = session.post(url, data=json.dumps(payload), headers=headers)
-        # Raise an exception if the response contains an HTTP error status code
-        response.raise_for_status()
-
+    try:
+        with _create_session_with_retry() as session:
+            response = session.post(url, data=json.dumps(payload), headers=headers)
+            # Raise an exception if the response contains an HTTP error status code
+            response.raise_for_status()
+    except requests.exceptions.HTTPError as errh:
+        raise BenchmarkUserException._with_error(
+            AzureMLError.create(BenchmarkUserError, error_details=f"HTTP Error: {errh}")
+        )
     return response
 
 

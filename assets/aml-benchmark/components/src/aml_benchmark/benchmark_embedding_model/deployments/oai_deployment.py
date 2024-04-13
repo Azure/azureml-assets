@@ -8,7 +8,7 @@ from typing import List
 from openai import OpenAI, BadRequestError, APITimeoutError
 from azureml._common._error_definition.azureml_error import AzureMLError
 
-from .deployment import Deployment
+from .abstract_deployment import AbstractDeployment
 from ...utils.helper import exponential_backoff
 from ...utils.constants import Constants
 from ...utils.logging import get_logger
@@ -19,7 +19,7 @@ from ...utils.error_definitions import BenchmarkValidationError
 logger = get_logger(__name__)
 
 
-class OAIDeployment(Deployment):
+class OAIDeployment(AbstractDeployment):
     """Class for OAI Deployment."""
 
     def __init__(
@@ -58,7 +58,7 @@ class OAIDeployment(Deployment):
         :return: Batch size that fits the model context length.
         """
         _batch_size = intital_batch_size
-    
+
         while _batch_size > 0:
             batch: List[str] = [longest_sentence] * _batch_size
             try:
@@ -81,4 +81,3 @@ class OAIDeployment(Deployment):
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
-
