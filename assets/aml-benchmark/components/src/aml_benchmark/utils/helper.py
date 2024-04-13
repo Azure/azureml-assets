@@ -30,7 +30,7 @@ def exponential_backoff(
     backoff_factor: int = Constants.BACKOFF_FACTOR,
 ) -> Callable:
     """
-    Decorator that implements exponential backoff for retrying a function.
+    Implement exponential backoff for retrying a function. Use this function as a decorator.
 
     :prama max_retries: Maximum number of retries.
     :param base_delay: Base delay in seconds before the first retry.

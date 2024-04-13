@@ -18,6 +18,7 @@ class AbstractDeployment(ABC):
     """Abstract class for deployment."""
 
     def __init__(self):
+        """Initialize Deployment."""
         self.sep = " "
 
     @abstractmethod
@@ -49,7 +50,7 @@ class AbstractDeployment(ABC):
 
     @staticmethod
     def _text_length(text: Any):
-        """Helper function to get the length for the input text."""
+        """Get the length for the input text."""
         if isinstance(text, dict):  # {key: value} case
             return len(next(iter(text.values())))
         elif not hasattr(text, "__len__"):  # Object has no len() method
@@ -63,7 +64,7 @@ class AbstractDeployment(ABC):
         self, sentences: List[str], batch_size: int = 32, **kwargs
     ) -> List[List[float]]:
         """
-        Returns a list of embeddings for the given sentences.
+        Get a list of embeddings for the given list of sentences.
 
         :param sentences: List of sentences to encode.
         :param batch_size: Batch size for the encoding.
@@ -95,11 +96,27 @@ class AbstractDeployment(ABC):
     def encode_queries(
         self, queries: List[str], batch_size: int, **kwargs
     ) -> List[List[float]]:
+        """
+        Get a list of embeddings for the given list of queries.
+
+        :param queries: List of queries to encode.
+        :param batch_size: Batch size for the encoding.
+        :param kwargs: Additional keyword arguments.
+        :return: List of embeddings for the given queries.
+        """
         return self.encode(queries, batch_size=batch_size, **kwargs)
 
     def encode_corpus(
         self, corpus: List[Dict[str, str]], batch_size: int, **kwargs
     ) -> List[List[float]]:
+        """
+        Get a list of embeddings for the given list of corpus.
+
+        :param corpus: List of corpus to encode.
+        :param batch_size: Batch size for the encoding.
+        :param kwargs: Additional keyword arguments.
+        :return: List of embeddings for the given corpus.
+        """
         if isinstance(corpus, dict):
             sentences = [
                 (
