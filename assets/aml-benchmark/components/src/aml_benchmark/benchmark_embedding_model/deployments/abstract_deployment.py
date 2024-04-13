@@ -83,7 +83,7 @@ class AbstractDeployment(ABC):
         for start_index in trange(
             0, len(sentences), batch_size, desc="Batches", disable=False
         ):
-            sentences_batch = sentences_sorted[start_index : start_index + batch_size]
+            sentences_batch = sentences_sorted[start_index: start_index + batch_size]
             embeddings = self.get_embeddings(sentences_batch)
             all_embeddings.extend(embeddings)
 
