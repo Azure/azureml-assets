@@ -3,8 +3,6 @@
 
 """Result utilities."""
 
-import os
-
 from ..request_modification.input_transformer import InputTransformer
 from ..scoring.scoring_result import ScoringResult
 from ..telemetry import logging_utils as lu
@@ -41,18 +39,3 @@ def get_return_value(ret: 'list[str]', output_behavior: str):
 
     lu.get_logger().info("Returning results in append_row mode.")
     return ret
-
-
-def save_mini_batch_results(mini_batch_results: list, mini_batch_results_out_directory: str, raw_mini_batch_context):
-    """Save mini batch results."""
-    lu.get_logger().debug("mini_batch_results_out_directory: {}".format(mini_batch_results_out_directory))
-
-    filename = f"{raw_mini_batch_context.minibatch_index}.jsonl"
-    file_path = os.path.join(mini_batch_results_out_directory, filename)
-
-    lu.get_logger().debug(f"Start saving {len(mini_batch_results)} results to file {file_path}.")
-    with open(file_path, "w", encoding="utf-8") as writer:
-        for item in mini_batch_results:
-            writer.write(item + "\n")
-
-    lu.get_logger().info(f"Completed saving {len(mini_batch_results)} results to file {file_path}.")

@@ -36,6 +36,33 @@ class ModelType(Enum):
     VISION_OSS = "vision_oss"
 
 
+class LoggerConfig:
+    """Logger Config."""
+
+    AML_BENCHMARK_HANDLER_NAME = "AMLBenchmarkHandler"
+    APPINSIGHT_HANDLER_NAME = "AppInsightsHandler"
+    DEFAULT_MODULE_NAME = "aml_benchmark"
+    VERBOSITY_LEVEL = "DEBUG"
+    OFFLINE_RUN_MESSAGE = "OFFLINE_RUN"
+    ASSET_NOT_FOUND = "AssetID missing in run details"
+    NON_PII_MESSAGE = '[Hidden as it may contain PII]'
+
+
+class ExceptionTypes:
+    """AzureML Exception Types."""
+
+    User = "User"
+    System = "System"
+    Service = "Service"
+    Unclassified = "Unclassified"
+    All = {User, System, Service, Unclassified}
+
+
+ROOT_RUN_PROPERTIES = {
+    "PipelineType": "Benchmark"
+}
+
+
 AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST = [
     "openai.azure.com",
     "api.cognitive.microsoft.com",

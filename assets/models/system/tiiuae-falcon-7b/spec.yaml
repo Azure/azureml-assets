@@ -51,4 +51,4 @@ tags:
     ignore_mismatched_sizes: 'false'
   inference_supported_envs:
     - vllm
-version: 8
+version: 9

@@ -15,7 +15,7 @@ from src.model_data_collector_preprocessor.genai_run import (
     _genai_uri_folder_to_enlarged_spans,
     _filter_df_by_time_window
 )
-from src.model_data_collector_preprocessor.store_url import StoreUrl
+from src.shared_utilities.store_url import StoreUrl
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
 

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: openbookqa_microsoft_phi_2_question_answering
-version: 1.0.2
+version: 2.02.04
 display_name: openbookqa_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for openbookqa dataset
 dataset_family: openbookqa
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.736
-
-path: ./job_files
 
 
 properties:

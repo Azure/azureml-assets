@@ -27,7 +27,7 @@ nodes:
     history_cache_enabled: true
     query: ${inputs.question}
     session_id: ${chat_session_tool.output}
-    include_view:
+    include_views:
   name: DBCopilot_generate
   source:
     tool: db_copilot_tool.db_copilot_tool.DBCopilot.generate
