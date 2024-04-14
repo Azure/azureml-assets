@@ -14,7 +14,8 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_WITH_JOIN_COLUMN,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN,
     DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME,
-    DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME
+    DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME,
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_DUPLICATE_JOIN_COLUMN
 )
 
 
@@ -101,6 +102,23 @@ class TestDataJoinerE2E:
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_OVERLAPPING_JOIN_VALUE,
             DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN,
+            DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME
+        )
+
+        assert pipeline_job.status == 'Failed'
+
+    def test_data_joiner_common_columns_failed(
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
+    ):
+        """Test data joiner that produces empty result."""
+        pipeline_job = _submit_data_joiner_job(
+            submit_pipeline_job,
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_WITH_JOIN_COLUMN,
+            DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_DUPLICATE_JOIN_COLUMN,
             DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME
         )
 

@@ -83,13 +83,14 @@ def run():
         args.right_join_column
     )
 
-    duplicate_column_names = joined_data_df.columns[joined_data_df.columns.duplicated()]
-
     # Check if there are any duplicate column names
-    if duplicate_column_names.size > 0:
-        raise Exception(f"Duplicate column names found: {duplicate_column_names.tolist()}")
+    columns = joined_data_df.columns
+    if len(columns) != len(set(columns)):
+        raise Exception(f"Duplicate column names found: {columns}")
 
-    # Write the joined data.
+    # Write the
+    # 
+    # joined data.
     save_spark_df_as_mltable(joined_data_df, args.joined_data)
     print('Successfully executed data joiner component.')
 

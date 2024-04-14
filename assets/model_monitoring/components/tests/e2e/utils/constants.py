@@ -68,6 +68,11 @@ DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN = (
     "azureml:mltable_iris_preprocessed_model_outputs_with_join_column:1"
 )
 
+DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_DUPLICATE_JOIN_COLUMN = (
+    "azureml:mltable_iris_preprocessed_model_outputs_with_duplicate_join_column:1"
+)
+
+
 DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT = (
     "azureml:mltable_data_drift_signal_output:1"
 )
