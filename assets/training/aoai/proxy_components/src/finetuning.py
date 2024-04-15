@@ -57,16 +57,17 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         return finetuned_model_id
 
     def delete_files(self):
+        """Delete training and validation files from azure openai resource."""
         if self.training_file_id is not None:
-            delete_file_metadata = self.aoai_client.files.delete(file_id=self.training_file_id)
-            logger.debug(f"file id: {delete_file_metadata.id} deleted : {delete_file_metadata.deleted}")
+            self.aoai_client.files.delete(file_id=self.training_file_id)
+            logger.debug(f"file id: {self.training_file_id} deleted")
 
         if self.validation_file_id is not None:
-            delete_file_metadata = self.aoai_client.files.delete(file_id=self.validation_file_id)
-            logger.debug(f"file id: {delete_file_metadata.id} deleted : {delete_file_metadata.deleted}")
+            self.aoai_client.files.delete(file_id=self.validation_file_id)
+            logger.debug(f"file id: {self.validation_file_id} deleted")
 
     def upload_files(self, train_file_path: str, validation_file_path: str = None):
-        """Upload training and validation files to azure openai."""
+        """Upload training and validation files to azure openai resource."""
 
         train_file_name, validation_file_name = utils.get_train_validation_filename(train_file_path,
                                                                                     validation_file_path)
