@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/minimal-py311-app-quickstart
+  name: azureml/curated/minimal-app-quickstart
   os: linux
   context:
     dir: context

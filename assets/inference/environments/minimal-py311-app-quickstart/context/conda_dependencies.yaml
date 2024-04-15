@@ -1,4 +1,4 @@
-name: minimal-quickstart
+name: minimal-app-quickstart
 channels:
 - anaconda
 - conda-forge
