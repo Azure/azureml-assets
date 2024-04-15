@@ -156,6 +156,7 @@ class TestBatchInferencePreparerComponent:
         )
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
         pipeline_job.inputs.endpoint_url = endpoint_url
+        pipeline_job.inputs.model_type = model_type.value
         pipeline_job.display_name = display_name
         pipeline_job.name = str(uuid.uuid4())
 
