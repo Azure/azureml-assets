@@ -105,6 +105,7 @@ class TestSpanTreeUtilities:
 
         assert tree_0.root_span is not None
         assert tree_0.root_span == s0
+        assert tree_0.possible_root_spans[0] == s0
         assert tree_0.root_span.children == []
 
         # scneario 1 where single span is give but parent_id is pointing to an unknown node.
@@ -124,6 +125,7 @@ class TestSpanTreeUtilities:
         # root span should be 1.
         assert tree_1.root_span is not None
         assert tree_1.root_span == s1
+        assert tree_1.possible_root_spans[0] == s1
         assert tree_1.root_span.children == []
 
         # scenario 2 where root span "0" is outside our data_window. Visually denoted by the dashes
@@ -143,6 +145,7 @@ class TestSpanTreeUtilities:
         # root span should be 1.
         assert tree_2.root_span is not None
         assert tree_2.root_span == s1
+        assert tree_2.possible_root_spans[0] == s1
         assert tree_2.root_span.children[0] == s2
         assert tree_2.root_span.children[1] == s3
 
@@ -162,11 +165,8 @@ class TestSpanTreeUtilities:
 
         assert tree_3.root_span is None
         assert tree_3._span_node_map == {span.span_id: span for span in spans_3}
-        # TODO: uncomment when we know what to look for in this case.
-        # assert tree_3.root_span is not None
-        # assert tree_3.root_span == s1
-        # assert tree_3.root_span.children[0] == s2
-        # assert tree_3.root_span.children[1] == s4
+        assert tree_3.possible_root_spans[0] == s1
+        assert tree_3.possible_root_spans[1] == s4
 
         # scenario 4 where spans in our data point to multiple outside parent spans.
         # 00  0
@@ -184,11 +184,24 @@ class TestSpanTreeUtilities:
 
         assert tree_4.root_span is None
         assert tree_4._span_node_map == {span.span_id: span for span in spans_4}
-        # TODO: uncomment when we know what to look for in this case.
-        # assert tree_4.root_span is not None
-        # assert tree_4.root_span == s1
-        # assert tree_4.root_span.children[0] == s2
-        # assert tree_4.root_span.children[1] == s4
+        assert tree_4.possible_root_spans[0] == s1
+        assert tree_4.possible_root_spans[1] == s4
+        assert tree_4.possible_root_spans[2] == s5
+
+        # scenario 5: we have two root spans where one has parent_id null and one doesn't.
+        # 00   null
+        # -|----|------
+        #  |    |-> 0
+        #  |-> 5
+        spans_5 = [s0, s5]
+        tree_5 = SpanTree(spans_5)
+        tree_5.show()
+        print()
+
+        assert tree_5.root_span is None
+        assert tree_5._span_node_map == {span.span_id: span for span in spans_5}
+        assert tree_5.possible_root_spans[0] == s0
+        assert tree_5.possible_root_spans[1] == s5
 
     def test_span_tree_from_json_string(self):
         """Test scenario to construct span tree from json string."""
