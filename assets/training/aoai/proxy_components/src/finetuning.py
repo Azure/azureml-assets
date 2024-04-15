@@ -32,8 +32,9 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         self.validation_file_id = None
         self.finetuning_job_id = None
 
-    def submit_job(self, training_file_path: str, validation_file_path: Optional[str], model: str, n_epochs: Optional[int],
-                   batch_size: Optional[int], learning_rate_multiplier: Optional[float], suffix=Optional[str]):
+    def submit_job(self, training_file_path: str, validation_file_path: Optional[str], model: str,
+                   n_epochs: Optional[int], batch_size: Optional[int],
+                   learning_rate_multiplier: Optional[float], suffix=Optional[str]):
 
         logger.info("Step 1: Uploading data to AzureOpenAI resource")
         self.upload_files(training_file_path, validation_file_path)
@@ -67,7 +68,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
     def upload_files(self, train_file_path: str, validation_file_path: str = None):
         """Upload training and validation files to azure openai."""
 
-        train_file_name, validation_file_name = utils.get_train_validation_filename(train_file_path,\
+        train_file_name, validation_file_name = utils.get_train_validation_filename(train_file_path,
                                                                                     validation_file_path)
         train_data, validation_data = utils.get_train_validation_data(train_file_path, validation_file_path)
 
@@ -76,14 +77,14 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                          {utils.train_dataset_split_ratio} ratio to create validation data")
 
         logger.debug(f"uploading training file : {train_file_name}")
-        train_metadata = self.aoai_client.files.create(file=(train_file_name, train_data, 'application/json'), 
+        train_metadata = self.aoai_client.files.create(file=(train_file_name, train_data, 'application/json'),
                                                        purpose='fine-tune')
         self.training_file_id = train_metadata.id
         self._wait_for_processing(train_metadata.id)
         logger.info("training file uploaded")
 
         logger.debug(f"uploading validation file : {validation_file_name}")
-        validation_metadata = self.aoai_client.files.create(file=(validation_file_name, validation_data, 'application/json'),\
+        validation_metadata = self.aoai_client.files.create(file=(validation_file_name, validation_data, 'application/json'),
                                                             purpose='fine-tune')
         self.validation_file_id = validation_metadata.id
         self._wait_for_processing(validation_metadata.id)
@@ -96,15 +97,16 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         if upload_file_metadata.status == "error":
             error_reason = upload_file_metadata.model_dump()["error"]
-            error_string = f"Processing file failed for {filename}, file id: {upload_file_metadata.id}, reason: {error_reason}"
+            error_string = f"Processing file failed for {filename},\
+                           file id: {upload_file_metadata.id}, reason: {error_reason}"
             logger.error(error_string)
             raise Exception(error_string)
 
     def submit_finetune_job(self, model, n_epochs, batch_size, learning_rate_multiplier, suffix=None):
         """Submit fine-tune job to AOAI."""
-        logger.debug(f"Starting fine-tune job, model: {model}, n_epochs: {n_epochs},\
-                     batch_size: {batch_size}, learning_rate_multiplier: {learning_rate_multiplier},\
-                     training_file_id: {self.training_file_id}, validation_file_id: {self.validation_file_id}, suffix: {suffix}")
+        logger.debug(f"Starting fine-tune job, model: {model}, n_epochs: {n_epochs}, batch_size: {batch_size},\
+                     learning_rate_multiplier: {learning_rate_multiplier}, suffix: {suffix},\
+                     training_file_id: {self.training_file_id}, validation_file_id: {self.validation_file_id}")
         hyperparameters = self.get_hyperparameters_dict(n_epochs, batch_size, learning_rate_multiplier)
 
         finetune_job = self.aoai_client.fine_tuning.jobs.create(
