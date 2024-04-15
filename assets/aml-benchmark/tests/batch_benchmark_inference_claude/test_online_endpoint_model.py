@@ -2,18 +2,10 @@
 # Licensed under the MIT License.
 
 """Tests for OnlineEndpointModel."""
-
-import sys
 import unittest
 from ddt import ddt, data, unpack
 
-from ..test_utils import get_src_dir
-
-
-sys.path.append(get_src_dir())
-print(get_src_dir())
-
-from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel  # noqa: E402
+from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 
 
 @ddt
@@ -39,5 +31,4 @@ class TestOnlineEndpointModel(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
