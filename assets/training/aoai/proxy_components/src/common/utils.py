@@ -41,6 +41,7 @@ def save_json(data, file_path):
 
 
 def get_train_validation_filename(train_file_path: str, validation_file_path: Optional[str]) -> tuple[str, str]:
+    """Get display name for files from path."""
     train_file_name = os.path.basename(train_file_path)
     if validation_file_path is None:
         validation_file_name = "validation_" + train_file_name
@@ -50,12 +51,14 @@ def get_train_validation_filename(train_file_path: str, validation_file_path: Op
 
 
 def get_dataset_length(file_path: str) -> int:
+    """Get total number of examples in file."""
     with jsonlines.open(file_path, mode='r') as file_reader:
         data_len = sum(1 for _ in file_reader)
     return data_len
 
 
 def split_data_in_train_and_validation(file_path: str, split_index: int) -> tuple[BytesIO, BytesIO]:
+    """Split train data to generate validation data."""
     index = 0
     train_data = BytesIO()
     validation_data = BytesIO()
@@ -71,7 +74,7 @@ def split_data_in_train_and_validation(file_path: str, split_index: int) -> tupl
 
 
 def get_train_validation_data(train_file_path: str, validation_file_path: Optional[str]) -> tuple[BytesIO, BytesIO]:
-
+    """Get train and validation data from files."""
     if validation_file_path is not None:
         train_data = open(train_file_path, "rb")
         validation_data = open(validation_file_path, "rb")
@@ -84,6 +87,7 @@ def get_train_validation_data(train_file_path: str, validation_file_path: Option
 
 
 def list_event_messages_after_given_event(events_list: list[FineTuningJobEvent], last_event_message: str) -> list[str]:
+    """List of events after last event recorded."""
     event_message_list = []
     for event in events_list:
         if last_event_message == event.message:

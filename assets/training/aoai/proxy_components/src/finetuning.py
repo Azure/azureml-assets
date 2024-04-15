@@ -21,9 +21,10 @@ logger = get_logger(__name__)
 
 
 class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
-    """Fine-tune proxy class to submit fine-tune job to AOAI."""
+    """Fine-tune class to submit fine-tune job to AOAI."""
 
     def __init__(self, aoai_client_manager: AzureOpenAIClientManager):
+        """Fine-tune class to submit fine-tune job to AOAI."""
         super().__init__(aoai_client_manager.endpoint_name,
                          aoai_client_manager.endpoint_resource_group,
                          aoai_client_manager.endpoint_subscription)
@@ -35,6 +36,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
     def submit_job(self, training_file_path: str, validation_file_path: Optional[str], model: str,
                    n_epochs: Optional[int], batch_size: Optional[int],
                    learning_rate_multiplier: Optional[float], suffix=Optional[str]):
+        """Upload data, finetune model and then delete data."""
 
         logger.info("Step 1: Uploading data to AzureOpenAI resource")
         self.upload_files(training_file_path, validation_file_path)
@@ -68,7 +70,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
     def upload_files(self, train_file_path: str, validation_file_path: str = None):
         """Upload training and validation files to azure openai resource."""
-
         train_file_name, validation_file_name = utils.get_train_validation_filename(train_file_path,
                                                                                     validation_file_path)
         train_data, validation_data = utils.get_train_validation_data(train_file_path, validation_file_path)
@@ -124,6 +125,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         return finetune_job.fine_tuned_model
 
     def track_finetuning_job(self):
+        """Fetch metrics for the job and log them."""
         finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(self.finetuning_job_id)
         job_status = finetune_job.status
 
