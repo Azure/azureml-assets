@@ -108,7 +108,7 @@ class SpanTreeNode:
     def trace_id(self) -> str:
         """Get the span's trace id."""
         return self.get_node_attribute("trace_id")  # type: ignore
-    
+
     @trace_id.setter
     def trace_id(self, value):
         """Set the span's trace id."""
