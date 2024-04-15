@@ -34,11 +34,14 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
     def submit_job(self, training_file_path: str, validation_file_path: Optional[str], model: str, n_epochs: Optional[int],
                     batch_size: Optional[int], learning_rate_multiplier: Optional[float], suffix=Optional[str]):
         
+        logger.info("Step 1: Uploading data to AzureOpenAI resource")
         self.upload_files(training_file_path, validation_file_path)
 
+        logger.info("Step 2: Finetuning model")
         finetuned_model_id = self.submit_finetune_job(model, n_epochs, batch_size, learning_rate_multiplier, suffix)
         finetuned_job = self.track_finetuning_job()
 
+        logger.info("Step 3: Deleting data from AzureOpenAI resource")
         self.delete_files()
 
         if finetuned_job.status == "failed":
@@ -68,15 +71,20 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         train_file_name, validation_file_name = utils.get_train_validation_filename(train_file_path, validation_file_path)
         train_data, validation_data = utils.get_train_validation_data(train_file_path, validation_file_path)
 
+        if validation_file_path is None:
+            logger.debug(f"validation file not provided, train data will be split in {utils.train_dataset_split_ratio} ratio to create validation data")
+
         logger.debug(f"uploading training file : {train_file_name}")
         train_metadata = self.aoai_client.files.create(file=(train_file_name, train_data, 'application/json'), purpose='fine-tune')
         self.training_file_id = train_metadata.id
         self._wait_for_processing(train_metadata.id)
+        logger.info("training file uploaded")
 
         logger.debug(f"uploading validation file : {validation_file_name}")
         validation_metadata = self.aoai_client.files.create(file=(validation_file_name, validation_data, 'application/json'), purpose='fine-tune')
         self.validation_file_id = validation_metadata.id
         self._wait_for_processing(validation_metadata.id)
+        logger.info("validation file uploaded")
 
     def _wait_for_processing(self, file_id):
         upload_file_metadata = self.aoai_client.files.wait_for_processing(file_id)
@@ -138,9 +146,12 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         self.delete_files()
 
         if self.finetuning_job_id is not None:
+            logger.info("cancelling finetuning job in AzureOpenAI resource")
             self.aoai_client.fine_tuning.jobs.cancel(self.finetuning_job_id)
-        
-        return
+        else:
+            logger.debug("finetuning job not created, not starting now as cancellation is triggered")
+
+        exit()
 
     def _log_metrics(self, finetune_job, last_metric_logged):
         """Fetch training metrics from azure open ai resource after finetuning is done and log them."""
@@ -247,7 +258,7 @@ def main():
         add_custom_dimenions_to_app_insights_handler(logger, finetune_component)
         CancelHandler.register_cancel_handler(finetune_component)
 
-        logger.info("Starting finetune submit component")
+        logger.info("Starting Finetuning in Azure OpenAI resource")
 
         finetuned_model_id = finetune_component.submit_job(
             training_file_path = args.training_file_path,
@@ -260,12 +271,12 @@ def main():
         )
 
         utils.save_json({"finetuned_model_id": finetuned_model_id}, args.finetune_submit_output)
-        logger.info("Completed finetune submit component")
+        logger.info("Completed finetuning in Azure OpenAI resource")
 
     except SystemExit:
         logger.warning("Exiting finetuning job")
     except Exception as e:
-        logger.error("Got exception while running finetune submit component. Ex: {}".format(e))
+        logger.error("Got exception while finetuning. Ex: {}".format(e))
         raise e
 
 
