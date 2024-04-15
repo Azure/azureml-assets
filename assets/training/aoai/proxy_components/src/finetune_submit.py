@@ -87,7 +87,6 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
                 if finetune_job.result_files is not None:
                     last_metric_logged = self._log_metrics(finetune_job, last_metric_logged)
 
-
         # emitting metrics after status becomes terminal, just to ensure we do not miss any metric
         last_metric_logged = self._log_metrics(finetune_job, last_metric_logged)
 
@@ -127,7 +126,7 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         df = pd.read_csv(f)
 
         if last_metric_logged >= len(df):
-            logger.info(f"no new metrics emitted, waiting to get latest metric, currently metrics logged till {last_metric_logged} steps")
+            logger.info(f"no new metrics emitted since last iteration, currently metrics logged till {last_metric_logged} steps")
             return last_metric_logged
 
         for col in df.columns[1:]:
