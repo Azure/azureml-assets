@@ -56,14 +56,12 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
     def delete_files(self):
         if self.training_file_id is not None:
-            self.aoai_client.files.delete(file_id=self.training_file_id)
-            self._wait_for_processing(self.training_file_id)
-            logger.debug("training file id: {} deleted".format(self.training_file_id))
-        
+            delete_file_metadata = self.aoai_client.files.delete(file_id=self.training_file_id)
+            logger.debug(f"file id: {delete_file_metadata.id} deleted : {delete_file_metadata.deleted}")
+
         if self.validation_file_id is not None:
-            self.aoai_client.files.delete(file_id=self.validation_file_id)
-            self._wait_for_processing(self.validation_file_id)
-            logger.debug("validation file id: {} deleted".format(self.validation_file_id))
+            delete_file_metadata = self.aoai_client.files.delete(file_id=self.validation_file_id)
+            logger.debug(f"file id: {delete_file_metadata.id} deleted : {delete_file_metadata.deleted}")
         
     def upload_files(self, train_file_path: str, validation_file_path: str = None):
         """Upload training and validation files to azure openai."""
@@ -168,8 +166,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         df = pd.read_csv(f)
 
         if last_metric_logged >= len(df):
-            logger.info(f"no new metrics emitted since last iteration,\
-                        currently metrics logged till {last_metric_logged} steps")
             return last_metric_logged
 
         for col in df.columns[1:]:
@@ -192,7 +188,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             for message in events_message_list:
                 logger.debug(message)
             return events_message_list[-1]
-        
+
         return last_event_message
 
     def get_hyperparameters_dict(self, n_epochs, batch_size, learning_rate_multiplier) -> Hyperparameters:
@@ -270,7 +266,7 @@ def main():
             suffix=args.suffix
         )
 
-        utils.save_json({"finetuned_model_id": finetuned_model_id}, args.finetune_submit_output)
+        utils.save_json({"finetuned_model_id": finetuned_model_id}, args.aoai_finetuning_output)
         logger.info("Completed finetuning in Azure OpenAI resource")
 
     except SystemExit:

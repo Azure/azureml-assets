@@ -78,7 +78,7 @@ outputs:
     description: Contains finetuned model id in output file in JSON/custom class format
 
 command: >-
-  python finetune_submit.py
+  python finetuning.py
   --endpoint_name ${{inputs.endpoint_name}}
   $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
   $[[--endpoint_subscription ${{inputs.endpoint_subscription}}]]
