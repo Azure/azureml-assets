@@ -18,6 +18,7 @@ import pandas as pd
 
 
 logger = get_logger(__name__)
+terminal_statuses = ["succeeded", "failed", "cancelled"]
 
 
 class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
@@ -128,7 +129,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(self.finetuning_job_id)
         job_status = finetune_job.status
 
-        terminal_statuses = ["succeeded", "failed", "cancelled"]
         last_metric_logged = 0
         last_event_message = None
 
@@ -152,14 +152,17 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         """Cancel finetuning job in Azure OpenAI resource."""
         logger.debug("job cancellation has been triggered, cancelling job")
 
-        self.delete_files()
-
         if self.finetuning_job_id is not None:
             logger.info("cancelling finetuning job in AzureOpenAI resource")
-            self.aoai_client.fine_tuning.jobs.cancel(self.finetuning_job_id)
+            cancelled_job = self.aoai_client.fine_tuning.jobs.cancel(self.finetuning_job_id)
+            while cancelled_job.status not in terminal_statuses:
+                time.sleep(10)
+                logger.debug(f"cancellation triggered, job not cancelled yet, current status: {cancelled_job.status}")
+                cancelled_job = self.aoai_client.fine_tuning.jobs.retrieve(cancelled_job.id)
         else:
             logger.debug("finetuning job not created, not starting now as cancellation is triggered")
-
+        
+        self.delete_files()
         exit()
 
     def _log_metrics(self, finetune_job, last_metric_logged):
