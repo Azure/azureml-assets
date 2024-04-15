@@ -1,4 +1,4 @@
-target,model_outputs_join_column
+sepal_length,model_outputs_join_column
 setosa,1
 setosa,2
 setosa,3
