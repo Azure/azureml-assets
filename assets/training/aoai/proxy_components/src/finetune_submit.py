@@ -126,7 +126,8 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         df = pd.read_csv(f)
 
         if last_metric_logged >= len(df):
-            logger.info(f"no new metrics emitted since last iteration, currently metrics logged till {last_metric_logged} steps")
+            logger.info(f"no new metrics emitted since last iteration,\
+                        currently metrics logged till {last_metric_logged} steps")
             return last_metric_logged
 
         for col in df.columns[1:]:
