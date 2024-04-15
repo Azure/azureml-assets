@@ -40,10 +40,12 @@ def save_json(data, file_path):
         json.dump(data, file, indent=4)
 
 
-def get_train_validation_filename(train_file_path:str, validation_file_path: Optional[str]) -> tuple[str, str]:
+def get_train_validation_filename(train_file_path: str, validation_file_path: Optional[str]) -> tuple[str, str]:
     train_file_name = os.path.basename(train_file_path)
-    validation_file_name = os.path.basename(validation_file_path) if validation_file_path\
-                           is not None else "validation_" + train_file_name
+    if validation_file_path is None:
+        validation_file_name = "validation_" + train_file_name
+    else:
+        validation_file_name = os.path.basename(validation_file_path)
     return train_file_name, validation_file_name
 
 
@@ -68,13 +70,13 @@ def split_data_in_train_and_validation(file_path: str, split_index: int) -> tupl
     return train_data, validation_data
 
 
-def get_train_validation_data(train_file_path:str, validation_file_path: Optional[str]) -> tuple[BytesIO, BytesIO]:
+def get_train_validation_data(train_file_path: str, validation_file_path: Optional[str]) -> tuple[BytesIO, BytesIO]:
 
     if validation_file_path is not None:
         train_data = open(train_file_path, "rb")
         validation_data = open(validation_file_path, "rb")
         return train_data, validation_data
-    
+
     train_data_length = get_dataset_length(train_file_path)
     split_index = int(train_data_length * train_dataset_split_ratio)
 

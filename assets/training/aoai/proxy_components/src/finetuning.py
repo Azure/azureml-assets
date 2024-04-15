@@ -85,7 +85,8 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         logger.info("training file uploaded")
 
         logger.debug(f"uploading validation file : {validation_file_name}")
-        validation_metadata = self.aoai_client.files.create(file=(validation_file_name, validation_data, 'application/json'),
+        validation_metadata = self.aoai_client.files.create(file=(validation_file_name,
+                                                            validation_data, 'application/json'),
                                                             purpose='fine-tune')
         self.validation_file_id = validation_metadata.id
         self._wait_for_processing(validation_metadata.id)
