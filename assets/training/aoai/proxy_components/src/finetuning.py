@@ -161,7 +161,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                 cancelled_job = self.aoai_client.fine_tuning.jobs.retrieve(cancelled_job.id)
         else:
             logger.debug("finetuning job not created, not starting now as cancellation is triggered")
-        
+
         self.delete_files()
         exit()
 
