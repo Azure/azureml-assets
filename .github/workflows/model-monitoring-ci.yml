@@ -7,7 +7,7 @@ on:
     paths:
       - assets/model_monitoring/**
       - .github/workflows/model-monitoring-ci.yml
-      
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
