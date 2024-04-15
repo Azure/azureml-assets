@@ -37,7 +37,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                    n_epochs: Optional[int], batch_size: Optional[int],
                    learning_rate_multiplier: Optional[float], suffix=Optional[str]):
         """Upload data, finetune model and then delete data."""
-
         logger.info("Step 1: Uploading data to AzureOpenAI resource")
         self.upload_files(training_file_path, validation_file_path)
 
@@ -204,7 +203,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         return last_event_message
 
     def get_hyperparameters_dict(self, n_epochs, batch_size, learning_rate_multiplier) -> Hyperparameters:
-
+        """Dictionary of non null hyperparameters."""
         hyperparameters: Hyperparameters = {}
 
         if n_epochs:
