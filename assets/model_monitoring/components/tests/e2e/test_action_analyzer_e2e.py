@@ -24,7 +24,7 @@ def _submit_action_analyzer_job(ml_client, get_component, signal_scored_data, si
             model_deployment_name="gpt-4-32k",
             workspace_connection_arm_id="test-connection",
             instance_type="standard_e4s_v3",
-            aml_deployment_id="test-deployment-id",
+            aml_deployment_id="test-aml-deployment-id",
             llm_summary_enabled="true"
         )
         return {"action_output": action_analyzer.outputs.action_output}
