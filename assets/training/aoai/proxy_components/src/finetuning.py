@@ -203,7 +203,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         return last_event_message
 
     def get_hyperparameters_dict(self, n_epochs, batch_size, learning_rate_multiplier) -> Hyperparameters:
-        """Dictionary of non null hyperparameters."""
+        """Get dictionary of non null hyperparameters."""
         hyperparameters: Hyperparameters = {}
 
         if n_epochs:
