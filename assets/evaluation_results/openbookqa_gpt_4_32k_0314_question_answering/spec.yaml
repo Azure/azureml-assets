@@ -1,6 +1,6 @@
 type: evaluationresult
 name: openbookqa_gpt_4_32k_0314_question_answering
-version: 1.0.1
+version: 2.02.04
 display_name: openbookqa_gpt_4_32k_0314_question_answering
 description: gpt-4-32k-0314 run for openbookqa dataset
 dataset_family: openbookqa
@@ -20,8 +20,6 @@ tags:
 
 metrics:
   accuracy: 0.946
-
-path: ./job_files
 
 
 properties:

@@ -12,7 +12,7 @@ import time
 import copy
 from azureml.core import Workspace
 
-from utils.utils import get_diff_files
+from utils.utils import get_diff_files, run_command
 from utils.logging_utils import log_debug, log_error, log_warning
 from azure.storage.blob import BlobServiceClient
 from azure.identity import AzureCliCredential
@@ -49,7 +49,8 @@ def download_blob_to_file(container_name, container_path, storage_name, target_d
     blob_service_client = BlobServiceClient(account_url, credential=cli_auth)
     container_client = blob_service_client.get_container_client(container_name)
 
-    log_debug(f"Downloading blobs under path {container_path} to {target_dir}")
+    log_debug(
+        f"Downloading blobs under path {container_path} to {target_dir}.")
     blob_list = container_client.list_blobs(container_path)
     for blob in blob_list:
         relative_path = os.path.relpath(blob.name, container_path)
@@ -65,7 +66,7 @@ def download_blob_to_file(container_name, container_path, storage_name, target_d
 
 def get_changed_models(diff_files):
     """Get changed models dir."""
-    changed_models = []
+    changed_models = set()
     deleted_models_path = []
     for file_path in diff_files:
         file_path_list = file_path.split("\t")
@@ -75,17 +76,14 @@ def get_changed_models(diff_files):
                     or git_diff_file_path == " ":
                 deleted_models_path.append(file_path)
             else:
-                changed_models.append(os.path.join(
+                changed_models.add(os.path.join(
                     MODELS_ROOT, git_diff_file_path.split("/")[-2]))
-
-    changed_models = ('assets/promptflow/models/template-chat-flow',
-                      'assets/promptflow/models/template-eval-flow', 'assets/promptflow/models/template-standard-flow')
 
     log_debug(
         f"Find {len(deleted_models_path)} deleted models: {deleted_models_path}.")
     log_debug(f"Find {len(changed_models)} changed models: {changed_models}.")
 
-    return changed_models
+    return list(changed_models)
 
 
 def get_all_models():
@@ -125,6 +123,15 @@ def check_flow_run_status(
             bulk_test_run = run_workspace.get_run(run_id=flow_run_id)
             if bulk_test_run.status == "Completed":
                 submitted_flow_run_ids.remove(flow_run_id)
+                # get the run detail with error info
+                command = f"pfazure run show -n {flow_run_id}" \
+                    f" --subscription {args.subscription_id} -g {args.resource_group} -w {args.workspace_name}"
+                res = run_command(command)
+                stdout_obj = json.loads(res.stdout)
+                error_info = stdout_obj.get("error")
+                log_debug(f"stdout error info: {error_info}")
+                if error_info:
+                    failed_flow_runs.update({flow_run_id: flow_run_link})
                 break
             elif bulk_test_run.status == "Failed":
                 submitted_flow_run_ids.remove(flow_run_id)
@@ -158,19 +165,21 @@ if __name__ == "__main__":
     parser.add_argument('--flow_submit_mode', type=str, default="sync")
     parser.add_argument('--run_time', type=str, default="default-mir")
     parser.add_argument('--skipped_flows', type=str,
-                        default="bring_your_own_data_qna,template_chat_flow")
+                        default="bring_your_own_data_qna,template_chat_flow,template_eval_flow")
     # Skip bring_your_own_data_qna test, the flow has a bug.
     # Bug 2773738: Add retry when ClientAuthenticationError
     # https://msdata.visualstudio.com/Vienna/_workitems/edit/2773738
     # Skip template_chat_flow because not able to extract samples.json for test.
+    # Skip template_eval_flow because current default input fails.
     args = parser.parse_args()
 
     # Get changed models folder or all models folder
     diff_files = get_diff_files()
     diff_files_list = {path.split('/')[-1] for path in diff_files}
-    log_debug(f"Git diff files include:{diff_files_list}")
+    log_debug(f"Git diff files include:{diff_files}.")
 
-    if "promptflow_ci.py" in diff_files_list or "promptflow-ci.yml" in diff_files_list:
+    if ("promptflow_ci.py" in diff_files_list or "promptflow-ci.yml" in diff_files_list
+            or "flow_utils.py" in diff_files_list):
         log_debug("promptflow_ci.py or promptflow_ci.yml changed, test all models.")
         changed_models = get_all_models()
     else:
@@ -182,10 +191,11 @@ if __name__ == "__main__":
     if args.skipped_flows != "":
         skipped_flows = args.skipped_flows.split(",")
         skipped_flows = [flow.replace("_", "-") for flow in skipped_flows]
-        log_debug(f"Skipped flows: {skipped_flows}")
+        log_debug(f"Skipped flows: {skipped_flows}.")
         flows_dirs = [flow_dir for flow_dir in changed_models if Path(
             flow_dir).name not in skipped_flows]
     # Check download models
+    log_debug(f"Flows to validate: {flows_dirs}.")
     errors = []
     for model_dir in flows_dirs:
         try:
@@ -194,7 +204,7 @@ if __name__ == "__main__":
             errors.append(e)
 
     if len(errors) > 0:
-        log_error(f"Found {len(errors)} errors when downloading models")
+        log_error(f"Found {len(errors)} errors when downloading models.")
         for error in errors:
             log_error(error)
         exit(1)
@@ -205,7 +215,7 @@ if __name__ == "__main__":
     flows_dirs = [Path(os.path.join(dir, TEST_FOLDER))
                   for dir in flows_dirs]
 
-    log_debug(flows_dirs)
+    log_debug(f"Flows to test: {flows_dirs}.")
     if len(flows_dirs) == 0:
         log_debug("No flow code change, skip flow testing.")
         exit(0)
@@ -218,7 +228,7 @@ if __name__ == "__main__":
         flows_dirs = flow_utils._assign_flow_values(flows_dirs)
         flow_utils._create_run_yamls(flows_dirs)
     except Exception as e:
-        log_error("Error when creating flow")
+        log_error("Error when creating flow.")
         raise e
     # endregion
 
@@ -245,14 +255,14 @@ if __name__ == "__main__":
     failed_evaluation_runs = {}  # run key : evaluation_run_link
     if flow_runs_count == 0:
         log_debug(
-            "\nNo bulk test run or bulk test evaluation run need to check status")
+            "\nNo bulk test run or bulk test evaluation run need to check status.")
 
     run_workspace = Workspace.get(
         name=args.workspace_name,
         subscription_id=args.subscription_id,
         resource_group=args.resource_group,
     )
-
+    log_debug(f"\nrun ids to check: {submitted_flow_run_ids}")
     log_debug(f"\n{flow_runs_count} bulk test runs need to check status.")
     check_flow_run_status(flow_runs_to_check, submitted_flow_run_links, submitted_flow_run_ids,
                           check_run_status_interval, check_run_status_max_attempts)
@@ -287,7 +297,7 @@ if __name__ == "__main__":
                   "to https://msdata.visualstudio.com/Vienna/_git/PromptFlow?path=/docs/"
                   "sharing-your-flows-in-prompt-flow-gallery.md&_a=preview&anchor=2.-how-to-debug-a-failed"
                   "-run-in--%60validate-prompt-flows%60-step-of-%5Bpromptflow-ci"
-                  "%5D(https%3A//github.com/azure/azureml-assets/actions/workflows/promptflow-ci.yml)")
+                  "%5D(https%3A//github.com/azure/azureml-assets/actions/workflows/promptflow-ci.yml).")
     elif len(submitted_flow_run_ids) == 0:
         log_debug(
             f"\nRun status checking completed. {flow_runs_count} flow runs completed.")

@@ -20,16 +20,16 @@ from src.batch_score.common.scoring.segmented_score_context import SegmentedScor
     ("stop", 101)])
 def test_has_more(
         mock_get_logger,
-        mock__score_once,
+        mock_score,
         stop_reason,
         total_generated):
-    """Test has more success case."""
+    """Test has more."""
     max_segment_size = 2
     max_tokens = 100
     request = ScoringRequest(f'{{"prompt": "Generate something.", "max_tokens": {max_tokens}}}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
 
-    scoring_result = mock__score_once["scoring_result"]
+    scoring_result = mock_score["scoring_result"]
     scoring_result.response_body = {"choices": [{"text": "not empty"}]}
     segmented_context._SegmentedScoreContext__segmented_results.append(scoring_result)
 
@@ -45,14 +45,14 @@ def test_has_more(
 @pytest.mark.parametrize("stop_reason", [None, "stop", "length"])
 def test_has_more_no_max_tokens(
         mock_get_logger,
-        mock__score_once,
+        mock_score,
         stop_reason):
-    """Test has more no max tokens case."""
+    """Test has more no max tokens."""
     max_segment_size = 2
     request = ScoringRequest('{"prompt": "Generate something."}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
 
-    scoring_result = mock__score_once["scoring_result"]
+    scoring_result = mock_score["scoring_result"]
     segmented_context._SegmentedScoreContext__segmented_results.append(scoring_result)
     segmented_context._SegmentedScoreContext__last_stop_reason = stop_reason
 
@@ -64,7 +64,7 @@ def test_has_more_no_max_tokens(
 
 def test_has_more_no_segmented_results(
         mock_get_logger):
-    """Test has more no segmented results case."""
+    """Test has more no segmented results."""
     max_segment_size = 2
     request = ScoringRequest('{"prompt": "Generate something."}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
@@ -75,14 +75,14 @@ def test_has_more_no_segmented_results(
 @pytest.mark.parametrize("max_tokens", [1, 2])
 def test_has_more_supports_segmentation_false(
         mock_get_logger,
-        mock__score_once,
+        mock_score,
         max_tokens):
-    """Test has more segmentation case."""
+    """Test has more supports segmentation false."""
     max_segment_size = 2
     request = ScoringRequest(f'{{"prompt": "Generate something.", "max_tokens": {max_tokens}}}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
 
-    scoring_result = mock__score_once["scoring_result"]
+    scoring_result = mock_score["scoring_result"]
     segmented_context._SegmentedScoreContext__segmented_results.append(scoring_result)
 
     assert not segmented_context.has_more()
@@ -90,13 +90,13 @@ def test_has_more_supports_segmentation_false(
 
 def test_has_more_when_predicted_text_is_empty(
         mock_get_logger,
-        mock__score_once):
-    """Test has more empty predicted text case."""
+        mock_score):
+    """Test has more when predicted text is empty."""
     max_segment_size = 2
     request = ScoringRequest('{"prompt": "Generate something.", "max_tokens": 3}')
     segmented_context = SegmentedScoreContext(request, max_segment_size)
 
-    scoring_result = mock__score_once["scoring_result"]
+    scoring_result = mock_score["scoring_result"]
     scoring_result.response_body = {"choices": [{"text": ""}]}
     segmented_context._SegmentedScoreContext__segmented_results.append(scoring_result)
 
@@ -105,9 +105,9 @@ def test_has_more_when_predicted_text_is_empty(
 
 @pytest.mark.asyncio
 async def test_score_next(
-        make_scoring_client,
+        make_pool_scoring_client,
         mock_get_logger,
-        mock__score_once,
+        mock_score,
         mock_get_quota_scope):
     """Test score next."""
     response_body = {"id": "123",
@@ -125,12 +125,14 @@ async def test_score_next(
     assert len(segmented_context._SegmentedScoreContext__segmented_results) == 0
     assert segmented_context._SegmentedScoreContext__next_scoring_request is None
 
-    scoring_result = mock__score_once["scoring_result"]
+    scoring_result = mock_score["scoring_result"]
     scoring_result.response_body = response_body
     scoring_result.request_obj = request_obj
 
-    result1 = await segmented_context.score_next_once(make_scoring_client(), None)
+    assert segmented_context.processed_segments_count == 0
+    result1 = await segmented_context.score_next_segment(make_pool_scoring_client(), None)
 
+    assert segmented_context.processed_segments_count == 1
     assert len(segmented_context._SegmentedScoreContext__segmented_results) == 1
     assert result1 == segmented_context._SegmentedScoreContext__segmented_results[0]
     assert result1.response_body == response_body
@@ -140,8 +142,9 @@ async def test_score_next(
 
     assert request2.cleaned_payload_obj['prompt'] == 'Generate something.One day'
 
-    result2 = await segmented_context.score_next_once(make_scoring_client(), None)
+    result2 = await segmented_context.score_next_segment(make_pool_scoring_client(), None)
 
+    assert segmented_context.processed_segments_count == 2
     assert len(segmented_context._SegmentedScoreContext__segmented_results) == 2
     assert result2 == segmented_context._SegmentedScoreContext__segmented_results[1]
     assert segmented_context._SegmentedScoreContext__next_scoring_request is None
@@ -149,14 +152,14 @@ async def test_score_next(
 
 def test_build_scoring_result_one_segment(
         mock_get_logger,
-        mock__score_once):
+        mock_score):
     """Test build scoring result one segment."""
     max_segment_size = 2
     request_obj = {"prompt": "Generate something."}
     request = ScoringRequest(json.dumps(request_obj))
     segmented_context = SegmentedScoreContext(request, max_segment_size)
 
-    scoring_result = mock__score_once["scoring_result"]
+    scoring_result = mock_score["scoring_result"]
     scoring_result.response_body = {"choices": [{"text": "not empty"}]}
     segmented_context._SegmentedScoreContext__segmented_results.append(scoring_result)
 
@@ -167,7 +170,7 @@ def test_build_scoring_result_one_segment(
 
 def test_build_scoring_result(
         mock_get_logger,
-        mock__score_once):
+        mock_score):
     """Test build scoring result."""
     max_segment_size = 2
     request_obj = {"prompt": "Generate something."}
@@ -188,7 +191,7 @@ def test_build_scoring_result(
 
     segmented_context = SegmentedScoreContext(request, max_segment_size)
 
-    scoring_result = mock__score_once["scoring_result"]
+    scoring_result = mock_score["scoring_result"]
     scoring_result.response_body = response_body
     segmented_context._SegmentedScoreContext__segmented_results.append(scoring_result)
 
@@ -211,3 +214,8 @@ def test_build_scoring_result(
     assert final_result.response_body["usage"]["prompt_tokens"] == 2
     assert final_result.response_body["usage"]["completion_tokens"] == 18
     assert final_result.response_body["usage"]["total_tokens"] == 20
+
+    # Ensure the shorthanded token fields are correct.
+    assert final_result.prompt_tokens == 2
+    assert final_result.completion_tokens == 18
+    assert final_result.total_tokens == 20

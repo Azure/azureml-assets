@@ -7,17 +7,17 @@ from copy import deepcopy
 
 import pandas as pd
 
-from ..batch_pool.quota.estimators.embeddings_estimator import EmbeddingsEstimator
+from ..batch_pool.quota.estimators import EmbeddingsEstimator
 from ..common.telemetry import logging_utils as lu
 
 estimator = None
 
 
-def _convert_to_list_of_input_batches(data: pd.DataFrame,
-                                      batch_size_per_request: int) -> "list[dict]":
+def _convert_to_list_of_input_batches(
+        data: pd.DataFrame,
+        batch_size_per_request: int) -> "list[dict]":
     """Convert input data to a list of input batches."""
-    """
-    This method is specific for APIs that allow batching, currently only Embeddings.
+    """This method is specific for APIs that allow batching, currently only Embeddings.
     That means the data has the "input" column.
 
     Given a dataframe and batch size, convert the data into a list of dictionaries,
@@ -109,8 +109,9 @@ def __build_output_idx_to_embedding_mapping(response_data):
 
 
 def __override_prompt_tokens(output_obj, token_count):
-    """Set the token_count as the value for `prompt_tokens` in response's usage info."""
     """
+    Set the token_count as the value for `prompt_tokens` in response's usage info.
+
     Args:
         output_obj: The dictionary of info for response, request
         token_count: The tiktoken count for this input string
@@ -123,8 +124,9 @@ def __override_prompt_tokens(output_obj, token_count):
 
 
 def __tiktoken_estimates_succeeded(token_count_estimates: "tuple[int]", input_length: int) -> bool:
-    """Return True if the length of the batch of inputs matches the length of the tiktoken estimates."""
     """
+    Return True if the length of the batch of inputs matches the length of the tiktoken estimates.
+
     Args:
         token_count_estimates: The tuple of tiktoken estimates for the inputs in this batch
         input_length: The length of inputs in this batch
@@ -132,14 +134,15 @@ def __tiktoken_estimates_succeeded(token_count_estimates: "tuple[int]", input_le
     token_est_length = len(token_count_estimates)
     length_matches = token_est_length == input_length
     if not length_matches:
-        lu.get_logger().warn(f"Input length {input_length} does not match token estimate length {token_est_length}. " +
+        lu.get_logger().warn(f"Input length {input_length} does not match token estimate length {token_est_length}. "
                              "Skipping prompt_tokens count overrides.")
     return length_matches
 
 
 def __tiktoken_estimates_retry(request_obj: dict) -> "tuple[int]":
-    """Return token counts for the inputs within a batch."""
     """
+    Return token counts for the inputs within a batch.
+
     Args:
         request_obj: The request dictionary.
     """
@@ -156,11 +159,13 @@ def __tiktoken_estimates_retry(request_obj: dict) -> "tuple[int]":
 
 
 def __validate_response_data_length(numrequests, numresults):
-    """Validate the number of outputs from the API response matches the number of requests in the batch."""
     """
+    Validate the number of outputs from the API response matches the number of requests in the batch.
+
     Args:
         numrequests: The number of requests in this batch.
         numresults: The number of results in the response data.
+
     Raises:
         Exception if response length and request length do not match.
     """

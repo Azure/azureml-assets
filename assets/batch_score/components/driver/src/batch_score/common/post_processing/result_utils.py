@@ -3,23 +3,22 @@
 
 """Result utilities."""
 
-import os
-
 from ..request_modification.input_transformer import InputTransformer
 from ..scoring.scoring_result import ScoringResult
 from ..telemetry import logging_utils as lu
 from .mini_batch_context import MiniBatchContext
 
 
-def apply_input_transformer(input_to_output_transformer: InputTransformer,
-                            scoring_results: "list[ScoringResult]",
-                            mini_batch_context: MiniBatchContext = None):
+def apply_input_transformer(
+        input_to_output_transformer: InputTransformer,
+        scoring_results: "list[ScoringResult]",
+        mini_batch_context: MiniBatchContext = None):
     """Apply input to output transformation to the scoring results."""
     if input_to_output_transformer:
         lu.get_logger().debug("Start applying input to output transformer.")
         for scoring_result in scoring_results:
-            # None request_obj values may be present,
-            # if a RequestModificationException was thrown during ScoringRequest creation
+            # None request_obj values may be present, if a RequestModificationException
+            # was thrown during ScoringRequest creation
             if not scoring_result.omit and scoring_result.request_obj:
                 scoring_result.request_obj = input_to_output_transformer.apply_modifications(
                     request_obj=scoring_result.request_obj)
@@ -40,18 +39,3 @@ def get_return_value(ret: 'list[str]', output_behavior: str):
 
     lu.get_logger().info("Returning results in append_row mode.")
     return ret
-
-
-def save_mini_batch_results(mini_batch_results: list, mini_batch_results_out_directory: str, raw_mini_batch_context):
-    """Save mini batch results."""
-    lu.get_logger().debug("mini_batch_results_out_directory: {}".format(mini_batch_results_out_directory))
-
-    filename = f"{raw_mini_batch_context.minibatch_index}.jsonl"
-    file_path = os.path.join(mini_batch_results_out_directory, filename)
-
-    lu.get_logger().debug(f"Start saving {len(mini_batch_results)} results to file {file_path}.")
-    with open(file_path, "w", encoding="utf-8") as writer:
-        for item in mini_batch_results:
-            writer.write(item + "\n")
-
-    lu.get_logger().info(f"Completed saving {len(mini_batch_results)} results to file {file_path}.")

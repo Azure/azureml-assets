@@ -7,7 +7,8 @@ on:
     paths:
       - assets/batch_score/**
       - .github/workflows/batch-score-ci.yml
-      
+  workflow_dispatch:
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -55,8 +56,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 
-      - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.testsRootPath }} --strict-markers -v -s -m "unit or smoke" -o log_level=DEBUG -n 8
+      - name: Run unit tests
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.testsRootPath }} --strict-markers -v -s -m "unit" -o log_level=DEBUG -n 8
+        env:
+          SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          RESOURCE_GROUP: ${{ env.resource_group }}
+          WORKSPACE_NAME: ${{ env.workspace }}
+      - name: Run e2e tests
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.testsRootPath }} --strict-markers -v -s -m "smoke" -o log_level=DEBUG -n 8
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}

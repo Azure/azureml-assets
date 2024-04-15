@@ -38,6 +38,7 @@ class EndpointDeploymentBase(OBOComponentBase):
         chat_connection_id = os.environ.get(
             "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT", None
         )
+
         secrets = {}
         if (
             embedding_connection_id is not None
@@ -103,6 +104,9 @@ class EndpointDeploymentBase(OBOComponentBase):
             "WORKER_TIMEOUT": "0",
             "GUNICORN_CMD_ARGS": "--threads 20",
             "AML_CORS_ORIGINS": "*",
+            "AZUREML_WORKSPACE_NAME": self.workspace.name,
+            "AZUREML_SUBSCRIPTION_ID": self.workspace.subscription_id,
+            "AZUREML_RESOURCE_GROUP": self.workspace.resource_group,
         }
         if extra_environment_variables:
             environment_variables.update(extra_environment_variables)

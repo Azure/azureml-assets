@@ -41,6 +41,7 @@ class InferencePostprocessor(object):
         prediction_column_name: str = None,
         ground_truth_dataset: str = None,
         ground_truth_column_name: str = None,
+        additional_columns: str = None,
         separator: str = None,
         find_first: str = None,
         regex_expr: str = None,
@@ -62,6 +63,7 @@ class InferencePostprocessor(object):
         :param prediction_column_name: Name of prediction column/key.
         :param ground_truth_dataset: Path to the jsonl file to load the prediction dataset.
         :param ground_truth_column_name: Name of ground truth column/key.
+        :param additional_columns: Name of additional columns which may be useful for metric computation.
         :param separator: Few shot separator used in prompt crafter.
         :param find_first: A list of strings to search for in the inference results. The first occurrence \
             of each string will be extracted. Must provide a comma-separated list of strings.
@@ -108,6 +110,7 @@ class InferencePostprocessor(object):
         self.prediction_column_name = prediction_column_name
         self.ground_truth_dataset = ground_truth_dataset
         self.ground_truth_column_name = ground_truth_column_name
+        self.additional_columns = additional_columns
         self.label_map = label_map
         self.separator = separator
         self.regex_expr = regex_expr
@@ -164,19 +167,40 @@ class InferencePostprocessor(object):
         """
         Read the ground truth dataset if provided.
 
-        If ground truth dataset is n-D array, then read only the provided ground truth column name.
+        If ground truth dataset is n-D array, then read only the provided ground truth column name
+        and the additional columns.
         """
         result_df = pd.DataFrame()
         if self.ground_truth_dataset:
             actual_df = pd.json_normalize(
                 read_jsonl_files(resolve_io_path(self.ground_truth_dataset))
             )
+            if not self.ground_truth_dataset and not self.additional_columns:
+                return actual_df
             if self.ground_truth_column_name:
                 result_df[self.ground_truth_column_name] = actual_df[
                     self.ground_truth_column_name
                 ]
-            else:
-                result_df = actual_df
+            if self.additional_columns:
+                columns = [col.strip() for col in self.additional_columns.split(',')]
+                if '' in columns:
+                    logger.warning("Received a column name as '' in additional_fields. "
+                                   "Please check if extra comma is provided between two column names. "
+                                   "Dropping columns named as '' from additional_fields input.")
+                    columns = [col for col in columns if col]  # and col in actual_df.columns.tolist()]
+                missing_columns = [col for col in columns if col not in actual_df.columns.tolist()]
+                if len(missing_columns) > 0:
+                    raise BenchmarkUserException._with_error(
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details=(
+                                f"The columns {missing_columns} provided in the additional_columns field is not "
+                                "found in the ground truth dataset. Please make sure that the all columns "
+                                "provided in this field is present in the groun_truth dataset."
+                            )
+                        )
+                    )
+                result_df[columns] = actual_df[columns]
         return result_df
 
     def apply_find_first(self, text: str) -> str:
@@ -237,6 +261,8 @@ class InferencePostprocessor(object):
                     except SyntaxError:
                         # we matched with something that is not a number
                         pass
+        if self.kwargs.get("extract_number_strategy_default_value") is not None:
+            default = self.kwargs.get("extract_number_strategy_default_value")
         return default
 
     def _convert_to_unicode(self, text: str) -> str:
@@ -404,7 +430,7 @@ class InferencePostprocessor(object):
                 pred_list.append(curr_pred_list)
             else:
                 out_string = predicted if isinstance(predicted, str) else predicted[0]
-                pred_list.append(self.apply_generic_processor(out_string, row))
+                pred_list.append(self.apply_generic_processor(out_string, row) if out_string != '' else out_string)
         if isinstance(pred_list[0], list) and len(pred_list[0]) > 1:
             cols = [
                 f"{self.prediction_column_name}_{i+1}" for i in range(len(pred_list[0]))

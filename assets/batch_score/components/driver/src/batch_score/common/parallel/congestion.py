@@ -28,10 +28,12 @@ class CongestionDetector(ABC):
     """Congestion detector."""
 
     @abstractmethod
-    def detect(self,
-               request_metrics: RequestMetrics,
-               start_time: pd.Timestamp,
-               end_time: pd.Timestamp = None) -> CongestionState:
+    def detect(
+        self,
+        request_metrics: RequestMetrics,
+        start_time: pd.Timestamp,
+        end_time: pd.Timestamp = None
+    ) -> CongestionState:
         """Detect congestion."""
         pass
 
@@ -43,14 +45,16 @@ class WaitTimeCongestionDetector(CongestionDetector):
     DEFAULT_SATURATION_P90_THRESHOLD = 5
 
     def __init__(self, client_settings_provider: ClientSettingsProvider):
-        """Init function."""
+        """Initialize WaitTimeCongestionDetector."""
         self.__client_settings_provider = client_settings_provider
         self._refresh_thresholds()
 
-    def detect(self,
-               request_metrics: RequestMetrics,
-               start_time: pd.Timestamp,
-               end_time: pd.Timestamp = None) -> CongestionState:
+    def detect(
+        self,
+        request_metrics: RequestMetrics,
+        start_time: pd.Timestamp,
+        end_time: pd.Timestamp = None
+    ) -> CongestionState:
         """Detect congestion from request total wait time metrics."""
         self._refresh_thresholds()
 
@@ -77,8 +81,11 @@ class WaitTimeCongestionDetector(CongestionDetector):
         if response_count == 0:
             result = CongestionState.UNKNOWN
         else:
-            df = metrics.groupby(by=RequestMetrics.COLUMN_REQUEST_ID, sort=False) \
-                     .max(RequestMetrics.COLUMN_REQUEST_TOTAL_WAIT_TIME)
+            df = metrics.groupby(
+                by=RequestMetrics.COLUMN_REQUEST_ID,
+                sort=False).max(
+                    RequestMetrics.COLUMN_REQUEST_TOTAL_WAIT_TIME)
+
             p90_wait_time = df[RequestMetrics.COLUMN_REQUEST_TOTAL_WAIT_TIME].quantile(0.9, interpolation="linear")
             request_count = len(df.index)
 
@@ -89,9 +96,9 @@ class WaitTimeCongestionDetector(CongestionDetector):
             else:
                 result = CongestionState.SATURATED
 
-        msg = "WaitTimeCongestionDetector response_count: {} request_count: {}, p90_wait_time: {} result: {}".format(
-                response_count, request_count, p90_wait_time, result)
-        lu.get_logger().info(msg)
+        lu.get_logger().info(
+            f"WaitTimeCongestionDetector response_count: {response_count}"
+            f" request_count: {request_count}, p90_wait_time: {p90_wait_time} result: {result}")
 
         return result
 
@@ -106,6 +113,6 @@ class WaitTimeCongestionDetector(CongestionDetector):
             or self.__client_settings_provider.get_client_setting(ClientSettingsKey.SATURATION_THRESHOLD_P90_WAIT_TIME)
             or self.DEFAULT_SATURATION_P90_THRESHOLD)
 
-        msg = "WaitTimeCongestionDetector using congestion threshold: {}, saturation threshold: {}".format(
-                self.__congestion_threshold, self.__saturation_threshold)
-        lu.get_logger().info(msg)
+        lu.get_logger().info(
+            f"WaitTimeCongestionDetector using congestion threshold: {self.__congestion_threshold},"
+            f" saturation threshold: {self.__saturation_threshold}")

@@ -9,7 +9,7 @@ from azure.ai.ml import load_model, MLClient
 from azure.ai.ml._utils._registry_utils import get_asset_body_for_registry_storage
 from azureml.assets.util import logger
 from azureml.assets.config import PathType
-from azureml.assets.model.download_utils import copy_azure_artifacts, download_git_model
+from azureml.assets.model.download_utils import CopyUpdater, copy_azure_artifacts, download_git_model
 from azureml.assets.deployment_config import AssetVersionUpdate
 
 
@@ -53,12 +53,13 @@ class RegistryUtils:
 class ModelAsset:
     """Asset class for model."""
 
-    def __init__(self, spec_path, model_config, registry_name, temp_dir):
+    def __init__(self, spec_path, model_config, registry_name, temp_dir, copy_updater: CopyUpdater = None):
         """Initialize model asset."""
         self._spec_path = spec_path
         self._model_config = model_config
         self._registry_name = registry_name
         self._temp_dir = temp_dir
+        self._copy_updater = copy_updater
 
         try:
             self._model = load_model(spec_path)
@@ -68,7 +69,7 @@ class ModelAsset:
             logger.error(f"Error in loading model spec file at {spec_path}: {e}")
             return False
 
-    def _publish_to_registry(self, ml_client: MLClient):
+    def _publish_to_registry(self, ml_client: MLClient, copy_updater: CopyUpdater = None):
         src_uri = self._model_config.path.uri
         if self._model_config.path.type == PathType.GIT:
             # download model locally
@@ -85,7 +86,7 @@ class ModelAsset:
             blob_uri, sas_uri = RegistryUtils.get_registry_data_reference(
                 self._model.name, self._model.version, ml_client
             )
-            success = copy_azure_artifacts(src_uri, sas_uri)
+            success = copy_azure_artifacts(src_uri, sas_uri, copy_updater)
             if not success:
                 raise Exception("blobstorage copy failed.")
             logger.print("Successfully copied model artifacts to registry storage")
@@ -100,13 +101,13 @@ class MLFlowModelAsset(ModelAsset):
     MLMODEL_FILE_NAME = "MLmodel"
     MLFLOW_MODEL_PATH = "mlflow_model_folder"
 
-    def __init__(self, spec_path, model_config, registry_name, temp_dir):
+    def __init__(self, spec_path, model_config, registry_name, temp_dir, copy_updater: CopyUpdater = None):
         """Initialize Mlflow model asset."""
-        super().__init__(spec_path, model_config, registry_name, temp_dir)
+        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
 
     def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
-        model_registry_path = self._publish_to_registry(ml_client)
+        model_registry_path = self._publish_to_registry(ml_client, self._copy_updater)
         self._model.path = model_registry_path + "/" + MLFlowModelAsset.MLFLOW_MODEL_PATH
         return self._model
 
@@ -114,26 +115,26 @@ class MLFlowModelAsset(ModelAsset):
 class CustomModelAsset(ModelAsset):
     """Asset class for custom model."""
 
-    def __init__(self, spec_path, model_config, registry_name, temp_dir):
+    def __init__(self, spec_path, model_config, registry_name, temp_dir, copy_updater: CopyUpdater = None):
         """Initialize custom model asset."""
-        super().__init__(spec_path, model_config, registry_name, temp_dir)
+        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
 
     def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
-        model_registry_path = self._publish_to_registry(ml_client)
+        model_registry_path = self._publish_to_registry(ml_client, self._copy_updater)
         self._model.path = model_registry_path
         return self._model
 
 
-def prepare_model(spec_path, model_config, temp_dir, ml_client: MLClient):
+def prepare_model(spec_path, model_config, temp_dir, ml_client: MLClient, copy_updater: CopyUpdater = None):
     """Prepare model for publish."""
     try:
         logger.print(f"Model type: {model_config.type}")
         registry_name = ml_client.models._registry_name
         if model_config.type == assets.ModelType.CUSTOM:
-            model_asset = CustomModelAsset(spec_path, model_config, registry_name, temp_dir)
+            model_asset = CustomModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater)
         elif model_config.type == assets.ModelType.MLFLOW:
-            model_asset = MLFlowModelAsset(spec_path, model_config, registry_name, temp_dir)
+            model_asset = MLFlowModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater)
         else:
             logger.log_error(f"Model type {model_config.type.value} not supported")
             return False
@@ -154,12 +155,12 @@ def update_model_metadata(
     """Update the mutable metadata of already registered Model."""
     try:
         model = ml_client.models.get(name=model_name, version=model_version)
-
         need_update = False
-        updated_tags = copy.deepcopy(model.tags)
-        updated_properties = copy.deepcopy(model.properties)
+
+        # Update tags
         if update.tags:
-            # Replace tags
+            updated_tags = copy.deepcopy(model.tags)
+
             if update.tags.replace is not None:
                 updated_tags = update.tags.replace
             else:
@@ -170,12 +171,14 @@ def update_model_metadata(
                     for k in update.tags.delete:
                         updated_tags.pop(k, None)
 
-        if updated_tags != model.tags:
-            logger.print("tags has been updated.")
-            model.tags = updated_tags
-            need_update = True
+            if updated_tags != model.tags:
+                logger.print("tags has been updated.")
+                model.tags = updated_tags
+                need_update = True
 
+        # Update properties
         if update.properties:
+            updated_properties = copy.deepcopy(model.properties)
             if update.properties.add is not None:
                 for k, v in update.properties.add.items():
                     if k in model.properties and model.properties[k] != v:
@@ -183,12 +186,13 @@ def update_model_metadata(
                                         f"be replaced to {v} without increasing the version.")
                     updated_properties[k] = v
 
-        if updated_properties != model.properties:
-            logger.print("properties has been updated.")
-            model.properties = updated_properties
-            need_update = True
+            if updated_properties != model.properties:
+                logger.print("properties has been updated.")
+                model.properties = updated_properties
+                need_update = True
 
-        if model.description != update.description:
+        # Update description
+        if update.description is not None and model.description != update.description:
             logger.print("description has been updated")
             model.description = update.description
             need_update = True
@@ -200,3 +204,14 @@ def update_model_metadata(
             logger.print(f"No update found for model {model_name}. Skipping")
     except Exception as e:
         logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")
+
+    # Archive or restore model based on stage
+    try:
+        if update.stage == "Archived":
+            logger.print(f"Archiving model {model_name} version {model_version}")
+            ml_client.models.archive(name=model_name, version=model_version)
+        elif update.stage == "Active":
+            logger.print(f"Restoring model {model_name} version {model_version}")
+            ml_client.models.restore(name=model_name, version=model_version)
+    except Exception as e:
+        logger.log_error(f"Failed to archive or restore model {model_name} version {model_version}: {e}")

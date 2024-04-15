@@ -16,6 +16,8 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 
 from aml_benchmark.utils.exceptions import BenchmarkValidationException
 from aml_benchmark.utils.error_definitions import BenchmarkValidationError
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from .prompt import (
     PromptType,
     Prompt,
@@ -45,6 +47,7 @@ class PromptFactory(ABC):
     few_shot_separator: Optional[str] = None
     prefix: Optional[str] = None
     ground_truth_column_name: Optional[str] = None
+    additional_columns: Optional[str] = None
     label_map_str: Optional[str] = None
     output_pattern: Optional[str] = None
     system_message: Optional[str] = None
@@ -199,6 +202,19 @@ class PromptFactory(ABC):
                 raise BenchmarkValidationException._with_error(
                     AzureMLError.create(BenchmarkValidationError, error_details=mssg))
 
+        if self.additional_columns:
+            elements = self.additional_columns.split(",")
+            strips = [s.strip() for s in elements if s.strip()]
+            for k in strips:
+                try:
+                    output_data[k] = row[k]
+                except KeyError:
+                    raise BenchmarkUserException._with_error(
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details=f"Column {k} doesn't exist. Please check your data before submitting again.")
+                        )
+
         if self.metadata_keys is not None:
             def collect_metadata(metadata_keys, data, index):
                 metadata = data.get("metadata", {})
@@ -287,15 +303,32 @@ class ChatPromptFactory(PromptFactory):
                                                Role.system.name)
             messages.extend(system_message)
 
+        prefix_messages = []
         if self.prefix:
             prefix_messages = self._parse_affix(affix=self.prefix)
-            messages.extend(prefix_messages)
+
+        # Parsing the prompt pattern
+        input_messages = self._parse_affix(affix=self.prompt_pattern)
 
         if self.few_shot_pool is not None and self.n_shots > 0:
             few_shot_messages = self._create_few_shots(row)
-            messages.extend(few_shot_messages)
+            if len(prefix_messages) == 1 and len(few_shot_messages) > 0:
+                # Updating the first few shot message with prefix
+                few_shot_messages[0]["content"] = prefix_messages[0]["content"] + few_shot_messages[0]["content"]
+            elif len(prefix_messages) > 1:
+                # If prefix is a list of dictionaries
+                messages.extend(prefix_messages)
 
-        input_messages = self._parse_affix(affix=self.prompt_pattern)
+            messages.extend(few_shot_messages)
+        else:
+            # With no few shot data and prefix present, adding prefix to prompt
+            if len(prefix_messages) == 1:
+                # Updating the first few shot message with prefix
+                input_messages[0]["content"] = prefix_messages[0]["content"] + input_messages[0]["content"]
+            elif len(prefix_messages) > 1:
+                # If prefix is a list of dictionaries
+                input_messages = prefix_messages + input_messages
+
         for input_message in input_messages:
             input_template = JINJA_ENV.from_string(input_message["content"])
             input_message["content"] = str(input_template.render(row))

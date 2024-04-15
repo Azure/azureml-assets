@@ -1,7 +1,7 @@
 path:
-  container_name: openai-whisper-large-lft-v2
-  container_path: openai-whisper-large-v14/mlflow_model_folder
-  storage_name: tanmaywhisper23457829905
+  container_name: models
+  container_path: huggingface/openai-whisper-large/1703152412/mlflow_model_folder
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md

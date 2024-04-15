@@ -16,6 +16,7 @@ from shared_utilities.constants import (
     SIGNAL_METRICS_METRIC_NAME,
     SIGNAL_METRICS_METRIC_VALUE,
     SIGNAL_METRICS_THRESHOLD_VALUE,
+    SIGNAL_METRICS_GROUP,
     ACCURACY_METRIC_NAME,
     PERCISION_METRIC_NAME,
     RECALL_METRIC_NAME,
@@ -43,7 +44,11 @@ Metric_Value_Should_Greater_Than_Threshold = [TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST
 
 def _generate_error_message(df, signal_name: str):
     """Generate the error message for the given thresholds."""
-    df = df.select("group", "metric_value", "metric_name", "threshold_value")
+    columns = df.schema.names
+    selected_cols = [SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_METRIC_NAME, SIGNAL_METRICS_THRESHOLD_VALUE]
+    if SIGNAL_METRICS_GROUP in columns:
+        selected_cols.append(SIGNAL_METRICS_GROUP)
+    df = df.select(*selected_cols)
     features_violating_threshold = df.toJSON().collect()
     error_message = f"The signal '{signal_name}' has failed due to one or more features violating metric thresholds.\n"
     error_message += "The feature names and their corresponding computed metric values violating "
@@ -77,7 +82,7 @@ def evaluate_metrics_threshold(
     metrics_threshold_breached_df = calculate_metrics_breach(is_not_nan_metrics_threshold_df)
     metrics_threshold_breached_df.show()
 
-    return send_email_for_breached(metrics_threshold_breached_df, notification_emails, signal_name)
+    return send_email_for_breached(metrics_threshold_breached_df, signal_name, notification_emails)
 
 
 def calculate_metrics_breach(metrics_threshold_df: pyspark.sql.DataFrame):

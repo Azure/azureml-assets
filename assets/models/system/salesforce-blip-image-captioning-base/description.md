@@ -1,17 +1,29 @@
-The `BLIP` framework is a new Vision-Language Pre-training (VLP) framework that can be used for both vision-language understanding and generation tasks. BLIP effectively utilizes noisy web data by bootstrapping the captions, where a captioner generates synthetic captions and a filter removes the noisy ones. This framework achieves state-of-the-art results on a wide range of vision-language tasks, such as image-text retrieval, image captioning, and VQA. BLIP also demonstrates strong generalization ability when directly transferred to video-language tasks in a zero-shot manner. The code, models, and datasets are available for use. Researchers should carefully assess the safety and fairness of the model before deploying it in any real-world applications.
+`BLIP` (Bootstrapping Language-Image Pre-training) designed for unified vision-language understanding and generation is a new VLP framework that expands the scope of downstream tasks compared to existing methods. The framework encompasses two key contributions from both model and data perspectives.
 
-> The above summary was generated using ChatGPT. Review the <a href='https://huggingface.co/Salesforce/blip-image-captioning-base' target='_blank'>original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+1. BLIP incorporates the Multi-modal Mixture of Encoder-Decoder (MED), an innovative model architecture designed to facilitate effective multi-task pre-training and flexible transfer learning. This model is jointly pre-trained using three vision-language objectives: image-text contrastive learning, image-text matching, and image-conditioned language modeling.
 
-### Inference samples
+2. BLIP introduces Captioning and Filtering (CapFilt), a distinctive dataset bootstrapping method aimed at learning from noisy image-text pairs. The pre-trained MED is fine-tuned into a captioner that generates synthetic captions from web images, and a filter that removes noisy captions from both the original web texts and synthetic texts.
+
+Authors of BLIP make following key observations based on extensive experiments and analysis. The collaboration between the captioner and filter significantly enhances performance across diverse downstream tasks through caption bootstrapping, with greater diversity in captions leading to more substantial gains. BLIP achieves  state-of-the-art performance in various vision-language tasks, including image-text retrieval, image captioning, visual question answering, visual reasoning, and visual dialog. It also achieves state-of-the-art zero-shot performance when directly applied to video-language tasks such as text-to-video retrieval and videoQA.
+
+Researchers should carefully assess the safety and fairness of the model before deploying it in any real-world applications.
+
+Model fine-tuned on COCO dataset with the language modeling (LM) loss to generate captions given images with base architecture (with ViT base backbone). For more details on Image Captioning with BLIP, review the section 5.2 of the <a href='https://arxiv.org/abs/2201.12086' target='_blank'>original-paper</a>.
+
+# License
+
+BSD 3-Clause License
+
+# Inference Samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|<a href='https://aka.ms/azureml-infer-online-sdk-blip-image-to-text' target='_blank'>image-to-text-online-endpoint.ipynb</a>|<a href='https://aka.ms/azureml-infer-online-cli-blip-image-to-text' target='_blank'>image-to-text-online-endpoint.sh</a>
 Batch |<a href='https://aka.ms/azureml-infer-batch-sdk-blip-image-to-text' target='_blank'>image-to-text-batch-endpoint.ipynb</a>|<a href='https://aka.ms/azureml-infer-batch-cli-blip-image-to-text' target='_blank'>image-to-text-batch-endpoint.sh</a>
 
-### Sample inputs and outputs (for real-time inference)
+# Sample input and output
 
-#### Sample input
+### Sample input
 
 ```json
 {
@@ -30,7 +42,7 @@ Batch |<a href='https://aka.ms/azureml-infer-batch-sdk-blip-image-to-text' targe
 Note:
 - "image1" and "image2" should be publicly accessible urls or strings in `base64` format.
 
-#### Sample output
+### Sample output
 
 ```json
 [
@@ -43,7 +55,8 @@ Note:
 ]
 ```
 
-#### Model inference - image to text
+#### Visualization of inference result for a sample image
+
 For sample image below, the output text is "a stream in the middle of a forest".
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_blip_image_captioning_base.png" alt="Salesforce-BLIP-image-captioning-base">

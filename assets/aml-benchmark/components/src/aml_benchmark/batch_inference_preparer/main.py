@@ -8,11 +8,14 @@ import argparse
 import pandas as pd
 
 from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files
-from aml_benchmark.utils.logging import get_logger
+from aml_benchmark.utils.logging import get_logger, log_params_and_metrics
 from aml_benchmark.utils.aml_run_utils import str2bool
 from .endpoint_data_preparer import EndpointDataPreparer
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+from aml_benchmark.utils.exceptions import BenchmarkUserException
+from aml_benchmark.utils.error_definitions import BenchmarkUserError
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 
 logger = get_logger(__name__)
@@ -37,6 +40,7 @@ def parse_args() -> argparse.Namespace:
         "--batch_input_pattern", nargs='?', const=None, type=str,
         help="The input patterns for the batch endpoint.", default="{}")
     parser.add_argument("--label_key", type=str, help="label key", default=None)
+    parser.add_argument("--additional_columns", type=str, help="additional_columns", default=None)
     parser.add_argument(
         "--n_samples", type=int, help="Top samples sending to the endpoint.", default=-1)
     parser.add_argument("--formatted_data", type=str, help="path to output location")
@@ -59,7 +63,8 @@ def main(
     endpoint_url: str,
     is_performance_test: bool,
     output_metadata: str,
-    label_key: str
+    label_key: str,
+    additional_columns: str
 ) -> None:
     """
     Entry function of the script.
@@ -73,12 +78,18 @@ def main(
     :param model_version: The model version.
     :param endpoint: The endpoint url.
     :param is_performance_test: Whether it is performance test.
+    :param label_key: Ground truth column name.
+    :param additional_columns: Name(s) of columns that could be helpful for
+        caculating certain metrics, separated by comma ",".
     :return: None
     """
     online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
 
     endpoint_data_preparer = EndpointDataPreparer(
-        online_model._model_type, batch_input_pattern, label_key=label_key)
+        online_model._model_type,
+        batch_input_pattern,
+        label_key=label_key,
+        additional_columns=additional_columns)
 
     # Read the data file into a pandas dataframe
     logger.info("Read data now.")
@@ -103,7 +114,12 @@ def main(
                 new_df.append(new_data)
                 ground_truth_df.append(ground_truth_data)
             else:
-                print("Payload {} meeting the following errors: {}.".format(new_data, validate_errors))
+                raise BenchmarkUserException._with_error(
+                    AzureMLError.create(
+                        BenchmarkUserError,
+                        error_details="Payload {} meeting the following errors: {}.".format(new_data, validate_errors)
+                    )
+                )
             sample_count += 1
             if n_samples > 0 and sample_count > n_samples:
                 break
@@ -128,6 +144,11 @@ def main(
     ground_truth_df = pd.DataFrame(ground_truth_df)
     ground_truth_df.to_json(
         os.path.join(output_metadata, "ground_truth_data.jsonl"), orient="records", lines=True)
+    log_params_and_metrics(
+        parameters={},
+        metrics={'total_records': len(df)},
+        log_to_parent=True,
+    )
 
 
 if __name__ == "__main__":
@@ -141,5 +162,6 @@ if __name__ == "__main__":
         endpoint_url=args.endpoint_url,
         is_performance_test=args.is_performance_test,
         output_metadata=args.output_metadata,
-        label_key=args.label_key
+        label_key=args.label_key,
+        additional_columns=args.additional_columns
     )

@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    {
+      "name": "summarize_text_content",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    },
+    {
+      "name": "classify_with_llm",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    }
+  ]
+}

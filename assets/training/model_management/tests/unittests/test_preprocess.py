@@ -14,6 +14,7 @@ from azureml.model.mgmt.processors.factory import (
     SupportedVisionTasks,
     SupportedTasks,
     MMLabDetectionTasks,
+    ModelFamilyPrefixes,
     PyFuncSupportedTasks,
     TextToImageMLflowConvertorFactory,
 )
@@ -100,7 +101,7 @@ def tokenizer():
 @pytest.fixture
 def translate_params():
     """Test translate params used in hf MLflow conversion."""
-    return {"task": "fill-mask", "model_id": "bert-base-cased"}
+    return {"task": "fill-mask", "model_id": "bert-base-cased", "model_flavor": "HFTransformersV2"}
 
 
 @pytest.fixture
@@ -274,7 +275,7 @@ class TestFactoryModule(unittest.TestCase):
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
 
-        translate_params = {"task": PyFuncSupportedTasks.EMBEDDINGS.value}
+        translate_params = {"task": PyFuncSupportedTasks.EMBEDDINGS.value, "model_id": ModelFamilyPrefixes.CLIP.value}
         mock_convertor = mock_clip_factory.create_mlflow_convertor.return_value
         result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
         self.assertEqual(result, mock_convertor)
@@ -340,6 +341,27 @@ class TestFactoryModule(unittest.TestCase):
         result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
         self.assertEqual(result, mock_convertor)
         mock_llava_factory.create_mlflow_convertor.assert_called_once_with(
+            model_dir,
+            output_dir,
+            temp_dir,
+            translate_params,
+        )
+
+    @patch("azureml.model.mgmt.processors.factory.DinoV2MLflowConvertorFactory")
+    def test_get_dinov2_embeddings_mlflow_convertor(self, mock_dinov2_factory):
+        """Test clip model MLflow convertor."""
+        model_framework = ModelFramework.HUGGINGFACE.value
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+
+        translate_params = {
+            "task": PyFuncSupportedTasks.EMBEDDINGS.value, "model_id": ModelFamilyPrefixes.DINOV2.value
+        }
+        mock_convertor = mock_dinov2_factory.create_mlflow_convertor.return_value
+        result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
+        self.assertEqual(result, mock_convertor)
+        mock_dinov2_factory.create_mlflow_convertor.assert_called_once_with(
             model_dir,
             output_dir,
             temp_dir,
@@ -454,8 +476,9 @@ class TestHFMLFLowConvertor:
             )
         assert "unsupported_task" in str(ex)
 
-        # Succesful case
-        translate_params = {"task": SupportedNLPTasks.FILL_MASK.value, "model_id": "bert-base-cased"}
+        # Successful case
+        translate_params = {"task": SupportedNLPTasks.FILL_MASK.value, "model_id": "bert-base-cased",
+                            "model_flavor": "HFTransformersV2"}
         NLPMLflowConvertor(
             model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
         )
@@ -486,7 +509,7 @@ class TestPyFunMLFLowConvertor:
             )
         assert "unsupported_task" in str(ex)
 
-        # Succesful case
+        # Successful case
         translate_params = {"task": MMLabDetectionTasks.MM_OBJECT_DETECTION.value}
         MMLabDetectionMLflowConvertor(
             model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params

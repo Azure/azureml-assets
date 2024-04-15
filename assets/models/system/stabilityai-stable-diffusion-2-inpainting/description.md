@@ -75,7 +75,7 @@ Using the model to generate content that is cruel to individuals is a misuse of 
 
 CreativeML Open RAIL++-M License
 
-# Inference samples
+# Inference Samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
@@ -89,7 +89,7 @@ Inference type|Python sample (Notebook)
 Real time|<a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image-inpainting" target="_blank">safe-text-to-image-inpainting-online-deployment.ipynb</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpainting" target="_blank">safe-text-to-image-inpainting-batch-endpoint.ipynb</a>
 
-# Sample inputs and outputs (for real-time inference)
+# Sample input and output
 
 ### Sample input
 

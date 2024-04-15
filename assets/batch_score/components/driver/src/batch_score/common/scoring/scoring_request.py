@@ -18,17 +18,19 @@ class ScoringRequest:
     __BATCH_REQUEST_METADATA = "_batch_request_metadata"
     __REQUEST_METADATA = "request_metadata"
 
-    def __init__(self,
-                 original_payload: str,
-                 input_to_request_transformer: InputTransformer = None,
-                 input_to_log_transformer: InputTransformer = None,
-                 mini_batch_context: MiniBatchContext = None):
-        """Init function."""
-        self.__internal_id: str = str(uuid.uuid4())
+    def __init__(
+            self,
+            original_payload: str,
+            input_to_request_transformer: InputTransformer = None,
+            input_to_log_transformer: InputTransformer = None,
+            internal_id: str = None,
+            mini_batch_context: MiniBatchContext = None):
+        """Initialize ScoringRequest."""
         self.__original_payload = original_payload
         self.__original_payload_obj = json.loads(original_payload)
         self.__input_to_request_transformer = input_to_request_transformer
         self.__input_to_log_transformer = input_to_log_transformer
+        self.__internal_id: str = internal_id or str(uuid.uuid4())
 
         # Used in checking if the max_retry_time_interval has been exceeded
         self.scoring_duration: int = 0
@@ -59,10 +61,13 @@ class ScoringRequest:
 
         self.__estimated_cost: int = None
         self.__estimated_tokens_per_item_in_batch: tuple[int] = ()
+        self.__segment_id: int = None
+        self.__scoring_url: str = None
 
         self.mini_batch_context: MiniBatchContext = mini_batch_context
         self.request_history: list[ScoringAttempt] = []  # Stack
         self.retry_count: int = 0
+        self.retry_count_for_limited_retries: int = 0
         self.total_wait_time: int = 0
 
     # read-only
@@ -113,26 +118,49 @@ class ScoringRequest:
         """Get the estimated cost."""
         return self.__estimated_cost or sum(self.__estimated_tokens_per_item_in_batch)
 
+    # read-only
+    @property
+    def estimated_token_counts(self) -> "tuple[int]":
+        """Get the estimated token counts."""
+        return self.__estimated_tokens_per_item_in_batch
+
+    # read-only
+    @property
+    def scoring_url(self) -> str:
+        """Get the scoring url."""
+        return self.__scoring_url
+
+    # read-only
+    @property
+    def segment_id(self) -> int:
+        """Get the segment id."""
+        return self.__segment_id
+
     @estimated_cost.setter
     def estimated_cost(self, cost: int):
         """Set the estimated cost."""
         self.__estimated_cost = cost
 
-    # read-only
-    @property
-    def estimated_token_counts(self) -> "tuple[int]":
-        """Get the estimated token count."""
-        return self.__estimated_tokens_per_item_in_batch
+    @scoring_url.setter
+    def scoring_url(self, url: str):
+        """Set the scoring url."""
+        self.__scoring_url = url
+
+    @segment_id.setter
+    def segment_id(self, id: int):
+        """Set the segment id."""
+        self.__segment_id = id
 
     @estimated_token_counts.setter
     def estimated_token_counts(self, token_counts: "tuple[int]"):
-        """Set the estimated token count."""
+        """Set the estimated token counts."""
         self.__estimated_tokens_per_item_in_batch = token_counts
 
     def copy_with_new_payload(self, payload):
         """Create a copy of the ScoringRequest using the existing transformers on a new payload."""
         return ScoringRequest(
             original_payload=payload,
+            internal_id=self.__internal_id,
             input_to_request_transformer=self.__input_to_request_transformer,
             input_to_log_transformer=self.__input_to_log_transformer,
             mini_batch_context=self.mini_batch_context,

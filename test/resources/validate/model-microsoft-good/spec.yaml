@@ -13,5 +13,6 @@ properties:
   SHA: 9da301148150e37e533abef672062fa49f6bda4f
   inference-min-sku-spec: 4|0|14|28
   inference-recommended-sku: Standard_DS3_v2
+  SharedComputeCapacityEnabled: true
 description: >-
   Microsoft test model

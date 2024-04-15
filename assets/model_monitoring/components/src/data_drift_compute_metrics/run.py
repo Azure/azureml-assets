@@ -4,12 +4,12 @@
 """Entry script for Data Drift Compute Metrics Spark Component."""
 
 import argparse
-from io_utils import (
+from data_drift_compute_metrics.io_utils import (
     select_columns_from_spark_df,
     output_computed_measures_tests,
 )
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error
-from compute_data_drift import compute_data_drift_measures_tests
+from data_drift_compute_metrics.compute_data_drift import compute_data_drift_measures_tests
 
 
 def run():
@@ -23,6 +23,8 @@ def run():
     parser.add_argument("--numerical_metric", type=str)
     parser.add_argument("--categorical_threshold", type=str)
     parser.add_argument("--numerical_threshold", type=str)
+    parser.add_argument("--override_numerical_features", type=str, required=False)
+    parser.add_argument("--override_categorical_features", type=str, required=False)
     parser.add_argument("--feature_names", type=str, default=None)
     args = parser.parse_args()
 
@@ -50,6 +52,8 @@ def run():
         args.categorical_metric,
         args.numerical_threshold,
         args.categorical_threshold,
+        args.override_numerical_features,
+        args.override_categorical_features
     )
     # Save metrics in default blob store
     output_computed_measures_tests(metrics_df, args.signal_metrics)

@@ -19,7 +19,7 @@ class VestaChatCompletionImageModifier(RequestModifier):
         return ("messages" in request_obj) and all("content" in message for message in request_obj["messages"])
 
     def __init__(self, image_encoder: "ImageEncoder" = None) -> None:
-        """Init function."""
+        """Initialize VestaChatCompletionImageModifier."""
         self.__image_encoder: ImageEncoder = image_encoder
 
     def modify(self, request_obj: any) -> any:

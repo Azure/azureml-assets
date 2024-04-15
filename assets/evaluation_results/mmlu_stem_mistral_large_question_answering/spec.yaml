@@ -1,0 +1,30 @@
+type: evaluationresult
+name: mmlu_stem_mistral_large_question_answering
+version: 2.02.04
+display_name: mmlu_stem_mistral_large_question_answering
+description: mistral-large run for mmlu_stem dataset
+dataset_family: mmlu
+dataset_name: mmlu_stem
+
+model_name: mistral-large
+model_version: "1"
+model_asset_id: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
+
+tags:
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.7285125
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

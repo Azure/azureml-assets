@@ -17,7 +17,7 @@
         "stdout_log_level": {
             "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/log_level.json",
             "default": "debug",
-            "description": "Minimum log level to emit to stdout."
+            "description": "Minimum log level to emit to job stdout."
         }
     }
 }

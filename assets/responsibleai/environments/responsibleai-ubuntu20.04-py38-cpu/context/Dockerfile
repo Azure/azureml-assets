@@ -15,6 +15,10 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
+RUN conda list
+# Conda install and pip install could happen side by side. Remove crypytography with vulnerability from conda
+RUN conda remove cryptography
+
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # no-deps install for domonic due to unresolvable dependencies requirment on urllib3 and requests.
@@ -30,7 +34,8 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-telemetry=={{latest-pypi-version}}'
+                'azureml-telemetry=={{latest-pypi-version}}' \
+                'azureml-rai-utils==0.0.6'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
@@ -38,6 +43,12 @@ RUN pip install 'pyarrow>=14.0.1'
 
 # To resolve vulnerability issue
 RUN pip install 'Werkzeug==2.2.3'
+
+# To resolve vulnerability issue regarding crytography
+RUN pip install 'cryptography>=42.0.4'
+
+# TODO: remove rai-core-flask pin with next raiwidgets release
+RUN pip install 'rai-core-flask==0.7.4'
 
 RUN pip freeze
 

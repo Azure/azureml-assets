@@ -19,7 +19,6 @@ from shared_utilities.constants import (
     RECALL_METRIC_NAME,
     MEAN_ABSOLUTE_ERROR_METRIC_NAME,
     ROOT_MEAN_SQUARED_ERROR_METRIC_NAME,
-    SIGNAL_METRICS_GROUP,
     SIGNAL_METRICS_METRIC_NAME,
     SIGNAL_METRICS_METRIC_VALUE,
     SIGNAL_METRICS_THRESHOLD_VALUE,
@@ -51,7 +50,6 @@ def convert_pandas_to_spark(pandas_data):
 def construct_signal_metrics(
         metrics_artifacts,
         output_data_file_name,
-        predictions_column_name,
         regression_rmse_threshold=None,
         regression_meanabserror_threshold=None,
         classification_precision_threshold=None,
@@ -99,16 +97,14 @@ def construct_signal_metrics(
     schema = StructType([
             StructField(SIGNAL_METRICS_METRIC_NAME, StringType(), True),
             StructField(SIGNAL_METRICS_METRIC_VALUE, DoubleType(), True),
-            StructField(SIGNAL_METRICS_THRESHOLD_VALUE, StringType(), True),
-            StructField(SIGNAL_METRICS_GROUP, StringType(), True)
+            StructField(SIGNAL_METRICS_THRESHOLD_VALUE, StringType(), True)
     ])
     spark = init_spark()
 
     signal_output_df = spark.createDataFrame(
                 [(metrics_name_to_output_metrics_name_map[col_],
                   metrics_data_df.first()[col_],
-                  metrics_name_to_threshold_map[col_],
-                  predictions_column_name) for col_ in metrics_data_df.columns],
+                  metrics_name_to_threshold_map[col_]) for col_ in metrics_data_df.columns],
                 schema)
 
     save_spark_df_as_mltable(signal_output_df, output_data_file_name)

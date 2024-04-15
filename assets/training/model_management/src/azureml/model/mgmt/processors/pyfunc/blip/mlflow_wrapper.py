@@ -3,20 +3,22 @@
 
 """MLflow PythonModel wrapper class that loads the MLflow model, preprocess inputs and performs inference."""
 
-import mlflow
-from PIL import Image
-import pandas as pd
-import tempfile
+import io
 
+import mlflow
+import pandas as pd
+
+from PIL import Image
 from transformers import (AutoProcessor, BlipForConditionalGeneration,
                           BlipForQuestionAnswering, Blip2ForConditionalGeneration)
+
 from config import MLflowSchemaLiterals, MLflowLiterals, Tasks, HfBlipModelId
-from typing import List
+
 
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
     # model wrapper for save_model().
-    from vision_utils import create_temp_file, process_image_pandas_series, get_current_device
+    from vision_utils import process_image, get_current_device
 except ImportError:
     pass
 
@@ -88,69 +90,33 @@ class BLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns ["text"]
         """
-        # Decode the base64 image column
-        decoded_images = input_data.loc[
-            :, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
-        ].apply(axis=1, func=process_image_pandas_series)
+        # Read all the input images.
+        pil_images = [
+            Image.open(io.BytesIO(process_image(image)))
+            for image in input_data[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
+        ]
 
-        with tempfile.TemporaryDirectory() as tmp_output_dir:
-            image_path_list = (
-                decoded_images.iloc[:, 0]
-                .map(lambda row: create_temp_file(row, tmp_output_dir)[0])
-                .tolist()
-            )
-
-            if self._task_type == Tasks.IMAGE_TO_TEXT.value:
-                generated_text_list = self.run_inference_batch(
-                    image_path_list=image_path_list,
-                )
-            elif self._task_type == Tasks.VISUAL_QUESTION_ANSWERING.value:
-                generated_text_list = self.run_inference_batch(
-                    image_path_list=image_path_list,
-                    question_list=input_data["text"].tolist()
-                )
-            else:
-                raise ValueError(f"invalid task type {self._task_type}")
-
-        df_result = pd.DataFrame(
-            columns=[
-                MLflowSchemaLiterals.OUTPUT_COLUMN_TEXT
-            ]
-        )
-
-        df_result[MLflowSchemaLiterals.OUTPUT_COLUMN_TEXT] = (
-            generated_text_list)
-        return df_result
-
-    def run_inference_batch(
-        self,
-        image_path_list: List,
-        question_list: List = None
-    ) -> List[str]:
-        """Perform inference on batch of input images.
-
-        :param image_path_list: list of image paths for inferencing.
-        :type image_path_list: List
-        :param question_list: list of questions for VQA Task. This is ignored for Image-To-Text task type.
-        :type question_list: List
-        :return: List of generated texts
-        :rtype: List of strings
-        """
-        image_list = [Image.open(img_path) for img_path in image_path_list]
-
+        # Preprocess the image and text data (if necessary) and move it to the device.
         if self._task_type == Tasks.IMAGE_TO_TEXT.value:
-            inputs = self._processor(images=image_list,
-                                     return_tensors="pt").to(self._device)
+            inputs = self._processor(images=pil_images, return_tensors="pt")
         elif self._task_type == Tasks.VISUAL_QUESTION_ANSWERING.value:
-            inputs = self._processor(images=image_list,
-                                     text=question_list,
-                                     padding=True,
-                                     return_tensors="pt").to(self._device)
+            inputs = self._processor(
+                images=pil_images, text=input_data[MLflowSchemaLiterals.INPUT_COLUMN_TEXT].tolist(),
+                padding=True, return_tensors="pt",
+            )
         else:
             raise ValueError(f"invalid task type {self._task_type}")
+        inputs = inputs.to(self._device)
 
+        # Do inference and convert to human readable strings.
         generated_ids = self._model.generate(**inputs)
         generated_text_list = self._processor.batch_decode(generated_ids, skip_special_tokens=True)
+        generated_text_list = [t.strip() for t in generated_text_list]
 
-        text_list = [t.strip() for t in generated_text_list]
-        return text_list
+        # Convert to Pandas dataframe and return.
+        df_result = pd.DataFrame(
+            {
+                MLflowSchemaLiterals.OUTPUT_COLUMN_TEXT: generated_text_list
+            }
+        )
+        return df_result

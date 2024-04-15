@@ -18,6 +18,8 @@ from src.batch_score.common.scoring.scoring_result import (
     ScoringResultStatus,
 )
 from src.batch_score.utils import common
+from src.batch_score.utils.v1_input_schema_handler import V1InputSchemaHandler
+from src.batch_score.utils.v2_input_schema_handler import V2InputSchemaHandler
 
 MLTable_yaml = """
 type: mltable
@@ -37,9 +39,39 @@ VALID_DATAFRAMES = [
     [[{"stop": ["<|im_end|>", "\n", "\\n", "```"]}], ['{"stop": ["<|im_end|>", "\\n", "\\\\n", "```"]}']],
 ]
 
+NEW_SCHEMA_VALID_DATAFRAMES = [
+    [
+        [
+            {"task_id": "task_123", "method": "POST", "url": "/v1/completions",
+             "body": '{"model": "chat-sahara-4", "max_tokens": 1}'},
+            {"task_id": "task_789", "method": "POST", "url": "/v1/completions",
+             "body": '{"model": "chat-sahara-4", "max_tokens": 2}'}
+        ],
+        [
+            '{"max_tokens": 1}', '{"max_tokens": 2}'
+        ]
+    ],
+    [
+        [
+            {"task_id": "task_123", "method": "POST", "url": "/v1/completions", "body": '{"model": "chat-sahara-4", \
+             "temperature": 0, "max_tokens": 1024, "top_p": 1, "frequency_penalty": 0, "presence_penalty": 0, \
+             "prompt": "# You will be given a conversation between a chatbot called Sydney and Human..."}'},
+            {"task_id": "task_456", "method": "POST", "url": "/v1/completions", "body": '{"model": "chat-sahara-4", \
+             "temperature": 0, "max_tokens": 1024, "top_p": 1, "frequency_penalty": 0, "presence_penalty": 0, \
+             "prompt": "# You will be given a conversation between a chatbot called Sydney and Human..."}'}
+        ],
+        [
+            ('{"temperature": 0, "max_tokens": 1024, "top_p": 1, "frequency_penalty": 0, "presence_penalty": 0,'
+             ' "prompt": "# You will be given a conversation between a chatbot called Sydney and Human..."}'),
+            ('{"temperature": 0, "max_tokens": 1024, "top_p": 1, "frequency_penalty": 0, "presence_penalty": 0,'
+             ' "prompt": "# You will be given a conversation between a chatbot called Sydney and Human..."}')
+        ]
+    ]
+]
+
 
 @pytest.mark.parametrize("obj_list, expected_result", VALID_DATAFRAMES)
-def test_convert_to_list_happy_path(obj_list: "list[any]", expected_result: "list[str]"):
+def test_convert_input_to_requests_happy_path(obj_list: "list[any]", expected_result: "list[str]"):
     """Test convert to list happy path."""
     with tempfile.TemporaryDirectory() as tmp_dir:
         with open(file=os.path.join(tmp_dir, "data.txt"), mode="w+") as text_file:
@@ -53,7 +85,8 @@ def test_convert_to_list_happy_path(obj_list: "list[any]", expected_result: "lis
         _mltable = mltable.load(tmp_dir)
         df_data = _mltable.to_pandas_dataframe()
 
-        result = common.convert_to_list(df_data)
+        input_handler = V1InputSchemaHandler()
+        result = input_handler.convert_input_to_requests(df_data)
         assert result == expected_result
 
 
@@ -61,7 +94,7 @@ def test_convert_to_list_happy_path(obj_list: "list[any]", expected_result: "lis
     (None),
     ({"max_tokens": 11})
 ])
-def test_convert_to_list_batch_size_20(additional_properties):
+def test_convert_input_to_requests_batch_size_20(additional_properties):
     """Test convert to list batch size 20 case."""
     batch_size_per_request = 20
     num_batches = 4
@@ -93,10 +126,31 @@ def test_convert_to_list_batch_size_20(additional_properties):
         df_data = _mltable.to_pandas_dataframe()
 
         additional_properties_string = json.dumps(additional_properties)
-        result = common.convert_to_list(df_data, additional_properties_string, batch_size_per_request)
+        input_handler = V1InputSchemaHandler()
+        result = input_handler.convert_input_to_requests(df_data, additional_properties_string, batch_size_per_request)
         assert len(result) == num_batches
         assert result[0] == expected_first_batch
         assert result[-1] == expected_last_batch
+
+
+@pytest.mark.parametrize("obj_list, expected_result", NEW_SCHEMA_VALID_DATAFRAMES)
+def test_new_schema_convert_input_to_requests_happy_path(obj_list: "list[any]", expected_result: "list[str]"):
+    """Test convert to list happy path."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        with open(file=os.path.join(tmp_dir, "data.txt"), mode="w+") as text_file:
+            for obj in obj_list:
+                str_json = json.dumps(obj)
+                text_file.write(str_json + "\n")
+
+        with open(file=os.path.join(tmp_dir, "MLTable"), mode="w+") as mltable_file:
+            mltable_file.write(MLTable_yaml)
+
+        _mltable = mltable.load(tmp_dir)
+        df_data = _mltable.to_pandas_dataframe()
+
+        input_handler = V2InputSchemaHandler()
+        result = input_handler.convert_input_to_requests(df_data)
+        assert result == expected_result
 
 
 @pytest.mark.parametrize("tiktoken_failed",

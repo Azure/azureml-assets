@@ -12,6 +12,6 @@
     "log_settings": {
         "app_insights_connection_string": "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://westus2-2.ingest.ai.applicationinsights.io/",
         "app_insights_log_level": "debug",
-        "stdout_log_level": "info"
+        "stdout_log_level": "debug"
     }
 }

@@ -12,6 +12,7 @@ inputs:
     path: ../data/
   label_column_name: label
   endpoint_url: http://test-endpoint.com
+  additional_columns: question
   handle_response_failure: use_fallback
   is_performance_test: False
 
@@ -25,16 +26,26 @@ outputs:
   ground_truth:
     type: uri_file
     path: azureml://datastores/${{default_datastore}}/paths/${{name}}/ground_truth.jsonl
+  successful_requests:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/successful_requests.jsonl
+  failed_requests:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/failed_requests.jsonl
+  unsafe_content_blocked_requests:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/unsafe_content_blocked_requests.jsonl
 
 jobs:
   run_batch_output_formatter:
     type: command
-    component: ../../components/batch-output-formatter/spec.yaml
+    component: ../../components/batch_output_formatter/spec.yaml
     limits: 
       timeout: 900
     inputs:
       batch_inference_output: ${{parent.inputs.batch_inference_output}}
       label_column_name: ${{parent.inputs.label_column_name}}
+      additional_columns: ${{parent.inputs.additional_columns}}
       endpoint_url: ${{parent.inputs.endpoint_url}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
@@ -42,3 +53,6 @@ jobs:
       predictions: ${{parent.outputs.predictions}}
       performance_metadata: ${{parent.outputs.performance_metadata}}
       ground_truth: ${{parent.outputs.ground_truth}}
+      successful_requests: ${{parent.outputs.successful_requests}}
+      failed_requests: ${{parent.outputs.failed_requests}}
+      unsafe_content_blocked_requests: ${{parent.outputs.unsafe_content_blocked_requests}}

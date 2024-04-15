@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    {
+      "name": "extract_query_from_question",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    },
+    {
+      "name": "augmented_chat",
+      "connection": "aoai_connection",
+      "inputs": {
+        "deployment_name": "gpt-35-turbo"
+      }
+    }
+  ]
+}

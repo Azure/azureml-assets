@@ -32,6 +32,7 @@ class SignalFactory:
         metrics: List[Row],
         baseline_histogram: List[Row] = None,
         target_histogram: List[Row] = None,
+        feature_importance: List[Row] = None,
     ) -> Signal:
         """Produce a signal of the given type."""
         if signal_type == SignalType.DATA_DRIFT.name:
@@ -41,18 +42,28 @@ class SignalFactory:
                 metrics=metrics,
                 baseline_histogram=baseline_histogram,
                 target_histogram=target_histogram,
+                feature_importance=feature_importance
             )
         elif signal_type == SignalType.PREDICTION_DRIFT.name:
             return PredictionDriftSignal(
-                monitor_name=monitor_name, signal_name=signal_name, metrics=metrics
+                monitor_name=monitor_name,
+                signal_name=signal_name,
+                metrics=metrics,
+                baseline_histogram=baseline_histogram,
+                target_histogram=target_histogram
             )
         elif signal_type == SignalType.DATA_QUALITY.name:
             return DataQualitySignal(
-                monitor_name=monitor_name, signal_name=signal_name, metrics=metrics
+                monitor_name=monitor_name,
+                signal_name=signal_name,
+                metrics=metrics,
+                feature_importance=feature_importance
             )
         elif signal_type == SignalType.FEATURE_ATTRIBUTION_DRIFT.name:
             return FeatureAttributionDriftSignal(
-                monitor_name=monitor_name, signal_name=signal_name, metrics=metrics
+                monitor_name=monitor_name,
+                signal_name=signal_name,
+                metrics=metrics
             )
         else:
             raise Exception(

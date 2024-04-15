@@ -4,13 +4,13 @@
 """Entry script for Data Drift Compute Metrics Spark Component."""
 
 import argparse
-from pyspark.sql.functions import split, trim, col
+from pyspark.sql.functions import col
 from shared_utilities.io_utils import (
     save_spark_df_as_mltable,
     try_read_mltable_in_spark_with_error,
 )
 from shared_utilities.df_utils import select_columns_from_spark_df
-from compute_data_quality_metrics import compute_data_quality_metrics
+from compute_data_quality_metrics import compute_data_quality_metrics, convert_set_string_to_array
 
 
 def _filter_metrics(df, metrics, data_type):
@@ -30,6 +30,8 @@ def run():
     parser.add_argument("--signal_metrics", type=str)
     parser.add_argument("--categorical_metrics", type=str)
     parser.add_argument("--numerical_metrics", type=str)
+    parser.add_argument("--override_numerical_features", type=str, required=False)
+    parser.add_argument("--override_categorical_features", type=str, required=False)
     args = parser.parse_args()
 
     # READ INPUT TABLES
@@ -46,11 +48,12 @@ def run():
         df = select_columns_from_spark_df(df, select_columns)
 
     # CONVERT "set" COLUMN BACK TO ARRAY TYPE STRING
-    data_stats_table = data_stats_table.withColumn(
-        "set", split(trim("set"), "( +)?, ?")
-    )
+    data_stats_table = convert_set_string_to_array(data_stats_table)
 
-    violation_df = compute_data_quality_metrics(df, data_stats_table)
+    violation_df = compute_data_quality_metrics(df,
+                                                data_stats_table,
+                                                args.override_numerical_features,
+                                                args.override_categorical_features)
     violation_df = _filter_metrics(
         violation_df, args.categorical_metrics.split(","), data_type="Categorical"
     )

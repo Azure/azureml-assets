@@ -1,0 +1,11 @@
+classification,correlationid,regression,classification-targetvalue,regression-targetvalue
+setosa,1,4.9,setosa,4.9
+rose,2,1.66,setosa,1.66
+setosa,3,4.66,setosa,9.8
+setosa,4,6.9,setosa,6.9
+rose,5,1.66,rose,1.66
+setosa,6,3.44,setosa,3.44
+setosa,7,3.44,setosa,3.21
+rose,8,3.44,rose,3.44
+setosa,9,3.55,setosa,3.55
+rose,10,3.44,rose,3.44

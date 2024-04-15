@@ -45,7 +45,9 @@ class Simulator:
     """PRS Simulator."""
 
     def __init__(self, data_input_folder_path):
-        """Init function."""
+        """Initialize PRS Simulator."""
+        os.getcwd()
+
         self.__mltable_data: mltable = mltable.load(data_input_folder_path)
         self.__df_data = self.__mltable_data.to_pandas_dataframe()
         self.__minibatch_size = 500  # lines

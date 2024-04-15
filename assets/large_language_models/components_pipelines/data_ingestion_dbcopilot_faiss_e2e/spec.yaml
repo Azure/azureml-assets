@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.js
 type: pipeline
 
 name: llm_ingest_dbcopilot_faiss_e2e
-version: 0.0.26
+version: 0.0.49
 display_name: Data Ingestion for DB Data Output to FAISS E2E Deployment
 description: Single job pipeline to chunk data from AzureML DB Datastore and create faiss embeddings index
 
@@ -101,6 +101,10 @@ inputs:
     type: string
     optional: true
     description: "The list of knowledge pieces to be used for grounding."
+  include_views:
+    type: boolean
+    optional: true
+    description: "Whether to turn on views."
 outputs:
   grounding_index:
     type: uri_folder
@@ -110,7 +114,7 @@ jobs:
   #########################################
   db_meta_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding:0.0.39"
+    component: "azureml:llm_dbcopilot_grounding:0.0.54"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -126,6 +130,7 @@ jobs:
       max_text_length: ${{parent.inputs.max_text_length}}
       selected_tables: ${{parent.inputs.selected_tables}}
       column_settings: ${{parent.inputs.column_settings}}
+      include_views: ${{parent.inputs.include_views}}
     outputs:
       output_chunk_file:
         type: uri_folder
@@ -135,7 +140,7 @@ jobs:
   #########################################
   generate_meta_embeddings:
     type: command
-    component: "azureml:llm_rag_generate_embeddings:0.0.42"
+    component: "azureml:llm_rag_generate_embeddings:0.0.53"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -156,7 +161,7 @@ jobs:
   #########################################
   create_meta_faiss_index_job:
     type: command
-    component: "azureml:llm_rag_create_faiss_index:0.0.47"
+    component: "azureml:llm_rag_create_faiss_index:0.0.58"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -176,7 +181,7 @@ jobs:
   #########################################
   db_sample_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.15"
+    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.29"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -196,7 +201,7 @@ jobs:
   #########################################
   generate_sample_embeddings:
     type: command
-    component: "azureml:llm_rag_generate_embeddings:0.0.42"
+    component: "azureml:llm_rag_generate_embeddings:0.0.53"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -217,7 +222,7 @@ jobs:
   #########################################
   create_sample_faiss_index_job:
     type: command
-    component: "azureml:llm_rag_create_faiss_index:0.0.47"
+    component: "azureml:llm_rag_create_faiss_index:0.0.58"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -234,7 +239,7 @@ jobs:
   #########################################
   endpoint_deployment_job:
     type: command
-    component: "azureml:llm_dbcopilot_deploy_endpoint:0.0.15"
+    component: "azureml:llm_dbcopilot_deploy_endpoint:0.0.29"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -268,6 +273,7 @@ jobs:
       temperature: ${{parent.inputs.temperature}}
       top_p: ${{parent.inputs.top_p}}
       knowledge_pieces: ${{parent.inputs.knowledge_pieces}}
+      include_views: ${{parent.inputs.include_views}}
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT: ${{parent.inputs.llm_connection}}

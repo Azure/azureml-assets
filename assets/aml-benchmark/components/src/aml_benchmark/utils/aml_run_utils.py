@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 """Helper functions for AML runs."""
-from typing import List, Optional, Tuple, cast
+from typing import List, Optional, Tuple, Union, cast
 import os
 import tempfile
 import re
@@ -10,9 +10,9 @@ import re
 import mlflow
 from mlflow.entities import Run as MLFlowRun
 from azureml.core import Run
-from aml_benchmark.utils.logging import get_logger
-
 from azureml._common._error_definition.azureml_error import AzureMLError
+
+from .logging import get_logger
 from .exceptions import BenchmarkValidationException
 from .error_definitions import BenchmarkValidationError
 
@@ -100,7 +100,7 @@ def get_mlflow_model_name_version(model_uri: str) -> Tuple[str, Optional[str], O
     return model_name, model_version, model_registry
 
 
-def str2bool(v):
+def str2bool(v: Union[bool, str]) -> bool:
     """Convert str to bool."""
     if isinstance(v, bool):
         return v
