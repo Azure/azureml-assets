@@ -169,7 +169,7 @@ API_CALL_RETRY_MAX_COUNT = 10
 INDEX_ACTION_TYPE = "Index Action"
 ACTION_DESCRIPTION = "The application's response quality is low due to suboptimal index retrieval. Please update the index with ID '{index_id}' to address this issue."  # noqa
 MAX_SAMPLE_SIZE = 20
-DEFAULT_RETRIEVAL_SCORE = 0
+DEFAULT_SCORE = 0
 
 
 # util

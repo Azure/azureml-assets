@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Entry script for Action Analyzer identify problem traffic."""
+"""Entry script for relevance action detector."""
 
 import os
 import re
@@ -43,12 +43,11 @@ from shared_utilities.constants import (
     API_CALL_RETRY_MAX_COUNT,
     ACTION_DESCRIPTION,
     MAX_SAMPLE_SIZE,
-    DEFAULT_RETRIEVAL_SCORE,
+    DEFAULT_SCORE,
     P_VALUE_THRESHOLD
 )
 from shared_utilities.prompts import BERTOPIC_DEFAULT_PROMPT, RELEVANCE_TEMPLATE, RELEVANCE_METRIC_TEMPLATE
 from shared_utilities.span_tree_utils import SpanTree
-
 from shared_utilities.io_utils import (
     np_encoder
 )
@@ -63,26 +62,54 @@ from shared_utilities.llm_utils import (
     _request_api,
     get_llm_request_args
 )
-
 from bertopic import BERTopic
 from openai import AzureOpenAI
 from bertopic.representation import OpenAI
 from typing import Tuple
+from action_analyzer.action import Action, ActionType
 
 
-class Action:
-    """Action class."""
+class IndexAction(Action):
+    """Index action class."""
 
-    def __init__(self, action_type, query_ids, query_intention, confidence_score):
-        """Create an action."""
-        self.action_type = action_type
-        self.query_ids = query_ids
-        self.query_intention = query_intention
-        self.confidence_score = confidence_score
+    def __init__(self, index_id, query_ids, query_intention, confidence_score):
+        """Create an index action."""
+        self.index_id = index_id
+        super().__init__(ActionType.IndexAction, query_ids, query_intention, confidence_score)
 
 
-def _query_relevance_score(
-    turns: Tuple[str, str, str],
+class DebuggingInfo:
+    """Debugging info class."""
+
+    def __init__(self,
+                 span_id,
+                 index_content,
+                 index_id,
+                 query,
+                 retrieval_documents,
+                 retrieval_score,
+                 retrieval_query_type,
+                 retrieval_top_k,
+                 prompt_flow_input):
+        """Create debugging info."""
+        self.span_id = span_id
+        self.index_content = index_content
+        self.index_id = index_id
+        self.query = query
+        self.retrieval_documents = retrieval_documents
+        self.retrieval_score = retrieval_score
+        self.retrieval_query_type = retrieval_query_type
+        self.retrieval_top_k = retrieval_top_k
+        self.prompt_flow_input = prompt_flow_input
+
+
+    def to_json_str(self):
+        """Get a dict which represents the debugging class."""
+        return json.dumps(self.__dict__)
+
+
+def _query_llm_score(
+    prompt: str,
     session: requests.Session,
     endpoint_url: str,
     token_manager: _APITokenManager,
@@ -95,161 +122,110 @@ def _query_relevance_score(
     max_tokens=3000,
     stop: str = None
 ) -> int:
+    request_data = {
+        "model": model,
+        "temperature": temperature,
+        "top_p": top_p,
+        "n": num_samples,
+        "max_tokens": max_tokens,
+        "frequency_penalty": frequency_penalty,
+        "presence_penalty": presence_penalty,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+    if stop:
+        request_data["stop"] = stop
 
-    turns_list = [turns]
-    prompts = [RELEVANCE_METRIC_TEMPLATE.replace("{{question}}", turn[0]).replace("{{answer}}", turn[1]).replace("{{context}}", turn[2]) for turn in turns_list]  # noqa: E501
-
-    ratings = []
-    for prompt in prompts:
-        request_data = {
-            "model": model,
-            "temperature": temperature,
-            "top_p": top_p,
-            "n": num_samples,
-            "max_tokens": max_tokens,
-            "frequency_penalty": frequency_penalty,
-            "presence_penalty": presence_penalty,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        }
-
-        if stop:
-            request_data["stop"] = stop
-
-        response = {}
-        try:
-            response, time_taken = _request_api(
-                session=session,
-                endpoint_url=endpoint_url,
-                token_manager=token_manager,
-                **request_data,
-            )
-            # Append time taken to the line
-            response["response_time_sec"] = time_taken
-            rating = float(response["samples"][0])
-            ratings.append(rating)
-        except Exception as e:  # noqa: B902
-            response["finish_reason"] = ["error"]
-            response["error"] = [str(e)]
-            raise e
-    return ratings[0]
+    response = {}
+    try:
+        response, time_taken = _request_api(
+            session=session,
+            endpoint_url=endpoint_url,
+            token_manager=token_manager,
+            **request_data,
+        )
+        # Append time taken to the line
+        response["response_time_sec"] = time_taken
+    except Exception as e:  # noqa: B902
+        response["finish_reason"] = ["error"]
+        response["error"] = [str(e)]
+        raise e
+    return response
 
 
-def _post_process_results(output):
+def _post_process_retrieval_results(response):
+    output = response["samples"][0]
     parsed_score_response = re.findall(r'\d+', output.split("# Result")[-1].strip())
     if len(parsed_score_response) > 0:
         score = float(parsed_score_response[0].replace("'", "").strip())
     else:
         # Result of score is not found in the output string
-        score = DEFAULT_RETRIEVAL_SCORE
-        print("Not able to parse the score from the output string, setting score to nan")
+        score = DEFAULT_SCORE
+        print("Not able to parse the retrieval score, setting score to 0")
     return score
 
 
-def _query_retrieval_score(
-    turns: Tuple[str, str, str],
-    session: requests.Session,
-    endpoint_url: str,
-    token_manager: _APITokenManager,
-    model: str,
-    temperature: float,
-    top_p: float,
-    num_samples: int,
-    frequency_penalty: float,
-    presence_penalty: float,
-    max_tokens=3000,
-    stop: str = None
-) -> int:
-
-    turns_list = [turns]
-    prompts = [RELEVANCE_TEMPLATE.replace("{{ query }}", turn[0]).replace("{{ history }}", "").replace("{{ FullBody }}", turn[2]) for turn in turns_list]  # noqa: E501
-
-    ratings = []
-    for prompt in prompts:
-        request_data = {
-            "model": model,
-            "temperature": temperature,
-            "top_p": top_p,
-            "n": num_samples,
-            "max_tokens": max_tokens,
-            "frequency_penalty": frequency_penalty,
-            "presence_penalty": presence_penalty,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        }
-
-        if stop:
-            request_data["stop"] = stop
-
-        response = {}
-        try:
-            response, time_taken = _request_api(
-                session=session,
-                endpoint_url=endpoint_url,
-                token_manager=token_manager,
-                **request_data,
-            )
-            # Append time taken to the line
-            response["response_time_sec"] = time_taken
-            rating = _post_process_results(response["samples"][0])
-            ratings.append(rating)
-        except Exception as e:  # noqa: B902
-            response["finish_reason"] = ["error"]
-            response["error"] = [str(e)]
-            raise e
-    return ratings[0]
+def _post_process_document_relevance_results(response):
+    try:
+        score = float(response["samples"][0])
+    except Exception:
+        score = DEFAULT_SCORE
+        print("Not able to parse the document relevance score, setting to 0.")
+    return score
 
 
-def get_llm_score(row,
-                  workspace_connection_arm_id,
-                  model_deployment_name,
-                  api_call_retry_max_count,
-                  api_call_retry_backoff_factor,
-                  request_args,
-                  score_name):
-    """Get llm score."""
+def _prepare_llm_template_inputs(row):
     question = row[MODIFIED_PROMPT_COLUMN]
     answer = row[COMPLETION_COLUMN]
     text = row[RETRIEVAL_DOC_COLUMN]
-
-    token_manager = _WorkspaceConnectionTokenManager(
-        connection_name=workspace_connection_arm_id,
-        auth_header=API_KEY)
-    azure_endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
-    azure_openai_api_version = token_manager.get_api_version()
-
-    azure_endpoint_url = _check_and_format_azure_endpoint_url(
-        AZURE_OPENAI_API_COMPLETION_URL_PATTERN,
-        AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-        azure_endpoint_domain_name,
-        azure_openai_api_version,
-        model_deployment_name  # mdoel
-    )
-    # endpoint_url = azure_endpoint_url
-    httpClient = _HTTPClientWithRetry(
-        n_retry=api_call_retry_max_count,
-        backoff_factor=api_call_retry_backoff_factor,
-    )
 
     context_array = text.split(TEXT_SPLITTER)
     context_json = {}
     for i, context in enumerate(context_array):
         context_json[f"Document {i}"] = context
-    with httpClient.client as session:
-        if score_name == DOCUMENT_RELEVANCE_SCORE_COLUMN:
-            score = _query_relevance_score(
-                (question, answer, json.dumps(context_json)),
-                session, azure_endpoint_url, token_manager,
-                **request_args,
-            )
-        else:
-            score = _query_retrieval_score(
-                (question, answer, json.dumps(context_json)),
-                session, azure_endpoint_url, token_manager,
-                **request_args,
-            )
+    return (question, answer, json.dumps(context_json))
+
+
+def get_document_relevance_score(row,
+                                 token_manager,
+                                 azure_endpoint_url,
+                                 http_client,
+                                 request_args):
+    """Get document relevance score using llm."""
+    question, answer, context_json = _prepare_llm_template_inputs(row)
+    prompt = RELEVANCE_METRIC_TEMPLATE.replace("{{question}}", question).replace("{{answer}}",answer).replace("{{context}}", context_json)  # noqa: E501
+
+    with http_client.client as session:
+        response = _query_llm_score(
+            prompt,
+            session,
+            azure_endpoint_url,
+            token_manager,
+            **request_args,
+        )
+        score = _post_process_document_relevance_results(response)
+    return score
+
+
+def get_retrieval_score(row,
+                        token_manager,
+                        azure_endpoint_url,
+                        http_client,
+                        request_args):
+    """Get retrieval score using llm."""
+    question, answer, context_json = _prepare_llm_template_inputs(row)
+    prompt = RELEVANCE_TEMPLATE.replace("{{ query }}", question).replace("{{ history }}", "").replace("{{ FullBody }}", context_json) # noqa: E501
+
+    with http_client.client as session:
+        response = _query_llm_score(
+            prompt,
+            session,
+            azure_endpoint_url,
+            token_manager,
+            **request_args,
+        )
+        score = _post_process_retrieval_results(response)
     return score
 
 
@@ -332,7 +308,7 @@ def parse_debugging_info(root_span):
     """Parse the span tree to get debugging info."""
     try:
         tree = SpanTree.create_tree_from_json_string(root_span)
-        spans_array = []
+        debugging_info_list = []
         prompt_flow_input = tree.root_span.input
         for span in tree:
             if span.span_type == RETRIEVAL_SPAN_TYPE:
@@ -354,8 +330,17 @@ def parse_debugging_info(root_span):
                 for document in retrieval_documents:
                     text.append(document["document.content"])
                     score.append(float(document["document.score"]))
-                spans_array.append((span.span_id, index_content, index_id, query, TEXT_SPLITTER.join(text), max(score), retrieval_query_type, retrieval_top_k, prompt_flow_input))  # noqa
-        return spans_array
+                debugging_info = DebuggingInfo(span.span_id,
+                                               index_content,
+                                               index_id,
+                                               query,
+                                               TEXT_SPLITTER.join(text),
+                                               max(score),
+                                               retrieval_query_type,
+                                               retrieval_top_k,
+                                               prompt_flow_input)
+                debugging_info_list.append(debugging_info.to_json_str())
+        return debugging_info_list
     except KeyError as e:
         print("Required field not found: ", e)
         return None
@@ -365,15 +350,15 @@ def expand_debugging_info(df):
     """Parse the debugging info and expand to span level."""
     df['debugging_info'] = df[ROOT_SPAN_COLUMN].apply(parse_debugging_info)
     df = df.explode('debugging_info')
-    df[SPAN_ID_COLUMN] = df['debugging_info'].apply(lambda x: x[0])
-    df[INDEX_CONTENT_COLUMN] = df['debugging_info'].apply(lambda x: x[1])
-    df[INDEX_ID_COLUMN] = df['debugging_info'].apply(lambda x: x[2])
-    df[MODIFIED_PROMPT_COLUMN] = df['debugging_info'].apply(lambda x: x[3])
-    df[RETRIEVAL_DOC_COLUMN] = df['debugging_info'].apply(lambda x: x[4])
-    df[INDEX_SCORE_COLUMN] = df['debugging_info'].apply(lambda x: x[5])
-    df[RETRIEVAL_QUERY_TYPE_COLUMN] = df['debugging_info'].apply(lambda x: x[6])
-    df[RETRIEVAL_TOP_K_COLUMN] = df['debugging_info'].apply(lambda x: x[7])
-    df[PROMPT_FLOW_INPUT_COLUMN] = df['debugging_info'].apply(lambda x: x[8])
+    df[SPAN_ID_COLUMN] = df['debugging_info'].apply(lambda x: json.loads(x)["span_id"])
+    df[INDEX_CONTENT_COLUMN] = df['debugging_info'].apply(lambda x: json.loads(x)["index_content"])
+    df[INDEX_ID_COLUMN] = df['debugging_info'].apply(lambda x: json.loads(x)["index_id"])
+    df[MODIFIED_PROMPT_COLUMN] = df['debugging_info'].apply(lambda x: json.loads(x)["query"])
+    df[RETRIEVAL_DOC_COLUMN] = df['debugging_info'].apply(lambda x: json.loads(x)["retrieval_documents"])
+    df[INDEX_SCORE_COLUMN] = df['debugging_info'].apply(lambda x: json.loads(x)["retrieval_score"])
+    df[RETRIEVAL_QUERY_TYPE_COLUMN] = df['debugging_info'].apply(lambda x: json.loads(x)["retrieval_query_type"])
+    df[RETRIEVAL_TOP_K_COLUMN] = df['debugging_info'].apply(lambda x: json.loads(x)["retrieval_top_k"])
+    df[PROMPT_FLOW_INPUT_COLUMN] = df['debugging_info'].apply(lambda x: json.loads(x)["prompt_flow_input"])
     df = df.drop(columns='debugging_info')
     return df
 
@@ -417,7 +402,7 @@ def perform_ttest(good_answer_scores, bad_answer_scores):
     return t_stat2, p_value2
 
 
-def peform_correlation_test(bad_answer_group, good_answer_group, query_intention):
+def peform_correlation_test(index, bad_answer_group, good_answer_group, query_intention):
     """Perform correlation test."""
     t_stat, p_value = perform_ttest(good_answer_group[INDEX_SCORE_LLM_COLUMN],
                                     bad_answer_group[INDEX_SCORE_LLM_COLUMN])
@@ -425,8 +410,7 @@ def peform_correlation_test(bad_answer_group, good_answer_group, query_intention
     print("Mean value of bad group: ", bad_mean)
     if t_stat > 0 and p_value < P_VALUE_THRESHOLD and bad_mean < 3.0:
         print("Generating action.")
-        # entry: [query_intention, bad_group, good_group, confidence_score]
-        return Action("Index Action", bad_answer_group[SPAN_ID_COLUMN].tolist(), query_intention, float(1.0 - p_value))
+        return IndexAction(index, bad_answer_group[SPAN_ID_COLUMN].tolist(), query_intention, float(1.0 - p_value))
     return None
 
 
@@ -451,23 +435,23 @@ def merge_actions(action_1, action_2):
 def generate_action(df, index_set):
     """Generate the action data."""
     actions = {}
-    df = df[df[INDEX_SCORE_LLM_COLUMN] != DEFAULT_RETRIEVAL_SCORE]
+    df = df[df[INDEX_SCORE_LLM_COLUMN] != DEFAULT_SCORE]
     for index in index_set:
         index_df = df[df[INDEX_ID_COLUMN] == index]
         bad_answer_df = index_df[index_df[DOCUMENT_RELEVANCE_SCORE_COLUMN] < METRICS_VIOLATION_THRESHOLD]
         good_answer_df = index_df[index_df[DOCUMENT_RELEVANCE_SCORE_COLUMN] >= GOOD_METRICS_VALUE]
-        action = peform_correlation_test(bad_answer_df, good_answer_df, "default")
-        if action:
-            actions[index] = action
+        action_out = peform_correlation_test(index, bad_answer_df, good_answer_df, "default")
         query_intention_set = bad_answer_df[QUERY_INTENTION_COLUMN].unique()
         for query_intention in query_intention_set:
             bad_answer_group = bad_answer_df[bad_answer_df[QUERY_INTENTION_COLUMN] == query_intention]
             print("query:", query_intention)
-            action = peform_correlation_test(bad_answer_group, good_answer_df, query_intention)
+            action = peform_correlation_test(index, bad_answer_group, good_answer_df, query_intention)
+            merge_actions(action_out, action)
             if index not in actions:
                 actions[index] = action
             else:
                 actions[index] = merge_actions(actions[index], action)
+        actions.append(action)
     return actions
 
 
@@ -564,16 +548,36 @@ def relevance_action_detector(df,
                               action_output_folder,
                               aml_deployment_id):
     """Relevance action detector."""
-    request_args = get_llm_request_args(model_deployment_name)
-
     # Expand to span level and get document relevance score
     df = expand_debugging_info(df)
-    df[DOCUMENT_RELEVANCE_SCORE_COLUMN] = df.apply(get_llm_score, axis=1, args=(workspace_connection_arm_id,
-                                                                                model_deployment_name,
-                                                                                API_CALL_RETRY_MAX_COUNT,
-                                                                                API_CALL_RETRY_BACKOFF_FACTOR,
-                                                                                request_args,
-                                                                                DOCUMENT_RELEVANCE_SCORE_COLUMN,))
+
+    # Prepare llm variables
+    request_args = get_llm_request_args(model_deployment_name)
+
+    token_manager = _WorkspaceConnectionTokenManager(
+        connection_name=workspace_connection_arm_id,
+        auth_header=API_KEY)
+    azure_endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
+    azure_openai_api_version = token_manager.get_api_version()
+
+    azure_endpoint_url = _check_and_format_azure_endpoint_url(
+        AZURE_OPENAI_API_COMPLETION_URL_PATTERN,
+        AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
+        azure_endpoint_domain_name,
+        azure_openai_api_version,
+        model_deployment_name
+    )
+
+    http_client = _HTTPClientWithRetry(
+        n_retry=API_CALL_RETRY_MAX_COUNT,
+        backoff_factor=API_CALL_RETRY_BACKOFF_FACTOR,
+    )
+
+    # get document relevance score
+    df[DOCUMENT_RELEVANCE_SCORE_COLUMN] = df.apply(get_document_relevance_score, axis=1, args=(token_manager,
+                                                                                               azure_endpoint_url,
+                                                                                               http_client,
+                                                                                               request_args,))
     print("Data with document relevance score.")
     print(df)
 
@@ -582,13 +586,11 @@ def relevance_action_detector(df,
     print("Data with group.")
     print(df)
 
-    # get index score
-    df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_llm_score, axis=1, args=(workspace_connection_arm_id,
-                                                                       model_deployment_name,
-                                                                       API_CALL_RETRY_MAX_COUNT,
-                                                                       API_CALL_RETRY_BACKOFF_FACTOR,
-                                                                       request_args,
-                                                                       INDEX_SCORE_LLM_COLUMN,))
+    # get retrieval score
+    df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_retrieval_score, axis=1, args=(token_manager,
+                                                                             azure_endpoint_url,
+                                                                             http_client,
+                                                                             request_args,))
     print("Data with retrieval score.")
     print(df)
 
