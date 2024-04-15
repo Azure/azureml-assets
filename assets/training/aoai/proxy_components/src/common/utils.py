@@ -5,13 +5,14 @@
 
 import json
 import yaml
-from typing import Optional, List
+from typing import Optional
 import os
 from io import BytesIO
 import jsonlines
 from openai.types.fine_tuning import FineTuningJobEvent
 
 train_dataset_split_ratio = 0.8
+
 
 def save_yaml(content, filename):
     """Save yaml file with given content and filename."""
@@ -38,18 +39,21 @@ def save_json(data, file_path):
     with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
 
+
 def get_train_validation_filename(train_file_path:str, validation_file_path: Optional[str]) -> tuple[str, str]:
     train_file_name = os.path.basename(train_file_path)
-    validation_file_name = os.path.basename(validation_file_path)\
-            if validation_file_path is not None else "validation_" + train_file_name
+    validation_file_name = os.path.basename(validation_file_path) if validation_file_path\
+                           is not None else "validation_" + train_file_name
     return train_file_name, validation_file_name
 
-def get_dataset_length(file_path:str) -> int:
+
+def get_dataset_length(file_path: str) -> int:
     with jsonlines.open(file_path, mode='r') as file_reader:
         data_len = sum(1 for _ in file_reader)
     return data_len
 
-def split_data_in_train_and_validation(file_path:str, split_index:int) -> tuple[BytesIO, BytesIO]:
+
+def split_data_in_train_and_validation(file_path: str, split_index: int) -> tuple[BytesIO, BytesIO]:
     index = 0
     train_data = BytesIO()
     validation_data = BytesIO()
@@ -63,8 +67,9 @@ def split_data_in_train_and_validation(file_path:str, split_index:int) -> tuple[
             index += 1
     return train_data, validation_data
 
-def get_train_validation_data(train_file_path:str, validation_file_path: Optional[str]) -> tuple[BytesIO, BytesIO]: 
-        
+
+def get_train_validation_data(train_file_path:str, validation_file_path: Optional[str]) -> tuple[BytesIO, BytesIO]:
+
     if validation_file_path is not None:
         train_data = open(train_file_path, "rb")
         validation_data = open(validation_file_path, "rb")
@@ -74,6 +79,7 @@ def get_train_validation_data(train_file_path:str, validation_file_path: Optiona
     split_index = int(train_data_length * train_dataset_split_ratio)
 
     return split_data_in_train_and_validation(train_file_path, split_index)
+
 
 def list_event_messages_after_given_event(events_list: list[FineTuningJobEvent], last_event_message: str) -> list[str]:
     event_message_list = []
