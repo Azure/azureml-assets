@@ -282,7 +282,7 @@ class SpanTree:
                     "Either found too many possible root_spans or did not find any, "
                     f"possible root spans found: {self.possible_root_spans}. Available spans: {self._span_node_map}")
         # If we have a root_span but the possible_root_spans list size is not equal to 1 then
-        # we have a weird situation which might be where there are multiple root spans 
+        # we have a weird situation which might be where there are multiple root spans
         # and some have the parent_id as null so we think we find a root_span but it's incorrect.
         else:
             if number_of_root_spans != 1:
