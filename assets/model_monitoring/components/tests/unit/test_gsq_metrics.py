@@ -78,6 +78,18 @@ class TestGSQMetrics:
             else:
                 assert result_metric_value == expected_metric_value
 
+    def test_pass_rate_includes_average_scores(self,
+                                               code_zip_test_setup,
+                                               gsq_preprocessor_test_setup):
+        """Test average score included with AggregatedGroundednessPassRate."""
+        histogram_df = get_histogram_data()
+        spark = init_spark()
+        histogram_df = spark.createDataFrame(histogram_df)
+        metric_names = "AggregatedGroundednessPassRate"
+        result = call_compute_metrics(histogram_df, metric_names)
+        result_df = result.toPandas()
+        assert "AverageGroundednessScore" in result_df[METRIC_NAME_COLUMN].values
+
 
 def get_histogram_data():
     """Get histogram data for testing."""
@@ -144,7 +156,17 @@ def get_expected_data():
         ['', 4.714285714285714, 'AverageRelevanceScore', '', ''],
         ['', 1.0, 'AggregatedCoherencePassRate', 0.7, ''],
         ['', '', 'AcceptableCoherenceScorePerInstance', 4, ''],
-        ['', 5.0, 'AverageCoherenceScore', '', '']
+        ['', 5.0, 'AverageCoherenceScore', '', ''],
+        ['', 0.0, 'CoherencePassRateViolationCounts', '', ''],
+        ['', 0.0, 'CoherenceAverageScoreViolationCounts', '', ''],
+        ['', 0.0, 'FluencyPassRateViolationCounts', '', ''],
+        ['', 0.0, 'FluencyAverageScoreViolationCounts', '', ''],
+        ['', 1.0, 'GroundednessPassRateViolationCounts', '', ''],
+        ['', 0.0, 'GroundednessAverageScoreViolationCounts', '', ''],
+        ['', 2.0, 'RelevancePassRateViolationCounts', '', ''],
+        ['', 0.0, 'RelevanceAverageScoreViolationCounts', '', ''],
+        ['', 3.0, 'TotalPassRateViolationCounts', '', ''],
+        ['', 0, 'TotalAverageScoreViolationCounts', '', ''],
     ]
     return pd.DataFrame(data, columns=['group', 'metric_value', 'metric_name',
                                        'threshold_value', 'group_dimension'])
@@ -153,4 +175,7 @@ def get_expected_data():
 def call_compute_metrics(histogram_df, metric_names):
     """Call compute_metrics method in GSQ component."""
     threshold_args = {threshold_name: 0.7 for threshold_name in THRESHOLD_PARAMS}
+    for metric in ALL_METRIC_NAMES:
+        if 'AverageScore' in metric:
+            threshold_args[metric] = 4.0
     return compute_metrics(histogram_df, threshold_args, metric_names)

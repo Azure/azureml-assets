@@ -21,7 +21,7 @@ from model_data_collector_preprocessor.mdc_utils import (
     _mdc_uri_folder_to_raw_spark_df,
     _extract_data_and_correlation_id,
 )
-from model_data_collector_preprocessor.store_url import StoreUrl
+from shared_utilities.store_url import StoreUrl
 from shared_utilities.momo_exceptions import DataNotFoundError
 
 

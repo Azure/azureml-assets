@@ -11,7 +11,6 @@ import requests
 from src.batch_score.common.constants import BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR
 from src.batch_score.common.telemetry.logging_utils import setup_logger
 from tests.fixtures.adjustment import *
-from tests.fixtures.completion_header_handler import *
 from tests.fixtures.configuration import *
 from tests.fixtures.conductor import *
 from tests.fixtures.geneva_event_listener import *

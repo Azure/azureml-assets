@@ -8,7 +8,8 @@ from pyspark.sql.types import (
     StringType,
     BooleanType
 )
-from pyspark.sql.functions import collect_set, col, udf, mean
+from pyspark.sql import Window
+from pyspark.sql.functions import collect_set, col, udf, max
 from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder
 import os
 import json
@@ -18,9 +19,9 @@ import copy
 from mlflow import MlflowClient
 from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.constants import (
-    INDEX_SCORE_COLUMN,
     INDEX_ID_COLUMN,
     INDEX_CONTENT_COLUMN,
+    INDEX_SCORE_LLM_COLUMN,
     INDEX_ACTION_TYPE,
     ACTION_DESCRIPTION,
     TEXT_SPLITTER,
@@ -34,7 +35,10 @@ from shared_utilities.constants import (
     ROOT_QUESTION_COLUMN,
     COMPLETION_COLUMN,
     ROOT_SPAN_COLUMN,
-    ACTION_ID_COLUMN
+    ACTION_ID_COLUMN,
+    RETRIEVAL_QUERY_TYPE_COLUMN,
+    RETRIEVAL_TOP_K_COLUMN,
+    PROMPT_FLOW_INPUT_COLUMN
 )
 
 
@@ -50,37 +54,47 @@ def is_query_in_action_sample(group_list, action_sample_set):
     return len(group_set.intersection(action_sample_set)) > 0
 
 
-def get_index_set(df):
-    """Get the index set."""
+def get_action_metadata(df):
+    """Get the index set and violated metrics for action."""
     index_set = set()
+    violated_metrics = set()
     for data_row in df.collect():
         index_set.add(data_row[INDEX_ID_COLUMN])
-    return index_set
+        violated_metrics.update(data_row[VIOLATED_METRICS_COLUMN].split(TEXT_SPLITTER))
+    return index_set, violated_metrics
 
 
-def write_actions(action_bad_group_df, action_good_group_df, action_output_folder, model_deployment_name, signal_name):
+def is_index_asset(index_id):
+    """Check if index id is asset id."""
+    return index_id.startswith("azureml://")
+
+
+def write_actions(action_bad_group_df, action_good_group_df, action_output_folder, aml_deployment_id, signal_name):
     """Write the action summary and action detail files."""
-    index_set = get_index_set(action_bad_group_df)
+    index_set, violated_metrics = get_action_metadata(action_bad_group_df)
     local_path = str(uuid.uuid4())
     action_summary = {}
     for index_id in index_set:
         row = action_bad_group_df.filter(col(INDEX_ID_COLUMN) == index_id).collect()[0]
         action_id = row[ACTION_ID_COLUMN]
-        confidence_score = row["action_confidence_score"]
         action = {
             "ActionId": action_id,
             "Type": INDEX_ACTION_TYPE,
-            "Description": ACTION_DESCRIPTION + index_id,
-            "ConfidenceScore": confidence_score,
-            "Signal": signal_name,
+            "Description": ACTION_DESCRIPTION.replace("{index_id}", index_id),
+            "ConfidenceScore": row["action_confidence_score"],
+            "ViolatedMetrics": ", ".join(violated_metrics),
+            "QueryIntention": row["most_significant_group"].split("_")[-1],
             "CreationTime": str(datetime.datetime.now()),
-            "RelativePath": os.path.join(action_output_folder, f"actions/{action_id}.json")
+            "FilePath": os.path.join(action_output_folder, f"actions/{action_id}.json")
         }
         action_summary[action_id] = action
         action_detail = copy.deepcopy(action)
-        action_detail["DeploymentId"] = model_deployment_name
+        action_detail["DeploymentId"] = aml_deployment_id
         action_detail["RunId"] = os.environ.get("AZUREML_RUN_ID", None)
-        action_detail["IndexName"] = row[INDEX_ID_COLUMN]
+        if is_index_asset(index_id):
+            action_detail["IndexAssetId"] = row[INDEX_ID_COLUMN]
+        else:
+            action_detail["IndexName"] = row[INDEX_ID_COLUMN]
         action_detail["IndexContent"] = row[INDEX_CONTENT_COLUMN]
         action_detail["PositiveSamples"] = generate_samples(action_good_group_df, False)
         action_detail["NegativeSamples"] = generate_samples(action_bad_group_df, True)
@@ -99,7 +113,7 @@ def generate_samples(action_df, is_negative_sample):
     samples = []
     # sort the good samples by index score
     if not is_negative_sample:
-        action_df = action_df.sort([INDEX_SCORE_COLUMN], ascending=False)
+        action_df = action_df.sort([INDEX_SCORE_LLM_COLUMN], ascending=False)
     sample_data = action_df.rdd.collect()
     for i in range(len(sample_data)):
         if i >= MAX_SAMPLE_SIZE and not is_negative_sample:
@@ -107,21 +121,24 @@ def generate_samples(action_df, is_negative_sample):
         sample = {
             "Question": sample_data[i][ROOT_QUESTION_COLUMN],
             "Answer": sample_data[i][COMPLETION_COLUMN],
-            "Topic": sample_data[i][TOPIC_LIST_COLUMN].replace(TEXT_SPLITTER, ","),
-            "LookupScore": sample_data[i][INDEX_SCORE_COLUMN],
-            "DebuggingInfo": sample_data[i][ROOT_SPAN_COLUMN]
+            "Topic": (sample_data[i][TOPIC_LIST_COLUMN].split(TEXT_SPLITTER))[0],
+            "LookupScore": sample_data[i][INDEX_SCORE_LLM_COLUMN],
+            "DebuggingInfo": sample_data[i][ROOT_SPAN_COLUMN],
+            "RetrievalQueryType": sample_data[i][RETRIEVAL_QUERY_TYPE_COLUMN],
+            "RetrievalTopK": sample_data[i][RETRIEVAL_TOP_K_COLUMN],
+            "PromptFlowInput": sample_data[i][PROMPT_FLOW_INPUT_COLUMN]
         }
         if is_negative_sample:
-            sample["ViolatedMetrics"] = sample_data[i][VIOLATED_METRICS_COLUMN].replace(TEXT_SPLITTER, ",")
+            sample["ViolatedMetrics"] = sample_data[i][VIOLATED_METRICS_COLUMN].replace(TEXT_SPLITTER, ", ")
         samples.append(sample)
     return samples
 
 
-def write_to_file(payload: dict, local_output_directory: str, signal_name: str):
-    """Save the signal to a local directory."""
+def write_to_file(payload: dict, local_output_directory: str, file_name: str):
+    """Save the action files to a local directory."""
     os.makedirs(local_output_directory, exist_ok=True)
-    signal_file = os.path.join(local_output_directory, f"{signal_name}.json")
-    with open(signal_file, "w") as f:
+    action_file = os.path.join(local_output_directory, f"{file_name}.json")
+    with open(action_file, "w") as f:
         f.write(json.dumps(payload, indent=4, default=np_encoder))
 
 
@@ -133,7 +150,7 @@ def run():
     parser.add_argument("--action_data", type=str)
     parser.add_argument("--data_with_action_metric_score", type=str)
     parser.add_argument("--signal_name", type=str)
-    parser.add_argument("--model_deployment_name", type=str, required=True)
+    parser.add_argument("--aml_deployment_id", type=str)
     args = parser.parse_args()
 
     action_data_df = try_read_mltable_in_spark(
@@ -144,19 +161,24 @@ def run():
         print("Empty action data, create an empty folder.")
         return
 
-    root_run_id = os.environ.get("AZUREML_ROOT_RUN_ID", None)
-    print("Action generated, setting tag for pipeline run: ", root_run_id)
-    client = MlflowClient()
-    client.set_tag(root_run_id, "momo_action_analyzer_has_action", "true")
-
     data_with_action_metric_score_df = try_read_mltable_in_spark(
         args.data_with_action_metric_score, "data_with_action_metric_score"
     )
 
-    # todo remove the groupby logic by using pure python or pandas
+    # get the group with highest confidence score (except the default group)
+    w = Window.partitionBy(INDEX_ID_COLUMN)
+    max_conf_df = action_data_df.filter(~col(BAD_GROUP_COLUMN).endswith("_default"))\
+                                .withColumn("max_confidence", max(CONFIDENCE_SCORE_COLUMN).over(w))\
+                                .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence'))\
+                                .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
+                                .select(INDEX_ID_COLUMN, "most_significant_group")
+
     merged_action = action_data_df.groupby(INDEX_ID_COLUMN).agg(collect_set(BAD_GROUP_COLUMN).alias("action_bad_group_set"),  # noqa: E501
                                                                 collect_set(GOOD_GROUP_COLUMN).alias("action_good_group_set"),  # noqa: E501
-                                                                mean(CONFIDENCE_SCORE_COLUMN).alias("action_confidence_score")).withColumn(ACTION_ID_COLUMN, _generate_guid())  # noqa: E501
+                                                                max(CONFIDENCE_SCORE_COLUMN).alias("action_confidence_score")).withColumn(ACTION_ID_COLUMN, _generate_guid())  # noqa: E501
+
+    # join the action data with all debugging info and highest confident group
+    merged_action = merged_action.join(max_conf_df, [INDEX_ID_COLUMN], "inner")
     action_with_group_df = data_with_action_metric_score_df.join(merged_action, [INDEX_ID_COLUMN], "inner")
 
     action_bad_group_df = action_with_group_df.filter(is_query_in_action_sample(col(GROUP_LIST_COLUMN),
@@ -165,15 +187,22 @@ def run():
     action_bad_group_df.show()
 
     action_good_group_df = action_with_group_df.filter(is_query_in_action_sample(col(GROUP_LIST_COLUMN),
-                                                                                 col("action_good_group_set")))
+                                                                                 col("action_good_group_set"))
+                                                       & ~col(GROUP_LIST_COLUMN).contains("_bad_group"))
     print("good group")
     action_good_group_df.show()
 
     write_actions(action_bad_group_df,
                   action_good_group_df,
                   args.action_output,
-                  args.model_deployment_name,
+                  args.aml_deployment_id,
                   args.signal_name)
+
+    # add action analyzer tag for the root run
+    root_run_id = os.environ.get("AZUREML_ROOT_RUN_ID", None)
+    print("Action generated, setting tag for pipeline run: ", root_run_id)
+    client = MlflowClient()
+    client.set_tag(root_run_id, "momo_action_analyzer_has_action", "true")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ type: spark
 name: data_quality_metrics_joiner
 display_name:  Data Quality - Metrics Joiner
 description: Join baseline and target data quality metrics into a single output.
-version: 0.3.8
+version: 0.3.11
 is_deterministic: true
 
 inputs:
@@ -27,6 +27,7 @@ code: ../../src/
 entry:
   file: ./data_quality_metrics_joiner/run.py
 conf:
+  spark.aml.internal.system.job: True
   spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 4
   spark.driver.memory: 28g

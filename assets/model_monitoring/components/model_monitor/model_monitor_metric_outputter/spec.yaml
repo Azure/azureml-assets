@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_metric_outputter
 display_name: Model Monitor - Metric Outputter
 description: Output the computed model monitor metrics.
-version: 0.3.18
+version: 0.3.21
 is_deterministic: true
 
 code: ../../src/
@@ -41,6 +41,7 @@ conf:
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4
+  spark.aml.internal.system.job: True
   spark.synapse.library.python.env: |
     channels:
       - defaults

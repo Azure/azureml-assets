@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_compute_histogram_buckets
 display_name: Model Monitor - Compute Histogram Buckets
 description: Compute histogram buckets given up to two datasets.
-version: 0.3.10
+version: 0.3.13
 is_deterministic: true
 
 code: ../../src
@@ -39,6 +39,7 @@ conf:
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4
+  spark.aml.internal.system.job: True
   spark.synapse.library.python.env: |
     channels:
       - defaults

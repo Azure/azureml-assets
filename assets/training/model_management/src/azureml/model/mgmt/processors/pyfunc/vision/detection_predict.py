@@ -3,24 +3,25 @@
 
 """MLflow PythonModel wrapper class that loads the MLflow model, preprocess inputs and performs inference."""
 
+import io
+import logging
 import subprocess
 import sys
-import tempfile
 from typing import Any, Dict, List, Tuple
 
 import mlflow
 import numpy as np
 import pandas as pd
 import torch
+from PIL import Image
 from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, ODLiterals, ISLiterals
 
-from azureml.model.mgmt.utils.logging_utils import get_logger
+logger = logging.getLogger(__name__)
 
-logger = get_logger(__name__)
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
     # model wrapper for save_model().
-    from vision_utils import create_temp_file, process_image_pandas_series
+    from vision_utils import process_image
 except ImportError:
     pass
 
@@ -171,10 +172,12 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns ["boxes"] for object detection
         """
-        # process the images in image column
-        processed_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
-            axis=1, func=process_image_pandas_series
-        )
+        # Read all the input images.
+        np_images = [
+            np.array(Image.open(io.BytesIO(process_image(image))))
+            for image in input_data[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
+        ]
+
         if not params:
             params = {}
         text_prompt = params.get(MMDetLiterals.TEXT_PROMPT, None)
@@ -182,15 +185,13 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         if not text_prompt and self.language_model:
             raise ValueError("text prompt not sent. please send text_prompt for Launguage models")
         classes = text_prompt.split(". ") if self.language_model else self.classes
-        with tempfile.TemporaryDirectory() as tmp_output_dir:
-            image_path_list = (
-                processed_images.iloc[:, 0].map(lambda row: create_temp_file(row, tmp_output_dir)[0]).tolist()
-            )
 
-            results = self._inference_detector(imgs=image_path_list,
-                                               model=self._model,
-                                               text_prompt=text_prompt,
-                                               custom_entities=custom_entities)
+        # Note: unlike HuggingFace, mmdetection does not support doing inference on a dataset, so
+        # passing images directly.
+        results = self._inference_detector(imgs=np_images,
+                                           model=self._model,
+                                           text_prompt=text_prompt,
+                                           custom_entities=custom_entities)
 
-            predictions = self._post_process_model_results(results, classes)
-            return pd.DataFrame(predictions)
+        predictions = self._post_process_model_results(results, classes)
+        return pd.DataFrame(predictions)

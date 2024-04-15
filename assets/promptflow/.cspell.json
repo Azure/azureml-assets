@@ -159,6 +159,7 @@
       "**.jinja2",
       "**.txt",
       "**.json",
+      "**.jsonl",
       "**/asset.yaml",
       "**/description.md",
       "**/model.yaml"

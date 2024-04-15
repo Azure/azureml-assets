@@ -4,7 +4,7 @@ type: spark
 name: model_performance_compute_metrics
 display_name: Model Performance - Compute Metrics
 description: Compute model performance metrics leveraged by the model performance monitor.
-version: 0.0.9
+version: 0.0.12
 is_deterministic: true
 
 code: ../../src
@@ -60,6 +60,7 @@ conf:
   spark.dynamicAllocation.enabled: True
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4
+  spark.aml.internal.system.job: True
   spark.synapse.library.python.env: |
     channels:
       - defaults

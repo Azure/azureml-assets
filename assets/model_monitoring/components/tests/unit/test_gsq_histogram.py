@@ -12,12 +12,8 @@ import uuid
 import pandas as pd
 import pyarrow as pa
 from generation_safety_quality.annotation_compute_histogram.run import (
-    _check_and_format_azure_endpoint_url,
     apply_annotation,
     SIMILARITY,
-    AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
-    AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-    GPT_4,
     TEST_CONNECTION,
     THRESHOLD_PARAMS,
     ALL_METRIC_NAMES,
@@ -33,6 +29,7 @@ import spark_mltable  # noqa, to enable spark.read.mltable
 
 QUESTION = 'question'
 EVALUATION = 'evaluation'
+GPT_4 = 'gpt-4'
 
 
 @pytest.fixture(scope="module")
@@ -62,35 +59,6 @@ def gsq_preprocessor_test_setup():
 @pytest.mark.unit
 class TestGSQHistogram:
     """Test class for GSQ histogram component and utilities."""
-
-    def test_gsq_invalid_deployment_url(self):
-        """Test _check_and_format_azure_endpoint_url method in GSQ component."""
-        url_pattern = AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN
-        domain_pattern_re = AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE
-        version = "2022-12-01"
-        model = "test_model"
-        invalid_url = "https://invalidurl.com"
-        with pytest.raises(InvalidInputError):
-            _check_and_format_azure_endpoint_url(
-                url_pattern, domain_pattern_re, invalid_url,
-                version, model)
-        # this was the url causing the error
-        cog_url = "australiaeast.api.cognitive.microsoft.com"
-        with pytest.raises(InvalidInputError):
-            _check_and_format_azure_endpoint_url(
-                url_pattern, domain_pattern_re, cog_url, version, model)
-
-    def test_gsq_valid_deployment_url(self):
-        """Test _check_and_format_azure_endpoint_url method in GSQ component."""
-        url_pattern = AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN
-        domain_pattern_re = AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE
-        version = "2022-12-01"
-        model = "test_model"
-        valid_url = "abc.openai.azure.com"
-        formatted_url = _check_and_format_azure_endpoint_url(
-            url_pattern, domain_pattern_re, valid_url, version, model)
-        expected_format = f"https://{valid_url}/openai/deployments/{model}?api-version={version}"
-        assert formatted_url == expected_format
 
     def test_gsq_apply_annotation(self, code_zip_test_setup,
                                   gsq_preprocessor_test_setup):
@@ -185,7 +153,7 @@ class TestGSQHistogram:
         write_json_data(mltable_path_copy, json_data)
         call_apply_annotation(",".join(metric_names), mltable_path=mltable_path_copy)
         # assert that the passthrough columns are added to the output
-        test_path = get_test_path()
+        test_path = get_test_path(None, "test_output")
         eval_path = os.path.join(test_path, EVALUATION)
         evaluation_df = io_utils.try_read_mltable_in_spark_with_error(eval_path, EVALUATION)
         for col in [CORRELATION_ID, TRACE_ID, ROOT_SPAN]:
@@ -262,9 +230,15 @@ def get_mltable_path():
         "mltable_groundedness_preprocessed_target_small")
 
 
-def get_test_path():
+def get_test_path(root_path, name):
     """Get path to test output folder."""
-    return os.path.abspath(os.path.join(os.getcwd(), "test_output"))
+    if root_path:
+        path = os.path.join(root_path, name)
+    else:
+        path = os.path.abspath(os.path.join(os.getcwd(), name))
+    if (not os.path.exists(path)):
+        os.mkdir(path)
+    return path
 
 
 def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
@@ -275,10 +249,14 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     """Call apply_annotation method in GSQ component."""
     if mltable_path is None:
         mltable_path = get_mltable_path()
-    test_path = get_test_path()
+    test_path = get_test_path(None, "test_output")
     fuse_prefix = "file://"
-    histogram_path = fuse_prefix + os.path.join(test_path, "histogram")
-    samples_index_path = fuse_prefix + os.path.join(test_path, "samples_index")
+    histogram_path = get_test_path(test_path, "histogram")
+    sample_index_path = get_test_path(test_path, "samples_index")
+    histogram_file_path = fuse_prefix + histogram_path
+    samples_index_file_path = fuse_prefix + sample_index_path
+    import fsspec
+    fs = fsspec.filesystem("file")
     if threshold_args is None:
         threshold_args = {threshold: 5 for threshold in THRESHOLD_PARAMS}
     violations = {
@@ -290,14 +268,14 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     }
 
     for k, v in violations.items():
-        violations[k] = fuse_prefix + os.path.join(test_path, v)
+        violations[k] = fuse_prefix + get_test_path(test_path, v)
 
-    evaluation_path = fuse_prefix + os.path.join(test_path, EVALUATION)
+    evaluation_path = fuse_prefix + get_test_path(test_path, EVALUATION)
 
     apply_annotation(
         metric_names=metric_names,
         production_dataset=mltable_path,
-        histogram=histogram_path,
+        histogram=histogram_file_path,
         model_deployment_name=GPT_4,
         workspace_connection_arm_id=TEST_CONNECTION,
         num_samples=1,
@@ -309,7 +287,8 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
         completion_column_name=completion_column_name,
         context_column_name=context_column_name,
         ground_truth_column_name=None,
-        samples_index=samples_index_path,
+        samples_index=samples_index_file_path,
         violations=violations,
-        evaluation=evaluation_path
+        evaluation=evaluation_path,
+        file_system=fs
     )

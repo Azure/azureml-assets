@@ -192,7 +192,12 @@ class SpanTree:
     def __init__(self, spans: List[SpanTreeNode]) -> None:
         """Spantree constructor to build up tree from span list."""
         self._span_node_map: Dict[str, SpanTreeNode] = {}
-        self.root_span = self._construct_span_tree(spans)
+        self._root_span = self._construct_span_tree(spans)
+
+    @property
+    def root_span(self) -> SpanTreeNode:
+        """Get the root span of the span tree."""
+        return self._root_span
 
     @classmethod
     def create_tree_from_json_string(cls, json_string: str) -> "SpanTree":
@@ -202,25 +207,25 @@ class SpanTree:
         # Default behavior is to load the whole tree from top level json string.
         root_span_dict = json.loads(json_string)
         if root_span_dict is None:
-            obj.root_span = None
+            obj._root_span = None
         else:
-            obj.root_span = SpanTreeNode.create_node_from_dict(root_span_dict)
+            obj._root_span = SpanTreeNode.create_node_from_dict(root_span_dict)
         obj._span_node_map = {span.span_id: span for span in obj}
         return obj
 
     def show(self) -> None:
         """Print to stdout a formatted representation of the Span Tree."""
-        if self.root_span is None:
+        if self._root_span is None:
             print("The SpanTree is empty.")
             return
-        print(f"SpanTree for trace id = {self.root_span.trace_id}:")
-        self.root_span.show()
+        print(f"SpanTree for trace id = {self._root_span.trace_id}:")
+        self._root_span.show()
 
     def to_json_str(self) -> str:
         """Get tree structure as json string."""
-        if self.root_span is None:
+        if self._root_span is None:
             return json.dumps(None)
-        return json.dumps(self.root_span.to_dict())
+        return json.dumps(self._root_span.to_dict())
 
     def get_span_tree_node_by_span_id(self, span_id: str) -> Optional[SpanTreeNode]:
         """Get a span tree node by span id. Return none if there is no matching span id."""
@@ -231,8 +236,10 @@ class SpanTree:
     def _construct_span_tree(self, spans: List[SpanTreeNode]) -> Optional[SpanTreeNode]:
         """Build the span tree in ascending time order from list of all spans."""
         root_span = None
+        possible_root_spans = []
         # construct a dict with span_id as key and span as value
         self._span_node_map = {span.span_id: span for span in spans}
+
         for span in self._span_node_map.values():
             parent_id = span.parent_id
             if parent_id is None:
@@ -241,16 +248,31 @@ class SpanTree:
                 parent_span = self.get_span_tree_node_by_span_id(parent_id)
                 if parent_span is not None:
                     parent_span.insert_child(span)
+                else:
+                    # consider the possibility that current span is root_span since
+                    # parent_span is not in the data.
+                    possible_root_spans.append(span)
+
+        # if root_span is None and we only have one possible root_span then we consider it the root_span
+        # else means we have multiple possible root_span nodes and we don't support forest structures for SpanTree
+        #     OR somehow we didn't find any possible root spans (is not probable? maybe impossible?)
+        if root_span is None:
+            if len(possible_root_spans) == 1:
+                root_span = possible_root_spans[0]
+            else:
+                print(
+                    "Either found too many possible root_spans or did not find any, "
+                    f"possible root spans found: {possible_root_spans}. Available spans: {self._span_node_map}")
         return root_span
 
     def __iter__(self) -> Iterator[SpanTreeNode]:
         """Iterate over the span tree in order."""
-        if self.root_span is None:
+        if self._root_span is None:
             return
-        for span in self.root_span.__iter__():
+        for span in self._root_span.__iter__():
             yield span
 
     def __repr__(self) -> str:
         """Get representation of the SpanTree."""
-        return f"SpanTree(trace id = {self.root_span.trace_id if self.root_span is not None else None}," + \
+        return f"SpanTree(trace id = {self._root_span.trace_id if self._root_span is not None else None}," + \
             f" spans = {self._span_node_map})"

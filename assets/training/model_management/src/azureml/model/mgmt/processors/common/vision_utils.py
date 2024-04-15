@@ -4,9 +4,6 @@
 """Helper utils for vision Mlflow models."""
 
 import logging
-import os
-import tempfile
-import uuid
 import PIL
 import pandas as pd
 import base64
@@ -18,30 +15,13 @@ from ast import literal_eval
 import numpy as np
 
 from PIL import Image, UnidentifiedImageError
-from typing import Tuple, Union
+from typing import Union
 
 
 logger = logging.getLogger(__name__)
 
 # Uncomment the following line for mlflow debug mode
 # logging.getLogger("mlflow").setLevel(logging.DEBUG)
-
-
-def create_temp_file(request_body: bytes, parent_dir: str) -> Tuple[str, Image.Image]:
-    """Create temporory file from image bytes, save image and return path to the file and PIL Image.
-
-    :param request_body: Image
-    :type request_body: bytes
-    :param parent_dir: directory name
-    :type parent_dir: str
-    :return: Path to the file, PIL Image
-    :rtype: Tuple[str, Image.Image]
-    """
-    with tempfile.NamedTemporaryFile(dir=parent_dir, mode="wb", delete=False) as image_file_fp:
-        img_path = image_file_fp.name + ".png"
-        img = get_pil_image(request_body)
-        img.save(img_path)
-        return img_path, img
 
 
 def get_pil_image(image: bytes) -> PIL.Image.Image:
@@ -58,24 +38,6 @@ def get_pil_image(image: bytes) -> PIL.Image.Image:
     except UnidentifiedImageError as e:
         logger.error("Invalid image format. Please use base64 encoding for input images.")
         raise e
-
-
-def save_image(output_folder: str, img: PIL.Image.Image, format: str) -> str:
-    """
-    Save image in a folder designated for batch output and return image file path.
-
-    :param output_folder: directory path where we need to save files
-    :type output_folder: str
-    :param img: image object
-    :type img: PIL.Image.Image
-    :param format: format to save image
-    :type format: str
-    :return: file name of image.
-    :rtype: str
-    """
-    filename = f"image_{uuid.uuid4()}.{format.lower()}"
-    img.save(os.path.join(output_folder, filename), format=format)
-    return filename
 
 
 def image_to_base64(img: PIL.Image.Image, format: str) -> str:

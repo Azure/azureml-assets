@@ -11,7 +11,7 @@ import time
 
 from azure.ai.ml import MLClient, load_component
 from azure.ai.ml.constants import AssetTypes
-from azure.ai.ml.operations._run_history_constants import RunHistoryConstants
+from azure.ai.ml.operations._run_history_constants import RunHistoryConstants, JobStatus
 from azure.ai.ml.entities import Job, Data
 from azure.identity import AzureCliCredential
 import pytest
@@ -687,7 +687,9 @@ def cleanup_previous_e2e_tests(ml_client: MLClient, test_suite_name):
         pass
     else:
         for job in ml_client.jobs.list():
-            if job.status in RunHistoryConstants.TERMINAL_STATUSES:
+            if not job:
+                continue
+            if job.status in RunHistoryConstants.TERMINAL_STATUSES or job.status == JobStatus.FINALIZING:
                 continue
 
             if job.experiment_name == test_suite_name:

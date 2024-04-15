@@ -11,7 +11,7 @@ from azure.core.credentials import AzureSasCredential
 from model_data_collector_preprocessor.mdc_preprocessor_helper import (
     get_file_list, set_data_access_config, serialize_credential, deserialize_credential
 )
-from model_data_collector_preprocessor.store_url import StoreUrl
+from src.shared_utilities.store_url import StoreUrl
 from test_store_url import assert_credentials_are_equal
 
 

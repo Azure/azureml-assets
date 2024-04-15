@@ -125,6 +125,39 @@ def test_handler_retriable_exception_throws_exception(exception_to_throw):
     assert ex.value.status_code == -408
 
 
+@pytest.mark.parametrize('status_code', [(500), (502), (504), (507)])
+def test_handle_response_server_error_max_retries_reached(status_code, mock_run_context):
+    """Test handle response returns failure when retry count reaches max retries."""
+    # Arrange
+    http_response = HttpScoringResponse(
+        status=status_code,
+        payload=['hello'],
+        headers={'x-ms-client-request-id': '123'})
+    scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
+    scoring_request.retry_count = 10
+    scoring_request.retry_count_for_limited_retries = 3
+    response_handler = MirHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
+
+    # Act
+    scoring_result = response_handler.handle_response(
+        scoring_request=scoring_request,
+        http_response=http_response,
+        x_ms_client_request_id=x_ms_client_request_id,
+        start=start_time,
+        end=end_time,
+        worker_id='1')
+
+    # Assert
+    assert_scoring_result(
+        scoring_result,
+        ScoringResultStatus.FAILURE,
+        scoring_request,
+        http_response,
+        start_time=start_time,
+        end_time=end_time
+    )
+
+
 @pytest.mark.parametrize('enable_tally_handler', [True, False])
 def test_handler_non_retriable_exception_returns_failure(enable_tally_handler):
     """Test handler non retriable exception returns failure."""

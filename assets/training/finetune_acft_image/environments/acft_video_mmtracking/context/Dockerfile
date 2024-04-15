@@ -22,4 +22,8 @@ RUN pip install scipy==1.10.1
 # It is recommended to upgrade to numpy version 1.23.5 to address the numpy.core.multiarray issue
 RUN pip install numpy==1.23.5
 
+# pin required version of yapf to avoid breaking changes in newer versions
+# https://github.com/open-mmlab/mmdetection/issues/10962
+RUN pip install yapf==0.40.1
+
 # dummy number to change when needing to force rebuild without changing the definition: 1

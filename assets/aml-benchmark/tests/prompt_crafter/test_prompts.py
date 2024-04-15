@@ -3,17 +3,10 @@
 
 """Test the functionality of the prompt factory which powers the prompt crafter."""
 
-import sys
 import pytest
 from typing import List, Dict
 
-from ..test_utils import get_src_dir
-
-sys.path.append(get_src_dir())
-try:
-    from aml_benchmark.prompt_crafter.package.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
-except ImportError:
-    raise ImportError("Please install the package 'prompt_crafter' to run this test.")
+from aml_benchmark.prompt_crafter.package.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
 
 
 # Without few_shot_pattern as inputs
@@ -30,21 +23,34 @@ expected_op_int_response = [
             {"role": "user", "content": "in4?"}
         ]
 
+expected_op_chat_response_with_prefix = [
+                    {"role": "system", "content": "You are an assistant."},
+                    {"role": "user", "content": "_PrefiX_fs_in?"},
+                    {"role": "assistant", "content": "fs_out"},
+                    {"role": "user", "content": "in4?"}
+                ]
+
 system_message = "You are an assistant."
 
 
 @pytest.mark.parametrize(
-    "n_shots, few_shot_pool, row, expected_output, system_message",
+    "n_shots, few_shot_pool, row, expected_output, system_message, prefix",
     [
         (1, [{'input': 'fs_in', 'output': 'fs_out'}],
          {'input': 'in4'},
-         expected_op_str_response, system_message),
+         expected_op_str_response, system_message, None),
         (1, [{'input': 'fs_in', 'output': '1'}],
          {'input': 'in4'},
-         expected_op_int_response, None),
+         expected_op_int_response, None, None),
         (0, [{'input': 'fs_in', 'output': 'fs_out'}],
          {'input': 'in4'},
-         [{"role": "user", "content": "in4?"}], None),
+         [{"role": "user", "content": "in4?"}], None, None),
+        (1, [{'input': 'fs_in', 'output': 'fs_out'}],
+         {'input': 'in4'},
+         expected_op_chat_response_with_prefix, system_message, "_PrefiX_"),
+        (0, [{'input': 'fs_in', 'output': 'fs_out'}],
+         {'input': 'in4'},
+         [{"role": "user", "content": "_PrefiX_in4?"}], None, "_PrefiX_"),
     ]
 )
 def test_chat_prompts(
@@ -53,6 +59,7 @@ def test_chat_prompts(
     row: Dict[str, str],
     expected_output: str,
     system_message: str,
+    prefix: str,
 ) -> None:
     """Test the functionality of the chat prompts with various inputs.
 
@@ -70,7 +77,8 @@ def test_chat_prompts(
         few_shot_pool=few_shot_pool,
         output_pattern=output_pattern,
         few_shot_separator=few_shot_separator,
-        system_message=system_message)
+        system_message=system_message,
+        prefix=prefix)
     prompt = prompt_factory.create_prompt(row=row)
     assert prompt.raw_prompt == expected_output
 
@@ -117,34 +125,40 @@ def test_chat_prompts_with_few_shot_pattern() -> None:
 
 
 @pytest.mark.parametrize(
-    "n_shots, few_shot_pool, row, expected_output",
+    "n_shots, few_shot_pool, row, expected_output, prefix",
     [
         (1, [{'input': 'in', 'output': 'out'}],
          {'input': 'in4', 'output': 'out4'},
-         'Input:in\nOutput:out\nInput:in4\nOutput:'),
+         'Input:in\nOutput:out\nInput:in4\nOutput:', None),
         (1, [{'input': 'in', 'output': '1'}],
          {'input': 'in4', 'output': '2'},
-         'Input:in\nOutput:1\nInput:in4\nOutput:'),
+         'Input:in\nOutput:1\nInput:in4\nOutput:', None),
         (0, [{'input': 'in', 'output': 'out'}],
          {'input': 'in4', 'output': 'out4'},
-         'Input:in4\nOutput:'),
+         'Input:in4\nOutput:', None),
         (0, [{'input': 'in', 'output': '1'}],
          {'input': 'in4', 'output': '2'},
-         'Input:in4\nOutput:')
+         'Input:in4\nOutput:', None),
+        (1, [{'input': 'in', 'output': 'out'}],
+         {'input': 'in4', 'output': 'out4'},
+         '_Prefix_Input:in\nOutput:out\nInput:in4\nOutput:', "_Prefix_"),
+        (0, [{'input': 'in', 'output': '1'}],
+         {'input': 'in4', 'output': '2'},
+         '_Prefix_Input:in4\nOutput:', "_Prefix_"),
     ]
 )
 def test_completions_prompts(
     n_shots: int,
     few_shot_pool: List[Dict[str, str]],
     row: Dict[str, str],
-    expected_output: str
+    expected_output: str,
+    prefix: str,
 ) -> None:
     """Test the functionality of the completions prompt factory."""
     prompt_pattern = 'Input:{{input}}\nOutput:'
     output_pattern = '{{output}}'
     few_shot_pattern = 'Input:{{input}}\nOutput:{{output}}'
     few_shot_separator = "\n"
-    prefix = None
     system_message = "You are an AI assistant."
 
     # When few_shot_pattern is present

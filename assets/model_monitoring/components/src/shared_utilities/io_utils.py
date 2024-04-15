@@ -4,13 +4,18 @@
 """This file contains utilities to read write data."""
 
 from enum import Enum
-import yaml
 import numpy as np
+import os
+import time
+import uuid
+import yaml
+from azureml.fsspec import AzureMachineLearningFileSystem
 from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql.types import StructType
+from .constants import MAX_RETRY_COUNT
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
-from model_data_collector_preprocessor.store_url import StoreUrl  # TODO: move StoreUrl to share_utilities
-from pyspark.sql.types import StructType
+from shared_utilities.store_url import StoreUrl
 
 
 class NoDataApproach(Enum):
@@ -124,6 +129,27 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
             raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
 
 
+def _write_mltable_yaml(mltable_obj, dest_path, file_system=None):
+    try:
+        folder_name = str(uuid.uuid4())
+        folder_path = os.path.join(os.getcwd(), folder_name)
+        os.makedirs(folder_path)
+        source_path = os.path.join(folder_path, "MLTable")
+        with open(source_path, "w") as yaml_file:
+            yaml.dump(mltable_obj, yaml_file)
+
+        fs = file_system or AzureMachineLearningFileSystem(dest_path)
+        fs.upload(
+            lpath=source_path,
+            rpath=dest_path,
+            **{"overwrite": "MERGE_WITH_OVERWRITE"},
+        )
+        return True
+    except Exception as e:
+        print(f"Error writing mltable file: {e}")
+        return False
+
+
 def read_mltable_in_spark(mltable_path: str):
     """Read mltable in spark."""
     _verify_mltable_paths(mltable_path)
@@ -131,11 +157,26 @@ def read_mltable_in_spark(mltable_path: str):
     return spark.read.mltable(mltable_path)
 
 
-def save_spark_df_as_mltable(metrics_df, folder_path: str):
+def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
     """Save spark dataframe as mltable."""
-    metrics_df.write.option("output_format", "parquet").option(
-        "overwrite", True
-    ).mltable(folder_path)
+    metrics_df.write.mode("overwrite").parquet(folder_path)
+
+    base_path = folder_path.rstrip('/')
+    output_path_pattern = base_path + "/*.parquet"
+
+    mltable_obj = {
+        'paths': [{'pattern': output_path_pattern}],
+        'transformations': ['read_parquet']
+    }
+
+    retries = 0
+    while True:
+        if _write_mltable_yaml(mltable_obj, folder_path, file_system):
+            break
+        retries += 1
+        if retries >= MAX_RETRY_COUNT:
+            raise Exception("Failed to write mltable yaml file after multiple retries.")
+        time.sleep(1)
 
 
 def np_encoder(object):

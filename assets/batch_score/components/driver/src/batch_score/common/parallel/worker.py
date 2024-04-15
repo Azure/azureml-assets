@@ -12,7 +12,6 @@ from collections import deque
 import aiohttp
 
 from ...batch_pool.quota.quota_client import QuotaUnavailableException
-from ...batch_pool.scoring.scoring_client import ScoringClient
 from ...utils.common import str2bool
 from ...utils import timeout_utils
 from .. import constants
@@ -25,6 +24,7 @@ from ..scoring.scoring_result import (
     ScoringResult,
     ScoringResultStatus,
 )
+from ..scoring.scoring_client import ScoringClient
 from ..scoring.scoring_utils import is_zero_traffic_group_error
 from ..scoring.segmented_score_context import SegmentedScoreContext
 from ..telemetry import logging_utils as lu
@@ -241,26 +241,30 @@ class Worker:
             scoring_request: ScoringRequest):
         lu.get_logger().error(
             "Worker {}: Score failed: Payload scored for {} seconds, which exceeded the maximum"
-            " time interval of {} seconds. internal_id: {}, total_wait_time: {}, retry_count: {}"
+            " time interval of {} seconds. internal_id: {}, total_wait_time: {},"
+            " retry_count: {}, retry_count_for_limited_retries: {}"
             .format(
                 self.id,
                 round(scoring_request.scoring_duration, 2),
                 self._configuration.max_retry_time_interval,
                 scoring_request.internal_id,
                 scoring_request.total_wait_time,
-                scoring_request.retry_count))
+                scoring_request.retry_count,
+                scoring_request.retry_count_for_limited_retries))
 
     def _log_score_failed_with_permanent_exception(
             self, scoring_request: ScoringRequest,
             exception: PermanentException):
         lu.get_logger().error(
-            "Worker {}: Score failed: {}. internal_id: {}, total_wait_time: {}, retry_count: {}"
+            "Worker {}: Score failed: {}. internal_id: {}, total_wait_time: {},"
+            " retry_count: {}, retry_count_for_limited_retries: {}"
             .format(
                 self.id,
                 str(exception),
                 scoring_request.internal_id,
                 scoring_request.total_wait_time,
-                scoring_request.retry_count))
+                scoring_request.retry_count,
+                scoring_request.retry_count_for_limited_retries))
 
     def _log_score_failed_with_retriable_exception(
             self,
@@ -270,7 +274,7 @@ class Worker:
             exception: RetriableException):
         lu.get_logger().debug(
             "Worker {}: Encountered retriable exception: {}. internal_id: {},"
-            " back_off: {}, wait_time: {}, total_wait_time: {}, retry_count: {}"
+            " back_off: {}, wait_time: {}, total_wait_time: {}, retry_count: {}, retry_count_for_limited_retries: {}"
             .format(
                 self.id,
                 str(exception),
@@ -278,7 +282,8 @@ class Worker:
                 back_off,
                 wait_time,
                 scoring_request.total_wait_time,
-                scoring_request.retry_count))
+                scoring_request.retry_count,
+                scoring_request.retry_count_for_limited_retries))
 
     def _log_score_failed_with_unhandled_exception(self, scoring_request: ScoringRequest, trace: str):
         lu.get_logger().error("Worker {}: Encountered unhandled exception. internal_id: {}, error: {}".format(
@@ -297,7 +302,7 @@ class Worker:
 
             if queue_item.segmented_score_context.has_more():
 
-                scoring_result = await queue_item.segmented_score_context.score_next_once(
+                scoring_result = await queue_item.segmented_score_context.score_next_segment(
                     self.__scoring_client,
                     self.__client_session,
                     timeout,
@@ -321,7 +326,7 @@ class Worker:
                         queue_item.segmented_score_context.processed_segments_count)
 
         else:
-            scoring_result = await self.__scoring_client.score_once(
+            scoring_result = await self.__scoring_client.score(
                 session=self.__client_session,
                 scoring_request=queue_item.scoring_request,
                 timeout=timeout,

@@ -1,0 +1,6 @@
+name: aoai-data-upload-finetune
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["AOAI"]
