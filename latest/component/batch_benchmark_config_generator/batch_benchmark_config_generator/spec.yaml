@@ -4,7 +4,7 @@ type: command
 name: batch_benchmark_config_generator
 display_name: Batch Benchmark Config Generator
 description: Generates the config for the batch score component.
-version: 0.0.1
+version: 0.0.2
 is_deterministic: true
 
 inputs:
@@ -98,7 +98,7 @@ outputs:
     description: The config json file for the batch score component.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/20
+environment: azureml://registries/azureml/environments/model-evaluation/versions/22
 command: >-
   python -m aml_benchmark.batch_config_generator.main  --scoring_url '${{inputs.scoring_url}}'
   --model_type ${{inputs.model_type}}

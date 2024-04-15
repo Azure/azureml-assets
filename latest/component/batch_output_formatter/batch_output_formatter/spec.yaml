@@ -1,5 +1,5 @@
 name: batch_output_formatter
-version: 0.0.7
+version: 0.0.8
 display_name: Batch Output Formatter
 is_deterministic: true
 type: command
@@ -57,6 +57,12 @@ inputs:
     default: false
     description: If true, the performance test will be run.
     optional: false
+  use_tiktoken:
+    type: boolean
+    default: false
+    description: If true, `cl100k_base` encoder is used from tiktoken to calculate
+      token count; overrides any other token count calculation.
+    optional: true
 outputs:
   predictions:
     type: uri_file
@@ -71,7 +77,7 @@ outputs:
   unsafe_content_blocked_requests:
     type: uri_file
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/20
+environment: azureml://registries/azureml/environments/model-evaluation/versions/22
 
 resources:
   instance_count: 1
@@ -92,5 +98,6 @@ command: >-
   $[[--additional_columns ${{inputs.additional_columns}}]]
   --handle_response_failure ${{inputs.handle_response_failure}}
   --is_performance_test ${{inputs.is_performance_test}}
+  $[[--use_tiktoken ${{inputs.use_tiktoken}}]]
   $[[--fallback_value ${{inputs.fallback_value}}]]
   $[[--ground_truth_input ${{inputs.ground_truth_input}}]]
