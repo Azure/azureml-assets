@@ -1,0 +1,78 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: mistral-community-Mixtral-8x22B-v0-1
+path: ./
+properties:
+  SharedComputeCapacityEnabled: true
+  SHA: 499f4b3093afb3defc03f599356b9dae13462379
+  inference-min-sku-spec: 96|8|1924|2900
+  inference-recommended-sku: Standard_ND96amsr_A100_v4
+  languages: moe, fr, it, de, es, en
+tags:
+  Featured: ''
+  Preview: ''
+  SharedComputeCapacityEnabled: ''
+  disable-batch: 'true'
+  huggingface_model_id: mistralai/Mixtral-8x7B-Instruct-v0.1mistral-community/Mixtral-8x22B-v0.1
+  inference_compute_allow_list: [Standard_ND96amsr_A100_v4]
+  inference_supported_envs:
+  - vllm
+  license: apache-2.0
+  task: text-generation
+version: 1
+description: |
+  The Mixtral-8x22B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts.
+
+  Mixtral-8x22B-v0.1 is a pretrained base model and therefore does not have any moderation mechanisms.
+
+  # Evaluation Results 
+  [Open LLM Leaderboard Evaluation Results](https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard)
+
+  Detailed results can be found [here](https://huggingface.co/datasets/open-llm-leaderboard/details_mistral-community__Mixtral-8x22B-v0.1)
+
+  |             Metric              |Value|
+  |---------------------------------|----:|
+  |Avg.                             |74.46|
+  |AI2 Reasoning Challenge (25-Shot)|70.48|
+  |HellaSwag (10-Shot)              |88.73|
+  |MMLU (5-Shot)                    |77.81|
+  |TruthfulQA (0-shot)              |51.08|
+  |Winogrande (5-shot)              |84.53|
+  |GSM8k (5-shot)                   |74.15|
+
+
+
+  # Inference samples
+
+  Inference type|Python sample (Notebook)|CLI with YAML
+  |--|--|--|
+  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
+  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
+
+  # Sample inputs and outputs
+
+  ### Sample input
+  ```json
+  {
+      "input_data": {
+          "input_string": [
+              "What is your favourite condiment?",
+              "Do you have mayonnaise recipes?"
+          ],
+          "parameters": {
+              "max_new_tokens": 100,
+              "do_sample": true,
+              "return_full_text": false
+          }
+      }
+  }
+  ```
+
+  ### Sample output
+  ```json
+  [
+    {
+      "0": "\n\nDoes Hellmann's Mayonnaise Mallows really exist?\n\nThis is a difficult one because I want to pick Orkney ice cream which is unbelievable but I am also drawn to Hellmann's Mayonnaise Mallows (yeah, they really do exist) which I recently tried for the first time in California.\n\nThey were exactly how I expected them to taste – like marshmallows made from mayonnaise. I can'",
+      "1": " I would imagine that the ingredients consist, at least in large part, of oil and cream [suggest edit]. However, I'm interested in baking mayonnaise into food, which means I'm worried that 50% of mayonnaise is just going to turn into oil and get absorbed by whatever it's cooked with [suggest edit] [suggest edit]. I thought that perhaps there might be a different recipe for mayonnaise which could be used specifically to with"
+    }
+  ]
+  ```
