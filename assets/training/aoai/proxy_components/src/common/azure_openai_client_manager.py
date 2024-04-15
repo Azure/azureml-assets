@@ -43,7 +43,7 @@ class AzureOpenAIClientManager:
         """Get the client id."""
         return os.environ.get(AzureOpenAIClientManager.ENV_CLIENT_ID_KEY, None)
 
-    def _get_workspace_subscription_id_resource_group(self) -> str:
+    def _get_workspace_subscription_id_resource_group(self) -> tuple[str,str]:
         """Get current subscription id."""
         uri = os.environ.get(AzureOpenAIClientManager.MLFLOW_TRACKING_URI, None)
         if uri is None:

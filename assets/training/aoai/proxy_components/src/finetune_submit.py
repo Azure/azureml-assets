@@ -87,6 +87,10 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
                 if finetune_job.result_files is not None:
                     last_metric_logged = self._log_metrics(finetune_job, last_metric_logged)
 
+
+        # emitting metrics after status becomes terminal, just to ensure we do not miss any metric
+        last_metric_logged = self._log_metrics(finetune_job, last_metric_logged)
+
         if status == "failed":
             error = finetune_job.error
             logger.error(f"Fine tuning job: {self.job_id} failed with error: {error}")
@@ -96,7 +100,6 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
             logger.info(f"finetune job: {self.job_id} got cancelled")
             return None
 
-        """metrics can be retrived only for successful finetune job"""
         finetuned_model_id = finetune_job.fine_tuned_model
         logger.info(f'Fine-tune job: {self.job_id} finished successfully. model id: {finetuned_model_id}')
         return finetuned_model_id
@@ -122,6 +125,10 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
             return
         f = io.BytesIO(response.content)
         df = pd.read_csv(f)
+
+        if last_metric_logged >= len(df):
+            logger.info(f"no new metrics emitted, waiting to get latest metric, currently metrics logged till {last_metric_logged} steps")
+            return last_metric_logged
 
         for col in df.columns[1:]:
             values = df[['step', col]].dropna()
