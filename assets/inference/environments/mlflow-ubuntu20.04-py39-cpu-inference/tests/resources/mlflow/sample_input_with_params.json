@@ -1,0 +1,10 @@
+{
+	"input_data": {
+		"columns": ["sentence1"], 
+		"data": [["my sentence "]]
+	},
+	"params": {
+		"num_beams": 3,
+		"max_length": 256
+	}
+}
