@@ -289,7 +289,7 @@ class SpanTree:
                 print(
                     f" The root_span = {root_span} has its parent_id = null,"
                     " but there were other spans which were identified as possible root spans."
-                    " Please debug your data carefully to figure out the issue.")
+                    " If this is unexpected, please debug your data carefully to figure out the issue.")
                 root_span = None
         return root_span
 
