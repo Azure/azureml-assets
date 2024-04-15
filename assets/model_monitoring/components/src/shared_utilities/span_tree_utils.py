@@ -227,6 +227,8 @@ class SpanTree:
             obj._root_span = SpanTreeNode.create_node_from_dict(root_span_dict)
         obj._span_node_map = {span.span_id: span for span in obj}
         obj._possible_root_spans = []
+        if obj.root_span is not None:
+            obj._possible_root_spans.append(obj.root_span)
         return obj
 
     def show(self) -> None:
