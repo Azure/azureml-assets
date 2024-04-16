@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import mlflow, os
+import mlflow
+import os
+
 
 # define a custom model
 class MyModel(mlflow.pyfunc.PythonModel):

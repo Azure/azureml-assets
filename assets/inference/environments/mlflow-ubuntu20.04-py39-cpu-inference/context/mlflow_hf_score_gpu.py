@@ -3,7 +3,6 @@
 
 import os
 import re
-import importlib
 import json
 import logging
 import torch
@@ -77,7 +76,7 @@ def convert_pandas_to_dict(input_data):
 
 # Function that appends device parameter
 def append_device_parameter(inputs):
-    device_parameter = {"dev_args":{"device": 0}}
+    device_parameter = {"dev_args": {"device": 0}}
     if "parameters" in inputs:
         inputs["parameters"].update(device_parameter)
     else:
@@ -112,14 +111,14 @@ def init():
         raise Exception("---GPU is not available. Please check the CUDA configuration---")
 
     model_path = str(os.getenv("AZUREML_MODEL_DIR"))
-    
+
     mlflow_model_folders = list()
     for root, dirs, files in os.walk(model_path):
         for name in files:
             if name.lower() == "mlmodel":
                 mlflow_model_folders.append(root)
-    
-    if len(mlflow_model_folders)==0:
+
+    if len(mlflow_model_folders) == 0:
         raise Exception("---- No MLmodel files found in AZUREML_MODEL_DIR ----")
     elif len(mlflow_model_folders) > 1:
         print("---- More than one MLmodel files found in AZUREML_MODEL_DIR. Terminating. ----")
@@ -137,8 +136,8 @@ def init():
 
     _add_code_from_conf_to_system_path(local_path, conf, code_key=CODE)
     data_path = os.path.join(local_path, conf[DATA]) if (DATA in conf) else local_path
-    kwargs = {"model_hf_load_kwargs":{"device_map":"eval_na"}}
-    model_impl = azureml_lp(data_path,**kwargs)
+    kwargs = {"model_hf_load_kwargs": {"device_map": "eval_na"}}
+    model_impl = azureml_lp(data_path, **kwargs)
     task_name = model_impl.task_type
     supported_tasks = SupportedTasks()
     if not (task_name in supported_tasks.all() or validate_translation_type(task_name)):

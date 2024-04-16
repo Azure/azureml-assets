@@ -2,11 +2,9 @@
 # Licensed under the MIT License.
 
 import os
-import subprocess
 import requests
 from datetime import datetime, timedelta
 import time
-import io
 import docker
 import argparse
 import json
@@ -238,7 +236,7 @@ def run_score_path_azmlinfsrv(
             req = get_swagger(headers=headers)
         else:
             req = score_with_post(data=payload, headers=headers)
-    
+
         # Commenting this to make sure minimal gpu ubuntu20.04 image integration tests pass
         # if check_text:
         #    assert text_assertion in container.logs().decode("UTF-8")
@@ -314,7 +312,7 @@ def run_score_path_triton_server(
             time.sleep(0.5)
             if text_assertion in triton_container.logs().decode("UTF-8"):
                 break
-            
+
         if custom_payload:
             # This section is to test scoring
             url = scoring_url
@@ -336,6 +334,7 @@ def run_score_path_triton_server(
                 triton_container.kill()
                 triton_container.remove()
 
+
 def get_image_info(inference_image_name):
     client = docker.from_env()
     try:
@@ -348,6 +347,7 @@ def get_image_info(inference_image_name):
         assert False
 
     return container.decode("UTF-8").strip("\n")
+
 
 def setup_parser_benchmarking():
     parser = argparse.ArgumentParser()

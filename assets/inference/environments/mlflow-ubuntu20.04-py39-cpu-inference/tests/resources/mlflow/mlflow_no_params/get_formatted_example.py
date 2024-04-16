@@ -5,7 +5,6 @@
 from mlflow.models.signature import infer_signature
 from sklearn import datasets, linear_model
 import mlflow
-from azureml.opendatasets import Diabetes
 
 diabetes_X, diabetes_y = datasets.load_diabetes(return_X_y=True, as_frame=True)
 regr = linear_model.LinearRegression()

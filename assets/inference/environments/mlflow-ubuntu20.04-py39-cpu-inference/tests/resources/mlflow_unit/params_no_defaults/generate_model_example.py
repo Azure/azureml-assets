@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import mlflow
+import mlflow, os, json
+import pandas as pd
 
 # define a custom model
 class MyModel(mlflow.pyfunc.PythonModel):
@@ -25,10 +26,10 @@ with mlflow.start_run():
     path = posixpath.normpath(path)
     dataframe_dict = {
         "columns": [
-        "sentence1"
+            "sentence1"
         ],
         "data": [
-        [ "this is a string starting with" ]
+            [ "this is a string starting with" ]
         ],
         "index": [0]
     }

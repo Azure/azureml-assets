@@ -30,14 +30,14 @@ try:
     from inference_schema.parameter_types.pandas_parameter_type import PandasParameterType
 
     pandas_installed = True
-except ImportError as exception:
+except ImportError:
     _logger.warning('Unable to import pandas')
 
 param_schema_supported = False
 try:
     from mlflow.types.schema import ParamSchema
     param_schema_supported = True
-except ImportError as exception:
+except ImportError:
     _logger.warning(f'Unable to import ParamSchema from MLflow. MLflow version: {mlflow.__version__}')
 
 
@@ -127,7 +127,8 @@ def create_other_sample_io(model_signature_io):
     if isinstance(inputs, list):
         _logger.info("Creating list sample")
         sample_list = []
-        if len(inputs) > 0 and (isinstance(inputs[0], str) or isinstance(inputs[0], ColSpec) and inputs[0].type == DataType.string):
+        if len(inputs) > 0 and (isinstance(inputs[0], str) or isinstance(inputs[0], ColSpec) and \
+            inputs[0].type == DataType.string):
             sample_list.append(sample_string)
         return sample_list
     elif isinstance(inputs, str):
@@ -201,6 +202,7 @@ output_param = None
 sample_params = None
 params_param = None
 
+
 def get_sample_input_from_loaded_example(input_example_info, loaded_input):
     orient = "split" if "columns" in loaded_input else "values"
     if input_example_info['type'] == 'dataframe':
@@ -249,7 +251,12 @@ except Exception as e:
         "For more information, please see: https://aka.ms/aml-mlflow-deploy.".format(e)
     )
 
-def get_samples_from_signature(model_signature_x, previous_sample_input=None, previous_sample_output=None, previous_sample_params=None):
+
+def get_samples_from_signature(
+    model_signature_x,
+    previous_sample_input=None,
+    previous_sample_output=None,
+    previous_sample_params=None):
     if model_signature_x is None:
         _logger.info("No model signature, returning previous sample input and output")
         return previous_sample_input, previous_sample_output, previous_sample_params
@@ -263,7 +270,8 @@ def get_samples_from_signature(model_signature_x, previous_sample_input=None, pr
     if model_signature_inputs == Schema([ColSpec("string")]) and is_transformers:
         _logger.info("Getting sample from a transformers model taking string input")
         sample_input_x = create_other_sample_io(model_signature_inputs)
-    elif type(model_signature_inputs.inputs[0]) is ColSpec and model_signature_inputs.inputs[0].name is not None and is_transformers:
+    elif type(model_signature_inputs.inputs[0]) is ColSpec and \
+        model_signature_inputs.inputs[0].name is not None and is_transformers:
         _logger.info("Getting sample from a transformers model taking dict input")
         sample_input_x = create_other_sample_io(model_signature_inputs)
     elif model_signature_inputs and previous_sample_input is None:
@@ -297,11 +305,13 @@ def get_samples_from_signature(model_signature_x, previous_sample_input=None, pr
 
     return sample_input_x, sample_output_x, sample_params_x
 
+
 # Handle the signature information to attempt creation of a sample based on signature if no concrete
 # sample was provided
 model_signature = model.signature
 if model_signature:
-    sample_input, sample_output, sample_params = get_samples_from_signature(model_signature, sample_input, sample_output, sample_params)
+    sample_input, sample_output, sample_params = get_samples_from_signature(
+        model_signature, sample_input, sample_output, sample_params)
 else:
     _logger.warning(
         "No signature information provided for model. If no sample information was provided with the model "
@@ -309,14 +319,16 @@ else:
         "For more information, please see: https://aka.ms/aml-mlflow-deploy."
     )
 
+
 def get_parameter_type(sample_input_ex, sample_output_ex=None, sample_param_ex=None):
     if sample_input_ex is None:
         _logger.info("sample input is none, returning NoSampleParameterType")
         input_param = NoSampleParameterType()
     else:
         try:
-            schema = _infer_schema(sample_input_ex)
-            schema_types = schema.input_types
+            # schema = _infer_schema(sample_input_ex)
+            # schema_types = schema.input_types
+            _infer_schema(sample_input_ex)
         except MlflowException:
             pass
         finally:
@@ -328,7 +340,8 @@ def get_parameter_type(sample_input_ex, sample_output_ex=None, sample_param_ex=N
                 _logger.info("sample input is a dataframe")
                 # TODO check with OSS about pd.Series
                 input_param = PandasParameterType(sample_input_ex, enforce_shape=False, orient='split')
-            # elif schema_types and isinstance(sample_input_ex, dict) and not all(stype == DataType.string for stype in schema_types) and \
+            # elif schema_types and isinstance(sample_input_ex, dict) and \
+            #     not all(stype == DataType.string for stype in schema_types) and \
             #     all(isinstance(value, list) for value in sample_input_ex.values()):
             #     # for dictionaries where there is any non-string type, named tensor
             #     param_arg = {}
@@ -351,7 +364,6 @@ def get_parameter_type(sample_input_ex, sample_output_ex=None, sample_param_ex=N
                 _logger.info("sample input is string, bytes, or non-transformers list")
                 # strings, bytes, lists and dictionaries with only strings as base type
                 input_param = NoSampleParameterType()
-            
 
     if sample_output_ex is None:
         output_param = NoSampleParameterType()
@@ -371,8 +383,9 @@ def get_parameter_type(sample_input_ex, sample_output_ex=None, sample_param_ex=N
         param_param = NoSampleParameterType()
     else:
         param_param = StandardPythonParameterType(sample_param_ex)
-    
+
     return input_param, output_param, param_param
+
 
 input_param, output_param, params_param = get_parameter_type(sample_input, sample_output, sample_params)
 
@@ -390,6 +403,7 @@ def init():
         _logger.info("Input and output collector initialized")
     except Exception as e:
         _logger.error("Error initializing model_inputs collector and model_outputs collector. {}".format(e))
+
 
 @input_schema("input_data", input_param)
 @input_schema("params", params_param, optional=True)
@@ -422,7 +436,8 @@ def run(input_data, params=None):
         if inspect.signature(model.predict).parameters.get("params"):
             result = model.predict(input_data, params=params)
         else:
-            _logger.warning("Switching back to use a model.predict() without params. Likely an older version of MLflow in use. MLflow version: {mlflow.__version__}")
+            _logger.warning("Switching back to use a model.predict() without params. " +
+                "Likely an older version of MLflow in use. MLflow version: {mlflow.__version__}")
             result = model.predict(input_data)
 
         # Collect model output
@@ -450,7 +465,8 @@ def run(input_data, params=None):
     if inspect.signature(model.predict).parameters.get("params"):
         result = model.predict(input, params=params)
     else:
-        _logger.warning("Switching back to use a model.predict() without params. Likely an older version of MLflow in use. MLflow version: {mlflow.__version__}")
+        _logger.warning("Switching back to use a model.predict() without params. " +
+            "Likely an older version of MLflow in use. MLflow version: {mlflow.__version__}")
         result = model.predict(input)
 
     # Collect output data
@@ -519,7 +535,8 @@ def parse_model_input_from_input_data_transformers(input_data):
                 _validate_input_dictionary_contains_only_strings_and_lists_of_strings(dict_input)
             input = input_data
         except MlflowException:
-            _logger.error("Could not parse model input - passed a list of dictionaries which had entries which were not strings or lists.")
+            _logger.error("Could not parse model input - passed a list of dictionaries" +
+                " which had entries which were not strings or lists.")
     elif isinstance(input_data, list):
         _logger.info("assuming list is a numpy array")
         # if a list, assume the input is a numpy array
@@ -577,6 +594,7 @@ def _validate_input_dictionary_contains_only_strings_and_lists_of_strings(data):
         raise MlflowException(
             f"The dictionary keys are not all strings or indexes. Invalid keys: {invalid_keys}"
         )
+
 
 # for testing purposes, return input, parameter, and output params
 def _get_schema_params():

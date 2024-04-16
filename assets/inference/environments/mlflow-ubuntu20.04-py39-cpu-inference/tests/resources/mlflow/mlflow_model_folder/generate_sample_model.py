@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import mlflow # using mlflow==1.24.0, also needs protobuf==3.20.3, numpy==1.22.2
+import mlflow   # using mlflow==1.24.0, also needs protobuf==3.20.3, numpy==1.22.2
 # from mlflow.models import infer_signature
 import pandas as pd
-import os
+
 
 # define a custom model
 class MyModel(mlflow.pyfunc.PythonModel):
@@ -15,11 +15,11 @@ class MyModel(mlflow.pyfunc.PythonModel):
         # do something with the model input
         return pd.DataFrame([0])
 
+
 # save the model
 my_model = MyModel()
 # if you have an error about YAML, delete mlruns directory
 with mlflow.start_run():
-    from pathlib import Path
     import posixpath
     path = "./temporary"
     path = posixpath.normpath(path)
