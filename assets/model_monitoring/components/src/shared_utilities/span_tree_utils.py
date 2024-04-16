@@ -200,7 +200,7 @@ class SpanTreeNode:
         return json.loads(attribute_dict.get("retrieval.documents"))
 
     @property
-    def embeddings(self) -> str:
+    def embeddings(self) -> list:
         """Get promptflow.embedding.embeddings for retrieval span."""
         if self.span_type != EMBEDDING_SPAN_TYPE:
             return None
@@ -215,18 +215,20 @@ class SpanTreeNode:
         if embeddings_event and len(embeddings_event) > 0:
             if embeddings_event[0].get("attributes", None) is None:
                 return None
-            return embeddings_event[0].get("attributes", None).get("payload", None)
+            return json.loads(embeddings_event[0].get("attributes", None).get("payload", None))
         else:
             return self.embeddings_from_attributes()
 
-    def embeddings_from_attributes(self) -> str:
+    def embeddings_from_attributes(self) -> list:
         """Get embeddings from attributes."""
         if self.attributes is None:
             return None
         attribute_dict: dict = json.loads(self.attributes)
         if attribute_dict is None:
             return None
-        return attribute_dict.get("embedding.embeddings", None)
+        if attribute_dict.get("embedding.embeddings") is None:
+            return None
+        return json.loads(attribute_dict.get("embedding.embeddings", None))
 
     @property
     def status(self) -> str:

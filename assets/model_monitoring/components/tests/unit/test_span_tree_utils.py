@@ -742,8 +742,8 @@ class TestSpanTreeUtilities:
                         "\\\"embedding.vector\\\": \\\"\\u003c1536 dimensional vector\\u003e\\\",\\n    "
                         "\\\"embedding.text\\\": \\\"\\u003c5 dimensional token\\u003e\\\"\\n  }\\n]\"\n"
                         "}\n        }]"),
-                    "[\n  {\n    \"embedding.vector\": \"\u003c1536 dimensional vector\u003e\",\n    "
-                    "\"embedding.text\": \"\u003c5 dimensional token\u003e\"\n  }\n]"),
+                    [{"embedding.vector": "\u003c1536 dimensional vector\u003e",
+                      "embedding.text": "\u003c5 dimensional token\u003e"}]),
                 (
                     Row(span_id="0",
                         parent_id=None,
@@ -756,8 +756,8 @@ class TestSpanTreeUtilities:
                         "{\\n    \\\"embedding.vector\\\": \\\"\\u003c1536 dimensional vector\\u003e\\\",\\n"
                         "    \\\"embedding.text\\\": \\\"\\u003c5 dimensional token\\u003e\\\"\\n  }\\n]\"}",
                         events="[]"),
-                    "[\n  {\n    \"embedding.vector\": \"\u003c1536 dimensional vector\u003e\",\n    "
-                    "\"embedding.text\": \"\u003c5 dimensional token\u003e\"\n  }\n]")
+                    [{"embedding.vector": "\u003c1536 dimensional vector\u003e",
+                     "embedding.text": "\u003c5 dimensional token\u003e"}])
             ])
     def test_span_tree_node_embedding_properties(self, row: Row, embeddings):
         """Test scenarios for getting the input and output tree node properties."""
