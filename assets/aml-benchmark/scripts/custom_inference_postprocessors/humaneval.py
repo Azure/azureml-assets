@@ -184,7 +184,6 @@ def run_humaneval_postprocessor(
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
-
         if "python" in row["original_prediction"]:
             tag_type = "python"
         else:
@@ -193,10 +192,11 @@ def run_humaneval_postprocessor(
         # Extract the prediction data from the markdown tags
         pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type)
 
+        # Get the index of the first function definition and return keyword
         func_name_index = pred_combined_prompt.find(str("def " + row["entry_point"] + "("))
         return_keyword_index = pred_combined_prompt.find("return")
 
-        # If function definition is not present or present after the first function body prediction
+        # If function definition is not present or present after the initial function body prediction
         if func_name_index == -1 or return_keyword_index < func_name_index:
             # If spaces were stripped from endpoint responses, add those back.
             if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
