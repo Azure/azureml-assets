@@ -187,7 +187,7 @@ def run_humaneval_postprocessor(
         func_name_index = row["original_prediction"].find(str("def " + row["entry_point"] + "("))
         return_keyword_index = row["original_prediction"].find("return")
 
-        if func_name_index != -1 and return_keyword_index > func_name_index:    
+        if func_name_index != -1 and return_keyword_index > func_name_index:
             # If the model regenerates the prompt/ function name
             pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
         else:
