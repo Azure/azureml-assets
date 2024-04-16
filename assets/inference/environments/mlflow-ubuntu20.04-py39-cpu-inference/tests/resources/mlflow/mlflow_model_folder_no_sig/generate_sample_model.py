@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import mlflow # using mlflow==1.24.0, also needs protobuf==3.20.3, numpy==1.22.2
+import mlflow  # using mlflow==1.24.0, also needs protobuf==3.20.3, numpy==1.22.2
 # from mlflow.models import infer_signature
 import pandas as pd
 

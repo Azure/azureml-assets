@@ -4,6 +4,7 @@
 import json
 import os
 from datetime import timedelta
+import pytest
 
 from utils import run_score_path_azmlinfsrv
 

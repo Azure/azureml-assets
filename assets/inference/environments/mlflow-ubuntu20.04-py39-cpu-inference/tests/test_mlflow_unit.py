@@ -1,7 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import sys, os, json, pytest, tempfile, shutil, yaml
+import sys
+import os
+import json
+import pytest
+import shutil
+import yaml
 import pandas as pd
 import numpy as np
 from mlflow.models.signature import ModelSignature
@@ -16,8 +21,9 @@ def teardown():
     yield
     try:
         shutil.rmtree("mlruns")
-    except:
+    except:  # noqa: E722
         pass
+
 
 def setup_traditional():
     import mlflow
@@ -30,7 +36,6 @@ def setup_traditional():
         def my_custom_function(self, model_input):
             # do something with the model input
             return 0
-
 
     # save the model
     my_model = MyModel()
@@ -48,28 +53,28 @@ def setup_traditional():
     os.environ["MLFLOW_MODEL_FOLDER"] = "dummy"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
     import mlflow_score_script
     mlflow_score_script.init()
 
+
 def setup_transformers():
-    import mlflow
     os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
     os.environ["MLFLOW_MODEL_FOLDER"] = "distilbert-base-uncased"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -325,17 +330,18 @@ def test_get_samples_from_signature_unnamed_tensor(teardown):
         assert isinstance(result1, np.ndarray)
         assert result1.shape == (1, 2, 3)
 
+
 @pytest.mark.parametrize("setup,result_type", [(setup_traditional, "dataframe"), (setup_transformers, "list")])
 @pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_get_samples_from_signature_str(teardown, setup, result_type):
     setup()
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -376,7 +382,7 @@ def test_get_parameter_type_no_sample_no_sig(teardown):
     from mlflow_score_script import get_samples_from_signature, get_parameter_type, NoSampleParameterType
 
     with open("./resources/mlflow/mlflow_model_folder_no_sig/MLmodel", 'r') as mlmodel:
-        loaded_dict = yaml.safe_load(mlmodel.read())
+        yaml.safe_load(mlmodel.read())
         input_sig = None
         sample_input, _, _ = get_samples_from_signature(input_sig)
         result1, _, _ = get_parameter_type(sample_input)
@@ -386,7 +392,8 @@ def test_get_parameter_type_no_sample_no_sig(teardown):
 
 def test_get_parameter_type_pandas(teardown):
     setup_traditional()
-    from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, get_parameter_type
+    from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, \
+        get_parameter_type
 
     with open("./resources/mlflow/mlflow_2_0_model_folder/input_example.json", 'r') as sample_input_file:
         example_info = {
@@ -431,7 +438,8 @@ def test_get_parameter_type_pandas(teardown):
 
 def test_get_parameter_type_unnamed_tensor(teardown):
     setup_traditional()
-    from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, get_parameter_type
+    from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, \
+        get_parameter_type
 
     with open("./resources/mlflow/mlflow_tensor_spec_unnamed/input_example.json", 'r') as sample_input_file:
         example_info = {
@@ -456,7 +464,11 @@ def test_get_parameter_type_unnamed_tensor(teardown):
                     }
                 }
             },
-            'example': [[[[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]]], [[[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]]], [[[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]]], [[[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]]], [[[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]]]],
+            'example': [
+                [
+                    [[0.0], [0.0], [0.0], [0.0], [0.0]]
+                ] * 5
+            ] * 5,
             'format': 'numpy.ndarray'
         }
 
@@ -481,14 +493,19 @@ def test_get_parameter_type_unnamed_tensor(teardown):
                     }
                 }
             },
-            'example': [[[[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]]], [[[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]]], [[[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]]], [[[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]]], [[[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]], [[0.0], [0.0], [0.0], [0.0], [0.0]]]],
+            'example': [
+                [
+                    [[0.0], [0.0], [0.0], [0.0], [0.0]]
+                ] * 5
+            ] * 5,
             'format': 'numpy.ndarray'
         }
 
 
 def test_get_parameter_type_named_tensor(teardown):
     setup_traditional()
-    from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, get_parameter_type
+    from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, \
+        get_parameter_type
 
     with open("./resources/mlflow/mlflow_tensor_spec_named/input_example.json", 'r') as sample_input_file:
         example_info = {
@@ -548,7 +565,8 @@ def test_get_parameter_type_named_tensor(teardown):
 @pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_get_parameter_type_str(teardown):
     setup_transformers()
-    from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, get_parameter_type
+    from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, \
+        get_parameter_type
 
     with open("./resources/mlflow_unit/str_translation/input_example.json", 'r') as sample_input_file:
         example_info = {
@@ -565,7 +583,10 @@ def test_get_parameter_type_str(teardown):
             'properties': {
                 'columns': {'type': 'array', 'items': {'type': 'string'}},
                 'index': {'type': 'array', 'items': {'type': 'integer', 'format': 'int64'}},
-                'data': {'type': 'array', 'items': {'type': 'array', 'items': {'type': 'array', 'items': {'type': 'string'}}}}
+                'data': {
+                    'type': 'array',
+                    'items': {'type': 'array', 'items': {'type': 'array', 'items': {'type': 'string'}}}
+                }
             },
             'example': {'columns': ['data'], 'index': [0], 'data': [[['MLflow is great!']]]},
             'format': 'pandas.DataFrame:split'
@@ -577,13 +598,18 @@ def test_get_parameter_type_str(teardown):
         sample_input, _, _ = get_samples_from_signature(input_sig)
         result1, _, _ = get_parameter_type(sample_input)
         assert isinstance(result1, StandardPythonParameterType)
-        assert result1.input_to_swagger() == {'type': 'array', 'items': {'type': 'string'}, 'example': ['sample string']}
+        assert result1.input_to_swagger() == {
+            'type': 'array',
+            'items': {'type': 'string'},
+            'example': ['sample string']
+        }
 
 
 @pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_get_parameter_type_dict_str_pandas(teardown):
     setup_transformers()
-    from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, get_parameter_type
+    from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, \
+        get_parameter_type
 
     with open("./resources/mlflow_unit/dict_str_qa/input_example.json", 'r') as sample_input_file:
         example_info = {
@@ -605,7 +631,11 @@ def test_get_parameter_type_dict_str_pandas(teardown):
             'example': {
                 'columns': ['question', 'context'],
                 'index': [0],
-                'data': [['Why is model conversion important?', 'The option to convert models between FARM and transformers gives freedom to the user and let people easily switch between frameworks.']]
+                'data': [[
+                    'Why is model conversion important?',
+                    'The option to convert models between FARM and transformers gives freedom to the user and ' +
+                    'let people easily switch between frameworks.'
+                ]]
             },
             'format': 'pandas.DataFrame:split'
         }
@@ -632,11 +662,11 @@ def test_distilbert_with_and_without_input_example(model_folder):
     os.environ["MLFLOW_MODEL_FOLDER"] = model_folder
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -656,11 +686,11 @@ def test_translation_t5_small():
     os.environ["MLFLOW_MODEL_FOLDER"] = "translation-t5-small"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -680,11 +710,11 @@ def test_question_answering_distilbert():
     os.environ["MLFLOW_MODEL_FOLDER"] = "question_answering_distilbert"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -704,11 +734,11 @@ def test_question_answering_multiple_distilbert():
     os.environ["MLFLOW_MODEL_FOLDER"] = "question_answering_distilbert"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -731,11 +761,11 @@ def test_text_classification_deberta():
     os.environ["MLFLOW_MODEL_FOLDER"] = "text_classification_deberta"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -757,11 +787,11 @@ def test_summarization_distilbart():
     os.environ["MLFLOW_MODEL_FOLDER"] = "summarization_distilbart"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -781,11 +811,11 @@ def test_token_classification_distilbert():
     os.environ["MLFLOW_MODEL_FOLDER"] = "token_classification_distilbert"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -805,11 +835,11 @@ def test_text_generation_gpt2():
     os.environ["MLFLOW_MODEL_FOLDER"] = "generation_gpt2"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -828,11 +858,11 @@ def test_params():
     os.environ["MLFLOW_MODEL_FOLDER"] = "params"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -843,7 +873,7 @@ def test_params():
             "sentence1"
         ],
         "data": [
-            [ "Once upon a time " ]
+            ["Once upon a time "]
         ],
         "index": [0]
     }
@@ -878,11 +908,11 @@ def test_params_no_defaults():
     os.environ["MLFLOW_MODEL_FOLDER"] = "params_no_defaults"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -893,7 +923,7 @@ def test_params_no_defaults():
             "sentence1"
         ],
         "data": [
-            [ "Once upon a time " ]
+            ["Once upon a time "]
         ],
         "index": [0]
     }
@@ -928,11 +958,11 @@ def test_params_hftransformers_back_compat():
     os.environ["MLFLOW_MODEL_FOLDER"] = "params_hftransformers"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}
@@ -968,11 +998,11 @@ def test_params_hftransformersv2_back_compat():
     os.environ["MLFLOW_MODEL_FOLDER"] = "params_hftransformersv2"
     try:
         del sys.modules['mlflow_score_script']
-    except:
+    except:  # noqa: E722
         pass
     try:
         del sys.modules['inference_schema']
-    except:
+    except:  # noqa: E722
         pass
     from inference_schema.schema_util import __functions_schema__
     __functions_schema__["mlflow_score_script.run"] = {}

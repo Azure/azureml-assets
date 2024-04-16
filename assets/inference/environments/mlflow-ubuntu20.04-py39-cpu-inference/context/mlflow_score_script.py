@@ -127,8 +127,8 @@ def create_other_sample_io(model_signature_io):
     if isinstance(inputs, list):
         _logger.info("Creating list sample")
         sample_list = []
-        if len(inputs) > 0 and (isinstance(inputs[0], str) or isinstance(inputs[0], ColSpec) and \
-            inputs[0].type == DataType.string):
+        if len(inputs) > 0 and (isinstance(inputs[0], str) or isinstance(inputs[0], ColSpec) and
+                inputs[0].type == DataType.string):
             sample_list.append(sample_string)
         return sample_list
     elif isinstance(inputs, str):
@@ -253,10 +253,10 @@ except Exception as e:
 
 
 def get_samples_from_signature(
-    model_signature_x,
-    previous_sample_input=None,
-    previous_sample_output=None,
-    previous_sample_params=None):
+        model_signature_x,
+        previous_sample_input=None,
+        previous_sample_output=None,
+        previous_sample_params=None):
     if model_signature_x is None:
         _logger.info("No model signature, returning previous sample input and output")
         return previous_sample_input, previous_sample_output, previous_sample_params
@@ -271,7 +271,7 @@ def get_samples_from_signature(
         _logger.info("Getting sample from a transformers model taking string input")
         sample_input_x = create_other_sample_io(model_signature_inputs)
     elif type(model_signature_inputs.inputs[0]) is ColSpec and \
-        model_signature_inputs.inputs[0].name is not None and is_transformers:
+            model_signature_inputs.inputs[0].name is not None and is_transformers:
         _logger.info("Getting sample from a transformers model taking dict input")
         sample_input_x = create_other_sample_io(model_signature_inputs)
     elif model_signature_inputs and previous_sample_input is None:
@@ -281,7 +281,7 @@ def get_samples_from_signature(
         else:
             try:
                 sample_input_x = create_col_spec_sample_io(model_signature_inputs)
-            except:
+            except:  # noqa: E722
                 sample_input_x = create_other_sample_io(model_signature_inputs)
                 _logger.warning("Sample input could not be parsed as either TensorSpec"
                                 " or ColSpec. Falling back to taking the sample as is rather than"
@@ -437,7 +437,7 @@ def run(input_data, params=None):
             result = model.predict(input_data, params=params)
         else:
             _logger.warning("Switching back to use a model.predict() without params. " +
-                "Likely an older version of MLflow in use. MLflow version: {mlflow.__version__}")
+                            "Likely an older version of MLflow in use. MLflow version: {mlflow.__version__}")
             result = model.predict(input_data)
 
         # Collect model output
@@ -466,7 +466,7 @@ def run(input_data, params=None):
         result = model.predict(input, params=params)
     else:
         _logger.warning("Switching back to use a model.predict() without params. " +
-            "Likely an older version of MLflow in use. MLflow version: {mlflow.__version__}")
+                        "Likely an older version of MLflow in use. MLflow version: {mlflow.__version__}")
         result = model.predict(input)
 
     # Collect output data
@@ -536,7 +536,7 @@ def parse_model_input_from_input_data_transformers(input_data):
             input = input_data
         except MlflowException:
             _logger.error("Could not parse model input - passed a list of dictionaries" +
-                " which had entries which were not strings or lists.")
+                          " which had entries which were not strings or lists.")
     elif isinstance(input_data, list):
         _logger.info("assuming list is a numpy array")
         # if a list, assume the input is a numpy array

@@ -12,7 +12,7 @@ nlp = pipeline('question-answering', model=model_name, tokenizer=model_name)
 data = QA_input = {
     'question': 'Why is model conversion important?',
     'context': 'The option to convert models between FARM and transformers gives ' +
-        'freedom to the user and let people easily switch between frameworks.'
+               'freedom to the user and let people easily switch between frameworks.'
 }
 model = nlp
 output = generate_signature_output(model, data)

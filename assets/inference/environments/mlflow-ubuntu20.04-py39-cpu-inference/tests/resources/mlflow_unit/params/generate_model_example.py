@@ -32,7 +32,7 @@ with mlflow.start_run():
             "sentence1"
         ],
         "data": [
-            [ "this is a string starting with" ]
+            ["this is a string starting with"]
         ],
         "index": [0]
     }
