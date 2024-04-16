@@ -323,6 +323,7 @@ def test_get_samples_from_signature_unnamed_tensor(teardown):
 		assert result1.shape == (1, 2, 3)
 
 @pytest.mark.parametrize("setup,result_type", [(setup_traditional, "dataframe"), (setup_transformers, "list")])
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_get_samples_from_signature_str(teardown, setup, result_type):
 	setup()
 	try:
@@ -541,6 +542,7 @@ def test_get_parameter_type_named_tensor(teardown):
 		assert "2" in swagger["example"]
 
 
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_get_parameter_type_str(teardown):
 	setup_transformers()
 	from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, get_parameter_type
@@ -575,6 +577,7 @@ def test_get_parameter_type_str(teardown):
 		assert result1.input_to_swagger() == {'type': 'array', 'items': {'type': 'string'}, 'example': ['sample string']}
 
 
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_get_parameter_type_dict_str_pandas(teardown):
 	setup_transformers()
 	from mlflow_score_script import get_samples_from_signature, get_sample_input_from_loaded_example, get_parameter_type
@@ -620,6 +623,7 @@ def test_get_parameter_type_dict_str_pandas(teardown):
 
 
 @pytest.mark.parametrize("model_folder", ["distilbert-base-uncased-noex", "distilbert-base-uncased"])
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_distilbert_with_and_without_input_example(model_folder):
 	os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
 	os.environ["MLFLOW_MODEL_FOLDER"] = model_folder
@@ -643,6 +647,7 @@ def test_distilbert_with_and_without_input_example(model_folder):
 		assert isinstance(result[0], str)
 
 
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_translation_t5_small():
 	os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
 	os.environ["MLFLOW_MODEL_FOLDER"] = "translation-t5-small"
@@ -666,6 +671,7 @@ def test_translation_t5_small():
 		assert isinstance(result[0], str)
 
 
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_question_answering_distilbert():
 	os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
 	os.environ["MLFLOW_MODEL_FOLDER"] = "question_answering_distilbert"
@@ -689,6 +695,7 @@ def test_question_answering_distilbert():
 		assert isinstance(result[0], str)
 
 
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_question_answering_multiple_distilbert():
 	os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
 	os.environ["MLFLOW_MODEL_FOLDER"] = "question_answering_distilbert"
@@ -715,6 +722,7 @@ def test_question_answering_multiple_distilbert():
 			assert str(e) == "Invalid input data type to parse. Expected: <class 'dict'> but got <class 'list'>"
 
 
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_text_classification_deberta():
 	os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
 	os.environ["MLFLOW_MODEL_FOLDER"] = "text_classification_deberta"
@@ -740,6 +748,7 @@ def test_text_classification_deberta():
 		assert "score" in result[0]
 
 
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_summarization_distilbart():
 	os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
 	os.environ["MLFLOW_MODEL_FOLDER"] = "summarization_distilbart"
@@ -763,6 +772,7 @@ def test_summarization_distilbart():
 		assert isinstance(result[0], str)
 
 
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_token_classification_distilbert():
 	os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
 	os.environ["MLFLOW_MODEL_FOLDER"] = "token_classification_distilbert"
@@ -786,6 +796,7 @@ def test_token_classification_distilbert():
 		assert isinstance(result[0], str)
 
 
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_text_generation_gpt2():
 	os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
 	os.environ["MLFLOW_MODEL_FOLDER"] = "generation_gpt2"
@@ -948,6 +959,7 @@ def test_params_hftransformers_back_compat():
 	}
 
 
+@pytest.mark.skip(reason="Transformers model too large to add to git")
 def test_params_hftransformersv2_back_compat():
 	os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
 	os.environ["MLFLOW_MODEL_FOLDER"] = "params_hftransformersv2"
