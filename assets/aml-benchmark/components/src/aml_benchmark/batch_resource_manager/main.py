@@ -395,11 +395,7 @@ def main(
     deployment_retry_interval_seconds: int,
     wait_finetuned_step: bool,
     finetuned_step_name: str,
-<<<<<<< HEAD
-    finetuned_model_metadata: str
-=======
     finetuned_start_timeout_seconds: int
->>>>>>> master
 ) -> None:
     """
     Entry function of the script.
@@ -524,38 +520,6 @@ def main(
 if __name__ == "__main__":
     args = parse_args()
     main(
-<<<<<<< HEAD
-        args.model,
-        args.model_version,
-        args.model_type,
-        args.endpoint_name,
-        args.endpoint_workspace,
-        args.endpoint_resource_group,
-        args.endpoint_subscription_id,
-        args.endpoint_location,
-        args.deployment_name,
-        args.deployment_sku,
-        args.output_metadata,
-        args.deployment_metadata,
-        args.deletion_model,
-        args.connections_name,
-        args.additional_deployment_env_vars,
-        args.do_quota_validation,
-        args.use_max_quota,
-        args.redeploy_model,
-        args.deployment_env,
-        args.cli_file,
-        args.is_finetuned_model,
-        args.finetuned_subscription_id,
-        args.finetuned_resource_group,
-        args.finetuned_workspace,
-        args.delete_managed_deployment,
-        args.deployment_retries,
-        args.deployment_retry_interval_seconds,
-        args.wait_finetuned_step,
-        args.finetuned_step_name,
-        args.finetuned_model_metadata
-=======
         model=args.model,
         model_version=args.model_version,
         model_type=args.model_type,
@@ -586,5 +550,4 @@ if __name__ == "__main__":
         wait_finetuned_step=args.wait_finetuned_step,
         finetuned_step_name=args.finetuned_step_name,
         finetuned_start_timeout_seconds=args.finetuned_start_timeout_seconds
->>>>>>> master
     )

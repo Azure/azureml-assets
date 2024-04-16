@@ -191,74 +191,17 @@ def get_logger(
     level: str = LoggerConfig.VERBOSITY_LEVEL
 ) -> logging.Logger:
     """
-<<<<<<< HEAD
-    Create and configure a logger based on the provided filename and level.
-
-    This function creates a logger with the specified filename and configures it
-    by setting the logging level to DEBUG, adding a StreamHandler to the logger,
-    and specifying a specific log message format.
-=======
     Create and configure a logger to always print logs on the stdout console.
 
     This function creates a logger with the specified filename and configures it
     by setting the logging level to INFO, adding a StreamHandler to the logger
     that outputs to stdout, and specifying a specific log message format.
->>>>>>> master
 
     :param filename: The name of the file associated with the logger.
     :param level: Verbosity level for the logger.
     :return: The configured logger.
     """
     logger = logging.getLogger(filename)
-<<<<<<< HEAD
-    numeric_log_level = getattr(logging, level.upper(), None)
-
-    # don't log twice i.e. root logger
-    logger.propagate = False
-    logger.setLevel(numeric_log_level)
-    handler_names = [handler.get_name() for handler in logger.handlers]
-    app_name = LoggerConfig.DEFAULT_MODULE_NAME
-    format_str = (
-        "[%(asctime)s - {} - {} - %(process)d - %(module)s - %(funcName)s - "
-        "%(lineno)s]: %(levelname)s - %(message)s \n"
-    )
-
-    if LoggerConfig.AML_BENCHMARK_HANDLER_NAME not in handler_names:
-        formatter = logging.Formatter(format_str.format(app_name, run_details.run.id))
-        stream_handler = AMLBenchmarkHandler()
-        stream_handler.setFormatter(formatter)
-        stream_handler.setLevel(numeric_log_level)
-        stream_handler.set_name(LoggerConfig.AML_BENCHMARK_HANDLER_NAME)
-        logger.addHandler(stream_handler)
-
-    if LoggerConfig.APPINSIGHT_HANDLER_NAME not in handler_names:
-        child_namespace = __name__
-        current_logger = logging.getLogger("azureml.telemetry").getChild(child_namespace)
-        current_logger.propagate = False
-        current_logger.setLevel(logging.CRITICAL)
-        appinsights_handler = get_appinsights_log_handler(
-            instrumentation_key=INSTRUMENTATION_KEY,
-            logger=current_logger, properties=vars(custom_dimensions)
-        )
-
-        formatter = AppInsightsPIIStrippingFormatter(fmt=format_str.format(app_name, run_details.run.id))
-        appinsights_handler.setFormatter(formatter)
-        appinsights_handler.setLevel(numeric_log_level)
-        appinsights_handler.set_name(LoggerConfig.APPINSIGHT_HANDLER_NAME)
-        logger.addHandler(appinsights_handler)
-
-    try:
-        for custom_logger in entry_points(group=AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT):
-            handler = custom_logger.load()
-            logger.addHandler(handler())
-    except TypeError:
-        # For Older python versions
-        custom_loggers = entry_points().get(AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT, ())
-        for custom_logger in custom_loggers:
-            if custom_logger is not None:
-                handler = custom_logger.load()
-                logger.addHandler(handler())
-=======
     logger.setLevel(logging.INFO)
     logger.handlers = []  # Clear existing handlers to avoid duplicates
 
@@ -277,7 +220,6 @@ def get_logger(
     # Add the handlers to the logger
     logger.addHandler(stream_handler)
     logger.addHandler(buffer_store_handler)
->>>>>>> master
 
     return logger
 

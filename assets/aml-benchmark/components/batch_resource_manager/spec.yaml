@@ -177,9 +177,4 @@ command: >-
   $[[--deployment_retry_interval_seconds ${{inputs.deployment_retry_interval_seconds}}]]
   $[[--wait_finetuned_step ${{inputs.wait_finetuned_step}}]]
   $[[--finetuned_step_name ${{inputs.finetuned_step_name}}]]
-<<<<<<< HEAD:assets/aml-benchmark/components/batch_resource_manager/spec.yaml
-  $[[--finetuned_model_metadata ${{inputs.finetuned_model_metadata}}]]
-=======
   $[[--finetuned_start_timeout_seconds ${{inputs.finetuned_start_timeout_seconds}}]]
-
->>>>>>> master:assets/aml-benchmark/components/batch-resource-manager/spec.yaml
