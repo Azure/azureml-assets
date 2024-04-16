@@ -166,12 +166,12 @@ def assign_default_group(group_list, query, metrics, good_queries, bad_queries):
     """Assign default group for good and bad queries."""
     good_query_list = json.loads(good_queries)
     bad_query_list = json.loads(bad_queries)
-    if query in good_query_list:
-        good_group_name = f"{metrics}_good_group"
-        group_list = _append_value(group_list, good_group_name)
-    elif query in bad_query_list:
+    if query in bad_query_list:
         bad_group_name = f"{metrics}_bad_group_default_default"
         group_list = _append_value(group_list, bad_group_name)
+    elif query in good_query_list:
+        good_group_name = f"{metrics}_good_group"
+        group_list = _append_value(group_list, good_group_name)
     return group_list
 
 
