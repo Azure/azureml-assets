@@ -128,7 +128,7 @@ def create_other_sample_io(model_signature_io):
         _logger.info("Creating list sample")
         sample_list = []
         if len(inputs) > 0 and (isinstance(inputs[0], str) or isinstance(inputs[0], ColSpec) and
-                inputs[0].type == DataType.string):
+                                inputs[0].type == DataType.string):
             sample_list.append(sample_string)
         return sample_list
     elif isinstance(inputs, str):
