@@ -184,10 +184,7 @@ def run_humaneval_postprocessor(
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
-        if "python" in row["original_prediction"]:
-            tag_type = "python"
-        else:
-            tag_type = ""
+        tag_type = "python" if "python" in row["original_prediction"] else ""
 
         # Extract the prediction data from the markdown tags
         pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type)
