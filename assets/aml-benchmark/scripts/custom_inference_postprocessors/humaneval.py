@@ -27,18 +27,23 @@ def _parse_args():
     parser.add_argument(
         "--prediction_dataset",
         type=str,
-        required=True,
-        help="Path to load the prediction dataset."
+        required=False,
+        help="Path to load the prediction dataset.",
+        default = "C:/Users/sagoswami/Downloads/gpt/predictions.jsonl"
     )
     parser.add_argument(
         "--ground_truth_dataset",
         type=str,
-        help="Path to load the actual dataset."
+        help="Path to load the actual dataset.",
+        required= False,
+        default = "C:/Users/sagoswami/Downloads/gpt/ground_truth.jsonl"
     )
     parser.add_argument(
         "--output_dataset",
         type=str,
-        help="Path to the jsonl output file to write the processed data."
+        help="Path to the jsonl output file to write the processed data.",
+        required= False,
+        default = "C:/Users/sagoswami/Downloads/gpt/output.jsonl"
     )
     argss = parser.parse_args()
     return argss
@@ -183,14 +188,16 @@ def run_humaneval_postprocessor(
 
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
+        if row['completion']!= "HumanEval/38":
+            continue
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
-        tag_type = "python" if "python" in row["original_prediction"] else ""
+        tag_type = "python" if "```python" in row["original_prediction"] else ""
 
         # Extract the prediction data from the markdown tags
         pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type)
 
         # Get the index of the first function definition and return keyword
-        func_name_index = pred_combined_prompt.find(str("def " + row["entry_point"] + "("))
+        func_name_index = pred_combined_prompt.find("def ")
         return_keyword_index = pred_combined_prompt.find("return")
 
         # If function definition is not present or present after the initial function body prediction
@@ -201,6 +208,11 @@ def run_humaneval_postprocessor(
             else:
                 prefix = "    "
             pred_combined_prompt = row["prompt"] + "\n" + prefix + pred_combined_prompt
+        else:
+            # If function name is present in the prediction
+            # we need to remove the function name from the prompt
+            prompt_header = row["prompt"].split(str("def " + row["entry_point"]))[0]
+            pred_combined_prompt = prompt_header + "\n" + pred_combined_prompt
 
         # Applying regex on the prediction column
         if regex_exp:
