@@ -27,23 +27,18 @@ def _parse_args():
     parser.add_argument(
         "--prediction_dataset",
         type=str,
-        required=False,
-        help="Path to load the prediction dataset.",
-        default = "C:/Users/sagoswami/Downloads/gpt/predictions.jsonl"
+        required=True,
+        help="Path to load the prediction dataset."
     )
     parser.add_argument(
         "--ground_truth_dataset",
         type=str,
-        help="Path to load the actual dataset.",
-        required= False,
-        default = "C:/Users/sagoswami/Downloads/gpt/ground_truth.jsonl"
+        help="Path to load the actual dataset."
     )
     parser.add_argument(
         "--output_dataset",
         type=str,
-        help="Path to the jsonl output file to write the processed data.",
-        required= False,
-        default = "C:/Users/sagoswami/Downloads/gpt/output.jsonl"
+        help="Path to the jsonl output file to write the processed data."
     )
     argss = parser.parse_args()
     return argss
@@ -188,8 +183,6 @@ def run_humaneval_postprocessor(
 
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
-        if row['completion']!= "HumanEval/38":
-            continue
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
         tag_type = "python" if "```python" in row["original_prediction"] else ""
 
@@ -209,8 +202,7 @@ def run_humaneval_postprocessor(
                 prefix = "    "
             pred_combined_prompt = row["prompt"] + "\n" + prefix + pred_combined_prompt
         else:
-            # If function name is present in the prediction
-            # we need to remove the function name from the prompt
+            # If function name is present in the prediction, then remove from prompt
             prompt_header = row["prompt"].split(str("def " + row["entry_point"]))[0]
             pred_combined_prompt = prompt_header + "\n" + pred_combined_prompt
 
