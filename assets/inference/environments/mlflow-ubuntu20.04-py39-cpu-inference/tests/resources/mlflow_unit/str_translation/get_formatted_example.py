@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from mlflow.models.signature import infer_signature
 from mlflow.transformers import generate_signature_output
 from transformers import pipeline

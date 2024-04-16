@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import sys, os, json, pytest, tempfile, shutil, yaml
 import pandas as pd
 import numpy as np

@@ -1,7 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
-
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
 def get_type_fullname(o):
     c = o.__class__
