@@ -27,23 +27,18 @@ def _parse_args():
     parser.add_argument(
         "--prediction_dataset",
         type=str,
-        required=False,
-        default="C:/Users/sagoswami/Downloads/mistral/predictions.jsonl",
+        required=True,
         help="Path to load the prediction dataset."
     )
     parser.add_argument(
         "--ground_truth_dataset",
         type=str,
-        help="Path to load the actual dataset.",
-        required=False,
-        default="C:/Users/sagoswami/Downloads/mistral/ground_truth.jsonl",
+        help="Path to load the actual dataset."
     )
     parser.add_argument(
         "--output_dataset",
         type=str,
-        help="Path to the jsonl output file to write the processed data.",
-        required=False,
-        default="C:/Users/sagoswami/Downloads/mistral/op.jsonl"
+        help="Path to the jsonl output file to write the processed data."
     )
     argss = parser.parse_args()
     return argss
@@ -198,11 +193,10 @@ def run_humaneval_postprocessor(
         # Extract the prediction data from the markdown tags
         pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type)
 
-        # Check if the function name is present in the prediction
         func_name_index = pred_combined_prompt.find(str("def " + row["entry_point"] + "("))
         return_keyword_index = pred_combined_prompt.find("return")
 
-        # If function definition is not present or multiple functions present in the prediction
+        # If function definition is not present or present after the first function body prediction
         if func_name_index == -1 or return_keyword_index < func_name_index:
             # If spaces were stripped from endpoint responses, add those back.
             if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
