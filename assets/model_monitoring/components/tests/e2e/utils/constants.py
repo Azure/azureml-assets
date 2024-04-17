@@ -127,6 +127,10 @@ DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS = (
     "azureml:uri_folder_genai_raw_log_model_inputs:1"
 )
 
+DATA_ASSET_GENAI_RAW_LOG_WITH_EVENTS = (
+    "azureml:uri_folder_genai_raw_log_with_events:1"
+)
+
 # For token stats aggregated data as mltable input
 DATA_AGGREGATED_TRACE_DATA = (
     "azureml:mltable_aggregrated_genai_preprocessor_outputs:1"
