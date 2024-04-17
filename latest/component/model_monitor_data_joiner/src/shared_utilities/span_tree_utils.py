@@ -11,6 +11,15 @@ from typing import Dict, Iterator, List, Optional
 from pyspark.sql import Row
 from copy import copy
 
+from shared_utilities.constants import (
+    APP_TRACES_EMBEDDINGS_EVENT_NAME,
+    APP_TRACES_INPUTS_EVENT_NAME,
+    APP_TRACES_OUTPUT_EVENT_NAME,
+    APP_TRACES_RETRIEVAL_QUERY_EVENT_NAME,
+    APP_TRACES_RETRIEVAL_DOCUMENT_EVENT_NAME,
+    EMBEDDING_SPAN_TYPE,
+    RETRIEVAL_SPAN_TYPE
+)
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -70,24 +79,156 @@ class SpanTreeNode:
         return self.get_node_attribute("attributes")  # type: ignore
 
     @property
+    def events(self) -> str:
+        """Get the span's attributes."""
+        return self.get_node_attribute("events")  # type: ignore
+
+    @property
     def input(self) -> str:
-        """Get the span's input from the attributes field as json string."""
+        """Get the span's input from the events payload field as json string."""
+        if self.events is None or len(self.events) == 0:
+            return self.input_from_attributes()
+        else:
+            events_array: list = json.loads(self.events)
+            if len(events_array) == 0:
+                return self.input_from_attributes()
+            input_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_INPUTS_EVENT_NAME,
+                                      events_array))
+            if input_event is not None and len(input_event) > 0:
+                if input_event[0].get("attributes", None) is None:
+                    return None
+                return input_event[0].get("attributes", None).get("payload", None)
+            else:
+                return self.input_from_attributes()
+
+    def input_from_attributes(self) -> str:
+        """Get input from attributes."""
         if self.attributes is None:
             return None  # type: ignore
         attribute_dict: dict = json.loads(self.attributes)
         if attribute_dict is None:
-            return None  # type: ignore
+            return None
         return attribute_dict.get("inputs", None)
 
     @property
     def output(self) -> str:
-        """Get the span's output from the attributes field as json string."""
+        """Get the span's output from the events payload field as json string."""
+        if self.events is None or len(self.events) == 0:
+            return self.output_from_attribute()
+        else:
+            events_array: list = json.loads(self.events)
+            if len(events_array) == 0:
+                return self.output_from_attribute()
+            output_event = list(filter(lambda event: event.get("name", None) == APP_TRACES_OUTPUT_EVENT_NAME,
+                                       events_array))
+            if output_event is not None and len(output_event) > 0:
+                if output_event[0].get("attributes", None) is None:
+                    return None
+                return output_event[0].get("attributes", None).get("payload", None)
+            else:
+                return self.output_from_attribute()
+
+    def output_from_attribute(self) -> str:
+        """Get output from attributes."""
         if self.attributes is None:
             return None  # type: ignore
         attribute_dict: dict = json.loads(self.attributes)
         if attribute_dict is None:
-            return None  # type: ignore
+            return None
         return attribute_dict.get("output", None)
+
+    @property
+    def retrieval_query(self) -> str:
+        """Get promptflow.retrieval.query for retrieval span."""
+        if self.span_type != RETRIEVAL_SPAN_TYPE:
+            return None
+        if self.events is None or len(self.events) == 0:
+            return self.retrieval_query_from_attributes()
+        events_array: list = json.loads(self.events)
+        if len(events_array) == 0:
+            return self.retrieval_query_from_attributes()
+        retrieval_event = list(filter(lambda event: event.get("name", None) ==
+                                      APP_TRACES_RETRIEVAL_QUERY_EVENT_NAME,
+                                      events_array))
+        if retrieval_event and len(retrieval_event) > 0:
+            if retrieval_event[0].get("attributes", None) is None:
+                return None
+            return retrieval_event[0].get("attributes", None).get("payload", None)
+        else:
+            return self.retrieval_query_from_attributes()
+
+    @property
+    def retrieval_documents(self) -> list:
+        """Get promptflow.retrieval.document for retrieval span."""
+        if self.span_type != RETRIEVAL_SPAN_TYPE:
+            return None
+        if self.events is None or len(self.events) == 0:
+            return self.retrieval_documents_from_attributes()
+        events_array: list = json.loads(self.events)
+        if len(events_array) == 0:
+            return self.retrieval_documents_from_attributes()
+        retrieval_event = list(filter(lambda event: event.get("name", None) ==
+                                      APP_TRACES_RETRIEVAL_DOCUMENT_EVENT_NAME,
+                                      events_array))
+        if retrieval_event and len(retrieval_event) > 0:
+            if retrieval_event[0].get("attributes", None) is None:
+                return None
+            if retrieval_event[0].get("attributes", None).get("payload") is None:
+                return None
+            return json.loads(retrieval_event[0].get("attributes", None).get("payload"))
+        else:
+            return self.retrieval_documents_from_attributes()
+
+    def retrieval_query_from_attributes(self) -> str:
+        """Get retrieval query from attributes."""
+        if self.attributes is None:
+            return None
+        attribute_dict: dict = json.loads(self.attributes)
+        if attribute_dict is None:
+            return None
+        return attribute_dict.get("retrieval.query", None)
+
+    def retrieval_documents_from_attributes(self) -> list:
+        """Get retrieval document from attributes."""
+        if self.attributes is None:
+            return None
+        attribute_dict: dict = json.loads(self.attributes)
+        if attribute_dict is None:
+            return None
+        if attribute_dict.get("retrieval.documents") is None:
+            return None
+        return json.loads(attribute_dict.get("retrieval.documents"))
+
+    @property
+    def embeddings(self) -> list:
+        """Get promptflow.embedding.embeddings for retrieval span."""
+        if self.span_type != EMBEDDING_SPAN_TYPE:
+            return None
+        if self.events is None or len(self.events) == 0:
+            return self.embeddings_from_attributes()
+        events_array: list = json.loads(self.events)
+        if len(events_array) == 0:
+            return self.embeddings_from_attributes()
+        embeddings_event = list(filter(lambda event: event.get("name", None) ==
+                                       APP_TRACES_EMBEDDINGS_EVENT_NAME,
+                                       events_array))
+        if embeddings_event and len(embeddings_event) > 0:
+            if embeddings_event[0].get("attributes", None) is None:
+                return None
+            return json.loads(embeddings_event[0].get("attributes", None).get("payload", None))
+        else:
+            return self.embeddings_from_attributes()
+
+    def embeddings_from_attributes(self) -> list:
+        """Get embeddings from attributes."""
+        if self.attributes is None:
+            return None
+        attribute_dict: dict = json.loads(self.attributes)
+        if attribute_dict is None:
+            return None
+        if attribute_dict.get("embedding.embeddings") is None:
+            return None
+        return json.loads(attribute_dict.get("embedding.embeddings", None))
 
     @property
     def status(self) -> str:
