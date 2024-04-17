@@ -15,7 +15,7 @@ properties:
     Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
     Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
-  finetune-min-sku-spec: 4|1|28|176
+  finetune-min-sku-spec: 4|1|28|64
   finetune-recommended-sku: Standard_NV12s_v3, Standard_NV24s_v3, Standard_NV48s_v3,
     Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3, Standard_NC4as_T4_v3,
     Standard_NC8as_T4_v3, Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
