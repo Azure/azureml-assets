@@ -10,34 +10,33 @@ from enum import Enum
 from abc import ABC, abstractmethod
 from action_analyzer.utils.utils import convert_to_camel_case
 
+
+class ActionType(Enum):
+    """Action type."""
+
+    METRICS_VIOLATION_INDEX_ACTION = 1
+    LOW_RETRIEVAL_SCORE_INDEX_ACTION = 2
+
+
 class ActionSample:
     """Action sample class."""
 
     def __init__(self,
                  question: str,
                  answer: str,
-                 lookup_score: float,
                  debugging_info: str,
-                 retrieval_query_type: str,
-                 retrieval_top_k: int,
                  prompt_flow_input: str) -> None:
         """Create an action sample.
 
         Args:
             question(str): the input question of the flow.
             answer(str): the output answer of the flow
-            lookup_score(float): the retrieval document look up score.
             debugging_info(str): the json string of debugging info in a span tree structure.
-            retrieval_query_type(str): the retrieval query type in the retrieval span.
-            retrieval_top_k(int): the retrieval top k value in the retrieval span.
             prompt_flow_input(str): the json str of prompt flow input.
         """
         self.question = question
         self.answer = answer
-        self.lookup_score = lookup_score
         self.debugging_info = debugging_info
-        self.retrieval_query_type = retrieval_query_type
-        self.retrieval_top_k = retrieval_top_k
         self.prompt_flow_input = prompt_flow_input
 
 
@@ -47,15 +46,7 @@ class ActionSample:
         json_out = {}
         for key, val in attribute_dict.items():
             json_out[convert_to_camel_case(key)] = val
-
         return json.dumps(json_out)
-
-
-class ActionType(Enum):
-    """Action type."""
-
-    METRICS_VIOLATION_INDEX_ACTION = 1
-    BAD_RETRIEVAL_SCORE_INDEX_ACTION = 2
 
 
 class Action():
@@ -68,8 +59,8 @@ class Action():
                  query_intention: str,
                  deployment_id: str,
                  run_id: str,
-                 positive_samples: list[str],
-                 negative_samples: list[str]) -> None:
+                 positive_samples: list[ActionSample],
+                 negative_samples: list[ActionSample]) -> None:
         """Create an action.
 
         Args:
@@ -79,8 +70,8 @@ class Action():
             query_intention(str): the query intention of the action.
             deployment_id(str): the azureml deployment id of the action.
             run_id(int): the azureml run id which generates the action.
-            positive_samples(list[str]): list of positive samples of the action.
-            negative_samples(list[str]): list of negative samples of the action.
+            positive_samples(list[ActionSample]): list of positive samples of the action.
+            negative_samples(list[ActionSample]): list of negative samples of the action.
         """
         self.action_id = str(uuid.uuid4())
         self.action_type = action_type

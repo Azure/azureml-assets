@@ -18,8 +18,8 @@ class LowRetreivalScoreIndexAction(Action):
                  query_intention: str,
                  deployment_id: str,
                  run_id: str,
-                 positive_samples: list[str],
-                 negative_samples: list[str],
+                 positive_samples: list[ActionSample],
+                 negative_samples: list[ActionSample],
                  index_name=None):
         """Create a low retrieval score index action.
 
@@ -30,8 +30,8 @@ class LowRetreivalScoreIndexAction(Action):
             query_intention(str): the query intention of the action.
             deployment_id(str): the azureml deployment id of the action.
             run_id(str): the azureml run id which generates the action.
-            positive_samples(list[str]): list of positive samples of the action.
-            negative_samples(list[str]): list of negative samples of the action.
+            positive_samples(list[ActionSample]): list of positive samples of the action.
+            negative_samples(list[ActionSample]): list of negative samples of the action.
             index_name(str): (optional) index name if index asset id does not exist.
         """
         self.IndexAssetId = index_id
