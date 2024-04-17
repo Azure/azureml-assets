@@ -3,7 +3,6 @@ azure-identity
 markdown
 bs4
 azureml-core
-promptflow
-promptflow-azure
+promptflow[azure]
 azure-ai-ml
 azure-cli-core
