@@ -10,6 +10,7 @@ from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_GENAI_PREPROCESSOR,
     DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS,
+    DATA_ASSET_GENAI_RAW_LOG_WITH_EVENTS
 )
 
 
@@ -63,7 +64,9 @@ class TestGenAIPreprocessorE2E:
         "input_data, start_time, end_time",
         [
             # traditional model
-            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-08T00:00:00Z")
+            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-06T00:00:00Z"),
+            # log with events
+            (DATA_ASSET_GENAI_RAW_LOG_WITH_EVENTS, "2024-04-08T00:00:00Z", "2024-04-10T20:00:00Z")
         ]
     )
     def test_mdc_preprocessor_successful(
