@@ -1,14 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Bad retrieval score index action detector class."""
+"""Low retrieval score index action detector class."""
 
 from action_analyzer.contracts.action_detector import ActionDetector
 from action_analyzer.contracts.action import Action
 
 
-class BadRetreivalScoreIndexActionDetector(ActionDetector):
-    """Bad retrieval score index action detector class."""
+class LowRetreivalScoreIndexActionDetector(ActionDetector):
+    """Low retrieval score index action detector class."""
 
     def __init__(self, 
                  workspace_connection_arm_id: str,
@@ -18,7 +18,7 @@ class BadRetreivalScoreIndexActionDetector(ActionDetector):
                  retrieval_score_violation_rate: float,
                  action_max_positive_sample_size: int,
                  llm_summary_enabled: str):
-        """Create a bad retrieval score index action detector.
+        """Create a low retrieval score index action detector.
 
         Args:
             workspace_connection_arm_id(str): azureml workspace connection arm id for llm.

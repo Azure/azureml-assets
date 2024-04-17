@@ -1,15 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""BadRetreivalScoreIndexAction Class."""
+"""LowRetreivalScoreIndexAction Class."""
 
 from action_analyzer.contracts.action import ActionType, Action
 from shared_utilities.constants import (
     ACTION_DESCRIPTION
 )
 
-class BadRetreivalScoreIndexAction(Action):
-    """Bad retrieval score index action class."""
+class LowRetreivalScoreIndexAction(Action):
+    """Low retrieval score index action class."""
 
     def __init__(self,
                  index_id: str,
@@ -21,7 +21,7 @@ class BadRetreivalScoreIndexAction(Action):
                  positive_samples: list[str],
                  negative_samples: list[str],
                  index_name=None):
-        """Create a bad retrieval score index action.
+        """Create a low retrieval score index action.
 
         Args:
             index_id(str): the index asset id.
@@ -38,7 +38,7 @@ class BadRetreivalScoreIndexAction(Action):
         self.IndexName = index_name
         self.IndexContent = index_content
         description = ACTION_DESCRIPTION.replace("{index_id}", index_id)
-        super().__init__(ActionType.BAD_RETRIEVAL_SCORE_INDEX_ACTION,
+        super().__init__(ActionType.LOW_RETRIEVAL_SCORE_INDEX_ACTION,
                          description,
                          confidence_score,
                          query_intention,
