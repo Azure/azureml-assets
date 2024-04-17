@@ -29,7 +29,7 @@ RUN pip install 'azureml-core==1.55.0.post2' \
                 'azureml-rai-utils==0.0.6'
 
 RUN pip install 'azureml-dataset-runtime==1.55.0' \
-                'azureml-automl-dnn-vision==1.55.0.post1'
+                'azureml-automl-dnn-vision==1.55.0.post2'
 
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'shap==0.41.0' \

@@ -4,7 +4,7 @@ tags:
   Preview: ""
 name: llm_dbcopilot_create_promptflow
 display_name: LLM - Create DBCopilot Prompt Flow
-version: 0.0.54
+version: 0.0.55
 inputs:
   index_name:
     type: string
@@ -36,6 +36,9 @@ inputs:
   runtime:
     type: string
     optional: false
+  knowledge_pieces:
+    type: string
+    optional: true
   include_views:
     type: boolean
     optional: true
@@ -47,4 +50,5 @@ command: python prompt_flow_creation.py --index_name '${{inputs.index_name}}' --
   --db_context_uri '${{inputs.db_context_uri}}' --asset_uri '${{inputs.asset_uri}}'
   $[[--chat_aoai_deployment_name '${{inputs.chat_aoai_deployment_name}}']] $[[--example_embedding_uri
   '${{inputs.example_embedding_uri}}']] $[[--llm_config '${{inputs.llm_config}}']]
-  --runtime '${{inputs.runtime}}' $[[--include_views '${{inputs.include_views}}']]
+  --runtime '${{inputs.runtime}}' $[[--knowledge_pieces '${{inputs.knowledge_pieces}}']]
+  $[[--include_views '${{inputs.include_views}}']]
