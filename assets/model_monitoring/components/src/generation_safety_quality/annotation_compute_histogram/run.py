@@ -20,7 +20,6 @@ import mlflow
 import socket
 
 import pandas as pd
-import requests
 from azure.ai.generative.evaluate import evaluate
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
@@ -43,15 +42,6 @@ TRACE_ID = "trace_id"
 ROOT_SPAN = "root_span"
 
 PASSTHROUGH_COLUMNS = [CORRELATION_ID, TRACE_ID, ROOT_SPAN]
-
-
-# ==================  HTTP Constants ==================
-# Timeout per each request: 5min
-HTTP_REQUEST_TIMEOUT = 300
-
-# ================= Endpoint Constants =================
-AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE = r"^(?=.{1,255}$)(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*\.(inference\.ml|openai)\.azure\.com(/openai)?$"  # noqa: E501
-AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN = "https://{}/openai/deployments/{}"
 
 # Parameters to OpenAI API requests
 OPENAI_REQUEST_PARAMS = [
@@ -85,14 +75,6 @@ THRESHOLD_PARAMS = [
     "fluency_rating_threshold",
     "coherence_rating_threshold",
 ]
-
-# ---
-
-CL_100K_BASE = "cl100k_base"
-GPT_35_TURBO = "gpt-35-turbo"
-GPT_35_TURBO_16K = "gpt-35-turbo-16k"
-GPT_4 = "gpt-4"
-GPT_4_32K = "gpt-4-32k"
 
 # ---
 
@@ -165,26 +147,6 @@ PRODUCTION_ROW_COUNT = "production_data"
 REFERENCE_ROW_COUNT = "reference_data"
 
 DEFAULT_PROMPTFLOW_PATH = "/home/trusted-service-user/.promptflow/"
-
-
-def _check_and_format_azure_endpoint_url(
-    url_pattern, domain_pattern_re, domain, api_version, model
-):
-    domain = domain.strip()
-    if domain.endswith('/'):
-        domain = domain[:-1]
-
-    if not re.match(domain_pattern_re, domain):
-        err_msg = f"Invalid Azure endpoint domain URL: {domain}."
-        err_msg += " The domain must be in the format of 'inference.ml.azure.com' or 'openai.azure.com'."
-        raise InvalidInputError(err_msg)
-
-    url = url_pattern.format(domain, model)
-
-    if api_version:
-        url += f"?api-version={api_version}"
-
-    return url
 
 
 def get_aad_credential():
@@ -287,26 +249,6 @@ class _WorkspaceConnectionTokenManager(object):
 
     def get_token(self):
         return self.token
-
-
-def _get_model_type(token_manager, get_model_endpoint):
-    try:
-        headers = {
-            "Content-Type": "application/json",
-            "api-key": token_manager.get_token()
-        }
-        response = requests.get(url=get_model_endpoint, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
-        if response.status_code == 200:
-            response_data = response.json()
-            model_type = response_data["model"]
-        else:
-            raise Exception(
-                "Received unexpected HTTP status: "
-                f"{response.status_code} {response.text}"
-            )
-    except Exception:
-        raise Exception("Error encountered while attempting to get model type")
-    return model_type
 
 
 def get_compact_metric_name(metric_name):
@@ -601,11 +543,9 @@ def apply_annotation(
     is_test_connection = False
     if workspace_connection_arm_id == TEST_CONNECTION:
         # Used for testing component e2e without consuming OpenAI endpoint
-        endpoint_domain_name = TEST_CONNECTION
         api_version = API_VERSION
         is_test_connection = True
         token_manager = None
-        model_type = GPT_4
     else:
         try:
             # Define authorization token manager
@@ -618,7 +558,6 @@ def apply_annotation(
             print(f"Unable to process request: {e}")
             return
 
-        endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
         api_version = token_manager.get_api_version()
         api_key = token_manager.get_token()
         api_base = token_manager.get_endpoint_domain()
@@ -627,13 +566,6 @@ def apply_annotation(
             "Created token manager for auth type "
             f"managed identity using auth header {API_KEY}."
         )
-        # use fixed API version since newer versions aren't supported
-        get_model_endpoint = _check_and_format_azure_endpoint_url(
-            AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
-            AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-            endpoint_domain_name, "2022-12-01",
-            model_deployment_name)
-        model_type = _get_model_type(token_manager, get_model_endpoint)
 
     all_metrics_pdf = None
     samples_index_rows = []
@@ -671,26 +603,39 @@ def apply_annotation(
             mlflow.set_tracking_uri(tracking_uri)
 
             output_dir = tempfile.TemporaryDirectory()
-            evaluate(
-                evaluation_name="gsq-evaluation",
-                data=rows,
-                task_type="qa",
-                data_mapping={
-                    "question": PROMPT,
-                    "context": CONTEXT,
-                    "answer": COMPLETION,
-                    "ground_truth": GROUND_TRUTH
-                },
-                model_config={
-                    "api_version": api_version,
-                    "api_base": api_base,
-                    "api_type": AZURE,
-                    "api_key": api_key,
-                    "deployment_id": model_type
-                },
-                metrics_list=metrics_list,
-                output_path=output_dir.name
-            )
+            evaluation_name = "gsq-evaluation"
+            run_name = evaluation_name + "-child-run"
+            # get existing run
+            with mlflow.start_run():
+                # create child run
+                with mlflow.start_run(nested=mlflow.active_run(), run_name=run_name) as run:
+                    evaluate(
+                        evaluation_name=evaluation_name,
+                        data=rows,
+                        task_type="qa",
+                        data_mapping={
+                            "question": PROMPT,
+                            "context": CONTEXT,
+                            "answer": COMPLETION,
+                            "ground_truth": GROUND_TRUTH
+                        },
+                        model_config={
+                            "api_version": api_version,
+                            "api_base": api_base,
+                            "api_type": AZURE,
+                            "api_key": api_key,
+                            "deployment_id": model_deployment_name
+                        },
+                        metrics_list=metrics_list,
+                        output_path=output_dir.name
+                    )
+                    child_run_id = run.info.run_id
+                    # add promptflow debug logs to run
+                    hostname = socket.gethostname()
+                    artifact_path = f"worker_promptflow/{hostname}"
+                    client = mlflow.tracking.MlflowClient()
+                    client.log_artifacts(
+                        child_run_id, DEFAULT_PROMPTFLOW_PATH, artifact_path=artifact_path)
             tabular_result = pd.read_json(os.path.join(output_dir.name, "eval_results.jsonl"), lines=True)
             for passthrough_column, passthrough_values in passthrough_cols.items():
                 tabular_result[passthrough_column] = passthrough_values
@@ -702,11 +647,6 @@ def apply_annotation(
                 tabular_result.rename(
                     columns={column_name: COLUMN_TO_COMPACT_METRIC_NAME[column_name]},
                     inplace=True)
-            # add promptflow debug logs
-            hostname = socket.gethostname()
-            artifact_path = f"worker_promptflow/{hostname}"
-            client = mlflow.tracking.MlflowClient()
-            client.log_artifacts(run_id, DEFAULT_PROMPTFLOW_PATH, artifact_path=artifact_path)
             yield tabular_result
 
     # used for testing without using openai connection
