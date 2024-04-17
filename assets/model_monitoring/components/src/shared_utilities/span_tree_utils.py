@@ -250,6 +250,15 @@ class SpanTreeNode:
         """Get the span's trace id."""
         return self.get_node_attribute("trace_id")  # type: ignore
 
+    @trace_id.setter
+    def trace_id(self, value):
+        """Set the span's trace id."""
+        if value is None:
+            print("Can not set the 'trace_id' to a null value.")
+        elif isinstance(value, str):
+            print(f"Setting 'trace_id' to '{value}'.")
+            self._span_row_dict["trace_id"] = value
+
     @classmethod
     def create_node_from_dict(cls, span_node_dict: dict) -> "SpanTreeNode":
         """Parse dict representation to create a single SpanTree node.
@@ -333,12 +342,18 @@ class SpanTree:
     def __init__(self, spans: List[SpanTreeNode]) -> None:
         """Spantree constructor to build up tree from span list."""
         self._span_node_map: Dict[str, SpanTreeNode] = {}
+        self._possible_root_spans = []
         self._root_span = self._construct_span_tree(spans)
 
     @property
     def root_span(self) -> SpanTreeNode:
         """Get the root span of the span tree."""
         return self._root_span
+
+    @property
+    def possible_root_spans(self) -> List[SpanTreeNode]:
+        """Get the possible root_spans list."""
+        return self._possible_root_spans
 
     @classmethod
     def create_tree_from_json_string(cls, json_string: str) -> "SpanTree":
@@ -352,6 +367,9 @@ class SpanTree:
         else:
             obj._root_span = SpanTreeNode.create_node_from_dict(root_span_dict)
         obj._span_node_map = {span.span_id: span for span in obj}
+        obj._possible_root_spans = []
+        if obj.root_span is not None:
+            obj._possible_root_spans.append(obj.root_span)
         return obj
 
     def show(self) -> None:
@@ -377,7 +395,7 @@ class SpanTree:
     def _construct_span_tree(self, spans: List[SpanTreeNode]) -> Optional[SpanTreeNode]:
         """Build the span tree in ascending time order from list of all spans."""
         root_span = None
-        possible_root_spans = []
+        self._possible_root_spans = []
         # construct a dict with span_id as key and span as value
         self._span_node_map = {span.span_id: span for span in spans}
 
@@ -385,6 +403,7 @@ class SpanTree:
             parent_id = span.parent_id
             if parent_id is None:
                 root_span = span
+                self._possible_root_spans.append(root_span)
             else:
                 parent_span = self.get_span_tree_node_by_span_id(parent_id)
                 if parent_span is not None:
@@ -392,18 +411,29 @@ class SpanTree:
                 else:
                     # consider the possibility that current span is root_span since
                     # parent_span is not in the data.
-                    possible_root_spans.append(span)
+                    self._possible_root_spans.append(span)
 
         # if root_span is None and we only have one possible root_span then we consider it the root_span
         # else means we have multiple possible root_span nodes and we don't support forest structures for SpanTree
         #     OR somehow we didn't find any possible root spans (is not probable? maybe impossible?)
+        number_of_root_spans = len(self.possible_root_spans)
         if root_span is None:
-            if len(possible_root_spans) == 1:
-                root_span = possible_root_spans[0]
+            if number_of_root_spans == 1:
+                root_span = self.possible_root_spans[0]
             else:
                 print(
                     "Either found too many possible root_spans or did not find any, "
-                    f"possible root spans found: {possible_root_spans}. Available spans: {self._span_node_map}")
+                    f"possible root spans found: {self.possible_root_spans}. Available spans: {self._span_node_map}")
+        # If we have a root_span but the possible_root_spans list size is not equal to 1 then
+        # we have a weird situation which might be where there are multiple root spans
+        # and some have the parent_id as null so we think we find a root_span but it's incorrect.
+        else:
+            if number_of_root_spans != 1:
+                print(
+                    f" The root_span = {root_span} has its parent_id = null,"
+                    " but there were other spans which were identified as possible root spans."
+                    " If this is unexpected, please debug your data carefully to figure out the issue.")
+                root_span = None
         return root_span
 
     def __iter__(self) -> Iterator[SpanTreeNode]:

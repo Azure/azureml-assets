@@ -22,7 +22,22 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
     span_list = [SpanTreeNode(row) for row in grouped_row.span_rows]
     tree = SpanTree(span_list)
     if tree.root_span is None:
-        return []
+        # until we replace trace_id with request_id for PF logs we will have multiple root_span for each
+        # trace_id and so we have to split them up manually.
+        seperated_trace_entries = []
+
+        for (root_span, trace_idx) in zip(tree.possible_root_spans, range(len(tree.possible_root_spans))):
+            root_span.trace_id = f"{root_span.trace_id}_{trace_idx}"
+
+            output_dict = root_span.to_dict(datetime_to_str=False)
+            output_dict['input'] = root_span.input
+            output_dict['output'] = root_span.output
+            output_dict['root_span'] = json.dumps(root_span.to_dict())
+
+            seperated_trace_entries.append(
+                tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
+            )
+        return seperated_trace_entries
     else:
         output_dict = tree.root_span.to_dict(datetime_to_str=False)
         output_dict['input'] = tree.root_span.input
@@ -59,7 +74,9 @@ def aggregate_spans_into_traces(
 
     # for PromptFlow we need to replace the trace_id values with request_id in order to handle edge cases
     # where PF has same trace_id but multiple LLM requests
-    enlarged_span_logs = enlarged_span_logs.rdd.map(_replace_trace_with_request_id).toDF(enlarged_span_logs.schema)
+    # TODO: Prompt flow team doesn't guarantee that all spans will have request_id due to a backlog of work.
+    # Uncomment the code below when we get a guarantee from them
+    # enlarged_span_logs = enlarged_span_logs.rdd.map(_replace_trace_with_request_id).toDF(enlarged_span_logs.schema)
 
     grouped_spans_df = enlarged_span_logs.groupBy('trace_id').agg(
         collect_list(
