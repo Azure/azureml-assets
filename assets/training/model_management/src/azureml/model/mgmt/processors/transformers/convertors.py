@@ -535,6 +535,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         "token-classification": AutoModelForTokenClassification,
         "question-answering": AutoModelForQuestionAnswering,
         "summarization": AutoModelForSeq2SeqLM,
+        "chat-completion": AutoModelForCausalLM,
         "text-generation": AutoModelForCausalLM,
         "translation": AutoModelForSeq2SeqLM,
     }
@@ -547,7 +548,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
 
     def get_model_signature(self):
         """Return model signature for NLP models."""
-        if self._task == SupportedNLPTasks.TEXT_GENERATION.value:
+        if self._task == SupportedNLPTasks.TEXT_GENERATION.value or self._task == SupportedNLPTasks.CHAT_COMPLETION:
             inputs = Schema([ColSpec(DataType.string)])
             outputs = Schema([ColSpec(DataType.string)])
             params = ParamSchema([ParamSpec("top_p", "float", default=0.8),
