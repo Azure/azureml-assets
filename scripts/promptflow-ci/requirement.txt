@@ -4,5 +4,6 @@ markdown
 bs4
 azureml-core
 promptflow
+promptflow-azure
 azure-ai-ml
 azure-cli-core
