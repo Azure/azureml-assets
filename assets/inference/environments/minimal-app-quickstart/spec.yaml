@@ -12,6 +12,17 @@ build:
 
 os_type: linux
 
+inference_config: 
+  scoring_route:
+      port: 5001
+      path: /
+  liveness_route:
+      port: 5001
+      path: /
+  readiness_route:
+      port: 5001
+      path: /
+
 tags:
   OS: Ubuntu22.04
   Python: 3.11
