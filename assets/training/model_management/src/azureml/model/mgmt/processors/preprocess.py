@@ -51,8 +51,8 @@ def check_for_py_files(model_path):
     return len(py_files) >= 1
 
 
-def get_all_files(directory):
-    """get all the from model path files.
+def check_all_files(directory):
+    """check all the from model path files.
 
     :param model_path: directroy
     """
