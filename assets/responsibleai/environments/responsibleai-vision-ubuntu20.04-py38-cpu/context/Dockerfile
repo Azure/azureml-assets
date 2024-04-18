@@ -34,7 +34,7 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'shap==0.41.0' \
                 'interpret-community==0.30.0' \
-                'Pillow>=10.2.0' \
+                'Pillow>=10.3.0' \
                 'Werkzeug==2.2.3' \
                 'setuptools>=65.5.1' \
                 'numpy==1.22.0' \
