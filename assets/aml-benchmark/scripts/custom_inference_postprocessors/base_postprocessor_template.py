@@ -34,10 +34,10 @@ def _parse_args():
     return argss
 
 
-def _read_input_file(file_path: str) -> List[Dict[str, Any]]:
-    """Read files that have content in the json format and return a list of dictionaries.
+def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
+    """Read `.jsonl` file and return a list of dictionaries.
 
-    :param file_paths: Path to input file.
+    :param file_paths: Path to .jsonl file.
     :return: List of dictionaries.
     """
     data_dicts = []
@@ -84,10 +84,10 @@ def _run(
     ground_truth_dataset: str = None
 ) -> None:
     """Entry function to read, run and write the processed the data."""
-    pred_data = _read_input_file(prediction_dataset)
+    pred_data = _read_jsonl_file(prediction_dataset)
     predictions = run_prediction_extractor(pred_data)
     if ground_truth_dataset:
-        actual_data = _read_input_file(ground_truth_dataset)
+        actual_data = _read_jsonl_file(ground_truth_dataset)
         ground_truths = run_ground_truth_extractor(actual_data)
     _write_to_jsonl_file(predictions, ground_truths, output_path)
 
@@ -98,7 +98,7 @@ def run_ground_truth_extractor(
     """
     Run the custom processor function to extract the ground truth.
 
-    :param data: Data loaded from _read_input_file function.
+    :param data: Data loaded from _read_jsonl_file function.
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
@@ -111,7 +111,7 @@ def run_prediction_extractor(
     """
     Run the custom processor function to extract the ground truth.
 
-    :param data: Data loaded from _read_input_file function.
+    :param data: Data loaded from _read_jsonl_file function.
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """

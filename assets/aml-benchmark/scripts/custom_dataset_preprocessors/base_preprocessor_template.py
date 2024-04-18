@@ -20,10 +20,10 @@ def _parse_args():
     return argss
 
 
-def _read_input_file(file_path: str) -> List[Dict[str, Any]]:
-    """Read files that have content in the json format and return a list of dictionaries.
+def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
+    """Read `.jsonl` file and return a list of dictionaries.
 
-    :param file_paths: Path to input file.
+    :param file_paths: Path to .jsonl file.
     :return: List of dictionaries.
     """
     data_dicts = []
@@ -54,7 +54,7 @@ def _write_to_jsonl_file(
 
 def _run(input_path: str, output_path: str) -> None:
     """Entry function to read, run and write the processed the data."""
-    data = _read_input_file(input_path)
+    data = _read_jsonl_file(input_path)
     processed_data = run_processor(data)
     _write_to_jsonl_file(processed_data, output_path)
 
