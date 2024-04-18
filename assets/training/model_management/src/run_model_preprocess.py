@@ -9,7 +9,7 @@ import json
 import shutil
 from azureml.model.mgmt.config import AppName, ModelFramework
 from azureml.model.mgmt.processors.transformers.config import HF_CONF
-from azureml.model.mgmt.processors.preprocess import run_preprocess, check_for_py_files, check_all_files
+from azureml.model.mgmt.processors.preprocess import run_preprocess, check_for_py_files, Check_all_files
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks as TransformersSupportedTasks
 from azureml.model.mgmt.processors.pyfunc.config import SupportedTasks as PyFuncSupportedTasks
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, UnsupportedTaskType
@@ -183,7 +183,7 @@ def run():
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
     logger.info(f"listing output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
-    all_files = check_all_files(mlflow_model_output_dir)
+    all_files = Check_all_files(mlflow_model_output_dir)
     elements_to_remove = ['MLmodel', 'conda.yaml', 'python_env.yaml', 'requirements.txt']
     mlflow_model_output_files = list(set(all_files) - set(elements_to_remove))
     model_path_files = os.listdir(model_path)
