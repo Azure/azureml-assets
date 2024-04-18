@@ -16,7 +16,7 @@ from datasets import load_dataset
 from typing import Any, Dict, List, Union
 
 JINJA_ENV = Environment(keep_trailing_newline=True)
-REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
+REGEX_EXPR = """((?:.*?def.*?FUNCNAME.*?))(?=(?:
 \\S|$))"""
 CODE_GENERATION_DEBUG = False
 
@@ -190,11 +190,12 @@ def run_humaneval_postprocessor(
         pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type)
 
         # Get the index of the first function definition and return keyword
-        func_name_index = pred_combined_prompt.find("def ")
+        def_index = pred_combined_prompt.find("def ")
+        func_name_index = pred_combined_prompt.find(str("def " + row["entry_point"]))
         return_keyword_index = pred_combined_prompt.find("return")
 
-        # If function definition is not present or present after the initial function body prediction
-        if func_name_index == -1 or return_keyword_index < func_name_index:
+        # If function definition is not present or present after the initial function body prediction       
+        if def_index == -1 or return_keyword_index < def_index or func_name_index==-1:
             # If spaces were stripped from endpoint responses, add those back.
             if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
                 prefix = ""
@@ -208,7 +209,8 @@ def run_humaneval_postprocessor(
 
         # Applying regex on the prediction column
         if regex_exp:
-            pred = apply_regex_expr(pred_combined_prompt, regex_exp)
+            regex_exp_func = regex_exp.replace("FUNCNAME", row["entry_point"])
+            pred = apply_regex_expr(pred_combined_prompt, regex_exp_func)
         else:
             pred = pred_combined_prompt
         if CODE_GENERATION_DEBUG is True:
