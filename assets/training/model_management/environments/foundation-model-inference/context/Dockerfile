@@ -41,6 +41,9 @@ ARG torch_cuda_arch_list='7.0 7.5 8.0 8.6 8.9 9.0+PTX'
 ENV TORCH_CUDA_ARCH_LIST=${torch_cuda_arch_list}
 RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd6
 
+# install updated transformers
+RUN pip install https://automlcesdkdataresources.blob.core.windows.net/wheels/transformers-4.40.0.dev0-py3-none-any.whl
+
 # For local testing
 # Need to copy src code and install in editable mode
 # COPY . .
