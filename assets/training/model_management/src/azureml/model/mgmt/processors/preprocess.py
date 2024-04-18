@@ -51,8 +51,8 @@ def check_for_py_files(model_path):
     return len(py_files) >= 1
 
 
-def check_all_files(directory):
-    """check all the from model path files.
+def Check_all_files(directory):
+    """Check all the from model path files.
 
     :param model_path: directroy
     """
@@ -62,5 +62,5 @@ def check_all_files(directory):
             all_files.append(name)  # Append the file name only
         for subdir in dirs:
             subdir_path = os.path.join(root, subdir)
-            all_files.extend(check_all_files(subdir_path))  # Recursively call get_all_files for subdirectories
+            all_files.extend(Check_all_files(subdir_path))  # Recursively call get_all_files for subdirectories
     return all_files
