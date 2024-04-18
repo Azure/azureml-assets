@@ -42,7 +42,8 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         self.upload_files(training_file_path, validation_file_path)
 
         logger.info("Step 2: Finetuning model")
-        self.finetuning_job_id = self.submit_finetune_job(model, n_epochs, batch_size, learning_rate_multiplier, suffix)
+        self.finetuning_job_id = self.submit_finetune_job(model, n_epochs, batch_size,\
+                                                          learning_rate_multiplier, suffix)
         finetuned_job = self.track_finetuning_job()
 
         logger.debug(f"Finetuned model name: {finetuned_job.fine_tuned_model}, status: {finetuned_job.status}")
