@@ -46,6 +46,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--handle_response_failure", type=str, help="how to handler failed response.")
     parser.add_argument("--fallback_value", type=str, help="The fallback value.", default='')
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
+    parser.add_argument(
+        "--use_tiktoken",
+        type=str2bool,
+        default=False,
+        help=("If true, `cl100k_base` encoder is used from tiktoken to calculate token count; "
+              "overrides any other token count calculation."))
     parser.add_argument("--min_endpoint_success_ratio", default=0, type=float, help="Min success ratio.")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
@@ -68,6 +74,7 @@ def main(
         fallback_value: str,
         is_performance_test: bool,
         endpoint_url: str,
+        use_tiktoken: bool = False,
         successful_requests_path: Optional[str] = None,
         failed_requests_path: Optional[str] = None,
         blocked_requests_path: Optional[str] = None,
@@ -91,6 +98,9 @@ def main(
     :param handle_response_failure: How to handle the response failure.
     :param fallback_value: The fallback value.
     :param is_performance_test: Whether it is a performance test.
+    :param endpoint_url: The endpoint url.
+    :param use_tiktoken: If true, `cl100k_base` encoder is used from tiktoken to calculate token count;
+    overrides any other token count calculation.
     :param successful_requests_data: The path to the successful requests data.
     :param failed_requests_data: The path to the failed requests data.
     :param blocked_requests_data: The path to the failed requests data.
@@ -149,7 +159,7 @@ def main(
             prediction_list.append(rc.convert_result(row))
             if rc.is_result_success(row):
                 # Don't calculate perf for failed requests.
-                perf_list.append(rc.convert_result_perf(row))
+                perf_list.append(rc.convert_result_perf(row, use_tiktoken))
             if not is_performance_test:
                 ground_truth_list.append(rc.convert_result_ground_truth(row))
             else:
@@ -219,5 +229,6 @@ if __name__ == "__main__":
         fallback_value=args.fallback_value,
         is_performance_test=args.is_performance_test,
         endpoint_url=args.endpoint_url,
+        use_tiktoken=args.use_tiktoken,
         min_endpoint_success_ratio=args.min_endpoint_success_ratio,
     )

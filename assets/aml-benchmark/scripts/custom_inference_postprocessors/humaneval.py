@@ -7,7 +7,6 @@ import re
 import json
 import codecs
 import argparse
-import logging as logger
 import pandas as pd
 import sys
 from io import StringIO
@@ -44,16 +43,12 @@ def _parse_args():
     return argss
 
 
-def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
-    """Read `.jsonl` file and return a list of dictionaries.
+def _read_input_file(file_path: str) -> List[Dict[str, Any]]:
+    """Read files that have content in the json format and return a list of dictionaries.
 
     :param file_paths: Path to .jsonl file.
     :return: List of dictionaries.
     """
-    if not file_path.endswith(".jsonl"):
-        mssg = f"Input file '{file_path}' is not a .jsonl file."
-        logger.ERROR(mssg)
-        raise ValueError(mssg)
     data_dicts = []
     with open(file_path, "r", encoding="utf8") as file:
         for i, line in enumerate(file):
@@ -113,9 +108,9 @@ def _run(
 ) -> None:
     """Entry function to read, run and write the processed the data."""
     if prediction_dataset:
-        pred_data = _read_jsonl_file(prediction_dataset)
+        pred_data = _read_input_file(prediction_dataset)
         if ground_truth_dataset:
-            task_id = _read_jsonl_file(ground_truth_dataset)
+            task_id = _read_input_file(ground_truth_dataset)
             pred_with_task_id, label_key, prediction_key = merge_id(task_id, pred_data)
 
     # Post processing the prediction and ground truth columns
@@ -133,9 +128,9 @@ def merge_id(
     """
     Merge the task_id with the prediction data.
 
-    :param label_data: Label data loaded from _read_jsonl_file function.
+    :param label_data: Label data loaded from _read_input_file function.
     :type: List[Dict[str, Any]]
-    :param pred_data: Prediction data loaded from _read_jsonl_file function.
+    :param pred_data: Prediction data loaded from _read_input_file function.
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
