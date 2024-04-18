@@ -49,3 +49,18 @@ def check_for_py_files(model_path):
     files = os.listdir(model_path)
     py_files = [file for file in files if file.endswith(".py")]
     return len(py_files) >= 1
+
+
+def get_all_files(directory):
+    """get all the from model path files.
+
+    :param model_path: directroy
+    """
+    all_files = []
+    for root, dirs, files in os.walk(directory):
+        for name in files:
+            all_files.append(name)  # Append the file name only
+        for subdir in dirs:
+            subdir_path = os.path.join(root, subdir)
+            all_files.extend(get_all_files(subdir_path))  # Recursively call get_all_files for subdirectories
+    return all_files
