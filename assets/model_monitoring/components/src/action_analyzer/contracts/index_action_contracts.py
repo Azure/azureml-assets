@@ -43,8 +43,8 @@ class IndexActionSample(ActionSample):
                          prompt_flow_input)
 
 
-class IndexDebuggingInfo:
-    """Debugging info class."""
+class RetrievalSpanData:
+    """Properties of retrieval span."""
 
     def __init__(self,
                  span_id: str,
@@ -56,7 +56,7 @@ class IndexDebuggingInfo:
                  retrieval_query_type: str,
                  retrieval_top_k: int,
                  prompt_flow_input: str) -> None:
-        """Create debugging info.        
+        """Create retreival span data.
         
         Args:
             span_id(str): the span id of te retreival span.
@@ -81,5 +81,5 @@ class IndexDebuggingInfo:
 
 
     def to_json_str(self) -> str:
-        """Convert a debugging info object to json str."""
+        """Convert a retrieval span data to json str."""
         return json.dumps(self.__dict__)
