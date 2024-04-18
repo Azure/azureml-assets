@@ -479,9 +479,6 @@ class TestInferencePostprocessorScript:
         invalid_prediction_dataset_error_mssg = (
             "the following arguments are required: --prediction_dataset"
         )
-        invalid_jsonl_dataset_mssg = (
-            "No .jsonl files found in the given prediction dataset."
-        )
         invalid_prediction_colname_error_mssg = (
             "the following arguments are required: --prediction_column_name"
         )
@@ -517,25 +514,6 @@ class TestInferencePostprocessorScript:
         except RuntimeError as e:
             exception_message = str(e)
             assert invalid_prediction_colname_error_mssg in exception_message
-
-        dummy_dataset_path = os.path.join(os.getcwd(), "prediction_dataset_path")
-        os.system(f"mkdir {dummy_dataset_path}")
-        try:
-            argss = " ".join(
-                [
-                    "--prediction_dataset",
-                    dummy_dataset_path,
-                    "--prediction_column_name",
-                    prediction_column_name,
-                    "--template",
-                    f"'{template}'",
-                ]
-            )
-            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
-            run_command(f"{cmd}")
-        except RuntimeError as e:
-            exception_message = str(e)
-            assert_exception_mssg(exception_message, invalid_jsonl_dataset_mssg)
 
         dummy_script_path = os.path.join(os.getcwd(), "user_script.json")
         os.system(f"touch {dummy_script_path}")

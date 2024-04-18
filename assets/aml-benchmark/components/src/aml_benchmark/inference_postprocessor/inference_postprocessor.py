@@ -138,20 +138,6 @@ class InferencePostprocessor(object):
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
-        if (
-            len(
-                [
-                    file
-                    for file in resolve_io_path(self.prediction_dataset)
-                    if file.endswith(".jsonl")
-                ]
-            )
-            == 0
-        ):
-            mssg = "No .jsonl files found in the given prediction dataset."
-            raise BenchmarkValidationException._with_error(
-                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
-            )
         if self.prediction_column_name is None:
             mssg = "Prediction column name is not provided."
             raise BenchmarkValidationException._with_error(
