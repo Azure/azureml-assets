@@ -34,9 +34,9 @@ class LowRetreivalScoreIndexAction(Action):
             negative_samples(list[ActionSample]): list of negative samples of the action.
             index_name(str): (optional) index name if index asset id does not exist.
         """
-        self.IndexAssetId = index_id
-        self.IndexName = index_name
-        self.IndexContent = index_content
+        self.index_id = index_id
+        self.index_name = index_name
+        self.index_content = index_content
         description = ACTION_DESCRIPTION.replace("{index_id}", index_id)
         super().__init__(ActionType.LOW_RETRIEVAL_SCORE_INDEX_ACTION,
                          description,
