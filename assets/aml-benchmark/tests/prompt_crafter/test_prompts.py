@@ -3,17 +3,10 @@
 
 """Test the functionality of the prompt factory which powers the prompt crafter."""
 
-import sys
 import pytest
 from typing import List, Dict
 
-from ..test_utils import get_src_dir
-
-sys.path.append(get_src_dir())
-try:
-    from aml_benchmark.prompt_crafter.package.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
-except ImportError:
-    raise ImportError("Please install the package 'prompt_crafter' to run this test.")
+from aml_benchmark.prompt_crafter.package.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
 
 
 # Without few_shot_pattern as inputs

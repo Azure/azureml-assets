@@ -76,15 +76,14 @@ class EndpointDataPreparer:
                 ))
         if self._model.is_aoai_model():
             if "prompt" in output_payload_dict:
-                if not isinstance(output_payload_dict["prompt"], str):
-                    errors.append("`prompt` should be of type string.")
+                if not isinstance(output_payload_dict['prompt'], str):
+                    errors.append("`prompt` field in the payload should be a string.")
             elif "messages" in output_payload_dict:
                 if not isinstance(output_payload_dict['messages'], list):
-                    errors.append(
-                        "`messages` field in the payload should be a list."
-                    )
+                    errors.append("`messages` field in the payload should be a list.")
             else:
-                errors.append("`messages` or `prompt` should be present in the payload json.")
+                errors.append(
+                    "either `messages` or `prompt` should be present in the payload json.")
         if self._model.is_vision_oss_model():
             if "input_data" not in output_payload_dict:
                 errors.append("`input_data` should be presented in the payload json.")

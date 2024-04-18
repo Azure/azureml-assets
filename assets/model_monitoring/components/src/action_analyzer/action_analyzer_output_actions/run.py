@@ -61,6 +61,8 @@ def get_action_metadata(df):
     for data_row in df.collect():
         index_set.add(data_row[INDEX_ID_COLUMN])
         violated_metrics.update(data_row[VIOLATED_METRICS_COLUMN].split(TEXT_SPLITTER))
+    # sometimes a same query can be both good or bad. For good case, the violated_metrics is empty so need to remove
+    violated_metrics.discard("")
     return index_set, violated_metrics
 
 

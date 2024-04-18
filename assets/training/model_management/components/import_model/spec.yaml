@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.28
+version: 0.0.30
 
 # Pipeline inputs
 inputs:
@@ -61,6 +61,7 @@ inputs:
   task_name:
     description: A Hugging face task on which model was trained on
     enum:
+      - chat-completion
       - fill-mask
       - token-classification
       - question-answering
@@ -234,7 +235,7 @@ jobs:
         type: uri_file
 
   download_model:
-    component: azureml:download_model:0.0.23
+    component: azureml:download_model:0.0.24
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -253,7 +254,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.24
+    component: azureml:convert_model_to_mlflow:0.0.26
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -275,11 +276,9 @@ jobs:
     outputs:
       mlflow_model_folder:
         type: mlflow_model
-      model_import_job_path:
-        type: uri_file
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.8
+    component: azureml:mlflow_model_local_validation:0.0.10
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -292,7 +291,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.12
+    component: azureml:register_model:0.0.13
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -307,7 +306,6 @@ jobs:
       model_type: mlflow_model
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
-      model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
     outputs:
       registration_details_folder: ${{parent.outputs.model_registration_details}}
 

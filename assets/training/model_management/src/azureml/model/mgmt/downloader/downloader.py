@@ -71,7 +71,9 @@ class AzureBlobstoreDownloader:
     @log_execution_time
     def _download(self):
         try:
-            download_cmd = f"azcopy cp --recursive=true '{self._model_uri}/*' {self._download_dir}"
+            # prevent from downloading under src folder name in the output directroy by
+            # disabling subdir copy
+            download_cmd = f"azcopy cp --recursive=true --as-subdir=false '{self._model_uri}' {self._download_dir}"
             # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
             # https://github.com/Azure/azureml-assets/issues/283
             exit_code, stdout = run_command(download_cmd)

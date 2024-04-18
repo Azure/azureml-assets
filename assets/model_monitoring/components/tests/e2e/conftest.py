@@ -687,6 +687,8 @@ def cleanup_previous_e2e_tests(ml_client: MLClient, test_suite_name):
         pass
     else:
         for job in ml_client.jobs.list():
+            if not job:
+                continue
             if job.status in RunHistoryConstants.TERMINAL_STATUSES or job.status == JobStatus.FINALIZING:
                 continue
 

@@ -166,12 +166,12 @@ def assign_default_group(group_list, query, metrics, good_queries, bad_queries):
     """Assign default group for good and bad queries."""
     good_query_list = json.loads(good_queries)
     bad_query_list = json.loads(bad_queries)
-    if query in good_query_list:
-        good_group_name = f"{metrics}_good_group"
-        group_list = _append_value(group_list, good_group_name)
-    elif query in bad_query_list:
+    if query in bad_query_list:
         bad_group_name = f"{metrics}_bad_group_default_default"
         group_list = _append_value(group_list, bad_group_name)
+    elif query in good_query_list:
+        good_group_name = f"{metrics}_good_group"
+        group_list = _append_value(group_list, good_group_name)
     return group_list
 
 
@@ -220,14 +220,13 @@ def parse_debugging_info(root_span):
                     print("No look up span found, skip action analyzer.")
                     return None
                 index_span = tree.get_span_tree_node_by_span_id(parent_id)
-                index_input = json.loads(json.loads(index_span.attributes)["inputs"])
+                index_input = json.loads(index_span.input)
                 index_content = index_input['mlindex_content']
                 retrieval_query_type = index_input["query_type"]
                 retrieval_top_k = index_input["top_k"]
                 index_id = get_index_id(index_content)
-                retrieval_info = json.loads(span.attributes)
-                query = retrieval_info["retrieval.query"]
-                retrieval_documents = json.loads(retrieval_info["retrieval.documents"])
+                query = span.retrieval_query
+                retrieval_documents = span.retrieval_documents
                 text = []
                 score = []
                 for document in retrieval_documents:

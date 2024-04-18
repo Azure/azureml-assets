@@ -16,6 +16,7 @@ dependencies:
     - datasets
     - tqdm
     - azure-core
+    - tiktoken
     ## Test requirements
     - pytest
     - pytest-xdist

@@ -153,6 +153,7 @@ GSQ_METRICS_LIST = ["Fluency", "Coherence", "Groundedness", "Relevance", "Simila
 GOOD_METRICS_VALUE = 5
 METRICS_VIOLATION_THRESHOLD = 4
 RETRIEVAL_SPAN_TYPE = "Retrieval"
+EMBEDDING_SPAN_TYPE = "Embedding"
 TEXT_SPLITTER = "#<Splitter>#"
 
 GROUP_TOPIC_MIN_SAMPLE_SIZE = 10
@@ -164,6 +165,11 @@ ACTION_DESCRIPTION = "The application's response quality is low due to suboptima
 MAX_SAMPLE_SIZE = 20
 DEFAULT_RETRIEVAL_SCORE = 0
 
+APP_TRACES_INPUTS_EVENT_NAME = "promptflow.function.inputs"
+APP_TRACES_OUTPUT_EVENT_NAME = "promptflow.function.output"
+APP_TRACES_RETRIEVAL_QUERY_EVENT_NAME = "promptflow.retrieval.query"
+APP_TRACES_RETRIEVAL_DOCUMENT_EVENT_NAME = "promptflow.retrieval.documents"
+APP_TRACES_EMBEDDINGS_EVENT_NAME = "promptflow.embedding.embeddings"
 
 # util
 MLFLOW_RUN_ID = "MLFLOW_RUN_ID"

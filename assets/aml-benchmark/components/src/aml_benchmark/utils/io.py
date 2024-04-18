@@ -113,20 +113,25 @@ def resolve_io_path(dataset: str) -> List[str]:
     return [dataset]
 
 
+def filter_files_with_given_extension(file_paths: List[str], extension: str) -> List[str]:
+    """Filter and returns the list of files with given extension."""
+    return [file_path for file_path in file_paths if file_path.endswith(extension)]
+
+
 def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
     """
-    Read `.jsonl` files and return a list of dictionaries.
+    Read `.jsonl` file/files and return a list of dictionaries.
 
-    Ignores files that do not have `.jsonl` extension. Raises exception if no `.jsonl` files
-    found or if any `.jsonl` file contains invalid JSON.
+    If a single path is present in `file_paths` and the file does not have any extension, try \
+    to read it as a `.jsonl` file. This is done to support `uri_file` without extension scenario.
 
     :param file_paths: List of paths to .jsonl files.
     :return: List of dictionaries.
     """
+    if len(file_paths) > 1:
+        file_paths = filter_files_with_given_extension(file_paths, ".jsonl")
     data_dicts = []
     for file_path in file_paths:
-        if not file_path.endswith(".jsonl"):
-            continue
         with open(file_path, 'r') as file:
             for i, line in enumerate(file):
                 try:

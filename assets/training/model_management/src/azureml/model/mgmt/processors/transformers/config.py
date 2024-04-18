@@ -62,6 +62,7 @@ class SupportedVisionTasks(_CustomEnum):
 class SupportedNLPTasks(_CustomEnum):
     """Supported NLP Hugging face tasks."""
 
+    CHAT_COMPLETION = "chat-completion"
     FILL_MASK = "fill-mask"
     TOKEN_CLASSIFICATION = "token-classification"
     QUESTION_ANSWERING = "question-answering"
@@ -82,6 +83,7 @@ class SupportedTasks(_CustomEnum):
     """Supported Hugging face tasks for conversion to MLflow."""
 
     # NLP tasks
+    CHAT_COMPLETION = "chat-completion"
     FILL_MASK = "fill-mask"
     TOKEN_CLASSIFICATION = "token-classification"
     QUESTION_ANSWERING = "question-answering"

@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference_with_inference_compute
 display_name: Batch Benchmark Inference (With Inference compute Support)
 description: Components for batch endpoint inference with inference compute support.
-version: 0.0.1
+version: 0.0.2
 
 inputs:
   input_dataset:
@@ -63,6 +63,11 @@ inputs:
     type: boolean
     default: False
     description: If true, the performance test will be run and the input dataset will be neglected.
+  use_tiktoken:
+    type: boolean
+    default: False
+    description: If true, `cl100k_base` encoder is used from tiktoken to calculate token count; overrides any other token count calculation.
+    optional: True
   authentication_type:
     type: string
     optional: False
@@ -182,7 +187,7 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: azureml:batch_inference_preparer:0.0.7
+    component: azureml:batch_inference_preparer:0.0.8
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       model_type: ${{parent.inputs.model_type}}
@@ -200,7 +205,7 @@ jobs:
   # Config generation
   config_generation:
     type: command
-    component: azureml:batch_benchmark_config_generator:0.0.1
+    component: azureml:batch_benchmark_config_generator:0.0.2
     inputs:
       scoring_url: ${{parent.inputs.endpoint_url}}
       connection_name: ${{parent.inputs.connections_name}}
@@ -248,7 +253,7 @@ jobs:
   # Reformat
   batch_output_formatter: 
     type: command
-    component: azureml:batch_output_formatter:0.0.7
+    component: azureml:batch_output_formatter:0.0.8
     inputs:
       model_type: ${{parent.inputs.model_type}}
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_output_directory}}
@@ -258,6 +263,7 @@ jobs:
       fallback_value: ${{parent.inputs.fallback_value}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
+      use_tiktoken: ${{parent.inputs.use_tiktoken}}
       endpoint_url: ${{parent.inputs.endpoint_url}}
       min_endpoint_success_ratio: ${{parent.inputs.min_endpoint_success_ratio}}
     outputs:

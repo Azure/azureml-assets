@@ -134,7 +134,7 @@ class TestDatasetPreprocessorComponent:
         self._verify_and_get_output_records(
             pipeline_job, dataset_name, dataset,
             Constants.PREPROCESS_SAMPLE_EXAMPLES_EXPECTED_OUTPUT_FILE,
-            output_dir=os.path.join(os.path.dirname(__file__), 'data')
+            output_dir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
         )
         assert_logged_params(
             pipeline_job.name,
@@ -245,7 +245,7 @@ class TestDatasetPreprocessorScript:
         script_path: str,
         encoder_config: str,
         output_dataset: str = os.path.join(
-            os.path.dirname(__file__), 'data/processed_output.jsonl'
+            os.path.dirname(os.path.dirname(__file__)), 'data/processed_output.jsonl'
         ),
     ) -> None:
         """Dataset Preprocessor script test."""
@@ -347,9 +347,6 @@ class TestDatasetPreprocessorScript:
         invalid_dataset_error_mssg = (
             "the following arguments are required: --dataset"
         )
-        invalid_jsonl_dataset_mssg = (
-            "No .jsonl files found in the given input dataset."
-        )
         invalid_preprocessor_logic_exception_mssg = (
            "Please provide the input to apply preprocessing logic either via template input or script_path."
         )
@@ -364,16 +361,6 @@ class TestDatasetPreprocessorScript:
         except RuntimeError as e:
             out_message = str(e)
             assert invalid_dataset_error_mssg in out_message
-
-        dummy_dataset_path = os.path.join(os.getcwd(), "input_dataset_path")
-        os.system(f"mkdir {dummy_dataset_path}")
-        try:
-            argss = " ".join(["--dataset", dummy_dataset_path])
-            cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
-            run_command(f"{cmd}")
-        except RuntimeError as e:
-            exception_message = str(e)
-            assert_exception_mssg(exception_message, invalid_jsonl_dataset_mssg)
 
         try:
             argss = " ".join(["--dataset", dataset])
@@ -410,7 +397,7 @@ class TestDatasetPreprocessorScript:
         script_path: str,
         encoder_config: str,
         output_dataset: str = os.path.join(
-            os.path.dirname(__file__), 'data/processed_output.jsonl'
+            os.path.dirname(os.path.dirname(__file__)), 'data/processed_output.jsonl'
         ),
     ) -> None:
         """TruthfulQA-HF Dataset Custom Preprocessor script test."""

@@ -15,6 +15,7 @@ inputs:
   additional_columns: question
   handle_response_failure: use_fallback
   is_performance_test: False
+  use_tiktoken: False
 
 outputs:
   predictions:
@@ -49,6 +50,7 @@ jobs:
       endpoint_url: ${{parent.inputs.endpoint_url}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
+      use_tiktoken: ${{parent.inputs.use_tiktoken}}
     outputs:
       predictions: ${{parent.outputs.predictions}}
       performance_metadata: ${{parent.outputs.performance_metadata}}

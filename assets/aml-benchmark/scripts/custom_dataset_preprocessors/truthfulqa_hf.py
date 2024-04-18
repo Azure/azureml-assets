@@ -23,9 +23,6 @@ def _parse_args():
 
 def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
     """Read `.jsonl` file and return a list of dictionaries."""
-    if not file_path.endswith(".jsonl"):
-        mssg = f"Input file '{file_path}' is not a .jsonl file."
-        raise ValueError(mssg)
     data_dicts = []
     with open(file_path, 'r', encoding="utf8") as file:
         for i, line in enumerate(file):
