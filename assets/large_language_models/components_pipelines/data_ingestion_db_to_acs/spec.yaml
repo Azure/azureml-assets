@@ -4,7 +4,7 @@ tags:
   Preview: ""
 name: llm_ingest_db_to_acs
 display_name: LLM - SQL Datastore to ACS Pipeline
-version: 0.0.81
+version: 0.0.82
 description: Single job pipeline to chunk data from AzureML sql data store, and create ACS embeddings index
 settings:
   default_compute: serverless
@@ -138,7 +138,7 @@ jobs:
       output_chunk_file:
         type: uri_folder
       output_grounding_context_file: ${{parent.outputs.db_context}}
-    component: "azureml:llm_dbcopilot_grounding:0.0.55"
+    component: "azureml:llm_dbcopilot_grounding:0.0.56"
     type: command
   generate_meta_embeddings:
     type: command
@@ -205,7 +205,7 @@ jobs:
     #########################################
   db_sample_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.30"
+    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.31"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -317,5 +317,5 @@ jobs:
         path: ${{parent.inputs.knowledge_pieces}}
       include_views:
         path: ${{parent.inputs.include_views}}
-    component: "azureml:llm_dbcopilot_create_promptflow:0.0.55"
+    component: "azureml:llm_dbcopilot_create_promptflow:0.0.56"
     type: command
