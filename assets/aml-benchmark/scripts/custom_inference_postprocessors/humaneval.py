@@ -194,8 +194,8 @@ def run_humaneval_postprocessor(
         func_name_index = pred_combined_prompt.find(str("def " + row["entry_point"]))
         return_keyword_index = pred_combined_prompt.find("return")
 
-        # If function definition is not present or present after the initial function body prediction       
-        if def_index == -1 or return_keyword_index < def_index or func_name_index==-1:
+        # If function definition is not present or present after the initial function body prediction
+        if def_index == -1 or return_keyword_index < def_index or func_name_index == -1:
             # If spaces were stripped from endpoint responses, add those back.
             if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
                 prefix = ""
