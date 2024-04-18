@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: aoai_finetuning
-version: 0.0.1
+version: 0.0.2
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: AOAI Finetuning Job
 description: Upload data to Azure OpenAI resource, finetune model and delete data
 
-environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/1
+environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/2
 
 code: ../../src
 

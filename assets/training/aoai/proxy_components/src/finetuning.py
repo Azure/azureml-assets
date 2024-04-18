@@ -36,27 +36,28 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
     def submit_job(self, training_file_path: str, validation_file_path: Optional[str], model: str,
                    n_epochs: Optional[int], batch_size: Optional[int],
-                   learning_rate_multiplier: Optional[float], suffix=Optional[str]):
+                   learning_rate_multiplier: Optional[float], suffix=Optional[str]) -> str:
         """Upload data, finetune model and then delete data."""
         logger.info("Step 1: Uploading data to AzureOpenAI resource")
         self.upload_files(training_file_path, validation_file_path)
 
         logger.info("Step 2: Finetuning model")
-        finetuned_model_id = self.submit_finetune_job(model, n_epochs, batch_size, learning_rate_multiplier, suffix)
+        self.finetuning_job_id = self.submit_finetune_job(model, n_epochs, batch_size, learning_rate_multiplier, suffix)
         finetuned_job = self.track_finetuning_job()
 
+        logger.debug(f"Finetuned model name: {finetuned_job.fine_tuned_model}, status: {finetuned_job.status}")
         logger.info("Step 3: Deleting data from AzureOpenAI resource")
         self.delete_files()
 
         if finetuned_job.status == "failed":
             raise Exception(f"Fine tuning job: {self.finetuning_job_id} failed with error: {finetuned_job.error}")
-        elif finetuned_job == "cancelled":
+        elif finetuned_job.status == "cancelled":
             logger.info(f"finetune job: {self.finetuning_job_id} got cancelled")
             return None
         else:
             logger.info(f'Fine-tune job: {self.finetuning_job_id} finished successfully')
 
-        return finetuned_model_id
+        return finetuned_job.fine_tuned_model
 
     def delete_files(self):
         """Delete training and validation files from azure openai resource."""
@@ -121,8 +122,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         logger.debug(f"started finetuning job in Azure OpenAI resource. Job id: {finetune_job.id}")
 
-        self.finetuning_job_id = finetune_job.id
-        return finetune_job.fine_tuned_model
+        return finetune_job.id
 
     def track_finetuning_job(self):
         """Fetch metrics for the job and log them."""
