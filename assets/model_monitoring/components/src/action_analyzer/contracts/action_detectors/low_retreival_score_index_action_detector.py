@@ -27,7 +27,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
             retrieval_score_violation_threshold(float): threshold for retrieval score violation.
             retrieval_score_violation_rate(float): retrieval score violation rate. If the violation rate is below this number, an action will be generated.
             action_max_positive_sample_size(int): max number of positive samples in the action.
-            llm_summary_enabled(str): enable llm summary. Accepted values: true or false.
+            llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
         """
         self.retrieval_score_violation_threshold = retrieval_score_violation_threshold
         self.retrieval_score_violation_rate = retrieval_score_violation_rate

@@ -38,12 +38,12 @@ class ActionDetector(ABC):
             model_deployment_name(str): model deployment name of the connection.
             aml_deployment_id(str): the azureml deployment id of the llm application.
             action_max_positive_sample_size(int): max number of positive samples in the action.
-            llm_summary_enabled(str): enable llm summary. Accepted values: true or false.
+            llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
         """
         self.aml_deployment_id = aml_deployment_id
         self.llm_summary_enabled = llm_summary_enabled
         self.action_max_positive_sample_size = action_max_positive_sample_size
-        self.setup_llm_properties(workspace_connection_arm_id, model_deployment_name)
+        self._setup_llm_properties(workspace_connection_arm_id, model_deployment_name)
 
     def _setup_llm_properties(self, workspace_connection_arm_id: str, model_deployment_name: str) -> None:
         """Setup LLM related properties for later usage.

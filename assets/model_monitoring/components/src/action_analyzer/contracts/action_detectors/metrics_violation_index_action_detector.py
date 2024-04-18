@@ -35,7 +35,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             correlation_test_method(str): test method for correlation test. e.g. ttest.
             correlation_test_pvalue_threshold(float): p-value threshold for correlation test to generate action.
             action_max_positive_sample_size(int): max number of positive samples in the action.
-            llm_summary_enabled(str): enable llm summary. Accepted values: true or false.
+            llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
         """
         self.metrics_violation_thresholds = metrics_violation_thresholds
         self.metrics_violation_passing_rate = metrics_violation_passing_rate
