@@ -62,5 +62,5 @@ def check_all_files(directory):
             all_files.append(name)  # Append the file name only
         for subdir in dirs:
             subdir_path = os.path.join(root, subdir)
-            all_files.extend(get_all_files(subdir_path))  # Recursively call get_all_files for subdirectories
+            all_files.extend(check_all_files(subdir_path))  # Recursively call get_all_files for subdirectories
     return all_files
