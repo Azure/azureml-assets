@@ -16,6 +16,7 @@ from .constants import MAX_RETRY_COUNT
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 from shared_utilities.store_url import StoreUrl
+from azureml.dataprep.api.errorhandlers import ExecutionError
 
 
 class NoDataApproach(Enum):
@@ -154,7 +155,15 @@ def read_mltable_in_spark(mltable_path: str):
     """Read mltable in spark."""
     _verify_mltable_paths(mltable_path)
     spark = init_spark()
-    return spark.read.mltable(mltable_path)
+    try:
+        return spark.read.mltable(mltable_path)
+    except ExecutionError as ee:
+        if 'AuthenticationError("RuntimeError: Non-matching ' in str(ee):
+            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, "
+                                    "please make sure only data defined in the same AML workspace is used in MLTable.")
+    except ValueError as ve:
+        if 'AuthenticationError("RuntimeError: Non-matching ' in str(ve):
+            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, it is not from the same AML workspace.")
 
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
