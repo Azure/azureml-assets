@@ -42,6 +42,7 @@ MLFLOW_TASK_HF_PRETRAINED_CLASS_MAP = {
     MLFlowHFFlavourTasks.TEXT_GENERATION: "AutoModelForCausalLM",
     MLFlowHFFlavourTasks.SUMMARIZATION: "AutoModelForSeq2SeqLM",
     MLFlowHFFlavourTasks.TRANSLATION: "AutoModelForSeq2SeqLM",
+    MLFlowHFFlavourTasks.CHAT_COMPLETION: "AutoModelForCausalLM",
 }
 
 
@@ -120,6 +121,16 @@ class PyTorch_to_MlFlow_ModelConverter:
         ))
         with open(mlflow_infer_params_file_path, 'r') as fp:
             mlflow_inference_params = json.load(fp)
+
+        # Ignore `return_full_text` key for chat completion
+        # HACK for now - Ideal place to do this is in preprocess_for_finetune.py of chat completion task
+        if self.mlflow_task_type == MLFlowHFFlavourTasks.CHAT_COMPLETION:
+            if MLFlowHFFlavourConstants.INFERENCE_PARAMS_SAVE_KEY in mlflow_inference_params:
+                mlflow_inference_params[MLFlowHFFlavourConstants.INFERENCE_PARAMS_SAVE_KEY].pop(
+                    "return_full_text", None
+                )
+                logger.info(
+                    f"Removing `return_full_text` from {MLFlowHFFlavourConstants.INFERENCE_PARAMS_SAVE_KEY} key.")
 
         misc_conf = {
             MLFlowHFFlavourConstants.TASK_TYPE: self.mlflow_task_type,
