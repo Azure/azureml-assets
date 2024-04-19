@@ -15,7 +15,7 @@ from datasets import load_dataset
 from typing import Any, Dict, List, Union
 
 JINJA_ENV = Environment(keep_trailing_newline=True)
-REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
+REGEX_EXPR = """((?:.*?def.*?FUNCNAME.*?))(?=(?:
 \\S|$))"""
 CODE_GENERATION_DEBUG = False
 
@@ -179,20 +179,33 @@ def run_humaneval_postprocessor(
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
-        if str("def " + row["entry_point"] + "(") in row["original_prediction"]:
-            # If the model regenerates the prompt/ function name
-            pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
-        else:
-            original_prediction = _extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
+        tag_type = "python" if "```python" in row["original_prediction"] else ""
+
+        # Extract the prediction data from the markdown tags
+        pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type)
+
+        # Get the index of the first function definition and return keyword
+        def_index = pred_combined_prompt.find("def ")
+        func_name_index = pred_combined_prompt.find(str("def " + row["entry_point"]))
+        return_keyword_index = pred_combined_prompt.find("return")
+
+        # If function definition is not present or present after the initial function body prediction
+        if def_index == -1 or return_keyword_index < def_index or func_name_index == -1:
             # If spaces were stripped from endpoint responses, add those back.
-            if not len(original_prediction) or (len(original_prediction) and original_prediction[0].isspace()):
+            if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
                 prefix = ""
             else:
                 prefix = "    "
-            pred_combined_prompt = row["prompt"] + "\n" + prefix + original_prediction
+            pred_combined_prompt = row["prompt"] + "\n" + prefix + pred_combined_prompt
+        else:
+            # If function name is present in the prediction, then remove from prompt
+            prompt_header = row["prompt"].split(str("def " + row["entry_point"]))[0]
+            pred_combined_prompt = prompt_header + "\n" + pred_combined_prompt
+
         # Applying regex on the prediction column
         if regex_exp:
-            pred = apply_regex_expr(pred_combined_prompt, regex_exp)
+            regex_exp_func = regex_exp.replace("FUNCNAME", row["entry_point"])
+            pred = apply_regex_expr(pred_combined_prompt, regex_exp_func)
         else:
             pred = pred_combined_prompt
         if CODE_GENERATION_DEBUG is True:
