@@ -51,6 +51,7 @@ TASK_SPECIFIC_PARAMS = {
     }
 }
 
+
 @dataclass
 class ComponentInput:
     """Dataclass for Ftaas pipeline component inputs."""
