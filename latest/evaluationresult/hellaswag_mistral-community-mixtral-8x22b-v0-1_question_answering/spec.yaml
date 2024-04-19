@@ -1,0 +1,31 @@
+type: evaluationresult
+name: hellaswag_mistral-community-mixtral-8x22b-v0-1_question_answering
+version: 2.19.040
+display_name: hellaswag_mistral-community-Mixtral-8x22B-v0-1_question_answering
+description: mistral-community-Mixtral-8x22B-v0-1 run for hellaswag dataset
+dataset_family: hellaswag
+dataset_name: hellaswag
+
+model_name: mistral-community-Mixtral-8x22B-v0-1
+model_version: "1"
+model_asset_id: azureml://registries/azureml/models/mistral-community-Mixtral-8x22B-v0-1/versions/1
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azureml/models/mistral-community-Mixtral-8x22B-v0-1/versions/1
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.8399721
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_mc1_microsoft_phi_2_question_answering
-version: 2.02.04
+version: 2.19.040
 display_name: truthfulqa_mc1_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for truthfulqa mc1 dataset
 dataset_family: truthfulqa
@@ -15,6 +15,7 @@ relationships:
   assetId: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 

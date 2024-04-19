@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_mistral_7b_instruct_v01_question_answering
-version: 2.02.04
+version: 2.19.040
 display_name: social_iqa_mistral_7b_instruct_v01_question_answering
 description: mistralai-mistral-7b-instruct-v01 run for social_iqa dataset
 dataset_family: social_iqa
@@ -15,6 +15,7 @@ relationships:
   assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v01/versions/1
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: openbookqa_mistralai-mistral-7b-instruct-v0-2_question_answering
-version: 2.08.04
+version: 2.19.040
 display_name: openbookqa_mistralai-Mistral-7B-Instruct-v0-2_question_answering
 description: mistralai-Mistral-7B-Instruct-v0-2 run for openbookqa dataset
 dataset_family: openbookqa
@@ -15,6 +15,7 @@ relationships:
   assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/1
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 

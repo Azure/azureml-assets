@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation_mistralai-mixtral-8x7b-v01_question_answering
-version: 2.02.04
+version: 2.19.040
 display_name: truthfulqa_generation_mistralai-Mixtral-8x7B-v01_question_answering
 description: mistralai-Mixtral-8x7B-v01 run for truthfulqa_generation dataset
 dataset_family: truthfulqa
@@ -15,6 +15,7 @@ relationships:
   assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/4
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
 

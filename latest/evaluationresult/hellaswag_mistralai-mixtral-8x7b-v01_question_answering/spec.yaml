@@ -1,6 +1,6 @@
 type: evaluationresult
 name: hellaswag_mistralai-mixtral-8x7b-v01_question_answering
-version: 2.02.04
+version: 2.19.040
 display_name: hellaswag_mistralai-Mixtral-8x7B-v01_question_answering
 description: mistralai-Mixtral-8x7B-v01 run for hellaswag dataset
 dataset_family: hellaswag
@@ -15,6 +15,7 @@ relationships:
   assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/4
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 
