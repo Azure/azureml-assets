@@ -89,10 +89,14 @@ def main(
                 shutil.copy(wheel, wheel_dir / wheel.name)
 
         # Adding wheel packages to Dockerfile
+        wheel_file_found = False
         with open(f"{staging_dir}/Dockerfile", "a") as f:
             for wheel in wheel_dir.glob("*.whl"):
-                f.write(f"\nCOPY ./wheels/{wheel.name} /wheels/\n")
-            f.write("\nRUN pip install --force-reinstall /wheels/*.whl\n")
+                if wheel.name is not None and len(wheel.name) > 0:
+                    wheel_file_found = True
+                    f.write(f"\nCOPY ./wheels/{wheel.name} /wheels/\n")
+            if wheel_file_found:
+                f.write("\nRUN pip install --force-reinstall /wheels/*.whl\n")
 
         env = Environment(
             name=environment_name,
