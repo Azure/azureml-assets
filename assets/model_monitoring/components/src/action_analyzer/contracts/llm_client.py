@@ -34,7 +34,7 @@ class LLMClient:
         self.model_deployment_name = model_deployment_name
         self._setup_llm_properties()
 
-    def _setup_llm_properties(self) -> None:
+    def _setup_llm_properties(self) -> None:  # noqa
         """Setup LLM related properties for later usage."""
         self.llm_request_args = get_llm_request_args(self.model_deployment_name)
 
