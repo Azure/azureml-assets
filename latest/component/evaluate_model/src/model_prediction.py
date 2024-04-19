@@ -246,8 +246,14 @@ class ModelPredictionRunner:
                     if self.task == constants.TASK.QnA:
                         for col in X_test.columns:
                             y_test_batch[col] = X_test[col]
-                elif self.task == constants.TASK.CHAT_COMPLETION and self.label_column_name is not None:
-                    y_test_batch = pd.DataFrame(y_test_batch, columns=[self.label_column_name])
+                elif self.task == constants.TASK.CHAT_COMPLETION:
+                    logger.info("Empty/NaN ground truths will replaced with Empty string values ('').")
+                    if self.label_column_name is not None:
+                        y_test_batch = pd.DataFrame(y_test_batch, columns=[self.label_column_name]).fillna("")
+                    else:
+                        logger.info("No label column found. Trying to parse test data for ground truths.")
+                        y_test_batch = pd.DataFrame(X_test[self.input_column_names[0]].apply(
+                            lambda x: x[-1]['content'] if x[-1]['role'] == 'assistant' else ""))
                 else:
                     y_test_batch = pd.DataFrame({})
                 if self.task != constants.TASK.CHAT_COMPLETION:

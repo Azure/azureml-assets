@@ -35,14 +35,16 @@ class ChatCompletion(PredictWrapper):
 
         # loop 'cause model accepts a single dataframe (multi-turn conversation) as an input
         for _, X_df in X_test.iterrows():
-            convo_arr = np.array(X_df[input_column_names[0]])
+            convo_df = pd.DataFrame(np.array(X_df[input_column_names[0]]), columns=[input_column_names[0]])
+            if convo_df[input_column_names[0]].iloc[-1]['role'] == 'assistant':
+                convo_df = convo_df[:-1]
             if "generator_config" in kwargs:
                 convo_arr_updated = {
                     "parameters": kwargs["generator_config"],
-                    "inputs": {"input": convo_arr},
+                    "inputs": {"input": convo_df},
                 }
             else:
-                convo_arr_updated = convo_arr
+                convo_arr_updated = convo_df
             try:
                 logger.info("Running predictions with the kwargs")
                 y_pred = self.model.predict(convo_arr_updated, **kwargs)
@@ -52,12 +54,21 @@ class ChatCompletion(PredictWrapper):
             except RuntimeError:
                 logger.info("Encountered RuntimeError, retrying.")
                 return self.handle_device_failure(convo_arr_updated, **kwargs)
-            y_pred_template = [{'role': 'assistant', 'content': y_pred['output']}]
-            y_pred_row = pd.DataFrame({input_column_names[0]: y_pred_template})
-            y_pred_appended_convo = pd.concat([X_df, y_pred_row], ignore_index=True)
+            if isinstance(y_pred, pd.DataFrame):
+                y_pred = y_pred[y_pred.columns[0]].tolist()[0]
+            elif isinstance(y_pred, dict):
+                y_pred = y_pred["output"]
+            elif isinstance(y_pred, list) and len(y_pred) == 1:
+                y_pred = y_pred[0]
+            y_pred_template = pd.DataFrame(
+                np.array([{'role': 'assistant', 'content': y_pred}]), columns=[input_column_names[0]]
+            )
+            y_pred_appended_convo = pd.concat([convo_df, y_pred_template], ignore_index=True)
             y_pred_dict = {
-                ChatCompletionConstants.OUTPUT: y_pred['output'],
-                ChatCompletionConstants.OUTPUT_FULL_CONVERSATION: y_pred_appended_convo
+                ChatCompletionConstants.OUTPUT: y_pred,
+                ChatCompletionConstants.OUTPUT_FULL_CONVERSATION: [{
+                    input_column_names[0]: np.array(y_pred_appended_convo[input_column_names[0]].tolist())
+                }]
             }
             y_pred_combined.append(y_pred_dict)
 

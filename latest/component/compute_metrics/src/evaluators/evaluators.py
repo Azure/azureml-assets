@@ -611,7 +611,7 @@ class ChatCompletionEvaluator(Evaluator):
         #  dataframe with 2 columns predictions and predictions appended to the conversation
         if len(y_pred.columns) > 1:
             y_pred_formatted = [
-                item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0]["0"]
+                list(item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0].values())[0]
                 for idx, item in y_pred.iterrows()
             ]
         # dataframe wih just predictions appended to conversations
