@@ -354,7 +354,7 @@ def add_task_specific_params(cmd: List[str], task_name: str, component_name: str
         elif isinstance(param_val, dict):
             # If its dict, then parse the param and add to cmd
             component_param_name = param_val.get("env_name", param)
-            if param_val.get("required", False) == True:
+            if param_val.get("required", False) is True:
                 if param_val["type"] == "param":
                     cmd += ["--" + param, decode_param_from_env_var(component_param_name)]
                 elif param_val["type"] == "input":
