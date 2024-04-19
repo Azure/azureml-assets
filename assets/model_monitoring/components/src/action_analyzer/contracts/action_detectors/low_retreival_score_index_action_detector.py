@@ -3,6 +3,7 @@
 
 """Low retrieval score index action detector class."""
 
+import pandas
 from action_analyzer.contracts.detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
@@ -11,7 +12,7 @@ from action_analyzer.contracts.llm_client import LLMClient
 class LowRetreivalScoreIndexActionDetector(ActionDetector):
     """Low retrieval score index action detector class."""
 
-    def __init__(self, 
+    def __init__(self,
                  index_id: str,
                  violated_metrics: list[str],
                  action_max_positive_sample_size: int,
@@ -27,7 +28,6 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         self.index_id = index_id
         self.violated_metrics = violated_metrics
         super().__init__(action_max_positive_sample_size, llm_summary_enabled)
-
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.

@@ -3,13 +3,8 @@
 
 """Action sample class."""
 
-import datetime
-import uuid
 import json
-from enum import Enum
-from abc import ABC, abstractmethod
 from action_analyzer.contracts.action import ActionSample
-from action_analyzer.utils.utils import convert_to_camel_case
 
 
 class IndexActionSample(ActionSample):
@@ -57,7 +52,7 @@ class RetrievalSpanData:
                  retrieval_top_k: int,
                  prompt_flow_input: str) -> None:
         """Create retreival span data.
-        
+
         Args:
             span_id(str): the span id of te retreival span.
             index_content(str): the azureml index content.
@@ -78,7 +73,6 @@ class RetrievalSpanData:
         self.retrieval_query_type = retrieval_query_type
         self.retrieval_top_k = retrieval_top_k
         self.prompt_flow_input = prompt_flow_input
-
 
     def to_json_str(self) -> str:
         """Convert a retrieval span data to json str."""

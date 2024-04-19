@@ -7,7 +7,6 @@ import datetime
 import uuid
 import json
 from enum import Enum
-from abc import ABC, abstractmethod
 from action_analyzer.utils.utils import convert_to_camel_case
 
 
@@ -42,10 +41,9 @@ class ActionSample:
         self.debugging_info = debugging_info
         self.prompt_flow_input = prompt_flow_input
 
-
     def to_json_str(self) -> str:
         """Convert an action sample object to json string."""
-        attribute_dict =  self.__dict__
+        attribute_dict = self.__dict__
         json_out = {}
         for key, val in attribute_dict.items():
             json_out[convert_to_camel_case(key)] = val
@@ -56,7 +54,7 @@ class Action():
     """Action class."""
 
     def __init__(self,
-                 action_type: ActionType, 
+                 action_type: ActionType,
                  description: str,
                  confidence_score: float,
                  query_intention: str,
@@ -87,10 +85,9 @@ class Action():
         self.positive_samples = positive_samples
         self.negative_samples = negative_samples
 
-
     def to_json_str(self) -> str:
         """Convert an action object to json str."""
-        attribute_dict =  self.__dict__
+        attribute_dict = self.__dict__
         json_out = {}
         for key, val in attribute_dict.items():
             if key == "action_type":

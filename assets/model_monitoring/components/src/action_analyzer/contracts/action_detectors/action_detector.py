@@ -3,6 +3,7 @@
 
 """Action Detector Class."""
 
+import pandas
 from abc import ABC, abstractmethod
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
@@ -23,7 +24,6 @@ class ActionDetector(ABC):
         self.action_max_positive_sample_size = action_max_positive_sample_size
         self.query_intention_enabled = query_intention_enabled
 
-
     @abstractmethod
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.
@@ -35,7 +35,6 @@ class ActionDetector(ABC):
             pandas.DataFrame: preprocessed pandas dataframe.
         """
         pass
-
 
     @abstractmethod
     def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> list(Action):

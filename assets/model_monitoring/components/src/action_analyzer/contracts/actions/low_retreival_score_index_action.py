@@ -4,9 +4,11 @@
 """LowRetreivalScoreIndexAction Class."""
 
 from action_analyzer.contracts.action import ActionType, Action
+from action_analyzer.contracts.index_action_contracts import IndexActionSample
 from shared_utilities.constants import (
     ACTION_DESCRIPTION
 )
+
 
 class LowRetreivalScoreIndexAction(Action):
     """Low retrieval score index action class."""

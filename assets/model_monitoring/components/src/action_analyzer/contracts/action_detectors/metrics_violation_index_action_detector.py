@@ -6,7 +6,6 @@
 from action_analyzer.contracts.detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
-from typing import Dict
 import pandas
 
 SUPPORTED_METRICS = ["Fluency", "Coherence", "Relevance", "Groundedness", "RetrievalRelevance"]
@@ -22,8 +21,8 @@ class MetricsViolationIndexActionDetector(ActionDetector):
                  correlation_test_pvalue_threshold: float,
                  action_max_positive_sample_size: int,
                  llm_summary_enabled: str,
-                 positive_metric_threshold = 5,
-                 negative_metric_threshold = 3) -> None:
+                 positive_metric_threshold=5,
+                 negative_metric_threshold=3) -> None:
         """Create a metrics violation index action detector.
 
         Args:
@@ -33,16 +32,15 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             correlation_test_pvalue_threshold(float): p-value threshold for correlation test to generate action.
             action_max_positive_sample_size(int): max number of positive samples in the action.
             llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
-            positive_metrics_threshold(int): (Optional) e2e metric threshold to mark the query as positive. 
-            negative_metrics_threshold(int): (Optional) e2e metric threshold to mark the query as negative.
+            positive_metric_threshold(int): (Optional) e2e metric threshold to mark the query as positive.
+            negative_metric_threshold(int): (Optional) e2e metric threshold to mark the query as negative.
         """
 
         self.correlation_test_method = correlation_test_method
         self.correlation_test_pvalue_threshold = correlation_test_pvalue_threshold
-        self.positive_metrics_threshold = positive_metrics_threshold
-        self.negative_metrics_threshold = negative_metrics_threshold
+        self.positive_metric_threshold = positive_metric_threshold
+        self.negative_metric_threshold = negative_metric_threshold
         super().__init__(action_max_positive_sample_size, llm_summary_enabled)
-
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.
@@ -55,7 +53,6 @@ class MetricsViolationIndexActionDetector(ActionDetector):
         """
         pass
 
-
     def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> list(Action):
         """Detect the action.
         Args:
@@ -66,28 +63,3 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             list(Action): list of actions.
         """
         pass
-
-
-    # def _get_violated_metrics(self, df) -> list[str]:
-    #     """Get violated metrics.
-
-    #     Args:
-    #         df(pandas.DataFrame): input pandas dataframe.
-    #     """
-        
-    #     column_names = df.columns.values.tolist()
-    #     missing_metrics = []
-    #     for metric, threshold in self.MetricsViolationThresholds.items():
-    #         if metric.lower() not in [m.lower() for m in SUPPORTED_METRICS]:
-    #             print(f"Metric {metric} is not supported. The supported metrics are: {SUPPORTED_METRICS}.")
-    #         if metric.lower() not in [c.lower() for c in column_names]:
-    #             print(f"Metric score {metrics} does not exist in the input dataframe.")
-    #             missing_metrics.append(metric)
-        
-    #     if len(missing_metrics) == 0:
-            
-            
-
-
-
-    

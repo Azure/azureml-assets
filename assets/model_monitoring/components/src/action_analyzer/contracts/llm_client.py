@@ -3,27 +3,20 @@
 
 """LLM Client Class."""
 
-import datetime
-import uuid
-import json
-from enum import Enum
-from abc import ABC, abstractmethod
-from action_analyzer.utils.utils import convert_to_camel_case
 from shared_utilities.llm_utils import (
     API_KEY,
     AZURE_OPENAI_API_COMPLETION_URL_PATTERN,
     AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-    _APITokenManager,
     _WorkspaceConnectionTokenManager,
     _HTTPClientWithRetry,
     _check_and_format_azure_endpoint_url,
-    _request_api,
     get_llm_request_args
 )
 from shared_utilities.constants import (
     API_CALL_RETRY_BACKOFF_FACTOR,
     API_CALL_RETRY_MAX_COUNT
 )
+
 
 class LLMClient:
     """LLM Client Class."""
@@ -41,17 +34,16 @@ class LLMClient:
         self.model_deployment_name = model_deployment_name
         self._setup()
 
-
     def _setup(self) -> None:
         """Setup LLM related properties for later usage."""
 
-        self.llm_request_args = _get_llm_request_args(self.model_deployment_name)
+        self.llm_request_args = get_llm_request_args(self.model_deployment_name)
 
         self.token_manager = _WorkspaceConnectionTokenManager(
             connection_name=self.workspace_connection_arm_id,
             auth_header=API_KEY)
-        azure_endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
-        azure_openai_api_version = token_manager.get_api_version()
+        azure_endpoint_domain_name = self.token_manager.get_endpoint_domain().replace("https://", "")
+        azure_openai_api_version = self.token_manager.get_api_version()
 
         self.azure_endpoint_url = _check_and_format_azure_endpoint_url(
             AZURE_OPENAI_API_COMPLETION_URL_PATTERN,

@@ -3,6 +3,7 @@
 
 """This file contains utilities for action detector."""
 
+
 def convert_to_camel_case(input_string: str) -> str:
     """
     Converts a snake_case string to camelCase.
