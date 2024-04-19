@@ -32,11 +32,10 @@ class LLMClient:
         """
         self.workspace_connection_arm_id = workspace_connection_arm_id
         self.model_deployment_name = model_deployment_name
-        self._setup()
+        self._setup_llm_properties()
 
-    def _setup(self) -> None:
+    def _setup_llm_properties(self) -> None:
         """Setup LLM related properties for later usage."""
-
         self.llm_request_args = get_llm_request_args(self.model_deployment_name)
 
         self.token_manager = _WorkspaceConnectionTokenManager(

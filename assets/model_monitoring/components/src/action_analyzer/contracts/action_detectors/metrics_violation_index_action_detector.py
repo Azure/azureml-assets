@@ -35,7 +35,6 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             positive_metric_threshold(int): (Optional) e2e metric threshold to mark the query as positive.
             negative_metric_threshold(int): (Optional) e2e metric threshold to mark the query as negative.
         """
-
         self.correlation_test_method = correlation_test_method
         self.correlation_test_pvalue_threshold = correlation_test_pvalue_threshold
         self.positive_metric_threshold = positive_metric_threshold
@@ -55,6 +54,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
 
     def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> list(Action):
         """Detect the action.
+
         Args:
             df(pandas.DataFrame): input pandas dataframe.
             llm_client(LLMClient): LLM client used to get some llm scores/info for action.

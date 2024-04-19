@@ -42,6 +42,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
 
     def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> list(Action):
         """Detect the action.
+
         Args:
             df(pandas.DataFrame): input pandas dataframe.
             llm_client(LLMClient): LLM client used to get some llm scores/info for action.
