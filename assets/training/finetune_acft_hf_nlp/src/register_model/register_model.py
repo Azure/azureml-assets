@@ -202,6 +202,7 @@ def get_properties(finetune_args_path: str) -> Dict[str, str]:
     additional_properties = {
         "baseModelWeightsVersion": 1.0,
         "hasDeltaWeights": "true",
+        "maas-finetuning": "true",
     }
     properties.update(additional_properties)
     logger.info(f"Adding the following properties to the registered model: {properties}")

@@ -44,6 +44,7 @@ ACFT_TASKS_HUGGINGFACE_MODELS_MAPPING = {
     Tasks.TRANSLATION: AutoModelForSeq2SeqLM,
     Tasks.QUESTION_ANSWERING: AutoModelForQuestionAnswering,
     Tasks.TEXT_GENERATION: AutoModelForCausalLM,
+    Tasks.CHAT_COMPLETION: AutoModelForCausalLM,
 }
 
 
@@ -55,6 +56,7 @@ ACFT_TASKS_PEFT_MODELS_MAPPING = {
     Tasks.TRANSLATION: AutoPeftModelForSeq2SeqLM,
     Tasks.QUESTION_ANSWERING: AutoPeftModelForQuestionAnswering,
     Tasks.TEXT_GENERATION: AutoPeftModelForCausalLM,
+    Tasks.CHAT_COMPLETION: AutoPeftModelForCausalLM,
 }
 
 
