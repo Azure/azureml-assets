@@ -49,6 +49,18 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference --no-cache-dir
 
+RUN pip uninstall -y vllm
+
+COPY ./vllm.patch ./vllm.patch
+
+RUN git clone https://github.com/vllm-project/vllm.git && \
+    cd vllm && \
+    git checkout e95cd879598b834f85e70ebcd23db316ae430540 && \
+    git apply ../vllm.patch && \
+    pip install -r requirements-cuda.txt && \
+    python setup.py bdist_wheel && \
+    pip install dist/*.whl
+
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 
