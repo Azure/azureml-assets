@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.44 (2024-04-19)
+### 🐛 Bugs Fixed
+- [#2726](https://github.com/Azure/azureml-assets/pull/2726) Set overall ACR task timeout
+
 ## 1.16.43 (2024-04-19)
 ### 🐛 Bugs Fixed
 - [#2726](https://github.com/Azure/azureml-assets/pull/2726) Set overall ACR task timeout
