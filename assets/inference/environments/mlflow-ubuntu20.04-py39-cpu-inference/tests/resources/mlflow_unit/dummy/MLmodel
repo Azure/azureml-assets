@@ -1,0 +1,14 @@
+artifact_path: C:\Users\wamartin\o16n-base-images\base_images\inference\tests\validation\scenarios\../resources/mlflow_unit/dummy
+flavors:
+  python_function:
+    cloudpickle_version: 2.2.1
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.16
+mlflow_version: 2.4.1
+model_uuid: f8abc029ceb44654b09a0a67185080cb
+run_id: d92a977190fc4110942f4e8805356bbe
+utc_time_created: '2023-06-30 18:04:12.935187'
