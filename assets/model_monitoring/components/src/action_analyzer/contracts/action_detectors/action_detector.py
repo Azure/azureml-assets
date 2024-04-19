@@ -13,15 +13,12 @@ class ActionDetector(ABC):
     """Action detector base class."""
 
     def __init__(self,
-                 action_max_positive_sample_size: int,
                  query_intention_enabled: str) -> None:
         """Create an action detector.
 
         Args:
-            action_max_positive_sample_size(int): max number of positive samples in the action.
             query_intention_enabled(str): enable llm generated query intention. Accepted values: true or false.
         """
-        self.action_max_positive_sample_size = action_max_positive_sample_size
         self.query_intention_enabled = query_intention_enabled
 
     @abstractmethod

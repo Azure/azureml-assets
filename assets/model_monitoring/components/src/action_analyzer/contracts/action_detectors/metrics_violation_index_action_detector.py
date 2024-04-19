@@ -19,7 +19,6 @@ class MetricsViolationIndexActionDetector(ActionDetector):
                  violated_metrics: list[str],
                  correlation_test_method: str,
                  correlation_test_pvalue_threshold: float,
-                 action_max_positive_sample_size: int,
                  llm_summary_enabled: str,
                  positive_metric_threshold=5,
                  negative_metric_threshold=3) -> None:
@@ -30,7 +29,6 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             violated_metrics(List[str]): violated e2e metrics
             correlation_test_method(str): test method for correlation test. e.g. ttest.
             correlation_test_pvalue_threshold(float): p-value threshold for correlation test to generate action.
-            action_max_positive_sample_size(int): max number of positive samples in the action.
             llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
             positive_metric_threshold(int): (Optional) e2e metric threshold to mark the query as positive.
             negative_metric_threshold(int): (Optional) e2e metric threshold to mark the query as negative.

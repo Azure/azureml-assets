@@ -15,14 +15,12 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
     def __init__(self,
                  index_id: str,
                  violated_metrics: list[str],
-                 action_max_positive_sample_size: int,
                  llm_summary_enabled: str):
         """Create a low retrieval score index action detector.
 
         Args:
             index_id(str): the index asset id.
             violated_metrics(List[str]): violated e2e metrics
-            action_max_positive_sample_size(int): max number of positive samples in the action.
             llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
         """
         self.index_id = index_id
