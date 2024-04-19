@@ -59,7 +59,7 @@ def create_acr_task(image_name: str,
         'stepTimeout': DEFAULT_STEP_TIMEOUT_SECONDS,
         'steps': [{
             'id': "build",
-            'stepTimeout': BUILD_STEP_TIMEOUT_SECONDS,
+            'timeout': BUILD_STEP_TIMEOUT_SECONDS,
             'build': f"-t $Registry/{image_name} -f {dockerfile} ."
         }]}
 
@@ -88,7 +88,7 @@ def create_acr_task(image_name: str,
         if os is assets.Os.LINUX:
             task['steps'].append({
                 'id': "scan",
-                'stepTimeout': SCAN_STEP_TIMEOUT_SECONDS,
+                'timeout': SCAN_STEP_TIMEOUT_SECONDS,
                 'cmd': f"aquasec/trivy -q --timeout {TRIVY_TIMEOUT} image --scanners vuln --ignore-unfixed "
                        f"$Registry/{image_name}",
                 'ignoreErrors': True,
@@ -111,7 +111,7 @@ def create_acr_task(image_name: str,
         YAML().dump(task, f)
 
     # Compute task timeout by adding all step timeouts
-    return sum([step.get('stepTimeout', DEFAULT_STEP_TIMEOUT_SECONDS) for step in task['steps']])
+    return sum([step.get('timeout', DEFAULT_STEP_TIMEOUT_SECONDS) for step in task['steps']])
 
 
 def build_image(asset_config: assets.AssetConfig,
