@@ -43,11 +43,11 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 
 # For local testing
 # Need to copy src code and install in editable mode
-COPY . .
-RUN pip install -e .
+#COPY . .
+#RUN pip install -e .
 
 # When copied to assets repo, change to install from public pypi
-# RUN pip install llm-optimized-inference --no-cache-dir
+RUN pip install llm-optimized-inference --no-cache-dir
 
 RUN pip uninstall -y vllm
 
