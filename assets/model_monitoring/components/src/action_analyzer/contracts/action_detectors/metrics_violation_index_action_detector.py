@@ -15,33 +15,32 @@ class MetricsViolationIndexActionDetector(ActionDetector):
     """Metrics violation index action detector class."""
 
     def __init__(self,
-                 workspace_connection_arm_id: str,
-                 model_deployment_name: str,
-                 aml_deployment_id: str,
-                 metrics_violation_thresholds: Dict[str, float],
-                 metrics_violation_passing_rate: Dict[str, float],
+                 index_id: str,
+                 violated_metrics: list[str],
                  correlation_test_method: str,
                  correlation_test_pvalue_threshold: float,
                  action_max_positive_sample_size: int,
-                 llm_summary_enabled: str) -> None:
+                 llm_summary_enabled: str,
+                 positive_metric_threshold = 5,
+                 negative_metric_threshold = 3) -> None:
         """Create a metrics violation index action detector.
 
         Args:
-            workspace_connection_arm_id(str): azureml workspace connection arm id for llm.
-            model_deployment_name(str): model deployment name of the connection.
-            aml_deployment_id(str): the azureml deployment id of the llm application.
-            metrics_violation_thresholds(Dict[str, float]): metrics violation thresholds dict, key is metric name, value is threshold for that metric.
-            metrics_violation_passing_rate(Dict[str, float]): metrics violation passing rate dict, key is metric name, value is passing rate for that metric.
+            index_id(str): the index asset id.
+            violated_metrics(List[str]): violated e2e metrics
             correlation_test_method(str): test method for correlation test. e.g. ttest.
             correlation_test_pvalue_threshold(float): p-value threshold for correlation test to generate action.
             action_max_positive_sample_size(int): max number of positive samples in the action.
             llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
+            positive_metrics_threshold(int): (Optional) e2e metric threshold to mark the query as positive. 
+            negative_metrics_threshold(int): (Optional) e2e metric threshold to mark the query as negative.
         """
-        self.metrics_violation_thresholds = metrics_violation_thresholds
-        self.metrics_violation_passing_rate = metrics_violation_passing_rate
+
         self.correlation_test_method = correlation_test_method
         self.correlation_test_pvalue_threshold = correlation_test_pvalue_threshold
-        super().__init__(workspace_connection_arm_id, model_deployment_name, aml_deployment_id, action_max_positive_sample_size, llm_summary_enabled)
+        self.positive_metrics_threshold = positive_metrics_threshold
+        self.negative_metrics_threshold = negative_metrics_threshold
+        super().__init__(action_max_positive_sample_size, llm_summary_enabled)
 
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:

@@ -23,6 +23,7 @@ class ActionSample:
 
     def __init__(self,
                  question: str,
+                 index_query: str,
                  answer: str,
                  debugging_info: str,
                  prompt_flow_input: str) -> None:
@@ -30,11 +31,13 @@ class ActionSample:
 
         Args:
             question(str): the input question of the flow.
-            answer(str): the output answer of the flow
+            index_query(str): the index query for document retrieval.
+            answer(str): the output answer of the flow.
             debugging_info(str): the json string of debugging info in a span tree structure.
             prompt_flow_input(str): the json str of prompt flow input.
         """
         self.question = question
+        self.index_query = index_query
         self.answer = answer
         self.debugging_info = debugging_info
         self.prompt_flow_input = prompt_flow_input

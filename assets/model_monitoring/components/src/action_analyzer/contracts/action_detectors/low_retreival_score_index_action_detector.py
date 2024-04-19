@@ -11,27 +11,21 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
     """Low retrieval score index action detector class."""
 
     def __init__(self, 
-                 workspace_connection_arm_id: str,
-                 model_deployment_name: str,
-                 aml_deployment_id: str,
-                 retrieval_score_violation_threshold: float,
-                 retrieval_score_violation_rate: float,
+                 index_id: str,
+                 violated_metrics: list[str],
                  action_max_positive_sample_size: int,
                  llm_summary_enabled: str):
         """Create a low retrieval score index action detector.
 
         Args:
-            workspace_connection_arm_id(str): azureml workspace connection arm id for llm.
-            model_deployment_name(str): model deployment name of the connection.
-            aml_deployment_id(str): the azureml deployment id of the llm application.
-            retrieval_score_violation_threshold(float): threshold for retrieval score violation.
-            retrieval_score_violation_rate(float): retrieval score violation rate. If the violation rate is below this number, an action will be generated.
+            index_id(str): the index asset id.
+            violated_metrics(List[str]): violated e2e metrics
             action_max_positive_sample_size(int): max number of positive samples in the action.
             llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
         """
-        self.retrieval_score_violation_threshold = retrieval_score_violation_threshold
-        self.retrieval_score_violation_rate = retrieval_score_violation_rate
-        super().__init__(workspace_connection_arm_id, model_deployment_name, aml_deployment_id, action_max_positive_sample_size, llm_summary_enabled)
+        self.index_id = index_id
+        self.violated_metrics = violated_metrics
+        super().__init__(action_max_positive_sample_size, llm_summary_enabled)
 
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:

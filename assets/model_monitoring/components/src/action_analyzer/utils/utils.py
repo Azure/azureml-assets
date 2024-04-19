@@ -11,4 +11,3 @@ def convert_to_camel_case(input_string: str) -> str:
     words = input_string.split("_")
     result = "".join(word.capitalize() for word in words)
     return result
-

@@ -402,3 +402,17 @@ def get_openai_request_args(args):
     }
     request_args["model"] = args.model_deployment_name
     return request_args
+
+
+def get_llm_request_args(model_deployment_name):
+    """Get openai request parameters."""
+    request_args = {
+        "temperature": TEMPERATURE_VALUE,
+        "top_p": TOP_P_VALUE,
+        "num_samples": NUM_SAMPLES_VALUE,
+        "frequency_penalty": FREQUENCY_PENALTY_VALUE,
+        "presence_penalty": PRESENCE_PENALTY_VALUE,
+        "model": model_deployment_name
+    }
+    request_args["model"] = model_deployment_name
+    return request_args
