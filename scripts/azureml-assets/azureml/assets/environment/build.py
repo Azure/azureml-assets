@@ -24,6 +24,7 @@ from azureml.assets.util import logger
 TASK_FILENAME = "_acr_build_task.yaml"
 BUILD_STEP_TIMEOUT_SECONDS = 60 * 90
 SCAN_STEP_TIMEOUT_SECONDS = 60 * 20
+DEFAULT_STEP_TIMEOUT_SECONDS = 60 * 30
 TRIVY_TIMEOUT = "15m0s"
 SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
@@ -37,7 +38,7 @@ def create_acr_task(image_name: str,
                     task_filename: str,
                     test_command: str = None,
                     push: bool = False,
-                    trivy_url: str = None):
+                    trivy_url: str = None) -> int:
     """Create ACR build task file.
 
     Args:
@@ -48,13 +49,17 @@ def create_acr_task(image_name: str,
         test_command (str, optional): Command used to test the image. Defaults to None.
         push (bool, optional): Push the image to the ACR. Defaults to False.
         trivy_url (str, optional): URL to download Trivy for vulnerability scanning. Defaults to None.
+
+    Returns:
+        int: Cumulative total of step timeouts, to be used when creating the ACR task.
     """
     # Start task with just the build step
     task = {
         'version': 'v1.1.0',
-        'stepTimeout': BUILD_STEP_TIMEOUT_SECONDS,
+        'stepTimeout': DEFAULT_STEP_TIMEOUT_SECONDS,
         'steps': [{
             'id': "build",
+            'stepTimeout': BUILD_STEP_TIMEOUT_SECONDS,
             'build': f"-t $Registry/{image_name} -f {dockerfile} ."
         }]}
 
@@ -105,6 +110,9 @@ def create_acr_task(image_name: str,
         yaml.default_flow_style = False
         YAML().dump(task, f)
 
+    # Compute task timeout by adding all step timeouts
+    return sum([step.get('stepTimeout', DEFAULT_STEP_TIMEOUT_SECONDS) for step in task['steps']])
+
 
 def build_image(asset_config: assets.AssetConfig,
                 env_config: assets.EnvironmentConfig,
@@ -139,11 +147,11 @@ def build_image(asset_config: assets.AssetConfig,
             temp_dir_path = Path(temp_dir)
             shutil.copytree(env_config.context_dir_with_path, temp_dir_path, dirs_exist_ok=True)
             build_context_dir = temp_dir_path
-            create_acr_task(image_name=image_name, dockerfile=env_config.dockerfile,
-                            os=env_config.os, task_filename=build_context_dir / TASK_FILENAME,
-                            test_command=test_command, push=push, trivy_url=trivy_url)
+            task_timeout = create_acr_task(image_name=image_name, dockerfile=env_config.dockerfile,
+                                           os=env_config.os, task_filename=build_context_dir / TASK_FILENAME,
+                                           test_command=test_command, push=push, trivy_url=trivy_url)
             cmd = ["az", "acr", "run", "-g", resource_group, "-r", registry, "--platform", env_config.os.value,
-                   "-f", TASK_FILENAME, "."]
+                   "--timeout", str(task_timeout), "-f", TASK_FILENAME, "."]
         else:
             # Build locally
             build_context_dir = env_config.context_dir_with_path
