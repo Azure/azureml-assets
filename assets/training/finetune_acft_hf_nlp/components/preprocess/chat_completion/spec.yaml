@@ -1,10 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: chat_completion_datapreprocess
-<<<<<<< HEAD
 version: 0.0.41
-=======
-version: 0.0.40
->>>>>>> e0b16b0ba (components for chat completion)
 type: command
 
 is_deterministic: True
