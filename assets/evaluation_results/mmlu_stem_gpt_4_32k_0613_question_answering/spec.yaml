@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_stem_gpt_4_32k_0613_question_answering
-version: 2.02.04
+version: 2.19.040
 display_name: mmlu_stem_gpt_4_32k_0613_question_answering
 description: gpt-4-32k-0613 run for mmlu_stem dataset
 dataset_family: mmlu
@@ -15,6 +15,7 @@ relationships:
     assetId: azureml://registries/azure-openai-preview/models/gpt-4-32k/versions/629592.2a481b56
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 

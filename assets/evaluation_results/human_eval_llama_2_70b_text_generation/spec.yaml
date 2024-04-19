@@ -1,6 +1,6 @@
 type: evaluationresult
 name: human_eval_llama_2_70b_text_generation
-version: 2.02.04
+version: 2.19.040
 display_name: human_eval_llama_2_70b_text_generation
 description: llama-2-70b run for human_eval dataset
 dataset_family: human_eval
@@ -15,6 +15,7 @@ relationships:
     assetId: azureml://registries/azureml-meta/models/Llama-2-70b/versions/13
 
 tags:
+  evaluation_type: text_generation
   task: text-generation
   accuracy_metric_name: pass@1
 
