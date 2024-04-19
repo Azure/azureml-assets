@@ -12,6 +12,7 @@ RUN apt-get -y update && \
     && apt-get install -y --no-install-recommends \
         python3.9-venv \
     && apt-get clean \
+    && python -m pip install --upgrade pip && pip install --upgrade idna \
     && rm -rf /var/lib/apt/lists/* && \
     python3.9 -m venv /venv
 
