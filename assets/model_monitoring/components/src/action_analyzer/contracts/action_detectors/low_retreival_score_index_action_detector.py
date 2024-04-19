@@ -40,7 +40,6 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         """
         pass
 
-
     def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> list(Action):
         """Detect the action.
         Args:
