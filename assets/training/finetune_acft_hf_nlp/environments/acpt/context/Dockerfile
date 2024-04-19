@@ -7,12 +7,11 @@ RUN apt-get update && apt-get -y upgrade
 RUN pip install --upgrade pip
 
 COPY requirements.txt .
-# The below 2 files are required for baking the code into the environment
-COPY data_import_run.py /azureml/data_import/run.py
+# The below file is required for baking the code into the environment
 COPY finetune_run.py /azureml/finetune/run.py
 
 RUN pip install -r requirements.txt --no-cache-dir
 RUN python -m nltk.downloader punkt
 RUN MAX_JOBS=4 pip install flash-attn==2.5.5 --no-build-isolation
 
-# dummy number to change when needing to force rebuild without changing the definition: 4
+# dummy number to change when needing to force rebuild without changing the definition: 1
