@@ -476,7 +476,10 @@ def get_parser():
         help="Loads Optimizer, Scheduler and Trainer state for finetuning if true",
     )
     parser.add_argument(
-        "--save_strategy", type=str, default=SaveStrategy.EVALUATION_STRATEGY, help="The checkpoint save strategy to adopt during training.",
+        "--save_strategy",
+        type=str,
+        default=SaveStrategy.EVALUATION_STRATEGY,
+        help="The checkpoint save strategy to adopt during training.",
     )
     parser.add_argument(
         "--save_steps",
