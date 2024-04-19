@@ -81,7 +81,7 @@ outputs:
 
 is_deterministic: True
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/23
+environment: azureml://registries/azureml/environments/model-evaluation/versions/24
 
 command: >-
   python download_dependencies.py
