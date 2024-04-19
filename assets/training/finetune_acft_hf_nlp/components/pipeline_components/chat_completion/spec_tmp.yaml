@@ -1,0 +1,630 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+description: Pipeline Component to finetune Hugging Face pretrained models for chat
+  completion task. The component supports optimizations such as LoRA, Deepspeed and
+  ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/chat_completion_pipeline)
+  to learn more.
+display_name: Chat Completion Pipeline
+inputs:
+  adam_beta1:
+    default: 0.9
+    description: beta1 hyperparameter for the AdamW optimizer
+    optional: true
+    type: number
+  adam_beta2:
+    default: 0.999
+    description: beta2 hyperparameter for the AdamW optimizer
+    optional: true
+    type: number
+  adam_epsilon:
+    default: 1e-8
+    description: epsilon hyperparameter for the AdamW optimizer
+    optional: true
+    type: number
+  apply_deepspeed:
+    default: 'false'
+    description: If set to true, will enable deepspeed for training
+    enum:
+    - 'true'
+    - 'false'
+    optional: true
+    type: string
+  apply_early_stopping:
+    default: 'false'
+    description: If set to "true", early stopping is enabled.
+    enum:
+    - 'true'
+    - 'false'
+    optional: true
+    type: string
+  apply_lora:
+    default: 'false'
+    description: If "true" enables lora.
+    enum:
+    - 'true'
+    - 'false'
+    optional: true
+    type: string
+  apply_ort:
+    default: 'false'
+    description: If set to true, will use the ONNXRunTime training
+    enum:
+    - 'true'
+    - 'false'
+    optional: true
+    type: string
+  auto_find_batch_size:
+    default: 'false'
+    description: If set to "true" and if the provided 'per_device_train_batch_size'
+      goes into Out Of Memory (OOM) auto_find_batch_size will find the correct batch
+      size by iteratively reducing batch size by a factor of 2 till the OOM is fixed
+    enum:
+    - 'true'
+    - 'false'
+    optional: true
+    type: string
+  batch_size:
+    default: 1000
+    description: Number of examples to batch before calling the tokenization function
+    min: 1
+    optional: true
+    type: integer
+  compute_finetune:
+    default: serverless
+    description: compute to be used for finetune eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in
+      the parameter value. If compute cluster name is provided, instance_type field
+      will be ignored and the respective cluster will be used
+    optional: true
+    type: string
+  compute_model_evaluation:
+    default: serverless
+    description: compute to be used for model_eavaluation eg. provide 'FT-Cluster'
+      if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid
+      in the parameter value. If compute cluster name is provided, instance_type field
+      will be ignored and the respective cluster will be used
+    optional: true
+    type: string
+  compute_model_import:
+    default: serverless
+    description: compute to be used for model_import eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in
+      the parameter value. If compute cluster name is provided, instance_type field
+      will be ignored and the respective cluster will be used
+    optional: true
+    type: string
+  compute_preprocess:
+    default: serverless
+    description: compute to be used for preprocess eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in
+      the parameter value. If compute cluster name is provided, instance_type field
+      will be ignored and the respective cluster will be used
+    optional: true
+    type: string
+  dataloader_num_workers:
+    default: 0
+    description: Number of subprocesses to use for data loading. 0 means that the
+      data will be loaded in the main process.
+    optional: true
+    type: integer
+  deepspeed:
+    description: Deepspeed config to be used for finetuning. Special characters like
+      \ and ' are invalid in the parameter value.
+    mode: rw_mount
+    optional: true
+    type: uri_file
+  deepspeed_stage:
+    default: '2'
+    description: This parameter configures which DEFAULT deepspeed config to be used
+      - stage2 or stage3. The default choice is stage2. Note that, this parameter
+      is ONLY applicable when user doesn't pass any config information via deepspeed
+      port.
+    enum:
+    - '2'
+    - '3'
+    optional: true
+    type: string
+  early_stopping_patience:
+    default: 1
+    description: Stop training when the metric specified through _metric_for_best_model_
+      worsens for _early_stopping_patience_ evaluation calls.This value is only valid
+      if _apply_early_stopping_ is set to true.
+    optional: true
+    type: integer
+  early_stopping_threshold:
+    default: 0.0
+    description: Denotes how much the specified metric must improve to satisfy early
+      stopping conditions. This value is only valid if _apply_early_stopping_ is set
+      to true.
+    optional: true
+    type: number
+  enable_full_determinism:
+    default: 'false'
+    description: Ensure reproducible behavior during distributed training. Check this
+      link https://pytorch.org/docs/stable/notes/randomness.html for more details.
+    enum:
+    - 'true'
+    - 'false'
+    optional: true
+    type: string
+  eval_accumulation_steps:
+    default: -1
+    description: Number of predictions steps to accumulate before moving the tensors
+      to the CPU, will be passed as None if set to -1
+    optional: true
+    type: integer
+  eval_steps:
+    default: 500
+    description: Number of update steps between two evals if evaluation_strategy='steps'
+    optional: true
+    type: integer
+  evaluation_config:
+    description: Additional parameters for Computing Metrics. Special characters like
+      \ and ' are invalid in the parameter value.
+    optional: true
+    type: uri_file
+  evaluation_config_params:
+    description: Additional parameters as JSON serielized string
+    optional: true
+    type: string
+  evaluation_steps_interval:
+    default: 0.0
+    description: The evaluation steps in fraction of an epoch steps to adopt during
+      training. Overwrites eval_steps if not 0.
+    optional: true
+    type: number
+  evaluation_strategy:
+    default: epoch
+    description: The evaluation strategy to adopt during training. If set to "steps",
+      either the `evaluation_steps_interval` or `eval_steps` needs to be specified,
+      which helps to determine the step at which the model evaluation needs to be
+      computed else evaluation happens at end of each epoch.
+    enum:
+    - epoch
+    - steps
+    optional: true
+    type: string
+  gradient_accumulation_steps:
+    default: 1
+    description: Number of updates steps to accumulate the gradients for, before performing
+      a backward/update pass
+    optional: true
+    type: integer
+  huggingface_id:
+    description: The string can be any valid Hugging Face id from the [Hugging Face
+      models webpage](https://huggingface.co/models?pipeline_tag=text-generation&sort=downloads).
+      Models from Hugging Face are subject to third party license terms available
+      on the Hugging Face model details page. It is your responsibility to comply
+      with the model's license terms.
+    optional: true
+    type: string
+  ignore_mismatched_sizes:
+    default: 'true'
+    description: Not setting this flag will raise an error if some of the weights
+      from the checkpoint do not have the same size as the weights of the model.
+    enum:
+    - 'true'
+    - 'false'
+    optional: true
+    type: string
+  instance_type_finetune:
+    default: Standard_nc24rs_v3
+    description: Instance type to be used for finetune component in case of serverless
+      compute, eg. standard_nc24rs_v3. The parameter compute_finetune must be set
+      to 'serverless' for instance_type to be used
+    optional: true
+    type: string
+  instance_type_model_evaluation:
+    default: Standard_nc24rs_v3
+    description: Instance type to be used for model_evaluation components in case
+      of serverless compute, eg. standard_nc24rs_v3. The parameter compute_model_evaluation
+      must be set to 'serverless' for instance_type to be used
+    optional: true
+    type: string
+  instance_type_model_import:
+    default: Standard_d12_v2
+    description: Instance type to be used for model_import component in case of serverless
+      compute, eg. standard_d12_v2. The parameter compute_model_import must be set
+      to 'serverless' for instance_type to be used
+    optional: true
+    type: string
+  instance_type_preprocess:
+    default: Standard_d12_v2
+    description: Instance type to be used for preprocess component in case of serverless
+      compute, eg. standard_d12_v2. The parameter compute_preprocess must be set to
+      'serverless' for instance_type to be used
+    optional: true
+    type: string
+  learning_rate:
+    default: 2.0e-05
+    description: Start learning rate used for training.
+    optional: true
+    type: number
+  logging_steps:
+    default: 10
+    description: Number of update steps between two logs if logging_strategy='steps'
+    optional: true
+    type: integer
+  logging_strategy:
+    default: steps
+    description: The logging strategy to adopt during training. If set to "steps",
+      the `logging_steps` will decide the frequency of logging else logging happens
+      at the end of epoch..
+    enum:
+    - epoch
+    - steps
+    optional: true
+    type: string
+  lora_alpha:
+    default: 128
+    description: alpha attention parameter for lora.
+    optional: true
+    type: integer
+  lora_dropout:
+    default: 0.0
+    description: lora dropout value
+    optional: true
+    type: number
+  lora_r:
+    default: 8
+    description: lora dimension
+    optional: true
+    type: integer
+  lr_scheduler_type:
+    default: linear
+    description: learning rate scheduler to use.
+    enum:
+    - linear
+    - cosine
+    - cosine_with_restarts
+    - polynomial
+    - constant
+    - constant_with_warmup
+    optional: true
+    type: string
+  max_grad_norm:
+    default: 1.0
+    description: Maximum gradient norm (for gradient clipping)
+    optional: true
+    type: number
+  max_seq_length:
+    default: -1
+    description: Controls the maximum length to use when pad_to_max_length parameter
+      is set to `true`. Default is -1 which means the padding is done up to the model's
+      max length. Else will be padded to `max_seq_length`.
+    optional: true
+    type: integer
+  max_steps:
+    default: -1
+    description: If set to a positive number, the total number of training steps to
+      perform. Overrides 'epochs'. In case of using a finite iterable dataset the
+      training may stop before reaching the set number of steps when all data is exhausted.
+    optional: true
+    type: integer
+  merge_lora_weights:
+    default: 'true'
+    description: If "true", the lora weights are merged with the base Hugging Face
+      model weights before saving.
+    enum:
+    - 'true'
+    - 'false'
+    optional: true
+    type: string
+  metric_for_best_model:
+    default: loss
+    description: metric to use to compare two different model checkpoints
+    enum:
+    - loss
+    - f1
+    - exact
+    optional: true
+    type: string
+  mlflow_model_path:
+    description: MLflow model asset path. Special characters like \ and ' are invalid
+      in the parameter value.
+    mode: rw_mount
+    optional: true
+    type: mlflow_model
+  num_nodes_finetune:
+    default: 1
+    description: number of nodes to be used for finetuning (used for distributed training)
+    min: 1
+    optional: true
+    type: integer
+  num_train_epochs:
+    default: 1
+    description: Number of epochs to run for finetune.
+    min: 1
+    optional: true
+    type: integer
+  number_of_gpu_to_use_finetuning:
+    default: 1
+    description: number of gpus to be used per node for finetuning, should be equal
+      to number of gpu per node in the compute SKU used for finetune
+    min: 1
+    optional: true
+    type: integer
+  optim:
+    default: adamw_hf
+    description: Optimizer to be used while training
+    enum:
+    - adamw_hf
+    - adamw_torch
+    - adafactor
+    optional: true
+    type: string
+  pad_to_max_length:
+    default: 'false'
+    description: If set to True, the returned sequences will be padded according to
+      the model's padding side and padding index, up to their `max_seq_length`. If
+      no `max_seq_length` is specified, the padding is done up to the model's max
+      length.
+    enum:
+    - 'true'
+    - 'false'
+    optional: true
+    type: string
+  per_device_eval_batch_size:
+    default: 1
+    description: Per gpu batch size used for validation. The default value is 1. The
+      effective validation batch size is _per_device_eval_batch_size_ * _num_gpus_
+      * _num_nodes_.
+    min: 1
+    optional: true
+    type: integer
+  per_device_train_batch_size:
+    default: 1
+    description: Per gpu batch size used for training. The effective training batch
+      size is _per_device_train_batch_size_ * _num_gpus_ * _num_nodes_.
+    min: 1
+    optional: true
+    type: integer
+  precision:
+    default: '32'
+    description: Apply mixed precision training. This can reduce memory footprint
+      by performing operations in half-precision.
+    enum:
+    - '32'
+    - '16'
+    optional: true
+    type: string
+  pytorch_model_path:
+    description: Pytorch model asset path. Special characters like \ and ' are invalid
+      in the parameter value.
+    mode: rw_mount
+    optional: true
+    type: custom_model
+  resume_from_checkpoint:
+    default: 'false'
+    description: If set to "true", resumes the training from last saved checkpoint.
+      Along with loading the saved weights, saved optimizer, scheduler and random
+      states will be loaded if exist. The default value is "false"
+    enum:
+    - 'true'
+    - 'false'
+    optional: true
+    type: string
+  save_total_limit:
+    default: -1
+    description: If a positive value is passed, it will limit the total number of
+      checkpoints saved. The value of -1 saves all the checkpoints, otherwise if the
+      number of checkpoints exceed the _save_total_limit_, the older checkpoints gets
+      deleted.
+    optional: true
+    type: integer
+  seed:
+    default: 42
+    description: Random seed that will be set at the beginning of training
+    optional: true
+    type: integer
+  shm_size_finetune:
+    default: 5g
+    description: Shared memory size to be used for finetune component. It is useful
+      while using Nebula (via DeepSpeed) which uses shared memory to save model and
+      optimizer states.
+    optional: true
+    type: string
+  task_name:
+    default: ChatCompletion
+    description: ChatCompletion task type
+    enum:
+    - ChatCompletion
+    optional: false
+    type: string
+  test_file_path:
+    description: Path to the registered test data asset. The supported data formats
+      are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
+      ' are invalid in the parameter value.
+    mode: rw_mount
+    optional: true
+    type: uri_file
+  test_mltable_path:
+    description: Path to the registered test data asset in `mltable` format. Special
+      characters like \ and ' are invalid in the parameter value.
+    optional: true
+    type: mltable
+  train_file_path:
+    description: Path to the registered training data asset. The supported data formats
+      are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
+      ' are invalid in the parameter value.
+    mode: rw_mount
+    optional: true
+    type: uri_file
+  train_mltable_path:
+    description: Path to the registered training data asset in `mltable` format. Special
+      characters like \ and ' are invalid in the parameter value.
+    optional: true
+    type: mltable
+  validation_file_path:
+    description: Path to the registered validation data asset. The supported data
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters
+      like \ and ' are invalid in the parameter value.
+    mode: rw_mount
+    optional: true
+    type: uri_file
+  validation_mltable_path:
+    description: Path to the registered validation data asset in `mltable` format.
+      Special characters like \ and ' are invalid in the parameter value.
+    optional: true
+    type: mltable
+  warmup_steps:
+    default: 0
+    description: Number of steps for the learning rate scheduler warmup phase.
+    optional: true
+    type: integer
+  weight_decay:
+    default: 0.0
+    description: Weight decay to apply (if not zero) to all layers except all bias
+      and LayerNorm weights in AdamW optimizer
+    optional: true
+    type: number
+jobs:
+  chat_completion_datapreprocess:
+    component: azureml://registries/azureml-preview-test1/components/chat_completion_datapreprocess/versions/0.0.1.cc_staging
+    compute: ${{parent.inputs.compute_preprocess}}
+    inputs:
+      batch_size: ${{parent.inputs.batch_size}}
+      max_seq_length: ${{parent.inputs.max_seq_length}}
+      model_selector_output: ${{parent.jobs.chat_completion_model_import.outputs.output_dir}}
+      pad_to_max_length: ${{parent.inputs.pad_to_max_length}}
+      test_file_path: ${{parent.inputs.test_file_path}}
+      test_mltable_path: ${{parent.inputs.test_mltable_path}}
+      train_file_path: ${{parent.inputs.train_file_path}}
+      train_mltable_path: ${{parent.inputs.train_mltable_path}}
+      validation_file_path: ${{parent.inputs.validation_file_path}}
+      validation_mltable_path: ${{parent.inputs.validation_mltable_path}}
+    resources:
+      instance_type: ${{parent.inputs.instance_type_preprocess}}
+    type: command
+  chat_completion_finetune:
+    component: azureml://registries/azureml-preview-test1/components/chat_completion_finetune/versions/0.0.1.cc_staging
+    compute: ${{parent.inputs.compute_finetune}}
+    distribution:
+      process_count_per_instance: ${{parent.inputs.number_of_gpu_to_use_finetuning}}
+      type: pytorch
+    inputs:
+      adam_beta1: ${{parent.inputs.adam_beta1}}
+      adam_beta2: ${{parent.inputs.adam_beta2}}
+      adam_epsilon: ${{parent.inputs.adam_epsilon}}
+      apply_deepspeed: ${{parent.inputs.apply_deepspeed}}
+      apply_early_stopping: ${{parent.inputs.apply_early_stopping}}
+      apply_lora: ${{parent.inputs.apply_lora}}
+      apply_ort: ${{parent.inputs.apply_ort}}
+      auto_find_batch_size: ${{parent.inputs.auto_find_batch_size}}
+      dataloader_num_workers: ${{parent.inputs.dataloader_num_workers}}
+      deepspeed: ${{parent.inputs.deepspeed}}
+      deepspeed_stage: ${{parent.inputs.deepspeed_stage}}
+      early_stopping_patience: ${{parent.inputs.early_stopping_patience}}
+      early_stopping_threshold: ${{parent.inputs.early_stopping_threshold}}
+      enable_full_determinism: ${{parent.inputs.enable_full_determinism}}
+      eval_accumulation_steps: ${{parent.inputs.eval_accumulation_steps}}
+      eval_steps: ${{parent.inputs.eval_steps}}
+      evaluation_steps_interval: ${{parent.inputs.evaluation_steps_interval}}
+      evaluation_strategy: ${{parent.inputs.evaluation_strategy}}
+      gradient_accumulation_steps: ${{parent.inputs.gradient_accumulation_steps}}
+      ignore_mismatched_sizes: ${{parent.inputs.ignore_mismatched_sizes}}
+      learning_rate: ${{parent.inputs.learning_rate}}
+      logging_steps: ${{parent.inputs.logging_steps}}
+      logging_strategy: ${{parent.inputs.logging_strategy}}
+      lora_alpha: ${{parent.inputs.lora_alpha}}
+      lora_dropout: ${{parent.inputs.lora_dropout}}
+      lora_r: ${{parent.inputs.lora_r}}
+      lr_scheduler_type: ${{parent.inputs.lr_scheduler_type}}
+      max_grad_norm: ${{parent.inputs.max_grad_norm}}
+      max_steps: ${{parent.inputs.max_steps}}
+      merge_lora_weights: ${{parent.inputs.merge_lora_weights}}
+      metric_for_best_model: ${{parent.inputs.metric_for_best_model}}
+      model_selector_output: ${{parent.jobs.chat_completion_model_import.outputs.output_dir}}
+      num_train_epochs: ${{parent.inputs.num_train_epochs}}
+      optim: ${{parent.inputs.optim}}
+      per_device_eval_batch_size: ${{parent.inputs.per_device_eval_batch_size}}
+      per_device_train_batch_size: ${{parent.inputs.per_device_train_batch_size}}
+      precision: ${{parent.inputs.precision}}
+      preprocess_output: ${{parent.jobs.chat_completion_datapreprocess.outputs.output_dir}}
+      resume_from_checkpoint: ${{parent.inputs.resume_from_checkpoint}}
+      save_total_limit: ${{parent.inputs.save_total_limit}}
+      seed: ${{parent.inputs.seed}}
+      warmup_steps: ${{parent.inputs.warmup_steps}}
+      weight_decay: ${{parent.inputs.weight_decay}}
+    outputs:
+      pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
+    resources:
+      instance_count: ${{parent.inputs.num_nodes_finetune}}
+      instance_type: ${{parent.inputs.instance_type_finetune}}
+      shm_size: ${{parent.inputs.shm_size_finetune}}
+    type: command
+  chat_completion_model_import:
+    component: azureml://registries/azureml-preview-test1/components/chat_completion_model_import/versions/0.0.1.cc_staging
+    compute: ${{parent.inputs.compute_model_import}}
+    inputs:
+      huggingface_id: ${{parent.inputs.huggingface_id}}
+      mlflow_model_path: ${{parent.inputs.mlflow_model_path}}
+      pytorch_model_path: ${{parent.inputs.pytorch_model_path}}
+      validation_output: ${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}
+    resources:
+      instance_type: ${{parent.inputs.instance_type_model_import}}
+    type: command
+  ft_nlp_common_validation:
+    component: azureml://registries/azureml-preview-test1/components/ft_nlp_common_validation/versions/0.0.1.cc_staging
+    compute: ${{parent.inputs.compute_model_import}}
+    inputs:
+      adam_beta1: ${{parent.inputs.adam_beta1}}
+      adam_beta2: ${{parent.inputs.adam_beta2}}
+      adam_epsilon: ${{parent.inputs.adam_epsilon}}
+      apply_deepspeed: ${{parent.inputs.apply_deepspeed}}
+      apply_lora: ${{parent.inputs.apply_lora}}
+      apply_ort: ${{parent.inputs.apply_ort}}
+      auto_find_batch_size: ${{parent.inputs.auto_find_batch_size}}
+      compute_data_preprocess: ${{parent.inputs.compute_preprocess}}
+      compute_finetune: ${{parent.inputs.compute_finetune}}
+      compute_model_import: ${{parent.inputs.compute_model_import}}
+      deepspeed_stage: ${{parent.inputs.deepspeed_stage}}
+      ignore_mismatched_sizes: ${{parent.inputs.ignore_mismatched_sizes}}
+      learning_rate: ${{parent.inputs.learning_rate}}
+      max_seq_length: ${{parent.inputs.max_seq_length}}
+      max_steps: ${{parent.inputs.max_steps}}
+      mlflow_model_path: ${{parent.inputs.mlflow_model_path}}
+      num_nodes_finetune: ${{parent.inputs.num_nodes_finetune}}
+      num_train_epochs: ${{parent.inputs.num_train_epochs}}
+      number_of_gpu_to_use_finetuning: ${{parent.inputs.number_of_gpu_to_use_finetuning}}
+      per_device_eval_batch_size: ${{parent.inputs.per_device_eval_batch_size}}
+      per_device_train_batch_size: ${{parent.inputs.per_device_train_batch_size}}
+      precision: ${{parent.inputs.precision}}
+      task_name: chat-completion
+      test_file_path: ${{parent.inputs.test_file_path}}
+      test_mltable_path: ${{parent.inputs.test_mltable_path}}
+      train_file_path: ${{parent.inputs.train_file_path}}
+      train_mltable_path: ${{parent.inputs.train_mltable_path}}
+      validation_file_path: ${{parent.inputs.validation_file_path}}
+      validation_mltable_path: ${{parent.inputs.validation_mltable_path}}
+    resources:
+      instance_type: ${{parent.inputs.instance_type_model_import}}
+    type: command
+  ft_nlp_model_converter:
+    component: azureml://registries/azureml-preview-test1/components/ft_nlp_model_converter/versions/0.0.1.cc_staging
+    compute: ${{parent.inputs.compute_finetune}}
+    inputs:
+      model_path: ${{parent.jobs.chat_completion_finetune.outputs.pytorch_model_folder}}
+    outputs:
+      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
+    resources:
+      instance_type: ${{parent.inputs.instance_type_finetune}}
+    type: command
+name: chat_completion_pipeline
+outputs:
+  evaluation_result:
+    description: Test Data Evaluation Results
+    type: uri_folder
+  mlflow_model_folder:
+    description: output folder containing _best_ finetuned model in mlflow format.
+    mode: rw_mount
+    type: mlflow_model
+  pytorch_model_folder:
+    description: output folder containing _best_ model as defined by _metric_for_best_model_.
+      Along with the best model, output folder contains checkpoints saved after every
+      evaluation which is defined by the _evaluation_strategy_. Each checkpoint contains
+      the model weight(s), config, tokenizer, optimzer, scheduler and random number
+      states.
+    mode: rw_mount
+    type: uri_folder
+type: pipeline
+version: 0.0.1.cc_staging
