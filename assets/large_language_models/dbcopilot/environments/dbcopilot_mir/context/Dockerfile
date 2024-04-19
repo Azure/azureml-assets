@@ -4,7 +4,7 @@ WORKDIR /
 USER root
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl unixodbc gnupg2 python3.9 \
+    && apt-get install -y --no-install-recommends curl unixodbc gnupg2 python3.10 \
     && curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc \
     && curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
