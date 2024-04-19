@@ -59,9 +59,6 @@ RUN git clone https://github.com/vllm-project/vllm.git && \
     python setup.py bdist_wheel && \
     pip install dist/*.whl
 
-# When copied to assets repo, change to install from public pypi
-# RUN pip install llm-optimized-inference --no-cache-dir
-
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 
