@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.43 (2024-04-19)
+### 🐛 Bugs Fixed
+- [#2726](https://github.com/Azure/azureml-assets/pull/2637) Increase image build time to 120mins
+
 ## 1.16.42 (2024-04-03)
 ### 🐛 Bugs Fixed
 - [#2591](https://github.com/Azure/azureml-assets/pull/2637) Exclude yanked version for `latest-pypi-version`

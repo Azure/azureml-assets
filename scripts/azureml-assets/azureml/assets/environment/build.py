@@ -22,7 +22,7 @@ import azureml.assets.util as util
 from azureml.assets.util import logger
 
 TASK_FILENAME = "_acr_build_task.yaml"
-BUILD_STEP_TIMEOUT_SECONDS = 60 * 90
+BUILD_STEP_TIMEOUT_SECONDS = 60 * 120
 SCAN_STEP_TIMEOUT_SECONDS = 60 * 20
 TRIVY_TIMEOUT = "15m0s"
 SUCCESS_COUNT = "success_count"
@@ -143,7 +143,7 @@ def build_image(asset_config: assets.AssetConfig,
                             os=env_config.os, task_filename=build_context_dir / TASK_FILENAME,
                             test_command=test_command, push=push, trivy_url=trivy_url)
             cmd = ["az", "acr", "run", "-g", resource_group, "-r", registry, "--platform", env_config.os.value,
-                   "-f", TASK_FILENAME, "."]
+                   "--timeout", BUILD_STEP_TIMEOUT_SECONDS, "-f", TASK_FILENAME, "."]
         else:
             # Build locally
             build_context_dir = env_config.context_dir_with_path
