@@ -4,7 +4,8 @@
 """Action Detector Class."""
 
 from abc import ABC, abstractmethod
-from action_analyzer.contracts.action import Action
+from action_analyzer.contracts.actions.action import Action
+from action_analyzer.contracts.llm_client import LLMClient
 
 
 class ActionDetector(ABC):
@@ -12,15 +13,15 @@ class ActionDetector(ABC):
 
     def __init__(self,
                  action_max_positive_sample_size: int,
-                 llm_summary_enabled: str) -> None:
+                 query_intention_enabled: str) -> None:
         """Create an action detector.
 
         Args:
             action_max_positive_sample_size(int): max number of positive samples in the action.
-            llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
+            query_intention_enabled(str): enable llm generated query intention. Accepted values: true or false.
         """
         self.action_max_positive_sample_size = action_max_positive_sample_size
-        self.llm_summary_enabled = llm_summary_enabled
+        self.query_intention_enabled = query_intention_enabled
 
 
     @abstractmethod
@@ -37,10 +38,11 @@ class ActionDetector(ABC):
 
 
     @abstractmethod
-    def detect(self, df) -> list(Action):
+    def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> list(Action):
         """Detect the action.
         Args:
             df(pandas.DataFrame): input pandas dataframe.
+            llm_client(LLMClient): LLM client used to get some llm scores/info for action.
 
         Returns:
             list(Action): list of actions.

@@ -3,8 +3,9 @@
 
 """Low retrieval score index action detector class."""
 
-from action_analyzer.contracts.action_detector import ActionDetector
-from action_analyzer.contracts.action import Action
+from action_analyzer.contracts.detectors.action_detector import ActionDetector
+from action_analyzer.contracts.actions.action import Action
+from action_analyzer.contracts.llm_client import LLMClient
 
 
 class LowRetreivalScoreIndexActionDetector(ActionDetector):
@@ -40,10 +41,11 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         pass
 
 
-    def detect(self, df) -> list(Action):
+    def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> list(Action):
         """Detect the action.
         Args:
             df(pandas.DataFrame): input pandas dataframe.
+            llm_client(LLMClient): LLM client used to get some llm scores/info for action.
 
         Returns:
             list(Action): list of actions.
