@@ -1,6 +1,6 @@
 type: evaluationresult
 name: boolq_mistralai-mixtral-8x7b-instruct-v01_question_answering
-version: 2.02.04
+version: 2.19.040
 display_name: boolq_mistralai-Mixtral-8x7B-Instruct-v01_question_answering
 description: mistralai-Mixtral-8x7B-Instruct-v01 run for boolq dataset
 dataset_family: boolq
@@ -15,6 +15,7 @@ relationships:
     assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-Instruct-v01/versions/2
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 
