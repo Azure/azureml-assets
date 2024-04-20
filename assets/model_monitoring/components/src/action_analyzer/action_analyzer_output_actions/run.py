@@ -76,6 +76,7 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
     action_summary = {}
     for index_id in index_set:
         row = action_bad_group_df.filter(col(INDEX_ID_COLUMN) == index_id).collect()[0]
+        query_intention = row["most_significant_group"].split("_")[-1]
         action_id = row[ACTION_ID_COLUMN]
         action = {
             "ActionId": action_id,
@@ -83,7 +84,7 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
             "Description": ACTION_DESCRIPTION.replace("{index_id}", index_id),
             "ConfidenceScore": row["action_confidence_score"],
             "ViolatedMetrics": ", ".join(violated_metrics),
-            "QueryIntention": row["most_significant_group"].split("_")[-1],
+            "QueryIntention": query_intention if query_intention != "default" else (row[TOPIC_LIST_COLUMN].split(TEXT_SPLITTER))[0],
             "CreationTime": str(datetime.datetime.now()),
             "FilePath": os.path.join(action_output_folder, f"actions/{action_id}.json")
         }
@@ -165,10 +166,9 @@ def run():
         args.data_with_action_metric_score, "data_with_action_metric_score"
     )
 
-    # get the group with highest confidence score (except the default group)
+    # get the group with highest confidence score
     w = Window.partitionBy(INDEX_ID_COLUMN)
-    max_conf_df = action_data_df.filter(~col(BAD_GROUP_COLUMN).endswith("_default"))\
-                                .withColumn("max_confidence", max(CONFIDENCE_SCORE_COLUMN).over(w))\
+    max_conf_df = action_data_df.withColumn("max_confidence", max(CONFIDENCE_SCORE_COLUMN).over(w))\
                                 .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence'))\
                                 .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
                                 .select(INDEX_ID_COLUMN, "most_significant_group")
