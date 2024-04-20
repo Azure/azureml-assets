@@ -85,8 +85,7 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
             "ConfidenceScore": row["action_confidence_score"],
             "ViolatedMetrics": ", ".join(violated_metrics),
             # if most significant group is default, pick the first bad query's topic.
-            "QueryIntention": query_intention if query_intention != "default" \ 
-                                              else (row[TOPIC_LIST_COLUMN].split(TEXT_SPLITTER))[0],
+            "QueryIntention": query_intention if query_intention != "default" else (row[TOPIC_LIST_COLUMN].split(TEXT_SPLITTER))[0],  # noqa
             "CreationTime": str(datetime.datetime.now()),
             "FilePath": os.path.join(action_output_folder, f"actions/{action_id}.json")
         }
