@@ -16,7 +16,16 @@ RUN apt-get update && apt-get install -y \
     less=551-1ubuntu0.2 \
     login=1:4.8.1-1ubuntu5.20.04.5 \
     passwd=1:4.8.1-1ubuntu5.20.04.5 \
-    uidmap=1:4.8.1-1ubuntu5.20.04.5 && \
+    uidmap=1:4.8.1-1ubuntu5.20.04.5 \
+    libcurl3-gnutls=7.68.0-1ubuntu2.22 \
+    libuuid1=2.34-0.1ubuntu9.6  \
+    libblkid1=2.34-0.1ubuntu9.6\
+    util-linux=2.34-0.1ubuntu9.6 \
+    fdisk=2.34-0.1ubuntu9.6 \
+    libfdisk1=2.34-0.1ubuntu9.6 \
+    mount=2.34-0.1ubuntu9.6 \
+    libsmartcols1=2.34-0.1ubuntu9.6 \
+    libmount1=2.34-0.1ubuntu9.6 &&\
     rm -rf /var/lib/apt/lists/*
 
 # Install MS SQL ODBC Driver
@@ -24,7 +33,7 @@ RUN apt-get update \
     && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
     && curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
-    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18 \
+    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18=18.3.3.1-1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Default to UTF-8 file.encoding
@@ -42,14 +51,14 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
-    pip install  promptflow-vectordb==0.2.2 && \
-    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.18-py3-none-any.whl \
-    pip install  cryptography==42.0.5 langchain==0.1.11"
+    pip install  promptflow-vectordb==0.2.9 && \
+    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.19-py3-none-any.whl \
+    pip install  cryptography==42.0.5 langchain==0.1.11 idna==3.7"
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda && \
-    pip install cryptography==42.0.5 && \
+    pip install cryptography==42.0.5 idna==3.7 && \
     conda deactivate"
 
 # Install certificates and other utilities

@@ -9,6 +9,7 @@ mltable>=1.5.0
 datasets
 tqdm
 azure-core
+tiktoken
 mteb
 openai
 pytest

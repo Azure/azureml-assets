@@ -25,6 +25,7 @@ inputs:
     }'
   is_performance_test: False
   endpoint_url: test-endpoint
+  model_type: oss
 
 outputs:
   formatted_data:
@@ -44,6 +45,7 @@ jobs:
       input_dataset: ${{parent.inputs.input_dataset}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
       online_endpoint_url: ${{parent.inputs.endpoint_url}}
+      model_type: ${{parent.inputs.model_type}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
     outputs:
       formatted_data: ${{parent.outputs.formatted_data}}

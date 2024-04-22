@@ -1,0 +1,94 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: aoai_finetuning
+version: 0.0.2
+type: command
+
+is_deterministic: True
+
+display_name: AOAI Finetuning Job
+description: Upload data to Azure OpenAI resource, finetune model and delete data
+
+environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/2
+
+code: ../../src
+
+inputs:
+  endpoint_name:
+    type: string
+    optional: False
+    description: The endpoint name or AOAI resource name.
+
+  endpoint_resource_group:
+    type: string
+    optional: True
+    description: Resource group for the AOAI resource.
+
+  endpoint_subscription:
+    type: string
+    optional: True
+    description: Subscription for the AOAI resource.
+
+  training_file_path:
+    type: uri_file
+    optional: False
+    description: jsonl source file/folder for training dataset.
+
+  validation_file_path:
+    type: uri_file
+    optional: True
+    description: source file/folder for validation dataset.
+
+  model:
+    type: string
+    optional: False
+    default: gpt-35-turbo-0613
+    description: GPT model engine
+  
+  task_type:
+    type: string
+    optional: False
+    description: Dataset type - chat or completion
+    enum:
+    - chat
+    - completion
+
+  n_epochs:
+    type: integer
+    optional: True
+    description: Number of training epochs. If not provided, number of epochs will be determined dynamically based on the input data.
+  
+  batch_size:
+    type: integer
+    optional: True
+    description: Global batch size. If not provided, batch size will be determined dynamically based on the input data.
+  
+  learning_rate_multiplier:
+    type: number
+    optional: True
+    description: The learning rate multiplier to use for training. If not provided, batch size will be determined dynamically based on the input data.
+  
+  suffix:
+    type: string
+    optional: true
+    description: A string of up to 18 characters that will be added to your fine-tuned model name
+
+outputs:
+  aoai_finetuning_output:
+    type: uri_file
+    description: Contains finetuned model id in output file in JSON/custom class format
+
+command: >-
+  python finetuning.py
+  --endpoint_name ${{inputs.endpoint_name}}
+  $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
+  $[[--endpoint_subscription ${{inputs.endpoint_subscription}}]]
+  --training_file_path ${{inputs.training_file_path}}
+  $[[--validation_file_path ${{inputs.validation_file_path}}]]
+  --model ${{inputs.model}}
+  --task_type ${{inputs.task_type}}
+  $[[--n_epochs ${{inputs.n_epochs}}]]
+  $[[--batch_size ${{inputs.batch_size}}]]
+  $[[--learning_rate_multiplier ${{inputs.learning_rate_multiplier}}]]
+  $[[--suffix ${{inputs.suffix}}]]
+  --aoai_finetuning_output ${{outputs.aoai_finetuning_output}}
+  

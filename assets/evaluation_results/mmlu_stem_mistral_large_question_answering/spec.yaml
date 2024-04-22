@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_stem_mistral_large_question_answering
-version: 2.02.04
+version: 2.19.040
 display_name: mmlu_stem_mistral_large_question_answering
 description: mistral-large run for mmlu_stem dataset
 dataset_family: mmlu
@@ -15,6 +15,7 @@ relationships:
     assetId: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 

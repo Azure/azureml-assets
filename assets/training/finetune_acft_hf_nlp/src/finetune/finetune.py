@@ -28,6 +28,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     MLFlowHFFlavourConstants,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     MLFLOW_FLAVORS,
+    SaveStrategy,
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
@@ -50,6 +51,8 @@ from azureml._common._error_definition.azureml_error import AzureMLError  # type
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
+
+PHI3_MINI_4K_INSTRUCT_MODEL_TYPE = "phi3mini"
 
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
@@ -175,6 +178,7 @@ ACFT_REGEX_PREFIX = "acft_regex:"
 
 DEEPSPEED_STAGE3_SUPPORTED_TASKS = [
     Tasks.TEXT_GENERATION,
+    Tasks.CHAT_COMPLETION
 ]
 DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_TASKS)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_TASKS and matches other words
@@ -186,6 +190,8 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.FALCON,
     HfModelTypes.MISTRAL,
     HfModelTypes.MIXTRAL,
+    HfModelTypes.PHI_LONGROPE,
+    PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
 ]
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
@@ -197,6 +203,8 @@ FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
     HfModelTypes.FALCON,
     HfModelTypes.MISTRAL,
     HfModelTypes.MIXTRAL,
+    HfModelTypes.PHI_LONGROPE,
+    PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
 ]
 
 FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
@@ -204,6 +212,8 @@ FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
     HfModelTypes.FALCON,
     HfModelTypes.MISTRAL,
     HfModelTypes.MIXTRAL,
+    HfModelTypes.PHI_LONGROPE,
+    PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
 ]
 
 
@@ -464,6 +474,18 @@ def get_parser():
         type=str2bool,
         default="false",
         help="Loads Optimizer, Scheduler and Trainer state for finetuning if true",
+    )
+    parser.add_argument(
+        "--save_strategy",
+        type=str,
+        default=SaveStrategy.EVALUATION_STRATEGY,
+        help="The checkpoint save strategy to adopt during training.",
+    )
+    parser.add_argument(
+        "--save_steps",
+        type=int,
+        default=100,
+        help="Number of update steps between two checkpoint saves if save_strategy='steps'",
     )
     parser.add_argument(
         "--save_total_limit",
@@ -1131,6 +1153,7 @@ def finetune(args: Namespace):
                         )
                     )
                 )
+        logger.info("Enabling QLoRA finetuning")
         if not args.apply_lora:
             logger.info("Lora is not enabled. Setting it to true.")
             setattr(args, "apply_lora", True)
@@ -1165,10 +1188,12 @@ def finetune(args: Namespace):
     else:
         logger.info(f"evaluation_steps_interval: {args.evaluation_steps_interval}")
 
-    args.save_strategy = args.evaluation_strategy
-    args.save_steps = args.eval_steps
+    if args.save_strategy == SaveStrategy.EVALUATION_STRATEGY:
+        logger.info(f"Setting save strategy to evaluation strategy: {args.evaluation_strategy}, {args.eval_steps}")
+        args.save_strategy = args.evaluation_strategy
+        args.save_steps = args.eval_steps
 
-    if args.task_name not in [Tasks.TEXT_GENERATION]:
+    if args.task_name not in [Tasks.TEXT_GENERATION, Tasks.CHAT_COMPLETION]:
         removed_base_image = metadata.pop("azureml.base_image", None)
         logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
                     base image value is {removed_base_image}.")

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_stem_gpt_35_turbo_0613_question_answering
-version: 2.02.04
+version: 2.19.040
 display_name: mmlu_stem_gpt_35_turbo_0613_question_answering
 description: gpt-35-turbo-0613 run for mmlu_stem dataset
 dataset_family: mmlu
@@ -15,6 +15,7 @@ relationships:
     assetId: azureml://registries/azure-openai-v2/models/gpt-35-turbo/versions/690135
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 

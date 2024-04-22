@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation_databricks-dbrx-base_question_answering
-version: 2.02.04
+version: 2.19.040
 display_name: truthfulqa_generation_databricks-dbrx-base_question_answering
 description: databricks-dbrx-base run for truthfulqa_generation dataset
 dataset_family: truthfulqa
@@ -15,6 +15,7 @@ relationships:
     assetId: azureml://registries/azureml-restricted/models/databricks-dbrx-base/versions/1
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
 

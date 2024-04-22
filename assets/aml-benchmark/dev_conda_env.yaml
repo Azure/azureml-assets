@@ -16,6 +16,7 @@ dependencies:
     - datasets
     - tqdm
     - azure-core
+    - tiktoken
     - mteb
     - openai
     ## Test requirements

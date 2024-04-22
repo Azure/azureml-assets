@@ -68,13 +68,6 @@ class DatasetPreprocessor(object):
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
-        if len([
-            file for file in resolve_io_path(self.input_dataset) if file.endswith(".jsonl")
-        ]) == 0:
-            mssg = "No .jsonl files found in the given input dataset."
-            raise BenchmarkValidationException._with_error(
-                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
-            )
         if self.template is None and self.user_preprocessor is None:
             mssg = (
                 "Please provide the input to apply preprocessing logic either via template input or script_path."
@@ -112,7 +105,6 @@ class DatasetPreprocessor(object):
 
     def prep_using_template(self) -> None:
         """Preprocessor run using template."""
-        from aml_benchmark.utils.io import resolve_io_path
         data = read_jsonl_files(resolve_io_path(self.input_dataset))
         template = json.dumps(self.template)
         template = json.loads(template)
