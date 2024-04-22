@@ -1,0 +1,31 @@
+type: evaluationresult
+name: human_eval_meta-llama-3-8b_text_generation
+version: 2.22.04
+display_name: human_eval_Meta-Llama-3-8B_text_generation
+description: Meta-Llama-3-8B run for human_eval dataset
+dataset_family: human_eval
+dataset_name: human_eval
+
+model_name: Meta-Llama-3-8B
+model_version: "1"
+model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3-8B/versions/1
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azureml-meta/models/Meta-Llama-3-8B/versions/1
+
+tags:
+  evaluation_type: text_generation
+  task: text-generation
+  accuracy_metric_name: pass@1
+
+metrics:
+  accuracy: 0.34146341463414637
+
+
+properties:
+  n_shot: 0
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: None
+  fewshot_split: "None"
