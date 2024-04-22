@@ -37,7 +37,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
         self.correlation_test_pvalue_threshold = correlation_test_pvalue_threshold
         self.positive_metric_threshold = positive_metric_threshold
         self.negative_metric_threshold = negative_metric_threshold
-        super().__init__(action_max_positive_sample_size, llm_summary_enabled)
+        super().__init__(llm_summary_enabled)
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.

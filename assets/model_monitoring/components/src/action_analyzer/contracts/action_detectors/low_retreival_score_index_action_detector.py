@@ -25,7 +25,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         """
         self.index_id = index_id
         self.violated_metrics = violated_metrics
-        super().__init__(action_max_positive_sample_size, llm_summary_enabled)
+        super().__init__(llm_summary_enabled)
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.
