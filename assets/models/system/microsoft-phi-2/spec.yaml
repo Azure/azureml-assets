@@ -16,6 +16,9 @@ properties:
 tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
+  license: mit
+  author: microsoft
+  task: text-generation
   evaluation_compute_allow_list:
     [
       Standard_DS5_v2,
@@ -78,7 +81,6 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND40rs_v2
     ]
-  license: mit
   inference_supported_envs:
     - vllm
     - ds_mii
@@ -89,5 +91,4 @@ tags:
     apply_ort: "false"
     precision: 16
     max_seq_length: 2048
-  task: text-generation
-version: 15
+version: 16

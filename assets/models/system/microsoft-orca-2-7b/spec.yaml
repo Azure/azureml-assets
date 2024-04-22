@@ -12,7 +12,7 @@ tags:
   license: other
   SharedComputeCapacityEnabled: ''
   task: text-generation
-  author: Microsoft Research
+  author: microsoft
   huggingface_model_id: microsoft/Orca-2-7b
   inference_compute_allow_list:
     [
@@ -26,4 +26,4 @@ tags:
       Standard_ND40rs_v2,
     ]
 
-version: 3
+version: 4
