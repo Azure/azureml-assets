@@ -3,7 +3,6 @@
 
 """Action sample class."""
 
-import json
 from action_analyzer.contracts.action import ActionSample
 
 
