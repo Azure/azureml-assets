@@ -380,7 +380,8 @@ class TestGenAISparkPreprocessor:
         ["12", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
-    _root_span_str_error = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T' + \
+    _root_span_str_error = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}",' + \
+        ' "end_time": "2024-02-05T' + \
         '00:08:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": null, "span' + \
         '_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01_0", "' + \
         'children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T0' + \
@@ -408,7 +409,8 @@ class TestGenAISparkPreprocessor:
         'an_id": "8", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01",' + \
         ' "children": []}]}'
 
-    _root_span_str_error3 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T' + \
+    _root_span_str_error3 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}",' + \
+        ' "end_time": "2024-02-05T' + \
         '00:08:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": null, "span' + \
         '_id": "9", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01_2", "' + \
         'children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T0' + \
