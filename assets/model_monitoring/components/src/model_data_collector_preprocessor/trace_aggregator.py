@@ -18,9 +18,9 @@ from shared_utilities.io_utils import init_spark
 def _construct_output_trace_entry(output_dict: dict, output_schema):
     """Create an aggregated trace entry and validate it is valid trace."""
     if output_dict.get('output', None) is None:
-        print(f'Throwing out trace: {output_dict.get("trace_id", None)} because the root_span with id = {output_dict.get("span_id", None)} "output" field as null.')
+        print(f'Throwing out trace: {output_dict.get("trace_id", None)} because the root_span with id = {output_dict.get("span_id", None)} has "output" field as null.')
         return None
-    elif output_dict.get('inputs', None) is None:
+    elif output_dict.get('input', None) is None:
         print(f'Throwing out trace: {output_dict.get("trace_id", None)} because the root_span with id = {output_dict.get("span_id", None)} has "input" field as null.')
         return None
     return tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
@@ -55,6 +55,7 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
         output_dict['input'] = tree.root_span.input
         output_dict['output'] = tree.root_span.output
         output_dict['root_span'] = tree.to_json_str()
+
         entry = _construct_output_trace_entry(output_dict, output_schema)
         return [entry] if entry is not None else []
 

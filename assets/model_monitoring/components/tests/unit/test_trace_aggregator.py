@@ -364,10 +364,10 @@ class TestGenAISparkPreprocessor:
         ['{"inputs":"in", "output":"out"}'] +
         [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "1"] +
         ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"],
-        ['{"inputs":"in", "output":"out"}'] +
+        ['{"inputs":"in"}'] +
         [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", "00"] +
         ["5", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-        ['{"inputs":"in"}'] +
+        ['{"inputs":"in", "output":"out"}}'] +
         [datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name", "5"] +
         ["6", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
         ['{"inputs":"in", "output":"out"}'] +
@@ -425,59 +425,59 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error2],
     ]
 
-    # def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
-    #     """Test scenarios where we have a faulty root span when generating tree."""
-    #     spark = self._init_spark()
-    #     start_time = datetime(2024, 2, 5, 0,)
-    #     end_time = datetime(2024, 2, 5, 1)
+    def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
+        """Test scenarios where we have a faulty root span when generating tree."""
+        spark = self._init_spark()
+        start_time = datetime(2024, 2, 5, 0,)
+        end_time = datetime(2024, 2, 5, 1)
 
-    #     span_logs_no_root_with_data = [
-    #         ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name"] +
-    #         [None, "1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-    #         ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name"] +
-    #         ["1", "2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "02"],
-    #     ]
-    #     span_logs_no_root_with_data_df = spark.createDataFrame(
-    #         span_logs_no_root_with_data,
-    #         self._preprocessed_log_schema)
+        span_logs_no_root_with_data = [
+            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name"] +
+            [None, "1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name"] +
+            ["1", "2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "02"],
+        ]
+        span_logs_no_root_with_data_df = spark.createDataFrame(
+            span_logs_no_root_with_data,
+            self._preprocessed_log_schema)
 
-    #     trace_df = aggregate_spans_into_traces(span_logs_no_root_with_data_df, True, start_time, end_time)
-    #     rows = trace_df.collect()
-    #     assert trace_df.count() == 2
-    #     assert rows[0]['trace_id'] == "01"
-    #     assert rows[1]['trace_id'] == "02"
+        trace_df = aggregate_spans_into_traces(span_logs_no_root_with_data_df, True, start_time, end_time)
+        rows = trace_df.collect()
+        assert trace_df.count() == 2
+        assert rows[0]['trace_id'] == "01"
+        assert rows[1]['trace_id'] == "02"
 
-    #     span_logs_no_root_forest = [
-    #         ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name"] +
-    #         ["1", "1", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
-    #         ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name"] +
-    #         ["1", "2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
-    #     ]
-    #     spans_no_root_df = spark.createDataFrame(span_logs_no_root_forest, self._preprocessed_log_schema)
-    #     no_root_traces = aggregate_spans_into_traces(spans_no_root_df, True, start_time, end_time)
-    #     assert no_root_traces.isEmpty()
+        span_logs_no_root_forest = [
+            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name"] +
+            ["1", "1", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
+            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name"] +
+            ["1", "2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
+        ]
+        spans_no_root_df = spark.createDataFrame(span_logs_no_root_forest, self._preprocessed_log_schema)
+        no_root_traces = aggregate_spans_into_traces(spans_no_root_df, True, start_time, end_time)
+        assert no_root_traces.isEmpty()
 
     @pytest.mark.parametrize(
         "span_input_logs, span_input_schema, expected_trace_logs, " +
         "expected_trace_schema, require_trace_data, data_window_start, data_window_end",
         [
-            # ([], _preprocessed_log_schema, [], _trace_log_schema, True,
-            #  datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
-            # (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema, True,
-            #  datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
-            # (_span_log_data_extra, _preprocessed_log_schema_extra, _trace_log_data_extra, _trace_log_schema, True,
-            #  datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
-            # (_span_log_data, _preprocessed_log_schema, [], _trace_log_schema, False,
-            #  datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
-            # # Look back with extra span logs
-            # (_span_log_data_lookback, _preprocessed_log_schema, _trace_log_data_lookback, _trace_log_schema, True,
-            #  datetime(2024, 2, 5, 6), datetime(2024, 2, 5, 7)),
-            # # request_id data
-            # # TODO: uncomment when we want to test replacing trace_id with request_id
-            # # (_span_log_data_request_id, _preprocessed_log_schema, _trace_log_data_request_id, _trace_log_schema,
-            # #  True, datetime(2024, 2, 5, 9), datetime(2024, 2, 5, 10))
-            # (_span_log_data_same_trace, _preprocessed_log_schema, _trace_log_data_same_trace, _trace_log_schema,
-            #  True, datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
+            ([], _preprocessed_log_schema, [], _trace_log_schema, True,
+             datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
+            (_span_log_data, _preprocessed_log_schema, _trace_log_data, _trace_log_schema, True,
+             datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
+            (_span_log_data_extra, _preprocessed_log_schema_extra, _trace_log_data_extra, _trace_log_schema, True,
+             datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
+            (_span_log_data, _preprocessed_log_schema, [], _trace_log_schema, False,
+             datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
+            # Look back with extra span logs
+            (_span_log_data_lookback, _preprocessed_log_schema, _trace_log_data_lookback, _trace_log_schema, True,
+             datetime(2024, 2, 5, 6), datetime(2024, 2, 5, 7)),
+            # request_id data
+            # TODO: uncomment when we want to test replacing trace_id with request_id
+            # (_span_log_data_request_id, _preprocessed_log_schema, _trace_log_data_request_id, _trace_log_schema,
+            #  True, datetime(2024, 2, 5, 9), datetime(2024, 2, 5, 10))
+            (_span_log_data_same_trace, _preprocessed_log_schema, _trace_log_data_same_trace, _trace_log_schema,
+             True, datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
             # one of the logs won't have input or output
             (_span_log_data_with_error, _preprocessed_log_schema, _trace_log_data_with_error, _trace_log_schema,
              True, datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
