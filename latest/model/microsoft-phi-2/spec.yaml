@@ -28,6 +28,9 @@ properties:
 tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
+  license: mit
+  author: microsoft
+  task: text-generation
   evaluation_compute_allow_list: [Standard_DS5_v2, Standard_NC6s_v3, Standard_NC12s_v3,
     Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4,
     Standard_ND96amsr_A100_v4]
@@ -45,7 +48,6 @@ tags:
     Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
     Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-  license: mit
   inference_supported_envs:
   - vllm
   - ds_mii
@@ -56,8 +58,7 @@ tags:
     apply_ort: "false"
     precision: 16
     max_seq_length: 2048
-  task: text-generation
-version: 15
+version: 16
 description: |
   ## **Microsoft Phi-2**
 
