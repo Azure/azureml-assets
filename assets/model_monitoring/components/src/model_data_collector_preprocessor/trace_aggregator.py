@@ -15,14 +15,14 @@ from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
 from shared_utilities.io_utils import init_spark
 
 
-def _construct_output_trace_entry(output_dict: dict, output_schema) -> tuple:
+def _construct_output_trace_entry(output_dict: dict, output_schema):
     """Create an aggregated trace entry and validate it is valid trace."""
     if output_dict.get('output', None) is None:
         print(f'Throwing out trace: {output_dict.get("trace_id", None)} because the root_span with id = {output_dict.get("span_id", None)} "output" field as null.')
-        return tuple()
+        return None
     elif output_dict.get('inputs', None) is None:
         print(f'Throwing out trace: {output_dict.get("trace_id", None)} because the root_span with id = {output_dict.get("span_id", None)} has "input" field as null.')
-        return tuple()
+        return None
     return tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
 
 
@@ -45,16 +45,18 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
             output_dict['output'] = root_span.output
             output_dict['root_span'] = json.dumps(root_span.to_dict())
 
-            seperated_trace_entries.append(
-                _construct_output_trace_entry(output_dict, output_schema)
-            )
+            if (entry := _construct_output_trace_entry(output_dict, output_schema)) is not None:
+                seperated_trace_entries.append(
+                    entry
+                )
         return seperated_trace_entries
     else:
         output_dict = tree.root_span.to_dict(datetime_to_str=False)
         output_dict['input'] = tree.root_span.input
         output_dict['output'] = tree.root_span.output
         output_dict['root_span'] = tree.to_json_str()
-        return [_construct_output_trace_entry(output_dict, output_schema)]
+        entry = _construct_output_trace_entry(output_dict, output_schema)
+        return [entry] if entry is not None else []
 
 
 def _replace_trace_with_request_id(row: Row):
