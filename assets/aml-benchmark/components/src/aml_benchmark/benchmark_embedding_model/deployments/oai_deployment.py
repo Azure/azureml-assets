@@ -9,6 +9,7 @@ from openai import OpenAI, BadRequestError, APITimeoutError
 from azureml._common._error_definition.azureml_error import AzureMLError
 
 from .abstract_deployment import AbstractDeployment
+from ..utils.constants import EmbeddingConstants
 from ...utils.helper import exponential_backoff
 from ...utils.constants import Constants
 from ...utils.logging import get_logger
@@ -29,11 +30,16 @@ class OAIDeployment(AbstractDeployment):
     ):
         """Initialize Deployment."""
         super().__init__()
+        if deployment_name is None:
+            mssg = "Deployment name is required for OAI contract like deployment."
+            raise BenchmarkValidationError._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
         self.deployment_name = deployment_name
         self._client = OpenAI(
             api_key=api_key,
             max_retries=Constants.MAX_RETRIES_OAI,
-            timeout=Constants.DEFAULT_HTTPX_TIMEOUT,
+            timeout=EmbeddingConstants.DEFAULT_HTTPX_TIMEOUT,
         )
 
     @exponential_backoff()
@@ -49,6 +55,7 @@ class OAIDeployment(AbstractDeployment):
         )
         return [embedding.embedding for embedding in response.data]
 
+    @exponential_backoff()
     def get_batch_size(self, longest_sentence: str, intital_batch_size: int) -> int:
         """
         Get the batch size that will fit the model context length.

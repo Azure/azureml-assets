@@ -28,7 +28,7 @@ def parse_args() -> argparse.Namespace:
         "--endpoint_url",
         type=str,
         required=False,
-        help="For AOAI, the base endpoint url. For OAI, this will be ignored.",
+        help="For AOAI, the base endpoint url. For OAI, this will be ignored. For OSS_MaaS, the target url.",
         default=None,
     )
     parser.add_argument(
@@ -36,13 +36,13 @@ def parse_args() -> argparse.Namespace:
         type=str,
         required=True,
         choices=[member.value for member in DeploymentType],
-        help="Choose from one of the deployment types: `AOAI`, `OAI`."
+        help="Choose from one of the deployment types: `AOAI`, `OAI`, `OSS_MaaS`, `OSS_MaaP`."
     )
     parser.add_argument(
         "--deployment_name",
         type=str,
-        required=True,
-        help="For AOAI, the deployment name. For OAI, the model name."
+        required=False,
+        help="For AOAI, the deployment name. For OAI, the model name. For OSS_MaaS, this wil be ignored."
     )
     parser.add_argument(
         "--connections_name",
@@ -88,10 +88,10 @@ def parse_args() -> argparse.Namespace:
         type=int,
         required=False,
         help=(
-            "Number of texts to send in a single batch. Defaults to 32. Will be automatically reduced "
+            "Number of texts to send in a single batch. Defaults to 128. Will be automatically reduced "
             "if the batch does not fit in the model context."
         ),
-        default=32,
+        default=128,
     )
     parser.add_argument(
         "--output_metrics_dir", type=str, required=True, help="Directory where the benchmark metrics will be saved."
@@ -174,15 +174,15 @@ def _validate_args(
 @swallow_all_exceptions(logger)
 def main(
     output_metrics_dir: str,
-    deployment_type: str,
-    deployment_name: str,
     connections_name: str,
+    deployment_type: str,
+    deployment_name: Optional[str] = None,
     endpoint_url: Optional[str] = None,
     tasks: Optional[str] = None,
     task_types: Optional[str] = None,
     task_langs: Optional[str] = None,
     preset: Optional[str] = None,
-    batch_size: int = 32,
+    batch_size: int = 128,
 ) -> None:
     """
     Entry function for Benchmark Embedding Model Component.
@@ -190,17 +190,17 @@ def main(
     Either `tasks` or `task_types` or `task_langs` or `preset` must be supplied.
 
     :param output_metrics_dir: Directory where the benchmark metrics will be saved.
-    :param deployment_type: Choose from one of the deployment types: `AOAI`, `OAI`.
-    :param deployment_name: For AOAI, the deployment name. For OAI, the model name.
     :param connections_name: Used for authenticating endpoint.
-    :param endpoint_url: For AOAI, the base endpoint url. For OAI, this will be ignored.
+    :param deployment_type: Choose from one of the deployment types: `AOAI`, `OAI`, `OSS_MaaS`, `OSS_MaaP`.
+    :param deployment_name: For AOAI, the deployment name. For OAI, the model name. For OSS_MaaS, this wil be ignored.
+    :param endpoint_url: For AOAI, the base endpoint url. For OAI, this will be ignored. For OSS_MaaS, the target url.
     :param tasks: Comma separated string denoting the tasks to benchmark the model on.
     :param task_types: Comma separated string denoting the task type to benchmark the model on. Choose from the
         following task types: classification, clustering, pair_classification, reranking, retrieval, sts,
         summarization, all.
     :param task_langs: Comma separated string denoting the task languages to benchmark the model on.
     :param preset: Choose from one of the presets for benchmarking: `None` or `mteb_main_en`. Default is `None`.
-    :param batch_size: Number of texts to send in a single batch. Defaults to 32. Will be automatically reduced
+    :param batch_size: Number of texts to send in a single batch. Defaults to 128. Will be automatically reduced
         if the batch does not fit in the model context.
     :return: None
     """

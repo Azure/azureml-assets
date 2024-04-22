@@ -5,6 +5,8 @@
 
 from enum import Enum
 
+from httpx import Timeout
+
 
 class Preset(Enum):
     """Preset."""
@@ -17,4 +19,11 @@ class DeploymentType(Enum):
 
     AOAI = "AOAI"
     OAI = "OAI"
-    OSS = "OSS"
+    OSS_MaaS = "OSS_MaaS"
+    OSS_MaaP = "OSS_MaaP"
+
+
+class EmbeddingConstants:
+    """Constants for embedding benchmarking."""
+
+    DEFAULT_HTTPX_TIMEOUT = Timeout(timeout=600.0, connect=120.0)

@@ -4,12 +4,13 @@
 """Deployment."""
 
 from abc import ABC, abstractmethod
-from typing import List, Any, Dict
+from typing import List, Any
+from concurrent.futures import ThreadPoolExecutor
 
-import numpy as np
-from tqdm.autonotebook import trange
+from tqdm import tqdm
 from azureml._common._error_definition.azureml_error import AzureMLError
 
+from ...utils.constants import Constants
 from ...utils.exceptions import BenchmarkValidationException
 from ...utils.error_definitions import BenchmarkValidationError
 
@@ -73,66 +74,26 @@ class AbstractDeployment(ABC):
         """
         all_embeddings = []
 
-        # sort sentences by length in descending order
-        length_sorted_idx = np.argsort([-self._text_length(sen) for sen in sentences])
-        sentences_sorted = [sentences[idx] for idx in length_sorted_idx]
+        # get the longest sentence in the input text
+        longest_sentence = max(sentences, key=self._text_length)
 
         # reduce batch_size if the longest sentence in the input text is too long
-        batch_size = self.get_batch_size(sentences_sorted[0], batch_size)
+        batch_size = self.get_batch_size(longest_sentence, batch_size)
 
-        # get embeddings in batches
-        for start_index in trange(
-            0, len(sentences), batch_size, desc="Batches", disable=False
-        ):
-            sentences_batch = sentences_sorted[start_index: start_index + batch_size]
-            embeddings = self.get_embeddings(sentences_batch)
-            all_embeddings.extend(embeddings)
+        total_sentences = len(sentences)
 
-        # sort embeddings back to the original order
-        all_embeddings = [all_embeddings[idx] for idx in np.argsort(length_sorted_idx)]
+        with ThreadPoolExecutor(max_workers=Constants.MAX_THREADS) as executor:
+            futures = []
+            with tqdm(total=total_sentences) as pbar:
+                for start_index in range(0, total_sentences, batch_size):
+                    sentences_batch = sentences[start_index: start_index + batch_size]
+                    future = executor.submit(self.get_embeddings, sentences_batch)
+                    # Update the progress bar when each future completes
+                    future.add_done_callback(lambda _: pbar.update(batch_size))
+                    futures.append(future)
+
+                for future in futures:
+                    embeddings = future.result()
+                    all_embeddings.extend(embeddings)
 
         return all_embeddings
-
-    def encode_queries(
-        self, queries: List[str], batch_size: int, **kwargs
-    ) -> List[List[float]]:
-        """
-        Get a list of embeddings for the given list of queries.
-
-        :param queries: List of queries to encode.
-        :param batch_size: Batch size for the encoding.
-        :param kwargs: Additional keyword arguments.
-        :return: List of embeddings for the given queries.
-        """
-        return self.encode(queries, batch_size=batch_size, **kwargs)
-
-    def encode_corpus(
-        self, corpus: List[Dict[str, str]], batch_size: int, **kwargs
-    ) -> List[List[float]]:
-        """
-        Get a list of embeddings for the given list of corpus.
-
-        :param corpus: List of corpus to encode.
-        :param batch_size: Batch size for the encoding.
-        :param kwargs: Additional keyword arguments.
-        :return: List of embeddings for the given corpus.
-        """
-        if isinstance(corpus, dict):
-            sentences = [
-                (
-                    (corpus["title"][i] + self.sep + corpus["text"][i]).strip()
-                    if "title" in corpus
-                    else corpus["text"][i].strip()
-                )
-                for i in range(len(corpus["text"]))
-            ]
-        else:
-            sentences = [
-                (
-                    (doc["title"] + self.sep + doc["text"]).strip()
-                    if "title" in doc
-                    else doc["text"].strip()
-                )
-                for doc in corpus
-            ]
-        return self.encode(sentences, batch_size=batch_size, **kwargs)

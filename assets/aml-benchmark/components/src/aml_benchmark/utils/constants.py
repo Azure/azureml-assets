@@ -4,8 +4,6 @@
 """Constants for Benchmarking."""
 from enum import Enum
 
-from httpx import Timeout
-
 
 class Constants:
     """Constants for benchmarking."""
@@ -17,8 +15,7 @@ class Constants:
     MAX_THREADS = 20
     BACKOFF_FACTOR = 2
     MAX_TIMEOUT_SEC = 180
-    DEFAULT_HTTPX_TIMEOUT = Timeout(timeout=600.0, connect=120.0)
-    RETRIABLE_STATUS_CODES = {413, 429, 500, 502, 503, 504}
+    RETRIABLE_STATUS_CODES = {413, 429, 500, 502, 503, 504, None}
 
 
 class AuthenticationType(Enum):

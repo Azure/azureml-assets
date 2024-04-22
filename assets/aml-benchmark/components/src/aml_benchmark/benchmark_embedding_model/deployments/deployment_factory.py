@@ -9,7 +9,8 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 
 from .aoai_deployment import AOAIDeployment
 from .oai_deployment import OAIDeployment
-from .oss_deployment import OSSDeployment
+from .oss_maas_deployment import OSSMaaSDeployment
+from .oss_maap_deployment import OSSMaaPDeployment
 from ..utils.constants import DeploymentType
 from ...utils.helper import get_api_key_from_connection
 from ...utils.exceptions import BenchmarkValidationException
@@ -22,7 +23,7 @@ class DeploymentFactory:
     @staticmethod
     def get_deployment(
         deployment_type: str,
-        deployment_name: str,
+        deployment_name: Optional[str],
         endpoint_url: Optional[str],
         connections_name: Optional[str],
     ):
@@ -41,8 +42,13 @@ class DeploymentFactory:
                 deployment_name=deployment_name,
                 api_key=_api_key,
             )
-        elif deployment_type == DeploymentType.OSS.value:
-            return OSSDeployment(
+        elif deployment_type == DeploymentType.OSS_MaaS.value:
+            return OSSMaaSDeployment(
+                endpoint_url=endpoint_url,
+                api_key=_api_key,
+            )
+        elif deployment_type == DeploymentType.OSS_MaaP.value:
+            return OSSMaaPDeployment(
                 deployment_name=deployment_name,
                 endpoint_url=endpoint_url,
                 api_key=_api_key,

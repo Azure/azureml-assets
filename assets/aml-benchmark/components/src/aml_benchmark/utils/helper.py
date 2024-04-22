@@ -3,6 +3,7 @@
 
 """Helper functions."""
 
+import re
 import json
 import time
 import requests
@@ -21,6 +22,40 @@ from .error_definitions import BenchmarkUserError
 
 
 logger = get_logger(__name__)
+
+
+def _get_status_code(e: Exception) -> Optional[int]:
+    """
+    Get the status code from the exception.
+
+    :param e: Exception.
+    :return: Status code.
+    """
+    status_code = getattr(e, "status_code", None)
+    if status_code is None and getattr(e, "response", None) is not None:
+        status_code = getattr(e.response, "status_code", None)
+    return status_code
+
+
+def _get_retry_delay(e: Exception) -> Optional[int]:
+    """
+    Get the retry delay from the exception.
+
+    :param e: Exception.
+    :return: Retry delay.
+    """
+    message = getattr(e, "message", None)
+    if message is None:
+        # oss does not return this information
+        retry_delay = None
+    else:
+        # oai as well as aoai return this information
+        try:
+            retry_after = re.search(r"retry after (\d+) second", message)
+            retry_delay = int(retry_after.group(1)) + 5
+        except Exception:
+            retry_delay = None
+    return retry_delay
 
 
 def exponential_backoff(
@@ -47,24 +82,24 @@ def exponential_backoff(
         def wrapper(*args, **kwargs):
             retries = 0
             delay = base_delay
-            while retries < max_retries:
+            while retries <= max_retries:
                 try:
                     tick = time.time()
                     return func(*args, **kwargs)
                 except Exception as e:
                     tock = time.time()
-                    status_code = getattr(e, "status_code", None)
-                    if not status_code and getattr(e, "response", None):
-                        status_code = getattr(e.response, "status_code", None)
+                    status_code = _get_status_code(e)
                     if status_code not in Constants.RETRIABLE_STATUS_CODES:
                         raise
                     retries += 1
-                    if retries < max_retries:
+                    if retries <= max_retries:
                         backoff_delay = min(delay, max_delay)
                         logger.info(
                             (
                                 f"Retrying method `{func.__name__}` after {backoff_delay} sec. "
-                                f"Time spent: {round(tock - tick)} sec. Error details: {e}"
+                                f"Retry attempt: {retries}/{max_retries}. "
+                                f"Time spent: {round(tock - tick)} sec. "
+                                f"Error details: {e}"
                             )
                         )
                         time.sleep(backoff_delay)
@@ -173,7 +208,7 @@ def get_api_key_from_connection(connections_name: str) -> Tuple[str, Optional[st
     credentials = resp.json()["properties"]["credentials"]
     metadata = resp.json()["properties"].get("metadata", {})
     if "key" in credentials:
-        return credentials["key"], metadata["ApiVersion"]
+        return credentials["key"], metadata.get("ApiVersion")
     else:
         if "secretAccessKey" not in credentials and "keys" in credentials:
             credentials = credentials["keys"]

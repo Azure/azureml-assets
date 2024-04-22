@@ -10,7 +10,7 @@ inputs:
   endpoint_url:
     type: string
     optional: True
-    description: For AOAI, the base endpoint url. For OAI, this will be ignored.
+    description: For AOAI, the base endpoint url. For OAI, this will be ignored. For OSS_MaaS, the target url.
   deployment_type:
     type: string
     optional: False
@@ -18,10 +18,11 @@ inputs:
     enum:
       - AOAI
       - OAI
+      - OSS_MaaS
   deployment_name:
     type: string
-    optional: False
-    description: For AOAI, the deployment name. For OAI, the model name. 
+    optional: True
+    description: For AOAI, the deployment name. For OAI, the model name. For OSS_MaaS, this wil be ignored. 
   connections_name:
     type: string
     optional: False
@@ -61,7 +62,7 @@ command: >-
   python -m aml_benchmark.benchmark_embedding_model.main
   $[[--endpoint_url ${{inputs.endpoint_url}}]]
   --deployment_type ${{inputs.deployment_type}}
-  --deployment_name ${{inputs.deployment_name}}
+  $[[--deployment_name ${{inputs.deployment_name}}]]
   --connections_name '${{inputs.connections_name}}'
   $[[--tasks '${{inputs.tasks}}']]
   $[[--task_types '${{inputs.task_types}}']]
