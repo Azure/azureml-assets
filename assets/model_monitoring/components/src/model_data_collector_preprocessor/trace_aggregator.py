@@ -43,6 +43,7 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
         output_dict['input'] = tree.root_span.input
         output_dict['output'] = tree.root_span.output
         output_dict['root_span'] = tree.to_json_str()
+
         return [tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())]
 
 
@@ -64,7 +65,6 @@ def aggregate_spans_into_traces(
     """Group span logs into aggregated trace logs."""
     output_trace_schema = _get_aggregated_trace_log_spark_df_schema()
 
-    # TODO: figure out optional output behavior and change to that.
     if not require_trace_data:
         spark = init_spark()
         print("Skip processing of spans into aggregated traces.")

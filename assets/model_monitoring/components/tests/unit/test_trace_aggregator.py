@@ -11,6 +11,7 @@ import pytest
 import os
 import sys
 from datetime import datetime
+from model_data_collector_preprocessor.genai_preprocessor_df_schemas import _get_aggregated_trace_log_spark_df_schema
 from model_data_collector_preprocessor.trace_aggregator import (
     aggregate_spans_into_traces,
 )
@@ -156,18 +157,7 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str],
     ]
 
-    _trace_log_schema = StructType(
-        [
-            StructField("trace_id", StringType(), False),
-            StructField("user_id", StringType(), True),
-            StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampType(), False),
-            StructField("end_time", TimestampType(), False),
-            StructField("input", StringType(), False),
-            StructField("output", StringType(), False),
-            StructField("root_span", StringType(), True),
-        ]
-    )
+    _trace_log_schema = _get_aggregated_trace_log_spark_df_schema()
 
     _trace_log_data_extra = [
             ["01", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
@@ -351,6 +341,98 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_2],
     ]
 
+    _span_log_data_with_error = [
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", None] +
+        ["1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name", "1"] +
+        ["2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "[]", "name", "2"] +
+        ["3", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "1"] +
+        ["4", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"],
+        ['{"inputs":"in"}'] +
+        [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", "00"] +
+        ["5", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}}'] +
+        [datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name", "5"] +
+        ["6", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "[]", "name", "6"] +
+        ["7", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "5"] +
+        ["8", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", None] +
+        ["9", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name", "9"] +
+        ["10", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "[]", "name", "10"] +
+        ["11", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "9"] +
+        ["12", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
+    ]
+
+    _root_span_str_error = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}",' + \
+        ' "end_time": "2024-02-05T' + \
+        '00:08:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": null, "span' + \
+        '_id": "1", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01_0", "' + \
+        'children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T0' + \
+        '0:05:00", "events": "[]", "framework": "RAG", "links": "[]", "name": "name", "parent_id": "1", "span_id' + \
+        '": "2", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "trace_id": "01", "chi' + \
+        'ldren": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T00:0' + \
+        '4:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_id": "2", "span_' + \
+        'id": "3", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": "01", "c' + \
+        'hildren": []}]}, {"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02' + \
+        '-05T00:07:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "1", "sp' + \
+        'an_id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01",' + \
+        ' "children": []}]}'
+
+    _root_span_str_error2 = '{"attributes": "{\\"inputs\\":\\"in\\"}", "end_time": "2024-02-05T' + \
+        '00:08:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": "00", "span' + \
+        '_id": "5", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01_1", "' + \
+        'children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T0' + \
+        '0:05:00", "events": "[]", "framework": "RAG", "links": "[]", "name": "name", "parent_id": "5", "span_id' + \
+        '": "6", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "trace_id": "01", "chi' + \
+        'ldren": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T00:0' + \
+        '4:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_id": "6", "span_' + \
+        'id": "7", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": "01", "c' + \
+        'hildren": []}]}, {"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02' + \
+        '-05T00:07:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "5", "sp' + \
+        'an_id": "8", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01",' + \
+        ' "children": []}]}'
+
+    _root_span_str_error3 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}",' + \
+        ' "end_time": "2024-02-05T' + \
+        '00:08:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": null, "span' + \
+        '_id": "9", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01_2", "' + \
+        'children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T0' + \
+        '0:05:00", "events": "[]", "framework": "RAG", "links": "[]", "name": "name", "parent_id": "9", "span_id' + \
+        '": "10", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "trace_id": "01", "chi' + \
+        'ldren": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T00:0' + \
+        '4:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_id": "10", "span_' + \
+        'id": "11", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": "01", "c' + \
+        'hildren": []}]}, {"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02' + \
+        '-05T00:07:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "9", "sp' + \
+        'an_id": "12", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01",' + \
+        ' "children": []}]}'
+
+    _trace_log_data_with_error = [
+            ["01_0", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
+            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error],
+            ["01_1", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
+            [datetime(2024, 2, 5, 0, 8, 0), "in", None, _root_span_str_error2],
+            ["01_2", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
+            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error3],
+    ]
+
     def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
         spark = self._init_spark()
@@ -403,7 +485,10 @@ class TestGenAISparkPreprocessor:
             # (_span_log_data_request_id, _preprocessed_log_schema, _trace_log_data_request_id, _trace_log_schema,
             #  True, datetime(2024, 2, 5, 9), datetime(2024, 2, 5, 10))
             (_span_log_data_same_trace, _preprocessed_log_schema, _trace_log_data_same_trace, _trace_log_schema,
-             True, datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1))
+             True, datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
+            # one of the logs won't have input or output
+            (_span_log_data_with_error, _preprocessed_log_schema, _trace_log_data_with_error, _trace_log_schema,
+             True, datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
         ]
     )
     def test_trace_aggregator(
