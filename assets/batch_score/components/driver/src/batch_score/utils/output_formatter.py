@@ -104,7 +104,8 @@ class OutputFormatter(ABC):
         """Build a mapping from output index to embedding."""
         """
         Given response data, return a dictionary of the index and embedding info for each element of the batch.
-        Unsure if the responses are always in the correct order by input index, ensure output order by mapping out index.
+        Unsure if the responses are always in the correct order by input index,
+        ensure output order by mapping out index.
 
         Args:
             response_data: The list of outputs from the 'data' of API response.
@@ -143,8 +144,8 @@ class OutputFormatter(ABC):
         token_est_length = len(token_count_estimates)
         length_matches = token_est_length == input_length
         if not length_matches:
-            lu.get_logger().warn(f"Input length {input_length} does not match token estimate length {token_est_length}. "
-                                "Skipping prompt_tokens count overrides.")
+            lu.get_logger().warn(f"Input length {input_length} does not match token estimate "
+                                 "length {token_est_length}. Skipping prompt_tokens count overrides.")
         return length_matches
 
     def __tiktoken_estimates_retry(self, request_obj: dict) -> "tuple[int]":
