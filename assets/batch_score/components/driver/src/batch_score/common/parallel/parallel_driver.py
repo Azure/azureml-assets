@@ -5,7 +5,9 @@
 
 import asyncio
 
-from ...utils.common import convert_result_list
+from ...utils.output_formatter import OutputFormatter
+from ...utils.v1_output_formatter import V1OutputFormatter
+from ...utils.v2_output_formatter import V2OutputFormatter
 from ..configuration.configuration import Configuration
 from ..post_processing.mini_batch_context import MiniBatchContext
 from ..post_processing.result_utils import apply_input_transformer
@@ -48,7 +50,12 @@ class Parallel:
 
         apply_input_transformer(self.__input_to_output_transformer, scoring_results)
 
-        results = convert_result_list(
+        output_formatter: OutputFormatter
+        if self._configuration.input_schema_version == 1:
+            output_formatter = V1OutputFormatter()
+        else:
+            output_formatter = V2OutputFormatter()
+        results = output_formatter.format_output(
             results=scoring_results,
             batch_size_per_request=self._configuration.batch_size_per_request)
 

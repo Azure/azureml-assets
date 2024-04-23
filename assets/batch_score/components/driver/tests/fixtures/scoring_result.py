@@ -19,6 +19,7 @@ def make_scoring_result():
     """Mock scoring result."""
     def make(
             status: ScoringResultStatus = ScoringResultStatus.SUCCESS,
+            model_response_code: int = 200,
             start: float = time.time() - 10,
             end: float = time.time(),
             request_obj: any = None,
@@ -30,6 +31,7 @@ def make_scoring_result():
         """Make a mock scoring result."""
         return ScoringResult(
             status=status,
+            model_response_code=model_response_code,
             start=start,
             end=end,
             request_obj=request_obj,
