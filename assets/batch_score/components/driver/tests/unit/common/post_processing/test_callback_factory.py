@@ -131,7 +131,7 @@ def test_output_handler(
             configuration=test_configuration,
             output_handler=output_handler,
             input_to_output_transformer=mock_input_to_output_transformer)
-        
+
         callbacks = callback_factory.generate_callback()
 
         _ = callbacks(gathered_result, mini_batch_context)

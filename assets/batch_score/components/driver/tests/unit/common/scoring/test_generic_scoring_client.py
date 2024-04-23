@@ -63,7 +63,7 @@ async def test_score(response_status, response_body, exception_to_raise):
     response_sent_to_handler = http_response_handler.handle_response.call_args.kwargs['http_response']
 
     assert "custom_id" not in scoring_client._create_http_request(scoring_request).payload
-    
+
     if exception_to_raise:
         assert type(response_sent_to_handler.exception) is exception_to_raise
     elif response_status == 200:

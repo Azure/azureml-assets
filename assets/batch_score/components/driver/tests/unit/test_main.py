@@ -107,8 +107,8 @@ def test_output_handler_interface(
     with patch(
         "tests.unit.test_main.SeparateFileOutputHandler"
       ) as mock_separate_file_output_handler, \
-      patch(
-        "tests.unit.test_main.SingleFileOutputHandler"
+        patch(
+          "tests.unit.test_main.SingleFileOutputHandler"
       ) as mock_single_file_output_handler:
 
         input_data, mini_batch_context = _setup_main()
@@ -117,9 +117,13 @@ def test_output_handler_interface(
         main.configuration.save_mini_batch_results = "enabled"
         main.configuration.mini_batch_results_out_directory = "driver/tests/unit/unit_test_results/"
         if main.configuration.split_output:
-            main.output_handler = SeparateFileOutputHandler(main.configuration.batch_size_per_request, main.configuration.input_schema_version)
+            main.output_handler = SeparateFileOutputHandler(
+                                    main.configuration.batch_size_per_request,
+                                    main.configuration.input_schema_version)
         else:
-            main.output_handler = SingleFileOutputHandler(main.configuration.batch_size_per_request, main.configuration.input_schema_version)
+            main.output_handler = SingleFileOutputHandler(
+                                    main.configuration.batch_size_per_request,
+                                    main.configuration.input_schema_version)
         main.run(input_data=input_data, mini_batch_context=mini_batch_context)
 
         assert mock_separate_file_output_handler.called == use_separate_file_output_handler

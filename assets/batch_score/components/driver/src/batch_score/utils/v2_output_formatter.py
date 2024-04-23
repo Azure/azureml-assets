@@ -41,7 +41,8 @@ class V2OutputFormatter(OutputFormatter):
             if "custom_id" in keys:
                 output["custom_id"] = scoringResult.request_obj["custom_id"]
             else:
-                raise Exception("V2OutputFormatter called and custom_id not found in request object (original payload)")
+                raise Exception("V2OutputFormatter called and custom_id not found"
+                                "in request object (original payload)")
 
             if scoringResult.status.name == "SUCCESS":
                 response = AoaiScoringResponse(request_id=self.__get_request_id(scoringResult),
