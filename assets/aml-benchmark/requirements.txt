@@ -10,6 +10,8 @@ datasets
 tqdm
 azure-core
 tiktoken
+mteb
+openai
 pytest
 pytest-xdist
 ddt

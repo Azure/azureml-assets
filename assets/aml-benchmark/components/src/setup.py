@@ -22,7 +22,9 @@ setup(
         "mltable>=1.5.0",
         "datasets",
         "tqdm",
-        "azure-core"
+        "azure-core",
+        "mteb",
+        "openai"
     ],
     python_requires=">=3.8,<3.12",
 )
