@@ -612,9 +612,10 @@ def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None
         _type_: _description_
     """
     if task in constants.IMAGE_TASKS:
-        from image_dataset import get_image_dataset
-        df = get_image_dataset(task_type=task, test_mltable=file_path)
-        data = iter([df])
+        data = read_data(file_path, batch_size, nrows)
+        # from image_dataset import get_image_dataset
+        # df = get_image_dataset(task_type=task, test_mltable=file_path)
+        # data = iter([df])
     else:
         data = read_data(file_path, batch_size, nrows)
     return data

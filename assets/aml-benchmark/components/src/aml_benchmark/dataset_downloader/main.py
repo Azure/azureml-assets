@@ -4,8 +4,12 @@
 """Entry script for Dataset Downloader Component."""
 
 import argparse
+import base64
+import io
 import os
 from typing import Optional, List
+
+from PIL.Image import Image
 
 from datasets import load_dataset, get_dataset_split_names, get_dataset_config_names
 import pandas as pd
@@ -129,6 +133,26 @@ def resolve_split(
     return [split]
 
 
+cnt = 0
+
+
+def image_to_base64(img, format) -> str:
+    """
+    Convert image into Base64 encoded string.
+
+    :param img: image object
+    :type img: PIL.Image.Image
+    :param format: image format
+    :type format: str
+    :return: base64 encoded string
+    :rtype: str
+    """
+    buffered = io.BytesIO()
+    img.save(buffered, format=format)
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    return img_str
+
+
 def download_dataset_from_hf(
     dataset_name: str, configuration: Optional[str], split: str, output_dir: str
 ) -> None:
@@ -143,7 +167,7 @@ def download_dataset_from_hf(
     """
     splits = resolve_split(dataset_name, configuration, split)
     for split in splits:
-        logger.info(f"Downloading - Configuration: '{configuration}', Split: '{split}'.")
+        logger.info(f"Downloading {dataset_name} - Configuration: '{configuration}', Split: '{split}'.")
         try:
             dataset = load_dataset(path=dataset_name, name=configuration, split=split)
         except Exception as e:
@@ -151,10 +175,42 @@ def download_dataset_from_hf(
             raise DatasetDownloadException._with_error(
                 AzureMLError.create(DatasetDownloadError, error_details=mssg)
             )
+
         out_dir = os.path.join(output_dir, str(configuration), split)
         os.makedirs(out_dir, exist_ok=True)
         output_file_path = os.path.join(out_dir, "data.jsonl")
-        dataset.to_json(output_file_path)
+
+        # dataset.to_json(output_file_path, force_ascii=False)
+
+        def encode_image_data(instance):
+            global cnt
+            if cnt <= 1:
+                logger.info("x1")
+                logger.info(list(instance.keys()))
+                # logger.info(type(instance["Path"]))
+                logger.info(type(instance["image"]))
+
+            # instance["Path"]["bytes"] = base64.b64encode(instance["Path"]["bytes"])
+            # instance["image"] = base64.b64encode(instance["image"])
+
+            # instance["image"] = base64.b64encode(instance["image"].tobytes())
+
+            if not isinstance(instance["image"], Image):
+                logger.info("x2", instance["image"])
+
+            instance["image"] = image_to_base64(instance["image"], format="png")
+
+            if cnt <= 1:
+                logger.info("x3", type(instance["image"]))
+
+            cnt += 1
+
+            return instance
+
+        dataset = dataset.map(encode_image_data)
+        with open(output_file_path, "wb") as f:
+            dataset.to_json(f, force_ascii=False)
+
         logger.info(f"Downloaded - Configuration: '{configuration}', Split: '{split}'.")
 
 
