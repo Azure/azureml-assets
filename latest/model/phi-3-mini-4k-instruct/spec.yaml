@@ -1,26 +1,28 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: phi-3-mini-128K-instruct
+name: phi-3-mini-4k-instruct
 path: ./
 properties:
   SharedComputeCapacityEnabled: true
   languages: en
-  inference-min-sku-spec: 24|1|220|64
-  inference-recommended-sku: Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  inference-min-sku-spec: 6|1|112|64
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: chat-completion
   finetune-min-sku-spec: 24|1|220|64
-  finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+  finetune-recommended-sku: Standard_ND40rs_v2,Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
 tags:
   Preview: ""
   huggingface_model_id: ""
+  SharedComputeCapacityEnabled: ''
   license: mit
   disable-batch: "true"
   task: chat-completion
   author: microsoft
-  SharedComputeCapacityEnabled: ""
-  inference_compute_allow_list: [Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4]
+  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96asr_v4,
+    Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4]
   finetune_compute_allow_list: [Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
   inference_supported_envs:
@@ -31,12 +33,11 @@ tags:
     apply_lora: "true"
     apply_ort: "false"
     precision: 16
-    ignore_mismatched_sizes: "false"
 version: 1
 description: |
   ---
   license: mit
-  license_link: https://huggingface.co/microsoft/Phi-3-mini-128k-instruct/resolve/main/LICENSE
+  license_link: https://huggingface.co/microsoft/Phi-3-mini-4k-instruct/resolve/main/LICENSE
 
   language:
   - en
@@ -48,10 +49,10 @@ description: |
 
   ## Model Details
 
-  Phi-3 Mini-128K-Instruct is a 3.8B parameters, lightweight, state-of-the-art open model built upon datasets used for Phi-2 - synthetic data and filtered websites - with a focus on very high-quality, reasoning dense data. The model belongs to the Phi-3 model family, and the Mini version comes in two variants 4K and 128K which is the context length (in tokens) it can support.
+  Phi-3 Mini-4K-Instruct is a 3.8B parameters, lightweight, state-of-the-art open model built upon datasets used for Phi-2 - synthetic data and filtered websites - with a focus on very high-quality, reasoning dense data. The model belongs to the Phi-3 model family, and the Mini version comes in two variants 4K and 128K which is the context length (in tokens) it can support.
 
   The model underwent a rigorous enhancement process, incorporating both supervised fine-tuning and direct preference optimization to ensure precise instruction adherence and robust safety measures.
-  When assessed against benchmarks testing common sense, language understanding, math, code, long context and logical reasoning, Phi-3 Mini-128K-Instruct showcased a robust and state-of-the-art performance among models with less than 13 billion parameters.
+  When assessed against benchmarks testing common sense, language understanding, math, code, long context and logical reasoning, Phi-3 Mini-4K-Instruct showcased a robust and state-of-the-art performance among models with less than 13 billion parameters.
 
   Resources and Technical Documentation:
 
@@ -62,9 +63,9 @@ description: |
 
   ### **Model**
 
-  * Architecture: Phi-3 Mini-128K-Instruct has 3.8B parameters and is a dense decoder-only Transformer model. The model is fine-tuned with Supervised fine-tuning (SFT) and Direct Preference Optimization (DPO) to ensure alignment with human preferences and safety guidlines.
+  * Architecture: Phi-3 Mini-4K-Instruct has 3.8B parameters and is a dense decoder-only Transformer model. The model is fine-tuned with Supervised fine-tuning (SFT) and Direct Preference Optimization (DPO) to ensure alignment with human preferences and safety guidlines.
   * Inputs: Text. It is best suited for prompts using chat format.
-  * Context length: 128K tokens
+  * Context length: 4K tokens
   * GPUs: 512 H100-80G
   * Training time: 7 days
   * Training data: 3.3T tokens
@@ -100,7 +101,7 @@ description: |
 
   ## Benchmarks
 
-  We report the results for Phi-3-Mini-128K-Instruct on standard open-source benchmarks measuring the model's reasoning ability (both common sense reasoning and logical reasoning). We compare to Phi-2, Mistral-7b-v0.1, Mixtral-8x7b, Gemma 7B, and GPT-3.5.
+  We report the results for Phi-3-Mini-4K-Instruct on standard open-source benchmarks measuring the model's reasoning ability (both common sense reasoning and logical reasoning). We compare to Phi-2, Mistral-7b-v0.1, Mixtral-8x7b, Gemma 7B, and GPT-3.5.
 
   All the reported numbers are produced with the exact same pipeline to ensure that the numbers are comparable. These numbers might differ from other published numbers due to slightly different choices in the evaluation.
 
@@ -110,27 +111,27 @@ description: |
 
   The number of k–shot examples is listed per-benchmark. 
 
-  || Phi-3-Mini-128K-In<br>3.8b (this model) | Phi-3-Small<br>7b (preview) | Phi-3-Medium<br>14b (preview) | Phi-2<br>2.7b | Mistral<br>7b | Gemma<br>7b | Mixtral<br>8x7b | GPT-3.5<br>version 1106 |
+  || Phi-3-Mini-4K-In<br>3.8b (this model) | Phi-3-Small<br>7b (preview) | Phi-3-Medium<br>14b (preview) | Phi-2<br>2.7b | Mistral<br>7b | Gemma<br>7b | Mixtral<br>8x7b | GPT-3.5<br>version 1106 |
   |---|---|---|---|---|---|---|---|---|
-  |MMLU <br>5-Shot |68.10|75.60|78.20|56.3|61.70|63.60|70.50|71.40|
-  |HellaSwag <br> 5-Shot |74.50|78.70|83.00|53.6|58.50|49.80|70.40|78.80|
-  |ANLI <br> 7-Shot |52.80|55.00|58.70|42.5|47.10|48.70|55.20|58.10|
-  |GSM-8K <br> 0-Shot; CoT |83.60|88.90|90.30|61.1|46.40|59.80|64.70|78.10|
-  |MedQA <br> 2-Shot |55.30|58.20|69.40|40.9|50.00|49.60|62.20|63.40|
-  |AGIEval <br> 0-Shot |36.90|45.00|48.40|29.8|35.10|42.10|45.20|48.40|
-  |TriviaQA <br> 5-Shot |57.10|59.10|75.60|45.2|75.20|72.30|82.20|85.80|
-  |Arc-C <br> 10-Shot |84.00|90.70|91.00|75.9|78.60|78.30|87.30|87.40|
-  |Arc-E <br> 10-Shot |95.20|97.10|97.80|88.5|90.60|91.40|95.60|96.30|
-  |PIQA <br> 5-Shot |83.60|87.80|87.70|60.2|77.70|78.10|86.00|86.60|
-  |SociQA <br> 5-Shot |76.10|79.00|80.20|68.3|74.60|65.50|75.90|68.30|
-  |BigBench-Hard <br> 0-Shot |71.50|74.90|81.30|59.4|57.30|59.60|69.70|68.30|
-  |WinoGrande <br> 5-Shot |72.50|82.50|81.40|54.7|54.20|55.60|62.00|68.80|
-  |OpenBookQA <br> 10-Shot |80.60|88.40|87.20|73.6|79.80|78.60|85.80|86.00|
-  |BoolQ <br> 0-Shot |78.70|82.90|86.60| -- |72.20|66.00|76.60|79.10|
-  |CommonSenseQA <br> 10-Shot |78.00|80.30|82.60|69.3|72.60|76.20|78.10|79.60|
-  |TruthfulQA <br> 10-Shot |63.20|68.70|75.70| -- |53.00|52.10|60.10|67.70|
-  |HumanEval <br> 0-Shot |57.90|59.10|55.50|59|28.00|34.10|37.80|62.20|
-  |MBPP <br> 3-Shot |62.50|71.40|74.50|60.6|50.80|51.50|60.20|77.80|
+  | MMLU <br>5-Shot |68.80|75.60|78.20|56.3|61.70|63.60|70.50|71.40|
+  | HellaSwag <br> 5-Shot |76.70|78.70|83.00|53.6|58.50|49.80|70.40|78.80|
+  | ANLI <br> 7-Shot |52.80|55.00|58.70|42.5|47.10|48.70|55.20|58.10|
+  | GSM-8K <br> 0-Shot; CoT |82.50|88.90|90.30|61.1|46.40|59.80|64.70|78.10|
+  | MedQA <br> 2-Shot |70.00|58.20|69.40|40.9|50.00|49.60|62.20|63.40|
+  | AGIEval <br> 0-Shot |37.50|45.00|48.40|29.8|35.10|42.10|45.20|48.40|
+  | TriviaQA <br> 5-Shot |64.00|59.10|75.60|45.2|75.20|72.30|82.20|85.80|
+  | Arc-C <br> 10-Shot |84.90|90.70|91.00|75.9|78.60|78.30|87.30|87.40|
+  | Arc-E <br> 10-Shot |94.60|97.10|97.80|88.5|90.60|91.40|95.60|96.30|
+  | PIQA <br> 5-Shot |83.20|87.80|87.70|60.2|77.70|78.10|86.00|86.60|
+  | SociQA <br> 5-Shot |76.60|79.00|80.20|68.3|74.60|65.50|75.90|68.30|
+  | BigBench-Hard <br> 0-Shot |71.70|74.90|81.30|59.4|57.30|59.60|69.70|68.30|
+  | WinoGrande <br> 5-Shot |70.80|82.50|81.40|54.7|54.20|55.60|62.00|68.80|
+  | OpenBookQA <br> 10-Shot |84.20|88.40|87.20|73.6|79.80|78.60|85.80|86.00|
+  | BoolQ <br> 0-Shot |77.60|82.90|86.60| -- |72.20|66.00|76.60|79.10|
+  | CommonSenseQA <br> 10-Shot |80.20|80.30|82.60|69.3|72.60|76.20|78.10|79.60|
+  | TruthfulQA <br> 10-Shot |65.00|68.70|75.70| -- |53.00|52.10|60.10|67.70|
+  | HumanEval <br> 0-Shot |59.10|59.10|55.50|59|28.00|34.10|37.80|62.20|
+  | MBPP <br> 3-Shot |53.80|71.40|74.50|60.6|50.80|51.50|60.20|77.80|
 
   ## Inference samples
 
@@ -152,14 +153,14 @@ description: |
       "input_string": [
         {
           "role": "user",
-          "content": "I am going to Paris, give me a list of 10 places to visit"
+          "content": "I am going to Paris, what should I see?"
         }
       ],
       "parameters": {
         "temperature": 0.7,
         "top_p": 0.9,
         "do_sample": true,
-        "max_new_tokens": 1000
+        "max_new_tokens": 200
       }
     }
   }
@@ -167,7 +168,7 @@ description: |
   ### **Sample output**
   ```json
   {
-    "output": " 1. Eiffel Tower: Visit the iconic symbol of Paris, offering breathtaking views of the city.\n\n2. Louvre Museum: Explore one of the world's largest and most visited museums, home to thousands of works of art, including the Mona Lisa.\n\n3. Notre-Dame Cathedral: Marvel at the stunning Gothic architecture of this famous cathedral, although note that it is currently under renovation due to the 2019 fire.\n\n4. Montmartre: Discover this historic and artistic neighborhood, famous for its bohemian past and the stunning Sacré-Cœur Basilica.\n\n5. Seine River Cruise: Take a relaxing cruise on the Seine River, seeing some of the city's most famous landmarks like the Louvre, Notre-Dame, and the Eiffel Tower from a unique perspective.\n\n6. Champs-Élysées: Visit this famous avenue lined with shops, cafes, and theaters. Don't forget to check out the Arc de Triomphe at its end.\n\n7. Palace of Versailles: Take a day trip from Paris to explore the opulent palace and gardens of Versailles, a UNESCO World Heritage site.\n\n8. Sacré-Cœur Basilica: Located at the highest point in the city, this basilica offers panoramic views of Paris.\n\n9. Latin Quarter: Stroll through this historic and vibrant neighborhood, famous for its student life, lively atmosphere, and cafes.\n\n10. Musée d'Orsay: Visit this museum, housing an impressive collection of Impressionist and Post-Impressionist art, including works by Monet, Degas, Renoir, and Van Gogh."
+    "output": " Going to Paris is an exciting adventure! Here's a list of must-see attractions and experiences that will make your trip memorable:\n\n1. Eiffel Tower: Visit this iconic landmark at night to enjoy a spectacular view of the city.\n2. Louvre Museum: Explore the world's largest art museum and a historic monument, home to the famous Mona Lisa and thousands of other masterpieces.\n3. Notre-Dame Cathedral: Take a guided tour of this medieval cathedral, admire its stunning architecture, and climb the towers for an even better view.\n4. Seine River Cruise: Take a relaxing boat ride along the Seine River, and enjoy the stunning views of Paris's most famous landmarks.\n5. Montmartre: Visit this historic and artistic neighborhood, and explore the Sacré-Cœur Basilica."
   }
   ```
 
@@ -181,7 +182,6 @@ description: |
   * NVIDIA V100 or earlier generation GPUs: call AutoModelForCausalLM.from_pretrained() with attn_implementation="eager"
   * CPU: use the **GGUF** quantized models [4K](https://aka.ms/Phi3-mini-4k-instruct-gguf)
   + Optimized inference on GPU, CPU, and Mobile: use the **ONNX** models [4K](https://aka.ms/Phi3-mini-4k-instruct-onnx)
-
 
   ## Cross Platform Support
 
@@ -215,10 +215,9 @@ description: |
   + Generation of Harmful Content: Developers should assess outputs for their context and use available safety classifiers or custom solutions appropriate for their use case. 
   + Misuse: Other forms of misuse such as fraud, spam, or malware production may be possible, and developers should ensure that their applications do not violate applicable laws and regulations.
 
-
   ## License
 
-  The model is licensed under the [MIT license](https://huggingface.co/microsoft/Phi-3-mini-128k/resolve/main/LICENSE).
+  The model is licensed under the [MIT license](https://huggingface.co/microsoft/Phi-3-mini-4k/resolve/main/LICENSE).
 
   ## Trademarks
 
