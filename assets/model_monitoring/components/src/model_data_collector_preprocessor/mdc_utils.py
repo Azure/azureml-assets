@@ -163,7 +163,7 @@ def _count_dropped_rows_with_error(
         additional_error_msg: str = ""):
     """Calculate number of dropped rows after transformations and throw error if too many rows lost."""
     if original_df_row_count == 0:
-        print("Original df contains no rows. Returning w/o calculating drop rate.")
+        print("Original df contains no rows. Returning without calculating drop rate.")
         return
     drop_rate = abs(transformed_df_row_count - original_df_row_count) / original_df_row_count
     print(f"Calculated the df drop rate as {drop_rate}%. Comparing to threshold criteria...")
