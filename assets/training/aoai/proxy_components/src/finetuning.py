@@ -5,13 +5,14 @@
 
 import argparse
 import time
-from typing import Optional
+from typing import Optional, Dict, Any
 from openai.types.fine_tuning.job_create_params import Hyperparameters
 from common import utils
 from common.cancel_handler import CancelHandler
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
 from proxy_component import AzureOpenAIProxyComponent
+from hyperparameters import Hyperparameters, Hyperparameters_1P
 import mlflow
 import io
 import pandas as pd
@@ -35,15 +36,13 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         self.finetuning_job_id = None
 
     def submit_job(self, training_file_path: str, validation_file_path: Optional[str], model: str,
-                   n_epochs: Optional[int], batch_size: Optional[int],
-                   learning_rate_multiplier: Optional[float], suffix=Optional[str]) -> str:
+                   hyperparameters: Dict[str, Any], hyperparameters_1p: Dict[str, Any], suffix=Optional[str]) -> str:
         """Upload data, finetune model and then delete data."""
         logger.info("Step 1: Uploading data to AzureOpenAI resource")
         self.upload_files(training_file_path, validation_file_path)
 
         logger.info("Step 2: Finetuning model")
-        self.finetuning_job_id = self.submit_finetune_job(model, n_epochs, batch_size,
-                                                          learning_rate_multiplier, suffix)
+        self.finetuning_job_id = self.submit_finetune_job(model, hyperparameters, hyperparameters_1p, suffix)
         finetuned_job = self.track_finetuning_job()
 
         logger.debug(f"Finetuned model name: {finetuned_job.fine_tuned_model}, status: {finetuned_job.status}")
@@ -107,18 +106,17 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             logger.error(error_string)
             raise Exception(error_string)
 
-    def submit_finetune_job(self, model, n_epochs, batch_size, learning_rate_multiplier, suffix=None):
+    def submit_finetune_job(self, model, hyperparameters: Dict[str, Any], hyperparameters_1p: Dict[str, Any], suffix=None):
         """Submit fine-tune job to AOAI."""
-        logger.debug(f"Starting fine-tune job, model: {model}, n_epochs: {n_epochs}, batch_size: {batch_size},\
-                     learning_rate_multiplier: {learning_rate_multiplier}, suffix: {suffix},\
+        logger.debug(f"Starting fine-tune job, model: {model}, suffix: {suffix},\
                      training_file_id: {self.training_file_id}, validation_file_id: {self.validation_file_id}")
-        hyperparameters = self.get_hyperparameters_dict(n_epochs, batch_size, learning_rate_multiplier)
 
         finetune_job = self.aoai_client.fine_tuning.jobs.create(
             model=model,
             training_file=self.training_file_id,
             validation_file=self.validation_file_id,
             hyperparameters=hyperparameters,
+            extra_headers=hyperparameters_1p,
             suffix=suffix)
 
         logger.debug(f"started finetuning job in Azure OpenAI resource. Job id: {finetune_job.id}")
@@ -227,25 +225,44 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         return hyperparameters
 
-
-def main():
-    """Submit fine-tune job to AOAI."""
+def parse_args():
     parser = argparse.ArgumentParser(description="AOAI Finetuning Component")
-    parser.add_argument("--training_file_path", type=str)
-    parser.add_argument("--validation_file_path", type=str)
-    parser.add_argument("--model", type=str)
-    parser.add_argument("--task_type", type=str)
-    parser.add_argument("--n_epochs", type=int)
-    parser.add_argument("--batch_size", type=int)
-    parser.add_argument("--learning_rate_multiplier", type=float)
-    parser.add_argument("--suffix", type=str)
-    parser.add_argument("--aoai_finetuning_output", type=str)
     parser.add_argument("--endpoint_name", type=str)
     parser.add_argument("--endpoint_resource_group", type=str)
     parser.add_argument("--endpoint_subscription", type=str)
 
+    parser.add_argument("--training_file_path", type=str)
+    parser.add_argument("--validation_file_path", type=str)
+
+    parser.add_argument("--model", type=str)
+    parser.add_argument("--task_type", type=str)
+    parser.add_argument("--suffix", type=str)
+
+    parser.add_argument("--n_epochs", type=int)
+    parser.add_argument("--batch_size", type=int)
+    parser.add_argument("--learning_rate_multiplier", type=float)
+
+    parser.add_argument("--export_merged_weights", type=str)
+    parser.add_argument("--completion_override", type=str)
+    parser.add_argument("--full_finetune", type=str)
+    parser.add_argument("--lora_v2", type=str)
+    parser.add_argument("--lora_dimensions", type=int)
+    parser.add_argument("--context_window", type=int)
+    parser.add_argument("--file_spm_rate", type=float)
+    parser.add_argument("--weight_decay_multiplier", type=str)
+    parser.add_argument("--prompt_loss_weight", type=str)
+    parser.add_argument("--context_window", type=int)
+    parser.add_argument("--file_spm_rate", type=float)
+    parser.add_argument("--weight_decay_multiplier", type=str)
+    parser.add_argument("--prompt_loss_weight", type=str)
+
     args = parser.parse_args()
-    logger.debug("args: {}".format(args))
+    return args
+
+def main():
+    """Submit fine-tune job to AOAI."""
+    args = parse_args()
+    logger.debug("job args: {}".format(args))
 
     try:
         aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
@@ -257,13 +274,18 @@ def main():
 
         logger.info("Starting Finetuning in Azure OpenAI resource")
 
+        hyperparameters = Hyperparameters(vars(args))
+        logger.debug("hyperparameters: {}".format(hyperparameters))
+
+        hyperparameters_1p = Hyperparameters_1P(vars(args))
+        logger.debug("hyperparameters for 1P: {}".format(hyperparameters_1p))
+
         finetuned_model_id = finetune_component.submit_job(
             training_file_path=args.training_file_path,
             validation_file_path=args.validation_file_path,
             model=args.model,
-            n_epochs=args.n_epochs,
-            batch_size=args.batch_size,
-            learning_rate_multiplier=args.learning_rate_multiplier,
+            hyperparameters = hyperparameters,
+            hyperparameters_1p = hyperparameters_1p,
             suffix=args.suffix
         )
 
