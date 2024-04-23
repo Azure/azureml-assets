@@ -15,6 +15,7 @@ from model_data_collector_preprocessor.genai_preprocessor_df_schemas import _get
 from model_data_collector_preprocessor.trace_aggregator import (
     aggregate_spans_into_traces,
 )
+from tests.unit.utils.unit_test_utils import assert_spark_dataframe_equal
 from spark_mltable import SPARK_ZIP_PATH
 
 
@@ -502,12 +503,3 @@ class TestGenAISparkPreprocessor:
         actual_trace_df.printSchema()
 
         assert_spark_dataframe_equal(actual_trace_df, expected_traces_df)
-
-
-def assert_spark_dataframe_equal(df1, df2):
-    """Assert two spark dataframes are equal."""
-    assert df1.schema == df2.schema
-    assert df1.count() == df2.count()
-    print(f'df1: {df1.collect()}')
-    print(f'df2: {df2.collect()}')
-    assert df1.collect() == df2.collect()
