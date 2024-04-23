@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: phi-3-mini-128k-instruct
+name: Phi-3-mini-128k-instruct
 path: ./
 properties:
   SharedComputeCapacityEnabled: true
