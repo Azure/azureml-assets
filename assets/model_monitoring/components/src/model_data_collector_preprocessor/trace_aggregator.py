@@ -23,12 +23,6 @@ def _validate_traces_df(aggregated_traces_df: DataFrame) -> DataFrame:
     # some PF logs that result in exception won't have output so need to drop traces that don't have output or input.
     transformed_df = aggregated_traces_df.dropna(subset=["output", "input"])
 
-    _count_dropped_rows_with_error(
-        aggregated_traces_df.count(),
-        transformed_df.count(),
-        additional_error_msg="Additionally, the step that caused issues was validating trace logs input/output." + \
-            " Double check the stdout and spark executor logs for debug info to find root cause of issue.")
-
     return transformed_df
 
 
@@ -114,5 +108,11 @@ def aggregate_spans_into_traces(
     all_aggregated_traces.printSchema()
 
     validated_traces = _validate_traces_df(all_aggregated_traces)
+
+    _count_dropped_rows_with_error(
+        grouped_spans_df.count(),
+        validated_traces.count(),
+        additional_error_msg="Additionally, the step that caused issues was validating trace logs input/output." + \
+            " Double check the stdout and spark executor logs for debug info to find root cause of issue.")
 
     return validated_traces
