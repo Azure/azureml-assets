@@ -33,7 +33,7 @@ class TestMDCUtils:
                 (1, -3, "Dropped more rows than possible", True),
             ])
     def test_count_dropped_rows_with_error(
-        self, original_count: int, transformed_count: int, error_msg: str, expect_error: bool):
+            self, original_count: int, transformed_count: int, error_msg: str, expect_error: bool):
         """Test."""
         if expect_error:
             try:
