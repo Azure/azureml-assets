@@ -4,13 +4,14 @@
 """Test file for MDC preprocessor helper."""
 
 import pytest
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import SparkSession
 from datetime import datetime
 from src.model_data_collector_preprocessor.mdc_utils import (
     _count_dropped_rows_with_error,
     _filter_df_by_time_window,
 )
 from tests.unit.utils.unit_test_utils import assert_spark_dataframe_equal
+
 
 @pytest.mark.unit
 class TestMDCUtils:
@@ -21,9 +22,27 @@ class TestMDCUtils:
         spark: SparkSession = SparkSession.builder.appName("test").getOrCreate()
         return spark
 
-    def test_(self, start, end, expected_datetimes):
+
+    @pytest.mark.parametrize(
+            "original_count,transformed_count,error_msg,expect_error",
+            [
+                (100, 100, "",False),
+                (100, 95, "", False),
+                (100, 30, "Test the error msg", True),
+                (100, 120, "", False),
+                (0, 1, "", False),
+                (1, -3, "Dropped more rows than possible", True),
+            ])
+    def test_count_dropped_rows_with_error(self, original_count: int, transformed_count: int, error_msg: str, expect_error: bool):
         """Test."""
-        pass
+        if expect_error:
+            try:
+                _ = _count_dropped_rows_with_error(original_count, transformed_count, error_msg)
+                assert False
+            except Exception as ex:
+                assert error_msg in str(ex)
+        else:
+            actual_drop_rate = _count_dropped_rows_with_error(original_count, transformed_count, error_msg)
 
     @pytest.mark.parametrize(
             "input_data, input_schema, expected_data, expected_schema",

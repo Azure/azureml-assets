@@ -10,7 +10,7 @@ from pyspark.sql.types import (
     StringType,
     BooleanType,
 )
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import SparkSession
 from src.shared_utilities.df_utils import (
     get_common_columns,
     has_duplicated_columns,

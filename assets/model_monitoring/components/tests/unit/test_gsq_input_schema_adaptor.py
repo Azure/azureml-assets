@@ -4,7 +4,7 @@
 """test class for GSQ - input schema adaptor component."""
 
 import pytest
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
 from src.generation_safety_quality.input_schema_adaptor.run import (
     _adapt_input_data_schema,
