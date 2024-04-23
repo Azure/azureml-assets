@@ -180,7 +180,7 @@ def download_dataset_from_hf(
         os.makedirs(out_dir, exist_ok=True)
         output_file_path = os.path.join(out_dir, "data.jsonl")
 
-        # dataset.to_json(output_file_path, force_ascii=False)
+        # dataset.to_json(output_file_path)
 
         def encode_image_data(instance):
             global cnt
