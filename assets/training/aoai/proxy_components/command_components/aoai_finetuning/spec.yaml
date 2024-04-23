@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: AOAI Finetuning Job
 description: Upload data to Azure OpenAI resource, finetune model and delete data
  
-environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/2
+environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/3
  
 code: ../../src
  
