@@ -10,7 +10,7 @@ tags:
 - code
 ---
 
-## Model Summary
+## Model Details
 
 Phi-3 Mini-128K-Instruct is a 3.8B parameters, lightweight, state-of-the-art open model built upon datasets used for Phi-2 - synthetic data and filtered websites - with a focus on very high-quality, reasoning dense data. The model belongs to the Phi-3 model family, and the Mini version comes in two variants 4K and 128K which is the context length (in tokens) it can support.
 
@@ -22,6 +22,26 @@ Resources and Technical Documentation:
 + [Phi-3 Microsoft Blog](https://aka.ms/phi3blog-april)
 + [Phi-3 Technical Report](https://aka.ms/phi3-tech-report)
 
+## Training Details
+
+### **Model**
+
+* Architecture: Phi-3 Mini-128K-Instruct has 3.8B parameters and is a dense decoder-only Transformer model. The model is fine-tuned with Supervised fine-tuning (SFT) and Direct Preference Optimization (DPO) to ensure alignment with human preferences and safety guidlines.
+* Inputs: Text. It is best suited for prompts using chat format.
+* Context length: 128K tokens
+* GPUs: 512 H100-80G
+* Training time: 7 days
+* Training data: 3.3T tokens
+* Outputs: Generated text in response to the input
+* Dates: Our models were trained between February and April 2024
+* Status: This is a static model trained on an offline dataset with cutoff date October 2023. Future versions of the tuned models may be released as we improve models.
+
+### **Datasets**
+
+The training data includes a wide variety of sources, totaling 3.3 trillion tokens, and is a combination of 
+1) Publicly available documents filtered rigorously for quality, selected high-quality educational data, and code; 
+2) Newly created synthetic, “textbook-like” data for the purpose of teaching math, coding, common sense reasoning, general knowledge of the world (science, daily activities, theory of mind, etc.); 
+3) High quality chat format supervised data covering various topics to reflect human preferences on different aspects such as instruct-following, truthfulness, honesty and helpfulness.
 
 ## Intended Uses
 
@@ -33,11 +53,11 @@ The model is intended for commercial and research use in English. The model prov
 2) Latency bound scenarios
 3) Strong reasoning (especially math and logic)
 
-Our model is designed to accelerate research on language and multimodal models, for use as a building block for generative AI powered features. 
+The model is designed to accelerate research on language and multimodal models, for use as a building block for generative AI powered features. 
 
 ### **Use case considerations**
 
-Our models are not specifically designed or evaluated for all downstream purposes. Developers should consider common limitations of language models as they select use cases, and evaluate and mitigate for accuracy, safety, and fariness before using within a specific downstream use case, particularly for high risk scenarios. Developers should be aware of and adhere to applicable laws or regulations (including privacy, trade compliance laws, etc.) that are relevant to their use case.
+The model is not specifically designed or evaluated for all downstream purposes. Developers should consider common limitations of language models as they select use cases, and evaluate and mitigate for accuracy, safety, and fariness before using within a specific downstream use case, particularly for high risk scenarios. Developers should be aware of and adhere to applicable laws or regulations (including privacy, trade compliance laws, etc.) that are relevant to their use case.
 
 Nothing contained in this Model Card should be interpreted as or deemed a restriction or modification to the license the model is released under.  
 
@@ -76,16 +96,14 @@ The number of k–shot examples is listed per-benchmark.
 |HumanEval <br> 0-Shot |57.90|59.10|55.50|59|28.00|34.10|37.80|62.20|
 |MBPP <br> 3-Shot |62.50|71.40|74.50|60.6|50.80|51.50|60.20|77.80|
 
-## How to Use
+## Finetuning samples
+Task|Dataset|Python sample (Notebook)
+|--|--|--|
+Chat completion|<a href="https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k" target="_blank">Ultrachat 200K</a>|<a href="https://aka.ms/phi3ftnotebook" target="_blank">chat-completion.ipynb</a>
 
-### **Deployment**
-To deploy the model simply click on the "Deploy" button on the toolbar of this page. Detailed instructions can be found [here](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-foundation-models?view=azureml-api-2#deploying-foundation-models-to-endpoints-for-inferencing). 
+## Sample inputs and outputs (for real-time inference)
 
-### **Sample inputs and outputs (for real-time inference)**
-Once deployment is successful, navigate to the deployed endpoint page. On that page you will find "Consume" tab. There you will find sample code in JavaScript, Python, C# and R.
-
-
-#### **Sample input**
+### **Sample input**
 ```json
 {
   "input_data": {
@@ -104,15 +122,12 @@ Once deployment is successful, navigate to the deployed endpoint page. On that p
   }
 }
 ``` 
-#### **Sample output**
+### **Sample output**
 ```json
 {
   "output": " 1. Eiffel Tower: Visit the iconic symbol of Paris, offering breathtaking views of the city.\n\n2. Louvre Museum: Explore one of the world's largest and most visited museums, home to thousands of works of art, including the Mona Lisa.\n\n3. Notre-Dame Cathedral: Marvel at the stunning Gothic architecture of this famous cathedral, although note that it is currently under renovation due to the 2019 fire.\n\n4. Montmartre: Discover this historic and artistic neighborhood, famous for its bohemian past and the stunning Sacré-Cœur Basilica.\n\n5. Seine River Cruise: Take a relaxing cruise on the Seine River, seeing some of the city's most famous landmarks like the Louvre, Notre-Dame, and the Eiffel Tower from a unique perspective.\n\n6. Champs-Élysées: Visit this famous avenue lined with shops, cafes, and theaters. Don't forget to check out the Arc de Triomphe at its end.\n\n7. Palace of Versailles: Take a day trip from Paris to explore the opulent palace and gardens of Versailles, a UNESCO World Heritage site.\n\n8. Sacré-Cœur Basilica: Located at the highest point in the city, this basilica offers panoramic views of Paris.\n\n9. Latin Quarter: Stroll through this historic and vibrant neighborhood, famous for its student life, lively atmosphere, and cafes.\n\n10. Musée d'Orsay: Visit this museum, housing an impressive collection of Impressionist and Post-Impressionist art, including works by Monet, Degas, Renoir, and Van Gogh."
 }
 ```
-
-### **Fine-tuning**
-A basic notebook demostrating supervised fine-tuning (SFT) is provided [here](https://aka.ms/phi3ftnotebook).
 
 ## Hardware Requirements
 Note that by default, the Phi-3-mini model uses flash attention, which requires certain types of GPU hardware to run. We have tested on the following GPU types:
@@ -139,28 +154,6 @@ Here are some of the optimized configurations we have added:
 2. ONNX model for fp16 CUDA
 3. ONNX model for int4 CUDA: Quantized to int4 via RTN
 4. ONNX model for int4 CPU and Mobile: Quantized to int4 via RTN
-
-## Training Details
-
-### **Model**
-
-* Architecture: Phi-3 Mini-128K-Instruct has 3.8B parameters and is a dense decoder-only Transformer model. The model is fine-tuned with Supervised fine-tuning (SFT) and Direct Preference Optimization (DPO) to ensure alignment with human preferences and safety guidlines.
-* Inputs: Text. It is best suited for prompts using chat format.
-* Context length: 128K tokens
-* GPUs: 512 H100-80G
-* Training time: 7 days
-* Training data: 3.3T tokens
-* Outputs: Generated text in response to the input
-* Dates: Our models were trained between February and April 2024
-* Status: This is a static model trained on an offline dataset with cutoff date October 2023. Future versions of the tuned models may be released as we improve models.
-
-### **Datasets**
-
-Our training data includes a wide variety of sources, totaling 3.3 trillion tokens, and is a combination of 
-1) Publicly available documents filtered rigorously for quality, selected high-quality educational data, and code; 
-2) Newly created synthetic, “textbook-like” data for the purpose of teaching math, coding, common sense reasoning, general knowledge of the world (science, daily activities, theory of mind, etc.); 
-3) High quality chat format supervised data covering various topics to reflect human preferences on different aspects such as instruct-following, truthfulness, honesty and helpfulness.
-
 
 ## Responsible AI Considerations
 
