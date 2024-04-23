@@ -226,7 +226,7 @@ class TestGenAISparkPreprocessor:
             assert False
         except Exception as ex:
             assert "Additionally, preprocessing step that caused issue was casting start/end" + \
-                "timestamp column to TimestampType(). Double check those columns for any issues." in str(ex)
+                " timestamp column to TimestampType(). Double check those columns for any issues." in str(ex)
 
     @pytest.mark.parametrize(
             "input_data, input_schema, expected_data, expected_schema",
