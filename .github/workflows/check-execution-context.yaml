@@ -22,7 +22,7 @@ jobs:
     permissions:
       # Required to clone repo
       contents: read
-      pull-requests: write
+      # pull-requests: write
 
     steps:
       - name: Check event type
@@ -34,10 +34,10 @@ jobs:
           echo "::error::This PR was created from a fork and requires the 'safe to test' label to run this check."
           exit 1
 
-      - name: Remove label
-        uses: actions-ecosystem/action-remove-labels@v1
-        with:
-          labels: 'safe to test'
+      # - name: Remove label
+      #   uses: actions-ecosystem/action-remove-labels@v1
+      #   with:
+      #     labels: 'safe to test'
       
       - name: Set forked PR flag
         if: fromJSON(env.continue)
