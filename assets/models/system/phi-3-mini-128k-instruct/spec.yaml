@@ -45,4 +45,4 @@ tags:
     apply_ort: "false"
     precision: 16
     ignore_mismatched_sizes: "false"
-version: 1
+version: 2
