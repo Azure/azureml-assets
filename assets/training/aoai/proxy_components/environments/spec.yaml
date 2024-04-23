@@ -3,12 +3,12 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: >-
   Environment used by proxy AOAI components
 
-name: aoai-data-upload-finetune
-version: 1
+name: "{{asset.name}}"
+version: "{{asset.version}}"
 
 build:
-  path: context/
-  dockerfile_path: context/
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
 

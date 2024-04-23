@@ -29,7 +29,7 @@ class Hyperparameters_1P(BaseModel):
     lora_v2: Optional[bool] = Field(...)
     lora_dimensions: Optional[int] = Field(...)
     context_window: Optional[int] = Field(...)
-    file_spm_rate: Optional[float] = Field(...)
+    file_spm_rate: Optional[float] = Field(..., ge=0, le=1)
     weight_decay_multiplier: Optional[float] = Field(...)
     prompt_loss_weight: Optional[float] = Field(...)
     trim_mode: Optional[str] = Field(...)
