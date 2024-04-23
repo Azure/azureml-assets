@@ -157,7 +157,7 @@ class TestGenAISparkPreprocessor:
         ["{\"span_id\":\"4\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 10, 15, 12, 0), "[]", "[]", "name", "5"] +
         [datetime(2024, 2, 10, 15, 11, 0), "OK", "02", "4", "llm", "LLM"],
-        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_tytest_genai_preprocessor_failspe\":\"llm\"}"] +
+        ["{\"framework\":\"LLM\",\"inputs\":\"in\",\"output\":\"out\",\"span_type\":\"llm\"}"] +
         ["{\"span_id\":\"5\",\"trace_id\":\"02\",\"trace_state\":\"[]\"}"] +
         [datetime(2024, 2, 10, 16, 1, 0), "[]", "[]", "name", None] +
         [datetime(2024, 2, 10, 15, 11, 0), "OK", "02", "5", "llm", "LLM"],

@@ -114,6 +114,7 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
         print("rows that will be removed:")
         df.filter(df.start_time.isNull()).show()
         df.filter(df.end_time.isNull()).show()
+
         original_df_row_count = df.count()
         df = df.dropna(subset=["start_time", "end_time"])
 

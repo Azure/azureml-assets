@@ -20,8 +20,9 @@ from shared_utilities.io_utils import init_spark
 
 def _validate_traces_df(aggregated_traces_df: DataFrame) -> DataFrame:
     """Check specific validations for aggregated trace entries as necessary."""
+    print("Validating aggregated trace logs...")
     # some PF logs that result in exception won't have output so need to drop traces that don't have output or input.
-    transformed_df = aggregated_traces_df.dropna(subset=["output", "input"])
+    transformed_df = aggregated_traces_df.dropna(subset=["input", "output"])
 
     _count_dropped_rows_with_error(
         aggregated_traces_df.count(),
