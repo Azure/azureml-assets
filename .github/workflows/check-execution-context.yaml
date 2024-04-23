@@ -22,6 +22,7 @@ jobs:
     permissions:
       # Required to clone repo
       contents: read
+      pull-requests: write
 
     steps:
       - name: Check event type
