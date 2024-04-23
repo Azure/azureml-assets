@@ -13,11 +13,11 @@ class Hyperparameters(BaseModel):
     batch_size: Optional[int] = Field(...)
     learning_rate_multiplier: Optional[float] = Field(...)
 
-    def get_dict(self, exclude_none = True) -> Dict[str, Any]:
+    def get_dict(self, exclude_none=True) -> Dict[str, Any]:
         """Dictionary of hyperparameters."""
         if exclude_none is False:
             return self.dict()
-        return { key:value for key,value in self.dict().items() if value is not None }
+        return {key: value for key, value in self.dict().items() if value is not None}
 
 
 class Hyperparameters_1P(BaseModel):
@@ -37,9 +37,8 @@ class Hyperparameters_1P(BaseModel):
     num_steps: Optional[int] = Field(...)
     shuffle_type: Optional[str] = Field(...)
 
-    def get_dict(self, exclude_none = True) -> Dict[str, Any]:
+    def get_dict(self, exclude_none=True) -> Dict[str, Any]:
         """Dictionary of hyperparameters."""
         if exclude_none is False:
             return self.dict()
-        return { key:value for key,value in self.dict().items() if value is not None }
-
+        return {key: value for key, value in self.dict().items() if value is not None}
