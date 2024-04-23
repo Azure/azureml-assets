@@ -277,11 +277,11 @@ class InferencePostprocessor(object):
     def remove_prefix(self, text: str, prefix: str) -> str:
         """Remove string prefix in the given text."""
         if text.startswith(prefix):
-            text = text[len(prefix) :]
+            text = text[len(prefix):]
         elif (self._convert_to_unicode(text)).startswith(
             self._convert_to_unicode(prefix)
         ):
-            text = text[len(prefix) :]
+            text = text[len(prefix):]
         return text
 
     def apply_remove_prefixes(self, text: str) -> str:
@@ -321,7 +321,7 @@ class InferencePostprocessor(object):
         """Remove prompts that has been added as prefix in the given text."""
         prompt_prefix = get_prompt(data, self.remove_prompt_prefix)
         if prompt_prefix and text.startswith(prompt_prefix):
-            text = text[len(prompt_prefix) :]
+            text = text[len(prompt_prefix):]
         return text
 
     def apply_separator(self, text: str) -> str:

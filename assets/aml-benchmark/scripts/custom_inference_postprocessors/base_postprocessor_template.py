@@ -131,4 +131,7 @@ def run_prediction_extractor(
 
 if __name__ == "__main__":
     argss = _parse_args()
-    _run(argss.prediction_dataset, argss.output_dataset, argss.ground_truth_dataset, json.loads(argss.additional_parameters))
+    _run(
+        argss.prediction_dataset, argss.output_dataset,
+        argss.ground_truth_dataset, json.loads(argss.additional_parameters)
+    )

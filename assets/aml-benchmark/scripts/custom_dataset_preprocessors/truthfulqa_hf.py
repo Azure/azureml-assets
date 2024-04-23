@@ -59,7 +59,7 @@ def format_string(sentence: str) -> str:
 
 def run_processor(
         data: List[Dict[str, Any]], additional_args: dict = None
-    ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
+) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """Run the custom processor function."""
     # generic preprocessor
     input_keys = ["question", "best_answer", "incorrect_answers"]
