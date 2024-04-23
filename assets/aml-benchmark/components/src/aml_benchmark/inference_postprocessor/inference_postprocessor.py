@@ -12,11 +12,18 @@ import codecs
 import subprocess
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 from typing import Union, List
 
 from azureml._common._error_definition.azureml_error import AzureMLError
-from aml_benchmark.utils.error_definitions import BenchmarkValidationError, BenchmarkUserError
-from aml_benchmark.utils.exceptions import BenchmarkValidationException, BenchmarkUserException
+from aml_benchmark.utils.error_definitions import (
+    BenchmarkValidationError,
+    BenchmarkUserError,
+)
+from aml_benchmark.utils.exceptions import (
+    BenchmarkValidationException,
+    BenchmarkUserException,
+)
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files
 
@@ -168,13 +175,19 @@ class InferencePostprocessor(object):
                     self.ground_truth_column_name
                 ]
             if self.additional_columns:
-                columns = [col.strip() for col in self.additional_columns.split(',')]
-                if '' in columns:
-                    logger.warning("Received a column name as '' in additional_fields. "
-                                   "Please check if extra comma is provided between two column names. "
-                                   "Dropping columns named as '' from additional_fields input.")
-                    columns = [col for col in columns if col]  # and col in actual_df.columns.tolist()]
-                missing_columns = [col for col in columns if col not in actual_df.columns.tolist()]
+                columns = [col.strip() for col in self.additional_columns.split(",")]
+                if "" in columns:
+                    logger.warning(
+                        "Received a column name as '' in additional_fields. "
+                        "Please check if extra comma is provided between two column names. "
+                        "Dropping columns named as '' from additional_fields input."
+                    )
+                    columns = [
+                        col for col in columns if col
+                    ]  # and col in actual_df.columns.tolist()]
+                missing_columns = [
+                    col for col in columns if col not in actual_df.columns.tolist()
+                ]
                 if len(missing_columns) > 0:
                     raise BenchmarkUserException._with_error(
                         AzureMLError.create(
@@ -183,7 +196,7 @@ class InferencePostprocessor(object):
                                 f"The columns {missing_columns} provided in the additional_columns field is not "
                                 "found in the ground truth dataset. Please make sure that the all columns "
                                 "provided in this field is present in the groun_truth dataset."
-                            )
+                            ),
                         )
                     )
                 result_df[columns] = actual_df[columns]
@@ -264,11 +277,11 @@ class InferencePostprocessor(object):
     def remove_prefix(self, text: str, prefix: str) -> str:
         """Remove string prefix in the given text."""
         if text.startswith(prefix):
-            text = text[len(prefix):]
+            text = text[len(prefix) :]
         elif (self._convert_to_unicode(text)).startswith(
             self._convert_to_unicode(prefix)
         ):
-            text = text[len(prefix):]
+            text = text[len(prefix) :]
         return text
 
     def apply_remove_prefixes(self, text: str) -> str:
@@ -308,7 +321,7 @@ class InferencePostprocessor(object):
         """Remove prompts that has been added as prefix in the given text."""
         prompt_prefix = get_prompt(data, self.remove_prompt_prefix)
         if prompt_prefix and text.startswith(prompt_prefix):
-            text = text[len(prompt_prefix):]
+            text = text[len(prompt_prefix) :]
         return text
 
     def apply_separator(self, text: str) -> str:
@@ -338,12 +351,16 @@ class InferencePostprocessor(object):
                 row[self.prediction_column_name] = row.get(key)
             predicted = row.get(self.prediction_column_name)
             if predicted is None:
-                logger.warning(f"Received None as prediction at index {idx}. \
-                               Falling back to an empty string.")
+                logger.warning(
+                    f"Received None as prediction at index {idx}. \
+                               Falling back to an empty string."
+                )
                 pred_list.append("")
             elif isinstance(predicted, list) and len(predicted) == 0:
-                logger.warning(f"Received an empty array of predictions at index {idx}. \
-                               Falling back to an empty string.")
+                logger.warning(
+                    f"Received an empty array of predictions at index {idx}. \
+                               Falling back to an empty string."
+                )
                 pred_list.append("")
             elif isinstance(predicted, list):
                 try:
@@ -402,21 +419,30 @@ class InferencePostprocessor(object):
         for idx, row in enumerate(predicted_data):
             predicted = row.get(key)
             if predicted is None:
-                logger.warning(f"Received None as prediction at index {idx}. \
-                               Falling back to an empty string.")
+                logger.warning(
+                    f"Received None as prediction at index {idx}. \
+                               Falling back to an empty string."
+                )
                 pred_list.append("")
             elif isinstance(predicted, list) and len(predicted) == 0:
-                logger.warning(f"Received an empty array of predictions at index {idx}. \
-                               Falling back to an empty string.")
+                logger.warning(
+                    f"Received an empty array of predictions at index {idx}. \
+                               Falling back to an empty string."
+                )
                 pred_list.append("")
             elif isinstance(predicted, list) and len(predicted[0]) > 1:
                 curr_pred_list = [
-                    self.apply_generic_processor(out_string, row) for out_string in predicted
+                    self.apply_generic_processor(out_string, row)
+                    for out_string in predicted
                 ]
                 pred_list.append(curr_pred_list)
             else:
                 out_string = predicted if isinstance(predicted, str) else predicted[0]
-                pred_list.append(self.apply_generic_processor(out_string, row) if out_string != '' else out_string)
+                pred_list.append(
+                    self.apply_generic_processor(out_string, row)
+                    if out_string != ""
+                    else out_string
+                )
         if isinstance(pred_list[0], list) and len(pred_list[0]) > 1:
             cols = [
                 f"{self.prediction_column_name}_{i+1}" for i in range(len(pred_list[0]))
@@ -456,23 +482,34 @@ class InferencePostprocessor(object):
         )
         actual_df = self.read_ground_truth_dataset()
         predicted_df = self.extract_inferences(key, processor_order)
-        pd.concat([actual_df, predicted_df], axis=1).to_json(self.result, lines=True, orient='records')
+        pd.concat([actual_df, predicted_df], axis=1).to_json(
+            self.result, lines=True, orient="records"
+        )
         return
+
+    def __get_parameters(self):
+        return deepcopy(self.__dict__)
 
     def run_user_postprocessor(self) -> None:
         """Postprocessor run using custom template."""
+        params_dict = deepcopy(self.__get_parameters())
+        postprocessor_script = params_dict.pop("self.user_postprocessor")
+        argss = [
+            "--prediction_dataset",
+            params_dict.pop("prediction_dataset"),
+            "--output_dataset",
+            params_dict.pop("result"),
+        ]
+        if self.ground_truth_dataset:
+            argss.extend(
+                ["--ground_truth_dataset", params_dict.pop("ground_truth_dataset")]
+            )
+        additional_parameters = json.dumps(params_dict)
+        argss.extend("--additional_parameters", f"'{additional_parameters}'")
+        argss = " ".join(argss)
         try:
-            argss = [
-                "--prediction_dataset",
-                self.prediction_dataset,
-                "--output_dataset",
-                self.result
-            ]
-            if self.ground_truth_dataset:
-                argss.extend(["--ground_truth_dataset", self.ground_truth_dataset])
-            argss = " ".join(argss)
             _ = subprocess.check_output(
-                f"python {self.user_postprocessor} {argss}",
+                f"python {postprocessor_script} {argss}",
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 shell=True,
