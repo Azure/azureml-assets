@@ -265,8 +265,8 @@ def main():
             training_file_path=args.training_file_path,
             validation_file_path=args.validation_file_path,
             model=args.model,
-            hyperparameters=hyperparameters,
-            hyperparameters_1p=hyperparameters_1p,
+            hyperparameters=hyperparameters.get_dict(),
+            hyperparameters_1p=hyperparameters_1p.get_dict(),
             suffix=args.suffix
         )
 
