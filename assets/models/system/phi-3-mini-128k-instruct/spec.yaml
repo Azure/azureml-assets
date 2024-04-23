@@ -1,0 +1,48 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Phi-3-mini-128k-instruct
+path: ./
+properties:
+  SharedComputeCapacityEnabled: true
+  languages: en
+  inference-min-sku-spec: 24|1|220|64
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetuning-tasks: chat-completion
+  finetune-min-sku-spec: 24|1|220|64
+  finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+tags:
+  Featured: ""
+  Preview: ""
+  huggingface_model_id: ""
+  license: mit
+  disable-batch: "true"
+  task: chat-completion
+  author: microsoft
+  SharedComputeCapacityEnabled : ""
+  inference_compute_allow_list:
+    [ 
+      Standard_ND40rs_v2,
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4, 
+      Standard_ND96asr_v4,
+      Standard_ND96amsr_A100_v4,
+      Standard_NC96ads_A100_v4
+    ]
+  finetune_compute_allow_list:
+    [ 
+      Standard_ND40rs_v2,
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96asr_v4,
+      Standard_ND96amsr_A100_v4
+    ]
+  inference_supported_envs:
+    - vllm
+  model_specific_defaults:
+    apply_deepspeed: "true"
+    deepspeed_stage: 2
+    apply_lora: "true"
+    apply_ort: "false"
+    precision: 16
+    ignore_mismatched_sizes: "false"
+version: 2
