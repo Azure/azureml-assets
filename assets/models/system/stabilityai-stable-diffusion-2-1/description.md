@@ -96,6 +96,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 
 ### Supported Parameters
 
+- negative_prompt: The prompt to guide what to not include in image generation. Ignored when not using guidance (`guidance_scale < 1`).
 - num_inference_steps: The number of de-noising steps. More de-noising steps usually lead to a higher quality image at the expense of slower inference, defaults to 50.
 - guidance_scale: A higher guidance scale value encourages the model to generate images closely linked to the text `prompt` at the expense of lower image quality. Guidance scale is enabled when `guidance_scale > 1`, defaults to 7.5.
 
@@ -106,8 +107,14 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 ```json
 {
    "input_data": {
-        "columns": ["prompt"],
-        "data": ["a photograph of an astronaut riding a horse"],
+        "columns": ["prompt", "negative_prompt"],
+        "data": [
+            {
+                "prompt": "a photograph of an astronaut riding a horse",
+                "negative_prompt": "blurry; cartoonish"
+
+            }
+        ],
         "index": [0],
         "parameters": {
             "num_inference_steps": 50,
