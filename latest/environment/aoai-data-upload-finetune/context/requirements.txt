@@ -7,3 +7,4 @@ azure-mgmt-cognitiveservices==13.5.0
 azure-identity==1.15.0
 jsonlines==4.0.0
 azureml-telemetry==1.55.0
+pydantic==2.7.0
