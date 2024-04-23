@@ -213,6 +213,7 @@ def parse_args():
 
     parser.add_argument("--training_file_path", type=str)
     parser.add_argument("--validation_file_path", type=str)
+    parser.add_argument("--aoai_finetuning_output", type=str)
 
     parser.add_argument("--model", type=str)
     parser.add_argument("--task_type", type=str)
@@ -222,19 +223,19 @@ def parse_args():
     parser.add_argument("--batch_size", type=int)
     parser.add_argument("--learning_rate_multiplier", type=float)
 
-    parser.add_argument("--export_merged_weights", type=bool)
-    parser.add_argument("--completion_override", type=bool)
-    parser.add_argument("--full_finetune", type=bool)
-    parser.add_argument("--lora_v2", type=bool)
-    parser.add_argument("--lora_dimensions", type=int)
-    parser.add_argument("--context_window", type=int)
-    parser.add_argument("--file_spm_rate", type=float)
-    parser.add_argument("--weight_decay_multiplier", type=float)
-    parser.add_argument("--prompt_loss_weight", type=float)
-    parser.add_argument("--trim_mode", type=str)
-    parser.add_argument("--check_point_interval", type=int)
-    parser.add_argument("--num_steps", type=int)
-    parser.add_argument("--shuffle_type", type=str)
+    parser.add_argument("--ExportMergedWeights", type=bool)
+    parser.add_argument("--CompletionOverride", type=bool)
+    parser.add_argument("--FullFineTune", type=bool)
+    parser.add_argument("--LoraV2", type=bool)
+    parser.add_argument("--LoraDimensions", type=int)
+    parser.add_argument("--ContextWindow", type=int)
+    parser.add_argument("--FileSPMRate", type=float)
+    parser.add_argument("--WeightDecayMultiplier", type=float)
+    parser.add_argument("--PromptLossWeight", type=float)
+    parser.add_argument("--TrimMode", type=str)
+    parser.add_argument("--CheckPointInterval", type=int)
+    parser.add_argument("--NumSteps", type=int)
+    parser.add_argument("--ShuffleType", type=str)
 
     args = parser.parse_args()
     return args
@@ -255,10 +256,10 @@ def main():
 
         logger.info("Starting Finetuning in Azure OpenAI resource")
 
-        hyperparameters = Hyperparameters(vars(args))
+        hyperparameters = Hyperparameters(**vars(args))
         logger.debug("hyperparameters: {}".format(hyperparameters))
 
-        hyperparameters_1p = Hyperparameters_1P(vars(args))
+        hyperparameters_1p = Hyperparameters_1P(**vars(args))
         logger.debug("hyperparameters for 1P: {}".format(hyperparameters_1p))
 
         finetuned_model_id = finetune_component.submit_job(
