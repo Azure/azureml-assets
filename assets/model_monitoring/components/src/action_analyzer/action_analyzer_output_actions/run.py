@@ -176,7 +176,7 @@ def run():
                                 .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence_score'))\
                                 .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
                                 .select(INDEX_ID_COLUMN, "max_confidence_score", "most_significant_group")
-    
+
     # if all the groups are default group, take the default group instead
     if max_conf_df.count() == 0:
         max_conf_df = action_data_df.withColumn("max_confidence_score", max(CONFIDENCE_SCORE_COLUMN).over(w))\
