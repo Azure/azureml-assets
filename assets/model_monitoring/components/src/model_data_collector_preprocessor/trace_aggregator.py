@@ -28,7 +28,7 @@ def _validate_traces_df(aggregated_traces_df: DataFrame) -> DataFrame:
         aggregated_traces_df.count(),
         transformed_df.count(),
         additional_error_msg="Additionally, the step that caused issues was validating trace logs input/output."
-            " Double check the stdout and spark executor logs for debug info to find root cause of issue.")
+        " Double check the stdout and spark executor logs for debug info to find root cause of issue.")
 
     return transformed_df
 
