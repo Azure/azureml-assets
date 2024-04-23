@@ -14,7 +14,7 @@ class Hyperparameters(BaseModel):
     learning_rate_multiplier: Optional[float] = Field(...)
 
     def get_dict(self) -> Dict[str, str]:
-        """Dictionary of hyperparameters."""
+        """Get dictionary of hyperparameters."""
         return {key: str(value) for key, value in self.dict().items() if value is not None}
 
 
@@ -36,5 +36,5 @@ class Hyperparameters_1P(BaseModel):
     ShuffleType: Optional[str] = Field(...)
 
     def get_dict(self) -> Dict[str, str]:
-        """Dictionary of hyperparameters."""
+        """Get dictionary of hyperparameters."""
         return {key: str(value) for key, value in self.dict().items() if value is not None}

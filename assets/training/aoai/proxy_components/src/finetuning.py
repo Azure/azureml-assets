@@ -206,6 +206,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
 
 def parse_args():
+    """Parse arguements provided to the component."""
     parser = argparse.ArgumentParser(description="AOAI Finetuning Component")
     parser.add_argument("--endpoint_name", type=str)
     parser.add_argument("--endpoint_resource_group", type=str)
