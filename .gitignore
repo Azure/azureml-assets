@@ -139,4 +139,3 @@ mlruns/
 
 # ignore config files
 config.json
-out*
