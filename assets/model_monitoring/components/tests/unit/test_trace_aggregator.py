@@ -427,7 +427,7 @@ class TestGenAISparkPreprocessor:
     _trace_log_data_with_error = [
             ["01_0", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error],
-            ["01_0", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
+            ["01_1", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
             [datetime(2024, 2, 5, 0, 8, 0), "in", None, _root_span_str_error2],
             ["01_2", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error3],
