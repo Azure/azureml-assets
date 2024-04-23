@@ -38,7 +38,8 @@ from shared_utilities.constants import (
     ACTION_ID_COLUMN,
     RETRIEVAL_QUERY_TYPE_COLUMN,
     RETRIEVAL_TOP_K_COLUMN,
-    PROMPT_FLOW_INPUT_COLUMN
+    PROMPT_FLOW_INPUT_COLUMN,
+    DEFAULT_TOPIC_NAME
 )
 
 
@@ -79,13 +80,14 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
     for index_id in index_set:
         row = action_bad_group_df.filter(col(INDEX_ID_COLUMN) == index_id).collect()[0]
         action_id = row[ACTION_ID_COLUMN]
+        query_intention = row["most_significant_group"].split("_")[-1]
         action = {
             "ActionId": action_id,
             "Type": INDEX_ACTION_TYPE,
             "Description": ACTION_DESCRIPTION.replace("{index_id}", index_id),
-            "ConfidenceScore": row["action_confidence_score"],
+            "ConfidenceScore": row["max_confidence_score"],
             "ViolatedMetrics": ", ".join(violated_metrics),
-            "QueryIntention": row["most_significant_group"].split("_")[-1],
+            "QueryIntention": query_intention if query_intention != "default" else DEFAULT_TOPIC_NAME,
             "CreationTime": str(datetime.datetime.now()),
             "FilePath": os.path.join(action_output_folder, f"actions/{action_id}.json")
         }
@@ -170,10 +172,17 @@ def run():
     # get the group with highest confidence score (except the default group)
     w = Window.partitionBy(INDEX_ID_COLUMN)
     max_conf_df = action_data_df.filter(~col(BAD_GROUP_COLUMN).endswith("_default"))\
-                                .withColumn("max_confidence", max(CONFIDENCE_SCORE_COLUMN).over(w))\
-                                .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence'))\
+                                .withColumn("max_confidence_score", max(CONFIDENCE_SCORE_COLUMN).over(w))\
+                                .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence_score'))\
                                 .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
-                                .select(INDEX_ID_COLUMN, "most_significant_group")
+                                .select(INDEX_ID_COLUMN, "max_confidence_score", "most_significant_group")
+    
+    # if all the groups are default group, take the default group instead
+    if max_conf_df.count() == 0:
+        max_conf_df = action_data_df.withColumn("max_confidence_score", max(CONFIDENCE_SCORE_COLUMN).over(w))\
+                                    .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence_score'))\
+                                    .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
+                                    .select(INDEX_ID_COLUMN, "max_confidence_score", "most_significant_group")
 
     merged_action = action_data_df.groupby(INDEX_ID_COLUMN).agg(collect_set(BAD_GROUP_COLUMN).alias("action_bad_group_set"),  # noqa: E501
                                                                 collect_set(GOOD_GROUP_COLUMN).alias("action_good_group_set"),  # noqa: E501
