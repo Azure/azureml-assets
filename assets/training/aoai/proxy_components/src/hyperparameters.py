@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 """Hyperparameters for Azure Open AI Finetuning."""
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 from pydantic import BaseModel, Field
 
 
@@ -29,7 +29,7 @@ class Hyperparameters_1P(BaseModel):
     ContextWindow: Optional[int] = Field(...)
     FileSPMRate: Optional[float] = Field(..., ge=0, le=1)
     WeightDecayMultiplier: Optional[float] = Field(...)
-    PromptLossWeight : Optional[float] = Field(...)
+    PromptLossWeight: Optional[float] = Field(...)
     TrimMode: Optional[str] = Field(...)
     CheckPointInterval: Optional[int] = Field(...)
     NumSteps: Optional[int] = Field(...)
