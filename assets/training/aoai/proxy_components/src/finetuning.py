@@ -5,7 +5,7 @@
 
 import argparse
 import time
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 from common import utils
 from common.cancel_handler import CancelHandler
 from common.azure_openai_client_manager import AzureOpenAIClientManager
@@ -35,7 +35,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         self.finetuning_job_id = None
 
     def submit_job(self, training_file_path: str, validation_file_path: Optional[str], model: str,
-                   hyperparameters: Dict[str, Any], hyperparameters_1p: Dict[str, Any], suffix=Optional[str]) -> str:
+                   hyperparameters: Dict[str, str], hyperparameters_1p: Dict[str, str], suffix=Optional[str]) -> str:
         """Upload data, finetune model and then delete data."""
         logger.info("Step 1: Uploading data to AzureOpenAI resource")
         self.upload_files(training_file_path, validation_file_path)
@@ -105,8 +105,8 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             logger.error(error_string)
             raise Exception(error_string)
 
-    def submit_finetune_job(self, model, hyperparameters: Dict[str, Any],
-                            hyperparameters_1p: Dict[str, Any], suffix=None):
+    def submit_finetune_job(self, model, hyperparameters: Dict[str, str],
+                            hyperparameters_1p: Dict[str, str], suffix=None):
         """Submit fine-tune job to AOAI."""
         logger.debug(f"Starting fine-tune job, model: {model}, suffix: {suffix},\
                      training_file_id: {self.training_file_id}, validation_file_id: {self.validation_file_id}")

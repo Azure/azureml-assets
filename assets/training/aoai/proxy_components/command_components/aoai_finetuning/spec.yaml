@@ -2,48 +2,48 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 name: aoai_finetuning
 version: 0.0.2
 type: command
- 
+
 is_deterministic: True
- 
+
 display_name: AOAI Finetuning Job
 description: Upload data to Azure OpenAI resource, finetune model and delete data
- 
+
 environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/3
- 
+
 code: ../../src
- 
+
 inputs:
   endpoint_name:
     type: string
     optional: False
     description: The endpoint name or AOAI resource name.
- 
+
   endpoint_resource_group:
     type: string
     optional: True
     description: Resource group for the AOAI resource.
- 
+
   endpoint_subscription:
     type: string
     optional: True
     description: Subscription for the AOAI resource.
- 
+
   training_file_path:
     type: uri_file
     optional: False
     description: jsonl source file/folder for training dataset.
- 
+
   validation_file_path:
     type: uri_file
     optional: True
     description: source file/folder for validation dataset.
- 
+
   model:
     type: string
     optional: False
     default: gpt-35-turbo-0613
     description: GPT model engine
- 
+
   task_type:
     type: string
     optional: False
@@ -52,72 +52,72 @@ inputs:
     - chat
     - completion
     - embedding
- 
+
   n_epochs:
     type: integer
     optional: True
     description: Number of training epochs. If not provided, it will be determined dynamically based on the input data.
- 
+
   batch_size:
     type: integer
     optional: True
     description: Global batch size. If not provided, it will be determined dynamically based on the input data.
- 
+
   learning_rate_multiplier:
     type: number
     optional: True
     description: The learning rate multiplier to use for training. If not provided, it will be determined dynamically based on the input data.
- 
+
   suffix:
     type: string
     optional: true
     description: A string of up to 18 characters that will be added to your fine-tuned model name
- 
+
   export_merged_weights:
     type: boolean
     optional: True
     description: To get the merged wights of the model as output as well. Default is false
- 
+
   completion_override:
     type: boolean
     optional: True
     description: To override the task type to completion. Default is false
- 
+
   full_finetune:
     type: boolean
     optional: True
     description: To perform full finetuning. Default is false
- 
+
   lora_v2:
     type: boolean
     optional: True
     description: To use lora V2. Default is false
- 
+
   lora_dimensions:
     type: integer
     optional: True
     description: The size of LoRA dimensions in self attention layer. If not provided, it will be determined dynamically.
- 
+
   context_window:
     type: integer
     optional: True
     description: Context length of the model. If not provided, context window will be determined dynamically.
- 
+
   file_spm_rate:
     type: number
     optional: True
     description: file spm rate should be between [0,1]
- 
+
   weight_decay_multiplier:
     type: number
     optional: True
     description: Weight Decay Multiplier for training. Not applicable for embedding finetuning
- 
+
   prompt_loss_weight:
     type: number
     optional: True
     description: Loss weight defined on prompt (i.e. user message). Note that loss weight defined on completion (i.e. assistant message) is alwyas 1.0.
- 
+
   trim_mode:
     type: string
     optional: True
@@ -126,17 +126,17 @@ inputs:
     - left
     - right
     - discard
- 
+
   check_point_interval:
     type: integer
     optional: True
     description: Checkpointing frequency based on steps. Applicable only to embedding finetuning.
- 
+
   num_steps:
     type: integer
     optional: True
     description: Total training steps. Applicable only to embedding finetuning.
- 
+
   shuffle_type:
     type: string
     optional: True
@@ -145,12 +145,12 @@ inputs:
     - none
     - full
     - buffer
- 
+
 outputs:
   aoai_finetuning_output:
     type: uri_file
     description: Contains finetuned model id in output file in JSON/custom class format
- 
+
 command: >-
   python finetuning.py
   --endpoint_name ${{inputs.endpoint_name}}
