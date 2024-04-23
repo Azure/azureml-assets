@@ -119,8 +119,8 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
 
         _count_dropped_rows_with_error(
             original_df_row_count, df.count(),
-            additional_error_msg="Additionally, preprocessing step that caused issue was casting start/end " + \
-                "timestamp column to TimestampType(). Double check those columns for any issues.")
+            additional_error_msg="Additionally, preprocessing step that caused issue was casting start/end "
+            "timestamp column to TimestampType(). Double check those columns for any issues.")
 
     df = _promote_fields_from_attributes(df)
 

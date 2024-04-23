@@ -112,7 +112,7 @@ def aggregate_spans_into_traces(
     _count_dropped_rows_with_error(
         grouped_spans_df.count(),
         validated_traces.count(),
-        additional_error_msg="Additionally, the step that caused issues was validating trace logs input/output." + \
-            " Double check the stdout and spark executor logs for debug info to find root cause of issue.")
+        additional_error_msg="Additionally, the step that caused issues was validating trace logs input/output."
+        " Double check the stdout and spark executor logs for debug info to find root cause of issue.")
 
     return validated_traces
