@@ -357,7 +357,7 @@ class TestGenAISparkPreprocessor:
         ['{"inputs":"in"}'] +
         [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", "00"] +
         ["5", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-        ['{"inputs":"in", "output":"out"}}'] +
+        ['{"inputs":"in", "output":"out"}'] +
         [datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name", "5"] +
         ["6", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
         ['{"inputs":"in", "output":"out"}'] +
@@ -395,20 +395,6 @@ class TestGenAISparkPreprocessor:
         'an_id": "4", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01",' + \
         ' "children": []}]}'
 
-    _root_span_str_error2 = '{"attributes": "{\\"inputs\\":\\"in\\"}", "end_time": "2024-02-05T' + \
-        '00:08:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": "00", "span' + \
-        '_id": "5", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01_1", "' + \
-        'children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T0' + \
-        '0:05:00", "events": "[]", "framework": "RAG", "links": "[]", "name": "name", "parent_id": "5", "span_id' + \
-        '": "6", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "trace_id": "01", "chi' + \
-        'ldren": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T00:0' + \
-        '4:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_id": "6", "span_' + \
-        'id": "7", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": "01", "c' + \
-        'hildren": []}]}, {"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02' + \
-        '-05T00:07:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "5", "sp' + \
-        'an_id": "8", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01",' + \
-        ' "children": []}]}'
-
     _root_span_str_error3 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}",' + \
         ' "end_time": "2024-02-05T' + \
         '00:08:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": null, "span' + \
@@ -427,8 +413,6 @@ class TestGenAISparkPreprocessor:
     _trace_log_data_with_error = [
             ["01_0", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error],
-            ["01_1", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
-            [datetime(2024, 2, 5, 0, 8, 0), "in", None, _root_span_str_error2],
             ["01_2", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error3],
     ]

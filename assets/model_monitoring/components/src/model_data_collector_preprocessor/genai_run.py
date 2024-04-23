@@ -19,6 +19,7 @@ from model_data_collector_preprocessor.mdc_utils import (
     _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string,
     _filter_df_by_time_window,
+    _count_dropped_rows_with_error,
 )
 from model_data_collector_preprocessor.trace_aggregator import (
     aggregate_spans_into_traces,
@@ -113,7 +114,13 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
         print("rows that will be removed:")
         df.filter(df.start_time.isNull()).show()
         df.filter(df.end_time.isNull()).show()
+        original_df_row_count = df.count()
         df = df.dropna(subset=["start_time", "end_time"])
+
+        _count_dropped_rows_with_error(
+            original_df_row_count, df.count(),
+            additional_error_msg="Additionally, preprocessing step that caused issue was casting start/end " + \
+                "timestamp column to TimestampType(). Double check those columns for any issues.")
 
     df = _promote_fields_from_attributes(df)
 

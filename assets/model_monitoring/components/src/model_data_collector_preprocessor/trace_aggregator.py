@@ -8,11 +8,28 @@ from pyspark.sql import DataFrame, Row
 from datetime import datetime
 from pyspark.sql.functions import collect_list, struct
 from shared_utilities.span_tree_utils import SpanTree, SpanTreeNode
-from model_data_collector_preprocessor.mdc_utils import _filter_df_by_time_window
+from model_data_collector_preprocessor.mdc_utils import (
+    _filter_df_by_time_window,
+    _count_dropped_rows_with_error,
+)
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_aggregated_trace_log_spark_df_schema,
 )
 from shared_utilities.io_utils import init_spark
+
+
+def _validate_traces_df(aggregated_traces_df: DataFrame) -> DataFrame:
+    """Check specific validations for aggregated trace entries as necessary."""
+    # some PF logs that result in exception won't have output so need to drop traces that don't have output or input.
+    transformed_df = aggregated_traces_df.dropna(subset=["output", "input"])
+
+    _count_dropped_rows_with_error(
+        aggregated_traces_df.count(),
+        transformed_df.count(),
+        additional_error_msg="Additionally, the step that caused issues was validating trace logs input/output." + \
+            " Double check the stdout and spark executor logs for debug info to find root cause of issue.")
+
+    return transformed_df
 
 
 def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
@@ -95,4 +112,7 @@ def aggregate_spans_into_traces(
     print("Aggregated Trace DF:")
     all_aggregated_traces.show()
     all_aggregated_traces.printSchema()
-    return all_aggregated_traces
+
+    validated_traces = _validate_traces_df(all_aggregated_traces)
+
+    return validated_traces
