@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.45 (2024-04-24)
+### 🐛 Bugs Fixed
+- [#2771](https://github.com/Azure/azureml-assets/pull/2771) Add h100 skus to supported inference skus list
+
 ## 1.16.44 (2024-04-19)
 ### 🐛 Bugs Fixed
 - [#2730](https://github.com/Azure/azureml-assets/pull/2730) Fix ACR task timeout keys
