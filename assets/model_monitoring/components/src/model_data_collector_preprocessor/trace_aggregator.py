@@ -20,18 +20,20 @@ from shared_utilities.io_utils import init_spark
 
 
 def _create_trace_log_output_entry(
-        output_dict: dict, root_span: SpanTreeNode, error_rate_accumulator: Accumulator[int]):
-    """"""
+        output_dict: dict, error_rate_accumulator: Accumulator[int]):
+    """Validate and create an entry for trace log output DF from output_dict."""
     output_schema = _get_aggregated_trace_log_spark_df_schema()
 
     if output_dict.get('input', None) is None:
         error_rate_accumulator.add(1)
-        print(f"'Input' for trace = {root_span.trace_id} and root_span id = {root_span.span_id} is null."
+        print(f"'Input' for trace = {output_dict.get('trace_id', None)} and"
+              f" root_span id = {output_dict.get('span_id', None)} is null."
               " Discarding trace entry.")
         return None
     if output_dict.get('output', None) is None:
         error_rate_accumulator.add(1)
-        print(f"'Output' for trace = {root_span.trace_id} and root_span id = {root_span.span_id} is null."
+        print(f"'Output' for trace = {output_dict.get('trace_id', None)} and"
+              f" root_span id = {output_dict.get('span_id', None)} is null."
               " Discarding trace entry.")
         return None
     return tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
@@ -56,7 +58,7 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row, error_rate_accumulator:
             output_dict['output'] = root_span.output
             output_dict['root_span'] = json.dumps(root_span.to_dict())
 
-            entry = _create_trace_log_output_entry(output_dict, root_span, error_rate_accumulator)
+            entry = _create_trace_log_output_entry(output_dict, error_rate_accumulator)
             if entry is not None:
                 seperated_trace_entries.append(entry)
 
@@ -69,7 +71,7 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row, error_rate_accumulator:
         output_dict['output'] = tree.root_span.output
         output_dict['root_span'] = tree.to_json_str()
 
-        entry = _create_trace_log_output_entry(output_dict, tree.root_span, error_rate_accumulator)
+        entry = _create_trace_log_output_entry(output_dict, error_rate_accumulator)
         return [] if entry is None else [entry]
 
 
