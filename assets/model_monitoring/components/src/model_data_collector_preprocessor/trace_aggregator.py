@@ -19,6 +19,9 @@ from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
 from shared_utilities.io_utils import init_spark
 
 
+logging_prefix_str = "[TRACE_AGGREGATOR_LOGS] [INFO]"
+
+
 def _create_trace_log_output_entry(
         output_dict: dict, error_rate_accumulator: Accumulator[int]):
     """Validate and create an entry for trace log output DF from output_dict."""
@@ -26,13 +29,13 @@ def _create_trace_log_output_entry(
 
     if output_dict.get('input', None) is None:
         error_rate_accumulator.add(1)
-        print(f"'Input' for trace = {output_dict.get('trace_id', None)} and"
+        print(f"{logging_prefix_str} 'Input' for trace = {output_dict.get('trace_id', None)} and"
               f" root_span id = {output_dict.get('span_id', None)} is null."
               " Discarding trace entry.")
         return None
     if output_dict.get('output', None) is None:
         error_rate_accumulator.add(1)
-        print(f"'Output' for trace = {output_dict.get('trace_id', None)} and"
+        print(f"{logging_prefix_str} 'Output' for trace = {output_dict.get('trace_id', None)} and"
               f" root_span id = {output_dict.get('span_id', None)} is null."
               " Discarding trace entry.")
         return None
@@ -45,7 +48,8 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row, error_rate_accumulator:
     tree = SpanTree(span_list)
 
     if tree.root_span is None:
-        print("Didn't find a singlular root_span. Attemting to flatten forest of root_spans if possible...")
+        print(f"{logging_prefix_str} Didn't find a singlular root_span."
+              "Attemting to flatten forest of root_spans if possible...")
         # until we replace trace_id with request_id for PF logs we will have multiple root_span for each
         # trace_id and so we have to split them up manually.
         seperated_trace_entries = []
@@ -62,10 +66,10 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row, error_rate_accumulator:
             if entry is not None:
                 seperated_trace_entries.append(entry)
 
-        print("Finish flattening forest.")
+        print(f"{logging_prefix_str} Finish flattening forest.")
         return seperated_trace_entries
     else:
-        print("Found a singlular root_span. Creating entry for it.")
+        print(f"{logging_prefix_str} Found a singlular root_span. Creating entry for it.")
         output_dict = tree.root_span.to_dict(datetime_to_str=False)
         output_dict['input'] = tree.root_span.input
         output_dict['output'] = tree.root_span.output
@@ -95,10 +99,10 @@ def aggregate_spans_into_traces(
     output_trace_schema = _get_aggregated_trace_log_spark_df_schema()
 
     if not require_trace_data:
-        print("Skip processing of spans into aggregated traces.")
+        print(f"{logging_prefix_str} Skip processing of spans into aggregated traces.")
         return spark.createDataFrame(data=[], schema=output_trace_schema)
 
-    print("Processing spans into aggregated traces...")
+    print(f"{logging_prefix_str} Processing spans into aggregated traces...")
 
     # for PromptFlow we need to replace the trace_id values with request_id in order to handle edge cases
     # where PF has same trace_id but multiple LLM requests
@@ -122,7 +126,7 @@ def aggregate_spans_into_traces(
     all_aggregated_traces = _filter_df_by_time_window(
         all_aggregated_traces, data_window_start, data_window_end)
 
-    print("Aggregated Trace DF:")
+    print(f"{logging_prefix_str} Aggregated Trace DF:")
     all_aggregated_traces.show()
     all_aggregated_traces.printSchema()
 
