@@ -19,7 +19,8 @@ from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
 from shared_utilities.io_utils import init_spark
 
 
-def _create_trace_log_output_entry(output_dict: dict, root_span: SpanTreeNode, error_rate_accumulator: Accumulator[int]):
+def _create_trace_log_output_entry(
+        output_dict: dict, root_span: SpanTreeNode, error_rate_accumulator: Accumulator[int]):
     """"""
     output_schema = _get_aggregated_trace_log_spark_df_schema()
 
