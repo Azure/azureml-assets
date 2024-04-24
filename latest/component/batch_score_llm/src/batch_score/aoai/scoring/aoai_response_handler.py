@@ -65,6 +65,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
         if response_status == 200:
             return self._create_scoring_result(
                 status=ScoringResultStatus.SUCCESS,
+                model_response_code=response_status,
                 scoring_request=scoring_request,
                 start=start,
                 end=end,
@@ -78,6 +79,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
 
         result = self._create_scoring_result(
             status=ScoringResultStatus.FAILURE,
+            model_response_code=response_status,
             scoring_request=scoring_request,
             start=start,
             end=end,
@@ -130,6 +132,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
         except Exception:
             return self._create_scoring_result(
                 status=ScoringResultStatus.FAILURE,
+                model_response_code=http_response.status,
                 scoring_request=scoring_request,
                 start=start,
                 end=end,

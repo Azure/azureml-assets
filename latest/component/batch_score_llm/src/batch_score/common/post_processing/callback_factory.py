@@ -5,7 +5,9 @@
 
 import traceback
 
-from ...utils.common import convert_result_list
+from ...utils.output_formatter import OutputFormatter
+from ...utils.v1_output_formatter import V1OutputFormatter
+from ...utils.v2_output_formatter import V2OutputFormatter
 from ..configuration.configuration import Configuration
 from ..scoring.scoring_result import ScoringResult
 from ..telemetry import logging_utils as lu
@@ -16,7 +18,7 @@ from .result_utils import (
     apply_input_transformer,
     get_return_value,
 )
-from .output_handler import SingleFileOutputHandler, SeparateFileOutputHandler
+from .output_handler import OutputHandler
 
 
 def add_callback(callback, cur):
@@ -33,9 +35,11 @@ class CallbackFactory:
 
     def __init__(self,
                  configuration: Configuration,
+                 output_handler: OutputHandler,
                  input_to_output_transformer):
         """Initialize CallbackFactory."""
         self._configuration = configuration
+        self._output_handler = output_handler
         self.__input_to_output_transformer = input_to_output_transformer
 
     def generate_callback(self):
@@ -46,7 +50,12 @@ class CallbackFactory:
         return callback
 
     def _convert_result_list(self, scoring_results: "list[ScoringResult]", mini_batch_context: MiniBatchContext):
-        return convert_result_list(
+        output_formatter: OutputFormatter
+        if self._configuration.input_schema_version == 1:
+            output_formatter = V1OutputFormatter()
+        else:
+            output_formatter = V2OutputFormatter()
+        return output_formatter.format_output(
             results=scoring_results,
             batch_size_per_request=self._configuration.batch_size_per_request)
 
@@ -64,13 +73,7 @@ class CallbackFactory:
             if mini_batch_context.exception is None:
                 if self._configuration.save_mini_batch_results == "enabled":
                     lu.get_logger().info("save_mini_batch_results is enabled")
-                    if (self._configuration.split_output):
-                        output_handler = SeparateFileOutputHandler()
-                        lu.get_logger().info("Saving successful results and errors to separate files")
-                    else:
-                        output_handler = SingleFileOutputHandler()
-                        lu.get_logger().info("Saving results to single file")
-                    output_handler.save_mini_batch_results(
+                    self._output_handler.save_mini_batch_results(
                         scoring_results,
                         self._configuration.mini_batch_results_out_directory,
                         mini_batch_context.raw_mini_batch_context

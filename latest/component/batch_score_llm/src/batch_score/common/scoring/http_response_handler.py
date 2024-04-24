@@ -32,6 +32,7 @@ class HttpResponseHandler:
     def _create_scoring_result(
             self,
             status: ScoringResultStatus,
+            model_response_code: int,
             scoring_request: ScoringRequest,
             start: float,
             end: float,
@@ -43,6 +44,7 @@ class HttpResponseHandler:
             status=status,
             start=start,
             end=end,
+            model_response_code=model_response_code,
             request_obj=scoring_request.original_payload_obj,
             request_metadata=scoring_request.request_metadata,
             response_body=http_post_response.payload,
