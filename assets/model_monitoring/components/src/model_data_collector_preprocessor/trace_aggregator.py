@@ -23,14 +23,14 @@ def _create_trace_log_output_entry(output_dict: dict, root_span: SpanTreeNode):
     output_schema = _get_aggregated_trace_log_spark_df_schema()
 
     if output_dict.get('input', None) is None:
-        error_rate_accumulator.add(1)
+        error_rate_accumulator.add(1)  # noqa: F821
         print(f"'Input' for trace = {root_span.trace_id} and root_span id = {root_span.span_id} is null."
-                " Discarding trace entry.")
+              " Discarding trace entry.")
         return None
     if output_dict.get('output', None) is None:
-        error_rate_accumulator.add(1)
+        error_rate_accumulator.add(1)  # noqa: F821
         print(f"'Output' for trace = {root_span.trace_id} and root_span id = {root_span.span_id} is null."
-                " Discarding trace entry.")
+              " Discarding trace entry.")
         return None
     return tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
 
