@@ -16,6 +16,7 @@ with patch('importlib.import_module', side_effect=mock_import):
 from src.batch_score.batch_pool.meds_client import MEDSClient
 from src.batch_score.common.common_enums import EndpointType
 from src.batch_score.common.configuration.configuration import Configuration
+from src.batch_score.common.post_processing.output_handler import SeparateFileOutputHandler, SingleFileOutputHandler
 from src.batch_score.common.telemetry.events import event_utils
 from src.batch_score.common.telemetry.trace_configs import (
     ConnectionCreateEndTrace,
@@ -103,20 +104,26 @@ def test_output_handler_interface(
         use_single_file_output_handler: bool,
         use_separate_file_output_handler: bool):
     """Test output handler interface."""
-    input_data, mini_batch_context = _setup_main()
-
     with patch(
-        "src.batch_score.main.SeparateFileOutputHandler",
-        return_value=MagicMock()
+        "tests.unit.test_main.SeparateFileOutputHandler"
       ) as mock_separate_file_output_handler, \
         patch(
-          "src.batch_score.main.SingleFileOutputHandler",
-          return_value=MagicMock()
+          "tests.unit.test_main.SingleFileOutputHandler"
       ) as mock_single_file_output_handler:
+
+        input_data, mini_batch_context = _setup_main()
 
         main.configuration.split_output = split_output
         main.configuration.save_mini_batch_results = "enabled"
         main.configuration.mini_batch_results_out_directory = "driver/tests/unit/unit_test_results/"
+        if main.configuration.split_output:
+            main.output_handler = SeparateFileOutputHandler(
+                                    main.configuration.batch_size_per_request,
+                                    main.configuration.input_schema_version)
+        else:
+            main.output_handler = SingleFileOutputHandler(
+                                    main.configuration.batch_size_per_request,
+                                    main.configuration.input_schema_version)
         main.run(input_data=input_data, mini_batch_context=mini_batch_context)
 
         assert mock_separate_file_output_handler.called == use_separate_file_output_handler
@@ -267,6 +274,7 @@ def _setup_main(par_exception=None):
     configuration.scoring_url = "https://scoring_url"
     configuration.batch_pool = "batch_pool"
     configuration.quota_audience = "quota_audience"
+    configuration.input_schema_version = 1
     main.configuration = configuration
 
     main.input_handler = MagicMock()

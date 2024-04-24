@@ -90,6 +90,7 @@ def init():
     global par
     global configuration
     global input_handler
+    global output_handler
 
     start = time.time()
     parser = ConfigurationParserFactory().get_parser()
@@ -102,6 +103,13 @@ def init():
         input_handler = V2InputSchemaHandler()
     else:
         raise ValueError(f"Invalid input_schema_version: {configuration.input_schema_version}")
+
+    if (configuration.split_output):
+        output_handler = SeparateFileOutputHandler()
+        lu.get_logger().info("Will save successful results and errors to separate files")
+    else:
+        output_handler = SingleFileOutputHandler()
+        lu.get_logger().info("Will save all results to a single file")
 
     event_utils.setup_context_vars(configuration, metadata)
     setup_geneva_event_handlers()
@@ -147,6 +155,7 @@ def init():
     if configuration.async_mode:
         callback_factory = CallbackFactory(
             configuration=configuration,
+            output_handler=output_handler,
             input_to_output_transformer=input_to_output_transformer)
         finished_callback = callback_factory.generate_callback()
 
@@ -200,13 +209,6 @@ def run(input_data: pd.DataFrame, mini_batch_context):
 
     try:
         ret = par.run(data_list, mini_batch_context)
-
-        if (configuration.split_output):
-            output_handler = SeparateFileOutputHandler()
-            lu.get_logger().info("Saving successful results and errors to separate files")
-        else:
-            output_handler = SingleFileOutputHandler()
-            lu.get_logger().info("Saving results to single file")
 
         if configuration.save_mini_batch_results == "enabled":
             lu.get_logger().info("save_mini_batch_results is enabled")
