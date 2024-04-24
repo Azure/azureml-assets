@@ -18,28 +18,30 @@ from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
 from shared_utilities.io_utils import init_spark
 
 
-def _validate_traces_df(aggregated_traces_df: DataFrame) -> DataFrame:
-    """Check specific validations for aggregated trace entries as necessary."""
-    print("Validating aggregated trace logs...")
-    # some PF logs that result in exception won't have output so need to drop traces that don't have output or input.
-    transformed_df = aggregated_traces_df.dropna(subset=["input", "output"])
+def _create_trace_log_output_entry(output_dict: dict, root_span: SpanTreeNode):
+    """"""
+    output_schema = _get_aggregated_trace_log_spark_df_schema()
 
-    _count_dropped_rows_with_error(
-        aggregated_traces_df.count(),
-        transformed_df.count(),
-        additional_error_msg="Additionally, the step that caused issues was validating trace logs input/output."
-        " Double check the stdout and spark executor logs for debug info to find root cause of issue.")
-
-    return transformed_df
+    if output_dict.get('input', None) is None:
+        error_rate_accumulator.add(1)
+        print(f"'Input' for trace = {root_span.trace_id} and root_span id = {root_span.span_id} is null."
+                " Discarding trace entry.")
+        return None
+    if output_dict.get('output', None) is None:
+        error_rate_accumulator.add(1)
+        print(f"'Output' for trace = {root_span.trace_id} and root_span id = {root_span.span_id} is null."
+                " Discarding trace entry.")
+        return None
+    return tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
 
 
 def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
     """Aggregate grouped span logs into trace logs."""
-    output_schema = _get_aggregated_trace_log_spark_df_schema()
-
     span_list = [SpanTreeNode(row) for row in grouped_row.span_rows]
     tree = SpanTree(span_list)
+
     if tree.root_span is None:
+        print("Didn't find a singlular root_span. Attemting to flatten forest of root_spans if possible...")
         # until we replace trace_id with request_id for PF logs we will have multiple root_span for each
         # trace_id and so we have to split them up manually.
         seperated_trace_entries = []
@@ -52,17 +54,21 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
             output_dict['output'] = root_span.output
             output_dict['root_span'] = json.dumps(root_span.to_dict())
 
-            seperated_trace_entries.append(
-                tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
-            )
+            entry = _create_trace_log_output_entry(output_dict, root_span)
+            if entry is not None:
+                seperated_trace_entries.append(entry)
+
+        print("Finish flattening forest.")
         return seperated_trace_entries
     else:
+        print("Found a singlular root_span. Creating entry for it.")
         output_dict = tree.root_span.to_dict(datetime_to_str=False)
         output_dict['input'] = tree.root_span.input
         output_dict['output'] = tree.root_span.output
         output_dict['root_span'] = tree.to_json_str()
 
-        return [tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())]
+        entry = _create_trace_log_output_entry(output_dict, tree.root_span)
+        return [] if entry is None else [entry]
 
 
 def _replace_trace_with_request_id(row: Row):
@@ -81,10 +87,10 @@ def aggregate_spans_into_traces(
         enlarged_span_logs: DataFrame, require_trace_data: bool,
         data_window_start: datetime, data_window_end: datetime) -> DataFrame:
     """Group span logs into aggregated trace logs."""
+    spark = init_spark()
     output_trace_schema = _get_aggregated_trace_log_spark_df_schema()
 
     if not require_trace_data:
-        spark = init_spark()
         print("Skip processing of spans into aggregated traces.")
         return spark.createDataFrame(data=[], schema=output_trace_schema)
 
@@ -102,6 +108,8 @@ def aggregate_spans_into_traces(
         ).alias('span_rows')
     )
 
+    error_rate_accumulator = spark.sparkContext.accumulator(0)
+
     all_aggregated_traces = grouped_spans_df \
         .rdd \
         .flatMap(_aggregate_span_logs_to_trace_logs) \
@@ -114,6 +122,11 @@ def aggregate_spans_into_traces(
     all_aggregated_traces.show()
     all_aggregated_traces.printSchema()
 
-    validated_traces = _validate_traces_df(all_aggregated_traces)
+    # check how many rows were dropped from the final trace output and check against threshold.
+    _count_dropped_rows_with_error(
+        all_aggregated_traces.count() + error_rate_accumulator.value,
+        all_aggregated_traces.count(),
+        additional_error_msg="Additionally, the most likely cause for dropped rows is trace logs with missing"
+        " input/output. Double check the spark executor logs for debug info to find root cause of issue.")
 
-    return validated_traces
+    return all_aggregated_traces
