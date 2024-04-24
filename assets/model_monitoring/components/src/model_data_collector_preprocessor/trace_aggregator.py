@@ -4,6 +4,7 @@
 
 
 import json
+from pyspark import Accumulator
 from pyspark.sql import DataFrame, Row
 from datetime import datetime
 from pyspark.sql.functions import collect_list, struct
@@ -18,24 +19,24 @@ from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
 from shared_utilities.io_utils import init_spark
 
 
-def _create_trace_log_output_entry(output_dict: dict, root_span: SpanTreeNode):
+def _create_trace_log_output_entry(output_dict: dict, root_span: SpanTreeNode, error_rate_accumulator: Accumulator[int]):
     """"""
     output_schema = _get_aggregated_trace_log_spark_df_schema()
 
     if output_dict.get('input', None) is None:
-        error_rate_accumulator.add(1)  # noqa: F821
+        error_rate_accumulator.add(1)
         print(f"'Input' for trace = {root_span.trace_id} and root_span id = {root_span.span_id} is null."
               " Discarding trace entry.")
         return None
     if output_dict.get('output', None) is None:
-        error_rate_accumulator.add(1)  # noqa: F821
+        error_rate_accumulator.add(1)
         print(f"'Output' for trace = {root_span.trace_id} and root_span id = {root_span.span_id} is null."
               " Discarding trace entry.")
         return None
     return tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())
 
 
-def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
+def _aggregate_span_logs_to_trace_logs(grouped_row: Row, error_rate_accumulator: Accumulator[int]):
     """Aggregate grouped span logs into trace logs."""
     span_list = [SpanTreeNode(row) for row in grouped_row.span_rows]
     tree = SpanTree(span_list)
@@ -54,7 +55,7 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
             output_dict['output'] = root_span.output
             output_dict['root_span'] = json.dumps(root_span.to_dict())
 
-            entry = _create_trace_log_output_entry(output_dict, root_span)
+            entry = _create_trace_log_output_entry(output_dict, root_span, error_rate_accumulator)
             if entry is not None:
                 seperated_trace_entries.append(entry)
 
@@ -67,7 +68,7 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
         output_dict['output'] = tree.root_span.output
         output_dict['root_span'] = tree.to_json_str()
 
-        entry = _create_trace_log_output_entry(output_dict, tree.root_span)
+        entry = _create_trace_log_output_entry(output_dict, tree.root_span, error_rate_accumulator)
         return [] if entry is None else [entry]
 
 
@@ -112,7 +113,7 @@ def aggregate_spans_into_traces(
 
     all_aggregated_traces = grouped_spans_df \
         .rdd \
-        .flatMap(_aggregate_span_logs_to_trace_logs) \
+        .flatMap(lambda row: _aggregate_span_logs_to_trace_logs(row, error_rate_accumulator)) \
         .toDF(output_trace_schema)
 
     all_aggregated_traces = _filter_df_by_time_window(
