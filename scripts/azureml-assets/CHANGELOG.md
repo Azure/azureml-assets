@@ -5,7 +5,7 @@
 
 ## 1.16.45 (2024-04-24)
 ### 🐛 Bugs Fixed
-- [#2771](https://github.com/Azure/azureml-assets/pull/2771) Add h100 skus to supported inference skus list
+- [#2773](https://github.com/Azure/azureml-assets/pull/2773) Add h100 skus to supported inference skus list
 
 ## 1.16.44 (2024-04-19)
 ### 🐛 Bugs Fixed
