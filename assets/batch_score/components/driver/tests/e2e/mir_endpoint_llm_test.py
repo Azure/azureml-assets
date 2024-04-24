@@ -68,6 +68,7 @@ YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
 
 # This test confirms that we can score an MIR endpoint using the scoring_url parameter and
 # the batch_score_llm.yml component.
+@pytest.mark.skip('Tempararily disabled until the test endpoint is created.')
 @pytest.mark.smoke
 @pytest.mark.e2e
 @pytest.mark.timeout(20 * 60)
