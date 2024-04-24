@@ -58,16 +58,6 @@ Note: output has been shortened.
         "id": "58",
         "warnings": []
       },
-      "follow_up_tasks": {
-        "summaries": [
-          {
-            "aspect": "Follow-Up Tasks",
-            "text": "@Ann Johnson will lead a conversation on leadership with @Deb Cupp."
-          }
-        ],
-        "id": "58",
-        "warnings": []
-      },
       "chapter_title": {
         "summaries": [
           {
