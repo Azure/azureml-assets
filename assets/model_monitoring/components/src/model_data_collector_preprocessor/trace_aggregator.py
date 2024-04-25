@@ -48,7 +48,7 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row, error_rate_accumulator:
     tree = SpanTree(span_list)
 
     if tree.root_span is None:
-        print(f"{logging_prefix_str} Didn't find a singlular root_span."
+        print(f"{logging_prefix_str} Didn't find a singular root_span."
               "Attemting to flatten forest of root_spans if possible...")
         # until we replace trace_id with request_id for PF logs we will have multiple root_span for each
         # trace_id and so we have to split them up manually.
@@ -69,7 +69,7 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row, error_rate_accumulator:
         print(f"{logging_prefix_str} Finish flattening forest.")
         return seperated_trace_entries
     else:
-        print(f"{logging_prefix_str} Found a singlular root_span. Creating entry for it.")
+        print(f"{logging_prefix_str} Found a singular root_span. Creating entry for it.")
         output_dict = tree.root_span.to_dict(datetime_to_str=False)
         output_dict['input'] = tree.root_span.input
         output_dict['output'] = tree.root_span.output
@@ -123,6 +123,14 @@ def aggregate_spans_into_traces(
         .flatMap(lambda row: _aggregate_span_logs_to_trace_logs(row, error_rate_accumulator)) \
         .toDF(output_trace_schema)
 
+    # check how many rows were dropped from the final trace output and check against threshold.
+    aggregated_trace_row_count = all_aggregated_traces.count()
+    _count_dropped_rows_with_error(
+        aggregated_trace_row_count + error_rate_accumulator.value,
+        aggregated_trace_row_count,
+        additional_error_msg="Additionally, the most likely cause for dropped rows is trace logs with missing"
+        " input/output. Double check the spark executor logs for debug info to find root cause of issue.")
+
     all_aggregated_traces = _filter_df_by_time_window(
         all_aggregated_traces, data_window_start, data_window_end)
 
@@ -130,12 +138,5 @@ def aggregate_spans_into_traces(
     all_aggregated_traces.show()
     all_aggregated_traces.printSchema()
 
-    # check how many rows were dropped from the final trace output and check against threshold.
-    final_trace_row_count = all_aggregated_traces.count()
-    _count_dropped_rows_with_error(
-        final_trace_row_count + error_rate_accumulator.value,
-        final_trace_row_count,
-        additional_error_msg="Additionally, the most likely cause for dropped rows is trace logs with missing"
-        " input/output. Double check the spark executor logs for debug info to find root cause of issue.")
 
     return all_aggregated_traces
