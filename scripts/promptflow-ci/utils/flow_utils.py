@@ -113,7 +113,7 @@ def get_run_id_and_url(res, sub, rg, ws):
                     f"/Microsoft.MachineLearningServices/workspaces/{ws}"
                     )
                 log_debug(f"!!!!! runId: {run_id}")
-        
+
         if ('"portal_url":' in line):
             match = re.search(r'"portal_url": "(.*?)",', line)
             if match:
