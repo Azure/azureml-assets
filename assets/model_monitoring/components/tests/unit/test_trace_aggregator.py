@@ -289,18 +289,6 @@ class TestGenAISparkPreprocessor:
         ['{"inputs":"in", "output":"out"}'] +
         [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "9"] +
         ["12", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"],
-        ['{"inputs":"in", "output":"out"}'] +
-        [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", None] +
-        ["13", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-        ['{"inputs":"in", "output":"out"}'] +
-        [datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name", "13"] +
-        ["14", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
-        ['{"inputs":"in", "output":"out"}'] +
-        [datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "[]", "name", "14"] +
-        ["15", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
-        ['{"inputs":"in", "output":"out"}'] +
-        [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "13"] +
-        ["16", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
     _root_span_str_0 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T' + \
@@ -390,7 +378,19 @@ class TestGenAISparkPreprocessor:
         ["11", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
         ['{"inputs":"in", "output":"out"}'] +
         [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "9"] +
-        ["12", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
+        ["12", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", None] +
+        ["13", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name", "13"] +
+        ["14", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "[]", "name", "14"] +
+        ["15", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "13"] +
+        ["16", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
     _root_span_str_error = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}",' + \
@@ -422,12 +422,29 @@ class TestGenAISparkPreprocessor:
         '-05T00:07:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "9", "sp' + \
         'an_id": "12", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01",' + \
         ' "children": []}]}'
+    
+    _root_span_str_error4 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}",' + \
+        ' "end_time": "2024-02-05T' + \
+        '00:08:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": null, "span_' + \
+        'id": "13", "span_type": "llm", "start_time": "2024-02-05T00:01:00", "status": "OK", "trace_id": "01_3", "' + \
+        'children": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T0' + \
+        '0:05:00", "events": "[]", "framework": "RAG", "links": "[]", "name": "name", "parent_id": "13", "span_id' + \
+        '": "14", "span_type": "llm", "start_time": "2024-02-05T00:02:00", "status": "OK", "trace_id": "01", "chi' + \
+        'ldren": [{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T00:0' + \
+        '4:00", "events": "[]", "framework": "INTERNAL", "links": "[]", "name": "name", "parent_id": "14", "span_' + \
+        'id": "15", "span_type": "llm", "start_time": "2024-02-05T00:03:00", "status": "OK", "trace_id": "01", "c' + \
+        'hildren": []}]}, {"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02' + \
+        '-05T00:07:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "13", "sp' + \
+        'an_id": "16", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01",' + \
+        ' "children": []}]}'
 
     _trace_log_data_with_error = [
             ["01_0", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error],
             ["01_2", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error3],
+            ["01_3", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
+            [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error4]
     ]
 
     def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
