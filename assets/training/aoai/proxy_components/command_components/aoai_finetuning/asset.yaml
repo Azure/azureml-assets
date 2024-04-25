@@ -1,3 +1,4 @@
 type: component
 spec: spec.yaml
+version: auto
 categories: ["AOAI"]
