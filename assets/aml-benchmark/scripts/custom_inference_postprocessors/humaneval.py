@@ -26,22 +26,18 @@ def _parse_args():
     parser.add_argument(
         "--prediction_dataset",
         type=str,
-        required=False,
-        default="C:/Users/sagoswami/Downloads/humaneval_snowflakes/predictions.jsonl",
+        required=True,
         help="Path to load the prediction dataset."
     )
     parser.add_argument(
         "--ground_truth_dataset",
         type=str,
         help="Path to load the actual dataset.",
-        required=False,
-        default="C:/Users/sagoswami/Downloads/humaneval_snowflakes/ground_truth.jsonl",
+        required=True,
     )
     parser.add_argument(
         "--output_dataset",
         type=str,
-        required=False,
-        default="C:/Users/sagoswami/Downloads/humaneval_snowflakes/output.jsonl",
         help="Path to the jsonl output file to write the processed data."
     )
     argss = parser.parse_args()
@@ -180,7 +176,7 @@ def run_humaneval_postprocessor(
 
     # Convert the dataframe to a dictionary of lists of each row
     pred_dict_full = pred_df_full.to_dict('records')
-    c=0
+
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
@@ -205,7 +201,7 @@ def run_humaneval_postprocessor(
         else:
             # If function name is present in the prediction, then remove from prompt
             prompt_header = row["prompt"].split(str("def " + row["entry_point"]))[0]
-            # If spaces are added in the beginning of the prediction, remove those
+            # Removing spaces from the beginning of the prediction
             if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
                 pred_combined_prompt = pred_combined_prompt.lstrip()
             pred_combined_prompt = prompt_header + "\n" + pred_combined_prompt
@@ -216,11 +212,7 @@ def run_humaneval_postprocessor(
             pred = apply_regex_expr(pred_combined_prompt, regex_exp_func)
         else:
             pred = pred_combined_prompt
-        c=c+1
-        print(c)
-        if c in [112,113, 114]:
-            continue
-        if CODE_GENERATION_DEBUG is True and c!=112:
+        if CODE_GENERATION_DEBUG is True:
             detailed_op = generate_output(pred,
                                           gt,
                                           row["task_id"],
@@ -229,7 +221,6 @@ def run_humaneval_postprocessor(
             gt_list.append(detailed_op)
         else:
             gt_list.append({"ground_truth": gt})
-
         pred_list.append({"prediction": pred})
     return gt_list, pred_list
 
