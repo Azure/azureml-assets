@@ -124,8 +124,8 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         Returns:
             LowRetreivalScoreIndexAction: the generated low retrieval score index action.
         """
-        query_intention = DEFAULT_TOPIC_NAME if self.llm_summary_enabled == "false" else \
-                          get_query_intention(low_retrieval_score_df[PROMPT_COLUMN])
+        query_intention = DEFAULT_TOPIC_NAME if self.llm_summary_enabled == "false" 
+                          else get_query_intention(low_retrieval_score_df[PROMPT_COLUMN])
 
         positive_samples = generate_index_action_samples(high_retrieval_score_df, False, self.max_positive_sample_size)  # noqa: E501
         negative_samples = generate_index_action_samples(low_retrieval_score_df, True, self.max_positive_sample_size)
