@@ -422,7 +422,7 @@ class TestGenAISparkPreprocessor:
         '-05T00:07:00", "events": "[]", "framework": "LLM", "links": "[]", "name": "name", "parent_id": "9", "sp' + \
         'an_id": "12", "span_type": "llm", "start_time": "2024-02-05T00:06:00", "status": "OK", "trace_id": "01",' + \
         ' "children": []}]}'
-    
+
     _root_span_str_error4 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}",' + \
         ' "end_time": "2024-02-05T' + \
         '00:08:00", "events": "[]", "framework": "FLOW", "links": "[]", "name": "name", "parent_id": null, "span_' + \
