@@ -98,7 +98,7 @@ def get_violated_metrics(signal_out_url: str, signal_name: str) -> list(str):
 
 
 def run():
-    """Action detector."""
+    """Script for action detector component."""
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--action_output", type=str)

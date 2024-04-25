@@ -54,6 +54,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.
+
             1. check if all violated metrics are available. If not, call evaluate sdk to get the e2e metrics.
             2. extract extra fields from the root span for action.
             3. convert the dataframe from trace level to span level.
