@@ -138,5 +138,4 @@ def aggregate_spans_into_traces(
     all_aggregated_traces.show()
     all_aggregated_traces.printSchema()
 
-
     return all_aggregated_traces
