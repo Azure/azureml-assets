@@ -200,6 +200,9 @@ def run_humaneval_postprocessor(
         else:
             # If function name is present in the prediction, then remove from prompt
             prompt_header = row["prompt"].split(str("def " + row["entry_point"]))[0]
+            # Removing spaces from the beginning of the prediction
+            if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
+                pred_combined_prompt = pred_combined_prompt.lstrip()
             pred_combined_prompt = prompt_header + "\n" + pred_combined_prompt
 
         # Applying regex on the prediction column
