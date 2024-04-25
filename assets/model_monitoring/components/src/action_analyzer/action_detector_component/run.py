@@ -19,8 +19,8 @@ from action_analyzer.contracts.utils.utils import (
 from shared_utilities.constants import (
     RETRIEVAL_SPAN_TYPE,
     ROOT_SPAN_COLUMN,
-    PROMPT_FLOW_INPUT_COLUMN,
-    GSQ_METRICS_LIST
+    GSQ_METRICS_LIST,
+    INDEX_ID_COLUMN
 )
 from shared_utilities.store_url import StoreUrl
 from shared_utilities.io_utils import try_read_mltable_in_spark
@@ -29,7 +29,7 @@ from shared_utilities.span_tree_utils import SpanTree
 
 def parse_index_id(root_span: str) -> list[str]:
     """Parse the span tree to get index id.
-    
+
     Args:
         root_span(str): the span tree in json string format.
 
