@@ -165,7 +165,7 @@ def _count_dropped_rows_with_error(
     if original_df_row_count <= 0:
         print("Original df contains no rows. Returning without calculating drop rate.")
         return
-    drop_rate = abs(transformed_df_row_count - original_df_row_count) / original_df_row_count
+    drop_rate = (transformed_df_row_count - original_df_row_count) / original_df_row_count
     print(f"Calculated the df drop rate as {drop_rate*100}%. Comparing to threshold criteria...")
 
     if drop_rate > 0.10 and drop_rate < 0.67:
