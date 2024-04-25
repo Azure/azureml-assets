@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: snowflake-arctic
+name: snowflake-arctic-instruct
 path: ./
 properties:
   SharedComputeCapacityEnabled: true
