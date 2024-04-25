@@ -168,11 +168,11 @@ def _count_dropped_rows_with_error(
     drop_rate = (transformed_df_row_count - original_df_row_count) / original_df_row_count
     print(f"Calculated the df drop rate as {drop_rate*100}%. Comparing to threshold criteria...")
 
-    if drop_rate > 0.10 and drop_rate < 0.67:
+    if drop_rate > 0.10 and drop_rate < 0.33:
         print(f"{drop_rate*100}% data missing after applying preprocessing."
               " Please check your log quality and the stdout logs for any possible debugging info."
               f" {additional_error_msg}")
-    elif drop_rate >= 0.67:
+    elif drop_rate >= 0.33:
         raise InvalidInputError(
             f"Majority of the logs missing after applying preprocessing (drop_rate = {drop_rate*100}%)."
             " Failing preprocessing job. Please check your log quality and"
