@@ -131,9 +131,10 @@ def aggregate_spans_into_traces(
     all_aggregated_traces.printSchema()
 
     # check how many rows were dropped from the final trace output and check against threshold.
+    final_trace_row_count = all_aggregated_traces.count()
     _count_dropped_rows_with_error(
-        all_aggregated_traces.count() + error_rate_accumulator.value,
-        all_aggregated_traces.count(),
+        final_trace_row_count + error_rate_accumulator.value,
+        final_trace_row_count,
         additional_error_msg="Additionally, the most likely cause for dropped rows is trace logs with missing"
         " input/output. Double check the spark executor logs for debug info to find root cause of issue.")
 
