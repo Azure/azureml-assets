@@ -288,7 +288,19 @@ class TestGenAISparkPreprocessor:
         ["11", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
         ['{"inputs":"in", "output":"out"}'] +
         [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "9"] +
-        ["12", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
+        ["12", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", None] +
+        ["13", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 5, 0), "[]", "RAG", "[]", "name", "13"] +
+        ["14", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 4, 0), "[]", "INTERNAL", "[]", "name", "14"] +
+        ["15", "llm", datetime(2024, 2, 5, 0, 3, 0), "OK", "01"],
+        ['{"inputs":"in", "output":"out"}'] +
+        [datetime(2024, 2, 5, 0, 7, 0), "[]", "LLM", "[]", "name", "13"] +
+        ["16", "llm", datetime(2024, 2, 5, 0, 6, 0), "OK", "01"]
     ]
 
     _root_span_str_0 = '{"attributes": "{\\"inputs\\":\\"in\\", \\"output\\":\\"out\\"}", "end_time": "2024-02-05T' + \
