@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Union
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def.*?FUNCNAME.*?))(?=(?:
 \\S|$))"""
-CODE_GENERATION_DEBUG = True
+CODE_GENERATION_DEBUG = False 
 
 
 def _parse_args():
@@ -32,8 +32,7 @@ def _parse_args():
     parser.add_argument(
         "--ground_truth_dataset",
         type=str,
-        help="Path to load the actual dataset.",
-        required=True,
+        help="Path to load the actual dataset."
     )
     parser.add_argument(
         "--output_dataset",
@@ -176,7 +175,6 @@ def run_humaneval_postprocessor(
 
     # Convert the dataframe to a dictionary of lists of each row
     pred_dict_full = pred_df_full.to_dict('records')
-
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
