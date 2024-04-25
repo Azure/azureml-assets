@@ -3,9 +3,11 @@
 
 """Low retrieval score index action detector class."""
 
+import os
 import pandas
 from action_analyzer.contracts.detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
+from action_analyzer.contracts.actions.low_retreival_score_index_action_detector import LowRetreivalScoreIndexAction
 from action_analyzer.contracts.llm_client import LLMClient
 from action_analyzer.contracts.utils.utils import (
     extract_fields_from_debugging_info,
@@ -16,13 +18,16 @@ from action_analyzer.contracts.utils.utils import (
     generate_index_action_samples
 )
 from shared_utilities.constants import (
-    GSQ_METRICS_LIST,
     INDEX_SCORE_LLM_COLUMN,
     METRICS_VIOLATION_THRESHOLD,
     GOOD_METRICS_THRESHOLD,
     MAX_SAMPLE_SIZE,
-    DEFAULT_TOPIC_NAME
+    DEFAULT_TOPIC_NAME,
+    INDEX_CONTENT_COLUMN,
+    PROMPT_COLUMN,
+    DEFAULT_LLM_SCORE
 )
+
 
 LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD = 0.1
 
@@ -89,19 +94,39 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
             # generate action only low retrieval score query ratio above the threshold
             low_retrieval_score_query_ratio = len(low_retrieval_score_df)/len(df)
             if low_retrieval_score_query_ratio >= LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD:
-                print(f"Generating action for metric {metric}. The low retrieval score query ratio is {low_retrieval_score_query_ratio}.")
+                print(f"Generating action for metric {metric}. \
+                The low retrieval score query ratio is {low_retrieval_score_query_ratio}.")
+                # use the low retrieval score query ratio as confidence
                 action = self.generate_action(metric,
-                                              low_retrieval_score_query_ratio,  # use the low retrieval score query ratio as confidence
+                                              low_retrieval_score_query_ratio,
                                               low_retrieval_score_df,
                                               high_retrieval_score_df,
                                               aml_deployment_id)
                 action_list.append(action)
         return action_list
 
-    def generate_action(self, metric, confidence_score, low_retrieval_score_df, high_retrieval_score_df, aml_deployment_id):
-        query_intention = get_query_intention(low_retrieval_score_df[PROMPT_COLUMN]) if self.llm_summary_enabled == "true" else DEFAULT_TOPIC_NAME
-        
-        positive_samples = generate_index_action_samples(high_retrieval_score_df, False, self.max_positive_sample_size)
+    def generate_action(self,
+                        metric: str,
+                        confidence_score: float,
+                        low_retrieval_score_df: pandas.DataFrame,
+                        high_retrieval_score_df: pandas.DataFrame,
+                        aml_deployment_id: str) -> LowRetreivalScoreIndexAction:
+        """Generate action from the dataframe.
+
+        Args:
+            metric(str): the violated metric for action.
+            confidence_score(float): LLM client used to get some llm scores/info for action.
+            low_retrieval_score_df(pandas.DataFrame): the data with low retrieval score.
+            high_retrieval_score_df(pandas.DataFrame): the data with high retrieval score.
+            aml_deployment_id(str): aml deployment id for the action.
+
+        Returns:
+            LowRetreivalScoreIndexAction: the generated low retrieval score index action.
+        """
+        query_intention = DEFAULT_TOPIC_NAME if self.llm_summary_enabled == "false" \
+                                             else get_query_intention(low_retrieval_score_df[PROMPT_COLUMN])
+
+        positive_samples = generate_index_action_samples(high_retrieval_score_df, False, self.max_positive_sample_size)  # noqa: E501
         negative_samples = generate_index_action_samples(low_retrieval_score_df, True, self.max_positive_sample_size)
 
         index_content = low_retrieval_score_df.iloc[0][INDEX_CONTENT_COLUMN]
@@ -114,6 +139,3 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
                                             os.environ.get("AZUREML_RUN_ID", None),
                                             positive_samples,
                                             negative_samples)
-
-
-

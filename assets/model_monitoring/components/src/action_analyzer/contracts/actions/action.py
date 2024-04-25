@@ -48,6 +48,7 @@ class ActionSample:
             json_out[convert_to_camel_case(key)] = val
         return json.dumps(json_out, default=np_encoder)
 
+
 class Action():
     """Action class."""
 
@@ -100,10 +101,10 @@ class Action():
 
     def to_summary_json(self, action_output_folder: str) -> dict:
         """Get the meta data for action summary.
-        
+
         Args:
             action_output_folder(str): output folder path for actions.
-        
+
         Returns:
             dict: action summary with metadata.
         """

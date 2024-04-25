@@ -52,15 +52,15 @@ class MetricsViolationIndexAction(Action):
                          positive_samples,
                          negative_samples)
 
-        def to_summary_json(self, action_output_folder) -> dict:
-            """Get the meta data for action summary.
-                    
-            Args:
-                action_output_folder(str): output folder path for actions.
-            
-            Returns:
-                dict: action summary with metadata.
-            """
-            summary_json = super().to_summary_json(action_output_folder)
-            summary_json["ViolatedMetrics"] = self.violated_metrics
-            return summary_json
+    def to_summary_json(self, action_output_folder) -> dict:
+        """Get the meta data for action summary.
+
+        Args:
+            action_output_folder(str): output folder path for actions.
+
+        Returns:
+            dict: action summary with metadata.
+        """
+        summary_json = super().to_summary_json(action_output_folder)
+        summary_json["ViolatedMetrics"] = self.violated_metrics
+        return summary_json

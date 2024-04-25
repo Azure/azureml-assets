@@ -3,11 +3,11 @@
 
 """Entry script for Action Detector."""
 
+import json
 import argparse
 import pandas
 from action_analyzer.contracts.action_detectors.low_retreival_score_index_action_detector import (
-    LowRetreivalScoreIndexActionDetector,
-    MetricsViolationIndexActionDetector
+    LowRetreivalScoreIndexActionDetector
 )
 from action_analyzer.contracts.llm_client import LLMClient
 from action_analyzer.contracts.utils.utils import (
@@ -17,36 +17,15 @@ from action_analyzer.contracts.utils.utils import (
     add_action_tag_to_run
 )
 from shared_utilities.constants import (
-    METRICS_VIOLATION_THRESHOLD,
     RETRIEVAL_SPAN_TYPE,
-    TEXT_SPLITTER,
-    PROMPT_COLUMN,
-    COMPLETION_COLUMN,
-    SPAN_ID_COLUMN,
-    INDEX_CONTENT_COLUMN,
-    INDEX_SCORE_COLUMN,
-    INDEX_ID_COLUMN,
-    INDEX_SCORE_LLM_COLUMN,
     ROOT_SPAN_COLUMN,
-    GROUP_TOPIC_MIN_SAMPLE_SIZE,
-    RETRIEVAL_QUERY_TYPE_COLUMN,
-    RETRIEVAL_TOP_K_COLUMN,
-    GOOD_METRICS_VALUE,
-    DEFAULT_TOPIC_NAME,
     PROMPT_FLOW_INPUT_COLUMN,
-    DOCUMENT_RELEVANCE_SCORE_COLUMN,
-    RETRIEVAL_DOC_COLUMN,
-    MODIFIED_PROMPT_COLUMN,
-    QUERY_INTENTION_COLUMN,
-    API_CALL_RETRY_BACKOFF_FACTOR,
-    API_CALL_RETRY_MAX_COUNT,
-    ACTION_DESCRIPTION,
-    MAX_SAMPLE_SIZE,
-    DEFAULT_SCORE,
-    P_VALUE_THRESHOLD
+    GSQ_METRICS_LIST
 )
+from shared_utilities.store_url import StoreUrl
 from shared_utilities.io_utils import try_read_mltable_in_spark
 from shared_utilities.span_tree_utils import SpanTree
+
 
 def parse_index_id(root_span: str) -> list[str]:
     """Parse the span tree to get index id.
@@ -176,6 +155,7 @@ def run():
     write_actions(final_actions, args.action_output)
 
     add_action_tag_to_run()
+
 
 if __name__ == "__main__":
     run()

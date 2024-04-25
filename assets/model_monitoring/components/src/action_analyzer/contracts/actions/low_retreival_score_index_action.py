@@ -54,10 +54,10 @@ class LowRetreivalScoreIndexAction(Action):
 
     def to_summary_json(self, action_output_folder) -> dict:
         """Get the meta data for action summary.
-                
+
         Args:
             action_output_folder(str): output folder path for actions.
-        
+
         Returns:
             dict: action summary with metadata.
         """

@@ -9,6 +9,7 @@ from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
 from shared_utilities.constants import MAX_SAMPLE_SIZE
 
+
 class ActionDetector(ABC):
     """Action detector base class."""
 

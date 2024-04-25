@@ -41,7 +41,8 @@ QUERY_INTENTION_PROMPT = """
     ---
     Topic:
     Sample texts from this topic:
-    - Traditional diets in most cultures were primarily plant-based with a little meat on top, but with the rise of industrial style meat production and factory farming, meat has become a staple food.
+    - Traditional diets in most cultures were primarily plant-based with a little meat on top, \
+    but with the rise of industrial style meat production and factory farming, meat has become a staple food.
     - Meat, but especially beef, is the worst food in terms of emissions.
     - Eating meat doesn't make you a bad person, not eating meat doesn't make you a good one.
 
