@@ -7,8 +7,7 @@ from action_analyzer.contracts.detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
 import pandas
-
-SUPPORTED_METRICS = ["Fluency", "Coherence", "Relevance", "Groundedness", "RetrievalRelevance"]
+from shared_utilities.constants import MAX_SAMPLE_SIZE
 
 
 class MetricsViolationIndexActionDetector(ActionDetector):
@@ -21,7 +20,8 @@ class MetricsViolationIndexActionDetector(ActionDetector):
                  correlation_test_pvalue_threshold: float,
                  llm_summary_enabled: str,
                  positive_metric_threshold=5,
-                 negative_metric_threshold=3) -> None:
+                 negative_metric_threshold=3,
+                 max_positive_sample_size=MAX_SAMPLE_SIZE) -> None:
         """Create a metrics violation index action detector.
 
         Args:
@@ -32,12 +32,13 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
             positive_metric_threshold(int): (Optional) e2e metric threshold to mark the query as positive.
             negative_metric_threshold(int): (Optional) e2e metric threshold to mark the query as negative.
+            max_positive_sample_size(int): (Optional) max positive sample size in the action.
         """
         self.correlation_test_method = correlation_test_method
         self.correlation_test_pvalue_threshold = correlation_test_pvalue_threshold
         self.positive_metric_threshold = positive_metric_threshold
         self.negative_metric_threshold = negative_metric_threshold
-        super().__init__(llm_summary_enabled)
+        super().__init__(llm_summary_enabled, max_positive_sample_size)
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.
@@ -50,7 +51,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
         """
         pass
 
-    def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> list(Action):
+    def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> list[Action]:
         """Detect the action.
 
         Args:
@@ -58,6 +59,6 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             llm_client(LLMClient): LLM client used to get some llm scores/info for action.
 
         Returns:
-            list(Action): list of actions.
+            list[Action]: list of actions.
         """
         pass

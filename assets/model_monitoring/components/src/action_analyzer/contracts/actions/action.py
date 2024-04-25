@@ -3,11 +3,13 @@
 
 """Action Class."""
 
+import os
 import datetime
 import uuid
 import json
 from enum import Enum
 from action_analyzer.utils.utils import convert_to_camel_case
+from shared_utilities.io_utils import np_encoder
 
 
 class ActionType(Enum):
@@ -44,8 +46,7 @@ class ActionSample:
         json_out = {}
         for key, val in attribute_dict.items():
             json_out[convert_to_camel_case(key)] = val
-        return json.dumps(json_out)
-
+        return json.dumps(json_out, default=np_encoder)
 
 class Action():
     """Action class."""
@@ -82,17 +83,37 @@ class Action():
         self.positive_samples = positive_samples
         self.negative_samples = negative_samples
 
-    def to_json_str(self) -> str:
-        """Convert an action object to json str."""
+    def to_json(self) -> dict:
+        """Convert an action object to json dict."""
         attribute_dict = self.__dict__
         json_out = {}
         for key, val in attribute_dict.items():
             if key == "action_type":
-                json_out[convert_to_camel_case(key)] = val.name
+                json_out["Type"] = val.name
             # serialize the samples
             elif key.endswith("_samples"):
-                json_val = str([v.to_json_str() for v in val])
+                json_val = [v.to_json_str() for v in val]
                 json_out[convert_to_camel_case(key)] = json_val
             else:
                 json_out[convert_to_camel_case(key)] = val
-        return json.dumps(json_out)
+        return json_out
+
+    def to_summary_json(self, action_output_folder: str) -> dict:
+        """Get the meta data for action summary.
+        
+        Args:
+            action_output_folder(str): output folder path for actions.
+        
+        Returns:
+            dict: action summary with metadata.
+        """
+        summary_json = {
+            "ActionId": self.action_id,
+            "Type": self.action_type.name,
+            "Description": self.description,
+            "ConfidenceScore": self.confidence_score,
+            "QueryIntention": self.query_intention,
+            "CreationTime": self.creation_time,
+            "FilePath": os.path.join(action_output_folder, f"actions/{self.action_id}.json")
+        }
+        return summary_json

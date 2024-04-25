@@ -34,6 +34,33 @@ BERTOPIC_DEFAULT_PROMPT = """
     Topic name:"""
 
 
+QUERY_INTENTION_PROMPT = """
+    This is a list of texts where each collection of texts describe a topic.
+    The task is to summarize the name of the topic they represent is mentioned as a short-highly-descriptive title.
+    Output "Topic name: " followed by the name of the topic.
+    ---
+    Topic:
+    Sample texts from this topic:
+    - Traditional diets in most cultures were primarily plant-based with a little meat on top, but with the rise of industrial style meat production and factory farming, meat has become a staple food.
+    - Meat, but especially beef, is the worst food in terms of emissions.
+    - Eating meat doesn't make you a bad person, not eating meat doesn't make you a good one.
+
+    Topic name: Environmental impacts of eating meat
+    ---
+    Topic:
+    Sample texts from this topic:
+    - I have ordered the product weeks ago but it still has not arrived!
+    - The website mentions that it only takes a couple of days to deliver but I still have not received mine.
+    - I got a message stating that I received the monitor but that is not true!
+    - It took a month longer to deliver than was advised...
+
+    Topic name: Shipping and delivery issues
+    ---
+    Topic:
+    Sample texts from this topic:
+    {{ QUERIES }}"""
+
+
 RELEVANCE_TEMPLATE = """
     A chat history between user and bot is shown below
     A list of documents is shown below in json format, and each document has one unique id.
