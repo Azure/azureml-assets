@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Union
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def.*?FUNCNAME.*?))(?=(?:
 \\S|$))"""
-CODE_GENERATION_DEBUG = False
+CODE_GENERATION_DEBUG = True
 
 
 def _parse_args():
@@ -26,17 +26,22 @@ def _parse_args():
     parser.add_argument(
         "--prediction_dataset",
         type=str,
-        required=True,
+        required=False,
+        default="C:/Users/sagoswami/Downloads/humaneval_snowflakes/predictions.jsonl",
         help="Path to load the prediction dataset."
     )
     parser.add_argument(
         "--ground_truth_dataset",
         type=str,
-        help="Path to load the actual dataset."
+        help="Path to load the actual dataset.",
+        required=False,
+        default="C:/Users/sagoswami/Downloads/humaneval_snowflakes/ground_truth.jsonl",
     )
     parser.add_argument(
         "--output_dataset",
         type=str,
+        required=False,
+        default="C:/Users/sagoswami/Downloads/humaneval_snowflakes/output.jsonl",
         help="Path to the jsonl output file to write the processed data."
     )
     argss = parser.parse_args()
@@ -200,6 +205,9 @@ def run_humaneval_postprocessor(
         else:
             # If function name is present in the prediction, then remove from prompt
             prompt_header = row["prompt"].split(str("def " + row["entry_point"]))[0]
+            # Removing spaces from the beginning of the prediction
+            if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
+                pred_combined_prompt = pred_combined_prompt.lstrip()
             pred_combined_prompt = prompt_header + "\n" + pred_combined_prompt
 
         # Applying regex on the prediction column
