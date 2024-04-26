@@ -33,10 +33,6 @@ inputs:
     type: string
     description: enable llm generated topic name to user
     default: "true"
-  instance_type:
-    type: string
-    default: "standard_e4s_v3"
-    optional: true
 outputs:
   action_output:
     type: uri_folder
