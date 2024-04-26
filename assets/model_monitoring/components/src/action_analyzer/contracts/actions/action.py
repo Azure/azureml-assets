@@ -7,6 +7,7 @@ import os
 import datetime
 import uuid
 from enum import Enum
+from typing import List
 from action_analyzer.contracts.action_sample import ActionSample
 from action_analyzer.contracts.utils.action_utils import convert_to_camel_case
 
@@ -14,7 +15,7 @@ from action_analyzer.contracts.utils.action_utils import convert_to_camel_case
 class ActionType(Enum):
     """Action type."""
 
-    METRICS_VIOLATION_INDEX_ACTION = "Metric violation index action"
+    METRICS_VIOLATION_INDEX_ACTION = "Metrics violation index action"
     LOW_RETRIEVAL_SCORE_INDEX_ACTION = "Low retrieval score index action"
 
 
@@ -28,8 +29,8 @@ class Action():
                  query_intention: str,
                  deployment_id: str,
                  run_id: str,
-                 positive_samples: list[ActionSample],
-                 negative_samples: list[ActionSample]) -> None:
+                 positive_samples: List[ActionSample],
+                 negative_samples: List[ActionSample]) -> None:
         """Create an action.
 
         Args:
