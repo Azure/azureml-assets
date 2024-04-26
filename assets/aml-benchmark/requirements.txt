@@ -15,3 +15,5 @@ openai
 pytest
 pytest-xdist
 ddt
+flake8
+pydocstyle

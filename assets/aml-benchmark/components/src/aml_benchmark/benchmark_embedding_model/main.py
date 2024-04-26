@@ -11,9 +11,10 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 from mteb import MTEB, MTEB_MAIN_EN
 from mteb.abstasks.TaskMetadata import TASK_TYPE
 
-from .utils.constants import Preset, DeploymentType
+from .utils.constants import Preset, DeploymentType, EmbeddingConstants
 from .deployments.deployment_factory import DeploymentFactory
 from ..utils.logging import get_logger, log_mlflow_params
+from ..utils.helper import run_command
 from ..utils.exceptions import swallow_all_exceptions, BenchmarkValidationException
 from ..utils.error_definitions import BenchmarkValidationError
 
@@ -212,6 +213,10 @@ def main(
         task_langs=task_langs,
         preset=preset,
     )
+
+    # upgrade the default limit of 65530 on the maximum number of memory mapped files
+    if os.name == "posix":
+        run_command(f"sudo sysctl -w vm.max_map_count={EmbeddingConstants.MAX_MEM_MAP_FILES}")
 
     # Run Benchmark
     deployment = DeploymentFactory.get_deployment(

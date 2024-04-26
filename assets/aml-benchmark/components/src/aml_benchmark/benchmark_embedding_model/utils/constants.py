@@ -27,3 +27,4 @@ class EmbeddingConstants:
     """Constants for embedding benchmarking."""
 
     DEFAULT_HTTPX_TIMEOUT = Timeout(timeout=600.0, connect=120.0)
+    MAX_MEM_MAP_FILES = 655300

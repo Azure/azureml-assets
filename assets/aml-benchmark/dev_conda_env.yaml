@@ -23,4 +23,6 @@ dependencies:
     - pytest
     - pytest-xdist
     - ddt
+    - flake8
+    - pydocstyle
 name: aml_benchmark

@@ -6,6 +6,8 @@
 import re
 import json
 import time
+import sys
+import subprocess
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
@@ -213,3 +215,26 @@ def get_api_key_from_connection(connections_name: str) -> Tuple[str, Optional[st
         if "secretAccessKey" not in credentials and "keys" in credentials:
             credentials = credentials["keys"]
         return credentials["secretAccessKey"], None
+
+
+def run_command(command: str) -> None:
+    """
+    Run the command in the shell.
+
+    :param command: The command to run.
+    :return: None
+    """
+    result = subprocess.run(
+        command,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        encoding=sys.stdout.encoding,
+        universal_newlines=True,
+        errors="ignore",
+    )
+    if result.returncode != 0:
+        mssg = f"Command: `{command}` failed with error:\n{result.stdout}"
+        raise BenchmarkUserException._with_error(
+            AzureMLError.create(BenchmarkUserError, error_details=mssg)
+        )
