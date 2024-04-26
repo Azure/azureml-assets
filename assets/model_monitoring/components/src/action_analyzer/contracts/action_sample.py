@@ -29,13 +29,13 @@ class ActionSample:
         self.debugging_info = debugging_info
         self.prompt_flow_input = prompt_flow_input
 
-    def to_json_str(self) -> str:
-        """Convert an action sample object to json string."""
+    def to_json(self) -> dict:
+        """Convert an action sample object to json."""
         attribute_dict = self.__dict__
         json_out = {}
         for key, val in attribute_dict.items():
             json_out[convert_to_camel_case(key)] = val
-        return json.dumps(json_out, default=np_encoder)
+        return json_out
 
 
 class IndexActionSample(ActionSample):

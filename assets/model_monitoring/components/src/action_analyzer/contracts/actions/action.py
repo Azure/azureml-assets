@@ -14,8 +14,8 @@ from action_analyzer.contracts.utils.action_utils import convert_to_camel_case
 class ActionType(Enum):
     """Action type."""
 
-    METRICS_VIOLATION_INDEX_ACTION = 1
-    LOW_RETRIEVAL_SCORE_INDEX_ACTION = 2
+    METRICS_VIOLATION_INDEX_ACTION = "Metric violation index action"
+    LOW_RETRIEVAL_SCORE_INDEX_ACTION = "Low retrieval score index action"
 
 
 class Action():
@@ -59,10 +59,10 @@ class Action():
         json_out = {}
         for key, val in attribute_dict.items():
             if key == "action_type":
-                json_out["Type"] = val.name
+                json_out["Type"] = val.value
             # serialize the samples
             elif key.endswith("_samples"):
-                json_val = [v.to_json_str() for v in val]
+                json_val = [v.to_json() for v in val]
                 json_out[convert_to_camel_case(key)] = json_val
             else:
                 json_out[convert_to_camel_case(key)] = val
