@@ -54,7 +54,7 @@ def _validate_traces_df(aggregated_traces_df: DataFrame) -> DataFrame:
 
 def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
     """Aggregate grouped span logs into trace logs."""
-    output_schema = _get_aggregated_trace_log_spark_df_schema(use_internal_contract=True)
+    output_schema = _get_aggregated_trace_log_spark_df_schema()
 
     span_list = [SpanTreeNode(row) for row in grouped_row.span_rows]
     tree = SpanTree(span_list)
@@ -94,11 +94,12 @@ def aggregate_spans_into_traces(
         enlarged_span_logs: DataFrame, require_trace_data: bool,
         data_window_start: datetime, data_window_end: datetime) -> DataFrame:
     """Group span logs into aggregated trace logs."""
+    output_schema = _get_aggregated_trace_log_spark_df_schema()
 
     if not require_trace_data:
         spark = init_spark()
         print(f"{logging_prefix_str} Skip processing of spans into aggregated traces.")
-        return spark.createDataFrame(data=[], schema=_get_aggregated_trace_log_spark_df_schema())
+        return spark.createDataFrame(data=[], schema=output_schema)
 
     print(f"{logging_prefix_str} Processing spans into aggregated traces...")
 
@@ -117,7 +118,7 @@ def aggregate_spans_into_traces(
     all_aggregated_traces = grouped_spans_df \
         .rdd \
         .flatMap(_aggregate_span_logs_to_trace_logs) \
-        .toDF(_get_aggregated_trace_log_spark_df_schema(use_internal_contract=True))
+        .toDF(output_schema)
 
     all_aggregated_traces = _filter_df_by_time_window(
         all_aggregated_traces, data_window_start, data_window_end)
