@@ -23,7 +23,7 @@ dependencies:
   - xz=5.4.2=h5eee18b_0
   - zlib=1.2.13=h5eee18b_0
   - pip:
-      - mlflow==2.10.2
+      - mlflow==2.12.1
       - accelerate==0.21.0
       - aiofiles==23.2.1
       - aiohttp==3.8.6
