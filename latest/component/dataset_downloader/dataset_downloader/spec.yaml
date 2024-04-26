@@ -39,7 +39,7 @@ outputs:
     description: Path to the directory where the dataset will be downloaded.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/22
+environment: azureml://registries/azureml/environments/model-evaluation/versions/24
 command: >-
   python -m aml_benchmark.dataset_downloader.main
   $[[--dataset_name ${{inputs.dataset_name}}]]  $[[--configuration ${{inputs.configuration}}]]  --split

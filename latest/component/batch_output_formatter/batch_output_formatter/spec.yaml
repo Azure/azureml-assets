@@ -77,7 +77,7 @@ outputs:
   unsafe_content_blocked_requests:
     type: uri_file
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/22
+environment: azureml://registries/azureml/environments/model-evaluation/versions/24
 
 resources:
   instance_count: 1

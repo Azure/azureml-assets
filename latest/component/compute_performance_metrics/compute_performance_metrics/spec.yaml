@@ -69,7 +69,7 @@ outputs:
       will be stored.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/22
+environment: azureml://registries/azureml/environments/model-evaluation/versions/24
 command: >-
   python -m aml_benchmark.compute_performance_metrics.main
   --performance_data ${{inputs.performance_data}}

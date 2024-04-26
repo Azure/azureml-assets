@@ -139,7 +139,7 @@ outputs:
 
 code: ../src
 
-environment: azureml://registries/azureml/environments/model-evaluation/versions/22
+environment: azureml://registries/azureml/environments/model-evaluation/versions/24
 
 command: >-
   python -m aml_benchmark.inference_postprocessor.main
