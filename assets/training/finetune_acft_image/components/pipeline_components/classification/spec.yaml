@@ -255,7 +255,7 @@ jobs:
 
   finetune_common_validation:
     type: command
-    component: azureml:finetune_common_validation:0.0.2
+    component: azureml:finetune_common_validation:0.0.3
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       train_mltable_path: ${{parent.inputs.training_data}}
