@@ -1,0 +1,26 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: snowflake-snowflake-arctic-base
+path: ./
+properties:
+  SharedComputeCapacityEnabled: true
+  SHA: 76fa59362cd95eb633a4e419c24364c90674966c
+  inference-min-sku-spec: 80|2|640|256
+  inference-recommended-sku:  Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
+  languages: moe, fr, it, de, es, en
+tags:
+  Featured: ''
+  Preview: ''
+  huggingface_model_id: Snowflake/snowflake-arctic-base
+  license: apache2.0
+  disable-batch: 'true'
+  task: text-generation
+  SharedComputeCapacityEnabled: ''
+  author: snowflake
+  inference_compute_allow_list:
+   [ 
+    Standard_NC80adis_H100_v5, 
+    Standard_ND96isr_H100_v5
+   ]
+  inference_supported_envs:
+  - vllm
+version: 1
