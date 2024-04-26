@@ -267,7 +267,7 @@ class StoreUrl:
                 datastore_type = self._datastore.datastore_type
                 if datastore_type not in ["AzureBlob", "AzureDataLakeGen2"]:
                     raise InvalidInputError("Only Azure Blob and Azure Data Lake Gen2 are supported, "
-                                            f"but got {self._datastore.type}.")
+                                            f"but got {datastore_type}.")
                 self.store_type = "dfs" if datastore_type == "AzureDataLakeGen2" else "blob"
                 self._scheme = StoreUrl._SCHEME_MAP[f"{self.store_type}&{self._datastore.protocol}"]
                 self.account_name = self._datastore.account_name
