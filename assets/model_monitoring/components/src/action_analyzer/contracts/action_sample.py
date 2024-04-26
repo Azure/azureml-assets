@@ -3,6 +3,7 @@
 
 """Action sample class."""
 
+import json
 from shared_utilities.io_utils import np_encoder
 from action_analyzer.contracts.utils.action_utils import convert_to_camel_case
 

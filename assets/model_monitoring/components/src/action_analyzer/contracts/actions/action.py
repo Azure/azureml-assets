@@ -6,7 +6,6 @@
 import os
 import datetime
 import uuid
-import json
 from enum import Enum
 from action_analyzer.contracts.action_sample import ActionSample
 from action_analyzer.contracts.utils.action_utils import convert_to_camel_case

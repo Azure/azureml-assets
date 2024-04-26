@@ -343,10 +343,10 @@ def _request_api(session,
     time_start = time.time()
 
     # print headers without disclosing token
-    headers_output = {
-        h: (headers[h] if h not in [AUTHORIZATION] else "*" * len(headers[h]))
-        for h in headers
-    }
+    # headers_output = {
+    #     h: (headers[h] if h not in [AUTHORIZATION] else "*" * len(headers[h]))
+    #     for h in headers
+    # }
     # print(
     #     f"Sending request \n    to endpoint: {endpoint_url}"
     #     f"\n    with headers: {headers_output}"
