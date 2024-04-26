@@ -9,7 +9,7 @@ from action_analyzer.contracts.action_detectors.action_detector import ActionDet
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.actions.low_retreival_score_index_action import LowRetreivalScoreIndexAction
 from action_analyzer.contracts.llm_client import LLMClient
-from action_analyzer.contracts.utils import (
+from action_analyzer.contracts.utils.detector_utils import (
     extract_fields_from_debugging_info,
     get_missed_metrics,
     calculate_e2e_metrics,
@@ -38,19 +38,19 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
     def __init__(self,
                  index_id: str,
                  violated_metrics: list[str],
-                 llm_summary_enabled: str,
+                 query_intention_enabled: str,
                  max_positive_sample_size=MAX_SAMPLE_SIZE) -> None:
         """Create a low retrieval score index action detector.
 
         Args:
             index_id(str): the index asset id.
             violated_metrics(List[str]): violated e2e metrics
-            llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
+            query_intention_enabled(str): enable llm generated summary. Accepted values: true or false.
             max_positive_sample_size(int): (Optional) max positive sample size in the action.
         """
         self.index_id = index_id
         self.violated_metrics = violated_metrics
-        super().__init__(llm_summary_enabled, max_positive_sample_size)
+        super().__init__(query_intention_enabled, max_positive_sample_size)
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.
@@ -89,17 +89,18 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
 
         action_list = []
         for metric in self.violated_metrics:
-            low_retrieval_score_df = df[df[metric] < METRICS_VIOLATION_THRESHOLD &
-                                        df[INDEX_SCORE_LLM_COLUMN] < METRICS_VIOLATION_THRESHOLD]
-            high_retrieval_score_df = df[df[metric] >= GOOD_METRICS_THRESHOLD &
-                                         df[INDEX_SCORE_LLM_COLUMN] >= GOOD_METRICS_THRESHOLD]
+            low_retrieval_score_df = df[(df[metric] < METRICS_VIOLATION_THRESHOLD) &
+                                        (df[INDEX_SCORE_LLM_COLUMN] < METRICS_VIOLATION_THRESHOLD)]
+            high_retrieval_score_df = df[(df[metric] >= GOOD_METRICS_THRESHOLD) &
+                                         (df[INDEX_SCORE_LLM_COLUMN] >= GOOD_METRICS_THRESHOLD)]
             # generate action only low retrieval score query ratio above the threshold
             low_retrieval_score_query_ratio = len(low_retrieval_score_df)/len(df)
             if low_retrieval_score_query_ratio >= LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD:
                 print(f"Generating action for metric {metric}. \
                 The low retrieval score query ratio is {low_retrieval_score_query_ratio}.")
                 # use the low retrieval score query ratio as confidence
-                action = self.generate_action(metric,
+                action = self.generate_action(llm_client,
+                                              metric,
                                               low_retrieval_score_query_ratio,
                                               low_retrieval_score_df,
                                               high_retrieval_score_df,
@@ -108,6 +109,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         return action_list
 
     def generate_action(self,
+                        llm_client: LLMClient,
                         metric: str,
                         confidence_score: float,
                         low_retrieval_score_df: pandas.DataFrame,
@@ -116,6 +118,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         """Generate action from the dataframe.
 
         Args:
+            llm_client(LLMClient): LLM client used to get some llm scores/info for action.
             metric(str): the violated metric for action.
             confidence_score(float): LLM client used to get some llm scores/info for action.
             low_retrieval_score_df(pandas.DataFrame): the data with low retrieval score.
@@ -125,7 +128,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         Returns:
             LowRetreivalScoreIndexAction: the generated low retrieval score index action.
         """
-        query_intention = get_query_intention(low_retrieval_score_df[PROMPT_COLUMN]) if self.llm_summary_enabled == "true" else DEFAULT_TOPIC_NAME  # noqa: E501
+        query_intention = get_query_intention(low_retrieval_score_df[PROMPT_COLUMN].to_list(), llm_client) if self.query_intention_enabled == "true" else DEFAULT_TOPIC_NAME  # noqa: E501
 
         positive_samples = generate_index_action_samples(high_retrieval_score_df, False, self.max_positive_sample_size)  # noqa: E501
         negative_samples = generate_index_action_samples(low_retrieval_score_df, True, self.max_positive_sample_size)

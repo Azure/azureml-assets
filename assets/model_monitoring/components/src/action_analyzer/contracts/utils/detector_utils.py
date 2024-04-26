@@ -38,19 +38,8 @@ from shared_utilities.io_utils import (
 from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.prompts import RELEVANCE_TEMPLATE, QUERY_INTENTION_PROMPT
 from action_analyzer.contracts.action_sample import IndexActionSample
-from action_analyzer.contract.actions.action import Action
+from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
-
-
-def convert_to_camel_case(input_string: str) -> str:
-    """
-    Convert a snake_case string to camelCase.
-
-    Example: "retrieval_top_k" -> "RetrievalTopK"
-    """
-    words = input_string.split("_")
-    result = "".join(word.capitalize() for word in words)
-    return result
 
 
 def get_index_id_from_index_content(index_content: str) -> str:
@@ -400,7 +389,7 @@ def write_actions(actions: list[Action], action_output_folder: str) -> None:
         action_output_folder(str): output folder path.
     """
     local_path = str(uuid.uuid4())
-    action_summary = generate_action_summary(actions)
+    action_summary = generate_action_summary(actions, action_output_folder)
     for action in actions:
         write_to_file(action.to_json(), local_path, action.action_id)
     print("Writing action summary to location ", action_output_folder)

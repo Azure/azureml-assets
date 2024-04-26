@@ -29,9 +29,9 @@ inputs:
   aml_deployment_id:
     type: string
     description: azure ml deployment name
-  llm_summary_enabled:
+  query_intention_enabled:
     type: string
-    description: enable llm generated topic name to user
+    description: enable llm generated query intention to user
     default: "true"
   instance_type:
     type: string
@@ -76,6 +76,6 @@ args: >-
   --signal_name ${{inputs.signal_name}}
   --model_deployment_name ${{inputs.model_deployment_name}}
   --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
-  --llm_summary_enabled ${{inputs.llm_summary_enabled}}
+  --query_intention_enabled ${{inputs.query_intention_enabled}}
   --aml_deployment_id ${{inputs.aml_deployment_id}}
   --action_output ${{outputs.action_output}}

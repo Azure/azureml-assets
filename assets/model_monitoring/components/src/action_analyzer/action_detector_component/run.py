@@ -10,7 +10,7 @@ from action_analyzer.contracts.action_detectors.low_retreival_score_index_action
     LowRetreivalScoreIndexActionDetector
 )
 from action_analyzer.contracts.llm_client import LLMClient
-from action_analyzer.contracts.utils import (
+from action_analyzer.contracts.utils.detector_utils import (
     get_index_id_from_index_content,
     deduplicate_actions,
     write_actions,
@@ -55,14 +55,14 @@ def parse_index_id(root_span: str) -> list[str]:
         return None
 
 
-def get_unique_indexes(df: pandas.DataFrame) -> list(str):
+def get_unique_indexes(df: pandas.DataFrame) -> list[str]:
     """Parse the span tree to find all unique indexes.
 
     Args:
         df(pandas.DataFrame): input pandas dataframe.
 
     Returns:
-        list(str): list of unique indexes.
+        list[str]: list of unique indexes.
     """
     df[INDEX_ID_COLUMN] = df[ROOT_SPAN_COLUMN].apply(parse_index_id)
     # expand each trace row to index level
@@ -70,14 +70,14 @@ def get_unique_indexes(df: pandas.DataFrame) -> list(str):
     return df[INDEX_ID_COLUMN].unique().tolist()
 
 
-def get_violated_metrics(signal_out_url: str, signal_name: str) -> list(str):
+def get_violated_metrics(signal_out_url: str, signal_name: str) -> list[str]:
     """Get the violated metrics names from the gsq output.
 
     Args:
         signal_out_url(str): gsq output url.
         signal_name(str): signal name defined by user.
     Returns:
-        list(str): list of violated metrics.
+        list[str]: list of violated metrics.
     """
     violated_metrics = []
     try:
@@ -108,7 +108,7 @@ def run():
     parser.add_argument("--model_deployment_name", type=str, required=True)
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
     parser.add_argument("--aml_deployment_id", type=str)
-    parser.add_argument("--llm_summary_enabled", type=str)
+    parser.add_argument("--query_intention_enabled", type=str)
     args = parser.parse_args()
 
     # get violated metrics
@@ -137,7 +137,7 @@ def run():
     for index in unique_indexes:
         index_actions = []
         # low retrieval score index action detector
-        lrsi_action_detector = LowRetreivalScoreIndexActionDetector(index, violated_metrics, args.llm_summary_enabled)
+        lrsi_action_detector = LowRetreivalScoreIndexActionDetector(index, violated_metrics, args.query_intention_enabled)
         df_preprocessed = lrsi_action_detector.preprocess_data(df_pandas)
         lrsi_actions = lrsi_action_detector.detect(df_preprocessed, llm_client, args.aml_deployment_id)
         index_actions += lrsi_actions
@@ -150,7 +150,7 @@ def run():
 
         # After all detectors, deduplicate actions if needed.
         final_actions += deduplicate_actions(index_actions)
-
+    print(f"{len(final_actions)} actions are detected.")
     # write action files to output folder
     write_actions(final_actions, args.action_output)
 

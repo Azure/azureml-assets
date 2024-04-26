@@ -18,7 +18,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
                  violated_metrics: list[str],
                  correlation_test_method: str,
                  correlation_test_pvalue_threshold: float,
-                 llm_summary_enabled: str,
+                 query_intention_enabled: str,
                  positive_metric_threshold=5,
                  negative_metric_threshold=3,
                  max_positive_sample_size=MAX_SAMPLE_SIZE) -> None:
@@ -29,7 +29,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             violated_metrics(List[str]): violated e2e metrics
             correlation_test_method(str): test method for correlation test. e.g. ttest.
             correlation_test_pvalue_threshold(float): p-value threshold for correlation test to generate action.
-            llm_summary_enabled(str): enable llm generated summary. Accepted values: true or false.
+            query_intention_enabled(str): enable llm generated summary. Accepted values: true or false.
             positive_metric_threshold(int): (Optional) e2e metric threshold to mark the query as positive.
             negative_metric_threshold(int): (Optional) e2e metric threshold to mark the query as negative.
             max_positive_sample_size(int): (Optional) max positive sample size in the action.
@@ -38,7 +38,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
         self.correlation_test_pvalue_threshold = correlation_test_pvalue_threshold
         self.positive_metric_threshold = positive_metric_threshold
         self.negative_metric_threshold = negative_metric_threshold
-        super().__init__(llm_summary_enabled, max_positive_sample_size)
+        super().__init__(query_intention_enabled, max_positive_sample_size)
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.
