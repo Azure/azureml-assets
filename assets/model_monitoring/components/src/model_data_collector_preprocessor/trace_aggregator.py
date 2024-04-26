@@ -75,7 +75,6 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
         return seperated_trace_entries
     else:
         print(f"{logging_prefix_str} Found a singular root_span. Creating entry for it.")
-
         return [_create_trace_log_output_entry(tree.root_span, output_schema)]
 
 
