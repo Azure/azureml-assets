@@ -137,7 +137,9 @@ def run():
     for index in unique_indexes:
         index_actions = []
         # low retrieval score index action detector
-        lrsi_action_detector = LowRetreivalScoreIndexActionDetector(index, violated_metrics, args.query_intention_enabled)
+        lrsi_action_detector = LowRetreivalScoreIndexActionDetector(index,
+                                                                    violated_metrics,
+                                                                    args.query_intention_enabled)
         df_preprocessed = lrsi_action_detector.preprocess_data(df_pandas)
         lrsi_actions = lrsi_action_detector.detect(df_preprocessed, llm_client, args.aml_deployment_id)
         index_actions += lrsi_actions
