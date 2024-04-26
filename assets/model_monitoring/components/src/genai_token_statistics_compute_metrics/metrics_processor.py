@@ -77,8 +77,8 @@ class MetricsProcessor:
                     parent = tree.get_span_tree_node_by_span_id(span.parent_id)
                     self.calculate_metrics(attributes=attributes,
                                            span_type=span_type,
-                                           root_input=parent.input,
-                                           root_output=parent.output)
+                                           root_input=None if parent is None else parent.input,
+                                           root_output=None if parent is None else parent.output)
         self.calculate_averages()
 
     def metrics_generator(self):
