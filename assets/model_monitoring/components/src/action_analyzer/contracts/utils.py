@@ -37,8 +37,8 @@ from shared_utilities.io_utils import (
 )
 from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.prompts import RELEVANCE_TEMPLATE, QUERY_INTENTION_PROMPT
-from action_analyzer.contracts.index_action_sample import IndexActionSample
-from action_analyzer.contract.actions import Action
+from action_analyzer.contracts.action_sample import IndexActionSample
+from action_analyzer.contract.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
 
 

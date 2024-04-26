@@ -9,6 +9,7 @@ import uuid
 import json
 from enum import Enum
 from action_analyzer.contracts.utils import convert_to_camel_case
+from action_analyzer.contracts.action_sample import ActionSample
 from shared_utilities.io_utils import np_encoder
 
 
@@ -17,36 +18,6 @@ class ActionType(Enum):
 
     METRICS_VIOLATION_INDEX_ACTION = 1
     LOW_RETRIEVAL_SCORE_INDEX_ACTION = 2
-
-
-class ActionSample:
-    """Action sample class."""
-
-    def __init__(self,
-                 question: str,
-                 answer: str,
-                 debugging_info: str,
-                 prompt_flow_input: str) -> None:
-        """Create an action sample.
-
-        Args:
-            question(str): the input question of the flow.
-            answer(str): the output answer of the flow.
-            debugging_info(str): the json string of debugging info in a span tree structure.
-            prompt_flow_input(str): the json str of prompt flow input.
-        """
-        self.question = question
-        self.answer = answer
-        self.debugging_info = debugging_info
-        self.prompt_flow_input = prompt_flow_input
-
-    def to_json_str(self) -> str:
-        """Convert an action sample object to json string."""
-        attribute_dict = self.__dict__
-        json_out = {}
-        for key, val in attribute_dict.items():
-            json_out[convert_to_camel_case(key)] = val
-        return json.dumps(json_out, default=np_encoder)
 
 
 class Action():

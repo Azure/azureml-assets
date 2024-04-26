@@ -7,7 +7,7 @@ import os
 import pandas
 from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
-from action_analyzer.contracts.actions.low_retreival_score_index_action_detector import LowRetreivalScoreIndexAction
+from action_analyzer.contracts.actions.low_retreival_score_index_action import LowRetreivalScoreIndexAction
 from action_analyzer.contracts.llm_client import LLMClient
 from action_analyzer.contracts.utils import (
     extract_fields_from_debugging_info,
