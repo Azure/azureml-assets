@@ -103,6 +103,8 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
                                               low_retrieval_score_df,
                                               high_retrieval_score_df,
                                               aml_deployment_id)
+                print(f"Positive sample size: {len(action.positive_samples)}.") 
+                print(f"Negative sample size: {len(action.negative_samples)}.")
                 action_list.append(action)
         return action_list
 
