@@ -15,3 +15,4 @@ dependencies:
     - certifi==2024.2.2
     - urllib3==2.2.1
     - paramiko==3.4.0
+    - idna==3.7
