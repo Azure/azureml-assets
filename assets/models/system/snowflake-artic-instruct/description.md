@@ -8,6 +8,19 @@ Arctic is a dense-MoE Hybrid transformer architecture pre-trained from scratch b
 - **License:** Apache-2.0.
 - **Model developers:** Snowflake AI Research Team.
 
+## Training Data
+Snowflake Arctic was pretrained on 3.5 trillion tokens of data from publicly available sources. The fine-tuning data includes publicly available instruction datasets.
+
+## Evaluation Results
+
+| Metric                                   | Value  |
+|------------------------------------------|--------|
+| MMLU                                     | 67.3   |
+| GSM8k                                    | 74.2   |
+| Spider                                   | 78.9   |
+| IFEval                                   | 52.4   |
+| Coding - HumanEval+ & MBPP+ -            | 64.3   |
+
 # Inference samples
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
