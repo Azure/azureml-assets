@@ -1193,7 +1193,7 @@ def finetune(args: Namespace):
         args.save_strategy = args.evaluation_strategy
         args.save_steps = args.eval_steps
 
-    if args.task_name not in [Tasks.TEXT_GENERATION, Tasks.CHAT_COMPLETION]:
+    if args.task_name not in [Tasks.TEXT_GENERATION]:
         removed_base_image = metadata.pop("azureml.base_image", None)
         logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
                     base image value is {removed_base_image}.")
