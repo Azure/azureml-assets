@@ -28,7 +28,7 @@ def _get_preprocessed_span_logs_df_schema() -> StructType:
     return schema
 
 
-def _get_aggregated_trace_log_spark_df_schema() -> StructType:
+def _get_aggregated_trace_log_spark_df_schema(use_internal_contract: bool = False) -> StructType:
     """Get Aggregated Trace Log DataFrame Schema."""
     # TODO: The user_id and session_id may not be available in v0 of trace aggregator.
     schema = StructType(
@@ -38,8 +38,8 @@ def _get_aggregated_trace_log_spark_df_schema() -> StructType:
             StructField("session_id", StringType(), True),
             StructField("start_time", TimestampType(), False),
             StructField("end_time", TimestampType(), False),
-            StructField("input", StringType(), False),
-            StructField("output", StringType(), False),
+            StructField("input", StringType(), use_internal_contract),
+            StructField("output", StringType(), use_internal_contract),
             StructField("root_span", StringType(), True),
         ]
     )
