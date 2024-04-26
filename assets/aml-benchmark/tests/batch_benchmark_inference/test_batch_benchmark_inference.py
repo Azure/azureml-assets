@@ -95,6 +95,7 @@ class TestBatchBenchmarkInferenceComponent:
             param_dict['model_type:'] = [f"  model_type: {self._model_type}\n"]
         return param_dict
 
+    @pytest.mark.skip("individual sub-components are tested in other tests")
     @pytest.mark.parametrize(
         'model_type', [("vision_oss")]
     )
