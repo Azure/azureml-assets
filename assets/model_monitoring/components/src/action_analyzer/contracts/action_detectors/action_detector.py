@@ -7,23 +7,19 @@ import pandas
 from abc import ABC, abstractmethod
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
-from shared_utilities.constants import MAX_SAMPLE_SIZE
 
 
 class ActionDetector(ABC):
     """Action detector base class."""
 
     def __init__(self,
-                 query_intention_enabled: str,
-                 max_positive_sample_size=MAX_SAMPLE_SIZE) -> None:
+                 query_intention_enabled: str) -> None:
         """Create an action detector.
 
         Args:
             query_intention_enabled(str): enable llm generated query intention. Accepted values: true or false.
-            max_positive_sample_size(int): (Optional) max positive sample size in the action.
         """
         self.query_intention_enabled = query_intention_enabled
-        self.max_positive_sample_size = max_positive_sample_size
 
     @abstractmethod
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:

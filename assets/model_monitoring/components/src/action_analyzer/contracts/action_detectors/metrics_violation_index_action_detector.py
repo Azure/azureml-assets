@@ -7,7 +7,6 @@ from action_analyzer.contracts.action_detectors.action_detector import ActionDet
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
 import pandas
-from shared_utilities.constants import MAX_SAMPLE_SIZE
 
 
 class MetricsViolationIndexActionDetector(ActionDetector):
@@ -20,8 +19,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
                  correlation_test_pvalue_threshold: float,
                  query_intention_enabled: str,
                  positive_metric_threshold=5,
-                 negative_metric_threshold=3,
-                 max_positive_sample_size=MAX_SAMPLE_SIZE) -> None:
+                 negative_metric_threshold=3) -> None:
         """Create a metrics violation index action detector.
 
         Args:
@@ -38,7 +36,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
         self.correlation_test_pvalue_threshold = correlation_test_pvalue_threshold
         self.positive_metric_threshold = positive_metric_threshold
         self.negative_metric_threshold = negative_metric_threshold
-        super().__init__(query_intention_enabled, max_positive_sample_size)
+        super().__init__(query_intention_enabled)
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.

@@ -29,7 +29,8 @@ from shared_utilities.constants import (
     INDEX_SCORE_LLM_COLUMN,
     PROMPT_COLUMN,
     DEFAULT_TOPIC_NAME,
-    TEXT_SPLITTER
+    TEXT_SPLITTER,
+    MAX_SAMPLE_SIZE
 )
 from shared_utilities.llm_utils import _APITokenManager, _request_api
 from shared_utilities.io_utils import (
@@ -311,14 +312,12 @@ def get_query_intention(query_list: list[str], llm_client: LLMClient) -> str:
 
 
 def generate_index_action_samples(df: pandas.DataFrame,
-                                  is_negative_sample: bool,
-                                  max_positive_sample_size: int):
+                                  is_negative_sample: bool):
     """Generate index action samples.
 
     Args:
         df(pandas.DataFrame): dataframe for generating action samples.
         is_negative_sample(bool): flag to show if the sample is negative.
-        max_positive_sample_size(int): max positive sample size in the action.
 
     Returns:
         pandas.DataFrame: dataframe with calculated metrics.
@@ -328,8 +327,6 @@ def generate_index_action_samples(df: pandas.DataFrame,
     if not is_negative_sample:
         df = df.sort_values(by=INDEX_SCORE_LLM_COLUMN, ascending=False)
     for i in range(len(df.index)):
-        if i >= max_positive_sample_size and not is_negative_sample:
-            break
         index_sample = IndexActionSample(
             df.iloc[i][PROMPT_COLUMN],
             df.iloc[i][MODIFIED_PROMPT_COLUMN],
@@ -391,6 +388,7 @@ def write_actions(actions: list[Action], action_output_folder: str) -> None:
     local_path = str(uuid.uuid4())
     action_summary = generate_action_summary(actions, action_output_folder)
     for action in actions:
+        action = reduce_positive_sample_size(action)
         write_to_file(action.to_json(), local_path, action.action_id)
     print("Writing action summary to location ", action_output_folder)
     print(action_summary)
@@ -405,3 +403,17 @@ def add_action_tag_to_run() -> None:
     print("Action generated, setting tag for pipeline run: ", root_run_id)
     client = MlflowClient()
     client.set_tag(root_run_id, "momo_action_analyzer_has_action", "true")
+
+
+def reduce_positive_sample_size(action: Action) -> Action:
+    """Reduce the positive sample size to the max sample size.
+
+    Args:
+        action(Action): input action.
+
+    Returns:
+        Action: output action with reduced positive sample size.
+    """
+    if len(action.positive_samples) > MAX_SAMPLE_SIZE:
+        action.positive_samples = action.positive_samples[:MAX_SAMPLE_SIZE]
+    return action

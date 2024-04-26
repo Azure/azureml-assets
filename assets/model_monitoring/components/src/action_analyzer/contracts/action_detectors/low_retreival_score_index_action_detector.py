@@ -21,7 +21,6 @@ from shared_utilities.constants import (
     INDEX_SCORE_LLM_COLUMN,
     METRICS_VIOLATION_THRESHOLD,
     GOOD_METRICS_THRESHOLD,
-    MAX_SAMPLE_SIZE,
     DEFAULT_TOPIC_NAME,
     INDEX_CONTENT_COLUMN,
     PROMPT_COLUMN,
@@ -38,8 +37,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
     def __init__(self,
                  index_id: str,
                  violated_metrics: list[str],
-                 query_intention_enabled: str,
-                 max_positive_sample_size=MAX_SAMPLE_SIZE) -> None:
+                 query_intention_enabled: str) -> None:
         """Create a low retrieval score index action detector.
 
         Args:
@@ -50,7 +48,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         """
         self.index_id = index_id
         self.violated_metrics = violated_metrics
-        super().__init__(query_intention_enabled, max_positive_sample_size)
+        super().__init__(query_intention_enabled)
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.
@@ -130,8 +128,8 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         """
         query_intention = get_query_intention(low_retrieval_score_df[PROMPT_COLUMN].to_list(), llm_client) if self.query_intention_enabled == "true" else DEFAULT_TOPIC_NAME  # noqa: E501
 
-        positive_samples = generate_index_action_samples(high_retrieval_score_df, False, self.max_positive_sample_size)  # noqa: E501
-        negative_samples = generate_index_action_samples(low_retrieval_score_df, True, self.max_positive_sample_size)
+        positive_samples = generate_index_action_samples(high_retrieval_score_df, False)
+        negative_samples = generate_index_action_samples(low_retrieval_score_df, True)
 
         index_content = low_retrieval_score_df.iloc[0][INDEX_CONTENT_COLUMN]
         return LowRetreivalScoreIndexAction(self.index_id,
