@@ -8,7 +8,7 @@ import datetime
 import uuid
 import json
 from enum import Enum
-from action_analyzer.utils.utils import convert_to_camel_case
+from action_analyzer.contracts.utils import convert_to_camel_case
 from shared_utilities.io_utils import np_encoder
 
 

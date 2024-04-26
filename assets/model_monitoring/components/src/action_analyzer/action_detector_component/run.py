@@ -10,7 +10,7 @@ from action_analyzer.contracts.action_detectors.low_retreival_score_index_action
     LowRetreivalScoreIndexActionDetector
 )
 from action_analyzer.contracts.llm_client import LLMClient
-from action_analyzer.contracts.utils.utils import (
+from action_analyzer.contracts.utils import (
     get_index_id_from_index_content,
     deduplicate_actions,
     write_actions,

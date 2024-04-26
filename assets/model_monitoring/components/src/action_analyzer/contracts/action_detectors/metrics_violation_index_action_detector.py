@@ -3,7 +3,7 @@
 
 """Metrics violation index action detector class."""
 
-from action_analyzer.contracts.detectors.action_detector import ActionDetector
+from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
 import pandas
