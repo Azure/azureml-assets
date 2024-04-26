@@ -9,7 +9,7 @@ Arctic is a dense-MoE Hybrid transformer architecture pre-trained from scratch b
 - **Model developers:** Snowflake AI Research Team.
 
 ## Training Data
-Snowflake Arctic was pretrained on 3.5 trillion tokens of data from publicly available sources. The fine-tuning data includes publicly available instruction datasets.
+Snowflake Arctic was pretrained on 3.5 trillion tokens of data from publicly available sources. The fine-tuning data includes publicly available  datasets.
 
 ## Evaluation Results
 
