@@ -95,9 +95,9 @@ def aggregate_spans_into_traces(
         enlarged_span_logs: DataFrame, require_trace_data: bool,
         data_window_start: datetime, data_window_end: datetime) -> DataFrame:
     """Group span logs into aggregated trace logs."""
-    spark = init_spark()
 
     if not require_trace_data:
+        spark = init_spark()
         print(f"{logging_prefix_str} Skip processing of spans into aggregated traces.")
         return spark.createDataFrame(data=[], schema=_get_aggregated_trace_log_spark_df_schema())
 
