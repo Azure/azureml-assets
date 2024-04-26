@@ -1,4 +1,4 @@
-mlflow==2.12.1
+mlflow==2.10.2
 cloudpickle==2.2.1
 datasets==2.15.0
 openmim==0.3.9
