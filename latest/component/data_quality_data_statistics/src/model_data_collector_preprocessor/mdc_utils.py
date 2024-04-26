@@ -9,7 +9,7 @@ from pyspark.sql.types import StringType, AtomicType
 from py4j.protocol import Py4JJavaError
 from dateutil import parser
 from datetime import datetime
-from shared_utilities.momo_exceptions import DataNotFoundError
+from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 from shared_utilities.io_utils import init_spark
 from shared_utilities.event_utils import add_tags_to_root_run
 from shared_utilities.constants import (
@@ -155,3 +155,26 @@ def _filter_df_by_time_window(df: DataFrame, data_window_start: datetime, data_w
     """Filter dataframe on its end_time column to fit within the given data window: [start, end)."""
     df = df.filter(df.end_time >= data_window_start).filter(df.end_time < data_window_end)
     return df
+
+
+def _count_dropped_rows_with_error(
+        original_df_row_count: int,
+        transformed_df_row_count: int,
+        additional_error_msg: str = ""):
+    """Calculate number of dropped rows after transformations and throw error if too many rows lost."""
+    if original_df_row_count <= 0:
+        print("Original df contains no rows. Returning without calculating drop rate.")
+        return
+    drop_rate = (original_df_row_count - transformed_df_row_count) / original_df_row_count
+    print(f"Calculated the df drop rate as {drop_rate*100}%. Comparing to threshold criteria...")
+
+    if drop_rate > 0.10 and drop_rate <= 0.33:
+        print(f"{drop_rate*100}% data missing after applying preprocessing."
+              " Please check your log quality and the stdout logs for any possible debugging info."
+              f" {additional_error_msg}")
+    elif drop_rate > 0.33:
+        raise InvalidInputError(
+            f"Majority of the logs missing after applying preprocessing (drop_rate = {drop_rate*100}%)."
+            " Failing preprocessing job. Please check your log quality and"
+            " the stdout logs for any possible debugging info for help."
+            f" {additional_error_msg}")
