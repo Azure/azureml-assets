@@ -47,4 +47,4 @@ tags:
     apply_lora: "true"
     apply_ort: "false"
     precision: 16
-version: 2
+version: 3

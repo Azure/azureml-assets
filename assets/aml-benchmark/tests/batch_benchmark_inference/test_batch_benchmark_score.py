@@ -36,6 +36,7 @@ class TestBatchBenchmarkScoreComponent:
 
     EXP_NAME = "batch-benchmark-score-test"
 
+    @pytest.mark.skip("batch_score_llm is used instead of batch_benchmark_score")
     @pytest.mark.parametrize(
             'model_type', [(None), ("vision_oss")]
     )
