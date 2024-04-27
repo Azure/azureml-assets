@@ -15,8 +15,14 @@ def generate_test_action():
     positive_samples = []
     negative_samples = []
     for i in range(30):
-        positive_samples.append(ActionSample(f"positive_query_{1}", f"positive_answer_{i}", f"positive_debugging_info_{i}", f"positive_prompt_flow_input_{i}"))
-        negative_samples.append(ActionSample(f"positive_query_{1}", f"positive_answer_{i}", f"positive_debugging_info_{i}", f"positive_prompt_flow_input_{i}"))
+        positive_samples.append(ActionSample(f"positive_query_{1}",
+                                             f"positive_answer_{i}",
+                                             f"positive_debugging_info_{i}",
+                                             f"positive_prompt_flow_input_{i}"))
+        negative_samples.append(ActionSample(f"positive_query_{1}",
+                                             f"positive_answer_{i}",
+                                             f"positive_debugging_info_{i}",
+                                             f"positive_prompt_flow_input_{i}"))
     return Action(ActionType.METRICS_VIOLATION_INDEX_ACTION,
                   "description",
                   0.95,
@@ -33,8 +39,14 @@ def generate_low_retrieval_score_index_action():
     positive_samples = []
     negative_samples = []
     for i in range(30):
-        positive_samples.append(ActionSample(f"positive_query_{1}", f"positive_answer_{i}", f"positive_debugging_info_{i}", f"positive_prompt_flow_input_{i}"))
-        negative_samples.append(ActionSample(f"positive_query_{1}", f"positive_answer_{i}", f"positive_debugging_info_{i}", f"positive_prompt_flow_input_{i}"))
+        positive_samples.append(ActionSample(f"positive_query_{1}",
+                                             f"positive_answer_{i}",
+                                             f"positive_debugging_info_{i}",
+                                             f"positive_prompt_flow_input_{i}"))
+        negative_samples.append(ActionSample(f"positive_query_{1}",
+                                             f"positive_answer_{i}",
+                                             f"positive_debugging_info_{i}",
+                                             f"positive_prompt_flow_input_{i}"))
     return LowRetrievalScoreIndexAction("index id",
                                         "index content",
                                         "coherence",
@@ -87,13 +99,12 @@ class TestAction:
         generate_test_action.reduce_positive_sample_size(max_sample_size)
         assert len(generate_test_action.positive_samples) == expected_sample_size
 
-
     def test_to_json_low_retrieval_score(self, generate_low_retrieval_score_index_action):
         """Test base class to_json()."""
         action_json = generate_low_retrieval_score_index_action.to_json()
 
         assert action_json["Type"] == "Low retrieval score index action"
-        assert action_json["Description"].startswith("The application's response quality is low due to suboptimal index retrieval.")
+        assert action_json["Description"].startswith("The application's response quality is low due to suboptimal index retrieval.")  # noqa
         assert action_json["ConfidenceScore"] == 0.95
         assert action_json["QueryIntention"] == "query intention"
         assert action_json["DeploymentId"] == "deployment id"
