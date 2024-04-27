@@ -388,7 +388,7 @@ def write_actions(actions: list[Action], action_output_folder: str) -> None:
     local_path = str(uuid.uuid4())
     action_summary = generate_action_summary(actions, action_output_folder)
     for action in actions:
-        action = reduce_positive_sample_size(action)
+        action.reduce_positive_sample_size(MAX_SAMPLE_SIZE)
         write_to_file(action.to_json(), local_path, action.action_id)
     print("Writing action summary to location ", action_output_folder)
     print(action_summary)
@@ -403,17 +403,3 @@ def add_action_tag_to_run() -> None:
     print("Action generated, setting tag for pipeline run: ", root_run_id)
     client = MlflowClient()
     client.set_tag(root_run_id, "momo_action_analyzer_has_action", "true")
-
-
-def reduce_positive_sample_size(action: Action) -> Action:
-    """Reduce the positive sample size to the max sample size.
-
-    Args:
-        action(Action): input action.
-
-    Returns:
-        Action: output action with reduced positive sample size.
-    """
-    if len(action.positive_samples) > MAX_SAMPLE_SIZE:
-        action.positive_samples = action.positive_samples[:MAX_SAMPLE_SIZE]
-    return action

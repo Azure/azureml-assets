@@ -6,8 +6,8 @@
 import json
 import argparse
 import pandas
-from action_analyzer.contracts.action_detectors.low_retreival_score_index_action_detector import (
-    LowRetreivalScoreIndexActionDetector
+from action_analyzer.contracts.action_detectors.low_retrieval_score_index_action_detector import (
+    LowRetrievalScoreIndexActionDetector
 )
 from action_analyzer.contracts.llm_client import LLMClient
 from action_analyzer.contracts.utils.detector_utils import (
@@ -137,7 +137,7 @@ def run():
     for index in unique_indexes:
         index_actions = []
         # low retrieval score index action detector
-        lrsi_action_detector = LowRetreivalScoreIndexActionDetector(index,
+        lrsi_action_detector = LowRetrievalScoreIndexActionDetector(index,
                                                                     violated_metrics,
                                                                     args.query_intention_enabled)
         df_preprocessed = lrsi_action_detector.preprocess_data(df_pandas)

@@ -7,7 +7,7 @@ import os
 import pandas
 from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
-from action_analyzer.contracts.actions.low_retreival_score_index_action import LowRetreivalScoreIndexAction
+from action_analyzer.contracts.actions.low_retrieval_score_index_action import LowRetrievalScoreIndexAction
 from action_analyzer.contracts.llm_client import LLMClient
 from action_analyzer.contracts.utils.detector_utils import (
     extract_fields_from_debugging_info,
@@ -31,7 +31,7 @@ from shared_utilities.constants import (
 LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD = 0.1
 
 
-class LowRetreivalScoreIndexActionDetector(ActionDetector):
+class LowRetrievalScoreIndexActionDetector(ActionDetector):
     """Low retrieval score index action detector class."""
 
     def __init__(self,
@@ -114,7 +114,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
                         confidence_score: float,
                         low_retrieval_score_df: pandas.DataFrame,
                         high_retrieval_score_df: pandas.DataFrame,
-                        aml_deployment_id: str) -> LowRetreivalScoreIndexAction:
+                        aml_deployment_id: str) -> LowRetrievalScoreIndexAction:
         """Generate action from the dataframe.
 
         Args:
@@ -126,7 +126,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
             aml_deployment_id(str): aml deployment id for the action.
 
         Returns:
-            LowRetreivalScoreIndexAction: the generated low retrieval score index action.
+            LowRetrievalScoreIndexAction: the generated low retrieval score index action.
         """
         query_intention = get_query_intention(low_retrieval_score_df[PROMPT_COLUMN].to_list(), llm_client) if self.query_intention_enabled == "true" else DEFAULT_TOPIC_NAME  # noqa: E501
 
@@ -134,7 +134,7 @@ class LowRetreivalScoreIndexActionDetector(ActionDetector):
         negative_samples = generate_index_action_samples(low_retrieval_score_df, True)
 
         index_content = low_retrieval_score_df.iloc[0][INDEX_CONTENT_COLUMN]
-        return LowRetreivalScoreIndexAction(self.index_id,
+        return LowRetrievalScoreIndexAction(self.index_id,
                                             index_content,
                                             metric,
                                             confidence_score,

@@ -80,7 +80,7 @@ class Action():
         """
         summary_json = {
             "ActionId": self.action_id,
-            "Type": self.action_type.name,
+            "Type": self.action_type.value,
             "Description": self.description,
             "ConfidenceScore": self.confidence_score,
             "QueryIntention": self.query_intention,
@@ -88,3 +88,8 @@ class Action():
             "FilePath": os.path.join(action_output_folder, f"actions/{self.action_id}.json")
         }
         return summary_json
+
+    def reduce_positive_sample_size(self, max_sample_size) -> None:
+        """Reduce the positive sample size to the max sample size."""
+        if len(self.positive_samples) > max_sample_size:
+            self.positive_samples = self.positive_samples[:max_sample_size]
