@@ -34,7 +34,7 @@ tags:
     apply_lora: "true"
     apply_ort: "false"
     precision: 16
-version: 3
+version: 4
 description: |
   ## Model Details
 
