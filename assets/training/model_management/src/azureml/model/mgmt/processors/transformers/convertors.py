@@ -28,6 +28,7 @@ from azureml.model.mgmt.utils.common_utils import (
     ITEM_COMMA_SEP,
     copy_files,
     move_files,
+    get_mlclient,
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
     fetch_mlflow_acft_metadata
@@ -91,8 +92,9 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         self._output_dir = output_dir
         self._temp_dir = temp_dir
         self._model_id = translate_params.get("model_id", None)
-        self._task = translate_params["task"]
-        self._model_flavor = translate_params["model_flavor"]
+        self._task = translate_params.get("task", None)
+        self._model_flavor = translate_params.get("model_flavor", "HFTransformersV2")
+        self._vllm_enabled = translate_params.get("vllm_enabled", False)        
         self._experimental = translate_params.get(HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value, False)
         self._misc = translate_params.get("misc", [])
         self._signatures = translate_params.get("signature", None)
@@ -174,6 +176,12 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
                                               is_finetuned_model=False,
                                               base_model_task=self._task)
+        if self._vllm_enabled:
+            mlclient = get_mlclient("azureml")
+            vllm_image = mlclient.environments.get("foundation-model-inference", label="latest")
+            metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/foundation-model-inference:"
+            + vllm_image.version
+
         if self._model_flavor == "OSS":
             try:
                 self._save_in_oss_flavor(model, metadata, conda_env, code_paths, input_example, pip_requirements)
