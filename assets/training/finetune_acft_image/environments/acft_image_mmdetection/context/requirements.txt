@@ -6,9 +6,9 @@ azureml-core=={{latest-pypi-version}}
 azure-ai-ml==1.13.0
 requests
 datasets==2.15.0
-transformers==4.38.2
+transformers==4.39.3
 accelerate==0.27.2
-optimum==1.17.1
+optimum==1.18.0
 diffusers==0.24.0
 openmim==0.3.9
 certifi==2023.07.22
