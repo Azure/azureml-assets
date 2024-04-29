@@ -30,6 +30,12 @@ def _parse_args():
         type=str,
         help="Path to the jsonl output file to write the processed data."
     )
+    parser.add_argument(
+        "--additional_parameters",
+        type=str,
+        default=None,
+        help="Additional parameter values set in other fields of the component in a pipeline."
+    )
     argss = parser.parse_args()
     return argss
 
@@ -81,19 +87,21 @@ def _write_to_jsonl_file(
 def _run(
     prediction_dataset: str,
     output_path: str,
-    ground_truth_dataset: str = None
+    ground_truth_dataset: str = None,
+    additional_args: dict = None
 ) -> None:
     """Entry function to read, run and write the processed the data."""
     pred_data = _read_jsonl_file(prediction_dataset)
-    predictions = run_prediction_extractor(pred_data)
+    predictions = run_prediction_extractor(pred_data, additional_args)
     if ground_truth_dataset:
         actual_data = _read_jsonl_file(ground_truth_dataset)
-        ground_truths = run_ground_truth_extractor(actual_data)
+        ground_truths = run_ground_truth_extractor(actual_data, additional_args)
     _write_to_jsonl_file(predictions, ground_truths, output_path)
 
 
 def run_ground_truth_extractor(
-    data: List[Dict[str, Any]]
+    data: List[Dict[str, Any]],
+    additional_args: dict = None
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
     Run the custom processor function to extract the ground truth.
@@ -106,12 +114,14 @@ def run_ground_truth_extractor(
 
 
 def run_prediction_extractor(
-    data: List[Dict[str, Any]]
+    data: List[Dict[str, Any]],
+    additional_args: dict = None
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
     Run the custom processor function to extract the ground truth.
 
     :param data: Data loaded from _read_jsonl_file function.
+    :param additional_args: Additional parameters.
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
@@ -121,4 +131,7 @@ def run_prediction_extractor(
 
 if __name__ == "__main__":
     argss = _parse_args()
-    _run(argss.prediction_dataset, argss.ground_truth_dataset, argss.output_dataset)
+    _run(
+        argss.prediction_dataset, argss.output_dataset,
+        argss.ground_truth_dataset, json.loads(argss.additional_parameters)
+    )

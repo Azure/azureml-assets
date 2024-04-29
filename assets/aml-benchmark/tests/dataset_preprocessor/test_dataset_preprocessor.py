@@ -134,7 +134,7 @@ class TestDatasetPreprocessorComponent:
         self._verify_and_get_output_records(
             pipeline_job, dataset_name, dataset,
             Constants.PREPROCESS_SAMPLE_EXAMPLES_EXPECTED_OUTPUT_FILE,
-            output_dir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
+            output_dir=os.path.join(os.path.dirname(__file__), '../data')
         )
         assert_logged_params(
             pipeline_job.name,
@@ -245,7 +245,7 @@ class TestDatasetPreprocessorScript:
         script_path: str,
         encoder_config: str,
         output_dataset: str = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), 'data/processed_output.jsonl'
+            os.path.dirname(__file__), '../data/processed_output.jsonl'
         ),
     ) -> None:
         """Dataset Preprocessor script test."""
@@ -397,7 +397,7 @@ class TestDatasetPreprocessorScript:
         script_path: str,
         encoder_config: str,
         output_dataset: str = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), 'data/processed_output.jsonl'
+            os.path.dirname(__file__), '../data/processed_output.jsonl'
         ),
     ) -> None:
         """TruthfulQA-HF Dataset Custom Preprocessor script test."""
@@ -417,6 +417,7 @@ class TestDatasetPreprocessorScript:
             os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE),
             "process_one_example.jsonl"
         )
+        encoder_config = json.dumps({str(i): chr(i+ord('A')-1) for i in range(1, 27)})
         argss = ["--dataset", dataset, "--output_dataset", output_dataset,]
         if dataset is not None:
             argss.extend(["--dataset", dataset])
@@ -425,7 +426,7 @@ class TestDatasetPreprocessorScript:
         elif script_path is not None:
             argss.extend(["--script_path", script_path])
         if encoder_config is not None:
-            argss.extend(["--encoder_config", str(encoder_config)])
+            argss.extend(["--encoder_config", f"'{encoder_config}'"])
         argss = " ".join(argss)
         cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
         run_command(f"{cmd}")
