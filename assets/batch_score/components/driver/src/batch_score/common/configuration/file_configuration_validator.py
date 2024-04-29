@@ -94,6 +94,7 @@ class FileConfigurationValidator:
         instance.setdefault("log_settings", {})
         instance["log_settings"].setdefault("app_insights_log_level", "debug")
         instance["log_settings"].setdefault("stdout_log_level", "debug")
+        instance["log_settings"].setdefault("logging_metadata", {})
 
         # output_settings
         instance.setdefault("output_settings", {})
