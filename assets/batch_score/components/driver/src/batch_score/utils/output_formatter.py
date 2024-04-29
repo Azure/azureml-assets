@@ -104,7 +104,8 @@ class OutputFormatter(ABC):
         """Build a mapping from output index to embedding."""
         """
         Given response data, return a dictionary of the index and embedding info for each element of the batch.
-        Unsure if the responses are always in the correct order by input index, ensure output order by mapping out index.
+        Unsure if the responses are always in the correct order by input index,
+        ensure output order by mapping out index.
 
         Args:
             response_data: The list of outputs from the 'data' of API response.
