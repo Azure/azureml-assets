@@ -9,7 +9,7 @@ display_name: Chat Completion Model Import
 description: Component to import PyTorch / MLFlow model. See [docs](https://aka.ms/azureml/components/chat_completion_model_import)
   to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/50
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/51
 
 code: ../../../src/model_selector
 

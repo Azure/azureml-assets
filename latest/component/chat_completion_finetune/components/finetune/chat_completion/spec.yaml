@@ -11,7 +11,7 @@ description: Component to finetune Hugging Face pretrained models for chat compl
   for performance enhancement. See [docs](https://aka.ms/azureml/components/chat_completion_finetune)
   to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/50
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/51
 
 code: ../../../src/finetune
 

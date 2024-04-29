@@ -9,7 +9,7 @@ display_name: Chat Completion DataPreProcess
 description: Component to preprocess data for chat completion task. See [docs](https://aka.ms/azureml/components/chat_completion_datapreprocess)
   to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/50
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/51
 
 code: ../../../src/preprocess
 
