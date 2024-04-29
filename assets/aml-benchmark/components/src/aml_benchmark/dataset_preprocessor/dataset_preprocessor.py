@@ -40,7 +40,7 @@ class DatasetPreprocessor(object):
         user_preprocessor: str = None,
         encoder_config: str = None,
         output_dataset: str = None,
-    ):
+    ) -> None:
         """Dataset Preprocessor Class.
 
         :param input_dataset: Path to the jsonl file to load the dataset.
@@ -138,7 +138,7 @@ class DatasetPreprocessor(object):
             self.prep_using_template()
             return
 
-    def __get_parameters(self):
+    def __get_parameters(self) -> dict:
         return deepcopy(self.__dict__)
 
     def run_user_preprocessor(self) -> None:

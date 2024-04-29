@@ -452,7 +452,7 @@ class InferencePostprocessor(object):
         result_df = pd.DataFrame(pred_list, columns=cols)
         return result_df
 
-    def run(self):
+    def run(self) -> None:
         """Postprocessor runner."""
         if self.user_postprocessor:
             self.run_user_postprocessor()
@@ -487,7 +487,7 @@ class InferencePostprocessor(object):
         )
         return
 
-    def __get_parameters(self):
+    def __get_parameters(self) -> dict:
         return deepcopy(self.__dict__)
 
     def run_user_postprocessor(self) -> None:
