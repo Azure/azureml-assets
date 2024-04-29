@@ -247,7 +247,9 @@ def test_output_formatter_failed_result(input_schema_version, tiktoken_failed):
         assert actual_obj["request"]["input"] == inputstring
         assert actual_obj["response"]["error"]["type"] == "invalid_request_error"
         assert "maximum context length is 8190 tokens" in actual_obj["response"]["error"]["message"]
-    elif input_schema_version == 2:  # TODO: Confirm this is the actual format for errors
+    elif input_schema_version == 2:
+        assert actual_obj["response"]["request_id"] is not None
+        assert actual_obj["response"]["status_code"] == 400
         assert actual_obj["error"]["message"]["error"]["type"] == "invalid_request_error"
         assert "maximum context length is 8190 tokens" in actual_obj["error"]["message"]["error"]["message"]
 
@@ -279,7 +281,8 @@ def test_output_formatter_failed_result_batch(input_schema_version, tiktoken_fai
             assert output_obj["response"]["error"]["type"] == "invalid_request_error"
             assert "maximum context length is 8190 tokens" in output_obj["response"]["error"]["message"]
         elif input_schema_version == 2:
-            assert output_obj["response"] is None
+            assert output_obj["response"]["request_id"] is not None
+            assert output_obj["response"]["status_code"] == 400
             assert output_obj["error"]["message"]["error"]["type"] == "invalid_request_error"
             assert "maximum context length is 8190 tokens" in output_obj["error"]["message"]["error"]["message"]
 
@@ -413,7 +416,7 @@ def test_endpoint_response_is_not_json(input_schema_version, mock_get_logger):
         end=0,
         model_response_code=400,
         request_metadata="Not important",
-        response_headers="Headers",
+        response_headers={"header1": "value"},
         num_retries=2,
         token_counts=(1,) * batch_size_per_request,
         request_obj={"input": inputs, "custom_id": "task_123"},
@@ -443,7 +446,8 @@ def test_endpoint_response_is_not_json(input_schema_version, mock_get_logger):
             assert type(unit['response']) is str
             assert 'maximum context length' in unit['response']
         elif input_schema_version == 2:
-            assert unit['response'] is None
+            assert unit['response']['request_id'] is not None
+            assert unit['response']['status_code'] == 400
             assert type(unit['error']['message']) is str
             assert 'maximum context length' in unit['error']['message']
 
@@ -480,7 +484,7 @@ def __get_failed_scoring_result_for_batch(request_obj, tiktoken_failed=False):
         end=0,
         model_response_code=400,
         request_metadata="Not important",
-        response_headers="Headers",
+        response_headers={"header1": "value"},
         num_retries=2,
         token_counts=token_counts,
         request_obj=request_obj,

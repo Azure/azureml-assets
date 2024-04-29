@@ -100,12 +100,12 @@ class OutputFormatter(ABC):
 
         return output_list
 
+
     def __build_output_idx_to_embedding_mapping(self, response_data):
         """Build a mapping from output index to embedding."""
         """
         Given response data, return a dictionary of the index and embedding info for each element of the batch.
-        Unsure if the responses are always in the correct order by input index,
-        ensure output order by mapping out index.
+        Unsure if the responses are always in the correct order by input index, ensure output order by mapping out index.
 
         Args:
             response_data: The list of outputs from the 'data' of API response.
@@ -114,6 +114,7 @@ class OutputFormatter(ABC):
             Dict mapping index to embedding info.
         """
         return {embedding_info['index']: embedding_info for embedding_info in response_data}
+
 
     def __override_prompt_tokens(self, output_obj, token_count, format_version):
         """
@@ -133,6 +134,7 @@ class OutputFormatter(ABC):
             lu.get_logger().exception("Unable to set prompt token override.")
             raise exc
 
+
     def __tiktoken_estimates_succeeded(self, token_count_estimates: "tuple[int]", input_length: int) -> bool:
         """
         Return True if the length of the batch of inputs matches the length of the tiktoken estimates.
@@ -144,9 +146,10 @@ class OutputFormatter(ABC):
         token_est_length = len(token_count_estimates)
         length_matches = token_est_length == input_length
         if not length_matches:
-            lu.get_logger().warn(f"Input length {input_length} does not match token estimate "
-                                 "length {token_est_length}. Skipping prompt_tokens count overrides.")
+            lu.get_logger().warn(f"Input length {input_length} does not match token estimate length {token_est_length}. "
+                                "Skipping prompt_tokens count overrides.")
         return length_matches
+
 
     def __tiktoken_estimates_retry(self, request_obj: dict) -> "tuple[int]":
         """
@@ -165,6 +168,7 @@ class OutputFormatter(ABC):
         else:
             return token_counts
 
+
     def __validate_response_data_length(self, numrequests, numresults):
         """
         Validate the number of outputs from the API response matches the number of requests in the batch.
@@ -181,6 +185,7 @@ class OutputFormatter(ABC):
                             f"{numrequests} request batch length."
             lu.get_logger().error(error_message)
             raise Exception(error_message)
+
 
     def _stringify_output(self, payload_obj: dict) -> str:
         return json.dumps(payload_obj, cls=BatchComponentJSONEncoder)

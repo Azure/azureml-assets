@@ -5,6 +5,7 @@
 
 import pytest
 from datetime import datetime, timezone
+import json
 
 from src.batch_score.common.common_enums import ApiType, AuthenticationType, EndpointType
 from src.batch_score.common.configuration.configuration import Configuration
@@ -85,7 +86,12 @@ def make_batch_score_init_completed_event(mock_run_context, make_configuration, 
     """Make a mock BatchScoreInitCompletedEvent."""
     setup_context_vars(make_configuration, make_metadata)
 
-    return update_common_fields(BatchScoreInitCompletedEvent(init_duration_ms=5))
+    if make_configuration.logging_metadata:
+        logging_metadata = json.loads(make_configuration.logging_metadata)
+    else:
+        logging_metadata = None
+
+    return update_common_fields(BatchScoreInitCompletedEvent(init_duration_ms=5, logging_metadata=logging_metadata))
 
 
 @pytest.fixture
