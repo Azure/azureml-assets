@@ -5,6 +5,7 @@
 import azureml.evaluate.mlflow as aml_mlflow
 import json
 from azureml.telemetry.activity import log_activity
+from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
 
 import constants
 from constants import ArgumentLiterals, ForecastingConfigContract, TASK, SubTask
@@ -21,6 +22,7 @@ from error_definitions import (
     InvalidGroundTruthColumnNameData,
     InvalidPredictionColumnNameData,
     BadInputData,
+    BadQuestionsContextGroundTruthData,
     BadEvaluationConfig,
     SavingOutputError,
 )
@@ -44,6 +46,10 @@ from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 import os
 import pandas as pd
 import numpy as np
+
+# Mark current path as allowed
+mark_path_as_loggable(os.path.dirname(__file__))
+
 
 custom_dimensions.app_name = constants.TelemetryConstants.COMPUTE_METRICS_NAME
 logger = get_logger(name=__name__)
@@ -156,8 +162,8 @@ class ComputeMetricsRunner:
                                    Skipping GPT Based Metrics Calculation")
                     self.config.pop(constants.OpenAIConstants.METRICS_KEY)
                 elif self.task == TASK.CHAT_COMPLETION and not all(len(values) for values in key_data.values()):
-                    message = "Failed to Fetch Questions and Contexts from Ground Truth Data."
-                    exception = get_azureml_exception(DataValidationException, message, None)
+                    exception = get_azureml_exception(DataValidationException,
+                                                      BadQuestionsContextGroundTruthData, None)
                     log_traceback(exception, logger)
                     raise exception
                 else:

@@ -1096,7 +1096,7 @@ def openai_init(llm_config, **openai_params):
     openai.api_base = llm_config.get("base", None)
     openai.api_key = llm_config.get("key", None)
 
-    if not all([llm_config["base"], llm_config["key"], llm_config['deployment_name']]):
+    if not all([llm_config.get("base", None), llm_config.get("key", None), llm_config.get('deployment_name', None)]):
         logger.warn("No Connection String Provided and no credentials present in workspace's keyvault.")
         logger.warn("Skipping OpenAI Initialization.")
         return {}
