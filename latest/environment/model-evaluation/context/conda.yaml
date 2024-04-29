@@ -15,6 +15,7 @@ dependencies:
   - psutil>=5.8,<5.9
   - pandas>=1.1,<1.2
   - azureml-core==1.55.0.post2
+  - azureml-automl-core==1.55.0.post2
   - azureml-defaults==1.55.0
   - azureml-mlflow==1.55.0
   - azureml-telemetry==1.55.0
@@ -26,7 +27,7 @@ dependencies:
   - lightgbm==3.2.1
   - msrest==0.6.21
   - mltable==1.6.1
-  - openai~=0.27.4
+  - openai==1.23.6
   - azure-ai-ml==1.15.0
   - mldesigner==0.1.0b18
   - tiktoken

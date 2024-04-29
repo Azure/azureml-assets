@@ -4,11 +4,13 @@
 """Entry script for Model Evaluation Component."""
 
 import azureml.evaluate.mlflow as aml_mlflow
+from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
 import pandas as pd
 import constants
 import torch
 import ast
 import time
+import os
 from datetime import datetime, timezone
 from itertools import repeat, chain
 from constants import ArgumentLiterals
@@ -45,6 +47,9 @@ from validation import (
     validate_common_args,
     validate_and_get_columns,
 )
+
+# Mark current path as allowed
+mark_path_as_loggable(os.path.dirname(__file__))
 
 custom_dimensions.app_name = constants.TelemetryConstants.MODEL_PREDICTION_NAME
 logger = get_logger(name=__name__)

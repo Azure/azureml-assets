@@ -202,7 +202,7 @@ class TelemetryConstants:
     """Telemetry Constants."""
 
     COMPONENT_NAME = "model_evaluation"
-    COMPONENT_DEFAULT_VERSION = "0.0.24"
+    COMPONENT_DEFAULT_VERSION = "0.0.25"
 
     INITIALISING_RUNNER = "initialising_runner"
     VALIDATION_NAME = "argument_validation"
@@ -226,6 +226,18 @@ class TelemetryConstants:
     APP_INSIGHT_HANDLER_NAME = "AppInsightsHandler"
 
     NON_PII_MESSAGE = '[Hidden as it may contain PII]'
+
+    ALLOWED_EXTRA_PACKAGES = [
+        "azureml.metrics",
+        "azureml.evaluate.mlflow",
+        "mlflow",
+        "transformers",
+        "torch",
+        "pandas",
+        "numpy",
+        "mltable",
+        "openai",
+    ]
 
 
 class ExceptionLiterals:
@@ -254,22 +266,22 @@ class ErrorStrings:
     """Error Strings."""
 
     GenericModelEvaluationError = "Model Evaluation failed due to [{error}]"
-    GenericModelPredictionError = "Model Prediction failed due to [{error}]"
-    GenericComputeMetricsError = "Compute metrics failed due to [{error}]"
+    GenericModelPredictionError = "Model Prediction failed due to [{error:log_safe}]"
+    GenericComputeMetricsError = "Compute metrics failed due to [{error:log_safe}]"
 
     # Download dependencies
-    DownloadDependenciesFailed = "Failed to install model dependencies: [{dependencies}]"
+    DownloadDependenciesFailed = "Failed to install model dependencies: [{dependencies:log_safe}]"
 
     # Arguments related
-    ArgumentParsingError = "Parsing input arguments failed with error: [{error}]"
-    InvalidTaskType = "Given Task Type [{TaskName}] is not supported. " + \
+    ArgumentParsingError = "Parsing input arguments failed with error: [{error:log_safe}]"
+    InvalidTaskType = "Given Task Type [{TaskName:log_safe}] is not supported. " + \
                       "Please see the list of supported task types:\n" + \
                       "\n".join(ALL_TASKS)
     InvalidModel = "Model passed is not a valid MLFlow model. " + \
                    "Please save model using 'azureml-evaluate-mlflow' or 'mlflow' package."
-    BadModelData = "Model load failed due to error: [{error}]"
-    InvalidData = "[{input_port}] should be passed."
-    InvalidFileInputSource = "File input source [{input_port}] must be of type ro_mount."
+    BadModelData = "Model load failed due to error: [{error:log_safe}]"
+    InvalidData = "[{input_port:log_safe}] should be passed."
+    InvalidFileInputSource = "File input source [{input_port:log_safe}] must be of type ro_mount."
     InvalidGroundTruthColumnName = "Ground truth column name should be passed since columns in data are > 0."
     InvalidGroundTruthColumnNameData = "Ground truth column name not found in input data."
     InvalidPredictionColumnNameData = "Prediction Column name [{prediction_column}] not found in input data."
@@ -284,6 +296,7 @@ class ErrorStrings:
     BadLabelColumnName = "No label column found in test data."
     BadFeatureColumnNames = "[{column}] not a subset of input test dataset columns.\
                  [{column}] include [{keep_columns}] whereas data has [{data_columns}]"
+    BadQuestionsContextGroundTruthData = "Failed to Fetch Questions and Contexts from Ground Truth Data."
     BadInputData = "Failed to load data with error: [{error}]"
     EmptyInputData = "Input data contains no data."
     BadEvaluationConfigFile = "Evaluation Config file failed to load due to [{error}]"
@@ -294,13 +307,13 @@ class ErrorStrings:
                                  "in the ground_truths parameter." \
                                  "The table must contain time, prediction " \
                                  "ground truth and time series IDs columns."
-    BadRegressionColumnType = "Failed to convert y_test column type to float with error: [{error}]. " \
-                              "Expected target columns of type float found [{y_test_dtype}] instead"
+    BadRegressionColumnType = "Failed to convert y_test column type to float with error: [{error:log_safe}]. " \
+                              "Expected target columns of type float found [{y_test_dtype:log_safe}] instead"
     FilteringDataError = "Failed to filter data with error: [{error}]"
 
     # Logging Related
-    MetricLoggingError = "Failed to log metric {metric_name} due to [{error}]"
-    SavingOutputError = "Failed to save output due to [{error}]"
+    MetricLoggingError = "Failed to log metric {metric_name:log_safe} due to [{error}]"
+    SavingOutputError = "Failed to save output due to [{error:log_safe}]"
 
     TorchErrorMessage = "Model prediction Failed.\nPossible Reason:\n" \
                         "1. Your input text exceeds max length of model.\n" \
