@@ -24,7 +24,9 @@ from shared_utilities.constants import (
     DEFAULT_TOPIC_NAME,
     INDEX_CONTENT_COLUMN,
     PROMPT_COLUMN,
-    DEFAULT_LLM_SCORE
+    LOW_RETRIEVAL_SCORE_THRESHOLD,
+    HIGH_RETRIEVAL_SCORE_THRESHOLD
+    INVALID_LLM_SCORE
 )
 
 
@@ -83,14 +85,14 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
         """
         # get llm retrieval score
         df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_retrieval_score, axis=1, args=(llm_client,))
-        df = df[df[INDEX_SCORE_LLM_COLUMN] != DEFAULT_LLM_SCORE]
+        df = df[df[INDEX_SCORE_LLM_COLUMN] != INVALID_LLM_SCORE]
 
         action_list = []
         for metric in self.violated_metrics:
             low_retrieval_score_df = df[(df[metric] < METRICS_VIOLATION_THRESHOLD) &
-                                        (df[INDEX_SCORE_LLM_COLUMN] < METRICS_VIOLATION_THRESHOLD)]
+                                        (df[INDEX_SCORE_LLM_COLUMN] < LOW_RETRIEVAL_SCORE_THRESHOLD)]
             high_retrieval_score_df = df[(df[metric] >= GOOD_METRICS_THRESHOLD) &
-                                         (df[INDEX_SCORE_LLM_COLUMN] >= GOOD_METRICS_THRESHOLD)]
+                                         (df[INDEX_SCORE_LLM_COLUMN] >= HIGH_RETRIEVAL_SCORE_THRESHOLD)]
             # generate action only low retrieval score query ratio above the threshold
             low_retrieval_score_query_ratio = len(low_retrieval_score_df)/len(df)
             if low_retrieval_score_query_ratio >= LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD:

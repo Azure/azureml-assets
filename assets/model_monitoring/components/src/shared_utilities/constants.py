@@ -156,6 +156,8 @@ GSQ_METRICS_LIST = ["Fluency", "Coherence", "Groundedness", "Relevance", "Simila
 GOOD_METRICS_VALUE = 5
 GOOD_METRICS_THRESHOLD = 5
 METRICS_VIOLATION_THRESHOLD = 4
+LOW_RETRIEVAL_SCORE_THRESHOLD = 4
+HIGH_RETRIEVAL_SCORE_THRESHOLD = 5
 RETRIEVAL_SPAN_TYPE = "Retrieval"
 EMBEDDING_SPAN_TYPE = "Embedding"
 TEXT_SPLITTER = "#<Splitter>#"
@@ -170,7 +172,7 @@ INDEX_ACTION_TYPE = "Index Action"
 ACTION_DESCRIPTION = "The application's response quality is low due to suboptimal index retrieval. Please update the index with ID '{index_asset_id}' to address this issue."  # noqa
 MAX_SAMPLE_SIZE = 20
 DEFAULT_RETRIEVAL_SCORE = 0
-DEFAULT_LLM_SCORE = -1
+INVALID_LLM_SCORE = -1
 
 APP_TRACES_INPUTS_EVENT_NAME = "promptflow.function.inputs"
 APP_TRACES_OUTPUT_EVENT_NAME = "promptflow.function.output"

@@ -24,7 +24,7 @@ from shared_utilities.constants import (
     RETRIEVAL_QUERY_TYPE_COLUMN,
     RETRIEVAL_TOP_K_COLUMN,
     PROMPT_FLOW_INPUT_COLUMN,
-    DEFAULT_LLM_SCORE,
+    INVALID_LLM_SCORE,
     ROOT_SPAN_COLUMN,
     INDEX_SCORE_LLM_COLUMN,
     PROMPT_COLUMN,
@@ -198,7 +198,7 @@ def _post_process_retrieval_results(response):
         score = float(parsed_score_response[0].replace("'", "").strip())
     else:
         # Result of score is not found in the output string
-        score = DEFAULT_LLM_SCORE
+        score = INVALID_LLM_SCORE
         print("Not able to parse the retrieval score, setting score to 0")
     return score
 
