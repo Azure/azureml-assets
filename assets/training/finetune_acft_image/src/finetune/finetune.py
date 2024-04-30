@@ -6,7 +6,6 @@
 import os
 import json
 import argparse
-import shutil
 from transformers.training_args import OptimizerNames
 from transformers.trainer_utils import SchedulerType, IntervalStrategy
 from optimum.onnxruntime.training_args import ORTOptimizerNames
@@ -14,7 +13,6 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.accelerator.constants import MetricConstants
 
 from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
-from azureml.acft.common_components.image.runtime_common.common import distributed_utils
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import (
     ModelInputEmpty,
@@ -28,8 +26,7 @@ from azureml.metrics.constants import Metric as metrics_constants
 
 from azureml.acft.image import VERSION, PROJECT_NAME
 from azureml.acft.image.components.common.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
-from azureml.acft.image.components.model_selector.constants import ImageModelSelectorConstants
-from azureml.acft.image.components.finetune.common.constants.constants import InferenceParameters, SettingParameters
+from azureml.acft.image.components.finetune.common.constants.constants import SettingParameters
 from azureml.acft.image.components.finetune.factory.mappings import MODEL_FAMILY_CLS
 from azureml.acft.image.components.finetune.factory.task_definitions import Tasks
 from azureml.acft.image.components.finetune.finetune_runner import finetune_runner
@@ -997,7 +994,7 @@ def main():
     if args.task_name in [Tasks.MM_OBJECT_DETECTION, Tasks.MM_INSTANCE_SEGMENTATION] and (
        args.apply_deepspeed is True or args.apply_ort is True):
         err_msg = (
-            f"apply_deepspeed or apply_ort is not yet supported for { args.task_name}. "
+            f"apply_deepspeed or apply_ort is not yet supported for {args.task_name}. "
             "Please disable ds and ort training."
         )
         raise ACFTValidationException._with_error(AzureMLError.create(ACFTUserError, pii_safe_message=err_msg))
