@@ -85,7 +85,7 @@ class TestAction:
         assert summary_json["ConfidenceScore"] == 0.95
         assert summary_json["QueryIntention"] == "query intention"
         assert summary_json["CreationTime"] == generate_test_action.creation_time
-        assert summary_json["FilePath"] == f"output\\actions/{generate_test_action.action_id}.json"
+        assert summary_json["FilePath"].endswith(f"actions/{generate_test_action.action_id}.json")
 
     @pytest.mark.parametrize(
         "max_sample_size, expected_sample_size", [
