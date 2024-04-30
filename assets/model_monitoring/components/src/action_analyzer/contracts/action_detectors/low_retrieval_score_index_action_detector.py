@@ -87,7 +87,6 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
             df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_retrieval_score, axis=1, args=(llm_client,))
             df = df[df[INDEX_SCORE_LLM_COLUMN] != INVALID_LLM_SCORE]
 
-
             for metric in self.violated_metrics:
                 low_retrieval_score_df = df[(df[metric] < METRICS_VIOLATION_THRESHOLD) &
                                             (df[INDEX_SCORE_LLM_COLUMN] < LOW_RETRIEVAL_SCORE_THRESHOLD)]
@@ -108,9 +107,9 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
                     print(f"Positive sample size: {len(action.positive_samples)}.")
                     print(f"Negative sample size: {len(action.negative_samples)}.")
                     action_list.append(action)
-            except Exception as e:
-                print("LowRetrievalScoreIndexActionDetector detect failed with error", e)
-            return action_list
+        except Exception as e:
+            print("LowRetrievalScoreIndexActionDetector detect failed with error", e)
+        return action_list
 
     def generate_action(self,
                         llm_client: LLMClient,
