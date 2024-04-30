@@ -15,7 +15,6 @@ from mlflow import MlflowClient
 from shared_utilities.span_tree_utils import SpanTree
 from shared_utilities.constants import (
     RETRIEVAL_SPAN_TYPE,
-    GSQ_METRICS_LIST,
     MODIFIED_PROMPT_COLUMN,
     COMPLETION_COLUMN,
     RETRIEVAL_DOC_COLUMN,
