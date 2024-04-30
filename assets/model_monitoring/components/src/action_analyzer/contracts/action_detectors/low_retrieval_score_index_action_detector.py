@@ -30,6 +30,7 @@ from shared_utilities.constants import (
 
 
 LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD = 0.1
+LOW_RETRIEVAL_SCORE_INDEX_ACTION_CONFIDENCE = 0.9
 
 
 class LowRetrievalScoreIndexActionDetector(ActionDetector):
@@ -92,7 +93,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
                 # use the low retrieval score query ratio as confidence
                 action = self.generate_action(llm_client,
                                               metric,
-                                              low_retrieval_score_query_ratio,
+                                              LOW_RETRIEVAL_SCORE_INDEX_ACTION_CONFIDENCE,
                                               low_retrieval_score_df,
                                               high_retrieval_score_df,
                                               aml_deployment_id)
