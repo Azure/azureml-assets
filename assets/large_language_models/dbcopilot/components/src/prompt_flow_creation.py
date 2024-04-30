@@ -51,6 +51,7 @@ class PromptFlowCreation(OBOComponentBase):
         runtime: str = None,
         knowledge_pieces: str = None,
         include_views: bool = False,
+        instruct_template: str = None,
     ):
         """Create the prompt flow."""
         from utils.asset_utils import get_datastore_uri, parse_connection
@@ -116,8 +117,9 @@ class PromptFlowCreation(OBOComponentBase):
             flow_data['nodes'][0]['inputs']['example_embedding_uri'] = example_embedding_uri
             flow_data['nodes'][0]['inputs']['knowledge_pieces'] = knowledge_pieces
             flow_data["nodes"][0]["inputs"]["include_views"] = include_views
+            flow_data["nodes"][0]["inputs"]["instruct_template"] = instruct_template
 
-        with open(self.FLOW_DAG, 'w', encoding="utf-8") as file:
+        with open(self.FLOW_DAG, "w", encoding="utf-8") as file:
             yaml.safe_dump(flow_data, file)
 
         # create flow
