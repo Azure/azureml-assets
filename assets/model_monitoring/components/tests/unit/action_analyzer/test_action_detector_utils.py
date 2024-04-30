@@ -3,14 +3,23 @@
 
 """Test file for action detector utils."""
 
+
+import os
 import pytest
 import pandas as pd
 import json
 from pyspark.sql import Row
 from datetime import datetime
 from action_analyzer.contracts.action_sample import IndexActionSample
-from action_analyzer.contracts.utils.detector_utils import *
-from action_analyzer.action_detector_component.run import *
+from action_analyzer.contracts.utils.detector_utils import (
+    parse_debugging_info,
+    generate_index_action_samples
+)
+from action_analyzer.action_detector_component.run import (
+    get_unique_indexes,
+    parse_index_id,
+    get_violated_metrics
+)
 from shared_utilities.span_tree_utils import (
     SpanTree,
     SpanTreeNode,
@@ -23,7 +32,12 @@ from shared_utilities.constants import (
     ROOT_SPAN_COLUMN,
     RETRIEVAL_QUERY_TYPE_COLUMN,
     RETRIEVAL_TOP_K_COLUMN,
-    PROMPT_FLOW_INPUT_COLUMN
+    PROMPT_FLOW_INPUT_COLUMN,
+    INDEX_SCORE_COLUMN,
+    RETRIEVAL_DOC_COLUMN,
+    INDEX_ID_COLUMN,
+    INDEX_CONTENT_COLUMN,
+    SPAN_ID_COLUMN
 )
 
 @pytest.fixture
@@ -90,7 +104,6 @@ def retrieval_root_span():
 
     spans = [s1, s2, s3, s4, s5]
     return SpanTree(spans).to_json_str()
-
 
 @pytest.fixture
 def root_span():
@@ -205,7 +218,6 @@ class TestDetectorUtils:
         assert "index_asset_id_1" in index_ids
         assert "index_asset_id_2" in index_ids
 
-
     def test_get_unique_indexes(self, retrieval_root_span):
         """Test get_unique_indexes function from the root span."""
         # The tree is structured like this:
@@ -222,7 +234,6 @@ class TestDetectorUtils:
         assert len(unique_indexes) == 2
         assert "index_asset_id_1" in unique_indexes
         assert "index_asset_id_2" in unique_indexes
-
 
     def test_parse_debugging_info(self, root_span):
         """Test parse_debugging_info function from the root span."""
