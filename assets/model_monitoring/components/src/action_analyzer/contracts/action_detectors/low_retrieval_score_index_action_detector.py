@@ -62,7 +62,12 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
             pandas.DataFrame: preprocessed pandas dataframe.
         """
 
-        return extract_fields_from_debugging_info(df, self.index_id)
+        try:
+            preprocessed_df = extract_fields_from_debugging_info(df, self.index_id)
+            return preprocessed_df
+        except Exception as e:
+            print("LowRetrievalScoreIndexActionDetector preprocess failed with error", e)
+            return None
 
     def detect(self, df: pandas.DataFrame, llm_client: LLMClient, aml_deployment_id=None) -> List[Action]:
         """Detect the action.
@@ -75,32 +80,37 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
         Returns:
             List[Action]: list of actions.
         """
-        # get llm retrieval score
-        df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_retrieval_score, axis=1, args=(llm_client,))
-        df = df[df[INDEX_SCORE_LLM_COLUMN] != INVALID_LLM_SCORE]
 
         action_list = []
-        for metric in self.violated_metrics:
-            low_retrieval_score_df = df[(df[metric] < METRICS_VIOLATION_THRESHOLD) &
-                                        (df[INDEX_SCORE_LLM_COLUMN] < LOW_RETRIEVAL_SCORE_THRESHOLD)]
-            high_retrieval_score_df = df[(df[metric] >= GOOD_METRICS_THRESHOLD) &
-                                         (df[INDEX_SCORE_LLM_COLUMN] >= HIGH_RETRIEVAL_SCORE_THRESHOLD)]
-            # generate action only low retrieval score query ratio above the threshold
-            low_retrieval_score_query_ratio = len(low_retrieval_score_df)/len(df)
-            if low_retrieval_score_query_ratio >= LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD:
-                print(f"Generating action for metric {metric}. \
-                The low retrieval score query ratio is {low_retrieval_score_query_ratio}.")
-                # use the low retrieval score query ratio as confidence
-                action = self.generate_action(llm_client,
-                                              metric,
-                                              LOW_RETRIEVAL_SCORE_INDEX_ACTION_CONFIDENCE,
-                                              low_retrieval_score_df,
-                                              high_retrieval_score_df,
-                                              aml_deployment_id)
-                print(f"Positive sample size: {len(action.positive_samples)}.")
-                print(f"Negative sample size: {len(action.negative_samples)}.")
-                action_list.append(action)
-        return action_list
+        try:
+            # get llm retrieval score
+            df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_retrieval_score, axis=1, args=(llm_client,))
+            df = df[df[INDEX_SCORE_LLM_COLUMN] != INVALID_LLM_SCORE]
+
+
+            for metric in self.violated_metrics:
+                low_retrieval_score_df = df[(df[metric] < METRICS_VIOLATION_THRESHOLD) &
+                                            (df[INDEX_SCORE_LLM_COLUMN] < LOW_RETRIEVAL_SCORE_THRESHOLD)]
+                high_retrieval_score_df = df[(df[metric] >= GOOD_METRICS_THRESHOLD) &
+                                            (df[INDEX_SCORE_LLM_COLUMN] >= HIGH_RETRIEVAL_SCORE_THRESHOLD)]
+                # generate action only low retrieval score query ratio above the threshold
+                low_retrieval_score_query_ratio = len(low_retrieval_score_df)/len(df)
+                if low_retrieval_score_query_ratio >= LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD:
+                    print(f"Generating action for metric {metric}. \
+                    The low retrieval score query ratio is {low_retrieval_score_query_ratio}.")
+                    # use the low retrieval score query ratio as confidence
+                    action = self.generate_action(llm_client,
+                                                metric,
+                                                LOW_RETRIEVAL_SCORE_INDEX_ACTION_CONFIDENCE,
+                                                low_retrieval_score_df,
+                                                high_retrieval_score_df,
+                                                aml_deployment_id)
+                    print(f"Positive sample size: {len(action.positive_samples)}.")
+                    print(f"Negative sample size: {len(action.negative_samples)}.")
+                    action_list.append(action)
+            except Exception as e:
+                print("LowRetrievalScoreIndexActionDetector detect failed with error", e)
+            return action_list
 
     def generate_action(self,
                         llm_client: LLMClient,

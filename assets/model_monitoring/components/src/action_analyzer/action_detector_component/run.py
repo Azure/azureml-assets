@@ -146,8 +146,9 @@ def run():
                                                                     violated_metrics,
                                                                     args.query_intention_enabled)
         df_preprocessed = lrsi_action_detector.preprocess_data(df_pandas)
-        lrsi_actions = lrsi_action_detector.detect(df_preprocessed, llm_client, args.aml_deployment_id)
-        index_actions += lrsi_actions
+        if df_preprocessed:
+            lrsi_actions = lrsi_action_detector.detect(df_preprocessed, llm_client, args.aml_deployment_id)
+            index_actions += lrsi_actions
 
         # # Todo: metrics violation index action detector
         # mvi_action_detector = MetricsViolationIndexActionDetector()
