@@ -61,7 +61,6 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
         Returns:
             pandas.DataFrame: preprocessed pandas dataframe.
         """
-
         try:
             preprocessed_df = extract_fields_from_debugging_info(df, self.index_id)
             return preprocessed_df
@@ -80,7 +79,6 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
         Returns:
             List[Action]: list of actions.
         """
-
         action_list = []
         try:
             # get llm retrieval score
