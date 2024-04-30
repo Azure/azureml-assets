@@ -46,6 +46,7 @@ inputs:
   # Instance prompt
   instance_prompt:
     type: string
+    optional: true
     description: The prompt with identifier specifying the instance.
   
   resolution:
@@ -379,7 +380,7 @@ command: >-
   --task_name ${{inputs.task_name}}
   --apply_lora ${{inputs.apply_lora}}
   --num_validation_images ${{inputs.num_validation_images}}
-  --instance_prompt ${{inputs.instance_prompt}}
+  $[[--instance_prompt ${{inputs.instance_prompt}}]]
   $[[--tokenizer_max_length ${{inputs.tokenizer_max_length}}]]
   $[[--text_encoder_name ${{inputs.text_encoder_name}}]]
   $[[--text_encoder_type ${{inputs.text_encoder_type}}]]
