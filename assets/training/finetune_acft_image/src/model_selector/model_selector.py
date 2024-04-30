@@ -20,7 +20,6 @@ logger = get_logger_app("azureml.acft.image.scripts.components.model_selector.mo
 def get_common_parser():
     """
     Add arguments and returns the parser. Here we add all the arguments for model selector.
-
     Those arguments that are not relevant for the input task should be ignored.
     """
     parser = argparse.ArgumentParser(
@@ -71,6 +70,13 @@ def get_common_parser():
         default=False,
         help="Download model directly from HuggingFace or MMDetection hubs instead of system registry"
     )
+    parser.add_argument(
+        "--component_type",
+        type=str,
+        default=None,
+        help="Component type used to differntiate stable diffusion model import from other "
+        "model imports because it has different folder copy logic."
+    )
 
     return parser
 
@@ -83,6 +89,7 @@ def main():
     common_args, _ = common_parser.parse_known_args()
 
     args = argparse.Namespace(**vars(common_args))
+    logger.info(f"args : {args}")
 
     set_logging_parameters(
         task_type="model_selector-" + args.model_family,
@@ -102,6 +109,7 @@ def main():
         model_family=args.model_family,
         output_dir=args.output_dir,
         download_from_source=args.download_from_source,
+        component_type=args.component_type
     ).run_workflow()
     logger.info("Model download successful!")
 
