@@ -412,7 +412,7 @@ outputs:
 jobs:
   text_to_image_model_import:
     type: command
-    component: ../model_import/model_import_diffusers_text2image.yaml
+    component: azureml:diffusers_text_to_image_model_import:0.0.1
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
@@ -422,7 +422,7 @@ jobs:
       download_from_source: ${{parent.inputs.download_from_source}}
   text_to_image_dreambooth_finetune:
     type: command
-    component: ../finetune/finetune_diffusers_text2image.yaml
+    component: azureml:diffusers_text_to_image_finetune:0.0.1
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
