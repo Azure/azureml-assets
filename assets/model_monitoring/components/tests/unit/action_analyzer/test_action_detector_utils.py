@@ -134,7 +134,7 @@ def root_span():
     for i in range(3):
         documents.append({"document.content": f"doc_{i}", "document.score": "0.5"})
 
-    retrieval_attributes = json.dumps({"retrieval.query": "query","retrieval.documents": json.dumps(documents)})
+    retrieval_attributes = json.dumps({"retrieval.query": "query", "retrieval.documents": json.dumps(documents)})
     s3 = SpanTreeNode(
         Row(trace_id="01", span_id="3", parent_id="2", start_time=datetime(2024, 2, 12, 9, 15, 0),
             end_time=datetime(2024, 2, 12, 9, 20, 0), span_type="Retrieval", attributes=retrieval_attributes)
@@ -168,17 +168,17 @@ class TestDetectorUtils:
 
     def test_get_violated_metrics_success(self):
         """Test get violated metrics from gsq output."""
-        # "AggregatedFluencyPassRate": {
-        #     "value": "0.92",
-        #     "threshold": "0.9",
+        # "AverageFluencyScore": {
+        #     "value": "4.62",
+        #     "threshold": "4.5",
         # }
-        # "AggregatedCoherencePassRate": {
-        #     "value": "0.86",
-        #     "threshold": "0.9",
+        # "AverageCoherenceScore": {
+        #     "value": "4.45",
+        #     "threshold": "4.5",
         # }
-        # "AggregatedRelevancePassRate": {
-        #     "value": "0.77",
-        #     "threshold": "0.9",
+        # "AverageRelevanceScore": {
+        #     "value": "4.17",
+        #     "threshold": "4.5",
         # }
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../")
         input_url = f"{tests_path}/unit/action_analyzer/resources/"

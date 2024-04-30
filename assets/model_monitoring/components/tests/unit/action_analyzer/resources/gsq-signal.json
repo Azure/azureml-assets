@@ -261,7 +261,7 @@
         },
         "AverageRelevanceScore": {
             "value": "4.17",
-            "threshold": "4.0",
+            "threshold": "4.5",
             "timeseries": {
                 "runId": "0c05df9a-f38a-4727-bf0f-5802ae00b223",
                 "metricNames": {
@@ -305,7 +305,7 @@
         },
         "AverageFluencyScore": {
             "value": "4.62",
-            "threshold": "4.0",
+            "threshold": "4.5",
             "timeseries": {
                 "runId": "db64e3c8-fc15-455a-bf03-e1e9eb0802fd",
                 "metricNames": {
@@ -349,7 +349,7 @@
         },
         "AverageCoherenceScore": {
             "value": "4.45",
-            "threshold": "4.0",
+            "threshold": "4.5",
             "timeseries": {
                 "runId": "ae83bec7-1f66-4fdd-96a7-b3cd7f72d464",
                 "metricNames": {

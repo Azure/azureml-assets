@@ -12,8 +12,6 @@ from action_analyzer.contracts.actions.low_retrieval_score_index_action import L
 from action_analyzer.contracts.llm_client import LLMClient
 from action_analyzer.contracts.utils.detector_utils import (
     extract_fields_from_debugging_info,
-    get_missed_metrics,
-    calculate_e2e_metrics,
     get_retrieval_score,
     get_query_intention,
     generate_index_action_samples

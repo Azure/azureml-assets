@@ -91,7 +91,7 @@ def get_violated_metrics(signal_out_url: str, signal_name: str) -> List[str]:
         gsq_output_json = json.loads(gsq_output)
         metrics_dict = gsq_output_json["metrics"]
         for metrics in GSQ_METRICS_LIST:
-            pass_rate_metrics = f"Aggregated{metrics}PassRate"
+            pass_rate_metrics = f"Average{metrics}Score"
             if pass_rate_metrics in metrics_dict:
                 if metrics_dict[pass_rate_metrics]["value"] < metrics_dict[pass_rate_metrics]["threshold"]:
                     print(f"Metrics {metrics} violated.")
