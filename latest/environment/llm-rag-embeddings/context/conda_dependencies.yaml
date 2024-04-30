@@ -20,11 +20,11 @@ dependencies:
   - azure-search-documents>=11.4.0
     # Azure ML
   - azureml-contrib-services
-  - azureml-core==1.55.0.post2
-  - azureml-dataset-runtime==1.55.0
+  - azureml-core==1.56.0
+  - azureml-dataset-runtime==1.56.0
   - azureml-inference-server-http==0.7.6
-  - azureml-mlflow==1.55.0
-  - azureml-telemetry==1.55.0
+  - azureml-mlflow==1.56.0
+  - azureml-telemetry==1.56.0
     # Other public packages
   - beautifulsoup4~=4.11.2
   - datasets~=2.10.1
