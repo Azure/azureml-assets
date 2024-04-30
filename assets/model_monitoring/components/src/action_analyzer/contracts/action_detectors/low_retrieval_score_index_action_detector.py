@@ -91,7 +91,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
                 low_retrieval_score_df = df[(df[metric] < METRICS_VIOLATION_THRESHOLD) &
                                             (df[INDEX_SCORE_LLM_COLUMN] < LOW_RETRIEVAL_SCORE_THRESHOLD)]
                 high_retrieval_score_df = df[(df[metric] >= GOOD_METRICS_THRESHOLD) &
-                                            (df[INDEX_SCORE_LLM_COLUMN] >= HIGH_RETRIEVAL_SCORE_THRESHOLD)]
+                                             (df[INDEX_SCORE_LLM_COLUMN] >= HIGH_RETRIEVAL_SCORE_THRESHOLD)]
                 # generate action only low retrieval score query ratio above the threshold
                 low_retrieval_score_query_ratio = len(low_retrieval_score_df)/len(df)
                 if low_retrieval_score_query_ratio >= LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD:
@@ -99,11 +99,11 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
                     The low retrieval score query ratio is {low_retrieval_score_query_ratio}.")
                     # use the low retrieval score query ratio as confidence
                     action = self.generate_action(llm_client,
-                                                metric,
-                                                LOW_RETRIEVAL_SCORE_INDEX_ACTION_CONFIDENCE,
-                                                low_retrieval_score_df,
-                                                high_retrieval_score_df,
-                                                aml_deployment_id)
+                                                  metric,
+                                                  LOW_RETRIEVAL_SCORE_INDEX_ACTION_CONFIDENCE,
+                                                  low_retrieval_score_df,
+                                                  high_retrieval_score_df,
+                                                  aml_deployment_id)
                     print(f"Positive sample size: {len(action.positive_samples)}.")
                     print(f"Negative sample size: {len(action.negative_samples)}.")
                     action_list.append(action)
