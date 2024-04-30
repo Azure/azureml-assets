@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.14
+version: 0.0.15
 name: image_classification_pipeline
 display_name: Image Classification Pipeline
 description: Pipeline component for image classification.
@@ -277,7 +277,7 @@ jobs:
 
   image_classification_runtime_component:
     type: command
-    component: azureml:train_image_classification_model:0.0.8
+    component: azureml:train_image_classification_model:0.0.9
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
