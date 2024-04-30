@@ -29,7 +29,7 @@ from shared_utilities.constants import (
 )
 
 
-LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD = 0.1
+LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD = 0.5
 LOW_RETRIEVAL_SCORE_INDEX_ACTION_CONFIDENCE = 0.9
 
 
@@ -43,7 +43,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
         """Create a low retrieval score index action detector.
 
         Args:
-            index_id(str): the index asset id.
+            index_id(str): the hashed index id.
             violated_metrics(List[str]): violated e2e metrics
             query_intention_enabled(str): enable llm generated summary. Accepted values: true or false.
             max_positive_sample_size(int): (Optional) max positive sample size in the action.
@@ -88,13 +88,14 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
             for metric in self.violated_metrics:
                 low_retrieval_score_df = df[(df[metric] < METRICS_VIOLATION_THRESHOLD) &
                                             (df[INDEX_SCORE_LLM_COLUMN] < LOW_RETRIEVAL_SCORE_THRESHOLD)]
+                low_metric_score_df = df[df[metric] < METRICS_VIOLATION_THRESHOLD]
                 high_retrieval_score_df = df[(df[metric] >= GOOD_METRICS_THRESHOLD) &
                                              (df[INDEX_SCORE_LLM_COLUMN] >= HIGH_RETRIEVAL_SCORE_THRESHOLD)]
                 # generate action only low retrieval score query ratio above the threshold
-                low_retrieval_score_query_ratio = len(low_retrieval_score_df)/len(df)
+                low_retrieval_score_query_ratio = len(low_retrieval_score_df)/len(low_metric_score_df)
+                print(f"The low retrieval score query ratio is {low_retrieval_score_query_ratio}.")
                 if low_retrieval_score_query_ratio >= LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD:
-                    print(f"Generating action for metric {metric}. \
-                    The low retrieval score query ratio is {low_retrieval_score_query_ratio}.")
+                    print(f"Generating action for metric {metric}.")
                     # use the low retrieval score query ratio as confidence
                     action = self.generate_action(llm_client,
                                                   metric,

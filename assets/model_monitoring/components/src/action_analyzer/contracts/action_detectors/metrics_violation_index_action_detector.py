@@ -9,9 +9,7 @@ from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
 import pandas
 from action_analyzer.contracts.utils.detector_utils import (
-    extract_fields_from_debugging_info,
-    get_missed_metrics,
-    calculate_e2e_metrics
+    extract_fields_from_debugging_info
 )
 
 
@@ -29,7 +27,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
         """Create a metrics violation index action detector.
 
         Args:
-            index_id(str): the index asset id.
+            index_id(str): the hashed index id.
             violated_metrics(List[str]): violated e2e metrics
             correlation_test_method(str): test method for correlation test. e.g. ttest.
             correlation_test_pvalue_threshold(float): p-value threshold for correlation test to generate action.
@@ -47,22 +45,18 @@ class MetricsViolationIndexActionDetector(ActionDetector):
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.
 
-            1. check if all violated metrics are available. If not, call evaluate sdk to get the e2e metrics.
-            2. extract extra fields from the root span for action.
-            3. convert the dataframe from trace level to span level.
-
         Args:
             df(pandas.DataFrame): input pandas dataframe.
 
         Returns:
             pandas.DataFrame: preprocessed pandas dataframe.
         """
-        missed_metrics = get_missed_metrics(self.violated_metrics, df.columns.tolist())
-
-        if missed_metrics != []:
-            df = calculate_e2e_metrics(df, missed_metrics)
-
-        return extract_fields_from_debugging_info(df, self.index_id)
+        try:
+            preprocessed_df = extract_fields_from_debugging_info(df, self.index_id)
+            return preprocessed_df
+        except Exception as e:
+            print("MetricsViolationIndexActionDetector preprocess failed with error", e)
+            return pandas.DataFrame()
 
     def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> List[Action]:
         """Detect the action.

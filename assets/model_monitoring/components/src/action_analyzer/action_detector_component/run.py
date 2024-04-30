@@ -12,10 +12,10 @@ from action_analyzer.contracts.action_detectors.low_retrieval_score_index_action
 )
 from action_analyzer.contracts.llm_client import LLMClient
 from action_analyzer.contracts.utils.detector_utils import (
-    get_index_id_from_index_content,
     deduplicate_actions,
     write_actions,
-    add_action_tag_to_run
+    add_action_tag_to_run,
+    hash_index_content
 )
 from shared_utilities.constants import (
     RETRIEVAL_SPAN_TYPE,
@@ -28,14 +28,14 @@ from shared_utilities.io_utils import try_read_mltable_in_spark
 from shared_utilities.span_tree_utils import SpanTree
 
 
-def parse_index_id(root_span: str) -> List[str]:
-    """Parse the span tree to get index id.
+def parse_hashed_index_id(root_span: str) -> List[str]:
+    """Parse the span tree to get hashed index id.
 
     Args:
         root_span(str): the span tree in json string format.
 
     Returns:
-        list(str): list of parsed indexes in the span tree.
+        list(str): list of hashed indexes in the span tree.
     """
     try:
         tree = SpanTree.create_tree_from_json_string(root_span)
@@ -47,13 +47,11 @@ def parse_index_id(root_span: str) -> List[str]:
                     print("No look up span found, skip action analyzer.")
                     return None
                 index_span = tree.get_span_tree_node_by_span_id(parent_id)
-                print(index_span)
                 index_input = json.loads(index_span.input)
-                print(index_input)
                 index_content = index_input['mlindex_content']
-                index_id = get_index_id_from_index_content(index_content)
-                if index_id:
-                    index_list.append(index_id)
+                hashed_index_id = hash_index_content(index_content)
+                if hashed_index_id:
+                    index_list.append(hashed_index_id)
         return index_list
     except KeyError as e:
         print("Required field not found: ", e)
@@ -69,7 +67,7 @@ def get_unique_indexes(df: pandas.DataFrame) -> List[str]:
     Returns:
         List[str]: list of unique indexes.
     """
-    df[INDEX_ID_COLUMN] = df[ROOT_SPAN_COLUMN].apply(parse_index_id)
+    df[INDEX_ID_COLUMN] = df[ROOT_SPAN_COLUMN].apply(parse_hashed_index_id)
     # expand each trace row to index level
     df = df.explode(INDEX_ID_COLUMN)
     return df[INDEX_ID_COLUMN].unique().tolist()

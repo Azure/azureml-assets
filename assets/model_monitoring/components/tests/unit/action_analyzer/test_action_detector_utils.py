@@ -8,18 +8,18 @@ import os
 import pytest
 import pandas as pd
 import json
+import hashlib
 from pyspark.sql import Row
 from datetime import datetime
 from action_analyzer.contracts.action_sample import IndexActionSample
 from action_analyzer.contracts.utils.detector_utils import (
     parse_debugging_info,
     generate_index_action_samples,
-    get_missed_metrics,
     get_index_id_from_index_content
 )
 from action_analyzer.action_detector_component.run import (
     get_unique_indexes,
-    parse_index_id,
+    parse_hashed_index_id,
     get_violated_metrics
 )
 from shared_utilities.span_tree_utils import (
@@ -143,6 +143,20 @@ def root_span():
     return SpanTree(spans).to_json_str()
 
 
+@pytest.fixture
+def hashed_index_id_1():
+    """Return a hashed index id 1."""
+    index_content_1 = '{"self": {"asset_id": "index_asset_id_1"}}'
+    return hashlib.sha256(index_content_1.encode('utf-8')).hexdigest()
+
+
+@pytest.fixture
+def hashed_index_id_2():
+    """Return a hashed index id 2."""
+    index_content_2 = '{"self": {"asset_id": "index_asset_id_2"}}'
+    return hashlib.sha256(index_content_2.encode('utf-8')).hexdigest()
+
+
 @pytest.mark.unit
 class TestDetectorUtils:
     """Test class for action."""
@@ -158,13 +172,6 @@ class TestDetectorUtils:
         """Test get_index_id_from_index_content function."""
         result = get_index_id_from_index_content(index_content)
         assert result == expected_index_id
-
-    def test_get_missed_metrics(self):
-        """Test get_missed_metrics function."""
-        violated_metrics = ["Fluency", "Coherence", "Relevance", "Groundedness", "Similarity", "other metrics"]
-        column_names = ["query", "completion", "Fluency", "Coherence"]
-        missed_metrics = get_missed_metrics(violated_metrics, column_names)
-        assert missed_metrics == ["Relevance", "Groundedness", "Similarity"]
 
     def test_get_violated_metrics_success(self):
         """Test get violated metrics from gsq output."""
@@ -211,18 +218,18 @@ class TestDetectorUtils:
         assert action_samples[0].lookup_score == 9
         assert action_samples[9].lookup_score == 0
 
-    def test_parse_index_id(self, retrieval_root_span):
-        """Test parse_index_id function from the root span."""
+    def test_parse_hashed_index_id(self, retrieval_root_span, hashed_index_id_1, hashed_index_id_2):
+        """Test parse_hashed_index_id function from the root span."""
         # The tree is structured like this:
         # 1
         # |-> 2 -> 3 (retrieval)
         # |-> 4 -> 5 (retreival)
-        index_ids = parse_index_id(retrieval_root_span)
+        index_ids = parse_hashed_index_id(retrieval_root_span)
         assert len(index_ids) == 2
-        assert "index_asset_id_1" in index_ids
-        assert "index_asset_id_2" in index_ids
+        assert hashed_index_id_1 in index_ids
+        assert hashed_index_id_2 in index_ids
 
-    def test_get_unique_indexes(self, retrieval_root_span):
+    def test_get_unique_indexes(self, retrieval_root_span, hashed_index_id_1, hashed_index_id_2):
         """Test get_unique_indexes function from the root span."""
         # The tree is structured like this:
         # 1
@@ -236,12 +243,12 @@ class TestDetectorUtils:
 
         unique_indexes = get_unique_indexes(df)
         assert len(unique_indexes) == 2
-        assert "index_asset_id_1" in unique_indexes
-        assert "index_asset_id_2" in unique_indexes
+        assert hashed_index_id_1 in unique_indexes
+        assert hashed_index_id_2 in unique_indexes
 
-    def test_parse_debugging_info(self, root_span):
+    def test_parse_debugging_info(self, root_span, hashed_index_id_1):
         """Test parse_debugging_info function from the root span."""
-        extra_feilds = json.loads(parse_debugging_info(root_span, "index_asset_id_1")[0])
+        extra_feilds = json.loads(parse_debugging_info(root_span, hashed_index_id_1)[0])
         print(extra_feilds)
         assert extra_feilds[SPAN_ID_COLUMN] == "3"
         assert extra_feilds[INDEX_CONTENT_COLUMN] == '{"self": {"asset_id": "index_asset_id_1"}}'

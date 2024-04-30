@@ -9,6 +9,7 @@ import pandas
 import yaml
 import requests
 import re
+import hashlib
 from typing import List
 from mlflow import MlflowClient
 from shared_utilities.span_tree_utils import SpanTree
@@ -44,6 +45,18 @@ from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
 
 
+def hash_index_content(index_content: str) -> str:
+    """Convert index content to sha256 hash string.
+
+    Args:
+        index_content(str): str of index yaml content.
+
+    Returns:
+        str: the sha256 hash string.
+    """
+    return hashlib.sha256(index_content.encode('utf-8')).hexdigest()
+
+
 def get_index_id_from_index_content(index_content: str) -> str:
     """Parse the index id from index yaml.
 
@@ -65,11 +78,11 @@ def get_index_id_from_index_content(index_content: str) -> str:
 
 
 def parse_debugging_info(root_span: str, detector_index_id: str) -> List[str]:
-    """Parse the span tree to get debugging info.
+    """Parse the span tree to get debugging info. Only for detector hashed index id.
 
     Args:
         root_span(str): the span tree in json string format.
-        detector_index_id(str): the index id specific to the detector.
+        detector_index_id(str): the hashed index id specific to the detector.
 
     Returns:
         List[str]: list of extra debugging fields in serilized dictionary.
@@ -87,10 +100,12 @@ def parse_debugging_info(root_span: str, detector_index_id: str) -> List[str]:
                 index_span = tree.get_span_tree_node_by_span_id(parent_id)
                 index_input = json.loads(index_span.input)
                 index_content = index_input['mlindex_content']
-                index_id = get_index_id_from_index_content(index_content)
-                # only get the data for the detector index id
-                if index_id != detector_index_id:
+                hashed_index_id = hash_index_content(index_content)
+                # only get the data for the detector hashed index id
+                if hashed_index_id != detector_index_id:
                     continue
+                # index asset id is only used for rag debugging
+                index_id = get_index_id_from_index_content(index_content)
                 retrieval_query_type = index_input["query_type"]
                 retrieval_top_k = index_input["top_k"]
                 retrieval_info = json.loads(span.attributes)
@@ -124,7 +139,7 @@ def extract_fields_from_debugging_info(df: pandas.DataFrame, detector_index_id: 
 
     Args:
         df(pandas.DataFrame): input dataframe in trace level.
-        detector_index_id(str): the index id specific to the detector.
+        detector_index_id(str): the hashed index id specific to the detector.
 
     Returns:
         pandas.DataFrame: dataframe with enriched debugging values in span level.
@@ -142,41 +157,6 @@ def extract_fields_from_debugging_info(df: pandas.DataFrame, detector_index_id: 
     df[RETRIEVAL_TOP_K_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[RETRIEVAL_TOP_K_COLUMN])
     df[PROMPT_FLOW_INPUT_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[PROMPT_FLOW_INPUT_COLUMN])
     df = df.drop(columns='extra_fields')
-    return df
-
-
-def get_missed_metrics(violated_metrics: List[str], column_names: List[str]) -> List[str]:
-    """Get missed e2e metrics in the input dataframe.
-
-    Args:
-        violated_metrics(List[str]): list of violated metrics.
-        column_names(List[str]): list of column names in dataframe.
-
-    Returns:
-        List[str]: list of missed e2e metrics.
-    """
-    missed_metrics = []
-    for metric in violated_metrics:
-        # skip the invalid metrics for now.
-        if metric not in GSQ_METRICS_LIST:
-            print(f"[Warning]Metric {metric} is not supported.")
-            continue
-        if metric not in column_names:
-            print(f"Metirc {metric} is not in the input dataframe.")
-            missed_metrics.append(metric)
-    return missed_metrics
-
-
-def calculate_e2e_metrics(df: pandas.DataFrame, missed_metrics: List[str]) -> pandas.DataFrame:
-    """[Todo] Calculate missed e2e metrics.
-
-    Args:
-        df(pandas.DataFrame): input dataframe.
-        missed_metrics(List[str]): list of missed e2e metrics to be calculated.
-
-    Returns:
-        pandas.DataFrame: dataframe with calculated metrics.
-    """
     return df
 
 
