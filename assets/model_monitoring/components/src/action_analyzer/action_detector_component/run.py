@@ -6,6 +6,7 @@
 import json
 import argparse
 import pandas
+from typing import List
 from action_analyzer.contracts.action_detectors.low_retrieval_score_index_action_detector import (
     LowRetrievalScoreIndexActionDetector
 )
@@ -27,7 +28,7 @@ from shared_utilities.io_utils import try_read_mltable_in_spark
 from shared_utilities.span_tree_utils import SpanTree
 
 
-def parse_index_id(root_span: str) -> list[str]:
+def parse_index_id(root_span: str) -> List[str]:
     """Parse the span tree to get index id.
 
     Args:
@@ -46,7 +47,9 @@ def parse_index_id(root_span: str) -> list[str]:
                     print("No look up span found, skip action analyzer.")
                     return None
                 index_span = tree.get_span_tree_node_by_span_id(parent_id)
+                print(index_span)
                 index_input = json.loads(index_span.input)
+                print(index_input)
                 index_content = index_input['mlindex_content']
                 index_list.append(get_index_id_from_index_content(index_content))
         return index_list
@@ -55,14 +58,14 @@ def parse_index_id(root_span: str) -> list[str]:
         return None
 
 
-def get_unique_indexes(df: pandas.DataFrame) -> list[str]:
+def get_unique_indexes(df: pandas.DataFrame) -> List[str]:
     """Parse the span tree to find all unique indexes.
 
     Args:
-        df(pandas.DataFrame): input pandas dataframe.
+        df(pandas.DataFrame): input pandas dataframe in trace level.
 
     Returns:
-        list[str]: list of unique indexes.
+        List[str]: list of unique indexes.
     """
     df[INDEX_ID_COLUMN] = df[ROOT_SPAN_COLUMN].apply(parse_index_id)
     # expand each trace row to index level
@@ -70,14 +73,14 @@ def get_unique_indexes(df: pandas.DataFrame) -> list[str]:
     return df[INDEX_ID_COLUMN].unique().tolist()
 
 
-def get_violated_metrics(signal_out_url: str, signal_name: str) -> list[str]:
+def get_violated_metrics(signal_out_url: str, signal_name: str) -> List[str]:
     """Get the violated metrics names from the gsq output.
 
     Args:
         signal_out_url(str): gsq output url.
         signal_name(str): signal name defined by user.
     Returns:
-        list[str]: list of violated metrics.
+        List[str]: list of violated metrics.
     """
     violated_metrics = []
     try:

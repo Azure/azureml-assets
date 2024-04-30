@@ -5,6 +5,7 @@
 
 import os
 import pandas
+from typing import List
 from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.actions.low_retrieval_score_index_action import LowRetrievalScoreIndexAction
@@ -38,7 +39,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
 
     def __init__(self,
                  index_id: str,
-                 violated_metrics: list[str],
+                 violated_metrics: List[str],
                  query_intention_enabled: str) -> None:
         """Create a low retrieval score index action detector.
 
@@ -72,7 +73,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
 
         return extract_fields_from_debugging_info(df, self.index_id)
 
-    def detect(self, df: pandas.DataFrame, llm_client: LLMClient, aml_deployment_id=None) -> list[Action]:
+    def detect(self, df: pandas.DataFrame, llm_client: LLMClient, aml_deployment_id=None) -> List[Action]:
         """Detect the action.
 
         Args:
@@ -81,7 +82,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
             aml_deployment_id(str): (Optional) aml deployment id for the action.
 
         Returns:
-            list[Action]: list of actions.
+            List[Action]: list of actions.
         """
         # get llm retrieval score
         df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_retrieval_score, axis=1, args=(llm_client,))

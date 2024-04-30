@@ -4,6 +4,7 @@
 """Action Detector Class."""
 
 import pandas
+from typing import List
 from abc import ABC, abstractmethod
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
@@ -34,7 +35,7 @@ class ActionDetector(ABC):
         pass
 
     @abstractmethod
-    def detect(self, df: pandas.DataFrame, llm_client: LLMClient, aml_deployment_id=None) -> list[Action]:
+    def detect(self, df: pandas.DataFrame, llm_client: LLMClient, aml_deployment_id=None) -> List[Action]:
         """Detect the action.
 
         Args:
@@ -43,6 +44,6 @@ class ActionDetector(ABC):
             aml_deployment_id(str): (Optional) aml deployment id for the action.
 
         Returns:
-            list[Action]: list of actions.
+            List[Action]: list of actions.
         """
         pass

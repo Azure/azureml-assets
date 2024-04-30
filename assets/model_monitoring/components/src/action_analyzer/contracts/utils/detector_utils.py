@@ -9,6 +9,7 @@ import pandas
 import yaml
 import requests
 import re
+from typing import List
 from mlflow import MlflowClient
 from shared_utilities.span_tree_utils import SpanTree
 from shared_utilities.constants import (
@@ -63,7 +64,7 @@ def get_index_id_from_index_content(index_content: str) -> str:
     return index_id
 
 
-def parse_debugging_info(root_span: str, detector_index_id: str) -> list[str]:
+def parse_debugging_info(root_span: str, detector_index_id: str) -> List[str]:
     """Parse the span tree to get debugging info.
 
     Args:
@@ -71,7 +72,7 @@ def parse_debugging_info(root_span: str, detector_index_id: str) -> list[str]:
         detector_index_id(str): the index id specific to the detector.
 
     Returns:
-        list[str]: list of extra debugging fields in serilized dictionary.
+        List[str]: list of extra debugging fields in serilized dictionary.
     """
     try:
         tree = SpanTree.create_tree_from_json_string(root_span)
@@ -84,7 +85,7 @@ def parse_debugging_info(root_span: str, detector_index_id: str) -> list[str]:
                     print("No look up span found, skip this span.")
                     continue
                 index_span = tree.get_span_tree_node_by_span_id(parent_id)
-                index_input = json.loads(json.loads(index_span.attributes)["inputs"])
+                index_input = json.loads(index_span.input)
                 index_content = index_input['mlindex_content']
                 index_id = get_index_id_from_index_content(index_content)
                 # only get the data for the detector index id
@@ -144,15 +145,15 @@ def extract_fields_from_debugging_info(df: pandas.DataFrame, detector_index_id: 
     return df
 
 
-def get_missed_metrics(violated_metrics: list[str], column_names: list[str]) -> list[str]:
+def get_missed_metrics(violated_metrics: List[str], column_names: List[str]) -> List[str]:
     """Get missed e2e metrics in the input dataframe.
 
     Args:
-        violated_metrics(list[str]): list of violated metrics.
-        column_names(list[str]): list of column names in dataframe.
+        violated_metrics(List[str]): list of violated metrics.
+        column_names(List[str]): list of column names in dataframe.
 
     Returns:
-        list[str]: list of missed e2e metrics.
+        List[str]: list of missed e2e metrics.
     """
     missed_metrics = []
     for metric in violated_metrics:
@@ -166,12 +167,12 @@ def get_missed_metrics(violated_metrics: list[str], column_names: list[str]) -> 
     return missed_metrics
 
 
-def calculate_e2e_metrics(df: pandas.DataFrame, missed_metrics: list[str]) -> pandas.DataFrame:
+def calculate_e2e_metrics(df: pandas.DataFrame, missed_metrics: List[str]) -> pandas.DataFrame:
     """[Todo] Calculate missed e2e metrics.
 
     Args:
         df(pandas.DataFrame): input dataframe.
-        missed_metrics(list[str]): list of missed e2e metrics to be calculated.
+        missed_metrics(List[str]): list of missed e2e metrics to be calculated.
 
     Returns:
         pandas.DataFrame: dataframe with calculated metrics.
@@ -286,11 +287,11 @@ def get_retrieval_score(row: pandas.Series,
     return score
 
 
-def get_query_intention(query_list: list[str], llm_client: LLMClient) -> str:
+def get_query_intention(query_list: List[str], llm_client: LLMClient) -> str:
     """Get the query intention from a list of queries.
 
     Args:
-        query_list(list[str]): list of queries.
+        query_list(List[str]): list of queries.
         llm_client(LLM): llm client to make llm call.
 
     Returns:
@@ -341,14 +342,14 @@ def generate_index_action_samples(df: pandas.DataFrame,
     return samples
 
 
-def deduplicate_actions(actions: list[Action]) -> list[Action]:
+def deduplicate_actions(actions: List[Action]) -> List[Action]:
     """Deduplicate actions.
 
     Args:
-        actions(list[Action]): list of actions.
+        actions(List[Action]): list of actions.
 
     Returns:
-        list[Action]: list of actions after deduplication.
+        List[Action]: list of actions after deduplication.
     """
     # Todo: do this later
     return actions
@@ -362,11 +363,11 @@ def write_to_file(payload: dict, local_output_directory: str, file_name: str):
         f.write(json.dumps(payload, indent=4, default=np_encoder))
 
 
-def generate_action_summary(actions: list[Action], action_output_folder: str) -> dict:
+def generate_action_summary(actions: List[Action], action_output_folder: str) -> dict:
     """Genearte action summary file from the action list.
 
     Args:
-        actions(list[Action]): list of actions.
+        actions(List[Action]): list of actions.
         action_output_folder(str): action output folder path.
 
     Returns:
@@ -378,11 +379,11 @@ def generate_action_summary(actions: list[Action], action_output_folder: str) ->
     return action_summary
 
 
-def write_actions(actions: list[Action], action_output_folder: str) -> None:
+def write_actions(actions: List[Action], action_output_folder: str) -> None:
     """Write action summary and action detail files.
 
     Args:
-        actions(list[Action]): list of actions.
+        actions(List[Action]): list of actions.
         action_output_folder(str): output folder path.
     """
     local_path = str(uuid.uuid4())
