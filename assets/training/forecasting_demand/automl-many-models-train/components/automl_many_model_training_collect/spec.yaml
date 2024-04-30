@@ -25,7 +25,7 @@ outputs:
 
 
 code: ../../src/collect
-environment: azureml://registries/azureml/environments/automl-gpu/versions/5
+environment: azureml://registries/azureml/environments/automl-gpu/labels/latest
 
 command: >-
   python collect.py 
