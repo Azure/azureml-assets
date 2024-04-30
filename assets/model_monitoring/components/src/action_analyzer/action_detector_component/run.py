@@ -146,7 +146,7 @@ def run():
                                                                     violated_metrics,
                                                                     args.query_intention_enabled)
         df_preprocessed = lrsi_action_detector.preprocess_data(df_pandas)
-        if df_preprocessed:
+        if not df_preprocessed.empty:
             lrsi_actions = lrsi_action_detector.detect(df_preprocessed, llm_client, args.aml_deployment_id)
             index_actions += lrsi_actions
 

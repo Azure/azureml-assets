@@ -66,7 +66,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
             return preprocessed_df
         except Exception as e:
             print("LowRetrievalScoreIndexActionDetector preprocess failed with error", e)
-            return None
+            return pandas.DataFrame()
 
     def detect(self, df: pandas.DataFrame, llm_client: LLMClient, aml_deployment_id=None) -> List[Action]:
         """Detect the action.
