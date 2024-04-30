@@ -20,6 +20,7 @@ logger = get_logger_app("azureml.acft.image.scripts.components.model_selector.mo
 def get_common_parser():
     """
     Add arguments and returns the parser. Here we add all the arguments for model selector.
+
     Those arguments that are not relevant for the input task should be ignored.
     """
     parser = argparse.ArgumentParser(
