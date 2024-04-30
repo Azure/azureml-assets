@@ -108,6 +108,10 @@ inputs:
     type: boolean
     optional: true
     description: "Whether to turn on views."
+  instruct_template:
+    type: string
+    optional: true
+    description: "The instruct template for the LLM."
 outputs:
   grounding_index:
     type: uri_folder
@@ -117,7 +121,7 @@ jobs:
   #########################################
   db_meta_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding:0.0.56"
+    component: "azureml:llm_dbcopilot_grounding:0.0.57"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -184,7 +188,7 @@ jobs:
   #########################################
   db_sample_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.31"
+    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.32"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -242,7 +246,7 @@ jobs:
   #########################################
   endpoint_deployment_job:
     type: command
-    component: "azureml:llm_dbcopilot_deploy_endpoint:0.0.31"
+    component: "azureml:llm_dbcopilot_deploy_endpoint:0.0.32"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -277,6 +281,7 @@ jobs:
       top_p: ${{parent.inputs.top_p}}
       knowledge_pieces: ${{parent.inputs.knowledge_pieces}}
       include_views: ${{parent.inputs.include_views}}
+      instruct_template: ${{parent.inputs.instruct_template}}
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT: ${{parent.inputs.llm_connection}}

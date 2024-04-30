@@ -56,6 +56,7 @@ class EndpointDeployment(EndpointDeploymentBase):
         knowledge_pieces: str = None,
         sku: str = "Standard_DS3_v2",
         include_views: bool = False,
+        instruct_template: str = None,
     ):
         """deploy_endpoint."""
         from utils.asset_utils import get_datastore_uri
@@ -107,5 +108,6 @@ class EndpointDeployment(EndpointDeploymentBase):
                 deployment_name,
                 code_dir,
                 score_script="score_zero.py",
+                extra_environment_variables={"INSTRUCT_TEMPLATE": instruct_template},
                 sku=sku,
             )
