@@ -76,6 +76,12 @@ Using the model to generate content that is cruel to individuals is a misuse of 
 
 CreativeML Open RAIL++-M License
 
+# Finetuning Samples
+
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|---|--|--|--|--|
+Text-to-image|Text-to-image|[dog-example](https://huggingface.co/datasets/diffusers/dog-example)|<a href="https://aka.ms/azureml-ft-sdk-dreambooth-text-to-image" target="_blank">diffusers-dreambooth-dog-text-to-image.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-dreambooth-text-to-image" target="_blank">diffusers-dreambooth-dog-text-to-image.sh</a>
+
 # Inference Samples
 
 > Note: The inferencing script of this model is optimized for high-throughput, low latency using <a href="https://github.com/microsoft/DeepSpeed-MII" target="_blank">Deepspedd-mii</a> library. Please use `version 4` of this model for inferencing using default (FP32) diffusion pipeline implementation.
