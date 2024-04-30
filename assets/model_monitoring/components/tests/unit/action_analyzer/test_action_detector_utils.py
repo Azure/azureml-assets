@@ -13,7 +13,9 @@ from datetime import datetime
 from action_analyzer.contracts.action_sample import IndexActionSample
 from action_analyzer.contracts.utils.detector_utils import (
     parse_debugging_info,
-    generate_index_action_samples
+    generate_index_action_samples,
+    get_missed_metrics,
+    get_index_id_from_index_content
 )
 from action_analyzer.action_detector_component.run import (
     get_unique_indexes,
@@ -39,6 +41,7 @@ from shared_utilities.constants import (
     INDEX_CONTENT_COLUMN,
     SPAN_ID_COLUMN
 )
+
 
 @pytest.fixture
 def df_for_action_sample():
@@ -66,6 +69,7 @@ def df_for_action_sample():
             PROMPT_FLOW_INPUT_COLUMN: 'Flow Input'
         }, ignore_index=True)
     return df
+
 
 @pytest.fixture
 def retrieval_root_span():
@@ -105,14 +109,13 @@ def retrieval_root_span():
     spans = [s1, s2, s3, s4, s5]
     return SpanTree(spans).to_json_str()
 
+
 @pytest.fixture
 def root_span():
     """Return a root span with all debugging info."""
     # The tree is structured like this:
     # 1
     # |-> 2 -> 3 (retrieval)
-
-
     s1 = SpanTreeNode(
         Row(trace_id="01", span_id="1", parent_id=None, start_time=datetime(2024, 2, 12, 9, 0, 0),
             end_time=datetime(2024, 2, 12, 10, 5, 0),
@@ -138,6 +141,7 @@ def root_span():
     )
     spans = [s1, s2, s3]
     return SpanTree(spans).to_json_str()
+
 
 @pytest.mark.unit
 class TestDetectorUtils:
@@ -193,7 +197,7 @@ class TestDetectorUtils:
         """Test generate_index_action_samples function for negative samples."""
         action_samples = generate_index_action_samples(df_for_action_sample, True)
         assert len(action_samples) == 10
-        assert type(action_samples[0]) == IndexActionSample
+        assert isinstance(action_samples[0], IndexActionSample)
         # the score is not sorted for negative samples
         assert action_samples[0].lookup_score == 0
         assert action_samples[9].lookup_score == 9
@@ -202,7 +206,7 @@ class TestDetectorUtils:
         """Test generate_index_action_samples function for positive samples."""
         action_samples = generate_index_action_samples(df_for_action_sample, False)
         assert len(action_samples) == 10
-        assert type(action_samples[0]) == IndexActionSample
+        assert isinstance(action_samples[0], IndexActionSample)
         # the score is sorted in descent order for positive samples
         assert action_samples[0].lookup_score == 9
         assert action_samples[9].lookup_score == 0

@@ -51,7 +51,9 @@ def parse_index_id(root_span: str) -> List[str]:
                 index_input = json.loads(index_span.input)
                 print(index_input)
                 index_content = index_input['mlindex_content']
-                index_list.append(get_index_id_from_index_content(index_content))
+                index_id = get_index_id_from_index_content(index_content)
+                if index_id:
+                    index_list.append(index_id)
         return index_list
     except KeyError as e:
         print("Required field not found: ", e)

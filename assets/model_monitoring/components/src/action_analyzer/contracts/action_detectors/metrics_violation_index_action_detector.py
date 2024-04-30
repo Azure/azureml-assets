@@ -3,10 +3,16 @@
 
 """Metrics violation index action detector class."""
 
+from typing import List
 from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.llm_client import LLMClient
 import pandas
+from action_analyzer.contracts.utils.detector_utils import (
+    extract_fields_from_debugging_info,
+    get_missed_metrics,
+    calculate_e2e_metrics
+)
 
 
 class MetricsViolationIndexActionDetector(ActionDetector):
@@ -14,7 +20,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
 
     def __init__(self,
                  index_id: str,
-                 violated_metrics: list[str],
+                 violated_metrics: List[str],
                  correlation_test_method: str,
                  correlation_test_pvalue_threshold: float,
                  query_intention_enabled: str,
@@ -41,15 +47,24 @@ class MetricsViolationIndexActionDetector(ActionDetector):
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
         """Preprocess the data for action detector.
 
+            1. check if all violated metrics are available. If not, call evaluate sdk to get the e2e metrics.
+            2. extract extra fields from the root span for action.
+            3. convert the dataframe from trace level to span level.
+
         Args:
             df(pandas.DataFrame): input pandas dataframe.
 
         Returns:
             pandas.DataFrame: preprocessed pandas dataframe.
         """
-        pass
+        missed_metrics = get_missed_metrics(self.violated_metrics, df.columns.tolist())
 
-    def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> list[Action]:
+        if missed_metrics != []:
+            df = calculate_e2e_metrics(df, missed_metrics)
+
+        return extract_fields_from_debugging_info(df, self.index_id)
+
+    def detect(self, df: pandas.DataFrame, llm_client: LLMClient) -> List[Action]:
         """Detect the action.
 
         Args:
@@ -57,6 +72,6 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             llm_client(LLMClient): LLM client used to get some llm scores/info for action.
 
         Returns:
-            list[Action]: list of actions.
+            List[Action]: list of actions.
         """
         pass

@@ -54,11 +54,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
         super().__init__(query_intention_enabled)
 
     def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
-        """Preprocess the data for action detector.
-
-            1. check if all violated metrics are available. If not, call evaluate sdk to get the e2e metrics.
-            2. extract extra fields from the root span for action.
-            3. convert the dataframe from trace level to span level.
+        """Preprocess the data for action detector. Convert the dataframe from trace level to span level.
 
         Args:
             df(pandas.DataFrame): input pandas dataframe.
@@ -66,10 +62,6 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
         Returns:
             pandas.DataFrame: preprocessed pandas dataframe.
         """
-        missed_metrics = get_missed_metrics(self.violated_metrics, df.columns.tolist())
-
-        if missed_metrics != []:
-            df = calculate_e2e_metrics(df, missed_metrics)
 
         return extract_fields_from_debugging_info(df, self.index_id)
 
