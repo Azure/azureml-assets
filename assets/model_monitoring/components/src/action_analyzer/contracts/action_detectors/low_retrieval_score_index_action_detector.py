@@ -17,6 +17,7 @@ from action_analyzer.contracts.utils.detector_utils import (
     generate_index_action_samples
 )
 from shared_utilities.constants import (
+    INDEX_ID_COLUMN,
     INDEX_SCORE_LLM_COLUMN,
     METRICS_VIOLATION_THRESHOLD,
     GOOD_METRICS_THRESHOLD,
@@ -136,7 +137,8 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
         negative_samples = generate_index_action_samples(low_retrieval_score_df, True)
 
         index_content = low_retrieval_score_df.iloc[0][INDEX_CONTENT_COLUMN]
-        return LowRetrievalScoreIndexAction(self.index_id,
+        index_asset_id = low_retrieval_score_df.iloc[0][INDEX_ID_COLUMN]
+        return LowRetrievalScoreIndexAction(index_asset_id,
                                             index_content,
                                             metric,
                                             confidence_score,
