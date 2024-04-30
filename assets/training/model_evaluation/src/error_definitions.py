@@ -303,6 +303,20 @@ class BadLabelColumnData(BadData):
 
 
 @error_decorator(use_parent_error_code=True)
+class BadQuestionsContextGroundTruthData(BadData):
+    """Bad Questions and Context in Ground Truth Data error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.BadQuestionsContextGroundTruthData
+
+
+@error_decorator(use_parent_error_code=True)
 class BadFeatureColumnData(BadData):
     """Bad Feature Data error."""
 
