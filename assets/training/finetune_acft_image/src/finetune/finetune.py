@@ -614,14 +614,6 @@ def get_parser():
 def add_sd_args_to_parser(parser):
     """Add Stable Diffusion related args to parser."""
     # # Data inputs
-    # # Given that "train_mltable_path" is a mandatory field. We recive instance_data_dir into that.
-    # parser.add_argument(
-    #     "--instance_data_dir",
-    #     type=str,
-    #     default=None,
-    #     required=True,
-    #     help="A folder containing the training data of instance images."
-    # )
     parser.add_argument(
         "--class_data_dir",
         type=str,
@@ -629,16 +621,6 @@ def add_sd_args_to_parser(parser):
         required=False,
         help="A folder containing the training data of class images."
     )
-    # parser.add_argument(
-    #     "--validation_images",
-    #     required=False,
-    #     default=None,
-    #     nargs="+",
-    #     help=(
-    #         "Optional set of images to use for validation. Used when the target pipeline takes"
-    #          "an initial image as input such as when training image variation or superresolution."
-    #     )
-    # )
 
     # Instance prompt
     parser.add_argument(
