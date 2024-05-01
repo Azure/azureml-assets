@@ -148,6 +148,7 @@ def extract_fields_from_debugging_info(df: pandas.DataFrame, detector_index_id: 
     df.dropna(subset=['extra_fields'], inplace=True)
     df = df.explode('extra_fields')
     df[SPAN_ID_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[SPAN_ID_COLUMN])
+    df[INDEX_ID_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[INDEX_ID_COLUMN])
     df[INDEX_CONTENT_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[INDEX_CONTENT_COLUMN])
     df[MODIFIED_PROMPT_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[MODIFIED_PROMPT_COLUMN])
     df[RETRIEVAL_DOC_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[RETRIEVAL_DOC_COLUMN])
