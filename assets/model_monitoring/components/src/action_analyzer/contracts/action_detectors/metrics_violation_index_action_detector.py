@@ -50,6 +50,8 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             negative_metric_threshold(int): (Optional) e2e metric threshold to mark the query as negative.
             max_positive_sample_size(int): (Optional) max positive sample size in the action.
         """
+        self.index_id = index_id
+        self.violated_metrics = violated_metrics
         self.correlation_test_method = correlation_test_method
         self.correlation_test_pvalue_threshold = correlation_test_pvalue_threshold
         self.positive_metric_threshold = positive_metric_threshold
