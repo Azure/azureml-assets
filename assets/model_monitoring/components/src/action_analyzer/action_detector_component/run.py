@@ -156,6 +156,10 @@ def run():
 
         # After all detectors, deduplicate actions if needed.
         final_actions += deduplicate_actions(index_actions)
+
+    if len(final_actions) == 0:
+        print("No action detected.")
+        return
     print(f"{len(final_actions)} actions are detected.")
     # write action files to output folder
     write_actions(final_actions, args.action_output)
