@@ -3,9 +3,11 @@
 
 """Metrics violation index action detector class."""
 
+import os
 from typing import List
 from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
+from action_analyzer.contracts.actions.metrics_violation_index_action import MetricsViolationIndexAction
 from action_analyzer.contracts.llm_client import LLMClient
 import pandas
 from action_analyzer.contracts.utils.detector_utils import (
@@ -91,7 +93,9 @@ class MetricsViolationIndexActionDetector(ActionDetector):
                 low_metric_score_df = df[df[metric] < self.negative_metric_threshold]
                 high_metric_score_df = df[df[metric] >= self.positive_metric_threshold]
 
-                t_stat, p_value = peform_correlation_test(high_metric_score_df, low_metric_score_df, self.correlation_test_method)
+                t_stat, p_value = peform_correlation_test(high_metric_score_df,
+                                                          low_metric_score_df,
+                                                          self.correlation_test_method)
                 if t_stat > 0 and p_value < self.correlation_test_pvalue_threshold:
                     print(f"Generating action for metric {metric}.")
                     action = self.generate_action(llm_client,
@@ -106,7 +110,6 @@ class MetricsViolationIndexActionDetector(ActionDetector):
         except Exception as e:
             print("MetricsViolationIndexActionDetector detect failed with error", e)
         return action_list
-
 
     def generate_action(self,
                         llm_client: LLMClient,
