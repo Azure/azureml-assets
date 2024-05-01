@@ -15,7 +15,7 @@ def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path", type=str, required=True)
     parser.add_argument("--output_path", type=str, required=True)
-    parser.add_argument('--additional_parameters', type=str, default=None, required=False)
+    parser.add_argument('--additional_parameters', type=str, default='null', required=False)
     argss = parser.parse_args()
     return argss
 

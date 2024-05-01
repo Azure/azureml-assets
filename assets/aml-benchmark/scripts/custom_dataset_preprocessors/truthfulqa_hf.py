@@ -17,7 +17,7 @@ def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
-    parser.add_argument('--additional_parameters', type=str, default=None, required=False)
+    parser.add_argument('--additional_parameters', type=str, default='null', required=False)
     argss = parser.parse_args()
     return argss
 
@@ -67,6 +67,8 @@ def run_processor(
 
     # create following dictionary for labels in format {'1': 'A', '2': 'B', ... '26': 'Z'}
     encoder_config = additional_args.get("encoder_config")
+    if encoder_config is None:
+        encoder_config = {str(i): chr(i+ord('A')-1) for i in range(1, 27)}
     ret_data = []
     for example in data:
         out_dict = {}
