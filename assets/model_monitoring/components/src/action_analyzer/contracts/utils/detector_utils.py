@@ -10,6 +10,7 @@ import yaml
 import requests
 import re
 import hashlib
+import statistics
 from typing import List
 from mlflow import MlflowClient
 from shared_utilities.span_tree_utils import SpanTree
@@ -31,7 +32,8 @@ from shared_utilities.constants import (
     PROMPT_COLUMN,
     DEFAULT_TOPIC_NAME,
     TEXT_SPLITTER,
-    MAX_SAMPLE_SIZE
+    MAX_SAMPLE_SIZE,
+    TTEST_NAME
 )
 from shared_utilities.llm_utils import _APITokenManager, _request_api
 from shared_utilities.io_utils import (
@@ -322,17 +324,95 @@ def generate_index_action_samples(df: pandas.DataFrame,
     return samples
 
 
-def deduplicate_actions(actions: List[Action]) -> List[Action]:
+def perform_ttest(good_group_retrieval_scores: pandas.Series,
+                  bad_group_retrieval_scores: pandas.Series) -> (float, float):
+    """Perform Mann-Whitney U test.
+
+    Args:
+        good_group_retrieval_scores(pandas.Series): retrieval scores of high metric score group.
+        bad_group_retrieval_scores(pandas.Series): retrieval scores of low metric score group.
+
+    Returns:
+        float: test statistic calculated in t-test.
+        float: p-value calcualted in t-test
+    """
+    t_stat, p_value = stats.ttest_ind(good_group_retrieval_scores, bad_group_retrieval_scores)
+    print(f"Normal t-test T-statistic: {t_stat}, P-value: {p_value}")
+    t_stat1, p_value1 = stats.ttest_ind(good_group_retrieval_scores, bad_group_retrieval_scores, equal_var=False)
+    print(f"Welch's t-test T-statistic: {t_stat1}, P-value: {p_value1}")
+    t_stat2, p_value2 = mannwhitneyu(good_group_retrieval_scores, bad_group_retrieval_scores, method='exact')
+    print(f"Mann-Whitney U t-test T-statistic: {t_stat2}, P-value: {p_value2}")
+    # Use Mann-Whitney U test for correlation test
+    return t_stat2, p_value2
+
+
+def peform_correlation_test(high_metric_score_df: pandas.DataFrame,
+                            low_metric_score_df: pandas.DataFrame,
+                            correlation_test_method: str) -> (float, float):
+    """Perform correlation test.
+
+    Args:
+        high_metric_score_df(pandas.DataFrame): dataframe of queires with high metric score.
+        low_metric_score_df(pandas.DataFrame): dataframe of queries with low metric score.
+        correlation_test_method(str): correlation test method. Default to t-test.
+
+    Returns:
+        float: test statistic calculated in t-test.
+        float: p-value calcualted in t-test
+    """
+    # only support t-test for now
+    if correlation_test_method == TTEST_NAME:
+        t_stat, p_value = perform_ttest(high_metric_score_df[INDEX_SCORE_LLM_COLUMN],
+                                        low_metric_score_df[INDEX_SCORE_LLM_COLUMN])
+        return (t_test, p_value)
+    return (-1, -1)
+
+
+def calculate_action_overlap(action1: Action, action2: Action) -> float:
+    """Get the action overlap rate of 2 actions.
+
+    Args:
+        action1(Action): action 1.
+        action2(Action): action 2.
+
+    Returns:
+        float: the action overlap rate.
+    """
+    negative_samples_1 = [sample.question for sample in action1.negative_samples]
+    negative_samples_2 = [sample.question for sample in action2.negative_samples]
+    intersection = len(set(negative_samples_1) & set(negative_samples_2))
+    union = len(set(negative_samples_1) | set(negative_samples_2))
+    return intersection / union
+
+
+def deduplicate_actions(action_list: List[Action]) -> List[Action]:
     """Deduplicate actions.
 
     Args:
-        actions(List[Action]): list of actions.
+        action_list(List[Action]): list of actions.
 
     Returns:
         List[Action]: list of actions after deduplication.
     """
-    # Todo: do this later
-    return actions
+    deduplicated_list = []
+    for i, action1 in enumerate(action_list):
+        add = True
+        for j, action2 in enumerate(action_list):
+            if i != j:
+                overlap = calculate_action_overlap(action1, action2)
+                if overlap > 0.5:
+                    if action1.confidence_score < action2.confidence_score:
+                        # do not add action1, action2 will be added later.
+                        add = False
+                        break
+                    else:
+                        # action1 should be added, remove action2 if action2 is in the final list.
+                        if action2 in deduplicated_list:
+                            deduplicated_list.remove(action2)
+        if add:
+            deduplicated_list.append(action1)
+    print(f"Deduplicated from {len(action_list)} actions to {len(deduplicated_list)}.")
+    return deduplicated_list
 
 
 def write_to_file(payload: dict, local_output_directory: str, file_name: str):

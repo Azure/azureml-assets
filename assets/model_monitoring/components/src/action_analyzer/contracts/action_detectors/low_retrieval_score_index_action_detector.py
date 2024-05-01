@@ -94,7 +94,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
                                              (df[INDEX_SCORE_LLM_COLUMN] >= HIGH_RETRIEVAL_SCORE_THRESHOLD)]
                 # generate action only low retrieval score query ratio above the threshold
                 low_retrieval_score_query_ratio = len(low_retrieval_score_df)/len(low_metric_score_df)
-                print(f"The low retrieval score query ratio is {low_retrieval_score_query_ratio}.")
+                print(f"The low retrieval score query ratio for metric {metric}: {low_retrieval_score_query_ratio}.")
                 if low_retrieval_score_query_ratio >= LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD:
                     print(f"Generating action for metric {metric}.")
                     # use the low retrieval score query ratio as confidence
@@ -132,12 +132,13 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
             LowRetrievalScoreIndexAction: the generated low retrieval score index action.
         """
         query_intention = get_query_intention(low_retrieval_score_df[PROMPT_COLUMN].to_list(), llm_client) if self.query_intention_enabled == "true" else DEFAULT_TOPIC_NAME  # noqa: E501
-
+        print("Got query intention: ", query_intention)
         positive_samples = generate_index_action_samples(high_retrieval_score_df, False)
         negative_samples = generate_index_action_samples(low_retrieval_score_df, True)
 
         index_content = low_retrieval_score_df.iloc[0][INDEX_CONTENT_COLUMN]
         index_asset_id = low_retrieval_score_df.iloc[0][INDEX_ID_COLUMN]
+        print("index_asset_id: ", index_asset_id)
         return LowRetrievalScoreIndexAction(index_asset_id,
                                             index_content,
                                             metric,

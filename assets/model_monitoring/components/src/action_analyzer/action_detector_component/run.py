@@ -7,8 +7,12 @@ import json
 import argparse
 import pandas
 from typing import List
+from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
 from action_analyzer.contracts.action_detectors.low_retrieval_score_index_action_detector import (
     LowRetrievalScoreIndexActionDetector
+)
+from action_analyzer.contracts.action_detectors.metrics_violation_index_action_detector import (
+    MetricsViolationIndexActionDetector
 )
 from action_analyzer.contracts.llm_client import LLMClient
 from action_analyzer.contracts.utils.detector_utils import (
@@ -21,7 +25,9 @@ from shared_utilities.constants import (
     RETRIEVAL_SPAN_TYPE,
     ROOT_SPAN_COLUMN,
     GSQ_METRICS_LIST,
-    INDEX_ID_COLUMN
+    INDEX_ID_COLUMN,
+    P_VALUE_THRESHOLD,
+    TTEST_NAME
 )
 from shared_utilities.store_url import StoreUrl
 from shared_utilities.io_utils import try_read_mltable_in_spark
@@ -79,6 +85,7 @@ def get_violated_metrics(signal_out_url: str, signal_name: str) -> List[str]:
     Args:
         signal_out_url(str): gsq output url.
         signal_name(str): signal name defined by user.
+
     Returns:
         List[str]: list of violated metrics.
     """
@@ -98,6 +105,48 @@ def get_violated_metrics(signal_out_url: str, signal_name: str) -> List[str]:
     except Exception as e:
         print("Exception while getting the violated metrics. ", e)
         return []
+
+
+def create_detectors(**params: dict) -> List[ActionDetector]:
+    """Initialize all supported detectors.
+
+    Args:
+        params(dict): parameters for detectors.
+
+    Returns:
+        List[ActionDetector]: list of violated metrics.
+    """
+    detectors = []
+    detectors.append(LowRetrievalScoreIndexActionDetector(params["hashed_index"],
+                                                          params["violated_metrics"],
+                                                          params["query_intention_enabled"]))
+    detectors.append(MetricsViolationIndexActionDetector(params["hashed_index"],
+                                                         params["violated_metrics"],
+                                                         TTEST_NAME,
+                                                         P_VALUE_THRESHOLD,
+                                                         params["query_intention_enabled"]))
+    return detectors
+
+
+def run_detectors(df: pandas.DataFrame, detectors: List[ActionDetector], **extra_params: dict) -> List[Action]:
+    """Run all detectors.
+
+    Args:
+        df(pandas.DataFrame): input pandas dataframe.
+        detectors(List[ActionDetector]): list of available detectors.
+        extra_params(dict): parameters for running detectors.
+
+    Returns:
+        List[str]: list of violated metrics.
+    """
+    action_list = []
+    for detector in detectors:
+        df_preprocessed = detector.preprocess_data(df)
+        if not df_preprocessed.empty:
+            action_list += detector.detect(df_preprocessed,
+                                           extra_params["llm_client"],
+                                           extra_params["aml_deployment_id"])
+    return action_list
 
 
 def run():
@@ -134,25 +183,17 @@ def run():
     print(f"Found {len(unique_indexes)} indexes in the input data.")
 
     llm_client = LLMClient(args.workspace_connection_arm_id, args.model_deployment_name)
-
     # detect actions for each index
     final_actions = []
     for index in unique_indexes:
-        index_actions = []
-        # low retrieval score index action detector
-        lrsi_action_detector = LowRetrievalScoreIndexActionDetector(index,
-                                                                    violated_metrics,
-                                                                    args.query_intention_enabled)
-        df_preprocessed = lrsi_action_detector.preprocess_data(df_pandas)
-        if not df_preprocessed.empty:
-            lrsi_actions = lrsi_action_detector.detect(df_preprocessed, llm_client, args.aml_deployment_id)
-            index_actions += lrsi_actions
+        detectors = create_detectors(hashed_index=index,
+                                     violated_metrics=violated_metrics,
+                                     query_intention_enabled=args.query_intention_enabled)
 
-        # # Todo: metrics violation index action detector
-        # mvi_action_detector = MetricsViolationIndexActionDetector()
-        # df_preprocessed = mvi_action_detector.preprocess_data(df_pandas)
-        # mvi_actions = mvi_action_detector.detect(df_preprocessed, llm_client, args.aml_deployment_id)
-        # index_actions += mvi_actions
+        index_actions = run_detectors(df=df_pandas, 
+                                      detectors=detectors,
+                                      llm_client=llm_client,
+                                      aml_deployment_id=args.aml_deployment_id)
 
         # After all detectors, deduplicate actions if needed.
         final_actions += deduplicate_actions(index_actions)
@@ -160,7 +201,7 @@ def run():
     if len(final_actions) == 0:
         print("No action detected.")
         return
-    print(f"{len(final_actions)} actions are detected.")
+    print(f"{len(final_actions)} action(s) detected.")
     # write action files to output folder
     write_actions(final_actions, args.action_output)
 
