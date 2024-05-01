@@ -92,7 +92,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
                 high_metric_score_df = df[df[metric] >= self.positive_metric_threshold]
 
                 t_stat, p_value = peform_correlation_test(high_metric_score_df, low_metric_score_df, self.correlation_test_method)
-                if t_stat > 0 and p_value < self.correlation_test_pvalue_threshold
+                if t_stat > 0 and p_value < self.correlation_test_pvalue_threshold:
                     print(f"Generating action for metric {metric}.")
                     action = self.generate_action(llm_client,
                                                   metric,

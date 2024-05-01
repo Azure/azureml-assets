@@ -7,6 +7,7 @@ import json
 import argparse
 import pandas
 from typing import List
+from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
 from action_analyzer.contracts.action_detectors.low_retrieval_score_index_action_detector import (
     LowRetrievalScoreIndexActionDetector
@@ -190,7 +191,7 @@ def run():
                                      violated_metrics=violated_metrics,
                                      query_intention_enabled=args.query_intention_enabled)
 
-        index_actions = run_detectors(df=df_pandas, 
+        index_actions = run_detectors(df=df_pandas,
                                       detectors=detectors,
                                       llm_client=llm_client,
                                       aml_deployment_id=args.aml_deployment_id)

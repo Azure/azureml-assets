@@ -10,7 +10,8 @@ import yaml
 import requests
 import re
 import hashlib
-import statistics
+from scipy import stats
+from scipy.stats import mannwhitneyu
 from typing import List
 from mlflow import MlflowClient
 from shared_utilities.span_tree_utils import SpanTree
@@ -364,7 +365,7 @@ def peform_correlation_test(high_metric_score_df: pandas.DataFrame,
     if correlation_test_method == TTEST_NAME:
         t_stat, p_value = perform_ttest(high_metric_score_df[INDEX_SCORE_LLM_COLUMN],
                                         low_metric_score_df[INDEX_SCORE_LLM_COLUMN])
-        return (t_test, p_value)
+        return (t_stat, p_value)
     return (-1, -1)
 
 
