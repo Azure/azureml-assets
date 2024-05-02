@@ -9,6 +9,8 @@ tasks include
 - Applications in educational or creative tools.
 - Research on generative models.
 
+Stable Diffusion DreamBooth Finetuning is now avalable for this model on AzureML. DreamBooth is a method for personalizing text-to-image models. It fine-tunes these models using 5-10 images of a specific subject, allowing them to generate personalized images based on textual prompts.
+
 # Training Details
 
 ## Training Data
@@ -95,7 +97,7 @@ Using the model to generate content that is cruel to individuals is a misuse of 
 
 The CreativeML OpenRAIL M license is an [Open RAIL M license](https://www.licenses.ai/blog/2022/8/18/naming-convention-of-responsible-ai-licenses), adapted from the work that [BigScience](https://bigscience.huggingface.co/) and [the RAIL Initiative](https://www.licenses.ai/) are jointly carrying in the area of responsible AI licensing. See also [the article about the BLOOM Open RAIL license](https://bigscience.huggingface.co/blog/the-bigscience-rail-license) on which our license is based.
 
-# Finetuning Samples
+# DreamBooth Finetuning Samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|--|
