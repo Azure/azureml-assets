@@ -66,13 +66,13 @@ def generate_low_retrieval_score_index_action():
     negative_samples = []
     for i in range(30):
         positive_samples.append(ActionSample(f"positive_query_{1}",
-                                            f"positive_answer_{i}",
-                                            f"positive_debugging_info_{i}",
-                                            f"positive_prompt_flow_input_{i}"))
+                                             f"positive_answer_{i}",
+                                             f"positive_debugging_info_{i}",
+                                             f"positive_prompt_flow_input_{i}"))
         negative_samples.append(ActionSample(f"negative_query_{1}",
-                                            f"negative_answer_{i}",
-                                            f"negative_debugging_info_{i}",
-                                            f"negative_prompt_flow_input_{i}"))
+                                             f"negative_answer_{i}",
+                                             f"negative_debugging_info_{i}",
+                                             f"negative_prompt_flow_input_{i}"))
     return LowRetrievalScoreIndexAction("index id",
                                         "index content",
                                         "coherence",

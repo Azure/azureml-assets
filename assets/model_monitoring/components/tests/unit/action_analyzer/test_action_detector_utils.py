@@ -301,7 +301,7 @@ class TestDetectorUtils:
         """Test deduplicate_actions function. Actions have overlap < 50%."""
         # Total 2 actions. The overlap is less than 50%.
         # action 1 has ['negative_query_1', 'negative_query_2', 'negative_query_3', 'negative_query_4']
-        # action 2 has ['negative_query_4', 'negative_query_5', 'negative_query_6', 'negative_query_7', 'negative_query_8']
+        # action 2 has ['negative_query_4', 'negative_query_5', 'negative_query_6', 'negative_query_7', 'negative_query_8']  # noqa
         actions = []
         positive_samples = []
         negative_samples = []
@@ -325,12 +325,12 @@ class TestDetectorUtils:
                                                  f"negative_debugging_info_{i}",
                                                  f"negative_prompt_flow_input_{i}"))
         actions.append(Action(ActionType.METRICS_VIOLATION_INDEX_ACTION,
-                             "action_2",
-                             0.95,
-                             "query intention",
-                             "deployment id",
-                             "run id",
-                             positive_samples,
-                             negative_samples))
+                              "action_2",
+                              0.95,
+                              "query intention",
+                              "deployment id",
+                              "run id",
+                              positive_samples,
+                              negative_samples))
         deduplicated_list = deduplicate_actions(actions)
         assert deduplicated_list == actions
