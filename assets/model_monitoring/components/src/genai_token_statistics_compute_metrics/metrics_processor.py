@@ -75,7 +75,8 @@ class MetricsProcessor:
                 if span_type in INCLUDE_SPAN_TYPE:
                     attributes = json.loads(span.get_node_attribute(attribute_key="attributes"))
                     parent = tree.get_span_tree_node_by_span_id(span.parent_id)
-                    # in some cases we have LLM/Embedding span with no parent so need to check before accessing its parent object
+                    # in some cases we have LLM/Embedding span with no parent so need to check 
+                    # before accessing its parent object
                     parent_input = None
                     parent_output = None
                     if parent is not None:
@@ -133,7 +134,8 @@ class MetricsProcessor:
         sample_data_df.show()
         return sample_data_df
 
-    def calculate_metrics(self, attributes: dict, span_type: str, root_input: Optional[str], root_output: Optional[str]):
+    def calculate_metrics(self, attributes: dict, span_type: str,
+                          root_input: Optional[str], root_output: Optional[str]):
         """Args.
 
         attributes (dict): attributes.
