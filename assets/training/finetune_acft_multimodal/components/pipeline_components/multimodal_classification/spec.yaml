@@ -362,7 +362,7 @@ outputs:
 jobs:
   multimodal_classification_model_import:
     type: command
-    component: azureml:multimodal_classification_model_import:0.0.2
+    component: azureml:multimodal_classification_model_import@latest #:0.0.2
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       data_modalities: ${{parent.inputs.data_modalities}}
@@ -371,7 +371,7 @@ jobs:
 
   multimodal_classification_data_preprocess:
     type: command
-    component: azureml:multimodal_classification_datapreprocessing:0.0.2
+    component: azureml:multimodal_classification_datapreprocessing@latest #:0.0.2
     compute: ${{parent.inputs.compute_preprocess}}
     inputs:
       problem_type: ${{parent.inputs.problem_type}}
@@ -387,7 +387,7 @@ jobs:
 
   multimodal_classification_finetune:
     type: command
-    component: azureml:multimodal_classification_finetune:0.0.2
+    component: azureml:multimodal_classification_finetune@latest #:0.0.2
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
