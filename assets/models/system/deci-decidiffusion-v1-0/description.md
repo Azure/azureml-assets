@@ -34,12 +34,6 @@ DeciDiffusion primarily underwent training on subsets of LAION-v2, with a focus 
 
 creativeml-openrail++-m
 
-# Finetuning Samples
-
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|---|--|--|--|--|
-Text-to-image|Text-to-image|[dog-example](https://huggingface.co/datasets/diffusers/dog-example)|<a href="https://aka.ms/azureml-ft-sdk-dreambooth-text-to-image" target="_blank">diffusers-dreambooth-dog-text-to-image.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-dreambooth-text-to-image" target="_blank">diffusers-dreambooth-dog-text-to-image.sh</a>
-
 # Inference Samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
