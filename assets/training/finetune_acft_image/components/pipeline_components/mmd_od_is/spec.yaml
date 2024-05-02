@@ -414,7 +414,7 @@ jobs:
 
   image_od_is_model_import:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.14
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.15
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
@@ -426,7 +426,7 @@ jobs:
 
   image_od_is_finetune:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.14
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.15
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -482,7 +482,7 @@ jobs:
 
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.23
+    component: azureml:model_prediction:0.0.25
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
@@ -497,7 +497,7 @@ jobs:
 
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.23
+    component: azureml:compute_metrics:0.0.25
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
