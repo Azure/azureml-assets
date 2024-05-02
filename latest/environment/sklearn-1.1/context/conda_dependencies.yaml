@@ -12,7 +12,7 @@ dependencies:
   - scikit-learn-intelex==2024.3.0
   - wheel~=0.38.1
   - azureml-core==1.56.0
-  - azureml-defaults==1.56.0
+  - azureml-defaults==1.56.0.post1
   - azureml-mlflow==1.56.0
   - azureml-telemetry==1.56.0
   - azureml-automl-common-tools==1.56.0
@@ -22,3 +22,4 @@ dependencies:
   - cryptography>=42.0.4
   - certifi >= 2023.07.22
   - requests >= 2.31.0
+  - idna>=3.7

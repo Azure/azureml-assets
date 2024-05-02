@@ -16,7 +16,7 @@ dependencies:
   - tqdm~=4.62.0
   - ipykernel~=6.20.2
   - azureml-core==1.56.0
-  - azureml-defaults==1.56.0
+  - azureml-defaults==1.56.0.post1
   - azureml-mlflow==1.56.0
   - azureml-telemetry==1.56.0
   - tensorboard~=2.12.0
@@ -27,3 +27,4 @@ dependencies:
   - horovod[tensorflow]
   - debugpy~=1.6.3
   - cryptography>=41.0.4
+  - idna>=3.7

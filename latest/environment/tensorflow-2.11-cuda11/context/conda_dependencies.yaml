@@ -12,7 +12,7 @@ dependencies:
   - setuptools==65.5.1
   - wheel~=0.38.1
   - azureml-core==1.56.0
-  - azureml-defaults==1.56.0
+  - azureml-defaults==1.56.0.post1
   - azureml-mlflow==1.56.0
   - azureml-telemetry==1.56.0
   - azureml-automl-common-tools==1.56.0
@@ -22,3 +22,4 @@ dependencies:
   - protobuf~=3.19.0
   - horovod[tensorflow]
   - cryptography>=41.0.4
+  - idna>=3.7

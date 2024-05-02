@@ -1,6 +1,6 @@
 azureml-core==1.56.0
 azureml-dataset-runtime==1.56.0
-azureml-defaults==1.56.0
+azureml-defaults==1.56.0.post1
 azure-ml==0.0.1
 azure-ml-component==0.9.18.post2
 azureml-mlflow==1.56.0
@@ -16,3 +16,4 @@ pybind11
 urllib3>=1.26.18
 cryptography>=42.0.5
 aiohttp>=3.8.5
+idna>=3.7
