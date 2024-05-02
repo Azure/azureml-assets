@@ -117,7 +117,8 @@ def root_span():
     """Return a root span with all debugging info."""
     # The tree is structured like this:
     # 1
-    # |-> 2 -> 3 (retrieval)
+    # |-> 2 -> 3 (index1 retrieval)
+    # |-> 4 -> 5 (index2 retrieval)
     s1 = SpanTreeNode(
         Row(trace_id="01", span_id="1", parent_id=None, start_time=datetime(2024, 2, 12, 9, 0, 0),
             end_time=datetime(2024, 2, 12, 10, 5, 0),
@@ -136,12 +137,31 @@ def root_span():
     for i in range(3):
         documents.append({"document.content": f"doc_{i}", "document.score": "0.5"})
 
-    retrieval_attributes = json.dumps({"retrieval.query": "query", "retrieval.documents": json.dumps(documents)})
+    retrieval_attributes = json.dumps({"retrieval.query": "query_3", "retrieval.documents": json.dumps(documents)})
     s3 = SpanTreeNode(
         Row(trace_id="01", span_id="3", parent_id="2", start_time=datetime(2024, 2, 12, 9, 15, 0),
             end_time=datetime(2024, 2, 12, 9, 20, 0), span_type="Retrieval", attributes=retrieval_attributes)
     )
-    spans = [s1, s2, s3]
+
+    mlindex_content = '{"self": {"asset_id": "index_asset_id_2"}}'
+    index_input = json.dumps({"mlindex_content": mlindex_content,
+                              "query_type": "Hybrid (vector + keyword)",
+                              "top_k": 3})
+    lookup_attributes = json.dumps({"inputs": index_input})
+    s4 = SpanTreeNode(
+        Row(trace_id="01", span_id="4", parent_id="1", start_time=datetime(2024, 2, 12, 9, 5, 0),
+            end_time=datetime(2024, 2, 12, 9, 40, 0),
+            attributes=lookup_attributes))
+    documents = []
+    for i in range(3):
+        documents.append({"document.content": f"doc_{i}", "document.score": "0.5"})
+
+    retrieval_attributes = json.dumps({"retrieval.query": "query_5", "retrieval.documents": json.dumps(documents)})
+    s5 = SpanTreeNode(
+        Row(trace_id="01", span_id="5", parent_id="4", start_time=datetime(2024, 2, 12, 9, 15, 0),
+            end_time=datetime(2024, 2, 12, 9, 20, 0), span_type="Retrieval", attributes=retrieval_attributes)
+    )
+    spans = [s1, s2, s3, s4, s5]
     return SpanTree(spans).to_json_str()
 
 
@@ -250,12 +270,19 @@ class TestDetectorUtils:
 
     def test_parse_debugging_info(self, root_span, hashed_index_id_1):
         """Test parse_debugging_info function from the root span."""
-        extra_feilds = json.loads(parse_debugging_info(root_span, hashed_index_id_1)[0])
+        # The tree is structured like this:
+        # 1
+        # |-> 2 -> 3 (index1 retrieval)
+        # |-> 4 -> 5 (index2 retrieval)
+        parsed_debugging_info = parse_debugging_info(root_span, hashed_index_id_1)
+        # only index 1 should be returned
+        assert len(parsed_debugging_info) == 1
+        extra_feilds = json.loads(parsed_debugging_info[0])
         print(extra_feilds)
         assert extra_feilds[SPAN_ID_COLUMN] == "3"
         assert extra_feilds[INDEX_CONTENT_COLUMN] == '{"self": {"asset_id": "index_asset_id_1"}}'
         assert extra_feilds[INDEX_ID_COLUMN] == "index_asset_id_1"
-        assert extra_feilds[MODIFIED_PROMPT_COLUMN] == "query"
+        assert extra_feilds[MODIFIED_PROMPT_COLUMN] == "query_3"
         assert extra_feilds[RETRIEVAL_DOC_COLUMN] == "doc_0#<Splitter>#doc_1#<Splitter>#doc_2"
         assert extra_feilds[INDEX_SCORE_COLUMN] == 0.5
         assert extra_feilds[RETRIEVAL_QUERY_TYPE_COLUMN] == "Hybrid (vector + keyword)"

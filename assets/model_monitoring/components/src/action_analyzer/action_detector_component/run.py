@@ -171,7 +171,7 @@ def run():
         return
     print("Violated metrics found: ", violated_metrics)
 
-    signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
+    # load scored data
     print("gsq output df")
     signal_scored_data_df.show()
     df_pandas = signal_scored_data_df.toPandas()
