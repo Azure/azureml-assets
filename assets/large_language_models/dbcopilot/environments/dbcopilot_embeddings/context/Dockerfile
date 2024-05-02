@@ -33,7 +33,7 @@ RUN apt-get update \
     && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
     && curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
-    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18=18.3.3.1-1 \
+    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18=18.3.3.1-1 msodbcsql17=17.10.6.1-1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Default to UTF-8 file.encoding
@@ -52,7 +52,7 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
     pip install  promptflow-vectordb==0.2.9 && \
-    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.19-py3-none-any.whl \
+    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.20-py3-none-any.whl \
     pip install  cryptography==42.0.5 langchain==0.1.11 idna==3.7"
 
 # Fix vunerabilities

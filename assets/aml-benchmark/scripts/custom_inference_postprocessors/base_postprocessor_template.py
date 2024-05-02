@@ -33,7 +33,7 @@ def _parse_args():
     parser.add_argument(
         "--additional_parameters",
         type=str,
-        default=None,
+        default='null',
         help="Additional parameter values set in other fields of the component in a pipeline."
     )
     argss = parser.parse_args()
