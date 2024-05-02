@@ -86,9 +86,10 @@ class StoreUrl:
                 return self._datastore.account_key
             elif self._datastore.credential_type == "Sas":
                 return AzureSasCredential(self._datastore.sas_token)
-            # elif self._datastore.credential_type is None or self._datastore.credential_type == "None":
-            #     raise InvalidInputError("Credential-less input data is NOT supported for Model Monitoring job, "
-            #                             f"please add credential to datastore {self._datastore.name}.")
+            elif self._datastore.credential_type is None or self._datastore.credential_type == "None":
+                pass
+                # raise InvalidInputError("Credential-less input data is NOT supported for Model Monitoring job, "
+                #                         f"please add credential to datastore {self._datastore.name}.")
             else:
                 raise InvalidInputError(f"Unsupported credential type: {self._datastore.credential_type}, "
                                         "only AccountKey and Sas are supported.")
@@ -96,7 +97,8 @@ class StoreUrl:
             if self._datastore.tenant_id and self._datastore.client_id and self._datastore.client_secret:
                 return ClientSecretCredential(tenant_id=self._datastore.tenant_id, client_id=self._datastore.client_id,
                                               client_secret=self._datastore.client_secret)
-            # else:
+            else:
+                pass
                 # raise InvalidInputError("Credential-less input data is NOT supported for Model Monitoring job. "
                 #                         f"Please add credential to datastore {self._datastore.name}.")
         else:
