@@ -75,10 +75,17 @@ class MetricsProcessor:
                 if span_type in INCLUDE_SPAN_TYPE:
                     attributes = json.loads(span.get_node_attribute(attribute_key="attributes"))
                     parent = tree.get_span_tree_node_by_span_id(span.parent_id)
+                    # in some cases we have LLM/Embedding span with no parent so need to check before accessing its parent object
+                    parent_input = None
+                    parent_output = None
+                    if parent is not None:
+                        parent_input = parent.input
+                        parent_output = parent.output
+
                     self.calculate_metrics(attributes=attributes,
                                            span_type=span_type,
-                                           root_input=parent.input,
-                                           root_output=parent.output)
+                                           root_input=parent_input,
+                                           root_output=parent_output)
         self.calculate_averages()
 
     def metrics_generator(self):
@@ -126,13 +133,13 @@ class MetricsProcessor:
         sample_data_df.show()
         return sample_data_df
 
-    def calculate_metrics(self, attributes: dict, span_type: str, root_input: str, root_output: str):
+    def calculate_metrics(self, attributes: dict, span_type: str, root_input: Optional[str], root_output: Optional[str]):
         """Args.
 
         attributes (dict): attributes.
         span_type (str): LLM, Embedding, Tool, Flow.
-        root_input (str): input from Flow.
-        root_output (str): output from Flow.
+        root_input Optional(str): input from Flow.
+        root_output Optional(str): output from Flow.
         """
         completion_count = self.get_value_from_attributes(attributes, COMPLETION_COUNT_KEYS)
         prompt_count = self.get_value_from_attributes(attributes, PROMPT_COUNT_KEYS)
