@@ -1,0 +1,31 @@
+type: evaluationresult
+name: human_eval_cohere_command_r_plus_text_generation
+version: 2.30.04
+display_name: human_eval_Cohere_command_r_plus_text_generation
+description: Cohere-command-r-plus run for human_eval dataset
+dataset_family: human_eval
+dataset_name: human_eval
+
+model_name: Cohere-command-r-plus
+model_version: "3"
+model_asset_id: azureml://registries/azureml-cohere/models/Cohere-command-r-plus/versions/3
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azureml-cohere/models/Cohere-command-r-plus/versions/3
+
+tags:
+  evaluation_type: text_generation
+  task: text-generation
+  accuracy_metric_name: pass@1
+
+metrics:
+  accuracy: 0.5487804878048781
+
+
+properties:
+  n_shot: 0
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: None
+  fewshot_split: "None"
