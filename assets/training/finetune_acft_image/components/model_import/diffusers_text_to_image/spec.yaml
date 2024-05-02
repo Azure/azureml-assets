@@ -1,9 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.14
-name: transformers_image_classification_model_import
-display_name: Image Classification HuggingFace Transformers Model Import
+version: 0.0.1
+name: diffusers_text_to_image_model_import
+display_name: Text to Image Diffusers Model Import
 description: Import PyTorch / MLflow model
 
 is_deterministic: True
@@ -58,10 +58,12 @@ outputs:
     description: Folder to store model metadata.
 
 command: >-
-  python model_selector.py 
+  python model_selector.py
+  --component_type "diffusers"
   $[[--model_family ${{inputs.model_family}}]]
   $[[--model_name ${{inputs.model_name}}]]
   $[[--pytorch_model ${{inputs.pytorch_model}}]]
   $[[--mlflow_model ${{inputs.mlflow_model}}]]
   $[[--download_from_source ${{inputs.download_from_source}}]]
   --output_dir ${{outputs.output_dir}}
+
