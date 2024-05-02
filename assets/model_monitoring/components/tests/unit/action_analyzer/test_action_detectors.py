@@ -9,19 +9,15 @@ import json
 import hashlib
 from pyspark.sql import Row
 from datetime import datetime
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 from action_analyzer.contracts.llm_client import LLMClient
-from action_analyzer.contracts.actions.action import ActionType, Action
-from action_analyzer.contracts.action_sample import ActionSample
-from action_analyzer.contracts.actions.low_retrieval_score_index_action import LowRetrievalScoreIndexAction
-from action_analyzer.contracts.actions.metrics_violation_index_action import MetricsViolationIndexAction
+from action_analyzer.contracts.actions.action import ActionType
 from action_analyzer.contracts.action_detectors.low_retrieval_score_index_action_detector import (
     LowRetrievalScoreIndexActionDetector
 )
 from action_analyzer.contracts.action_detectors.metrics_violation_index_action_detector import (
     MetricsViolationIndexActionDetector
 )
-from action_analyzer.contracts.utils import detector_utils
 from shared_utilities.span_tree_utils import (
     SpanTree,
     SpanTreeNode,
@@ -50,6 +46,7 @@ def hashed_index_id_1():
     index_content_1 = '{"self": {"asset_id": "index_asset_id_1"}}'
     return hashlib.sha256(index_content_1.encode('utf-8')).hexdigest()
 
+
 @pytest.fixture
 def df_with_root_span():
     """Return a dataframe for testing."""
@@ -76,7 +73,8 @@ def df_with_root_span():
     for i in range(3):
         documents.append({"document.content": f"doc_{i}", "document.score": "0.5"})
 
-    retrieval_attributes = json.dumps({"retrieval.query": "retrieval_query_3", "retrieval.documents": json.dumps(documents)})
+    retrieval_attributes = json.dumps({"retrieval.query": "retrieval_query_3", 
+                                       "retrieval.documents": json.dumps(documents)})
     s3 = SpanTreeNode(
         Row(trace_id="01", span_id="3", parent_id="2", start_time=datetime(2024, 2, 12, 9, 15, 0),
             end_time=datetime(2024, 2, 12, 9, 20, 0), span_type="Retrieval", attributes=retrieval_attributes)
@@ -85,8 +83,9 @@ def df_with_root_span():
         Row(trace_id="01", span_id="4", parent_id="1", start_time=datetime(2024, 2, 12, 9, 5, 0),
             end_time=datetime(2024, 2, 12, 9, 40, 0),
             attributes=lookup_attributes))
-    
-    retrieval_attributes = json.dumps({"retrieval.query": "retrieval_query_5", "retrieval.documents": json.dumps(documents)})
+
+    retrieval_attributes = json.dumps({"retrieval.query": "retrieval_query_5",
+                                       "retrieval.documents": json.dumps(documents)})
     s5 = SpanTreeNode(
         Row(trace_id="01", span_id="5", parent_id="4", start_time=datetime(2024, 2, 12, 9, 15, 0),
             end_time=datetime(2024, 2, 12, 9, 20, 0), span_type="Retrieval", attributes=retrieval_attributes)
@@ -255,7 +254,6 @@ class TestActionDetector():
             assert actions[0].query_intention == DEFAULT_TOPIC_NAME
             assert len(actions[0].negative_samples) == 5
             assert len(actions[0].positive_samples) == 5
-
 
     def test_metrics_violation_index_action_detector_no_action(self, preprocessed_df_score, hashed_index_id_1):
         """Test MetricsViolationIndexActionDetector detect with no action."""
