@@ -11,11 +11,13 @@ import json
 import hashlib
 from pyspark.sql import Row
 from datetime import datetime
-from action_analyzer.contracts.action_sample import IndexActionSample
+from action_analyzer.contracts.actions.action import ActionType, Action
+from action_analyzer.contracts.action_sample import ActionSample, IndexActionSample
 from action_analyzer.contracts.utils.detector_utils import (
     parse_debugging_info,
     generate_index_action_samples,
-    get_index_id_from_index_content
+    get_index_id_from_index_content,
+    deduplicate_actions
 )
 from action_analyzer.action_detector_component.run import (
     get_unique_indexes,
@@ -259,3 +261,76 @@ class TestDetectorUtils:
         assert extra_feilds[RETRIEVAL_QUERY_TYPE_COLUMN] == "Hybrid (vector + keyword)"
         assert extra_feilds[RETRIEVAL_TOP_K_COLUMN] == 3
         assert extra_feilds[PROMPT_FLOW_INPUT_COLUMN] == "prompt_flow_input"
+
+    def test_deduplicate_actions_should_dedup(self):
+        """Test deduplicate_actions function. Actions have overlap > 50%."""
+        # Total 6 actions. All have same negative queries. Confidence scores are 1, 0.9, 0.8, 0.95, 0.95, 0.95.
+        positive_samples = []
+        negative_samples = []
+        for i in range(10):
+            negative_samples.append(ActionSample(f"negative_query_{i}",
+                                                 f"negative_answer_{i}",
+                                                 f"negative_debugging_info_{i}",
+                                                 f"negative_prompt_flow_input_{i}"))
+        actions = []
+        for i in range(3):
+            actions.append(Action(ActionType.LOW_RETRIEVAL_SCORE_INDEX_ACTION,
+                                  f"action_{i}",
+                                  1 - i/10,
+                                  "query intention",
+                                  "deployment id",
+                                  "run id",
+                                  positive_samples,
+                                  negative_samples))
+        for i in range(3):
+            actions.append(Action(ActionType.METRICS_VIOLATION_INDEX_ACTION,
+                                  f"action_{i}",
+                                  0.95,
+                                  "query intention",
+                                  "deployment id",
+                                  "run id",
+                                  positive_samples,
+                                  negative_samples))
+
+        deduplicated_list = deduplicate_actions(actions)
+        assert len(deduplicated_list) == 1
+        assert deduplicated_list[0].confidence_score == 1
+        assert deduplicated_list[0].action_type == ActionType.LOW_RETRIEVAL_SCORE_INDEX_ACTION
+
+    def test_deduplicate_actions_not_dedup(self):
+        """Test deduplicate_actions function. Actions have overlap < 50%."""
+        # Total 2 actions. The overlap is less than 50%.
+        # action 1 has ['negative_query_1', 'negative_query_2', 'negative_query_3', 'negative_query_4']
+        # action 2 has ['negative_query_4', 'negative_query_5', 'negative_query_6', 'negative_query_7', 'negative_query_8']
+        actions = []
+        positive_samples = []
+        negative_samples = []
+        for i in range(1, 5):
+            negative_samples.append(ActionSample(f"negative_query_{i}",
+                                                 f"negative_answer_{i}",
+                                                 f"negative_debugging_info_{i}",
+                                                 f"negative_prompt_flow_input_{i}"))
+        actions.append(Action(ActionType.METRICS_VIOLATION_INDEX_ACTION,
+                              "action_1",
+                              0.95,
+                              "query intention",
+                              "deployment id",
+                              "run id",
+                              positive_samples,
+                              negative_samples))
+        negative_samples = []
+        for i in range(4, 9):
+            negative_samples.append(ActionSample(f"negative_query_{i}",
+                                                 f"negative_answer_{i}",
+                                                 f"negative_debugging_info_{i}",
+                                                 f"negative_prompt_flow_input_{i}"))
+        actions.append(Action(ActionType.METRICS_VIOLATION_INDEX_ACTION,
+                             "action_2",
+                             0.95,
+                             "query intention",
+                             "deployment id",
+                             "run id",
+                             positive_samples,
+                             negative_samples))
+        deduplicated_list = deduplicate_actions(actions)
+        assert deduplicated_list == actions
