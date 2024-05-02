@@ -40,6 +40,7 @@ from shared_utilities.constants import (
     DEFAULT_TOPIC_NAME
 )
 
+
 @pytest.fixture
 def hashed_index_id_1():
     """Return a hashed index id 1."""
@@ -73,7 +74,7 @@ def df_with_root_span():
     for i in range(3):
         documents.append({"document.content": f"doc_{i}", "document.score": "0.5"})
 
-    retrieval_attributes = json.dumps({"retrieval.query": "retrieval_query_3", 
+    retrieval_attributes = json.dumps({"retrieval.query": "retrieval_query_3",
                                        "retrieval.documents": json.dumps(documents)})
     s3 = SpanTreeNode(
         Row(trace_id="01", span_id="3", parent_id="2", start_time=datetime(2024, 2, 12, 9, 15, 0),
