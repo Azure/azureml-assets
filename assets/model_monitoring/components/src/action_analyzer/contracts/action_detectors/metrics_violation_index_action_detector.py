@@ -68,6 +68,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             pandas.DataFrame: preprocessed pandas dataframe.
         """
         try:
+            print("Start to run MetricsViolationIndexActionDetector.")
             preprocessed_df = extract_fields_from_debugging_info(df, self.index_id)
             return preprocessed_df
         except Exception as e:
