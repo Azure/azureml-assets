@@ -75,7 +75,7 @@ class MetricsProcessor:
                 if span_type in INCLUDE_SPAN_TYPE:
                     attributes = json.loads(span.get_node_attribute(attribute_key="attributes"))
                     parent = tree.get_span_tree_node_by_span_id(span.parent_id)
-                    # in some cases we have LLM/Embedding span with no parent so need to check 
+                    # in some cases we have LLM/Embedding span with no parent so need to check
                     # before accessing its parent object
                     parent_input = None
                     parent_output = None
