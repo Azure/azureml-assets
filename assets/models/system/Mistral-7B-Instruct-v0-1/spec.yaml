@@ -12,7 +12,7 @@ tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
   disable-batch: "true"
-  _aml_system_vanity_registry: "azureml-phi"
+  _aml_system_vanity_registry: "azureml-mistral"
   inference_compute_allow_list:
     [
       Standard_NC12s_v3,
