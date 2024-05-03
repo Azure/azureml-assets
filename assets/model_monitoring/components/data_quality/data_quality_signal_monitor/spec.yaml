@@ -79,7 +79,11 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: aml_token
+      type: managed
+      properties:
+        tenant_id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+        principal_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
+        client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   feature_selection:
     type: spark
     component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.13
@@ -100,7 +104,11 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: aml_token
+      type: managed
+      properties:
+        tenant_id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+        principal_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
+        client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   compute_baseline_data_statistics:
     type: spark
     component: azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.13
@@ -117,7 +125,11 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: aml_token
+      type: managed
+      properties:
+        tenant_id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+        principal_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
+        client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   compute_baseline_data_quality:
     type: spark
     component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.17
@@ -142,7 +154,11 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: aml_token
+      type: managed
+      properties:
+        tenant_id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+        principal_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
+        client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   compute_target_data_quality:
     type: spark
     component: azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.17
@@ -165,7 +181,11 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: aml_token
+      type: managed
+      properties:
+        tenant_id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+        principal_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
+        client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   join_data_quality_metrics:
     type: spark
     component: azureml://registries/azureml/components/data_quality_metrics_joiner/versions/0.3.11
@@ -185,7 +205,11 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: aml_token
+      type: managed
+      properties:
+        tenant_id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+        principal_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
+        client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   output_signal_metrics:
     type: spark
     component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.17
@@ -207,7 +231,11 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: aml_token
+      type: managed
+      properties:
+        tenant_id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+        principal_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
+        client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   evaluate_metric_thresholds:
     type: spark
     component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.17
@@ -221,4 +249,8 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: aml_token
+      type: managed
+      properties:
+        tenant_id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+        principal_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
+        client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
