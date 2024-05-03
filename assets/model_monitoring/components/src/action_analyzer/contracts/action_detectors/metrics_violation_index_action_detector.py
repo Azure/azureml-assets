@@ -23,7 +23,9 @@ from shared_utilities.constants import (
     DEFAULT_TOPIC_NAME,
     INDEX_CONTENT_COLUMN,
     PROMPT_COLUMN,
-    INVALID_LLM_SCORE
+    INVALID_LLM_SCORE,
+    METRICS_VIOLATION_THRESHOLD,
+    GOOD_METRICS_THRESHOLD
 )
 
 
@@ -36,8 +38,8 @@ class MetricsViolationIndexActionDetector(ActionDetector):
                  correlation_test_method: str,
                  correlation_test_pvalue_threshold: float,
                  query_intention_enabled: str,
-                 positive_metric_threshold=5,
-                 negative_metric_threshold=3,
+                 positive_metric_threshold=GOOD_METRICS_THRESHOLD,
+                 negative_metric_threshold=METRICS_VIOLATION_THRESHOLD,
                  preprocessed_data=pandas.DataFrame()) -> None:
         """Create a metrics violation index action detector.
 

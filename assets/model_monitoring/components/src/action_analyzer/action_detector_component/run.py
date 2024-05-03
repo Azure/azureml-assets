@@ -12,9 +12,6 @@ from action_analyzer.contracts.action_detectors.action_detector import ActionDet
 from action_analyzer.contracts.action_detectors.low_retrieval_score_index_action_detector import (
     LowRetrievalScoreIndexActionDetector
 )
-from action_analyzer.contracts.action_detectors.metrics_violation_index_action_detector import (
-    MetricsViolationIndexActionDetector
-)
 from action_analyzer.contracts.llm_client import LLMClient
 from action_analyzer.contracts.utils.detector_utils import (
     deduplicate_actions,
@@ -168,14 +165,6 @@ def run():
         index_actions = []
         lrsi_detector = LowRetrievalScoreIndexActionDetector(index, violated_metrics, args.query_intention_enabled)
         index_actions += run_detector(df_pandas, lrsi_detector, llm_client, args.aml_deployment_id)
-
-        mvi_detector = MetricsViolationIndexActionDetector(index,
-                                                           violated_metrics,
-                                                           TTEST_NAME,
-                                                           P_VALUE_THRESHOLD,
-                                                           args.query_intention_enabled,
-                                                           preprocessed_data=lrsi_detector.preprocessed_data)
-        index_actions += run_detector(df_pandas, mvi_detector, llm_client, args.aml_deployment_id)
 
         # After all detectors, deduplicate actions if needed.
         final_actions += deduplicate_actions(index_actions)
