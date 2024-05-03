@@ -123,8 +123,8 @@ def run_detector(df: pandas.DataFrame,
     Returns:
         List[str]: list of violated metrics.
     """
-    detector.preprocess_data(df, LLMClient)
-    return detector.detect(LLMClient, aml_deployment_id)
+    detector.preprocess_data(df, llm_client)
+    return detector.detect(llm_client, aml_deployment_id)
 
 
 def run():
