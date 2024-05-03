@@ -60,4 +60,4 @@ tags:
     apply_ort: "false"
     precision: 16
     max_seq_length: 2048
-version: 17
+version: 18
