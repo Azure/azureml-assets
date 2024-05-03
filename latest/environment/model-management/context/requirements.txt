@@ -5,7 +5,7 @@ azureml-evaluate-mlflow==0.0.52
 ffmpeg-python==0.2.0
 langcodes==3.4.0
 sentencepiece==0.2.0
-accelerate==0.29.3
+accelerate==0.30.0
 wget==3.2
 applicationinsights==0.11.10
 azureml-automl-core==1.56.0
