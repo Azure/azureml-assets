@@ -438,10 +438,6 @@ def apply_annotation(
     metric_names = process_metric_names(metric_names)
     validate_parameters(request_args, sample_rate)
 
-    if "chat_history" in [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]:
-        raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
-                                  "column. ")
-
     production_df = io_utils.try_read_mltable_in_spark_with_error(production_dataset, "production_dataset")
     # Ensure input data has the correct columns given the metrics
     # Question, answer required for coherence and fluency
