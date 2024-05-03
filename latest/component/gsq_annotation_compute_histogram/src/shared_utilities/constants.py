@@ -148,22 +148,32 @@ RETRIEVAL_QUERY_TYPE_COLUMN = "retrieval_query_type"
 RETRIEVAL_TOP_K_COLUMN = "retrieval_top_k"
 DEFAULT_TOPIC_NAME = "disparate"
 PROMPT_FLOW_INPUT_COLUMN = "prompt_flow_input"
+RETRIEVAL_DOC_COLUMN = "retrieved_doc"
+MODIFIED_PROMPT_COLUMN = "modified_prompt_column"
+QUERY_INTENTION_COLUMN = "query_intention"
 
 GSQ_METRICS_LIST = ["Fluency", "Coherence", "Groundedness", "Relevance", "Similarity"]
 GOOD_METRICS_VALUE = 5
+GOOD_METRICS_THRESHOLD = 5
 METRICS_VIOLATION_THRESHOLD = 4
+LOW_RETRIEVAL_SCORE_THRESHOLD = 4
+HIGH_RETRIEVAL_SCORE_THRESHOLD = 5
 RETRIEVAL_SPAN_TYPE = "Retrieval"
 EMBEDDING_SPAN_TYPE = "Embedding"
 TEXT_SPLITTER = "#<Splitter>#"
 
+TTEST_NAME = "t-test"
 GROUP_TOPIC_MIN_SAMPLE_SIZE = 10
 P_VALUE_THRESHOLD = 0.05
 MEAN_THRESHOLD = 3
+API_CALL_RETRY_BACKOFF_FACTOR = 4
+API_CALL_RETRY_MAX_COUNT = 10
 
 INDEX_ACTION_TYPE = "Index Action"
 ACTION_DESCRIPTION = "The application's response quality is low due to suboptimal index retrieval. Please update the index with ID '{index_id}' to address this issue."  # noqa
 MAX_SAMPLE_SIZE = 20
 DEFAULT_RETRIEVAL_SCORE = 0
+INVALID_LLM_SCORE = -1
 
 APP_TRACES_INPUTS_EVENT_NAME = "promptflow.function.inputs"
 APP_TRACES_OUTPUT_EVENT_NAME = "promptflow.function.output"

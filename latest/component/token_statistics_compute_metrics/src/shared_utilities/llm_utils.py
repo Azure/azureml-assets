@@ -334,7 +334,7 @@ def _request_api(session,
         "Content-Type": "application/json",
     }
 
-    print(f"Using {token_manager.auth_header} authentication")
+    # print(f"Using {token_manager.auth_header} authentication")
     if token_manager.auth_header == BEARER:
         headers[AUTHORIZATION] = f"{BEARER} {token}"
     elif token_manager.auth_header == API_KEY:
@@ -343,23 +343,23 @@ def _request_api(session,
     time_start = time.time()
 
     # print headers without disclosing token
-    headers_output = {
-        h: (headers[h] if h not in [AUTHORIZATION] else "*" * len(headers[h]))
-        for h in headers
-    }
-    print(
-        f"Sending request \n    to endpoint: {endpoint_url}"
-        f"\n    with headers: {headers_output}"
-        f"\n    and params: {request_params}"
-    )
+    # headers_output = {
+    #     h: (headers[h] if h not in [AUTHORIZATION] else "*" * len(headers[h]))
+    #     for h in headers
+    # }
+    # print(
+    #     f"Sending request \n    to endpoint: {endpoint_url}"
+    #     f"\n    with headers: {headers_output}"
+    #     f"\n    and params: {request_params}"
+    # )
     response = session.post(
         endpoint_url,
         headers=headers,
         json=request_params,
         timeout=HTTP_REQUEST_TIMEOUT)
     time_taken = str(time.time() - time_start)
-    print(f"Received response from endpoint: {response.__dict__}")
-    print(f"Time taken to receive response: {time_taken}")
+    # print(f"Received response from endpoint: {response.__dict__}")
+    # print(f"Time taken to receive response: {time_taken}")
     if response.status_code == 200:
         response_data = response.json()
 
