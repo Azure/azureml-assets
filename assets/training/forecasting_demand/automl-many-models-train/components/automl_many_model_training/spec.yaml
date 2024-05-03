@@ -4,7 +4,7 @@ type: pipeline
 name: automl_many_models_training
 display_name: AutoML - Many Models Training
 description: Enables AutoML many models training.
-version: 0.0.2
+version: 0.0.3
 is_deterministic: false
 
 inputs:
