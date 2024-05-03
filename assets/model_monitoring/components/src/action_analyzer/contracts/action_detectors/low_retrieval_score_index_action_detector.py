@@ -92,6 +92,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
         if not self.preprocessed_data.empty:
             df = self.preprocessed_data
             try:
+                print("LowRetrievalScoreIndexActionDetector starts to detect actions.")
                 for metric in self.violated_metrics:
                     low_retrieval_score_df = df[(df[metric] < METRICS_VIOLATION_THRESHOLD) &
                                                 (df[INDEX_SCORE_LLM_COLUMN] < LOW_RETRIEVAL_SCORE_THRESHOLD)]
@@ -103,7 +104,6 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
                     print(f"The low retrieval score query ratio for metric {metric}: {low_retrieval_score_query_ratio}.")  # noqa
                     if low_retrieval_score_query_ratio >= LOW_RETRIEVAL_SCORE_QUERY_RATIO_THRESHOLD:
                         print(f"Generating action for metric {metric}.")
-                        # use the low retrieval score query ratio as confidence
                         action = self.generate_action(llm_client,
                                                       metric,
                                                       LOW_RETRIEVAL_SCORE_INDEX_ACTION_CONFIDENCE,
@@ -144,7 +144,6 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
 
         index_content = low_retrieval_score_df.iloc[0][INDEX_CONTENT_COLUMN]
         index_asset_id = low_retrieval_score_df.iloc[0][INDEX_ID_COLUMN]
-        print("index_asset_id: ", index_asset_id)
         return LowRetrievalScoreIndexAction(index_asset_id,
                                             index_content,
                                             metric,

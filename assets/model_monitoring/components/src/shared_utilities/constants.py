@@ -170,7 +170,7 @@ API_CALL_RETRY_BACKOFF_FACTOR = 4
 API_CALL_RETRY_MAX_COUNT = 10
 
 INDEX_ACTION_TYPE = "Index Action"
-ACTION_DESCRIPTION = "The application's response quality is low due to suboptimal index retrieval. Please update the index with ID '{index_asset_id}' to address this issue."  # noqa
+ACTION_DESCRIPTION = "The application's response quality is low due to suboptimal index retrieval. Please update the index with ID '{index_id}' to address this issue."  # noqa
 MAX_SAMPLE_SIZE = 20
 DEFAULT_RETRIEVAL_SCORE = 0
 INVALID_LLM_SCORE = -1

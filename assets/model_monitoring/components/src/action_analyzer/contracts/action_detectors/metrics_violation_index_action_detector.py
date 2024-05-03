@@ -93,6 +93,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
         """
         action_list = []
         if not self.preprocessed_data.empty:
+            print("MetricsViolationIndexActionDetector start to detect actions.")
             df = self.preprocessed_data
             try:
                 for metric in self.violated_metrics:
@@ -138,7 +139,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             MetricsViolationIndexAction: the generated low retrieval score index action.
         """
         query_intention = get_query_intention(low_metric_score_df[PROMPT_COLUMN].to_list(), llm_client) if self.query_intention_enabled == "true" else DEFAULT_TOPIC_NAME  # noqa: E501
-
+        print("Got query intention: ", query_intention)
         positive_samples = generate_index_action_samples(high_metric_score_df, False)
         negative_samples = generate_index_action_samples(low_metric_score_df, True)
 

@@ -43,7 +43,7 @@ class MetricsViolationIndexAction(Action):
         self.index_name = index_name
         self.index_content = index_content
         self.violated_metrics = violated_metrics
-        description = ACTION_DESCRIPTION.replace("{index_asset_id}", index_asset_id)
+        description = ACTION_DESCRIPTION.replace("{index_id}", index_asset_id)
         super().__init__(ActionType.METRICS_VIOLATION_INDEX_ACTION,
                          description,
                          confidence_score,
