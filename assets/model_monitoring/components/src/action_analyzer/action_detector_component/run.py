@@ -108,10 +108,11 @@ def get_violated_metrics(signal_out_url: str, signal_name: str) -> List[str]:
         return []
 
 
-def run_detector(detector: ActionDetector, llm_client: LLMClient, aml_deployment_id: str) -> List[Action]:
+def run_detector(df: pandas.DataFrame, detector: ActionDetector, llm_client: LLMClient, aml_deployment_id: str) -> List[Action]:
     """Run detector.
 
     Args:
+        df(pandas.DataFrame): the input dataframe.
         detector(ActionDetector): the detector to run.
         llm_client(LLMClient): LLM client used to get some llm scores/info for action.
         aml_deployment_id(str): aml deployment id for the action.
@@ -120,8 +121,8 @@ def run_detector(detector: ActionDetector, llm_client: LLMClient, aml_deployment
         List[str]: list of violated metrics.
     """
 
-    detector.preprocess_data(df)
-    return detector.detect(extra_params["llm_client"], extra_params["aml_deployment_id"])
+    detector.preprocess_data(df, LLMClient)
+    return detector.detect(LLMClient, aml_deployment_id)
 
 
 def run():
@@ -162,9 +163,9 @@ def run():
     # detect actions for each index
     final_actions = []
     for index in unique_indexes:
-        index_action = []
+        index_actions = []
         lrsi_detector = LowRetrievalScoreIndexActionDetector(index, violated_metrics, args.query_intention_enabled)
-        index_actions += run_detector(lrsi_detector)
+        index_actions += run_detector(df_pandas, lrsi_detector)
 
         mvi_detector = MetricsViolationIndexActionDetector(index,
                                                            violated_metrics,
@@ -172,7 +173,7 @@ def run():
                                                            P_VALUE_THRESHOLD,
                                                            args.query_intention_enabled,
                                                            preprocessed_data=lrsi_detector.preprocessed_data)
-        index_action += run_detector(mvi_detector)
+        index_actions += run_detector(df_pandas, mvi_detector)
 
         # After all detectors, deduplicate actions if needed.
         final_actions += deduplicate_actions(index_actions)

@@ -15,7 +15,7 @@ class ActionDetector(ABC):
 
     def __init__(self,
                  query_intention_enabled: str,
-                 preprocessed_data: pandas.DataFrame=pandas.DataFrame()) -> None:
+                 preprocessed_data=pandas.DataFrame()) -> None:
         """Create an action detector.
 
         Args:
@@ -26,11 +26,12 @@ class ActionDetector(ABC):
         self.preprocessed_data = preprocessed_data
 
     @abstractmethod
-    def preprocess_data(self, df: pandas.DataFrame):
+    def preprocess_data(self, df: pandas.DataFrame, llm_client: LLMClient):
         """Preprocess the data for action detector.
 
         Args:
             df(pandas.DataFrame): input pandas dataframe.
+            llm_client(LLMClient): LLM client used to get some llm scores/info for action.
         """
         pass
 
