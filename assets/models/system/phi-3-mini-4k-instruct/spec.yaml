@@ -17,6 +17,7 @@ tags:
   license: mit
   disable-batch: "true"
   task: chat-completion
+  _aml_system_vanity_registry: "azureml-phi"
   author: microsoft
   inference_compute_allow_list:
     [ 
