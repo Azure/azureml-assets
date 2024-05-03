@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_gpt_4_0314_question_answering
-version: 2.19.040
+version: 2.03.05
 display_name: social_iqa_gpt_4_0314_question_answering
 description: gpt-4-0314 run for social_iqa dataset
 dataset_family: social_iqa
@@ -8,11 +8,11 @@ dataset_name: social_iqa
 
 model_name: gpt-4-0314
 model_version: "0314"
-model_asset_id: azureml://registries/azure-openai-preview/models/gpt-4/versions/629591.2a481b56
+model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/4
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azure-openai-preview/models/gpt-4/versions/629591.2a481b56
+    assetId: azureml://registries/azure-openai/models/gpt-4/versions/4
 
 tags:
   evaluation_type: text_generation
