@@ -1,0 +1,31 @@
+type: evaluationresult
+name: gsm8k_gpt-4-turbo-2024-04-09_chat_completion
+version: 2.03.05
+display_name: gsm8k_gpt-4-turbo-2024-04-09_chat_completion
+description: gsm8k_gpt-4-turbo-2024-04-09_chat_completion
+dataset_family: gsm8k
+dataset_name: gsm8k
+
+model_name: gpt-4-turbo-2024-04-09
+model_version: "2024-04-09"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/4
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azure-openai/models/gpt-4/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.9484457922668689
+
+
+properties:
+  n_shot: 8
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

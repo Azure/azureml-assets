@@ -1,0 +1,31 @@
+type: evaluationresult
+name: boolq_gpt-4-turbo-2024-04-09_chat_completion
+version: 2.03.05
+display_name: boolq_gpt-4-turbo-2024-04-09_chat_completion
+description: boolq_gpt-4-turbo-2024-04-09_chat_completion
+dataset_family: boolq
+dataset_name: boolq
+
+model_name: gpt-4-turbo-2024-04-09
+model_version: "2024-04-09"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/4
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azure-openai/models/gpt-4/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.9125382262996942
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"
