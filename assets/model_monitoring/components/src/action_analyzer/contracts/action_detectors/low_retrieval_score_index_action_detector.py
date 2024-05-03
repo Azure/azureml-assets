@@ -65,7 +65,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
             if not self.preprocessed_data.empty:
                 print("Preprocessed data is available. Skip executing preprocess.")
                 return
-            
+
             print("Start to run LowRetrievalScoreIndexActionDetector.")
             preprocessed_df = extract_retrieval_info_from_root_span(df, self.index_id)
 
