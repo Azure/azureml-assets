@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""MetricsViolationIndexAction Class."""
+"""LowRetrievalScoreIndexAction Class."""
 
 from typing import List
 from action_analyzer.contracts.actions.action import ActionType, Action
@@ -11,21 +11,21 @@ from shared_utilities.constants import (
 )
 
 
-class MetricsViolationIndexAction(Action):
-    """Metrics violated index action class."""
+class LowRetrievalScoreIndexAction(Action):
+    """Low retrieval score index action class."""
 
     def __init__(self,
                  index_asset_id: str,
                  index_content: str,
                  violated_metrics: str,
-                 confidence_score: float,
+                 confidence_score: str,
                  query_intention: str,
                  deployment_id: str,
                  run_id: str,
                  positive_samples: List[IndexActionSample],
                  negative_samples: List[IndexActionSample],
                  index_name=None) -> None:
-        """Create a metrics violated index action.
+        """Create a low retrieval score index action.
 
         Args:
             index_asset_id(str): the index asset id.
@@ -44,7 +44,7 @@ class MetricsViolationIndexAction(Action):
         self.index_content = index_content
         self.violated_metrics = violated_metrics
         description = ACTION_DESCRIPTION.replace("{index_id}", index_asset_id)
-        super().__init__(ActionType.METRICS_VIOLATION_INDEX_ACTION,
+        super().__init__(ActionType.LOW_RETRIEVAL_SCORE_INDEX_ACTION,
                          description,
                          confidence_score,
                          query_intention,

@@ -3,7 +3,37 @@
 
 """Action sample class."""
 
-from action_analyzer.contracts.action import ActionSample
+from action_analyzer.contracts.utils.action_utils import convert_to_camel_case
+
+
+class ActionSample:
+    """Action sample class."""
+
+    def __init__(self,
+                 question: str,
+                 answer: str,
+                 debugging_info: str,
+                 prompt_flow_input: str) -> None:
+        """Create an action sample.
+
+        Args:
+            question(str): the input question of the flow.
+            answer(str): the output answer of the flow.
+            debugging_info(str): the json string of debugging info in a span tree structure.
+            prompt_flow_input(str): the json str of prompt flow input.
+        """
+        self.question = question
+        self.answer = answer
+        self.debugging_info = debugging_info
+        self.prompt_flow_input = prompt_flow_input
+
+    def to_json(self) -> dict:
+        """Convert an action sample object to json."""
+        attribute_dict = self.__dict__
+        json_out = {}
+        for key, val in attribute_dict.items():
+            json_out[convert_to_camel_case(key)] = val
+        return json_out
 
 
 class IndexActionSample(ActionSample):
