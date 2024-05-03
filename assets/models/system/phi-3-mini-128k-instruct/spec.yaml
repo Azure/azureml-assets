@@ -17,7 +17,8 @@ tags:
   disable-batch: "true"
   task: chat-completion
   author: microsoft
-  SharedComputeCapacityEnabled : ""
+  _aml_system_vanity_registry: "azureml-phi"
+  SharedComputeCapacityEnabled : ""  
   inference_compute_allow_list:
     [ 
       Standard_NC24ads_A100_v4,
