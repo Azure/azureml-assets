@@ -330,6 +330,51 @@ def publish_feature_attr_drift_signal_monitor_component(
 
 
 @pytest.fixture(scope="session")
+def publish_model_monitor_action_analyzer_component(
+    main_worker_lock,
+    publish_command_components,
+    model_monitoring_components,
+    components_directory,
+    root_temporary_directory,
+    asset_version,
+    ml_client,
+):
+    """Publish the data drift model monitor pipeline component to the test workspace."""
+    if not _is_main_worker(main_worker_lock):
+        return
+
+    print_header("Publishing Action Analyzer Model Monitor")
+    out_directory = os.path.join(root_temporary_directory, "command_components")
+    os.makedirs(out_directory, exist_ok=True)
+
+    for component in model_monitoring_components:
+        if component["name"] != "model_monitor_action_analyzer":
+            continue
+        print(f"Publishing {component['name']}..")
+        component["jobs"]["identify_problem_traffic"][
+            "component"
+        ] = f"azureml:action_analyzer_identify_problem_traffic:{asset_version}"
+        component["jobs"]["metrics_calculation"][
+            "component"
+        ] = f"azureml:action_analyzer_metrics_calculation:{asset_version}"
+        component["jobs"]["correlation_test"][
+            "component"
+        ] = f"azureml:action_analyzer_correlation_test:{asset_version}"
+        component["jobs"]["output_actions"][
+            "component"
+        ] = f"azureml:action_analyzer_output_actions:{asset_version}"
+        component["version"] = asset_version
+
+        spec_path = os.path.join(
+            out_directory, f"{component['name']}-{generate_random_filename('yaml')}"
+        )
+
+        write_to_yaml(spec_path, component)
+        ml_client.components.create_or_update(load_component(spec_path))
+        print(f"Successfully published {component['name']}.")
+
+
+@pytest.fixture(scope="session")
 def publish_prediction_drift_model_monitor_component(
     main_worker_lock,
     publish_command_components,
@@ -583,7 +628,8 @@ def register_components(
     publish_feature_attr_drift_signal_monitor_component,
     publish_generation_safety_signal_monitor_component,
     publish_model_performance_model_monitor_component,
-    publish_model_token_stats_model_monitor_component
+    publish_model_token_stats_model_monitor_component,
+    publish_model_monitor_action_analyzer_component
 ):
     """Publish all model monitor components."""
     yield
