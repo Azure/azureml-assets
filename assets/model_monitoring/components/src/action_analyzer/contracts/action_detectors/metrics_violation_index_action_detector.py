@@ -4,6 +4,7 @@
 """Metrics violation index action detector class."""
 
 import os
+import traceback
 from typing import List
 from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
@@ -82,6 +83,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             self.preprocessed_data = preprocessed_df[preprocessed_df[INDEX_SCORE_LLM_COLUMN] != INVALID_LLM_SCORE]
         except Exception as e:
             print("MetricsViolationIndexActionDetector preprocess failed with error", e)
+            print(traceback.format_exc())
 
     def detect(self, llm_client: LLMClient, aml_deployment_id=None) -> List[Action]:
         """Detect the action.
@@ -118,6 +120,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
                         action_list.append(action)
             except Exception as e:
                 print("MetricsViolationIndexActionDetector detect failed with error", e)
+                print(traceback.format_exc())
         return action_list
 
     def generate_action(self,

@@ -23,9 +23,7 @@ from shared_utilities.constants import (
     RETRIEVAL_SPAN_TYPE,
     ROOT_SPAN_COLUMN,
     GSQ_METRICS_LIST,
-    INDEX_ID_COLUMN,
-    P_VALUE_THRESHOLD,
-    TTEST_NAME
+    INDEX_ID_COLUMN
 )
 from shared_utilities.store_url import StoreUrl
 from shared_utilities.io_utils import try_read_mltable_in_spark

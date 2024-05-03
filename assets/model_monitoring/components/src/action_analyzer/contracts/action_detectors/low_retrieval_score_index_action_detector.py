@@ -5,6 +5,7 @@
 
 import os
 import pandas
+import traceback
 from typing import List
 from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
 from action_analyzer.contracts.actions.action import Action
@@ -77,6 +78,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
 
         except Exception as e:
             print("LowRetrievalScoreIndexActionDetector preprocess failed with error", e)
+            print(traceback.format_exc())
 
     def detect(self, llm_client: LLMClient, aml_deployment_id=None) -> List[Action]:
         """Detect the action.
@@ -115,6 +117,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
                         action_list.append(action)
             except Exception as e:
                 print("LowRetrievalScoreIndexActionDetector detect failed with error", e)
+                print(traceback.format_exc())
         return action_list
 
     def generate_action(self,
