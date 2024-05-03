@@ -89,7 +89,7 @@ class LowRetrievalScoreIndexActionDetector(ActionDetector):
             List[Action]: list of actions.
         """
         action_list = []
-        if not self.df_preprocessed.empty:
+        if not self.preprocessed_data.empty:
             df = self.preprocessed_data
             try:
                 for metric in self.violated_metrics:

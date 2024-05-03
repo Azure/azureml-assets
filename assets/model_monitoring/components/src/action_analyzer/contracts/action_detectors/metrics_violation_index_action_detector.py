@@ -92,13 +92,9 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             List[Action]: list of actions.
         """
         action_list = []
-        if not self.df_preprocessed.empty:
-            df = self.preprocessed_df
+        if not self.preprocessed_data.empty:
+            df = self.preprocessed_data
             try:
-                # get llm retrieval score
-                df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_retrieval_score, axis=1, args=(llm_client,))
-                df = df[df[INDEX_SCORE_LLM_COLUMN] != INVALID_LLM_SCORE]
-
                 for metric in self.violated_metrics:
                     low_metric_score_df = df[df[metric] < self.negative_metric_threshold]
                     high_metric_score_df = df[df[metric] >= self.positive_metric_threshold]

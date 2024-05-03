@@ -37,7 +37,8 @@ from shared_utilities.constants import (
     SPAN_ID_COLUMN,
     TTEST_NAME,
     P_VALUE_THRESHOLD,
-    DEFAULT_TOPIC_NAME
+    DEFAULT_TOPIC_NAME,
+    INDEX_SCORE_LLM_COLUMN
 )
 
 
@@ -110,7 +111,7 @@ def df_with_root_span():
 
 
 @pytest.fixture
-def preprocessed_df_score():
+def preprocessed_df():
     """Return a df with preprocessed schema."""
     df = pd.DataFrame(columns=[
         PROMPT_COLUMN,
@@ -152,39 +153,47 @@ class TestActionDetector():
     def test_low_retrieval_score_index_action_detector_preprocess(self, df_with_root_span, hashed_index_id_1):
         """Test LowRetrievalScoreIndexActionDetector preprocess."""
         detector = LowRetrievalScoreIndexActionDetector(hashed_index_id_1, ["Fluency", "Coherence"], "true")
-        preprocessed_df = detector.preprocess_data(df_with_root_span)
-
-        column_names = list(preprocessed_df.columns.values)
-        assert SPAN_ID_COLUMN in column_names
-        assert INDEX_ID_COLUMN in column_names
-        assert INDEX_CONTENT_COLUMN in column_names
-        assert MODIFIED_PROMPT_COLUMN in column_names
-        assert RETRIEVAL_DOC_COLUMN in column_names
-        assert INDEX_SCORE_COLUMN in column_names
-        assert RETRIEVAL_QUERY_TYPE_COLUMN in column_names
-        assert RETRIEVAL_TOP_K_COLUMN in column_names
-        assert PROMPT_FLOW_INPUT_COLUMN in column_names
-
-        assert len(preprocessed_df.index) == 10
-        assert preprocessed_df.iloc[0][MODIFIED_PROMPT_COLUMN] == "retrieval_query_3"
-        assert preprocessed_df.iloc[0][SPAN_ID_COLUMN] == "3"
-        assert preprocessed_df.iloc[1][MODIFIED_PROMPT_COLUMN] == "retrieval_query_5"
-        assert preprocessed_df.iloc[1][SPAN_ID_COLUMN] == "5"
-
-    def test_low_retrieval_score_index_action_detector_detect_with_action(self,
-                                                                          preprocessed_df_score,
-                                                                          hashed_index_id_1):
-        """Test LowRetrievalScoreIndexAction detect with action detected."""
-        detector = LowRetrievalScoreIndexActionDetector(hashed_index_id_1, ["Fluency"], "false")
         with patch("action_analyzer.contracts.utils.detector_utils._query_llm_score") as retrieval_score, \
              patch("action_analyzer.contracts.utils.detector_utils._post_process_retrieval_results") as post_score, \
              patch.object(LLMClient, "__new__"):
-            retrieval_score.return_value = "fake value"
-            # All retrieval scores are 1. All bad queries are due to index issue.
-            post_score.return_value = 1
-            fake_llm_client = LLMClient("workspace_connection_arm_id", "model_deployment_name")
+             retrieval_score.return_value = "fake value"
+             # All retrieval scores are 1.
+             post_score.return_value = 1
+             fake_llm_client = LLMClient("workspace_connection_arm_id", "model_deployment_name")
+             detector.preprocess_data(df_with_root_span, fake_llm_client)
 
-            actions = detector.detect(preprocessed_df_score, fake_llm_client)
+             column_names = list(detector.preprocessed_data.columns.values)
+             assert SPAN_ID_COLUMN in column_names
+             assert INDEX_ID_COLUMN in column_names
+             assert INDEX_CONTENT_COLUMN in column_names
+             assert MODIFIED_PROMPT_COLUMN in column_names
+             assert RETRIEVAL_DOC_COLUMN in column_names
+             assert INDEX_SCORE_COLUMN in column_names
+             assert RETRIEVAL_QUERY_TYPE_COLUMN in column_names
+             assert RETRIEVAL_TOP_K_COLUMN in column_names
+             assert PROMPT_FLOW_INPUT_COLUMN in column_names
+
+             assert len(detector.preprocessed_data.index) == 10
+             assert detector.preprocessed_data.iloc[0][MODIFIED_PROMPT_COLUMN] == "retrieval_query_3"
+             assert detector.preprocessed_data.iloc[0][SPAN_ID_COLUMN] == "3"
+             assert detector.preprocessed_data.iloc[0][INDEX_SCORE_LLM_COLUMN] == 1
+             assert detector.preprocessed_data.iloc[1][MODIFIED_PROMPT_COLUMN] == "retrieval_query_5"
+             assert detector.preprocessed_data.iloc[1][SPAN_ID_COLUMN] == "5"
+             assert detector.preprocessed_data.iloc[1][INDEX_SCORE_LLM_COLUMN] == 1
+
+    def test_low_retrieval_score_index_action_detector_detect_with_action(self,
+                                                                          preprocessed_df,
+                                                                          hashed_index_id_1):
+        """Test LowRetrievalScoreIndexAction detect with action detected."""
+        # All retrieval scores are 1. All bad queries are due to index issue.
+        preprocessed_df[INDEX_SCORE_LLM_COLUMN] = 1
+        detector = LowRetrievalScoreIndexActionDetector(hashed_index_id_1,
+                                                        ["Fluency"],
+                                                        "false",
+                                                        preprocessed_data=preprocessed_df)
+        with patch.object(LLMClient, "__new__"):
+            fake_llm_client = LLMClient("workspace_connection_arm_id", "model_deployment_name")
+            actions = detector.detect(fake_llm_client)
             assert len(actions) == 1
             assert actions[0].action_type == ActionType.LOW_RETRIEVAL_SCORE_INDEX_ACTION
             assert actions[0].confidence_score == 0.9
@@ -192,19 +201,18 @@ class TestActionDetector():
             assert len(actions[0].negative_samples) == 5
 
     def test_low_retrieval_score_index_action_detector_detect_no_action(self,
-                                                                        preprocessed_df_score,
+                                                                        preprocessed_df,
                                                                         hashed_index_id_1):
         """Test LowRetrievalScoreIndexAction detect with no action."""
-        detector = LowRetrievalScoreIndexActionDetector(hashed_index_id_1, ["Fluency"], "false")
-        with patch("action_analyzer.contracts.utils.detector_utils._query_llm_score") as retrieval_score, \
-             patch("action_analyzer.contracts.utils.detector_utils._post_process_retrieval_results") as post_score, \
-             patch.object(LLMClient, "__new__"):
-            retrieval_score.return_value = "fake value"
-            # All retrieval scores are 5. All bad queries are not due to index issue.
-            post_score.return_value = 5
+        # All retrieval scores are 5. All bad queries are not due to index issue.
+        preprocessed_df[INDEX_SCORE_LLM_COLUMN] = 5
+        detector = LowRetrievalScoreIndexActionDetector(hashed_index_id_1,
+                                                        ["Fluency"],
+                                                        "false",
+                                                        preprocessed_data=preprocessed_df)
+        with patch.object(LLMClient, "__new__"):
             fake_llm_client = LLMClient("workspace_connection_arm_id", "model_deployment_name")
-
-            actions = detector.detect(preprocessed_df_score, fake_llm_client)
+            actions = detector.detect(fake_llm_client)
             assert len(actions) == 0
 
     def test_metrics_violation_index_action_detector_preprocess(self, df_with_root_span, hashed_index_id_1):
@@ -214,41 +222,49 @@ class TestActionDetector():
                                                        TTEST_NAME,
                                                        P_VALUE_THRESHOLD,
                                                        "true")
-        preprocessed_df = detector.preprocess_data(df_with_root_span)
+        with patch("action_analyzer.contracts.utils.detector_utils._query_llm_score") as retrieval_score, \
+             patch("action_analyzer.contracts.utils.detector_utils._post_process_retrieval_results") as post_score, \
+             patch.object(LLMClient, "__new__"):
+             retrieval_score.return_value = "fake value"
+             # All retrieval scores are 1.
+             post_score.return_value = 1
+             fake_llm_client = LLMClient("workspace_connection_arm_id", "model_deployment_name")
+             detector.preprocess_data(df_with_root_span, fake_llm_client)
+        
+             column_names = list(detector.preprocessed_data.columns.values)
+             assert SPAN_ID_COLUMN in column_names
+             assert INDEX_ID_COLUMN in column_names
+             assert INDEX_CONTENT_COLUMN in column_names
+             assert MODIFIED_PROMPT_COLUMN in column_names
+             assert RETRIEVAL_DOC_COLUMN in column_names
+             assert INDEX_SCORE_COLUMN in column_names
+             assert RETRIEVAL_QUERY_TYPE_COLUMN in column_names
+             assert RETRIEVAL_TOP_K_COLUMN in column_names
+             assert PROMPT_FLOW_INPUT_COLUMN in column_names
 
-        column_names = list(preprocessed_df.columns.values)
-        assert SPAN_ID_COLUMN in column_names
-        assert INDEX_ID_COLUMN in column_names
-        assert INDEX_CONTENT_COLUMN in column_names
-        assert MODIFIED_PROMPT_COLUMN in column_names
-        assert RETRIEVAL_DOC_COLUMN in column_names
-        assert INDEX_SCORE_COLUMN in column_names
-        assert RETRIEVAL_QUERY_TYPE_COLUMN in column_names
-        assert RETRIEVAL_TOP_K_COLUMN in column_names
-        assert PROMPT_FLOW_INPUT_COLUMN in column_names
+             assert len(detector.preprocessed_data.index) == 10
+             assert detector.preprocessed_data.iloc[0][MODIFIED_PROMPT_COLUMN] == "retrieval_query_3"
+             assert detector.preprocessed_data.iloc[0][SPAN_ID_COLUMN] == "3"
+             assert detector.preprocessed_data.iloc[0][INDEX_SCORE_LLM_COLUMN] == 1
+             assert detector.preprocessed_data.iloc[1][MODIFIED_PROMPT_COLUMN] == "retrieval_query_5"
+             assert detector.preprocessed_data.iloc[1][SPAN_ID_COLUMN] == "5"
+             assert detector.preprocessed_data.iloc[1][INDEX_SCORE_LLM_COLUMN] == 1
 
-        assert len(preprocessed_df.index) == 10
-        assert preprocessed_df.iloc[0][MODIFIED_PROMPT_COLUMN] == "retrieval_query_3"
-        assert preprocessed_df.iloc[0][SPAN_ID_COLUMN] == "3"
-        assert preprocessed_df.iloc[1][MODIFIED_PROMPT_COLUMN] == "retrieval_query_5"
-        assert preprocessed_df.iloc[1][SPAN_ID_COLUMN] == "5"
-
-    def test_metrics_violation_index_action_detector_with_action(self, preprocessed_df_score, hashed_index_id_1):
+    def test_metrics_violation_index_action_detector_with_action(self, preprocessed_df, hashed_index_id_1):
         """Test MetricsViolationIndexActionDetector detect with action detected."""
+        # E2E metric score is 1, retrieval score is 1. E2E metrics score is 5, retrieval score is 5. T-test should show significance.  # noqa
+        preprocessed_df[INDEX_SCORE_LLM_COLUMN] = [1, 1, 1, 1, 1, 5, 5, 5, 5, 5]
+        print(preprocessed_df[INDEX_SCORE_LLM_COLUMN])
         detector = MetricsViolationIndexActionDetector(hashed_index_id_1,
                                                        ["Fluency"],
                                                        TTEST_NAME,
                                                        P_VALUE_THRESHOLD,
-                                                       "false")
-        with patch("action_analyzer.contracts.utils.detector_utils._query_llm_score") as retrieval_score, \
-             patch("action_analyzer.contracts.utils.detector_utils._post_process_retrieval_results") as post_score, \
-             patch.object(LLMClient, "__new__"):
-            retrieval_score.return_value = "fake value"
-            # E2E metric score is 1, retrieval score is 1. E2E metrics score is 5, retrieval score is 5. T-test should show significance.  # noqa
-            post_score.side_effect = [1, 1, 1, 1, 1, 5, 5, 5, 5, 5]
+                                                       "false",
+                                                       preprocessed_data=preprocessed_df)
+        with patch.object(LLMClient, "__new__"):
             fake_llm_client = LLMClient("workspace_connection_arm_id", "model_deployment_name")
 
-            actions = detector.detect(preprocessed_df_score, fake_llm_client)
+            actions = detector.detect(fake_llm_client)
             assert len(actions) == 1
             assert actions[0].action_type == ActionType.METRICS_VIOLATION_INDEX_ACTION
             assert actions[0].confidence_score > 0.95
@@ -256,20 +272,17 @@ class TestActionDetector():
             assert len(actions[0].negative_samples) == 5
             assert len(actions[0].positive_samples) == 5
 
-    def test_metrics_violation_index_action_detector_no_action(self, preprocessed_df_score, hashed_index_id_1):
+    def test_metrics_violation_index_action_detector_no_action(self, preprocessed_df, hashed_index_id_1):
         """Test MetricsViolationIndexActionDetector detect with no action."""
+        # All retrieval scores are 1. T-test should not show significance.
+        preprocessed_df[INDEX_SCORE_LLM_COLUMN] = 1
         detector = MetricsViolationIndexActionDetector(hashed_index_id_1,
                                                        ["Fluency"],
                                                        TTEST_NAME,
                                                        P_VALUE_THRESHOLD,
-                                                       "false")
-        with patch("action_analyzer.contracts.utils.detector_utils._query_llm_score") as retrieval_score, \
-             patch("action_analyzer.contracts.utils.detector_utils._post_process_retrieval_results") as post_score, \
-             patch.object(LLMClient, "__new__"):
-            retrieval_score.return_value = "fake value"
-            # All retrieval scores are 1. T-test should not show significance.
-            post_score.return_value = 1
+                                                       "false",
+                                                       preprocessed_data=preprocessed_df)
+        with patch.object(LLMClient, "__new__"):
             fake_llm_client = LLMClient("workspace_connection_arm_id", "model_deployment_name")
-
-            actions = detector.detect(preprocessed_df_score, fake_llm_client)
+            actions = detector.detect(fake_llm_client)
             assert len(actions) == 0
