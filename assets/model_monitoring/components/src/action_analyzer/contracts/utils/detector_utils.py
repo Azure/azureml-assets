@@ -79,8 +79,8 @@ def get_index_id_from_index_content(index_content: str) -> str:
     return index_id
 
 
-def parse_debugging_info(root_span: str, detector_index_id: str) -> List[str]:
-    """Parse the span tree to get debugging info. Only for detector hashed index id.
+def extract_retrieval_info(root_span: str, detector_index_id: str) -> List[str]:
+    """Parse the span tree to get retrieval information. Only for detector hashed index id.
 
     Args:
         root_span(str): the span tree in json string format.
@@ -91,7 +91,7 @@ def parse_debugging_info(root_span: str, detector_index_id: str) -> List[str]:
     """
     try:
         tree = SpanTree.create_tree_from_json_string(root_span)
-        extra_feilds_list = []
+        retrieval_info_list = []
         prompt_flow_input = tree.root_span.input
         for span in tree:
             if span.span_type == RETRIEVAL_SPAN_TYPE:
@@ -110,15 +110,15 @@ def parse_debugging_info(root_span: str, detector_index_id: str) -> List[str]:
                 index_id = get_index_id_from_index_content(index_content)
                 retrieval_query_type = index_input["query_type"]
                 retrieval_top_k = index_input["top_k"]
-                retrieval_info = json.loads(span.attributes)
-                query = retrieval_info["retrieval.query"]
-                retrieval_documents = json.loads(retrieval_info["retrieval.documents"])
+                retrieval_attributes = json.loads(span.attributes)
+                query = retrieval_attributes["retrieval.query"]
+                retrieval_documents = json.loads(retrieval_attributes["retrieval.documents"])
                 texts = []
                 scores = []
                 for document in retrieval_documents:
                     texts.append(document["document.content"])
                     scores.append(float(document["document.score"]))
-                extra_fields = {
+                retrieval_info = {
                     SPAN_ID_COLUMN: span.span_id,
                     INDEX_CONTENT_COLUMN: index_content,
                     INDEX_ID_COLUMN: index_id,
@@ -129,15 +129,15 @@ def parse_debugging_info(root_span: str, detector_index_id: str) -> List[str]:
                     RETRIEVAL_TOP_K_COLUMN: retrieval_top_k,
                     PROMPT_FLOW_INPUT_COLUMN: prompt_flow_input
                 }
-                extra_feilds_list.append(json.dumps(extra_fields))
-        return extra_feilds_list if extra_feilds_list != [] else None
+                retrieval_info_list.append(json.dumps(retrieval_info))
+        return retrieval_info_list if retrieval_info_list != [] else None
     except KeyError as e:
         print("Required field not found: ", e)
         return None
 
 
-def extract_fields_from_debugging_info(df: pandas.DataFrame, detector_index_id: str) -> pandas.DataFrame:
-    """Parse the debugging info, expand the dataframe to span level, and populate extra fields as new columns.
+def extract_retrieval_info_from_root_span(df: pandas.DataFrame, detector_index_id: str) -> pandas.DataFrame:
+    """Parse the root span, expand the dataframe to span level, and populate retrieval info fields as new columns.
 
     Args:
         df(pandas.DataFrame): input dataframe in trace level.
@@ -146,20 +146,20 @@ def extract_fields_from_debugging_info(df: pandas.DataFrame, detector_index_id: 
     Returns:
         pandas.DataFrame: dataframe with enriched debugging values in span level.
     """
-    df['extra_fields'] = df[ROOT_SPAN_COLUMN].apply(parse_debugging_info, args=(detector_index_id,))
+    df['retrieval_info'] = df[ROOT_SPAN_COLUMN].apply(extract_retrieval_info, args=(detector_index_id,))
     # filter rows only for the detector index id
-    df.dropna(subset=['extra_fields'], inplace=True)
-    df = df.explode('extra_fields')
-    df[SPAN_ID_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[SPAN_ID_COLUMN])
-    df[INDEX_ID_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[INDEX_ID_COLUMN])
-    df[INDEX_CONTENT_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[INDEX_CONTENT_COLUMN])
-    df[MODIFIED_PROMPT_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[MODIFIED_PROMPT_COLUMN])
-    df[RETRIEVAL_DOC_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[RETRIEVAL_DOC_COLUMN])
-    df[INDEX_SCORE_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[INDEX_SCORE_COLUMN])
-    df[RETRIEVAL_QUERY_TYPE_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[RETRIEVAL_QUERY_TYPE_COLUMN])
-    df[RETRIEVAL_TOP_K_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[RETRIEVAL_TOP_K_COLUMN])
-    df[PROMPT_FLOW_INPUT_COLUMN] = df['extra_fields'].apply(lambda x: json.loads(x)[PROMPT_FLOW_INPUT_COLUMN])
-    df = df.drop(columns='extra_fields')
+    df.dropna(subset=['retrieval_info'], inplace=True)
+    df = df.explode('retrieval_info')
+    df[SPAN_ID_COLUMN] = df['retrieval_info'].apply(lambda x: json.loads(x)[SPAN_ID_COLUMN])
+    df[INDEX_ID_COLUMN] = df['retrieval_info'].apply(lambda x: json.loads(x)[INDEX_ID_COLUMN])
+    df[INDEX_CONTENT_COLUMN] = df['retrieval_info'].apply(lambda x: json.loads(x)[INDEX_CONTENT_COLUMN])
+    df[MODIFIED_PROMPT_COLUMN] = df['retrieval_info'].apply(lambda x: json.loads(x)[MODIFIED_PROMPT_COLUMN])
+    df[RETRIEVAL_DOC_COLUMN] = df['retrieval_info'].apply(lambda x: json.loads(x)[RETRIEVAL_DOC_COLUMN])
+    df[INDEX_SCORE_COLUMN] = df['retrieval_info'].apply(lambda x: json.loads(x)[INDEX_SCORE_COLUMN])
+    df[RETRIEVAL_QUERY_TYPE_COLUMN] = df['retrieval_info'].apply(lambda x: json.loads(x)[RETRIEVAL_QUERY_TYPE_COLUMN])
+    df[RETRIEVAL_TOP_K_COLUMN] = df['retrieval_info'].apply(lambda x: json.loads(x)[RETRIEVAL_TOP_K_COLUMN])
+    df[PROMPT_FLOW_INPUT_COLUMN] = df['retrieval_info'].apply(lambda x: json.loads(x)[PROMPT_FLOW_INPUT_COLUMN])
+    df = df.drop(columns='retrieval_info')
     return df
 
 
@@ -395,23 +395,18 @@ def deduplicate_actions(action_list: List[Action]) -> List[Action]:
     Returns:
         List[Action]: list of actions after deduplication.
     """
+    sorted_actions = sorted(action_list, key=lambda x: x.confidence_score, reverse=True)
     deduplicated_list = []
-    for i, action1 in enumerate(action_list):
-        add = True
-        for j, action2 in enumerate(action_list):
-            if i != j:
-                overlap = calculate_action_overlap(action1, action2)
-                if overlap > 0.5:
-                    if action1.confidence_score < action2.confidence_score:
-                        # do not add action1, action2 will be added later.
-                        add = False
-                        break
-                    else:
-                        # action1 should be added, remove action2 if action2 is in the final list.
-                        if action2 in deduplicated_list:
-                            deduplicated_list.remove(action2)
-        if add:
-            deduplicated_list.append(action1)
+    for action in sorted_actions:
+        is_unique_action = True
+        for unique_action in deduplicated_list:
+            overlap = calculate_action_overlap(action, unique_action)
+            if overlap > 0.5:
+                # do not add this action.
+                is_unique_action = False
+                break
+        if is_unique_action:
+            deduplicated_list.append(action)
     print(f"Deduplicated from {len(action_list)} actions to {len(deduplicated_list)}.")
     return deduplicated_list
 

@@ -97,9 +97,9 @@ def get_violated_metrics(signal_out_url: str, signal_name: str) -> List[str]:
         gsq_output_json = json.loads(gsq_output)
         metrics_dict = gsq_output_json["metrics"]
         for metrics in GSQ_METRICS_LIST:
-            pass_rate_metrics = f"Average{metrics}Score"
-            if pass_rate_metrics in metrics_dict:
-                if metrics_dict[pass_rate_metrics]["value"] < metrics_dict[pass_rate_metrics]["threshold"]:
+            average_score_name = f"Average{metrics}Score"
+            if average_score_name in metrics_dict:
+                if metrics_dict[average_score_name]["value"] < metrics_dict[average_score_name]["threshold"]:
                     print(f"Metrics {metrics} violated.")
                     violated_metrics.append(metrics)
         return violated_metrics
@@ -108,46 +108,20 @@ def get_violated_metrics(signal_out_url: str, signal_name: str) -> List[str]:
         return []
 
 
-def create_detectors(**params: dict) -> List[ActionDetector]:
-    """Initialize all supported detectors.
+def run_detector(detector: ActionDetector, llm_client: LLMClient, aml_deployment_id: str) -> List[Action]:
+    """Run detector.
 
     Args:
-        params(dict): parameters for detectors.
-
-    Returns:
-        List[ActionDetector]: list of violated metrics.
-    """
-    detectors = []
-    detectors.append(LowRetrievalScoreIndexActionDetector(params["hashed_index"],
-                                                          params["violated_metrics"],
-                                                          params["query_intention_enabled"]))
-    detectors.append(MetricsViolationIndexActionDetector(params["hashed_index"],
-                                                         params["violated_metrics"],
-                                                         TTEST_NAME,
-                                                         P_VALUE_THRESHOLD,
-                                                         params["query_intention_enabled"]))
-    return detectors
-
-
-def run_detectors(df: pandas.DataFrame, detectors: List[ActionDetector], **extra_params: dict) -> List[Action]:
-    """Run all detectors.
-
-    Args:
-        df(pandas.DataFrame): input pandas dataframe.
-        detectors(List[ActionDetector]): list of available detectors.
-        extra_params(dict): parameters for running detectors.
+        detector(ActionDetector): the detector to run.
+        llm_client(LLMClient): LLM client used to get some llm scores/info for action.
+        aml_deployment_id(str): aml deployment id for the action.
 
     Returns:
         List[str]: list of violated metrics.
     """
-    action_list = []
-    for detector in detectors:
-        df_preprocessed = detector.preprocess_data(df)
-        if not df_preprocessed.empty:
-            action_list += detector.detect(df_preprocessed,
-                                           extra_params["llm_client"],
-                                           extra_params["aml_deployment_id"])
-    return action_list
+
+    detector.preprocess_data(df)
+    return detector.detect(extra_params["llm_client"], extra_params["aml_deployment_id"])
 
 
 def run():
@@ -188,14 +162,17 @@ def run():
     # detect actions for each index
     final_actions = []
     for index in unique_indexes:
-        detectors = create_detectors(hashed_index=index,
-                                     violated_metrics=violated_metrics,
-                                     query_intention_enabled=args.query_intention_enabled)
+        index_action = []
+        lrsi_detector = LowRetrievalScoreIndexActionDetector(index, violated_metrics, args.query_intention_enabled)
+        index_actions += run_detector(lrsi_detector)
 
-        index_actions = run_detectors(df=df_pandas,
-                                      detectors=detectors,
-                                      llm_client=llm_client,
-                                      aml_deployment_id=args.aml_deployment_id)
+        mvi_detector = MetricsViolationIndexActionDetector(index,
+                                                           violated_metrics,
+                                                           TTEST_NAME,
+                                                           P_VALUE_THRESHOLD,
+                                                           args.query_intention_enabled,
+                                                           preprocessed_data=lrsi_detector.preprocessed_data)
+        index_action += run_detector(mvi_detector)
 
         # After all detectors, deduplicate actions if needed.
         final_actions += deduplicate_actions(index_actions)

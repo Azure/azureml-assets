@@ -14,32 +14,31 @@ class ActionDetector(ABC):
     """Action detector base class."""
 
     def __init__(self,
-                 query_intention_enabled: str) -> None:
+                 query_intention_enabled: str,
+                 preprocessed_data: pandas.DataFrame=pandas.DataFrame()) -> None:
         """Create an action detector.
 
         Args:
             query_intention_enabled(str): enable llm generated query intention. Accepted values: true or false.
+            preprocessed_data(pandas.DataFrame): (Optional) preprocessed data. If passed, skip the preprocess step.
         """
         self.query_intention_enabled = query_intention_enabled
+        self.preprocessed_data = preprocessed_data
 
     @abstractmethod
-    def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
+    def preprocess_data(self, df: pandas.DataFrame):
         """Preprocess the data for action detector.
 
         Args:
             df(pandas.DataFrame): input pandas dataframe.
-
-        Returns:
-            pandas.DataFrame: preprocessed pandas dataframe.
         """
         pass
 
     @abstractmethod
-    def detect(self, df: pandas.DataFrame, llm_client: LLMClient, aml_deployment_id=None) -> List[Action]:
+    def detect(self, llm_client: LLMClient, aml_deployment_id=None) -> List[Action]:
         """Detect the action.
 
         Args:
-            df(pandas.DataFrame): input pandas dataframe.
             llm_client(LLMClient): LLM client used to get some llm scores/info for action.
             aml_deployment_id(str): (Optional) aml deployment id for the action.
 

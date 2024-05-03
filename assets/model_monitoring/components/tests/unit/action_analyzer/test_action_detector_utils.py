@@ -14,7 +14,7 @@ from datetime import datetime
 from action_analyzer.contracts.actions.action import ActionType, Action
 from action_analyzer.contracts.action_sample import ActionSample, IndexActionSample
 from action_analyzer.contracts.utils.detector_utils import (
-    parse_debugging_info,
+    extract_retrieval_info,
     generate_index_action_samples,
     get_index_id_from_index_content,
     deduplicate_actions
@@ -268,26 +268,26 @@ class TestDetectorUtils:
         assert hashed_index_id_1 in unique_indexes
         assert hashed_index_id_2 in unique_indexes
 
-    def test_parse_debugging_info(self, root_span, hashed_index_id_1):
-        """Test parse_debugging_info function from the root span."""
+    def test_extract_retrieval_info(self, root_span, hashed_index_id_1):
+        """Test extract_retrieval_info function from the root span."""
         # The tree is structured like this:
         # 1
         # |-> 2 -> 3 (index1 retrieval)
         # |-> 4 -> 5 (index2 retrieval)
-        parsed_debugging_info = parse_debugging_info(root_span, hashed_index_id_1)
+        retrieval_info_list = extract_retrieval_info(root_span, hashed_index_id_1)
         # only index 1 should be returned
-        assert len(parsed_debugging_info) == 1
-        extra_feilds = json.loads(parsed_debugging_info[0])
-        print(extra_feilds)
-        assert extra_feilds[SPAN_ID_COLUMN] == "3"
-        assert extra_feilds[INDEX_CONTENT_COLUMN] == '{"self": {"asset_id": "index_asset_id_1"}}'
-        assert extra_feilds[INDEX_ID_COLUMN] == "index_asset_id_1"
-        assert extra_feilds[MODIFIED_PROMPT_COLUMN] == "query_3"
-        assert extra_feilds[RETRIEVAL_DOC_COLUMN] == "doc_0#<Splitter>#doc_1#<Splitter>#doc_2"
-        assert extra_feilds[INDEX_SCORE_COLUMN] == 0.5
-        assert extra_feilds[RETRIEVAL_QUERY_TYPE_COLUMN] == "Hybrid (vector + keyword)"
-        assert extra_feilds[RETRIEVAL_TOP_K_COLUMN] == 3
-        assert extra_feilds[PROMPT_FLOW_INPUT_COLUMN] == "prompt_flow_input"
+        assert len(retrieval_info_list) == 1
+        retrieval_info = json.loads(retrieval_info_list[0])
+        print(retrieval_info)
+        assert retrieval_info[SPAN_ID_COLUMN] == "3"
+        assert retrieval_info[INDEX_CONTENT_COLUMN] == '{"self": {"asset_id": "index_asset_id_1"}}'
+        assert retrieval_info[INDEX_ID_COLUMN] == "index_asset_id_1"
+        assert retrieval_info[MODIFIED_PROMPT_COLUMN] == "query_3"
+        assert retrieval_info[RETRIEVAL_DOC_COLUMN] == "doc_0#<Splitter>#doc_1#<Splitter>#doc_2"
+        assert retrieval_info[INDEX_SCORE_COLUMN] == 0.5
+        assert retrieval_info[RETRIEVAL_QUERY_TYPE_COLUMN] == "Hybrid (vector + keyword)"
+        assert retrieval_info[RETRIEVAL_TOP_K_COLUMN] == 3
+        assert retrieval_info[PROMPT_FLOW_INPUT_COLUMN] == "prompt_flow_input"
 
     def test_deduplicate_actions_should_dedup(self):
         """Test deduplicate_actions function. Actions have overlap > 50%."""
@@ -323,6 +323,49 @@ class TestDetectorUtils:
         assert len(deduplicated_list) == 1
         assert deduplicated_list[0].confidence_score == 1
         assert deduplicated_list[0].action_type == ActionType.LOW_RETRIEVAL_SCORE_INDEX_ACTION
+
+    def test_deduplicate_actions_should_dedup_two_actions(self):
+        """Test deduplicate_actions function. Actions have overlap > 50%."""
+        # Total 6 actions. 3 of each have same queries. Confidence scores are 1, 0.9, 0.8, 0.95, 0.95, 0.95.
+        positive_samples = []
+        negative_samples_1 = []
+        negative_samples_2 = []
+        for i in range(10):
+            negative_samples_1.append(ActionSample(f"negative_query_{i}",
+                                                   f"negative_answer_{i}",
+                                                   f"negative_debugging_info_{i}",
+                                                   f"negative_prompt_flow_input_{i}"))
+        for i in range(10):
+            negative_samples_2.append(ActionSample(f"query_{i}",
+                                                   f"answer_{i}",
+                                                   f"debugging_info_{i}",
+                                                   f"prompt_flow_input_{i}"))
+        actions = []
+        for i in range(3):
+            actions.append(Action(ActionType.LOW_RETRIEVAL_SCORE_INDEX_ACTION,
+                                  f"action_{i}",
+                                  1 - i/10,
+                                  "query intention",
+                                  "deployment id",
+                                  "run id",
+                                  positive_samples,
+                                  negative_samples_1))
+        for i in range(3):
+            actions.append(Action(ActionType.METRICS_VIOLATION_INDEX_ACTION,
+                                  f"action_{i}",
+                                  0.95,
+                                  "query intention",
+                                  "deployment id",
+                                  "run id",
+                                  positive_samples,
+                                  negative_samples_2))
+
+        deduplicated_list = deduplicate_actions(actions)
+        assert len(deduplicated_list) == 2
+        assert deduplicated_list[0].confidence_score == 1
+        assert deduplicated_list[0].action_type == ActionType.LOW_RETRIEVAL_SCORE_INDEX_ACTION
+        assert deduplicated_list[1].confidence_score == 0.95
+        assert deduplicated_list[1].action_type == ActionType.METRICS_VIOLATION_INDEX_ACTION
 
     def test_deduplicate_actions_not_dedup(self):
         """Test deduplicate_actions function. Actions have overlap < 50%."""

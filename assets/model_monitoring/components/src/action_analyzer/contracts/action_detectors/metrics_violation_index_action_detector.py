@@ -11,7 +11,7 @@ from action_analyzer.contracts.actions.metrics_violation_index_action import Met
 from action_analyzer.contracts.llm_client import LLMClient
 import pandas
 from action_analyzer.contracts.utils.detector_utils import (
-    extract_fields_from_debugging_info,
+    extract_retrieval_info_from_root_span,
     get_retrieval_score,
     get_query_intention,
     generate_index_action_samples,
@@ -37,7 +37,8 @@ class MetricsViolationIndexActionDetector(ActionDetector):
                  correlation_test_pvalue_threshold: float,
                  query_intention_enabled: str,
                  positive_metric_threshold=5,
-                 negative_metric_threshold=3) -> None:
+                 negative_metric_threshold=3,
+                 preprocessed_data: pandas.DataFrame=pandas.DataFrame()) -> None:
         """Create a metrics violation index action detector.
 
         Args:
@@ -48,7 +49,7 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             query_intention_enabled(str): enable llm generated summary. Accepted values: true or false.
             positive_metric_threshold(int): (Optional) e2e metric threshold to mark the query as positive.
             negative_metric_threshold(int): (Optional) e2e metric threshold to mark the query as negative.
-            max_positive_sample_size(int): (Optional) max positive sample size in the action.
+            preprocessed_data(pandas.DataFrame): (Optional) preprocessed data. If passed, skip the preprocess step.
         """
         self.index_id = index_id
         self.violated_metrics = violated_metrics
@@ -56,9 +57,9 @@ class MetricsViolationIndexActionDetector(ActionDetector):
         self.correlation_test_pvalue_threshold = correlation_test_pvalue_threshold
         self.positive_metric_threshold = positive_metric_threshold
         self.negative_metric_threshold = negative_metric_threshold
-        super().__init__(query_intention_enabled)
+        super().__init__(query_intention_enabled, preprocessed_data)
 
-    def preprocess_data(self, df: pandas.DataFrame) -> pandas.DataFrame:
+    def preprocess_data(self, df: pandas.DataFrame):
         """Preprocess the data for action detector.
 
         Args:
@@ -68,18 +69,24 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             pandas.DataFrame: preprocessed pandas dataframe.
         """
         try:
+            if not self.preprocessed_data.empty:
+                print("Preprocessed data is available. Skip executing preprocess.")
+                return
             print("Start to run MetricsViolationIndexActionDetector.")
-            preprocessed_df = extract_fields_from_debugging_info(df, self.index_id)
-            return preprocessed_df
+            preprocessed_df =  extract_retrieval_info_from_root_span(df, self.index_id)
+
+            # get llm retrieval score
+            preprocessed_df[INDEX_SCORE_LLM_COLUMN] = preprocessed_df.apply(get_retrieval_score,
+                                                                            axis=1,
+                                                                            args=(llm_client,))
+            self.preprocessed_data = preprocessed_df[preprocessed_df[INDEX_SCORE_LLM_COLUMN] != INVALID_LLM_SCORE]
         except Exception as e:
             print("MetricsViolationIndexActionDetector preprocess failed with error", e)
-            return pandas.DataFrame()
 
-    def detect(self, df: pandas.DataFrame, llm_client: LLMClient, aml_deployment_id=None) -> List[Action]:
+    def detect(self, llm_client: LLMClient, aml_deployment_id=None) -> List[Action]:
         """Detect the action.
 
         Args:
-            df(pandas.DataFrame): input pandas dataframe.
             llm_client(LLMClient): LLM client used to get some llm scores/info for action.
             aml_deployment_id(str): (Optional) aml deployment id for the action.
 
@@ -87,31 +94,33 @@ class MetricsViolationIndexActionDetector(ActionDetector):
             List[Action]: list of actions.
         """
         action_list = []
-        try:
-            # get llm retrieval score
-            df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_retrieval_score, axis=1, args=(llm_client,))
-            df = df[df[INDEX_SCORE_LLM_COLUMN] != INVALID_LLM_SCORE]
+        if not self.df_preprocessed.empty:
+            df = self.preprocessed_df
+            try:
+                # get llm retrieval score
+                df[INDEX_SCORE_LLM_COLUMN] = df.apply(get_retrieval_score, axis=1, args=(llm_client,))
+                df = df[df[INDEX_SCORE_LLM_COLUMN] != INVALID_LLM_SCORE]
 
-            for metric in self.violated_metrics:
-                low_metric_score_df = df[df[metric] < self.negative_metric_threshold]
-                high_metric_score_df = df[df[metric] >= self.positive_metric_threshold]
+                for metric in self.violated_metrics:
+                    low_metric_score_df = df[df[metric] < self.negative_metric_threshold]
+                    high_metric_score_df = df[df[metric] >= self.positive_metric_threshold]
 
-                t_stat, p_value = peform_correlation_test(high_metric_score_df,
-                                                          low_metric_score_df,
-                                                          self.correlation_test_method)
-                if t_stat > 0 and p_value < self.correlation_test_pvalue_threshold:
-                    print(f"Generating action for metric {metric}.")
-                    action = self.generate_action(llm_client,
-                                                  metric,
-                                                  1-p_value,
-                                                  low_metric_score_df,
-                                                  high_metric_score_df,
-                                                  aml_deployment_id)
-                    print(f"Positive sample size: {len(action.positive_samples)}.")
-                    print(f"Negative sample size: {len(action.negative_samples)}.")
-                    action_list.append(action)
-        except Exception as e:
-            print("MetricsViolationIndexActionDetector detect failed with error", e)
+                    t_stat, p_value = peform_correlation_test(high_metric_score_df,
+                                                            low_metric_score_df,
+                                                            self.correlation_test_method)
+                    if t_stat > 0 and p_value < self.correlation_test_pvalue_threshold:
+                        print(f"Generating action for metric {metric}.")
+                        action = self.generate_action(llm_client,
+                                                    metric,
+                                                    1-p_value,
+                                                    low_metric_score_df,
+                                                    high_metric_score_df,
+                                                    aml_deployment_id)
+                        print(f"Positive sample size: {len(action.positive_samples)}.")
+                        print(f"Negative sample size: {len(action.negative_samples)}.")
+                        action_list.append(action)
+            except Exception as e:
+                print("MetricsViolationIndexActionDetector detect failed with error", e)
         return action_list
 
     def generate_action(self,
