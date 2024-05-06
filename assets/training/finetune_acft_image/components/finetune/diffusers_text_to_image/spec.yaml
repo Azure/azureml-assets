@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.1
+version: 0.0.2
 
 name: diffusers_text_to_image_finetune
 display_name: Text to Image Diffusers Model Finetune
@@ -201,7 +201,7 @@ inputs:
       - "no"
       - "fp32"
       - "fp16"
-      - "bfp16"
+      - "bf16"
     description: Choose prior generation precision between fp32, fp16 and bf16 (bfloat16). Bf16 requires PyTorch >= 1.10.and an Nvidia Ampere GPU.  Default to  fp16 if a GPU is available else fp32.
   prior_loss_weight:
     type: number
