@@ -826,8 +826,8 @@ def add_sd_args_to_parser(parser):
     parser.add_argument(
         "--prior_generation_precision",
         type=str,
-        default=None,
-        choices=["no", "fp32", "fp16", "bf16"],
+        default="fp32",
+        choices=["fp32", "fp16", "bf16"],
         help=(
             "Choose prior generation precision between fp32, fp16 and bf16 (bfloat16). Bf16 requires PyTorch >="
             " 1.10.and an Nvidia Ampere GPU.  Default to  fp16 if a GPU is available else fp32."
