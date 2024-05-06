@@ -46,6 +46,7 @@ def _submit_action_detector_job(ml_client, get_component, signal_scored_data, si
 
     return ml_client.jobs.get(pipeline_job.name)
 
+
 @pytest.mark.e2e
 class TestGenerationSafetyModelMonitor:
     """Test class."""
