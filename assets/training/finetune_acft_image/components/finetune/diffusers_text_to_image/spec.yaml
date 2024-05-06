@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.2
+version: 0.0.3
 
 name: diffusers_text_to_image_finetune
 display_name: Text to Image Diffusers Model Finetune
@@ -196,9 +196,8 @@ inputs:
     description: Minimal class images for prior preservation loss. If there are not enough images already present in class_data_dir, additional images will be sampled with class_prompt.
   prior_generation_precision:
     type: string
-    optional: true
+    default: "fp32"
     enum:
-      - "no"
       - "fp32"
       - "fp16"
       - "bf16"
