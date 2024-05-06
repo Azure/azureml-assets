@@ -16,6 +16,7 @@ tags:
   Featured: ""
   Preview: ""
   SharedComputeCapacityEnabled: ""
+  hiddenlayerscanned: ""
   huggingface_model_id: mistralai/Mistral-7B-v0.1
   evaluation_compute_allow_list:
     [

@@ -19,6 +19,7 @@ tags:
   license: mit
   author: microsoft
   task: text-generation
+  hiddenlayerscanned: ""
   evaluation_compute_allow_list:
     [
       Standard_DS5_v2,

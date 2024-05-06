@@ -11,6 +11,7 @@ tags:
   SharedComputeCapacityEnabled: ""
   license: creativeml-openrail++-m
   task: text-to-image
+  hiddenlayerscanned: ""
   huggingface_model_id: stabilityai/stable-diffusion-2-inpainting
   training_dataset: LAION-5B
   author: stabilityai
