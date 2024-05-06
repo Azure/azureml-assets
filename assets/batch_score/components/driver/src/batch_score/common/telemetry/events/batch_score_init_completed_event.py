@@ -18,3 +18,4 @@ class BatchScoreInitCompletedEvent(BatchScoreEvent):
         return "BatchScore.Init.Completed"
 
     init_duration_ms: float = field(init=True, default=0)
+    logging_metadata: dict = field(init=True, default=None)

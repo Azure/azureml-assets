@@ -12,7 +12,7 @@ import sys
 from io import StringIO
 from jinja2 import Environment
 from datasets import load_dataset
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def.*?FUNCNAME.*?))(?=(?:
@@ -39,6 +39,12 @@ def _parse_args():
         type=str,
         help="Path to the jsonl output file to write the processed data."
     )
+    parser.add_argument(
+        "--additional_parameters",
+        type=str,
+        default='null',
+        help="Additional parameter values set in other fields of the component in a pipeline."
+    )
     argss = parser.parse_args()
     return argss
 
@@ -51,7 +57,7 @@ def _read_input_file(file_path: str) -> List[Dict[str, Any]]:
     """
     data_dicts = []
     with open(file_path, "r", encoding="utf8") as file:
-        for i, line in enumerate(file):
+        for line in file:
             data_dicts.append(json.loads(line))
     return data_dicts
 
@@ -104,7 +110,8 @@ def _extract_text_from_markdown_tag(input_string: str, tag_type='python') -> str
 def _run(
     prediction_dataset: str,
     output_path: str,
-    ground_truth_dataset: str = None
+    ground_truth_dataset: str = None,
+    additional_args: Optional[dict] = None,
 ) -> None:
     """Entry function to read, run and write the processed the data."""
     if prediction_dataset:
@@ -291,4 +298,7 @@ def apply_regex_expr(
 
 if __name__ == "__main__":
     argss = _parse_args()
-    _run(argss.prediction_dataset, argss.output_dataset, argss.ground_truth_dataset)
+    _run(
+        argss.prediction_dataset, argss.output_dataset,
+        argss.ground_truth_dataset, json.loads(argss.additional_parameters)
+    )
