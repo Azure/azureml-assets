@@ -80,6 +80,12 @@ class Constants:
     CUSTOM_PREPROCESSOR_SCRIPT_PATH = os.path.join(
         os.path.dirname(__file__), '../scripts/custom_dataset_preprocessors'
     )
+    CUSTOM_INFERENCE_POSTPROCESSOR_SCRIPT_PATH = os.path.join(
+        os.path.dirname(__file__), '../scripts/custom_inference_postprocessors'
+    )
+    CUSTOM_HUMANEVAL_POSTPROCESSOR_SCRIPT_PATH = os.path.join(
+        CUSTOM_INFERENCE_POSTPROCESSOR_SCRIPT_PATH, "humaneval.py"
+    )
     POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data/process_inference_sample_examples.jsonl"
     )
