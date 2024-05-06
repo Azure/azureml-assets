@@ -7,13 +7,14 @@ description: Generate and output actions
 version: 0.0.1
 is_deterministic: true
 inputs:
-  signal_scored_data:
-    type: mltable
-    description: production data with metrics scores from monitoring signal
   signal_output:
     type: uri_folder
     mode: direct
     description: violated metrics names
+  signal_scored_data:
+    type: mltable
+    mode: direct
+    description: production data with metrics scores from monitoring signal
   signal_name:
     type: string
     optional: false
