@@ -18,6 +18,7 @@ tags:
   SharedComputeCapacityEnabled: ''
   task: fill-mask
   datasets: bookcorpus, wikipedia
+  hiddenlayerscanned: ""
   huggingface_model_id: bert-base-cased
   inference_compute_allow_list:
     [
