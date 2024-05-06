@@ -4,9 +4,9 @@ channels:
 - anaconda
 dependencies:
 - python=3.9
-- pip=21.1
+- pip=22.3.1
 - pandas~=1.3.0
-- scipy~=1.7.0
+- scipy~=1.10.0
 - numpy~=1.22.0
 - pip:
   - setuptools==65.5.1
@@ -22,7 +22,7 @@ dependencies:
   - tensorboard~=2.12.0
   - tensorflow~=2.12.0
   - tensorflow-datasets~=4.5.0
-  - onnxruntime-gpu~=1.9.0
+  - onnxruntime-gpu~=1.15.0
   - protobuf~=4.22.0
   - horovod[tensorflow]
   - debugpy~=1.6.3
