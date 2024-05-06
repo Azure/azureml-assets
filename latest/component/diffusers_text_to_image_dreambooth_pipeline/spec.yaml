@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.2
+version: 0.0.3
 name: diffusers_text_to_image_dreambooth_pipeline
 display_name: Text to Image Dreambooth Finetuning Diffusers Pipeline
 description: Pipeline component for text to image dreambooth training using diffusers
@@ -270,9 +270,8 @@ inputs:
       with class_prompt.
   prior_generation_precision:
     type: string
-    optional: true
+    default: "fp32"
     enum:
-    - "no"
     - "fp32"
     - "fp16"
     - "bf16"
