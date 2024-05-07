@@ -49,21 +49,6 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference --no-cache-dir
 
-RUN pip uninstall -y transformers
-RUN pip uninstall -y vllm
-RUN pip uninstall -y deepspeed
-
-RUN pip install git+https://github.com/RezaYazdaniAminabadi/DeepSpeed.git@selective-dequantization
-
-RUN git clone -b yak-staging https://github.com/Snowflake-Labs/vllm.git && \
-    cd vllm && \
-    pip install . && \
-    cd ..
-
-RUN git clone -b yak-staging https://github.com/Snowflake-Labs/transformers.git && \
-    cd transformers && \
-    pip install .
-
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 
