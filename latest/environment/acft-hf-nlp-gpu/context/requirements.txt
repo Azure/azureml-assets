@@ -1,6 +1,6 @@
 azureml-acft-accelerator==0.0.52
 azureml_acft_common_components==0.0.52
-azureml-acft-contrib-hf-nlp==0.0.52
+azureml-acft-contrib-hf-nlp==0.0.52.post1
 azureml-evaluate-mlflow==0.0.52
 azureml-metrics[text]==0.0.52
 mltable==1.6.1
