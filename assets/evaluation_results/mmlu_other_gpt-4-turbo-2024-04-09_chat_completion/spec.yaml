@@ -1,13 +1,13 @@
 type: evaluationresult
 name: mmlu_other_gpt-4-turbo-2024-04-09_chat_completion
-version: 2.03.05
+version: 2.07.05
 display_name: mmlu_other_gpt-4-turbo-2024-04-09_chat_completion
 description: mmlu_other_gpt-4-turbo-2024-04-09_chat_completion
 dataset_family: mmlu
 dataset_name: mmlu_other
 
 model_name: gpt-4-turbo-2024-04-09
-model_version: "2024-04-09"
+model_version: "turbo-2024-04-09"
 model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/4
 
 relationships:
