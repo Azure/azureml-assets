@@ -54,7 +54,6 @@ COMPONENT_NAME = "ACFT-Finetune"
 
 PHI3_MINI_4K_INSTRUCT_MODEL_TYPE = "phi3mini"
 
-
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
 
@@ -776,6 +775,49 @@ def setup_deepspeed_nebula(ds_config_json: Dict[str, Any], pytorch_model_folder:
     return ds_config_json
 
 
+def is_vllm_enabled(task_name: str, finetune_config: Dict[str, Any]) -> bool:
+    """Read :flag `inferencing_config.enable_vllm` to enable vllm for finetuned model.
+
+    1. vllm support is disabled by default.
+    2. To enable vllm support update the param :inferencing_config.enable_vllm to True.
+    3. Legacy support
+        vllm support for text generation task is enabled by default.
+        To disable it set the param :inferencing_config.enable_vllm to False.
+    """
+    if (
+        finetune_config.get("inferencing_config") is not None and
+        finetune_config["inferencing_config"].get("enable_vllm") is not None
+    ):
+        enable_vllm = bool(finetune_config["inferencing_config"]["enable_vllm"])
+        enabled_or_disabled_warn_msg = "enabled" if enable_vllm else "disabled"
+        logger.warning(f"Vllm inferencing is {enabled_or_disabled_warn_msg} for {task_name} from finetune config.")
+        return enable_vllm
+    # legacy support for already supported models
+    elif task_name == Tasks.TEXT_GENERATION:
+        logger.warning(
+            f"Vllm inferencing is auto enabled for {task_name}. "
+            "Set the :param `inferencing_config.enable_vllm to False` to disable it."
+        )
+        return True
+    return False  # default case
+
+
+def setup_vllm(task_name: str, finetune_config: Dict[str, Any], base_model_metadata: Dict[str, Any]) -> Dict[str, Any]:
+    """Enable/disable vllm for finetuned model inferencing."""
+    if not is_vllm_enabled(task_name, finetune_config):
+        removed_base_image = base_model_metadata.pop("azureml.base_image", None)
+        if removed_base_image is not None:
+            logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
+                        base image value is {removed_base_image}.")
+    else:
+        if base_model_metadata.get("azureml.base_image") is not None:
+            logger.info(
+                "Adding inferencing base image {} for {} task.\
+                ".format(base_model_metadata.get("azureml.base_image"), task_name)
+            )
+    return base_model_metadata
+
+
 def resolve_deepspeed_config(args: Namespace) -> str:
     """Identify the right deepspeed config to be used based on user passed parameters."""
     # Check for deepspeed config via input port
@@ -916,6 +958,23 @@ def set_flash_attention(args: Namespace):
 
 def set_gradient_checkpointing(args: Namespace):
     """Set Gradient checkpointing related parameters."""
+    if args.apply_lora and not args.apply_deepspeed:
+        # do not set `gradient_checkpointing` for LoRA only training as it fails with the following error:
+        # RuntimeError: Expected to mark a variable ready only once. This error is caused by one of the following
+        # reasons: 1) Use of a module parameter outside the `forward` function. Please make sure model parameters
+        # are not shared across multiple concurrent forward-backward passes. or try to use _set_static_graph() as
+        # a workaround if this module graph does not change during training loop.2) Reused parameters in multiple
+        # reentrant backward passes. For example, if you use multiple `checkpoint` functions to wrap the same part
+        # of your model, it would result in the same set of parameters been used by different reentrant backward
+        # passes multiple times, and hence marking a variable ready multiple times. DDP does not support such use
+        # cases in default. You can try to use _set_static_graph() as a workaround if your module graph does not
+        # change over iterations.
+        # Parameter at index xxx has been marked as ready twice. This means that multiple autograd engine  hooks
+        # have fired for this particular parameter during this iteration. You can set the environment variable
+        # TORCH_DISTRIBUTED_DEBUG to either INFO or DETAIL to print parameter names for further debugging.
+        logger.info("Not setting `gradient_checkpointing` to True for LoRA only finetuning.")
+        return
+
     if (
         hasattr(args, "model_type")
         and args.model_type in FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES
@@ -1193,15 +1252,8 @@ def finetune(args: Namespace):
         args.save_strategy = args.evaluation_strategy
         args.save_steps = args.eval_steps
 
-    if args.task_name not in [Tasks.TEXT_GENERATION]:
-        removed_base_image = metadata.pop("azureml.base_image", None)
-        logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
-                    base image value is {removed_base_image}.")
-    else:
-        logger.info(
-            "Adding inferencing base image {} for text generation \
-            task.".format(metadata.get("azureml.base_image", "Base image for inference does not exist"))
-        )
+    # setup vllm for finetuned model inference
+    metadata = setup_vllm(args.task_name, args.finetune_config, metadata)
 
     args.model_metadata = update_acft_metadata(metadata=metadata,
                                                finetuning_task=args.task_name,
