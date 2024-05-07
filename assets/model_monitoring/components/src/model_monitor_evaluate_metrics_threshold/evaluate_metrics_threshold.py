@@ -10,6 +10,11 @@ from shared_utilities.constants import (
     AGGREGATED_FLUENCY_PASS_RATE_METRIC_NAME,
     AGGREGATED_SIMILARITY_PASS_RATE_METRIC_NAME,
     AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME,
+    AVERAGE_COHERENCE_SCORE_METRIC_NAME,
+    AVERAGE_GROUNDEDNESS_SCORE_METRIC_NAME,
+    AVERAGE_FLUENCY_SCORE_METRIC_NAME,
+    AVERAGE_RELEVANCE_SCORE_METRIC_NAME,
+    AVERAGE_SIMILARITY_SCORE_METRIC_NAME,
     NORMALIZED_DISCOUNTED_CUMULATIVE_GAIN_METRIC_NAME,
     PEARSONS_CHI_SQUARED_TEST_METRIC_NAME,
     TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST_METRIC_NAME,
@@ -21,7 +26,7 @@ from shared_utilities.constants import (
     PERCISION_METRIC_NAME,
     RECALL_METRIC_NAME,
 )
-import pyspark
+from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 
 
@@ -36,9 +41,11 @@ Metric_Value_Should_Greater_Than_Threshold = [TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST
                                               AGGREGATED_FLUENCY_PASS_RATE_METRIC_NAME,
                                               AGGREGATED_SIMILARITY_PASS_RATE_METRIC_NAME,
                                               AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME,
-                                              ACCURACY_METRIC_NAME,
-                                              PERCISION_METRIC_NAME,
-                                              RECALL_METRIC_NAME
+                                              AVERAGE_COHERENCE_SCORE_METRIC_NAME,
+                                              AVERAGE_GROUNDEDNESS_SCORE_METRIC_NAME,
+                                              AVERAGE_FLUENCY_SCORE_METRIC_NAME,
+                                              AVERAGE_RELEVANCE_SCORE_METRIC_NAME,
+                                              AVERAGE_SIMILARITY_SCORE_METRIC_NAME,
                                               ]
 
 
@@ -58,34 +65,31 @@ def _generate_error_message(df, signal_name: str):
 
 
 def evaluate_metrics_threshold(
-    signal_name: str, metrics_to_evaluate_df, notification_emails: str
+    signal_name: str, metrics_to_evaluate_df: DataFrame, notification_emails: str
 ):
     """Evaluate the computed metrics against the threshold."""
+    print("Computed metrics to evaluate against threshold DF:")
     metrics_to_evaluate_df.show()
 
-    is_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
-        metrics_to_evaluate_df.threshold_value.isNull()
-    )
-
-    is_nan_metrics_threshold_df = is_nan_metrics_threshold_df.filter(
-        is_nan_metrics_threshold_df.metric_value.isNull()
-    )
-
+    # filter out null values
     is_not_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
-        metrics_to_evaluate_df.threshold_value.isNotNull()
+        F.col(SIGNAL_METRICS_THRESHOLD_VALUE).isNotNull() |
+        F.col(SIGNAL_METRICS_THRESHOLD_VALUE) != ""
     )
 
     is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
-        is_not_nan_metrics_threshold_df.metric_value.isNotNull()
+        F.col(SIGNAL_METRICS_METRIC_VALUE).isNotNull() |
+        F.col(SIGNAL_METRICS_METRIC_VALUE) != ""
     )
 
     metrics_threshold_breached_df = calculate_metrics_breach(is_not_nan_metrics_threshold_df)
+    print("Metrics calculated to breach threshold DF:")
     metrics_threshold_breached_df.show()
 
     return send_email_for_breached(metrics_threshold_breached_df, signal_name, notification_emails)
 
 
-def calculate_metrics_breach(metrics_threshold_df: pyspark.sql.DataFrame):
+def calculate_metrics_breach(metrics_threshold_df: DataFrame):
     """Calculate the breached metrics by the given thresholds."""
     metrics_threshold_breached_df = metrics_threshold_df.where(
         (F.col(SIGNAL_METRICS_METRIC_NAME).isin(Metric_Value_Should_Greater_Than_Threshold) &
@@ -96,7 +100,7 @@ def calculate_metrics_breach(metrics_threshold_df: pyspark.sql.DataFrame):
     return metrics_threshold_breached_df
 
 
-def send_email_for_breached(metrics_threshold_breached_df: pyspark.sql.DataFrame,
+def send_email_for_breached(metrics_threshold_breached_df: DataFrame,
                             signal_name: str,
                             notification_emails: str):
     """Send email notification for the breached metrics."""
