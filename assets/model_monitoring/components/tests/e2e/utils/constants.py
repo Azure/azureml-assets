@@ -140,4 +140,5 @@ DATA_AGGREGATED_TRACE_DATA = (
     "azureml:mltable_aggregrated_genai_preprocessor_outputs:1"
 )
 
+# For action detector as input
 DATA_ASSET_SIGNAL_OUTPUT_GSQ = "azureml:uri_folder_signal_output_gsq:1"
