@@ -25,6 +25,7 @@ tags:
   Preview: ''
   license: mit
   task: multimodal-classification
+  hiddenlayerscanned: ""
   openmmlab_model_id: mmeft
   SharedComputeCapacityEnabled: ''
   finetune_compute_allow_list:

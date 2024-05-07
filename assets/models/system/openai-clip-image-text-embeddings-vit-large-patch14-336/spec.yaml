@@ -23,6 +23,7 @@ tags:
     author: openai
     license: mit
     task: embeddings
+    hiddenlayerscanned: ""
     inference_compute_allow_list:
         [
             Standard_DS2_v2,
