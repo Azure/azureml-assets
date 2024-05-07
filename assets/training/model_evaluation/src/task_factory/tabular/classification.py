@@ -107,9 +107,12 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
         Returns:
             _type_: _description_
         """
+        print("b0", self.model_flavor)
+
         y_transformer = kwargs.get("y_transformer", None)
 
         predict_fn, _ = self._extract_predict_fn()
+        print("b1", predict_fn)
 
         if self.model_flavor == MODEL_FLAVOR.TRANSFORMERS:
             params = kwargs.get("params", {})

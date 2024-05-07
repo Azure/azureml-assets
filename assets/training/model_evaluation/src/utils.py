@@ -12,6 +12,7 @@ import argparse
 import json
 import openai
 import glob
+import tempfile
 from typing import Union
 
 from constants import TASK, ForecastingConfigContract, ArgumentLiterals
@@ -20,7 +21,7 @@ from workspace_utils import (get_connection_by_id_v2,
                              get_target_from_connection,
                              get_metadata_from_connection)
 from logging_utilities import get_logger, log_traceback
-from mltable import load
+from mltable import from_json_lines_files, load
 from task_factory.tabular.classification import TabularClassifier
 from task_factory.text.classification import TextClassifier
 from task_factory.tabular.regression import TabularRegressor
@@ -596,6 +597,10 @@ def check_and_return_if_mltable(data):
     return is_mltable
 
 
+def get_file_extension(file_path):
+    return os.path.splitext(file_path)[1].lower()
+
+
 def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None):
     """Util function for reading test data for model prediction.
 
@@ -612,9 +617,40 @@ def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None
         _type_: _description_
     """
     if task in constants.IMAGE_TASKS:
+        # from image_dataset import get_image_dataset
+        # df = get_image_dataset(task_type=task, test_mltable=file_path)
+        # data = iter([df])
+
+        # data = read_data(file_path, batch_size, nrows)
+
+        # logger.info("y1 file_path={} file_extension={}".format(file_path, get_file_extension(file_path)))
+
+        if get_file_extension(file_path) == ".jsonl":
+            # logger.info("y2")
+
+            converted_mltable = True
+            table = from_json_lines_files([{"file": file_path}])
+
+            # logger.info("y3")
+
+            file_path = tempfile.TemporaryDirectory()
+            table.save(file_path)
+
+            # logger.info("y4")
+        else:
+            converted_mltable = False
+
+        # logger.info("y5")
+
         from image_dataset import get_image_dataset
         df = get_image_dataset(task_type=task, test_mltable=file_path)
         data = iter([df])
+
+        # logger.info("y6")
+
+        if converted_mltable:
+            file_path.cleanup()
+
     else:
         data = read_data(file_path, batch_size, nrows)
     return data
@@ -677,7 +713,7 @@ def read_dataframe(file_path, batch_size=None, nrows=None):
     Returns:
         _type_: _description_
     """
-    file_extension = os.path.splitext(file_path)[1].lower()
+    file_extension = get_file_extension(file_path)
     logger.info("Detected File Format: {}".format(file_extension))
     if batch_size:
         nrows = None

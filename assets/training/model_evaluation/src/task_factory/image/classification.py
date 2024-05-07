@@ -3,6 +3,8 @@
 
 """Image classification predictor."""
 
+import base64
+
 import numpy as np
 import pandas as pd
 
@@ -66,6 +68,16 @@ class ImageMulticlassClassifier(TabularClassifier):
         """
         # Image classification predict() returns both labels and probs
         try:
+            print("a1", type(x_test))
+            print("a2", x_test.columns.tolist())
+            print("a3", x_test.iloc[0])
+
+            # x_test["image"] = x_test["image"].apply(lambda x: base64.b64decode(x["bytes"]))
+
+            x_test["image"] = x_test["image"].apply(lambda x: base64.b64decode(x["path"]))
+
+            print("a4", x_test.iloc[0])
+
             op_df = super().predict(x_test, **kwargs)
         except (TypeError, AttributeError, NameError) as ex:
             if self.is_hf:
