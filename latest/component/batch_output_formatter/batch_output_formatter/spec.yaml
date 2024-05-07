@@ -1,5 +1,5 @@
 name: batch_output_formatter
-version: 0.0.9
+version: 0.0.10
 display_name: Batch Output Formatter
 is_deterministic: true
 type: command
