@@ -5,7 +5,7 @@
 
 """Base template for custom inference postprocessor script."""
 
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 import argparse
 import json
 import pandas as pd
@@ -88,7 +88,7 @@ def _run(
     prediction_dataset: str,
     output_path: str,
     ground_truth_dataset: str = None,
-    additional_args: dict = None
+    additional_args: Optional[dict] = None,
 ) -> None:
     """Entry function to read, run and write the processed the data."""
     pred_data = _read_jsonl_file(prediction_dataset)

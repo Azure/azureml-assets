@@ -19,6 +19,7 @@ tags:
   model_specific_defaults : {'apply_deepspeed': 'true', 'apply_lora': 'true', 'apply_ort': 'true'}
   SharedComputeCapacityEnabled: ''
   task: question-answering
+  hiddenlayerscanned: ""
   huggingface_model_id: deepset/roberta-base-squad2
   inference_compute_allow_list:
     [

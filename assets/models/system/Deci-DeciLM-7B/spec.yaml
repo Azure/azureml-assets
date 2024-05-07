@@ -26,6 +26,7 @@ tags:
   - Standard_ND96amsr_A100_v4
   SharedComputeCapacityEnabled: ''
   task: text-generation
+  hiddenlayerscanned: ""
   license: apache-2.0
   author: deci-ai
   huggingface_model_id: Deci/DeciLM-7B

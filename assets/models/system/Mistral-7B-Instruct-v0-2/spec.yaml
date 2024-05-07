@@ -11,6 +11,7 @@ tags:
   Featured: ""
   Preview: ""
   SharedComputeCapacityEnabled: ""
+  hiddenlayerscanned: ""
   disable-batch: "true"
   inference_compute_allow_list:
     [

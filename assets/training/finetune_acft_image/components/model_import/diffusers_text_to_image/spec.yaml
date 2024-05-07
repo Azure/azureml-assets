@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.1
+version: 0.0.4
 name: diffusers_text_to_image_model_import
 display_name: Text to Image Diffusers Model Import
 description: Import PyTorch / MLflow model

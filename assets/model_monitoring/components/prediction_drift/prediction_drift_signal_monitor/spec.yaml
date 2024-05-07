@@ -4,7 +4,7 @@ type: pipeline
 name: prediction_drift_signal_monitor
 display_name: Prediction Drift - Signal Monitor
 description: Computes the prediction drift between a baseline and a target data assets.
-version: 0.4.13
+version: 0.4.14
 is_deterministic: true
 
 inputs:
@@ -57,7 +57,7 @@ outputs:
 jobs:
   feature_selection:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.13
+    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.14
     inputs:
       input_data_1:
         type: mltable
@@ -80,7 +80,7 @@ jobs:
       client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   compute_drift_metrics:
     type: spark
-    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.18
+    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.19
     inputs:
       production_dataset:
         type: mltable
@@ -110,7 +110,7 @@ jobs:
       client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   compute_histogram_buckets:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.13
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.14
     inputs:
       input_data_1:
         type: mltable
@@ -133,7 +133,7 @@ jobs:
       client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   compute_baseline_histogram:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.13
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.14
     inputs:
       input_data:
         type: mltable
@@ -156,7 +156,7 @@ jobs:
       client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   compute_target_histogram:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.13
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.14
     inputs:
       input_data:
         type: mltable
@@ -179,7 +179,7 @@ jobs:
       client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   output_signal_metrics: 
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.17
+    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.18
     inputs:
       signal_metrics:
         type: mltable
@@ -209,7 +209,7 @@ jobs:
       client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   evaluate_metric_thresholds: 
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.17
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.18
     inputs:
       signal_metrics: 
         type: mltable

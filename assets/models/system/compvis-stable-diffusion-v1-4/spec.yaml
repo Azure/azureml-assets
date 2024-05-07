@@ -16,6 +16,7 @@ tags:
   SharedComputeCapacityEnabled: ""
   license: creativeml-openrail-m
   task: text-to-image
+  hiddenlayerscanned: ""
   huggingface_model_id: CompVis/stable-diffusion-v1-4
   author: CompVis
   training_dataset: LAION-5B

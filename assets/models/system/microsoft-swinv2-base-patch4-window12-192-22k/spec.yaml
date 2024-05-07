@@ -36,6 +36,7 @@ tags:
     apply_deepspeed: 'true'
     apply_ort: 'true'
   task: image-classification
+  hiddenlayerscanned: ""
   inference_compute_allow_list:
     [
       Standard_DS3_v2,
