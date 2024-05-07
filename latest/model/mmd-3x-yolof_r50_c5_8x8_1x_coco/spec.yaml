@@ -30,6 +30,7 @@ tags:
   SharedComputeCapacityEnabled: ''
   openmmlab_model_id: mmd-3x-yolof_r50_c5_8x8_1x_coco
   training_dataset: COCO
+  hiddenlayerscanned: ""
   license: apache-2.0
   model_specific_defaults:
     apply_deepspeed: 'false'

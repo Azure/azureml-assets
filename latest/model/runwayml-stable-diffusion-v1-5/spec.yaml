@@ -14,6 +14,7 @@ properties:
 tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
+  hiddenlayerscanned: ""
   license: creativeml-openrail-m
   task: text-to-image
   huggingface_model_id: runwayml/stable-diffusion-v1-5

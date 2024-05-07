@@ -35,6 +35,7 @@ tags:
   model_specific_defaults: {"apply_deepspeed": "true", "apply_lora": "true", "apply_ort": "true"}
   SharedComputeCapacityEnabled: ''
   task: text-generation
+  hiddenlayerscanned: ""
   huggingface_model_id: gpt2-large
   inference_compute_allow_list: [Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
     Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,

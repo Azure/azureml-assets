@@ -18,6 +18,7 @@ tags:
   SharedComputeCapacityEnabled: ''
   license: other
   task: text-generation
+  hiddenlayerscanned: ""
   author: microsoft
   evaluation_compute_allow_list:
   - Standard_DS4_v2

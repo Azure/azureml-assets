@@ -32,6 +32,7 @@ tags:
   datasets: squad
   license: apache-2.0
   task: question-answering
+  hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ''
   huggingface_model_id: distilbert-base-uncased-distilled-squad
   inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,

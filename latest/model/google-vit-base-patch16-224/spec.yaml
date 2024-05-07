@@ -33,6 +33,7 @@ tags:
     apply_deepspeed: 'true'
     apply_ort: 'true'
   task: image-classification
+  hiddenlayerscanned: ""
   training_dataset: imagenet-1k, imagenet-21k
   SharedComputeCapacityEnabled: ''
   author: google
