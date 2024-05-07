@@ -94,7 +94,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         self._model_id = translate_params.get("model_id", None)
         self._task = translate_params.get("task", None)
         self._model_flavor = translate_params.get("model_flavor", "HFTransformersV2")
-        self._vllm_enabled = translate_params.get("vllm_enabled", False)        
+        self._vllm_enabled = translate_params.get("vllm_enabled", False)
         self._experimental = translate_params.get(HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value, False)
         self._misc = translate_params.get("misc", [])
         self._signatures = translate_params.get("signature", None)
@@ -181,7 +181,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
             mlclient = get_mlclient("azureml")
             vllm_image = mlclient.environments.get("foundation-model-inference", label="latest")
             metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/foundation-model-inference:" \
-            + str(vllm_image.version)
+                                                 + str(vllm_image.version)
             logger.info("Metadata: {}".format(metadata))
 
         if self._model_flavor == "OSS":
