@@ -163,6 +163,8 @@ def get_classification_dataset(
     """
     mltable = _combine_mltables(testing_mltable)
 
+    logger.info("z1 {}".format(mltable))
+
     dataset_wrapper: AmlDatasetBaseWrapper = cast(AmlDatasetBaseWrapper, AmlDatasetWrapper)
 
     ws = get_workspace()

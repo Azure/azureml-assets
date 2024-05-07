@@ -623,36 +623,38 @@ def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None
 
         # data = read_data(file_path, batch_size, nrows)
 
-        # logger.info("y1 file_path={} file_extension={}".format(file_path, get_file_extension(file_path)))
+        logger.info("y1 file_path={} file_extension={}".format(file_path, get_file_extension(file_path)))
 
         if get_file_extension(file_path) == ".jsonl":
-            # logger.info("y2")
+            logger.info("y2")
 
             converted_mltable = True
             table = from_json_lines_files([{"file": file_path}])
 
-            # logger.info("y3")
+            logger.info("y3")
 
-            file_path = tempfile.TemporaryDirectory()
+            temporary_directory = tempfile.TemporaryDirectory()
+            file_path = temporary_directory.name
             table.save(file_path)
 
-            # logger.info("y4")
+            logger.info("y4")
         else:
             converted_mltable = False
 
-        # logger.info("y5")
+        logger.info("y5")
 
         from image_dataset import get_image_dataset
         df = get_image_dataset(task_type=task, test_mltable=file_path)
         data = iter([df])
 
-        # logger.info("y6")
+        logger.info("y6")
 
         if converted_mltable:
-            file_path.cleanup()
+            temporary_directory.cleanup()
 
     else:
         data = read_data(file_path, batch_size, nrows)
+
     return data
 
 

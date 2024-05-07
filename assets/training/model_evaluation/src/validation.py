@@ -82,6 +82,7 @@ def _validate_input_source_mount(data, input_port):
 def _validate_test_data(args):
     logger.info("Validating Test Data is passed with correct mount.")
     data = args[ArgumentLiterals.DATA]
+    logger.info("e1 {}".format(data))
     _validate_data_passed(data, "test_data")
     _validate_input_source_mount(data, "test_data")
 

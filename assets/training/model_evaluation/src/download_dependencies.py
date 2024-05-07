@@ -50,7 +50,8 @@ def main():
             "azureml_evaluate_mlflow",
             "azureml-evaluate-mlflow",
             "azureml_metrics",
-            "azureml-metrics"
+            "azureml-metrics",
+            "azureml-core"
         ]
         install_deps = []
         with open(reqs_file, "r") as f:

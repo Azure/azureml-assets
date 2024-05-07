@@ -201,7 +201,10 @@ def download_dataset_from_hf(
             # RD: checkpoint where image data is saved in the jsonl file
             # instance["image"] = image_to_base64(instance["image"], format="png")
 
-            instance["image"] = "azureml://storage-container/path/to/image/file"
+            instance = {
+                "image_url": "azureml://subscriptions/dbd697c3-ef40-488f-83e6-5ad4dfb78f9b/resourcegroups/rdondera/workspaces/benchmarking/datastores/workspaceblobstore/paths/temp/1.jpg",
+                "label": instance["label"],
+            }
 
             cnt += 1
 
