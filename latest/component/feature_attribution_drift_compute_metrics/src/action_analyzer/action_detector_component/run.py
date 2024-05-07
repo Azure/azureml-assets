@@ -6,6 +6,7 @@
 import json
 import argparse
 import pandas
+import traceback
 from typing import List
 from action_analyzer.contracts.actions.action import Action
 from action_analyzer.contracts.action_detectors.action_detector import ActionDetector
@@ -136,45 +137,49 @@ def run():
     parser.add_argument("--query_intention_enabled", type=str)
     args = parser.parse_args()
 
-    # get violated metrics
-    violated_metrics = get_violated_metrics(args.signal_output, f"signals/{args.signal_name}")
-    if violated_metrics == []:
-        print("No violated metrics. No action will be generated.")
-        return
-    print("Violated metrics found: ", violated_metrics)
+    try:
+        # get violated metrics
+        violated_metrics = get_violated_metrics(args.signal_output, f"signals/{args.signal_name}")
+        if violated_metrics == []:
+            print("No violated metrics. No action will be generated.")
+            return
+        print("Violated metrics found: ", violated_metrics)
 
-    # load scored data
-    signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
-    print("gsq output df")
-    signal_scored_data_df.show()
-    df_pandas = signal_scored_data_df.toPandas()
+        # load scored data
+        signal_scored_data_df = try_read_mltable_in_spark(args.signal_scored_data, "signal_scored_data")
+        print("gsq output df")
+        signal_scored_data_df.show()
+        df_pandas = signal_scored_data_df.toPandas()
 
-    # find unique indexes
-    unique_indexes = get_unique_indexes(df_pandas)
-    if not unique_indexes or len(unique_indexes) == 0:
-        print("No index found in the data input. No action will be generated.")
-        return
-    print(f"Found {len(unique_indexes)} indexes in the input data.")
+        # find unique indexes
+        unique_indexes = get_unique_indexes(df_pandas)
+        if not unique_indexes or len(unique_indexes) == 0:
+            print("No index found in the data input. No action will be generated.")
+            return
+        print(f"Found {len(unique_indexes)} indexes in the input data.")
 
-    llm_client = LLMClient(args.workspace_connection_arm_id, args.model_deployment_name)
-    # detect actions for each index
-    final_actions = []
-    for index in unique_indexes:
-        index_actions = []
-        lrsi_detector = LowRetrievalScoreIndexActionDetector(index, violated_metrics, args.query_intention_enabled)
-        index_actions += run_detector(df_pandas, lrsi_detector, llm_client, args.aml_deployment_id)
+        llm_client = LLMClient(args.workspace_connection_arm_id, args.model_deployment_name)
+        # detect actions for each index
+        final_actions = []
+        for index in unique_indexes:
+            index_actions = []
+            lrsi_detector = LowRetrievalScoreIndexActionDetector(index, violated_metrics, args.query_intention_enabled)
+            index_actions += run_detector(df_pandas, lrsi_detector, llm_client, args.aml_deployment_id)
 
-        # After all detectors, deduplicate actions if needed.
-        final_actions += deduplicate_actions(index_actions)
+            # After all detectors, deduplicate actions if needed.
+            final_actions += deduplicate_actions(index_actions)
 
-    if len(final_actions) == 0:
-        print("No action detected.")
-        return
-    print(f"{len(final_actions)} action(s) detected.")
-    # write action files to output folder
-    write_actions(final_actions, args.action_output)
+        if len(final_actions) == 0:
+            print("No action detected.")
+            return
+        print(f"{len(final_actions)} action(s) detected.")
+        # write action files to output folder
+        write_actions(final_actions, args.action_output)
 
-    add_action_tag_to_run()
+        add_action_tag_to_run()
+    except Exception as e:
+        print("Action detector failed with exception:", e)
+        print(traceback.format_exc())
 
 
 if __name__ == "__main__":
