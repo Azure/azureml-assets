@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/development/commandComponent.schema.json
 type: command
 
-version: 0.0.14
+version: 0.0.15
 name: image_framework_selector
 display_name: Framework Selector for Image Tasks
 description: Framework selector control flow component for image tasks
