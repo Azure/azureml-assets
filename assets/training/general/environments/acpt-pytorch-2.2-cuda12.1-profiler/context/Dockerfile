@@ -42,10 +42,6 @@ RUN echo "--use_JSON" | tee -a /etc/dynolog.gflags
 # run profiler
 #dyno gputrace --log-file kineto-trace.json
 
-# sample script
-RUN wget https://raw.githubusercontent.com/facebookincubator/dynolog/main/scripts/pytorch/xor.py
-
-
 # install HTA
 RUN pip install HolisticTraceAnalysis
 WORKDIR /workspace
