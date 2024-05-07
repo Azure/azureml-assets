@@ -51,7 +51,7 @@ inputs:
     type: boolean
     description: Enable vllm in the converted model 
     default: false
-    optional: true
+    optional: false
 
   token:
     type: string
@@ -219,7 +219,7 @@ jobs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
       model_version: ${{parent.inputs.model_version}}
-      model_flavor: ${{parent.inputs.model_flavor}}   
+      model_flavor: ${{parent.inputs.model_flavor}}
       model_description: ${{parent.inputs.model_description}}
       model_metadata: ${{parent.inputs.model_metadata}}
       registry_name: ${{parent.inputs.registry_name}}
