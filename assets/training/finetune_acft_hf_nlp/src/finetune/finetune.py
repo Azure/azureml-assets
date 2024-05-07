@@ -803,7 +803,7 @@ def is_vllm_enabled(task_name: str, finetune_config: Dict[str, Any]) -> bool:
 
 
 def setup_vllm(task_name: str, finetune_config: Dict[str, Any], base_model_metadata: Dict[str, Any]) -> Dict[str, Any]:
-    """Setup vllm for finetuned model inferencing."""
+    """Enable/disable vllm for finetuned model inferencing."""
     if not is_vllm_enabled(task_name, finetune_config):
         removed_base_image = base_model_metadata.pop("azureml.base_image", None)
         if removed_base_image is not None:
