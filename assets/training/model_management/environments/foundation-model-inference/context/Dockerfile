@@ -34,7 +34,7 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 WORKDIR /
 
 # Needed for megablocks
-RUN pip install torch~=2.1.2 --index-url https://download.pytorch.org/whl/cu121
+RUN pip install torch~=2.3.0 --index-url https://download.pytorch.org/whl/cu121
 
 # mixtral specific
 ARG torch_cuda_arch_list='7.0 7.5 8.0 8.6 8.9 9.0+PTX'
