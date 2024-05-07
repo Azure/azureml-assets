@@ -29,7 +29,7 @@ def _get_parser():
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
     parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
     parser.add_argument("--model-flavor", type=str, required=False, help="Model flavor HFtransformersV2 / OSS")
-    parser.add_argument("--vllm-enabled", type=bool, required=False, default=False, help="Flag to enabled vllm")
+    parser.add_argument("--vllm-enabled", type=bool, required=True, default=False, help="Flag to enabled vllm")
     parser.add_argument("--hf-config-args", type=str, required=False, help="Hugging Face config init args")
     parser.add_argument("--hf-tokenizer-args", type=str, required=False, help="Hugging Face tokenizer init args")
     parser.add_argument("--hf-model-args", type=str, required=False, help="Hugging Face model init args")
