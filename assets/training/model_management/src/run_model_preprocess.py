@@ -29,7 +29,7 @@ def _get_parser():
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
     parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
     parser.add_argument("--model-flavor", type=str, required=False, help="Model flavor HFtransformersV2 / OSS")
-    parser.add_argument("--vllm-enabled", type=bool, required=True, default=False, help="Flag to enabled vllm")
+    parser.add_argument("--vllm-enabled", type=str, required=True, default="false", help="Flag to enabled vllm")
     parser.add_argument("--hf-config-args", type=str, required=False, help="Hugging Face config init args")
     parser.add_argument("--hf-tokenizer-args", type=str, required=False, help="Hugging Face tokenizer init args")
     parser.add_argument("--hf-model-args", type=str, required=False, help="Hugging Face model init args")
@@ -93,7 +93,7 @@ def run():
     model_id = args.model_id
     task_name = args.task_name
     model_flavor = args.model_flavor
-    vllm_enabled = args.vllm_enabled
+    vllm_enabled = False if args.vllm_enabled.lower() == "false" else True
     model_framework = args.model_framework
     hf_config_args = args.hf_config_args
     hf_tokenizer_args = args.hf_tokenizer_args
