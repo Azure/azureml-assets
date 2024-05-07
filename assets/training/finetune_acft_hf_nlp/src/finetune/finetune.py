@@ -972,7 +972,7 @@ def set_gradient_checkpointing(args: Namespace):
         # Parameter at index xxx has been marked as ready twice. This means that multiple autograd engine  hooks
         # have fired for this particular parameter during this iteration. You can set the environment variable
         # TORCH_DISTRIBUTED_DEBUG to either INFO or DETAIL to print parameter names for further debugging.
-        logger.info(f"Not setting `gradient_checkpointing` to True for LoRA only finetuning.")
+        logger.info("Not setting `gradient_checkpointing` to True for LoRA only finetuning.")
         return
 
     if (
