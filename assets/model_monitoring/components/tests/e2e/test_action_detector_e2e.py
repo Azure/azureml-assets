@@ -9,7 +9,8 @@ from azure.ai.ml.entities import AmlTokenConfiguration
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_ACTION_DETECTOR,
-    DATA_ASSET_EMPTY
+    DATA_ASSET_EMPTY,
+    DATA_ASSET_SIGNAL_OUTPUT_GSQ
 )
 
 
@@ -59,7 +60,7 @@ class TestGenerationSafetyModelMonitor:
             ml_client,
             get_component,
             DATA_ASSET_EMPTY,
-            DATA_ASSET_EMPTY
+            DATA_ASSET_SIGNAL_OUTPUT_GSQ
         )
 
         assert pipeline_job.status == "Completed"

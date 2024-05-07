@@ -17,6 +17,7 @@ COMPONENT_NAME_DATA_JOINER = "model_monitor_data_joiner"
 COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR = 'generation_safety_quality_signal_monitor'
 COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR = "model_performance_signal_monitor"
 COMPONENT_NAME_MODEL_TOKEN_STATS_SIGNAL_MONITOR = "genai_token_statistics_signal_monitor"
+COMPONENT_NAME_ACTION_DETECTOR = "model_monitor_action_detector"
 
 # MDC-generated target dataset of an iris model. The data contains drift.
 # Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
@@ -138,3 +139,5 @@ DATA_ASSET_GENAI_RAW_LOG_WITH_EVENTS = (
 DATA_AGGREGATED_TRACE_DATA = (
     "azureml:mltable_aggregrated_genai_preprocessor_outputs:1"
 )
+
+DATA_ASSET_SIGNAL_OUTPUT_GSQ = "azureml:uri_folder_signal_output_gsq:1"
