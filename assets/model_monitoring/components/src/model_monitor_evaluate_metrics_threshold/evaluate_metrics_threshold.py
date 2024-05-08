@@ -76,7 +76,7 @@ def evaluate_metrics_threshold(
         F.col(SIGNAL_METRICS_THRESHOLD_VALUE).isNotNull()
     )
 
-    is_not_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
+    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
         F.col(SIGNAL_METRICS_THRESHOLD_VALUE) != F.lit("")
     )
 
@@ -84,7 +84,7 @@ def evaluate_metrics_threshold(
         F.col(SIGNAL_METRICS_METRIC_VALUE).isNotNull()
     )
 
-    is_not_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
+    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
         F.col(SIGNAL_METRICS_METRIC_VALUE) != F.lit("")
     )
 
