@@ -265,7 +265,7 @@ inputs:
   # model checkpointing limit
   save_total_limit:
     type: integer
-    default: -1
+    default: 5
     optional: true
     description: If a value is passed, will limit the total amount of checkpoints. Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints".
 
