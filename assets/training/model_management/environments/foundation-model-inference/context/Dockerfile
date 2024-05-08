@@ -51,6 +51,8 @@ RUN pip install llm-optimized-inference --no-cache-dir
 
 RUN pip uninstall -y vllm
 
+COPY ./vllm.patch ./vllm.patch
+
 RUN git clone https://github.com/vllm-project/vllm.git && \
     cd vllm && \
     git checkout 0ce0539d4750f9ebcd9b19d7085ca3b934b9ec67 && \
