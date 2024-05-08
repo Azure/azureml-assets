@@ -15,4 +15,3 @@ pyarrow==14.0.2
 GitPython=={{latest-pypi-version}}
 paramiko=={{latest-pypi-version}}
 tqdm=={{latest-pypi-version}}
-onnx=={{latest-pypi-version}}
