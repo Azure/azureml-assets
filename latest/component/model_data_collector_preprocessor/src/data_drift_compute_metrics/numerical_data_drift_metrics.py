@@ -166,7 +166,8 @@ def _normalized_wasserstein(
 
         # Normalize the Wasserstein distance by dividing it by the norm
         std_dev = baseline_df.select(F.stddev(column)).collect()[0][0]
-        norm = max(std_dev, 0.001)
+        # if all the values of the column is None, we would get None stddev value
+        norm = max(std_dev, 0.001) if std_dev is not None else 0.001
 
         normalized_distance = distance / norm
         row = [column, float(normalized_distance), "Numerical", NORMALIZED_WASSERSTEN_DISTANCE_METRIC_NAME, column, ""]
