@@ -33,7 +33,7 @@ tags:
     apply_ort: "false"
     precision: 16
     ignore_mismatched_sizes: "false"
-version: 4
+version: 5
 description: |
   ## Model Details
 
