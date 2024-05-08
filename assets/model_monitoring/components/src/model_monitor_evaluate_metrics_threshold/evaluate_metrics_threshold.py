@@ -22,9 +22,6 @@ from shared_utilities.constants import (
     SIGNAL_METRICS_METRIC_VALUE,
     SIGNAL_METRICS_THRESHOLD_VALUE,
     SIGNAL_METRICS_GROUP,
-    ACCURACY_METRIC_NAME,
-    PERCISION_METRIC_NAME,
-    RECALL_METRIC_NAME,
 )
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
@@ -64,20 +61,11 @@ def _generate_error_message(df, signal_name: str):
     return error_message
 
 
-def evaluate_metrics_threshold(
-    signal_name: str, metrics_to_evaluate_df: DataFrame, notification_emails: str
-):
-    """Evaluate the computed metrics against the threshold."""
-    print("Computed metrics to evaluate against threshold DF:")
-    metrics_to_evaluate_df.show()
-
-    # filter out null values
-    is_not_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
+def _clean_metrics_df(metrics_df: DataFrame) -> DataFrame:
+    """Apply some minor data cleaning to metrics DF."""
+    # filter out null values and empty string
+    is_not_nan_metrics_threshold_df = metrics_df.filter(
         F.col(SIGNAL_METRICS_THRESHOLD_VALUE).isNotNull()
-    )
-
-    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
-        F.col(SIGNAL_METRICS_THRESHOLD_VALUE) != F.lit("")
     )
 
     is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
@@ -85,10 +73,26 @@ def evaluate_metrics_threshold(
     )
 
     is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
+        F.col(SIGNAL_METRICS_THRESHOLD_VALUE) != F.lit("")
+    )
+
+    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
         F.col(SIGNAL_METRICS_METRIC_VALUE) != F.lit("")
     )
 
-    metrics_threshold_breached_df = calculate_metrics_breach(is_not_nan_metrics_threshold_df)
+    return is_not_nan_metrics_threshold_df
+
+
+def evaluate_metrics_threshold(
+    signal_name: str, metrics_to_evaluate_df: DataFrame, notification_emails: str
+):
+    """Evaluate the computed metrics against the threshold."""
+    print("Computed metrics to evaluate against threshold DF:")
+    metrics_to_evaluate_df.show()
+
+    cleaned_metrics_df = _clean_metrics_df(metrics_to_evaluate_df)
+
+    metrics_threshold_breached_df = calculate_metrics_breach(cleaned_metrics_df)
     print("Metrics calculated to breach threshold DF:")
     metrics_threshold_breached_df.show()
 
