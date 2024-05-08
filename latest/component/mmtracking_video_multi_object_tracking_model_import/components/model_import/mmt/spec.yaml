@@ -8,7 +8,7 @@ description: Import PyTorch / MLflow model
 
 is_deterministic: true
 
-environment: azureml://registries/azureml/environments/acft-mmtracking-video-gpu/versions/26
+environment: azureml://registries/azureml/environments/acft-mmtracking-video-gpu/versions/27
 
 code: ../../../src/model_selector
 
