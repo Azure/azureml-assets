@@ -116,7 +116,7 @@ class TestEvaluateMetricsThreshold:
         assert sorted(breached_metrics_df.collect()) == sorted(actual_breached_metrics_df.collect())
 
     @pytest.mark.parametrize("metrics_df, expected_metrics_df",
-                             [#(test_null_df, emptyRDD),
+                             [(test_null_df, emptyRDD),
                               (test_clean_df, test_clean_df)])
     def test_clean_metrics_df(self, metrics_df, expected_metrics_df):
         """Test clean metrics dataframe."""
