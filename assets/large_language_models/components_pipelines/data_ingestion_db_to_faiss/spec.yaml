@@ -4,7 +4,7 @@ tags:
   Preview: ""
 name: llm_ingest_db_to_faiss
 display_name: LLM - SQL Datastore to FAISS Pipeline
-version: 0.0.83
+version: 0.0.84
 description: Single job pipeline to chunk data from AzureML sql data store, and create FAISS embeddings index
 settings:
   default_compute: serverless
@@ -132,7 +132,7 @@ jobs:
       output_chunk_file:
         type: uri_folder
       output_grounding_context_file: ${{parent.outputs.db_context}}
-    component: "azureml:llm_dbcopilot_grounding:0.0.57"
+    component: "azureml:llm_dbcopilot_grounding:0.0.58"
     type: command
   generate_meta_embeddings:
     type: command
@@ -142,7 +142,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: "azureml:llm_rag_generate_embeddings:0.0.54"
+    component: "azureml:llm_rag_generate_embeddings:0.0.55"
     inputs:
       chunks_source:
         type: uri_folder
@@ -191,13 +191,13 @@ jobs:
         path: ${{parent.jobs.generate_meta_embeddings.outputs.embeddings}}
     outputs:
       index: ${{parent.outputs.grounding_index}}
-    component: "azureml:llm_rag_create_faiss_index:0.0.59"
+    component: "azureml:llm_rag_create_faiss_index:0.0.60"
     type: command
 
   #########################################
   db_sample_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.32"
+    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.33"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -217,7 +217,7 @@ jobs:
   #########################################
   generate_sample_embeddings:
     type: command
-    component: "azureml:llm_rag_generate_embeddings:0.0.54"
+    component: "azureml:llm_rag_generate_embeddings:0.0.55"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -238,7 +238,7 @@ jobs:
   #########################################
   create_sample_faiss_index_job:
     type: command
-    component: "azureml:llm_rag_create_faiss_index:0.0.59"
+    component: "azureml:llm_rag_create_faiss_index:0.0.60"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -268,7 +268,7 @@ jobs:
     outputs:
       asset_id:
         type: uri_file
-    component: "azureml:llm_rag_register_mlindex_asset:0.0.58"
+    component: "azureml:llm_rag_register_mlindex_asset:0.0.59"
     type: command
   create_prompt_flow:
     environment_variables:
@@ -307,5 +307,5 @@ jobs:
         path: ${{parent.inputs.include_views}}
       instruct_template:
         path: ${{parent.inputs.instruct_template}}
-    component: "azureml:llm_dbcopilot_create_promptflow:0.0.57"
+    component: "azureml:llm_dbcopilot_create_promptflow:0.0.58"
     type: command
