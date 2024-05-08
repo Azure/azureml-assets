@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y \
     libldap-2.4-2=2.4.49+dfsg-2ubuntu1.10 \
     libldap-common=2.4.49+dfsg-2ubuntu1.10 \
     libxml2=2.9.10+dfsg-5ubuntu0.20.04.7 \
-    less=551-1ubuntu0.2 \
     login=1:4.8.1-1ubuntu5.20.04.5 \
     passwd=1:4.8.1-1ubuntu5.20.04.5 \
     uidmap=1:4.8.1-1ubuntu5.20.04.5 \
@@ -58,7 +57,7 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda && \
-    pip install cryptography==42.0.5 idna==3.7 && \
+    pip install cryptography==42.0.5 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 && \
     conda deactivate"
 
 # Install certificates and other utilities

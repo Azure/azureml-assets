@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.14
+version: 0.0.15
 name: transformers_image_classification_finetune
 display_name: Image Classification HuggingFace Transformers Model Finetune
 description: Component to finetune HuggingFace transformers models for image classification.
 
 is_deterministic: false
 
-environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/29
+environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/30
 
 code: ../../../src/finetune
 
@@ -265,7 +265,7 @@ inputs:
   # model checkpointing limit
   save_total_limit:
     type: integer
-    default: -1
+    default: 5
     optional: true
     description: If a value is passed, will limit the total amount of checkpoints. Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints".
 
