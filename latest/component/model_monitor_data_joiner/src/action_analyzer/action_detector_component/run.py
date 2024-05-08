@@ -47,15 +47,15 @@ def parse_hashed_index_id(root_span: str) -> List[str]:
             if span.span_type == RETRIEVAL_SPAN_TYPE:
                 parent_id = span.parent_id
                 if not parent_id:
-                    print("No look up span found, skip action analyzer.")
-                    return None
+                    print("No look up span found, skip this span.")
+                    continue
                 index_span = tree.get_span_tree_node_by_span_id(parent_id)
                 index_input = json.loads(index_span.input)
                 index_content = index_input['mlindex_content']
                 hashed_index_id = hash_index_content(index_content)
                 if hashed_index_id:
                     index_list.append(hashed_index_id)
-        return index_list
+        return index_list if index_list != [] else None
     except KeyError as e:
         print("Required field not found: ", e)
         return None
@@ -71,6 +71,7 @@ def get_unique_indexes(df: pandas.DataFrame) -> List[str]:
         List[str]: list of unique indexes.
     """
     df[INDEX_ID_COLUMN] = df[ROOT_SPAN_COLUMN].apply(parse_hashed_index_id)
+    df.dropna(axis=0, subset=[INDEX_ID_COLUMN], inplace=True)
     # expand each trace row to index level
     df = df.explode(INDEX_ID_COLUMN)
     return df[INDEX_ID_COLUMN].unique().tolist()
