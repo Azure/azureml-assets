@@ -216,8 +216,11 @@ def generate_assets(
         dirs[:] = new_dirs
         comp = parse_asset_yamls(files, root)
         if comp is not None:
-            if isinstance(comp, Pipeline) and comp.name in rag_pipeline_names:
-                pipe_assets_all[comp.name] = comp
+            if isinstance(comp, Pipeline):
+                if comp.name in rag_pipeline_names:
+                    pipe_assets_all[comp.name] = comp
+                else:
+                    print(f"Skipping pipeline '{comp.name}'")
             else:
                 comp_assets_all[comp.name] = comp
 
