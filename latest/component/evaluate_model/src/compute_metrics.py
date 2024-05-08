@@ -140,9 +140,9 @@ class ComputeMetricsRunner:
         ground_truth = None
         if self.ground_truth:
             if os.path.isdir(self.ground_truth) and not self.is_ground_truth_mltable:
-                ground_truth = read_multiple_files(self.ground_truth)
+                ground_truth, _ = read_multiple_files(self.ground_truth)
             else:
-                ground_truth = read_data(self.ground_truth)
+                ground_truth, _ = read_data(self.ground_truth)
             ground_truth = list(ground_truth)[0]
 
             if self.config.get(constants.OpenAIConstants.METRICS_KEY) and (
@@ -178,9 +178,9 @@ class ComputeMetricsRunner:
                                                                                     self.config)
 
         if os.path.isdir(self.predictions) and not self.is_predictions_mltable:
-            predictions = read_multiple_files(path=self.predictions)
+            predictions, _ = read_multiple_files(path=self.predictions)
         else:
-            predictions = read_data(self.predictions)
+            predictions, _ = read_data(self.predictions)
         predictions = list(predictions)[0]
         if self.predictions_column_name is not None:
             predictions = filter_predictions(predictions, self.task, self.predictions_column_name)
@@ -188,9 +188,9 @@ class ComputeMetricsRunner:
         predictions_probabilities = None
         if self.predictions_probabilities is not None:
             if os.path.isdir(self.predictions_probabilities) and not self.is_predictions_probabilities_mltable:
-                predictions_probabilities = read_multiple_files(path=self.predictions_probabilities)
+                predictions_probabilities, _ = read_multiple_files(path=self.predictions_probabilities)
             else:
-                predictions_probabilities = read_data(self.predictions_probabilities)
+                predictions_probabilities, _ = read_data(self.predictions_probabilities)
             predictions_probabilities = list(predictions_probabilities)[0]
         self.ground_truth, self.predictions, self.predictions_probabilities = \
             ground_truth, predictions, predictions_probabilities

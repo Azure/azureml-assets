@@ -229,7 +229,8 @@ def validate_and_get_columns(args):
         args (_type_): _description_
     """
     logger.info("Reading top row in data for validation.")
-    data = list(read_model_prediction_data(args[ArgumentLiterals.DATA], args[ArgumentLiterals.TASK], nrows=1))[0]
+    data, _ = read_model_prediction_data(args[ArgumentLiterals.DATA], args[ArgumentLiterals.TASK], nrows=1)
+    data = list(data)[0]
     input_column_names, label_column_name, extra_y_test_cols = get_column_names(args, data)
 
     validate_input_column_names(input_column_names, data)

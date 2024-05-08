@@ -72,6 +72,17 @@ ALL_MODEL_FLAVORS = [
 ]
 
 
+class SupportedFileExtensions:
+    """Supported File extensions."""
+
+    CSV = "csv"
+    TSV = "tsv"
+    JSONL = "jsonl"
+    JSON = "json"
+    MLTable = "MLTable"
+    IMAGE = "image"
+
+
 class TASK:
     """TASK list."""
 
@@ -202,7 +213,7 @@ class TelemetryConstants:
     """Telemetry Constants."""
 
     COMPONENT_NAME = "model_evaluation"
-    COMPONENT_DEFAULT_VERSION = "0.0.25"
+    COMPONENT_DEFAULT_VERSION = "0.0.26"
 
     INITIALISING_RUNNER = "initialising_runner"
     VALIDATION_NAME = "argument_validation"
@@ -358,18 +369,32 @@ class PerformanceColumns:
     OUTPUT_TOKENS_COLUMN_NAME = 'output_token_count'
 
 
+class AllowedPipelineParams:
+    """Allowed pipeline params for OSS and HF models."""
+
+    TOKENIZER_CONFIG = "tokenizer_config"
+    GENERATOR_CONFIG = "generator_config"
+    MODEL_KWARGS = "model_kwargs"
+    PIPELINE_INIT_ARGS = "pipeline_init_args"
+    TRUST_REMOTE_CODE = "trust_remote_code"
+    SOURCE_LANG = "source_lang"
+    TARGET_LANG = "target_lang"
+
+    PARAMS = "params"
+
+
 ALLOWED_PIPELINE_HF_PARAMS = {
-    "tokenizer_config",
-    "generator_config",
-    "model_kwargs",
-    "pipeline_init_args",
-    "trust_remote_code",
-    "source_lang",
-    "target_lang"
+    AllowedPipelineParams.TOKENIZER_CONFIG,
+    AllowedPipelineParams.GENERATOR_CONFIG,
+    AllowedPipelineParams.MODEL_KWARGS,
+    AllowedPipelineParams.PIPELINE_INIT_ARGS,
+    AllowedPipelineParams.TRUST_REMOTE_CODE,
+    AllowedPipelineParams.SOURCE_LANG,
+    AllowedPipelineParams.TARGET_LANG
 }
 
 ALLOWED_PIPELINE_MLFLOW_TRANSFORMER_PARAMS = {
-    "params"
+    AllowedPipelineParams.PARAMS
 }
 
 
