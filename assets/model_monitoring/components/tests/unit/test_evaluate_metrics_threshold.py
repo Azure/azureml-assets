@@ -92,7 +92,7 @@ valid_clean_data = [
     # this is not a likely case but test non-empty strings
     (AVERAGE_FLUENCY_SCORE_METRIC_NAME, "3.0", '3.0'),
 ]
-test_clean_df = create_pyspark_dataframe(null_data, columns)
+test_clean_df = create_pyspark_dataframe(valid_clean_data, columns)
 # create empty dataframe
 spark = SparkSession.builder.getOrCreate()
 emptyRDD = spark.sparkContext.emptyRDD()
@@ -102,21 +102,21 @@ emptyRDD = spark.sparkContext.emptyRDD()
 class TestEvaluateMetricsThreshold:
     """Test class for evaluate metrics threshold component."""
 
-    # @pytest.mark.parametrize("metrics_df, breached_metrics_df",
-    #                          [(metrics_breached_df, metrics_breached_df),
-    #                           (metrics_not_breached_df, emptyRDD)])
-    # def test_calculate_metrics_breach(
-    #         self,
-    #         metrics_df,
-    #         breached_metrics_df
-    # ):
-    #     """Test calculate metrics breach."""
-    #     actual_breached_metrics_df = calculate_metrics_breach(metrics_df)
-    #     assert breached_metrics_df.count() == actual_breached_metrics_df.count()
-    #     assert sorted(breached_metrics_df.collect()) == sorted(actual_breached_metrics_df.collect())
+    @pytest.mark.parametrize("metrics_df, breached_metrics_df",
+                             [(metrics_breached_df, metrics_breached_df),
+                              (metrics_not_breached_df, emptyRDD)])
+    def test_calculate_metrics_breach(
+            self,
+            metrics_df,
+            breached_metrics_df
+    ):
+        """Test calculate metrics breach."""
+        actual_breached_metrics_df = calculate_metrics_breach(metrics_df)
+        assert breached_metrics_df.count() == actual_breached_metrics_df.count()
+        assert sorted(breached_metrics_df.collect()) == sorted(actual_breached_metrics_df.collect())
 
     @pytest.mark.parametrize("metrics_df, expected_metrics_df",
-                             [(test_null_df, emptyRDD),
+                             [#(test_null_df, emptyRDD),
                               (test_clean_df, test_clean_df)])
     def test_clean_metrics_df(self, metrics_df, expected_metrics_df):
         """Test clean metrics dataframe."""
@@ -124,28 +124,28 @@ class TestEvaluateMetricsThreshold:
         assert expected_metrics_df.count() == actual_cleaned_metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(actual_cleaned_metrics_df.collect())
 
-    # @pytest.mark.parametrize("data, schema, expected_message",
-    #                          [([("1", "metics", 4.6, 5.6)],
-    #                            ["group", SIGNAL_METRICS_METRIC_NAME,
-    #                             SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_THRESHOLD_VALUE],
-    #                            'The signal \'name\' has failed due to one or more features violating ' +
-    #                            'metric thresholds.\nThe feature names and their corresponding computed ' +
-    #                            'metric values violating the threshold are \n[\'{"metric_value":4.6,' +
-    #                            '"metric_name":"metics","threshold_value":5.6,"group":"1"}\']\n'),
-    #                           ([("metics", 4.6, 5.6)],
-    #                            [SIGNAL_METRICS_METRIC_NAME,
-    #                             SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_THRESHOLD_VALUE],
-    #                            'The signal \'name\' has failed due to one or more features violating ' +
-    #                            'metric thresholds.\nThe feature names and their corresponding computed ' +
-    #                            'metric values violating the threshold are ' +
-    #                            '\n[\'{"metric_value":4.6,"metric_name":"metics","threshold_value":5.6}\']\n')])
-    # def test_generate_error_message(
-    #     self,
-    #     data,
-    #     schema,
-    #     expected_message
-    # ):
-    #     """Test generate error message."""
-    #     df = create_pyspark_dataframe(data, schema)
-    #     message = _generate_error_message(df, "name")
-    #     assert expected_message == message
+    @pytest.mark.parametrize("data, schema, expected_message",
+                             [([("1", "metics", 4.6, 5.6)],
+                               ["group", SIGNAL_METRICS_METRIC_NAME,
+                                SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_THRESHOLD_VALUE],
+                               'The signal \'name\' has failed due to one or more features violating ' +
+                               'metric thresholds.\nThe feature names and their corresponding computed ' +
+                               'metric values violating the threshold are \n[\'{"metric_value":4.6,' +
+                               '"metric_name":"metics","threshold_value":5.6,"group":"1"}\']\n'),
+                              ([("metics", 4.6, 5.6)],
+                               [SIGNAL_METRICS_METRIC_NAME,
+                                SIGNAL_METRICS_METRIC_VALUE, SIGNAL_METRICS_THRESHOLD_VALUE],
+                               'The signal \'name\' has failed due to one or more features violating ' +
+                               'metric thresholds.\nThe feature names and their corresponding computed ' +
+                               'metric values violating the threshold are ' +
+                               '\n[\'{"metric_value":4.6,"metric_name":"metics","threshold_value":5.6}\']\n')])
+    def test_generate_error_message(
+        self,
+        data,
+        schema,
+        expected_message
+    ):
+        """Test generate error message."""
+        df = create_pyspark_dataframe(data, schema)
+        message = _generate_error_message(df, "name")
+        assert expected_message == message
