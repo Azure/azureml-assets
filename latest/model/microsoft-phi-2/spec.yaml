@@ -39,7 +39,6 @@ tags:
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
   inference_supported_envs:
   - vllm
-  - ds_mii
   model_specific_defaults:
     apply_deepspeed: "true"
     deepspeed_stage: 2
