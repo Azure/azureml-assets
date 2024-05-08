@@ -131,7 +131,7 @@ jobs:
   #########################################
   db_meta_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding:0.0.57"
+    component: "azureml:llm_dbcopilot_grounding:0.0.58"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -200,7 +200,7 @@ jobs:
   #########################################
   db_sample_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.32"
+    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.33"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -262,7 +262,7 @@ jobs:
   #########################################
   endpoint_deployment_job:
     type: command
-    component: "azureml:llm_dbcopilot_deploy_endpoint:0.0.32"
+    component: "azureml:llm_dbcopilot_deploy_endpoint:0.0.33"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
