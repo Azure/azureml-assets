@@ -21,19 +21,9 @@ class Hyperparameters(BaseModel):
 class Hyperparameters_1P(BaseModel):
     """Hyperparameters available for 1P customers for finetuning."""
 
-    ExportMergedWeights: Optional[bool] = Field(...)
-    CompletionOverride: Optional[bool] = Field(...)
-    FullFineTune: Optional[bool] = Field(...)
-    LoraV2: Optional[bool] = Field(...)
-    LoraDimensions: Optional[int] = Field(...)
-    ContextWindow: Optional[int] = Field(...)
-    FileSPMRate: Optional[float] = Field(..., ge=0, le=1)
-    WeightDecayMultiplier: Optional[float] = Field(...)
-    PromptLossWeight: Optional[float] = Field(...)
-    TrimMode: Optional[str] = Field(...)
-    CheckPointInterval: Optional[int] = Field(...)
-    NumSteps: Optional[int] = Field(...)
-    ShuffleType: Optional[str] = Field(...)
+    n_ctx: Optional[int] = Field(...)
+    lora_dim: Optional[int] = Field(...)
+    weight_decay_multiplier: Optional[float] = Field(...)
 
     def get_dict(self) -> Dict[str, str]:
         """Get dictionary of hyperparameters."""
