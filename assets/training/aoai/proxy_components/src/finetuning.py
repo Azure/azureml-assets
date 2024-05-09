@@ -108,11 +108,11 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         logger.info("validation file uploaded")
 
     def upload_file_uri_from_rest(self, file_uri: str) -> str:
-        
+
         file_uri_payload = utils.create_payload_for_data_upload_rest_call(file_uri)
         file_upload_response = self.aoai_client_manager.upload_data_to_aoai(file_uri_payload)
         
-        file_id =  utils.parse_file_id_from_upload_response(file_upload_response)
+        file_id = utils.parse_file_id_from_upload_response(file_upload_response)
         self._wait_for_processing(file_id)
         logger.info(f"file id : {file_id} uploaded")
 
@@ -259,15 +259,17 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 def validate_train_data_upload_type(args: Namespace) -> str:
     if args.training_file_path is None and args.training_file_uri_key is None:
         raise ValueError("One of training file path and training file uri key should be provided")
-    
+
     if args.training_file_path is not None and args.training_file_uri_key is not None:
         raise ValueError("Exactly one of training file path or training file uri key must be provided")
-    
+
     if args.validation_file_path is not None and args.validation_file_uri_key is not None:
         raise ValueError("Exactly one of validation file path and validation file uri key must be provided")
+
 
 def main():
     """Submit fine-tune job to AOAI."""
