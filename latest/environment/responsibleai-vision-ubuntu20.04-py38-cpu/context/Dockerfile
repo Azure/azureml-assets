@@ -38,7 +38,8 @@ RUN pip install 'shap==0.41.0' \
                 'setuptools>=65.5.1' \
                 'numpy==1.22.0' \
                 'scipy==1.10.0' \
-                'statsmodels==0.14.0'
+                'statsmodels==0.14.0' \
+                'gunicorn>=22.0.0'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict

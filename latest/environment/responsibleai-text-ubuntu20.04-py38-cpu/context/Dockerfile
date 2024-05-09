@@ -25,7 +25,8 @@ RUN pip install 'azureml-core==1.56.0' \
 
 RUN pip install 'azureml-dataset-runtime==1.56.0' \
                 'azureml-telemetry==1.56.0' \
-                'Werkzeug==3.0.2'
+                'Werkzeug==3.0.2' \
+                'gunicorn>=22.0.0'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
