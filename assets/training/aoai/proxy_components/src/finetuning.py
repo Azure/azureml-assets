@@ -111,7 +111,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         file_uri_payload = utils.create_payload_for_data_upload_rest_call(file_uri)
         file_upload_response = self.aoai_client_manager.upload_data_to_aoai(file_uri_payload)
-        
+
         file_id = utils.parse_file_id_from_upload_response(file_upload_response)
         self._wait_for_processing(file_id)
         logger.info(f"file id : {file_id} uploaded")

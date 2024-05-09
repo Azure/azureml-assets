@@ -89,7 +89,7 @@ class AzureOpenAIClientManager:
 
     @property
     def data_upload_url(self) -> str:
-        base_url = self.aoai_client.base_url  #https://<aoai-resource-name>.openai.azure.com/openai/
+        base_url = self.aoai_client.base_url  # https://<aoai-resource-name>.openai.azure.com/openai/
         return f"{base_url}/files/import?api-version={self.api_version}"
 
     def get_auth_header(self) -> dict:
