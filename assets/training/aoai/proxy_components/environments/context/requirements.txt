@@ -9,3 +9,4 @@ jsonlines==4.0.0
 azureml-telemetry==1.55.0
 pydantic==2.7.0
 idna>=3.7
+azure-keyvault-secrets==4.8.0
