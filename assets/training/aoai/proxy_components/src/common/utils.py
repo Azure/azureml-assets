@@ -97,20 +97,23 @@ def list_event_messages_after_given_event(events_list: list[FineTuningJobEvent],
     event_message_list.reverse()
     return event_message_list
 
+
 def parse_file_name_from_uri(file_uri: str) -> str:
-    file_path=urlparse(file_uri).path
+    file_path = urlparse(file_uri).path
     filename = file_path.split('/')[-1]
     filename = unquote(filename)  # Decode URL-encoded characters if present
     return filename
 
-def create_payload_for_data_upload_rest_call(file_uri: str) -> dict[str,str]:
+
+def create_payload_for_data_upload_rest_call(file_uri: str) -> dict[str, str]:
     file_name = parse_file_name_from_uri(file_uri)
-    payload : dict[str,str] = {
+    payload: dict[str, str] = {
         "purpose": "fine-tune",
         "filename": file_name,
         "content_url": file_uri
     }
     return payload
+
 
 def parse_file_id_from_upload_response(response: str) -> str:
     resp_json = json.loads(response)

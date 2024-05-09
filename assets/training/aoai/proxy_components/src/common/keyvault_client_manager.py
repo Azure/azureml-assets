@@ -68,5 +68,4 @@ class KeyVaultClientManager:
         return f"https://{self.keyvault_name}.vault.azure.net/"
 
     def get_keyvault_client(self):
-        return SecretClient(credential=self._get_credential(), vault_url= self.keyvault_url)
-
+        return SecretClient(credential=self._get_credential(), vault_url=self.keyvault_url)
