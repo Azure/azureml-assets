@@ -3,6 +3,7 @@
 
 """Azure OpenAI client manager."""
 
+import requests
 from azure.identity import ManagedIdentityCredential
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 from azure.mgmt.cognitiveservices.models import ApiKeys
@@ -84,3 +85,27 @@ class AzureOpenAIClientManager:
             return AzureOpenAI(azure_endpoint=self.get_endpoint_from_cognitive_service_account(client),
                                api_key=self.get_key_from_cognitive_service_account(client),
                                api_version=AzureOpenAIClientManager.api_version)
+
+    @property
+    def endpoint_url(self) -> str:
+        client = CognitiveServicesManagementClient(credential=self._get_credential(),
+                                                       subscription_id=self.endpoint_subscription)
+        return self.get_endpoint_from_cognitive_service_account(client)
+    
+    @property
+    def data_upload_url(self) -> str:
+        base_url = self.endpoint_url
+        return f"{base_url}/openai/files/import?api-version={self.api_version}"
+
+    def get_auth_header(self) -> dict:
+        return { "api-key": self._get_credential(),
+                 "Content-Type": "application/json"}
+
+    def upload_data_to_aoai(self, body: dict[str, str]):
+        try:
+            logger.info(f"Uploading data to endpoint: {self.data_upload_url} via rest call")
+            resp = requests.post(self.data_upload_url, headers=self.get_auth_header(), json=body)
+            logger.info(f"Recieved response status : {resp.status_code}, value: {resp.text}")
+            return resp.text
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Got Exception : {e} while uploading data to AOAI resource")
