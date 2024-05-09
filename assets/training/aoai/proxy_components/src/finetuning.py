@@ -31,7 +31,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         super().__init__(aoai_client_manager.endpoint_name,
                          aoai_client_manager.endpoint_resource_group,
                          aoai_client_manager.endpoint_subscription)
-        self.aoai_client = aoai_client_manager.get_azure_openai_client()
+        self.aoai_client = aoai_client_manager.aoai_client
         self.aoai_client_manager = aoai_client_manager
         self.training_file_id = None
         self.validation_file_id = None

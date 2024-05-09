@@ -111,3 +111,7 @@ def create_payload_for_data_upload_rest_call(file_uri: str) -> dict[str,str]:
         "content_url": file_uri
     }
     return payload
+
+def parse_file_id_from_upload_response(response: str) -> str:
+    resp_json = json.loads(response)
+    return resp_json["id"]

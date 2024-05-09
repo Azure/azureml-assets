@@ -5,7 +5,6 @@
 
 from azure.identity import ManagedIdentityCredential
 import os
-from typing import Optional
 from azure.ai.ml import MLClient
 from azure.keyvault.secrets import SecretClient
 from common.logging import get_logger
@@ -26,11 +25,9 @@ class KeyVaultClientManager:
         self.resource_group = resource_group
         self.workspace_name = workspace_name
 
-        self.keyvault_client = self._get_keyvault_client()
-
     def _get_ml_client(self) -> MLClient:
         credential = self._get_credential()
-        ml_client = MLClient(credential, self.subscription_id, self.resource_group, self.workspace)
+        ml_client = MLClient(credential, self.subscription_id, self.resource_group, self.workspace_name)
         return ml_client
 
     def _get_client_id(self) -> str:
@@ -41,7 +38,7 @@ class KeyVaultClientManager:
         """Get current subscription id."""
         uri = os.environ.get(KeyVaultClientManager.MLFLOW_TRACKING_URI, None)
         if uri is None:
-            return None
+            raise ValueError("mlflow tracking uri not set")
         uri_segments = uri.split("/")
         subscription_id = uri_segments[uri_segments.index("subscriptions") + 1]
         resource_group = uri_segments[uri_segments.index("resourceGroups") + 1]
@@ -58,7 +55,9 @@ class KeyVaultClientManager:
     def _get_workspace_keyvault_name(self):
         ml_client = self._get_ml_client()
         workspace = ml_client.workspaces.get(self.workspace_name)
-        return workspace.key_vault
+        key_vault_path = workspace.key_vault
+        key_vault_name = os.path.basename(key_vault_path)
+        return key_vault_name
 
     @property
     def keyvault_name(self) -> str:
