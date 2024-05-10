@@ -68,13 +68,12 @@ class ImageMulticlassClassifier(TabularClassifier):
         """
         # Image classification predict() returns both labels and probs
         try:
-            print("a1", type(x_test))
-            print("a2", x_test.columns.tolist())
-            print("a3", x_test.iloc[0])
+            # print("a1", type(x_test))
+            # print("a2", x_test.columns.tolist())
+            # print("a3", x_test.iloc[0])
 
             # x_test["image"] = x_test["image"].apply(lambda x: base64.b64decode(x["bytes"]))
-
-            x_test["image"] = x_test["image"].apply(lambda x: base64.b64decode(x["path"]))
+            # x_test["image"] = x_test["image"].apply(lambda x: base64.b64decode(x["path"]))
 
             print("a4", x_test.iloc[0])
 

@@ -171,6 +171,8 @@ def get_classification_dataset(
 
     test_tabular_ds, valid_tabular_ds = utils.get_tabular_dataset(settings=settings, mltable_json=mltable)
 
+    logger.info("z2")
+
     utils.download_or_mount_image_files(
         settings=settings,
         train_ds=test_tabular_ds,
@@ -178,6 +180,8 @@ def get_classification_dataset(
         dataset_class=dataset_wrapper,
         workspace=ws,
     )
+
+    logger.info("z3")
 
     label_column_name = settings.get(SettingLiterals.LABEL_COLUMN_NAME, None)
     test_dataset_wrapper = AmlDatasetWrapper(
@@ -195,11 +199,13 @@ def get_classification_dataset(
     for index in range(len(test_dataset_wrapper)):
         image_path = test_dataset_wrapper.get_image_full_path(index)
         if is_valid_image(image_path):
-            # sending image_paths instead of base64 encoded string as oss flavor doesnt take bytes as input.
             df = df.append({
                 ImageDataFrameParams.IMAGE_COLUMN_NAME: image_path,
+                # ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
                 ImageDataFrameParams.LABEL_COLUMN_NAME: test_dataset_wrapper.label_at_index(index)
             }, ignore_index=True)
+
+    logger.info("z4")
 
     return df
 

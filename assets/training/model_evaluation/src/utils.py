@@ -21,7 +21,7 @@ from workspace_utils import (get_connection_by_id_v2,
                              get_target_from_connection,
                              get_metadata_from_connection)
 from logging_utilities import get_logger, log_traceback
-from mltable import from_json_lines_files, load
+from mltable import DataType, from_json_lines_files, load
 from task_factory.tabular.classification import TabularClassifier
 from task_factory.text.classification import TextClassifier
 from task_factory.tabular.regression import TabularRegressor
@@ -630,6 +630,11 @@ def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None
 
             converted_mltable = True
             table = from_json_lines_files([{"file": file_path}])
+            column_types = {
+                "image_url": DataType.to_stream(),
+                # "label": DataType.to_string(),
+            }
+            table = table.convert_column_types(column_types)
 
             logger.info("y3")
 

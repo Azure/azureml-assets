@@ -22,10 +22,12 @@ from aml_benchmark.utils.exceptions import (
     DatasetDownloadException,
 )
 from aml_benchmark.utils.error_definitions import BenchmarkValidationError, DatasetDownloadError
+from azureml.core import Run
 
 
 logger = get_logger(__name__)
 ALL = "all"
+TEMP_DIRECTORY_NAME = "temp"
 
 
 def parse_args() -> argparse.Namespace:
@@ -182,6 +184,14 @@ def download_dataset_from_hf(
 
         # dataset.to_json(output_file_path)
 
+        logger.info("x0a")
+        run = Run.get_context()
+        workspace = run.experiment.workspace
+        datastore = workspace.get_default_datastore()
+        logger.info("x0b {}".format(datastore.name))
+
+        os.makedirs(TEMP_DIRECTORY_NAME, exist_ok=True)
+
         def encode_image_data(instance):
             global cnt
             if cnt <= 1:
@@ -201,16 +211,29 @@ def download_dataset_from_hf(
             # RD: checkpoint where image data is saved in the jsonl file
             # instance["image"] = image_to_base64(instance["image"], format="png")
 
-            instance = {
-                "image_url": "azureml://subscriptions/dbd697c3-ef40-488f-83e6-5ad4dfb78f9b/resourcegroups/rdondera/workspaces/benchmarking/datastores/workspaceblobstore/paths/temp/1.jpg",
-                "label": instance["label"],
-            }
+            # get the image label
+            label = instance["label"]
+
+            # save the image locally
+            image_file_name = "image_{:09}.png".format(cnt)
+            instance["image"].save(os.path.join(TEMP_DIRECTORY_NAME, image_file_name))
+
+            # Note that returning a different dictionary than `instance` does not work (!).
+            instance.clear()
+            # instance["image_url"] = "https://benchmarking5611733072.blob.core.windows.net/azureml-blobstore-545f212e-5ca8-4d30-9876-7c72c787d762/temp/1.jpg"
+            instance["image_url"] = "AmlDatastore://{}/{}/{}".format(datastore.name, TEMP_DIRECTORY_NAME, image_file_name)
+            instance["label"] = label
+
+            if cnt <= 1:
+                logger.info("x3 {}".format(instance))
 
             cnt += 1
 
             return instance
 
-        dataset = dataset.map(encode_image_data)
+        dataset = dataset.select(range(2)).map(encode_image_data)
+        datastore.upload(src_dir="./{}".format(TEMP_DIRECTORY_NAME), target_path=TEMP_DIRECTORY_NAME)
+
         with open(output_file_path, "wb") as f:
             dataset.to_json(f, force_ascii=False)
 
