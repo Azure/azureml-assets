@@ -124,7 +124,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         logger.info(f"file status is : {upload_file_metadata.status} for file name : {filename}")
 
         if upload_file_metadata.status == "error":
-            error_reason = upload_file_metadata.model_dump()["error"]
+            error_reason = upload_file_metadata.status_details
             error_string = f"Processing file failed for {filename},\
                            file id: {upload_file_metadata.id}, reason: {error_reason}"
             logger.error(error_string)
