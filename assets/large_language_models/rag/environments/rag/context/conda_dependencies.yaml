@@ -25,6 +25,7 @@ dependencies:
   - beautifulsoup4~=4.11.2
   - datasets~=2.10.1
   - faiss-cpu~=1.7.3
+  - gunicorn==22.0.0
   - inference-schema==1.4
   - lxml
   - markdown
