@@ -61,7 +61,6 @@ inputs:
     enum:
     - chat
     - completion
-    - embedding
 
   n_epochs:
     type: integer
