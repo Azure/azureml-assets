@@ -151,7 +151,10 @@ def run():
         threshold_pair = threshold.split(":")
         if len(threshold_pair) == 2:
             threshold_name, threshold_value = threshold_pair
-            threshold_args[threshold_name] = float(threshold_value)
+            try:
+                threshold_args[threshold_name] = float(threshold_value)
+            except ValueError:
+                print("Invalid threshold value found: ", threshold_value)
     metric_names = args.metric_names
     aggregated_metrics_df = compute_metrics(histogram_df, threshold_args, metric_names)
     save_spark_df_as_mltable(aggregated_metrics_df, args.signal_metrics)
