@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/acpt-pytorch-2.0-cuda11.7
+  name: azureml/curated/acpt-pytorch-2.2-cuda12.1-profiler
   os: linux
   context:
     dir: context

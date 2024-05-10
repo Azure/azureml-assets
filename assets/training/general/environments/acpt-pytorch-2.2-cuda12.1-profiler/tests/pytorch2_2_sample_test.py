@@ -12,11 +12,11 @@ import subprocess
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "../../acpt-tests/src"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 120)
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_pytorch_2_0():
+def test_pytorch_2_2():
     """Tests a sample job using pytorch 2.0 as the environment."""
     this_dir = Path(__file__).parent
 
@@ -28,19 +28,19 @@ def test_pytorch_2_0():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "acpt-pytorch-2_0-cuda11_7"
+    env_name = "acpt-pytorch-2_2-cuda12_1-profiler"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name=env_name,
-        description="Pytorch 2.0 environment created from a Docker context.",
+        description="Pytorch 2.2 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="pip install -r requirements.txt" \
+        command="pip install -r requirements.txt && pip install multiprocess==0.70.15" \
                 " && python pretrain_glue.py --tensorboard_log_dir \"/outputs/runs/\"" \
                 " --deepspeed ds_config.json --num_train_epochs 5 --output_dir outputs --disable_tqdm 1" \
                 " --local_rank $RANK --evaluation_strategy \"epoch\" --logging_strategy \"epoch\"" \
@@ -59,7 +59,7 @@ def test_pytorch_2_0():
         compute=os.environ.get("gpu_v100_cluster"),
         display_name="bert-pretrain-GLUE",
         description="Pretrain the BERT model on the GLUE dataset.",
-        experiment_name="pytorch20_Cuda117_Experiment",
+        experiment_name="pytorch22_Cuda121_py310_profiler_Experiment",
         distribution=PyTorchDistribution(process_count_per_instance=1),
         resources=JobResourceConfiguration(instance_count=2, shm_size='3100m'),
     )

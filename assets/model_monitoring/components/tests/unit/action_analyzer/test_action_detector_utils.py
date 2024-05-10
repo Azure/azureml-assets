@@ -113,6 +113,18 @@ def retrieval_root_span():
 
 
 @pytest.fixture
+def root_span_without_retrieval():
+    """Return a root span with no retrieval span."""
+    # The tree only has one root node.
+    s1 = SpanTreeNode(
+        Row(trace_id="01", span_id="1", parent_id=None, start_time=datetime(2024, 2, 12, 9, 0, 0),
+            end_time=datetime(2024, 2, 12, 10, 5, 0)))
+
+    spans = [s1]
+    return SpanTree(spans).to_json_str()
+
+
+@pytest.fixture
 def root_span():
     """Return a root span with all debugging info."""
     # The tree is structured like this:
@@ -267,6 +279,17 @@ class TestDetectorUtils:
         assert len(unique_indexes) == 2
         assert hashed_index_id_1 in unique_indexes
         assert hashed_index_id_2 in unique_indexes
+
+    def test_get_unique_indexes_no_retreival_span(self, root_span_without_retrieval):
+        """Test get_unique_indexes function from the root span with no retrieval span."""
+        df = pd.DataFrame(columns=[ROOT_SPAN_COLUMN])
+        for i in range(10):
+            df = df.append({
+                ROOT_SPAN_COLUMN: root_span_without_retrieval
+            }, ignore_index=True)
+
+        unique_indexes = get_unique_indexes(df)
+        assert len(unique_indexes) == 0
 
     def test_extract_retrieval_info(self, root_span, hashed_index_id_1):
         """Test extract_retrieval_info function from the root span."""

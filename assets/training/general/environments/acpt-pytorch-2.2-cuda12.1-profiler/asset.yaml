@@ -1,4 +1,4 @@
-name: acpt-pytorch-2.1-cuda12.1
+name: acpt-pytorch-2.2-cuda12.1-profiler
 version: auto
 type: environment
 spec: spec.yaml
