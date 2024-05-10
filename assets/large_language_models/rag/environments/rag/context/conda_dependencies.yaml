@@ -25,7 +25,7 @@ dependencies:
   - beautifulsoup4~=4.11.2
   - datasets~=2.10.1
   - faiss-cpu~=1.7.3
-  - inference-schema==1.4
+  - inference-schema~=1.7.0
   - lxml
   - markdown
   - mlflow-skinny==2.3.2
