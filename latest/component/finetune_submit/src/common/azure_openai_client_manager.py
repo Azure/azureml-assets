@@ -20,7 +20,7 @@ class AzureOpenAIClientManager:
 
     ENV_CLIENT_ID_KEY = "DEFAULT_IDENTITY_CLIENT_ID"
     MLFLOW_TRACKING_URI = "MLFLOW_TRACKING_URI"
-    api_version = "2023-12-01-preview"
+    api_version = "2024-04-01-preview"
 
     def __init__(self, endpoint_name, endpoint_resource_group: Optional[str], endpoint_subscription: Optional[str]):
         """Initialize the AzureOpenAIClientManager."""
