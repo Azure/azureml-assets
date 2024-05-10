@@ -45,14 +45,21 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         if training_file_path is not None:
             self.upload_files(training_file_path, validation_file_path)
         else:
-            keyvault_client = KeyVaultClientManager().get_keyvault_client()
+            keyvault_client_manager = KeyVaultClientManager()
+            keyvault_client = keyvault_client_manager.get_keyvault_client()
 
+            logger.info(f"fetching training file uri from keyvault : {keyvault_client_manager.keyvault_name}")
             training_file_uri = keyvault_client.get_secret(training_file_uri_key).value
+
             self.training_file_id = self.upload_file_uri_from_rest(training_file_uri)
+            logger.info(f"uploaded training file uri to aoai resource")
 
             if validation_file_uri_key is not None:
+                logger.info(f"fetching validation file uri from keyvault : {keyvault_client_manager.keyvault_name}")
                 validation_file_uri = keyvault_client.get_secret(validation_file_uri_key).value
+
                 self.validation_file_id = self.upload_file_uri_from_rest(validation_file_uri)
+                logger.info(f"uploaded validation file uri to aoai resource")
 
         logger.info("Step 2: Finetuning model")
         self.finetuning_job_id = self.submit_finetune_job(model, hyperparameters, hyperparameters_1p, suffix)
