@@ -3,6 +3,7 @@
 
 """Azure OpenAI client manager."""
 
+import requests
 from azure.identity import ManagedIdentityCredential
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 from azure.mgmt.cognitiveservices.models import ApiKeys
@@ -38,6 +39,7 @@ class AzureOpenAIClientManager:
             self.endpoint_resource_group = workspace_resource_group
             if self.endpoint_resource_group is None:
                 raise Exception("endpoint_resource_group is None")
+        self.aoai_client = self._get_azure_openai_client()
 
     def _get_client_id(self) -> str:
         """Get the client id."""
@@ -47,7 +49,7 @@ class AzureOpenAIClientManager:
         """Get current subscription id."""
         uri = os.environ.get(AzureOpenAIClientManager.MLFLOW_TRACKING_URI, None)
         if uri is None:
-            return None
+            return None, None
         uri_segments = uri.split("/")
         subscription_id = uri_segments[uri_segments.index("subscriptions") + 1]
         resource_group = uri_segments[uri_segments.index("resourceGroups") + 1]
@@ -72,7 +74,7 @@ class AzureOpenAIClientManager:
         logger.info("Endpoint: {}".format(account.properties.endpoint))
         return account.properties.endpoint
 
-    def get_azure_openai_client(self) -> AzureOpenAI:
+    def _get_azure_openai_client(self) -> AzureOpenAI:
         """Get azure openai client."""
         if self._get_client_id() is None:
             logger.info("Managed identity client id is empty, will fail...")
@@ -84,3 +86,23 @@ class AzureOpenAIClientManager:
             return AzureOpenAI(azure_endpoint=self.get_endpoint_from_cognitive_service_account(client),
                                api_key=self.get_key_from_cognitive_service_account(client),
                                api_version=AzureOpenAIClientManager.api_version)
+
+    @property
+    def data_upload_url(self) -> str:
+        """Url to call for uploading data to AOAI resource."""
+        base_url = self.aoai_client.base_url  # https://<aoai-resource-name>.openai.azure.com/openai/
+        return f"{base_url}/files/import?api-version={self.api_version}"
+
+    def _get_auth_header(self) -> dict:
+        return {"api-key": self.aoai_client.api_key,
+                "Content-Type": "application/json"}
+
+    def upload_data_to_aoai(self, body: dict[str, str]):
+        """Upload data to aoai via rest call."""
+        try:
+            logger.info(f"Uploading data to endpoint: {self.data_upload_url} via rest call")
+            resp = requests.post(self.data_upload_url, headers=self._get_auth_header(), json=body)
+            logger.info(f"Recieved response status : {resp.status_code}, value: {resp.text}")
+            return resp.text
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Got Exception : {e} while uploading data to AOAI resource")

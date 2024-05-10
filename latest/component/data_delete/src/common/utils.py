@@ -10,6 +10,7 @@ import os
 from io import BytesIO
 import jsonlines
 from openai.types.fine_tuning import FineTuningJobEvent
+from urllib.parse import urlparse, unquote
 
 train_dataset_split_ratio = 0.8
 
@@ -95,3 +96,28 @@ def list_event_messages_after_given_event(events_list: list[FineTuningJobEvent],
         event_message_list.append(event.message)
     event_message_list.reverse()
     return event_message_list
+
+
+def parse_file_name_from_uri(file_uri: str) -> str:
+    """Parse file name from uri."""
+    file_path = urlparse(file_uri).path
+    filename = file_path.split('/')[-1]
+    filename = unquote(filename)  # Decode URL-encoded characters if present
+    return filename
+
+
+def create_payload_for_data_upload_rest_call(file_uri: str) -> dict[str, str]:
+    """Create payload for data upload."""
+    file_name = parse_file_name_from_uri(file_uri)
+    payload: dict[str, str] = {
+        "purpose": "fine-tune",
+        "filename": file_name,
+        "content_url": file_uri
+    }
+    return payload
+
+
+def parse_file_id_from_upload_response(response: str) -> str:
+    """Parse file from upload response."""
+    resp_json = json.loads(response)
+    return resp_json["id"]
