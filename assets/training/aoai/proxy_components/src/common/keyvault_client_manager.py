@@ -61,11 +61,14 @@ class KeyVaultClientManager:
 
     @property
     def keyvault_name(self) -> str:
+        """Name for the Keyvault associated with user workspace"""
         return self._get_workspace_keyvault_name()
 
     @property
     def keyvault_url(self) -> str:
+        """Url for the Keyvault associated with user workspace"""
         return f"https://{self.keyvault_name}.vault.azure.net/"
 
     def get_keyvault_client(self):
+        """Client for the Keyvault associated with user workspace"""
         return SecretClient(credential=self._get_credential(), vault_url=self.keyvault_url)

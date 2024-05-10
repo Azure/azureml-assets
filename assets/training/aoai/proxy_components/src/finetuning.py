@@ -108,7 +108,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         logger.info("validation file uploaded")
 
     def upload_file_uri_from_rest(self, file_uri: str) -> str:
-
+        """Upload file uri to azure openai resource via rest call."""
         file_uri_payload = utils.create_payload_for_data_upload_rest_call(file_uri)
         file_upload_response = self.aoai_client_manager.upload_data_to_aoai(file_uri_payload)
 
@@ -261,6 +261,7 @@ def parse_args():
 
 
 def validate_train_data_upload_type(args: Namespace) -> str:
+    """Validate input of dataset."""
     if args.training_file_path is None and args.training_file_uri_key is None:
         raise ValueError("One of training file path and training file uri key should be provided")
 
