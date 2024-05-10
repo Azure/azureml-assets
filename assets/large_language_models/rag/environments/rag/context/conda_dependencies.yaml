@@ -20,12 +20,11 @@ dependencies:
   - azureml-telemetry=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
   - azureml-fsspec
-  - azureml-inference-server-http==0.7.6
+  - azureml-inference-server-http==1.2.1
   - azureml-mlflow=={{latest-pypi-version}}
   - beautifulsoup4~=4.11.2
   - datasets~=2.10.1
   - faiss-cpu~=1.7.3
-  - gunicorn==22.0.0
   - inference-schema==1.4
   - lxml
   - markdown
