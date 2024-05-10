@@ -256,10 +256,26 @@ Fill Mask|Fill Mask|[rcds/wikipedia-for-mask-filling](https://huggingface.co/dat
 
 #### Sample input
 ```json
-{'input_data': {'input_string': ['My name is John and I am', 'Once upon a time,'], 'parameters': {'max_new_tokens': 25, 'do_sample': True, 'temperature': 0.5, 'top_p': 0.5}}}
+{
+  "input_data": {
+    "input_string": [
+      "Once upon a time,"
+    ],
+    "parameters": {
+      "top_p": 0.8,
+      "temperature": 0.8,
+      "max_new_tokens": 100,
+      "do_sample": true
+    }
+  }
+}
 ```
 
 #### Sample output
 ```json
-[{"0": "My name is John and I am a guy who's been living in the city for a long time. I'm a guy who's been living in"}, {"0": "Once upon a time, the world was a place where all the people were free to live and love.\n\nThe story is told in the form"}]
+[
+  {
+    "0": "Once upon a time, the North was peaceful and tranquil. A great man, named Jum, reigned supreme. But time was running out. A war had raged for several centuries, and the dangers of war were threatening to overwhelm the world. It was time to take action. One man, a soldier of fortune, Jum, was the man to lead the nation. But Jum had to deal with many complications in the way of his quest"
+  }
+]
 ```
