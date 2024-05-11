@@ -17,7 +17,6 @@ RUN echo "Downloading azcopy to file azcopy.tar ....";\
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN apt-get update && apt-get upgrade -y apt-get -y autoremove && apt-get -y clean
 ## Vulnerability fix
 RUN pip install Pillow==10.3.0 gunicorn==22.0.0 onnx==1.16.0 tqdm
 # List installed packages
@@ -26,3 +25,5 @@ RUN pip list
 ## Delete
 RUN rm requirements.txt
 # dummy number to change when needing to force rebuild without changing the definition: 1
+
+RUN apt-get update && apt-get upgrade -y apt-get -y autoremove && apt-get -y clean
