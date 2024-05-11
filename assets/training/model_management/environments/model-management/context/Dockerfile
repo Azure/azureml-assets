@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch1131:{{latest
 
 WORKDIR /
 
-RUN apt-get update && apt-get upgrade -y && apt-get install less curl util-linux binutils libpam-modules libgnutls30 libssh-4 libsqlite3-0 openssh-client openssh-server git git-lfs -y apt-get -y autoremove && apt-get -y clean
+RUN apt-get update && apt-get upgrade -y && apt-get install less curl util-linux binutils libpam-modules libgnutls30 libssh-4 libsqlite3-0 openssh-client openssh-server git git-lfs -y
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
@@ -17,6 +17,7 @@ RUN echo "Downloading azcopy to file azcopy.tar ....";\
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
+RUN apt-get update && apt-get upgrade -y apt-get -y autoremove && apt-get -y clean
 ## Vulnerability fix
 RUN pip install Pillow==10.3.0 gunicorn==22.0.0 onnx==1.16.0 tqdm
 # List installed packages
