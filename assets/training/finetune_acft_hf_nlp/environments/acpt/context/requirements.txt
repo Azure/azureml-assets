@@ -20,4 +20,6 @@ aiohttp==3.9.3
 peft==0.8.2
 deepspeed==0.13.3
 trl==0.8.1
+# singularityrt package is not available on pypi yet
+./singularityrt-1.1.262227590-py3-none-any.whl
 tiktoken==0.6.0

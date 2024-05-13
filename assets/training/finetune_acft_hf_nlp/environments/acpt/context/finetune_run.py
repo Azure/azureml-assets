@@ -548,10 +548,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.register_model",
         "--task_name", task_name,
-        "--finetune_args_path", os.path.join(
-            pytorch_model_folder,
-            "finetune_args.json"
-        ),
+        "--model_asset_id", decode_param_from_env_var('model_asset_id'),
         "--registration_details_folder", decode_output_from_env_var('output_model'),
         "--model_path", os.path.join(
             pytorch_model_folder,
