@@ -19,6 +19,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 ## Vulnerability fix
 RUN pip install Pillow==10.3.0 gunicorn==22.0.0 onnx==1.16.0 tqdm
+RUN go get -u golang.org/x/net
 # List installed packages
 RUN pip list
 
