@@ -4,6 +4,7 @@ WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && apt-get install curl util-linux binutils libpam-modules libgnutls30 libssh-4 libsqlite3-0 openssh-client openssh-server git git-lfs -y
 # azcopy install starts
+
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
     wget https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar --no-verbose;\
     tar -xvf azcopy.tar;\
