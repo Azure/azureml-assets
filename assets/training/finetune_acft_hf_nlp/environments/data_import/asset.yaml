@@ -1,0 +1,6 @@
+name: acft-hf-nlp-data-import
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["Data Import", "MaaS", "Training"]
