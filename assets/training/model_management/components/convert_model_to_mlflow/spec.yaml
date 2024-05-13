@@ -9,7 +9,7 @@ is_deterministic: True
 display_name: Convert models to MLflow
 description: Component converts models from supported frameworks to MLflow model packaging format
 
-environment: azureml://registries/azureml/environments/model-management/versions/25
+environment: azureml://registries/azureml-preview-test1/environments/model-management-vul-test-kv/versions/1
 
 code: ../../src/
 command: |
