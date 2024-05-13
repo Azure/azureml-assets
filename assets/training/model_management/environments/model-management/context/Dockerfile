@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py39-torch1131:{{latest
 
 WORKDIR /
 
-RUN apt-get update && apt-get upgrade -y && apt-get install linux-headers-5.4.0-177=5.4.0-181.201
+RUN apt-get update && apt-get upgrade -y && apt-get install linux-headers-5.4.0-177
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
