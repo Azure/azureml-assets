@@ -24,6 +24,3 @@ RUN pip list
 
 ## Delete
 RUN rm requirements.txt
-# dummy number to change when needing to force rebuild without changing the definition: 1
-
-RUN apt-get update && apt-get upgrade -y apt-get -y autoremove && apt-get -y clean
