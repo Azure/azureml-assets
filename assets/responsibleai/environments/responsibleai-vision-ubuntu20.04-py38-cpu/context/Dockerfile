@@ -48,8 +48,9 @@ RUN pip install 'pyarrow>=14.0.1'
 RUN pip install 'cryptography>=42.0.4'
 
 # To resolve vulnerability issue
-RUN pip install 'Werkzeug>=3.0.3'
-RUN pip install 'tqdm>=4.66.3'
+RUN pip install 'Werkzeug>=3.0.3' \
+                'tqdm>=4.66.3' \
+                'onnx>=1.16.0'
 
 RUN pip freeze
 
