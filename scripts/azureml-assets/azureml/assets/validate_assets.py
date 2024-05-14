@@ -153,6 +153,11 @@ BUILD_CONTEXT_DISALLOWED_PATTERNS = [
     re.compile(r"extra-index-url", re.IGNORECASE),
 ]
 
+# Docker build context file extensions to be ignored 
+BUILD_CONTEXT_IGNORED_FILE_EXTENSIONS = [
+    ".whl",
+]
+
 # Directory path for config files related to asset validation, relative to the current source path
 CONFIG_DIRECTORY = "config"
 
@@ -298,6 +303,10 @@ def validate_build_context(environment_config: assets.EnvironmentConfig) -> int:
     error_count = 0
     # Iterate over all files in the build context
     for file_path in environment_config.release_paths:
+        for ext in BUILD_CONTEXT_IGNORED_FILE_EXTENSIONS:
+            if file_path.endswith(ext):
+                _log_warning(file_path, f"Ignoring validation for file with extension: '{ext}'")
+                continue
         with open(file_path) as f:
             # Read file into memory, normalize EOL characters
             contents = f.read()
