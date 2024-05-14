@@ -11,7 +11,7 @@ dependencies:
   - azure-search-documents>=11.4.0
   - langchain<0.2
   - tiktoken==0.5.2
-  - azure-ai-ml==1.15.0
+  - azure-ai-ml==1.16.0
   - azure-identity==1.16.0
   - azure-keyvault-secrets==4.6.0
   - azure-mgmt-cognitiveservices~=13.4.0
