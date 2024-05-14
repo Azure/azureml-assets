@@ -33,3 +33,4 @@ dependencies:
   - tiktoken
   - gunicorn==22.0.0
   - idna==3.7
+  - mlflow==2.12.2
