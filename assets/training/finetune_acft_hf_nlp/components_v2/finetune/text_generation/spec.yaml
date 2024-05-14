@@ -283,14 +283,6 @@ inputs:
     optional: True
     default: 100
     description: Number of update steps between two checkpoint saves if save_strategy='steps'
-  save_on_singularity_preemption:
-    type: string
-    optional: True
-    default: "false"
-    description: Checkpoint is saved on Singularity Preemption. Overrides save_strategy.
-    enum:
-    - "true"
-    - "false"
   save_total_limit:
     type: integer
     optional: True
