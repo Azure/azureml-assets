@@ -304,7 +304,7 @@ def validate_build_context(environment_config: assets.EnvironmentConfig) -> int:
     # Iterate over all files in the build context
     for file_path in environment_config.release_paths:
         for ext in BUILD_CONTEXT_IGNORED_FILE_EXTENSIONS:
-            if file_path.endswith(ext):
+            if str(file_path).endswith(ext):
                 _log_warning(file_path, f"Ignoring validation for file with extension: '{ext}'")
                 continue
         with open(file_path) as f:
