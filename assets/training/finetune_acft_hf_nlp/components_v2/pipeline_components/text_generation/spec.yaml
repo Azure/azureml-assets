@@ -111,6 +111,12 @@ inputs:
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
+  # Model parameters
+  model_asset_id:
+    type: string
+    optional: false
+    description: Asset id of model
+
   # Model registration
   registered_model_name:
     type: string
