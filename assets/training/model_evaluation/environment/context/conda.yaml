@@ -31,6 +31,4 @@ dependencies:
   - azure-ai-ml==1.15.0
   - mldesigner==0.1.0b18
   - tiktoken
-  - gunicorn==22.0.0
   - idna==3.7
-  - mlflow==2.12.2
