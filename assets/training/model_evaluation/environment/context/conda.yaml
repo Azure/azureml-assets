@@ -31,3 +31,4 @@ dependencies:
   - azure-ai-ml=={{latest-pypi-version}}
   - mldesigner=={{latest-pypi-version:pre}}
   - tiktoken
+  - mteb
