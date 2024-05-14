@@ -34,7 +34,6 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
 RUN pip install 'shap==0.41.0' \
                 'interpret-community==0.31.0' \
                 'Pillow>=10.3.0' \
-                'Werkzeug==3.0.2' \
                 'setuptools>=65.5.1' \
                 'numpy==1.22.0' \
                 'scipy==1.10.0' \
@@ -47,6 +46,10 @@ RUN pip install 'pyarrow>=14.0.1'
 
 # To resolve vulnerability issue regarding crytography
 RUN pip install 'cryptography>=42.0.4'
+
+# To resolve vulnerability issue
+RUN pip install 'Werkzeug>=3.0.3'
+RUN pip install 'tqdm>=4.66.3'
 
 RUN pip freeze
 
