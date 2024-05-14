@@ -12,6 +12,7 @@ tags:
   SharedComputeCapacityEnabled: ""
   license: creativeml-openrail-m
   task: text-to-image
+  hiddenlayerscanned: ""
   training_dataset: LAION aesthetics v2.5+
   author: Runway
   huggingface_model_id: runwayml/stable-diffusion-inpainting
@@ -24,4 +25,4 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4
     ]
-version: 6
+version: 7

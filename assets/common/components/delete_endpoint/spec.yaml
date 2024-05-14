@@ -8,9 +8,7 @@ is_deterministic: True
 display_name: Delete Endpoint
 description:
   Deletes an endpoint resource.
-
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/14
-
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/15
 code: ../../src
 command: >-
   python delete_endpoint.py

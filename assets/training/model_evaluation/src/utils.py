@@ -14,13 +14,14 @@ import openai
 import glob
 from typing import Union
 
-from constants import TASK, ForecastingConfigContract, ArgumentLiterals
+from constants import TASK, ForecastingConfigContract, ArgumentLiterals, SupportedFileExtensions
 from workspace_utils import (get_connection_by_id_v2,
                              workspace_connection_to_credential,
                              get_target_from_connection,
                              get_metadata_from_connection)
 from logging_utilities import get_logger, log_traceback
 from mltable import load
+from task_factory.base import BasePredictor
 from task_factory.tabular.classification import TabularClassifier
 from task_factory.text.classification import TextClassifier
 from task_factory.tabular.regression import TabularRegressor
@@ -38,6 +39,7 @@ from task_factory.image.od_is import ImageOdIsPredictor
 from evaluators.evaluators import EvaluatorFactory
 from logging_utilities import current_run, get_azureml_exception
 from azureml.metrics import _scoring_utilities, constants as metrics_constants
+from mlflow.models import Model
 from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 import azureml.evaluate.mlflow as aml_mlflow
 from azureml.evaluate.mlflow.models.evaluation import EvaluationResult
@@ -117,22 +119,51 @@ def get_task_from_model(model_uri):
     return task_type
 
 
-def filter_pipeline_params(evaluation_config, model_flavor=""):
+def filter_pipeline_params(evaluation_config, model_flavor="", predictor: BasePredictor = None):
     """Filter Pipeline params in evaluation_config.
 
     Args:
         evaluation_config (_type_): _description_
         model_flavor (_type_): _description_
+        predictor (_type_): _description_
 
     Returns:
         _type_: _description_
     """
     if model_flavor == constants.MODEL_FLAVOR.TRANSFORMERS:
-        filtered_params = {i: j for i, j in evaluation_config.items() if
-                           i in constants.ALLOWED_PIPELINE_MLFLOW_TRANSFORMER_PARAMS}
-        filtered_params = {"params": filtered_params}  # Transformers curently accepts dict and not **kwargs
+        params_schema = Model.load(predictor.model_uri).get_params_schema() or []
+        model_params = set(param.name for param in params_schema)
+        allowed_params = {*constants.ALLOWED_PIPELINE_HF_PARAMS, *model_params}
+
+        filtered_params = dict(evaluation_config)
+        oss_params = filtered_params.pop(constants.AllowedPipelineParams.PARAMS, dict())
+
+        tokenizer_config = {
+            **filtered_params.pop(constants.AllowedPipelineParams.TOKENIZER_CONFIG, dict()),
+            **oss_params.pop(constants.AllowedPipelineParams.TOKENIZER_CONFIG, dict())
+        }
+        generator_config = {
+            **filtered_params.pop(constants.AllowedPipelineParams.GENERATOR_CONFIG, dict()),
+            **oss_params.pop(constants.AllowedPipelineParams.GENERATOR_CONFIG, dict())
+        }
+        model_kwargs = {
+            **filtered_params.pop(constants.AllowedPipelineParams.MODEL_KWARGS, dict()),
+            **oss_params.pop(constants.AllowedPipelineParams.MODEL_KWARGS, dict())
+        }
+        pipeline_init_args = {
+            **filtered_params.pop(constants.AllowedPipelineParams.PIPELINE_INIT_ARGS, dict()),
+            **oss_params.pop(constants.AllowedPipelineParams.PIPELINE_INIT_ARGS, dict())
+        }
+        filtered_params = {
+            **filtered_params, **oss_params, **tokenizer_config, **generator_config, **model_kwargs,
+            **pipeline_init_args
+        }
+        filtered_params = {key: value for key, value in filtered_params.items() if key in allowed_params}
+        filtered_params = {"params": filtered_params}  # Transformers currently accepts dict and not **kwargs
     else:
-        filtered_params = {i: j for i, j in evaluation_config.items() if i in constants.ALLOWED_PIPELINE_HF_PARAMS}
+        filtered_params = {
+            key: value for key, value in evaluation_config.items() if key in constants.ALLOWED_PIPELINE_HF_PARAMS
+        }
     return filtered_params
 
 
@@ -615,9 +646,10 @@ def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None
         from image_dataset import get_image_dataset
         df = get_image_dataset(task_type=task, test_mltable=file_path)
         data = iter([df])
+        file_ext = SupportedFileExtensions.IMAGE
     else:
-        data = read_data(file_path, batch_size, nrows)
-    return data
+        data, file_ext = read_data(file_path, batch_size, nrows)
+    return data, file_ext
 
 
 def read_data(file_path, batch_size=None, nrows=None):
@@ -655,15 +687,16 @@ def read_data(file_path, batch_size=None, nrows=None):
             if nrows:
                 mltable_data = mltable_data.take(nrows)
             data = iter([mltable_data.to_pandas_dataframe()])
+            file_ext = constants.SupportedFileExtensions.MLTable
         else:
-            data = read_dataframe(file_path, batch_size=batch_size, nrows=nrows)
+            data, file_ext = read_dataframe(file_path, batch_size=batch_size, nrows=nrows)
             if not batch_size:
                 data = iter([data])
     except Exception as e:
         exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=repr(e))
         log_traceback(exception, logger)
         raise exception
-    return data
+    return data, file_ext
 
 
 def read_dataframe(file_path, batch_size=None, nrows=None):
@@ -684,30 +717,33 @@ def read_dataframe(file_path, batch_size=None, nrows=None):
 
     if file_extension == '.csv':
         # Reading a CSV file with the specified batch_size
-        return pd.read_csv(file_path, chunksize=batch_size, nrows=nrows)
+        return pd.read_csv(file_path, chunksize=batch_size, nrows=nrows), SupportedFileExtensions.CSV
     elif file_extension == '.tsv':
         # Reading a TSV file with the specified batch_size and skipping initial spaces
-        return pd.read_csv(file_path, sep='\t', chunksize=batch_size, nrows=nrows, skipinitialspace=True)
+        return (pd.read_csv(file_path, sep='\t', chunksize=batch_size, nrows=nrows, skipinitialspace=True),
+                SupportedFileExtensions.TSV)
     elif file_extension == '.json':
         try:
             if batch_size:
                 logger.warning("batch_size not supported for json file format. Ignoring parameter.")
             json_data = pd.read_json(file_path)
-            return iter([json_data]) if batch_size else json_data
+            return iter([json_data]) if batch_size else json_data, SupportedFileExtensions.JSON
         except Exception as e:
             logger.error("Failed to load data json data. Exception: {}".format(str(e)))
             logger.info("Trying to load the data with 'lines=True'.")
             # Reading a JSONL file with the specified batch_size
-            return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size, nrows=nrows)
+            return (pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size, nrows=nrows),
+                    SupportedFileExtensions.JSONL)
     elif file_extension == '.jsonl':
         try:
             # Reading a JSONL file with the specified batch_size
-            return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size, nrows=nrows)
+            return (pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size, nrows=nrows),
+                    SupportedFileExtensions.JSONL)
         except Exception as e:
             logger.error("Failed to load data with JSONL. Trying to load the data without 'lines=True'. "
                          "Exception: {}".format(str(e)))
             json_data = pd.read_json(file_path)
-            return iter([json_data]) if batch_size else json_data
+            return iter([json_data]) if batch_size else json_data, SupportedFileExtensions.JSON
     else:
         # Default to reading JSONL files without raising an exception
         if file_extension == "":
@@ -715,7 +751,8 @@ def read_dataframe(file_path, batch_size=None, nrows=None):
         else:
             logger.warning("File format not in supported formats. Defaulting to load data as jsonl format. "
                            "Valid formats: csv, tsv, json, jsonl.")
-        return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size, nrows=nrows)
+        return (pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size, nrows=nrows),
+                SupportedFileExtensions.JSONL)
 
 
 def read_multiple_files(path):
@@ -731,8 +768,9 @@ def read_multiple_files(path):
         _type_: _description_
     """
     dfs = []
+    file_ext = SupportedFileExtensions.JSONL
     for file_path in glob.glob(os.path.join(path, "**", "*.jsonl"), recursive=True):
-        df = read_data(file_path=file_path)
+        df, _ = read_data(file_path=file_path)
         df = list(df)[0]
         dfs.append(df)
     if not dfs:
@@ -741,7 +779,7 @@ def read_multiple_files(path):
         log_traceback(exception, logger)
         raise exception
     data = pd.concat(dfs, ignore_index=True)
-    return iter([data])
+    return iter([data]), file_ext
 
 
 def _check_if_non_empty(val: Union[str, list, int]) -> bool:
@@ -825,7 +863,8 @@ def _clean_and_validate_dataset(data, keep_columns, batch_size=None):
 
 
 def prepare_data(data, task, all_cols, label_column_name=None,
-                 _has_multiple_output=False, extra_y_test_cols=None, batch_size=None):
+                 _has_multiple_output=False, extra_y_test_cols=None, batch_size=None,
+                 file_ext=None):
     """Prepare data.
 
     Args:
@@ -836,6 +875,7 @@ def prepare_data(data, task, all_cols, label_column_name=None,
         _has_multiple_output (bool, optional): _description_. Defaults to False.
         extra_y_test_cols (_type_, optional): _description_. Defaults to None.
         batch_size
+        file_ext
 
     Raises:
         ModelEvaluationException: _description_
@@ -915,6 +955,15 @@ def prepare_data(data, task, all_cols, label_column_name=None,
         if not isinstance(y_test.iloc[0], str) and not isinstance(y_test.iloc[0], tuple):
             message = "Ground Truths for Fill-Mask should be a string or an array found " + type(y_test.iloc[0])
             exception = get_azureml_exception(DataLoaderException, BadInputData, None, error=message)
+            log_traceback(exception, logger, message)
+            raise exception
+
+    if task == constants.TASK.CHAT_COMPLETION and file_ext == SupportedFileExtensions.CSV:
+        try:
+            X_test = X_test.applymap(json.loads)
+        except Exception as e:
+            message = "Incorrectly formatted JSON in CSV file."
+            exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=message)
             log_traceback(exception, logger, message)
             raise exception
 
@@ -1096,7 +1145,7 @@ def openai_init(llm_config, **openai_params):
     openai.api_base = llm_config.get("base", None)
     openai.api_key = llm_config.get("key", None)
 
-    if not all([llm_config["base"], llm_config["key"], llm_config['deployment_name']]):
+    if not all([llm_config.get("base", None), llm_config.get("key", None), llm_config.get('deployment_name', None)]):
         logger.warn("No Connection String Provided and no credentials present in workspace's keyvault.")
         logger.warn("Skipping OpenAI Initialization.")
         return {}

@@ -15,3 +15,5 @@ dependencies:
     - certifi=={{latest-pypi-version}}
     - urllib3=={{latest-pypi-version}}
     - paramiko=={{latest-pypi-version}}
+    - idna=={{latest-pypi-version}}
+    - tqdm=={{latest-pypi-version}}

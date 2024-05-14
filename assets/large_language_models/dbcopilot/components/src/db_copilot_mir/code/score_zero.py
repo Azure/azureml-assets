@@ -132,6 +132,7 @@ def set_db_copilot_adapter(db_name, db_copilot_config, visibility):
             return db_name.split("/")[-1].replace(".", "_")
         return db_name
 
+    instruct_template = os.getenv("INSTRUCT_TEMPLATE", None)
     if cache_uri:
         cache_folder = os.path.join(
             cache_dir, visibility.value.lower(), simple_db_name(db_name)
@@ -146,6 +147,7 @@ def set_db_copilot_adapter(db_name, db_copilot_config, visibility):
                 chat_aoai_connection=chat_aoai_connection,
                 history_service=history_service,
                 cache_folder=cache_folder,
+                instruct_template=instruct_template,
             )
     else:
         db_copilot_adapter = DBCopilotAdapter(
@@ -153,6 +155,7 @@ def set_db_copilot_adapter(db_name, db_copilot_config, visibility):
             embedding_aoai_connection=embedding_aoai_connection,
             chat_aoai_connection=chat_aoai_connection,
             history_service=history_service,
+            instruct_template=instruct_template,
         )
     if visibility == Visibility.Shared:
         db_copilots_shared.set(db_name, db_copilot_adapter)

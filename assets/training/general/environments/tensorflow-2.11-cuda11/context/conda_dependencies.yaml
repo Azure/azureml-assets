@@ -22,3 +22,4 @@ dependencies:
   - protobuf~=3.19.0
   - horovod[tensorflow]
   - cryptography>=41.0.4
+  - idna>=3.7

@@ -68,10 +68,18 @@ class SeparateFileOutputHandler(OutputHandler):
         with open(success_file_path, "w", encoding="utf-8") as success_writer, \
              open(error_file_path, "w", encoding="utf-8") as error_writer:
             for item in mini_batch_results:
-                if '"status": "SUCCESS"' in item:
+                if self.__is_item_successful(item):
                     success_writer.write(item + "\n")
                 else:
                     error_writer.write(item + "\n")
 
         lu.get_logger().info(f"Completed saving {len(mini_batch_results)} results to files {success_file_path} \
                                and {error_file_path}.")
+
+    def __is_item_successful(self, item):
+        if '"status": "SUCCESS"' in item:  # V1 output schema
+            return True
+        elif '"status_code": 200' in item:  # V2 output schema
+            return True
+        else:
+            return False

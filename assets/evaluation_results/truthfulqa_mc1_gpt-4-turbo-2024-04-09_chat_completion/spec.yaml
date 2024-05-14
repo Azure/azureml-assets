@@ -1,0 +1,31 @@
+type: evaluationresult
+name: truthfulqa_mc1_gpt-4-turbo-2024-04-09_chat_completion
+version: 2.07.05
+display_name: truthfulqa_mc1_gpt-4-turbo-2024-04-09_chat_completion
+description: truthfulqa_mc1_gpt-4-turbo-2024-04-09_chat_completion
+dataset_family: truthfulqa
+dataset_name: truthfulqa_mc1
+
+model_name: gpt-4-turbo-2024-04-09
+model_version: "turbo-2024-04-09"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/4
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azure-openai/models/gpt-4/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.8506731946144431
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

@@ -16,6 +16,7 @@ tags:
   Preview: ""
   license: mit
   task: token-classification
+  hiddenlayerscanned: ""
   training_datasets: Jean-Baptiste/wikiner_fr
   huggingface_model_id: Jean-Baptiste/camembert-ner-medium
   evaluation_compute_allow_list:

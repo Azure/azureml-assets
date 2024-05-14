@@ -5,6 +5,7 @@
 import azureml.evaluate.mlflow as aml_mlflow
 import json
 from azureml.telemetry.activity import log_activity
+from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
 
 import constants
 from constants import ArgumentLiterals, ForecastingConfigContract, TASK, SubTask
@@ -21,6 +22,7 @@ from error_definitions import (
     InvalidGroundTruthColumnNameData,
     InvalidPredictionColumnNameData,
     BadInputData,
+    BadQuestionsContextGroundTruthData,
     BadEvaluationConfig,
     SavingOutputError,
 )
@@ -44,6 +46,10 @@ from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 import os
 import pandas as pd
 import numpy as np
+
+# Mark current path as allowed
+mark_path_as_loggable(os.path.dirname(__file__))
+
 
 custom_dimensions.app_name = constants.TelemetryConstants.COMPUTE_METRICS_NAME
 logger = get_logger(name=__name__)
@@ -134,9 +140,9 @@ class ComputeMetricsRunner:
         ground_truth = None
         if self.ground_truth:
             if os.path.isdir(self.ground_truth) and not self.is_ground_truth_mltable:
-                ground_truth = read_multiple_files(self.ground_truth)
+                ground_truth, _ = read_multiple_files(self.ground_truth)
             else:
-                ground_truth = read_data(self.ground_truth)
+                ground_truth, _ = read_data(self.ground_truth)
             ground_truth = list(ground_truth)[0]
 
             if self.config.get(constants.OpenAIConstants.METRICS_KEY) and (
@@ -156,8 +162,8 @@ class ComputeMetricsRunner:
                                    Skipping GPT Based Metrics Calculation")
                     self.config.pop(constants.OpenAIConstants.METRICS_KEY)
                 elif self.task == TASK.CHAT_COMPLETION and not all(len(values) for values in key_data.values()):
-                    message = "Failed to Fetch Questions and Contexts from Ground Truth Data."
-                    exception = get_azureml_exception(DataValidationException, message, None)
+                    exception = get_azureml_exception(DataValidationException,
+                                                      BadQuestionsContextGroundTruthData, None)
                     log_traceback(exception, logger)
                     raise exception
                 else:
@@ -172,9 +178,9 @@ class ComputeMetricsRunner:
                                                                                     self.config)
 
         if os.path.isdir(self.predictions) and not self.is_predictions_mltable:
-            predictions = read_multiple_files(path=self.predictions)
+            predictions, _ = read_multiple_files(path=self.predictions)
         else:
-            predictions = read_data(self.predictions)
+            predictions, _ = read_data(self.predictions)
         predictions = list(predictions)[0]
         if self.predictions_column_name is not None:
             predictions = filter_predictions(predictions, self.task, self.predictions_column_name)
@@ -182,9 +188,9 @@ class ComputeMetricsRunner:
         predictions_probabilities = None
         if self.predictions_probabilities is not None:
             if os.path.isdir(self.predictions_probabilities) and not self.is_predictions_probabilities_mltable:
-                predictions_probabilities = read_multiple_files(path=self.predictions_probabilities)
+                predictions_probabilities, _ = read_multiple_files(path=self.predictions_probabilities)
             else:
-                predictions_probabilities = read_data(self.predictions_probabilities)
+                predictions_probabilities, _ = read_data(self.predictions_probabilities)
             predictions_probabilities = list(predictions_probabilities)[0]
         self.ground_truth, self.predictions, self.predictions_probabilities = \
             ground_truth, predictions, predictions_probabilities

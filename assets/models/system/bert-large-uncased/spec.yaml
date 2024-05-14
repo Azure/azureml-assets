@@ -18,6 +18,7 @@ tags:
   license: apache-2.0
   model_specific_defaults : {'apply_deepspeed': 'true', 'apply_lora': 'true', 'apply_ort': 'true'}
   datasets: bookcorpus, wikipedia
+  hiddenlayerscanned: ""
   huggingface_model_id: bert-large-uncased
   inference_compute_allow_list:
     [

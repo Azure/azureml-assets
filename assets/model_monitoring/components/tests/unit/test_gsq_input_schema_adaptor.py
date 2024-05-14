@@ -4,11 +4,12 @@
 """test class for GSQ - input schema adaptor component."""
 
 import pytest
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
 from src.generation_safety_quality.input_schema_adaptor.run import (
     _adapt_input_data_schema,
 )
+from tests.unit.utils.unit_test_utils import assert_spark_dataframe_equal
 
 
 @pytest.mark.gsq_test
@@ -157,10 +158,3 @@ class TestInputSchemaAdaptor:
             pytest.fail("Should have thrown InvalidInputError exception.")
         except Exception as ex:
             assert match_err in str(ex)
-
-
-def assert_spark_dataframe_equal(actual_df: DataFrame, expected_df: DataFrame):
-    """Assert two spark dataframes are equal."""
-    assert actual_df.schema == expected_df.schema
-    assert actual_df.count() == expected_df.count()
-    assert actual_df.collect() == expected_df.collect()

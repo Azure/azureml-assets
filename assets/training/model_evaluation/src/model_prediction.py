@@ -4,11 +4,13 @@
 """Entry script for Model Evaluation Component."""
 
 import azureml.evaluate.mlflow as aml_mlflow
+from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
 import pandas as pd
 import constants
 import torch
 import ast
 import time
+import os
 from datetime import datetime, timezone
 from itertools import repeat, chain
 from constants import ArgumentLiterals
@@ -45,6 +47,9 @@ from validation import (
     validate_common_args,
     validate_and_get_columns,
 )
+
+# Mark current path as allowed
+mark_path_as_loggable(os.path.dirname(__file__))
 
 custom_dimensions.app_name = constants.TelemetryConstants.MODEL_PREDICTION_NAME
 logger = get_logger(name=__name__)
@@ -122,9 +127,9 @@ class ModelPredictionRunner:
         if self.extra_y_test_cols is not None:
             all_cols += self.extra_y_test_cols
 
-        data = read_model_prediction_data(test_data, self.task, self.batch_size)
+        data, file_ext = read_model_prediction_data(test_data, self.task, self.batch_size)
         data = map(prepare_data, data, repeat(self.task), repeat(all_cols), repeat(self.label_column_name),
-                   repeat(False), repeat(self.extra_y_test_cols), repeat(self.batch_size))
+                   repeat(False), repeat(self.extra_y_test_cols), repeat(self.batch_size), repeat(file_ext))
         return data  # X_test, y_test
 
     def load_tokenizer(self, token_counts_enabled):
@@ -167,6 +172,8 @@ class ModelPredictionRunner:
         enable_character_counts = self.config.get("char_count_per_sample", False)
         tokenizer = self.load_tokenizer(enable_token_counts)
 
+        pipeline_params = filter_pipeline_params(self.config, self.predictor.model_flavor, self.predictor)
+
         try:
             for idx, (X_test, y_test_batch) in enumerate(data):
                 logger.info("batch: " + str(idx))
@@ -177,7 +184,6 @@ class ModelPredictionRunner:
                 y_transformer = None
 
                 pred_probas_batch = None
-                pipeline_params = filter_pipeline_params(self.config, self.predictor.model_flavor)
 
                 def add_to_predict_params_if_applicable(dict_to_add, predict_params):
                     if self.predictor.model_flavor != constants.MODEL_FLAVOR.TRANSFORMERS:

@@ -23,6 +23,7 @@ tags:
     author: facebook
     license: apache-2.0
     task: embeddings
+    hiddenlayerscanned: ""
     inference_compute_allow_list:
         [
             Standard_DS3_v2,
@@ -73,4 +74,4 @@ tags:
             Standard_ND96amsr_A100_v4,
             Standard_ND40rs_v2
         ]
-version: 2
+version: 3

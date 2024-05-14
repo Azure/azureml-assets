@@ -42,17 +42,23 @@ class V2OutputFormatter(OutputFormatter):
                 output["custom_id"] = scoringResult.request_obj["custom_id"]
             else:
                 raise Exception("V2OutputFormatter called and custom_id not found"
-                                "in request object (original payload)")
+                                " in request object (original payload)")
+
+            request_id = self.__get_request_id(scoringResult)
+            status_code = scoringResult.model_response_code
 
             if scoringResult.status.name == "SUCCESS":
-                response = AoaiScoringResponse(request_id=self.__get_request_id(scoringResult),
-                                               status_code=scoringResult.model_response_code,
+                response = AoaiScoringResponse(request_id=request_id,
+                                               status_code=status_code,
                                                body=deepcopy(scoringResult.response_body))
                 output["response"] = vars(response)
                 output["error"] = None
             else:
                 error = AoaiScoringError(message=deepcopy(scoringResult.response_body))
-                output["response"] = None
+                output["response"] = {
+                    "request_id": request_id,
+                    "status_code": status_code,
+                }
                 output["error"] = vars(error)
 
             if batch_size_per_request > 1:

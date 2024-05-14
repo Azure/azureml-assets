@@ -107,12 +107,13 @@ def get_run_id_and_url(res, sub, rg, ws):
             match = re.search(r'"name": "(.*?)",', line)
             if match:
                 run_id = match.group(1)
-                portal_url = (
-                    f"https://ml.azure.com/prompts/flow/bulkrun/run/{run_id}/details"
-                    f"?wsid=/subscriptions/{sub}/resourceGroups/{rg}/providers"
-                    f"/Microsoft.MachineLearningServices/workspaces/{ws}"
-                    )
                 log_debug(f"runId: {run_id}")
+
+        if ('"portal_url":' in line):
+            match = re.search(r'"portal_url": "(.*?)",', line)
+            if match:
+                portal_url = match.group(1)
+                log_debug(f"portal_url: {portal_url}")
     return run_id, portal_url
 
 

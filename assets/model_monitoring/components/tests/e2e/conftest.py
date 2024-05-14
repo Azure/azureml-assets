@@ -535,7 +535,7 @@ def publish_generation_safety_signal_monitor_component(
         print(f"Successfully published {component['name']}.")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def publish_model_token_stats_model_monitor_component(
     main_worker_lock,
     publish_command_components,

@@ -17,8 +17,12 @@ dependencies:
     - tqdm
     - azure-core
     - tiktoken
+    - mteb
+    - openai
     ## Test requirements
     - pytest
     - pytest-xdist
     - ddt
+    - flake8
+    - pydocstyle
 name: aml_benchmark

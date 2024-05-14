@@ -1,0 +1,3234 @@
+diff --git a/csrc/attention/attention_kernels.cu b/csrc/attention/attention_kernels.cu
+index f3a5bbfd..45d025bc 100644
+--- a/csrc/attention/attention_kernels.cu
++++ b/csrc/attention/attention_kernels.cu
+@@ -110,6 +110,9 @@ __device__ void paged_attention_kernel(
+   const int q_stride,
+   const int kv_block_stride,
+   const int kv_head_stride,
++  const int blocksparse_local_blocks,
++  const int blocksparse_vert_stride,
++  const int blocksparse_block_size,
+   const float kv_scale) {
+   const int seq_idx = blockIdx.y;
+   const int partition_idx = blockIdx.z;
+@@ -121,6 +124,10 @@ __device__ void paged_attention_kernel(
+     return;
+   }
+ 
++  // const int blocksparse_local_blocks = 16;
++  // const int blocksparse_vert_stride = 8;
++  // const int blocksparse_block_size = 64;
++  const int blocksparse_head_sliding_step = 1;
+   const int num_context_blocks = DIVIDE_ROUND_UP(context_len, BLOCK_SIZE);
+   const int num_blocks_per_partition = USE_PARTITIONING ? PARTITION_SIZE / BLOCK_SIZE : num_context_blocks;
+ 
+@@ -199,10 +206,31 @@ __device__ void paged_attention_kernel(
+   // Each thread group in a warp fetches a key from the block, and computes
+   // dot product with the query.
+   const int* block_table = block_tables + seq_idx * max_num_blocks_per_seq;
++  const int num_blocksparse_blocks = DIVIDE_ROUND_UP(num_context_blocks, 4);
++  const bool is_sparse =  (blocksparse_vert_stride != 1);
+   for (int block_idx = start_block_idx + warp_idx; block_idx < end_block_idx; block_idx += NUM_WARPS) {
+     // NOTE(woosuk): The block number is stored in int32. However, we cast it to int64
+     // because int32 can lead to overflow when this variable is multiplied by large numbers
+-    // (e.g., kv_block_stride).
++    // For blocksparse attention: skip computation on blocks that are not attended
++    if (is_sparse) {
++      const int block_seq_id = block_idx * BLOCK_SIZE / blocksparse_block_size;
++      const bool is_remote = ((block_seq_id + head_idx * blocksparse_head_sliding_step  + 1) % blocksparse_vert_stride == 0);
++      const bool is_local = (block_seq_id >= num_blocksparse_blocks - blocksparse_local_blocks);
++      if (!is_remote && !is_local) {
++        for (int i = 0; i < NUM_TOKENS_PER_THREAD_GROUP; i++) {
++          const int physical_block_offset = (thread_group_idx + i * WARP_SIZE) % BLOCK_SIZE;
++          const int token_idx = block_idx * BLOCK_SIZE + physical_block_offset;
++
++          if (thread_group_offset == 0) {
++            // NOTE(linxihui): assign very large number to skipped tokens to avoid
++            // contribution to the sumexp softmax normalizer.
++            // This will not be used at computing sum(softmax*v) as the blocks will be skipped.
++            logits[token_idx - start_token_idx] = -FLT_MAX;
++          }
++        }
++      continue;
++      }
++    }
+     const int64_t physical_block_number = static_cast<int64_t>(block_table[block_idx]);
+ 
+     // Load a key to registers.
+@@ -333,7 +361,14 @@ __device__ void paged_attention_kernel(
+   for (int block_idx = start_block_idx + warp_idx; block_idx < end_block_idx; block_idx += NUM_WARPS) {
+     // NOTE(woosuk): The block number is stored in int32. However, we cast it to int64
+     // because int32 can lead to overflow when this variable is multiplied by large numbers
+-    // (e.g., kv_block_stride).
++    // For blocksparse attention: skip computation on blocks that are not attended
++    if (is_sparse) {
++      int block_seq_id = block_idx * BLOCK_SIZE / blocksparse_block_size;
++      if (!((block_seq_id + head_idx * blocksparse_head_sliding_step + 1) % blocksparse_vert_stride == 0) &&
++          !((block_seq_id >= num_blocksparse_blocks - blocksparse_local_blocks))) {
++        continue;
++      }
++    }
+     const int64_t physical_block_number = static_cast<int64_t>(block_table[block_idx]);
+     const int physical_block_offset = (lane % NUM_V_VECS_PER_ROW) * V_VEC_SIZE;
+     const int token_idx = block_idx * BLOCK_SIZE + physical_block_offset;
+@@ -463,11 +498,15 @@ __global__ void paged_attention_v1_kernel(
+   const int q_stride,
+   const int kv_block_stride,
+   const int kv_head_stride,
++  const int blocksparse_local_blocks,
++  const int blocksparse_vert_stride,
++  const int blocksparse_block_size,
+   const float kv_scale) {
+   paged_attention_kernel<scalar_t, cache_t, HEAD_SIZE, BLOCK_SIZE, NUM_THREADS, IS_FP8_KV_CACHE>(
+     /* exp_sums */ nullptr, /* max_logits */ nullptr,
+     out, q, k_cache, v_cache, num_kv_heads, scale, block_tables, context_lens,
+-    max_num_blocks_per_seq, alibi_slopes, q_stride, kv_block_stride, kv_head_stride, kv_scale);
++    max_num_blocks_per_seq, alibi_slopes, q_stride, kv_block_stride, kv_head_stride, 
++    blocksparse_local_blocks, blocksparse_vert_stride, blocksparse_block_size, kv_scale);
+ }
+ 
+ // Grid: (num_heads, num_seqs, max_num_partitions).
+@@ -495,11 +534,15 @@ __global__ void paged_attention_v2_kernel(
+   const int q_stride,
+   const int kv_block_stride,
+   const int kv_head_stride,
++  const int blocksparse_local_blocks,
++  const int blocksparse_vert_stride,
++  const int blocksparse_block_size,
+   const float kv_scale) {
+   paged_attention_kernel<scalar_t, cache_t, HEAD_SIZE, BLOCK_SIZE, NUM_THREADS, IS_FP8_KV_CACHE, PARTITION_SIZE>(
+     exp_sums, max_logits, tmp_out, q, k_cache, v_cache, num_kv_heads, scale,
+     block_tables, context_lens, max_num_blocks_per_seq, alibi_slopes,
+-    q_stride, kv_block_stride, kv_head_stride, kv_scale);
++    q_stride, kv_block_stride, kv_head_stride, blocksparse_local_blocks,
++    blocksparse_vert_stride, blocksparse_block_size,kv_scale);
+ }
+ 
+ // Grid: (num_heads, num_seqs).
+@@ -622,6 +665,9 @@ __global__ void paged_attention_v2_reduce_kernel(
+     q_stride,                                                                                 \
+     kv_block_stride,                                                                          \
+     kv_head_stride,                                                                           \
++    blocksparse_local_blocks,                                                                 \
++    blocksparse_vert_stride,                                                                  \
++    blocksparse_block_size,                                                                   \
+     kv_scale);
+ 
+ // TODO(woosuk): Tune NUM_THREADS.
+@@ -642,6 +688,9 @@ void paged_attention_v1_launcher(
+   torch::Tensor& context_lens,
+   int max_context_len,
+   const c10::optional<torch::Tensor>& alibi_slopes,
++  int blocksparse_local_blocks,
++  int blocksparse_vert_stride,
++  int blocksparse_block_size,
+   float kv_scale) {
+   int num_seqs = query.size(0);
+   int num_heads = query.size(1);
+@@ -651,6 +700,7 @@ void paged_attention_v1_launcher(
+   int kv_block_stride = key_cache.stride(0);
+   int kv_head_stride = key_cache.stride(1);
+ 
++
+   int thread_group_size = MAX(WARP_SIZE / BLOCK_SIZE, 1);
+   assert(head_size % thread_group_size == 0);
+ 
+@@ -718,6 +768,9 @@ void paged_attention_v1_launcher(
+     context_lens,                                                            \
+     max_context_len,                                                         \
+     alibi_slopes,                                                            \
++    blocksparse_local_blocks,                                                \
++    blocksparse_vert_stride,                                                 \
++    blocksparse_block_size,                                                  \
+     kv_scale);
+ 
+ // NOTE(woosuk): To reduce the compilation time, we omitted block sizes
+@@ -751,6 +804,9 @@ void paged_attention_v1(
+   int max_context_len,
+   const c10::optional<torch::Tensor>& alibi_slopes,
+   const std::string& kv_cache_dtype,
++  int blocksparse_local_blocks,
++  int blocksparse_vert_stride,
++  int blocksparse_block_size,
+   float kv_scale) {
+   if (kv_cache_dtype == "auto") {
+     if (query.dtype() == at::ScalarType::Float) {
+@@ -796,6 +852,9 @@ void paged_attention_v1(
+     q_stride,                                                                                 \
+     kv_block_stride,                                                                          \
+     kv_head_stride,                                                                           \
++    blocksparse_local_blocks,                                                                 \
++    blocksparse_vert_stride,                                                                  \
++    blocksparse_block_size,                                                                   \
+     kv_scale);                                                                                \
+   vllm::paged_attention_v2_reduce_kernel<T, HEAD_SIZE, NUM_THREADS, PARTITION_SIZE>           \
+   <<<reduce_grid, block, reduce_shared_mem_size, stream>>>(                                   \
+@@ -827,6 +886,9 @@ void paged_attention_v2_launcher(
+   torch::Tensor& context_lens,
+   int max_context_len,
+   const c10::optional<torch::Tensor>& alibi_slopes,
++  int blocksparse_local_blocks,
++  int blocksparse_vert_stride,
++  int blocksparse_block_size,
+   float kv_scale) {
+   int num_seqs = query.size(0);
+   int num_heads = query.size(1);
+@@ -912,6 +974,9 @@ void paged_attention_v2_launcher(
+     context_lens,                                                                \
+     max_context_len,                                                             \
+     alibi_slopes,                                                                \
++    blocksparse_local_blocks,                                                    \
++    blocksparse_vert_stride,                                                     \
++    blocksparse_block_size,                                                      \
+     kv_scale);
+ 
+ // NOTE(woosuk): To reduce the compilation time, we omitted block sizes
+@@ -948,6 +1013,9 @@ void paged_attention_v2(
+   int max_context_len,
+   const c10::optional<torch::Tensor>& alibi_slopes,
+   const std::string& kv_cache_dtype,
++  int blocksparse_local_blocks,
++  int blocksparse_vert_stride,
++  int blocksparse_block_size,
+   float kv_scale) {
+   if (kv_cache_dtype == "auto") {
+     if (query.dtype() == at::ScalarType::Float) {
+@@ -977,4 +1045,4 @@ void paged_attention_v2(
+ #undef WARP_SIZE
+ #undef MAX
+ #undef MIN
+-#undef DIVIDE_ROUND_UP
++#undef DIVIDE_ROUND_UP
+\ No newline at end of file
+diff --git a/csrc/ops.h b/csrc/ops.h
+index 41ecc1e8..84d2e55d 100644
+--- a/csrc/ops.h
++++ b/csrc/ops.h
+@@ -15,6 +15,9 @@ void paged_attention_v1(
+   int max_context_len,
+   const c10::optional<torch::Tensor>& alibi_slopes,
+   const std::string& kv_cache_dtype,
++  int blocksparse_local_blocks,
++  int blocksparse_vert_stride,
++  int blocksparse_block_size,
+   float kv_scale);
+ 
+ void paged_attention_v2(
+@@ -33,6 +36,9 @@ void paged_attention_v2(
+   int max_context_len,
+   const c10::optional<torch::Tensor>& alibi_slopes,
+   const std::string& kv_cache_dtype,
++  int blocksparse_local_blocks,
++  int blocksparse_vert_stride,
++  int blocksparse_block_size,
+   float kv_scale);
+ 
+ void rms_norm(
+diff --git a/tests/models/test_phi3.py b/tests/models/test_phi3.py
+new file mode 100644
+index 00000000..d91fca72
+--- /dev/null
++++ b/tests/models/test_phi3.py
+@@ -0,0 +1,54 @@
++import os
++import sys
++
++from vllm import LLM, SamplingParams
++
++os.environ["NCCL_DEBUG"] = "WARN"
++
++tp = int(sys.argv[1]) if len(sys.argv) >= 2 else 1
++
++long_prompt = ""
++
++# your prompts path
++file_path = ""
++with open(file_path) as f:
++    long_prompt = f.read().strip()
++
++prompts = [long_prompt]
++
++# your model path
++model_path = ""
++
++sampling_params = SamplingParams(temperature=0)
++llm = LLM(
++    model=model_path,
++    tokenizer=model_path,
++    enforce_eager=False,
++    trust_remote_code=True,
++    block_size=16,
++    tensor_parallel_size=tp,
++)
++
++outputs = llm.generate(prompts, sampling_params)
++
++print("1st run:")
++for output in outputs:
++    prompt = output.prompt
++    generated_text = output.outputs[0].text
++    print(f"result:\n {generated_text}")
++
++# -----
++# exit()
++
++prompts = [
++    "The president of Microsoft is " * 300,
++    "Wikipedia\n" * 10 + "Wikipedia is a",
++]
++
++outputs2 = llm.generate(prompts, sampling_params)
++
++print(">>>> 2nd run")
++for output in outputs2:
++    prompt = output.prompt
++    generated_text = output.outputs[0].text
++    print(f"result:\n {generated_text}")
+diff --git a/vllm/attention/backends/abstract.py b/vllm/attention/backends/abstract.py
+index a03cf2dd..3507265a 100644
+--- a/vllm/attention/backends/abstract.py
++++ b/vllm/attention/backends/abstract.py
+@@ -70,6 +70,9 @@ class AttentionImpl(ABC):
+         num_kv_heads: Optional[int] = None,
+         alibi_slopes: Optional[List[float]] = None,
+         sliding_window: Optional[int] = None,
++        blocksparse_local_blocks: int = 16,
++        blocksparse_vert_stride: int = 8,
++        blocksparse_block_size: int = 64,
+     ) -> None:
+         raise NotImplementedError
+ 
+@@ -81,6 +84,9 @@ class AttentionImpl(ABC):
+         value: torch.Tensor,
+         kv_cache: torch.Tensor,
+         attn_metadata: AttentionMetadata,
++        blocksparse_local_blocks: int,
++        blocksparse_vert_stride: int,
++        blocksparse_block_size: int,
+         kv_scale: float,
+     ) -> torch.Tensor:
+         raise NotImplementedError
+diff --git a/vllm/attention/backends/flash_attn.py b/vllm/attention/backends/flash_attn.py
+index 4e0d9d14..e257c7db 100644
+--- a/vllm/attention/backends/flash_attn.py
++++ b/vllm/attention/backends/flash_attn.py
+@@ -129,6 +129,9 @@ class FlashAttentionImpl(AttentionImpl):
+         num_kv_heads: Optional[int] = None,
+         alibi_slopes: Optional[List[float]] = None,
+         sliding_window: Optional[int] = None,
++        blocksparse_local_blocks: int = 16,
++        blocksparse_vert_stride: int = 1,
++        blocksparse_block_size: int = 64,
+     ) -> None:
+         self.num_heads = num_heads
+         self.head_size = head_size
+@@ -139,10 +142,15 @@ class FlashAttentionImpl(AttentionImpl):
+         if alibi_slopes is not None:
+             alibi_slopes = torch.tensor(alibi_slopes, dtype=torch.float32)
+         self.alibi_slopes = alibi_slopes
++        self.blocksparse_local_blocks = blocksparse_local_blocks
++        self.blocksparse_vert_stride = blocksparse_vert_stride
++        self.blocksparse_block_size = blocksparse_block_size
+ 
+         assert self.num_heads % self.num_kv_heads == 0
+         self.num_queries_per_kv = self.num_heads // self.num_kv_heads
+ 
++        # print(f'> {self.num_heads=}, {self.num_kv_heads=}, {self.head_size}')
++
+         suppored_head_sizes = PagedAttention.get_supported_head_sizes()
+         if head_size not in suppored_head_sizes:
+             raise ValueError(
+@@ -238,6 +246,9 @@ class FlashAttentionImpl(AttentionImpl):
+                 self.num_kv_heads,
+                 self.scale,
+                 self.alibi_slopes,
++                self.blocksparse_local_blocks,
++                self.blocksparse_vert_stride,
++                self.blocksparse_block_size,
+                 kv_scale,
+             )
+ 
+diff --git a/vllm/attention/backends/torch_sdpa.py b/vllm/attention/backends/torch_sdpa.py
+index 9706e191..c60b1f7a 100644
+--- a/vllm/attention/backends/torch_sdpa.py
++++ b/vllm/attention/backends/torch_sdpa.py
+@@ -86,6 +86,9 @@ class TorchSDPABackendImpl(AttentionImpl):
+         num_kv_heads: Optional[int] = None,
+         alibi_slopes: Optional[List[float]] = None,
+         sliding_window: Optional[int] = None,
++        blocksparse_local_blocks: int = 16,
++        blocksparse_vert_stride: int = 1,
++        blocksparse_block_size: int = 64,
+     ) -> None:
+         self.num_heads = num_heads
+         self.head_size = head_size
+@@ -99,6 +102,10 @@ class TorchSDPABackendImpl(AttentionImpl):
+         self.need_mask = (self.alibi_slopes is not None
+                           or self.sliding_window is not None)
+ 
++        self.blocksparse_local_blocks = blocksparse_local_blocks
++        self.blocksparse_vert_stride = blocksparse_vert_stride
++        self.blocksparse_block_size = blocksparse_block_size
++
+         assert self.num_heads % self.num_kv_heads == 0
+         self.num_queries_per_kv = self.num_heads // self.num_kv_heads
+         suppored_head_sizes = PagedAttention.get_supported_head_sizes()
+@@ -201,6 +208,9 @@ class TorchSDPABackendImpl(AttentionImpl):
+                 self.num_kv_heads,
+                 self.scale,
+                 self.alibi_slopes,
++                self.blocksparse_local_blocks,
++                self.blocksparse_vert_stride,
++                self.blocksparse_block_size,
+                 kv_scale,
+             )
+ 
+diff --git a/vllm/attention/backends/xformers.py b/vllm/attention/backends/xformers.py
+index d349c3ef..b3a5f4a6 100644
+--- a/vllm/attention/backends/xformers.py
++++ b/vllm/attention/backends/xformers.py
+@@ -147,6 +147,9 @@ class XFormersImpl(AttentionImpl):
+         num_kv_heads: Optional[int] = None,
+         alibi_slopes: Optional[List[float]] = None,
+         sliding_window: Optional[int] = None,
++        blocksparse_local_blocks: int = 16,
++        blocksparse_vert_stride: int = 1,
++        blocksparse_block_size: int = 64,
+     ) -> None:
+         self.num_heads = num_heads
+         self.head_size = head_size
+@@ -170,6 +173,9 @@ class XFormersImpl(AttentionImpl):
+         # nor FlashAttention. As a temporary workaround, we use naive PyTorch
+         # implementation of attention.
+         self.use_naive_attention = _check_use_naive_attention()
++        self.blocksparse_local_blocks = blocksparse_local_blocks
++        self.blocksparse_vert_stride = blocksparse_vert_stride
++        self.blocksparse_block_size = blocksparse_block_size
+ 
+     def forward(
+         self,
+@@ -290,6 +296,9 @@ class XFormersImpl(AttentionImpl):
+                 self.num_kv_heads,
+                 self.scale,
+                 self.alibi_slopes,
++                self.blocksparse_local_blocks,
++                self.blocksparse_vert_stride,
++                self.blocksparse_block_size,
+                 kv_scale,
+             )
+ 
+diff --git a/vllm/attention/layer.py b/vllm/attention/layer.py
+index 9856654f..71e4a9c4 100644
+--- a/vllm/attention/layer.py
++++ b/vllm/attention/layer.py
+@@ -28,12 +28,17 @@ class Attention(nn.Module):
+         num_kv_heads: Optional[int] = None,
+         alibi_slopes: Optional[List[float]] = None,
+         sliding_window: Optional[int] = None,
++        blocksparse_local_blocks: int = 16,
++        blocksparse_vert_stride: int = 8,
++        blocksparse_block_size: int = 64,
+     ) -> None:
+         super().__init__()
+         self.backend = get_attn_backend(torch.get_default_dtype())
+         impl_cls = self.backend.get_impl_cls()
+         self.impl = impl_cls(num_heads, head_size, scale, num_kv_heads,
+-                             alibi_slopes, sliding_window)
++                             alibi_slopes, sliding_window,
++                             blocksparse_local_blocks, blocksparse_vert_stride,
++                             blocksparse_block_size)
+ 
+     def forward(
+         self,
+diff --git a/vllm/attention/ops/paged_attn.py b/vllm/attention/ops/paged_attn.py
+index 256bffdf..bb67709b 100644
+--- a/vllm/attention/ops/paged_attn.py
++++ b/vllm/attention/ops/paged_attn.py
+@@ -97,6 +97,9 @@ class PagedAttention:
+         num_kv_heads: int,
+         scale: float,
+         alibi_slopes: Optional[torch.Tensor],
++        blocksparse_local_blocks: int,
++        blocksparse_vert_stride: int,
++        blocksparse_block_size: int,
+         kv_scale: float,
+     ) -> torch.Tensor:
+         output = torch.empty_like(query)
+@@ -129,6 +132,9 @@ class PagedAttention:
+                 max_context_len,
+                 alibi_slopes,
+                 kv_cache_dtype,
++                blocksparse_local_blocks,
++                blocksparse_vert_stride,
++                blocksparse_block_size,
+                 kv_scale,
+             )
+         else:
+@@ -161,6 +167,9 @@ class PagedAttention:
+                 max_context_len,
+                 alibi_slopes,
+                 kv_cache_dtype,
++                blocksparse_local_blocks,
++                blocksparse_vert_stride,
++                blocksparse_block_size,
+                 kv_scale,
+             )
+         return output
+diff --git a/vllm/config.py b/vllm/config.py
+index 6762a75f..d28664eb 100644
+--- a/vllm/config.py
++++ b/vllm/config.py
+@@ -972,7 +972,7 @@ def _get_and_verify_max_len(
+         derived_max_model_len = default_max_len
+ 
+     rope_scaling = getattr(hf_config, "rope_scaling", None)
+-    if rope_scaling is not None:
++    if rope_scaling is not None and rope_scaling["type"] not in ("longrope", "su"):
+         assert "factor" in rope_scaling
+         scaling_factor = rope_scaling["factor"]
+         if rope_scaling["type"] == "yarn":
+diff --git a/vllm/entrypoints/openai/serving_engine.py b/vllm/entrypoints/openai/serving_engine.py
+index 8f69388c..fec0c7ac 100644
+--- a/vllm/entrypoints/openai/serving_engine.py
++++ b/vllm/entrypoints/openai/serving_engine.py
+@@ -4,6 +4,7 @@ from dataclasses import dataclass
+ from http import HTTPStatus
+ from typing import Dict, List, Optional, Union
+ 
++import numpy as np
+ from pydantic import conint
+ 
+ from vllm.engine.async_llm_engine import AsyncLLMEngine
+@@ -103,9 +104,13 @@ class OpenAIServing:
+             step_top_logprobs = top_logprobs[i]
+             if step_top_logprobs is not None:
+                 token_logprob = step_top_logprobs[token_id].logprob
++                token_logprob = max(token_logprob, -1e9)
++                token_logprob = None if np.isinf(
++                    token_logprob) else token_logprob
++                token = step_top_logprobs[token_id].decoded_token
+             else:
+                 token_logprob = None
+-            token = step_top_logprobs[token_id].decoded_token
++                token = ""
+             logprobs.tokens.append(token)
+             logprobs.token_logprobs.append(token_logprob)
+             if len(logprobs.text_offset) == 0:
+@@ -117,9 +122,10 @@ class OpenAIServing:
+ 
+             if num_output_top_logprobs:
+                 logprobs.top_logprobs.append({
+-                    p.decoded_token: p.logprob
++                    p.decoded_token: None if np.isinf(p.logprob) else p.logprob
+                     for i, p in step_top_logprobs.items()
+                 } if step_top_logprobs else None)
++
+         return logprobs
+ 
+     def create_error_response(
+diff --git a/vllm/model_executor/layers/rotary_embedding.py b/vllm/model_executor/layers/rotary_embedding.py
+index d80e73bb..3b05ddc0 100644
+--- a/vllm/model_executor/layers/rotary_embedding.py
++++ b/vllm/model_executor/layers/rotary_embedding.py
+@@ -236,6 +236,132 @@ class DynamicNTKScalingRotaryEmbedding(RotaryEmbedding):
+         return cache
+ 
+ 
++class PhiLongScaledRotaryEmbedding(nn.Module):
++
++    def __init__(
++        self,
++        head_size: int,
++        rotary_dim: int,
++        max_position_embeddings: int,
++        original_max_position_embeddings: int,
++        base: int,
++        is_neox_style: bool,
++        short_factor: List[float],
++        long_factor: List[float],
++        short_mscale: float = 1.1,
++        long_mscale: float = 1.225,
++    ):
++        super().__init__()
++
++        self.head_size = head_size
++        self.rotary_dim = rotary_dim
++        self.base = base
++        self.is_neox_style = is_neox_style
++
++        self.max_position_embeddings = max_position_embeddings
++        self.original_max_position_embeddings = original_max_position_embeddings
++
++        self.short_factor = short_factor
++        self.long_factor = long_factor
++        self.short_mscale = short_mscale
++        self.long_mscale = long_mscale
++
++        short_cache = self._compute_cos_sin_cache(
++            original_max_position_embeddings, short_factor, short_mscale)
++        short_cache = short_cache.to(torch.get_default_dtype())
++        self.register_buffer("short_cos_sin_cache",
++                             short_cache,
++                             persistent=False)
++
++        long_cache = self._compute_cos_sin_cache(max_position_embeddings,
++                                                 long_factor, long_mscale)
++        long_cache = long_cache.to(torch.get_default_dtype())
++        self.register_buffer("long_cos_sin_cache",
++                             long_cache,
++                             persistent=False)
++
++        long_short_cache = torch.cat(
++            [self.short_cos_sin_cache, self.long_cos_sin_cache], dim=0)
++        self.register_buffer("long_short_cos_sin_cache",
++                             long_short_cache,
++                             persistent=False)
++
++    def _compute_inv_freq(self, rescale_factors: List[float]) -> torch.Tensor:
++        rescale_factors = torch.tensor(rescale_factors, dtype=torch.float32)
++        inv_freq = 1.0 / (rescale_factors * (self.base**(torch.arange(
++            0, self.rotary_dim, 2, dtype=torch.float) / self.rotary_dim)))
++        return inv_freq
++
++    def _compute_cos_sin_cache(
++        self,
++        max_position_embeddings: int,
++        rescale_factors: List[float],
++        mscale: float,
++    ) -> torch.Tensor:
++        inv_freq = self._compute_inv_freq(rescale_factors)
++        t = torch.arange(max_position_embeddings, dtype=torch.float)
++        freqs = torch.einsum("i,j -> ij", t, inv_freq)
++        cos = (freqs.cos() * mscale)
++        sin = (freqs.sin() * mscale)
++        cache = torch.cat((cos, sin), dim=-1)
++        return cache
++
++    def forward(
++        self,
++        positions: torch.Tensor,
++        query: torch.Tensor,
++        key: torch.Tensor,
++        offsets: Optional[torch.Tensor] = None,
++    ) -> Tuple[torch.Tensor, torch.Tensor]:
++        # TODO: CUDA kernels for multiple caches
++
++        query_shape = query.shape
++        key_shape = key.shape
++        query = query.view(*query.shape[:-1], -1, self.head_size)
++        key = key.view(*key.shape[:-1], -1, self.head_size)
++
++        query_rot = query[..., :self.rotary_dim]
++        key_rot = key[..., :self.rotary_dim]
++        if self.rotary_dim < self.head_size:
++            query_pass = query[..., self.rotary_dim:]
++            key_pass = key[..., self.rotary_dim:]
++
++        # LongRoPE switch logic
++        # For long prompt, offset position by original_max_position_embeddings
++        # to index long_cos_sin_cache properly
++        k = self.original_max_position_embeddings
++        long_prompt_offset = (torch.any(positions > k).float() *
++                              torch.full_like(positions, k)).long()
++        idx = torch.add(positions, long_prompt_offset
++                        ) if long_prompt_offset is not None else positions
++        self.long_short_cos_sin_cache = self.long_short_cos_sin_cache.to(
++            idx.device)
++        idx = torch.add(idx, offsets) if offsets is not None else idx
++
++        cos_sin = torch.index_select(self.long_short_cos_sin_cache, 0, idx)
++        cos, sin = cos_sin.chunk(2, dim=-1)
++        if self.is_neox_style:
++            # NOTE(woosuk): Here we assume that the positions tensor has the
++            # shape [batch_size, seq_len].
++            cos = cos.repeat(1, 1, 2).unsqueeze(-2)
++            sin = sin.repeat(1, 1, 2).unsqueeze(-2)
++        else:
++            cos = cos.repeat_interleave(2, dim=-1).unsqueeze(-2)
++            sin = sin.repeat_interleave(2, dim=-1).unsqueeze(-2)
++
++        rotate_fn = _rotate_neox if self.is_neox_style else _rotate_gptj
++        query_rot = query_rot * cos + rotate_fn(query_rot) * sin
++        key_rot = key_rot * cos + rotate_fn(key_rot) * sin
++
++        if self.rotary_dim < self.head_size:
++            query = torch.cat((query_rot, query_pass), dim=-1)
++            key = torch.cat((key_rot, key_pass), dim=-1)
++        else:
++            query = query_rot
++            key = key_rot
++        return query.view(query_shape), key.view(key_shape)
++
++
+ # Inverse dim formula to find dim based on number of rotations
+ def _yarn_find_correction_dim(num_rotations: int,
+                               dim: int,
+@@ -347,8 +473,12 @@ def get_rope(
+     is_neox_style: bool = True,
+     rope_scaling: Optional[Dict[str, Any]] = None,
+ ) -> RotaryEmbedding:
++    # key = (head_size, rotary_dim, max_position, base, is_neox_style,
++    #        tuple(rope_scaling.items()) if rope_scaling is not None else None)
+     key = (head_size, rotary_dim, max_position, base, is_neox_style,
+-           tuple(rope_scaling.items()) if rope_scaling is not None else None)
++           (v for v in rope_scaling.items()
++            if not isinstance(v, list)) if rope_scaling is not None else None)
++
+     if key in _ROPE_DICT:
+         return _ROPE_DICT[key]
+ 
+@@ -357,7 +487,9 @@ def get_rope(
+                                      is_neox_style)
+     else:
+         scaling_type = rope_scaling["type"]
+-        scaling_factor = rope_scaling["factor"]
++
++        if scaling_type != "longrope":
++            scaling_factor = rope_scaling["factor"]
+         if scaling_type == "linear":
+             rotary_emb = LinearScalingRotaryEmbedding(head_size, rotary_dim,
+                                                       max_position, base,
+@@ -381,6 +513,19 @@ def get_rope(
+                                                     base, is_neox_style,
+                                                     scaling_factor,
+                                                     **extra_kwargs)
++        elif scaling_type in ("longrope", "su"):
++            short_factor = rope_scaling["short_factor"]
++            long_factor = rope_scaling["long_factor"]
++            original_max_position = rope_scaling[
++                "original_max_position_embeddings"]
++            extra_kwargs = {
++                k: v
++                for k, v in rope_scaling.items()
++                if k in ("short_mscale", "long_mscale")
++            }
++            rotary_emb = PhiLongScaledRotaryEmbedding(
++                head_size, rotary_dim, max_position, original_max_position,
++                base, is_neox_style, short_factor, long_factor, **extra_kwargs)
+         else:
+             raise ValueError(f"Unknown RoPE scaling type {scaling_type}")
+     _ROPE_DICT[key] = rotary_emb
+diff --git a/vllm/model_executor/models/__init__.py b/vllm/model_executor/models/__init__.py
+index 4647947f..d35878da 100755
+--- a/vllm/model_executor/models/__init__.py
++++ b/vllm/model_executor/models/__init__.py
+@@ -53,6 +53,7 @@ _MODELS = {
+     "StableLmForCausalLM": ("stablelm", "StablelmForCausalLM"),
+     "Starcoder2ForCausalLM": ("starcoder2", "Starcoder2ForCausalLM"),
+     "XverseForCausalLM": ("xverse", "XverseForCausalLM"),
++    "Phi3SmallForCausalLM": ("phi3small", "Phi3SmallForCausalLM"),
+ }
+ 
+ # Architecture -> type.
+diff --git a/vllm/model_executor/models/phi3small/__init__.py b/vllm/model_executor/models/phi3small/__init__.py
+new file mode 100644
+index 00000000..db7c56e2
+--- /dev/null
++++ b/vllm/model_executor/models/phi3small/__init__.py
+@@ -0,0 +1,5 @@
++from .phi3small import Phi3SmallForCausalLM
++
++__all__ = [
++    "Phi3SmallForCausalLM",
++]
+diff --git a/vllm/model_executor/models/phi3small/blocksparse_attention/__init__.py b/vllm/model_executor/models/phi3small/blocksparse_attention/__init__.py
+new file mode 100644
+index 00000000..e69de29b
+diff --git a/vllm/model_executor/models/phi3small/blocksparse_attention/interface.py b/vllm/model_executor/models/phi3small/blocksparse_attention/interface.py
+new file mode 100644
+index 00000000..bca09eae
+--- /dev/null
++++ b/vllm/model_executor/models/phi3small/blocksparse_attention/interface.py
+@@ -0,0 +1,409 @@
++import math
++from functools import lru_cache
++
++import torch
++
++from .utils import dense_to_crow_col, get_sparse_attn_mask
++
++IS_COMPUTE_8_OR_ABOVE = (torch.cuda.is_available()
++                         and torch.cuda.get_device_capability()[0] >= 8)
++
++if IS_COMPUTE_8_OR_ABOVE:
++    from .kernels import (blocksparse_flash_attn_varlen_fwd,
++                          blocksparse_flash_attn_varlen_fwd_with_blocktable)
++
++
++class LocalStridedBlockSparseAttn(torch.nn.Module):
++
++    def __init__(
++        self,
++        n_heads,
++        max_seqlen,
++        local_blocks,
++        vert_stride,
++        block_size,
++        device=None,
++        dtype=None,
++        homo_head=False,
++        active_head_range=None,
++        q_block_size=None,
++        use_spda=None,
++    ):
++        super().__init__()
++        if use_spda is None:
++            use_spda = not (torch.cuda.is_available()
++                            and torch.cuda.get_device_capability()[0] >= 8)
++        device = device or (torch.cuda.current_device()
++                            if torch.cuda.is_available() else "cpu")
++        device = torch.device(device)
++        # NOTE: vllm CPU backend support BF16 instead of FP16.
++        dtype = dtype or (torch.bfloat16 if IS_COMPUTE_8_OR_ABOVE
++                          or device.type == "cpu" else torch.half)
++
++        self.n_heads = n_heads
++        self.max_seqlen = max_seqlen
++        self.local_blocks = local_blocks
++        self.vert_stride = vert_stride
++        self.use_spda = use_spda
++        self.dtype = dtype
++        self.device = device
++        self.block_size = block_size
++        self.q_block_size = q_block_size
++        self.homo_head = homo_head
++        self.active_head_range = active_head_range
++
++        sparse_layout, sparse_pattern, self.dense_attn_mask = (
++            self.get_attn_pattern(dtype, device))
++
++        if q_block_size is not None and q_block_size != block_size:
++            if q_block_size > block_size:
++                assert q_block_size % block_size == 0
++                blocks_to_merge = q_block_size // block_size
++                shape = sparse_pattern.shape
++                sparse_pattern = sparse_pattern.view(shape[0], -1,
++                                                     blocks_to_merge,
++                                                     shape[-1])
++                sparse_pattern = sparse_pattern.sum(2)
++                sparse_layout = dense_to_crow_col(sparse_pattern)
++            else:
++                raise ValueError(
++                    "Does not support smaller q_block_size. It will be slower."
++                )
++
++        self.sparse_layout = sparse_layout
++
++    def get_attn_pattern(self, dtype, device):
++        sparse_layout, sparse_pattern, dense_attn_mask = get_sparse_attn_mask(
++            self.n_heads,
++            self.max_seqlen,
++            self.max_seqlen,
++            dtype,
++            device,
++            block_size=self.block_size,
++            local_blocks=self.local_blocks,
++            vert_stride=self.vert_stride,
++            homo_head=self.homo_head,
++            return_dense=self.use_spda,
++            dense_mask_type="bias",
++        )
++        if (not self.homo_head) and (self.active_head_range is not None):
++            assert isinstance(self.active_head_range, tuple)
++            assert (len(self.active_head_range) == 2)
++            h_start, h_end = self.active_head_range
++            sparse_layout = tuple(x[h_start:h_end] for x in sparse_layout)
++            if self.use_spda:
++                dense_attn_mask = dense_attn_mask[h_start:h_end]
++        return sparse_layout, sparse_pattern, dense_attn_mask
++
++    def varlen_attn(self,
++                    q,
++                    k,
++                    v,
++                    cu_seqlens_k,
++                    cu_seqlens_q=None,
++                    sm_scale=None):
++        """
++        q, k, v: shape = (num_tokens, num_heads_q/kv, head_size).
++        Support grouped attention, with `q[:, i*r:(i*r + r)]`
++        is correspondent to `k[:, i]`, where `r` is the q/k ratio.
++        cu_seqlens_k: shape=(batch_size + 1,), 
++        indicating segment of samples, 
++        e.g., `k[cu_seqlen[i]:cu_seqlne[i+1]]` is q of sample i
++        cu_seqlens_q: shape=(batch_size + 1, ).
++        Default None: same as cu_seqlens_k for prefilling or
++        [0, 1, .., batch_size] for decoding.
++        The only case you need to specify is when q is a mix of 
++        prefilling and decoding.
++        sm_scale: softmax scale, default to 1/sqrt(head_size).
++
++        return: tensor of shape as q.
++        """
++        assert (
++            IS_COMPUTE_8_OR_ABOVE
++        ), "Requires compute capability of 8 or above (Ampere or newer) to use \
++            Triton kernel."
++
++        sm_scale = sm_scale or 1.0 / math.sqrt(q.size(-1))
++
++        return blocksparse_flash_attn_varlen_fwd(
++            q,
++            k,
++            v,
++            cu_seqlens_k,
++            cu_seqlens_q,
++            sm_scale,
++            self.sparse_layout,
++            block_size=self.block_size,
++            q_block_size=self.q_block_size,
++            max_seqlen=self.max_seqlen,
++        )
++
++    @staticmethod
++    def transpose_and_pad(x, cu_seqlens, maxlen, head_repeats=1):
++        """
++        :param x: (total_tokens, n_heads, head_size)
++        :return: (batch, n_heads, length, head_size)
++        """
++        x_padded = x.new_empty(
++            len(cu_seqlens) - 1, x.size(1), head_repeats, maxlen, x.size(2))
++        cu_seqlens = cu_seqlens.cpu()
++        for i, (s, e) in enumerate(zip(cu_seqlens[:-1], cu_seqlens[1:])):
++            x_padded[i, :, :, :e - s].copy_(x[s:e].transpose(0,
++                                                             1).unsqueeze(1))
++        return x_padded.flatten(1, 2)
++
++    @staticmethod
++    def transpose_and_unpad(x_padded, cu_seqlens):
++        """
++        :param x_padded: (batch, n_heads, length, head_size)
++        :return: (total_tokens, n_heads, head_size)
++        """
++        cu_seqlens = cu_seqlens.cpu()
++        total_n_tokens = cu_seqlens[-1]
++        x = x_padded.new_empty(total_n_tokens, x_padded.size(1),
++                               x_padded.size(3))
++        for i, (s, e) in enumerate(zip(cu_seqlens[:-1], cu_seqlens[1:])):
++            x[s:e].copy_(x_padded[i, :, :e - s].transpose(0, 1))
++        return x
++
++    def spda(self, q, k, v, cu_seqlens_k, cu_seqlens_q=None, sm_scale=None):
++        """For CPU, V100 or other older GPUs.
++        NOTE: torch SPDA supports nested tensor, 
++        but seems extremely slow. Choose to pad instead.
++        """
++        assert (cu_seqlens_q is None or
++                (cu_seqlens_q
++                 == cu_seqlens_k).all()), "Can only handle prompt with SPDA."
++        assert q.size(0) == k.size(0), "can only handle prompt with SPDA."
++
++        assert q.size(1) % k.size(1) == 0
++        q_k_ratio = q.size(1) // k.size(1)
++        sm_scale = sm_scale or 1.0 / math.sqrt(q.size(-1))
++        cu_seqlens = cu_seqlens_k.cpu()
++        maxlen = (cu_seqlens[1:] - cu_seqlens[:-1]).max()
++
++        if (self.dense_attn_mask.dtype != q.dtype
++                or self.dense_attn_mask.device != q.device):
++            _, _, self.dense_attn_mask = self.get_attn_pattern(
++                q.dtype, q.device)
++        attn_mask = self.dense_attn_mask[None, :, :maxlen, :maxlen]
++
++        q2 = self.transpose_and_pad(q, cu_seqlens, maxlen, 1)
++        k2, v2 = [
++            self.transpose_and_pad(x, cu_seqlens, maxlen, q_k_ratio)
++            for x in [k, v]
++        ]
++        spda_output = torch.nn.functional.scaled_dot_product_attention(
++            q2, k2, v2, attn_mask=attn_mask, scale=sm_scale)
++        return self.transpose_and_unpad(spda_output, cu_seqlens)
++
++    def forward(self, q, k, v, cu_seqlens_k, cu_seqlens_q=None, sm_scale=None):
++        """Dispatch to `varlen_attn` (Ampere or newer) or 
++        `self.spda`(cpu, Volta, Turing or older)based on 
++        the type of device used and cuda compute capability.
++
++        q, k, v: shape = (num_tokens, num_heads_q/kv, head_size).
++                Support grouped attention, with `q[:, i*r:(i*r + r)]`
++                is correspondent to `k[:, i]`, where `r` is the q/k ratio.
++        cu_seqlens_k: shape=(batch_size + 1,), indicating segment of samples,
++                    e.g., `k[cu_seqlen[i]:cu_seqlne[i+1]]` is q of sample i
++        cu_seqlens_q: shape=(batch_size + 1, ).
++                    Default None: same as cu_seqlens_k for prefilling or
++                    [0, 1, .., batch_size] for decoding.
++                    The only case you need to specify 
++                    is when q is a mix of prefilling 
++                    and decoding.
++        sm_scale: softmax scale, default to 1/sqrt(head_size).
++
++        return: tensor of shape as q.
++        """
++        assert k.dim() == 3
++        if self.use_spda:
++            return self.spda(
++                q,
++                k,
++                v,
++                cu_seqlens_k,
++                cu_seqlens_q=cu_seqlens_q,
++                sm_scale=sm_scale,
++            )
++        return self.varlen_attn(q,
++                                k,
++                                v,
++                                cu_seqlens_k,
++                                cu_seqlens_q=cu_seqlens_q,
++                                sm_scale=sm_scale)
++
++
++class LocalStridedBlockSparsePagedAttn(torch.nn.Module):
++
++    def __init__(
++        self,
++        n_heads,
++        max_seqlen,
++        local_blocks,
++        vert_stride,
++        block_size,
++        device=None,
++        dtype=torch.bfloat16,
++        homo_head=False,
++        active_head_range=None,
++        vllm_block_size=None,
++        mode="split",
++    ):
++        super().__init__()
++        device = device or torch.cuda.current_device()
++        self.max_seqlen = max_seqlen
++        self.block_size = block_size
++        self.local_blocks = local_blocks
++        self.vert_stride = vert_stride
++        sparse_layout, sparse_pattern, _ = get_sparse_attn_mask(
++            n_heads,
++            max_seqlen,
++            max_seqlen,
++            dtype,
++            device,
++            block_size=block_size,
++            local_blocks=local_blocks,
++            vert_stride=vert_stride,
++            homo_head=homo_head,
++            return_dense=False,
++        )
++        self.mode = mode
++        if mode in ("split", "remote-only"):
++            sparse_layout, sparse_pattern = self.get_remote_sparse_layout(
++                n_heads,
++                max_seqlen,
++                dtype,
++                device,
++                block_size,
++                local_blocks,
++                vert_stride,
++                homo_head=homo_head,
++                return_dense=False,
++            )
++
++        if (not homo_head) and (active_head_range is not None):
++            assert isinstance(active_head_range, tuple)
++            assert (len(active_head_range) == 2
++                    ), '"active_head_range" should be a \
++                tuple of start/end index of the heads.'
++
++            h_start, h_end = active_head_range
++            sparse_layout = tuple(x[h_start:h_end] for x in sparse_layout)
++            sparse_pattern = sparse_pattern[h_start:h_end]
++
++        self.sparse_layout = sparse_layout
++        self.sparse_pattern = sparse_pattern
++
++        self.vllm_block_size = None
++        if vllm_block_size:
++            self.set_vllm_block_size(vllm_block_size)
++
++    def set_vllm_block_size(self, vllm_block_size):
++        if self.vllm_block_size is not None:
++            raise ValueError("vllm_block_size has been set")
++
++        self.vllm_block_size = vllm_block_size
++        sparse_block_size = self.block_size
++        kernel_block_size = vllm_block_size
++
++        assert sparse_block_size % kernel_block_size == 0
++        if sparse_block_size // kernel_block_size > 1:
++            _mul = sparse_block_size // kernel_block_size
++            sparse_pattern = torch.kron(
++                self.sparse_pattern, self.sparse_pattern.new_ones(_mul, _mul))
++            num_sparse_blocks = sparse_pattern.size(-1)
++            block_causal_mask = (torch.arange(0, num_sparse_blocks)[:, None] >=
++                                 torch.arange(0, num_sparse_blocks)[None])
++            sparse_pattern *= block_causal_mask.type_as(sparse_pattern)
++            sparse_layout = dense_to_crow_col(sparse_pattern)
++            self.sparse_layout = sparse_layout
++            self.sparse_pattern = self.sparse_pattern
++
++    @classmethod
++    @lru_cache
++    def get_remote_sparse_layout(
++        cls,
++        n_heads,
++        max_seqlen,
++        dtype,
++        device,
++        block_size,
++        local_blocks,
++        vert_stride,
++        homo_head=False,
++        return_dense=False,
++    ):
++        _, sparse_pattern, _ = get_sparse_attn_mask(
++            n_heads,
++            max_seqlen,
++            max_seqlen,
++            dtype,
++            device,
++            block_size=block_size,
++            local_blocks=local_blocks,
++            vert_stride=vert_stride,
++            homo_head=homo_head,
++            return_dense=False,
++        )
++
++        _, sparse_pattern_local, _ = get_sparse_attn_mask(
++            n_heads,
++            max_seqlen,
++            max_seqlen,
++            dtype,
++            device,
++            block_size=block_size,
++            local_blocks=local_blocks,
++            vert_stride=max_seqlen + 1,
++            homo_head=homo_head,
++            return_dense=return_dense,
++        )
++        sparse_pattern_strides = sparse_pattern - sparse_pattern_local
++
++        sparse_layout_strides = dense_to_crow_col(sparse_pattern_strides)
++        return sparse_layout_strides, sparse_pattern_strides
++
++    def forward(self,
++                q,
++                k,
++                v,
++                block_tables,
++                context_lens,
++                sm_scale=None,
++                kv_scale=1.0):
++        """
++        q, k, v: shape = (num_tokens, num_heads_q/kv, head_size).
++                Support grouped attention, with `q[:, i*r:(i*r + r)]`
++                is correspondent to `k[:, i]`, where `r` is the q/k ratio.
++        sm_scale: softmax scale, default to 1/sqrt(head_size).
++
++        return: tensor of shape as q.
++        """
++        if self.sparse_layout[0].size(0) != 1:
++            assert q.size(1) == self.sparse_layout[0].size(0)
++
++        sm_scale = sm_scale or 1.0 / math.sqrt(q.size(-1))
++
++        if self.vllm_block_size is None:
++            self.set_vllm_block_size(v.size(-1))
++
++        # TODO: auto extend length to next_power_of_2
++        assert block_tables.size(1) * self.vllm_block_size <= self.max_seqlen
++
++        return blocksparse_flash_attn_varlen_fwd_with_blocktable(
++            q,
++            k,
++            v,
++            block_tables,
++            context_lens,
++            sm_scale,
++            self.sparse_layout,
++            sparse_block_size=self.block_size,
++            vllm_block_size=self.vllm_block_size,
++            num_local_blocks=self.local_blocks,
++            mode=self.mode,
++            max_seqlen=self.max_seqlen,
++            kv_scale=kv_scale,
++        )
+diff --git a/vllm/model_executor/models/phi3small/blocksparse_attention/kernels/__init__.py b/vllm/model_executor/models/phi3small/blocksparse_attention/kernels/__init__.py
+new file mode 100644
+index 00000000..d4ff91dc
+--- /dev/null
++++ b/vllm/model_executor/models/phi3small/blocksparse_attention/kernels/__init__.py
+@@ -0,0 +1,8 @@
++from .blocksparse_attention import blocksparse_flash_attn_varlen_fwd
++from .blocksparse_paged_attention import (
++    blocksparse_flash_attn_varlen_fwd_with_blocktable)
++
++__all__ = [
++    "blocksparse_flash_attn_varlen_fwd",
++    "blocksparse_flash_attn_varlen_fwd_with_blocktable",
++]
+\ No newline at end of file
+diff --git a/vllm/model_executor/models/phi3small/blocksparse_attention/kernels/blocksparse_attention.py b/vllm/model_executor/models/phi3small/blocksparse_attention/kernels/blocksparse_attention.py
+new file mode 100644
+index 00000000..219ded9c
+--- /dev/null
++++ b/vllm/model_executor/models/phi3small/blocksparse_attention/kernels/blocksparse_attention.py
+@@ -0,0 +1,422 @@
++import torch
++import triton
++import triton.language as tl
++
++
++def blocksparse_flash_attn_varlen_fwd(
++        q,
++        k,
++        v,  # (#tokens, n_heads, head_size)
++        cu_seqlens_k,
++        cu_seqlens_q,
++        sm_scale,
++        sparse_layout,
++        *,
++        block_size=64,
++        q_block_size=None,
++        max_seqlen=None):
++    # split q to blocks
++
++    assert isinstance(sparse_layout, (list, tuple))
++
++    _, n_heads, head_size = q.shape
++    batch_size = cu_seqlens_k.size(0) - 1
++    q_block_size = q_block_size or block_size
++
++    assert q.dim() == k.dim() == v.dim() == 3
++    assert q.size(1) % k.size(1) == 0
++    assert q.size(2) == k.size(2)
++    # TODO(linxihui): allow k, v to have different head_size
++    assert k.shape == v.shape
++    assert cu_seqlens_k.dim() == 1
++
++    q_k_ratio = q.size(1) // k.size(1)
++
++    if cu_seqlens_q is None:
++        if q.size(0) == batch_size:  # decoding only
++            cu_seqlens_q = torch.arange(
++                0,
++                batch_size + 1,
++                dtype=cu_seqlens_k.dtype,
++                device=cu_seqlens_k.device,
++            )
++        elif q.size(0) == k.size(0):
++            cu_seqlens_q = cu_seqlens_k
++        else:
++            raise ValueError("cu_seqlens_q must be specified\
++                    if it mix of prefilling and decoding.")
++    else:
++        assert cu_seqlens_k.size(0) == cu_seqlens_q.size(0)
++
++    # switch to use cpu to avoid too many kernel launches when iterated over
++    q_lens = (cu_seqlens_q[1:] - cu_seqlens_q[:-1]).cpu()
++    k_lens = (cu_seqlens_k[1:] - cu_seqlens_k[:-1]).cpu()
++
++    assert torch.logical_or(q_lens == 1, k_lens == q_lens).all(), (
++        "length of q should either be 1 (decoding) or same as k (prefilling).")
++
++    if max_seqlen:
++        assert k_lens.max() <= max_seqlen
++
++    n_blocks = (q_lens + q_block_size - 1) // q_block_size
++
++    q_batch_ids = torch.tensor(
++        [i for i, n in enumerate(n_blocks) for _ in range(n)],
++        dtype=cu_seqlens_q.dtype,
++        device=cu_seqlens_q.device,
++    )
++    q_start_sids = torch.tensor(
++        [i * q_block_size for n in n_blocks for i in range(n)],
++        dtype=cu_seqlens_q.dtype,
++        device=cu_seqlens_q.device,
++    )
++
++    out = q.new_empty(q.shape)
++    cu_seqlens_q = cu_seqlens_q.contiguous()
++    cu_seqlens_k = cu_seqlens_k.contiguous()
++
++    layout_crow_indices, layout_col_indices = sparse_layout
++    block_d = triton.next_power_of_2(head_size)
++
++    decoding_only = (q_lens == 1).all().item()
++    grid = (len(q_start_sids), n_heads, 1)
++
++    _fwd_kernel_batch_inference[grid](
++        q,
++        k,
++        v,
++        out,
++        sm_scale,
++        cu_seqlens_q[:-1],
++        cu_seqlens_q[1:],
++        cu_seqlens_k[:-1],
++        cu_seqlens_k[1:],
++        q_batch_ids,
++        q_start_sids,
++        0,
++        *q.stride(),
++        0,
++        *k.stride(),
++        0,
++        *v.stride(),
++        0,
++        *out.stride(),
++        layout_crow_indices,
++        layout_col_indices,
++        *layout_crow_indices.stride(),
++        *layout_col_indices.stride(),
++        q_k_ratio,
++        HAS_BATCH_DIM=False,
++        D_HEAD=head_size,
++        BLOCK_M=q_block_size,
++        BLOCK_N=block_size,
++        BLOCK_D=block_d,
++        BLOCK_M_LOADING=(16 if decoding_only else
++                         q_block_size),  # smaller for decoding
++        EVEN_D=block_d == head_size,
++        num_warps=1 if decoding_only else 4,
++        num_stages=3)
++
++    return out
++
++
++@triton.jit
++def _fwd_kernel_inner(
++    acc,
++    l_i,
++    m_i,
++    q,
++    Q,
++    k_block_col_idx,
++    layout_col_ptr,
++    layout_col_stride_h,
++    layout_col_stride_m,
++    k_ptrs,
++    v_ptrs,
++    off_h,
++    offs_m,
++    offs_n,
++    offs_d,
++    stride_kt,
++    stride_vt,
++    sm_scale,
++    k_seqlen,
++    past_len,
++    LAST_K_BLOCK: tl.constexpr,
++    BLOCK_M_LOADING: tl.constexpr,
++    BLOCK_N: tl.constexpr,
++    D_HEAD: tl.constexpr,
++    EVEN_D: tl.constexpr,
++    M_LT_N: tl.constexpr,
++):
++    k_block_id = tl.load(layout_col_ptr + off_h * layout_col_stride_h +
++                         k_block_col_idx * layout_col_stride_m).to(tl.int32)
++    start_n = k_block_id * BLOCK_N
++    if LAST_K_BLOCK:
++        if EVEN_D:
++            k = tl.load(
++                k_ptrs + start_n * stride_kt,
++                mask=offs_n[None, :] + start_n < k_seqlen,
++            )
++        else:
++            k = tl.load(
++                k_ptrs + start_n * stride_kt,
++                mask=(offs_n[None, :] + start_n < k_seqlen)
++                & (offs_d[:, None] < D_HEAD),
++            )
++    else:
++        if EVEN_D:
++            k = tl.load(k_ptrs + start_n * stride_kt)
++        else:
++            k = tl.load(k_ptrs + start_n * stride_kt,
++                        mask=offs_d[:, None] < D_HEAD)
++
++    qk = tl.zeros([BLOCK_M_LOADING, BLOCK_N], dtype=tl.float32)
++    qk += tl.dot(q, k)
++    qk *= sm_scale
++
++    # the following is needed only when LAST_K_BLOCK or BLOCK_M < BLOCK_N
++    if LAST_K_BLOCK | M_LT_N:
++        qk += tl.where(
++            offs_m[:, None] + past_len >= (start_n + offs_n[None, :]),
++            0,
++            float("-inf"),
++        )
++
++    ### flash-attn2
++    m_ij = tl.maximum(m_i, tl.max(qk, 1))
++    p = tl.math.exp2(qk - m_ij[:, None])
++    l_ij = tl.sum(p, 1)
++    alpha = tl.math.exp2(m_i - m_ij)
++    acc = acc * alpha[:, None]
++    # update m_i
++    m_i = m_ij
++    l_i = l_i * alpha + l_ij
++
++    p = p.to(Q.dtype.element_ty)
++    # update acc
++    if LAST_K_BLOCK:
++        if EVEN_D:
++            v = tl.load(
++                v_ptrs + start_n * stride_vt,
++                mask=offs_n[:, None] + start_n < k_seqlen,
++            )
++        else:
++            v = tl.load(
++                v_ptrs + start_n * stride_vt,
++                mask=(offs_n[:, None] + start_n < k_seqlen)
++                & (offs_d[None, :] < D_HEAD),
++            )
++    else:
++        if EVEN_D:
++            v = tl.load(v_ptrs + start_n * stride_vt)
++        else:
++            v = tl.load(v_ptrs + start_n * stride_vt,
++                        mask=offs_d[None, :] < D_HEAD)
++
++    acc += tl.dot(p, v)
++
++    return acc, l_i, m_i
++
++
++@triton.heuristics({
++    "M_LT_N":
++    lambda kwargs: kwargs["BLOCK_M"] < kwargs["BLOCK_N"],
++})
++@triton.jit
++def _fwd_kernel_batch_inference(
++    Q,
++    K,
++    V,
++    Out,
++    sm_scale,
++    q_batch_starts,
++    q_batch_ends,
++    k_batch_starts,
++    k_batch_ends,
++    q_batch_ids,
++    q_start_sids,
++    stride_qb,
++    stride_qt,
++    stride_qh,
++    stride_qd,
++    stride_kb,
++    stride_kt,
++    stride_kh,
++    stride_kd,
++    stride_vb,
++    stride_vt,
++    stride_vh,
++    stride_vd,
++    stride_ob,
++    stride_ot,
++    stride_oh,
++    stride_od,
++    layout_crow_ptr,
++    layout_col_ptr,
++    layout_crow_stride_h,
++    layout_crow_stride_m,
++    layout_col_stride_h,
++    layout_col_stride_m,
++    q_k_ratio,
++    HAS_BATCH_DIM: tl.constexpr,
++    D_HEAD: tl.constexpr,
++    BLOCK_M: tl.constexpr,
++    BLOCK_N: tl.constexpr,
++    BLOCK_D: tl.constexpr,
++    BLOCK_M_LOADING: tl.constexpr,
++    EVEN_D: tl.constexpr,
++    M_LT_N: tl.constexpr,
++):
++    """
++    NOTATION:
++    pid: position id
++    sid: storage id
++    sbid: storage block id
++    pbid: position block id
++    offs_m, offs_n: storage offsets of m-dim(q, row) and n-dim(k, col)
++
++    TODO(linxihui):
++    Optimize grouped-attn
++    """
++    off_zm = tl.program_id(0)
++    off_h = tl.program_id(1)
++
++    off_h_for_kv = off_h // q_k_ratio
++
++    if HAS_BATCH_DIM:
++        off_z = tl.program_id(2)
++        Q += off_z * stride_qb
++        K += off_z * stride_kb
++        V += off_z * stride_vb
++        Out += off_z * stride_ob
++        start_m = off_zm
++        q_start_sid = start_m * BLOCK_M  # always 0 for decoding
++    else:
++        off_z = tl.load(q_batch_ids + off_zm).to(tl.int32)  # [0, 0, 0, 1]
++        q_start_sid = tl.load(q_start_sids + off_zm)
++        start_m = q_start_sid // BLOCK_M  # q_sbid
++
++    offs_m = start_m * BLOCK_M + tl.arange(0, BLOCK_M_LOADING)
++    offs_n = tl.arange(0, BLOCK_N)
++    offs_d = tl.arange(0, BLOCK_D)
++
++    q_cu_start = tl.load(q_batch_starts + off_z).to(tl.int32)
++    q_seqlen = tl.load(q_batch_ends + off_z).to(tl.int32) - q_cu_start
++    k_cu_start = tl.load(k_batch_starts + off_z).to(tl.int32)
++    k_seqlen = tl.load(k_batch_ends + off_z).to(tl.int32) - k_cu_start
++    past_len = k_seqlen - q_seqlen
++
++    Q += q_cu_start * stride_qt + off_h * stride_qh
++    K += k_cu_start * stride_kt + off_h_for_kv * stride_kh
++    V += k_cu_start * stride_vt + off_h_for_kv * stride_vh
++    Out += q_cu_start * stride_ot + off_h * stride_oh
++
++    q_pbid = (past_len + q_start_sid) // BLOCK_M
++
++    if EVEN_D:
++        q = tl.load(
++            Q + offs_m[:, None] * stride_qt + offs_d[None, :] * stride_qd,
++            mask=offs_m[:, None] < q_seqlen,
++        )
++    else:
++        q = tl.load(
++            Q + offs_m[:, None] * stride_qt + offs_d[None, :] * stride_qd,
++            mask=(offs_m[:, None] < q_seqlen) & (offs_d[None, :] < D_HEAD),
++            other=0,
++        )
++
++    sparse_crow_ptr = (layout_crow_ptr + off_h * layout_crow_stride_h +
++                       q_pbid * layout_crow_stride_m)
++
++    # TODO(linxihui): load at once, supported in new Triton
++    k_block_start = tl.load(sparse_crow_ptr).to(tl.int32)
++    k_block_end = tl.load(sparse_crow_ptr + 1).to(tl.int32)
++
++    m_i = tl.zeros([BLOCK_M_LOADING], dtype=tl.float32) - float("inf")
++    l_i = tl.zeros([BLOCK_M_LOADING], dtype=tl.float32)
++    acc = tl.zeros([BLOCK_M_LOADING, BLOCK_D], dtype=tl.float32)
++
++    k_ptrs = K + offs_n[None, :] * stride_kt + offs_d[:, None] * stride_kd
++    v_ptrs = V + offs_n[:, None] * stride_vt + offs_d[None, :] * stride_vd
++
++    sm_scale *= (
++        1.44269504  # 1/log2 as we use base2 for exponential and logarithm
++    )
++
++    for k_block_col_idx in range(k_block_start, k_block_end - 1):
++        acc, l_i, m_i = _fwd_kernel_inner(
++            acc,
++            l_i,
++            m_i,
++            q,
++            Q,
++            k_block_col_idx,
++            layout_col_ptr,
++            layout_col_stride_h,
++            layout_col_stride_m,
++            k_ptrs,
++            v_ptrs,
++            off_h,
++            offs_m,
++            offs_n,
++            offs_d,
++            stride_kt,
++            stride_vt,
++            sm_scale,
++            k_seqlen,
++            past_len,
++            False,
++            BLOCK_M_LOADING,
++            BLOCK_N,
++            D_HEAD,
++            EVEN_D,
++            M_LT_N,
++        )
++
++    acc, l_i, m_i = _fwd_kernel_inner(
++        acc,
++        l_i,
++        m_i,
++        q,
++        Q,
++        k_block_end - 1,
++        layout_col_ptr,
++        layout_col_stride_h,
++        layout_col_stride_m,
++        k_ptrs,
++        v_ptrs,
++        off_h,
++        offs_m,
++        offs_n,
++        offs_d,
++        stride_kt,
++        stride_vt,
++        sm_scale,
++        k_seqlen,
++        past_len,
++        True,
++        BLOCK_M_LOADING,
++        BLOCK_N,
++        D_HEAD,
++        EVEN_D,
++        M_LT_N,
++    )
++
++    ### flash-attn 2
++    m_i += tl.math.log2(l_i)
++    acc = acc / l_i[:, None]
++
++    # write output
++    if EVEN_D:
++        tl.store(
++            Out + offs_m[:, None] * stride_ot + offs_d[None, :] * stride_od,
++            acc,
++            mask=offs_m[:, None] < q_seqlen,
++        )
++    else:
++        tl.store(
++            Out + offs_m[:, None] * stride_ot + offs_d[None, :] * stride_od,
++            acc,
++            mask=(offs_m[:, None] < q_seqlen) & (offs_d[None, :] < D_HEAD),
++        )
+diff --git a/vllm/model_executor/models/phi3small/blocksparse_attention/kernels/blocksparse_paged_attention.py b/vllm/model_executor/models/phi3small/blocksparse_attention/kernels/blocksparse_paged_attention.py
+new file mode 100644
+index 00000000..3bfc72ea
+--- /dev/null
++++ b/vllm/model_executor/models/phi3small/blocksparse_attention/kernels/blocksparse_paged_attention.py
+@@ -0,0 +1,522 @@
++import torch
++import triton
++import triton.language as tl
++
++
++def blocksparse_flash_attn_varlen_fwd_with_blocktable(
++    q,  # (#tokens, n_heads, head_size)
++    k,  # (num_blocks, n_heads, head_size / x, vllm_block_size, x)
++    v,  # (num_blocks, n_heads, head_size, vllm_block_size)
++    block_tables,
++    context_lens,
++    sm_scale,
++    sparse_layout,
++    *,
++    vllm_block_size=16,
++    sparse_block_size=64,
++    kv_scale=1,
++    num_local_blocks=16,
++    mode="split",  # combine, split, local-only, remote-only
++    max_seqlen=None,
++):
++    assert mode in ("split", "combine", "local-only", "remote-only")
++    split_local_remote = mode == "split"
++
++    _, n_heads, head_size = q.shape
++    batches = context_lens.size(0)
++    assert batches == q.size(0)
++
++    assert q.dim() == 3 and k.dim() == 5 and v.dim() == 4
++    assert q.size(1) % k.size(1) == 0
++    assert q.size(2) == k.size(2) * k.size(4)
++    assert k.size(1) == k.size(1)
++    assert context_lens.dim() == 1
++
++    q_k_ratio = q.size(1) // k.size(1)
++
++    # the following is only needed to determined q/k len
++    context_lens = context_lens.contiguous()
++    layout_crow_indices, layout_col_indices = sparse_layout
++
++    assert sparse_block_size % vllm_block_size == 0
++    block_d = triton.next_power_of_2(head_size)
++
++    IS_FP8 = k.element_size() == 1
++    X = 16 // k.element_size()  # fixed in vllm
++
++    if split_local_remote:
++        start_local_head_idx = n_heads
++        out = q.new_zeros((q.size(0), q.size(1) * 2, q.size(2)))
++        m = q.new_zeros(
++            (q.size(0), q.size(1) * 2), dtype=torch.float32) - float("inf")
++
++        grid = (batches, n_heads + n_heads // q_k_ratio, 1)
++    else:
++        m = q.new_empty((q.size(0), q.size(1)), dtype=torch.float32)
++        out = q.new_zeros(q.shape)
++        if mode == "local-only":
++            start_local_head_idx = 0
++            grid = (batches, n_heads // q_k_ratio, 1)
++        else:
++            start_local_head_idx = n_heads + 1
++            grid = (batches, n_heads, 1)
++
++    _fwd_kernel_batch_inference_with_blocktable[grid](
++        q,
++        k,
++        v,
++        out,
++        m,
++        sm_scale,
++        context_lens,
++        *q.stride(),
++        *k.stride(),
++        *v.stride(),
++        *out.stride(),
++        *m.stride(),
++        layout_crow_indices,
++        layout_col_indices,
++        *layout_crow_indices.stride(),
++        *layout_col_indices.stride(),
++        q_k_ratio,
++        block_tables,
++        *block_tables.stride(),
++        kv_scale,
++        start_local_head_idx,
++        num_local_blocks,
++        SPARSE_BLOCK_SIZE=sparse_block_size,
++        X=X,
++        IS_FP8=IS_FP8,
++        D_HEAD=head_size,
++        BLOCK_M=vllm_block_size,
++        BLOCK_N=vllm_block_size,
++        BLOCK_D=block_d,
++        BLOCK_M_LOADING=16,
++        EVEN_D=block_d == head_size,
++        num_warps=1,
++        num_stages=3,
++    )
++
++    if split_local_remote:
++        m0 = m.view(m.size(0), 2, -1)
++        m = torch.exp2(m0 - m0.max(1, keepdim=True)[0])
++
++        m /= m.sum(1, keepdim=True)
++        out = out.view(out.size(0), 2, -1, out.size(2))
++        # out = out[:, 1] # local only
++        out = (out * m.unsqueeze(-1).type_as(out)).sum(1)
++
++    return out
++
++
++@triton.jit
++def _load_kv(
++    k_block_id,
++    K,
++    V,
++    Q,
++    block_tables,
++    stride_kb,
++    stride_kd,
++    stride_kt,
++    stride_kx,
++    stride_vb,
++    stride_vd,
++    stride_vt,
++    stride_btb,
++    stride_btt,
++    off_z,
++    kv_scale,
++    BLOCK_N: tl.constexpr,
++    D_HEAD: tl.constexpr,
++    X: tl.constexpr,
++    IS_FP8: tl.constexpr,
++    BLOCK_D: tl.constexpr,
++    EVEN_D: tl.constexpr,
++):
++    bt_id = tl.load(block_tables + off_z * stride_btb +
++                    k_block_id * stride_btt)
++
++    k_ptrs = (K + bt_id * stride_kb +
++              tl.arange(0, BLOCK_N)[None, None] * stride_kt +
++              tl.arange(0, BLOCK_D // X)[:, None, None] * stride_kd +
++              tl.arange(0, X)[None, :, None] * stride_kx)
++    k_ptrs = tl.reshape(k_ptrs, (BLOCK_D, BLOCK_N))
++
++    v_ptrs = (V + bt_id * stride_vb +
++              tl.arange(0, BLOCK_N)[:, None] * stride_vt +
++              tl.arange(0, BLOCK_D)[None, :] * stride_vd)
++
++    ### for using vector-product
++    # k_ptrs = K + bt_id * stride_kb + tl.arange(0, BLOCK_N)[:, None, None] * \
++    #      stride_kt +
++    #     tl.arange(0, BLOCK_D // X)[None, :, None] * stride_kd + \
++    #     tl.arange(0, X)[None, None, :] * stride_kx
++    #     k_ptrs = tl.reshape(k_ptrs, (BLOCK_N, BLOCK_D))
++    #     v_ptrs = V + bt_id * stride_vb + tl.arange(0, BLOCK_N)[None, :] * \
++    #     stride_vt +
++    #     tl.arange(0, BLOCK_D)[:, None] * stride_vd
++
++    if EVEN_D:
++        k = tl.load(k_ptrs)
++        v = tl.load(v_ptrs)
++    else:
++        k = tl.load(k_ptrs, mask=tl.arange(0, BLOCK_D)[:, None] < D_HEAD)
++        v = tl.load(v_ptrs, mask=tl.arange(0, BLOCK_D)[None, :] < D_HEAD)
++
++    if IS_FP8:
++        k = k.to(tl.bfloat16) * kv_scale
++        v = v.to(tl.bfloat16) * kv_scale
++
++    return k, v
++
++
++@triton.jit
++def _fwd_kernel_inner_with_blocktable(
++    acc,
++    l_i,
++    m_i,
++    q,
++    k,
++    v,
++    Q,
++    k_block_id,
++    offs_n,
++    sm_scale,
++    q_pid,
++    LAST_K_BLOCK: tl.constexpr,
++    BLOCK_M_LOADING: tl.constexpr,
++    BLOCK_N: tl.constexpr,
++):
++    start_n = k_block_id * BLOCK_N
++    qk = tl.dot(q, k)
++    # qk = tl.expand_dims(tl.sum(q * k.to(tl.float32), 1), 0)
++    qk *= sm_scale
++
++    # the following is needed only when LAST_K_BLOCK or BLOCK_M < BLOCK_N
++    if LAST_K_BLOCK:
++        qk += tl.where(start_n + offs_n[None, :] <= q_pid, 0, -float("inf"))
++
++    ### flash-attn2
++    m_ij = tl.maximum(m_i, tl.max(qk, 1))
++    p = tl.math.exp2(qk - m_ij[:, None])
++    l_ij = tl.sum(p, 1)
++    alpha = tl.math.exp2(m_i - m_ij)
++    acc = acc * alpha[:, None]
++    # update m_i
++    m_i = m_ij
++    l_i = l_i * alpha + l_ij
++
++    p = p.to(Q.dtype.element_ty)
++
++    # update acc
++    acc = tl.dot(p, v, acc)
++    # acc += tl.expand_dims(tl.sum(p* v.to(tl.float32), 1), 0)
++    # acc += tl.expand_dims(tl.sum(p* tl.trans(v).to(tl.float32), 1), 0)
++
++    return acc, l_i, m_i
++
++
++@triton.jit
++def _fwd_kernel_batch_inference_with_blocktable(
++    Q,
++    K,
++    V,
++    Out,
++    M,
++    sm_scale,
++    context_lens,
++    stride_qt,
++    stride_qh,
++    stride_qd,
++    stride_kb,
++    stride_kh,
++    stride_kd,
++    stride_kt,
++    stride_kx,
++    stride_vb,
++    stride_vh,
++    stride_vd,
++    stride_vt,
++    stride_ot,
++    stride_oh,
++    stride_od,
++    stride_mt,
++    stride_mh,
++    layout_crow_ptr,
++    layout_col_ptr,
++    layout_crow_stride_h,
++    layout_crow_stride_m,
++    layout_col_stride_h,
++    layout_col_stride_m,
++    q_k_ratio,
++    block_tables,
++    stride_btb,
++    stride_btt,
++    kv_scale,
++    start_local_head_idx: tl.constexpr,
++    num_local_blocks: tl.constexpr,
++    SPARSE_BLOCK_SIZE: tl.constexpr,
++    X: tl.constexpr,  # X = 16/ #bytes of k dtype
++    IS_FP8: tl.constexpr,
++    D_HEAD: tl.constexpr,
++    BLOCK_M: tl.constexpr,
++    BLOCK_N: tl.constexpr,
++    BLOCK_D: tl.constexpr,
++    BLOCK_M_LOADING: tl.constexpr,
++    EVEN_D: tl.constexpr,
++):
++    off_z = tl.program_id(0)
++    off_h = tl.program_id(1)
++
++    is_local = off_h >= start_local_head_idx
++
++    offs_n = tl.arange(0, BLOCK_N)
++    offs_d = tl.arange(0, D_HEAD)
++    k_seqlen = tl.load(context_lens + off_z).to(tl.int32)
++    q_pid = k_seqlen - 1
++    q_pbid = q_pid // BLOCK_M  # to find column/k_block id
++
++    if is_local:
++        off_h_for_kv = off_h - start_local_head_idx
++        q_mask_h = tl.arange(0, BLOCK_M_LOADING)
++        q = tl.load(
++            Q + off_z * stride_qt +
++            (off_h_for_kv * q_k_ratio + q_mask_h[:, None]) * stride_qh +
++            offs_d[None, :] * stride_qd,
++            mask=q_mask_h[:, None] < q_k_ratio,
++        )
++        # convert original sparsse block size to vllm qv-cache block size
++        num_blocks_per_sparse_block = SPARSE_BLOCK_SIZE // BLOCK_M
++        k_block_end = q_pbid + 1  # exclusive
++        sparse_k_block_end = q_pid // SPARSE_BLOCK_SIZE + 1
++        k_block_start = (sparse_k_block_end -
++                         num_local_blocks) * num_blocks_per_sparse_block
++        if k_block_start < 0:
++            k_block_start = 0
++
++        m_i = tl.zeros([BLOCK_M_LOADING], dtype=tl.float32) - float("inf")
++        l_i = tl.zeros([BLOCK_M_LOADING], dtype=tl.float32) + 1.0
++        acc = tl.zeros([BLOCK_M_LOADING, D_HEAD], dtype=tl.float32)
++
++        K += off_h_for_kv * stride_kh
++        V += off_h_for_kv * stride_vh
++
++        if IS_FP8:
++            q = q.to(tl.bfloat16)
++        sm_scale *= (
++            1.44269504  # 1/log2 as we use base2 for exponential and logarithm
++        )
++
++        for k_block_id in range(k_block_start, k_block_end - 1):
++            k, v = _load_kv(
++                k_block_id,
++                K,
++                V,
++                Q,
++                block_tables,
++                stride_kb,
++                stride_kd,
++                stride_kt,
++                stride_kx,
++                stride_vb,
++                stride_vd,
++                stride_vt,
++                stride_btb,
++                stride_btt,
++                off_z,
++                kv_scale,
++                BLOCK_N,
++                D_HEAD,
++                X,
++                IS_FP8,
++                BLOCK_D,
++                EVEN_D,
++            )
++
++            acc, l_i, m_i = _fwd_kernel_inner_with_blocktable(
++                acc,
++                l_i,
++                m_i,
++                q,
++                k,
++                v,
++                Q,
++                k_block_id,
++                offs_n,
++                sm_scale,
++                q_pid,
++                False,
++                BLOCK_M_LOADING,
++                BLOCK_N,
++            )
++
++        k_block_id = k_block_end - 1
++        k, v = _load_kv(
++            k_block_id,
++            K,
++            V,
++            Q,
++            block_tables,
++            stride_kb,
++            stride_kd,
++            stride_kt,
++            stride_kx,
++            stride_vb,
++            stride_vd,
++            stride_vt,
++            stride_btb,
++            stride_btt,
++            off_z,
++            kv_scale,
++            BLOCK_N,
++            D_HEAD,
++            X,
++            IS_FP8,
++            BLOCK_D,
++            EVEN_D,
++        )
++
++        acc, l_i, m_i = _fwd_kernel_inner_with_blocktable(
++            acc,
++            l_i,
++            m_i,
++            q,
++            k,
++            v,
++            Q,
++            k_block_id,
++            offs_n,
++            sm_scale,
++            q_pid,
++            True,
++            BLOCK_M_LOADING,
++            BLOCK_N,
++        )
++
++        # TODO(linxihui): split last block
++
++        ### flash-attn 2
++        m_i += tl.math.log2(l_i)
++        acc = acc / l_i[:, None]
++
++        Out += (off_z * stride_ot +
++                (off_h_for_kv * q_k_ratio + start_local_head_idx) * stride_oh)
++        q_mask_h = tl.arange(0, BLOCK_M_LOADING)
++        tl.store(
++            Out + q_mask_h[:, None] * stride_oh + offs_d[None, :] * stride_od,
++            acc,
++            mask=q_mask_h[:, None] < q_k_ratio,
++        )
++
++        M += (off_z * stride_mt +
++              (off_h_for_kv * q_k_ratio + start_local_head_idx) * stride_mh)
++        tl.store(M + q_mask_h * stride_mh, m_i, mask=q_mask_h < q_k_ratio)
++
++    else:
++        off_h_for_kv = off_h // q_k_ratio
++        offs_m = tl.arange(0, BLOCK_M_LOADING)
++
++        Q += off_z * stride_qt + off_h * stride_qh
++        if EVEN_D:
++            q = tl.load(Q + offs_d[None, :] * stride_qd)
++        else:
++            q = tl.load(
++                Q + offs_d[None, :] * stride_qd,
++                mask=(offs_d[None, :] < D_HEAD),
++                other=0,
++            )
++
++        q = tl.broadcast_to(q, (BLOCK_M_LOADING, D_HEAD))
++
++        sparse_crow_ptr = (layout_crow_ptr + off_h * layout_crow_stride_h +
++                           q_pbid * layout_crow_stride_m)
++
++        # TODO(linxihui): load at once, supported in new Triton
++        k_block_start = tl.load(sparse_crow_ptr).to(tl.int32)
++        k_block_end = tl.load(sparse_crow_ptr + 1).to(tl.int32)
++
++        m_i = tl.zeros([BLOCK_M_LOADING], dtype=tl.float32) - float("inf")
++        l_i = tl.zeros([BLOCK_M_LOADING], dtype=tl.float32) + 1.0
++        acc = tl.zeros([BLOCK_M_LOADING, D_HEAD], dtype=tl.float32)
++
++        K += off_h_for_kv * stride_kh
++        V += off_h_for_kv * stride_vh
++
++        if IS_FP8:
++            q = q.to(tl.bfloat16)
++        sm_scale *= (
++            1.44269504  # 1/log2 as we use base2 for exponential and logarithm
++        )
++
++        for k_block_col_idx in range(k_block_start, k_block_end):
++            k_block_id = tl.load(layout_col_ptr + off_h * layout_col_stride_h +
++                                 k_block_col_idx * layout_col_stride_m).to(
++                                     tl.int32)
++
++            k, v = _load_kv(
++                k_block_id,
++                K,
++                V,
++                Q,
++                block_tables,
++                stride_kb,
++                stride_kd,
++                stride_kt,
++                stride_kx,
++                stride_vb,
++                stride_vd,
++                stride_vt,
++                stride_btb,
++                stride_btt,
++                off_z,
++                kv_scale,
++                BLOCK_N,
++                D_HEAD,
++                X,
++                IS_FP8,
++                BLOCK_D,
++                EVEN_D,
++            )
++
++            acc, l_i, m_i = _fwd_kernel_inner_with_blocktable(
++                acc,
++                l_i,
++                m_i,
++                q,
++                k,
++                v,
++                Q,
++                k_block_id,
++                offs_n,
++                sm_scale,
++                q_pid,
++                False,  # can be safely set to False is it is remote only
++                BLOCK_M_LOADING,
++                BLOCK_N,
++            )
++
++        ### flash-attn 2
++        m_i += tl.math.log2(l_i)
++        acc = acc / l_i[:, None]
++
++        # write output
++        offs_m = tl.arange(0, BLOCK_M_LOADING)
++        Out += off_z * stride_ot + off_h * stride_oh
++        if EVEN_D:
++            tl.store(
++                Out + offs_m[:, None] * stride_ot +
++                offs_d[None, :] * stride_od,
++                acc,
++                mask=offs_m[:, None] < 1,
++            )
++        else:
++            tl.store(
++                Out + offs_m[:, None] * stride_ot +
++                offs_d[None, :] * stride_od,
++                acc,
++                mask=(offs_m[:, None] < 1) & (offs_d[None, :] < D_HEAD),
++            )
++
++        M += off_z * stride_mt + off_h * stride_mh
++        tl.store(M + offs_m * stride_mh, m_i, mask=offs_m < 1)
+diff --git a/vllm/model_executor/models/phi3small/blocksparse_attention/utils.py b/vllm/model_executor/models/phi3small/blocksparse_attention/utils.py
+new file mode 100644
+index 00000000..87b9ee01
+--- /dev/null
++++ b/vllm/model_executor/models/phi3small/blocksparse_attention/utils.py
+@@ -0,0 +1,214 @@
++# Helper functions for 3D sparse pattern
++# These function are not optimized and very inefficient.
++# Avoid calling them too frequent or use a cache mechanism.
++
++from functools import lru_cache
++
++import torch
++import triton
++
++
++def dense_to_crow_col(x):
++    """Turning a 2D/3D torch tensor (x) to CSR rows/cols indexing.
++    param:
++    TODO:
++        1. improve efficiency, is it faster if done in CPU, or 
++            customize a cuda kernel for it?
++    NOTE: col_indices padded -1
++    """
++    pad = -1
++    dim = x.dim()
++    assert x.dim() in (2, 3)
++    if x.dim() == 2:
++        x = x[None]
++    x = [xi.to_sparse_csr() for xi in x]
++    crows = torch.vstack([xi.crow_indices() for xi in x])
++    cols = [xi.col_indices() for xi in x]
++    max_cols = max(len(xi) for xi in cols)
++    cols = [
++        torch.cat([xi, pad + xi.new_zeros(max_cols - xi.shape[0])])
++        for xi in cols
++    ]
++    cols = torch.vstack(cols)
++    if dim == 2:
++        crows = crows[0]
++        cols = cols[0]
++    return crows, cols
++
++
++def crow_col_to_dense(crows, cols, dtype=torch.float16):
++    dim = crows.dim()
++    if dim == 1:
++        crows = crows[None]
++        cols = cols[None]
++    device = crows.device
++    crows, cols = crows.cpu(), cols.cpu()  # faster in cpu
++    shape = (crows.shape[0], crows.shape[1] - 1, cols.max() + 1)
++    x = torch.zeros(shape, dtype=dtype)
++    for i in range(shape[0]):
++        for j in range(shape[1]):
++            x[i, j, cols[i, crows[i, j]:crows[i, j + 1]]] = 1
++    if dim == 1:
++        x = x[0]
++    return x.to(device)
++
++
++def dense_to_ccol_row(x):
++    """Similar, but to CSC format"""
++    x = x.transpose(-2, -1)
++    return dense_to_crow_col(x)
++
++
++def ccol_row_to_dense(ccol, rows, dtype=torch.float16):
++    return crow_col_to_dense(ccol, rows, dtype).permute(0, 2, 1).contiguous()
++
++
++def _get_sparse_attn_mask_homo_head(
++    q_len,
++    max_seqlen,
++    dtype,
++    device,
++    block_size=128,
++    local_blocks=4,
++    vert_stride=4,
++    return_dense=False,
++):
++    """
++    :return: a tuple of 3:
++        - tuple of crow_indices, col_indices representation 
++            of CSR format.
++        - block dense mask
++        - all token dense mask (be aware that it can be 
++            OOM if it is too big) if `return_dense==True`, 
++            otherwise, None
++    """
++    with torch.no_grad():
++        num_blocks = triton.cdiv(max_seqlen, block_size)
++        q_pos = torch.arange(num_blocks)[:, None]
++        k_pos = torch.arange(num_blocks)[None]
++        mask_vert_strided = (torch.arange(num_blocks) + 1) % vert_stride == 0
++        block_mask_dense = (((q_pos >= k_pos)
++                             & ((q_pos - k_pos < local_blocks)
++                                | mask_vert_strided)).to(device).to(dtype))
++        num_blocks_q = triton.cdiv(q_len, block_size)
++        block_mask_dense_output = (
++            block_mask_dense[-num_blocks_q:].contiguous().to_sparse_csr())
++    if return_dense:
++        mask_dense = torch.kron(
++            block_mask_dense,
++            block_mask_dense.new_ones((block_size, block_size)),
++        )
++        causal_mask = torch.tril(torch.ones(
++            max_seqlen, max_seqlen)).type_as(mask_dense)[-q_len:]
++        mask_dense = mask_dense[-q_len:, :max_seqlen] * causal_mask
++        return (
++            (
++                block_mask_dense_output.crow_indices(),
++                block_mask_dense_output.col_indices(),
++            ),
++            block_mask_dense,
++            mask_dense,
++        )
++    else:
++        return (
++            (
++                block_mask_dense_output.crow_indices(),
++                block_mask_dense_output.col_indices(),
++            ),
++            block_mask_dense,
++            None,
++        )
++
++
++def binary_mask_to_bias(mask_dense):
++    mask_dense = 1 - mask_dense
++    mask_dense.masked_fill_(mask_dense.bool(), -torch.inf)
++    return mask_dense
++
++
++@lru_cache
++def get_sparse_attn_mask(
++    n_heads,
++    q_len,
++    max_seqlen,
++    dtype,
++    device,
++    block_size=128,
++    local_blocks=4,
++    vert_stride=4,
++    homo_head=True,
++    return_dense=False,
++    dense_mask_type="binary",
++):
++    """
++    :param dense_mask_type: "binary" (0 for skip token, 1 for others)
++        or "bias" (-inf for skip token, 0 or others)
++    :return: a tuple of 3:
++        - tuple of crow_indices, col_indices representation 
++            of CSR format.
++        - block dense mask
++        - all token dense mask (be aware that it can be OOM if it 
++            is too big) if `return_dense==True`, otherwise, None
++    """
++    assert dense_mask_type in ("binary", "bias")
++    if homo_head:
++        with torch.no_grad():
++            (crow, col), block_mask_dense, mask_dense = (
++                _get_sparse_attn_mask_homo_head(
++                    q_len,
++                    max_seqlen,
++                    dtype,
++                    device,
++                    block_size,
++                    local_blocks,
++                    vert_stride,
++                    return_dense,
++                ))
++            crow = crow[None].expand(n_heads, crow.shape[0])
++            col = col[None].expand(n_heads, col.shape[0])
++            if return_dense:
++                mask_dense = mask_dense[None].expand(n_heads,
++                                                     *mask_dense.shape)
++                if dense_mask_type == "bias":
++                    mask_dense = binary_mask_to_bias(mask_dense)
++            return (crow, col), block_mask_dense, mask_dense
++
++    with torch.no_grad():
++        num_blocks = triton.cdiv(max_seqlen, block_size)
++        q_pos = torch.arange(num_blocks)[None, :, None]
++        k_pos = torch.arange(num_blocks)[None, None]
++        head_sliding_step = max(
++            1, int(vert_stride /
++                   n_heads))  # if vert_stride <= n_heads, rotating the heads
++        mask_vert_strided = [
++            (torch.arange(num_blocks) + h * head_sliding_step + 1) %
++            vert_stride == 0 for h in range(n_heads)
++        ]
++        mask_vert_strided = torch.vstack(mask_vert_strided).unsqueeze(1)
++        block_mask_dense = (((q_pos >= k_pos)
++                             & ((q_pos - k_pos < local_blocks)
++                                | mask_vert_strided)).to(device).to(dtype))
++        num_blocks_q = triton.cdiv(q_len, block_size)
++        block_mask_dense_output = block_mask_dense[:, -num_blocks_q:]
++    if return_dense:
++        mask_dense = torch.kron(
++            block_mask_dense,
++            block_mask_dense.new_ones((block_size, block_size)),
++        )
++        causal_mask = torch.tril(torch.ones(
++            max_seqlen, max_seqlen)).type_as(mask_dense)[-q_len:]
++        mask_dense = mask_dense[..., -q_len:, :max_seqlen] * causal_mask[None]
++        if dense_mask_type == "bias":
++            mask_dense = binary_mask_to_bias(mask_dense)
++
++        return (
++            dense_to_crow_col(block_mask_dense_output),
++            block_mask_dense,
++            mask_dense,
++        )
++    else:
++        return (
++            dense_to_crow_col(block_mask_dense_output),
++            block_mask_dense,
++            None,
++        )
+diff --git a/vllm/model_executor/models/phi3small/phi3small.py b/vllm/model_executor/models/phi3small/phi3small.py
+new file mode 100644
+index 00000000..5ba7c618
+--- /dev/null
++++ b/vllm/model_executor/models/phi3small/phi3small.py
+@@ -0,0 +1,445 @@
++import math
++from typing import List, Optional, Tuple
++
++import torch
++from torch import nn
++from transformers.configuration_utils import PretrainedConfig
++
++from vllm.attention import Attention, AttentionMetadata
++from vllm.model_executor.layers.linear import (LinearMethodBase,
++                                               MergedColumnParallelLinear,
++                                               QKVParallelLinear,
++                                               RowParallelLinear)
++from vllm.model_executor.layers.logits_processor import LogitsProcessor
++from vllm.model_executor.layers.rotary_embedding import get_rope
++from vllm.model_executor.layers.sampler import Sampler
++from vllm.model_executor.layers.vocab_parallel_embedding import (
++    DEFAULT_VOCAB_PADDING_SIZE, ParallelLMHead, VocabParallelEmbedding)
++from vllm.model_executor.models.phi3small.phi3small_attention import (
++    BlockSparseFlashAttention)
++from vllm.model_executor.parallel_utils.parallel_state import (
++    get_tensor_model_parallel_rank, get_tensor_model_parallel_world_size)
++from vllm.model_executor.sampling_metadata import SamplingMetadata
++from vllm.model_executor.weight_utils import (default_weight_loader,
++                                              hf_model_weights_iterator)
++from vllm.sequence import SamplerOutput
++
++
++def load_column_parallel_weight(param: torch.nn.Parameter,
++                                loaded_weight: torch.Tensor):
++    tp = get_tensor_model_parallel_world_size()
++    rk = get_tensor_model_parallel_rank()
++    assert param.size(0) * tp == loaded_weight.size(0)
++    s = rk * param.size(0)
++    e = (rk + 1) * param.size(0)
++    loaded_weight = loaded_weight[s:e]
++    assert param.shape == loaded_weight.shape
++    param.data.copy_(loaded_weight)
++
++
++class QKVParallelLinear2(QKVParallelLinear):
++
++    def weight_loader(self, param: torch.nn.Parameter,
++                      loaded_weight: torch.Tensor):
++        return load_column_parallel_weight(param, loaded_weight)
++
++
++class MergedColumnParallelLinear2(MergedColumnParallelLinear):
++
++    def weight_loader(self, param: torch.nn.Parameter,
++                      loaded_weight: torch.Tensor):
++        return load_column_parallel_weight(param, loaded_weight)
++
++
++@torch.jit.script
++def quick_gelu(x):
++    return x * torch.sigmoid(1.702 * x)
++
++
++@torch.jit.script
++def gegelu(input, limit: Optional[float] = None):
++    a_gelu, a_linear = input[..., ::2], input[..., 1::2]
++    if limit is not None:
++        a_gelu = torch.where(torch.isinf(a_gelu), a_gelu,
++                             a_gelu.clamp(min=None, max=limit))
++        a_linear = torch.where(
++            torch.isinf(a_linear),
++            a_linear,
++            a_linear.clamp(min=-limit, max=limit),
++        )
++    out_gelu = quick_gelu(a_gelu)
++    return out_gelu * (a_linear + 1)
++
++
++class Phi3SmallMLP(nn.Module):
++
++    def __init__(
++        self,
++        config: PretrainedConfig,
++        linear_method: Optional[LinearMethodBase] = None,
++    ) -> None:
++        super().__init__()
++        self.config = config
++        assert (self.config.hidden_act == "gegelu"
++                ), "Only `gegelu` is supported for the 4.7 series of models .."
++        self.hidden_size = config.hidden_size
++        self.gegelu_limit = config.gegelu_limit
++        self.intermediate_size = config.intermediate_size
++
++        self.up_proj = MergedColumnParallelLinear2(
++            self.hidden_size,
++            2 * [self.intermediate_size],
++            bias=True,
++            linear_method=linear_method,
++        )
++        self.down_proj = RowParallelLinear(
++            self.intermediate_size,
++            self.hidden_size,
++            bias=True,
++            linear_method=linear_method,
++        )
++
++    def forward(self, x):
++        gate_up, _ = self.up_proj(x)
++        x = gegelu(gate_up)
++        x, _ = self.down_proj(x)
++        return x
++
++
++class Phi3SmallSelfAttention(nn.Module):
++
++    def __init__(self,
++                 config: PretrainedConfig,
++                 layer_idx: Optional[int] = None) -> None:
++        super().__init__()
++        self.layer_idx = layer_idx
++        self.config = config
++        self.sparse_block_size = config.blocksparse_block_size
++        self.homo_heads = config.blocksparse_homo_head_pattern
++        self.lcoal_blocks = config.blocksparse_num_local_blocks
++        self.vert_stride = config.blocksparse_vert_stride
++
++        assert (config.blocksparse_block_size ==
++                config.blocksparse_triton_kernel_block_size)
++
++        self.hidden_size = config.hidden_size
++        # Number of Query Heads
++        self.num_heads = config.num_attention_heads
++
++        self.head_dim = self.hidden_size // self.num_heads
++        self.tp_size = get_tensor_model_parallel_world_size()
++        # Number of total Key Value Heads before tensor parallel
++        self.num_key_value_heads = config.num_key_value_heads
++        self.num_q_per_kv = self.num_heads // self.num_key_value_heads
++        if self.tp_size > 1:
++            assert self.num_key_value_heads % self.tp_size == 0
++        self.num_kv_heads_per_partion = max(
++            1, self.num_key_value_heads // self.tp_size)
++        self.num_heads_per_partition = self.num_heads // self.tp_size
++
++        self.max_position_embeddings = config.max_position_embeddings
++        self.rope_embedding_base = config.rope_embedding_base
++        self.rope_position_scale = config.rope_position_scale
++        self.is_causal = True
++
++        norm_factor = None
++        if config.mup_use_scaling:
++            norm_factor = self.head_dim / config.mup_attn_multiplier
++        else:
++            norm_factor = math.sqrt(self.head_dim)
++        self.scale = 1 / norm_factor
++
++        self.query_key_value = QKVParallelLinear2(
++            self.hidden_size,
++            self.head_dim,
++            self.num_heads,
++            self.num_key_value_heads,
++            bias=True,
++            linear_method=None,
++        )
++
++        self.dense = RowParallelLinear(self.hidden_size,
++                                       self.hidden_size,
++                                       bias=True,
++                                       linear_method=None)
++
++        if getattr(self.config, "rope_scaling", None) is not None:
++            rope_scaling = self.config.rope_scaling
++            for key in rope_scaling:
++                if isinstance(rope_scaling[key], list):
++                    rope_scaling[key] = tuple(rope_scaling[key])
++
++            if "factor" not in rope_scaling:
++                rope_scaling["factor"] = self.rope_position_scale
++        else:
++            rope_scaling = {
++                "type": "linear",
++                "factor": self.rope_position_scale,
++            }
++
++        self.rotary_emb = get_rope(
++            self.head_dim,
++            rotary_dim=self.head_dim,
++            max_position=self.max_position_embeddings,
++            base=self.rope_embedding_base,
++            rope_scaling=rope_scaling,
++        )
++
++        # blocksparse params
++        self.blocksparse_block_size = config.blocksparse_block_size
++        self.blocksparse_num_local_blocks = config.blocksparse_num_local_blocks
++        self.blocksparse_vert_stride = config.blocksparse_vert_stride
++
++        use_dense_attn = (getattr(self.config,
++                                  "dense_attention_every_n_layers", None)
++                          and (self.layer_idx + 1) %
++                          self.config.dense_attention_every_n_layers == 0)
++
++        if use_dense_attn:
++            self.attn = Attention(
++                self.num_heads_per_partition,
++                self.head_dim,
++                self.scale,
++                num_kv_heads=self.num_kv_heads_per_partion,
++            )
++        else:
++            self.attn = BlockSparseFlashAttention(
++                self.lcoal_blocks,
++                self.vert_stride,
++                self.num_heads_per_partition,
++                self.head_dim,
++                self.scale,
++                max_seqlen=self.max_position_embeddings,
++                sparse_block_size=self.sparse_block_size,
++                num_kv_heads=self.num_kv_heads_per_partion,
++                layer_idx=layer_idx,
++            )
++
++    def forward(
++        self,
++        positions: torch.Tensor,
++        hidden_states: torch.Tensor,
++        kv_cache: torch.Tensor,
++        attn_metadata: AttentionMetadata,
++    ) -> Tuple[torch.Tensor, Optional[torch.Tensor],
++               Optional[Tuple[torch.Tensor]]]:
++        qkv, _ = self.query_key_value(hidden_states)
++
++        qkv = qkv.view(qkv.shape[:-1] +
++                       (-1, (self.num_q_per_kv + 2), self.head_dim))
++        q, k, v = qkv.split([self.num_q_per_kv, 1, 1], dim=-2)
++
++        # NOTE: this is required by RotaryEmbed, which indeed does not have to
++        # TODO: allow 3D QK for rotary forward
++        q = q.reshape(-1, self.head_dim * self.num_heads_per_partition)
++        k = k.reshape(-1, self.head_dim * self.num_kv_heads_per_partion)
++        v = v.reshape(-1, self.head_dim * self.num_kv_heads_per_partion)
++
++        q, k = self.rotary_emb(positions, q, k)
++        attn_output = self.attn(q, k, v, kv_cache, attn_metadata=attn_metadata)
++        output, _ = self.dense(attn_output)
++
++        return output
++
++
++class Phi3SmallDecoderLayer(nn.Module):
++
++    def __init__(
++        self,
++        config: PretrainedConfig,
++        layer_idx: int,
++        linear_method: Optional[LinearMethodBase] = None,
++    ):
++        super().__init__()
++        self.hidden_size = config.hidden_size
++        self.self_attn = Phi3SmallSelfAttention(config, layer_idx)
++        self.mlp = Phi3SmallMLP(config)
++
++        self.input_layernorm = nn.LayerNorm(config.hidden_size,
++                                            eps=config.layer_norm_epsilon)
++        self.post_attention_layernorm = nn.LayerNorm(
++            config.hidden_size, eps=config.layer_norm_epsilon)
++
++    def forward(
++        self,
++        positions: torch.Tensor,
++        hidden_states: torch.Tensor,
++        kv_cache: torch.Tensor,
++        attn_metadata: AttentionMetadata,
++    ) -> torch.Tensor:
++        residual = hidden_states
++        hidden_states = self.input_layernorm(hidden_states)
++
++        hidden_states = self.self_attn(
++            positions=positions,
++            hidden_states=hidden_states,
++            kv_cache=kv_cache,
++            attn_metadata=attn_metadata,
++        )
++        hidden_states = residual + hidden_states
++
++        residual = hidden_states
++        hidden_states = self.post_attention_layernorm(hidden_states)
++        hidden_states = self.mlp(hidden_states)
++        hidden_states = residual + hidden_states
++        return hidden_states
++
++
++class Phi3SmallModel(nn.Module):
++
++    def __init__(
++        self,
++        config: PretrainedConfig,
++        linear_method: Optional[LinearMethodBase] = None,
++    ):
++        super().__init__()
++        self.config = config
++
++        self.embed_tokens = VocabParallelEmbedding(config.vocab_size,
++                                                   config.hidden_size)
++
++        self.mup_embedding_multiplier = config.mup_embedding_multiplier
++
++        self.layers = nn.ModuleList([
++            Phi3SmallDecoderLayer(config, layer_idx)
++            for layer_idx in range(config.num_hidden_layers)
++        ])
++
++        self.final_layernorm = nn.LayerNorm(config.hidden_size,
++                                            eps=config.layer_norm_epsilon)
++
++    def get_input_embeddings(self):
++        return self.embed_tokens
++
++    def set_input_embeddings(self, value):
++        self.embed_tokens = value
++
++    def forward(
++        self,
++        input_ids: torch.LongTensor,
++        positions: Optional[torch.LongTensor],
++        kv_caches: List[torch.Tensor],
++        attn_metadata: AttentionMetadata = None,
++    ):
++        hidden_states = self.embed_tokens(input_ids)
++        if (self.mup_embedding_multiplier is not None
++                and self.mup_embedding_multiplier > 0.0):
++            hidden_states = hidden_states * self.mup_embedding_multiplier
++        for i in range(len(self.layers)):
++            layer = self.layers[i]
++            hidden_states = layer(
++                positions,
++                hidden_states,
++                kv_caches[i],
++                attn_metadata,
++            )
++        hidden_states = self.final_layernorm(hidden_states)
++        return hidden_states
++
++
++class Phi3SmallForCausalLM(nn.Module):
++    _tied_weights_keys = ["lm_head.weight"]
++
++    def __init__(
++        self,
++        config,
++        linear_method: Optional[LinearMethodBase] = None,
++    ):
++        super().__init__()
++        self.config = config
++        self.model = Phi3SmallModel(config)
++        self.vocab_size = config.vocab_size
++        self.mup_width_multiplier = config.mup_width_multiplier
++        self.lm_head = ParallelLMHead(
++            self.vocab_size,
++            config.hidden_size,
++            org_num_embeddings=config.vocab_size,
++            padding_size=DEFAULT_VOCAB_PADDING_SIZE,
++        )
++        self.logits_processor = LogitsProcessor(config.vocab_size)
++        self.sampler = Sampler()
++
++        # tokens in tiktoken but not used
++        if hasattr(config, 'dummy_token_indices'):
++            device = self.lm_head.weight.device
++            self.register_buffer(
++                'dummy_token_indices',
++                torch.LongTensor(config.dummy_token_indices).to(device),
++                persistent=False)
++        else:
++            self.dummy_token_indices = None
++
++    def get_input_embeddings(self):
++        return self.model.embed_tokens
++
++    def set_input_embeddings(self, value):
++        self.model.embed_tokens = value
++
++    def get_output_embeddings(self):
++        return self.lm_head
++
++    def set_output_embeddings(self, value):
++        self.lm_head = value
++
++    def set_decoder(self, decoder):
++        self.model = decoder
++
++    def get_decoder(self):
++        return self.model
++
++    def compute_logits(self, hidden_states: torch.Tensor,
++                       sampling_metadata: SamplingMetadata) -> torch.Tensor:
++        logits = self.logits_processor(self.lm_head.weight, hidden_states,
++                                       sampling_metadata)
++        if self.dummy_token_indices is not None and logits is not None:
++            # In case of tensor-parallelism, the logit processor under the hood
++            # does an `tensor_model_parallel_gather`, so that the vocab multiplication
++            # would happen only on rank 0. For all other ranks, the logits are returned as
++            # None. Hence only rank with not None logits should fill the dummy tokens with -inf.
++            logits.index_fill_(-1, self.dummy_token_indices, -torch.inf)
++        return logits
++
++    def forward(
++        self,
++        input_ids: torch.LongTensor,
++        positions: Optional[torch.LongTensor],
++        kv_caches: List[torch.Tensor],
++        attn_metadata: AttentionMetadata,
++    ) -> torch.Tensor:
++        output_hidden_states = self.model(
++            input_ids=input_ids,
++            positions=positions,
++            kv_caches=kv_caches,
++            attn_metadata=attn_metadata,
++        )
++        output_hidden_states = output_hidden_states
++        return output_hidden_states
++
++    def sample(
++        self,
++        logits: torch.Tensor,
++        sampling_metadata: SamplingMetadata,
++    ) -> Optional[SamplerOutput]:
++        next_tokens = self.sampler(logits / self.mup_width_multiplier,
++                                   sampling_metadata)
++        return next_tokens
++
++    def load_weights(
++        self,
++        model_name_or_path: str,
++        cache_dir: Optional[str] = None,
++        load_format: str = "auto",
++        revision: Optional[str] = None,
++    ):
++        params_dict = dict(self.named_parameters())
++        for name, loaded_weight in hf_model_weights_iterator(
++                model_name_or_path, cache_dir, load_format, revision):
++            if "rotary_emb.inv_freq" in name:
++                continue
++            if name.endswith(".bias") and name not in params_dict:
++                continue
++            param = params_dict[name]
++            weight_loader = getattr(param, "weight_loader",
++                                    default_weight_loader)
++            weight_loader(param, loaded_weight)
++        self.lm_head.weight.data.copy_(self.model.embed_tokens.weight.data)
+diff --git a/vllm/model_executor/models/phi3small/phi3small_attention.py b/vllm/model_executor/models/phi3small/phi3small_attention.py
+new file mode 100644
+index 00000000..092713ac
+--- /dev/null
++++ b/vllm/model_executor/models/phi3small/phi3small_attention.py
+@@ -0,0 +1,392 @@
++# from vllm.attention import Attention, AttentionMetadata
++import os
++from dataclasses import dataclass
++from typing import Dict, List, Optional, Tuple, Type
++
++import torch
++from torch import nn
++
++from vllm.attention.backends.abstract import (AttentionBackend, AttentionImpl,
++                                              AttentionMetadata)
++from vllm.attention.ops.paged_attn import (PagedAttention,
++                                           PagedAttentionMetadata)
++from vllm.model_executor.parallel_utils.parallel_state import (
++    get_tensor_model_parallel_rank, get_tensor_model_parallel_world_size)
++
++from .blocksparse_attention.interface import (LocalStridedBlockSparseAttn,
++                                              LocalStridedBlockSparsePagedAttn)
++
++
++class BlockSparseFlashAttention(nn.Module):
++    """Attention layer.
++
++    This class takes query, key, and value tensors as input. The input tensors
++    can either contain prompt tokens or generation tokens.
++    The class does the following:
++
++    1. Store the input key and value tensors in the KV cache.
++    2. Perform (multi-head/multi-query/grouped-query) attention.
++    3. Return the output tensor.
++
++    NOTE: You can use set PHI3SMALL_USE_TRITON_PAGED_ATTN=1 to use the 
++    Triton paged attn instead of vllm cuda paged attn.
++
++    Arguments
++    =========
++
++    local_blocks: number of blocks for local attention, i.e., number of 
++    local attended tokens / `sparse_block_size`
++    vert_stride: attend to one block per every `vert_stride` blocks.
++    num_heads: num of heads per tensor-paralllel rank, i.e., 
++    total num of heads / TP_SIZE.
++    head_size:
++    scale: softmax scale.
++    num_kv_heads: num of kv heads per tensor-parallel rank, i.e., 
++        total num of KV heads / TP_SIZE
++    max_seqlen: target sequence length. Used to construct attention mask
++    sparse_block_size: block size used for blocksparse attention. 
++        This is the block_size used in `local_blocks`, `vert_stride`.
++    layer_idx: idx starts from 0
++    use_triton_paged_attn: If to use customized Triton paged attn kernel
++        for blocksparse-attention during decoding phase.
++        By default it is False, but you can activate this by setting 
++        environment variable `PHI3SMALL_USE_TRITON_PAGED_ATTN=1`.
++    homo_head: if to use the same vertical stride offset for all heads, 
++        i.e., attend to the same block of tokens on all heads.
++        By default, it is False, i.e., attention on the non-local 
++        blocks depends on the `head_idx`, that is on
++        blocks satisfying `(block_idx + head_idx * head_sliding_step + 1) % \
++            vert_stride == 0`
++        where `head_sliding_step=max(1, int(vert_stride / num_total_heads))`,
++                `block_idx = position_id // sparse_block_size`.
++        See `.blocksparse_attention.utils:get_sparse_attn_mask` for more detail.
++    **kwargs: not used, only for API compatibility.
++    """
++
++    def __init__(
++        self,
++        local_blocks: int,
++        vert_stride: int,
++        num_heads: int,
++        head_size: int,
++        scale: float,
++        num_kv_heads: Optional[int] = None,
++        max_seqlen: int = 8192,
++        sparse_block_size: int = 64,
++        layer_idx: int = 0,
++        use_triton_paged_attn: Optional[bool] = None,
++        homo_head: bool = False,
++        **kwargs,
++    ) -> None:
++        super().__init__()
++        self.layer_idx = layer_idx
++        self.local_blocks = local_blocks
++        self.vert_stride = vert_stride
++        self.homo_head = homo_head
++
++        if use_triton_paged_attn is None:
++            use_triton_paged_attn = bool(
++                int(os.environ.get("PHI3SMALL_USE_TRITON_PAGED_ATTN", "0")))
++
++        self.use_triton_paged_attn = use_triton_paged_attn
++        self.backend = BlocksparseFlashAttentionBackend
++        impl_cls = self.backend.get_impl_cls()
++        self.impl = impl_cls(
++            local_blocks,
++            vert_stride,
++            num_heads,
++            head_size,
++            scale,
++            num_kv_heads,
++            homo_head=homo_head,
++            max_seqlen=max_seqlen,
++            sparse_block_size=sparse_block_size,
++            layer_idx=layer_idx,
++            use_triton_paged_attn=use_triton_paged_attn,
++        )
++
++    def forward(
++        self,
++        query: torch.Tensor,
++        key: torch.Tensor,
++        value: torch.Tensor,
++        kv_cache: Optional[torch.Tensor],
++        attn_metadata: AttentionMetadata,
++        kv_scale: float = 1.0,
++    ) -> torch.Tensor:
++        return self.impl.forward(query, key, value, kv_cache, attn_metadata,
++                                 kv_scale)
++
++
++class BlocksparseFlashAttentionBackend(AttentionBackend):
++
++    @staticmethod
++    def get_impl_cls() -> Type["BlocksparseFlashAttentionImpl"]:
++        return BlocksparseFlashAttentionImpl
++
++    @staticmethod
++    def make_metadata(*args, **kwargs) -> "BlocksparseFlashAttentionMetadata":
++        return BlocksparseFlashAttentionMetadata(*args, **kwargs)
++
++    @staticmethod
++    def get_kv_cache_shape(
++        num_blocks: int,
++        block_size: int,
++        num_kv_heads: int,
++        head_size: int,
++    ) -> Tuple[int, ...]:
++        return PagedAttention.get_kv_cache_shape(num_blocks, block_size,
++                                                 num_kv_heads, head_size)
++
++    @staticmethod
++    def swap_blocks(
++        src_kv_cache: torch.Tensor,
++        dst_kv_cache: torch.Tensor,
++        src_to_dst: Dict[int, int],
++    ) -> None:
++        PagedAttention.swap_blocks(src_kv_cache, dst_kv_cache, src_to_dst)
++
++    @staticmethod
++    def copy_blocks(
++        kv_caches: List[torch.Tensor],
++        src_to_dists: Dict[int, List[int]],
++    ) -> None:
++        PagedAttention.copy_blocks(kv_caches, src_to_dists)
++
++
++@dataclass
++class BlocksparseFlashAttentionMetadata(AttentionMetadata,
++                                        PagedAttentionMetadata):
++    """Metadata for FlashAttentionBackend.
++
++    NOTE: Any python object stored here is not updated when it is
++    cuda-graph replayed. If you have values that need to be changed
++    dynamically, it should be stored in tensor. The tensor has to be
++    updated from `CUDAGraphRunner.forward` API.
++    """
++
++    # Currently, input sequences can only contain all prompts
++    # or all decoding. True if all sequences are prompts.
++    is_prompt: bool
++    # (batch_size,). The prompt length per sequence. None if it is a decoding.
++    prompt_lens: Optional[List[int]]
++    # prompt_lens stored as a tensor.
++    prompt_lens_tensor: Optional[torch.Tensor]
++    # The number of prompt tokens. Doesn't include padding.
++    num_prompt_tokens: int
++    # The number of generation tokens. Doesn't include padding.
++    num_generation_tokens: int
++
++    # NOTE(sang): Definition of context_len, subquery_len, and seqlen.
++    # |---------- N-1 iteration --------|
++    # |---------------- N iteration ---------------------|
++    # |- tokenA -|......................|-- newTokens ---|
++    # |---------- context_len ----------|
++    # |-------------------- seqlen ----------------------|
++    #                                   |- subquery_len -|
++
++    # WARNING(sang): context_len has different definition depending on if it is
++    # prefill vs decoding. When it is prefill, it doesn't include new tokens.
++    # When it is for decoding, it includes a new token.
++
++    # Maximum subquery length in the batch.
++    max_subquery_len: Optional[int]
++    # Maximum prompt length in the batch.
++    max_prompt_len: Optional[int]
++    # (batch_size + 1,). The cumulative subquery lengths of the sequences in
++    # the batch, used to index into subquery. E.g., if the subquery length
++    # is [4, 6], it is [0, 4, 10].
++    subquery_start_loc: Optional[torch.Tensor]
++    # (batch_size + 1,). The cumulative sequence lengths of the sequences in
++    # the batch, used to index into sequence. E.g., if the sequence length is
++    # [4, 6], it is [0, 4, 10].
++    seq_start_loc: Optional[torch.Tensor]
++
++    # Whether or not if cuda graph is enabled.
++    # Cuda-graph is currently enabled for decoding only.
++    # TODO(woosuk): Move `use_cuda_graph` out since it's unrelated to attention.
++    use_cuda_graph: bool
++
++
++class BlocksparseFlashAttentionImpl(AttentionImpl):
++    """
++    If the input tensors contain prompt tokens, the layout is as follows:
++    |<--------------- num_prompt_tokens -------------->|
++    |<--prompt_0-->|<--prompt_1-->|...|<--prompt_N-1-->|
++
++    Otherwise, the layout is as follows:
++    |<------------------ num_generation_tokens (M) ----------------->|
++    |<--generation_0-->|..........|<--generation_M-1-->|<--padding-->|
++
++    Generation tokens can contain padding when cuda-graph is used.
++    Currently, prompt tokens don't contain any padding.
++
++    The prompts might have different lengths, while the generation tokens
++    always have length 1.
++
++    """
++
++    def __init__(
++            self,
++            local_blocks: int,
++            vert_stride: int,
++            num_heads: int,
++            head_size: int,
++            scale: float,
++            num_kv_heads: Optional[int] = None,
++            max_seqlen: int = 8192,
++            sparse_block_size: int = 64,
++            alibi_slopes: Optional[List[float]] = None,
++            layer_idx: int = 0,
++            use_triton_paged_attn: bool = False,
++            homo_head: bool = False,
++            **kwargs,  # for compatibility
++    ) -> None:
++        self.layer_idx = layer_idx
++        self.num_heads = num_heads
++        self.head_size = head_size
++        self.scale = float(scale)
++        self.local_blocks = local_blocks
++        self.vert_stride = vert_stride
++        self.sparse_block_size = sparse_block_size
++        self.num_kv_heads = num_heads if num_kv_heads is None else num_kv_heads
++        self.homo_head = homo_head
++
++        self.use_triton_paged_attn = use_triton_paged_attn
++
++        if alibi_slopes is not None:
++            assert ValueError(
++                "Alibi not support for blocksparse flash attention.")
++        self.alibi_slopes = alibi_slopes
++
++        assert self.num_heads % self.num_kv_heads == 0
++        self.num_queries_per_kv = self.num_heads // self.num_kv_heads
++
++        suppored_head_sizes = PagedAttention.get_supported_head_sizes()
++        if head_size not in suppored_head_sizes:
++            raise ValueError(
++                f"Head size {head_size} is not supported by PagedAttention. "
++                f"Supported head sizes are: {suppored_head_sizes}.")
++
++        tp_size = get_tensor_model_parallel_world_size()
++        tp_rank = get_tensor_model_parallel_rank()
++        active_head_range = (
++            tp_rank * self.num_heads,
++            (tp_rank + 1) * self.num_heads,
++        )
++
++        total_num_heads = num_heads * tp_size
++        self.bs_attn = LocalStridedBlockSparseAttn(
++            total_num_heads,
++            max_seqlen,
++            local_blocks,
++            vert_stride,
++            sparse_block_size,
++            homo_head=self.homo_head,
++            active_head_range=active_head_range,
++        )
++
++        if self.use_triton_paged_attn:
++            self.bs_paged_attn = LocalStridedBlockSparsePagedAttn(
++                total_num_heads,
++                max_seqlen,
++                local_blocks,
++                vert_stride,
++                sparse_block_size,
++                homo_head=self.homo_head,
++                active_head_range=active_head_range,
++            )
++
++    def forward(
++        self,
++        query: torch.Tensor,
++        key: torch.Tensor,
++        value: torch.Tensor,
++        kv_cache: torch.Tensor,
++        attn_metadata: BlocksparseFlashAttentionMetadata,
++        kv_scale: float,
++    ) -> torch.Tensor:
++        """Forward pass with FlashAttention and PagedAttention.
++
++        Args:
++            query: shape = [num_tokens, num_heads * head_size]
++            key: shape = [num_tokens, num_kv_heads * head_size]
++            value: shape = [num_tokens, num_kv_heads * head_size]
++            kv_cache = [2, num_blocks, block_size * num_kv_heads * head_size]
++            attn_metadata: Metadata for attention.
++        Returns:
++            shape = [num_tokens, num_heads * head_size]
++        """
++        num_tokens, hidden_size = query.shape
++        # Reshape the query, key, and value tensors.
++        query = query.view(-1, self.num_heads, self.head_size)
++        key = key.view(-1, self.num_kv_heads, self.head_size)
++        value = value.view(-1, self.num_kv_heads, self.head_size)
++
++        if kv_cache is not None:
++            key_cache, value_cache = PagedAttention.split_kv_cache(
++                kv_cache, self.num_kv_heads, self.head_size)
++
++            # Reshape the input keys and values and store them in the cache.
++            # If kv_cache is not provided, the new key and value tensors are
++            # not cached. This happens during the initial memory profiling run.
++
++            PagedAttention.write_to_paged_cache(
++                key,
++                value,
++                key_cache,
++                value_cache,
++                attn_metadata.slot_mapping,
++                attn_metadata.kv_cache_dtype,
++                kv_scale,
++            )
++
++        if attn_metadata.is_prompt:
++
++            # Prompt run.
++            # normal attention
++            # When block_tables are not filled, it means q and k are the
++            # prompt, and they have the same length.
++
++            output = self.bs_attn(
++                q=query,
++                k=key,
++                v=value,
++                cu_seqlens_q=attn_metadata.seq_start_loc,
++                cu_seqlens_k=attn_metadata.seq_start_loc,
++                sm_scale=self.scale,
++            )
++
++        else:
++            # Decoding run.
++            if self.use_triton_paged_attn:
++                output = self.bs_paged_attn(
++                    query,
++                    key_cache,
++                    value_cache,
++                    attn_metadata.block_tables,
++                    attn_metadata.context_lens,
++                    sm_scale=self.scale,
++                    kv_scale=kv_scale,
++                )
++
++            else:  # cuda kernel
++                output = PagedAttention.forward_decode(
++                    query,
++                    key_cache,
++                    value_cache,
++                    attn_metadata.block_tables,
++                    attn_metadata.context_lens,
++                    attn_metadata.max_context_len,
++                    attn_metadata.kv_cache_dtype,
++                    self.num_kv_heads,
++                    self.scale,
++                    self.alibi_slopes,
++                    self.local_blocks,
++                    self.vert_stride,
++                    self.sparse_block_size,
++                    kv_scale,
++                )
++
++        # Reshape the output tensor.
++        return output.view(num_tokens, hidden_size)
+diff --git a/vllm/transformers_utils/config.py b/vllm/transformers_utils/config.py
+index 8a6ba6c5..9b721455 100644
+--- a/vllm/transformers_utils/config.py
++++ b/vllm/transformers_utils/config.py
+@@ -54,4 +54,4 @@ def get_hf_text_config(config: PretrainedConfig):
+         assert hasattr(config.text_config, "num_attention_heads")
+         return config.text_config
+     else:
+-        return config
++        return config
+\ No newline at end of file
+diff --git a/vllm/utils.py b/vllm/utils.py
+index 380ffe76..40c17d79 100644
+--- a/vllm/utils.py
++++ b/vllm/utils.py
+@@ -10,7 +10,7 @@ from collections import OrderedDict, defaultdict
+ from functools import lru_cache, partial
+ from platform import uname
+ from typing import (Any, Awaitable, Callable, Generic, Hashable, List,
+-                    Optional, Tuple, TypeVar, Union)
++                    Optional, Tuple, TypeVar, Union, Dict)
+ 
+ import psutil
+ import torch
+@@ -452,8 +452,8 @@ def maybe_expand_dim(tensor: torch.Tensor,
+     return tensor
+ 
+ 
+-def merge_dicts(dict1: dict[Any, list[Any]],
+-                dict2: dict[Any, list[Any]]) -> dict[Any, list[Any]]:
++def merge_dicts(dict1: Dict[Any, List[Any]],
++                dict2: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
+     """Merge 2 dicts that have key -> List of items.
+     
+     When a key conflicts, the values in dict1 is prioritized.
+@@ -466,4 +466,4 @@ def merge_dicts(dict1: dict[Any, list[Any]],
+     for key, value in dict2.items():
+         merged_dict[key].extend(value)
+ 
+-    return dict(merged_dict)
++    return dict(merged_dict)
+\ No newline at end of file

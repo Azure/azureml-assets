@@ -154,17 +154,17 @@ def load_and_merge_peft_lora_model(model_path: str, component_args: Namespace, f
 def copy_tokenizer_files_to_model_folder(mlflow_model_folder: str, task_name: str):
     """Copy tokenizer files to model folder.
 
-    Copying for Text Gen and Chat Completion tasks as this is needed for vLLM inference engine.
     It expects tokenizer and model files in same folder i.e. "data/model".
     """
-    if task_name not in [Tasks.TEXT_GENERATION, Tasks.CHAT_COMPLETION]:
-        logger.info("Not copying tokenizer files to model folder for {}".format(task_name))
-        return
-
-    logger.info("Copying tokenizer files to model folder for {}".format(task_name))
-    shutil.copytree(
-        str(Path(mlflow_model_folder, 'data', 'tokenizer')),
-        str(Path(mlflow_model_folder, 'data', 'model')),
-        dirs_exist_ok=True
-    )
-    logger.info("Copy completed for tokenizer files to model folder for {}".format(task_name))
+    src_dir = Path(mlflow_model_folder, 'data', 'tokenizer')
+    dst_dir = Path(mlflow_model_folder, 'data', 'model')
+    if src_dir.is_dir() and dst_dir.is_dir():
+        logger.info("Copying tokenizer files to model folder for {}".format(task_name))
+        shutil.copytree(
+            str(Path(mlflow_model_folder, 'data', 'tokenizer')),
+            str(Path(mlflow_model_folder, 'data', 'model')),
+            dirs_exist_ok=True
+        )
+        logger.info("Copy completed for tokenizer files to model folder for {}".format(task_name))
+    else:
+        logger.warning("Couldn't copy the tokenizer files to model folder.")

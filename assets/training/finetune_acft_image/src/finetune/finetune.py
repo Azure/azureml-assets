@@ -6,11 +6,9 @@
 import os
 import json
 import argparse
+import shutil
 from transformers.training_args import OptimizerNames
-from transformers.trainer_utils import (
-    SchedulerType,
-    IntervalStrategy
-)
+from transformers.trainer_utils import SchedulerType, IntervalStrategy
 from optimum.onnxruntime.training_args import ORTOptimizerNames
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.accelerator.constants import MetricConstants
@@ -18,7 +16,9 @@ from azureml.acft.accelerator.constants import MetricConstants
 from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import (
-    ModelInputEmpty, ArgumentInvalid, ACFTUserError
+    ModelInputEmpty,
+    ArgumentInvalid,
+    ACFTUserError,
 )
 from azureml.acft.common_components.utils.arg_utils import str2bool
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import swallow_all_exceptions
@@ -27,9 +27,7 @@ from azureml.metrics.constants import Metric as metrics_constants
 
 from azureml.acft.image import VERSION, PROJECT_NAME
 from azureml.acft.image.components.common.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
-from azureml.acft.image.components.finetune.common.constants.constants import (
-    SettingParameters
-)
+from azureml.acft.image.components.finetune.common.constants.constants import SettingParameters
 from azureml.acft.image.components.finetune.factory.mappings import MODEL_FAMILY_CLS
 from azureml.acft.image.components.finetune.factory.task_definitions import Tasks
 from azureml.acft.image.components.finetune.finetune_runner import finetune_runner
@@ -78,7 +76,7 @@ class Mapper:
         IncomingLearingScheduler.WARMUP_COSINE_WITH_RESTARTS: SchedulerType.COSINE_WITH_RESTARTS,
         IncomingLearingScheduler.WARMUP_POLYNOMIAL: SchedulerType.POLYNOMIAL,
         IncomingLearingScheduler.CONSTANT: SchedulerType.CONSTANT,
-        IncomingLearingScheduler.WARMUP_CONSTANT: SchedulerType.CONSTANT_WITH_WARMUP
+        IncomingLearingScheduler.WARMUP_CONSTANT: SchedulerType.CONSTANT_WITH_WARMUP,
     }
 
     # Optimizer names mapping from incoming names to finetune runner names
@@ -92,14 +90,15 @@ class Mapper:
         IncomingOptimizerNames.SGD: OptimizerNames.SGD,
         IncomingOptimizerNames.ADAFACTOR: OptimizerNames.ADAFACTOR,
         IncomingOptimizerNames.ADAGRAD: OptimizerNames.ADAGRAD,
-        IncomingOptimizerNames.ADAMW_ORT_FUSED: ORTOptimizerNames.ADAMW_ORT_FUSED
+        IncomingOptimizerNames.ADAMW_ORT_FUSED: ORTOptimizerNames.ADAMW_ORT_FUSED,
     }
 
 
 def get_parser():
     """Get the parser object."""
-    parser = argparse.ArgumentParser(description="Image Tasks which include Image classification, \
-                                                  object detection and instance segmentation.")
+    parser = argparse.ArgumentParser(
+        description="Image Tasks which include Image classification, object detection and instance segmentation."
+    )
 
     # # component input: model path from model_selector component
     parser.add_argument(
@@ -133,41 +132,49 @@ def get_parser():
         "--image_width",
         type=int,
         default=-1,
-        help="Final Image width after augmentation that is input to the network. \
-            Default value is -1 which means it would be overwritten by default image \
-            width in Hugging Face feature extractor. If either image_width or image_height \
-            is set to -1, default value would be used for both width and height."
+        help=(
+            "Final Image width after augmentation that is input to the network."
+            "Default value is -1 which means it would be overwritten by default image "
+            "width in Hugging Face feature extractor. If either image_width or image_height "
+            "is set to -1, default value would be used for both width and height."
+        )
     )
     parser.add_argument(
         "--image_height",
         type=int,
         default=-1,
-        help="Final Image height after augmentation that is input to the network. \
-            Default value is -1 which means it would be overwritten by default image \
-            height in Hugging Face feature extractor. If either image_width or image_height \
-            is set to -1, default value would be used for both width and height."
+        help=(
+            "Final Image width after augmentation that is input to the network."
+            "Default value is -1 which means it would be overwritten by default image "
+            "width in Hugging Face feature extractor. If either image_width or image_height "
+            "is set to -1, default value would be used for both width and height."
+        )
     )
 
     # Image min_size and max_size. Only applicable for OD and IS.
     parser.add_argument(
         "--image_min_size",
         type=int,
-        help="Minimum image size after augmentation that is input to the network. Default \
-            is -1 which means it would be overwritten by image_scale in model config. \
-            The image will be rescaled as large as possible within \
-            the range [image_min_size, image_max_size]. \
-            The image size will be constraint so that the max edge is no longer than \
-            image_max_size and short edge is no longer than image_min_size."
+        help=(
+            "Minimum image size after augmentation that is input to the network. Default "
+            "is -1 which means it would be overwritten by image_scale in model config. "
+            "The image will be rescaled as large as possible within "
+            "the range [image_min_size, image_max_size]. "
+            "The image size will be constraint so that the max edge is no longer than "
+            "image_max_size and short edge is no longer than image_min_size."
+        )
     )
     parser.add_argument(
         "--image_max_size",
         type=int,
-        help="Maximum image size after augmentation that is input to the network. Default \
-            is -1 which means it would be overwritten by image_scale in model config. \
-            The image will be rescaled as large as possible within\
-            the range [image_min_size, image_max_size]. \
-            The image size will be constraint so that the max edge is no longer than \
-            image_max_size and short edge is no longer than image_min_size."
+        help=(
+            "Maximum image size after augmentation that is input to the network. Default "
+            "is -1 which means it would be overwritten by image_scale in model config. "
+            "The image will be rescaled as large as possible within "
+            "the range [image_min_size, image_max_size]. "
+            "The image size will be constraint so that the max edge is no longer than "
+            "image_max_size and short edge is no longer than image_min_size."
+        )
     )
 
     # # Task name
@@ -179,7 +186,8 @@ def get_parser():
             Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION,
             Tasks.MM_OBJECT_DETECTION,
             Tasks.MM_INSTANCE_SEGMENTATION,
-            Tasks.MM_MULTI_OBJECT_TRACKING
+            Tasks.MM_MULTI_OBJECT_TRACKING,
+            Tasks.HF_SD_TEXT_TO_IMAGE,
         ),
         required=True,
         help="Name of the task the model is solving."
@@ -208,8 +216,10 @@ def get_parser():
     parser.add_argument(
         "--apply_deepspeed",
         type=lambda x: bool(str2bool(str(x), "apply_deepspeed")),
-        help="If set to true, will enable deepspeed for training. "
-        "If left empty, will be chosen automatically based on the task type and model selected."
+        help=(
+            "If set to true, will enable deepspeed for training. "
+            "If left empty, will be chosen automatically based on the task type and model selected."
+        )
     )
     # optional component input: deepspeed config json
     # core is using this parameter to check if deepspeed is enabled
@@ -217,15 +227,17 @@ def get_parser():
         "--deepspeed_config",
         type=str,
         default=None,
-        help="Deepspeed config to be used for finetuning",
+        help="Deepspeed config to be used for finetuning"
     )
 
     # # ORT
     parser.add_argument(
         "--apply_ort",
         type=lambda x: bool(str2bool(str(x), "apply_ort")),
-        help="If set to true, will enable Onnxruntime for training. "
-        "If left empty, will be chosen automatically based on the task type and model selected."
+        help=(
+            "If set to true, will enable Onnxruntime for training. "
+            "If left empty, will be chosen automatically based on the task type and model selected."
+        )
     )
 
     # # LORA
@@ -248,7 +260,7 @@ def get_parser():
         help=(
             "Number of training epochs."
             "If left empty, will be chosen automatically based on the task type and model selected."
-        ),
+        )
     )
     parser.add_argument(
         "--max_steps",
@@ -258,14 +270,16 @@ def get_parser():
             "In case of using a finite iterable dataset the training may stop before reaching the set number of steps"
             "when all data is exhausted."
             "If left empty, will be chosen automatically based on the task type and model selected."
-        ),
+        )
     )
 
     # # Batch size
     parser.add_argument(
         "--per_device_train_batch_size",
         type=int,
-        help="Train batch size. If left empty, will be chosen automatically based on the task type and model selected."
+        help=(
+            "Train batch size. If left empty, will be chosen automatically based on the task type and model selected."
+        )
     )
     parser.add_argument(
         "--per_device_eval_batch_size",
@@ -316,21 +330,22 @@ def get_parser():
             "The weight decay to apply (if not zero) to all layers except all "
             "bias and LayerNorm weights in AdamW optimizer."
             "If left empty, will be chosen automatically based on the task type and model selected."
-        ),
+        )
     )
     parser.add_argument(
         "--extra_optim_args",
         default="",
         type=str,
-        help=("Optional additional arguments that are supplied to SGD Optimizer."
-              "The arguments should be semi-colon separated key value pairs. "
-              "For example, 'momentum=0.5; nesterov=True' for sgd"
-              "Please make sure to use a valid parameter names for the chosen optimizer. For exact parameter names"
-              "please refer https://pytorch.org/docs/1.13/generated/torch.optim.SGD.html#torch.optim.SGD for SGD."
-              "Parameters supplied in extra_optim_args will take precedence over the parameter supplied via"
-              "other arguments such as weight_decay. If weight_decay is provided via 'weight_decay'"
-              "parameter and via extra_optim_args both, values specified in extra_optim_args will be used."
-              ),
+        help=(
+            "Optional additional arguments that are supplied to SGD Optimizer."
+            "The arguments should be semi-colon separated key value pairs. "
+            "For example, 'momentum=0.5; nesterov=True' for sgd"
+            "Please make sure to use a valid parameter names for the chosen optimizer. For exact parameter names"
+            "please refer https://pytorch.org/docs/1.13/generated/torch.optim.SGD.html#torch.optim.SGD for SGD."
+            "Parameters supplied in extra_optim_args will take precedence over the parameter supplied via"
+            "other arguments such as weight_decay. If weight_decay is provided via 'weight_decay'"
+            "parameter and via extra_optim_args both, values specified in extra_optim_args will be used."
+        )
     )
     # # Learning rate
     parser.add_argument(
@@ -339,7 +354,7 @@ def get_parser():
         help=(
             "Start learning rate. Defaults to 5e-05."
             "If left empty, will be chosen automatically based on the task type and model selected."
-        ),
+        )
     )
 
     # # Learning rate scheduler
@@ -371,7 +386,7 @@ def get_parser():
         help=(
             "Number of steps used for a linear warmup from 0 to learning_rate."
             "If left empty, will be chosen automatically based on the task type and model selected."
-        ),
+        )
     )
 
     # # Gradient accumulation steps
@@ -381,7 +396,7 @@ def get_parser():
         help=(
             "Number of updates steps to accumulate the gradients for, before performing a backward/update pass."
             "If left empty, will be chosen automatically based on the task type and model selected."
-        ),
+        )
     )
 
     # # mixed precision training
@@ -470,7 +485,7 @@ def get_parser():
             "If a value is passed, will limit the total amount of checkpoints. "
             "Deletes the older checkpoints in output_dir. "
             "If the value is -1 saves all checkpoints."
-        ),
+        )
     )
 
     # # metrics for model
@@ -496,12 +511,12 @@ def get_parser():
             metrics_constants.MOTA,
             metrics_constants.MOTP,
             metrics_constants.IDF1,
-            metrics_constants.IDSW
+            metrics_constants.IDSW,
         ),
         help=(
             "Specify the metric to use to compare two different models."
             "If left empty, will be chosen automatically based on the task type and model selected."
-        ),
+        )
     )
     # label smoothing factor
     parser.add_argument(
@@ -594,20 +609,299 @@ def get_parser():
     return parser
 
 
+def add_sd_args_to_parser(parser):
+    """Add Stable Diffusion related args to parser."""
+    # # Data inputs
+    parser.add_argument(
+        "--class_data_dir",
+        type=str,
+        default="class_data_dir",
+        required=False,
+        help="A folder containing the training data of class images."
+    )
+
+    # Instance prompt
+    parser.add_argument(
+        "--instance_prompt",
+        type=str,
+        default=None,
+        required=False,
+        help="The prompt with identifier specifying the instance"
+    )
+
+    parser.add_argument(
+        "--resolution",
+        type=int,
+        default=512,
+        required=False,
+        help="The image resolution for training."
+    )
+
+    parser.add_argument(
+        "--sample_batch_size",
+        type=int,
+        default=4,
+        required=False,
+        help="Batch size (per device) for sampling class images for prior preservation."
+    )
+
+    # Tokenizer
+    parser.add_argument(
+        "--tokenizer_name",
+        type=str,
+        default="openai/clip-vit-large-patch14",
+        choices=("openai/clip-vit-large-patch14"),
+        help="Pretrained tokenizer name or path if not the same as model_name"
+    )
+    parser.add_argument(
+        "--tokenizer_max_length",
+        type=int,
+        default=None,
+        required=False,
+        help="The maximum length of the tokenizer. If not set, will default to the tokenizer's max length."
+    )
+
+    # Text Encoder:
+    parser.add_argument(
+        "--text_encoder_type",
+        type=str,
+        default="CLIPTextModel",
+        choices=("CLIPTextModel", "T5EncoderModel"),
+        help="Text Encoder or path if not the same as model_name"
+    )
+    parser.add_argument(
+        "--text_encoder_name",
+        type=str,
+        required=False,
+        help="Text Encoder or path if not the same as model_name",
+    )
+    parser.add_argument(
+        "--train_text_encoder",
+        type=lambda x: bool(str2bool(str(x), "train_text_encoder")),
+        default=False,
+        help="Whether to train the text encoder. If set, the text encoder should be float32 precision."
+    )
+    parser.add_argument(
+        "--pre_compute_text_embeddings",
+        type=lambda x: bool(str2bool(str(x), "pre_compute_text_embeddings")),
+        default=True,
+        help=(
+            "Whether or not to pre-compute text embeddings. If text embeddings are pre-computed,"
+            "the text encoder will not be kept in memory during training and will leave more GPU memory"
+            "available for training the rest of the model. This is not compatible with `--train_text_encoder`."
+        )
+    )
+    parser.add_argument(
+        "--text_encoder_use_attention_mask",
+        type=lambda x: bool(str2bool(str(x), "text_encoder_use_attention_mask")),
+        default=False,
+        required=False,
+        help="Whether to use attention mask for the text encoder"
+    )
+    parser.add_argument(
+        "--skip_save_text_encoder",
+        type=lambda x: bool(str2bool(str(x), "skip_save_text_encoder")),
+        default=False,
+        required=False,
+        help="Set to not save text encoder"
+    )
+
+    # Residual noise predictio using UNET - decide whether to use timesteps as labels or None
+    parser.add_argument(
+        "--class_labels_conditioning",
+        type=str,
+        required=False,
+        default=None,
+        choices=("timesteps", None),
+        help="The optional `class_label` conditioning to pass to the unet, available values are `timesteps`."
+    )
+
+    # Noise Scheduler
+    parser.add_argument(
+        "--noise_scheduler_name",
+        type=str,
+        required=False,
+        choices=("DPMSolverMultistepScheduler", "DDPMScheduler", "PNDMScheduler"),
+        help="The noise scheduler name to use for the diffusion process."
+    )
+    parser.add_argument(
+        "--noise_scheduler_num_train_timesteps",
+        type=int,
+        required=False,
+        help="The number of diffusion steps to train the model."
+    )
+    parser.add_argument(
+        "--noise_scheduler_variance_type",
+        type=str,
+        choices=("fixed_small", "fixed_small_log", "fixed_large", "fixed_large_log", "learned", "learned_range"),
+        required=False,
+        help="Clip the variance when adding noise to the denoised sample."
+    )
+    parser.add_argument(
+        "--noise_scheduler_prediction_type",
+        type=str,
+        choices=("epsilon", "sample", "v_prediction"),
+        required=False,
+        help=(
+            "Prediction type of the scheduler function; can be `epsilon` (predicts the noise of the diffusion"
+            "process), `sample` (directly predicts the noisy sample`) or `v_prediction` "
+            "(see section 2.4 of [Imagen Video](https://imagen.research.google/video/paper.pdf) paper)."
+        )
+    )
+    parser.add_argument(
+        "--noise_scheduler_timestep_spacing",
+        type=str,
+        required=False,
+        help=(
+            "The way the timesteps should be scaled. Refer to Table 2 of the "
+            "[Common Diffusion Noise Schedules and Sample Steps are Flawed](https://huggingface.co/papers/2305.08891) "
+            "for more information."
+        )
+    )
+    parser.add_argument(
+        "--noise_scheduler_steps_offset",
+        type=int,
+        default=0,
+        required=False,
+        help=(
+            "An offset added to the inference steps. You can use a combination of `offset=1` and "
+            "`set_alpha_to_one=False` to make the last step use step 0 for the previous "
+            " alpha product like in Stable Diffusion."
+        ),
+    )
+    parser.add_argument(
+        "--extra_noise_scheduler_args",
+        type=str,
+        required=False,
+        help=(
+            "Optional additional arguments that are supplied to noise scheduler. The arguments should be semi-colon "
+            "separated key value pairs and should be enclosed in double quotes. "
+            "For example, 'clip_sample_range=1.0; clip_sample=True' for DDPMScheduler."
+        )
+    )
+
+    # Offset Noise
+    parser.add_argument(
+        "--offset_noise",
+        type=lambda x: bool(str2bool(str(x), "offset_noise")),
+        required=False,
+        help=(
+            "Fine-tuning against a modified noise"
+            " See: https://www.crosslabs.org//blog/diffusion-with-offset-noise for more information."
+        )
+    )
+
+    # Rebalance the loss
+    parser.add_argument(
+        "--snr_gamma",
+        type=float,
+        default=None,
+        help=(
+            "SNR weighting gamma to be used if rebalancing the loss. Recommended value is 5.0. "
+            "More details here: https://arxiv.org/abs/2303.09556."
+        )
+    )
+
+    # Prior preservation loss
+    parser.add_argument(
+        "--with_prior_preservation",
+        type=lambda x: bool(str2bool(str(x), "with_prior_preservation")),
+        default=True,
+        help="Ste to True for enabling prior preservation loss."
+    )
+    parser.add_argument(
+        "--class_prompt",
+        type=str,
+        default=None,
+        help="The prompt to specify images in the same class as provided instance images."
+    )
+    parser.add_argument(
+        "--num_class_images",
+        type=int,
+        default=100,
+        help=(
+            "Minimal class images for prior preservation loss. If there are not enough images already present in"
+            " class_data_dir, additional images will be sampled with class_prompt."
+        )
+    )
+    parser.add_argument(
+        "--prior_generation_precision",
+        type=str,
+        default="fp32",
+        choices=["fp32", "fp16", "bf16"],
+        help=(
+            "Choose prior generation precision between fp32, fp16 and bf16 (bfloat16). Bf16 requires PyTorch >="
+            " 1.10.and an Nvidia Ampere GPU.  Default to  fp16 if a GPU is available else fp32."
+        )
+    )
+    parser.add_argument(
+        "--prior_loss_weight",
+        type=float,
+        default=1.0,
+        help="The weight of prior preservation loss."
+    )
+
+    # Validation
+    parser.add_argument(
+        "--validation_prompt",
+        type=str,
+        default=None,
+        help="A prompt that is used during validation to verify that the model is learning."
+    )
+    parser.add_argument(
+        "--num_validation_images",
+        type=int,
+        default=0,
+        help="Number of images that should be generated during validation with `instance prompt`."
+    )
+    parser.add_argument(
+        "--validation_steps",
+        type=int,
+        default=100,
+        help=(
+            "Run validation every X steps. Validation consists of running the prompt"
+            " `args.validation_prompt` multiple times: `args.num_validation_images`"
+            " and logging the images."
+        )
+    )
+    parser.add_argument(
+        "--validation_scheduler",
+        type=str,
+        default="DPMSolverMultistepScheduler",
+        choices=("DPMSolverMultistepScheduler", "DDPMScheduler"),
+        help="Select which scheduler to use for validation. DDPMScheduler is recommended for DeepFloyd IF."
+    )
+
+    return parser
+
+
 @swallow_all_exceptions(time_delay=60)
 def main():
     """Driver function."""
     parser = get_parser()
     args, _ = parser.parse_known_args()
 
+    if args.task_name in [Tasks.HF_SD_TEXT_TO_IMAGE]:
+        parser = add_sd_args_to_parser(parser)
+        args, _ = parser.parse_known_args()
+        # saving is needed as lora adapters are picked from checkpoints.
+        # args.save_strategy = "no"
+        # args.evaluation_strategy = "no"
+        # args.eval_steps = None
+        # args.save_steps = None
+
+        # Todo: Remove if not required
+        if args.with_prior_preservation and args.class_data_dir and not os.path.exists(args.class_data_dir):
+            os.makedirs(args.class_data_dir, exist_ok=True)
+
     # step learning rate scheduler can only come from sweep component. The only other option that's available in
     # sweep components is warmup_cosine, hence we are raising following exception.
     if args.lr_scheduler_type == IncomingLearingScheduler.STEP:
-        error_string = f"Step scheduler is not supported by Huggingface and MMdetection trainer. Please choose "\
+        error_string = (
+            f"Step scheduler is not supported by Huggingface and MMdetection trainer. Please choose "
             f"{IncomingLearingScheduler.WARMUP_COSINE} as the learning rate scheduler."
-        raise ACFTValidationException._with_error(
-            AzureMLError.create(ACFTUserError, pii_safe_message=error_string)
         )
+        raise ACFTValidationException._with_error(AzureMLError.create(ACFTUserError, pii_safe_message=error_string))
 
     set_logging_parameters(
         task_type=args.task_name,
@@ -651,10 +945,8 @@ def main():
             args.model_weights_path_or_url = args.model_weights_path_or_url
     else:
         raise ACFTValidationException._with_error(
-              AzureMLError.create(ModelInputEmpty,
-                                  argument_name="Model ports and model_name"
-                                  )
-              )
+            AzureMLError.create(ModelInputEmpty, argument_name="Model ports and model_name")
+        )
 
     # Map learing rate scheduler to as expected by the Trainer class
     if args.lr_scheduler_type is not None:
@@ -672,6 +964,7 @@ def main():
         Tasks.HF_MULTI_CLASS_IMAGE_CLASSIFICATION,
         Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION,
         Tasks.MM_MULTI_OBJECT_TRACKING,
+        Tasks.HF_SD_TEXT_TO_IMAGE
     ]:
         training_defaults = TrainingDefaults(
             task=args.task_name,
@@ -686,28 +979,30 @@ def main():
     logger.info(f"Using learning rate scheduler - {args.lr_scheduler_type}")
     logger.info(f"Using optimizer - {args.optim}")
 
-    if args.task_name == Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION and \
-            args.label_smoothing_factor is not None and args.label_smoothing_factor > 0.0:
+    if (
+        args.task_name == Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION
+        and args.label_smoothing_factor is not None
+        and args.label_smoothing_factor > 0.0
+    ):
         args.label_smoothing_factor = 0.0
-        msg = f"Label smoothing is not supported for multi-label image classification. \
-            Setting label_smoothing_factor to 0.0 from {args.label_smoothing_factor}"
+        msg = (
+            f"Label smoothing is not supported for multi-label image classification. "
+            f"Setting label_smoothing_factor to 0.0 from {args.label_smoothing_factor}"
+        )
         logger.warning(msg)
 
-    # We also don't support DS & ORT training for OD and IS tasks.
-    if args.task_name in [
-        Tasks.MM_OBJECT_DETECTION,
-        Tasks.MM_INSTANCE_SEGMENTATION
-    ] and (args.apply_deepspeed is True or args.apply_ort is True):
-        err_msg = f"apply_deepspeed or apply_ort is not yet supported for {args.task_name}. " \
+    # We don't support DS & ORT training for OD and IS tasks.
+    if args.task_name in [Tasks.MM_OBJECT_DETECTION, Tasks.MM_INSTANCE_SEGMENTATION] and (
+       args.apply_deepspeed is True or args.apply_ort is True):
+        err_msg = (
+            f"apply_deepspeed or apply_ort is not yet supported for {args.task_name}. "
             "Please disable ds and ort training."
-        raise ACFTValidationException._with_error(
-            AzureMLError.create(ACFTUserError, pii_safe_message=err_msg)
         )
+        raise ACFTValidationException._with_error(AzureMLError.create(ACFTUserError, pii_safe_message=err_msg))
 
     if args.task_name in [
-        Tasks.MM_OBJECT_DETECTION,
-        Tasks.MM_INSTANCE_SEGMENTATION,
-        Tasks.MM_MULTI_OBJECT_TRACKING
+        Tasks.MM_OBJECT_DETECTION, Tasks.MM_INSTANCE_SEGMENTATION, Tasks.MM_MULTI_OBJECT_TRACKING,
+        Tasks.HF_SD_TEXT_TO_IMAGE
     ]:
         # Note: This is temporary check to disable deepspeed and ORT for MM tasks, until they are working.
         deepspeed_ort_arg_names = []
@@ -723,23 +1018,28 @@ def main():
             )
 
     if args.apply_ort is False and args.optim == IncomingOptimizerNames.ADAMW_ORT_FUSED:
-        error_string = f"ORT fused AdamW ({IncomingOptimizerNames.ADAMW_ORT_FUSED}) optimizer \
-        should only be used with ORT training."
-        raise ACFTValidationException._with_error(
-            AzureMLError.create(ACFTUserError, pii_safe_message=error_string)
+        error_string = (
+            f"ORT fused AdamW ({IncomingOptimizerNames.ADAMW_ORT_FUSED}) optimizer should only be used with ORT "
+            f"training."
         )
+        raise ACFTValidationException._with_error(AzureMLError.create(ACFTUserError, pii_safe_message=error_string))
 
     if args.apply_ort is True and args.optim != IncomingOptimizerNames.ADAMW_ORT_FUSED:
-        logger.warning(f"ORT training is enabled but optimizer is not set to {IncomingOptimizerNames.ADAMW_ORT_FUSED},\
-            Setting optimizer to {IncomingOptimizerNames.ADAMW_ORT_FUSED}")
+        logger.warning(
+            f"ORT training is enabled but optimizer is not set to {IncomingOptimizerNames.ADAMW_ORT_FUSED}, "
+            f"setting optimizer to {IncomingOptimizerNames.ADAMW_ORT_FUSED}"
+        )
         args.optim = IncomingOptimizerNames.ADAMW_ORT_FUSED
 
-    if "iou" in args.metric_for_best_model and args.task_name != Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION:
-        err_msg = f"{args.metric_for_best_model} metric supported only for {Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION}"
-        raise ACFTValidationException._with_error(
-            AzureMLError.create(ArgumentInvalid, argument_name="metric_for_best_model",
-                                expected_type=err_msg)
-        )
+    if args.task_name != Tasks.HF_SD_TEXT_TO_IMAGE:
+        # Metrics is not supported for text-to-image task yet
+        if args.task_name != Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION and "iou" in args.metric_for_best_model:
+            err_msg = (
+                f"{args.metric_for_best_model} metric supported only for {Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION}"
+            )
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(ArgumentInvalid, argument_name="metric_for_best_model", expected_type=err_msg)
+            )
 
     # Prepare args as per the TrainingArguments class+
     use_fp16 = bool(args.precision == 16)
@@ -768,6 +1068,16 @@ def main():
     args.model_selector_output = args.model_path
     args.output_dir = SettingParameters.DEFAULT_OUTPUT_DIR
 
+    # Empty the output directory in master process.
+    # Todo: Ideally, in case of preemption, we should handle start finetuning
+    # from the last checkpoint. This logic will be implemented in the future.
+    # For now, we are deleting the output directory and starting the training
+    # from scratch.
+    master_process = os.environ.get("RANK") == "0"
+    if os.path.exists(args.output_dir) and master_process:
+        shutil.rmtree(args.output_dir)
+    os.makedirs(args.output_dir, exist_ok=True)
+
     # TODO: overwriting the save_as_mlflow_model flag to True. Otherwise, it will fail the pipeline service since it
     #  expects the mlflow model folder to create model asset. It can be modified if outputs of the component can be
     #  optional.
@@ -776,6 +1086,10 @@ def main():
     # Disable adding prefixes to logger.
     args.set_log_prefix = False
     logger.info(f"Using log prefix - {args.set_log_prefix}")
+
+    if args.apply_lora:
+        args.lora_algo = "peft"
+        args.label_names = ["labels"]
 
     logger.info(args)
 
