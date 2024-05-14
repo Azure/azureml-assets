@@ -153,7 +153,7 @@ BUILD_CONTEXT_DISALLOWED_PATTERNS = [
     re.compile(r"extra-index-url", re.IGNORECASE),
 ]
 
-# Docker build context file extensions to be ignored 
+# Docker build context file extensions to be ignored
 BUILD_CONTEXT_IGNORED_FILE_EXTENSIONS = [
     ".whl",
 ]
