@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: oss_text_generation_finetune
+name: oss_chat_completion_finetune
 version: 0.0.12
 type: command
 
 is_deterministic: true
 
-display_name: OSS Text Generation Finetune
-description: FTaaS component to finetune model for Text Generation task
+display_name: OSS Chat Completion Finetune
+description: FTaaS component to finetune model for Chat Completion task
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/55
 
@@ -14,42 +14,29 @@ inputs:
   task_name:
     type: string
     optional: true
-    default: "TextGeneration"
+    default: "ChatCompletion"
     description: Finetune task name.
     enum:
-    - "TextGeneration"
+    - "ChatCompletion"
   mlflow_model_path:
     type: mlflow_model
     optional: true
     description: Input folder path containing mlflow model for further finetuning.
-      Proper model/huggingface id must be passed.
     mode: download
   model_asset_id:
     type: string
     optional: false
     description: Asset id of model
+  pytorch_model_path:
+    type: custom_model
+    optional: true
+    description: Input folder path containing pytorch model for further finetuning.
   dataset_input:
     type: uri_folder
     optional: false
     description: Output of data import component. The folder contains train and validation
       data.
     mode: download
-  text_key:
-    type: string
-    optional: false
-    description: key for text in an example. format your data keeping in mind that
-      text is concatenated with ground_truth while finetuning in the form - text +
-      groundtruth. for eg. "text"="knock knock\n", "ground_truth"="who's there"; will
-      be treated as "knock knock\nwho's there"
-  ground_truth_key:
-    type: string
-    optional: true
-    description: key for ground_truth in an example. we take separate column for ground_truth
-      to enable use cases like summarization, translation, question_answering, etc.
-      which can be repurposed in form of text-generation where both text and ground_truth
-      are needed. This separation is useful for calculating metrics. for eg. "text"="Summarize
-      this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of the
-      dialogue}"
   batch_size:
     type: integer
     optional: true
@@ -239,7 +226,7 @@ inputs:
   ignore_mismatched_sizes:
     type: string
     optional: true
-    default: "false"
+    default: "true"
     description: Whether or not to raise an error if some of the weights from the
       checkpoint do not have the same size as the weights of the model
     enum:
