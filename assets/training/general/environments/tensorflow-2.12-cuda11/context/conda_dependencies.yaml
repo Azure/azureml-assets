@@ -20,7 +20,7 @@ dependencies:
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
   - tensorboard~=2.15.0
-  - tensorflow~=2.12.0
+  - tensorflow~=2.15.0
   - tensorflow-datasets~=4.5.0
   - onnxruntime-gpu~=1.15.0
   - horovod[tensorflow]
