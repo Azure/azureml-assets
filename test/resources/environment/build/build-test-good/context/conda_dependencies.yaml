@@ -3,7 +3,7 @@ channels:
 - anaconda
 - conda-forge
 dependencies:
-- python=3.7
-- pip=20.2.4
+- python=3.10
+- pip=23.2.1
 - pip:
   - azureml-core=={{latest-pypi-version}}
