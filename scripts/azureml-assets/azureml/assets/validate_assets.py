@@ -855,7 +855,10 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
         error_count += 1
 
     if not model.tags.get(MLFlowModelTags.HIDDEN_LAYERS_SCANNED):
-        _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.HIDDEN_LAYERS_SCANNED} missing")
+        _log_error(
+            asset_config.file_name_with_path,
+            "Model is not scanned by HiddenLayer ModelScanner tool. Please scan the model and retry"
+        )
         error_count += 1
 
     # shared compute check
