@@ -5,13 +5,17 @@
 
 import argparse
 import os
+import tempfile
 from typing import Optional, List
 
-from datasets import load_dataset, get_dataset_split_names, get_dataset_config_names
+from datasets import Features, get_dataset_split_names, get_dataset_config_names, load_dataset, Value
 import pandas as pd
 from azureml._common._error_definition.azureml_error import AzureMLError
 
+from aml_benchmark.dataset_downloader.vision_dataset_adapter import VisionDatasetAdapterFactory
+from aml_benchmark.utils.aml_run_utils import get_default_datastore
 from aml_benchmark.utils.logging import get_logger, log_mlflow_params
+from aml_benchmark.utils.io import get_image_file_name, get_random_datastore_directory
 from aml_benchmark.utils.exceptions import (
     swallow_all_exceptions,
     BenchmarkValidationException,
@@ -21,6 +25,7 @@ from aml_benchmark.utils.error_definitions import BenchmarkValidationError, Data
 
 
 logger = get_logger(__name__)
+
 ALL = "all"
 
 
@@ -154,8 +159,96 @@ def download_dataset_from_hf(
         out_dir = os.path.join(output_dir, str(configuration), split)
         os.makedirs(out_dir, exist_ok=True)
         output_file_path = os.path.join(out_dir, "data.jsonl")
-        dataset.to_json(output_file_path)
+
+        # Save dataset to JSONL format, making the necessary adaptations for vision (eg save image data to datastore
+        # and include image links in JSONL file).
+        vision_dataset_adapter = VisionDatasetAdapterFactory.get_adapter(dataset)
+        _save_dataset_to_jsonl(dataset, vision_dataset_adapter, output_file_path)
+
         logger.info(f"Downloaded - Configuration: '{configuration}', Split: '{split}'.")
+
+
+def _save_dataset_to_jsonl(dataset, vision_dataset_adapter, dataset_file_path):
+    logger.info("a1 {} {}".format(vision_dataset_adapter, dataset_file_path))
+
+    # Local temporary directory not used by default.
+    temporary_directory = None
+
+    if vision_dataset_adapter is not None:
+        # Make the local temporary directory where the images will be saved.
+        temporary_directory = tempfile.TemporaryDirectory()
+
+        # Get the datastore and the directory within it where the images will be uploaded.
+        datastore = get_default_datastore()
+        logger.info("a2 {}".format(datastore))
+        datastore_directory_name, datastore_directory_url = get_random_datastore_directory(datastore.name)
+        logger.info("a3 {} {}".format(datastore_directory_name, datastore_directory_url))
+
+        # Initialize the image counter.
+        image_counter = 0
+
+        def adapt_vision_instance(instance):
+            nonlocal image_counter
+
+            if image_counter < 2:
+                logger.info("a4 {}".format(list(instance.keys())))
+
+            # Save the current image to the local temporary directory.
+            image_file_name = get_image_file_name(image_counter=image_counter)
+            image_file_path = os.path.join(temporary_directory.name, image_file_name)
+            vision_dataset_adapter.get_pil_image(instance).save(image_file_path)
+
+            if image_counter < 2:
+                logger.info("a5 {} {}".format(type(vision_dataset_adapter.get_pil_image(instance)), image_file_path))
+
+            # Get the current label.
+            label = vision_dataset_adapter.get_label(instance)
+
+            if image_counter < 2:
+                logger.info("a6 {} {}".format(type(label), label))
+
+            # Since returning a different dictionary than `instance` does not work, the current dictionary is modified
+            # and then returned.
+            instance.clear()
+
+            # Store the datastore URL where the image will be saved and also store the label.
+            instance["image_url"] = "{}/{}".format(datastore_directory_url, image_file_name)
+            instance["label"] = label
+
+            if image_counter < 2:
+                logger.info("a7 {}".format(instance))
+
+            # Increment the image counter.
+            image_counter += 1
+
+            return instance
+
+        logger.info("a8")
+
+        # Save the images in the dataset to temporary local storage.
+        dataset = dataset.map(
+            adapt_vision_instance,
+            features=Features({
+                "image_url": Value(dtype="string", id=None),
+                "label": Value(dtype="string", id=None),
+            })
+        )
+        logger.info("a9", dataset[0])
+
+        # Upload the images to datastore.
+        datastore.upload(src_dir=temporary_directory.name, target_path=datastore_directory_name)
+
+    logger.info("a10")
+
+    # Save the dataset to JSONL format.
+    dataset.to_json(dataset_file_path)
+
+    logger.info("a11")
+
+    # If images were saved to local temporary directory, delete it.
+    if temporary_directory is not None:
+        logger.info("a12")
+        temporary_directory.cleanup()
 
 
 def download_file_from_url(url: str, output_dir: str) -> None:

@@ -3,12 +3,13 @@
 
 """Contains helper functions for input/output operations."""
 
-from typing import Any, List, Dict, Optional
+from typing import Any, List, Dict, Optional, Tuple
 import uuid
 import json
 import os
 import glob
 import pandas as pd
+import uuid
 
 import mltable
 from azureml._common._error_definition.azureml_error import AzureMLError
@@ -19,6 +20,10 @@ from .error_definitions import DataFormatError
 
 
 logger = get_logger(__name__)
+
+DATASTORE_DIRECTORY_URL_TEMPLATE = "AmlDatastore://{datastore_name}/{directory_name}"
+RANDOM_IMAGE_DIRECTORY_TEMPLATE = "images/{random_id}"
+IMAGE_FILE_NAME_TEMPLATE = "image_{image_counter:09d}.png"
 
 
 def _raise_if_not_jsonl_file(input_file_path: str) -> None:
@@ -116,6 +121,20 @@ def resolve_io_path(dataset: str) -> List[str]:
 def filter_files_with_given_extension(file_paths: List[str], extension: str) -> List[str]:
     """Filter and returns the list of files with given extension."""
     return [file_path for file_path in file_paths if file_path.endswith(extension)]
+
+
+def get_image_file_name(image_counter: int) -> str:
+    """???"""
+    return IMAGE_FILE_NAME_TEMPLATE.format(image_counter=image_counter)
+
+
+def get_random_datastore_directory(datastore_name: str) -> Tuple[str, str]:
+    """???"""
+    datastore_directory_name = RANDOM_IMAGE_DIRECTORY_TEMPLATE.format(random_id=str(uuid.uuid4()))
+    datastore_directory_url = DATASTORE_DIRECTORY_URL_TEMPLATE.format(
+        datastore_name=datastore_name, directory_name=datastore_directory_name
+    )
+    return datastore_directory_name, datastore_directory_url
 
 
 def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
