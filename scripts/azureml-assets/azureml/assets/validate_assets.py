@@ -89,6 +89,10 @@ class MLFlowModelTags:
     # This enables model to use shared quota for deployment
     SHARED_COMPUTE_CAPACITY = "SharedComputeCapacityEnabled"
 
+    # make sure all prod models has hiddenlayerscanned tag added
+    # model scan and tag has to be added manually currently
+    HIDDEN_LAYERS_SCANNED = "hiddenlayerscanned"
+
 
 class ModelValidationState:
     """Enums for storing validation results state.
@@ -848,6 +852,10 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
 
     if not model.tags.get(MLFlowModelTags.LICENSE):
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
+        error_count += 1
+
+    if not model.tags.get(MLFlowModelTags.HIDDEN_LAYERS_SCANNED):
+        _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.HIDDEN_LAYERS_SCANNED} missing")
         error_count += 1
 
     # shared compute check
