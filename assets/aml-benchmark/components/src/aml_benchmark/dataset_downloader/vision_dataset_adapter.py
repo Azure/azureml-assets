@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import io
 
 from abc import ABC, abstractmethod
@@ -66,10 +69,6 @@ class VisionDatasetAdapterFactory:
     @staticmethod
     def get_adapter(dataset: Dataset) -> VisionDatasetAdapter:
         VISION_ADAPTERS_BY_DATASET_NAME = {
-            # "food101": Food101Adapter,
-            # "1aurent/PatchCamelyon": PatchCamelyonAdapter,
-            # "timm/resisc45": Resisc45Adapter,
-            # "bazyl/GTSRB": GTSRBAdapter,
             "food101": Food101Adapter,
             "patch_camelyon": PatchCamelyonAdapter,
             "resisc45": Resisc45Adapter,
