@@ -17,6 +17,7 @@ tags:
   license: mit
   disable-batch: "true"
   task: chat-completion
+  hiddenlayerscanned: ""
   author: microsoft
   inference_compute_allow_list:
     [ 
