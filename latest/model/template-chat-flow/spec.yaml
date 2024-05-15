@@ -9,6 +9,8 @@ properties:
   azureml.promptflow.description: Template Chat Flow
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
+tags:
+  hiddenlayerscanned: ""
 version: 5
 description: |-
   The "Template Chat Flow" is a chat model using GPT3.5 that generates the next message based on the conversation history and the latest chat content.

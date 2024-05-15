@@ -10,6 +10,8 @@ properties:
     of Azure AI Playground - on Your Data.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
+tags:
+  hiddenlayerscanned: ""
 version: 4
 description: |
   This flow template is an advanced RAG flow modeled on the implementation of Azure AI Playground - on Your Data. The flow consists of tools that rewrites user query input into one or more queries based on chat history context using LLM, retrieves data for rewritten queries from the data index and generates a chat response from LLM by augmenting the prompt with retrieved data as well as chat history.

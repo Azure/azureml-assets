@@ -9,6 +9,8 @@ properties:
   azureml.promptflow.description: Template Standard Flow
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
+tags:
+  hiddenlayerscanned: ""
 version: 2
 description: |-
   The "Template Standard Flow" is a model using GPT3.5 to generate a joke based on user input.
