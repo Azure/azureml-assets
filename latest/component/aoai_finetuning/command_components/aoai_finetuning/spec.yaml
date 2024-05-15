@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: aoai_finetuning
-version: 0.0.6
+version: 0.0.7
 type: command
 
 is_deterministic: true
@@ -38,15 +38,16 @@ inputs:
     optional: true
     description: source file/folder for validation dataset.
 
-  training_file_uri_key:
-    type: string
+  training_import_path:
+    type: uri_file
     optional: true
-    description: key for the stored training file uri in users workspace keyvault.
+    description: json file containing training data uri or key for stored uri in keyvault.
 
-  validation_file_uri_key:
-    type: string
+  validation_import_path:
+    type: uri_file
     optional: true
-    description: key for the stored validation file uri in users workspace keyvault.
+    description: json file containing validation data uri or key for stored uri in
+      keyvault.
 
   model:
     type: string
@@ -117,8 +118,8 @@ command: >-
   $[[--endpoint_subscription ${{inputs.endpoint_subscription}}]]
   $[[--training_file_path ${{inputs.training_file_path}}]]
   $[[--validation_file_path ${{inputs.validation_file_path}}]]
-  $[[--training_file_uri_key ${{inputs.training_file_uri_key}}]]
-  $[[--validation_file_uri_key ${{inputs.validation_file_uri_key}}]]
+  $[[--training_import_path ${{inputs.training_import_path}}]]
+  $[[--validation_import_path ${{inputs.validation_import_path}}]]
   --model ${{inputs.model}}
   --task_type ${{inputs.task_type}}
   $[[--n_epochs ${{inputs.n_epochs}}]]
