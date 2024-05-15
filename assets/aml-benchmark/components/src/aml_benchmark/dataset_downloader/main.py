@@ -15,7 +15,7 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 from aml_benchmark.dataset_downloader.vision_dataset_adapter import VisionDatasetAdapterFactory
 from aml_benchmark.utils.aml_run_utils import get_default_datastore
 from aml_benchmark.utils.logging import get_logger, log_mlflow_params
-from aml_benchmark.utils.io import get_image_file_name, get_random_datastore_directory
+from aml_benchmark.utils.io import get_image_file_name, get_datastore_image_directory_name
 from aml_benchmark.utils.exceptions import (
     swallow_all_exceptions,
     BenchmarkValidationException,
@@ -181,7 +181,7 @@ def _save_dataset_to_jsonl(dataset, vision_dataset_adapter, dataset_file_path):
         # Get the datastore and the directory within it where the images will be uploaded.
         datastore = get_default_datastore()
         logger.info("a2 {}".format(datastore))
-        datastore_directory_name, datastore_directory_url = get_random_datastore_directory(datastore.name)
+        datastore_directory_name, datastore_directory_url = get_datastore_image_directory_name(datastore.name)
         logger.info("a3 {} {}".format(datastore_directory_name, datastore_directory_url))
 
         # Initialize the image counter.

@@ -9,7 +9,6 @@ import json
 import os
 import glob
 import pandas as pd
-import uuid
 
 import mltable
 from azureml._common._error_definition.azureml_error import AzureMLError
@@ -124,12 +123,12 @@ def filter_files_with_given_extension(file_paths: List[str], extension: str) -> 
 
 
 def get_image_file_name(image_counter: int) -> str:
-    """???"""
+    """Make name for local image file."""
     return IMAGE_FILE_NAME_TEMPLATE.format(image_counter=image_counter)
 
 
-def get_random_datastore_directory(datastore_name: str) -> Tuple[str, str]:
-    """???"""
+def get_datastore_image_directory_name(datastore_name: str) -> Tuple[str, str]:
+    """Make random name for image directory on datastore and get its URL."""
     datastore_directory_name = RANDOM_IMAGE_DIRECTORY_TEMPLATE.format(random_id=str(uuid.uuid4()))
     datastore_directory_url = DATASTORE_DIRECTORY_URL_TEMPLATE.format(
         datastore_name=datastore_name, directory_name=datastore_directory_name

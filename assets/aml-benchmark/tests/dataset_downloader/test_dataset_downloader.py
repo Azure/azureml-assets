@@ -147,9 +147,9 @@ class TestDatasetDownloaderScript:
     ):
         """Test for invalid input combination."""
         if dataset_name and script:
-            expected_exception_mssg = "Either "dataset_name" or "script" must be supplied; but not both."
+            expected_exception_mssg = "Either 'dataset_name' or 'script' must be supplied; but not both."
         elif not (dataset_name or script):
-            expected_exception_mssg = "Either "dataset_name" or "script" must be supplied."
+            expected_exception_mssg = "Either 'dataset_name' or 'script' must be supplied."
 
         # Run the script and verify the exception
         try:
@@ -170,14 +170,14 @@ class TestDatasetDownloaderScript:
         self, dataset_name: str, configuration: Optional[str], split: str
     ):
         """Test for unsupported url file."""
-        expected_exception_mssg = f"Split "{split}" not available for dataset "{dataset_name}" and config "{None}"."
+        expected_exception_mssg = f"Split '{split}' not available for dataset '{dataset_name}' and config '{None}'."
         if dataset_name == "winogrande" and configuration is None:
             expected_exception_mssg = (
-                f"Multiple configurations available for dataset "{dataset_name}". Please specify either one of "
-                f"the following: {get_dataset_config_names(dataset_name)} or "all"."
+                f"Multiple configurations available for dataset '{dataset_name}'. Please specify either one of "
+                f"the following: {get_dataset_config_names(dataset_name)} or 'all'."
             )
         elif dataset_name == "some_random_name":
-            expected_exception_mssg = f"FileNotFoundError: Dataset "{dataset_name}" doesn"t exist on the Hub"
+            expected_exception_mssg = f"FileNotFoundError: Dataset '{dataset_name}' doesn't exist on the Hub"
 
         # Run the script and verify the exception
         try:
@@ -278,7 +278,7 @@ class TestVisionDatasetAdapters:
                 3: "desert",
                 4: "forest",
                 5: "freeway",
-                6: "harbor", 
+                6: "harbor",
                 7: "lake",
                 8: "palace",
                 9: "railway_station",
