@@ -1,0 +1,33 @@
+type: evaluationresult
+name: truthfulqa_generation_gpt-4-0613_question_answering
+version: 2.10.05
+display_name: truthfulqa_generation_gpt_4_0613_question_answering
+description: gpt-4-0613 run for truthfulqa generation dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_generation
+
+model_name: gpt-4-0613
+model_version: "0613"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/4
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azure-openai/models/gpt-4/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  coherence: 4.882209
+  fluency: 4.924
+  GPTSimilarity: 3.754
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

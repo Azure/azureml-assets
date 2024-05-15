@@ -1,0 +1,33 @@
+type: evaluationresult
+name: truthfulqa_generation_cohere-command-r_question_answering
+version: 2.10.05
+display_name: truthfulqa_generation_Cohere-command-r_question_answering
+description: Cohere-command-r for truthfulqa_generation dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_generation
+
+model_name: cohere-command-r
+model_version: "3"
+model_asset_id: azureml://registries/azureml-cohere/models/Cohere-command-r/versions/3
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azureml-cohere/models/Cohere-command-r/versions/3
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  coherence: 4.824539877300613
+  fluency: 4.938650306748467
+  GPTSimilarity: 3.05875153
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"
