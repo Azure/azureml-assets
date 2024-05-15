@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: chat_completion_finetune
-version: 0.0.47
+version: 0.0.48
 type: command
 
 is_deterministic: true
@@ -215,7 +215,7 @@ inputs:
     enum:
     - "true"
     - "false"
-    default: "true"
+    default: "false"
     optional: true
     description: Not setting this flag will raise an error if some of the weights
       from the checkpoint do not have the same size as the weights of the model.
