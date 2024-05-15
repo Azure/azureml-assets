@@ -8,6 +8,8 @@ The model is intended for research purposes only. Possible research areas and ta
 - Applications in educational or creative tools.
 - Research on generative models.
 
+Stable Diffusion DreamBooth Finetuning is now avalable for this model on AzureML. DreamBooth is a method for personalizing text-to-image models. It fine-tunes these models using 5-10 images of a specific subject, allowing them to generate personalized images based on textual prompts.
+
 # Training Details
 
 ## Training Data
@@ -75,6 +77,12 @@ Using the model to generate content that is cruel to individuals is a misuse of 
 # License
 
 CreativeML Open RAIL++-M License
+
+# DreamBooth Finetuning Samples
+
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|---|--|--|--|--|
+Text-to-image|Text-to-image|[dog-example](https://huggingface.co/datasets/diffusers/dog-example)|<a href="https://aka.ms/azureml-ft-sdk-dreambooth-text-to-image" target="_blank">diffusers-dreambooth-dog-text-to-image.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-dreambooth-text-to-image" target="_blank">diffusers-dreambooth-dog-text-to-image.sh</a>
 
 # Inference Samples
 

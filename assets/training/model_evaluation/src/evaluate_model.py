@@ -124,7 +124,7 @@ class EvaluateModel(BasePredictor):
         all_cols = list(input_column_names)
         if label_column_name is not None:
             all_cols += [label_column_name]
-        data = read_model_prediction_data(test_data, self.task, self.batch_size)
+        data, _ = read_model_prediction_data(test_data, self.task, self.batch_size)
         data = map(prepare_data, data, repeat(self.task), repeat(all_cols), repeat(label_column_name),
                    repeat(False), repeat(list()), repeat(self.batch_size))
         return data  # X_test, y_test

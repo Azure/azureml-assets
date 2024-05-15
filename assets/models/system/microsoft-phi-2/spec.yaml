@@ -19,6 +19,7 @@ tags:
   license: mit
   author: microsoft
   task: text-generation
+  hiddenlayerscanned: ""
   evaluation_compute_allow_list:
     [
       Standard_DS5_v2,
@@ -52,7 +53,6 @@ tags:
     ]
   inference_supported_envs:
     - vllm
-    - ds_mii
   model_specific_defaults:
     apply_deepspeed: "true"
     deepspeed_stage: 2
@@ -60,4 +60,4 @@ tags:
     apply_ort: "false"
     precision: 16
     max_seq_length: 2048
-version: 17
+version: 19

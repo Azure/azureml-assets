@@ -101,6 +101,11 @@ class TestInferencePostprocessorComponent:
                 None, None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None,
             ),
+            (
+                "human-eval-custom-script", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, None, None, None, None, None, None, None,
+                None, Constants.CUSTOM_HUMANEVAL_POSTPROCESSOR_SCRIPT_PATH, None, None,
+            ),
         ],
     )
     def test_inference_postprocessor_as_component(
@@ -209,7 +214,7 @@ class TestInferencePostprocessorComponent:
             strip_characters=strip_characters,
             extract_number=extract_number,
             template=template,
-            script_path=script_path,
+            user_postprocessor=script_path,
             label_map=label_map,
             find_first=find_first
         )

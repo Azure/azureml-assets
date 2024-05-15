@@ -10,8 +10,15 @@ import os
 from io import BytesIO
 import jsonlines
 from openai.types.fine_tuning import FineTuningJobEvent
+from urllib.parse import urlparse, unquote
 
-train_dataset_split_ratio = 0.8
+
+class Constants:
+    """Constants for finetuning."""
+
+    train_dataset_split_ratio = 0.8
+    data_uri_key = "keyvault_key_for_data_uri"
+    data_uri = "data_uri"
 
 
 def save_yaml(content, filename):
@@ -81,7 +88,7 @@ def get_train_validation_data(train_file_path: str, validation_file_path: Option
         return train_data, validation_data
 
     train_data_length = get_dataset_length(train_file_path)
-    split_index = int(train_data_length * train_dataset_split_ratio)
+    split_index = int(train_data_length * Constants.train_dataset_split_ratio)
 
     return split_data_in_train_and_validation(train_file_path, split_index)
 
@@ -95,3 +102,42 @@ def list_event_messages_after_given_event(events_list: list[FineTuningJobEvent],
         event_message_list.append(event.message)
     event_message_list.reverse()
     return event_message_list
+
+
+def parse_file_name_from_uri(file_uri: str) -> str:
+    """Parse file name from uri."""
+    file_path = urlparse(file_uri).path
+    filename = file_path.split('/')[-1]
+    filename = unquote(filename)  # Decode URL-encoded characters if present
+    return filename
+
+
+def create_payload_for_data_upload_rest_call(file_uri: str) -> dict[str, str]:
+    """Create payload for data upload."""
+    file_name = parse_file_name_from_uri(file_uri)
+    payload: dict[str, str] = {
+        "purpose": "fine-tune",
+        "filename": file_name,
+        "content_url": file_uri
+    }
+    return payload
+
+
+def parse_file_id_from_upload_response(response: str) -> str:
+    """Parse file from upload response."""
+    resp_json = json.loads(response)
+    return resp_json["id"]
+
+
+def get_key_or_uri_from_data_import_path(json_path: str) -> tuple[str, str]:
+    """Parse data kay and data uri from json."""
+    json_data = load_json(json_path)
+    data_uri_key = json_data.get(Constants.data_uri_key, None)
+    data_uri = json_data.get(Constants.data_uri, None)
+
+    if data_uri is None and data_uri_key is None:
+        raise ValueError("One of data uri or keyvault data uri key should be provided")
+    if data_uri is not None and data_uri_key is not None:
+        raise ValueError("Only one of data uri and keyvault data uri key should be provided")
+
+    return data_uri_key, data_uri

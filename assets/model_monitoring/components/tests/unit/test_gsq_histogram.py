@@ -24,12 +24,14 @@ from generation_safety_quality.annotation_compute_histogram.run import (
 from shared_utilities import io_utils
 from shared_utilities.momo_exceptions import (
     DataNotFoundError, InvalidInputError)
+from shared_utilities.constants import MDC_CHAT_HISTORY_COLUMN
 import spark_mltable  # noqa, to enable spark.read.mltable
 
 
 QUESTION = 'question'
 EVALUATION = 'evaluation'
 GPT_4 = 'gpt-4'
+CHAT_HISTORY = MDC_CHAT_HISTORY_COLUMN
 
 
 @pytest.fixture(scope="module")
@@ -135,6 +137,15 @@ class TestGSQHistogram:
         # remove test folder
         shutil.rmtree(mltable_path_copy)
 
+    def test_gsq_with_chat_history_column_name(self, code_zip_test_setup,
+                                               gsq_preprocessor_test_setup):
+        """Test dataset with extra chat history column."""
+        metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
+        mltable_path = get_chat_history_mltable_path()
+        call_apply_annotation(
+            ",".join(metric_names), completion_column_name="output",
+            context_column_name=CHAT_HISTORY, mltable_path=mltable_path)
+
     def test_gsq_with_added_passthrough_columns(self, code_zip_test_setup,
                                                 gsq_preprocessor_test_setup):
         """Test dataset with extra passthrough columns added."""
@@ -220,6 +231,14 @@ def write_empty_production_data():
     mltable_file_contents = create_ml_table_file_contents(pq_filename)
     create_ml_table_file(mltable_path, mltable_file_contents)
     return mltable_path
+
+
+def get_chat_history_mltable_path():
+    """Get chat history mltable path."""
+    test_file_dir = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(
+        test_file_dir, "..", "e2e", "resources",
+        "mltable_chat_history_data_small")
 
 
 def get_mltable_path():

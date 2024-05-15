@@ -16,6 +16,7 @@ from tests.e2e.utils.constants import (
 def _submit_genai_token_statistics_model_monitor_job(
     ml_client,
     get_component,
+    submit_pipeline_job,
     experiment_name,
     aggregated_data
 ):
@@ -36,8 +37,8 @@ def _submit_genai_token_statistics_model_monitor_job(
 
     pipeline_job = _token_statistics_signal_monitor_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
-    pipeline_job = ml_client.jobs.create_or_update(
-       pipeline_job, experiment_name=experiment_name, skip_validation=True
+    pipeline_job = submit_pipeline_job(
+       pipeline_job, experiment_name=experiment_name
     )
 
     # Wait until the job completes
@@ -55,13 +56,14 @@ class TestGenAiTSModelMonitor:
     """Test class."""
 
     def test_monitoring_run_use_defaults_successful(
-        self, ml_client: MLClient, get_component, download_job_output,
+        self, ml_client: MLClient, get_component, submit_pipeline_job, download_job_output,
         test_suite_name
     ):
         """Test the happy path scenario where the data has no drift."""
         pipeline_job = _submit_genai_token_statistics_model_monitor_job(
             ml_client,
             get_component,
+            submit_pipeline_job,
             test_suite_name,
             DATA_AGGREGATED_TRACE_DATA,
         )

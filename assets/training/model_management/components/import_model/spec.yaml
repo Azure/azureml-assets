@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.31
+version: 0.0.32
 
 # Pipeline inputs
 inputs:
@@ -46,6 +46,12 @@ inputs:
     default: HFTransformersV2
     optional: false
     description: Flavor of MLFlow to which model the model is converted to.
+
+  vllm_enabled:
+    type: boolean
+    description: Enable vllm in the converted model 
+    default: false
+    optional: false
 
   token:
     type: string
@@ -254,13 +260,16 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.27
+    component: azureml:convert_model_to_mlflow:0.0.28
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
     inputs:
       task_name: ${{parent.inputs.task_name}}
       model_flavor: ${{parent.inputs.model_flavor}}
+      vllm_enabled: ${{parent.inputs.vllm_enabled}}
       license_file_path: ${{parent.inputs.license_file_path}}
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}

@@ -18,6 +18,7 @@ tags:
   SharedComputeCapacityEnabled: ''
   mlflow_flavor: transformers
   task: text-translation
+  hiddenlayerscanned: ""
   huggingface_model_id: t5-small
   inference_compute_allow_list:
     [

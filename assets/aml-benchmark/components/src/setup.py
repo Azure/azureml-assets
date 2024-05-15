@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name="aml-benchmark",
-    version="0.4",
+    version="0.5",
     description="AzureML Benchmarking SDK",
     author="Microsoft Corp",
     entry_points={},
@@ -22,7 +22,9 @@ setup(
         "mltable>=1.5.0",
         "datasets",
         "tqdm",
-        "azure-core"
+        "azure-core",
+        "mteb",
+        "openai"
     ],
     python_requires=">=3.8,<3.12",
 )

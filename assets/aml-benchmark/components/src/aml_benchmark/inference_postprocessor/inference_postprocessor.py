@@ -493,7 +493,7 @@ class InferencePostprocessor(object):
     def run_user_postprocessor(self) -> None:
         """Postprocessor run using custom template."""
         params_dict = deepcopy(self.__get_parameters())
-        postprocessor_script = params_dict.pop("self.user_postprocessor")
+        postprocessor_script = params_dict.pop("user_postprocessor")
         argss = [
             "--prediction_dataset",
             params_dict.pop("prediction_dataset"),
@@ -505,7 +505,7 @@ class InferencePostprocessor(object):
                 ["--ground_truth_dataset", params_dict.pop("ground_truth_dataset")]
             )
         additional_parameters = json.dumps(params_dict)
-        argss.extend("--additional_parameters", f"'{additional_parameters}'")
+        argss.extend(["--additional_parameters", f"'{additional_parameters}'"])
         argss = " ".join(argss)
         try:
             _ = subprocess.check_output(

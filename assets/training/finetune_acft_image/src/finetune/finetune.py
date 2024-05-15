@@ -6,6 +6,7 @@
 import os
 import json
 import argparse
+import shutil
 from transformers.training_args import OptimizerNames
 from transformers.trainer_utils import SchedulerType, IntervalStrategy
 from optimum.onnxruntime.training_args import ORTOptimizerNames
@@ -826,8 +827,8 @@ def add_sd_args_to_parser(parser):
     parser.add_argument(
         "--prior_generation_precision",
         type=str,
-        default=None,
-        choices=["no", "fp32", "fp16", "bf16"],
+        default="fp32",
+        choices=["fp32", "fp16", "bf16"],
         help=(
             "Choose prior generation precision between fp32, fp16 and bf16 (bfloat16). Bf16 requires PyTorch >="
             " 1.10.and an Nvidia Ampere GPU.  Default to  fp16 if a GPU is available else fp32."
@@ -1066,6 +1067,16 @@ def main():
     # setting arguments as needed for the core
     args.model_selector_output = args.model_path
     args.output_dir = SettingParameters.DEFAULT_OUTPUT_DIR
+
+    # Empty the output directory in master process.
+    # Todo: Ideally, in case of preemption, we should handle start finetuning
+    # from the last checkpoint. This logic will be implemented in the future.
+    # For now, we are deleting the output directory and starting the training
+    # from scratch.
+    master_process = os.environ.get("RANK") == "0"
+    if os.path.exists(args.output_dir) and master_process:
+        shutil.rmtree(args.output_dir)
+    os.makedirs(args.output_dir, exist_ok=True)
 
     # TODO: overwriting the save_as_mlflow_model flag to True. Otherwise, it will fail the pipeline service since it
     #  expects the mlflow model folder to create model asset. It can be modified if outputs of the component can be

@@ -44,25 +44,22 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # For local testing
 # Need to copy src code and install in editable mode
 # COPY . .
-# RUN pip install -e .
+# RUN pip install -e ./ --no-cache-dir
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference --no-cache-dir
+RUN pip install llm-optimized-inference==0.1.7 --no-cache-dir
 
-RUN pip uninstall -y transformers
 RUN pip uninstall -y vllm
-RUN pip uninstall -y deepspeed
 
-RUN pip install git+https://github.com/RezaYazdaniAminabadi/DeepSpeed.git@selective-dequantization
+COPY ./vllm.patch ./vllm.patch
 
-RUN git clone -b yak-staging https://github.com/Snowflake-Labs/vllm.git && \
+RUN git clone https://github.com/vllm-project/vllm.git && \
     cd vllm && \
-    pip install . && \
-    cd ..
-
-RUN git clone -b yak-staging https://github.com/Snowflake-Labs/transformers.git && \
-    cd transformers && \
-    pip install .
+    git checkout 0ce0539d4750f9ebcd9b19d7085ca3b934b9ec67 && \
+    git apply ../vllm.patch && \
+    pip install -r requirements-cuda.txt && \
+    python setup.py bdist_wheel && \
+    pip install dist/*.whl
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

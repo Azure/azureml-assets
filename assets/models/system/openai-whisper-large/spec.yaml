@@ -49,5 +49,6 @@ tags:
   Preview: ""
   license: mit
   SharedComputeCapacityEnabled: ""
+  hiddenlayerscanned: ""
   task: automatic-speech-recognition
 version: 15
