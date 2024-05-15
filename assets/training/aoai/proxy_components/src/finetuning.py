@@ -49,8 +49,8 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
             if validation_import_path is not None:
                 validation_data_uri_key, validation_data_uri =\
-                utils.get_key_or_uri_from_data_import_path(validation_import_path)
-            
+                    utils.get_key_or_uri_from_data_import_path(validation_import_path)
+
             keyvault_client_manager = KeyVaultClientManager()
             keyvault_client = keyvault_client_manager.get_keyvault_client()
 
