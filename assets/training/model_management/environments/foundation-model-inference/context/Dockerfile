@@ -47,7 +47,7 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # RUN pip install -e ./ --no-cache-dir
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference --no-cache-dir
+RUN pip install llm-optimized-inference==0.1.7 --no-cache-dir
 
 RUN pip uninstall -y vllm
 
