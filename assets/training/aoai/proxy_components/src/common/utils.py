@@ -12,7 +12,9 @@ import jsonlines
 from openai.types.fine_tuning import FineTuningJobEvent
 from urllib.parse import urlparse, unquote
 
+
 class Constants:
+    """Constants for finetuning."""
     train_dataset_split_ratio = 0.8
     data_uri_key = "keyvault_key_for_data_uri"
     data_uri = "data_uri"
@@ -124,6 +126,7 @@ def parse_file_id_from_upload_response(response: str) -> str:
     """Parse file from upload response."""
     resp_json = json.loads(response)
     return resp_json["id"]
+
 
 def get_key_or_uri_from_data_import_path(json_path: str) -> tuple[str, str]:
     """Parse data kay and data uri from json."""
