@@ -15,6 +15,7 @@ from urllib.parse import urlparse, unquote
 
 class Constants:
     """Constants for finetuning."""
+
     train_dataset_split_ratio = 0.8
     data_uri_key = "keyvault_key_for_data_uri"
     data_uri = "data_uri"
