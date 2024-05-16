@@ -636,13 +636,23 @@ def apply_annotation(
             for passthrough_column, passthrough_values in passthrough_cols.items():
                 tabular_result[passthrough_column] = passthrough_values
             # rename metric columns
-            for column_name in metrics_list:
-                # set failures to -1
-                tabular_result[column_name] = pd.to_numeric(tabular_result[column_name], errors='coerce')
-                tabular_result[column_name].fillna(-1, inplace=True)
-                tabular_result.rename(
-                    columns={column_name: COLUMN_TO_COMPACT_METRIC_NAME[column_name]},
-                    inplace=True)
+            try:
+                for column_name in metrics_list:
+                    # set failures to -1
+                    tabular_result[column_name] = pd.to_numeric(tabular_result[column_name], errors='coerce')
+                    tabular_result[column_name].fillna(-1, inplace=True)
+                    tabular_result.rename(
+                        columns={column_name: COLUMN_TO_COMPACT_METRIC_NAME[column_name]},
+                        inplace=True)
+            except KeyError as e:
+                # raise new user error with more context
+                raise InvalidInputError(
+                    f"Unable to retrieve and rename {column_name}. "
+                    f"Usually this indicates an invalid configuration or connection. "
+                    f"Please check the model_deployment_name and workspace_connection_arm_id. "
+                    f"For more detailed error information please see the promptflow "
+                    f"debug folder in the child run with run id {child_run_id}."
+                ) from e
             yield tabular_result
 
     # used for testing without using openai connection
