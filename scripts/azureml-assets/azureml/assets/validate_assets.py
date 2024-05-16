@@ -1086,7 +1086,7 @@ def validate_assets(input_dirs: List[Path],
                     valid_tags_filename = 'evaluationresult/tag_values_text_embeddings.yaml'
                 else:
                     raise ValidationException(f"Unknown evaluation type: {evaluation_type}")
-                
+
                 error_count += validate_tags(asset_config, valid_tags_filename)
 
             if asset_config.type == assets.AssetType.PROMPT:
