@@ -857,7 +857,10 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     if MLFlowModelTags.HIDDEN_LAYERS_SCANNED not in model.tags:
         _log_error(
             asset_config.file_name_with_path,
-            "`hiddenlayerscanned` tag missing. Model is not scanned by HiddenLayer ModelScanner tool. Please scan the model and retry"
+            (
+                "`hiddenlayerscanned` tag missing. "
+                "Model is not scanned by HiddenLayer ModelScanner tool. Please scan the model and retry"
+            )
         )
         error_count += 1
 
