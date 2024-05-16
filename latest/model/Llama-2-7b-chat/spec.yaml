@@ -49,7 +49,7 @@ tags:
   - vllm
   - ds_mii
 
-version: 1
+version: 21
 description: |
   # **Model Details**
   Note: Use of this model is governed by the Meta license. Click on View License above.
