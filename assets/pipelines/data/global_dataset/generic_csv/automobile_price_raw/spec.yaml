@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+description: Data for Designer Sample "Regression - Automobile Price Prediction (Basic)"
+type: uri_folder
+path: sample_data/
