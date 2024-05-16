@@ -71,8 +71,8 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                 else:
                     logger.info("User has provided validation data uri directly, sending it to Azure OpenAI resource")
 
-                    self.validation_file_id = self.upload_file_uri_from_rest(validation_data_uri)
-                    logger.info("uploaded validation file uri to aoai resource")
+                self.validation_file_id = self.upload_file_uri_from_rest(validation_data_uri)
+                logger.info("uploaded validation file uri to aoai resource")
 
         logger.info("Step 2: Finetuning model")
         self.finetuning_job_id = self.submit_finetune_job(model, hyperparameters, hyperparameters_1p, suffix)
