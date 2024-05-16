@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/ViolenceEvaluator/v1
+  container_path: models/evaluators/ViolenceEvaluator/v1/violence
   storage_name: amlraipfmodels
   type: azureblob
 publish:
