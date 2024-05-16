@@ -8,7 +8,7 @@ import os
 import tempfile
 from typing import Optional, List
 
-from datasets import Features, get_dataset_split_names, get_dataset_config_names, load_dataset, Value
+from datasets import Dataset, Features, get_dataset_split_names, get_dataset_config_names, load_dataset, Value
 import pandas as pd
 from azureml._common._error_definition.azureml_error import AzureMLError
 
@@ -19,9 +19,10 @@ from aml_benchmark.utils.io import get_image_file_name, get_datastore_image_dire
 from aml_benchmark.utils.exceptions import (
     swallow_all_exceptions,
     BenchmarkValidationException,
+    DataFormatException,
     DatasetDownloadException,
 )
-from aml_benchmark.utils.error_definitions import BenchmarkValidationError, DatasetDownloadError
+from aml_benchmark.utils.error_definitions import BenchmarkValidationError, DataFormatError, DatasetDownloadError
 
 
 logger = get_logger(__name__)
@@ -160,18 +161,18 @@ def download_dataset_from_hf(
         os.makedirs(out_dir, exist_ok=True)
         output_file_path = os.path.join(out_dir, "data.jsonl")
 
-        # Save dataset to JSONL format, making the necessary adaptations for vision (eg save image data to datastore
-        # and include image links in JSONL file).
-        vision_dataset_adapter = VisionDatasetAdapterFactory.get_adapter(dataset)
-        _save_dataset_to_jsonl(dataset, vision_dataset_adapter, output_file_path)
+        # Save dataset to JSONL format, making adaptations for vision datasets (eg save image data to datastor and
+        # include image links in JSONL file).
+        _save_dataset_to_jsonl(dataset, output_file_path)
 
         logger.info(f"Downloaded - Configuration: '{configuration}', Split: '{split}'.")
 
 
-def _save_dataset_to_jsonl(dataset, vision_dataset_adapter, dataset_file_path):
-    logger.info("a1 {} {}".format(vision_dataset_adapter, dataset_file_path))
+def _save_dataset_to_jsonl(dataset: Dataset, dataset_file_path: str) -> None:
+    """Save dataset to specified file in JSONL format."""
+    vision_dataset_adapter = VisionDatasetAdapterFactory.get_adapter(dataset)
 
-    # Local temporary directory not used by default.
+    # Local temporary directory (only used for vision datasets).
     temporary_directory = None
 
     if vision_dataset_adapter is not None:
@@ -180,9 +181,7 @@ def _save_dataset_to_jsonl(dataset, vision_dataset_adapter, dataset_file_path):
 
         # Get the datastore and the directory within it where the images will be uploaded.
         datastore = get_default_datastore()
-        logger.info("a2 {}".format(datastore))
         datastore_directory_name, datastore_directory_url = get_datastore_image_directory_name(datastore.name)
-        logger.info("a3 {} {}".format(datastore_directory_name, datastore_directory_url))
 
         # Initialize the image counter.
         image_counter = 0
@@ -190,22 +189,13 @@ def _save_dataset_to_jsonl(dataset, vision_dataset_adapter, dataset_file_path):
         def adapt_vision_instance(instance):
             nonlocal image_counter
 
-            if image_counter < 2:
-                logger.info("a4 {}".format(list(instance.keys())))
-
             # Save the current image to the local temporary directory.
             image_file_name = get_image_file_name(image_counter=image_counter)
             image_file_path = os.path.join(temporary_directory.name, image_file_name)
             vision_dataset_adapter.get_pil_image(instance).save(image_file_path)
 
-            if image_counter < 2:
-                logger.info("a5 {} {}".format(type(vision_dataset_adapter.get_pil_image(instance)), image_file_path))
-
             # Get the current label.
             label = vision_dataset_adapter.get_label(instance)
-
-            if image_counter < 2:
-                logger.info("a6 {} {}".format(type(label), label))
 
             # Since returning a different dictionary than `instance` does not work, the current dictionary is modified
             # and then returned.
@@ -215,15 +205,10 @@ def _save_dataset_to_jsonl(dataset, vision_dataset_adapter, dataset_file_path):
             instance["image_url"] = "{}/{}".format(datastore_directory_url, image_file_name)
             instance["label"] = label
 
-            if image_counter < 2:
-                logger.info("a7 {}".format(instance))
-
             # Increment the image counter.
             image_counter += 1
 
             return instance
-
-        logger.info("a8")
 
         # Save the images in the dataset to temporary local storage.
         dataset = dataset.map(
@@ -233,21 +218,22 @@ def _save_dataset_to_jsonl(dataset, vision_dataset_adapter, dataset_file_path):
                 "label": Value(dtype="string", id=None),
             })
         )
-        logger.info("a9", dataset[0])
 
         # Upload the images to datastore.
         datastore.upload(src_dir=temporary_directory.name, target_path=datastore_directory_name)
 
-    logger.info("a10")
-
     # Save the dataset to JSONL format.
-    dataset.to_json(dataset_file_path)
-
-    logger.info("a11")
+    try:
+        dataset.to_json(dataset_file_path)
+    except Exception as e:
+        message = (
+            f"Error saving dataset to JSONL format: {e}. "
+            "Note: only a fixed set of vision datasets on HuggingFace are available."
+        )
+        raise DataFormatException._with_error(AzureMLError.create(DataFormatError, error_details=message))
 
     # If images were saved to local temporary directory, delete it.
     if temporary_directory is not None:
-        logger.info("a12")
         temporary_directory.cleanup()
 
 

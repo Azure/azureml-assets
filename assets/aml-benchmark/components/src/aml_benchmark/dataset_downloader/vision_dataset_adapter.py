@@ -103,7 +103,7 @@ class GTSRBAdapter(VisionDatasetAdapter):
 
 
 class VisionDatasetAdapterFactory:
-    """Factory for making vision adapters based on dataset names."""
+    """Factory for making vision dataset adapters based on dataset names."""
 
     @staticmethod
     def get_adapter(dataset: Dataset) -> VisionDatasetAdapter:
@@ -116,8 +116,12 @@ class VisionDatasetAdapterFactory:
             "gtsrb": GTSRBAdapter,
         }
 
-        adapter_cls = VISION_ADAPTERS_BY_DATASET_NAME.get(dataset.info.dataset_name)
-        if adapter_cls is None:
+        # Select the adapter class based on the dataset name. If name not available or not recognized, do not make
+        # an adapter.
+        if not hasattr(dataset.info, "dataset_name"):
             return None
+        if dataset.info.dataset_name not in VISION_ADAPTERS_BY_DATASET_NAME:
+            return None
+        adapter_cls = VISION_ADAPTERS_BY_DATASET_NAME[dataset.info.dataset_name]
 
         return adapter_cls(dataset)
