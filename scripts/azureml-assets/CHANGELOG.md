@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.46 (2024-05-15)
+### 🐛 Bugs Fixed
+- [#2907](https://github.com/Azure/azureml-assets/pull/2907) add hiddenlayerscanned tags valdn
+
 ## 1.16.45 (2024-04-24)
 ### 🐛 Bugs Fixed
 - [#2773](https://github.com/Azure/azureml-assets/pull/2773) Add h100 skus to supported inference skus list

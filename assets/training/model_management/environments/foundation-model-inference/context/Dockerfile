@@ -34,7 +34,7 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 WORKDIR /
 
 # Needed for megablocks
-RUN pip install torch~=2.1.2 --index-url https://download.pytorch.org/whl/cu121
+RUN pip install torch~=2.3.0 torchvision --index-url https://download.pytorch.org/whl/cu121
 
 # mixtral specific
 ARG torch_cuda_arch_list='7.0 7.5 8.0 8.6 8.9 9.0+PTX'
@@ -46,17 +46,21 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # COPY . .
 # RUN pip install -e ./ --no-cache-dir
 
+# Flash attention needed for phi-3-mini-v
+RUN pip install packaging
+RUN pip install flash-attn --no-build-isolation
+
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference --no-cache-dir
+RUN pip install llm-optimized-inference==0.1.8 --no-cache-dir
 
 RUN pip uninstall -y vllm
 
-COPY ./vllm.patch ./vllm.patch
-
+# Apply patch
+COPY ./vllm_phiv.patch ./vllm_phiv.patch
 RUN git clone https://github.com/vllm-project/vllm.git && \
     cd vllm && \
-    git checkout 0ce0539d4750f9ebcd9b19d7085ca3b934b9ec67 && \
-    git apply ../vllm.patch && \
+    git checkout f8e7adda21810104382bdf3febe3ea02c72f7348 && \
+    git apply ../vllm_phiv.patch && \
     pip install -r requirements-cuda.txt && \
     python setup.py bdist_wheel && \
     pip install dist/*.whl
@@ -64,7 +68,7 @@ RUN git clone https://github.com/vllm-project/vllm.git && \
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 
-ADD runit_folder/api_server /var/runit/api_server
+ADD /api_server /var/runit/api_server
 RUN sed -i 's/\r$//g' /var/runit/api_server/run
 RUN chmod +x /var/runit/api_server/run
 
