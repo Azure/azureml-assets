@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/inference-base-gpu-2004:20240510.v6
+FROM mcr.microsoft.com/azureml/inference-base-gpu-2004:20240515.v1
 
 WORKDIR /
 
