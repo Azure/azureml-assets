@@ -1074,10 +1074,23 @@ def validate_assets(input_dirs: List[Path],
                 if check_environment_version:
                     error_count += validate_environment_version(asset_config)
 
-            if asset_config.type == assets.AssetType.PROMPT or asset_config.type == assets.AssetType.EVALUATIONRESULT:
-                error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
+            if asset_config.type == assets.AssetType.EVALUATIONRESULT:
+                error_count += validate_tags(asset_config, 'evaluationresult/tag_values_shared.yaml')
+
+                asset_spec = asset_config._spec._yaml
+                evaluation_type = asset_spec.get('tags', {}).get('evaluation_type', None)
+
+                if evaluation_type == 'text_generation':
+                    valid_tags_filename = 'evaluationresult/tag_values_text_generation.yaml'
+                elif evaluation_type == 'text_embeddings':
+                    valid_tags_filename = 'evaluationresult/tag_values_text_embeddings.yaml'
+                else:
+                    raise ValidationException(f"Unknown evaluation type: {evaluation_type}")
+                
+                error_count += validate_tags(asset_config, valid_tags_filename)
 
             if asset_config.type == assets.AssetType.PROMPT:
+                error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
                 error_count += validate_tags(asset_config, 'tag_values_prompt.yaml')
 
             # Validate categories
