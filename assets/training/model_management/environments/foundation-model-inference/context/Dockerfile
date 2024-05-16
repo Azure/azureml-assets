@@ -68,6 +68,7 @@ RUN git clone https://github.com/vllm-project/vllm.git && \
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 
+ADD runit_folder/api_server /var/runit/api_server
 ADD /api_server /var/runit/api_server
 RUN sed -i 's/\r$//g' /var/runit/api_server/run
 RUN chmod +x /var/runit/api_server/run
