@@ -38,7 +38,7 @@ class TestDatasetDownloaderComponent:
             ("xquad", "xquad.en", "validation", None),
             ("xquad", "xquad.en,xquad.hi", "all", None),
             ("xquad", "all", "all", None),
-            ("timm/resisc45", "all", "test", None),
+            ("cifar10", "all", "test", None),
             (None, "all", "test", Constants.MATH_DATASET_LOADER_SCRIPT),
         ],
     )
@@ -239,6 +239,20 @@ class TestVisionDatasetAdapters:
         adapter = VisionDatasetAdapterFactory.get_adapter(dataset)
 
         assert adapter is None
+
+    def test_cifar10_adapter(self):
+        dataset = self.MockDataset("cifar10", {0: "airplane"})
+        label = 0
+        image = Image.new("RGB", (640, 480))
+        instance = {
+            "label": label,
+            "img": image,
+        }
+
+        adapter = VisionDatasetAdapterFactory.get_adapter(dataset)
+
+        assert adapter.get_label(instance) == "airplane"
+        assert adapter.get_pil_image(instance) == image
 
     def test_food101_adapter(self):
         dataset = self.MockDataset("food101", {13: "beignets"})
