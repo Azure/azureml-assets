@@ -180,14 +180,13 @@ class TestDatasetDownloaderScript:
         elif dataset_name == "some_random_name":
             expected_exception_mssg = f"FileNotFoundError: Dataset '{dataset_name}' doesn't exist on the Hub"
         elif dataset_name == "cifar100":
-            expected_exception_mssg = f"Error saving dataset to JSONL format: "
+            expected_exception_mssg = "Error saving dataset to JSONL format: "
 
         # Run the script and verify the exception
         try:
             self._run_downloader_script(dataset_name, None, split, None)
         except RuntimeError as e:
             exception_message = str(e)
-            print("v1", exception_message)
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
     def _run_downloader_script(
