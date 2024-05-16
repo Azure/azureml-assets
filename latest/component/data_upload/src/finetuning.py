@@ -51,10 +51,9 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                 validation_data_uri_key, validation_data_uri =\
                     utils.get_key_or_uri_from_data_import_path(validation_import_path)
 
-            keyvault_client_manager = KeyVaultClientManager()
-            keyvault_client = keyvault_client_manager.get_keyvault_client()
-
             if training_data_uri_key is not None:
+                keyvault_client_manager = KeyVaultClientManager()
+                keyvault_client = keyvault_client_manager.get_keyvault_client()
                 logger.info(f"fetching training file uri from keyvault : {keyvault_client_manager.keyvault_name}")
                 training_data_uri = keyvault_client.get_secret(training_data_uri_key).value
             else:
@@ -65,6 +64,8 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
             if validation_import_path is not None:
                 if validation_data_uri_key is not None:
+                    keyvault_client_manager = KeyVaultClientManager()
+                    keyvault_client = keyvault_client_manager.get_keyvault_client()
                     logger.info(f"fetching validation file uri from keyvault: {keyvault_client_manager.keyvault_name}")
                     validation_data_uri = keyvault_client.get_secret(validation_data_uri_key).value
                 else:
