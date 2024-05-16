@@ -1081,17 +1081,15 @@ def validate_assets(input_dirs: List[Path],
                 evaluation_type = asset_spec.get('tags', {}).get('evaluation_type', None)
 
                 if evaluation_type == 'text_generation':
-                    valid_tags_filename = 'evaluationresult/tag_values_text_generation.yaml'
+                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_generation.yaml')
                 elif evaluation_type == 'text_embeddings':
-                    valid_tags_filename = 'evaluationresult/tag_values_text_embeddings.yaml'
+                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_embeddings.yaml')
                 else:
                     _log_error(
                         asset_config.file_name_with_path,
                         f"Asset '{asset_config.name}' has unknown evaluation_type: '{evaluation_type}'"
                     )
                     error_count += 1
-
-                error_count += validate_tags(asset_config, valid_tags_filename)
 
             if asset_config.type == assets.AssetType.PROMPT:
                 error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
