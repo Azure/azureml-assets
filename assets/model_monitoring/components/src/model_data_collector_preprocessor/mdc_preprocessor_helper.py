@@ -179,9 +179,9 @@ def copy_appendblob_to_blockblob(appendblob_url: StoreUrl,
                                  start_datetime: datetime, end_datetime: datetime) -> StoreUrl:
     """Copy append blob to block blob and return the StoreUrl of block blob."""
     datastore = appendblob_url._datastore
-    if datastore is None:
-        return StoreUrl(appendblob_url)
-        # raise InvalidInputError("Credential-less input data is NOT supported!")
+    # if datastore is None:
+    #     return StoreUrl(appendblob_url)
+    #     raise InvalidInputError("Credential-less input data is NOT supported!")
     datastore_type = datastore.datastore_type
     if datastore_type == "AzureBlob":
         sas_token = _get_sas_token(appendblob_url.account_name, appendblob_url.container_name,
