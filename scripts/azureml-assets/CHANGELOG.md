@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.47 (2024-05-17)
+### 🐛 Bugs Fixed
+- [#2933](https://github.com/Azure/azureml-assets/pull/2933) skip hiddenlayerscanned tags till most models are scanned
+
 ## 1.16.46 (2024-05-15)
 ### 🐛 Bugs Fixed
 - [#2907](https://github.com/Azure/azureml-assets/pull/2907) add hiddenlayerscanned tags valdn
