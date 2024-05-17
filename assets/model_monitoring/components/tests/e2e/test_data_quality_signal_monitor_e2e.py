@@ -145,7 +145,7 @@ class TestDataQualityModelMonitor:
             "target",
             "TopNByAttribution",
             "3",
-            expect_failure = True
+            expect_failure=True
         )
 
         # empty target data should cause the pipeline to fail

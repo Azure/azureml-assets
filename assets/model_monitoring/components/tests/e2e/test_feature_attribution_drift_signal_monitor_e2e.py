@@ -175,7 +175,7 @@ class TestFeatureAttributionDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
             DATA_ASSET_EMPTY,
-            expect_failure = True
+            expect_failure=True
         )
 
         # empty target data should cause the pipeline to fail

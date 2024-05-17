@@ -87,7 +87,7 @@ class TestPredictionDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
             DATA_ASSET_EMPTY,
-            expect_failure = True
+            expect_failure=True
         )
 
         # empty target data should fail the pipeline
@@ -105,7 +105,7 @@ class TestPredictionDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS,
-            expect_failure = True
+            expect_failure=True
         )
 
         # No common columns should fail the job in the feature selector step.
@@ -123,7 +123,7 @@ class TestPredictionDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_EMPTY,
             DATA_ASSET_EMPTY,
-            expect_failure = True,
+            expect_failure=True,
         )
 
         # empty production and target data should fail the job
