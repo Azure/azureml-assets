@@ -64,6 +64,8 @@ RUN git clone https://github.com/vllm-project/vllm.git && \
     pip install -r requirements-cuda.txt && \
     python setup.py bdist_wheel && \
     pip install dist/*.whl
+# Address pillow vulnerability - torchvision above installs 10.2.0
+RUN pip install pillow==10.3.0
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
