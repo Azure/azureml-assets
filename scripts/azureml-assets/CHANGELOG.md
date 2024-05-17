@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.49 (2024-05-17)
+### 🐛 Bugs Fixed
+- [#2935](https://github.com/Azure/azureml-assets/pull/2935) Update the manifest file to include additional configs
+
 ## 1.16.48 (2024-05-17)
 ### 🐛 Bugs Fixed
 - [#2934](https://github.com/Azure/azureml-assets/pull/2934) Update asset validation check for EvaluationResult
