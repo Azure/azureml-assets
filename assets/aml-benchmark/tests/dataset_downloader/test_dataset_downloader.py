@@ -227,7 +227,11 @@ class TestDatasetDownloaderScript:
 
 
 class TestVisionDatasetAdapters:
+    """Tests for individual vision dataset adapters."""
+
     class MockDataset:
+        """Mock dataset with info and features fields."""
+
         def __init__(self, name, label_mapping):
             self.info = namedtuple("dataset_info", "dataset_name")(name)
             self.features = {
@@ -237,6 +241,7 @@ class TestVisionDatasetAdapters:
             }
 
     def test_no_vision_adapter(self):
+        """Test invalid vision dataset."""
         dataset = self.MockDataset("glue", {})
 
         adapter = VisionDatasetAdapterFactory.get_adapter(dataset)
@@ -244,6 +249,7 @@ class TestVisionDatasetAdapters:
         assert adapter is None
 
     def test_cifar10_adapter(self):
+        """Test Cifar10 dataset."""
         dataset = self.MockDataset("cifar10", {0: "airplane"})
         label = 0
         image = Image.new("RGB", (640, 480))
@@ -258,6 +264,7 @@ class TestVisionDatasetAdapters:
         assert adapter.get_pil_image(instance) == image
 
     def test_food101_adapter(self):
+        """Test Food101 dataset."""
         dataset = self.MockDataset("food101", {13: "beignets"})
         label = 13
         image = Image.new("RGB", (640, 480))
@@ -273,6 +280,7 @@ class TestVisionDatasetAdapters:
 
     @pytest.mark.parametrize("label", [0, 1])
     def test_patch_camelyon_adapter(self, label):
+        """Test PatchCamelyon dataset."""
         dataset = self.MockDataset("patch_camelyon", {})
         image = Image.new("RGB", (640, 480))
         instance = {
@@ -286,6 +294,7 @@ class TestVisionDatasetAdapters:
         assert adapter.get_pil_image(instance) == image
 
     def test_resisc45_adapter(self):
+        """Test Resisc45 dataset."""
         dataset = self.MockDataset(
             "resisc45",
             {
@@ -315,6 +324,7 @@ class TestVisionDatasetAdapters:
         assert adapter.get_pil_image(instance) == image
 
     def test_gtsrb_adapter(self):
+        """Test GTSRB dataset."""
         dataset = self.MockDataset(
             "gtsrb",
             {
