@@ -21,7 +21,7 @@ dependencies:
   - azureml-contrib-services
   - azureml-core=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
-  - azureml-inference-server-http==0.7.6
+  - azureml-inference-server-http==1.2.1
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
     # Other public packages
@@ -29,7 +29,7 @@ dependencies:
   - datasets~=2.10.1
   - faiss-cpu~=1.7.3
   - GitPython>=3.1
-  - inference-schema==1.4
+  - inference-schema~=1.7.0
   - langchain<0.2
   - lxml
   - markdown
