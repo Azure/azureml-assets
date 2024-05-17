@@ -1,4 +1,4 @@
-name: minimal-py311-inference
+name: minimal-ubuntu22.04-py311-cpu-inference
 
 version: auto
 type: environment
