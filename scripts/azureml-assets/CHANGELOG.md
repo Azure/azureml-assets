@@ -3,10 +3,6 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.16.47 (2024-05-16)
-### 🐛 Bugs Fixed
-- [#2923](https://github.com/Azure/azureml-assets/pull/2923) Update asset validation check for EvaluationResult
-
 ## 1.16.46 (2024-05-15)
 ### 🐛 Bugs Fixed
 - [#2907](https://github.com/Azure/azureml-assets/pull/2907) add hiddenlayerscanned tags valdn
