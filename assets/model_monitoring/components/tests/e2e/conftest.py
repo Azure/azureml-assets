@@ -658,7 +658,10 @@ def submit_pipeline_job(ml_client: MLClient, request):
     """Submit pipeline job to ml ws. Handle deletion if the testcase is cancelled/stopped."""
     submitted_jobs = []
 
-    def _submit_job(job: Job, experiment_name: str):
+    def _submit_job(job: Job, experiment_name: str, expect_failure: bool = False):
+        if job.display_name is not None:
+            job.display_name += "_should_FAIL" if expect_failure else "_should_PASS"
+        
         pipeline_job = ml_client.jobs.create_or_update(
             job, experiment_name=experiment_name, skip_validation=True
         )

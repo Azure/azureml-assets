@@ -31,7 +31,8 @@ def _submit_data_quality_signal_monitor_job(
     filter_type=None,
     filter_value=None,
     override_numerical_features=None,
-    override_categorical_features=None
+    override_categorical_features=None,
+    expect_failure: bool = False
 ):
     dd_signal_monitor = get_component(COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR)
 
@@ -57,7 +58,7 @@ def _submit_data_quality_signal_monitor_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = submit_pipeline_job(
-        pipeline_job, experiment_name
+        pipeline_job, experiment_name, expect_failure
     )
 
     # Wait until the job completes
@@ -143,7 +144,8 @@ class TestDataQualityModelMonitor:
             DATA_ASSET_EMPTY,
             "target",
             "TopNByAttribution",
-            "3"
+            "3",
+            expect_failure = True
         )
 
         # empty target data should cause the pipeline to fail
