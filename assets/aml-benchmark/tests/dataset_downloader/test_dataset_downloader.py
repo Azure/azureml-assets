@@ -233,6 +233,7 @@ class TestVisionDatasetAdapters:
         """Mock dataset with info and features fields."""
 
         def __init__(self, name, label_mapping):
+            """Make mock dataset."""
             self.info = namedtuple("dataset_info", "dataset_name")(name)
             self.features = {
                 "label": namedtuple("label_info", "int2str")(
