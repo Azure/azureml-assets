@@ -10,7 +10,6 @@ dependencies:
   - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore]==0.2.32
     # Azure AI
   - azure-ai-formrecognizer==3.3.1
-  - azure-ai-ml==1.15.0
     # Azure
   - azure-core<2.0.0,>=1.8.0,!=1.22.0
   - azure-identity=={{latest-pypi-version}}
