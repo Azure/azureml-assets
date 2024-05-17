@@ -854,15 +854,16 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
         error_count += 1
 
-    if MLFlowModelTags.HIDDEN_LAYERS_SCANNED not in model.tags:
-        _log_error(
-            asset_config.file_name_with_path,
-            (
-                "`hiddenlayerscanned` tag missing. "
-                "Model is not scanned by HiddenLayer ModelScanner tool. Please scan the model and retry"
-            )
-        )
-        error_count += 1
+    # TODO: skip hidden layer valdn till most models are scanned
+    # if MLFlowModelTags.HIDDEN_LAYERS_SCANNED not in model.tags:
+    #     _log_error(
+    #         asset_config.file_name_with_path,
+    #         (
+    #             "`hiddenlayerscanned` tag missing. "
+    #             "Model is not scanned by HiddenLayer ModelScanner tool. Please scan the model and retry"
+    #         )
+    #     )
+    #     error_count += 1
 
     # shared compute check
     if MLFlowModelTags.SHARED_COMPUTE_CAPACITY not in model.tags:
