@@ -61,9 +61,6 @@ jobs:
       runtime_version: "3.3"
     identity:
       type: managed
-      
-      object_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
-      client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   compute_production_explanations:
     type: spark
     component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.18
@@ -83,9 +80,6 @@ jobs:
       runtime_version: "3.3"
     identity:
       type: managed
-      
-      object_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
-      client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   compute_feature_attribution:
     type: spark
     component: azureml://registries/azureml/components/feature_attribution_drift_compute_metrics/versions/0.3.15
@@ -105,9 +99,6 @@ jobs:
       runtime_version: "3.3"
     identity:
       type: managed
-      
-      object_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
-      client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   output_signal_metrics:
     type: spark
     component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.18
@@ -129,9 +120,6 @@ jobs:
       runtime_version: "3.3"
     identity:
       type: managed
-      
-      object_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
-      client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
   evaluate_metric_thresholds:
     type: spark
     component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.18
@@ -146,6 +134,3 @@ jobs:
       runtime_version: "3.3"
     identity:
       type: managed
-      
-      object_id: f4864e28-fd30-42a0-9993-8924f6c1c9f9
-      client_id: e65d9540-9733-4672-a4f5-51563f2e2f68
