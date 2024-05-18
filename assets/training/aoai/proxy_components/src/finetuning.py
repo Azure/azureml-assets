@@ -4,11 +4,13 @@
 """Azure Open AI Finetuning component."""
 
 import argparse
+from argparse import Namespace
 import time
 from typing import Optional, Dict
 from common import utils
 from common.cancel_handler import CancelHandler
 from common.azure_openai_client_manager import AzureOpenAIClientManager
+from common.keyvault_client_manager import KeyVaultClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
 from proxy_component import AzureOpenAIProxyComponent
 from hyperparameters import Hyperparameters, Hyperparameters_1P
@@ -29,16 +31,48 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         super().__init__(aoai_client_manager.endpoint_name,
                          aoai_client_manager.endpoint_resource_group,
                          aoai_client_manager.endpoint_subscription)
-        self.aoai_client = aoai_client_manager.get_azure_openai_client()
+        self.aoai_client = aoai_client_manager.aoai_client
+        self.aoai_client_manager = aoai_client_manager
         self.training_file_id = None
         self.validation_file_id = None
         self.finetuning_job_id = None
 
-    def submit_job(self, training_file_path: str, validation_file_path: Optional[str], model: str,
+    def submit_job(self, training_file_path: Optional[str], validation_file_path: Optional[str],
+                   training_import_path: Optional[str], validation_import_path: Optional[str], model: str,
                    hyperparameters: Dict[str, str], hyperparameters_1p: Dict[str, str], suffix=Optional[str]) -> str:
         """Upload data, finetune model and then delete data."""
         logger.info("Step 1: Uploading data to AzureOpenAI resource")
-        self.upload_files(training_file_path, validation_file_path)
+        if training_file_path is not None:
+            self.upload_files(training_file_path, validation_file_path)
+        else:
+            training_data_uri_key, training_data_uri = utils.get_key_or_uri_from_data_import_path(training_import_path)
+
+            if validation_import_path is not None:
+                validation_data_uri_key, validation_data_uri =\
+                    utils.get_key_or_uri_from_data_import_path(validation_import_path)
+
+            if training_data_uri_key is not None:
+                keyvault_client_manager = KeyVaultClientManager()
+                keyvault_client = keyvault_client_manager.get_keyvault_client()
+                logger.info(f"fetching training file uri from keyvault : {keyvault_client_manager.keyvault_name}")
+                training_data_uri = keyvault_client.get_secret(training_data_uri_key).value
+            else:
+                logger.info("User has provided trainining data uri directly, sending it to Azure OpenAI resource")
+
+            self.training_file_id = self.upload_file_uri_from_rest(training_data_uri)
+            logger.info("uploaded training file uri to aoai resource")
+
+            if validation_import_path is not None:
+                if validation_data_uri_key is not None:
+                    keyvault_client_manager = KeyVaultClientManager()
+                    keyvault_client = keyvault_client_manager.get_keyvault_client()
+                    logger.info(f"fetching validation file uri from keyvault: {keyvault_client_manager.keyvault_name}")
+                    validation_data_uri = keyvault_client.get_secret(validation_data_uri_key).value
+                else:
+                    logger.info("User has provided validation data uri directly, sending it to Azure OpenAI resource")
+
+                self.validation_file_id = self.upload_file_uri_from_rest(validation_data_uri)
+                logger.info("uploaded validation file uri to aoai resource")
 
         logger.info("Step 2: Finetuning model")
         self.finetuning_job_id = self.submit_finetune_job(model, hyperparameters, hyperparameters_1p, suffix)
@@ -93,13 +127,24 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         self._wait_for_processing(validation_metadata.id)
         logger.info("validation file uploaded")
 
+    def upload_file_uri_from_rest(self, file_uri: str) -> str:
+        """Upload file uri to azure openai resource via rest call."""
+        file_uri_payload = utils.create_payload_for_data_upload_rest_call(file_uri)
+        file_upload_response = self.aoai_client_manager.upload_data_to_aoai(file_uri_payload)
+
+        file_id = utils.parse_file_id_from_upload_response(file_upload_response)
+        self._wait_for_processing(file_id)
+        logger.info(f"file id : {file_id} uploaded")
+
+        return file_id
+
     def _wait_for_processing(self, file_id):
         upload_file_metadata = self.aoai_client.files.wait_for_processing(file_id)
         filename = upload_file_metadata.filename
         logger.info(f"file status is : {upload_file_metadata.status} for file name : {filename}")
 
         if upload_file_metadata.status == "error":
-            error_reason = upload_file_metadata.model_dump()["error"]
+            error_reason = upload_file_metadata.status_details
             error_string = f"Processing file failed for {filename},\
                            file id: {upload_file_metadata.id}, reason: {error_reason}"
             logger.error(error_string)
@@ -214,6 +259,9 @@ def parse_args():
 
     parser.add_argument("--training_file_path", type=str)
     parser.add_argument("--validation_file_path", type=str)
+
+    parser.add_argument("--training_import_path", type=str)
+    parser.add_argument("--validation_import_path", type=str)
     parser.add_argument("--aoai_finetuning_output", type=str)
 
     parser.add_argument("--model", type=str)
@@ -224,22 +272,24 @@ def parse_args():
     parser.add_argument("--batch_size", type=int)
     parser.add_argument("--learning_rate_multiplier", type=float)
 
-    parser.add_argument("--ExportMergedWeights", type=bool)
-    parser.add_argument("--CompletionOverride", type=bool)
-    parser.add_argument("--FullFineTune", type=bool)
-    parser.add_argument("--LoraV2", type=bool)
-    parser.add_argument("--LoraDimensions", type=int)
-    parser.add_argument("--ContextWindow", type=int)
-    parser.add_argument("--FileSPMRate", type=float)
-    parser.add_argument("--WeightDecayMultiplier", type=float)
-    parser.add_argument("--PromptLossWeight", type=float)
-    parser.add_argument("--TrimMode", type=str)
-    parser.add_argument("--CheckPointInterval", type=int)
-    parser.add_argument("--NumSteps", type=int)
-    parser.add_argument("--ShuffleType", type=str)
+    parser.add_argument("--lora_dim", type=int)
+    parser.add_argument("--n_ctx", type=int)
+    parser.add_argument("--weight_decay_multiplier", type=float)
 
     args = parser.parse_args()
     return args
+
+
+def validate_train_data_upload_type(args: Namespace) -> str:
+    """Validate input of dataset."""
+    if args.training_file_path is None and args.training_import_path is None:
+        raise ValueError("One of training file path or training import path should be provided")
+
+    if args.training_file_path is not None and args.training_import_path is not None:
+        raise ValueError("Exactly one of training file path or training import path must be provided")
+
+    if args.validation_file_path is not None and args.validation_import_path is not None:
+        raise ValueError("Exactly one of validation file path and validation import path must be provided")
 
 
 def main():
@@ -263,9 +313,13 @@ def main():
         hyperparameters_1p = Hyperparameters_1P(**vars(args))
         logger.debug("hyperparameters for 1P: {}".format(hyperparameters_1p))
 
+        validate_train_data_upload_type(args)
+
         finetuned_model_id = finetune_component.submit_job(
             training_file_path=args.training_file_path,
             validation_file_path=args.validation_file_path,
+            training_import_path=args.training_import_path,
+            validation_import_path=args.validation_import_path,
             model=args.model,
             hyperparameters=hyperparameters.get_dict(),
             hyperparameters_1p=hyperparameters_1p.get_dict(),

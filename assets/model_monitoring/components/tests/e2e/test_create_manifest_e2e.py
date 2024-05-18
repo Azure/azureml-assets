@@ -17,7 +17,8 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_data_drift_and_create_manifest_job(
-    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, baseline_data, target_data
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, baseline_data, target_data,
+    expect_failure: bool = False
 ):
     dd_model_monitor = get_component(COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR)
     create_manifest = get_component(COMPONENT_NAME_CREATE_MANIFEST)
@@ -69,7 +70,7 @@ def _submit_data_drift_and_create_manifest_job(
     )
 
     pipeline_job = submit_pipeline_job(
-        pipeline_job, experiment_name
+        pipeline_job, experiment_name, expect_failure
     )
 
     # Wait until the job completes
