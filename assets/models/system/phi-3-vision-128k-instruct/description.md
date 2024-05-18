@@ -131,7 +131,8 @@ Real time|<a href="https://aka.ms/azureml-infer-sdk-image-text-to-text-generatio
 
 ```json
 {
-  "output": " The image shows a street view with a stop sign, a car, a statue, and several buildings with signage in a city setting."
+  "output": " The image captures a vibrant street scene. Dominating the left side of the image is a red stop sign, standing on a white pole. Adjacent to the stop sign, a white lion statue adds a touch of symbolism to the scene. \n\nThe background is filled with colorful buildings, including a red one and a yellow one, adding a lively atmosphere to the scene. The blue sky overhead and a clear white road underneath it complete the picture. \n\nAdding to the cultural context, there are Chinese characters visible in the background, suggesting the presence of a Chinese influence in this location. The overall scene is a blend of urban life and cultural elements."
+
 }
 ```
 
