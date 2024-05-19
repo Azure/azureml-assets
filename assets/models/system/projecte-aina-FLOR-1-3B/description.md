@@ -235,22 +235,8 @@ be liable for any results arising from the use made by third parties.
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-fill-mask)|[fill-mask-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-fill-mask)
-Batch |[fill-mask-batch-endpoint.ipynb](https://aka.ms/azureml-infer-batch-sdk-fill-mask)|coming soon
-
-### Finetuning samples
-
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Text Classification|Emotion Detection|[Emotion](https://huggingface.co/datasets/dair-ai/emotion)|[emotion-detection.ipynb](https://aka.ms/azureml-ft-sdk-emotion-detection)|[emotion-detection.sh](https://aka.ms/azureml-ft-cli-emotion-detection)
-Token Classification|Named Entity Recognition|[Conll2003](https://huggingface.co/datasets/conll2003)|[named-entity-recognition.ipynb](https://aka.ms/azureml-ft-sdk-token-classification)|[named-entity-recognition.sh](https://aka.ms/azureml-ft-cli-token-classification)
-Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/datasets/squad)|[extractive-qa.ipynb](https://aka.ms/azureml-ft-sdk-extractive-qa)|[extractive-qa.sh](https://aka.ms/azureml-ft-cli-extractive-qa)
-
-### Model Evaluation samples
-
-Task | Use case | Dataset | Python sample (Notebook) | CLI with YAML
-|--|--|--|--|--|
-Fill Mask|Fill Mask|[rcds/wikipedia-for-mask-filling](https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|[evaluate-model-fill-mask.yml](https://aka.ms/azureml-eval-cli-fill-mask/)
+Real time|[text-generation-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-text-generation)|[text-generation-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-text-generation)
+Batch |[	text-generation-batch-endpoint.ipynb](https://aka.ms/azureml-infer-batch-sdk-text-generation)|coming soon
 
 ### Sample inputs and outputs
 
@@ -264,7 +250,7 @@ Fill Mask|Fill Mask|[rcds/wikipedia-for-mask-filling](https://huggingface.co/dat
     "parameters": {
       "top_p": 0.8,
       "temperature": 0.8,
-      "max_new_tokens": 100,
+      "max_new_tokens": 90,
       "do_sample": true
     }
   }
@@ -275,7 +261,7 @@ Fill Mask|Fill Mask|[rcds/wikipedia-for-mask-filling](https://huggingface.co/dat
 ```json
 [
   {
-    "0": "Once upon a time, the North was peaceful and tranquil. A great man, named Jum, reigned supreme. But time was running out. A war had raged for several centuries, and the dangers of war were threatening to overwhelm the world. It was time to take action. One man, a soldier of fortune, Jum, was the man to lead the nation. But Jum had to deal with many complications in the way of his quest"
+    "0": "Once upon a time, there were two brothers who lived in the small village of Summerfield. They were known as the brothers Hare and Bunny. They were very good friends and they loved each other dearly.\n\nOne day, the brothers Hare and Bunny went to the fields and they got some apples from the apple tree. When they got the apples, they went to the pond and they drank"
   }
 ]
 ```

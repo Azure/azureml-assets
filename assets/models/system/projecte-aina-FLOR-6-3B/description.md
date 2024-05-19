@@ -228,31 +228,33 @@ be liable for any results arising from the use made by third parties.
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-fill-mask)|[fill-mask-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-fill-mask)
-Batch |[fill-mask-batch-endpoint.ipynb](https://aka.ms/azureml-infer-batch-sdk-fill-mask)|coming soon
-
-### Finetuning samples
-
-Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|--|--|--|--|--|
-Text Classification|Emotion Detection|[Emotion](https://huggingface.co/datasets/dair-ai/emotion)|[emotion-detection.ipynb](https://aka.ms/azureml-ft-sdk-emotion-detection)|[emotion-detection.sh](https://aka.ms/azureml-ft-cli-emotion-detection)
-Token Classification|Named Entity Recognition|[Conll2003](https://huggingface.co/datasets/conll2003)|[named-entity-recognition.ipynb](https://aka.ms/azureml-ft-sdk-token-classification)|[named-entity-recognition.sh](https://aka.ms/azureml-ft-cli-token-classification)
-Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/datasets/squad)|[extractive-qa.ipynb](https://aka.ms/azureml-ft-sdk-extractive-qa)|[extractive-qa.sh](https://aka.ms/azureml-ft-cli-extractive-qa)
-
-### Model Evaluation samples
-
-Task | Use case | Dataset | Python sample (Notebook) | CLI with YAML
-|--|--|--|--|--|
-Fill Mask|Fill Mask|[rcds/wikipedia-for-mask-filling](https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|[evaluate-model-fill-mask.yml](https://aka.ms/azureml-eval-cli-fill-mask/)
+Real time|[text-generation-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-text-generation)|[text-generation-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-text-generation)
+Batch |[	text-generation-batch-endpoint.ipynb](https://aka.ms/azureml-infer-batch-sdk-text-generation)|coming soon
 
 ### Sample inputs and outputs
 
 #### Sample input
 ```json
-{'input_data': {'input_string': ['My name is John and I am', 'Once upon a time,'], 'parameters': {'max_new_tokens': 25, 'do_sample': True, 'temperature': 0.5, 'top_p': 0.5}}}
+{
+  "input_data": {
+    "input_string": [
+      "Once upon a time,"
+    ],
+    "parameters": {
+      "top_p": 0.8,
+      "temperature": 0.8,
+      "max_new_tokens": 90,
+      "do_sample": true
+    }
+  }
+}
 ```
 
 #### Sample output
 ```json
-[{"0": "My name is John and I am a professional photographer. I have been shooting weddings for over 10 years and have photographed over"}, {"0": "Once upon a time, there was a little girl named Mary. She was a very curious and inquisitive child, always asking qu"}]
+[
+  {
+    "0": "Once upon a time, there was a village where the villagers lived in peace and harmony. They worked together, shared their food and resources, and lived in a way that made them happy.\n\nOne day, a stranger arrived in the village. He was a wise and powerful man who could see the future. He told the villagers that their way of life was not sustainable and that they needed to change it.\n\nThe villa"
+  }
+]
 ```

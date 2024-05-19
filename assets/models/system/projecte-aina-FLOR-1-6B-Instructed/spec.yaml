@@ -10,6 +10,7 @@ properties:
 tags:
   Preview: ''
   SharedComputeCapacityEnabled: ''
+  hiddenlayerscanned: ''
   inference_compute_allow_list:
    [
       Standard_NC4as_T4_v3,
