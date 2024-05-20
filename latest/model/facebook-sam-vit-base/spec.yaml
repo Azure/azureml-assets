@@ -21,6 +21,7 @@ tags:
   license: apache-2.0
   task: image-segmentation
   training_dataset: SA-1B
+  hiddenlayerscanned: ''
   SharedComputeCapacityEnabled: ''
   inference_compute_allow_list: [Standard_DS5_v2, Standard_D8a_v4, Standard_D8as_v4,
     Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4,
