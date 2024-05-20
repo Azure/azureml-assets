@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Fluency-Evaluator
+path: ./
+properties:
+  is-promptflow: true
+  is-evaluator: true
+  show-artifact: true
+  _default-display-file: ./evaluator/flow/prompt.jinja2
+tags:
+  Preview: ""
+  hiddenlayerscanned: ""
+version: 1

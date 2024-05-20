@@ -12,6 +12,7 @@ tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
   disable-batch: "true"
+  hiddenlayerscanned: ""
   inference_compute_allow_list:
     [
       Standard_NC12s_v3,

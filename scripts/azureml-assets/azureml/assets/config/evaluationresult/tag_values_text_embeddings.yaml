@@ -1,0 +1,13 @@
+# Valid tag values that can be applied to evaluation results whose evaluation_type is `text_embeddings`.
+task:
+  required: True
+  allow_multiple: False
+  values:
+  - BitextMining
+  - Classification
+  - Clustering
+  - PairClassification
+  - Reranking
+  - Retrieval
+  - Summarization
+  - STS
