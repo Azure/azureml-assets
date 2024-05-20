@@ -23,6 +23,7 @@ tags:
    huggingface_model_id: openai/clip-vit-large-patch14
    SharedComputeCapacityEnabled: ''
    author: openai
+   hiddenlayerscanned: ''
    inference_compute_allow_list:
         [
             Standard_DS2_v2,
