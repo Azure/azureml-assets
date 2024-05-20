@@ -40,7 +40,7 @@ conf:
       - python=3.10
       - pip:
         - azure-storage-file-datalake~=12.8.0
-        - azure-ai-ml~=1.13.0
+        - azure-ai-ml~=1.16.0
         - mltable~=1.3.0
         - azureml-fsspec~=1.0.0
         - fsspec~=2023.4.0
