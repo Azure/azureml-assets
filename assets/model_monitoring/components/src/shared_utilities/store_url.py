@@ -75,7 +75,8 @@ class StoreUrl:
             url = f"{url}/{relative_path.lstrip('/')}"
         return url
 
-    def get_credential(self) -> Union[str, ClientSecretCredential, AzureSasCredential, AzureMLOnBehalfOfCredential, None]:
+    def get_credential(self) -> Union[
+            str, ClientSecretCredential, AzureSasCredential, AzureMLOnBehalfOfCredential, None]:
         """Get credential for this store url."""
         if not self._datastore:
             raise InvalidInputError(
@@ -106,8 +107,12 @@ class StoreUrl:
             raise InvalidInputError(f"Unsupported datastore type: {self._datastore.datastore_type}, "
                                     "only Azure Blob and Azure Data Lake Gen2 are supported.")
 
-    def get_container_client(self, credential: Union[str, AzureSasCredential, ClientSecretCredential, AzureMLOnBehalfOfCredential, None] = None) \
-            -> Union[FileSystemClient, ContainerClient, None]:
+    def get_container_client(
+            self,
+            credential: Union[
+                str, AzureSasCredential, ClientSecretCredential, AzureMLOnBehalfOfCredential, None
+            ] = None
+        ) -> Union[FileSystemClient, ContainerClient, None]:
         """
         Get container client for this store url.
 
@@ -123,7 +128,8 @@ class StoreUrl:
         if self.store_type == "blob" and self._datastore \
                 and (self._datastore.credential_type and self._datastore.credential_type != "None"):
             return self._datastore.blob_service.get_container_client(self.container_name)
-        # fallback to AzureMLOnBehalfOfCredential for credential less datastore for now. Requires that we submit MoMo component with managed identity.
+        # fallback to AzureMLOnBehalfOfCredential for credential less datastore for now.
+        # Requires that we submit MoMo component with managed identity.
         credential = credential or self.get_credential()
         account_url_scheme = "https" if self._is_secure() else "http"
         if self.store_type == "blob":
