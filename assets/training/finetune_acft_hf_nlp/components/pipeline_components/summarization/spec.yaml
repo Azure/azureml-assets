@@ -512,7 +512,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.49
+    component: azureml://registries/azureml-preview-test1/components/ft_nlp_common_validation/versions/dev20.05.1
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -549,7 +549,7 @@ jobs:
       auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
   summarization_model_import:
     type: command
-    component: azureml:summarization_model_import:0.0.49
+    component: azureml://registries/azureml-preview-test1/components/summarization_model_import/versions/dev20.05.1 
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -560,7 +560,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   summarization_datapreprocess:
     type: command
-    component: azureml:summarization_datapreprocess:0.0.49
+    component: azureml://registries/azureml-preview-test1/components/summarization_datapreprocess/versions/dev20.05.1
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -580,7 +580,7 @@ jobs:
       model_selector_output: '${{parent.jobs.summarization_model_import.outputs.output_dir}}'
   summarization_finetune:
     type: command
-    component: azureml:summarization_finetune:0.0.49
+    component: azureml://registries/azureml-preview-test1/components/summarization_finetune/versions/dev20.05.1
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -637,7 +637,7 @@ jobs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.49
+    component: azureml://registries/azureml-preview-test1/components/ft_nlp_model_converter/versions/dev20.05.1
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -647,7 +647,7 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.22
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.22
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -663,7 +663,7 @@ jobs:
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.22
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.22
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
