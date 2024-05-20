@@ -19,6 +19,7 @@ tags:
   task: chat-completion
   hiddenlayerscanned: ""
   author: microsoft
+  _aml_system_vanity_registry: "azureml-phi"
   inference_compute_allow_list:
     [ 
       Standard_NC6s_v3,
