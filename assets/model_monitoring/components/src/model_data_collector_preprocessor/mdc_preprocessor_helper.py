@@ -207,8 +207,7 @@ def copy_appendblob_to_blockblob(appendblob_url: StoreUrl,
 def _get_sas_token(account_name, container_name, credential) -> str:
     """Get sas token for append blob in blob storage."""
     def get_blob_sas_token_from_client_credential(
-            client_credential: Union[ClientSecretCredential, AzureMLOnBehalfOfCredential]
-        ):
+            client_credential: Union[ClientSecretCredential, AzureMLOnBehalfOfCredential]):
         account_url = f"https://{account_name}.blob.core.windows.net"
         blob_service_client = BlobServiceClient(account_url=account_url, credential=client_credential)
         # get a user delegation key for the Blob service that's valid for 1 day

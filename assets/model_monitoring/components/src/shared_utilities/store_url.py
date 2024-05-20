@@ -110,9 +110,8 @@ class StoreUrl:
     def get_container_client(
             self,
             credential: Union[
-                str, AzureSasCredential, ClientSecretCredential, AzureMLOnBehalfOfCredential, None
-            ] = None
-        ) -> Union[FileSystemClient, ContainerClient, None]:
+                str, AzureSasCredential, ClientSecretCredential, AzureMLOnBehalfOfCredential, None] = None
+            ) -> Union[FileSystemClient, ContainerClient, None]:
         """
         Get container client for this store url.
 
