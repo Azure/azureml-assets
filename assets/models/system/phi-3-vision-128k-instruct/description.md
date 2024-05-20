@@ -100,6 +100,13 @@ Real time|<a href="https://aka.ms/azureml-infer-sdk-image-text-to-text-generatio
 
 ## Sample inputs and outputs (for real-time inference)
 
+Phi-3-vision model only supports single image per conversation. Specifically, please refer to below grid:
+ 
+|    |Single-turn|Multi-turn conversation|
+|------------|------------|------------|
+|Single Image|Yes|Yes|
+|Multiple Images|No|No|
+
 ### Sample Input
 
 ```json
