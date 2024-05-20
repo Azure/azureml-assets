@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/projecte-aina-FLOR-1-3B/1715322192/mlflow_model_folder
+  container_path: huggingface/projecte-aina-aguila-7b/1715323023/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
