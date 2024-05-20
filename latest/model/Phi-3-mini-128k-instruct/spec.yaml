@@ -6,25 +6,26 @@ properties:
   languages: en
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+    Standard_ND96amsr_A100_v4
   finetuning-tasks: chat-completion
   finetune-min-sku-spec: 24|1|220|64
   finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+    Standard_ND96amsr_A100_v4
 tags:
   Featured: ""
   Preview: ""
   huggingface_model_id: ""
+  maas-inference: true
   license: mit
   disable-batch: "true"
   task: chat-completion
-  hiddenlayerscanned: ""
   author: microsoft
   SharedComputeCapacityEnabled: ""
+  hiddenlayerscanned: ""
   inference_compute_allow_list: [Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4]
+    Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4]
   finetune_compute_allow_list: [Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
+    Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4]
   inference_supported_envs:
   - vllm
   model_specific_defaults:
@@ -34,7 +35,16 @@ tags:
     apply_ort: "false"
     precision: 16
     ignore_mismatched_sizes: "false"
-version: 6
+    num_train_epochs: 1
+    per_device_train_batch_size: 1
+    per_device_eval_batch_size: 1
+    gradient_accumulation_steps: 1
+    learning_rate: 5e-6
+    lr_scheduler_type: "cosine"
+    logging_strategy: "steps"
+    logging_steps: 10
+    save_total_limit: 1
+version: 7
 description: |
   ## Model Details
 
@@ -121,12 +131,6 @@ description: |
   |TruthfulQA <br> 10-Shot |63.20|68.70|75.70| -- |53.00|52.10|60.10|67.70|
   |HumanEval <br> 0-Shot |57.90|59.10|55.50|59|28.00|34.10|37.80|62.20|
   |MBPP <br> 3-Shot |62.50|71.40|74.50|60.6|50.80|51.50|60.20|77.80|
-
-  ## Inference samples
-
-  Inference type|Python sample (Notebook)|CLI with YAML
-  |--|--|--|
-  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
 
   ## Finetuning samples
   Task|Dataset|Python sample (Notebook)

@@ -84,12 +84,6 @@ The number of k–shot examples is listed per-benchmark.
 |HumanEval <br> 0-Shot |57.90|59.10|55.50|59|28.00|34.10|37.80|62.20|
 |MBPP <br> 3-Shot |62.50|71.40|74.50|60.6|50.80|51.50|60.20|77.80|
 
-## Inference samples
-
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
-
 ## Finetuning samples
 Task|Dataset|Python sample (Notebook)
 |--|--|--|
