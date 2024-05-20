@@ -123,7 +123,7 @@ Task|Dataset|Python sample (Notebook)
 |--|--|--|
 Chat completion|<a href="https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k" target="_blank">Ultrachat 200K</a>|<a href="https://aka.ms/phi3ftnotebook" target="_blank">chat-completion.ipynb</a>
 
-## Inference sample inputs and outputs (for real-time inference)
+## Sample inputs and outputs (for real-time inference)
 
 ### **Sample input**
 ```json
