@@ -1,1 +1,2 @@
 include azureml/assets/config/*
+include azureml/assets/config/evaluationresult/*

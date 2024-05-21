@@ -18,7 +18,8 @@ def _submit_genai_token_statistics_model_monitor_job(
     get_component,
     submit_pipeline_job,
     experiment_name,
-    aggregated_data
+    aggregated_data,
+    expect_failure: bool = False
 ):
     ts_model_monitor = get_component(COMPONENT_NAME_MODEL_TOKEN_STATS_SIGNAL_MONITOR)
 
@@ -38,7 +39,7 @@ def _submit_genai_token_statistics_model_monitor_job(
     pipeline_job = _token_statistics_signal_monitor_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
     pipeline_job = submit_pipeline_job(
-       pipeline_job, experiment_name=experiment_name
+       pipeline_job, experiment_name=experiment_name, expect_failure=expect_failure
     )
 
     # Wait until the job completes

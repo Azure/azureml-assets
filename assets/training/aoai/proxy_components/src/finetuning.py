@@ -38,27 +38,40 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         self.finetuning_job_id = None
 
     def submit_job(self, training_file_path: Optional[str], validation_file_path: Optional[str],
-                   training_file_uri_key: Optional[str], validation_file_uri_key: Optional[str], model: str,
+                   training_import_path: Optional[str], validation_import_path: Optional[str], model: str,
                    hyperparameters: Dict[str, str], hyperparameters_1p: Dict[str, str], suffix=Optional[str]) -> str:
         """Upload data, finetune model and then delete data."""
         logger.info("Step 1: Uploading data to AzureOpenAI resource")
         if training_file_path is not None:
             self.upload_files(training_file_path, validation_file_path)
         else:
-            keyvault_client_manager = KeyVaultClientManager()
-            keyvault_client = keyvault_client_manager.get_keyvault_client()
+            training_data_uri_key, training_data_uri = utils.get_key_or_uri_from_data_import_path(training_import_path)
 
-            logger.info(f"fetching training file uri from keyvault : {keyvault_client_manager.keyvault_name}")
-            training_file_uri = keyvault_client.get_secret(training_file_uri_key).value
+            if validation_import_path is not None:
+                validation_data_uri_key, validation_data_uri =\
+                    utils.get_key_or_uri_from_data_import_path(validation_import_path)
 
-            self.training_file_id = self.upload_file_uri_from_rest(training_file_uri)
+            if training_data_uri_key is not None:
+                keyvault_client_manager = KeyVaultClientManager()
+                keyvault_client = keyvault_client_manager.get_keyvault_client()
+                logger.info(f"fetching training file uri from keyvault : {keyvault_client_manager.keyvault_name}")
+                training_data_uri = keyvault_client.get_secret(training_data_uri_key).value
+            else:
+                logger.info("User has provided trainining data uri directly, sending it to Azure OpenAI resource")
+
+            self.training_file_id = self.upload_file_uri_from_rest(training_data_uri)
             logger.info("uploaded training file uri to aoai resource")
 
-            if validation_file_uri_key is not None:
-                logger.info(f"fetching validation file uri from keyvault : {keyvault_client_manager.keyvault_name}")
-                validation_file_uri = keyvault_client.get_secret(validation_file_uri_key).value
+            if validation_import_path is not None:
+                if validation_data_uri_key is not None:
+                    keyvault_client_manager = KeyVaultClientManager()
+                    keyvault_client = keyvault_client_manager.get_keyvault_client()
+                    logger.info(f"fetching validation file uri from keyvault: {keyvault_client_manager.keyvault_name}")
+                    validation_data_uri = keyvault_client.get_secret(validation_data_uri_key).value
+                else:
+                    logger.info("User has provided validation data uri directly, sending it to Azure OpenAI resource")
 
-                self.validation_file_id = self.upload_file_uri_from_rest(validation_file_uri)
+                self.validation_file_id = self.upload_file_uri_from_rest(validation_data_uri)
                 logger.info("uploaded validation file uri to aoai resource")
 
         logger.info("Step 2: Finetuning model")
@@ -247,8 +260,8 @@ def parse_args():
     parser.add_argument("--training_file_path", type=str)
     parser.add_argument("--validation_file_path", type=str)
 
-    parser.add_argument("--training_file_uri_key", type=str)
-    parser.add_argument("--validation_file_uri_key", type=str)
+    parser.add_argument("--training_import_path", type=str)
+    parser.add_argument("--validation_import_path", type=str)
     parser.add_argument("--aoai_finetuning_output", type=str)
 
     parser.add_argument("--model", type=str)
@@ -269,14 +282,14 @@ def parse_args():
 
 def validate_train_data_upload_type(args: Namespace) -> str:
     """Validate input of dataset."""
-    if args.training_file_path is None and args.training_file_uri_key is None:
-        raise ValueError("One of training file path and training file uri key should be provided")
+    if args.training_file_path is None and args.training_import_path is None:
+        raise ValueError("One of training file path or training import path should be provided")
 
-    if args.training_file_path is not None and args.training_file_uri_key is not None:
-        raise ValueError("Exactly one of training file path or training file uri key must be provided")
+    if args.training_file_path is not None and args.training_import_path is not None:
+        raise ValueError("Exactly one of training file path or training import path must be provided")
 
-    if args.validation_file_path is not None and args.validation_file_uri_key is not None:
-        raise ValueError("Exactly one of validation file path and validation file uri key must be provided")
+    if args.validation_file_path is not None and args.validation_import_path is not None:
+        raise ValueError("Exactly one of validation file path and validation import path must be provided")
 
 
 def main():
@@ -305,8 +318,8 @@ def main():
         finetuned_model_id = finetune_component.submit_job(
             training_file_path=args.training_file_path,
             validation_file_path=args.validation_file_path,
-            training_file_uri_key=args.training_file_uri_key,
-            validation_file_uri_key=args.validation_file_uri_key,
+            training_import_path=args.training_import_path,
+            validation_import_path=args.validation_import_path,
             model=args.model,
             hyperparameters=hyperparameters.get_dict(),
             hyperparameters_1p=hyperparameters_1p.get_dict(),

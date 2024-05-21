@@ -16,7 +16,7 @@ from tests.e2e.utils.constants import (
 
 def _submit_metric_outputter_job(
     submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, signal_metrics_input,
-    samples_index_input
+    samples_index_input, expect_failure: bool = False
 ):
     metric_outputter_component = get_component(COMPONENT_NAME_METRIC_OUTPUTTER)
 
@@ -44,7 +44,7 @@ def _submit_metric_outputter_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = submit_pipeline_job(
-        pipeline_job, experiment_name
+        pipeline_job, experiment_name, expect_failure
     )
 
     # Wait until the job completes
