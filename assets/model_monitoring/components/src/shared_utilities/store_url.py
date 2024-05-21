@@ -128,6 +128,8 @@ class StoreUrl:
         # Requires that we submit MoMo component with managed identity or will fail later on.
         credential = credential or self.get_credential()
         account_url_scheme = "https" if self._is_secure() else "http"
+        if not self._is_secure() and isinstance(credential, AzureMLOnBehalfOfCredential):
+            raise InvalidInputError("Token credential is only supported with secure HTTPS protocol. Please use a secure url for the StoreUrl.")
         if self.store_type == "blob":
             return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.core.windows.net",
                                    container_name=self.container_name, credential=credential)
