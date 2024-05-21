@@ -26,8 +26,6 @@ outputs:
   joined_data:
     type: mltable
     mode: direct
-identity:
-  type: managed
 conf:
   spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 4
