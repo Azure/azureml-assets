@@ -1,0 +1,24 @@
+type: evaluationresult
+name: banking77classification_cohere-embed-v3-multilingual_classification
+version: 2.16.05
+display_name: Banking77Classification_cohere-embed-v3-multilingual_Classification
+description: cohere-embed-v3-multilingual run for Banking77Classification dataset
+dataset_name: Banking77Classification
+dataset_family: Banking77Classification
+
+model_name: cohere-embed-v3-multilingual
+model_version: "3"
+model_asset_id: azureml://registries/azureml-cohere/models/Cohere-embed-v3-multilingual/versions/3
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azureml-cohere/models/Cohere-embed-v3-multilingual/versions/3
+
+tags:
+    evaluation_type: text_embeddings
+    task: Classification
+    primary_metric: accuracy
+
+metrics:
+    accuracy: 0.7934415584415585
+
+properties: {}

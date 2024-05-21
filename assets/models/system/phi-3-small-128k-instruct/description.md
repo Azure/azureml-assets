@@ -1,0 +1,191 @@
+## Model Summary
+
+The Phi-3-Small-128K-Instruct is a 7B parameters, lightweight, state-of-the-art open model trained with the Phi-3 datasets that includes both synthetic data and the filtered publicly available websites data with a focus on high-quality and reasoning dense properties. The model supports 128K context length (in tokens).
+
+The model has underwent a post-training process that incorporates both supervised fine-tuning and direct preference optimization for the instruction following and safety measures.
+When assessed against benchmarks testing common sense, language understanding, math, code, long context and logical reasoning, Phi-3-Small-128K-Instruct showcased a robust and state-of-the-art performance among models with less than 13 billion parameters.
+
+Resources and Technical Documentation:
+
++ [Phi-3 Microsoft Blog](https://aka.ms/phi3blog-april)
++ [Phi-3 Technical Report](https://aka.ms/phi3-tech-report)
+
+## Intended Uses
+
+**Primary use cases**
+
+The model is intended for broad commercial and research use in English. The model provides uses for general purpose AI systems and applications which require :
+
+1) Memory/compute constrained environments
+2) Latency bound scenarios
+3) Strong reasoning (especially code, math and logic)
+
+Our model is designed to accelerate research on language and multimodal models, for use as a building block for generative AI powered features. 
+
+**Use case considerations**
+
+The model is specifically designed or evaluated for all downstream purposes. Developers should consider common limitations of language models as they select use cases, and evaluate and mitigate for accuracy, safety, and fariness before using within a specific downstream use case, particularly for high risk scenarios. Developers should be aware of and adhere to applicable laws or regulations (including privacy, trade compliance laws, etc.) that are relevant to their use case.
+
+Nothing contained in this Model Card should be interpreted as or deemed a restriction or modification to the license the model is released under.  
+
+## Training
+
+### Model
+
+* Architecture: Phi-3 Small-128K-Instruct has 7B parameters and is a dense decoder-only Transformer model. The model is fine-tuned with Supervised fine-tuning (SFT) and Direct Preference Optimization (DPO) to ensure alignment with human preferences and safety guidlines.
+* Inputs: Text. It is best suited for prompts using chat format.
+* Context length: 128K tokens
+* GPUs: 1024 H100-80G
+* Training time: 18 days
+* Training data: 4.8T tokens
+* Outputs: Generated text in response to the input
+* Dates: Our models were trained between February and April 2024
+* Status: This is a static model trained on an offline dataset with cutoff date October 2023. Future versions of the tuned models may be released as we improve models.
+* Release dates	The model weight is released on May 21, 2024.
+
+### Datasets
+
+Our training data includes a wide variety of sources, totaling 4.8 trillion tokens (including 10% multilingual), and is a combination of 
+1) Publicly available documents filtered rigorously for quality, selected high-quality educational data, and code; 
+2) Newly created synthetic, “textbook-like” data for the purpose of teaching math, coding, common sense reasoning, general knowledge of the world (science, daily activities, theory of mind, etc.); 
+3) High quality chat format supervised data covering various topics to reflect human preferences on different aspects such as instruct-following, truthfulness, honesty and helpfulness.
+
+We are focusing on the quality of data that could potentially improve the reasoning ability for the model, and we filter the publicly available documents to contain the correct level of knowledge. As an example, the result of a game in premier league in a particular day might be good training data for frontier models, but we need to remove such information to leave more model capacity for reasoning for the small size models. More details about data can be found in the [Phi-3 Technical Report](https://aka.ms/phi3-tech-report).
+
+## Benchmarks
+
+We report the results for Phi-3-Small-128K-Instruct on standard open-source benchmarks measuring the model's reasoning ability (both common sense reasoning and logical reasoning). We compare to Mixtral-8x7b, Gemini-Pro, Gemma 7B, Llama-3-8B-Instruct, GPT-3.5-Turbo-1106, and GPT-4-Turbo-1106.
+
+All the reported numbers are produced with the exact same pipeline to ensure that the numbers are comparable. These numbers might differ from other published numbers due to slightly different choices in the evaluation.
+
+As is now standard, we use few-shot prompts to evaluate the models, at temperature 0. 
+The prompts and number of shots are part of a Microsoft internal tool to evaluate language models, and in particular we did no optimization to the pipeline for Phi-3.
+More specifically, we do not change prompts, pick different few-shot examples, change prompt format, or do any other form of optimization for the model.
+
+The number of k–shot examples is listed per-benchmark. 
+
+|Benchmark|Phi-3-Small-128K-Instruct<br>7b|Gemma<br>7B|Mixtral<br>8x7B|Llama-3-Instruct<br>8b|GPT-3.5-Turbo<br>version 1106|Gemini<br>Pro|GPT-4-Turbo<br>version 1106 (Chat)|
+|---------|-------------------------------|----------|-------------|-------------------------|---------------------------|------------|--------------------------------|
+|AGI Eval<br>5-shot|43.9|42.1|45.2|42.0|48.4|49.0|59.6|
+|MMLU<br>5-shot|75.5|63.6|70.5|66.5|71.4|66.7|84.0|
+|BigBench Hard<br>3-shot|77.6|59.6|69.7|51.5|68.3|75.6|87.7|
+|ANLI<br>7-shot|55.8|48.7|55.2|57.3|58.1|64.2|71.7|
+|HellaSwag<br>5-shot|79.6|49.8|70.4|71.1|78.8|76.2|88.3|
+|ARC Challenge<br>10-shot|90.8|78.3|87.3|82.8|87.4|88.3|95.6|
+|ARC Easy<br>10-shot|97.3|91.4|95.6|93.4|96.3|96.1|98.8|
+|BoolQ<br>2-shot|83.7|66.0|76.6|80.9|79.1|86.4|91.3|
+|CommonsenseQA<br>10-shot|80.8|76.2|78.1|79.0|79.6|81.8|86.7|
+|MedQA<br>2-shot|46.3|49.6|62.2|60.5|63.4|58.2|83.7|
+|OpenBookQA<br>10-shot|87.8|78.6|85.8|82.6|86.0|86.4|93.4|
+|PIQA<br>5-shot|88.1|78.1|86.0|75.7|86.6|86.2|90.1|
+|Social IQA<br>5-shot|78.7|65.5|75.9|73.9|68.3|75.4|81.7|
+|TruthfulQA (MC2)<br>10-shot|69.6|52.1|60.1|63.2|67.7|72.6|85.2|
+|WinoGrande<br>5-shot|80.1|55.6|62.0|65.0|68.8|72.2|86.7|
+|TriviaQA<br>5-shot|66.0|72.3|82.2|67.7|85.8|80.2|73.3|
+|GSM8K Chain of Thought<br>8-shot|87.3|59.8|64.7|77.4|78.1|80.4|94.2|
+|HumanEval<br>0-shot|59.1|34.1|37.8|60.4|62.2|64.4|79.9|
+|MBPP<br>3-shot|70.3|51.5|60.2|67.7|77.8|73.2|86.7|
+|Average|74.6|61.8|69.8|69.4|74.3|75.4|85.2|
+
+We take a closer look at different categories across 80 public benchmark datasets at the table below:
+
+|Benchmark|Phi-3-Small-128K-Instruct<br>7b|Gemma<br>7B|Mixtral<br>8x7B|Llama-3-Instruct<br>8b|GPT-3.5-Turbo<br>version 1106|Gemini<br>Pro|GPT-4-Turbo<br>version 1106 (Chat)|
+|--------|--------------------------|--------|-------------|-------------------|-------------------|----------|------------------------|
+|Popular aggregated benchmark|70.6|59.4|66.2|59.9|67.0|67.5|80.5|
+|Reasoning|80.3|69.1|77.0|75.7|78.3|80.4|89.3|
+|Language understanding|67.4|58.4|64.9|65.4|70.4|75.3|81.6|
+|Code generation|60.0|45.6|52.7|56.4|70.4|66.7|76.1|
+|Math|48.1|35.8|40.3|41.1|52.8|50.9|67.1|
+|Factual knowledge|41.7|46.7|58.6|43.1|63.4|54.6|45.9|
+|Multilingual|62.6|63.2|63.4|65.0|69.1|76.5|82.0|
+|Robustness|68.7|38.4|51.0|64.5|69.3|69.7|84.6|
+
+## Responsible AI Considerations
+
+Like other language models, the Phi series models can potentially behave in ways that are unfair, unreliable, or offensive. Some of the limiting behaviors to be aware of include:
+
++ Quality of Service: the Phi models are trained primarily on English text. Languages other than English will experience worse performance. English language varieties with less representation in the training data might experience worse performance than standard American English.   
++ Representation of Harms & Perpetuation of Stereotypes: These models can over- or under-represent groups of people, erase representation of some groups, or reinforce demeaning or negative stereotypes. Despite safety post-training, these limitations may still be present due to differing levels of representation of different groups or prevalence of examples of negative stereotypes in training data that reflect real-world patterns and societal biases. 
++ Inappropriate or Offensive Content: these models may produce other types of inappropriate or offensive content, which may make it inappropriate to deploy for sensitive contexts without additional mitigations that are specific to the use case. 
++ Information Reliability: Language models can generate nonsensical content or fabricate content that might sound reasonable but is inaccurate or outdated.  
++ Limited Scope for Code: Majority of Phi-3 training data is based in Python and use common packages such as "typing, math, random, collections, datetime, itertools". If the model generates Python scripts that utilize other packages or scripts in other languages, we strongly recommend users manually verify all API uses.   
+
+Developers should apply responsible AI best practices and are responsible for ensuring that a specific use case complies with relevant laws and regulations (e.g. privacy, trade, etc.). Important areas for consideration include:
+
++ Allocation: Models may not be suitable for scenarios that could have consequential impact on legal status or the allocation of resources or life opportunities (ex: housing, employment, credit, etc.) without further assessments and additional debiasing techniques.
++ High-Risk Scenarios: Developers should assess suitability of using models in high-risk scenarios where unfair, unreliable or offensive outputs might be extremely costly or lead to harm. This includes providing advice in sensitive or expert domains where accuracy and reliability are critical (ex: legal or health advice). Additional safeguards should be implemented at the application level according to the deployment context. 
++ Misinformation: Models may produce inaccurate information. Developers should follow transparency best practices and inform end-users they are interacting with an AI system. At the application level, developers can build feedback mechanisms and pipelines to ground responses in use-case specific, contextual information, a technique known as Retrieval Augmented Generation (RAG).   
++ Generation of Harmful Content: Developers should assess outputs for their context and use available safety classifiers or custom solutions appropriate for their use case. 
++ Misuse: Other forms of misuse such as fraud, spam, or malware production may be possible, and developers should ensure that their applications do not violate applicable laws and regulations.
+
+## Finetuning samples
+Task|Dataset|Python sample (Notebook)
+|--|--|--|
+Chat completion|<a href="https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k" target="_blank">Ultrachat 200K</a>|<a href="https://aka.ms/phi3ftnotebook" target="_blank">chat-completion.ipynb</a>
+
+## Sample inputs and outputs (for real-time inference)
+
+### **Sample input**
+```json
+{
+  "input_data": {
+    "input_string": [
+      {
+        "role": "user",
+        "content": "I am going to Paris, give me a list of 10 places to visit"
+      }
+    ],
+    "parameters": {
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "do_sample": true,
+      "max_new_tokens": 1000
+    }
+  }
+}
+``` 
+### **Sample output**
+```json
+{
+  "output": " 1. Eiffel Tower: Visit the iconic symbol of Paris, offering breathtaking views of the city.\n\n2. Louvre Museum: Explore one of the world's largest and most visited museums, home to thousands of works of art, including the Mona Lisa.\n\n3. Notre-Dame Cathedral: Marvel at the stunning Gothic architecture of this famous cathedral, although note that it is currently under renovation due to the 2019 fire.\n\n4. Montmartre: Discover this historic and artistic neighborhood, famous for its bohemian past and the stunning Sacré-Cœur Basilica.\n\n5. Seine River Cruise: Take a relaxing cruise on the Seine River, seeing some of the city's most famous landmarks like the Louvre, Notre-Dame, and the Eiffel Tower from a unique perspective.\n\n6. Champs-Élysées: Visit this famous avenue lined with shops, cafes, and theaters. Don't forget to check out the Arc de Triomphe at its end.\n\n7. Palace of Versailles: Take a day trip from Paris to explore the opulent palace and gardens of Versailles, a UNESCO World Heritage site.\n\n8. Sacré-Cœur Basilica: Located at the highest point in the city, this basilica offers panoramic views of Paris.\n\n9. Latin Quarter: Stroll through this historic and vibrant neighborhood, famous for its student life, lively atmosphere, and cafes.\n\n10. Musée d'Orsay: Visit this museum, housing an impressive collection of Impressionist and Post-Impressionist art, including works by Monet, Degas, Renoir, and Van Gogh."
+}
+```
+
+## Software
+
+* [PyTorch](https://github.com/pytorch/pytorch)
+* [DeepSpeed](https://github.com/microsoft/DeepSpeed)
+* [Transformers](https://github.com/huggingface/transformers)
+* [Flash-Attention](https://github.com/HazyResearch/flash-attention)
+* [Tiktoken](https://github.com/openai/tiktoken)
+* [Triton](https://github.com/openai/triton)
+
+## Hardware
+Note that by default, the Phi-3-Small model uses flash attention, which requires certain types of GPU hardware to run. We have tested on the following GPU types:
+* NVIDIA A100
+* NVIDIA A6000
+* NVIDIA H100
+
+If you want to run the model on:
++ Optimized inference on GPU, CPU, and Mobile: use the **ONNX** models [128K](https://huggingface.co/microsoft/Phi-3-small-128k-instruct-onnx)
+
+
+## Cross Platform Support
+
+ONNX runtime ecosystem now supports Phi3 small models  across platforms and hardware. 
+Optimized phi-3 models are also published here in ONNX format, to run with ONNX Runtime on CPU and GPU across devices, including server platforms, Windows, Linux and Mac desktops, and mobile CPUs, with the precision best suited to each of these targets. DirectML GPU acceleration is supported for Windows desktops GPUs (AMD, Intel, and NVIDIA).  
+Along with DML, ONNX Runtime provides cross platform support for Phi3 Small  across a range of devices CPU, GPU, and mobile. 
+Here are some of the optimized configurations we have added: 
+
+1. ONNX models for int4 DML: Quantized to int4 via AWQ
+2. ONNX model for fp16 CUDA
+3. ONNX model for int4 CUDA: Quantized to int4 via RTN
+4. ONNX model for int4 CPU and Mobile: Quantized to int4 via RTN
+
+## License
+
+The model is licensed under the MIT license.
+
+## Trademarks
+
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft’s Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party’s policies.

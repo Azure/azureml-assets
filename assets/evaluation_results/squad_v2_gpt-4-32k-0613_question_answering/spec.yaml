@@ -1,0 +1,33 @@
+type: evaluationresult
+name: squad_v2_gpt-4-32k-0613_question_answering
+version: 2.10.05
+display_name: squad_v2_gpt-4-32k-0613_question_answering
+description: gpt-4-32k-0613 run for squad_v2 dataset
+dataset_family: squad_v2
+dataset_name: squad_v2
+
+model_name: gpt-4-32k-0613
+model_version: "0613"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4-32k/versions/315
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azure-openai/models/gpt-4-32k/versions/315
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  groundedness: 4.138513513513513
+  relevance: 4.380691399662732
+  GPTSimilarity: 4.300590219224283
+
+
+properties:
+  n_shot: 2
+  evaluation_sampling_ratio: 0.2
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

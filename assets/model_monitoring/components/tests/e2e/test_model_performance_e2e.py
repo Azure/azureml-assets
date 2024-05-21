@@ -26,7 +26,7 @@ def _submit_model_performance_signal_monitor_job(
     classification_precision_threshold=None,
     classification_accuracy_threshold=None,
     classification_recall_threshold=None,
-
+    expect_failure: bool = False
 ):
     mp_signal_monitor = get_component(COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR)
 
@@ -52,7 +52,7 @@ def _submit_model_performance_signal_monitor_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = submit_pipeline_job(
-        pipeline_job, experiment_name
+        pipeline_job, experiment_name, expect_failure
     )
 
     # Wait until the job completes
