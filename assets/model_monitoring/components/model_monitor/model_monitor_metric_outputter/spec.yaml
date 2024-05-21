@@ -31,8 +31,6 @@ outputs:
   signal_output:
     type: uri_folder
     mode: direct
-identity:
-  type: managed
 conf:
   spark.hadoop.aml.enable_cache : "true"
   spark.driver.cores: 4
