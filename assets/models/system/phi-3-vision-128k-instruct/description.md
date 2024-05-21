@@ -42,7 +42,7 @@ To understand the capabilities, we compare Phi-3 Vision-128K-Instruct with a set
 
 |Benchmark|Phi-3 Vision-128K-In1|LlaVA-1.6 Vicuna-7B|QWEN-VL Chat|Llama3-Llava-Next-8B|Claude-3 Haiku|Gemini 1.0 Pro V|GPT-4V-Turbo|
 |---------|---------------------|------------------|------------|--------------------|--------------|----------------|------------|
-|MMMU|40.2|34.2|39.0|36.4|40.7|42.0|55.5| 
+|MMMU|40.4|34.2|39.0|36.4|40.7|42.0|55.5| 
 |MMBench|80.5|76.3|75.8|79.4|62.4|80.0|86.1|
 |ScienceQA|90.8|70.6|67.2|73.7|72.0|79.7|75.7|
 |MathVista|44.5|31.5|29.4|34.8|33.2|35.0|47.5|
