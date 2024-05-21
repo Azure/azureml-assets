@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import MLClient, Output, Input
-from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.entities import Spark, ManagedIdentityConfiguration
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR,
@@ -48,13 +48,13 @@ def _submit_data_drift_and_create_manifest_job(
             signal_outputs_1=dd_model_monitor_metrics_output.outputs.signal_output
         )
 
-        mdc_preprocessor_output.identity = AmlTokenConfiguration()
+        mdc_preprocessor_output.identity = ManagedIdentityConfiguration()
         mdc_preprocessor_output.resources = {
             "instance_type": "Standard_E8S_V3",
             "runtime_version": "3.3",
         }
 
-        create_manifest_output.identity = AmlTokenConfiguration()
+        create_manifest_output.identity = ManagedIdentityConfiguration()
         create_manifest_output.resources = {
             "instance_type": "Standard_E8S_V3",
             "runtime_version": "3.3",

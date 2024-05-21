@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import Input, MLClient, Output
-from azure.ai.ml.entities import AmlTokenConfiguration
+from azure.ai.ml.entities import ManagedIdentityConfiguration
 from azure.ai.ml.dsl import pipeline
 from azure.ai.ml.exceptions import JobException
 from tests.e2e.utils.constants import (
@@ -109,19 +109,19 @@ def _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
             monitor_current_time="2023-01-01T00:00:00Z",
         )
 
-        mdc_preprocessor_model_inputs.identity = AmlTokenConfiguration()
+        mdc_preprocessor_model_inputs.identity = ManagedIdentityConfiguration()
         mdc_preprocessor_model_inputs.resources = {
             'instance_type': 'Standard_E8S_V3',
             'runtime_version': '3.3',
         }
 
-        mdc_preprocessor_model_outputs.identity = AmlTokenConfiguration()
+        mdc_preprocessor_model_outputs.identity = ManagedIdentityConfiguration()
         mdc_preprocessor_model_outputs.resources = {
             'instance_type': 'Standard_E8S_V3',
             'runtime_version': '3.3',
         }
 
-        data_joiner_output.identity = AmlTokenConfiguration()
+        data_joiner_output.identity = ManagedIdentityConfiguration()
         data_joiner_output.resources = {
             'instance_type': 'Standard_E8S_V3',
             'runtime_version': '3.3',

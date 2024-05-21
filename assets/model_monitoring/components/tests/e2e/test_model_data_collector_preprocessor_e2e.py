@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import Input, MLClient, Output
-from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.entities import Spark, ManagedIdentityConfiguration
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_MDC_PREPROCESSOR,
@@ -29,7 +29,7 @@ def _submit_mdc_preprocessor_job(
             extract_correlation_id=extract_correlation_id
         )
 
-        mdc_preprocessor_output.identity = AmlTokenConfiguration()
+        mdc_preprocessor_output.identity = ManagedIdentityConfiguration()
         mdc_preprocessor_output.resources = {
             'instance_type': 'Standard_E4S_V3',
             'runtime_version': '3.3',
@@ -83,4 +83,4 @@ class TestMDCPreprocessorE2E:
                 end_time
             )
 
-        assert pipeline_job.status == 'Completed'
+        assert pipeline_job.status == "Completed"

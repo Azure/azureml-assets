@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import MLClient, Output
-from azure.ai.ml.entities import AmlTokenConfiguration
+from azure.ai.ml.entities import ManagedIdentityConfiguration
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_ACTION_DETECTOR,
@@ -28,7 +28,7 @@ def _submit_action_detector_job(ml_client, get_component, signal_scored_data, si
             aml_deployment_id="test-aml-deployment-id",
             query_intention_enabled="true"
         )
-        action_detector.identity = AmlTokenConfiguration()
+        action_detector.identity = ManagedIdentityConfiguration()
         action_detector.resources = {
             'instance_type': 'Standard_E4S_V3',
             'runtime_version': '3.3',

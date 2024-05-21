@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import Input, MLClient, Output
-from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.entities import Spark, ManagedIdentityConfiguration
 from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
@@ -40,7 +40,7 @@ def _submit_data_joiner_job(
             right_join_column=right_join_column
         )
 
-        data_joiner_output.identity = AmlTokenConfiguration()
+        data_joiner_output.identity = ManagedIdentityConfiguration()
         data_joiner_output.resources = {
             'instance_type': 'Standard_E8S_V3',
             'runtime_version': '3.3',
@@ -88,7 +88,7 @@ class TestDataJoinerE2E:
             DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME
         )
 
-        assert pipeline_job.status == 'Completed'
+        assert pipeline_job.status == "Completed"
 
     def test_data_joiner_empty_result_failed(
         self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
@@ -102,7 +102,8 @@ class TestDataJoinerE2E:
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_OVERLAPPING_JOIN_VALUE,
             DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN,
-            DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME
+            DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME,
+            expect_failure=True
         )
 
-        assert pipeline_job.status == 'Failed'
+        assert pipeline_job.status == "Failed"
