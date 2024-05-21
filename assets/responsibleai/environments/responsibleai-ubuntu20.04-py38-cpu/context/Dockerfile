@@ -45,8 +45,7 @@ RUN pip install 'pyarrow>=14.0.1'
 RUN pip install 'cryptography>=42.0.4'
 
 # TODO: remove rai-core-flask pin with next raiwidgets release
-RUN pip install 'rai-core-flask==0.7.6' \
-                'responsibleai-tabular-automl==0.12.0'
+RUN pip install 'rai-core-flask==0.7.6'
 
 # To resolve vulnerability issue
 RUN pip install 'gunicorn>=22.0.0'
