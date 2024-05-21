@@ -79,10 +79,7 @@ class StoreUrl:
             str, ClientSecretCredential, AzureSasCredential, AzureMLOnBehalfOfCredential, None]:
         """Get credential for this store url."""
         if not self._datastore:
-            raise InvalidInputError(
-                "abfs(s), wasb(s) and http(s) URLs are credential less and are NOT supported by Model Monitoring job, "
-                "please use azureml file system path with credential data store, e.g. "
-                "azureml://datastores/<credential_datastore_name>/paths/<path_to_data>")
+            return AzureMLOnBehalfOfCredential()
         elif self._datastore.datastore_type == "AzureBlob":
             if self._datastore.credential_type == "AccountKey":
                 return self._datastore.account_key
@@ -116,8 +113,8 @@ class StoreUrl:
         Get container client for this store url.
 
         :param credential: if provided, it contains the credential to authorize the container to access the data,
-        if not provided, will retrieve credential from datastore. It's a special handling for access dataref file in
-        executors.
+        if not provided, will retrieve credential from datastore. If datastore is credential-less will fallback to
+        use Azureml OBO credential. It's a special handling for access dataref file in executors.
         """
         if not self.account_name:
             # local or not supported store type
@@ -128,7 +125,7 @@ class StoreUrl:
                 and (self._datastore.credential_type and self._datastore.credential_type != "None"):
             return self._datastore.blob_service.get_container_client(self.container_name)
         # fallback to AzureMLOnBehalfOfCredential for credential less datastore for now.
-        # Requires that we submit MoMo component with managed identity.
+        # Requires that we submit MoMo component with managed identity or will fail later on.
         credential = credential or self.get_credential()
         account_url_scheme = "https" if self._is_secure() else "http"
         if self.store_type == "blob":
