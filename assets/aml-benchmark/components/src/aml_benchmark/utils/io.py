@@ -13,16 +13,13 @@ import pandas as pd
 import mltable
 from azureml._common._error_definition.azureml_error import AzureMLError
 
+from .constants import IntermediateNames
 from .logging import get_logger
 from .exceptions import DataFormatException
 from .error_definitions import DataFormatError
 
 
 logger = get_logger(__name__)
-
-DATASTORE_DIRECTORY_URL_TEMPLATE = "AmlDatastore://{datastore_name}/{directory_name}"
-RANDOM_IMAGE_DIRECTORY_TEMPLATE = "images/{random_id}"
-IMAGE_FILE_NAME_TEMPLATE = "image_{image_counter:09d}.png"
 
 
 def _raise_if_not_jsonl_file(input_file_path: str) -> None:
@@ -124,13 +121,13 @@ def filter_files_with_given_extension(file_paths: List[str], extension: str) -> 
 
 def get_image_file_name(image_counter: int) -> str:
     """Make name for local image file."""
-    return IMAGE_FILE_NAME_TEMPLATE.format(image_counter=image_counter)
+    return IntermediateNames.IMAGE_FILE_NAME_TEMPLATE.format(image_counter=image_counter)
 
 
 def get_datastore_image_directory_name(datastore_name: str) -> Tuple[str, str]:
     """Make random name for image directory on datastore and get its URL."""
-    datastore_directory_name = RANDOM_IMAGE_DIRECTORY_TEMPLATE.format(random_id=str(uuid.uuid4()))
-    datastore_directory_url = DATASTORE_DIRECTORY_URL_TEMPLATE.format(
+    datastore_directory_name = IntermediateNames.RANDOM_IMAGE_DIRECTORY_TEMPLATE.format(random_id=str(uuid.uuid4()))
+    datastore_directory_url = IntermediateNames.DATASTORE_DIRECTORY_URL_TEMPLATE.format(
         datastore_name=datastore_name, directory_name=datastore_directory_name
     )
     return datastore_directory_name, datastore_directory_url

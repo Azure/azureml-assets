@@ -6,6 +6,7 @@
 import io
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from datasets import Dataset
 from PIL import Image
@@ -106,7 +107,7 @@ class VisionDatasetAdapterFactory:
     """Factory for making vision dataset adapters based on dataset names."""
 
     @staticmethod
-    def get_adapter(dataset: Dataset) -> VisionDatasetAdapter:
+    def get_adapter(dataset: Dataset) -> Optional[VisionDatasetAdapter]:
         """Make vision adapter based on dataset name."""
         VISION_ADAPTERS_BY_DATASET_NAME = {
             "cifar10": Cifar10Adapter,
