@@ -55,6 +55,14 @@ class ExceptionTypes:
     All = {User, System, Service, Unclassified}
 
 
+class IntermediateNames:
+    """Names for intermediate files and directories."""
+
+    DATASTORE_DIRECTORY_URL_TEMPLATE = "AmlDatastore://{datastore_name}/{directory_name}"
+    RANDOM_IMAGE_DIRECTORY_TEMPLATE = "images/{random_id}"
+    IMAGE_FILE_NAME_TEMPLATE = "image_{image_counter:09d}.png"
+
+
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Benchmark"
 }
