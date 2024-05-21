@@ -69,7 +69,8 @@ class TestStoreUrl:
             assert container is not None
             assert isinstance(container.credential, AzureMLOnBehalfOfCredential)
         else:
-            with pytest.raises(InvalidInputError, match=r"Token credential is only supported with secure HTTPS protocol..*"):
+            with pytest.raises(InvalidInputError,
+                               match=r"Token credential is only supported with secure HTTPS protocol..*"):
                 store_url.get_container_client()
 
     @pytest.mark.parametrize(
@@ -123,7 +124,8 @@ class TestStoreUrl:
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "/", AzureMLOnBehalfOfCredential(),
-                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container", AzureMLOnBehalfOfCredential())
+                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container",
+                                 AzureMLOnBehalfOfCredential())
             ),
             (
                 "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
@@ -132,7 +134,8 @@ class TestStoreUrl:
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "/rpath", AzureMLOnBehalfOfCredential(),
-                ContainerClient("https://my_account.blob.core.windows.net", "my_container", AzureMLOnBehalfOfCredential())
+                ContainerClient("https://my_account.blob.core.windows.net", "my_container",
+                                AzureMLOnBehalfOfCredential())
             ),
             # TODO: Update this UT with how the unsecure URL should work with credential-less. Or can we remove it?
             # (
