@@ -20,11 +20,11 @@ dependencies:
   - azureml-dataset-runtime==1.56.0
   - azureml-telemetry==1.56.0
   - azureml-responsibleai==1.56.0
-  - azureml-automl-core==1.56.0
-  - azureml-automl-runtime==1.56.0
+  - azureml-automl-core==1.56.0.post1
+  - azureml-automl-runtime==1.56.0.post1
   - azureml-train-automl-client==1.56.0
   - azureml-defaults==1.56.0.post1
   - azureml-interpret==1.56.0
-  - azureml-train-automl-runtime==1.56.0
+  - azureml-train-automl-runtime==1.56.0.post1
   - azureml-automl-dnn-vision==1.56.0
   - azureml-dataprep>=2.24.4

@@ -25,7 +25,6 @@ RUN pip install 'azureml-core==1.56.0' \
 
 RUN pip install 'azureml-dataset-runtime==1.56.0' \
                 'azureml-telemetry==1.56.0' \
-                'Werkzeug==3.0.2' \
                 'gunicorn>=22.0.0'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
@@ -38,6 +37,10 @@ RUN pip install 'cryptography>=42.0.4'
 # Install huggingface evaluate package from source
 # see issue https://github.com/huggingface/datasets/issues/6182
 RUN pip install git+https://github.com/huggingface/evaluate.git
+
+# To resolve vulnerability issue
+RUN pip install 'Werkzeug>=3.0.3'
+RUN pip install 'tqdm>=4.66.3'
 
 RUN pip freeze
 
