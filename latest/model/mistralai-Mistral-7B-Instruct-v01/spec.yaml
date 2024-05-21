@@ -24,7 +24,7 @@ tags:
   license: apache-2.0
   task: chat-completion
   author: mistralai
-version: 8
+version: 9
 description: |
   # **Model Details**
 
