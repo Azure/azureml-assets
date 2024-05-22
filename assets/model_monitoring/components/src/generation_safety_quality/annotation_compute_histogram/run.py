@@ -21,7 +21,7 @@ import socket
 
 import pandas as pd
 from azure.ai.generative.evaluate import evaluate
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+from shared_utilities.llm_utils import _WorkspaceConnectionTokenManager
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
 from pyspark.sql.functions import col
 from shared_utilities import io_utils
@@ -147,108 +147,6 @@ PRODUCTION_ROW_COUNT = "production_data"
 REFERENCE_ROW_COUNT = "reference_data"
 
 DEFAULT_PROMPTFLOW_PATH = "/home/trusted-service-user/.promptflow/"
-
-
-def get_aad_credential():
-    """Get AzureMLOnBehalfOfCredential."""
-    return AzureMLOnBehalfOfCredential(
-        AZUREML_SYNAPSE_CLUSTER_IDENTIFIER=os.environ[
-            "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER"
-        ],
-        AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT=os.environ[
-            "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT"
-        ],
-        AZUREML_RUN_ID=os.environ["AZUREML_RUN_ID"],
-        AZUREML_RUN_TOKEN_EXPIRY=os.environ["AZUREML_RUN_TOKEN_EXPIRY"],
-    )
-
-
-def get_ml_client(connection_name, subscription_id, resource_group_name, workspace_name, use_aad=False):
-    """Get MLClient handler with necessary authentication."""
-    get_aad_credential()
-
-    try:
-        from azureml.dataprep.api._aml_auth._azureml_token_authentication import AzureMLTokenAuthentication
-        from azure.ai.ml import MLClient
-        credential = AzureMLTokenAuthentication._initialize_aml_token_auth()
-        ml_client = MLClient(
-            credential=credential,
-            subscription_id=subscription_id,
-            resource_group_name=resource_group_name,
-            workspace_name=workspace_name
-        )
-    except Exception:
-        tb = traceback.format_exc()
-        raise Exception(f"Error encountered while attempting to setup MLClient auth: {tb}")
-    return ml_client
-
-
-class _WorkspaceConnectionTokenManager(object):
-    def __init__(
-        self,
-        *,
-        connection_name,
-        auth_header,
-        **kwargs,
-    ):
-        uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)",  # noqa: E501
-                             connection_name, flags=re.IGNORECASE)
-
-        subscription_id = uri_match.group(1)
-        resource_group_name = uri_match.group(2)
-        workspace_name = uri_match.group(3)
-        ml_client = get_ml_client(connection_name, subscription_id,
-                                  resource_group_name, workspace_name)
-        self.token = None
-        self.auth_header = auth_header
-
-        try:
-            from azure.ai.ml.entities import WorkspaceConnection
-            if os.environ.get("AZUREML_RUN_ID", None) is not None:
-                # In AzureML Run context, we need to use workspaces internal endpoint that will accept
-                # AzureMLToken auth.
-                ml_client.connections._operation._client._base_url = f"{os.environ.get('AZUREML_SERVICE_ENDPOINT')}/rp/workspaces"  # noqa: E501
-                print(f"Using ml_client base_url: {ml_client.connections._operation._client._base_url}")
-                list_secrets_response = ml_client.connections._operation.list_secrets(
-                    connection_name=uri_match.group(4),
-                    resource_group_name=ml_client.resource_group_name,
-                    workspace_name=ml_client.workspace_name,
-                )
-                connection = WorkspaceConnection._from_rest_object(list_secrets_response)
-                print(f"Retrieved Workspace Connection: {connection.id}")
-
-                if connection.type != "azure_open_ai":
-                    raise Exception(f"Received unexpected endpoint type {connection.type}"
-                                    "only Azure Open AI endpoints are supported at this time")
-                api_version = API_VERSION
-                if hasattr(connection.metadata, METADATA_APIVERSION):
-                    api_version = connection.metadata[METADATA_APIVERSION]
-                # this was renamed in latest ml_client
-                if hasattr(connection.metadata, METADATA_DEPLOYMENTAPIVERSION):
-                    api_version = connection.metadata[METADATA_DEPLOYMENTAPIVERSION]
-                # api version
-                self.api_version = api_version
-                # base_url
-                self.domain_name = connection.target
-                # api_key
-                self.token = connection.credentials["key"]
-                self.api_type = None
-                if hasattr(connection.metadata, METADATA_APITYPE):
-                    self.api_type = connection.metadata[METADATA_APITYPE]
-            else:
-                raise Exception("Unable to retrieve the token to establish a Workspace Connection")
-        except Exception:
-            tb = traceback.format_exc()
-            raise Exception(f"Error encountered while getting connection info: {tb}")
-
-    def get_api_version(self):
-        return self.api_version
-
-    def get_endpoint_domain(self):
-        return self.domain_name
-
-    def get_token(self):
-        return self.token
 
 
 def get_compact_metric_name(metric_name):
