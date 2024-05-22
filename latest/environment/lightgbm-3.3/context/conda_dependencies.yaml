@@ -14,7 +14,6 @@ dependencies:
   - azureml-defaults==1.56.0.post1
   - azureml-mlflow==1.56.0
   - azureml-telemetry==1.56.0
-  - azureml-automl-common-tools==1.56.0
   - scikit-learn~=1.0.1
   - xgboost~=1.4.0
   - lightgbm~=3.3.5
@@ -26,3 +25,13 @@ dependencies:
   - certifi >= 2023.07.22
   - requests >= 2.31.0
   - idna>=3.7
+  # azureml-automl-common-tools packages
+  - py-spy==0.3.12
+  - debugpy~=1.6.3
+  - ipykernel~=6.0
+  - tensorboard
+  - psutil~=5.8.0
+  - matplotlib~=3.5.0
+  - tqdm~=4.66.3
+  - py-cpuinfo==5.0.0
+  - torch-tb-profiler~=0.4.0
