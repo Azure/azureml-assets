@@ -23,6 +23,7 @@ tags:
   author: facebook
   license: apache-2.0
   task: image-segmentation
+  hiddenlayerscanned: ''
   inference_compute_allow_list:
     [
       Standard_DS5_v2,

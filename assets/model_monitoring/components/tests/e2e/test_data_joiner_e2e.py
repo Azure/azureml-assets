@@ -26,7 +26,8 @@ def _submit_data_joiner_job(
     left_input_data,
     left_join_column,
     right_input_data,
-    right_join_column
+    right_join_column,
+    expect_failure: bool = False
 ):
     data_joiner_component = get_component(COMPONENT_NAME_DATA_JOINER)
 
@@ -55,7 +56,7 @@ def _submit_data_joiner_job(
     )
 
     pipeline_job = submit_pipeline_job(
-        pipeline_job, experiment_name
+        pipeline_job, experiment_name, expect_failure
     )
 
     # Wait until the job completes

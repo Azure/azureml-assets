@@ -20,6 +20,7 @@ tags:
   SharedComputeCapacityEnabled: ''
   task: text-generation
   author: tiiuae
+  hiddenlayerscanned: ''
   huggingface_model_id: tiiuae/falcon-40b
   evaluation_compute_allow_list:
     [
