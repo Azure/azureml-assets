@@ -6,6 +6,7 @@
 import pytest
 from azure.ai.ml import Input, MLClient, Output
 from azure.ai.ml.entities import Spark, ManagedIdentityConfiguration
+from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_METRIC_OUTPUTTER,
@@ -48,7 +49,12 @@ def _submit_metric_outputter_job(
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
+
     return ml_client.jobs.get(pipeline_job.name)
 
 

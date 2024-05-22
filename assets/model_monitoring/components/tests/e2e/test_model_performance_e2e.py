@@ -5,6 +5,7 @@
 
 import pytest
 from azure.ai.ml import MLClient, Output
+from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR,
@@ -14,7 +15,7 @@ from tests.e2e.utils.constants import (
 
 def _submit_model_performance_signal_monitor_job(
     submit_pipeline_job,
-    ml_client,
+    ml_client: MLClient,
     get_component,
     experiment_name,
     task,
@@ -56,7 +57,11 @@ def _submit_model_performance_signal_monitor_job(
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
 
     return ml_client.jobs.get(pipeline_job.name)
 

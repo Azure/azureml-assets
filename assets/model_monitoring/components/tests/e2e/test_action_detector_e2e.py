@@ -6,6 +6,7 @@
 import pytest
 from azure.ai.ml import MLClient, Output
 from azure.ai.ml.entities import ManagedIdentityConfiguration
+from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_ACTION_DETECTOR,
@@ -14,7 +15,7 @@ from tests.e2e.utils.constants import (
 )
 
 
-def _submit_action_detector_job(ml_client, get_component, signal_scored_data, signal_output):
+def _submit_action_detector_job(ml_client: MLClient, get_component, signal_scored_data, signal_output):
     action_detector_component = get_component(COMPONENT_NAME_ACTION_DETECTOR)
 
     @pipeline()
@@ -43,7 +44,11 @@ def _submit_action_detector_job(ml_client, get_component, signal_scored_data, si
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
 
     return ml_client.jobs.get(pipeline_job.name)
 
