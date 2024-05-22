@@ -1,10 +1,11 @@
 type: evaluationresult
-name: banking77classification_text-embedding-ada-002_classification
+name: tweetsentimentextractionclassification_text-embedding-ada-002_classification
 version: 2.22.05
-display_name: Banking77Classification_text-embedding-ada-002_classification
-description: text-embedding-ada-002 run for Banking77Classification dataset
-dataset_name: Banking77Classification
-dataset_family: Banking77Classification
+display_name: TweetSentimentExtractionClassification_text-embedding-ada-002_classification
+description: text-embedding-ada-002 run for TweetSentimentExtractionClassification
+  dataset
+dataset_name: TweetSentimentExtractionClassification
+dataset_family: TweetSentimentExtractionClassification
 
 model_name: text-embedding-ada-002
 model_version: "2"
@@ -19,6 +20,6 @@ tags:
   primary_metric: accuracy
 
 metrics:
-  accuracy: 0.8053246753246753
+  accuracy: 0.6181380871533673
 
 properties: {}

@@ -1,7 +1,7 @@
 type: evaluationresult
 name: arguana_cohere-embed-v3-english_retrieval
-version: 2.16.05
-display_name: ArguAna_cohere-embed-v3-english_Retrieval
+version: 2.22.05
+display_name: ArguAna_cohere-embed-v3-english_retrieval
 description: cohere-embed-v3-english run for ArguAna dataset
 dataset_name: ArguAna
 dataset_family: ArguAna
@@ -15,7 +15,7 @@ relationships:
 
 tags:
   evaluation_type: text_embeddings
-  task: Retrieval
+  task: retrieval
   primary_metric: ndcg_at_10
 
 metrics:

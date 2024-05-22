@@ -1,10 +1,11 @@
 type: evaluationresult
-name: banking77classification_cohere-embed-v3-english_classification
+name: tweetsentimentextractionclassification_cohere-embed-v3-english_classification
 version: 2.22.05
-display_name: Banking77Classification_cohere-embed-v3-english_classification
-description: cohere-embed-v3-english run for Banking77Classification dataset
-dataset_name: Banking77Classification
-dataset_family: Banking77Classification
+display_name: TweetSentimentExtractionClassification_cohere-embed-v3-english_classification
+description: cohere-embed-v3-english run for TweetSentimentExtractionClassification
+  dataset
+dataset_name: TweetSentimentExtractionClassification
+dataset_family: TweetSentimentExtractionClassification
 
 model_name: cohere-embed-v3-english
 model_version: "3"
@@ -19,6 +20,6 @@ tags:
   primary_metric: accuracy
 
 metrics:
-  accuracy: 0.7934415584415586
+  accuracy: 0.631409168081494
 
 properties: {}

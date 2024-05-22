@@ -1,10 +1,10 @@
 type: evaluationresult
-name: stsbenchmark_cohere-embed-v3-english_sts
+name: summeval_cohere-embed-v3-english_summarization
 version: 2.22.05
-display_name: STSBenchmark_cohere-embed-v3-english_sts
-description: cohere-embed-v3-english run for STSBenchmark dataset
-dataset_name: STSBenchmark
-dataset_family: STSBenchmark
+display_name: SummEval_cohere-embed-v3-english_summarization
+description: cohere-embed-v3-english run for SummEval dataset
+dataset_name: SummEval
+dataset_family: SummEval
 
 model_name: cohere-embed-v3-english
 model_version: "3"
@@ -15,10 +15,10 @@ relationships:
 
 tags:
   evaluation_type: text_embeddings
-  task: sts
+  task: summarization
   primary_metric: spearman_correlation
 
 metrics:
-  spearman_correlation: 0.8652148323533708
+  spearman_correlation: 0.3109032487005159
 
 properties: {}

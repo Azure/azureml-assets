@@ -1,10 +1,10 @@
 type: evaluationresult
-name: banking77classification_cohere-embed-v3-multilingual_classification
+name: tatoeba_cohere-embed-v3-multilingual_bitext_mining
 version: 2.22.05
-display_name: Banking77Classification_cohere-embed-v3-multilingual_classification
-description: cohere-embed-v3-multilingual run for Banking77Classification dataset
-dataset_name: Banking77Classification
-dataset_family: Banking77Classification
+display_name: Tatoeba_cohere-embed-v3-multilingual_bitext_mining
+description: cohere-embed-v3-multilingual run for Tatoeba dataset
+dataset_name: Tatoeba
+dataset_family: Tatoeba
 
 model_name: cohere-embed-v3-multilingual
 model_version: "3"
@@ -15,10 +15,10 @@ relationships:
 
 tags:
   evaluation_type: text_embeddings
-  task: classification
-  primary_metric: accuracy
+  task: bitext_mining
+  primary_metric: f1_score
 
 metrics:
-  accuracy: 0.7934415584415585
+  f1_score: 0.7244086222194668
 
 properties: {}

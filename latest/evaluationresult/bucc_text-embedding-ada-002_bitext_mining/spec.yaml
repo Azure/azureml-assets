@@ -1,10 +1,10 @@
 type: evaluationresult
-name: arguana_text-embedding-ada-002_retrieval
+name: bucc_text-embedding-ada-002_bitext_mining
 version: 2.22.05
-display_name: ArguAna_text-embedding-ada-002_retrieval
-description: text-embedding-ada-002 run for ArguAna dataset
-dataset_name: ArguAna
-dataset_family: ArguAna
+display_name: BUCC_text-embedding-ada-002_bitext_mining
+description: text-embedding-ada-002 run for BUCC dataset
+dataset_name: BUCC
+dataset_family: BUCC
 
 model_name: text-embedding-ada-002
 model_version: "2"
@@ -15,10 +15,10 @@ relationships:
 
 tags:
   evaluation_type: text_embeddings
-  task: retrieval
-  primary_metric: ndcg_at_10
+  task: bitext_mining
+  primary_metric: f1_score
 
 metrics:
-  ndcg_at_10: 0.57455
+  f1_score: 0.9765893479830264
 
 properties: {}

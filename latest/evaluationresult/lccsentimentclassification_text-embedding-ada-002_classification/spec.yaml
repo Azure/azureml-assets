@@ -1,7 +1,7 @@
 type: evaluationresult
 name: lccsentimentclassification_text-embedding-ada-002_classification
-version: 2.16.05
-display_name: LccSentimentClassification_text-embedding-ada-002_Classification
+version: 2.22.05
+display_name: LccSentimentClassification_text-embedding-ada-002_classification
 description: text-embedding-ada-002 run for LccSentimentClassification dataset
 dataset_name: LccSentimentClassification
 dataset_family: LccSentimentClassification
@@ -15,7 +15,7 @@ relationships:
 
 tags:
   evaluation_type: text_embeddings
-  task: Classification
+  task: classification
   primary_metric: accuracy
 
 metrics:
