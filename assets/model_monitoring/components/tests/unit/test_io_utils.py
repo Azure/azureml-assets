@@ -17,12 +17,7 @@ class TestIOUtils:
     @pytest.mark.parametrize(
         "mltable_path",
         [
-            {"file": "https://my_account.blob.core.windows.net/my_container/path/to/data.parquet"},
-            {"folder": "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder"},
-            {"pattern": "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/*/*.jsonl"},
-            {"file": "http://my_account.blob.core.windows.net/my_container/path/to/data.parquet"},
-            {"folder": "wasb://my_container@my_account.blob.core.windows.net/path/to/folder"},
-            {"pattern": "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder/*/*.jsonl"}
+            ({"file": "azureml:my_data:1"})
         ]
     )
     def test_verify_mltable_paths_error(self, mltable_path):
@@ -31,7 +26,7 @@ class TestIOUtils:
             "type": "mltable",
             "paths": [mltable_path]
         }
-        with pytest.raises(InvalidInputError):
+        with pytest.raises(InvalidInputError, match=r"Invalid or unsupported path .*"):
             _verify_mltable_paths("foo_path", mltable_dict=mltable_dict)
 
     def test_verify_mltable_paths_pass(self):
@@ -44,6 +39,12 @@ class TestIOUtils:
                 {"pattern": "azureml://datastores/my_datastore/paths/path/to/folder/**/*.jsonl"},
                 {"pattern": "./path/to/folder/*.csv"},
                 {"file": "baseline_data.csv"},
+                {"file": "https://my_account.blob.core.windows.net/my_container/path/to/data.parquet"},
+                {"folder": "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder"},
+                {"pattern": "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/*/*.jsonl"},
+                {"file": "http://my_account.blob.core.windows.net/my_container/path/to/data.parquet"},
+                {"folder": "wasb://my_container@my_account.blob.core.windows.net/path/to/folder"},
+                {"pattern": "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder/*/*.jsonl"}
             ]
         }
         mock_datastore = Mock(datastore_type="AzureBlob", protocol="https", endpoint="core.windows.net",
@@ -62,10 +63,9 @@ class TestIOUtils:
             ({"file": "azureml://datastores/my_datastore/paths/path/to/data.parquet"}, "AzureDataLakeGen2"),
             ({"folder": "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore/paths/path/to/folder"}, "AzureBlob"),  # noqa: E501
             ({"pattern": "azureml://datastores/my_datastore/paths/path/to/folder/**/*.jsonl"}, "AzureDataLakeGen2"),
-            ({"file": "azureml:my_data:1"}, "AzureBlob")
         ]
     )
-    def test_verify_mltable_paths_azureml_path_error(self, mltable_path, datastore_type):
+    def test_verify_mltable_paths_azureml_path_credentialless_datastore(self, mltable_path, datastore_type):
         """Test _verify_mltable_paths, for azureml paths, negative cases."""
         mock_datastore = Mock(datastore_type=datastore_type, protocol="https", endpoint="core.windows.net",
                               account_name="my_account", container_name="my_container")
@@ -78,5 +78,5 @@ class TestIOUtils:
             "paths": [mltable_path]
         }
 
-        with patch.object(Datastore, "get", return_value=mock_datastore), pytest.raises(InvalidInputError):
+        with patch.object(Datastore, "get", return_value=mock_datastore):
             _verify_mltable_paths("foo_path", mock_ws, mltable_dict)
