@@ -206,13 +206,12 @@ def copy_appendblob_to_blockblob(appendblob_url: StoreUrl,
 
 def _get_sas_token(account_name, container_name, credential) -> str:
     """Get sas token for append blob in blob storage."""
-    def get_blob_sas_token_from_client_credential(
-            client_credential: Union[ClientSecretCredential, AzureMLOnBehalfOfCredential]):
+    def get_blob_sas_token_from_client_secret_credential(client_secret_credential: ClientSecretCredential):
         account_url = f"https://{account_name}.blob.core.windows.net"
-        blob_service_client = BlobServiceClient(account_url=account_url, credential=client_credential)
+        blob_service_client = BlobServiceClient(account_url=account_url, credential=client_secret_credential)
         # get a user delegation key for the Blob service that's valid for 1 day
-        key_start_time = datetime.now(timezone.utc) - timedelta(minutes=15)
-        key_expiry_time = datetime.now(timezone.utc) + timedelta(days=1)
+        key_start_time = datetime.utcnow() - timedelta(minutes=15)
+        key_expiry_time = datetime.utcnow() + timedelta(days=1)
         # TODO raise validation error if the SP has no permission to generate user delegation key
         user_delegation_key = blob_service_client.get_user_delegation_key(key_start_time, key_expiry_time)
         # get a sas token with the user delegation key
@@ -220,21 +219,19 @@ def _get_sas_token(account_name, container_name, credential) -> str:
             account_name=account_name, container_name=container_name,
             user_delegation_key=user_delegation_key,
             permission=ContainerSasPermissions(read=True, write=True, list=True),
-            expiry=datetime.now(timezone.utc) + timedelta(hours=8))
+            expiry=datetime.utcnow() + timedelta(hours=8))
 
     if credential is None:
         raise InvalidInputError("credential-less input data is NOT supported!")
-    if isinstance(credential, AzureMLOnBehalfOfCredential):
-        return get_blob_sas_token_from_client_credential(credential)
     if isinstance(credential, AzureSasCredential):
         return credential.signature
     if isinstance(credential, str):  # account key
         return generate_container_sas(
             account_name=account_name, container_name=container_name,
             account_key=credential, permission=ContainerSasPermissions(read=True, write=True, list=True),
-            expiry=datetime.now(timezone.utc) + timedelta(hours=8))
+            expiry=datetime.utcnow() + timedelta(hours=8))
     if isinstance(credential, ClientSecretCredential):
-        return get_blob_sas_token_from_client_credential(credential)
+        return get_blob_sas_token_from_client_secret_credential(credential)
 
     raise InvalidInputError(f"Credential type {type(credential)} is not supported, "
                             "please use account key or SAS token.")
