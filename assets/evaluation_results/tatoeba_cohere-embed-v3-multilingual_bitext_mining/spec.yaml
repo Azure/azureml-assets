@@ -1,10 +1,10 @@
 type: evaluationresult
-name: arguana_cohere-embed-v3-multilingual_retrieval
+name: tatoeba_cohere-embed-v3-multilingual_bitext_mining
 version: 2.22.05
-display_name: ArguAna_cohere-embed-v3-multilingual_retrieval
-description: cohere-embed-v3-multilingual run for ArguAna dataset
-dataset_name: ArguAna
-dataset_family: ArguAna
+display_name: Tatoeba_cohere-embed-v3-multilingual_bitext_mining
+description: cohere-embed-v3-multilingual run for Tatoeba dataset
+dataset_name: Tatoeba
+dataset_family: Tatoeba
 
 model_name: cohere-embed-v3-multilingual
 model_version: "3"
@@ -15,10 +15,10 @@ relationships:
 
 tags:
     evaluation_type: text_embeddings
-    task: retrieval
-    primary_metric: ndcg_at_10
+    task: bitext_mining
+    primary_metric: f1_score
 
 metrics:
-    ndcg_at_10: 0.57989
+    f1_score: 0.7244086222194668
 
 properties: {}

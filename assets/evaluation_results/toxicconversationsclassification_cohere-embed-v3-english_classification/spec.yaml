@@ -1,10 +1,10 @@
 type: evaluationresult
-name: lccsentimentclassification_cohere-embed-v3-english_classification
+name: toxicconversationsclassification_cohere-embed-v3-english_classification
 version: 2.22.05
-display_name: LccSentimentClassification_cohere-embed-v3-english_classification
-description: cohere-embed-v3-english run for LccSentimentClassification dataset
-dataset_name: LccSentimentClassification
-dataset_family: LccSentimentClassification
+display_name: ToxicConversationsClassification_cohere-embed-v3-english_classification
+description: cohere-embed-v3-english run for ToxicConversationsClassification dataset
+dataset_name: ToxicConversationsClassification
+dataset_family: ToxicConversationsClassification
 
 model_name: cohere-embed-v3-english
 model_version: "3"
@@ -19,6 +19,6 @@ tags:
     primary_metric: accuracy
 
 metrics:
-    accuracy: 0.434
+    accuracy: 0.6031759999999999
 
 properties: {}

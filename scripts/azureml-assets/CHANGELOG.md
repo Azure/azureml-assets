@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.50 (2024-05-22)
+### 🐛 Bugs Fixed
+- [#2956](https://github.com/Azure/azureml-assets/pull/2956) Update embeddings asset task type
+
 ## 1.16.49 (2024-05-17)
 ### 🐛 Bugs Fixed
 - [#2935](https://github.com/Azure/azureml-assets/pull/2935) Update the manifest file to include additional configs
