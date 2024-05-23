@@ -15,7 +15,7 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_generation_safety_quality_model_monitor_job(
-    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, 
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name,
     production_data, data_columns_dict: dict = {}, expect_failure: bool = False
 ):
     generation_safety_quality_signal_monitor = get_component(
