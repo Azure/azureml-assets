@@ -19,9 +19,9 @@ dependencies:
   - azureml-defaults=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
-  - tensorboard~=2.15.0
-  - tensorflow~=2.15.0
-  - tensorflow-datasets~=4.5.0
+  - tensorboard~=2.16.0
+  - tensorflow~=2.16.0
+  - tensorflow-datasets~=4.9.0
   - onnxruntime-gpu~=1.15.0
   - horovod[tensorflow]
   - debugpy~=1.6.3
