@@ -139,7 +139,11 @@ def _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
 
     return ml_client.jobs.get(pipeline_job.name)
 
