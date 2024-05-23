@@ -1,0 +1,34 @@
+{
+  "columnAttributes": [
+    {
+      "name": "Title",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Category",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Text",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    }
+  ],
+  "featureChannels": [],
+  "labelColumns": {},
+  "scoreColumns": {}
+}

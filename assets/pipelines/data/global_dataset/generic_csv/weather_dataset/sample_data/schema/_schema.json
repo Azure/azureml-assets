@@ -1,0 +1,241 @@
+{
+  "columnAttributes": [
+    {
+      "name": "AirportID",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Year",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Month",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Day",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Time",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "TimeZone",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "SkyCondition",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Visibility",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "WeatherType",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "DryBulbFarenheit",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "DryBulbCelsius",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "WetBulbFarenheit",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "WetBulbCelsius",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "DewPointFarenheit",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "DewPointCelsius",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "RelativeHumidity",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "WindSpeed",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "WindDirection",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "ValueForWindCharacter",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "StationPressure",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "PressureTendency",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "PressureChange",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "SeaLevelPressure",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "RecordType",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "HourlyPrecip",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Altimeter",
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    }
+  ],
+  "featureChannels": [],
+  "labelColumns": {},
+  "scoreColumns": {}
+}

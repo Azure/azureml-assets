@@ -1,0 +1,6 @@
+name: weather_dataset
+version: 2
+type: data
+spec: spec.yaml
+categories:
+  - pipeline

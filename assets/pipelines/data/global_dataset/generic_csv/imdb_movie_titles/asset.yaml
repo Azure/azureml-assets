@@ -1,0 +1,6 @@
+name: imdb_movie_titles
+version: 2
+type: data
+spec: spec.yaml
+categories:
+  - pipeline

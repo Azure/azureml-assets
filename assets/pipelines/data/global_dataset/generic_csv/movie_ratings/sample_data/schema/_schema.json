@@ -1,0 +1,43 @@
+{
+  "columnAttributes": [
+    {
+      "name": "UserId",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "MovieId",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Rating",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Timestamp",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    }
+  ],
+  "featureChannels": [],
+  "labelColumns": {},
+  "scoreColumns": {}
+}
