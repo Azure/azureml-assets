@@ -15,6 +15,7 @@ tags:
   training_datasets: cnn_dailymail, xsum
   SharedComputeCapacityEnabled: ""
   huggingface_model_id: sshleifer/distilbart-cnn-12-6
+  hiddenlayerscanned: ""
   evaluation_compute_allow_list:
     [
       Standard_DS4_v2,

@@ -12,13 +12,14 @@ properties:
 tags:
   Featured: ""
   Preview: ""
+  maas-inference: true
   huggingface_model_id: ""
   SharedComputeCapacityEnabled: ''
   license: mit
   disable-batch: "true"
   task: chat-completion
-  hiddenlayerscanned: ""
   author: microsoft
+  hiddenlayerscanned : ""
   inference_compute_allow_list:
     [ 
       Standard_NC6s_v3,
@@ -47,4 +48,14 @@ tags:
     apply_lora: "true"
     apply_ort: "false"
     precision: 16
-version: 6
+    ignore_mismatched_sizes: "false"
+    num_train_epochs: 1
+    per_device_train_batch_size: 1
+    per_device_eval_batch_size: 1
+    gradient_accumulation_steps: 1
+    learning_rate: 5e-6
+    lr_scheduler_type: "cosine"
+    logging_strategy: "steps"
+    logging_steps: 10
+    save_total_limit: 1
+version: 7

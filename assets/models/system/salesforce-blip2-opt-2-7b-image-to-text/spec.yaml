@@ -23,6 +23,7 @@ tags:
    SharedComputeCapacityEnabled: ""
    huggingface_model_id: Salesforce/blip2-opt-2.7b
    author: Salesforce
+   hiddenlayerscanned: ""
    inference_compute_allow_list:
     [
         Standard_DS5_v2,

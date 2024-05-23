@@ -15,7 +15,7 @@ relationships:
 
 tags:
     evaluation_type: text_embeddings
-    task: Retrieval
+    task: retrieval
     primary_metric: ndcg_at_10
 
 metrics:
