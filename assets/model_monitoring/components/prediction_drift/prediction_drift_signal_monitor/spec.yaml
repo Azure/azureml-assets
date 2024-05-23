@@ -74,7 +74,7 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token
   compute_drift_metrics:
     type: spark
     component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.20
@@ -101,7 +101,7 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token
   compute_histogram_buckets:
     type: spark
     component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.14
@@ -121,7 +121,7 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token
   compute_baseline_histogram:
     type: spark
     component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.14
@@ -141,7 +141,7 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token
   compute_target_histogram:
     type: spark
     component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.14
@@ -161,7 +161,7 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token
   output_signal_metrics: 
     type: spark
     component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.18
@@ -188,7 +188,7 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token
   evaluate_metric_thresholds: 
     type: spark
     component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.19
@@ -202,4 +202,4 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token

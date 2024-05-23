@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import Input, MLClient, Output
-from azure.ai.ml.entities import Spark, ManagedIdentityConfiguration
+from azure.ai.ml.entities import Spark, AmlTokenConfiguration
 from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
@@ -29,7 +29,7 @@ def _submit_genai_preprocessor_job(
             input_data=Input(path=input_data, mode="direct", type="uri_folder"),
         )
 
-        genai_preprocessor_output.identity = ManagedIdentityConfiguration()
+        genai_preprocessor_output.identity = AmlTokenConfiguration()
         genai_preprocessor_output.resources = {
             'instance_type': 'Standard_E4S_V3',
             'runtime_version': '3.3',

@@ -62,5 +62,5 @@ resources:
   runtime_version: "3.3"
 
 identity:
-  type: managed
+  type: aml_token
   client_id: ${{inputs.user_assigned_managed_identity_client_id}

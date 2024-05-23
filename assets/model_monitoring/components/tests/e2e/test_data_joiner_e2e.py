@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import Input, MLClient, Output
-from azure.ai.ml.entities import Spark, ManagedIdentityConfiguration
+from azure.ai.ml.entities import Spark, AmlTokenConfiguration
 from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
@@ -40,7 +40,7 @@ def _submit_data_joiner_job(
             right_join_column=right_join_column
         )
 
-        data_joiner_output.identity = ManagedIdentityConfiguration()
+        data_joiner_output.identity = AmlTokenConfiguration()
         data_joiner_output.resources = {
             'instance_type': 'Standard_E8S_V3',
             'runtime_version': '3.3',

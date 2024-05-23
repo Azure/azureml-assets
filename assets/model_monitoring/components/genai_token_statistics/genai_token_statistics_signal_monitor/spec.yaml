@@ -46,7 +46,7 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token
   output_signal_metrics: 
     type: spark
     component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.22
@@ -68,4 +68,4 @@ jobs:
       instance_type: ${{parent.inputs.instance_type}}
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token
