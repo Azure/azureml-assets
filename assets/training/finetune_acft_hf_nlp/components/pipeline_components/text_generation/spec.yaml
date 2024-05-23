@@ -528,7 +528,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml://registries/azureml-preview-test1/components/ft_nlp_common_validation/versions/dev20.05.1
+    component: azureml://registries/azureml-preview-test1/components/ft_nlp_common_validation/versions/vish_dev22.05.1
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -566,7 +566,7 @@ jobs:
       auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
   text_generation_model_import:
     type: command
-    component: azureml://registries/azureml-preview-test1/components/text_generation_model_import/versions/dev20.05.1
+    component: azureml://registries/azureml-preview-test1/components/text_generation_model_import/versions/vish_dev22.05.1
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -578,7 +578,7 @@ jobs:
       system_properties: '${{parent.inputs.system_properties}}'
   text_generation_datapreprocess:
     type: command
-    component: azureml://registries/azureml-preview-test1/components/text_generation_datapreprocess/versions/dev20.05.1
+    component: azureml://registries/azureml-preview-test1/components/text_generation_datapreprocess/versions/vish_dev22.05.1
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -598,7 +598,7 @@ jobs:
       system_properties: '${{parent.inputs.system_properties}}'
   text_generation_finetune:
     type: command
-    component: azureml://registries/azureml-preview-test1/components/text_generation_finetune/versions/dev20.05.1
+    component: azureml://registries/azureml-preview-test1/components/text_generation_finetune/versions/vish_dev22.05.1
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -656,7 +656,7 @@ jobs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml://registries/azureml-preview-test1/components/ft_nlp_model_converter/versions/dev20.05.1
+    component: azureml://registries/azureml-preview-test1/components/ft_nlp_model_converter/versions/vish_dev22.05.1
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -667,7 +667,7 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.22
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.26
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -683,7 +683,7 @@ jobs:
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.22
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.26
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'

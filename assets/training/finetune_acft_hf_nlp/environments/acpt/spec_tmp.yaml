@@ -6,4 +6,4 @@ name: acft-hf-nlp-gpu
 os_type: linux
 tags:
   Preview: ''
-version: dev20.05.01
+version: vish_dev22.05.01
