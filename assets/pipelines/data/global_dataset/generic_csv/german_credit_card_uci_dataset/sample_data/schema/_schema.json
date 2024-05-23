@@ -1,43 +1,7 @@
 {
   "columnAttributes": [
     {
-      "name": "Year",
-      "elementType": {
-        "typeName": "int64",
-        "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
-    },
-    {
-      "name": "Month",
-      "elementType": {
-        "typeName": "int64",
-        "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
-    },
-    {
-      "name": "DayofMonth",
-      "elementType": {
-        "typeName": "int64",
-        "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
-    },
-    {
-      "name": "DayOfWeek",
-      "elementType": {
-        "typeName": "int64",
-        "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
-    },
-    {
-      "name": "Carrier",
+      "name": "Col1",
       "elementType": {
         "typeName": "str",
         "isNullable": false
@@ -46,7 +10,7 @@
       "type": "String"
     },
     {
-      "name": "OriginAirportID",
+      "name": "Col2",
       "elementType": {
         "typeName": "int64",
         "isNullable": false
@@ -55,7 +19,25 @@
       "type": "Numeric"
     },
     {
-      "name": "DestAirportID",
+      "name": "Col3",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col4",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col5",
       "elementType": {
         "typeName": "int64",
         "isNullable": false
@@ -64,7 +46,25 @@
       "type": "Numeric"
     },
     {
-      "name": "CRSDepTime",
+      "name": "Col6",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col7",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col8",
       "elementType": {
         "typeName": "int64",
         "isNullable": false
@@ -73,25 +73,25 @@
       "type": "Numeric"
     },
     {
-      "name": "DepDelay",
+      "name": "Col9",
       "elementType": {
-        "typeName": "float64",
+        "typeName": "str",
         "isNullable": false
       },
       "isFeature": true,
-      "type": "Numeric"
+      "type": "String"
     },
     {
-      "name": "DepDel15",
+      "name": "Col10",
       "elementType": {
-        "typeName": "float64",
+        "typeName": "str",
         "isNullable": false
       },
       "isFeature": true,
-      "type": "Numeric"
+      "type": "String"
     },
     {
-      "name": "CRSArrTime",
+      "name": "Col11",
       "elementType": {
         "typeName": "int64",
         "isNullable": false
@@ -100,27 +100,90 @@
       "type": "Numeric"
     },
     {
-      "name": "ArrDelay",
+      "name": "Col12",
       "elementType": {
-        "typeName": "float64",
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col13",
+      "elementType": {
+        "typeName": "int64",
         "isNullable": false
       },
       "isFeature": true,
       "type": "Numeric"
     },
     {
-      "name": "ArrDel15",
+      "name": "Col14",
       "elementType": {
-        "typeName": "float64",
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col15",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col16",
+      "elementType": {
+        "typeName": "int64",
         "isNullable": false
       },
       "isFeature": true,
       "type": "Numeric"
     },
     {
-      "name": "Cancelled",
+      "name": "Col17",
       "elementType": {
-        "typeName": "float64",
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col18",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Col19",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col20",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col21",
+      "elementType": {
+        "typeName": "int64",
         "isNullable": false
       },
       "isFeature": true,
