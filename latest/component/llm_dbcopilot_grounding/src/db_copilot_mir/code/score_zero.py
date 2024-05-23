@@ -213,6 +213,7 @@ class RequestBody:
     max_rows: Optional[int] = None
     max_sampling_rows: Optional[int] = None
     max_text_length: Optional[int] = None
+    max_knowledge_pieces: Optional[int] = None
     is_stream: bool = False
     # Context
     tools: Optional[List[str]] = None
