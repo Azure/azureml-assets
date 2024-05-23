@@ -1,0 +1,24 @@
+type: evaluationresult
+name: arguana_text-embedding-ada-002_retrieval
+version: 2.22.05
+display_name: ArguAna_text-embedding-ada-002_retrieval
+description: text-embedding-ada-002 run for ArguAna dataset
+dataset_name: ArguAna
+dataset_family: ArguAna
+
+model_name: text-embedding-ada-002
+model_version: "2"
+model_asset_id: azureml://registries/azure-openai/models/text-embedding-ada-002/versions/2
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azure-openai/models/text-embedding-ada-002/versions/2
+
+tags:
+    evaluation_type: text_embeddings
+    task: retrieval
+    primary_metric: ndcg_at_10
+
+metrics:
+    ndcg_at_10: 0.57455
+
+properties: {}

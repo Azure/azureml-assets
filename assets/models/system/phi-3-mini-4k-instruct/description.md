@@ -84,12 +84,6 @@ The number of k–shot examples is listed per-benchmark.
 | HumanEval <br> 0-Shot |59.10|59.10|55.50|59|28.00|34.10|37.80|62.20|
 | MBPP <br> 3-Shot |53.80|71.40|74.50|60.6|50.80|51.50|60.20|77.80|
 
-## Inference samples
-
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
-
 ## Finetuning samples
 Task|Dataset|Python sample (Notebook)
 |--|--|--|
@@ -104,14 +98,14 @@ Chat completion|<a href="https://huggingface.co/datasets/HuggingFaceH4/ultrachat
     "input_string": [
       {
         "role": "user",
-        "content": "I am going to Paris, what should I see?"
+        "content": "I am going to Paris, give me a list of 10 places to visit"
       }
     ],
     "parameters": {
       "temperature": 0.7,
       "top_p": 0.9,
       "do_sample": true,
-      "max_new_tokens": 200
+      "max_new_tokens": 1000
     }
   }
 }
@@ -119,7 +113,7 @@ Chat completion|<a href="https://huggingface.co/datasets/HuggingFaceH4/ultrachat
 ### **Sample output**
 ```json
 {
-  "output": " Going to Paris is an exciting adventure! Here's a list of must-see attractions and experiences that will make your trip memorable:\n\n1. Eiffel Tower: Visit this iconic landmark at night to enjoy a spectacular view of the city.\n2. Louvre Museum: Explore the world's largest art museum and a historic monument, home to the famous Mona Lisa and thousands of other masterpieces.\n3. Notre-Dame Cathedral: Take a guided tour of this medieval cathedral, admire its stunning architecture, and climb the towers for an even better view.\n4. Seine River Cruise: Take a relaxing boat ride along the Seine River, and enjoy the stunning views of Paris's most famous landmarks.\n5. Montmartre: Visit this historic and artistic neighborhood, and explore the Sacré-Cœur Basilica."
+  "output": " 1. Eiffel Tower: Visit the iconic symbol of Paris, offering breathtaking views of the city.\n\n2. Louvre Museum: Explore one of the world's largest and most visited museums, home to thousands of works of art, including the Mona Lisa.\n\n3. Notre-Dame Cathedral: Marvel at the stunning Gothic architecture of this famous cathedral, although note that it is currently under renovation due to the 2019 fire.\n\n4. Montmartre: Discover this historic and artistic neighborhood, famous for its bohemian past and the stunning Sacré-Cœur Basilica.\n\n5. Seine River Cruise: Take a relaxing cruise on the Seine River, seeing some of the city's most famous landmarks like the Louvre, Notre-Dame, and the Eiffel Tower from a unique perspective.\n\n6. Champs-Élysées: Visit this famous avenue lined with shops, cafes, and theaters. Don't forget to check out the Arc de Triomphe at its end.\n\n7. Palace of Versailles: Take a day trip from Paris to explore the opulent palace and gardens of Versailles, a UNESCO World Heritage site.\n\n8. Sacré-Cœur Basilica: Located at the highest point in the city, this basilica offers panoramic views of Paris.\n\n9. Latin Quarter: Stroll through this historic and vibrant neighborhood, famous for its student life, lively atmosphere, and cafes.\n\n10. Musée d'Orsay: Visit this museum, housing an impressive collection of Impressionist and Post-Impressionist art, including works by Monet, Degas, Renoir, and Van Gogh."
 }
 ```
 

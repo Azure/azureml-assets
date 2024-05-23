@@ -11,7 +11,7 @@ deepspeed==0.13.1
 optimum==1.16.1
 accelerate==0.25.0
 diffusers==0.24.0
-onnxruntime-training==1.17.3
+onnxruntime-training==1.18.0
 scipy==1.10.0
 mpi4py==3.1.4
 sentencepiece==0.1.99

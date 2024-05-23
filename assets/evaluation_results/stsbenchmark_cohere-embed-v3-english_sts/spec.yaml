@@ -1,0 +1,24 @@
+type: evaluationresult
+name: stsbenchmark_cohere-embed-v3-english_sts
+version: 2.22.05
+display_name: STSBenchmark_cohere-embed-v3-english_sts
+description: cohere-embed-v3-english run for STSBenchmark dataset
+dataset_name: STSBenchmark
+dataset_family: STSBenchmark
+
+model_name: cohere-embed-v3-english
+model_version: "3"
+model_asset_id: azureml://registries/azureml-cohere/models/Cohere-embed-v3-english/versions/3
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azureml-cohere/models/Cohere-embed-v3-english/versions/3
+
+tags:
+    evaluation_type: text_embeddings
+    task: sts
+    primary_metric: spearman_correlation
+
+metrics:
+    spearman_correlation: 0.8652148323533708
+
+properties: {}

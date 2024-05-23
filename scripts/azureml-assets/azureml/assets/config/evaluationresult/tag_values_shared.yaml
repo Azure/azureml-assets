@@ -1,0 +1,7 @@
+# Valid tag values that can be applied to all evaluation results.
+evaluation_type:
+  required: True
+  allow_multiple: False
+  values:
+    - text_generation
+    - text_embeddings
