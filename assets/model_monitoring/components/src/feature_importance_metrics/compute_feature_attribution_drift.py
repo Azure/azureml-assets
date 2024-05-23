@@ -8,7 +8,11 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import ndcg_score
 
-from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable
+from shared_utilities.io_utils import (
+    try_read_mltable_in_spark_with_error,
+    save_spark_df_as_mltable,
+    init_momo_component_environment,
+)
 from shared_utilities import constants
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -186,6 +190,9 @@ def validate_features_match(baseline_df, production_df):
 
 def run(args):
     """Calculate feature attribution drift."""
+    # setup momo environment
+    init_momo_component_environment()
+
     try:
         log_time_and_message("Reading in baseline data & target data")
         baseline_df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")

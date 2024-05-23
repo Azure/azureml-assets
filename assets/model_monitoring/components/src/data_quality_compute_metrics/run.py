@@ -8,6 +8,7 @@ from pyspark.sql.functions import col
 from shared_utilities.io_utils import (
     save_spark_df_as_mltable,
     try_read_mltable_in_spark_with_error,
+    init_momo_component_environment,
 )
 from shared_utilities.df_utils import select_columns_from_spark_df
 from compute_data_quality_metrics import compute_data_quality_metrics, convert_set_string_to_array
@@ -22,6 +23,9 @@ def _filter_metrics(df, metrics, data_type):
 
 def run():
     """Compute metrics."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_data", type=str)

@@ -16,7 +16,8 @@ from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     save_spark_df_as_mltable,
     create_spark_df,
-    save_empty_dataframe
+    save_empty_dataframe,
+    init_momo_component_environment,
 )
 from shared_utilities.constants import (
     P_VALUE_THRESHOLD,
@@ -127,6 +128,9 @@ def get_unique_group_and_index(data_with_action_metric_score_df):
 
 def run():
     """Correlation test."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--action_data", type=str)

@@ -11,12 +11,17 @@ from typing import List
 
 from azure_monitor_metric_publisher import extract_location_from_aml_endpoint_str, publish_metric
 from shared_utilities.datetime_utils import parse_datetime_from_string
-from shared_utilities.io_utils import try_read_mltable_in_spark_with_error
+from shared_utilities.io_utils import (
+    try_read_mltable_in_spark_with_error, init_momo_component_environment,
+)
 from shared_utilities.log_utils import log_error
 
 
 def run():
     """Publish Azure monitor metrics."""
+    # setup momo environment
+    init_momo_component_environment()
+
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--signal_metrics", type=str)
     arg_parser.add_argument("--monitor_name", type=str)

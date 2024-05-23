@@ -11,13 +11,17 @@ from model_monitor_feature_selector.selectors.feature_selector_type import (
     FeatureSelectorType,
 )
 from shared_utilities.io_utils import (
-    try_read_mltable_in_spark, try_read_mltable_in_spark_with_error, save_spark_df_as_mltable
+    try_read_mltable_in_spark, try_read_mltable_in_spark_with_error,
+    save_spark_df_as_mltable, init_momo_component_environment,
 )
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 
 
 def run():
     """Compute data window and preprocess data from MDC."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_data_1", type=str)

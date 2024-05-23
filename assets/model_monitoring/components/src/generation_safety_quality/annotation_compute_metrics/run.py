@@ -11,6 +11,7 @@ from shared_utilities.io_utils import (
     init_spark,
     save_spark_df_as_mltable,
     try_read_mltable_in_spark_with_error,
+    init_momo_component_environment,
 )
 
 GROUP_COLUMN = "group"
@@ -127,6 +128,9 @@ def _calculate_violation_counts(df, metric_name):
 
 def run():
     """Run method for compute metrics."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--metric_names", type=str)

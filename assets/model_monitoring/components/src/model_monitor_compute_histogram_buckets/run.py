@@ -8,12 +8,16 @@ from histogram_buckets import compute_histogram_buckets
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     save_spark_df_as_mltable,
+    init_momo_component_environment,
 )
 from shared_utilities.event_utils import post_warning_event
 
 
 def run():
     """Compute histogram."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_data_1", type=str)

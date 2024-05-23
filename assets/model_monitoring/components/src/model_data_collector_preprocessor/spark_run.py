@@ -5,7 +5,9 @@
 
 import argparse
 
-from shared_utilities.io_utils import save_spark_df_as_mltable
+from shared_utilities.io_utils import (
+    save_spark_df_as_mltable, init_momo_component_environment,
+)
 from model_data_collector_preprocessor.mdc_utils import (
     _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string,
@@ -39,6 +41,9 @@ def mdc_preprocessor(
 
 def run():
     """Compute data window and preprocess data from MDC."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_window_start", type=str)

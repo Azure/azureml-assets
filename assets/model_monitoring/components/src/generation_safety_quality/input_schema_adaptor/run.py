@@ -11,6 +11,7 @@ from shared_utilities.io_utils import (
     init_spark,
     save_spark_df_as_mltable,
     try_read_mltable_in_spark_with_error,
+    init_momo_component_environment,
 )
 from shared_utilities.momo_exceptions import InvalidInputError
 from model_data_collector_preprocessor.spark_run import _convert_complex_columns_to_json_string
@@ -77,6 +78,9 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
 
 def run():
     """Adapt the production dataset schema to match GSQ input schema if necessary."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--production_dataset", type=str, required=True)

@@ -8,6 +8,7 @@ import pyspark.sql as pyspark_sql
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark_with_error,
     save_spark_df_as_mltable,
+    init_momo_component_environment,
 )
 from shared_utilities.momo_exceptions import InvalidInputError
 
@@ -63,6 +64,9 @@ def join_data(
 
 def run():
     """Join data assets on given columns."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--left_input_data", type=str, required=True)

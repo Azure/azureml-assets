@@ -6,12 +6,19 @@
 import argparse
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import regexp_replace
-from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable
+from shared_utilities.io_utils import (
+    try_read_mltable_in_spark_with_error,
+    save_spark_df_as_mltable,
+    init_momo_component_environment,
+)
 from compute_data_quality_statistics import compute_data_quality_statistics
 
 
 def run():
     """Compute metrics."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline_data", type=str)

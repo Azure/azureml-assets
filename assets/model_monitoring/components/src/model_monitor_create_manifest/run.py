@@ -9,6 +9,7 @@ import json
 import os
 import uuid
 from shared_utilities.amlfs import amlfs_put_as_json, amlfs_download, amlfs_upload
+from shared_utilities.io_utils import init_momo_component_environment
 
 
 def _generate_manifest(root_dir: str):
@@ -26,6 +27,9 @@ def _generate_manifest(root_dir: str):
 
 def run():
     """Create Manifest."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--signal_outputs_1", type=str, required=True)

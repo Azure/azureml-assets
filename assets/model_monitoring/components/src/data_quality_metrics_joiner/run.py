@@ -5,11 +5,18 @@
 
 import argparse
 from pyspark.sql.functions import col, when, lit
-from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable
+from shared_utilities.io_utils import (
+    try_read_mltable_in_spark_with_error,
+    save_spark_df_as_mltable,
+    init_momo_component_environment,
+)
 
 
 def run():
     """Compute metrics."""
+    # setup momo environment
+    init_momo_component_environment()
+
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline_metrics", type=str)
