@@ -6,11 +6,10 @@
 import os
 import subprocess
 from typing import List, Union
-from datetime import timezone, datetime, timedelta
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import json
 import calendar
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.core.credentials import AzureSasCredential
 from azure.identity import ClientSecretCredential
 from azure.storage.blob import BlobServiceClient, ContainerClient, ContainerSasPermissions, generate_container_sas
