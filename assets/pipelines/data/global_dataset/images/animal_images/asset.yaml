@@ -1,4 +1,4 @@
-name: german_credit_card_uci_dataset
+name: animal_images
 version: 2
 type: data
 spec: spec.yaml

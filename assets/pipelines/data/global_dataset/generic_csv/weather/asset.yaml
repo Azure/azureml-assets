@@ -1,4 +1,4 @@
-name: weather_dataset
+name: weather
 version: 2
 type: data
 spec: spec.yaml
