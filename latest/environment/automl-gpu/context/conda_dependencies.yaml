@@ -29,11 +29,11 @@ dependencies:
   - azureml-train-automl-runtime==1.56.0.post1
   - azureml-dataset-runtime==1.56.0
   - azureml-train-automl==1.56.0
-  - azureml-contrib-automl-dnn-forecasting==1.56.0
-  - https://aka.ms/automl-resources/packages/en_core_web_sm-2.3.1.tar.gz
+  - azureml-contrib-automl-dnn-forecasting==1.56.0.post1
+  - https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz
   - cryptography>=42.0.4
   - scipy==1.10.1
-  - spacy==2.3.9
+  - spacy==3.7.4
   - prophet==1.1.4
   - GitPython>=3.1.41
   - py-cpuinfo==5.0.0
