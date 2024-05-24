@@ -121,6 +121,7 @@ class StoreUrl:
         if self.store_type == "blob" and self._datastore \
                 and (self._datastore.credential_type and self._datastore.credential_type != "None"):
             return self._datastore.blob_service.get_container_client(self.container_name)
+
         # fallback to AzureMLOnBehalfOfCredential for credential less datastore for now.
         # Requires that we submit MoMo component with managed identity or will fail later on.
         credential = credential or self.get_credential()
@@ -128,6 +129,7 @@ class StoreUrl:
         if not self._is_secure() and isinstance(credential, AzureMLOnBehalfOfCredential):
             raise InvalidInputError("Token credential is only supported with secure HTTPS protocol."
                                     "Please use a secure url for the StoreUrl.")
+
         if self.store_type == "blob":
             return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.core.windows.net",
                                    container_name=self.container_name, credential=credential)
