@@ -9,14 +9,10 @@ import constants
 from model_performance_metrics.compute_metrics import EvaluatorFactory
 from model_performance_metrics.data_reader import DataReaderFactory
 from model_performance_metrics.utils import construct_signal_metrics
-from shared_utilities.io_utils import init_momo_component_environment
 
 
 def run():
     """Compute metrics."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", type=str, dest="task", choices=constants.ALL_TASKS)

@@ -47,8 +47,7 @@ from shared_utilities.store_url import StoreUrl
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     save_spark_df_as_mltable,
-    save_empty_dataframe,
-    init_momo_component_environment,
+    save_empty_dataframe
 )
 from shared_utilities.llm_utils import (
     API_KEY,
@@ -293,9 +292,6 @@ def get_violated_metrics(signal_out_url, signal_name):
 
 def run():
     """Identify problem traffic."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_with_groups", type=str)

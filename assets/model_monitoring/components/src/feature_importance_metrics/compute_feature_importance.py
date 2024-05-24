@@ -12,12 +12,7 @@ from pyspark.sql.types import (
     FloatType
 )
 from shared_utilities.df_utils import get_numerical_and_categorical_cols
-from shared_utilities.io_utils import (
-    try_read_mltable_in_spark_with_error,
-    save_spark_df_as_mltable,
-    init_spark,
-    init_momo_component_environment,
-)
+from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable, init_spark
 from shared_utilities.momo_exceptions import InvalidInputError
 from shared_utilities import constants
 from sklearn.model_selection import train_test_split
@@ -262,9 +257,6 @@ def check_df_has_target_column_with_error(baseline_df, target_column: str):
 
 def run(args):
     """Calculate feature importance."""
-    # setup momo environment
-    init_momo_component_environment()
-
     try:
         # Check to see if target is present. If not, we'll return an empty dataframe
         if args.target_column is None:

@@ -9,7 +9,6 @@ import os
 import time
 import uuid
 import yaml
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.dataprep.api.errorhandlers import ExecutionError
 from azureml.fsspec import AzureMachineLearningFileSystem
 from pyspark.sql import SparkSession, DataFrame
@@ -36,13 +35,6 @@ class InputNotFoundCategory(Enum):
     ROOT_FOLDER_NOT_FOUND = 2
     MLTABLE_NOT_FOUND = 3
     GENERAL = 10
-
-
-def init_momo_component_environment() -> None:
-    """Initialize shared component settings."""
-    # init class to support credential-less amlfs access and credential-less datastore support.
-    # The class will auto-add several important env variables for free
-    AzureMLOnBehalfOfCredential()
 
 
 def init_spark() -> SparkSession:

@@ -15,14 +15,10 @@ from shared_utilities.io_utils import (
 from model_monitor_output_metrics.factories.signal_factory import SignalFactory
 from model_monitor_output_metrics.entities.signals.signal import Signal
 from shared_utilities.amlfs import amlfs_upload
-from shared_utilities.io_utils import init_momo_component_environment
 
 
 def run():
     """Output metrics."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse arguments
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--monitor_name", type=str)

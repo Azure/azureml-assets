@@ -11,16 +11,12 @@ from genai_token_statistics_compute_metrics.metrics_processor import MetricsProc
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark_with_error,
     save_spark_df_as_mltable,
-    init_spark,
-    init_momo_component_environment,
+    init_spark
 )
 
 
 def run():
     """Execute the main function."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--production_dataset", type=str, required=True)

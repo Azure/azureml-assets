@@ -10,7 +10,7 @@ from pyspark.sql.types import (
 )
 from pyspark.sql import Window
 from pyspark.sql.functions import collect_set, col, udf, max
-from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder, init_momo_component_environment
+from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder
 import os
 import json
 import uuid
@@ -148,9 +148,6 @@ def write_to_file(payload: dict, local_output_directory: str, file_name: str):
 
 def run():
     """Merge and output actions."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--action_output", type=str)

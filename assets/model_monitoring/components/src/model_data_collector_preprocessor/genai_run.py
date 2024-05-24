@@ -12,9 +12,7 @@ from pyspark.sql.types import TimestampType
 from pyspark.sql.functions import lit
 from pyspark.sql.utils import AnalysisException
 from shared_utilities.df_utils import try_get_df_column
-from shared_utilities.io_utils import (
-    save_spark_df_as_mltable, init_momo_component_environment,
-)
+from shared_utilities.io_utils import save_spark_df_as_mltable
 from shared_utilities.store_url import StoreUrl
 
 from model_data_collector_preprocessor.mdc_utils import (
@@ -196,9 +194,6 @@ def genai_preprocessor(
 
 def run():
     """Compute data window and preprocess data from MDC."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse arguments
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--data_window_start", type=str)

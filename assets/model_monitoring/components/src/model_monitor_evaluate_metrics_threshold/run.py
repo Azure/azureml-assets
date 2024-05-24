@@ -7,16 +7,11 @@ import argparse
 from evaluate_metrics_threshold import (
     evaluate_metrics_threshold,
 )
-from shared_utilities.io_utils import (
-    try_read_mltable_in_spark_with_error, init_momo_component_environment
-)
+from shared_utilities.io_utils import try_read_mltable_in_spark_with_error
 
 
 def run():
     """Evaluate metrics threshold."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--metrics_to_evaluate", type=str)

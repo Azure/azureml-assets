@@ -16,7 +16,6 @@ from shared_utilities.io_utils import (
     save_spark_df_as_mltable,
     try_read_mltable_in_spark,
     try_read_mltable_in_spark_with_error,
-    init_momo_component_environment,
 )
 
 
@@ -34,9 +33,6 @@ def _create_empty_histogram_buckets_df():
 
 def run():
     """Compute histogram."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_data", type=str)

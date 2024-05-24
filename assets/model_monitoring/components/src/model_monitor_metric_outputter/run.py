@@ -26,15 +26,11 @@ from shared_utilities.dict_utils import merge_dicts
 from shared_utilities.io_utils import (
     np_encoder,
     try_read_mltable_in_spark_with_error,
-    init_momo_component_environment,
 )
 
 
 def run():
     """Output metrics."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse arguments
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--monitor_name", type=str)

@@ -27,7 +27,7 @@ from shared_utilities.constants import (
     INDEX_ID_COLUMN
 )
 from shared_utilities.store_url import StoreUrl
-from shared_utilities.io_utils import try_read_mltable_in_spark, init_momo_component_environment
+from shared_utilities.io_utils import try_read_mltable_in_spark
 from shared_utilities.span_tree_utils import SpanTree
 
 
@@ -126,9 +126,6 @@ def run_detector(df: pandas.DataFrame,
 
 def run():
     """Script for action detector component."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--action_output", type=str)

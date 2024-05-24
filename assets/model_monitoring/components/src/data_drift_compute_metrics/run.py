@@ -8,15 +8,12 @@ from data_drift_compute_metrics.io_utils import (
     select_columns_from_spark_df,
     output_computed_measures_tests,
 )
-from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, init_momo_component_environment
+from shared_utilities.io_utils import try_read_mltable_in_spark_with_error
 from data_drift_compute_metrics.compute_data_drift import compute_data_drift_measures_tests
 
 
 def run():
     """Compute metrics."""
-    # setup momo environment
-    init_momo_component_environment()
-
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--signal_metrics", type=str)
