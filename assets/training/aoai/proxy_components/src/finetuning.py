@@ -110,7 +110,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         if validation_file_path is None:
             logger.debug(f"validation file not provided, train data will be split in\
-                         {utils.train_dataset_split_ratio} ratio to create validation data")
+                         {utils.Constants.train_dataset_split_ratio} ratio to create validation data")
 
         logger.debug(f"uploading training file : {train_file_name}")
         train_metadata = self.aoai_client.files.create(file=(train_file_name, train_data, 'application/json'),
