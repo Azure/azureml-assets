@@ -112,9 +112,10 @@ class StoreUrl:
         """
         Get container client for this store url.
 
-        :param credential: if provided, it contains the credential to authorize the container to access the data,
-        if not provided, will retrieve credential from datastore. If datastore is credential-less will fallback to
-        use Azureml OBO credential. It's a special handling for access dataref file in executors.
+        :param credential: if provided, it contains the credential to authorize the container to access the data;
+        if not provided, will retrieve credential from datastore,
+        if datastore absent or is credential-less, use Azureml OBO credential.
+        It's a special handling for access dataref file in executors.
         """
         if not self.account_name:
             # local or not supported store type
