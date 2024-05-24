@@ -21,3 +21,5 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 RUN pip install mlflow==2.12.2 gunicorn==22.0.0
+
+
