@@ -9,6 +9,7 @@ import os
 import time
 import uuid
 import yaml
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.dataprep.api.errorhandlers import ExecutionError
 from azureml.fsspec import AzureMachineLearningFileSystem
 from pyspark.sql import SparkSession, DataFrame
@@ -168,6 +169,10 @@ def read_mltable_in_spark(mltable_path: str):
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
     """Save spark dataframe as mltable."""
+    # init aml OBO class for supporting credential-less datastore scenarios.
+    # this class will init specific env variables required by Amlfs to get user token.
+    AzureMLOnBehalfOfCredential()
+
     metrics_df.write.mode("overwrite").parquet(folder_path)
 
     base_path = folder_path.rstrip('/')
