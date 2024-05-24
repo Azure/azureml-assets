@@ -1,0 +1,33 @@
+type: evaluationresult
+name: squad_v2_mistralaimistral7binstruct_question_answering
+version: 2.23.05
+display_name: mistralai-Mistral-7B-Instruct-v0-2_squad_v2_chat_completion_added
+description: mistralai-mistral-7b-instruct-v0-2 run for squad_v2 dataset
+dataset_family: squad_v2
+dataset_name: squad_v2
+
+model_name: mistralai-mistral-7b-instruct-v0-2
+model_version: "3"
+model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/3
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/3
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  groundedness: 4.327986
+  relevance: 4.14593
+  GPTSimilarity: 3.490312
+
+
+properties:
+  n_shot: 2
+  evaluation_sampling_ratio: 0.2
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

@@ -1,0 +1,33 @@
+type: evaluationresult
+name: truthfulqa_generation_mistralaimistral7binstruct_question_answering
+version: 2.23.05
+display_name: mistralai-Mistral-7B-Instruct-v0-2_truthfulqa_generation_chat_completion_added
+description: mistralai-mistral-7b-instruct-v0-2  for truthfulqa_generation dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_generation
+
+model_name: mistralai-mistral-7b-instruct-v0-2
+model_version: "3"
+model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/3
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/3
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  coherence: 4.903305
+  fluency: 4.9375
+  GPTSimilarity: 3.525092
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

@@ -1,0 +1,33 @@
+type: evaluationresult
+name: truthfulqa_generation_communitymixtral8x22bv01_question_answering
+version: 2.23.05
+display_name: mistral-community-Mixtral-8x22B-v0-1_truthfulqa_generation_text_generation
+description: mistral-community-mixtral-8x22b-v0-1  for truthfulqa_generation dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_generation
+
+model_name: mistral-community-mixtral-8x22b-v0-1
+model_version: "2"
+model_asset_id: azureml://registries/azureml/models/mistral-community-Mixtral-8x22B-v0-1/versions/2
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/mistral-community-Mixtral-8x22B-v0-1/versions/2
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  coherence: 3.604651
+  fluency: 3.779682
+  GPTSimilarity: 2.448529
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"
