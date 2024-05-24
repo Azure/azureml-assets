@@ -4,7 +4,7 @@ type: command
 name: validation_trigger_import
 display_name: Validation Trigger Import model
 description: Component for enabling validation of import pipeline.
-version: 0.0.7
+version: 0.0.8
 
 # Pipeline inputs
 inputs:
@@ -70,6 +70,7 @@ inputs:
     - translation
     - image-classification
     - text-to-image
+    - chat-completion
     optional: true
     type: string
 
