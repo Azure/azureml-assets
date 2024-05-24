@@ -8,6 +8,7 @@ from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 from azure.mgmt.cognitiveservices.models import ApiKeys
+from azure.core.exceptions import ClientAuthenticationError
 from azure.core.pipeline.policies import BearerTokenCredentialPolicy
 from azure.core.pipeline import PipelineRequest, PipelineContext
 from azure.core.rest import HttpRequest
@@ -104,7 +105,7 @@ class AzureOpenAIClientManager:
                 azure_ad_token_provider=self._get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default"),
                 api_version=AzureOpenAIClientManager.api_version,
             )
-        except:
+        except ClientAuthenticationError:
             logger.info("Failed to get azure openai client using AzureMLOnBehalfOfCredential, will try using ManagedIdentityCredential")
             if self._get_client_id() is None:
                 logger.info("Managed identity client id is empty, will fail...")
