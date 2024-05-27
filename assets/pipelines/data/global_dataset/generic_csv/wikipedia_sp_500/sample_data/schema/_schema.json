@@ -2,30 +2,30 @@
   "columnAttributes": [
     {
       "name": "Title",
+      "type": "String",
+      "isFeature": true,
       "elementType": {
         "typeName": "str",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "String"
+      }
     },
     {
       "name": "Category",
+      "type": "String",
+      "isFeature": true,
       "elementType": {
         "typeName": "str",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "String"
+      }
     },
     {
       "name": "Text",
+      "type": "String",
+      "isFeature": true,
       "elementType": {
         "typeName": "str",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "String"
+      }
     }
   ],
   "featureChannels": [],

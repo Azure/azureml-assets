@@ -2,39 +2,39 @@
   "columnAttributes": [
     {
       "name": "UserId",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "MovieId",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "Rating",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "Timestamp",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     }
   ],
   "featureChannels": [],

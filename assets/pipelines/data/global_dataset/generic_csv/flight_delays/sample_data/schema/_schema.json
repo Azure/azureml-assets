@@ -2,129 +2,129 @@
   "columnAttributes": [
     {
       "name": "Year",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "Month",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "DayofMonth",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "DayOfWeek",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "Carrier",
+      "type": "String",
+      "isFeature": true,
       "elementType": {
         "typeName": "str",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "String"
+      }
     },
     {
       "name": "OriginAirportID",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "DestAirportID",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "CRSDepTime",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "DepDelay",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "float64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "DepDel15",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "float64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "CRSArrTime",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "int64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "ArrDelay",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "float64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "ArrDel15",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "float64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     },
     {
       "name": "Cancelled",
+      "type": "Numeric",
+      "isFeature": true,
       "elementType": {
         "typeName": "float64",
         "isNullable": false
-      },
-      "isFeature": true,
-      "type": "Numeric"
+      }
     }
   ],
   "featureChannels": [],
