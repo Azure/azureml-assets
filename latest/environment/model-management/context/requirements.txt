@@ -14,4 +14,3 @@ azureml-automl-dnn-vision==1.56.0
 pyarrow==14.0.2
 GitPython==3.1.43
 paramiko==3.4.0
-tqdm==4.66.4
