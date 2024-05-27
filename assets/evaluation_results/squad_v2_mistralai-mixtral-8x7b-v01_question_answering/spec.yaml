@@ -1,12 +1,12 @@
 type: evaluationresult
-name: truthfulqa_generation_mistralai-mixtral-8x7b-v01_question_answering
+name: squad_v2_mistralai-mixtral-8x7b-v01_question_answering
 version: 2.27.05
-display_name: truthfulqa_generation_mistralai-Mixtral-8x7B-v01_question_answering
-description: mistralai-Mixtral-8x7B-v01 run for truthfulqa_generation dataset
-dataset_family: truthfulqa
-dataset_name: truthfulqa_generation
+display_name: squad_v2_mistralai-Mixtral-8x7B-v01_question_answering
+description: mistralai-mixtral-8x7b-v01 run for squad_v2 dataset
+dataset_family: squad_v2
+dataset_name: squad_v2
 
-model_name: mistralai-Mixtral-8x7B-v01
+model_name: mistralai-mixtral-8x7b-v01
 model_version: "12"
 model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/12
 
@@ -20,14 +20,14 @@ tags:
   accuracy_metric_name: nan
 
 metrics:
-  coherence: 3.88848
-  fluency: 4.170343
-  GPTSimilarity: 2.542892
+  groundedness: 3.584563
+  relevance: 3.483137
+  GPTSimilarity: 3.720303
 
 
 properties:
-  n_shot: 6
-  evaluation_sampling_ratio: 1.0
+  n_shot: 2
+  evaluation_sampling_ratio: 0.2
   evaluation_split: "validation"
   fewshot_sampling_ratio: 1.0
   fewshot_split: "dev"

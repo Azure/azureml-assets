@@ -1,10 +1,10 @@
 type: evaluationresult
-name: truthfulqa_generation_databricks-dbrx-instruct_question_answering
+name: squad_v2_databricks-dbrx-instruct_question_answering
 version: 2.27.05
-display_name: truthfulqa_generation_databricks-dbrx-instruct_question_answering
-description: databricks-dbrx-instruct run for truthfulqa_generation dataset
-dataset_family: truthfulqa
-dataset_name: truthfulqa_generation
+display_name: squad_v2_databricks-dbrx-instruct_question_answering
+description: databricks-dbrx-instruct run for squad_v2 dataset
+dataset_family: squad_v2
+dataset_name: squad_v2
 
 model_name: databricks-dbrx-instruct
 model_version: "3"
@@ -20,14 +20,14 @@ tags:
   accuracy_metric_name: nan
 
 metrics:
-  coherence: 4.647059
-  fluency: 4.729167
-  GPTSimilarity: 3.35049
+  groundedness: 4.002111
+  relevance: 4.010553
+  GPTSimilarity: 4.077085
 
 
 properties:
-  n_shot: 6
-  evaluation_sampling_ratio: 1.0
+  n_shot: 2
+  evaluation_sampling_ratio: 0.2
   evaluation_split: "validation"
   fewshot_sampling_ratio: 1.0
   fewshot_split: "dev"
