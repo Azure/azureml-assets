@@ -1,0 +1,33 @@
+type: evaluationresult
+name: truthfulqa_generation_meta-llama-3-8b-instruct_question_answering
+version: 2.10.05
+display_name: truthfulqa_generation_meta-llama-3-8b_question_answering
+description: meta-llama-3-8b-instruct for truthfulqa_generation dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_generation
+
+model_name: Meta-Llama-3-8B-Instruct
+model_version: "2"
+model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3-8B-Instruct/versions/2
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-meta/models/Meta-Llama-3-8B-Instruct/versions/2
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  coherence: 4.6576687116564415
+  fluency: 4.736777367773677
+  GPTSimilarity: 3.1113831089351285
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

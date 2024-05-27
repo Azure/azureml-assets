@@ -89,6 +89,10 @@ class MLFlowModelTags:
     # This enables model to use shared quota for deployment
     SHARED_COMPUTE_CAPACITY = "SharedComputeCapacityEnabled"
 
+    # make sure all prod models has hiddenlayerscanned tag added
+    # model scan and tag has to be added manually currently
+    HIDDEN_LAYERS_SCANNED = "hiddenlayerscanned"
+
 
 class ModelValidationState:
     """Enums for storing validation results state.
@@ -850,6 +854,17 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
         error_count += 1
 
+    # TODO: skip hidden layer valdn till most models are scanned
+    # if MLFlowModelTags.HIDDEN_LAYERS_SCANNED not in model.tags:
+    #     _log_error(
+    #         asset_config.file_name_with_path,
+    #         (
+    #             "`hiddenlayerscanned` tag missing. "
+    #             "Model is not scanned by HiddenLayer ModelScanner tool. Please scan the model and retry"
+    #         )
+    #     )
+    #     error_count += 1
+
     # shared compute check
     if MLFlowModelTags.SHARED_COMPUTE_CAPACITY not in model.tags:
         _log_error(asset_config.file_name_with_path, f"Tag {MLFlowModelTags.SHARED_COMPUTE_CAPACITY} missing")
@@ -1060,10 +1075,25 @@ def validate_assets(input_dirs: List[Path],
                 if check_environment_version:
                     error_count += validate_environment_version(asset_config)
 
-            if asset_config.type == assets.AssetType.PROMPT or asset_config.type == assets.AssetType.EVALUATIONRESULT:
-                error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
+            if asset_config.type == assets.AssetType.EVALUATIONRESULT:
+                error_count += validate_tags(asset_config, 'evaluationresult/tag_values_shared.yaml')
+
+                asset_spec = asset_config._spec._yaml
+                evaluation_type = asset_spec.get('tags', {}).get('evaluation_type', None)
+
+                if evaluation_type == 'text_generation':
+                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_generation.yaml')
+                elif evaluation_type == 'text_embeddings':
+                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_embeddings.yaml')
+                else:
+                    _log_error(
+                        asset_config.file_name_with_path,
+                        f"Asset '{asset_config.name}' has unknown evaluation_type: '{evaluation_type}'"
+                    )
+                    error_count += 1
 
             if asset_config.type == assets.AssetType.PROMPT:
+                error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
                 error_count += validate_tags(asset_config, 'tag_values_prompt.yaml')
 
             # Validate categories

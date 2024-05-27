@@ -9,6 +9,7 @@ tags:
   license: apache-2.0
   inference_compute_allow_list: [Standard_DS3_v2]
   SharedComputeCapacityEnabled: ''
+  hiddenlayerscanned: ""
 properties:
   SHA: 9da301148150e37e533abef672062fa49f6bda4f
   inference-min-sku-spec: 4|0|14|28
