@@ -2,7 +2,7 @@ type: evaluationresult
 name: truthfulqa_generation_databricks-dbrx-instruct_question_answering
 version: 2.27.05
 display_name: truthfulqa_generation_databricks-dbrx-instruct_question_answering
-description: databricks-dbrx-instruct  for truthfulqa_generation dataset
+description: databricks-dbrx-instruct run for truthfulqa_generation dataset
 dataset_family: truthfulqa
 dataset_name: truthfulqa_generation
 
