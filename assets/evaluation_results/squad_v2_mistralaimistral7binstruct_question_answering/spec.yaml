@@ -1,7 +1,7 @@
 type: evaluationresult
 name: squad_v2_mistralaimistral7binstruct_question_answering
-version: 2.23.05
-display_name: mistralai-Mistral-7B-Instruct-v0-2_squad_v2_chat_completion_added
+version: 2.27.05
+display_name: squad_v2_mistralaimistral7BInstruct_question_answering
 description: mistralai-mistral-7b-instruct-v0-2 run for squad_v2 dataset
 dataset_family: squad_v2
 dataset_name: squad_v2

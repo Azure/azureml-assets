@@ -1,7 +1,7 @@
 type: evaluationresult
 name: squad_v2_mixtral8x22binstructv01_question_answering
-version: 2.23.05
-display_name: mistralai-Mixtral-8x22B-Instruct-v0-1_squad_v2_chat_completion
+version: 2.27.05
+display_name: squad_v2_Mixtral8x22BInstructv01_question_answering
 description: mistralai-mixtral-8x22b-instruct-v0-1 run for squad_v2 dataset
 dataset_family: squad_v2
 dataset_name: squad_v2

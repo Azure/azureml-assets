@@ -1,7 +1,7 @@
 type: evaluationresult
 name: truthfulqa_generation_mistralaimistral7binstruct_question_answering
-version: 2.23.05
-display_name: mistralai-Mistral-7B-Instruct-v0-2_truthfulqa_generation_chat_completion_added
+version: 2.27.05
+display_name: truthfulqa_generation_mistralaimistral7BInstruct_question_answering
 description: mistralai-mistral-7b-instruct-v0-2  for truthfulqa_generation dataset
 dataset_family: truthfulqa
 dataset_name: truthfulqa_generation

@@ -1,7 +1,7 @@
 type: evaluationresult
 name: truthfulqa_generation_mistralai-mixtral-8x22b-v0-1_question_answering
-version: 2.23.05
-display_name: mistralai-Mixtral-8x22B-v0-1_truthfulqa_generation_text_generation
+version: 2.27.05
+display_name: truthfulqa_generation_mistralai-Mixtral-8x22B-v0-1_question_answering
 description: mistralai-Mixtral-8x22B-v0-1  for truthfulqa_generation dataset
 dataset_family: truthfulqa
 dataset_name: truthfulqa_generation

@@ -1,7 +1,7 @@
 type: evaluationresult
 name: squad_v2_databricks-dbrx-base_question_answering
-version: 2.23.05
-display_name: databricks-dbrx-base_squad_v2_text_generation
+version: 2.27.05
+display_name: squad_v2_databricks-dbrx-base_question_answering
 description: databricks-dbrx-base run for squad_v2 dataset
 dataset_family: squad_v2
 dataset_name: squad_v2
