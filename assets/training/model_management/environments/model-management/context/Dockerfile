@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py39-torch1131:{{latest
 
 WORKDIR /
 
-RUN apt-get update && apt-get upgrade -y
+RUN apt-get update && apt-get upgrade -y && apt-get install python3-idna -y
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
@@ -18,7 +18,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 ## Vulnerability fix
-RUN pip install Pillow gunicorn onnx idna tqdm Werkzeug
+RUN pip install Pillow gunicorn onnx idna tqdm requests
 # List installed packages
 RUN pip list
 
