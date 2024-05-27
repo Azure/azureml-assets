@@ -28,6 +28,14 @@ inputs:
     optional: True
     description: Subscription for the AOAI resource.
 
+  authentication_type:
+    type: string
+    optional: True
+    description: Authentication type for the AOAI endpoint. If not provided, it will default to 'managed_identity'.
+    enum:
+    - managed_identity
+    - user_identity
+
   training_file_path:
     type: uri_file
     optional: True
@@ -108,6 +116,7 @@ command: >-
   --endpoint_name ${{inputs.endpoint_name}}
   $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
   $[[--endpoint_subscription ${{inputs.endpoint_subscription}}]]
+  $[[--authentication_type ${{inputs.authentication_type}}]]
   $[[--training_file_path ${{inputs.training_file_path}}]]
   $[[--validation_file_path ${{inputs.validation_file_path}}]]
   $[[--training_import_path ${{inputs.training_import_path}}]]

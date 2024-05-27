@@ -256,6 +256,7 @@ def parse_args():
     parser.add_argument("--endpoint_name", type=str)
     parser.add_argument("--endpoint_resource_group", type=str)
     parser.add_argument("--endpoint_subscription", type=str)
+    parser.add_argument("--authentication_type", type=str)
 
     parser.add_argument("--training_file_path", type=str)
     parser.add_argument("--validation_file_path", type=str)
@@ -300,7 +301,8 @@ def main():
     try:
         aoai_client_manager = AzureOpenAIClientManager(endpoint_name=args.endpoint_name,
                                                        endpoint_resource_group=args.endpoint_resource_group,
-                                                       endpoint_subscription=args.endpoint_subscription)
+                                                       endpoint_subscription=args.endpoint_subscription,
+                                                       authentication_type=args.authentication_type)
         finetune_component = AzureOpenAIFinetuning(aoai_client_manager)
         add_custom_dimenions_to_app_insights_handler(logger, finetune_component)
         CancelHandler.register_cancel_handler(finetune_component)
