@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: models/huggingface/Llama-2-7b/1716802697/mlflow_model_folder
+  container_path: huggingface/Llama-2-7b/1716802697/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
