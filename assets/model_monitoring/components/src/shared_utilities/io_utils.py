@@ -9,6 +9,7 @@ import os
 import time
 import uuid
 import yaml
+from azure.core.exceptions import ResourceNotFoundError
 from azureml.dataprep.api.errorhandlers import ExecutionError
 from azureml.fsspec import AzureMachineLearningFileSystem
 from pyspark.sql import SparkSession, DataFrame
@@ -119,7 +120,14 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
 
 def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None):
     """Verify paths in mltable is supported."""
-    mltable_dict = mltable_dict or yaml.safe_load(StoreUrl(mltable_path, ws).read_file_content("MLTable"))
+    storeUrl = StoreUrl(mltable_path, ws)
+    if not storeUrl.is_file_exists("MLTable"):
+        raise InvalidInputError(
+            f"The mltable specification file does not exist at path: '{mltable_path}/MLTable'."
+            " Please double-check if the MLTable spec file exists at the given location."
+            " Else, try re-running your Monitoring pipeline.")
+    mltable_dict = mltable_dict or yaml.safe_load(storeUrl.read_file_content("MLTable"))
+
     for path in mltable_dict.get("paths", []):
         path_val = path.get("file") or path.get("folder") or path.get("pattern")
         try:

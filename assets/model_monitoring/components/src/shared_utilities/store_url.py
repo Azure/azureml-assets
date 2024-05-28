@@ -151,6 +151,20 @@ class StoreUrl:
             full_path = f"{self.path}/{relative_path}/" if relative_path else f"{self.path}/"
             blobs = container_client.list_blobs(name_starts_with=full_path)
             return any(blobs)
+    
+    def is_file_exists(self, relative_path: str) -> bool:
+        """Check if a file exists in the store."""
+        if self.is_local_path():
+            return self._is_local_file_exists(relative_path)
+
+        container_client = self.get_container_client()
+        full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
+        if isinstance(container_client, FileSystemClient):
+            with container_client.get_file_client(full_path) as file_client:
+                return file_client.exists()
+        else:
+            with container_client.get_blob_client(full_path) as blob_client:
+                return blob_client.exists()
 
     def is_local_path(self) -> bool:
         """Check if the store url is a local path."""
@@ -218,6 +232,10 @@ class StoreUrl:
     def _is_local_folder_exists(self, relative_path: str = None) -> bool:
         full_path = os.path.join(self._base_url, relative_path) if relative_path else self._base_url
         return os.path.isdir(full_path)
+
+    def _is_local_file_exists(self, relative_path: str = None) -> bool:
+        full_path = os.path.join(self._base_url, relative_path) if relative_path else self._base_url
+        return os.path.isfile(full_path)
 
     _SCHEME_MAP = {"blob&https": "wasbs", "blob&http": "wasb", "dfs&https": "abfss", "dfs&http": "abfs"}
 
