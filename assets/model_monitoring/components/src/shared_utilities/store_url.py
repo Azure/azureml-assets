@@ -100,6 +100,11 @@ class StoreUrl:
             raise InvalidInputError(f"Unsupported datastore type: {self._datastore.datastore_type}, "
                                     "only Azure Blob and Azure Data Lake Gen2 are supported.")
 
+    def is_credentials_less(self) -> bool:
+        """Check if the store url is credential less."""
+        credential = self.get_credential()
+        return credential is None or isinstance(credential, AzureMLOnBehalfOfCredential)
+
     def get_container_client(
             self,
             credential: Union[
