@@ -10,7 +10,8 @@ from azure.ai.ml._restclient.models import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
-BUILD_CONTEXT = Path("../context")
+# BUILD_CONTEXT = Path("../context") ##f"../environments/{env_name}/context"
+BUILD_CONTEXT = Path("../environments/minimal-ubuntu20.04-py39-cpu-inference/context")
 JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
@@ -36,7 +37,6 @@ def test_minimal_cpu_inference():
         description="minimal 20.04 py38 cpu inference environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
-
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
