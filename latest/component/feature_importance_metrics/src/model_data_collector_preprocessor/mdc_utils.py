@@ -17,10 +17,9 @@ from shared_utilities.constants import (
 )
 
 from model_data_collector_preprocessor.mdc_preprocessor_helper import (
-    get_file_list, set_data_access_config, serialize_credential, copy_appendblob_to_blockblob
+    get_file_list, set_data_access_config, serialize_credential, deserialize_credential, copy_appendblob_to_blockblob
 )
 from shared_utilities.store_url import StoreUrl
-from model_data_collector_preprocessor.mdc_preprocessor_helper import deserialize_credential
 
 
 def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: datetime, store_url: StoreUrl,
@@ -40,6 +39,10 @@ def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: date
             return _uri_folder_to_spark_df(start_datetime, end_datetime, store_url, soft_delete_enabled=False)
         except Py4JJavaError as pe:
             if "This endpoint does not support BlobStorageEvents or SoftDelete" in pe.java_exception.getMessage():
+                if store_url.is_credentials_less():
+                    raise InvalidInputError(
+                        "Credential-less blob store with soft delete enabled is not supported, you can: "
+                        "1. Upgrade to adlsgen2, 2. Switch to credential store, or 3. Disable soft delete.")
                 blockblob_url = copy_appendblob_to_blockblob(store_url, start_datetime, end_datetime)
                 return _uri_folder_to_spark_df(start_datetime, end_datetime, blockblob_url, soft_delete_enabled=True)
             else:
