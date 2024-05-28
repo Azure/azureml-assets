@@ -28,7 +28,7 @@ def _generate_manifest(root_dir: str):
 def run():
     """Create Manifest."""
     # init aml OBO class for supporting credential-less datastore scenarios.
-    # this class will init specific env variables required by Amlfs to get 
+    # this class will init specific env variables required by Amlfs to get
     # user token in case of credential-less data access scenario
     AzureMLOnBehalfOfCredential()
 
