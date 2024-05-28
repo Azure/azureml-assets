@@ -7,25 +7,29 @@ dependencies:
 - pip=24.0
 - scikit-learn
 - pip:
-  - azureml-rag[cognitive_search,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore]==0.2.31
-  - azure-search-documents>=11.4.0
-  - langchain<0.2
-  - tiktoken==0.5.2
-  - azure-ai-ml=={{latest-pypi-version}}
+    # RAG package
+  - azureml-rag[azure,cognitive_search,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore]==0.2.32
+    # Azure
+  - azure-ai-formrecognizer==3.3.1
   - azure-identity=={{latest-pypi-version}}
   - azure-keyvault-secrets==4.6.0
+  - azure-search-documents>=11.4.0
   - azure-mgmt-cognitiveservices~=13.4.0
+    # Azure ML
   - azureml-contrib-services
   - azureml-core=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
   - azureml-fsspec
-  - azureml-inference-server-http==0.7.6
+  - azureml-inference-server-http==1.2.1
   - azureml-mlflow=={{latest-pypi-version}}
+    # Other public packages
   - beautifulsoup4~=4.11.2
+  - cryptography>=41.0.4
   - datasets~=2.10.1
   - faiss-cpu~=1.7.3
-  - inference-schema==1.4
+  - inference-schema~=1.7.0
+  - langchain<0.2
   - lxml
   - markdown
   - mlflow-skinny==2.3.2
@@ -41,5 +45,4 @@ dependencies:
   - sentence-transformers
   - sqlalchemy==1.4.46
   - tika~=2.6.0
-  - cryptography>=41.0.4
-  - azure-ai-formrecognizer==3.3.1
+  - tiktoken==0.5.2

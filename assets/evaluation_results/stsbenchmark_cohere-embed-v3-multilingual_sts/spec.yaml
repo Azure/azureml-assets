@@ -1,7 +1,7 @@
 type: evaluationresult
 name: stsbenchmark_cohere-embed-v3-multilingual_sts
-version: 2.16.05
-display_name: STSBenchmark_cohere-embed-v3-multilingual_STS
+version: 2.22.05
+display_name: STSBenchmark_cohere-embed-v3-multilingual_sts
 description: cohere-embed-v3-multilingual run for STSBenchmark dataset
 dataset_name: STSBenchmark
 dataset_family: STSBenchmark
@@ -15,7 +15,7 @@ relationships:
 
 tags:
     evaluation_type: text_embeddings
-    task: STS
+    task: sts
     primary_metric: spearman_correlation
 
 metrics:

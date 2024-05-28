@@ -19,4 +19,4 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     conda clean -a -y
 
 ## Vulnerability fix
-RUN pip install tqdm
+RUN pip install tqdm requests
