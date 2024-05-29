@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: test-component
+name: delete_endpoint
 version: 0.0.6
 type: command
 
