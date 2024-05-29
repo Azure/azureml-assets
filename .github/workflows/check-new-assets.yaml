@@ -25,12 +25,8 @@ jobs:
       - name: Test step
         run: echo "hello world"
 
-
       - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
-        with:
-          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
-          fetch-depth: 2
+        uses: actions/checkout@v3
 
       - name: Get changed files
         id: changed-files
