@@ -13,8 +13,6 @@ defaults:
 permissions:
   # Required to clone repo
   contents: read
-  # Required for OIDC login to Azure
-  id-token: write
 
 jobs:
   check-new-assets:
@@ -22,9 +20,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test step
-        run: echo "hello world"
-
       - name: Clone branch
         uses: actions/checkout@v3
 
@@ -32,19 +27,13 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v35
 
-      - name: List all added files
+      - name: Check for new asset
         run: |
-          echo "${{ steps.changed-files.outputs.added_files }}"
           echo "continue=false" >> $GITHUB_ENV
-
-          for file in ${{ steps.changed-files.outputs.added_files }}; do
-            echo $file
-          done
 
           for file in ${{ steps.changed-files.outputs.added_files }}; do
             if [[ "$file" =~ .*\/spec.yaml ]] || [[ "$file" =~ .*\/asset.yaml ]]; then
               echo "continue=true" >> $GITHUB_ENV
-              echo "matched"
               break
             fi
           done
