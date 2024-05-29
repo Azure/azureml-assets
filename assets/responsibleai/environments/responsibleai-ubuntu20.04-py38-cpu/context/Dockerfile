@@ -52,6 +52,9 @@ RUN pip install 'gunicorn>=22.0.0'
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
 
+# To resolve vulnerability issue GHSA-9wx4-h78v-vm56
+RUN pip install 'requests>=2.32.0'
+
 RUN pip freeze
 
 # This is needed for mpi to locate libpython

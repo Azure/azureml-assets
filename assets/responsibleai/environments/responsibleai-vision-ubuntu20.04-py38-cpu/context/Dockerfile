@@ -52,6 +52,9 @@ RUN pip install 'Werkzeug>=3.0.3' \
                 'tqdm>=4.66.3' \
                 'onnx>=1.16.0'
 
+# To resolve vulnerability issue GHSA-9wx4-h78v-vm56
+RUN pip install 'requests>=2.32.0'
+
 RUN pip freeze
 
 # This is needed for mpi to locate libpython
