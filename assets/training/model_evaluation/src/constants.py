@@ -213,7 +213,7 @@ class TelemetryConstants:
     """Telemetry Constants."""
 
     COMPONENT_NAME = "model_evaluation"
-    COMPONENT_DEFAULT_VERSION = "0.0.26"
+    COMPONENT_DEFAULT_VERSION = "0.0.27"
 
     INITIALISING_RUNNER = "initialising_runner"
     VALIDATION_NAME = "argument_validation"
@@ -427,15 +427,37 @@ class OpenAIConstants:
 
     CONNECTION_STRING_KEY = "AZUREML_WORKSPACE_CONNECTION_ID_AOAI"
     METRICS_KEY = "openai_params"
+
+    KEY = "key"
+    BASE = "base"
+
+    OPENAI_API_TYPE = "openai_api_type"
+    OPENAI_API_VERSION = "openai_api_version"
+
+    METADATA_API_TYPE = 'ApiType'
+    METADATA_API_VERSION = 'ApiVersion'
+
+    TYPE = "type"
+    MODEL_NAME = "model_name"
+    DEPLOYMENT_NAME = "deployment_name"
+
+    DEFAULT_OPENAI_CONFIG_TYPE = "azure_open_ai"
+    DEFAULT_OPENAI_CONFIG_MODEL_NAME = "gpt-35-turbo-16k"
+    DEFAULT_OPENAI_CONFIG_DEPLOYMENT_NAME = "gpt-35-turbo-16k"
+
+    DEFAULT_OPENAI_INIT_PARAMS_OPENAI_API_TYPE = "azure"
+    DEFAULT_OPENAI_INIT_PARAMS_OPENAI_API_VERSION = "2024-02-15-preview"
+
     DEFAULT_OPENAI_CONFIG = {
-        "type": "azure_open_ai",
-        "model_name": "gpt-35-turbo-16k",
-        "deployment_name": "gpt-35-turbo-16k"
+        TYPE: DEFAULT_OPENAI_CONFIG_TYPE,
+        MODEL_NAME: DEFAULT_OPENAI_CONFIG_MODEL_NAME,
+        DEPLOYMENT_NAME: DEFAULT_OPENAI_CONFIG_DEPLOYMENT_NAME,
     }
     DEFAULT_OPENAI_INIT_PARAMS = {
-        "openai_api_type": "azure",
-        "openai_api_version": "2023-03-15-preview"
+        OPENAI_API_TYPE: DEFAULT_OPENAI_INIT_PARAMS_OPENAI_API_TYPE,
+        OPENAI_API_VERSION: DEFAULT_OPENAI_INIT_PARAMS_OPENAI_API_VERSION,
     }
+
     QUESTIONS_KEY = "questions"
     CONTEXTS_KEY = "contexts"
     REQUIRED_KEYS = [QUESTIONS_KEY, CONTEXTS_KEY]

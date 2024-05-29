@@ -113,11 +113,13 @@ class ComputeMetricsRunner:
                     logger.warning(f"Any of Required Keys '[{', '.join(keys)}]' missing in openai_config_params.\n"
                                    f"Skipping GPT Based Metrics calculation for this Run.")
                     do_openai_init = False
-            elif self.task == TASK.CHAT_COMPLETION:
+            elif self.task == TASK.CHAT_COMPLETION and \
+                    self.config.get(SubTask.SUB_TASK_KEY, "") == SubTask.RAG_EVALUATION:
                 if not all(k in llm_config for k in keys):
                     message = f"Required Keys '[{', '.join(keys)}]' missing in openai_config_params."
-                    exception = get_azureml_exception(DataValidationException, BadEvaluationConfig,
-                                                      None, error=message)
+                    exception = get_azureml_exception(
+                        DataValidationException, BadEvaluationConfig, None, error=message
+                    )
                     log_traceback(exception, logger)
                     raise exception
             self.rag_input_data_keys = {}
