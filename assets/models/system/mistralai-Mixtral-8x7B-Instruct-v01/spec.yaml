@@ -26,4 +26,4 @@ tags:
   license: apache-2.0
   task: chat-completion
   author: mistralai
-version: 6
+version: 7
