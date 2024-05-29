@@ -22,6 +22,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Test step
+        run: echo "hello world"
+
+
       - name: Clone branch
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
