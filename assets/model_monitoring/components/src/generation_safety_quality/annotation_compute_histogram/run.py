@@ -24,7 +24,11 @@ from azure.ai.generative.evaluate import evaluate
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
 from pyspark.sql.functions import col
-from shared_utilities import io_utils
+from shared_utilities.io_utils import (
+    try_read_mltable_in_spark_with_error,
+    save_spark_df_as_mltable,
+    init_spark
+)
 from shared_utilities.momo_exceptions import InvalidInputError
 
 _logger = logging.getLogger(__file__)
@@ -438,7 +442,7 @@ def apply_annotation(
     metric_names = process_metric_names(metric_names)
     validate_parameters(request_args, sample_rate)
 
-    production_df = io_utils.try_read_mltable_in_spark_with_error(production_dataset, "production_dataset")
+    production_df = try_read_mltable_in_spark_with_error(production_dataset, "production_dataset")
     # Ensure input data has the correct columns given the metrics
     # Question, answer required for coherence and fluency
     qa_required = len(list(set(QA_METRIC_NAMES).intersection(
@@ -498,7 +502,7 @@ def apply_annotation(
     production_df = production_df_sampled
     row_count = production_df.count()
 
-    spark = io_utils.init_spark()
+    spark = init_spark()
     spark_conf = spark.sparkContext.getConf()
     spark_conf_vars = {
         "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",  # noqa: E501
@@ -736,7 +740,7 @@ def apply_annotation(
                              .withColumnRenamed(COMPLETION, completion_column_name)
                              .withColumnRenamed(CONTEXT, context_column_name)
                              .withColumnRenamed(GROUND_TRUTH, ground_truth_column_name))
-            io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()], file_system)
+            save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()], file_system)
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
                                        GROUP_DIMENSION: "",
@@ -778,13 +782,13 @@ def apply_annotation(
     samples_df = spark.createDataFrame(samples_index_rows, metadata_schema)
 
     # Save the samples and annotations dataframes as output
-    io_utils.save_spark_df_as_mltable(annotations_df, evaluation, file_system)
-    io_utils.save_spark_df_as_mltable(samples_df, samples_index, file_system)
+    save_spark_df_as_mltable(annotations_df, evaluation, file_system)
+    save_spark_df_as_mltable(samples_df, samples_index, file_system)
 
     # temporary workaround for pandas>2.0 until pyspark upgraded to 3.4.1, see issue:
     # https://stackoverflow.com/questions/76404811/attributeerror-dataframe-object-has-no-attribute-iteritems
     pd.DataFrame.iteritems = pd.DataFrame.items
-    io_utils.save_spark_df_as_mltable(
+    save_spark_df_as_mltable(
         spark.createDataFrame(all_metrics_pdf),
         histogram,
         file_system)
