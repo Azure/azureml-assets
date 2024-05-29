@@ -189,7 +189,8 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
         if isinstance(error, Py4JJavaError):
             if "Access token couldn't be obtained" in str(error):
                 raise InvalidInputError(
-                    f"Failed to use AML OBO token for data write due to the following error: {error.java_exception.getMessage()}."
+                    "Failed to use AML OBO token for data write due to the following error:"
+                    f" {error.java_exception.getMessage()}"
                     " This is most likely due to the datastore being credential-less,"
                     " but we don't fully support that scenario right now."
                     " Please add credentials (account key/SAS token) to the datastore where your"
