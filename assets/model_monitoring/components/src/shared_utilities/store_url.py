@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import os
 import re
 from typing import Union, Tuple
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
 from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
@@ -176,12 +176,24 @@ class StoreUrl:
 
         container_client = self.get_container_client(credential)
         full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
-        if isinstance(container_client, FileSystemClient):
-            with container_client.get_file_client(full_path) as file_client:
-                return file_client.download_file().readall().decode()
-        else:
-            with container_client.get_blob_client(full_path) as blob_client:
-                return blob_client.download_blob().readall().decode()
+        # TODO: remove this check block after we are able to support submitting managed identity MoMo graphs.
+        try:
+            if isinstance(container_client, FileSystemClient):
+                with container_client.get_file_client(full_path) as file_client:
+                    return file_client.download_file().readall().decode()
+            else:
+                with container_client.get_blob_client(full_path) as blob_client:
+                    return blob_client.download_blob().readall().decode()
+        except CredentialUnavailableError as cue:
+            if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
+                raise InvalidInputError(
+                    f"Failed to use AML OBO token for data read."
+                    " This is most likely due to the datastore being credential-less,"
+                    " but we don't fully support that scenario right now."
+                    " Please add credentials (account key/SAS token) to the datastore where your"
+                    " data is being stored and resubmit the Monitor. Else check the full error message:"
+                    f" {cue.message}")
+            raise cue
 
     def write_file(self, file_content: Union[str, bytes], relative_path: str = None, overwrite: bool = False,
                    credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None) -> dict:

@@ -130,18 +130,7 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
 
 def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None):
     """Verify paths in mltable is supported."""
-    # TODO: remove this check block after we are able to support submitting managed identity MoMo graphs.
-    try:
-        mltable_dict = mltable_dict or yaml.safe_load(StoreUrl(mltable_path, ws).read_file_content("MLTable"))
-    except CredentialUnavailableError as cue:
-        if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
-            raise InvalidInputError(
-                f"Failed to use AML OBO token for data read."
-                " This is most likely due to the datastore being credential-less,"
-                " but we don't fully support that scenario right now."
-                " Please add credentials (account key/SAS token) to the datastore where your"
-                " data is being stored and resubmit the Monitor. Else check the full error message:"
-                f" {cue.message}")
+    mltable_dict = mltable_dict or yaml.safe_load(StoreUrl(mltable_path, ws).read_file_content("MLTable"))
     for path in mltable_dict.get("paths", []):
         path_val = path.get("file") or path.get("folder") or path.get("pattern")
         try:
