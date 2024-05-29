@@ -13,6 +13,7 @@ tags:
   Featured: ""
   Preview: ""
   maas-inference: true
+  maas-finetuning-test: true
   huggingface_model_id: ""
   SharedComputeCapacityEnabled: ''
   license: mit
