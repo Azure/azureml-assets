@@ -36,6 +36,12 @@ jobs:
         run: |
           echo "${{ steps.changed-files.outputs.added_files }}"
           echo "continue=false" >> $GITHUB_ENV
+
+          for file in ${{ steps.changed-files.outputs.added_files }}; do
+            echo $file
+          done
+
+
           for file in ${{ steps.changed-files.outputs.added_files }}; do
             if [[ "$file" == *.spec.yaml ]] || [[ "$file" == *.asset.yaml ]]; then
               echo "continue=true" >> $GITHUB_ENV
