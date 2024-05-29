@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py39-torch1131:biweekly
 
 WORKDIR /
 
-RUN apt-get update && apt-get upgrade -y && apt-get install python3-idna -y
+RUN apt-get update && apt-get upgrade -y && apt-get install python3-idna git git-lfs -y
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
