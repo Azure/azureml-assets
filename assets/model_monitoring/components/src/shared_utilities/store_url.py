@@ -151,12 +151,24 @@ class StoreUrl:
 
         container_client = self.get_container_client()
         relative_path = relative_path.strip("/")
-        if isinstance(container_client, FileSystemClient):
-            return container_client.get_directory_client(f"{self.path}/{relative_path}").exists()
-        else:
-            full_path = f"{self.path}/{relative_path}/" if relative_path else f"{self.path}/"
-            blobs = container_client.list_blobs(name_starts_with=full_path)
-            return any(blobs)
+        # TODO: edit this check block after we are able to support submitting managed identity MoMo graphs.
+        try:
+            if isinstance(container_client, FileSystemClient):
+                return container_client.get_directory_client(f"{self.path}/{relative_path}").exists()
+            else:
+                full_path = f"{self.path}/{relative_path}/" if relative_path else f"{self.path}/"
+                blobs = container_client.list_blobs(name_starts_with=full_path)
+                return any(blobs)
+        except CredentialUnavailableError as cue:
+            if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
+                raise InvalidInputError(
+                    f"Failed to use AML OBO token for data read."
+                    " This is most likely due to the datastore being credential-less,"
+                    " but we don't fully support that scenario right now."
+                    " Please add credentials (account key/SAS token) to the datastore where your"
+                    " data is being stored and resubmit the Monitor. Else check the full error message:"
+                    f" {cue.message}")
+            raise cue
 
     def is_local_path(self) -> bool:
         """Check if the store url is a local path."""
@@ -176,7 +188,7 @@ class StoreUrl:
 
         container_client = self.get_container_client(credential)
         full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
-        # TODO: remove this check block after we are able to support submitting managed identity MoMo graphs.
+        # TODO: edit this check block after we are able to support submitting managed identity MoMo graphs.
         try:
             if isinstance(container_client, FileSystemClient):
                 with container_client.get_file_client(full_path) as file_client:
@@ -203,12 +215,23 @@ class StoreUrl:
 
         container_client = self.get_container_client(credential)
         full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
-        if isinstance(container_client, FileSystemClient):
-            with container_client.get_file_client(full_path) as file_client:
-                return file_client.upload_data(file_content, overwrite)
-        else:
-            with container_client.get_blob_client(full_path) as blob_client:
-                return blob_client.upload_blob(file_content, overwrite=overwrite)
+        # TODO: edit this check block after we are able to support submitting managed identity MoMo graphs.
+        try:
+            if isinstance(container_client, FileSystemClient):
+                with container_client.get_file_client(full_path) as file_client:
+                    return file_client.upload_data(file_content, overwrite)
+            else:
+                with container_client.get_blob_client(full_path) as blob_client:
+                    return blob_client.upload_blob(file_content, overwrite=overwrite)
+        except CredentialUnavailableError as cue:
+            if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
+                raise InvalidInputError(
+                    f"Failed to use AML OBO token for data read."
+                    " This is most likely due to the datastore being credential-less,"
+                    " but we don't fully support that scenario right now."
+                    " Please add credentials (account key/SAS token) to the datastore where your"
+                    " data is being stored and resubmit the Monitor. Else check the full error message:"
+                    f" {cue.message}")
 
     @staticmethod
     def _normalize_local_path(local_path: str) -> str:
