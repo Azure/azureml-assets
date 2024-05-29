@@ -3,6 +3,7 @@ name: Phi-3-medium-128k-instruct
 path: ./
 properties:
   SharedComputeCapacityEnabled: true
+  SHA: 1e10cf49da9eceb263824a4e4646d0ecba4f7dec
   languages: en
   inference-min-sku-spec: 48|2|440|128
   inference-recommended-sku: Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
@@ -50,4 +51,4 @@ tags:
     logging_steps: 10
     save_total_limit: 1
     max_seq_length: 4096
-version: 1
+version: 2
