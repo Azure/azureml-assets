@@ -130,21 +130,14 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
             raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
 
 
-def _write_mltable_yaml(mltable_obj, dest_path, file_system=None):
+def _write_mltable_yaml(mltable_obj, dest_path):
     try:
-        folder_name = str(uuid.uuid4())
-        folder_path = os.path.join(os.getcwd(), folder_name)
-        os.makedirs(folder_path)
-        source_path = os.path.join(folder_path, "MLTable")
-        with open(source_path, "w") as yaml_file:
-            yaml.dump(mltable_obj, yaml_file)
+        content = yaml.dump(mltable_obj, default_flow_style=False)
+        storeUrl = StoreUrl(dest_path)
+        print(f"StoreUrl: {storeUrl}. Path: {dest_path}. content: {content}.")
+        result = storeUrl.write_file(content, "MLTable", True)
 
-        fs = file_system or AzureMachineLearningFileSystem(dest_path)
-        fs.upload(
-            lpath=source_path,
-            rpath=dest_path,
-            **{"overwrite": "MERGE_WITH_OVERWRITE"},
-        )
+        print(f"write data response: {result}")
         return True
     except Exception as e:
         print(f"Error writing mltable file: {e}")
@@ -166,10 +159,8 @@ def read_mltable_in_spark(mltable_path: str):
             raise InvalidInputError(f"Failed to read MLTable {mltable_path}, it is not from the same AML workspace.")
 
 
-def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
+def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
-    metrics_df.write.mode("overwrite").parquet(folder_path)
-
     base_path = folder_path.rstrip('/')
     output_path_pattern = base_path + "/*.parquet"
 
@@ -180,12 +171,14 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
 
     retries = 0
     while True:
-        if _write_mltable_yaml(mltable_obj, folder_path, file_system):
+        if _write_mltable_yaml(mltable_obj, folder_path):
             break
         retries += 1
         if retries >= MAX_RETRY_COUNT:
             raise Exception("Failed to write mltable yaml file after multiple retries.")
         time.sleep(1)
+
+    metrics_df.write.mode("overwrite").parquet(folder_path)
 
 
 def np_encoder(object):

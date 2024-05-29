@@ -185,6 +185,7 @@ class StoreUrl:
 
         container_client = self.get_container_client(credential)
         full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
+        print(full_path)
         if isinstance(container_client, FileSystemClient):
             with container_client.get_file_client(full_path) as file_client:
                 return file_client.upload_data(file_content, overwrite)
