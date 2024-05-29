@@ -20,6 +20,7 @@ tags:
   disable-batch: "true"
   task: chat-completion
   author: microsoft
+  _aml_system_vanity_registry: "azureml-phi"
   hiddenlayerscanned : ""
   inference_compute_allow_list:
     [ 
