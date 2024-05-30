@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "wikipedia_sp_500"
+version: "2"
+properties:
+  azureml.Designer: true
+  azureml.Designer.name: Wikipedia SP 500 Dataset
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: Wikipedia SP 500 Datase
+type: uri_folder
+path: sample_data/

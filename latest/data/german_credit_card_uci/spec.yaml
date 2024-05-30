@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "german_credit_card_uci"
+version: "2"
+properties:
+  azureml.Designer: true
+  azureml.Designer.name: German Credit Card UCI dataset
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: German Credit Card UCI dataset
+type: uri_folder
+path: sample_data/

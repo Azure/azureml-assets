@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "crm_churn_labels_shared"
+version: "2"
+properties:
+  azureml.Designer: true
+  azureml.Designer.name: CRM Churn Labels Shared
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: CRM Churn Labels
+type: uri_folder
+path: sample_data/

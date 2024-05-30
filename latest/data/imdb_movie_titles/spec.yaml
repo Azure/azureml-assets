@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "imdb_movie_titles"
+version: "2"
+properties:
+  azureml.Designer: true
+  azureml.Designer.name: IMDB Movie Titles
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: IMDB Movie Titles
+type: uri_folder
+path: sample_data/

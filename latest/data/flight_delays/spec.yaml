@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "flight_delays"
+version: "2"
+properties:
+  azureml.Designer: true
+  azureml.Designer.name: Flight Delays Data
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: Flight Delays Data
+type: uri_folder
+path: sample_data/

@@ -1,6 +1,11 @@
 $schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
 name: "automobile_price_raw"
-version: "1.0.0"
-description: Data for Designer Sample "Regression - Automobile Price Prediction (Basic)"
+version: "2"
+properties:
+  azureml.Designer: true
+  azureml.Designer.name: Automobile price data (Raw)
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: Clean missing data module required. Prices of various automobiles against
+  make, model and technical specifications
 type: uri_folder
 path: sample_data/

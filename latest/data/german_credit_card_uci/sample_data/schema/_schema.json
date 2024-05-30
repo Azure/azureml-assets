@@ -1,0 +1,196 @@
+{
+  "columnAttributes": [
+    {
+      "name": "Col1",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col2",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Col3",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col4",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col5",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Col6",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col7",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col8",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Col9",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col10",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col11",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Col12",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col13",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Col14",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col15",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col16",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Col17",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col18",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    },
+    {
+      "name": "Col19",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col20",
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "String"
+    },
+    {
+      "name": "Col21",
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      },
+      "isFeature": true,
+      "type": "Numeric"
+    }
+  ],
+  "featureChannels": [],
+  "labelColumns": {},
+  "scoreColumns": {}
+}
