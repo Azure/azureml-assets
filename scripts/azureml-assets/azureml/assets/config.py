@@ -1005,6 +1005,7 @@ class DataConfig(Config):
             container_name: my_container
             container_path: foo/bar
     """
+
     def __init__(self, file_name: Path):
         """Initialize object for the Data Asset Properties extracted from storage.yaml.
 
