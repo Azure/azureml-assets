@@ -6,7 +6,7 @@ model_evaluation_pipeline_component
 
 ### Version 
 
-0.0.27
+0.0.28
 
 ### Type 
 
