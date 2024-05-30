@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/minimal-py38-inference
+  name: azureml/curated/minimal-ubuntu20.04-py38-cpu-inference
   os: linux
   context:
     dir: context
