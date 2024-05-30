@@ -11,6 +11,7 @@ from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
+print(f"BUILD_CONTEXT : {BUILD_CONTEXT}")
 JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
@@ -19,7 +20,7 @@ STD_LOG = Path("artifacts/user_logs/std_log.txt")
 def test_minimal_cpu_inference():
     """Tests a sample job using minimal 20.04 py38 cpu as the environment."""
     this_dir = Path(__file__).parent
-
+    print(f"this_dir : {this_dir}")
     subscription_id = os.environ.get("subscription_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
