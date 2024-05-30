@@ -3,8 +3,8 @@ name: "{{asset.name}}"
 version: "{{asset.version}}"
 properties:
   azureml.Designer: true
-  azureml.Designer.name: Automobile price data (Raw)
+  azureml.Designer.name: Restaurant Ratings
   azureml.Designer.dataTypeId: DataFrameDirectory
-description: Clean missing data module required. Prices of various automobiles against make, model and technical specifications
+description: Contains ratings given by customers to restaurants on scale from 0 to 2.
 type: uri_folder
 path: sample_data/

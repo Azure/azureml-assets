@@ -1,0 +1,667 @@
+{
+  "visualizationType": "default",
+  "data": {
+    "name": null,
+    "numberOfColumns": 2,
+    "numberOfRows": 16059,
+    "features": [
+      {
+        "name": "Movie ID",
+        "index": 0,
+        "elementType": "int64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Movie Name",
+        "index": 1,
+        "elementType": "str",
+        "featureType": "String Feature"
+      }
+    ],
+    "records": [
+      [
+        8,
+        "Edison Kinetoscopic Record of a Sneeze (1894)"
+      ],
+      [
+        91,
+        "Le manoir du diable (1896)"
+      ],
+      [
+        417,
+        "Le voyage dans la lune (1902)"
+      ],
+      [
+        628,
+        "The s of Dollie (1908)"
+      ],
+      [
+        833,
+        "The Country Doctor (1909)"
+      ],
+      [
+        1223,
+        "Frankenstein (1910)"
+      ],
+      [
+        1740,
+        "The Lonedale Operator (1911)"
+      ],
+      [
+        2101,
+        "Cleopatra (1912)"
+      ],
+      [
+        2130,
+        "Linferno (1911)"
+      ],
+      [
+        2844,
+        "Fantmas - lombre de la guillotine (1913)"
+      ],
+      [
+        4099,
+        "His Majesty the Scarecrow of Oz (1914)"
+      ],
+      [
+        4936,
+        "The Bank (1915)"
+      ],
+      [
+        4972,
+        "The Birth of a Nation (1915)"
+      ],
+      [
+        5078,
+        "The Cheat (1915)"
+      ],
+      [
+        5530,
+        "Lhrosme de Paddy (1915)"
+      ],
+      [
+        6684,
+        "The Fireman (1916)"
+      ],
+      [
+        6689,
+        "The Floorwalker (1916)"
+      ],
+      [
+        7264,
+        "The Rink (1916)"
+      ],
+      [
+        7880,
+        "Easy Street (1917)"
+      ],
+      [
+        8133,
+        "The Immigrant (1917)"
+      ],
+      [
+        8395,
+        "Otets Sergiy (1918)"
+      ],
+      [
+        9018,
+        "A Dogs Life (1918)"
+      ],
+      [
+        9968,
+        "Broken Blossoms or The Yellow Man and the Girl (1919)"
+      ],
+      [
+        10247,
+        "Herr Arnes pengar (1919)"
+      ],
+      [
+        10323,
+        "Das Cabinet des Dr. Caligari (1920)"
+      ],
+      [
+        11267,
+        "Headin Home (1920)"
+      ],
+      [
+        11508,
+        "Neighbors (1920)"
+      ],
+      [
+        11541,
+        "One Week (1920)"
+      ],
+      [
+        11607,
+        "Prstnkan (1920)"
+      ],
+      [
+        11717,
+        "The Son of Tarzan (1920)"
+      ],
+      [
+        12278,
+        "The High Sign (1921)"
+      ],
+      [
+        12349,
+        "The Kid (1921)"
+      ],
+      [
+        12651,
+        "Schlo?Vogeloed (1921)"
+      ],
+      [
+        13025,
+        "Cops (1922)"
+      ],
+      [
+        13086,
+        "Dr. Mabuse der Spieler - Ein Bild der Zeit (1922)"
+      ],
+      [
+        13257,
+        "Hxan (1922)"
+      ],
+      [
+        13427,
+        "Nanook of the North (1922)"
+      ],
+      [
+        13442,
+        "Nosferatu eine Symphonie des Grauens (1922)"
+      ],
+      [
+        14142,
+        "The Hunchback of Notre Dame (1923)"
+      ],
+      [
+        14341,
+        "Our Hospitality (1923)"
+      ],
+      [
+        14429,
+        "Safety Last (1923)"
+      ],
+      [
+        14538,
+        "Three Ages (1923)"
+      ],
+      [
+        14624,
+        "A Woman of Paris A of Fate (1923)"
+      ],
+      [
+        14872,
+        "Entracte (1924)"
+      ],
+      [
+        14972,
+        "He Who Gets Slapped (1924)"
+      ],
+      [
+        15002,
+        "Hot Water (1924)"
+      ],
+      [
+        15064,
+        "Der letzte Mann (1924)"
+      ],
+      [
+        15163,
+        "The Navigator (1924)"
+      ],
+      [
+        15174,
+        "Die Nibelungen Kriemhilds Rache (1924)"
+      ],
+      [
+        15175,
+        "Die Nibelungen Siegfried (1924)"
+      ],
+      [
+        15324,
+        "Sherlock Jr. (1924)"
+      ],
+      [
+        15361,
+        "Stachka (1925)"
+      ],
+      [
+        15400,
+        "The Thief of Bagdad (1924)"
+      ],
+      [
+        15532,
+        "Die Abenteuer des Prinzen Achmed (1926)"
+      ],
+      [
+        15624,
+        "The Big Parade (1925)"
+      ],
+      [
+        15648,
+        "Bronenosets Potyomkin (1925)"
+      ],
+      [
+        15864,
+        "The Gold Rush (1925)"
+      ],
+      [
+        15881,
+        "Greed (1924)"
+      ],
+      [
+        16172,
+        "Oh Doctor (1925)"
+      ],
+      [
+        16220,
+        "The Phantom of the Opera (1925)"
+      ],
+      [
+        16230,
+        "The Pleasure Garden (1925)"
+      ],
+      [
+        16332,
+        "Seven Chances (1925)"
+      ],
+      [
+        16600,
+        "Along Came Auntie (1926)"
+      ],
+      [
+        16847,
+        "Faust - Eine deutsche Volkssage (1926)"
+      ],
+      [
+        16903,
+        "45 Minutes from Hollywood (1926)"
+      ],
+      [
+        17075,
+        "The Lodger A Story of the London Fog (1927)"
+      ],
+      [
+        17136,
+        "Metropolis (1927)"
+      ],
+      [
+        17196,
+        "Nana (1926)"
+      ],
+      [
+        17350,
+        "The Scarlet Letter (1926)"
+      ],
+      [
+        17463,
+        "3 Bad Men (1926)"
+      ],
+      [
+        17729,
+        "Call of the Cuckoo (1927)"
+      ],
+      [
+        17765,
+        "College (1927)"
+      ],
+      [
+        17825,
+        "Downhill (1927)"
+      ],
+      [
+        17836,
+        "Duck Soup (1927)"
+      ],
+      [
+        17843,
+        "Easy Virtue (1928)"
+      ],
+      [
+        17925,
+        "The General (1926)"
+      ],
+      [
+        18033,
+        "It (1927)"
+      ],
+      [
+        18037,
+        "The Jazz Singer (1927)"
+      ],
+      [
+        18106,
+        "Love Em and Weep (1927)"
+      ],
+      [
+        18217,
+        "Oktyabr (1928)"
+      ],
+      [
+        18328,
+        "The Ring (1927)"
+      ],
+      [
+        18368,
+        "The Second 100 Years (1927)"
+      ],
+      [
+        18452,
+        "Sugar Daddies (1927)"
+      ],
+      [
+        18455,
+        "Sunrise A Song of Two Humans (1927)"
+      ],
+      [
+        18528,
+        "The Unknown (1927)"
+      ],
+      [
+        18578,
+        "Wings (1927)"
+      ],
+      [
+        18583,
+        "With Love and Hisses (1927)"
+      ],
+      [
+        18742,
+        "The Cameraman (1928)"
+      ],
+      [
+        18773,
+        "The Circus (1928)"
+      ],
+      [
+        18806,
+        "The Crowd (1928)"
+      ],
+      [
+        18860,
+        "Early to Bed (1928)"
+      ],
+      [
+        18876,
+        "The Farmers Wife (1928)"
+      ],
+      [
+        18890,
+        "The Finishing Touch (1928)"
+      ],
+      [
+        19109,
+        "Lonesome (1928)"
+      ],
+      [
+        19130,
+        "The Man Who Laughs (1928)"
+      ],
+      [
+        19195,
+        "The Mysterious Lady (1928)"
+      ],
+      [
+        19254,
+        "La passion de Jeanne dArc (1928)"
+      ],
+      [
+        19344,
+        "Sadie Thompson (1928)"
+      ],
+      [
+        19376,
+        "Should Married Men Go Home? (1928)"
+      ],
+      [
+        19421,
+        "Steamboat Bill Jr. (1928)"
+      ]
+    ]
+  },
+  "statistics": {
+    "name": null,
+    "numberOfColumns": 7,
+    "numberOfRows": 2,
+    "features": [
+      {
+        "name": "Mean",
+        "index": 0,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Median",
+        "index": 1,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Min",
+        "index": 2,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Max",
+        "index": 3,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Standard Deviation",
+        "index": 4,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Unique Values",
+        "index": 5,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Missing Values",
+        "index": 6,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      }
+    ],
+    "records": [
+      [
+        893106.8326794944,
+        412922.0,
+        8.0,
+        3740916.0,
+        927712.4616001211,
+        16059,
+        0
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        16046,
+        0
+      ]
+    ]
+  },
+  "layout": {
+    "name": null,
+    "numberOfColumns": 2,
+    "numberOfRows": 2,
+    "features": [
+      {
+        "name": "Histogram",
+        "index": 0,
+        "elementType": "object",
+        "featureType": "Object Feature"
+      },
+      {
+        "name": "Boxplot",
+        "index": 1,
+        "elementType": "object",
+        "featureType": "Object Feature"
+      }
+    ],
+    "records": [
+      [
+        {
+          "Bins": [
+            {
+              "x": 8.0,
+              "dx": 374090.8,
+              "y": 7613,
+              "numElements": 0
+            },
+            {
+              "x": 374098.8,
+              "dx": 374090.8,
+              "y": 1376,
+              "numElements": 0
+            },
+            {
+              "x": 748189.6,
+              "dx": 374090.79999999993,
+              "y": 1178,
+              "numElements": 0
+            },
+            {
+              "x": 1122280.4,
+              "dx": 374090.80000000005,
+              "y": 1362,
+              "numElements": 0
+            },
+            {
+              "x": 1496371.2,
+              "dx": 374090.80000000005,
+              "y": 1553,
+              "numElements": 0
+            },
+            {
+              "x": 1870462.0,
+              "dx": 374090.7999999998,
+              "y": 1166,
+              "numElements": 0
+            },
+            {
+              "x": 2244552.8,
+              "dx": 374090.8000000003,
+              "y": 966,
+              "numElements": 0
+            },
+            {
+              "x": 2618643.6,
+              "dx": 374090.7999999998,
+              "y": 416,
+              "numElements": 0
+            },
+            {
+              "x": 2992734.4,
+              "dx": 374090.7999999998,
+              "y": 312,
+              "numElements": 0
+            },
+            {
+              "x": 3366825.1999999997,
+              "dx": 374090.8000000003,
+              "y": 117,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 16059
+        },
+        {
+          "median": 412922.0,
+          "boxBottom": 99776.5,
+          "boxTop": 1626157.0,
+          "whiskerBottom": 8,
+          "whiskerTop": 3740916,
+          "outliers": []
+        }
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "Shadow of Chinatown (1936)",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": "Ningen no jken (1959)",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": "Innocence (2004)",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": "Chaos (2005)",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": "Broken (2006)",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": "Skin (2008)",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": "The Door (2012)",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": "Filth (2013)",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": "Pusher (2012)",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": "Home Sweet Home (2013)",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 16059
+        },
+        null
+      ]
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-name: automobile_price_raw
+name: german_credit_card_uci
 version: 2
 type: data
 spec: spec.yaml

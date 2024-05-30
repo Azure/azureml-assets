@@ -1,0 +1,5 @@
+type: ImageDirectory
+extension: {}
+image_list: images.lst
+samples: _samples.json
+schema: _schema.json

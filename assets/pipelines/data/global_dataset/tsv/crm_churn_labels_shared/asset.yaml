@@ -1,4 +1,4 @@
-name: automobile_price_raw
+name: crm_churn_labels_shared
 version: 2
 type: data
 spec: spec.yaml

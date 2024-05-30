@@ -1,4 +1,4 @@
-name: automobile_price_raw
+name: crm_upselling_labels_shared
 version: 2
 type: data
 spec: spec.yaml

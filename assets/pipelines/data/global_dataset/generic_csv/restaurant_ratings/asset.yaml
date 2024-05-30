@@ -1,4 +1,4 @@
-name: automobile_price_raw
+name: restaurant_ratings
 version: 2
 type: data
 spec: spec.yaml

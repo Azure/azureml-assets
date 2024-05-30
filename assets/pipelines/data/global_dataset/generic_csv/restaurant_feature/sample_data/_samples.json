@@ -1,0 +1,74 @@
+[
+  {
+    "placeID": 134999,
+    "latitude": 18.915421,
+    "longitude": -99.184871,
+    "the_geom_meter": "0101000020957F000088568DE356715AC138C0A525FC464A41",
+    "name": "Kiku Cuernavaca",
+    "address": "Revolucion",
+    "city": "Cuernavaca",
+    "state": "Morelos",
+    "country": "Mexico",
+    "zip": {
+      "isNan": true
+    },
+    "alcohol": "No_Alcohol_Served",
+    "smoking_area": "none",
+    "dress_code": "informal",
+    "accessibility": "no_accessibility",
+    "price": "medium",
+    "url": "kikucuernavaca.com.mx",
+    "Rambience": "familiar",
+    "franchise": "f",
+    "area": "closed",
+    "other_services": "none"
+  },
+  {
+    "placeID": 132825,
+    "latitude": 22.1473922,
+    "longitude": -100.983092,
+    "the_geom_meter": "0101000020957F00001AD016568C4858C1243261274BA54B41",
+    "name": "puesto de tacos",
+    "address": "esquina santos degollado y leon guzman",
+    "city": "s.l.p.",
+    "state": "s.l.p.",
+    "country": "mexico",
+    "zip": "78280",
+    "alcohol": "No_Alcohol_Served",
+    "smoking_area": "none",
+    "dress_code": "informal",
+    "accessibility": "completely",
+    "price": "low",
+    "url": {
+      "isNan": true
+    },
+    "Rambience": "familiar",
+    "franchise": "f",
+    "area": "open",
+    "other_services": "none"
+  },
+  {
+    "placeID": 135106,
+    "latitude": 22.149708800000003,
+    "longitude": -100.97609279999999,
+    "the_geom_meter": "0101000020957F0000649D6F21634858C119AE9BF528A34B41",
+    "name": "El Rinc\u00f3n de San Francisco",
+    "address": "Universidad 169",
+    "city": "San Luis Potosi",
+    "state": "San Luis Potosi",
+    "country": "Mexico",
+    "zip": "78000",
+    "alcohol": "Wine-Beer",
+    "smoking_area": "only at bar",
+    "dress_code": "informal",
+    "accessibility": "partially",
+    "price": "medium",
+    "url": {
+      "isNan": true
+    },
+    "Rambience": "familiar",
+    "franchise": "f",
+    "area": "open",
+    "other_services": "none"
+  }
+]

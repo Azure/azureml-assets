@@ -1,4 +1,4 @@
-name: automobile_price_raw
+name: restaurant_feature
 version: 2
 type: data
 spec: spec.yaml
