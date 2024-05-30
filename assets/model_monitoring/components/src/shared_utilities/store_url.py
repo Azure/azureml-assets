@@ -162,7 +162,7 @@ class StoreUrl:
                 return any(blobs)
         except CredentialUnavailableError as cue:
             if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(cue.message))
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=cue.message))
             raise cue
 
     def is_local_path(self) -> bool:
@@ -193,7 +193,7 @@ class StoreUrl:
                     return blob_client.download_blob().readall().decode()
         except CredentialUnavailableError as cue:
             if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(cue.message))
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=cue.message))
             raise cue
 
     def write_file(self, file_content: Union[str, bytes], relative_path: str = None, overwrite: bool = False,
@@ -214,7 +214,7 @@ class StoreUrl:
                     return blob_client.upload_blob(file_content, overwrite=overwrite)
         except CredentialUnavailableError as cue:
             if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(cue.message))
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=cue.message))
 
     @staticmethod
     def _normalize_local_path(local_path: str) -> str:

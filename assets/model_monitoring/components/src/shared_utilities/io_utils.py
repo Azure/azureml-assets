@@ -118,7 +118,7 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
         else:
             # TODO: remove this check block after we are able to support submitting managed identity MoMo graphs.
             if isinstance(error, CredentialUnavailableError):
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(error.message))
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.message))
             raise error
     return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 
@@ -185,7 +185,7 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
         if isinstance(error, Py4JJavaError):
             if "Access token couldn't be obtained" in str(error):
                 raise InvalidInputError(
-                    MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(error.java_exception.getMessage()))
+                    MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.java_exception.getMessage()))
         raise error
 
     base_path = folder_path.rstrip('/')
