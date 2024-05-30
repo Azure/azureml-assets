@@ -192,8 +192,8 @@ MAX_RETRY_COUNT = 3
 
 # Exception error messages
 MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE = "Failed to use AML OBO token for data read and/or write." + \
-" This is most likely due to the datastore being credential-less," + \
-" but we don't fully support that scenario right now." + \
-" Please add credentials (account key/SAS token) to the datastore where your" + \
-" data is being stored and resubmit the Monitor. Else check the full error message:" + \
-" {message}"
+    " This is most likely due to the datastore being credential-less," + \
+    " but we don't fully support that scenario right now." + \
+    " Please add credentials (account key/SAS token) to the datastore where your" + \
+    " data is being stored and resubmit the Monitor. Else check the full error message:" + \
+    " {message}"
