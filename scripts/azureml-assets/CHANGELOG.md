@@ -5,7 +5,7 @@
 
 ## 1.16.51 (2024-05-30)
 ### 🐛 Bugs Fixed
-- [#](https://github.com/Azure/azureml-assets/pull/) Generate SAS tokens for data assets
+- [#2991](https://github.com/Azure/azureml-assets/pull/2991) Generate SAS tokens for data assets
 
 ## 1.16.50 (2024-05-22)
 ### 🐛 Bugs Fixed
