@@ -10,7 +10,7 @@ from azure.ai.ml._restclient.models import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
-BUILD_CONTEXT = Path("../context")
+BUILD_CONTEXT = Path("../environments/minimal-ubuntu20.04-py39-cpu-inference/context")
 print(f"BUILD_CONTEXT : {BUILD_CONTEXT}")
 JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
