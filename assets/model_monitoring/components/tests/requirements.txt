@@ -9,7 +9,8 @@ numpy~=1.19.0
 pandas~=1.4.3
 pyspark
 pytest~=7.2.1
-responsibleai~=0.29.0
+interpret-community[mimic]~=0.31.0
+lightgbm~=4.3.0
 ruamel.yaml==0.17.21
 scipy~=1.10.0
 pytest-xdist

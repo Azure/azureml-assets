@@ -1,7 +1,7 @@
 type: evaluationresult
 name: stsbenchmark_text-embedding-ada-002_sts
-version: 2.16.05
-display_name: STSBenchmark_text-embedding-ada-002_STS
+version: 2.22.05
+display_name: STSBenchmark_text-embedding-ada-002_sts
 description: text-embedding-ada-002 run for STSBenchmark dataset
 dataset_name: STSBenchmark
 dataset_family: STSBenchmark
@@ -15,7 +15,7 @@ relationships:
 
 tags:
     evaluation_type: text_embeddings
-    task: STS
+    task: sts
     primary_metric: spearman_correlation
 
 metrics:

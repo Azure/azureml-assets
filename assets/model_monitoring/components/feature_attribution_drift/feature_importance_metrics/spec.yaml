@@ -50,10 +50,10 @@ conf:
     - pip:
         - azure-storage-file-datalake~=12.8.0
         - mltable~=1.3.0
-        - responsibleai~=0.29.0
+        - interpret-community[mimic]~=0.31.0
         - azureml-fsspec~=1.0.0
         - fsspec~=2023.4.0
-    name: responsibleai-spark
+    name: interpret-spark
 args: >-
   --baseline_data ${{inputs.baseline_data}}
   $[[--target_column ${{inputs.target_column}}]]

@@ -33,6 +33,7 @@ class DataBaseGrounding(ComponentBase):
         max_rows: int = None,
         max_sampling_rows: int = None,
         max_text_length: int = None,
+        max_knowledge_pieces: int = None,
         selected_tables: str = None,
         column_settings: str = None,
         include_views: bool = False,
@@ -54,6 +55,8 @@ class DataBaseGrounding(ComponentBase):
             grounding_config.max_sampling_rows = max_sampling_rows
         if max_text_length:
             grounding_config.max_text_length = max_text_length
+        if max_knowledge_pieces:
+            grounding_config.max_knowledge_pieces = max_knowledge_pieces
 
         db_executor_config = DBExecutorConfig()
         if selected_tables:

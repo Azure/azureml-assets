@@ -1,5 +1,5 @@
 # PTCA Image (enabling Singularity Support)
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch201:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py38-torch201:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 RUN apt-get update && apt-get -y upgrade
 
@@ -19,5 +19,3 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
-
-RUN pip install mlflow==2.12.2 gunicorn==22.0.0
