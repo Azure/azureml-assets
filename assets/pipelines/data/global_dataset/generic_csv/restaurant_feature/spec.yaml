@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+properties:
+  azureml.Designer: true
+  azureml.Designer.name: Restaurant Feature Data
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: Contains restaurant features, such as name, address and dress_code.
+type: uri_folder
+path: sample_data/

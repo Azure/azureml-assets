@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+properties:
+  azureml.Designer: true
+  azureml.Designer.name: Adult Census Income Binary Classification dataset
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: Census Income dataset
+type: uri_folder
+path: sample_data/

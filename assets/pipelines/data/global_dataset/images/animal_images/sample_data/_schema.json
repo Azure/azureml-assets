@@ -1,0 +1,52 @@
+{
+  "columnAttributes": [
+    {
+      "name": "image",
+      "type": "Bytes",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "bytes",
+        "isNullable": false
+      },
+      "properties": {
+        "mime_type": "image/png",
+        "image_ref": "image_info"
+      }
+    },
+    {
+      "name": "id",
+      "type": "Numeric",
+      "isFeature": false,
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "category",
+      "type": "String",
+      "isFeature": false,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      },
+      "properties": {
+        "annotation_type": "COCO_classification",
+        "categories": [
+          {
+            "id": 0,
+            "name": "cat"
+          },
+          {
+            "id": 1,
+            "name": "dog"
+          },
+          {
+            "id": 2,
+            "name": "frog"
+          }
+        ]
+      }
+    }
+  ]
+}
