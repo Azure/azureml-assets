@@ -7,6 +7,6 @@ extra_config: environment.yaml
 test:
   pytest:
     enabled: true
-    pip_requirements: tests/requirements.txt
-    tests_dir: tests
+    pip_requirements: ../../tests/requirements.txt
+    tests_dir: ../../tests
 categories: ["Inference"]
