@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.51 (2024-05-30)
+### 🐛 Bugs Fixed
+- [#2991](https://github.com/Azure/azureml-assets/pull/2991) Generate SAS tokens for data assets
+
 ## 1.16.50 (2024-05-22)
 ### 🐛 Bugs Fixed
 - [#2956](https://github.com/Azure/azureml-assets/pull/2956) Update embeddings asset task type
