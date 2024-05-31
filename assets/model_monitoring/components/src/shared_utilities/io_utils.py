@@ -10,6 +10,8 @@ import time
 import uuid
 import yaml
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
+from azure.storage.blob import ContainerClient
+from azure.storage.filedatalake import FileSystemClient
 from azureml.dataprep.api.errorhandlers import ExecutionError
 from azureml.fsspec import AzureMachineLearningFileSystem
 from pyspark.sql import SparkSession, DataFrame
@@ -139,7 +141,18 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
 def _write_mltable_yaml(mltable_obj, store_url: StoreUrl, credential):
     try:
         content = yaml.dump(mltable_obj, default_flow_style=False)
+        print(f"store_url.container_name: {store_url.container_name}")
+        print(f"store_url.account_name: {store_url.account_name}")
+        print(f"store_url.path: {store_url.path}")
+        print(f"store_url.store_type: {store_url.store_type}")
+        print(f"store_url._base_url: {store_url._base_url}")
+        print(f"store_url._datastore: {store_url._datastore}")
+        print(f"store_url.is_local_path(): {store_url.is_local_path()}")
+
         store_url.write_file(content, "MLTable", True, credential)
+
+        # store_url.write_file(content, "MLTable", True)
+        print(f"store_url.is_folder_exists() after: {store_url.is_folder_exists(dest_path)}")
         return True
     except Exception as e:
         print(f"Error writing mltable file: {e}")
@@ -163,7 +176,9 @@ def read_mltable_in_spark(mltable_path: str):
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
-    store_url = StoreUrl(folder_path)
+    # We do this first to get Aml OBO credential which will let spark.write.parquet 
+    # work in credential-less scenario by initializing certain env variables for free.
+    store_url = StoreUrl(dest_path)
     credential = store_url.get_credential()
 
     try:
@@ -186,7 +201,7 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str):
 
     retries = 0
     while True:
-        if _write_mltable_yaml(mltable_obj, store_url, None):
+        if _write_mltable_yaml(mltable_obj, store_url, credential):
             break
         retries += 1
         if retries >= MAX_RETRY_COUNT:
