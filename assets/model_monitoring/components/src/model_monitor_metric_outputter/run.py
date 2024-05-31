@@ -27,6 +27,7 @@ from shared_utilities.io_utils import (
     np_encoder,
     try_read_mltable_in_spark_with_error,
 )
+from shared_utilities.store_url import StoreUrl
 
 
 def run():
@@ -71,15 +72,18 @@ def run():
 
     output_payload = to_output_payload(args.signal_name, args.signal_type, result)
 
-    local_path = str(uuid.uuid4())
-    write_to_file(
-        payload=output_payload,
-        local_output_directory=local_path,
-        signal_name=args.signal_name,
-    )
+    content = json.dumps(output_payload, indent=4, default=np_encoder)
+    # local_path = str(uuid.uuid4())
+    # write_to_file(
+    #     payload=output_payload,
+    #     local_output_directory=local_path,
+    #     signal_name=args.signal_name,
+    # )
 
     target_remote_path = os.path.join(args.signal_output, "signals")
-    amlfs_upload(local_path=local_path, remote_path=target_remote_path)
+    store_url = StoreUrl(target_remote_path)
+
+    store_url.write_file(content, f"{args.signal_name}.json")
 
     print("Uploading run metrics to AML run history.")
     metric_timestamp = parser.parse(args.metric_timestamp)
