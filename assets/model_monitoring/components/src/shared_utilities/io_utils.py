@@ -150,9 +150,6 @@ def _write_mltable_yaml(mltable_obj, store_url: StoreUrl, credential):
         print(f"store_url.is_local_path(): {store_url.is_local_path()}")
 
         store_url.write_file(content, "MLTable", True, credential)
-
-        # store_url.write_file(content, "MLTable", True)
-        print(f"store_url.is_folder_exists() after: {store_url.is_folder_exists(dest_path)}")
         return True
     except Exception as e:
         print(f"Error writing mltable file: {e}")
@@ -178,18 +175,11 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
     # We do this first to get Aml OBO credential which will let spark.write.parquet 
     # work in credential-less scenario by initializing certain env variables for free.
-    store_url = StoreUrl(dest_path)
+    print(f"folder_path: {folder_path}")
+    store_url = StoreUrl(folder_path)
     credential = store_url.get_credential()
 
-    try:
-        metrics_df.write.mode("overwrite").parquet(folder_path)
-    except Exception as error:
-        # TODO: remove this check block after we switch over to using StoreUrl for saving spark df
-        if isinstance(error, Py4JJavaError):
-            if "Access token couldn't be obtained" in str(error):
-                raise InvalidInputError(
-                    MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.java_exception.getMessage()))
-        raise error
+    metrics_df.write.mode("overwrite").parquet(folder_path)
 
     base_path = folder_path.rstrip('/')
     output_path_pattern = base_path + "/*.parquet"
