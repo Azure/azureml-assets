@@ -22,7 +22,7 @@ from tests.e2e.utils.constants import (
 
 def _submit_data_quality_signal_monitor_job(
     submit_pipeline_job,
-    ml_client,
+    ml_client: MLClient,
     get_component,
     experiment_name,
     baseline_data,

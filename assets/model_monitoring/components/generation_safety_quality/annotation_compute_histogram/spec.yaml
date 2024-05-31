@@ -128,7 +128,7 @@ conf:
           - azureml-fsspec~=1.2.0
           - fsspec~=2023.4.0
           - pyopenssl<23.0.0
-    name: momo-base-spark
+    name: momo-gsq-spark
 code: ../../src
 entry:
   file: ./generation_safety_quality/annotation_compute_histogram/run.py
