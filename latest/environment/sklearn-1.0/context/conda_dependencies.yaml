@@ -19,7 +19,7 @@ dependencies:
   # vulnerabilities
   - cryptography>=42.0.4
   - certifi >= 2023.07.22
-  - requests >= 2.31.0  
+  - requests>=2.32.3  
   - idna>=3.7
   # azureml-automl-common-tools packages
   - py-spy==0.3.12
