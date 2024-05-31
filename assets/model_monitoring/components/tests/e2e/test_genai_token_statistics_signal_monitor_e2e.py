@@ -14,7 +14,7 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_genai_token_statistics_model_monitor_job(
-    ml_client,
+    ml_client: MLClient,
     get_component,
     submit_pipeline_job,
     experiment_name,

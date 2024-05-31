@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: projecte-aina-FLOR-1-6B-Instructed
+name: projecte-aina-FLOR-6-3B-Instructed
 path: ./
 properties:
   SharedComputeCapacityEnabled: true
@@ -12,6 +12,7 @@ tags:
   Preview: ''
   SharedComputeCapacityEnabled: ''
   hiddenlayerscanned: ''
+  huggingface_model_id: projecte-aina/FLOR-6.3B-Instructed
   inference_compute_allow_list:
    [
       Standard_NC6s_v3,
