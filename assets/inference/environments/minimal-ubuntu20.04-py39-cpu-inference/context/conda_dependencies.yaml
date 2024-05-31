@@ -4,6 +4,6 @@ channels:
 - conda-forge
 dependencies:
 - python=3.9.13
-- pip=22.1.2
+- pip=24.0
 - pip:
   - azureml-inference-server-http=={{latest-pypi-version}}
