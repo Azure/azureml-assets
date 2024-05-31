@@ -12,6 +12,7 @@ tags:
   Preview: ''
   SharedComputeCapacityEnabled: ''
   hiddenlayerscanned: ''
+  huggingface_model_id: projecte-aina/FLOR-6.3B
   inference_compute_allow_list:
    [
       Standard_NC6s_v3,
