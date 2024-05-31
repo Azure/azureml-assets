@@ -158,9 +158,7 @@ def read_mltable_in_spark(mltable_path: str):
 def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
     store_url = StoreUrl(folder_path)
-    credential = store_url.get_credential()
-
-    metrics_df.write.mode("overwrite").parquet(folder_path)
+    # credential = store_url.get_credential()
 
     base_path = folder_path.rstrip('/')
     output_path_pattern = base_path + "/*.parquet"
@@ -172,12 +170,14 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str):
 
     retries = 0
     while True:
-        if _write_mltable_yaml(mltable_obj, store_url, credential):
+        if _write_mltable_yaml(mltable_obj, store_url, None):
             break
         retries += 1
         if retries >= MAX_RETRY_COUNT:
             raise Exception("Failed to write mltable yaml file after multiple retries.")
         time.sleep(1)
+
+    metrics_df.write.mode("overwrite").parquet(folder_path)
 
 
 def np_encoder(object):
